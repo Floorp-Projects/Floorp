@@ -1,0 +1,64 @@
+[package]
+name = "wgpu-core"
+version = "0.10.0"
+authors = ["wgpu developers"]
+edition = "2018"
+description = "WebGPU core logic on gfx-hal"
+homepage = "https://github.com/gfx-rs/wgpu"
+repository = "https://github.com/gfx-rs/wgpu"
+keywords = ["graphics"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+
+[features]
+default = []
+# Enable API tracing
+trace = ["ron", "serde", "wgt/trace", "arrayvec/serde", "naga/serialize"]
+# Enable API replaying
+replay = ["serde", "wgt/replay", "arrayvec/serde", "naga/deserialize"]
+# Enable serializable compute/render passes, and bundle encoders.
+serial-pass = ["serde", "wgt/serde", "arrayvec/serde"]
+
+[dependencies]
+arrayvec = "0.7"
+bitflags = "1.0"
+copyless = "0.1"
+fxhash = "0.2"
+log = "0.4"
+parking_lot = "0.11"
+profiling = { version = "1", default-features = false }
+raw-window-handle = { version = "0.3", optional = true }
+ron = { version = "0.6", optional = true }
+serde = { version = "1.0", features = ["serde_derive"], optional = true }
+smallvec = "1"
+thiserror = "1"
+
+[dependencies.naga]
+git = "https://github.com/gfx-rs/naga"
+rev = "93db57c"
+#version = "0.6"
+features = ["wgsl-in"]
+
+[dependencies.wgt]
+path = "../wgpu-types"
+package = "wgpu-types"
+version = "0.10"
+
+[dependencies.hal]
+path = "../wgpu-hal"
+package = "wgpu-hal"
+version = "0.10.1"
+
+[target.'cfg(all(not(target_arch = "wasm32"), any(target_os = "ios", target_os = "macos")))'.dependencies]
+hal = { path = "../wgpu-hal", package = "wgpu-hal", version = "0.10", features = ["metal"] }
+#Note: could also enable "vulkan" for Vulkan Portability
+
+[target.'cfg(all(not(target_arch = "wasm32"), unix, not(target_os = "ios"), not(target_os = "macos")))'.dependencies]
+hal = { path = "../wgpu-hal", package = "wgpu-hal", version = "0.10", features = ["vulkan", "gles", "renderdoc"] }
+
+[target.'cfg(all(not(target_arch = "wasm32"), windows))'.dependencies]
+hal = { path = "../wgpu-hal", package = "wgpu-hal", version = "0.10", features = ["vulkan", "dx12", "renderdoc"] }
+
+[build-dependencies]
+cfg_aliases = "0.1"

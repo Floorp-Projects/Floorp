@@ -10,8 +10,6 @@
 //
 // Original authors: alexchrichton, bluss
 
-use std::ptr;
-
 // UTF-8 ranges and tags for encoding characters
 const TAG_CONT: u8    = 0b1000_0000;
 const TAG_TWO_B: u8   = 0b1100_0000;
@@ -24,11 +22,6 @@ const MAX_THREE_B: u32 =  0x10000;
 /// Placeholder
 pub struct EncodeUtf8Error;
 
-#[inline]
-unsafe fn write(ptr: *mut u8, index: usize, byte: u8) {
-    ptr::write(ptr.add(index), byte)
-}
-
 /// Encode a char into buf using UTF-8.
 ///
 /// On success, return the byte length of the encoding (1, 2, 3 or 4).<br>
@@ -40,22 +33,22 @@ pub unsafe fn encode_utf8(ch: char, ptr: *mut u8, len: usize) -> Result<usize, E
 {
     let code = ch as u32;
     if code < MAX_ONE_B && len >= 1 {
-        write(ptr, 0, code as u8);
+        ptr.add(0).write(code as u8);
         return Ok(1);
     } else if code < MAX_TWO_B && len >= 2 {
-        write(ptr, 0, (code >> 6 & 0x1F) as u8 | TAG_TWO_B);
-        write(ptr, 1, (code & 0x3F) as u8 | TAG_CONT);
+        ptr.add(0).write((code >> 6 & 0x1F) as u8 | TAG_TWO_B);
+        ptr.add(1).write((code & 0x3F) as u8 | TAG_CONT);
         return Ok(2);
     } else if code < MAX_THREE_B && len >= 3 {
-        write(ptr, 0, (code >> 12 & 0x0F) as u8 | TAG_THREE_B);
-        write(ptr, 1, (code >>  6 & 0x3F) as u8 | TAG_CONT);
-        write(ptr, 2, (code & 0x3F) as u8 | TAG_CONT);
+        ptr.add(0).write((code >> 12 & 0x0F) as u8 | TAG_THREE_B);
+        ptr.add(1).write((code >>  6 & 0x3F) as u8 | TAG_CONT);
+        ptr.add(2).write((code & 0x3F) as u8 | TAG_CONT);
         return Ok(3);
     } else if len >= 4 {
-        write(ptr, 0, (code >> 18 & 0x07) as u8 | TAG_FOUR_B);
-        write(ptr, 1, (code >> 12 & 0x3F) as u8 | TAG_CONT);
-        write(ptr, 2, (code >>  6 & 0x3F) as u8 | TAG_CONT);
-        write(ptr, 3, (code & 0x3F) as u8 | TAG_CONT);
+        ptr.add(0).write((code >> 18 & 0x07) as u8 | TAG_FOUR_B);
+        ptr.add(1).write((code >> 12 & 0x3F) as u8 | TAG_CONT);
+        ptr.add(2).write((code >>  6 & 0x3F) as u8 | TAG_CONT);
+        ptr.add(3).write((code & 0x3F) as u8 | TAG_CONT);
         return Ok(4);
     };
     Err(EncodeUtf8Error)

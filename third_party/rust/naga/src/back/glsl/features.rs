@@ -32,6 +32,8 @@ bitflags::bitflags! {
         const CULL_DISTANCE = 1 << 14;
         // Sample ID
         const SAMPLE_VARIABLES = 1 << 15;
+        /// Arrays with a dynamic length
+        const DYNAMIC_ARRAY_SIZE = 1 << 16;
     }
 }
 
@@ -98,6 +100,7 @@ impl FeaturesManager {
         check_feature!(CLIP_DISTANCE, 130, 300);
         check_feature!(CULL_DISTANCE, 450, 300);
         check_feature!(SAMPLE_VARIABLES, 400, 300);
+        check_feature!(DYNAMIC_ARRAY_SIZE, 430, 310);
 
         // Return an error if there are missing features
         if missing.is_empty() {
@@ -202,8 +205,13 @@ impl<'a, W> Writer<'a, W> {
     /// If the version doesn't support any of the needed [`Features`](Features) a
     /// [`Error::MissingFeatures`](super::Error::MissingFeatures) will be returned
     pub(super) fn collect_required_features(&mut self) -> BackendResult {
+        let ep_info = self.info.get_entry_point(self.entry_point_idx as usize);
+
         if let Some(depth_test) = self.entry_point.early_depth_test {
-            self.features.request(Features::IMAGE_LOAD_STORE);
+            // If IMAGE_LOAD_STORE is supported for this version of GLSL
+            if self.options.version.supports_early_depth_test() {
+                self.features.request(Features::IMAGE_LOAD_STORE);
+            }
 
             if depth_test.conservative.is_some() {
                 self.features.request(Features::CONSERVATIVE_DEPTH);
@@ -217,20 +225,58 @@ impl<'a, W> Writer<'a, W> {
             self.varying_required_features(result.binding.as_ref(), result.ty);
         }
 
-        if let ShaderStage::Compute = self.options.shader_stage {
+        if let ShaderStage::Compute = self.entry_point.stage {
             self.features.request(Features::COMPUTE_SHADER)
         }
 
-        for (_, ty) in self.module.types.iter() {
+        for (ty_handle, ty) in self.module.types.iter() {
             match ty.inner {
                 TypeInner::Scalar { kind, width } => self.scalar_required_features(kind, width),
                 TypeInner::Vector { kind, width, .. } => self.scalar_required_features(kind, width),
                 TypeInner::Matrix { width, .. } => {
                     self.scalar_required_features(ScalarKind::Float, width)
                 }
-                TypeInner::Array { base, .. } => {
+                TypeInner::Array { base, size, .. } => {
                     if let TypeInner::Array { .. } = self.module.types[base].inner {
                         self.features.request(Features::ARRAY_OF_ARRAYS)
+                    }
+
+                    // If the array is dynamically sized
+                    if size == crate::ArraySize::Dynamic {
+                        let mut is_used = false;
+
+                        // Check if this type is used in a global that is needed by the current entrypoint
+                        for (global_handle, global) in self.module.global_variables.iter() {
+                            // Skip unused globals
+                            if ep_info[global_handle].is_empty() {
+                                continue;
+                            }
+
+                            // If this array is the type of a global, then this array is used
+                            if global.ty == ty_handle {
+                                is_used = true;
+                                break;
+                            }
+
+                            // If the type of this global is a struct
+                            if let crate::TypeInner::Struct { ref members, .. } =
+                                self.module.types[global.ty].inner
+                            {
+                                // Check the last element of the struct to see if it's type uses
+                                // this array
+                                if let Some(last) = members.last() {
+                                    if last.ty == ty_handle {
+                                        is_used = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // If this dynamically size array is used, we need dynamic array size support
+                        if is_used {
+                            self.features.request(Features::DYNAMIC_ARRAY_SIZE);
+                        }
                     }
                 }
                 TypeInner::Image {
@@ -245,13 +291,14 @@ impl<'a, W> Writer<'a, W> {
                     }
 
                     match class {
-                        ImageClass::Sampled { multi: true, .. } => {
+                        ImageClass::Sampled { multi: true, .. }
+                        | ImageClass::Depth { multi: true } => {
                             self.features.request(Features::MULTISAMPLED_TEXTURES);
                             if arrayed {
                                 self.features.request(Features::MULTISAMPLED_TEXTURE_ARRAYS);
                             }
                         }
-                        ImageClass::Storage(format) => match format {
+                        ImageClass::Storage { format, .. } => match format {
                             StorageFormat::R8Unorm
                             | StorageFormat::R8Snorm
                             | StorageFormat::R8Uint
@@ -275,17 +322,21 @@ impl<'a, W> Writer<'a, W> {
                             }
                             _ => {}
                         },
-                        _ => {}
+                        ImageClass::Sampled { multi: false, .. }
+                        | ImageClass::Depth { multi: false } => {}
                     }
                 }
                 _ => {}
             }
         }
 
-        for (_, global) in self.module.global_variables.iter() {
+        for (handle, global) in self.module.global_variables.iter() {
+            if ep_info[handle].is_empty() {
+                continue;
+            }
             match global.class {
                 StorageClass::WorkGroup => self.features.request(Features::COMPUTE_SHADER),
-                StorageClass::Storage => self.features.request(Features::BUFFER_STORAGE),
+                StorageClass::Storage { .. } => self.features.request(Features::BUFFER_STORAGE),
                 StorageClass::PushConstant => return Err(Error::PushConstantNotSupported),
                 _ => {}
             }

@@ -5,6 +5,8 @@ use std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 /// the same size and representation as `Handle<T>`.
 type Index = NonZeroU32;
 
+use crate::Span;
+
 /// A strongly typed reference to an arena item.
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
@@ -123,15 +125,14 @@ impl<T> Iterator for Range<T> {
 /// The arena can be indexed using the given handle to obtain
 /// a reference to the stored item.
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
-#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
-#[cfg_attr(
-    any(feature = "serialize", feature = "deserialize"),
-    serde(transparent)
-)]
+#[cfg_attr(feature = "serialize", serde(transparent))]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Arena<T> {
     /// Values of this arena.
     data: Vec<T>,
+    #[cfg(feature = "span")]
+    #[cfg_attr(feature = "serialize", serde(skip))]
+    span_info: Vec<Span>,
 }
 
 impl<T> Default for Arena<T> {
@@ -148,7 +149,11 @@ impl<T: fmt::Debug> fmt::Debug for Arena<T> {
 impl<T> Arena<T> {
     /// Create a new arena with no initial capacity allocated.
     pub fn new() -> Self {
-        Arena { data: Vec::new() }
+        Arena {
+            data: Vec::new(),
+            #[cfg(feature = "span")]
+            span_info: Vec::new(),
+        }
     }
 
     /// Extracts the inner vector.
@@ -187,11 +192,15 @@ impl<T> Arena<T> {
     }
 
     /// Adds a new value to the arena, returning a typed handle.
-    pub fn append(&mut self, value: T) -> Handle<T> {
+    pub fn append(&mut self, value: T, span: Span) -> Handle<T> {
+        #[cfg(not(feature = "span"))]
+        let _ = span;
         let position = self.data.len() + 1;
         let index =
             Index::new(position as u32).expect("Failed to append to Arena. Handle overflows");
         self.data.push(value);
+        #[cfg(feature = "span")]
+        self.span_info.push(span);
         Handle::new(index)
     }
 
@@ -207,30 +216,35 @@ impl<T> Arena<T> {
     /// returns a handle pointing to
     /// an existing element if the check succeeds, or adds a new
     /// element otherwise.
-    pub fn fetch_if_or_append<F: Fn(&T, &T) -> bool>(&mut self, value: T, fun: F) -> Handle<T> {
+    pub fn fetch_if_or_append<F: Fn(&T, &T) -> bool>(
+        &mut self,
+        value: T,
+        span: Span,
+        fun: F,
+    ) -> Handle<T> {
         if let Some(index) = self.data.iter().position(|d| fun(d, &value)) {
             let index = unsafe { Index::new_unchecked((index + 1) as u32) };
             Handle::new(index)
         } else {
-            self.append(value)
+            self.append(value, span)
         }
     }
 
     /// Adds a value with a check for uniqueness, where the check is plain comparison.
-    pub fn fetch_or_append(&mut self, value: T) -> Handle<T>
+    pub fn fetch_or_append(&mut self, value: T, span: Span) -> Handle<T>
     where
         T: PartialEq,
     {
-        self.fetch_if_or_append(value, T::eq)
+        self.fetch_if_or_append(value, span, T::eq)
     }
 
     pub fn try_get(&self, handle: Handle<T>) -> Option<&T> {
-        self.data.get(handle.index.get() as usize - 1)
+        self.data.get(handle.index())
     }
 
     /// Get a mutable reference to an element in the arena.
     pub fn get_mut(&mut self, handle: Handle<T>) -> &mut T {
-        self.data.get_mut(handle.index.get() as usize - 1).unwrap()
+        self.data.get_mut(handle.index()).unwrap()
     }
 
     /// Get the range of handles from a particular number of elements to the end.
@@ -240,12 +254,56 @@ impl<T> Arena<T> {
             marker: PhantomData,
         }
     }
+
+    /// Clears the arena keeping all allocations
+    pub fn clear(&mut self) {
+        self.data.clear()
+    }
+
+    pub fn get_span(&self, handle: Handle<T>) -> &Span {
+        #[cfg(feature = "span")]
+        {
+            return self.span_info.get(handle.index()).unwrap_or(&Span::Unknown);
+        }
+        #[cfg(not(feature = "span"))]
+        {
+            let _ = handle;
+            &Span::Unknown
+        }
+    }
+}
+
+#[cfg(feature = "deserialize")]
+impl<'de, T> serde::Deserialize<'de> for Arena<T>
+where
+    T: serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = Vec::deserialize(deserializer)?;
+        #[cfg(feature = "span")]
+        let span_info = std::iter::repeat(Span::Unknown).take(data.len()).collect();
+
+        Ok(Self {
+            data,
+            #[cfg(feature = "span")]
+            span_info,
+        })
+    }
 }
 
 impl<T> ops::Index<Handle<T>> for Arena<T> {
     type Output = T;
     fn index(&self, handle: Handle<T>) -> &T {
         &self.data[handle.index()]
+    }
+}
+
+impl<T> ops::IndexMut<Handle<T>> for Arena<T> {
+    fn index_mut(&mut self, handle: Handle<T>) -> &mut T {
+        &mut self.data[handle.index()]
     }
 }
 
@@ -263,8 +321,8 @@ mod tests {
     #[test]
     fn append_non_unique() {
         let mut arena: Arena<u8> = Arena::new();
-        let t1 = arena.append(0);
-        let t2 = arena.append(0);
+        let t1 = arena.append(0, Default::default());
+        let t2 = arena.append(0, Default::default());
         assert!(t1 != t2);
         assert!(arena[t1] == arena[t2]);
     }
@@ -272,8 +330,8 @@ mod tests {
     #[test]
     fn append_unique() {
         let mut arena: Arena<u8> = Arena::new();
-        let t1 = arena.append(0);
-        let t2 = arena.append(1);
+        let t1 = arena.append(0, Default::default());
+        let t2 = arena.append(1, Default::default());
         assert!(t1 != t2);
         assert!(arena[t1] != arena[t2]);
     }
@@ -281,8 +339,8 @@ mod tests {
     #[test]
     fn fetch_or_append_non_unique() {
         let mut arena: Arena<u8> = Arena::new();
-        let t1 = arena.fetch_or_append(0);
-        let t2 = arena.fetch_or_append(0);
+        let t1 = arena.fetch_or_append(0, Default::default());
+        let t2 = arena.fetch_or_append(0, Default::default());
         assert!(t1 == t2);
         assert!(arena[t1] == arena[t2])
     }
@@ -290,8 +348,8 @@ mod tests {
     #[test]
     fn fetch_or_append_unique() {
         let mut arena: Arena<u8> = Arena::new();
-        let t1 = arena.fetch_or_append(0);
-        let t2 = arena.fetch_or_append(1);
+        let t1 = arena.fetch_or_append(0, Default::default());
+        let t2 = arena.fetch_or_append(1, Default::default());
         assert!(t1 != t2);
         assert!(arena[t1] != arena[t2]);
     }

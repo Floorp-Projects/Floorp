@@ -58,6 +58,8 @@ bitflags::bitflags! {
         const PUSH_CONSTANT = 0x1;
         /// Float values with width = 8.
         const FLOAT64 = 0x2;
+        /// Support for `Builtin:PrimitiveIndex`.
+        const PRIMITIVE_INDEX = 0x4;
     }
 }
 
@@ -165,6 +167,7 @@ impl crate::TypeInner {
                 size: crate::ArraySize::Constant(_),
                 ..
             }
+            | Self::Atomic { .. }
             | Self::Pointer { .. }
             | Self::ValuePointer { .. }
             | Self::Struct { .. } => true,
@@ -172,6 +175,7 @@ impl crate::TypeInner {
         }
     }
 
+    /// Return the `ImageDimension` for which `self` is an appropriate coordinate.
     fn image_storage_coordinates(&self) -> Option<crate::ImageDimension> {
         match *self {
             Self::Scalar {

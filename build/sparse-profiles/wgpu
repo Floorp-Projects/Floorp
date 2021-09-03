@@ -1,4 +1,0 @@
-%include build/sparse-profiles/mach
-
-[include]
-path:gfx/wgpu/

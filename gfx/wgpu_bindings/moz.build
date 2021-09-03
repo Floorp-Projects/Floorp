@@ -11,7 +11,14 @@ EXPORTS.mozilla.webgpu.ffi += [
 UNIFIED_SOURCES += []
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
-    CbindgenHeader("wgpu_ffi_generated.h", inputs=["/gfx/wgpu_bindings", "/gfx/wgpu"])
+    CbindgenHeader(
+        "wgpu_ffi_generated.h",
+        inputs=[
+            "/gfx/wgpu_bindings",
+            "/third_party/rust/wgpu-core",
+            "/third_party/rust/wgpu-types",
+        ],
+    )
 
     EXPORTS.mozilla.webgpu.ffi += [
         "!wgpu_ffi_generated.h",

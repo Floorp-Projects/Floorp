@@ -47,9 +47,9 @@ exclude = [
 
 [parse]
 parse_deps = true
-include = ["wgpu-core", "wgpu-types"]
+include = ["wgpu-core", "wgpu-types", "wgpu-hal"]
 
-extra_bindings = ["wgpu-core", "wgpu-types"]
+extra_bindings = ["wgpu-core", "wgpu-types", "wgpu-hal"]
 
 [fn]
 prefix = "WGPU_INLINE"

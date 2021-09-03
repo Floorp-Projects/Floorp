@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gpu-alloc"
-version = "0.4.7"
+version = "0.5.0"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 description = "Implementation agnostic memory allocator for Vulkan like APIs"
 homepage = "https://github.com/zakarumych/gpu-alloc"
@@ -43,6 +43,5 @@ optional = true
 default-features = false
 
 [features]
-default = ["std", "freelist"]
-freelist = []
+default = ["std"]
 std = []

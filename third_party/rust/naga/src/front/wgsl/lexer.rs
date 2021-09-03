@@ -197,8 +197,12 @@ impl<'a> Lexer<'a> {
         (token, rest)
     }
 
-    fn current_byte_offset(&self) -> usize {
+    pub(super) fn current_byte_offset(&self) -> usize {
         self.source.len() - self.input.len()
+    }
+
+    pub(super) fn span_from(&self, offset: usize) -> Span {
+        offset..self.current_byte_offset()
     }
 
     #[must_use]
@@ -347,12 +351,26 @@ impl<'a> Lexer<'a> {
         Ok(pair)
     }
 
-    pub(super) fn next_format_generic(&mut self) -> Result<crate::StorageFormat, Error<'a>> {
+    // TODO relocate storage texture specifics
+    pub(super) fn next_format_generic(
+        &mut self,
+    ) -> Result<(crate::StorageFormat, crate::StorageAccess), Error<'a>> {
         self.expect(Token::Paren('<'))?;
         let (ident, ident_span) = self.next_ident_with_span()?;
         let format = conv::map_storage_format(ident, ident_span)?;
+        let access = if self.skip(Token::Separator(',')) {
+            let (raw, span) = self.next_ident_with_span()?;
+            match raw {
+                "read" => crate::StorageAccess::LOAD,
+                "write" => crate::StorageAccess::STORE,
+                "read_write" => crate::StorageAccess::all(),
+                _ => return Err(Error::UnknownAccess(span)),
+            }
+        } else {
+            crate::StorageAccess::LOAD
+        };
         self.expect(Token::Paren('>'))?;
-        Ok(format)
+        Ok((format, access))
     }
 
     pub(super) fn open_arguments(&mut self) -> Result<(), Error<'a>> {
@@ -455,5 +473,23 @@ fn test_variable_decl() {
             Token::Paren('>'),
             Token::Separator(';'),
         ],
-    )
+    );
+    sub_test(
+        "var<storage,read_write> buffer: array<u32>;",
+        &[
+            Token::Word("var"),
+            Token::Paren('<'),
+            Token::Word("storage"),
+            Token::Separator(','),
+            Token::Word("read_write"),
+            Token::Paren('>'),
+            Token::Word("buffer"),
+            Token::Separator(':'),
+            Token::Word("array"),
+            Token::Paren('<'),
+            Token::Word("u32"),
+            Token::Paren('>'),
+            Token::Separator(';'),
+        ],
+    );
 }

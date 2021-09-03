@@ -113,18 +113,33 @@ struct DescriptorBucket<P> {
 }
 
 impl<P> Drop for DescriptorBucket<P> {
+    #[cfg(feature = "tracing")]
     fn drop(&mut self) {
         #[cfg(feature = "std")]
-        if !std::thread::panicking() {
-            assert_eq!(
-                self.total, 0,
-                "Allocator dropped before all sets were deallocated"
-            );
+        {
+            if std::thread::panicking() {
+                return;
+            }
+        }
+        if self.total > 0 {
+            tracing::error!("Descriptor sets were not deallocated");
+        }
+    }
 
-            assert!(
-                self.pools.is_empty(),
-                "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
-            );
+    #[cfg(all(not(feature = "tracing"), feature = "std"))]
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            return;
+        }
+        if self.total > 0 {
+            eprintln!("Descriptor sets were not deallocated")
+        }
+    }
+
+    #[cfg(all(not(feature = "tracing"), not(feature = "std")))]
+    fn drop(&mut self) {
+        if self.total > 0 {
+            panic!("Descriptor sets were not deallocated")
         }
     }
 }
@@ -162,7 +177,7 @@ impl<P> DescriptorBucket<P> {
         max_sets = (u32::MAX / self.size.inline_uniform_block_bytes.max(1)).min(max_sets);
         max_sets = (u32::MAX / self.size.inline_uniform_block_bindings.max(1)).min(max_sets);
 
-        let size = DescriptorTotalCount {
+        let mut pool_size = DescriptorTotalCount {
             sampler: self.size.sampler * max_sets,
             combined_image_sampler: self.size.combined_image_sampler * max_sets,
             sampled_image: self.size.sampled_image * max_sets,
@@ -179,7 +194,11 @@ impl<P> DescriptorBucket<P> {
             inline_uniform_block_bindings: self.size.inline_uniform_block_bindings * max_sets,
         };
 
-        (size, max_sets)
+        if pool_size == Default::default() {
+            pool_size.sampler = 1;
+        }
+
+        (pool_size, max_sets)
     }
 
     unsafe fn allocate<L, S>(
@@ -413,9 +432,9 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// one `DescriptorAllocator` instance.
     /// * `flags` must match flags that were used to create the layout.
     /// * `layout_descriptor_count` must match descriptor numbers in the layout.
-    pub unsafe fn allocate<L: Debug>(
+    pub unsafe fn allocate<L, D>(
         &mut self,
-        device: &impl DescriptorDevice<L, P, S>,
+        device: &D,
         layout: &L,
         flags: DescriptorSetLayoutCreateFlags,
         layout_descriptor_count: &DescriptorTotalCount,
@@ -423,6 +442,8 @@ impl<P, S> DescriptorAllocator<P, S> {
     ) -> Result<Vec<DescriptorSet<S>>, AllocationError>
     where
         S: Debug,
+        L: Debug,
+        D: DescriptorDevice<L, P, S>,
     {
         if count == 0 {
             return Ok(Vec::new());
@@ -479,11 +500,11 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// * None of descriptor sets can be referenced in any pending command buffers.
     /// * All command buffers where at least one of descriptor sets referenced
     /// move to invalid state.
-    pub unsafe fn free<L>(
-        &mut self,
-        device: &impl DescriptorDevice<L, P, S>,
-        sets: impl IntoIterator<Item = DescriptorSet<S>>,
-    ) {
+    pub unsafe fn free<L, D, I>(&mut self, device: &D, sets: I)
+    where
+        D: DescriptorDevice<L, P, S>,
+        I: IntoIterator<Item = DescriptorSet<S>>,
+    {
         debug_assert!(self.raw_sets_cache.is_empty());
 
         let mut last_key = (EMPTY_COUNT, false);

@@ -4,7 +4,7 @@
 
 use crate::{
     cow_label, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction, DropAction,
-    ImplicitLayout, QueueWriteAction, RawString, ShaderModuleSource, TextureAction,
+    ImplicitLayout, QueueWriteAction, RawString, TextureAction,
 };
 
 use wgc::{hub::IdentityManager, id};
@@ -68,7 +68,7 @@ pub struct ComputePipelineDescriptor {
 #[repr(C)]
 pub struct VertexBufferLayout {
     array_stride: wgt::BufferAddress,
-    step_mode: wgt::InputStepMode,
+    step_mode: wgt::VertexStepMode,
     attributes: *const wgt::VertexAttribute,
     attributes_length: usize,
 }
@@ -101,7 +101,7 @@ impl VertexState {
 pub struct ColorTargetState<'a> {
     format: wgt::TextureFormat,
     blend: Option<&'a wgt::BlendState>,
-    write_mask: wgt::ColorWrite,
+    write_mask: wgt::ColorWrites,
 }
 
 #[repr(C)]
@@ -186,7 +186,7 @@ pub enum RawBindingType {
 #[repr(C)]
 pub struct BindGroupLayoutEntry<'a> {
     binding: u32,
-    visibility: wgt::ShaderStage,
+    visibility: wgt::ShaderStages,
     ty: RawBindingType,
     has_dynamic_offset: bool,
     min_binding_size: Option<wgt::BufferSize>,
@@ -288,7 +288,7 @@ impl ImplicitLayout<'_> {
         ImplicitLayout {
             pipeline: identities.pipeline_layouts.alloc(backend),
             bind_groups: Cow::Owned(
-                (0..wgc::MAX_BIND_GROUPS)
+                (0..8) // hal::MAX_BIND_GROUPS
                     .map(|_| identities.bind_group_layouts.alloc(backend))
                     .collect(),
             ),
@@ -622,7 +622,13 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     let descriptor = wgc::command::RenderBundleEncoderDescriptor {
         label: cow_label(&desc.label),
         color_formats: Cow::Borrowed(make_slice(desc.color_formats, desc.color_formats_length)),
-        depth_stencil_format: desc.depth_stencil_format.cloned(),
+        depth_stencil: desc
+            .depth_stencil_format
+            .map(|&format| wgt::RenderBundleDepthStencil {
+                format,
+                depth_read_only: false, //TODO: add to `RenderBundleEncoderDescriptor`
+                stencil_read_only: false,
+            }),
         sample_count: desc.sample_count,
     };
     match wgc::command::RenderBundleEncoder::new(&descriptor, device_id, None) {
@@ -907,19 +913,12 @@ pub unsafe extern "C" fn wgpu_client_create_shader_module(
         .shader_modules
         .alloc(backend);
 
-    let source = match cow_label(&desc.wgsl_chars) {
-        Some(code) => ShaderModuleSource::Wgsl(code),
-        None => ShaderModuleSource::SpirV(Cow::Borrowed(make_slice(
-            desc.spirv_words,
-            desc.spirv_words_length,
-        ))),
-    };
+    let code = cow_label(&desc.wgsl_chars).unwrap_or_default();
     let desc = wgc::pipeline::ShaderModuleDescriptor {
         label: cow_label(&desc.label),
-        flags: wgt::ShaderFlags::VALIDATION, // careful here!
     };
 
-    let action = DeviceAction::CreateShaderModule(id, desc, source);
+    let action = DeviceAction::CreateShaderModule(id, desc, code);
     *bb = make_byte_buf(&action);
     id
 }

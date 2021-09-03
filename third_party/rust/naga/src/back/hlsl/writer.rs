@@ -1,104 +1,126 @@
-//TODO: temp
-#![allow(dead_code)]
-use super::{Error, Options, ShaderModel};
-use crate::{
-    back::{hlsl::keywords::RESERVED, vector_size_str},
-    proc::{EntryPointIndex, NameKey, Namer, TypeResolution},
-    valid::{FunctionInfo, ModuleInfo},
-    Arena, ArraySize, BuiltIn, Bytes, Constant, ConstantInner, Expression, FastHashMap, Function,
-    GlobalVariable, Handle, ImageDimension, LocalVariable, Module, ScalarKind, ScalarValue,
-    ShaderStage, Statement, StructMember, Type, TypeInner,
+use super::{
+    help::{MipLevelCoordinate, WrappedArrayLength, WrappedImageQuery},
+    storage::StoreValue,
+    BackendResult, Error, Options,
 };
-use std::fmt::Write;
+use crate::{
+    back,
+    proc::{self, NameKey},
+    valid, Handle, Module, ShaderStage, TypeInner,
+};
+use std::{fmt, mem};
 
-const INDENT: &str = "    ";
-const COMPONENTS: &[char] = &['x', 'y', 'z', 'w'];
 const LOCATION_SEMANTIC: &str = "LOC";
-const BAKE_PREFIX: &str = "_e";
+const SPECIAL_CBUF_TYPE: &str = "NagaConstants";
+const SPECIAL_CBUF_VAR: &str = "_NagaConstants";
+const SPECIAL_BASE_VERTEX: &str = "base_vertex";
+const SPECIAL_BASE_INSTANCE: &str = "base_instance";
+const SPECIAL_OTHER: &str = "other";
 
-/// Shorthand result used internally by the backend
-type BackendResult = Result<(), Error>;
-
-/// Stores the current function type (either a regular function or an entry point)
-///
-/// Also stores data needed to identify it (handle for a regular function or index for an entry point)
-// TODO: copy-paste from glsl-out, wgsl-out
-enum FunctionType {
-    /// A regular function and it's handle
-    Function(Handle<Function>),
-    /// A entry point and it's index
-    EntryPoint(EntryPointIndex),
+struct EpStructMember {
+    name: String,
+    ty: Handle<crate::Type>,
+    // technically, this should always be `Some`
+    binding: Option<crate::Binding>,
+    index: u32,
 }
 
-/// Helper structure that stores data needed when writing the function
-// TODO: copy-paste from glsl-out, wgsl-out
-struct FunctionCtx<'a> {
-    /// The current function type being written
-    ty: FunctionType,
-    /// Analysis about the function
-    info: &'a FunctionInfo,
-    /// The expression arena of the current function being written
-    expressions: &'a Arena<Expression>,
-    /// Map of expressions that have associated variable names
-    named_expressions: &'a crate::NamedExpressions,
+/// Structure contains information required for generating
+/// wrapped structure of all entry points arguments
+struct EntryPointBinding {
+    /// Name of the fake EP argument that contains the struct
+    /// with all the flattened input data.
+    arg_name: String,
+    /// Generated structure name
+    ty_name: String,
+    /// Members of generated structure
+    members: Vec<EpStructMember>,
 }
 
-impl<'a> FunctionCtx<'_> {
-    /// Helper method that generates a [`NameKey`](crate::proc::NameKey) for a local in the current function
-    fn name_key(&self, local: Handle<LocalVariable>) -> NameKey {
-        match self.ty {
-            FunctionType::Function(handle) => NameKey::FunctionLocal(handle, local),
-            FunctionType::EntryPoint(idx) => NameKey::EntryPointLocal(idx, local),
+pub(super) struct EntryPointInterface {
+    /// If `Some`, the input of an entry point is gathered in a special
+    /// struct with members sorted by binding.
+    /// The `EntryPointBinding::members` array is sorted by index,
+    /// so that we can walk it in `write_ep_arguments_initialization`.
+    input: Option<EntryPointBinding>,
+    /// If `Some`, the output of an entry point is flattened.
+    /// The `EntryPointBinding::members` array is sorted by binding,
+    /// So that we can walk it in `Statement::Return` handler.
+    output: Option<EntryPointBinding>,
+}
+
+#[derive(Clone, Eq, PartialEq, PartialOrd, Ord)]
+enum InterfaceKey {
+    Location(u32),
+    BuiltIn(crate::BuiltIn),
+    Other,
+}
+
+impl InterfaceKey {
+    fn new(binding: Option<&crate::Binding>) -> Self {
+        match binding {
+            Some(&crate::Binding::Location { location, .. }) => Self::Location(location),
+            Some(&crate::Binding::BuiltIn(bi)) => Self::BuiltIn(bi),
+            None => Self::Other,
         }
     }
 }
 
-struct EntryPointBinding {
-    stage: ShaderStage,
-    name: String,
-    members: Vec<EpStructMember>,
+#[derive(Copy, Clone, PartialEq)]
+enum Io {
+    Input,
+    Output,
 }
 
-struct EpStructMember {
-    pub name: String,
-    pub ty: Handle<Type>,
-    pub binding: Option<crate::Binding>,
-}
-
-pub struct Writer<'a, W> {
-    out: W,
-    names: FastHashMap<NameKey, String>,
-    namer: Namer,
-    options: &'a Options,
-    ep_inputs: Vec<Option<EntryPointBinding>>,
-    named_expressions: crate::NamedExpressions,
-}
-
-impl<'a, W: Write> Writer<'a, W> {
+impl<'a, W: fmt::Write> super::Writer<'a, W> {
     pub fn new(out: W, options: &'a Options) -> Self {
         Self {
             out,
-            names: FastHashMap::default(),
-            namer: Namer::default(),
+            names: crate::FastHashMap::default(),
+            namer: proc::Namer::default(),
             options,
-            ep_inputs: Vec::with_capacity(3),
+            entry_point_io: Vec::new(),
             named_expressions: crate::NamedExpressions::default(),
+            wrapped_array_lengths: crate::FastHashSet::default(),
+            wrapped_image_queries: crate::FastHashSet::default(),
+            temp_access_chain: Vec::new(),
         }
     }
 
     fn reset(&mut self, module: &Module) {
         self.names.clear();
-        self.namer.reset(module, RESERVED, &[], &mut self.names);
+        self.namer
+            .reset(module, super::keywords::RESERVED, &[], &mut self.names);
+        self.entry_point_io.clear();
         self.named_expressions.clear();
-        self.ep_inputs.clear();
+        self.wrapped_array_lengths.clear();
+        self.wrapped_image_queries.clear();
     }
 
-    pub fn write(&mut self, module: &Module, info: &ModuleInfo) -> BackendResult {
-        if self.options.shader_model < ShaderModel::default() {
-            return Err(Error::UnsupportedShaderModel(self.options.shader_model));
-        }
-
+    pub fn write(
+        &mut self,
+        module: &Module,
+        module_info: &valid::ModuleInfo,
+    ) -> Result<super::ReflectionInfo, Error> {
         self.reset(module);
+
+        // Write special constants, if needed
+        if let Some(ref bt) = self.options.special_constants_binding {
+            writeln!(self.out, "struct {} {{", SPECIAL_CBUF_TYPE)?;
+            writeln!(self.out, "{}int {};", back::INDENT, SPECIAL_BASE_VERTEX)?;
+            writeln!(self.out, "{}int {};", back::INDENT, SPECIAL_BASE_INSTANCE)?;
+            writeln!(self.out, "{}uint {};", back::INDENT, SPECIAL_OTHER)?;
+            writeln!(self.out, "}};")?;
+            write!(
+                self.out,
+                "ConstantBuffer<{}> {}: register(b{}",
+                SPECIAL_CBUF_TYPE, SPECIAL_CBUF_VAR, bt.register
+            )?;
+            if bt.space != 0 {
+                write!(self.out, ", space{}", bt.space)?;
+            }
+            writeln!(self.out, ");")?;
+        }
 
         // Write all constants
         // For example, input wgsl shader:
@@ -120,6 +142,16 @@ impl<'a, W: Write> Writer<'a, W> {
             }
         }
 
+        // Extra newline for readability
+        writeln!(self.out)?;
+
+        // Save all entry point output types
+        let ep_results = module
+            .entry_points
+            .iter()
+            .map(|ep| (ep.stage, ep.function.result.clone()))
+            .collect::<Vec<(ShaderStage, Option<crate::FunctionResult>)>>();
+
         // Write all structs
         for (handle, ty) in module.types.iter() {
             if let TypeInner::Struct {
@@ -128,7 +160,32 @@ impl<'a, W: Write> Writer<'a, W> {
                 ..
             } = ty.inner
             {
-                self.write_struct(module, handle, top_level, members)?;
+                if let Some(member) = members.last() {
+                    if let TypeInner::Array {
+                        size: crate::ArraySize::Dynamic,
+                        ..
+                    } = module.types[member.ty].inner
+                    {
+                        // unsized arrays can only be in storage buffers, for which we use `ByteAddressBuffer` anyway.
+                        continue;
+                    }
+                }
+
+                let ep_result = ep_results.iter().find(|e| {
+                    if let Some(ref result) = e.1 {
+                        result.ty == handle
+                    } else {
+                        false
+                    }
+                });
+
+                self.write_struct(
+                    module,
+                    handle,
+                    top_level,
+                    members,
+                    ep_result.map(|r| (r.0, Io::Output)),
+                )?;
                 writeln!(self.out)?;
             }
         }
@@ -144,37 +201,93 @@ impl<'a, W: Write> Writer<'a, W> {
         }
 
         // Write all entry points wrapped structs
-        for (index, ep) in module.entry_points.iter().enumerate() {
-            self.write_ep_input_struct(module, &ep.function, ep.stage, index)?;
+        for ep in module.entry_points.iter() {
+            let ep_io = self.write_ep_interface(module, &ep.function, ep.stage, &ep.name)?;
+            self.entry_point_io.push(ep_io);
         }
 
         // Write all regular functions
         for (handle, function) in module.functions.iter() {
-            let info = &info[handle];
-            let ctx = FunctionCtx {
-                ty: FunctionType::Function(handle),
+            let info = &module_info[handle];
+
+            // Check if all of the globals are accessible
+            if !self.options.fake_missing_bindings {
+                if let Some((var_handle, _)) =
+                    module
+                        .global_variables
+                        .iter()
+                        .find(|&(var_handle, var)| match var.binding {
+                            Some(ref binding) if !info[var_handle].is_empty() => {
+                                self.options.resolve_resource_binding(binding).is_err()
+                            }
+                            _ => false,
+                        })
+                {
+                    log::info!(
+                        "Skipping function {:?} (name {:?}) because global {:?} is inaccessible",
+                        handle,
+                        function.name,
+                        var_handle
+                    );
+                    continue;
+                }
+            }
+
+            let ctx = back::FunctionCtx {
+                ty: back::FunctionType::Function(handle),
                 info,
                 expressions: &function.expressions,
                 named_expressions: &function.named_expressions,
             };
             let name = self.names[&NameKey::Function(handle)].clone();
 
+            // Write wrapped function for `Expression::ImageQuery` and `Expressions::ArrayLength`
+            // before writing all statements and expressions.
+            self.write_wrapped_functions(module, &ctx)?;
+
             self.write_function(module, name.as_str(), function, &ctx)?;
 
             writeln!(self.out)?;
         }
 
+        let mut entry_point_names = Vec::with_capacity(module.entry_points.len());
+
         // Write all entry points
         for (index, ep) in module.entry_points.iter().enumerate() {
-            let ctx = FunctionCtx {
-                ty: FunctionType::EntryPoint(index as u16),
-                info: info.get_entry_point(index),
+            let info = module_info.get_entry_point(index);
+
+            if !self.options.fake_missing_bindings {
+                let mut ep_error = None;
+                for (var_handle, var) in module.global_variables.iter() {
+                    match var.binding {
+                        Some(ref binding) if !info[var_handle].is_empty() => {
+                            if let Err(err) = self.options.resolve_resource_binding(binding) {
+                                ep_error = Some(err);
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if let Some(err) = ep_error {
+                    entry_point_names.push(Err(err));
+                    continue;
+                }
+            }
+
+            let ctx = back::FunctionCtx {
+                ty: back::FunctionType::EntryPoint(index as u16),
+                info,
                 expressions: &ep.function.expressions,
                 named_expressions: &ep.function.named_expressions,
             };
 
+            // Write wrapped function for `Expression::ImageQuery` and `Expressions::ArrayLength`
+            // before writing all statements and expressions.
+            self.write_wrapped_functions(module, &ctx)?;
+
             if ep.stage == ShaderStage::Compute {
-                // HLSL is calling workgroup size, num threads
+                // HLSL is calling workgroup size "num threads"
                 let num_threads = ep.workgroup_size;
                 writeln!(
                     self.out,
@@ -183,126 +296,342 @@ impl<'a, W: Write> Writer<'a, W> {
                 )?;
             }
 
-            let name = match ep.stage {
-                ShaderStage::Vertex => &self.options.vertex_entry_point_name,
-                ShaderStage::Fragment => &self.options.fragment_entry_point_name,
-                ShaderStage::Compute => &self.options.compute_entry_point_name,
-            };
-
-            self.write_function(module, name, &ep.function, &ctx)?;
+            let name = self.names[&NameKey::EntryPoint(index as u16)].clone();
+            self.write_function(module, &name, &ep.function, &ctx)?;
 
             if index < module.entry_points.len() - 1 {
                 writeln!(self.out)?;
             }
+
+            entry_point_names.push(Ok(name));
         }
 
-        Ok(())
+        Ok(super::ReflectionInfo { entry_point_names })
     }
 
-    fn write_binding(&mut self, binding: &crate::Binding) -> BackendResult {
+    //TODO: we could force fragment outputs to always go through `entry_point_io.output` path
+    // if they are struct, so that the `stage` argument here could be omitted.
+    fn write_semantic(
+        &mut self,
+        binding: &crate::Binding,
+        stage: Option<(ShaderStage, Io)>,
+    ) -> BackendResult {
         match *binding {
             crate::Binding::BuiltIn(builtin) => {
-                write!(self.out, " : {}", builtin_str(builtin))?;
+                let builtin_str = builtin.to_hlsl_str()?;
+                write!(self.out, " : {}", builtin_str)?;
             }
             crate::Binding::Location { location, .. } => {
-                write!(self.out, " : {}{}", LOCATION_SEMANTIC, location)?;
+                if stage == Some((crate::ShaderStage::Fragment, Io::Output)) {
+                    write!(self.out, " : SV_Target{}", location)?;
+                } else {
+                    write!(self.out, " : {}{}", LOCATION_SEMANTIC, location)?;
+                }
             }
         }
 
         Ok(())
     }
 
+    fn write_interface_struct(
+        &mut self,
+        module: &Module,
+        shader_stage: (ShaderStage, Io),
+        struct_name: String,
+        mut members: Vec<EpStructMember>,
+    ) -> Result<EntryPointBinding, Error> {
+        // Sort the members so that first come the user-defined varyings
+        // in ascending locations, and then built-ins. This allows VS and FS
+        // interfaces to match with regards to order.
+        members.sort_by_key(|m| InterfaceKey::new(m.binding.as_ref()));
+
+        write!(self.out, "struct {}", struct_name)?;
+        writeln!(self.out, " {{")?;
+        for m in members.iter() {
+            write!(self.out, "{}", back::INDENT)?;
+            self.write_type(module, m.ty)?;
+            write!(self.out, " {}", &m.name)?;
+            if let Some(ref binding) = m.binding {
+                self.write_semantic(binding, Some(shader_stage))?;
+            }
+            writeln!(self.out, ";")?;
+        }
+        writeln!(self.out, "}};")?;
+        writeln!(self.out)?;
+
+        match shader_stage.1 {
+            Io::Input => {
+                // bring back the original order
+                members.sort_by_key(|m| m.index);
+            }
+            Io::Output => {
+                // keep it sorted by binding
+            }
+        }
+
+        Ok(EntryPointBinding {
+            arg_name: self.namer.call_unique(struct_name.to_lowercase().as_str()),
+            ty_name: struct_name,
+            members,
+        })
+    }
+
+    /// Flatten all entry point arguments into a single struct.
+    /// This is needed since we need to re-order them: first placing user locations,
+    /// then built-ins.
     fn write_ep_input_struct(
         &mut self,
         module: &Module,
-        func: &Function,
+        func: &crate::Function,
         stage: ShaderStage,
-        index: usize,
-    ) -> BackendResult {
-        if !func.arguments.is_empty() {
-            let struct_name = self.namer.call_unique(match stage {
-                ShaderStage::Vertex => "VertexInput",
-                ShaderStage::Fragment => "FragmentInput",
-                ShaderStage::Compute => "ComputeInput",
-            });
+        entry_point_name: &str,
+    ) -> Result<EntryPointBinding, Error> {
+        let struct_name = format!("{:?}Input_{}", stage, entry_point_name);
 
-            let mut members = Vec::with_capacity(func.arguments.len());
-
-            write!(self.out, "struct {}", &struct_name)?;
-            writeln!(self.out, " {{")?;
-
-            for arg in func.arguments.iter() {
-                let member_name = if let Some(ref name) = arg.name {
-                    name
-                } else {
-                    "member"
-                };
-                let member = EpStructMember {
-                    name: self.namer.call_unique(member_name),
-                    ty: arg.ty,
-                    binding: arg.binding.clone(),
-                };
-
-                write!(self.out, "{}", INDENT)?;
-                self.write_type(module, member.ty)?;
-                write!(self.out, " {}", &member.name)?;
-                if let Some(ref binding) = member.binding {
-                    self.write_binding(binding)?;
+        let mut fake_members = Vec::new();
+        for arg in func.arguments.iter() {
+            match module.types[arg.ty].inner {
+                TypeInner::Struct { ref members, .. } => {
+                    for member in members.iter() {
+                        let member_name = if let Some(ref name) = member.name {
+                            name
+                        } else {
+                            "member"
+                        };
+                        let index = fake_members.len() as u32;
+                        fake_members.push(EpStructMember {
+                            name: self.namer.call_unique(member_name),
+                            ty: member.ty,
+                            binding: member.binding.clone(),
+                            index,
+                        });
+                    }
                 }
-                write!(self.out, ";")?;
-                writeln!(self.out)?;
-
-                members.push(member);
+                _ => {
+                    let member_name = if let Some(ref name) = arg.name {
+                        name
+                    } else {
+                        "member"
+                    };
+                    let index = fake_members.len() as u32;
+                    fake_members.push(EpStructMember {
+                        name: self.namer.call_unique(member_name),
+                        ty: arg.ty,
+                        binding: arg.binding.clone(),
+                        index,
+                    });
+                }
             }
-
-            writeln!(self.out, "}};")?;
-            writeln!(self.out)?;
-
-            let ep_input = EntryPointBinding {
-                stage,
-                name: struct_name,
-                members,
-            };
-
-            self.ep_inputs.insert(index, Some(ep_input));
         }
 
+        self.write_interface_struct(module, (stage, Io::Input), struct_name, fake_members)
+    }
+
+    /// Flatten all entry point results into a single struct.
+    /// This is needed since we need to re-order them: first placing user locations,
+    /// then built-ins.
+    fn write_ep_output_struct(
+        &mut self,
+        module: &Module,
+        result: &crate::FunctionResult,
+        stage: ShaderStage,
+        entry_point_name: &str,
+    ) -> Result<EntryPointBinding, Error> {
+        let struct_name = format!("{:?}Output_{}", stage, entry_point_name);
+
+        let mut fake_members = Vec::new();
+        let empty = [];
+        let members = match module.types[result.ty].inner {
+            TypeInner::Struct { ref members, .. } => members,
+            ref other => {
+                log::error!("Unexpected {:?} output type without a binding", other);
+                &empty[..]
+            }
+        };
+
+        for member in members.iter() {
+            let member_name = if let Some(ref name) = member.name {
+                name
+            } else {
+                "member"
+            };
+            let index = fake_members.len() as u32;
+            fake_members.push(EpStructMember {
+                name: self.namer.call_unique(member_name),
+                ty: member.ty,
+                binding: member.binding.clone(),
+                index,
+            });
+        }
+
+        self.write_interface_struct(module, (stage, Io::Output), struct_name, fake_members)
+    }
+
+    /// Writes special interface structures for an entry point. The special structures have
+    /// all the fields flattened into them and sorted by binding. They are only needed for
+    /// VS outputs and FS inputs, so that these interfaces match.
+    fn write_ep_interface(
+        &mut self,
+        module: &Module,
+        func: &crate::Function,
+        stage: ShaderStage,
+        ep_name: &str,
+    ) -> Result<EntryPointInterface, Error> {
+        Ok(EntryPointInterface {
+            input: if !func.arguments.is_empty() && stage == ShaderStage::Fragment {
+                Some(self.write_ep_input_struct(module, func, stage, ep_name)?)
+            } else {
+                None
+            },
+            output: match func.result {
+                Some(ref fr) if fr.binding.is_none() && stage == ShaderStage::Vertex => {
+                    Some(self.write_ep_output_struct(module, fr, stage, ep_name)?)
+                }
+                _ => None,
+            },
+        })
+    }
+
+    /// Write an entry point preface that initializes the arguments as specified in IR.
+    fn write_ep_arguments_initialization(
+        &mut self,
+        module: &Module,
+        func: &crate::Function,
+        ep_index: u16,
+    ) -> BackendResult {
+        let ep_input = match self.entry_point_io[ep_index as usize].input.take() {
+            Some(ep_input) => ep_input,
+            None => return Ok(()),
+        };
+        let mut fake_iter = ep_input.members.iter();
+        for (arg_index, arg) in func.arguments.iter().enumerate() {
+            write!(self.out, "{}", back::INDENT)?;
+            self.write_type(module, arg.ty)?;
+            let arg_name = &self.names[&NameKey::EntryPointArgument(ep_index, arg_index as u32)];
+            write!(self.out, " {}", arg_name)?;
+            match module.types[arg.ty].inner {
+                TypeInner::Array { size, .. } => {
+                    self.write_array_size(module, size)?;
+                    let fake_member = fake_iter.next().unwrap();
+                    writeln!(self.out, " = {}.{};", ep_input.arg_name, fake_member.name)?;
+                }
+                TypeInner::Struct { ref members, .. } => {
+                    write!(self.out, " = {{ ")?;
+                    for index in 0..members.len() {
+                        if index != 0 {
+                            write!(self.out, ", ")?;
+                        }
+                        let fake_member = fake_iter.next().unwrap();
+                        write!(self.out, "{}.{}", ep_input.arg_name, fake_member.name)?;
+                    }
+                    writeln!(self.out, " }};")?;
+                }
+                _ => {
+                    let fake_member = fake_iter.next().unwrap();
+                    writeln!(self.out, " = {}.{};", ep_input.arg_name, fake_member.name)?;
+                }
+            }
+        }
+        assert!(fake_iter.next().is_none());
         Ok(())
     }
 
     /// Helper method used to write global variables
     /// # Notes
     /// Always adds a newline
-    fn write_global(&mut self, module: &Module, handle: Handle<GlobalVariable>) -> BackendResult {
+    fn write_global(
+        &mut self,
+        module: &Module,
+        handle: Handle<crate::GlobalVariable>,
+    ) -> BackendResult {
         let global = &module.global_variables[handle];
         let inner = &module.types[global.ty].inner;
 
-        let (storage_class, register_ty) = match *inner {
-            TypeInner::Image { .. } => ("", "t"),
-            TypeInner::Sampler { .. } => ("", "s"),
-            TypeInner::Struct { .. } | TypeInner::Vector { .. } => ("static ", ""),
-            // TODO: other register ty https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-variable-register
-            _ => return Err(Error::Unimplemented(format!("register_ty {:?}", inner))),
+        if let Some(ref binding) = global.binding {
+            if let Err(err) = self.options.resolve_resource_binding(binding) {
+                log::info!(
+                    "Skipping global {:?} (name {:?}) for being inaccessible: {}",
+                    handle,
+                    global.name,
+                    err,
+                );
+                return Ok(());
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-variable-register
+        let register_ty = match global.class {
+            crate::StorageClass::Function => unreachable!("Function storage class"),
+            crate::StorageClass::Private => {
+                write!(self.out, "static ")?;
+                self.write_type(module, global.ty)?;
+                ""
+            }
+            crate::StorageClass::WorkGroup => {
+                write!(self.out, "groupshared ")?;
+                self.write_type(module, global.ty)?;
+                ""
+            }
+            crate::StorageClass::Uniform => {
+                // constant buffer declarations are expected to be inlined, e.g.
+                // `cbuffer foo: register(b0) { field1: type1; }`
+                write!(self.out, "cbuffer")?;
+                "b"
+            }
+            crate::StorageClass::Storage { access } => {
+                let (prefix, register) = if access.contains(crate::StorageAccess::STORE) {
+                    ("RW", "u")
+                } else {
+                    ("", "t")
+                };
+                write!(self.out, "{}ByteAddressBuffer", prefix)?;
+                register
+            }
+            crate::StorageClass::Handle => {
+                let register = match *inner {
+                    TypeInner::Sampler { .. } => "s",
+                    // all storage textures are UAV, unconditionally
+                    TypeInner::Image {
+                        class: crate::ImageClass::Storage { .. },
+                        ..
+                    } => "u",
+                    _ => "t",
+                };
+                self.write_type(module, global.ty)?;
+                register
+            }
+            crate::StorageClass::PushConstant => unimplemented!("Push constants"),
         };
 
-        write!(self.out, "{}", storage_class)?;
-        self.write_type(module, global.ty)?;
+        let name = &self.names[&NameKey::GlobalVariable(handle)];
+        write!(self.out, " {}", name)?;
         if let TypeInner::Array { size, .. } = module.types[global.ty].inner {
             self.write_array_size(module, size)?;
         }
-        write!(
-            self.out,
-            " {}",
-            &self.names[&NameKey::GlobalVariable(handle)]
-        )?;
 
         if let Some(ref binding) = global.binding {
-            writeln!(self.out, " : register({}{});", register_ty, binding.binding)?;
-        } else {
-            if let Some(init) = global.init {
-                write!(self.out, " = ")?;
-                self.write_constant(module, init)?;
+            // this was already resolved earlier when we started evaluating an entry point.
+            let bt = self.options.resolve_resource_binding(binding).unwrap();
+            write!(self.out, " : register({}{}", register_ty, bt.register)?;
+            if bt.space != 0 {
+                write!(self.out, ", space{}", bt.space)?;
             }
+            write!(self.out, ")")?;
+        } else if global.class == crate::StorageClass::Private {
+            write!(self.out, " = ")?;
+            if let Some(init) = global.init {
+                self.write_constant(module, init)?;
+            } else {
+                self.write_default_init(module, global.ty)?;
+            }
+        }
+
+        if global.class == crate::StorageClass::Uniform {
+            write!(self.out, " {{ ")?;
+            self.write_type(module, global.ty)?;
+            let name = &self.names[&NameKey::GlobalVariable(handle)];
+            writeln!(self.out, " {}; }}", name)?;
+        } else {
             writeln!(self.out, ";")?;
         }
 
@@ -315,25 +644,25 @@ impl<'a, W: Write> Writer<'a, W> {
     /// Ends in a newline
     fn write_global_constant(
         &mut self,
-        _module: &Module,
-        inner: &ConstantInner,
-        handle: Handle<Constant>,
+        module: &Module,
+        inner: &crate::ConstantInner,
+        handle: Handle<crate::Constant>,
     ) -> BackendResult {
+        write!(self.out, "static const ")?;
         match *inner {
-            ConstantInner::Scalar {
+            crate::ConstantInner::Scalar {
                 width: _,
                 ref value,
             } => {
-                write!(self.out, "static const ")?;
                 // Write type
-                match *value {
-                    crate::ScalarValue::Sint(_) => write!(self.out, "int")?,
-                    crate::ScalarValue::Uint(_) => write!(self.out, "uint")?,
-                    crate::ScalarValue::Float(_) => write!(self.out, "float")?,
-                    crate::ScalarValue::Bool(_) => write!(self.out, "bool")?,
+                let ty_str = match *value {
+                    crate::ScalarValue::Sint(_) => "int",
+                    crate::ScalarValue::Uint(_) => "uint",
+                    crate::ScalarValue::Float(_) => "float",
+                    crate::ScalarValue::Bool(_) => "bool",
                 };
                 let name = &self.names[&NameKey::Constant(handle)];
-                write!(self.out, " {} = ", name)?;
+                write!(self.out, "{} {} = ", ty_str, name)?;
 
                 // Second match required to avoid heap allocation by `format!()`
                 match *value {
@@ -346,36 +675,34 @@ impl<'a, W: Write> Writer<'a, W> {
                     }
                     crate::ScalarValue::Bool(value) => write!(self.out, "{}", value)?,
                 };
-                writeln!(self.out, ";")?;
             }
-            ConstantInner::Composite { .. } => {
-                return Err(Error::Unimplemented(format!(
-                    "write_global_constant Composite {:?}",
-                    inner
-                )))
+            crate::ConstantInner::Composite { ty, ref components } => {
+                self.write_type(module, ty)?;
+                let name = &self.names[&NameKey::Constant(handle)];
+                write!(self.out, " {} = ", name)?;
+                self.write_composite_constant(module, ty, components)?;
             }
         }
-        // End with extra newline for readability
-        writeln!(self.out)?;
+        writeln!(self.out, ";")?;
         Ok(())
     }
 
-    // copy-paste from glsl-out
-    fn write_array_size(&mut self, module: &Module, size: ArraySize) -> BackendResult {
+    pub(super) fn write_array_size(
+        &mut self,
+        module: &Module,
+        size: crate::ArraySize,
+    ) -> BackendResult {
         write!(self.out, "[")?;
 
         // Write the array size
         // Writes nothing if `ArraySize::Dynamic`
-        // Panics if `ArraySize::Constant` has a constant that isn't an uint
+        // Panics if `ArraySize::Constant` has a constant that isn't an sint or uint
         match size {
-            ArraySize::Constant(const_handle) => match module.constants[const_handle].inner {
-                ConstantInner::Scalar {
-                    width: _,
-                    value: ScalarValue::Uint(size),
-                } => write!(self.out, "{}", size)?,
-                _ => unreachable!(),
-            },
-            ArraySize::Dynamic => (),
+            crate::ArraySize::Constant(const_handle) => {
+                let size = module.constants[const_handle].to_array_length().unwrap();
+                write!(self.out, "{}", size)?;
+            }
+            crate::ArraySize::Dynamic => unreachable!(),
         }
 
         write!(self.out, "]")?;
@@ -389,17 +716,18 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_struct(
         &mut self,
         module: &Module,
-        handle: Handle<Type>,
+        handle: Handle<crate::Type>,
         _block: bool,
-        members: &[StructMember],
+        members: &[crate::StructMember],
+        shader_stage: Option<(ShaderStage, Io)>,
     ) -> BackendResult {
         // Write struct name
-        write!(self.out, "struct {}", self.names[&NameKey::Type(handle)])?;
-        writeln!(self.out, " {{")?;
+        let struct_name = &self.names[&NameKey::Type(handle)];
+        writeln!(self.out, "struct {} {{", struct_name)?;
 
         for (index, member) in members.iter().enumerate() {
             // The indentation is only for readability
-            write!(self.out, "{}", INDENT)?;
+            write!(self.out, "{}", back::INDENT)?;
 
             match module.types[member.ty].inner {
                 TypeInner::Array {
@@ -408,15 +736,22 @@ impl<'a, W: Write> Writer<'a, W> {
                     stride: _,
                 } => {
                     // HLSL arrays are written as `type name[size]`
-                    let ty_name = match module.types[base].inner {
+                    let (ty_name, vec_size) = match module.types[base].inner {
                         // Write scalar type by backend so as not to depend on the front-end implementation
                         // Name returned from frontend can be generated (type1, float1, etc.)
-                        TypeInner::Scalar { kind, width } => scalar_kind_str(kind, width)?,
-                        _ => &self.names[&NameKey::Type(base)],
+                        TypeInner::Scalar { kind, width } => (kind.to_hlsl_str(width)?, None),
+                        // Similarly, write vector types directly.
+                        TypeInner::Vector { size, kind, width } => {
+                            (kind.to_hlsl_str(width)?, Some(size))
+                        }
+                        _ => (self.names[&NameKey::Type(base)].as_str(), None),
                     };
 
                     // Write `type` and `name`
                     write!(self.out, "{}", ty_name)?;
+                    if let Some(s) = vec_size {
+                        write!(self.out, "{}", s as usize)?;
+                    }
                     write!(
                         self.out,
                         " {}",
@@ -426,6 +761,28 @@ impl<'a, W: Write> Writer<'a, W> {
                     self.write_array_size(module, size)?;
                 }
                 _ => {
+                    // Write interpolation modifier before type
+                    if let Some(crate::Binding::Location {
+                        interpolation,
+                        sampling,
+                        ..
+                    }) = member.binding
+                    {
+                        if let Some(interpolation) = interpolation {
+                            write!(self.out, "{} ", interpolation.to_hlsl_str())?
+                        }
+
+                        if let Some(sampling) = sampling {
+                            if let Some(string) = sampling.to_hlsl_str() {
+                                write!(self.out, "{} ", string)?
+                            }
+                        }
+                    }
+
+                    if let TypeInner::Matrix { .. } = module.types[member.ty].inner {
+                        write!(self.out, "row_major ")?;
+                    }
+
                     // Write the member type and name
                     self.write_type(module, member.ty)?;
                     write!(
@@ -437,10 +794,9 @@ impl<'a, W: Write> Writer<'a, W> {
             }
 
             if let Some(ref binding) = member.binding {
-                self.write_binding(binding)?;
+                self.write_semantic(binding, shader_stage)?;
             };
-            write!(self.out, ";")?;
-            writeln!(self.out)?;
+            writeln!(self.out, ";")?;
         }
 
         writeln!(self.out, "}};")?;
@@ -451,7 +807,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Adds no trailing or leading whitespace
-    fn write_type(&mut self, module: &Module, ty: Handle<Type>) -> BackendResult {
+    fn write_type(&mut self, module: &Module, ty: Handle<crate::Type>) -> BackendResult {
         let inner = &module.types[ty].inner;
         match *inner {
             TypeInner::Struct { .. } => write!(self.out, "{}", self.names[&NameKey::Type(ty)])?,
@@ -467,17 +823,17 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Adds no trailing or leading whitespace
-    fn write_value_type(&mut self, module: &Module, inner: &TypeInner) -> BackendResult {
+    pub(super) fn write_value_type(&mut self, module: &Module, inner: &TypeInner) -> BackendResult {
         match *inner {
-            TypeInner::Scalar { kind, width } => {
-                write!(self.out, "{}", scalar_kind_str(kind, width)?)?;
+            TypeInner::Scalar { kind, width } | TypeInner::Atomic { kind, width } => {
+                write!(self.out, "{}", kind.to_hlsl_str(width)?)?;
             }
             TypeInner::Vector { size, kind, width } => {
                 write!(
                     self.out,
                     "{}{}",
-                    scalar_kind_str(kind, width)?,
-                    vector_size_str(size)
+                    kind.to_hlsl_str(width)?,
+                    back::vector_size_str(size)
                 )?;
             }
             TypeInner::Matrix {
@@ -487,36 +843,30 @@ impl<'a, W: Write> Writer<'a, W> {
             } => {
                 // The IR supports only float matrix
                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-matrix
+
+                // Because of the implicit transpose all matrices have in HLSL, we need to tranpose the size as well.
                 write!(
                     self.out,
                     "{}{}x{}",
-                    scalar_kind_str(ScalarKind::Float, width)?,
-                    vector_size_str(columns),
-                    vector_size_str(rows),
+                    crate::ScalarKind::Float.to_hlsl_str(width)?,
+                    back::vector_size_str(rows),
+                    back::vector_size_str(columns),
                 )?;
             }
             TypeInner::Image {
                 dim,
-                arrayed: _, //TODO:
+                arrayed,
                 class,
             } => {
-                let dim_str = image_dimension_str(dim);
-                if let crate::ImageClass::Sampled { kind, multi: false } = class {
-                    write!(
-                        self.out,
-                        "Texture{}<{}4>",
-                        dim_str,
-                        scalar_kind_str(kind, 4)?
-                    )?
-                } else {
-                    return Err(Error::Unimplemented(format!(
-                        "write_value_type {:?}",
-                        inner
-                    )));
-                }
+                self.write_image_type(dim, arrayed, class)?;
             }
-            TypeInner::Sampler { comparison: false } => {
-                write!(self.out, "SamplerState")?;
+            TypeInner::Sampler { comparison } => {
+                let sampler = if comparison {
+                    "SamplerComparisonState"
+                } else {
+                    "SamplerState"
+                };
+                write!(self.out, "{}", sampler)?;
             }
             // HLSL arrays are written as `type name[size]`
             // Current code is written arrays only as `[size]`
@@ -535,19 +885,30 @@ impl<'a, W: Write> Writer<'a, W> {
         Ok(())
     }
 
-    /// Helper method used to write structs
+    /// Helper method used to write functions
     /// # Notes
     /// Ends in a newline
     fn write_function(
         &mut self,
         module: &Module,
         name: &str,
-        func: &Function,
-        func_ctx: &FunctionCtx<'_>,
+        func: &crate::Function,
+        func_ctx: &back::FunctionCtx<'_>,
     ) -> BackendResult {
         // Function Declaration Syntax - https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-syntax
         if let Some(ref result) = func.result {
-            self.write_type(module, result.ty)?;
+            match func_ctx.ty {
+                back::FunctionType::Function(_) => {
+                    self.write_type(module, result.ty)?;
+                }
+                back::FunctionType::EntryPoint(index) => {
+                    if let Some(ref ep_output) = self.entry_point_io[index as usize].output {
+                        write!(self.out, "{}", ep_output.ty_name)?;
+                    } else {
+                        self.write_type(module, result.ty)?;
+                    }
+                }
+            }
         } else {
             write!(self.out, "void")?;
         }
@@ -557,33 +918,55 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Write function arguments for non entry point functions
         match func_ctx.ty {
-            FunctionType::Function(handle) => {
+            back::FunctionType::Function(handle) => {
                 for (index, arg) in func.arguments.iter().enumerate() {
+                    if index != 0 {
+                        write!(self.out, ", ")?;
+                    }
                     // Write argument type
-                    self.write_type(module, arg.ty)?;
+                    let arg_ty = match module.types[arg.ty].inner {
+                        // pointers in function arguments are expected and resolve to `inout`
+                        TypeInner::Pointer { base, .. } => {
+                            //TODO: can we narrow this down to just `in` when possible?
+                            write!(self.out, "inout ")?;
+                            base
+                        }
+                        _ => arg.ty,
+                    };
+                    self.write_type(module, arg_ty)?;
 
                     let argument_name =
                         &self.names[&NameKey::FunctionArgument(handle, index as u32)];
 
                     // Write argument name. Space is important.
                     write!(self.out, " {}", argument_name)?;
-                    if index < func.arguments.len() - 1 {
-                        // Add a separator between args
-                        write!(self.out, ", ")?;
+                    if let TypeInner::Array { size, .. } = module.types[arg.ty].inner {
+                        self.write_array_size(module, size)?;
                     }
                 }
             }
-            FunctionType::EntryPoint(index) => {
-                // EntryPoint arguments wrapped into structure
-                if !self.ep_inputs.is_empty() {
-                    if let Some(ref ep_input) = self.ep_inputs[index as usize] {
-                        write!(
-                            self.out,
-                            "{} {}",
-                            ep_input.name,
-                            self.namer
-                                .call_unique(ep_input.name.to_lowercase().as_str())
-                        )?;
+            back::FunctionType::EntryPoint(ep_index) => {
+                if let Some(ref ep_input) = self.entry_point_io[ep_index as usize].input {
+                    write!(self.out, "{} {}", ep_input.ty_name, ep_input.arg_name,)?;
+                } else {
+                    let stage = module.entry_points[ep_index as usize].stage;
+                    for (index, arg) in func.arguments.iter().enumerate() {
+                        if index != 0 {
+                            write!(self.out, ", ")?;
+                        }
+                        self.write_type(module, arg.ty)?;
+
+                        let argument_name =
+                            &self.names[&NameKey::EntryPointArgument(ep_index, index as u32)];
+
+                        write!(self.out, " {}", argument_name)?;
+                        if let TypeInner::Array { size, .. } = module.types[arg.ty].inner {
+                            self.write_array_size(module, size)?;
+                        }
+
+                        if let Some(ref binding) = arg.binding {
+                            self.write_semantic(binding, Some((stage, Io::Input)))?;
+                        }
                     }
                 }
             }
@@ -592,49 +975,51 @@ impl<'a, W: Write> Writer<'a, W> {
         write!(self.out, ")")?;
 
         // Write semantic if it present
-        let stage = match func_ctx.ty {
-            FunctionType::EntryPoint(index) => Some(module.entry_points[index as usize].stage),
-            _ => None,
-        };
-        if let Some(ref result) = func.result {
-            if let Some(ref binding) = result.binding {
-                match *binding {
-                    crate::Binding::BuiltIn(builtin) => {
-                        write!(self.out, " : {}", builtin_str(builtin))?;
-                    }
-                    crate::Binding::Location { location, .. } => {
-                        if stage == Some(ShaderStage::Fragment) {
-                            write!(self.out, " : SV_Target{}", location)?;
-                        }
-                    }
-                }
+        if let back::FunctionType::EntryPoint(index) = func_ctx.ty {
+            let stage = module.entry_points[index as usize].stage;
+            if let Some(crate::FunctionResult {
+                binding: Some(ref binding),
+                ..
+            }) = func.result
+            {
+                self.write_semantic(binding, Some((stage, Io::Output)))?;
             }
         }
 
         // Function body start
         writeln!(self.out)?;
         writeln!(self.out, "{{")?;
+
+        if let back::FunctionType::EntryPoint(index) = func_ctx.ty {
+            self.write_ep_arguments_initialization(module, func, index)?;
+        }
+
         // Write function local variables
         for (handle, local) in func.local_variables.iter() {
             // Write indentation (only for readability)
-            write!(self.out, "{}", INDENT)?;
+            write!(self.out, "{}", back::INDENT)?;
 
             // Write the local name
             // The leading space is important
-            write!(self.out, "var {}: ", self.names[&func_ctx.name_key(handle)])?;
-
-            // Write the local type
             self.write_type(module, local.ty)?;
+            write!(self.out, " {}", self.names[&func_ctx.name_key(handle)])?;
+            // Write size for array type
+            if let TypeInner::Array { size, .. } = module.types[local.ty].inner {
+                self.write_array_size(module, size)?;
+            }
 
+            write!(self.out, " = ")?;
             // Write the local initializer if needed
             if let Some(init) = local.init {
                 // Put the equal signal only if there's a initializer
                 // The leading and trailing spaces aren't needed but help with readability
-                write!(self.out, " = ")?;
 
                 // Write the constant
                 // `write_constant` adds no trailing or leading space/newline
                 self.write_constant(module, init)?;
+            } else {
+                // Zero initialize local variables
+                self.write_default_init(module, local.ty)?;
             }
 
             // Finish the local with `;` and add a newline (only for readability)
@@ -665,10 +1050,13 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_stmt(
         &mut self,
         module: &Module,
-        stmt: &Statement,
-        func_ctx: &FunctionCtx<'_>,
+        stmt: &crate::Statement,
+        func_ctx: &back::FunctionCtx<'_>,
         indent: usize,
     ) -> BackendResult {
+        use crate::Statement;
+        use back::INDENT;
+
         match *stmt {
             Statement::Emit(ref range) => {
                 for handle in range.clone() {
@@ -748,22 +1136,47 @@ impl<'a, W: Write> Writer<'a, W> {
                     // We can safery unwrap here, since we now we working with struct
                     let ty = base_ty_res.handle().unwrap();
                     let struct_name = &self.names[&NameKey::Type(ty)];
-                    let variable_name = self.namer.call_unique(struct_name.as_str()).to_lowercase();
+                    let variable_name = self.namer.call(&struct_name.to_lowercase());
                     write!(
                         self.out,
                         "{}const {} {} = ",
                         INDENT.repeat(indent),
                         struct_name,
-                        variable_name
+                        variable_name,
                     )?;
                     self.write_expr(module, expr, func_ctx)?;
-                    writeln!(self.out)?;
-                    writeln!(
-                        self.out,
-                        "{}return {};",
-                        INDENT.repeat(indent),
-                        variable_name
-                    )?;
+                    writeln!(self.out, ";")?;
+
+                    // for entry point returns, we may need to reshuffle the outputs into a different struct
+                    let ep_output = match func_ctx.ty {
+                        back::FunctionType::Function(_) => None,
+                        back::FunctionType::EntryPoint(index) => {
+                            self.entry_point_io[index as usize].output.as_ref()
+                        }
+                    };
+                    let final_name = match ep_output {
+                        Some(ep_output) => {
+                            let final_name = self.namer.call_unique(&variable_name);
+                            write!(
+                                self.out,
+                                "{}const {} {} = {{ ",
+                                INDENT.repeat(indent),
+                                ep_output.ty_name,
+                                final_name,
+                            )?;
+                            for (index, m) in ep_output.members.iter().enumerate() {
+                                if index != 0 {
+                                    write!(self.out, ", ")?;
+                                }
+                                let member_name = &self.names[&NameKey::StructMember(ty, m.index)];
+                                write!(self.out, "{}.{}", variable_name, member_name)?;
+                            }
+                            writeln!(self.out, " }};")?;
+                            final_name
+                        }
+                        None => variable_name,
+                    };
+                    writeln!(self.out, "{}return {};", INDENT.repeat(indent), final_name)?;
                 } else {
                     write!(self.out, "{}return ", INDENT.repeat(indent))?;
                     self.write_expr(module, expr, func_ctx)?;
@@ -771,11 +1184,137 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
             }
             Statement::Store { pointer, value } => {
+                let array_info = match *func_ctx.info[pointer].ty.inner_with(&module.types) {
+                    TypeInner::Pointer { base, .. } => match module.types[base].inner {
+                        crate::TypeInner::Array {
+                            size: crate::ArraySize::Constant(ch),
+                            ..
+                        } => Some((ch, base)),
+                        _ => None,
+                    },
+                    _ => None,
+                };
+
+                if let Some(crate::StorageClass::Storage { .. }) = func_ctx.info[pointer]
+                    .ty
+                    .inner_with(&module.types)
+                    .pointer_class()
+                {
+                    let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
+                    self.write_storage_store(
+                        module,
+                        var_handle,
+                        StoreValue::Expression(value),
+                        func_ctx,
+                        indent,
+                    )?;
+                } else if let Some((const_handle, base_ty)) = array_info {
+                    let size = module.constants[const_handle].to_array_length().unwrap();
+                    writeln!(self.out, "{}{{", INDENT.repeat(indent))?;
+                    write!(self.out, "{}", INDENT.repeat(indent + 1))?;
+                    self.write_type(module, base_ty)?;
+                    write!(self.out, " _result[{}]=", size)?;
+                    self.write_expr(module, value, func_ctx)?;
+                    writeln!(self.out, ";")?;
+                    write!(
+                        self.out,
+                        "{}for(int _i=0; _i<{}; ++_i) ",
+                        INDENT.repeat(indent + 1),
+                        size
+                    )?;
+                    self.write_expr(module, pointer, func_ctx)?;
+                    writeln!(self.out, "[_i] = _result[_i];")?;
+                    writeln!(self.out, "{}}}", INDENT.repeat(indent))?;
+                } else {
+                    write!(self.out, "{}", INDENT.repeat(indent))?;
+                    self.write_expr(module, pointer, func_ctx)?;
+                    write!(self.out, " = ")?;
+                    self.write_expr(module, value, func_ctx)?;
+                    writeln!(self.out, ";")?
+                }
+            }
+            Statement::Loop {
+                ref body,
+                ref continuing,
+            } => {
+                if !continuing.is_empty() {
+                    let gate_name = self.namer.call("loop_init");
+                    writeln!(
+                        self.out,
+                        "{}bool {} = true;",
+                        INDENT.repeat(indent),
+                        gate_name
+                    )?;
+                    writeln!(self.out, "{}while(true) {{", INDENT.repeat(indent))?;
+                    writeln!(
+                        self.out,
+                        "{}if (!{}) {{",
+                        INDENT.repeat(indent + 1),
+                        gate_name
+                    )?;
+                    for sta in continuing.iter() {
+                        self.write_stmt(module, sta, func_ctx, indent + 1)?;
+                    }
+                    writeln!(self.out, "{}}}", INDENT.repeat(indent + 1))?;
+                    writeln!(
+                        self.out,
+                        "{}{} = false;",
+                        INDENT.repeat(indent + 1),
+                        gate_name
+                    )?;
+                } else {
+                    writeln!(self.out, "{}while(true) {{", INDENT.repeat(indent))?;
+                }
+
+                for sta in body.iter() {
+                    self.write_stmt(module, sta, func_ctx, indent + 1)?;
+                }
+                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+            }
+            Statement::Break => writeln!(self.out, "{}break;", INDENT.repeat(indent))?,
+            Statement::Continue => writeln!(self.out, "{}continue;", INDENT.repeat(indent))?,
+            Statement::Barrier(barrier) => {
+                if barrier.contains(crate::Barrier::STORAGE) {
+                    writeln!(
+                        self.out,
+                        "{}DeviceMemoryBarrierWithGroupSync();",
+                        INDENT.repeat(indent)
+                    )?;
+                }
+
+                if barrier.contains(crate::Barrier::WORK_GROUP) {
+                    writeln!(
+                        self.out,
+                        "{}GroupMemoryBarrierWithGroupSync();",
+                        INDENT.repeat(indent)
+                    )?;
+                }
+            }
+            Statement::ImageStore {
+                image,
+                coordinate,
+                array_index,
+                value,
+            } => {
                 write!(self.out, "{}", INDENT.repeat(indent))?;
-                self.write_expr(module, pointer, func_ctx)?;
+                self.write_expr(module, image, func_ctx)?;
+
+                write!(self.out, "[")?;
+                if let Some(index) = array_index {
+                    // Array index accepted only for texture_storage_2d_array, so we can safety use int3(coordinate, array_index) here
+                    write!(self.out, "int3(")?;
+                    self.write_expr(module, coordinate, func_ctx)?;
+                    write!(self.out, ", ")?;
+                    self.write_expr(module, index, func_ctx)?;
+                    write!(self.out, ")")?;
+                } else {
+                    self.write_expr(module, coordinate, func_ctx)?;
+                }
+                write!(self.out, "]")?;
+
                 write!(self.out, " = ")?;
                 self.write_expr(module, value, func_ctx)?;
-                writeln!(self.out, ";")?
+                writeln!(self.out, ";")?;
             }
             Statement::Call {
                 function,
@@ -784,11 +1323,17 @@ impl<'a, W: Write> Writer<'a, W> {
             } => {
                 write!(self.out, "{}", INDENT.repeat(indent))?;
                 if let Some(expr) = result {
-                    let name = format!("{}{}", BAKE_PREFIX, expr.index());
-                    write!(self.out, "const {} = ", name)?;
-                    self.write_expr(module, expr, func_ctx)?;
+                    write!(self.out, "const ")?;
+                    let name = format!("{}{}", back::BAKE_PREFIX, expr.index());
+                    let expr_ty = &func_ctx.info[expr].ty;
+                    match *expr_ty {
+                        proc::TypeResolution::Handle(handle) => self.write_type(module, handle)?,
+                        proc::TypeResolution::Value(ref value) => {
+                            self.write_value_type(module, value)?
+                        }
+                    };
+                    write!(self.out, " {} = ", name)?;
                     self.named_expressions.insert(expr, name);
-                    writeln!(self.out, ";")?
                 }
                 let func_name = &self.names[&NameKey::Function(function)];
                 write!(self.out, "{}(", func_name)?;
@@ -802,7 +1347,98 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
                 writeln!(self.out, ");")?
             }
-            _ => return Err(Error::Unimplemented(format!("write_stmt {:?}", stmt))),
+            Statement::Atomic {
+                pointer,
+                ref fun,
+                value,
+                result,
+            } => {
+                write!(self.out, "{}", INDENT.repeat(indent))?;
+                let res_name = format!("{}{}", back::BAKE_PREFIX, result.index());
+                match func_ctx.info[result].ty {
+                    proc::TypeResolution::Handle(handle) => self.write_type(module, handle)?,
+                    proc::TypeResolution::Value(ref value) => {
+                        self.write_value_type(module, value)?
+                    }
+                };
+
+                let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
+                // working around the borrow checker in `self.write_expr`
+                let chain = mem::take(&mut self.temp_access_chain);
+                let var_name = &self.names[&NameKey::GlobalVariable(var_handle)];
+
+                let fun_str = fun.to_hlsl_suffix();
+                write!(
+                    self.out,
+                    " {}; {}.Interlocked{}(",
+                    res_name, var_name, fun_str
+                )?;
+                self.write_storage_address(module, &chain, func_ctx)?;
+                if let crate::AtomicFunction::Exchange { compare: Some(_) } = *fun {
+                    return Err(Error::Unimplemented("atomic CompareExchange".to_string()));
+                }
+                write!(self.out, ", ")?;
+                self.write_expr(module, value, func_ctx)?;
+                writeln!(self.out, ", {});", res_name)?;
+                self.temp_access_chain = chain;
+                self.named_expressions.insert(result, res_name);
+            }
+            Statement::Switch {
+                selector,
+                ref cases,
+                ref default,
+            } => {
+                // Start the switch
+                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "switch(")?;
+                self.write_expr(module, selector, func_ctx)?;
+                writeln!(self.out, ") {{")?;
+
+                // Write all cases
+                let indent_str_1 = INDENT.repeat(indent + 1);
+                let indent_str_2 = INDENT.repeat(indent + 2);
+
+                for case in cases {
+                    writeln!(self.out, "{}case {}: {{", &indent_str_1, case.value)?;
+
+                    if case.fall_through {
+                        // Generate each fallthrough case statement in a new block. This is done to
+                        // prevent symbol collision of variables declared in these cases statements.
+                        writeln!(self.out, "{}/* fallthrough */", &indent_str_2)?;
+                        writeln!(self.out, "{}{{", &indent_str_2)?;
+                    }
+                    for sta in case.body.iter() {
+                        self.write_stmt(
+                            module,
+                            sta,
+                            func_ctx,
+                            indent + 2 + usize::from(case.fall_through),
+                        )?;
+                    }
+
+                    if case.fall_through {
+                        writeln!(self.out, "{}}}", &indent_str_2)?;
+                    } else {
+                        writeln!(self.out, "{}break;", &indent_str_2)?;
+                    }
+
+                    writeln!(self.out, "{}}}", &indent_str_1)?;
+                }
+
+                // Only write the default block if the block isn't empty
+                // Writing default without a block is valid but it's more readable this way
+                if !default.is_empty() {
+                    writeln!(self.out, "{}default: {{", &indent_str_1)?;
+
+                    for sta in default {
+                        self.write_stmt(module, sta, func_ctx, indent + 2)?;
+                    }
+
+                    writeln!(self.out, "{}}}", &indent_str_1)?;
+                }
+
+                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+            }
         }
 
         Ok(())
@@ -812,14 +1448,54 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Doesn't add any newlines or leading/trailing spaces
-    fn write_expr(
+    pub(super) fn write_expr(
         &mut self,
         module: &Module,
-        expr: Handle<Expression>,
-        func_ctx: &FunctionCtx<'_>,
+        expr: Handle<crate::Expression>,
+        func_ctx: &back::FunctionCtx<'_>,
     ) -> BackendResult {
+        use crate::Expression;
+
+        // Handle the special semantics for base vertex/instance
+        let ff_input = if self.options.special_constants_binding.is_some() {
+            func_ctx.is_fixed_function_input(expr, module)
+        } else {
+            None
+        };
+        let closing_bracket = match ff_input {
+            Some(crate::BuiltIn::VertexIndex) => {
+                write!(self.out, "({}.{} + ", SPECIAL_CBUF_VAR, SPECIAL_BASE_VERTEX)?;
+                ")"
+            }
+            Some(crate::BuiltIn::InstanceIndex) => {
+                write!(
+                    self.out,
+                    "({}.{} + ",
+                    SPECIAL_CBUF_VAR, SPECIAL_BASE_INSTANCE,
+                )?;
+                ")"
+            }
+            Some(crate::BuiltIn::NumWorkGroups) => {
+                //Note: despite their names (`BASE_VERTEX` and `BASE_INSTANCE`),
+                // in compute shaders the special constants contain the number
+                // of workgroups, which we are using here.
+                write!(
+                    self.out,
+                    "uint3({}.{}, {}.{}, {}.{})",
+                    SPECIAL_CBUF_VAR,
+                    SPECIAL_BASE_VERTEX,
+                    SPECIAL_CBUF_VAR,
+                    SPECIAL_BASE_INSTANCE,
+                    SPECIAL_CBUF_VAR,
+                    SPECIAL_OTHER,
+                )?;
+                return Ok(());
+            }
+            _ => "",
+        };
+
         if let Some(name) = self.named_expressions.get(&expr) {
-            write!(self.out, "{}", name)?;
+            write!(self.out, "{}{}", name, closing_bracket)?;
             return Ok(());
         }
 
@@ -828,32 +1504,51 @@ impl<'a, W: Write> Writer<'a, W> {
         match *expression {
             Expression::Constant(constant) => self.write_constant(module, constant)?,
             Expression::Compose { ty, ref components } => {
-                let is_struct = if let TypeInner::Struct { .. } = module.types[ty].inner {
-                    true
-                } else {
-                    false
+                let braces_init = match module.types[ty].inner {
+                    TypeInner::Struct { .. } | TypeInner::Array { .. } => true,
+                    _ => false,
                 };
-                if is_struct {
+
+                if braces_init {
                     write!(self.out, "{{ ")?;
                 } else {
                     self.write_type(module, ty)?;
                     write!(self.out, "(")?;
                 }
-                for (index, component) in components.iter().enumerate() {
-                    self.write_expr(module, *component, func_ctx)?;
-                    // Only write a comma if isn't the last element
-                    if index != components.len().saturating_sub(1) {
+
+                for (index, &component) in components.iter().enumerate() {
+                    if index != 0 {
                         // The leading space is for readability only
                         write!(self.out, ", ")?;
                     }
+                    self.write_expr(module, component, func_ctx)?;
                 }
-                if is_struct {
-                    write!(self.out, " }};")?
+
+                if braces_init {
+                    write!(self.out, " }}")?
                 } else {
                     write!(self.out, ")")?
                 }
             }
-            // TODO: copy-paste from wgsl-out
+            // All of the multiplication can be expressed as `mul`,
+            // except vector * vector, which needs to use the "*" operator.
+            Expression::Binary {
+                op: crate::BinaryOperator::Multiply,
+                left,
+                right,
+            } if func_ctx.info[left].ty.inner_with(&module.types).is_matrix()
+                || func_ctx.info[right]
+                    .ty
+                    .inner_with(&module.types)
+                    .is_matrix() =>
+            {
+                // We intentionally flip the order of multiplication as our matrices are implicitly transposed.
+                write!(self.out, "mul(")?;
+                self.write_expr(module, right, func_ctx)?;
+                write!(self.out, ", ")?;
+                self.write_expr(module, left, func_ctx)?;
+                write!(self.out, ")")?;
+            }
             Expression::Binary { op, left, right } => {
                 write!(self.out, "(")?;
                 self.write_expr(module, left, func_ctx)?;
@@ -861,88 +1556,507 @@ impl<'a, W: Write> Writer<'a, W> {
                 self.write_expr(module, right, func_ctx)?;
                 write!(self.out, ")")?;
             }
-            // TODO: copy-paste from glsl-out
+            Expression::Access { base, index } => {
+                if let Some(crate::StorageClass::Storage { .. }) = func_ctx.info[expr]
+                    .ty
+                    .inner_with(&module.types)
+                    .pointer_class()
+                {
+                    // do nothing, the chain is written on `Load`/`Store`
+                } else {
+                    self.write_expr(module, base, func_ctx)?;
+                    write!(self.out, "[")?;
+                    self.write_expr(module, index, func_ctx)?;
+                    write!(self.out, "]")?;
+                }
+            }
             Expression::AccessIndex { base, index } => {
-                self.write_expr(module, base, func_ctx)?;
+                if let Some(crate::StorageClass::Storage { .. }) = func_ctx.info[expr]
+                    .ty
+                    .inner_with(&module.types)
+                    .pointer_class()
+                {
+                    // do nothing, the chain is written on `Load`/`Store`
+                } else {
+                    self.write_expr(module, base, func_ctx)?;
 
-                let base_ty_res = &func_ctx.info[base].ty;
-                let mut resolved = base_ty_res.inner_with(&module.types);
-                let base_ty_handle = match *resolved {
-                    TypeInner::Pointer { base, class: _ } => {
-                        resolved = &module.types[base].inner;
-                        Some(base)
-                    }
-                    _ => base_ty_res.handle(),
-                };
+                    let base_ty_res = &func_ctx.info[base].ty;
+                    let mut resolved = base_ty_res.inner_with(&module.types);
+                    let base_ty_handle = match *resolved {
+                        TypeInner::Pointer { base, class: _ } => {
+                            resolved = &module.types[base].inner;
+                            Some(base)
+                        }
+                        _ => base_ty_res.handle(),
+                    };
 
-                match *resolved {
-                    TypeInner::Vector { .. } => {
-                        // Write vector access as a swizzle
-                        write!(self.out, ".{}", COMPONENTS[index as usize])?
-                    }
-                    TypeInner::Matrix { .. }
-                    | TypeInner::Array { .. }
-                    | TypeInner::ValuePointer { .. } => write!(self.out, "[{}]", index)?,
-                    TypeInner::Struct { .. } => {
-                        // This will never panic in case the type is a `Struct`, this is not true
-                        // for other types so we can only check while inside this match arm
-                        let ty = base_ty_handle.unwrap();
+                    match *resolved {
+                        TypeInner::Vector { .. } => {
+                            // Write vector access as a swizzle
+                            write!(self.out, ".{}", back::COMPONENTS[index as usize])?
+                        }
+                        TypeInner::Matrix { .. }
+                        | TypeInner::Array { .. }
+                        | TypeInner::ValuePointer { .. } => write!(self.out, "[{}]", index)?,
+                        TypeInner::Struct { .. } => {
+                            // This will never panic in case the type is a `Struct`, this is not true
+                            // for other types so we can only check while inside this match arm
+                            let ty = base_ty_handle.unwrap();
 
-                        write!(
-                            self.out,
-                            ".{}",
-                            &self.names[&NameKey::StructMember(ty, index)]
-                        )?
+                            write!(
+                                self.out,
+                                ".{}",
+                                &self.names[&NameKey::StructMember(ty, index)]
+                            )?
+                        }
+                        ref other => {
+                            return Err(Error::Custom(format!("Cannot index {:?}", other)))
+                        }
                     }
-                    ref other => return Err(Error::Custom(format!("Cannot index {:?}", other))),
                 }
             }
             Expression::FunctionArgument(pos) => {
-                match func_ctx.ty {
-                    FunctionType::Function(handle) => {
-                        let name = &self.names[&NameKey::FunctionArgument(handle, pos)];
-                        write!(self.out, "{}", name)?;
-                    }
-                    FunctionType::EntryPoint(index) => {
-                        // EntryPoint arguments wrapped into structure
-                        // We can safery unwrap here, because if we write function arguments it means, that ep_input struct already exists
-                        let ep_input = self.ep_inputs[index as usize].as_ref().unwrap();
-                        let member_name = &ep_input.members[pos as usize].name;
-                        write!(
-                            self.out,
-                            "{}.{}",
-                            &ep_input.name.to_lowercase(),
-                            member_name
-                        )?
+                let key = match func_ctx.ty {
+                    back::FunctionType::Function(handle) => NameKey::FunctionArgument(handle, pos),
+                    back::FunctionType::EntryPoint(index) => {
+                        NameKey::EntryPointArgument(index, pos)
                     }
                 };
+                let name = &self.names[&key];
+                write!(self.out, "{}", name)?;
             }
             Expression::ImageSample {
                 image,
-                sampler,        // TODO:
-                coordinate,     // TODO:
-                array_index: _, // TODO:
-                offset: _,      // TODO:
-                level: _,       // TODO:
-                depth_ref: _,   // TODO:
+                sampler,
+                coordinate,
+                array_index,
+                offset,
+                level,
+                depth_ref,
             } => {
-                // TODO: others
+                use crate::SampleLevel as Sl;
+
+                let texture_func = match level {
+                    Sl::Auto => {
+                        if depth_ref.is_some() {
+                            "SampleCmp"
+                        } else {
+                            "Sample"
+                        }
+                    }
+                    Sl::Zero => "SampleCmpLevelZero",
+                    Sl::Exact(_) => "SampleLevel",
+                    Sl::Bias(_) => "SampleBias",
+                    Sl::Gradient { .. } => "SampleGrad",
+                };
+
                 self.write_expr(module, image, func_ctx)?;
-                write!(self.out, ".Sample(")?;
+                write!(self.out, ".{}(", texture_func)?;
                 self.write_expr(module, sampler, func_ctx)?;
                 write!(self.out, ", ")?;
-                self.write_expr(module, coordinate, func_ctx)?;
+                self.write_texture_coordinates(
+                    "float",
+                    coordinate,
+                    array_index,
+                    MipLevelCoordinate::NotApplicable,
+                    module,
+                    func_ctx,
+                )?;
+
+                if let Some(depth_ref) = depth_ref {
+                    write!(self.out, ", ")?;
+                    self.write_expr(module, depth_ref, func_ctx)?;
+                }
+
+                match level {
+                    Sl::Auto | Sl::Zero => {}
+                    Sl::Exact(expr) => {
+                        write!(self.out, ", ")?;
+                        self.write_expr(module, expr, func_ctx)?;
+                    }
+                    Sl::Bias(expr) => {
+                        write!(self.out, ", ")?;
+                        self.write_expr(module, expr, func_ctx)?;
+                    }
+                    Sl::Gradient { x, y } => {
+                        write!(self.out, ", ")?;
+                        self.write_expr(module, x, func_ctx)?;
+                        write!(self.out, ", ")?;
+                        self.write_expr(module, y, func_ctx)?;
+                    }
+                }
+
+                if let Some(offset) = offset {
+                    write!(self.out, ", ")?;
+                    self.write_constant(module, offset)?;
+                }
+
                 write!(self.out, ")")?;
             }
-            // TODO: copy-paste from wgsl-out
-            Expression::GlobalVariable(handle) => {
-                let name = &self.names[&NameKey::GlobalVariable(handle)];
-                write!(self.out, "{}", name)?;
+            Expression::ImageQuery { image, query } => {
+                // use wrapped image query function
+                if let TypeInner::Image {
+                    dim,
+                    arrayed,
+                    class,
+                } = *func_ctx.info[image].ty.inner_with(&module.types)
+                {
+                    let wrapped_image_query = WrappedImageQuery {
+                        dim,
+                        arrayed,
+                        class,
+                        query: query.into(),
+                    };
+
+                    self.write_wrapped_image_query_function_name(wrapped_image_query)?;
+                    write!(self.out, "(")?;
+                    // Image always first param
+                    self.write_expr(module, image, func_ctx)?;
+                    if let crate::ImageQuery::Size { level: Some(level) } = query {
+                        write!(self.out, ", ")?;
+                        self.write_expr(module, level, func_ctx)?;
+                    }
+                    write!(self.out, ")")?;
+                }
             }
-            Expression::Load { pointer } => self.write_expr(module, pointer, func_ctx)?,
-            _ => return Err(Error::Unimplemented(format!("write_expr {:?}", expression))),
+            Expression::ImageLoad {
+                image,
+                coordinate,
+                array_index,
+                index,
+            } => {
+                // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
+                let (ms, storage) = match *func_ctx.info[image].ty.inner_with(&module.types) {
+                    TypeInner::Image { class, .. } => match class {
+                        crate::ImageClass::Sampled { multi, .. }
+                        | crate::ImageClass::Depth { multi } => (multi, false),
+                        crate::ImageClass::Storage { .. } => (false, true),
+                    },
+                    _ => (false, false),
+                };
+
+                self.write_expr(module, image, func_ctx)?;
+                write!(self.out, ".Load(")?;
+
+                let mip_level = if ms || storage {
+                    MipLevelCoordinate::NotApplicable
+                } else {
+                    match index {
+                        Some(expr) => MipLevelCoordinate::Expression(expr),
+                        None => MipLevelCoordinate::Zero,
+                    }
+                };
+
+                self.write_texture_coordinates(
+                    "int",
+                    coordinate,
+                    array_index,
+                    mip_level,
+                    module,
+                    func_ctx,
+                )?;
+
+                if ms {
+                    write!(self.out, ", ")?;
+                    self.write_expr(module, index.unwrap(), func_ctx)?;
+                }
+
+                // close bracket for Load function
+                write!(self.out, ")")?;
+
+                // return x component if return type is scalar
+                if let TypeInner::Scalar { .. } = *func_ctx.info[expr].ty.inner_with(&module.types)
+                {
+                    write!(self.out, ".x")?;
+                }
+            }
+            Expression::GlobalVariable(handle) => match module.global_variables[handle].class {
+                crate::StorageClass::Storage { .. } => {}
+                _ => {
+                    let name = &self.names[&NameKey::GlobalVariable(handle)];
+                    write!(self.out, "{}", name)?;
+                }
+            },
+            Expression::LocalVariable(handle) => {
+                write!(self.out, "{}", self.names[&func_ctx.name_key(handle)])?
+            }
+            Expression::Load { pointer } => {
+                match func_ctx.info[pointer]
+                    .ty
+                    .inner_with(&module.types)
+                    .pointer_class()
+                {
+                    Some(crate::StorageClass::Storage { .. }) => {
+                        let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
+                        let result_ty = func_ctx.info[expr].ty.clone();
+                        self.write_storage_load(module, var_handle, result_ty, func_ctx)?;
+                    }
+                    _ => {
+                        self.write_expr(module, pointer, func_ctx)?;
+                    }
+                }
+            }
+            Expression::Unary { op, expr } => {
+                // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-operators#unary-operators
+                let op_str = match op {
+                    crate::UnaryOperator::Negate => "-",
+                    crate::UnaryOperator::Not => "!",
+                };
+                write!(self.out, "{}", op_str)?;
+                self.write_expr(module, expr, func_ctx)?;
+            }
+            Expression::As { expr, kind, .. } => {
+                let inner = func_ctx.info[expr].ty.inner_with(&module.types);
+                match *inner {
+                    TypeInner::Vector { size, width, .. } => {
+                        write!(
+                            self.out,
+                            "{}{}",
+                            kind.to_hlsl_str(width)?,
+                            back::vector_size_str(size),
+                        )?;
+                    }
+                    TypeInner::Scalar { width, .. } => {
+                        write!(self.out, "{}", kind.to_hlsl_str(width)?)?
+                    }
+                    _ => {
+                        return Err(Error::Unimplemented(format!(
+                            "write_expr expression::as {:?}",
+                            inner
+                        )));
+                    }
+                };
+                write!(self.out, "(")?;
+                self.write_expr(module, expr, func_ctx)?;
+                write!(self.out, ")")?;
+            }
+            Expression::Math {
+                fun,
+                arg,
+                arg1,
+                arg2,
+            } => {
+                use crate::MathFunction as Mf;
+
+                enum Function {
+                    Asincosh { is_sin: bool },
+                    Atanh,
+                    Regular(&'static str),
+                }
+
+                let fun = match fun {
+                    // comparison
+                    Mf::Abs => Function::Regular("abs"),
+                    Mf::Min => Function::Regular("min"),
+                    Mf::Max => Function::Regular("max"),
+                    Mf::Clamp => Function::Regular("clamp"),
+                    // trigonometry
+                    Mf::Cos => Function::Regular("cos"),
+                    Mf::Cosh => Function::Regular("cosh"),
+                    Mf::Sin => Function::Regular("sin"),
+                    Mf::Sinh => Function::Regular("sinh"),
+                    Mf::Tan => Function::Regular("tan"),
+                    Mf::Tanh => Function::Regular("tanh"),
+                    Mf::Acos => Function::Regular("acos"),
+                    Mf::Asin => Function::Regular("asin"),
+                    Mf::Atan => Function::Regular("atan"),
+                    Mf::Atan2 => Function::Regular("atan2"),
+                    Mf::Asinh => Function::Asincosh { is_sin: true },
+                    Mf::Acosh => Function::Asincosh { is_sin: false },
+                    Mf::Atanh => Function::Atanh,
+                    // decomposition
+                    Mf::Ceil => Function::Regular("ceil"),
+                    Mf::Floor => Function::Regular("floor"),
+                    Mf::Round => Function::Regular("round"),
+                    Mf::Fract => Function::Regular("frac"),
+                    Mf::Trunc => Function::Regular("trunc"),
+                    Mf::Modf => Function::Regular("modf"),
+                    Mf::Frexp => Function::Regular("frexp"),
+                    Mf::Ldexp => Function::Regular("ldexp"),
+                    // exponent
+                    Mf::Exp => Function::Regular("exp"),
+                    Mf::Exp2 => Function::Regular("exp2"),
+                    Mf::Log => Function::Regular("log"),
+                    Mf::Log2 => Function::Regular("log2"),
+                    Mf::Pow => Function::Regular("pow"),
+                    // geometry
+                    Mf::Dot => Function::Regular("dot"),
+                    //Mf::Outer => ,
+                    Mf::Cross => Function::Regular("cross"),
+                    Mf::Distance => Function::Regular("distance"),
+                    Mf::Length => Function::Regular("length"),
+                    Mf::Normalize => Function::Regular("normalize"),
+                    Mf::FaceForward => Function::Regular("faceforward"),
+                    Mf::Reflect => Function::Regular("reflect"),
+                    Mf::Refract => Function::Regular("refract"),
+                    // computational
+                    Mf::Sign => Function::Regular("sign"),
+                    Mf::Fma => Function::Regular("fma"),
+                    Mf::Mix => Function::Regular("lerp"),
+                    Mf::Step => Function::Regular("step"),
+                    Mf::SmoothStep => Function::Regular("smoothstep"),
+                    Mf::Sqrt => Function::Regular("sqrt"),
+                    Mf::InverseSqrt => Function::Regular("rsqrt"),
+                    //Mf::Inverse =>,
+                    Mf::Transpose => Function::Regular("transpose"),
+                    Mf::Determinant => Function::Regular("determinant"),
+                    // bits
+                    Mf::CountOneBits => Function::Regular("countbits"),
+                    Mf::ReverseBits => Function::Regular("reversebits"),
+                    _ => return Err(Error::Unimplemented(format!("write_expr_math {:?}", fun))),
+                };
+
+                match fun {
+                    Function::Asincosh { is_sin } => {
+                        write!(self.out, "log(")?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        write!(self.out, " + sqrt(")?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        write!(self.out, " * ")?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        match is_sin {
+                            true => write!(self.out, " + 1.0))")?,
+                            false => write!(self.out, " - 1.0))")?,
+                        }
+                    }
+                    Function::Atanh => {
+                        write!(self.out, "0.5 * log((1.0 + ")?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        write!(self.out, ") / (1.0 - ")?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        write!(self.out, "))")?;
+                    }
+                    Function::Regular(fun_name) => {
+                        write!(self.out, "{}(", fun_name)?;
+                        self.write_expr(module, arg, func_ctx)?;
+                        if let Some(arg) = arg1 {
+                            write!(self.out, ", ")?;
+                            self.write_expr(module, arg, func_ctx)?;
+                        }
+                        if let Some(arg) = arg2 {
+                            write!(self.out, ", ")?;
+                            self.write_expr(module, arg, func_ctx)?;
+                        }
+                        write!(self.out, ")")?
+                    }
+                }
+            }
+            Expression::Swizzle {
+                size,
+                vector,
+                pattern,
+            } => {
+                self.write_expr(module, vector, func_ctx)?;
+                write!(self.out, ".")?;
+                for &sc in pattern[..size as usize].iter() {
+                    self.out.write_char(back::COMPONENTS[sc as usize])?;
+                }
+            }
+            Expression::ArrayLength(expr) => {
+                let var_handle = match func_ctx.expressions[expr] {
+                    Expression::AccessIndex { base, index: _ } => {
+                        match func_ctx.expressions[base] {
+                            Expression::GlobalVariable(handle) => handle,
+                            _ => unreachable!(),
+                        }
+                    }
+                    Expression::GlobalVariable(handle) => handle,
+                    _ => unreachable!(),
+                };
+
+                let var = &module.global_variables[var_handle];
+                let (offset, stride) = match module.types[var.ty].inner {
+                    TypeInner::Array { stride, .. } => (0, stride),
+                    TypeInner::Struct {
+                        top_level: true,
+                        ref members,
+                        ..
+                    } => {
+                        let last = members.last().unwrap();
+                        let stride = match module.types[last.ty].inner {
+                            TypeInner::Array { stride, .. } => stride,
+                            _ => unreachable!(),
+                        };
+                        (last.offset, stride)
+                    }
+                    _ => unreachable!(),
+                };
+
+                let storage_access = match var.class {
+                    crate::StorageClass::Storage { access } => access,
+                    _ => crate::StorageAccess::default(),
+                };
+                let wrapped_array_length = WrappedArrayLength {
+                    writable: storage_access.contains(crate::StorageAccess::STORE),
+                };
+
+                write!(self.out, "((")?;
+                self.write_wrapped_array_length_function_name(wrapped_array_length)?;
+                let var_name = &self.names[&NameKey::GlobalVariable(var_handle)];
+                write!(self.out, "({}) - {}) / {})", var_name, offset, stride)?
+            }
+            Expression::Derivative { axis, expr } => {
+                use crate::DerivativeAxis as Da;
+
+                let fun_str = match axis {
+                    Da::X => "ddx",
+                    Da::Y => "ddy",
+                    Da::Width => "fwidth",
+                };
+                write!(self.out, "{}(", fun_str)?;
+                self.write_expr(module, expr, func_ctx)?;
+                write!(self.out, ")")?
+            }
+            Expression::Relational { fun, argument } => {
+                use crate::RelationalFunction as Rf;
+
+                let fun_str = match fun {
+                    Rf::All => "all",
+                    Rf::Any => "any",
+                    Rf::IsNan => "isnan",
+                    Rf::IsInf => "isinf",
+                    Rf::IsFinite => "isfinite",
+                    Rf::IsNormal => "isnormal",
+                };
+                write!(self.out, "{}(", fun_str)?;
+                self.write_expr(module, argument, func_ctx)?;
+                write!(self.out, ")")?
+            }
+            Expression::Splat { size, value } => {
+                // hlsl is not supported one value constructor
+                // if we write, for example, int4(0), dxc returns error:
+                // error: too few elements in vector initialization (expected 4 elements, have 1)
+                let number_of_components = match size {
+                    crate::VectorSize::Bi => "xx",
+                    crate::VectorSize::Tri => "xxx",
+                    crate::VectorSize::Quad => "xxxx",
+                };
+                let resolved = func_ctx.info[expr].ty.inner_with(&module.types);
+                self.write_value_type(module, resolved)?;
+                write!(self.out, "(")?;
+                self.write_expr(module, value, func_ctx)?;
+                write!(self.out, ".{})", number_of_components)?
+            }
+            Expression::Select {
+                condition,
+                accept,
+                reject,
+            } => {
+                write!(self.out, "(")?;
+                self.write_expr(module, condition, func_ctx)?;
+                write!(self.out, " ? ")?;
+                self.write_expr(module, accept, func_ctx)?;
+                write!(self.out, " : ")?;
+                self.write_expr(module, reject, func_ctx)?;
+                write!(self.out, ")")?
+            }
+            // Nothing to do here, since call expression already cached
+            Expression::CallResult(_) | Expression::AtomicResult { .. } => {}
         }
 
+        if !closing_bracket.is_empty() {
+            write!(self.out, "{}", closing_bracket)?;
+        }
         Ok(())
     }
 
@@ -950,7 +2064,11 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Doesn't add any newlines or leading/trailing spaces
-    fn write_constant(&mut self, module: &Module, handle: Handle<Constant>) -> BackendResult {
+    fn write_constant(
+        &mut self,
+        module: &Module,
+        handle: Handle<crate::Constant>,
+    ) -> BackendResult {
         let constant = &module.constants[handle];
         match constant.inner {
             crate::ConstantInner::Scalar {
@@ -964,42 +2082,55 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
             }
             crate::ConstantInner::Composite { ty, ref components } => {
-                let (open_b, close_b) = match module.types[ty].inner {
-                    TypeInner::Struct { .. } => ("{ ", " }"),
-                    _ => {
-                        // We should write type only for non struct constants
-                        self.write_type(module, ty)?;
-                        ("(", ")")
-                    }
-                };
-                write!(self.out, "{}", open_b)?;
-                for (index, constant) in components.iter().enumerate() {
-                    self.write_constant(module, *constant)?;
-                    // Only write a comma if isn't the last element
-                    if index != components.len().saturating_sub(1) {
-                        // The leading space is for readability only
-                        write!(self.out, ", ")?;
-                    }
-                }
-                write!(self.out, "{}", close_b)?;
+                self.write_composite_constant(module, ty, components)?;
             }
         }
 
         Ok(())
     }
 
-    /// Helper method used to write [`ScalarValue`](ScalarValue)
+    fn write_composite_constant(
+        &mut self,
+        module: &Module,
+        ty: Handle<crate::Type>,
+        components: &[Handle<crate::Constant>],
+    ) -> BackendResult {
+        let (open_b, close_b) = match module.types[ty].inner {
+            TypeInner::Array { .. } | TypeInner::Struct { .. } => ("{ ", " }"),
+            _ => {
+                // We should write type only for non struct/array constants
+                self.write_type(module, ty)?;
+                ("(", ")")
+            }
+        };
+        write!(self.out, "{}", open_b)?;
+        for (index, constant) in components.iter().enumerate() {
+            self.write_constant(module, *constant)?;
+            // Only write a comma if isn't the last element
+            if index != components.len().saturating_sub(1) {
+                // The leading space is for readability only
+                write!(self.out, ", ")?;
+            }
+        }
+        write!(self.out, "{}", close_b)?;
+
+        Ok(())
+    }
+
+    /// Helper method used to write [`ScalarValue`](crate::ScalarValue)
     ///
     /// # Notes
     /// Adds no trailing or leading whitespace
-    fn write_scalar_value(&mut self, value: ScalarValue) -> BackendResult {
+    fn write_scalar_value(&mut self, value: crate::ScalarValue) -> BackendResult {
+        use crate::ScalarValue as Sv;
+
         match value {
-            ScalarValue::Sint(value) => write!(self.out, "{}", value)?,
-            ScalarValue::Uint(value) => write!(self.out, "{}u", value)?,
+            Sv::Sint(value) => write!(self.out, "{}", value)?,
+            Sv::Uint(value) => write!(self.out, "{}u", value)?,
             // Floats are written using `Debug` instead of `Display` because it always appends the
             // decimal part even it's zero
-            ScalarValue::Float(value) => write!(self.out, "{:?}", value)?,
-            ScalarValue::Bool(value) => write!(self.out, "{}", value)?,
+            Sv::Float(value) => write!(self.out, "{:?}", value)?,
+            Sv::Bool(value) => write!(self.out, "{}", value)?,
         }
 
         Ok(())
@@ -1008,12 +2139,12 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_named_expr(
         &mut self,
         module: &Module,
-        handle: Handle<Expression>,
+        handle: Handle<crate::Expression>,
         name: String,
-        ctx: &FunctionCtx,
+        ctx: &back::FunctionCtx,
     ) -> BackendResult {
         match ctx.info[handle].ty {
-            TypeResolution::Handle(ty_handle) => match module.types[ty_handle].inner {
+            proc::TypeResolution::Handle(ty_handle) => match module.types[ty_handle].inner {
                 TypeInner::Struct { .. } => {
                     let ty_name = &self.names[&NameKey::Type(ty_handle)];
                     write!(self.out, "{}", ty_name)?;
@@ -1022,7 +2153,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     self.write_type(module, ty_handle)?;
                 }
             },
-            TypeResolution::Value(ref inner) => {
+            proc::TypeResolution::Value(ref inner) => {
                 self.write_value_type(module, inner)?;
             }
         }
@@ -1043,57 +2174,30 @@ impl<'a, W: Write> Writer<'a, W> {
         Ok(())
     }
 
-    pub fn finish(self) -> W {
-        self.out
-    }
-}
-
-fn image_dimension_str(dim: ImageDimension) -> &'static str {
-    match dim {
-        ImageDimension::D1 => "1D",
-        ImageDimension::D2 => "2D",
-        ImageDimension::D3 => "3D",
-        ImageDimension::Cube => "Cube",
-    }
-}
-
-fn builtin_str(built_in: BuiltIn) -> &'static str {
-    match built_in {
-        BuiltIn::Position => "SV_Position",
-        // vertex
-        BuiltIn::ClipDistance => "SV_ClipDistance",
-        BuiltIn::CullDistance => "SV_CullDistance",
-        BuiltIn::InstanceIndex => "SV_InstanceID",
-        // based on this page https://docs.microsoft.com/en-us/windows/uwp/gaming/glsl-to-hlsl-reference#comparing-opengl-es-20-with-direct3d-11
-        // No meaning unless you target Direct3D 9
-        BuiltIn::PointSize => "PSIZE",
-        BuiltIn::VertexIndex => "SV_VertexID",
-        // fragment
-        BuiltIn::FragDepth => "SV_Depth",
-        BuiltIn::FrontFacing => "SV_IsFrontFace",
-        BuiltIn::SampleIndex => "SV_SampleIndex",
-        BuiltIn::SampleMask => "SV_Coverage",
-        // compute
-        BuiltIn::GlobalInvocationId => "SV_DispatchThreadID",
-        BuiltIn::LocalInvocationId => "SV_GroupThreadID",
-        BuiltIn::LocalInvocationIndex => "SV_GroupIndex",
-        BuiltIn::WorkGroupId => "SV_GroupID",
-        _ => todo!("builtin_str {:?}", built_in),
-    }
-}
-
-/// Helper function that returns scalar related strings
-/// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-scalar
-fn scalar_kind_str(kind: ScalarKind, width: Bytes) -> Result<&'static str, Error> {
-    match kind {
-        ScalarKind::Sint => Ok("int"),
-        ScalarKind::Uint => Ok("uint"),
-        ScalarKind::Float => match width {
-            2 => Ok("half"),
-            4 => Ok("float"),
-            8 => Ok("double"),
-            _ => Err(Error::UnsupportedScalar(kind, width)),
-        },
-        ScalarKind::Bool => Ok("bool"),
+    /// Helper function that write default zero initialization
+    fn write_default_init(&mut self, module: &Module, ty: Handle<crate::Type>) -> BackendResult {
+        match module.types[ty].inner {
+            TypeInner::Array {
+                size: crate::ArraySize::Constant(const_handle),
+                base,
+                ..
+            } => {
+                write!(self.out, "{{")?;
+                let count = module.constants[const_handle].to_array_length().unwrap();
+                for i in 0..count {
+                    if i != 0 {
+                        write!(self.out, ",")?;
+                    }
+                    self.write_default_init(module, base)?;
+                }
+                write!(self.out, "}}")?;
+            }
+            _ => {
+                write!(self.out, "(")?;
+                self.write_type(module, ty)?;
+                write!(self.out, ")0")?;
+            }
+        }
+        Ok(())
     }
 }

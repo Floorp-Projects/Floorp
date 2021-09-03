@@ -1,8 +1,7 @@
-#![allow(dead_code)]
 use crate::prelude::*;
-use crate::version::{DeviceV1_0, InstanceV1_0};
 use crate::vk;
 use crate::RawPtr;
+use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 
@@ -13,11 +12,11 @@ pub struct DisplaySwapchain {
 }
 
 impl DisplaySwapchain {
-    pub fn new<I: InstanceV1_0, D: DeviceV1_0>(instance: &I, device: &D) -> DisplaySwapchain {
+    pub fn new(instance: &Instance, device: &Device) -> Self {
         let swapchain_fn = vk::KhrDisplaySwapchainFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        DisplaySwapchain {
+        Self {
             handle: device.handle(),
             swapchain_fn,
         }

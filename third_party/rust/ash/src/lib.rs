@@ -9,12 +9,12 @@
 //!
 //! ## Examples
 //!
-//! ```rust,no_run
-//! use ash::{vk, Entry, version::EntryV1_0};
+//! ```no_run
+//! use ash::{vk, Entry};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let entry = Entry::new()?;
+//! let entry = unsafe { Entry::new() }?;
 //! let app_info = vk::ApplicationInfo {
-//!     api_version: vk::make_version(1, 0, 0),
+//!     api_version: vk::make_api_version(0, 1, 0, 0),
 //!     ..Default::default()
 //! };
 //! let create_info = vk::InstanceCreateInfo {
@@ -25,6 +25,12 @@
 //! # Ok(()) }
 //! ```
 //!
+//! ## Getting started
+//! Load the Vulkan library at the default location using [`Entry::new()`][EntryCustom<_>::new()],
+//! or at a custom location using [`Entry::with_library("path/to/vulkan")`][EntryCustom<_>::with_library()].
+//! These loaders use [`libloading`]. If you wish to perform function loading yourself
+//! call [`EntryCustom::new_custom()`] with a closure turning function names
+//! into function pointers.
 
 pub use crate::device::Device;
 pub use crate::entry::{EntryCustom, InstanceError};
@@ -39,11 +45,12 @@ mod entry_libloading;
 mod instance;
 pub mod prelude;
 pub mod util;
-pub mod version;
+/// Raw Vulkan bindings and types, generated from `vk.xml`
 #[macro_use]
 pub mod vk;
 
 // macros of vk need to be defined beforehand
+/// Wrappers for Vulkan extensions
 pub mod extensions;
 
 pub trait RawPtr<T> {

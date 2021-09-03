@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.1 (2021-08-18)
+  - expose all indirect argument types
+  - expose methods for setting root constants
+
 ## v0.4.0 (2021-04-29)
   - update `libloading` to 0.7
 

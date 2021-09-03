@@ -115,7 +115,6 @@ gfx/tests/
 gfx/thebes/
 gfx/vr/
 gfx/webrender_bindings/
-gfx/wgpu/
 gfx/wgpu_bindings/
 gfx/wr/
 gfx/ycbcr/
