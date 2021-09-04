@@ -94,14 +94,9 @@ const load = {
 
   // Returns a promise that settles once the given path has been fetched
   // through a synchronous XMLHttpRequest.
-  xhr_sync: async (path, headers) => {
+  xhr_sync: async path => {
     const xhr = new XMLHttpRequest;
     xhr.open("GET", path, /* async = */ false);
-    if (headers instanceof Object) {
-      for (const [key, value] of Object.entries(headers)) {
-        xhr.setRequestHeader(key, value);
-      }
-    }
     xhr.send();
   }
 };
