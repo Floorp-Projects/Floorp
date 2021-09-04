@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDeviceContext.h"
-#include <algorithm>      // for max
+#include <algorithm>  // for max
 #include "gfxContext.h"
 #include "gfxImageSurface.h"     // for gfxImageSurface
 #include "gfxPoint.h"            // for gfxSize
