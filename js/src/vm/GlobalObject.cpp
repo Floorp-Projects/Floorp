@@ -162,7 +162,9 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_WasmTable:
     case JSProto_WasmGlobal:
     case JSProto_WasmTag:
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
     case JSProto_WasmFunction:
+#endif
     case JSProto_WasmException:
       return false;
 

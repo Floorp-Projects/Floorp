@@ -40,7 +40,13 @@
 #  define IF_INTL(REAL, IMAGINARY) IMAGINARY
 #endif
 
-#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL)                     \
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+#  define IF_WASM_TYPE(REAL, IMAGINARY) REAL
+#else
+#  define IF_WASM_TYPE(REAL, IMAGINARY) IMAGINARY
+#endif
+
+#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_WASM_TYPE)  \
   IMAGINARY(Null, dummy)                                                      \
   REAL(Object, OCLASP(Plain))                                                 \
   REAL(Function, &FunctionClass)                                              \
@@ -122,15 +128,16 @@
   REAL(WasmTable, OCLASP(WasmTable))                                          \
   REAL(WasmGlobal, OCLASP(WasmGlobal))                                        \
   REAL(WasmTag, OCLASP(WasmTag))                                              \
-  REAL(WasmFunction, CLASP(WasmFunction))                                     \
+  REAL_IF_WASM_TYPE(WasmFunction, CLASP(WasmFunction))                        \
   REAL(WasmException, OCLASP(WasmException))                                  \
   REAL(FinalizationRegistry, OCLASP(FinalizationRegistry))                    \
   REAL(WeakRef, OCLASP(WeakRef))                                              \
   REAL(Iterator, OCLASP(Iterator))                                            \
   REAL(AsyncIterator, OCLASP(AsyncIterator))
 
-#define JS_FOR_PROTOTYPES(REAL, IMAGINARY) \
-  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY))
+#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
+  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
+                     IF_WASM_TYPE(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 
