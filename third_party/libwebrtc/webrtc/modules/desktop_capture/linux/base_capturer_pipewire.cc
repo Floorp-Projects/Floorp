@@ -238,6 +238,10 @@ BaseCapturerPipeWire::~BaseCapturerPipeWire() {
     g_object_unref(proxy_);
     proxy_ = nullptr;
   }
+
+  if (pw_fd_ != -1) {
+    close(pw_fd_);
+  }
 }
 
 void BaseCapturerPipeWire::InitPortal() {
