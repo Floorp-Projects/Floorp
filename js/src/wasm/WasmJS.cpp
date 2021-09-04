@@ -4310,9 +4310,6 @@ const ClassSpec WasmFunctionClassSpec = {CreateWasmFunctionConstructor,
 const JSClass js::WasmFunctionClass = {
     "WebAssembly.Function", 0, JS_NULL_CLASS_OPS, &WasmFunctionClassSpec};
 
-#else
-const JSClass js::WasmFunctionClass = {"WebAssembly.Function", 0,
-                                       JS_NULL_CLASS_OPS, JS_NULL_CLASS_SPEC};
 #endif
 
 // ============================================================================
