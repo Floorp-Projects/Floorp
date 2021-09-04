@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const INT64_MIN = -0x8000000000000000n;
+
 class RequestError extends Error {
   constructor(resultCode, resultName) {
     super(`Request failed (code: ${resultCode}, name: ${resultName})`);
