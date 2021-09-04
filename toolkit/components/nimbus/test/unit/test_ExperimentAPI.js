@@ -171,10 +171,6 @@ add_task(async function test_getExperiment_feature() {
 
   Assert.ok(exposureStub.notCalled, "Not called by default");
 
-  ExperimentAPI.getExperiment({ featureId: "cfr", sendExposureEvent: true });
-
-  Assert.ok(exposureStub.calledOnce, "Called explicitly.");
-
   sandbox.restore();
 });
 
@@ -397,43 +393,6 @@ add_task(async function test_activateBranch_safe() {
     Assert.ok(false, "Should catch error in ExperimentAPI");
   }
 
-  sandbox.restore();
-});
-
-add_task(async function test_activateBranch_activationEvent() {
-  const store = ExperimentFakes.store();
-  const sandbox = sinon.createSandbox();
-  sandbox.stub(ExperimentAPI, "_store").get(() => store);
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "green", enabled: true },
-    },
-  });
-
-  await store.init();
-  await store.addExperiment(experiment);
-  // Adding stub later because `addExperiment` emits update events
-  const stub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
-  ExperimentAPI.activateBranch({ featureId: "green" });
-  Assert.equal(
-    stub.callCount,
-    0,
-    "Exposure is not sent by default by activateBranch"
-  );
-
-  ExperimentAPI.activateBranch({ featureId: "green", sendExposureEvent: true });
-
-  Assert.equal(stub.callCount, 1, "Called by doing activateBranch");
-  Assert.deepEqual(
-    stub.firstCall.args[0],
-    {
-      featureId: experiment.branch.feature.featureId,
-      experimentSlug: experiment.slug,
-      branchSlug: experiment.branch.slug,
-    },
-    "Has correct payload"
-  );
   sandbox.restore();
 });
 

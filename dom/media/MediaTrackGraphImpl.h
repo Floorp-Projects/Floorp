@@ -64,9 +64,6 @@ class NativeInputTrack : public ProcessedMediaTrack {
                        uint32_t aAlreadyBuffered);
   void DeviceChanged(MediaTrackGraphImpl* aGraph);
 
-  // Other Graph Thread APIs
-  void InitDataHolderIfNeeded();
-
   // Any thread
   NativeInputTrack* AsNativeInputTrack() override { return this; }
 
@@ -75,30 +72,9 @@ class NativeInputTrack : public ProcessedMediaTrack {
   nsTArray<RefPtr<AudioDataListener>> mDataUsers;
 
  private:
-  class AudioDataBuffers {
-   public:
-    AudioDataBuffers() = default;
-    void SetOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels, TrackRate aRate);
-    void SetInputData(AudioDataValue* aBuffer, size_t aFrames,
-                      uint32_t aChannels, TrackRate aRate);
-
-    enum Scope : unsigned char {
-      Input = 0x01,
-      Output = 0x02,
-    };
-    void Clear(Scope aScope);
-
-    typedef AudioDataListenerInterface::BufferInfo BufferInfo;
-    // Storing the audio output data coming from NotifyOutputData
-    Maybe<BufferInfo> mOutputData;
-    // Storing the audio input data coming from NotifyInputData
-    Maybe<BufferInfo> mInputData;
-  };
-
-  // Only accessed on the graph thread.
-  // Storing the audio data coming from GraphDriver directly.
-  Maybe<AudioDataBuffers> mDataHolder;
+  // Queue the audio input data coming from NotifyInputData. Used in graph
+  // thread only.
+  AudioInputSamples mInputData;
 
   // Only accessed on the graph thread.
   uint32_t mInputChannels = 0;

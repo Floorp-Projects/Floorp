@@ -209,7 +209,7 @@ int32_t BrowsingContext::IndexOf(BrowsingContext* aChild) {
   return index;
 }
 
-WindowContext* BrowsingContext::GetTopWindowContext() {
+WindowContext* BrowsingContext::GetTopWindowContext() const {
   if (mParentWindow) {
     return mParentWindow->TopWindowContext();
   }
@@ -859,7 +859,10 @@ void BrowsingContext::Detach(bool aFromIPC) {
       }
     });
   } else if (!aFromIPC) {
-    auto callback = [](auto) {};
+    // Hold a strong reference to ourself until the responses come back to
+    // ensure the BrowsingContext isn't cleaned up before the parent process
+    // acknowledges the discard request.
+    auto callback = [self = RefPtr{this}](auto) {};
     ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
                                                              callback);
   }
@@ -961,6 +964,14 @@ bool BrowsingContext::AncestorsAreCurrent() const {
       return true;
     }
   }
+}
+
+bool BrowsingContext::IsInBFCache() const {
+  if (mozilla::SessionHistoryInParent()) {
+    return mIsInBFCache;
+  }
+  return mParentWindow &&
+         mParentWindow->TopWindowContext()->GetWindowStateSaved();
 }
 
 Span<RefPtr<BrowsingContext>> BrowsingContext::Children() const {

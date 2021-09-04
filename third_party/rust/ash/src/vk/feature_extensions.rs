@@ -211,7 +211,7 @@ impl StructureType {
 #[doc = "Generated from 'VK_VERSION_1_1'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES: Self =
-        StructureType::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
+        Self::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
 }
 #[doc = "Generated from 'VK_VERSION_1_1'"]
 impl StructureType {
@@ -547,7 +547,7 @@ impl StructureType {
 #[doc = "Generated from 'VK_VERSION_1_1'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES: Self =
-        StructureType::PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+        Self::PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
 }
 #[doc = "Generated from 'VK_VERSION_1_2'"]
 impl StructureType {

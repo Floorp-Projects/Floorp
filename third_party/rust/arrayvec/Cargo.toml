@@ -13,13 +13,13 @@
 [package]
 edition = "2018"
 name = "arrayvec"
-version = "0.5.2"
+version = "0.7.1"
 authors = ["bluss"]
 description = "A vector with fixed capacity, backed by an array (it can be stored on the stack too). Implements fixed capacity ArrayVec and ArrayString."
 documentation = "https://docs.rs/arrayvec/"
 keywords = ["stack", "vector", "array", "data-structure", "no_std"]
 categories = ["data-structures", "no-std"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/bluss/arrayvec"
 [package.metadata.docs.rs]
 features = ["serde"]
@@ -56,8 +56,5 @@ version = "1.0"
 [build-dependencies]
 
 [features]
-array-sizes-129-255 = []
-array-sizes-33-128 = []
 default = ["std"]
 std = []
-unstable-const-fn = []

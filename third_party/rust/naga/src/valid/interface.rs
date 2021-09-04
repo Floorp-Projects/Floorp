@@ -15,11 +15,6 @@ pub enum GlobalVariableError {
     InvalidUsage,
     #[error("Type isn't compatible with the storage class")]
     InvalidType,
-    #[error("Storage access {seen:?} exceeds the allowed {allowed:?}")]
-    InvalidStorageAccess {
-        allowed: crate::StorageAccess,
-        seen: crate::StorageAccess,
-    },
     #[error("Type flags {seen:?} do not meet the required {required:?}")]
     MissingTypeFlags {
         required: TypeFlags,
@@ -53,6 +48,8 @@ pub enum VaryingError {
     BindingCollision { location: u32 },
     #[error("Built-in {0:?} is present more than once")]
     DuplicateBuiltIn(crate::BuiltIn),
+    #[error("Capability {0:?} is not supported")]
+    UnsupportedCapability(Capabilities),
 }
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -99,6 +96,7 @@ struct VaryingContext<'a> {
     types: &'a Arena<crate::Type>,
     location_mask: &'a mut BitSet,
     built_in_mask: u32,
+    capabilities: Capabilities,
 }
 
 impl VaryingContext<'_> {
@@ -176,6 +174,21 @@ impl VaryingContext<'_> {
                                 width: crate::BOOL_WIDTH,
                             },
                     ),
+                    Bi::PrimitiveIndex => {
+                        if !self.capabilities.contains(Capabilities::PRIMITIVE_INDEX) {
+                            return Err(VaryingError::UnsupportedCapability(
+                                Capabilities::PRIMITIVE_INDEX,
+                            ));
+                        }
+                        (
+                            self.stage == St::Fragment && !self.output,
+                            *ty_inner
+                                == Ti::Scalar {
+                                    kind: Sk::Uint,
+                                    width,
+                                },
+                        )
+                    }
                     Bi::SampleIndex => (
                         self.stage == St::Fragment && !self.output,
                         *ty_inner
@@ -203,7 +216,8 @@ impl VaryingContext<'_> {
                     Bi::GlobalInvocationId
                     | Bi::LocalInvocationId
                     | Bi::WorkGroupId
-                    | Bi::WorkGroupSize => (
+                    | Bi::WorkGroupSize
+                    | Bi::NumWorkGroups => (
                         self.stage == St::Compute && !self.output,
                         *ty_inner
                             == Ti::Vector {
@@ -304,16 +318,15 @@ impl super::Validator {
         log::debug!("var {:?}", var);
         let type_info = &self.types[var.ty.index()];
 
-        let (allowed_storage_access, required_type_flags, is_resource) = match var.class {
+        let (required_type_flags, is_resource) = match var.class {
             crate::StorageClass::Function => return Err(GlobalVariableError::InvalidUsage),
-            crate::StorageClass::Storage => {
+            crate::StorageClass::Storage { .. } => {
                 if let Err((ty_handle, disalignment)) = type_info.storage_layout {
                     if self.flags.contains(ValidationFlags::STRUCT_LAYOUTS) {
                         return Err(GlobalVariableError::Alignment(ty_handle, disalignment));
                     }
                 }
                 (
-                    crate::StorageAccess::all(),
                     TypeFlags::DATA | TypeFlags::HOST_SHARED | TypeFlags::TOP_LEVEL,
                     true,
                 )
@@ -325,8 +338,8 @@ impl super::Validator {
                     }
                 }
                 (
-                    crate::StorageAccess::empty(),
                     TypeFlags::DATA
+                        | TypeFlags::COPY
                         | TypeFlags::SIZED
                         | TypeFlags::HOST_SHARED
                         | TypeFlags::TOP_LEVEL,
@@ -334,23 +347,15 @@ impl super::Validator {
                 )
             }
             crate::StorageClass::Handle => {
-                let access = match types[var.ty].inner {
-                    crate::TypeInner::Image {
-                        class: crate::ImageClass::Storage(_),
-                        ..
-                    } => crate::StorageAccess::all(),
-                    crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => {
-                        crate::StorageAccess::empty()
-                    }
+                match types[var.ty].inner {
+                    crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => {}
                     _ => return Err(GlobalVariableError::InvalidType),
                 };
-                (access, TypeFlags::empty(), true)
+                (TypeFlags::empty(), true)
             }
-            crate::StorageClass::Private | crate::StorageClass::WorkGroup => (
-                crate::StorageAccess::empty(),
-                TypeFlags::DATA | TypeFlags::SIZED,
-                false,
-            ),
+            crate::StorageClass::Private | crate::StorageClass::WorkGroup => {
+                (TypeFlags::DATA | TypeFlags::SIZED, false)
+            }
             crate::StorageClass::PushConstant => {
                 if !self.capabilities.contains(Capabilities::PUSH_CONSTANT) {
                     return Err(GlobalVariableError::UnsupportedCapability(
@@ -358,19 +363,11 @@ impl super::Validator {
                     ));
                 }
                 (
-                    crate::StorageAccess::LOAD,
-                    TypeFlags::DATA | TypeFlags::HOST_SHARED | TypeFlags::SIZED,
+                    TypeFlags::DATA | TypeFlags::COPY | TypeFlags::HOST_SHARED | TypeFlags::SIZED,
                     false,
                 )
             }
         };
-
-        if !allowed_storage_access.contains(var.storage_access) {
-            return Err(GlobalVariableError::InvalidStorageAccess {
-                seen: var.storage_access,
-                allowed: allowed_storage_access,
-            });
-        }
 
         if !type_info.flags.contains(required_type_flags) {
             return Err(GlobalVariableError::MissingTypeFlags {
@@ -429,6 +426,7 @@ impl super::Validator {
                 types: &module.types,
                 location_mask: &mut self.location_mask,
                 built_in_mask: argument_built_ins,
+                capabilities: self.capabilities,
             };
             ctx.validate(fa.binding.as_ref())
                 .map_err(|e| EntryPointError::Argument(index as u32, e))?;
@@ -444,6 +442,7 @@ impl super::Validator {
                 types: &module.types,
                 location_mask: &mut self.location_mask,
                 built_in_mask: 0,
+                capabilities: self.capabilities,
             };
             ctx.validate(fr.binding.as_ref())
                 .map_err(EntryPointError::Result)?;
@@ -461,12 +460,12 @@ impl super::Validator {
             let allowed_usage = match var.class {
                 crate::StorageClass::Function => unreachable!(),
                 crate::StorageClass::Uniform => GlobalUse::READ | GlobalUse::QUERY,
-                crate::StorageClass::Storage => storage_usage(var.storage_access),
+                crate::StorageClass::Storage { access } => storage_usage(access),
                 crate::StorageClass::Handle => match module.types[var.ty].inner {
                     crate::TypeInner::Image {
-                        class: crate::ImageClass::Storage(_),
+                        class: crate::ImageClass::Storage { access, .. },
                         ..
-                    } => storage_usage(var.storage_access),
+                    } => storage_usage(access),
                     _ => GlobalUse::READ | GlobalUse::QUERY,
                 },
                 crate::StorageClass::Private | crate::StorageClass::WorkGroup => GlobalUse::all(),

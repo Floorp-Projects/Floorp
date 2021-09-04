@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Cribbed from upgradeDialog.js; whether this is actually still required
+ * is not totally clear, but better to be safe than sorry:
+ *
+ * For some reason SubDialog browser sizing can result in scrollbars, so just
+ * hide the horizontal scrollbar that would have then required vertical
+ * scrollbar. This should be okay as we wrap content for this fixed width
+ * dialog unless the window is actually narrow and really does need
+ * horizontal scrollbars. */
+@media (min-width: 604px) {
+body {
+  overflow-x: hidden;
+}
+}
+
+body {
+  width: 604px;
+  padding: 12px 30px;
+}
+
+#dialog-content {
+  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 13px;
+}
+
+#title {
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 36px;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+#content {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 16px;
+  max-width: 372px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+#primary {
+  font-size: 13px;
+}
+
+#secondary {
+  /* make this look like a link rather than a button */
+  background: none;
+
+  /* without this; we fall back to black on mouseover */
+  color: var(--in-content-link-color);
+
+  /* make the font look like the mock */
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: normal;
+}

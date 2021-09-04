@@ -214,11 +214,10 @@ class AsyncLogger {
             }
             static MarkerSchema MarkerTypeDisplay() {
               using MS = MarkerSchema;
-              MS schema{MS::Location::markerChart, MS::Location::markerTable};
+              MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
               schema.SetChartLabel("{marker.data.name}");
               schema.SetTableLabel("{marker.name} - {marker.data.name}");
-              schema.AddKeyLabelFormat("name", "Comment",
-                                       MarkerSchema::Format::string);
+              schema.AddKeyLabelFormat("name", "Comment", MS::Format::String);
               return schema;
             }
           };
@@ -231,7 +230,7 @@ class AsyncLogger {
                 baseprofiler::SpliceableJSONWriter& aWriter) {}
             static MarkerSchema MarkerTypeDisplay() {
               using MS = MarkerSchema;
-              MS schema{MS::Location::markerChart, MS::Location::markerTable};
+              MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
               // Nothing outside the defaults.
               return schema;
             }

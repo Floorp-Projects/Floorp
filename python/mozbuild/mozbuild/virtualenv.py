@@ -14,7 +14,6 @@ import platform
 import shutil
 import subprocess
 import sys
-from tempfile import TemporaryDirectory
 
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
@@ -33,13 +32,6 @@ If you still receive this error, your shell environment is likely detecting
 another Python version. Ensure a modern Python can be found in the paths
 defined by the $PATH environment variable and try again.
 """.lstrip()
-
-here = os.path.abspath(os.path.dirname(__file__))
-
-
-# We can't import six.ensure_binary() or six.ensure_text() because this module
-# has to run stand-alone.  Instead we'll implement an abbreviated version of the
-# checks it does.
 
 
 class VirtualenvHelper(object):
@@ -208,7 +200,10 @@ class VirtualenvManager(VirtualenvHelper):
             if current_paths != required_paths:
                 return False
 
-        if env_requirements.pypi_requirements:
+        if (
+            env_requirements.pypi_requirements
+            or env_requirements.pypi_optional_requirements
+        ):
             pip_json = self._run_pip(
                 ["list", "--format", "json"], stdout=subprocess.PIPE
             ).stdout
@@ -221,6 +216,13 @@ class VirtualenvManager(VirtualenvHelper):
                     installed_packages.get(requirement.package_name, None)
                     != requirement.version
                 ):
+                    return False
+
+            for requirement in env_requirements.pypi_optional_requirements:
+                installed_version = installed_packages.get(
+                    requirement.package_name, None
+                )
+                if installed_version and installed_version != requirement.version:
                     return False
 
         return True
@@ -440,16 +442,13 @@ class VirtualenvManager(VirtualenvHelper):
 
         exec(open(self.activate_path).read(), dict(__file__=self.activate_path))
 
-    def install_pip_package(self, package, vendored=False):
+    def install_pip_package(self, package):
         """Install a package via pip.
 
         The supplied package is specified using a pip requirement specifier.
         e.g. 'foo' or 'foo==1.0'.
 
         If the package is already installed, this is a no-op.
-
-        If vendored is True, no package index will be used and no dependencies
-        will be installed.
         """
         if sys.executable.startswith(self.bin_path):
             # If we're already running in this interpreter, we can optimize in
@@ -461,47 +460,9 @@ class VirtualenvManager(VirtualenvHelper):
             if req.satisfied_by is not None:
                 return
 
-        args = ["install"]
-        vendored_dist_info_dir = None
+        return self._run_pip(["install", package], stderr=subprocess.STDOUT)
 
-        if vendored:
-            args.extend(
-                [
-                    "--no-deps",
-                    "--no-index",
-                    # The setup will by default be performed in an isolated build
-                    # environment, and since we're running with --no-index, this
-                    # means that pip will be unable to install in the isolated build
-                    # environment any dependencies that might be specified in a
-                    # setup_requires directive for the package. Since we're manually
-                    # controlling our build environment, build isolation isn't a
-                    # concern and we can disable that feature. Note that this is
-                    # safe and doesn't risk trampling any other packages that may be
-                    # installed due to passing `--no-deps --no-index` as well.
-                    "--no-build-isolation",
-                ]
-            )
-            vendored_dist_info_dir = next(
-                (d for d in os.listdir(package) if d.endswith(".dist-info")), None
-            )
-
-        with TemporaryDirectory() as tmp:
-            if vendored_dist_info_dir:
-                # This is a vendored wheel. We have to re-pack it in order for pip
-                # to install it.
-                wheel_file = os.path.join(
-                    tmp, "{}-1.0-py3-none-any.whl".format(os.path.basename(package))
-                )
-                shutil.make_archive(wheel_file, "zip", package)
-                shutil.move("{}.zip".format(wheel_file), wheel_file)
-                package = wheel_file
-
-            args.append(package)
-            return self._run_pip(args, stderr=subprocess.STDOUT)
-
-    def install_pip_requirements(
-        self, path, require_hashes=True, quiet=False, vendored=False
-    ):
+    def install_pip_requirements(self, path, require_hashes=True, quiet=False):
         """Install a pip requirements.txt file.
 
         The supplied path is a text file containing pip requirement
@@ -522,9 +483,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         if quiet:
             args.append("--quiet")
-
-        if vendored:
-            args.extend(["--no-deps", "--no-index"])
 
         return self._run_pip(args, stderr=subprocess.STDOUT)
 

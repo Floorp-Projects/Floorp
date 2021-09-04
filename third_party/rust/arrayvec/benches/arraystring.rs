@@ -7,7 +7,7 @@ use arrayvec::ArrayString;
 use bencher::Bencher;
 
 fn try_push_c(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     b.iter(|| {
         v.clear();
         while v.try_push('c').is_ok() {
@@ -18,7 +18,7 @@ fn try_push_c(b: &mut Bencher) {
 }
 
 fn try_push_alpha(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     b.iter(|| {
         v.clear();
         while v.try_push('α').is_ok() {
@@ -30,7 +30,7 @@ fn try_push_alpha(b: &mut Bencher) {
 
 // Yes, pushing a string char-by-char is slow. Use .push_str.
 fn try_push_string(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     let input = "abcαβγ“”";
     b.iter(|| {
         v.clear();
@@ -45,7 +45,7 @@ fn try_push_string(b: &mut Bencher) {
 }
 
 fn push_c(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     b.iter(|| {
         v.clear();
         while !v.is_full() {
@@ -57,7 +57,7 @@ fn push_c(b: &mut Bencher) {
 }
 
 fn push_alpha(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     b.iter(|| {
         v.clear();
         while !v.is_full() {
@@ -69,7 +69,7 @@ fn push_alpha(b: &mut Bencher) {
 }
 
 fn push_string(b: &mut Bencher) {
-    let mut v = ArrayString::<[u8; 512]>::new();
+    let mut v = ArrayString::<512>::new();
     let input = "abcαβγ“”";
     b.iter(|| {
         v.clear();

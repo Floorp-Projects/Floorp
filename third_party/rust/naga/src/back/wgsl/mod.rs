@@ -26,3 +26,18 @@ pub fn write_string(
     let output = w.finish();
     Ok(output)
 }
+
+impl crate::AtomicFunction {
+    fn to_wgsl(self) -> &'static str {
+        match self {
+            Self::Add => "Add",
+            Self::And => "And",
+            Self::InclusiveOr => "Or",
+            Self::ExclusiveOr => "Xor",
+            Self::Min => "Min",
+            Self::Max => "Max",
+            Self::Exchange { compare: None } => "Exchange",
+            Self::Exchange { .. } => "CompareExchangeWeak",
+        }
+    }
+}

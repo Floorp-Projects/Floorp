@@ -326,9 +326,9 @@ struct ProcessPriorityChange {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.AddKeyFormat("Before", MS::Format::string);
-    schema.AddKeyFormat("After", MS::Format::string);
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyFormat("Before", MS::Format::String);
+    schema.AddKeyFormat("After", MS::Format::String);
     schema.AddStaticLabelValue("Note",
                                "This is a notification of the priority change "
                                "that was done by the parent process");
@@ -352,9 +352,9 @@ struct ProcessPriority {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.AddKeyFormat("Priority", MS::Format::string);
-    schema.AddKeyFormat("Marker cause", MS::Format::string);
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyFormat("Priority", MS::Format::String);
+    schema.AddKeyFormat("Marker cause", MS::Format::String);
     schema.SetAllLabels("priority: {marker.data.Priority}");
     return schema;
   }

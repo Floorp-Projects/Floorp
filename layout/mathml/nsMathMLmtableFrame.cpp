@@ -312,8 +312,8 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
                                  : PaintBorderFlags();
 
     ImgDrawResult result = nsCSSRendering::PaintBorderWithStyleBorder(
-        mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(), bounds,
-        styleBorder, mFrame->Style(), flags, mFrame->GetSkipSides());
+        mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(aBuilder, aCtx),
+        bounds, styleBorder, mFrame->Style(), flags, mFrame->GetSkipSides());
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }

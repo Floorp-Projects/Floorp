@@ -40,7 +40,7 @@ const kAllowedPrefs = new Set([
   "pdfjs.previousHandler.alwaysAskBeforeHandling",
   "pdfjs.previousHandler.preferredAction",
   "pdfjs.renderer",
-  "pdfjs.renderInteractiveForms",
+  "pdfjs.annotationMode",
   "pdfjs.sidebarViewOnLoad",
   "pdfjs.scrollModeOnLoad",
   "pdfjs.spreadModeOnLoad",

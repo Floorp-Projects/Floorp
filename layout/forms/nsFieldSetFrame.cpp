@@ -127,7 +127,7 @@ void nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                     gfxContext* aCtx) {
   image::ImgDrawResult result =
       static_cast<nsFieldSetFrame*>(mFrame)->PaintBorder(
-          aBuilder, *aCtx, ToReferenceFrame(), GetPaintRect());
+          aBuilder, *aCtx, ToReferenceFrame(), GetPaintRect(aBuilder, aCtx));
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }

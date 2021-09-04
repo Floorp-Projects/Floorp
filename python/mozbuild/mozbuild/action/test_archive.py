@@ -382,7 +382,7 @@ ARCHIVE_FILES = {
         {"source": buildconfig.topsrcdir, "pattern": "build/autoconf/**"},
         {"source": buildconfig.topsrcdir, "pattern": "build/moz.configure/**"},
         {"source": buildconfig.topsrcdir, "pattern": "python/**"},
-        {"source": buildconfig.topsrcdir, "pattern": "build/mach_bootstrap.py"},
+        {"source": buildconfig.topsrcdir, "pattern": "build/mach_initialize.py"},
         {
             "source": buildconfig.topsrcdir,
             "pattern": "build/build_virtualenv_packages.txt",

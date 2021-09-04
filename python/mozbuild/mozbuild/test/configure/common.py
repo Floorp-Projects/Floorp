@@ -41,7 +41,7 @@ class ConfigureTestVFS(object):
         self._paths = set(mozpath.abspath(p) for p in paths)
 
     def _real_file(self, path):
-        return mozpath.basedir(path, [topsrcdir, topobjdir, tempfile.tempdir])
+        return mozpath.basedir(path, [topsrcdir, topobjdir, tempfile.gettempdir()])
 
     def exists(self, path):
         if path in self._paths:

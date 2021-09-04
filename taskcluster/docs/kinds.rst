@@ -310,18 +310,9 @@ release-flatpak-repackage
 -------------------------
 Generate an installer using Flathub's Flatpak format.
 
-release-snap-push
------------------
-Pushes Snap repackage on Snap store.
-
 release-flatpak-push
 --------------------
 Pushes Flatpak repackage on Flathub
-
-release-secondary-snap-push
----------------------------
-Performs the same function as `release-snap-push`, except for the beta channel as part of RC
-Releases.
 
 release-secondary-flatpak-push
 ------------------------------
@@ -668,11 +659,6 @@ webrender
 ---------
 Tasks used to do testing of WebRender standalone (without gecko). The
 WebRender code lives in gfx/wr and has its own testing infrastructure.
-
-wgpu
----------
-Tasks used to do testing of WebGPU standalone (without gecko). The
-WebGPU code lives in gfx/wgpu and has its own testing infrastructure.
 
 github-sync
 ------------

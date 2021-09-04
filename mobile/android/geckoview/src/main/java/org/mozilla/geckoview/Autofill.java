@@ -290,10 +290,6 @@ public class Autofill {
             return mRoot;
         }
 
-        /* package */ String getUuid(final int id) {
-            return mNodes.get(id).getUuid();
-        }
-
         /* package */ int getIdFromUuid(final String uuid) {
             final Integer id = mUuidToId.get(uuid);
             if (id != null) {
@@ -1103,8 +1099,10 @@ public class Autofill {
                     response = new GeckoBundle(values.size() - i);
                     callback = newCallback;
                 }
-                final String uuid = getAutofillSession().getUuid(id);
-                response.putString(uuid, String.valueOf(value));
+                final Node node = getAutofillSession().getNode(id);
+                if (node != null) {
+                    response.putString(node.getUuid(), String.valueOf(value));
+                }
             }
 
             if (callback != null) {

@@ -147,9 +147,9 @@ void nsDisplayGradient::Paint(nsDisplayListBuilder* aBuilder,
     result = imageRenderer.PrepareResult();
   } else {
     nsRect dest(ToReferenceFrame(), size);
-    result = imageRenderer.DrawLayer(frame->PresContext(), *aCtx, dest, dest,
-                                     dest.TopLeft(), GetPaintRect(),
-                                     dest.Size(), /* aOpacity = */ 1.0f);
+    result = imageRenderer.DrawLayer(
+        frame->PresContext(), *aCtx, dest, dest, dest.TopLeft(),
+        GetPaintRect(aBuilder, aCtx), dest.Size(), /* aOpacity = */ 1.0f);
   }
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -1537,8 +1537,8 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
     uint32_t flags = imgIContainer::FLAG_SYNC_DECODE;
 
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    ImgDrawResult result =
-        f->DisplayAltFeedback(*aCtx, GetPaintRect(), ToReferenceFrame(), flags);
+    ImgDrawResult result = f->DisplayAltFeedback(
+        *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), flags);
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
@@ -2003,8 +2003,8 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
-  ImgDrawResult result = frame->PaintImage(*aCtx, ToReferenceFrame(),
-                                           GetPaintRect(), mImage, flags);
+  ImgDrawResult result = frame->PaintImage(
+      *aCtx, ToReferenceFrame(), GetPaintRect(aBuilder, aCtx), mImage, flags);
 
   if (result == ImgDrawResult::NOT_READY ||
       result == ImgDrawResult::INCOMPLETE ||
@@ -2012,8 +2012,9 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
     // If the current image failed to paint because it's still loading or
     // decoding, try painting the previous image.
     if (mPrevImage) {
-      result = frame->PaintImage(*aCtx, ToReferenceFrame(), GetPaintRect(),
-                                 mPrevImage, flags);
+      result =
+          frame->PaintImage(*aCtx, ToReferenceFrame(),
+                            GetPaintRect(aBuilder, aCtx), mPrevImage, flags);
     }
   }
 

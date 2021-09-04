@@ -233,8 +233,8 @@ impl super::Instruction {
 
         let (depth, multi, sampled) = match image_class {
             crate::ImageClass::Sampled { kind: _, multi } => (false, multi, true),
-            crate::ImageClass::Depth => (true, false, true),
-            crate::ImageClass::Storage(_) => (false, false, false),
+            crate::ImageClass::Depth { multi } => (true, multi, true),
+            crate::ImageClass::Storage { .. } => (false, false, false),
         };
         instruction.add_operand(depth as u32);
         instruction.add_operand(arrayed as u32);
@@ -242,7 +242,7 @@ impl super::Instruction {
         instruction.add_operand(if sampled { 1 } else { 2 });
 
         let format = match image_class {
-            crate::ImageClass::Storage(format) => match format {
+            crate::ImageClass::Storage { format, .. } => match format {
                 crate::StorageFormat::R8Unorm => spirv::ImageFormat::R8,
                 crate::StorageFormat::R8Snorm => spirv::ImageFormat::R8Snorm,
                 crate::StorageFormat::R8Uint => spirv::ImageFormat::R8ui,
@@ -439,19 +439,49 @@ impl super::Instruction {
         instruction
     }
 
+    pub(super) fn atomic_load(
+        result_type_id: Word,
+        id: Word,
+        pointer_id: Word,
+        scope_id: Word,
+        semantics_id: Word,
+    ) -> Self {
+        let mut instruction = Self::new(Op::AtomicLoad);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(pointer_id);
+        instruction.add_operand(scope_id);
+        instruction.add_operand(semantics_id);
+        instruction
+    }
+
     pub(super) fn store(
         pointer_id: Word,
-        object_id: Word,
+        value_id: Word,
         memory_access: Option<spirv::MemoryAccess>,
     ) -> Self {
         let mut instruction = Self::new(Op::Store);
         instruction.add_operand(pointer_id);
-        instruction.add_operand(object_id);
+        instruction.add_operand(value_id);
 
         if let Some(memory_access) = memory_access {
             instruction.add_operand(memory_access.bits());
         }
 
+        instruction
+    }
+
+    pub(super) fn atomic_store(
+        pointer_id: Word,
+        scope_id: Word,
+        semantics_id: Word,
+        value_id: Word,
+    ) -> Self {
+        let mut instruction = Self::new(Op::AtomicStore);
+        instruction.add_operand(pointer_id);
+        instruction.add_operand(scope_id);
+        instruction.add_operand(semantics_id);
+        instruction.add_operand(value_id);
         instruction
     }
 
@@ -579,27 +609,14 @@ impl super::Instruction {
         instruction
     }
 
-    pub(super) fn image_fetch(
+    pub(super) fn image_fetch_or_read(
+        op: Op,
         result_type_id: Word,
         id: Word,
         image: Word,
         coordinates: Word,
     ) -> Self {
-        let mut instruction = Self::new(Op::ImageFetch);
-        instruction.set_type(result_type_id);
-        instruction.set_result(id);
-        instruction.add_operand(image);
-        instruction.add_operand(coordinates);
-        instruction
-    }
-
-    pub(super) fn image_read(
-        result_type_id: Word,
-        id: Word,
-        image: Word,
-        coordinates: Word,
-    ) -> Self {
-        let mut instruction = Self::new(Op::ImageRead);
+        let mut instruction = Self::new(op);
         instruction.set_type(result_type_id);
         instruction.set_result(id);
         instruction.add_operand(image);
@@ -734,6 +751,25 @@ impl super::Instruction {
         instruction
     }
 
+    pub(super) fn atomic_binary(
+        op: Op,
+        result_type_id: Word,
+        id: Word,
+        pointer: Word,
+        scope_id: Word,
+        semantics_id: Word,
+        value: Word,
+    ) -> Self {
+        let mut instruction = Self::new(op);
+        instruction.set_type(result_type_id);
+        instruction.set_result(id);
+        instruction.add_operand(pointer);
+        instruction.add_operand(scope_id);
+        instruction.add_operand(semantics_id);
+        instruction.add_operand(value);
+        instruction
+    }
+
     //
     // Bit Instructions
     //
@@ -757,6 +793,21 @@ impl super::Instruction {
     //
     // Control-Flow Instructions
     //
+
+    pub(super) fn phi(
+        result_type_id: Word,
+        result_id: Word,
+        var_parent_pairs: &[(Word, Word)],
+    ) -> Self {
+        let mut instruction = Self::new(Op::Phi);
+        instruction.add_operand(result_type_id);
+        instruction.add_operand(result_id);
+        for &(variable, parent) in var_parent_pairs {
+            instruction.add_operand(variable);
+            instruction.add_operand(parent);
+        }
+        instruction
+    }
 
     pub(super) fn selection_merge(
         merge_id: Word,

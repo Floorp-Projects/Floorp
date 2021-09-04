@@ -9,7 +9,7 @@ mod array_vec {
 
     #[test]
     fn test_ser_de_empty() {
-        let vec = ArrayVec::<[u32; 0]>::new();
+        let vec = ArrayVec::<u32, 0>::new();
 
         assert_tokens(&vec, &[
             Token::Seq { len: Some(0) },
@@ -20,7 +20,7 @@ mod array_vec {
 
     #[test]
     fn test_ser_de() {
-        let mut vec = ArrayVec::<[u32; 3]>::new();
+        let mut vec = ArrayVec::<u32, 3>::new();
         vec.push(20);
         vec.push(55);
         vec.push(123);
@@ -36,7 +36,7 @@ mod array_vec {
 
     #[test]
     fn test_de_too_large() {
-        assert_de_tokens_error::<ArrayVec<[u32; 2]>>(&[
+        assert_de_tokens_error::<ArrayVec<u32, 2>>(&[
             Token::Seq { len: Some(3) },
             Token::U32(13),
             Token::U32(42),
@@ -52,7 +52,7 @@ mod array_string {
 
     #[test]
     fn test_ser_de_empty() {
-        let string = ArrayString::<[u8; 0]>::new();
+        let string = ArrayString::<0>::new();
 
         assert_tokens(&string, &[
             Token::Str(""),
@@ -62,7 +62,7 @@ mod array_string {
 
     #[test]
     fn test_ser_de() {
-        let string = ArrayString::<[u8; 9]>::from("1234 abcd")
+        let string = ArrayString::<9>::from("1234 abcd")
             .expect("expected exact specified capacity to be enough");
 
         assert_tokens(&string, &[
@@ -72,7 +72,7 @@ mod array_string {
 
     #[test]
     fn test_de_too_large() {
-        assert_de_tokens_error::<ArrayString<[u8; 2]>>(&[
+        assert_de_tokens_error::<ArrayString<2>>(&[
             Token::Str("afd")
         ], "invalid length 3, expected a string no more than 2 bytes long");
     }

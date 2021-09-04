@@ -70,7 +70,7 @@ def _parse_mach_env_requirements(
 ):
     def _parse_requirements_line(line):
         line = line.strip()
-        if line.startswith("#"):
+        if not line or line.startswith("#"):
             return
 
         action, params = line.rstrip().split(":", maxsplit=1)
@@ -84,7 +84,7 @@ def _parse_mach_env_requirements(
         elif action == "pypi-optional":
             if len(params.split(":", maxsplit=1)) != 2:
                 raise Exception(
-                    "Expected pypi-optional package to have a repercussion"
+                    "Expected pypi-optional package to have a repercussion "
                     'description in the format "package:fallback explanation", '
                     'found "{}"'.format(params)
                 )

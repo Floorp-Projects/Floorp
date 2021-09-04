@@ -350,7 +350,6 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget* aWidget,
 }
 
 static void DisplayErrCode(HRESULT hres) {
-#if defined(DEBUG_rods) || defined(DEBUG_pinkerton)
   if (hres == E_INVALIDARG) {
     MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_INVALIDARG\n"));
   } else if (hres == E_UNEXPECTED) {
@@ -377,7 +376,6 @@ static void DisplayErrCode(HRESULT hres) {
     MOZ_LOG(gWin32ClipboardLog, LogLevel::Info,
             ("****** DisplayErrCode 0x%X\n", hres));
   }
-#endif
 }
 
 //-------------------------------------------------------------------------

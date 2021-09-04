@@ -649,6 +649,7 @@ def start_servers(logger, host, ports, paths, routes, bind_address, config,
                 "ws": start_ws_server,
                 "wss": start_wss_server,
                 "quic-transport": start_quic_transport_server,
+                "webtransport-h3": start_webtransport_h3_server,
             }[scheme]
 
             server_proc = ServerProc(mp_context, scheme=scheme)
@@ -849,6 +850,25 @@ def start_quic_transport_server(logger, host, port, paths, routes, bind_address,
         startup_failed(logger)
 
 
+
+
+def start_webtransport_h3_server(logger, host, port, paths, routes, bind_address, config, **kwargs):
+    try:
+        # TODO(bashi): Move the following import to the beginning of this file
+        # once WebTransportH3Server is enabled by default.
+        from webtransport.h3.webtransport_h3_server import WebTransportH3Server  # type: ignore
+        return WebTransportH3Server(host=host,
+                                    port=port,
+                                    doc_root=paths["doc_root"],
+                                    cert_path=config.ssl_config["cert_path"],
+                                    key_path=config.ssl_config["key_path"],
+                                    logger=logger)
+    except Exception as error:
+        logger.critical(
+            "Failed to start WebTransport over HTTP/3 server: {}".format(error))
+        sys.exit(0)
+
+
 def start(logger, config, routes, mp_context, log_handlers, **kwargs):
     host = config["server_host"]
     ports = config.ports
@@ -988,6 +1008,9 @@ def build_config(logger, override_path=None, config_cls=ConfigBuilder, **kwargs)
     if kwargs.get("quic_transport"):
         rv._default["ports"]["quic-transport"] = [10000]
 
+    if kwargs.get("webtransport_h3"):
+        rv._default["ports"]["webtransport-h3"] = [11000]
+
     if override_path and os.path.exists(override_path):
         with open(override_path) as f:
             override_obj = json.load(f)
@@ -1036,6 +1059,8 @@ def get_parser():
     parser.add_argument("--no-h2", action="store_false", dest="h2", default=None,
                         help="Disable the HTTP/2.0 server")
     parser.add_argument("--quic-transport", action="store_true", help="Enable QUIC server for WebTransport")
+    parser.add_argument("--webtransport-h3", action="store_true",
+                        help="Enable WebTransport over HTTP/3 server")
     parser.add_argument("--exit-after-start", action="store_true", help="Exit after starting servers")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.set_defaults(report=False)

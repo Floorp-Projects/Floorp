@@ -36,7 +36,22 @@ pub enum CallError {
 
 #[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
+pub enum AtomicError {
+    #[error("Pointer {0:?} to atomic is invalid.")]
+    InvalidPointer(Handle<crate::Expression>),
+    #[error("Operand {0:?} has invalid type.")]
+    InvalidOperand(Handle<crate::Expression>),
+    #[error("Result expression {0:?} has already been introduced earlier")]
+    ResultAlreadyInScope(Handle<crate::Expression>),
+    #[error("Result type for {0:?} doesn't match the statement")]
+    ResultTypeMismatch(Handle<crate::Expression>),
+}
+
+#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum LocalVariableError {
+    #[error("Local variable has a type {0:?} that can't be stored in a local variable.")]
+    InvalidType(Handle<crate::Type>),
     #[error("Initializer doesn't match the variable type")]
     InitializerType,
 }
@@ -63,8 +78,10 @@ pub enum FunctionError {
     InvalidArgumentType { index: usize, name: String },
     #[error("There are instructions after `return`/`break`/`continue`")]
     InstructionsAfterReturn,
-    #[error("The `break`/`continue` is used outside of a loop context")]
-    BreakContinueOutsideOfLoop,
+    #[error("The `break` is used outside of a `loop` or `switch` context")]
+    BreakOutsideOfLoopOrSwitch,
+    #[error("The `continue` is used outside of a `loop` context")]
+    ContinueOutsideOfLoop,
     #[error("The `return` is called within a `continuing` block")]
     InvalidReturnSpot,
     #[error("The `return` value {0:?} does not match the function return value")]
@@ -94,6 +111,8 @@ pub enum FunctionError {
         #[source]
         error: CallError,
     },
+    #[error("Atomic operation is invalid")]
+    InvalidAtomic(#[from] AtomicError),
     #[error(
         "Required uniformity of control flow for {0:?} in {1:?} is not fulfilled because of {2:?}"
     )]
@@ -106,16 +125,18 @@ pub enum FunctionError {
 
 bitflags::bitflags! {
     #[repr(transparent)]
-    struct Flags: u8 {
-        /// The control can jump out of this block.
-        const CAN_JUMP = 0x1;
-        /// The control is in a loop, can break and continue.
-        const IN_LOOP = 0x2;
+    struct ControlFlowAbility: u8 {
+        /// The control can return out of this block.
+        const RETURN = 0x1;
+        /// The control can break.
+        const BREAK = 0x2;
+        /// The control can continue.
+        const CONTINUE = 0x4;
     }
 }
 
 struct BlockContext<'a> {
-    flags: Flags,
+    abilities: ControlFlowAbility,
     info: &'a FunctionInfo,
     expressions: &'a Arena<crate::Expression>,
     types: &'a Arena<crate::Type>,
@@ -133,7 +154,7 @@ impl<'a> BlockContext<'a> {
         prev_infos: &'a [FunctionInfo],
     ) -> Self {
         Self {
-            flags: Flags::CAN_JUMP,
+            abilities: ControlFlowAbility::RETURN,
             info,
             expressions: &fun.expressions,
             types: &module.types,
@@ -144,17 +165,8 @@ impl<'a> BlockContext<'a> {
         }
     }
 
-    fn with_flags(&self, flags: Flags) -> Self {
-        BlockContext {
-            flags,
-            info: self.info,
-            expressions: self.expressions,
-            types: self.types,
-            global_vars: self.global_vars,
-            functions: self.functions,
-            prev_infos: self.prev_infos,
-            return_type: self.return_type,
-        }
+    fn with_abilities(&self, abilities: ControlFlowAbility) -> Self {
+        BlockContext { abilities, ..*self }
     }
 
     fn get_expression(
@@ -242,7 +254,8 @@ impl super::Validator {
                 return Err(CallError::ResultAlreadyInScope(expr));
             }
             match context.expressions[expr] {
-                crate::Expression::Call(callee) if fun.result.is_some() && callee == function => {}
+                crate::Expression::CallResult(callee)
+                    if fun.result.is_some() && callee == function => {}
                 _ => return Err(CallError::ExpressionMismatch(result)),
             }
         } else if fun.result.is_some() {
@@ -251,6 +264,62 @@ impl super::Validator {
 
         let callee_info = &context.prev_infos[function.index()];
         Ok(callee_info.available_stages)
+    }
+
+    fn validate_atomic(
+        &mut self,
+        pointer: Handle<crate::Expression>,
+        fun: &crate::AtomicFunction,
+        value: Handle<crate::Expression>,
+        result: Handle<crate::Expression>,
+        context: &BlockContext,
+    ) -> Result<(), FunctionError> {
+        let pointer_inner = context.resolve_type(pointer, &self.valid_expression_set)?;
+        let (ptr_kind, ptr_width) = match *pointer_inner {
+            crate::TypeInner::Pointer { base, .. } => match context.types[base].inner {
+                crate::TypeInner::Atomic { kind, width } => (kind, width),
+                ref other => {
+                    log::error!("Atomic pointer to type {:?}", other);
+                    return Err(AtomicError::InvalidPointer(pointer).into());
+                }
+            },
+            ref other => {
+                log::error!("Atomic on type {:?}", other);
+                return Err(AtomicError::InvalidPointer(pointer).into());
+            }
+        };
+
+        let value_inner = context.resolve_type(value, &self.valid_expression_set)?;
+        match *value_inner {
+            crate::TypeInner::Scalar { width, kind } if kind == ptr_kind && width == ptr_width => {}
+            ref other => {
+                log::error!("Atomic operand type {:?}", other);
+                return Err(AtomicError::InvalidOperand(value).into());
+            }
+        }
+
+        if let crate::AtomicFunction::Exchange { compare: Some(cmp) } = *fun {
+            if context.resolve_type(cmp, &self.valid_expression_set)? != value_inner {
+                log::error!("Atomic exchange comparison has a different type from the value");
+                return Err(AtomicError::InvalidOperand(cmp).into());
+            }
+        }
+
+        if self.valid_expression_set.insert(result.index()) {
+            self.valid_expression_list.push(result);
+        } else {
+            return Err(AtomicError::ResultAlreadyInScope(result).into());
+        }
+        match context.expressions[result] {
+            //TODO: support atomic result with comparison
+            crate::Expression::AtomicResult {
+                kind,
+                width,
+                comparison: false,
+            } if kind == ptr_kind && width == ptr_width => {}
+            _ => return Err(AtomicError::ResultTypeMismatch(result).into()),
+        }
+        Ok(())
     }
 
     fn validate_block_impl(
@@ -311,10 +380,14 @@ impl super::Validator {
                             return Err(FunctionError::ConflictingSwitchCase(case.value));
                         }
                     }
+                    let pass_through_abilities = context.abilities
+                        & (ControlFlowAbility::RETURN | ControlFlowAbility::CONTINUE);
+                    let sub_context =
+                        context.with_abilities(pass_through_abilities | ControlFlowAbility::BREAK);
                     for case in cases {
-                        stages &= self.validate_block(&case.body, context)?;
+                        stages &= self.validate_block(&case.body, &sub_context)?;
                     }
-                    stages &= self.validate_block(default, context)?;
+                    stages &= self.validate_block(default, &sub_context)?;
                 }
                 S::Loop {
                     ref body,
@@ -323,24 +396,37 @@ impl super::Validator {
                     // special handling for block scoping is needed here,
                     // because the continuing{} block inherits the scope
                     let base_expression_count = self.valid_expression_list.len();
+                    let pass_through_abilities = context.abilities & ControlFlowAbility::RETURN;
                     stages &= self.validate_block_impl(
                         body,
-                        &context.with_flags(Flags::CAN_JUMP | Flags::IN_LOOP),
+                        &context.with_abilities(
+                            pass_through_abilities
+                                | ControlFlowAbility::BREAK
+                                | ControlFlowAbility::CONTINUE,
+                        ),
                     )?;
-                    stages &=
-                        self.validate_block_impl(continuing, &context.with_flags(Flags::empty()))?;
+                    stages &= self.validate_block_impl(
+                        continuing,
+                        &context.with_abilities(ControlFlowAbility::empty()),
+                    )?;
                     for handle in self.valid_expression_list.drain(base_expression_count..) {
                         self.valid_expression_set.remove(handle.index());
                     }
                 }
-                S::Break | S::Continue => {
-                    if !context.flags.contains(Flags::IN_LOOP) {
-                        return Err(FunctionError::BreakContinueOutsideOfLoop);
+                S::Break => {
+                    if !context.abilities.contains(ControlFlowAbility::BREAK) {
+                        return Err(FunctionError::BreakOutsideOfLoopOrSwitch);
+                    }
+                    finished = true;
+                }
+                S::Continue => {
+                    if !context.abilities.contains(ControlFlowAbility::CONTINUE) {
+                        return Err(FunctionError::ContinueOutsideOfLoop);
                     }
                     finished = true;
                 }
                 S::Return { value } => {
-                    if !context.flags.contains(Flags::CAN_JUMP) {
+                    if !context.abilities.contains(ControlFlowAbility::RETURN) {
                         return Err(FunctionError::InvalidReturnSpot);
                     }
                     let value_ty = value
@@ -385,7 +471,10 @@ impl super::Validator {
                         _ => {}
                     }
                     let good = match *context.resolve_pointer_type(pointer)? {
-                        Ti::Pointer { base, class: _ } => *value_ty == context.types[base].inner,
+                        Ti::Pointer { base, class: _ } => match context.types[base].inner {
+                            Ti::Atomic { kind, width } => *value_ty == Ti::Scalar { kind, width },
+                            ref other => value_ty == other,
+                        },
                         Ti::ValuePointer {
                             size: Some(size),
                             kind,
@@ -461,11 +550,13 @@ impl super::Validator {
                                 }
                             }
                             match class {
-                                crate::ImageClass::Storage(format) => crate::TypeInner::Vector {
-                                    kind: format.into(),
-                                    size: crate::VectorSize::Quad,
-                                    width: 4,
-                                },
+                                crate::ImageClass::Storage { format, .. } => {
+                                    crate::TypeInner::Vector {
+                                        kind: format.into(),
+                                        size: crate::VectorSize::Quad,
+                                        width: 4,
+                                    }
+                                }
                                 _ => {
                                     return Err(FunctionError::InvalidImageStore(
                                         ExpressionError::InvalidImageClass(class),
@@ -492,6 +583,14 @@ impl super::Validator {
                     Ok(callee_stages) => stages &= callee_stages,
                     Err(error) => return Err(FunctionError::InvalidCall { function, error }),
                 },
+                S::Atomic {
+                    pointer,
+                    ref fun,
+                    value,
+                    result,
+                } => {
+                    self.validate_atomic(pointer, fun, value, result, context)?;
+                }
             }
         }
         Ok(stages)
@@ -517,6 +616,12 @@ impl super::Validator {
         constants: &Arena<crate::Constant>,
     ) -> Result<(), LocalVariableError> {
         log::debug!("var {:?}", var);
+        if !self.types[var.ty.index()]
+            .flags
+            .contains(TypeFlags::DATA | TypeFlags::SIZED)
+        {
+            return Err(LocalVariableError::InvalidType(var.ty));
+        }
         if let Some(const_handle) = var.init {
             match constants[const_handle].inner {
                 crate::ConstantInner::Scalar { width, ref value } => {
@@ -558,7 +663,7 @@ impl super::Validator {
         for (index, argument) in fun.arguments.iter().enumerate() {
             if !self.types[argument.ty.index()]
                 .flags
-                .contains(TypeFlags::DATA | TypeFlags::SIZED)
+                .contains(TypeFlags::ARGUMENT)
             {
                 return Err(FunctionError::InvalidArgumentType {
                     index,
@@ -568,6 +673,7 @@ impl super::Validator {
         }
 
         self.valid_expression_set.clear();
+        self.valid_expression_list.clear();
         for (handle, expr) in fun.expressions.iter() {
             if expr.needs_pre_emit() {
                 self.valid_expression_set.insert(handle.index());
