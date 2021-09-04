@@ -41,13 +41,8 @@
 </div>
 <pre id="test">
 <script class=testbody" type="application/javascript">
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("dom.forms.inputmode");
-});
-
 add_task(async function setup() {
   await new Promise(r => SimpleTest.waitForFocus(r));
-  await SpecialPowers.setBoolPref("dom.forms.inputmode", true);
 });
 
 add_task(async function basic() {
@@ -107,7 +102,10 @@ add_task(async function dynamicChange() {
     is(SpecialPowers.DOMWindowUtils.focusedInputMode, "tel", "Initial inputmode");
     element.inputMode = "url";
     is(SpecialPowers.DOMWindowUtils.focusedInputMode, "url",
-       "inputmode in InputContext has to sync with current inputmode");
+       "inputmode in InputContext has to sync with current inputMode property");
+    element.setAttribute("inputmode", "decimal");
+    is(SpecialPowers.DOMWindowUtils.focusedInputMode, "decimal",
+       "inputmode in InputContext has to sync with current inputmode attribute");
     // Storing the original value may be safer.
     element.inputMode = "tel";
   }
