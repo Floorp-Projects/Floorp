@@ -951,13 +951,13 @@ nsRect Element::GetClientAreaRect() {
   nsPresContext* presContext = doc->GetPresContext();
 
   // We can avoid a layout flush if this is the scrolling element of the
-  // document, we have overlay scrollbars, and we can't synchronously observe
-  // our parent document, so the implicit flush in the GetScrollFrame call below
-  // will not flush our parent document.
+  // document, we have overlay scrollbars, and we aren't embedded in another
+  // document
   bool overlayScrollbars =
       LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
-  if (overlayScrollbars &&
-      !doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout() &&
+  bool rootContentDocument =
+      presContext && presContext->IsRootContentDocument();
+  if (overlayScrollbars && rootContentDocument &&
       doc->IsScrollingElement(this)) {
     if (PresShell* presShell = doc->GetPresShell()) {
       // Ensure up to date dimensions, but don't reflow
