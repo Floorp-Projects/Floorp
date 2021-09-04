@@ -1860,6 +1860,36 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
   return updated;
 }
 
+Result<bool, nsresult> MaybeUpdateLastAccessTimeForOrigin(
+    FullOriginMetadata& aFullOriginMetadata) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (aFullOriginMetadata.mLastAccessTime == INT64_MIN) {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    QM_TRY_INSPECT(
+        const auto& metadataFile,
+        quotaManager->GetDirectoryForOrigin(
+            aFullOriginMetadata.mPersistenceType, aFullOriginMetadata.mOrigin));
+
+    QM_TRY(metadataFile->Append(nsLiteralString(METADATA_V2_FILE_NAME)));
+
+    QM_TRY_UNWRAP(int64_t timestamp,
+                  MOZ_TO_RESULT_INVOKE(metadataFile, GetLastModifiedTime));
+
+    // Need to convert from milliseconds to microseconds.
+    MOZ_ASSERT((INT64_MAX / PR_USEC_PER_MSEC) > timestamp);
+    timestamp *= int64_t(PR_USEC_PER_MSEC);
+
+    aFullOriginMetadata.mLastAccessTime = timestamp;
+
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace
 
 BackgroundThreadObject::BackgroundThreadObject()
@@ -2387,6 +2417,10 @@ int64_t GetLastModifiedTime(PersistenceType aPersistenceType, nsIFile& aFile) {
   if (NS_FAILED(rv)) {
     timestamp = PR_Now();
   }
+
+  // XXX if there were no suitable files for getting last modified time
+  // (timestamp is still set to INT64_MIN), we should return the current time
+  // instead of returning INT64_MIN.
 
   return timestamp;
 }
@@ -4099,19 +4133,6 @@ nsresult QuotaManager::LoadQuota() {
               fullOriginMetadata.mOrigin,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 3));
 
-          QM_TRY_INSPECT(const bool& updated,
-                         MaybeUpdateGroupForOrigin(fullOriginMetadata));
-
-          Unused << updated;
-
-          // We don't need to update the .metadata-v2 file on disk here,
-          // EnsureTemporaryOriginIsInitialized is responsible for doing that.
-          // We just need to use correct group before initializing quota for the
-          // given origin. (Note that calling LoadFullOriginMetadataWithRestore
-          // below might update the group in the metadata file, but only as a
-          // side-effect. The actual place we ensure consistency is in
-          // EnsureTemporaryOriginIsInitialized.)
-
           QM_TRY_INSPECT(
               const auto& clientUsagesText,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 4));
@@ -4127,6 +4148,25 @@ nsresult QuotaManager::LoadQuota() {
                          MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 7));
           QM_TRY_UNWRAP(fullOriginMetadata.mPersisted,
                         MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 8));
+
+          QM_TRY_INSPECT(const bool& groupUpdated,
+                         MaybeUpdateGroupForOrigin(fullOriginMetadata));
+
+          Unused << groupUpdated;
+
+          QM_TRY_INSPECT(
+              const bool& lastAccessTimeUpdated,
+              MaybeUpdateLastAccessTimeForOrigin(fullOriginMetadata));
+
+          Unused << lastAccessTimeUpdated;
+
+          // We don't need to update the .metadata-v2 file on disk here,
+          // EnsureTemporaryOriginIsInitialized is responsible for doing that.
+          // We just need to use correct group and last access time before
+          // initializing quota for the given origin. (Note that calling
+          // LoadFullOriginMetadataWithRestore below might update the group in
+          // the metadata file, but only as a side-effect. The actual place we
+          // ensure consistency is in EnsureTemporaryOriginIsInitialized.)
 
           if (accessed) {
             QM_TRY_INSPECT(
@@ -4617,10 +4657,16 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
 
   QM_TRY(binaryStream->Close());
 
-  QM_TRY_INSPECT(const bool& updated,
+  QM_TRY_INSPECT(const bool& groupUpdated,
                  MaybeUpdateGroupForOrigin(fullOriginMetadata));
 
-  if (updated) {
+  // A workaround for a bug in GetLastModifiedTime implementation which should
+  // have returned the current time instead of INT64_MIN when there were no
+  // suitable files for getting last modified time.
+  QM_TRY_INSPECT(const bool& lastAccessTimeUpdated,
+                 MaybeUpdateLastAccessTimeForOrigin(fullOriginMetadata));
+
+  if (groupUpdated || lastAccessTimeUpdated) {
     // Only overwriting .metadata-v2 (used to overwrite .metadata too) to reduce
     // I/O.
     QM_TRY(CreateDirectoryMetadata2(
