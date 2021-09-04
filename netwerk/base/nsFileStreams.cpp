@@ -901,14 +901,6 @@ nsSafeFileOutputStream::Finish() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStream
 
-nsresult nsFileStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                              void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
-  RefPtr<nsFileStream> stream = new nsFileStream();
-  return stream->QueryInterface(aIID, aResult);
-}
-
 NS_IMPL_ISUPPORTS_INHERITED(nsFileStream, nsFileStreamBase, nsIInputStream,
                             nsIOutputStream, nsIFileStream)
 
