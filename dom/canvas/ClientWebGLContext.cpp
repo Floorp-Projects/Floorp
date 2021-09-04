@@ -2699,12 +2699,13 @@ void ClientWebGLContext::ClearDepth(GLclampf v) { Run<RPROC(ClearDepth)>(v); }
 
 void ClientWebGLContext::ClearStencil(GLint v) { Run<RPROC(ClearStencil)>(v); }
 
-void ClientWebGLContext::ColorMaskI(Maybe<GLuint> i, bool r, bool g,
-                                   bool b, bool a) const {
+void ClientWebGLContext::ColorMaskI(Maybe<GLuint> i, bool r, bool g, bool b,
+                                    bool a) const {
   const FuncScope funcScope(*this, "colorMask");
   if (IsContextLost()) return;
 
-  const uint8_t mask = uint8_t(r << 0) | uint8_t(g << 1) | uint8_t(b << 2) | uint8_t(a << 3);
+  const uint8_t mask =
+      uint8_t(r << 0) | uint8_t(g << 1) | uint8_t(b << 2) | uint8_t(a << 3);
   Run<RPROC(ColorMask)>(i, mask);
 }
 
