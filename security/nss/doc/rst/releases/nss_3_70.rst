@@ -1,0 +1,68 @@
+.. _mozilla_projects_nss_nss_3_70_release_notes:
+
+NSS 3.70 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.70 was released on **5 August 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_70_RTM. NSS 3.70 requires NSPR 4.32 or newer.
+
+   NSS 3.70 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_70_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.70:
+
+`Changes in NSS 3.70 <#changes_in_nss_3.70>`__
+----------------------------------------------------
+
+.. container::
+
+   - Documentation: release notes for NSS 3.70.
+   - Documentation: release notes for NSS 3.69.1.
+   - Bug 1726022 - Update test case to verify fix.
+   - Bug 1714579 - Explicitly disable downgrade check in TlsConnectStreamTls13.EchOuterWith12Max
+   - Bug 1714579 - Explicitly disable downgrade check in TlsConnectTest.DisableFalseStartOnFallback
+   - Formatting for lib/util
+   - Bug 1681975 - Avoid using a lookup table in nssb64d.
+   - Bug 1724629 - Use HW accelerated SHA2 on AArch64 Big Endian.
+   - Bug 1714579 Change default value of enableHelloDowngradeCheck to true.
+   - Formatting for gtests/pk11_gtest/pk11_hpke_unittest.cc
+   - Bug 1726022 Cache additional PBE entries.
+   - Bug 1709750 - Read HPKE vectors from official JSON.
+   - Documentation: update for NSS 3.69 release.
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.70 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.70 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

@@ -1,0 +1,76 @@
+.. _mozilla_projects_nss_nss_3_69_1_release_notes:
+
+NSS 3.69.1 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.69.1 was released on **26 August 2021**.
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_69_1_RTM. NSS 3.69.1 requires NSPR 4.32 or newer.
+
+   NSS 3.69.1 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_69_1_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_3.69.1:
+
+`Changes in NSS 3.69.1 <#changes_3.69.1>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1722613 (Backout) - Disable DTLS 1.0 and 1.1 by default
+   - Bug 1720226 (Backout) - integrity checks in key4.db not happening on private components with AES_CBC
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.69.1 shared libraries are backwards-compatible with all older NSS 3.x shared libraries. A
+   program linked with older NSS 3.x shared libraries will work with NSS 3.69.1 shared libraries
+   without recompiling or relinking. Furthermore, applications that restrict their use of NSS APIs
+   to the functions listed in NSS Public Functions will remain compatible with future versions of
+   the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
+
+`Notes <#notes>`__
+------------------
+
+.. container::
+
+   NSS 3.69.1 is a dot release based on the content of Firefox 92. Due to some issues with
+   the process for bringing NSS releases to Firefox, commits for 1722613 and 1720226 were absent
+   from the Firefox 92 branch which was associated to NSS 3.69. Due to time constraints a decision
+   was made to align the content of 3.69.1 with the Fx92 branch by backing out these changes instead
+   of restoring these commits.
+
+   Note that Bug 1720226 was also known to introduce a performance regression that has been fixed
+   in the main/default branch of NSS (Bug 1726022). Since the change has been backed out in this
+   release, 3.69.1 does not suffer from that performance regression.
+
+   This fix is not in 3.69 (which is affected) but will be in the 3.70 branch, which benefits from
+   both the change and the fix for the regression.
+
+   The NSS 3.70 release is on schedule and will happen on September 2nd.
