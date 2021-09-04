@@ -258,8 +258,6 @@ class nsFileStream : public nsFileStreamBase,
                      public nsIOutputStream,
                      public nsIFileStream {
  public:
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIFILESTREAM
   NS_FORWARD_NSIINPUTSTREAM(nsFileStreamBase::)

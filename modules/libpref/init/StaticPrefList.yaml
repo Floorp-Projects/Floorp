@@ -2805,17 +2805,6 @@
   value: "storage"
   mirror: never
 
-# An upper limit for the "age" of an origin. Any origin which is older than the
-# threshold is considered as unaccessed. That doesn't necessarily mean that
-# such origins will be immediatelly archived. They will be archived only when
-# dom.quotaManager.checkQuotaInfoLoadTime is true and loading of quota info
-# takes a long time (dom.quotaManager.longQuotaInfoLoadTimeThresholdMs is used
-# to decide what is a long quota info load time).
-- name: dom.quotaManager.unaccessedForLongTimeThresholdSec
-  type: RelaxedAtomicUint32
-  value: 33696000 # 13 months
-  mirror: always
-
 # Should we try to load origin information from the cache?
 # See bug 1563023 for more details.
 - name: dom.quotaManager.loadQuotaFromCache
@@ -2834,20 +2823,6 @@
 - name: dom.quotaManager.caching.checkBuildId
   type: RelaxedAtomicBool
   value: true
-  mirror: always
-
-# Should we check quota info load time and eventually archive some unaccessed
-# origins if loading of quota info takes a long time ?
-- name: dom.quotaManager.checkQuotaInfoLoadTime
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# An upper limit for quota info load time, anything which takes longer than the
-# threshold is considered as long quota info load time.
-- name: dom.quotaManager.longQuotaInfoLoadTimeThresholdMs
-  type: RelaxedAtomicUint32
-  value: 21000 # 21 seconds
   mirror: always
 
 # Preference that users can set to override temporary storage smart limit

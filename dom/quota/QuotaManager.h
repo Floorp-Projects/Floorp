@@ -505,9 +505,7 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<Ok, nsresult> CreateEmptyLocalStorageArchive(
       nsIFile& aLsArchiveFile) const;
 
-  template <typename OriginFunc>
-  nsresult InitializeRepository(PersistenceType aPersistenceType,
-                                OriginFunc&& aOriginFunc);
+  nsresult InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult InitializeOrigin(PersistenceType aPersistenceType,
                             const OriginMetadata& aOriginMetadata,
@@ -532,9 +530,6 @@ class QuotaManager final : public BackgroundThreadObject {
                             const nsACString& aOrigin);
 
   void FinalizeOriginEviction(nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks);
-
-  Result<Ok, nsresult> ArchiveOrigins(
-      const nsTArray<FullOriginMetadata>& aFullOriginMetadatas);
 
   void ReleaseIOThreadObjects() {
     AssertIsOnIOThread();
@@ -643,7 +638,6 @@ class QuotaManager final : public BackgroundThreadObject {
   const nsString mStorageName;
   LazyInitializedOnce<const nsString> mIndexedDBPath;
   LazyInitializedOnce<const nsString> mStoragePath;
-  LazyInitializedOnce<const nsString> mStorageArchivesPath;
   LazyInitializedOnce<const nsString> mPermanentStoragePath;
   LazyInitializedOnce<const nsString> mTemporaryStoragePath;
   LazyInitializedOnce<const nsString> mDefaultStoragePath;
