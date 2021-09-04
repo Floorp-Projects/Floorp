@@ -11,83 +11,49 @@ impl KhrSurfaceFn {
     pub const SPEC_VERSION: u32 = 25u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroySurfaceKHR = extern "system" fn(
+pub type PFN_vkDestroySurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     surface: SurfaceKHR,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceSupportKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     queue_family_index: u32,
     surface: SurfaceKHR,
     p_supported: *mut Bool32,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     surface: SurfaceKHR,
     p_surface_capabilities: *mut SurfaceCapabilitiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceFormatsKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     surface: SurfaceKHR,
     p_surface_format_count: *mut u32,
     p_surface_formats: *mut SurfaceFormatKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfacePresentModesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfacePresentModesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     surface: SurfaceKHR,
     p_present_mode_count: *mut u32,
     p_present_modes: *mut PresentModeKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrSurfaceFn {
-    pub destroy_surface_khr: extern "system" fn(
-        instance: Instance,
-        surface: SurfaceKHR,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub get_physical_device_surface_support_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        surface: SurfaceKHR,
-        p_supported: *mut Bool32,
-    ) -> Result,
-    pub get_physical_device_surface_capabilities_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_capabilities: *mut SurfaceCapabilitiesKHR,
-    ) -> Result,
-    pub get_physical_device_surface_formats_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_format_count: *mut u32,
-        p_surface_formats: *mut SurfaceFormatKHR,
-    ) -> Result,
-    pub get_physical_device_surface_present_modes_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_present_mode_count: *mut u32,
-        p_present_modes: *mut PresentModeKHR,
-    ) -> Result,
+    pub destroy_surface_khr: PFN_vkDestroySurfaceKHR,
+    pub get_physical_device_surface_support_khr: PFN_vkGetPhysicalDeviceSurfaceSupportKHR,
+    pub get_physical_device_surface_capabilities_khr: PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
+    pub get_physical_device_surface_formats_khr: PFN_vkGetPhysicalDeviceSurfaceFormatsKHR,
+    pub get_physical_device_surface_present_modes_khr:
+        PFN_vkGetPhysicalDeviceSurfacePresentModesKHR,
 }
 unsafe impl Send for KhrSurfaceFn {}
 unsafe impl Sync for KhrSurfaceFn {}
-impl ::std::clone::Clone for KhrSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrSurfaceFn {
-            destroy_surface_khr: self.destroy_surface_khr,
-            get_physical_device_surface_support_khr: self.get_physical_device_surface_support_khr,
-            get_physical_device_surface_capabilities_khr: self
-                .get_physical_device_surface_capabilities_khr,
-            get_physical_device_surface_formats_khr: self.get_physical_device_surface_formats_khr,
-            get_physical_device_surface_present_modes_khr: self
-                .get_physical_device_surface_present_modes_khr,
-        }
-    }
-}
 impl KhrSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -95,7 +61,7 @@ impl KhrSurfaceFn {
     {
         KhrSurfaceFn {
             destroy_surface_khr: unsafe {
-                extern "system" fn destroy_surface_khr(
+                unsafe extern "system" fn destroy_surface_khr(
                     _instance: Instance,
                     _surface: SurfaceKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -112,7 +78,7 @@ impl KhrSurfaceFn {
                 }
             },
             get_physical_device_surface_support_khr: unsafe {
-                extern "system" fn get_physical_device_surface_support_khr(
+                unsafe extern "system" fn get_physical_device_surface_support_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _surface: SurfaceKHR,
@@ -134,7 +100,7 @@ impl KhrSurfaceFn {
                 }
             },
             get_physical_device_surface_capabilities_khr: unsafe {
-                extern "system" fn get_physical_device_surface_capabilities_khr(
+                unsafe extern "system" fn get_physical_device_surface_capabilities_khr(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_surface_capabilities: *mut SurfaceCapabilitiesKHR,
@@ -155,7 +121,7 @@ impl KhrSurfaceFn {
                 }
             },
             get_physical_device_surface_formats_khr: unsafe {
-                extern "system" fn get_physical_device_surface_formats_khr(
+                unsafe extern "system" fn get_physical_device_surface_formats_khr(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_surface_format_count: *mut u32,
@@ -177,7 +143,7 @@ impl KhrSurfaceFn {
                 }
             },
             get_physical_device_surface_present_modes_khr: unsafe {
-                extern "system" fn get_physical_device_surface_present_modes_khr(
+                unsafe extern "system" fn get_physical_device_surface_present_modes_khr(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_present_mode_count: *mut u32,
@@ -288,27 +254,27 @@ impl KhrSwapchainFn {
     pub const SPEC_VERSION: u32 = 70u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateSwapchainKHR = extern "system" fn(
+pub type PFN_vkCreateSwapchainKHR = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const SwapchainCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_swapchain: *mut SwapchainKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroySwapchainKHR = extern "system" fn(
+pub type PFN_vkDestroySwapchainKHR = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSwapchainImagesKHR = extern "system" fn(
+pub type PFN_vkGetSwapchainImagesKHR = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     p_swapchain_image_count: *mut u32,
     p_swapchain_images: *mut Image,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkAcquireNextImageKHR = extern "system" fn(
+pub type PFN_vkAcquireNextImageKHR = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     timeout: u64,
@@ -318,100 +284,45 @@ pub type PFN_vkAcquireNextImageKHR = extern "system" fn(
 ) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkQueuePresentKHR =
-    extern "system" fn(queue: Queue, p_present_info: *const PresentInfoKHR) -> Result;
+    unsafe extern "system" fn(queue: Queue, p_present_info: *const PresentInfoKHR) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceGroupPresentCapabilitiesKHR = extern "system" fn(
+pub type PFN_vkGetDeviceGroupPresentCapabilitiesKHR = unsafe extern "system" fn(
     device: Device,
     p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceGroupSurfacePresentModesKHR = extern "system" fn(
+pub type PFN_vkGetDeviceGroupSurfacePresentModesKHR = unsafe extern "system" fn(
     device: Device,
     surface: SurfaceKHR,
     p_modes: *mut DeviceGroupPresentModeFlagsKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDevicePresentRectanglesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDevicePresentRectanglesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     surface: SurfaceKHR,
     p_rect_count: *mut u32,
     p_rects: *mut Rect2D,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkAcquireNextImage2KHR = extern "system" fn(
+pub type PFN_vkAcquireNextImage2KHR = unsafe extern "system" fn(
     device: Device,
     p_acquire_info: *const AcquireNextImageInfoKHR,
     p_image_index: *mut u32,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrSwapchainFn {
-    pub create_swapchain_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const SwapchainCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_swapchain: *mut SwapchainKHR,
-    ) -> Result,
-    pub destroy_swapchain_khr: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub get_swapchain_images_khr: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_swapchain_image_count: *mut u32,
-        p_swapchain_images: *mut Image,
-    ) -> Result,
-    pub acquire_next_image_khr: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        timeout: u64,
-        semaphore: Semaphore,
-        fence: Fence,
-        p_image_index: *mut u32,
-    ) -> Result,
-    pub queue_present_khr:
-        extern "system" fn(queue: Queue, p_present_info: *const PresentInfoKHR) -> Result,
-    pub get_device_group_present_capabilities_khr: extern "system" fn(
-        device: Device,
-        p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
-    ) -> Result,
-    pub get_device_group_surface_present_modes_khr: extern "system" fn(
-        device: Device,
-        surface: SurfaceKHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result,
-    pub get_physical_device_present_rectangles_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_rect_count: *mut u32,
-        p_rects: *mut Rect2D,
-    ) -> Result,
-    pub acquire_next_image2_khr: extern "system" fn(
-        device: Device,
-        p_acquire_info: *const AcquireNextImageInfoKHR,
-        p_image_index: *mut u32,
-    ) -> Result,
+    pub create_swapchain_khr: PFN_vkCreateSwapchainKHR,
+    pub destroy_swapchain_khr: PFN_vkDestroySwapchainKHR,
+    pub get_swapchain_images_khr: PFN_vkGetSwapchainImagesKHR,
+    pub acquire_next_image_khr: PFN_vkAcquireNextImageKHR,
+    pub queue_present_khr: PFN_vkQueuePresentKHR,
+    pub get_device_group_present_capabilities_khr: PFN_vkGetDeviceGroupPresentCapabilitiesKHR,
+    pub get_device_group_surface_present_modes_khr: PFN_vkGetDeviceGroupSurfacePresentModesKHR,
+    pub get_physical_device_present_rectangles_khr: PFN_vkGetPhysicalDevicePresentRectanglesKHR,
+    pub acquire_next_image2_khr: PFN_vkAcquireNextImage2KHR,
 }
 unsafe impl Send for KhrSwapchainFn {}
 unsafe impl Sync for KhrSwapchainFn {}
-impl ::std::clone::Clone for KhrSwapchainFn {
-    fn clone(&self) -> Self {
-        KhrSwapchainFn {
-            create_swapchain_khr: self.create_swapchain_khr,
-            destroy_swapchain_khr: self.destroy_swapchain_khr,
-            get_swapchain_images_khr: self.get_swapchain_images_khr,
-            acquire_next_image_khr: self.acquire_next_image_khr,
-            queue_present_khr: self.queue_present_khr,
-            get_device_group_present_capabilities_khr: self
-                .get_device_group_present_capabilities_khr,
-            get_device_group_surface_present_modes_khr: self
-                .get_device_group_surface_present_modes_khr,
-            get_physical_device_present_rectangles_khr: self
-                .get_physical_device_present_rectangles_khr,
-            acquire_next_image2_khr: self.acquire_next_image2_khr,
-        }
-    }
-}
 impl KhrSwapchainFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -419,7 +330,7 @@ impl KhrSwapchainFn {
     {
         KhrSwapchainFn {
             create_swapchain_khr: unsafe {
-                extern "system" fn create_swapchain_khr(
+                unsafe extern "system" fn create_swapchain_khr(
                     _device: Device,
                     _p_create_info: *const SwapchainCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -437,7 +348,7 @@ impl KhrSwapchainFn {
                 }
             },
             destroy_swapchain_khr: unsafe {
-                extern "system" fn destroy_swapchain_khr(
+                unsafe extern "system" fn destroy_swapchain_khr(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -457,7 +368,7 @@ impl KhrSwapchainFn {
                 }
             },
             get_swapchain_images_khr: unsafe {
-                extern "system" fn get_swapchain_images_khr(
+                unsafe extern "system" fn get_swapchain_images_khr(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _p_swapchain_image_count: *mut u32,
@@ -478,7 +389,7 @@ impl KhrSwapchainFn {
                 }
             },
             acquire_next_image_khr: unsafe {
-                extern "system" fn acquire_next_image_khr(
+                unsafe extern "system" fn acquire_next_image_khr(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _timeout: u64,
@@ -501,7 +412,7 @@ impl KhrSwapchainFn {
                 }
             },
             queue_present_khr: unsafe {
-                extern "system" fn queue_present_khr(
+                unsafe extern "system" fn queue_present_khr(
                     _queue: Queue,
                     _p_present_info: *const PresentInfoKHR,
                 ) -> Result {
@@ -516,7 +427,7 @@ impl KhrSwapchainFn {
                 }
             },
             get_device_group_present_capabilities_khr: unsafe {
-                extern "system" fn get_device_group_present_capabilities_khr(
+                unsafe extern "system" fn get_device_group_present_capabilities_khr(
                     _device: Device,
                     _p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
                 ) -> Result {
@@ -536,7 +447,7 @@ impl KhrSwapchainFn {
                 }
             },
             get_device_group_surface_present_modes_khr: unsafe {
-                extern "system" fn get_device_group_surface_present_modes_khr(
+                unsafe extern "system" fn get_device_group_surface_present_modes_khr(
                     _device: Device,
                     _surface: SurfaceKHR,
                     _p_modes: *mut DeviceGroupPresentModeFlagsKHR,
@@ -557,7 +468,7 @@ impl KhrSwapchainFn {
                 }
             },
             get_physical_device_present_rectangles_khr: unsafe {
-                extern "system" fn get_physical_device_present_rectangles_khr(
+                unsafe extern "system" fn get_physical_device_present_rectangles_khr(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_rect_count: *mut u32,
@@ -579,7 +490,7 @@ impl KhrSwapchainFn {
                 }
             },
             acquire_next_image2_khr: unsafe {
-                extern "system" fn acquire_next_image2_khr(
+                unsafe extern "system" fn acquire_next_image2_khr(
                     _device: Device,
                     _p_acquire_info: *const AcquireNextImageInfoKHR,
                     _p_image_index: *mut u32,
@@ -762,33 +673,33 @@ impl KhrDisplayFn {
     pub const SPEC_VERSION: u32 = 23u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceDisplayPropertiesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_property_count: *mut u32,
     p_properties: *mut DisplayPropertiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_property_count: *mut u32,
     p_properties: *mut DisplayPlanePropertiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR = extern "system" fn(
+pub type PFN_vkGetDisplayPlaneSupportedDisplaysKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     plane_index: u32,
     p_display_count: *mut u32,
     p_displays: *mut DisplayKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDisplayModePropertiesKHR = extern "system" fn(
+pub type PFN_vkGetDisplayModePropertiesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     display: DisplayKHR,
     p_property_count: *mut u32,
     p_properties: *mut DisplayModePropertiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDisplayModeKHR = extern "system" fn(
+pub type PFN_vkCreateDisplayModeKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     display: DisplayKHR,
     p_create_info: *const DisplayModeCreateInfoKHR,
@@ -796,79 +707,32 @@ pub type PFN_vkCreateDisplayModeKHR = extern "system" fn(
     p_mode: *mut DisplayModeKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDisplayPlaneCapabilitiesKHR = extern "system" fn(
+pub type PFN_vkGetDisplayPlaneCapabilitiesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     mode: DisplayModeKHR,
     plane_index: u32,
     p_capabilities: *mut DisplayPlaneCapabilitiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDisplayPlaneSurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateDisplayPlaneSurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const DisplaySurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrDisplayFn {
-    pub get_physical_device_display_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPropertiesKHR,
-    ) -> Result,
-    pub get_physical_device_display_plane_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPlanePropertiesKHR,
-    ) -> Result,
-    pub get_display_plane_supported_displays_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        plane_index: u32,
-        p_display_count: *mut u32,
-        p_displays: *mut DisplayKHR,
-    ) -> Result,
-    pub get_display_mode_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayModePropertiesKHR,
-    ) -> Result,
-    pub create_display_mode_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_create_info: *const DisplayModeCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_mode: *mut DisplayModeKHR,
-    ) -> Result,
-    pub get_display_plane_capabilities_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        mode: DisplayModeKHR,
-        plane_index: u32,
-        p_capabilities: *mut DisplayPlaneCapabilitiesKHR,
-    ) -> Result,
-    pub create_display_plane_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const DisplaySurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub get_physical_device_display_properties_khr: PFN_vkGetPhysicalDeviceDisplayPropertiesKHR,
+    pub get_physical_device_display_plane_properties_khr:
+        PFN_vkGetPhysicalDeviceDisplayPlanePropertiesKHR,
+    pub get_display_plane_supported_displays_khr: PFN_vkGetDisplayPlaneSupportedDisplaysKHR,
+    pub get_display_mode_properties_khr: PFN_vkGetDisplayModePropertiesKHR,
+    pub create_display_mode_khr: PFN_vkCreateDisplayModeKHR,
+    pub get_display_plane_capabilities_khr: PFN_vkGetDisplayPlaneCapabilitiesKHR,
+    pub create_display_plane_surface_khr: PFN_vkCreateDisplayPlaneSurfaceKHR,
 }
 unsafe impl Send for KhrDisplayFn {}
 unsafe impl Sync for KhrDisplayFn {}
-impl ::std::clone::Clone for KhrDisplayFn {
-    fn clone(&self) -> Self {
-        KhrDisplayFn {
-            get_physical_device_display_properties_khr: self
-                .get_physical_device_display_properties_khr,
-            get_physical_device_display_plane_properties_khr: self
-                .get_physical_device_display_plane_properties_khr,
-            get_display_plane_supported_displays_khr: self.get_display_plane_supported_displays_khr,
-            get_display_mode_properties_khr: self.get_display_mode_properties_khr,
-            create_display_mode_khr: self.create_display_mode_khr,
-            get_display_plane_capabilities_khr: self.get_display_plane_capabilities_khr,
-            create_display_plane_surface_khr: self.create_display_plane_surface_khr,
-        }
-    }
-}
 impl KhrDisplayFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -876,7 +740,7 @@ impl KhrDisplayFn {
     {
         KhrDisplayFn {
             get_physical_device_display_properties_khr: unsafe {
-                extern "system" fn get_physical_device_display_properties_khr(
+                unsafe extern "system" fn get_physical_device_display_properties_khr(
                     _physical_device: PhysicalDevice,
                     _p_property_count: *mut u32,
                     _p_properties: *mut DisplayPropertiesKHR,
@@ -897,7 +761,7 @@ impl KhrDisplayFn {
                 }
             },
             get_physical_device_display_plane_properties_khr: unsafe {
-                extern "system" fn get_physical_device_display_plane_properties_khr(
+                unsafe extern "system" fn get_physical_device_display_plane_properties_khr(
                     _physical_device: PhysicalDevice,
                     _p_property_count: *mut u32,
                     _p_properties: *mut DisplayPlanePropertiesKHR,
@@ -918,7 +782,7 @@ impl KhrDisplayFn {
                 }
             },
             get_display_plane_supported_displays_khr: unsafe {
-                extern "system" fn get_display_plane_supported_displays_khr(
+                unsafe extern "system" fn get_display_plane_supported_displays_khr(
                     _physical_device: PhysicalDevice,
                     _plane_index: u32,
                     _p_display_count: *mut u32,
@@ -940,7 +804,7 @@ impl KhrDisplayFn {
                 }
             },
             get_display_mode_properties_khr: unsafe {
-                extern "system" fn get_display_mode_properties_khr(
+                unsafe extern "system" fn get_display_mode_properties_khr(
                     _physical_device: PhysicalDevice,
                     _display: DisplayKHR,
                     _p_property_count: *mut u32,
@@ -962,7 +826,7 @@ impl KhrDisplayFn {
                 }
             },
             create_display_mode_khr: unsafe {
-                extern "system" fn create_display_mode_khr(
+                unsafe extern "system" fn create_display_mode_khr(
                     _physical_device: PhysicalDevice,
                     _display: DisplayKHR,
                     _p_create_info: *const DisplayModeCreateInfoKHR,
@@ -984,7 +848,7 @@ impl KhrDisplayFn {
                 }
             },
             get_display_plane_capabilities_khr: unsafe {
-                extern "system" fn get_display_plane_capabilities_khr(
+                unsafe extern "system" fn get_display_plane_capabilities_khr(
                     _physical_device: PhysicalDevice,
                     _mode: DisplayModeKHR,
                     _plane_index: u32,
@@ -1006,7 +870,7 @@ impl KhrDisplayFn {
                 }
             },
             create_display_plane_surface_khr: unsafe {
-                extern "system" fn create_display_plane_surface_khr(
+                unsafe extern "system" fn create_display_plane_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const DisplaySurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1146,31 +1010,19 @@ impl KhrDisplaySwapchainFn {
     pub const SPEC_VERSION: u32 = 10u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateSharedSwapchainsKHR = extern "system" fn(
+pub type PFN_vkCreateSharedSwapchainsKHR = unsafe extern "system" fn(
     device: Device,
     swapchain_count: u32,
     p_create_infos: *const SwapchainCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_swapchains: *mut SwapchainKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrDisplaySwapchainFn {
-    pub create_shared_swapchains_khr: extern "system" fn(
-        device: Device,
-        swapchain_count: u32,
-        p_create_infos: *const SwapchainCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_swapchains: *mut SwapchainKHR,
-    ) -> Result,
+    pub create_shared_swapchains_khr: PFN_vkCreateSharedSwapchainsKHR,
 }
 unsafe impl Send for KhrDisplaySwapchainFn {}
 unsafe impl Sync for KhrDisplaySwapchainFn {}
-impl ::std::clone::Clone for KhrDisplaySwapchainFn {
-    fn clone(&self) -> Self {
-        KhrDisplaySwapchainFn {
-            create_shared_swapchains_khr: self.create_shared_swapchains_khr,
-        }
-    }
-}
 impl KhrDisplaySwapchainFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1178,7 +1030,7 @@ impl KhrDisplaySwapchainFn {
     {
         KhrDisplaySwapchainFn {
             create_shared_swapchains_khr: unsafe {
-                extern "system" fn create_shared_swapchains_khr(
+                unsafe extern "system" fn create_shared_swapchains_khr(
                     _device: Device,
                     _swapchain_count: u32,
                     _p_create_infos: *const SwapchainCreateInfoKHR,
@@ -1236,44 +1088,27 @@ impl KhrXlibSurfaceFn {
     pub const SPEC_VERSION: u32 = 6u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateXlibSurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateXlibSurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const XlibSurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     queue_family_index: u32,
     dpy: *mut Display,
     visual_id: VisualID,
 ) -> Bool32;
+#[derive(Clone)]
 pub struct KhrXlibSurfaceFn {
-    pub create_xlib_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const XlibSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
-    pub get_physical_device_xlib_presentation_support_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        dpy: *mut Display,
-        visual_id: VisualID,
-    ) -> Bool32,
+    pub create_xlib_surface_khr: PFN_vkCreateXlibSurfaceKHR,
+    pub get_physical_device_xlib_presentation_support_khr:
+        PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR,
 }
 unsafe impl Send for KhrXlibSurfaceFn {}
 unsafe impl Sync for KhrXlibSurfaceFn {}
-impl ::std::clone::Clone for KhrXlibSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrXlibSurfaceFn {
-            create_xlib_surface_khr: self.create_xlib_surface_khr,
-            get_physical_device_xlib_presentation_support_khr: self
-                .get_physical_device_xlib_presentation_support_khr,
-        }
-    }
-}
 impl KhrXlibSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1281,7 +1116,7 @@ impl KhrXlibSurfaceFn {
     {
         KhrXlibSurfaceFn {
             create_xlib_surface_khr: unsafe {
-                extern "system" fn create_xlib_surface_khr(
+                unsafe extern "system" fn create_xlib_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const XlibSurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1302,7 +1137,7 @@ impl KhrXlibSurfaceFn {
                 }
             },
             get_physical_device_xlib_presentation_support_khr: unsafe {
-                extern "system" fn get_physical_device_xlib_presentation_support_khr(
+                unsafe extern "system" fn get_physical_device_xlib_presentation_support_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _dpy: *mut Display,
@@ -1363,44 +1198,27 @@ impl KhrXcbSurfaceFn {
     pub const SPEC_VERSION: u32 = 6u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateXcbSurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateXcbSurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const XcbSurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceXcbPresentationSupportKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceXcbPresentationSupportKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     queue_family_index: u32,
     connection: *mut xcb_connection_t,
     visual_id: xcb_visualid_t,
 ) -> Bool32;
+#[derive(Clone)]
 pub struct KhrXcbSurfaceFn {
-    pub create_xcb_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const XcbSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
-    pub get_physical_device_xcb_presentation_support_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        connection: *mut xcb_connection_t,
-        visual_id: xcb_visualid_t,
-    ) -> Bool32,
+    pub create_xcb_surface_khr: PFN_vkCreateXcbSurfaceKHR,
+    pub get_physical_device_xcb_presentation_support_khr:
+        PFN_vkGetPhysicalDeviceXcbPresentationSupportKHR,
 }
 unsafe impl Send for KhrXcbSurfaceFn {}
 unsafe impl Sync for KhrXcbSurfaceFn {}
-impl ::std::clone::Clone for KhrXcbSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrXcbSurfaceFn {
-            create_xcb_surface_khr: self.create_xcb_surface_khr,
-            get_physical_device_xcb_presentation_support_khr: self
-                .get_physical_device_xcb_presentation_support_khr,
-        }
-    }
-}
 impl KhrXcbSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1408,7 +1226,7 @@ impl KhrXcbSurfaceFn {
     {
         KhrXcbSurfaceFn {
             create_xcb_surface_khr: unsafe {
-                extern "system" fn create_xcb_surface_khr(
+                unsafe extern "system" fn create_xcb_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const XcbSurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1429,7 +1247,7 @@ impl KhrXcbSurfaceFn {
                 }
             },
             get_physical_device_xcb_presentation_support_khr: unsafe {
-                extern "system" fn get_physical_device_xcb_presentation_support_khr(
+                unsafe extern "system" fn get_physical_device_xcb_presentation_support_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _connection: *mut xcb_connection_t,
@@ -1490,42 +1308,27 @@ impl KhrWaylandSurfaceFn {
     pub const SPEC_VERSION: u32 = 6u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateWaylandSurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateWaylandSurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const WaylandSurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceWaylandPresentationSupportKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceWaylandPresentationSupportKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     queue_family_index: u32,
     display: *mut wl_display,
-) -> Bool32;
+)
+    -> Bool32;
+#[derive(Clone)]
 pub struct KhrWaylandSurfaceFn {
-    pub create_wayland_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const WaylandSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
-    pub get_physical_device_wayland_presentation_support_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        display: *mut wl_display,
-    ) -> Bool32,
+    pub create_wayland_surface_khr: PFN_vkCreateWaylandSurfaceKHR,
+    pub get_physical_device_wayland_presentation_support_khr:
+        PFN_vkGetPhysicalDeviceWaylandPresentationSupportKHR,
 }
 unsafe impl Send for KhrWaylandSurfaceFn {}
 unsafe impl Sync for KhrWaylandSurfaceFn {}
-impl ::std::clone::Clone for KhrWaylandSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrWaylandSurfaceFn {
-            create_wayland_surface_khr: self.create_wayland_surface_khr,
-            get_physical_device_wayland_presentation_support_khr: self
-                .get_physical_device_wayland_presentation_support_khr,
-        }
-    }
-}
 impl KhrWaylandSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1533,7 +1336,7 @@ impl KhrWaylandSurfaceFn {
     {
         KhrWaylandSurfaceFn {
             create_wayland_surface_khr: unsafe {
-                extern "system" fn create_wayland_surface_khr(
+                unsafe extern "system" fn create_wayland_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const WaylandSurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1554,7 +1357,7 @@ impl KhrWaylandSurfaceFn {
                 }
             },
             get_physical_device_wayland_presentation_support_khr: unsafe {
-                extern "system" fn get_physical_device_wayland_presentation_support_khr(
+                unsafe extern "system" fn get_physical_device_wayland_presentation_support_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _display: *mut wl_display,
@@ -1611,14 +1414,10 @@ impl KhrMirSurfaceFn {
     }
     pub const SPEC_VERSION: u32 = 4u32;
 }
+#[derive(Clone)]
 pub struct KhrMirSurfaceFn {}
 unsafe impl Send for KhrMirSurfaceFn {}
 unsafe impl Sync for KhrMirSurfaceFn {}
-impl ::std::clone::Clone for KhrMirSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrMirSurfaceFn {}
-    }
-}
 impl KhrMirSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1635,29 +1434,18 @@ impl KhrAndroidSurfaceFn {
     pub const SPEC_VERSION: u32 = 6u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateAndroidSurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateAndroidSurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const AndroidSurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrAndroidSurfaceFn {
-    pub create_android_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const AndroidSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_android_surface_khr: PFN_vkCreateAndroidSurfaceKHR,
 }
 unsafe impl Send for KhrAndroidSurfaceFn {}
 unsafe impl Sync for KhrAndroidSurfaceFn {}
-impl ::std::clone::Clone for KhrAndroidSurfaceFn {
-    fn clone(&self) -> Self {
-        KhrAndroidSurfaceFn {
-            create_android_surface_khr: self.create_android_surface_khr,
-        }
-    }
-}
 impl KhrAndroidSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1665,7 +1453,7 @@ impl KhrAndroidSurfaceFn {
     {
         KhrAndroidSurfaceFn {
             create_android_surface_khr: unsafe {
-                extern "system" fn create_android_surface_khr(
+                unsafe extern "system" fn create_android_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const AndroidSurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1710,7 +1498,7 @@ impl KhrWin32SurfaceFn {
     pub const SPEC_VERSION: u32 = 6u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateWin32SurfaceKHR = extern "system" fn(
+pub type PFN_vkCreateWin32SurfaceKHR = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const Win32SurfaceCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
@@ -1718,28 +1506,15 @@ pub type PFN_vkCreateWin32SurfaceKHR = extern "system" fn(
 ) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR =
-    extern "system" fn(physical_device: PhysicalDevice, queue_family_index: u32) -> Bool32;
+    unsafe extern "system" fn(physical_device: PhysicalDevice, queue_family_index: u32) -> Bool32;
+#[derive(Clone)]
 pub struct KhrWin32SurfaceFn {
-    pub create_win32_surface_khr: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const Win32SurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_win32_surface_khr: PFN_vkCreateWin32SurfaceKHR,
     pub get_physical_device_win32_presentation_support_khr:
-        extern "system" fn(physical_device: PhysicalDevice, queue_family_index: u32) -> Bool32,
+        PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR,
 }
 unsafe impl Send for KhrWin32SurfaceFn {}
 unsafe impl Sync for KhrWin32SurfaceFn {}
-impl ::std::clone::Clone for KhrWin32SurfaceFn {
-    fn clone(&self) -> Self {
-        KhrWin32SurfaceFn {
-            create_win32_surface_khr: self.create_win32_surface_khr,
-            get_physical_device_win32_presentation_support_khr: self
-                .get_physical_device_win32_presentation_support_khr,
-        }
-    }
-}
 impl KhrWin32SurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1747,7 +1522,7 @@ impl KhrWin32SurfaceFn {
     {
         KhrWin32SurfaceFn {
             create_win32_surface_khr: unsafe {
-                extern "system" fn create_win32_surface_khr(
+                unsafe extern "system" fn create_win32_surface_khr(
                     _instance: Instance,
                     _p_create_info: *const Win32SurfaceCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -1768,7 +1543,7 @@ impl KhrWin32SurfaceFn {
                 }
             },
             get_physical_device_win32_presentation_support_khr: unsafe {
-                extern "system" fn get_physical_device_win32_presentation_support_khr(
+                unsafe extern "system" fn get_physical_device_win32_presentation_support_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                 ) -> Bool32 {
@@ -1823,14 +1598,14 @@ impl AndroidNativeBufferFn {
     pub const SPEC_VERSION: u32 = 8u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSwapchainGrallocUsageANDROID = extern "system" fn(
+pub type PFN_vkGetSwapchainGrallocUsageANDROID = unsafe extern "system" fn(
     device: Device,
     format: Format,
     image_usage: ImageUsageFlags,
     gralloc_usage: *mut c_int,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkAcquireImageANDROID = extern "system" fn(
+pub type PFN_vkAcquireImageANDROID = unsafe extern "system" fn(
     device: Device,
     image: Image,
     native_fence_fd: c_int,
@@ -1838,7 +1613,7 @@ pub type PFN_vkAcquireImageANDROID = extern "system" fn(
     fence: Fence,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkQueueSignalReleaseImageANDROID = extern "system" fn(
+pub type PFN_vkQueueSignalReleaseImageANDROID = unsafe extern "system" fn(
     queue: Queue,
     wait_semaphore_count: u32,
     p_wait_semaphores: *const Semaphore,
@@ -1846,7 +1621,7 @@ pub type PFN_vkQueueSignalReleaseImageANDROID = extern "system" fn(
     p_native_fence_fd: *mut c_int,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSwapchainGrallocUsage2ANDROID = extern "system" fn(
+pub type PFN_vkGetSwapchainGrallocUsage2ANDROID = unsafe extern "system" fn(
     device: Device,
     format: Format,
     image_usage: ImageUsageFlags,
@@ -1854,48 +1629,15 @@ pub type PFN_vkGetSwapchainGrallocUsage2ANDROID = extern "system" fn(
     gralloc_consumer_usage: *mut u64,
     gralloc_producer_usage: *mut u64,
 ) -> Result;
+#[derive(Clone)]
 pub struct AndroidNativeBufferFn {
-    pub get_swapchain_gralloc_usage_android: extern "system" fn(
-        device: Device,
-        format: Format,
-        image_usage: ImageUsageFlags,
-        gralloc_usage: *mut c_int,
-    ) -> Result,
-    pub acquire_image_android: extern "system" fn(
-        device: Device,
-        image: Image,
-        native_fence_fd: c_int,
-        semaphore: Semaphore,
-        fence: Fence,
-    ) -> Result,
-    pub queue_signal_release_image_android: extern "system" fn(
-        queue: Queue,
-        wait_semaphore_count: u32,
-        p_wait_semaphores: *const Semaphore,
-        image: Image,
-        p_native_fence_fd: *mut c_int,
-    ) -> Result,
-    pub get_swapchain_gralloc_usage2_android: extern "system" fn(
-        device: Device,
-        format: Format,
-        image_usage: ImageUsageFlags,
-        swapchain_image_usage: SwapchainImageUsageFlagsANDROID,
-        gralloc_consumer_usage: *mut u64,
-        gralloc_producer_usage: *mut u64,
-    ) -> Result,
+    pub get_swapchain_gralloc_usage_android: PFN_vkGetSwapchainGrallocUsageANDROID,
+    pub acquire_image_android: PFN_vkAcquireImageANDROID,
+    pub queue_signal_release_image_android: PFN_vkQueueSignalReleaseImageANDROID,
+    pub get_swapchain_gralloc_usage2_android: PFN_vkGetSwapchainGrallocUsage2ANDROID,
 }
 unsafe impl Send for AndroidNativeBufferFn {}
 unsafe impl Sync for AndroidNativeBufferFn {}
-impl ::std::clone::Clone for AndroidNativeBufferFn {
-    fn clone(&self) -> Self {
-        AndroidNativeBufferFn {
-            get_swapchain_gralloc_usage_android: self.get_swapchain_gralloc_usage_android,
-            acquire_image_android: self.acquire_image_android,
-            queue_signal_release_image_android: self.queue_signal_release_image_android,
-            get_swapchain_gralloc_usage2_android: self.get_swapchain_gralloc_usage2_android,
-        }
-    }
-}
 impl AndroidNativeBufferFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -1903,7 +1645,7 @@ impl AndroidNativeBufferFn {
     {
         AndroidNativeBufferFn {
             get_swapchain_gralloc_usage_android: unsafe {
-                extern "system" fn get_swapchain_gralloc_usage_android(
+                unsafe extern "system" fn get_swapchain_gralloc_usage_android(
                     _device: Device,
                     _format: Format,
                     _image_usage: ImageUsageFlags,
@@ -1925,7 +1667,7 @@ impl AndroidNativeBufferFn {
                 }
             },
             acquire_image_android: unsafe {
-                extern "system" fn acquire_image_android(
+                unsafe extern "system" fn acquire_image_android(
                     _device: Device,
                     _image: Image,
                     _native_fence_fd: c_int,
@@ -1947,7 +1689,7 @@ impl AndroidNativeBufferFn {
                 }
             },
             queue_signal_release_image_android: unsafe {
-                extern "system" fn queue_signal_release_image_android(
+                unsafe extern "system" fn queue_signal_release_image_android(
                     _queue: Queue,
                     _wait_semaphore_count: u32,
                     _p_wait_semaphores: *const Semaphore,
@@ -1970,7 +1712,7 @@ impl AndroidNativeBufferFn {
                 }
             },
             get_swapchain_gralloc_usage2_android: unsafe {
-                extern "system" fn get_swapchain_gralloc_usage2_android(
+                unsafe extern "system" fn get_swapchain_gralloc_usage2_android(
                     _device: Device,
                     _format: Format,
                     _image_usage: ImageUsageFlags,
@@ -2070,23 +1812,23 @@ impl ExtDebugReportFn {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_debug_report\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 9u32;
+    pub const SPEC_VERSION: u32 = 10u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDebugReportCallbackEXT = extern "system" fn(
+pub type PFN_vkCreateDebugReportCallbackEXT = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const DebugReportCallbackCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_callback: *mut DebugReportCallbackEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyDebugReportCallbackEXT = extern "system" fn(
+pub type PFN_vkDestroyDebugReportCallbackEXT = unsafe extern "system" fn(
     instance: Instance,
     callback: DebugReportCallbackEXT,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkDebugReportMessageEXT = extern "system" fn(
+pub type PFN_vkDebugReportMessageEXT = unsafe extern "system" fn(
     instance: Instance,
     flags: DebugReportFlagsEXT,
     object_type: DebugReportObjectTypeEXT,
@@ -2096,40 +1838,14 @@ pub type PFN_vkDebugReportMessageEXT = extern "system" fn(
     p_layer_prefix: *const c_char,
     p_message: *const c_char,
 );
+#[derive(Clone)]
 pub struct ExtDebugReportFn {
-    pub create_debug_report_callback_ext: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const DebugReportCallbackCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_callback: *mut DebugReportCallbackEXT,
-    ) -> Result,
-    pub destroy_debug_report_callback_ext: extern "system" fn(
-        instance: Instance,
-        callback: DebugReportCallbackEXT,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub debug_report_message_ext: extern "system" fn(
-        instance: Instance,
-        flags: DebugReportFlagsEXT,
-        object_type: DebugReportObjectTypeEXT,
-        object: u64,
-        location: usize,
-        message_code: i32,
-        p_layer_prefix: *const c_char,
-        p_message: *const c_char,
-    ),
+    pub create_debug_report_callback_ext: PFN_vkCreateDebugReportCallbackEXT,
+    pub destroy_debug_report_callback_ext: PFN_vkDestroyDebugReportCallbackEXT,
+    pub debug_report_message_ext: PFN_vkDebugReportMessageEXT,
 }
 unsafe impl Send for ExtDebugReportFn {}
 unsafe impl Sync for ExtDebugReportFn {}
-impl ::std::clone::Clone for ExtDebugReportFn {
-    fn clone(&self) -> Self {
-        ExtDebugReportFn {
-            create_debug_report_callback_ext: self.create_debug_report_callback_ext,
-            destroy_debug_report_callback_ext: self.destroy_debug_report_callback_ext,
-            debug_report_message_ext: self.debug_report_message_ext,
-        }
-    }
-}
 impl ExtDebugReportFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2137,7 +1853,7 @@ impl ExtDebugReportFn {
     {
         ExtDebugReportFn {
             create_debug_report_callback_ext: unsafe {
-                extern "system" fn create_debug_report_callback_ext(
+                unsafe extern "system" fn create_debug_report_callback_ext(
                     _instance: Instance,
                     _p_create_info: *const DebugReportCallbackCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -2159,7 +1875,7 @@ impl ExtDebugReportFn {
                 }
             },
             destroy_debug_report_callback_ext: unsafe {
-                extern "system" fn destroy_debug_report_callback_ext(
+                unsafe extern "system" fn destroy_debug_report_callback_ext(
                     _instance: Instance,
                     _callback: DebugReportCallbackEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -2180,7 +1896,7 @@ impl ExtDebugReportFn {
                 }
             },
             debug_report_message_ext: unsafe {
-                extern "system" fn debug_report_message_ext(
+                unsafe extern "system" fn debug_report_message_ext(
                     _instance: Instance,
                     _flags: DebugReportFlagsEXT,
                     _object_type: DebugReportObjectTypeEXT,
@@ -2255,8 +1971,7 @@ impl StructureType {
 }
 #[doc = "Generated from 'VK_EXT_debug_report'"]
 impl StructureType {
-    pub const DEBUG_REPORT_CREATE_INFO_EXT: Self =
-        StructureType::DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    pub const DEBUG_REPORT_CREATE_INFO_EXT: Self = Self::DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 }
 #[doc = "Generated from 'VK_EXT_debug_report'"]
 impl Result {
@@ -2281,14 +1996,10 @@ impl NvGlslShaderFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvGlslShaderFn {}
 unsafe impl Send for NvGlslShaderFn {}
 unsafe impl Sync for NvGlslShaderFn {}
-impl ::std::clone::Clone for NvGlslShaderFn {
-    fn clone(&self) -> Self {
-        NvGlslShaderFn {}
-    }
-}
 impl NvGlslShaderFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2308,14 +2019,10 @@ impl ExtDepthRangeUnrestrictedFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtDepthRangeUnrestrictedFn {}
 unsafe impl Send for ExtDepthRangeUnrestrictedFn {}
 unsafe impl Sync for ExtDepthRangeUnrestrictedFn {}
-impl ::std::clone::Clone for ExtDepthRangeUnrestrictedFn {
-    fn clone(&self) -> Self {
-        ExtDepthRangeUnrestrictedFn {}
-    }
-}
 impl ExtDepthRangeUnrestrictedFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2331,14 +2038,10 @@ impl KhrSamplerMirrorClampToEdgeFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct KhrSamplerMirrorClampToEdgeFn {}
 unsafe impl Send for KhrSamplerMirrorClampToEdgeFn {}
 unsafe impl Sync for KhrSamplerMirrorClampToEdgeFn {}
-impl ::std::clone::Clone for KhrSamplerMirrorClampToEdgeFn {
-    fn clone(&self) -> Self {
-        KhrSamplerMirrorClampToEdgeFn {}
-    }
-}
 impl KhrSamplerMirrorClampToEdgeFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2353,7 +2056,7 @@ impl SamplerAddressMode {
 }
 #[doc = "Generated from 'VK_KHR_sampler_mirror_clamp_to_edge'"]
 impl SamplerAddressMode {
-    pub const MIRROR_CLAMP_TO_EDGE_KHR: Self = SamplerAddressMode::MIRROR_CLAMP_TO_EDGE;
+    pub const MIRROR_CLAMP_TO_EDGE_KHR: Self = Self::MIRROR_CLAMP_TO_EDGE;
 }
 impl ImgFilterCubicFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -2362,14 +2065,10 @@ impl ImgFilterCubicFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ImgFilterCubicFn {}
 unsafe impl Send for ImgFilterCubicFn {}
 unsafe impl Sync for ImgFilterCubicFn {}
-impl ::std::clone::Clone for ImgFilterCubicFn {
-    fn clone(&self) -> Self {
-        ImgFilterCubicFn {}
-    }
-}
 impl ImgFilterCubicFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2393,14 +2092,10 @@ impl AmdExtension17Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension17Fn {}
 unsafe impl Send for AmdExtension17Fn {}
 unsafe impl Sync for AmdExtension17Fn {}
-impl ::std::clone::Clone for AmdExtension17Fn {
-    fn clone(&self) -> Self {
-        AmdExtension17Fn {}
-    }
-}
 impl AmdExtension17Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2416,14 +2111,10 @@ impl AmdExtension18Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension18Fn {}
 unsafe impl Send for AmdExtension18Fn {}
 unsafe impl Sync for AmdExtension18Fn {}
-impl ::std::clone::Clone for AmdExtension18Fn {
-    fn clone(&self) -> Self {
-        AmdExtension18Fn {}
-    }
-}
 impl AmdExtension18Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2439,14 +2130,10 @@ impl AmdRasterizationOrderFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdRasterizationOrderFn {}
 unsafe impl Send for AmdRasterizationOrderFn {}
 unsafe impl Sync for AmdRasterizationOrderFn {}
-impl ::std::clone::Clone for AmdRasterizationOrderFn {
-    fn clone(&self) -> Self {
-        AmdRasterizationOrderFn {}
-    }
-}
 impl AmdRasterizationOrderFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2466,14 +2153,10 @@ impl AmdExtension20Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension20Fn {}
 unsafe impl Send for AmdExtension20Fn {}
 unsafe impl Sync for AmdExtension20Fn {}
-impl ::std::clone::Clone for AmdExtension20Fn {
-    fn clone(&self) -> Self {
-        AmdExtension20Fn {}
-    }
-}
 impl AmdExtension20Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2489,14 +2172,10 @@ impl AmdShaderTrinaryMinmaxFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderTrinaryMinmaxFn {}
 unsafe impl Send for AmdShaderTrinaryMinmaxFn {}
 unsafe impl Sync for AmdShaderTrinaryMinmaxFn {}
-impl ::std::clone::Clone for AmdShaderTrinaryMinmaxFn {
-    fn clone(&self) -> Self {
-        AmdShaderTrinaryMinmaxFn {}
-    }
-}
 impl AmdShaderTrinaryMinmaxFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2512,14 +2191,10 @@ impl AmdShaderExplicitVertexParameterFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderExplicitVertexParameterFn {}
 unsafe impl Send for AmdShaderExplicitVertexParameterFn {}
 unsafe impl Sync for AmdShaderExplicitVertexParameterFn {}
-impl ::std::clone::Clone for AmdShaderExplicitVertexParameterFn {
-    fn clone(&self) -> Self {
-        AmdShaderExplicitVertexParameterFn {}
-    }
-}
 impl AmdShaderExplicitVertexParameterFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2536,55 +2211,37 @@ impl ExtDebugMarkerFn {
     pub const SPEC_VERSION: u32 = 4u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkDebugMarkerSetObjectTagEXT =
-    extern "system" fn(device: Device, p_tag_info: *const DebugMarkerObjectTagInfoEXT) -> Result;
+pub type PFN_vkDebugMarkerSetObjectTagEXT = unsafe extern "system" fn(
+    device: Device,
+    p_tag_info: *const DebugMarkerObjectTagInfoEXT,
+) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDebugMarkerSetObjectNameEXT =
-    extern "system" fn(device: Device, p_name_info: *const DebugMarkerObjectNameInfoEXT) -> Result;
+pub type PFN_vkDebugMarkerSetObjectNameEXT = unsafe extern "system" fn(
+    device: Device,
+    p_name_info: *const DebugMarkerObjectNameInfoEXT,
+) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDebugMarkerBeginEXT = extern "system" fn(
+pub type PFN_vkCmdDebugMarkerBeginEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_marker_info: *const DebugMarkerMarkerInfoEXT,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDebugMarkerEndEXT = extern "system" fn(command_buffer: CommandBuffer);
+pub type PFN_vkCmdDebugMarkerEndEXT = unsafe extern "system" fn(command_buffer: CommandBuffer);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDebugMarkerInsertEXT = extern "system" fn(
+pub type PFN_vkCmdDebugMarkerInsertEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_marker_info: *const DebugMarkerMarkerInfoEXT,
 );
+#[derive(Clone)]
 pub struct ExtDebugMarkerFn {
-    pub debug_marker_set_object_tag_ext: extern "system" fn(
-        device: Device,
-        p_tag_info: *const DebugMarkerObjectTagInfoEXT,
-    ) -> Result,
-    pub debug_marker_set_object_name_ext: extern "system" fn(
-        device: Device,
-        p_name_info: *const DebugMarkerObjectNameInfoEXT,
-    ) -> Result,
-    pub cmd_debug_marker_begin_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_marker_info: *const DebugMarkerMarkerInfoEXT,
-    ),
-    pub cmd_debug_marker_end_ext: extern "system" fn(command_buffer: CommandBuffer),
-    pub cmd_debug_marker_insert_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_marker_info: *const DebugMarkerMarkerInfoEXT,
-    ),
+    pub debug_marker_set_object_tag_ext: PFN_vkDebugMarkerSetObjectTagEXT,
+    pub debug_marker_set_object_name_ext: PFN_vkDebugMarkerSetObjectNameEXT,
+    pub cmd_debug_marker_begin_ext: PFN_vkCmdDebugMarkerBeginEXT,
+    pub cmd_debug_marker_end_ext: PFN_vkCmdDebugMarkerEndEXT,
+    pub cmd_debug_marker_insert_ext: PFN_vkCmdDebugMarkerInsertEXT,
 }
 unsafe impl Send for ExtDebugMarkerFn {}
 unsafe impl Sync for ExtDebugMarkerFn {}
-impl ::std::clone::Clone for ExtDebugMarkerFn {
-    fn clone(&self) -> Self {
-        ExtDebugMarkerFn {
-            debug_marker_set_object_tag_ext: self.debug_marker_set_object_tag_ext,
-            debug_marker_set_object_name_ext: self.debug_marker_set_object_name_ext,
-            cmd_debug_marker_begin_ext: self.cmd_debug_marker_begin_ext,
-            cmd_debug_marker_end_ext: self.cmd_debug_marker_end_ext,
-            cmd_debug_marker_insert_ext: self.cmd_debug_marker_insert_ext,
-        }
-    }
-}
 impl ExtDebugMarkerFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2592,7 +2249,7 @@ impl ExtDebugMarkerFn {
     {
         ExtDebugMarkerFn {
             debug_marker_set_object_tag_ext: unsafe {
-                extern "system" fn debug_marker_set_object_tag_ext(
+                unsafe extern "system" fn debug_marker_set_object_tag_ext(
                     _device: Device,
                     _p_tag_info: *const DebugMarkerObjectTagInfoEXT,
                 ) -> Result {
@@ -2612,7 +2269,7 @@ impl ExtDebugMarkerFn {
                 }
             },
             debug_marker_set_object_name_ext: unsafe {
-                extern "system" fn debug_marker_set_object_name_ext(
+                unsafe extern "system" fn debug_marker_set_object_name_ext(
                     _device: Device,
                     _p_name_info: *const DebugMarkerObjectNameInfoEXT,
                 ) -> Result {
@@ -2632,7 +2289,7 @@ impl ExtDebugMarkerFn {
                 }
             },
             cmd_debug_marker_begin_ext: unsafe {
-                extern "system" fn cmd_debug_marker_begin_ext(
+                unsafe extern "system" fn cmd_debug_marker_begin_ext(
                     _command_buffer: CommandBuffer,
                     _p_marker_info: *const DebugMarkerMarkerInfoEXT,
                 ) {
@@ -2651,7 +2308,7 @@ impl ExtDebugMarkerFn {
                 }
             },
             cmd_debug_marker_end_ext: unsafe {
-                extern "system" fn cmd_debug_marker_end_ext(_command_buffer: CommandBuffer) {
+                unsafe extern "system" fn cmd_debug_marker_end_ext(_command_buffer: CommandBuffer) {
                     panic!(concat!(
                         "Unable to load ",
                         stringify!(cmd_debug_marker_end_ext)
@@ -2667,7 +2324,7 @@ impl ExtDebugMarkerFn {
                 }
             },
             cmd_debug_marker_insert_ext: unsafe {
-                extern "system" fn cmd_debug_marker_insert_ext(
+                unsafe extern "system" fn cmd_debug_marker_insert_ext(
                     _command_buffer: CommandBuffer,
                     _p_marker_info: *const DebugMarkerMarkerInfoEXT,
                 ) {
@@ -2736,143 +2393,688 @@ impl StructureType {
 impl StructureType {
     pub const DEBUG_MARKER_MARKER_INFO_EXT: Self = Self(1_000_022_002);
 }
-impl AmdExtension24Fn {
+impl KhrVideoQueueFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_24\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_video_queue\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension24Fn {}
-unsafe impl Send for AmdExtension24Fn {}
-unsafe impl Sync for AmdExtension24Fn {}
-impl ::std::clone::Clone for AmdExtension24Fn {
-    fn clone(&self) -> Self {
-        AmdExtension24Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    p_video_profile: *const VideoProfileKHR,
+    p_capabilities: *mut VideoCapabilitiesKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    p_video_format_info: *const PhysicalDeviceVideoFormatInfoKHR,
+    p_video_format_property_count: *mut u32,
+    p_video_format_properties: *mut VideoFormatPropertiesKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkCreateVideoSessionKHR = unsafe extern "system" fn(
+    device: Device,
+    p_create_info: *const VideoSessionCreateInfoKHR,
+    p_allocator: *const AllocationCallbacks,
+    p_video_session: *mut VideoSessionKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkDestroyVideoSessionKHR = unsafe extern "system" fn(
+    device: Device,
+    video_session: VideoSessionKHR,
+    p_allocator: *const AllocationCallbacks,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetVideoSessionMemoryRequirementsKHR = unsafe extern "system" fn(
+    device: Device,
+    video_session: VideoSessionKHR,
+    p_video_session_memory_requirements_count: *mut u32,
+    p_video_session_memory_requirements: *mut VideoGetMemoryPropertiesKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkBindVideoSessionMemoryKHR = unsafe extern "system" fn(
+    device: Device,
+    video_session: VideoSessionKHR,
+    video_session_bind_memory_count: u32,
+    p_video_session_bind_memories: *const VideoBindMemoryKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkCreateVideoSessionParametersKHR = unsafe extern "system" fn(
+    device: Device,
+    p_create_info: *const VideoSessionParametersCreateInfoKHR,
+    p_allocator: *const AllocationCallbacks,
+    p_video_session_parameters: *mut VideoSessionParametersKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkUpdateVideoSessionParametersKHR = unsafe extern "system" fn(
+    device: Device,
+    video_session_parameters: VideoSessionParametersKHR,
+    p_update_info: *const VideoSessionParametersUpdateInfoKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkDestroyVideoSessionParametersKHR = unsafe extern "system" fn(
+    device: Device,
+    video_session_parameters: VideoSessionParametersKHR,
+    p_allocator: *const AllocationCallbacks,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdBeginVideoCodingKHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_begin_info: *const VideoBeginCodingInfoKHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdEndVideoCodingKHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_end_coding_info: *const VideoEndCodingInfoKHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdControlVideoCodingKHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_coding_control_info: *const VideoCodingControlInfoKHR,
+);
+#[derive(Clone)]
+pub struct KhrVideoQueueFn {
+    pub get_physical_device_video_capabilities_khr: PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR,
+    pub get_physical_device_video_format_properties_khr:
+        PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR,
+    pub create_video_session_khr: PFN_vkCreateVideoSessionKHR,
+    pub destroy_video_session_khr: PFN_vkDestroyVideoSessionKHR,
+    pub get_video_session_memory_requirements_khr: PFN_vkGetVideoSessionMemoryRequirementsKHR,
+    pub bind_video_session_memory_khr: PFN_vkBindVideoSessionMemoryKHR,
+    pub create_video_session_parameters_khr: PFN_vkCreateVideoSessionParametersKHR,
+    pub update_video_session_parameters_khr: PFN_vkUpdateVideoSessionParametersKHR,
+    pub destroy_video_session_parameters_khr: PFN_vkDestroyVideoSessionParametersKHR,
+    pub cmd_begin_video_coding_khr: PFN_vkCmdBeginVideoCodingKHR,
+    pub cmd_end_video_coding_khr: PFN_vkCmdEndVideoCodingKHR,
+    pub cmd_control_video_coding_khr: PFN_vkCmdControlVideoCodingKHR,
 }
-impl AmdExtension24Fn {
+unsafe impl Send for KhrVideoQueueFn {}
+unsafe impl Sync for KhrVideoQueueFn {}
+impl KhrVideoQueueFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension24Fn {}
+        KhrVideoQueueFn {
+            get_physical_device_video_capabilities_khr: unsafe {
+                unsafe extern "system" fn get_physical_device_video_capabilities_khr(
+                    _physical_device: PhysicalDevice,
+                    _p_video_profile: *const VideoProfileKHR,
+                    _p_capabilities: *mut VideoCapabilitiesKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_physical_device_video_capabilities_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetPhysicalDeviceVideoCapabilitiesKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_physical_device_video_capabilities_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_physical_device_video_format_properties_khr: unsafe {
+                unsafe extern "system" fn get_physical_device_video_format_properties_khr(
+                    _physical_device: PhysicalDevice,
+                    _p_video_format_info: *const PhysicalDeviceVideoFormatInfoKHR,
+                    _p_video_format_property_count: *mut u32,
+                    _p_video_format_properties: *mut VideoFormatPropertiesKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_physical_device_video_format_properties_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetPhysicalDeviceVideoFormatPropertiesKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_physical_device_video_format_properties_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            create_video_session_khr: unsafe {
+                unsafe extern "system" fn create_video_session_khr(
+                    _device: Device,
+                    _p_create_info: *const VideoSessionCreateInfoKHR,
+                    _p_allocator: *const AllocationCallbacks,
+                    _p_video_session: *mut VideoSessionKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(create_video_session_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCreateVideoSessionKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    create_video_session_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            destroy_video_session_khr: unsafe {
+                unsafe extern "system" fn destroy_video_session_khr(
+                    _device: Device,
+                    _video_session: VideoSessionKHR,
+                    _p_allocator: *const AllocationCallbacks,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(destroy_video_session_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkDestroyVideoSessionKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    destroy_video_session_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_video_session_memory_requirements_khr: unsafe {
+                unsafe extern "system" fn get_video_session_memory_requirements_khr(
+                    _device: Device,
+                    _video_session: VideoSessionKHR,
+                    _p_video_session_memory_requirements_count: *mut u32,
+                    _p_video_session_memory_requirements: *mut VideoGetMemoryPropertiesKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_video_session_memory_requirements_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetVideoSessionMemoryRequirementsKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_video_session_memory_requirements_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            bind_video_session_memory_khr: unsafe {
+                unsafe extern "system" fn bind_video_session_memory_khr(
+                    _device: Device,
+                    _video_session: VideoSessionKHR,
+                    _video_session_bind_memory_count: u32,
+                    _p_video_session_bind_memories: *const VideoBindMemoryKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(bind_video_session_memory_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkBindVideoSessionMemoryKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    bind_video_session_memory_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            create_video_session_parameters_khr: unsafe {
+                unsafe extern "system" fn create_video_session_parameters_khr(
+                    _device: Device,
+                    _p_create_info: *const VideoSessionParametersCreateInfoKHR,
+                    _p_allocator: *const AllocationCallbacks,
+                    _p_video_session_parameters: *mut VideoSessionParametersKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(create_video_session_parameters_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCreateVideoSessionParametersKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    create_video_session_parameters_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            update_video_session_parameters_khr: unsafe {
+                unsafe extern "system" fn update_video_session_parameters_khr(
+                    _device: Device,
+                    _video_session_parameters: VideoSessionParametersKHR,
+                    _p_update_info: *const VideoSessionParametersUpdateInfoKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(update_video_session_parameters_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkUpdateVideoSessionParametersKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    update_video_session_parameters_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            destroy_video_session_parameters_khr: unsafe {
+                unsafe extern "system" fn destroy_video_session_parameters_khr(
+                    _device: Device,
+                    _video_session_parameters: VideoSessionParametersKHR,
+                    _p_allocator: *const AllocationCallbacks,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(destroy_video_session_parameters_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkDestroyVideoSessionParametersKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    destroy_video_session_parameters_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_begin_video_coding_khr: unsafe {
+                unsafe extern "system" fn cmd_begin_video_coding_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_begin_info: *const VideoBeginCodingInfoKHR,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_begin_video_coding_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdBeginVideoCodingKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_begin_video_coding_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_end_video_coding_khr: unsafe {
+                unsafe extern "system" fn cmd_end_video_coding_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_end_coding_info: *const VideoEndCodingInfoKHR,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_end_video_coding_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdEndVideoCodingKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_end_video_coding_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_control_video_coding_khr: unsafe {
+                unsafe extern "system" fn cmd_control_video_coding_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_coding_control_info: *const VideoCodingControlInfoKHR,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_control_video_coding_khr)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdControlVideoCodingKHR\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_control_video_coding_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceVideoCapabilitiesKHR.html>"]
+    pub unsafe fn get_physical_device_video_capabilities_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        p_video_profile: *const VideoProfileKHR,
+        p_capabilities: *mut VideoCapabilitiesKHR,
+    ) -> Result {
+        (self.get_physical_device_video_capabilities_khr)(
+            physical_device,
+            p_video_profile,
+            p_capabilities,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceVideoFormatPropertiesKHR.html>"]
+    pub unsafe fn get_physical_device_video_format_properties_khr(
+        &self,
+        physical_device: PhysicalDevice,
+        p_video_format_info: *const PhysicalDeviceVideoFormatInfoKHR,
+        p_video_format_property_count: *mut u32,
+        p_video_format_properties: *mut VideoFormatPropertiesKHR,
+    ) -> Result {
+        (self.get_physical_device_video_format_properties_khr)(
+            physical_device,
+            p_video_format_info,
+            p_video_format_property_count,
+            p_video_format_properties,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateVideoSessionKHR.html>"]
+    pub unsafe fn create_video_session_khr(
+        &self,
+        device: Device,
+        p_create_info: *const VideoSessionCreateInfoKHR,
+        p_allocator: *const AllocationCallbacks,
+        p_video_session: *mut VideoSessionKHR,
+    ) -> Result {
+        (self.create_video_session_khr)(device, p_create_info, p_allocator, p_video_session)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyVideoSessionKHR.html>"]
+    pub unsafe fn destroy_video_session_khr(
+        &self,
+        device: Device,
+        video_session: VideoSessionKHR,
+        p_allocator: *const AllocationCallbacks,
+    ) {
+        (self.destroy_video_session_khr)(device, video_session, p_allocator)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetVideoSessionMemoryRequirementsKHR.html>"]
+    pub unsafe fn get_video_session_memory_requirements_khr(
+        &self,
+        device: Device,
+        video_session: VideoSessionKHR,
+        p_video_session_memory_requirements_count: *mut u32,
+        p_video_session_memory_requirements: *mut VideoGetMemoryPropertiesKHR,
+    ) -> Result {
+        (self.get_video_session_memory_requirements_khr)(
+            device,
+            video_session,
+            p_video_session_memory_requirements_count,
+            p_video_session_memory_requirements,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindVideoSessionMemoryKHR.html>"]
+    pub unsafe fn bind_video_session_memory_khr(
+        &self,
+        device: Device,
+        video_session: VideoSessionKHR,
+        video_session_bind_memory_count: u32,
+        p_video_session_bind_memories: *const VideoBindMemoryKHR,
+    ) -> Result {
+        (self.bind_video_session_memory_khr)(
+            device,
+            video_session,
+            video_session_bind_memory_count,
+            p_video_session_bind_memories,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateVideoSessionParametersKHR.html>"]
+    pub unsafe fn create_video_session_parameters_khr(
+        &self,
+        device: Device,
+        p_create_info: *const VideoSessionParametersCreateInfoKHR,
+        p_allocator: *const AllocationCallbacks,
+        p_video_session_parameters: *mut VideoSessionParametersKHR,
+    ) -> Result {
+        (self.create_video_session_parameters_khr)(
+            device,
+            p_create_info,
+            p_allocator,
+            p_video_session_parameters,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUpdateVideoSessionParametersKHR.html>"]
+    pub unsafe fn update_video_session_parameters_khr(
+        &self,
+        device: Device,
+        video_session_parameters: VideoSessionParametersKHR,
+        p_update_info: *const VideoSessionParametersUpdateInfoKHR,
+    ) -> Result {
+        (self.update_video_session_parameters_khr)(device, video_session_parameters, p_update_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyVideoSessionParametersKHR.html>"]
+    pub unsafe fn destroy_video_session_parameters_khr(
+        &self,
+        device: Device,
+        video_session_parameters: VideoSessionParametersKHR,
+        p_allocator: *const AllocationCallbacks,
+    ) {
+        (self.destroy_video_session_parameters_khr)(device, video_session_parameters, p_allocator)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginVideoCodingKHR.html>"]
+    pub unsafe fn cmd_begin_video_coding_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_begin_info: *const VideoBeginCodingInfoKHR,
+    ) {
+        (self.cmd_begin_video_coding_khr)(command_buffer, p_begin_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndVideoCodingKHR.html>"]
+    pub unsafe fn cmd_end_video_coding_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_end_coding_info: *const VideoEndCodingInfoKHR,
+    ) {
+        (self.cmd_end_video_coding_khr)(command_buffer, p_end_coding_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdControlVideoCodingKHR.html>"]
+    pub unsafe fn cmd_control_video_coding_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_coding_control_info: *const VideoCodingControlInfoKHR,
+    ) {
+        (self.cmd_control_video_coding_khr)(command_buffer, p_coding_control_info)
     }
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl QueueFlags {
-    pub const RESERVED_6_KHR: Self = Self(0b100_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_PROFILE_KHR: Self = Self(1_000_023_000);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl PipelineStageFlags {
-    pub const RESERVED_27_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_CAPABILITIES_KHR: Self = Self(1_000_023_001);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl AccessFlags {
-    pub const RESERVED_30_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_PICTURE_RESOURCE_KHR: Self = Self(1_000_023_002);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl BufferUsageFlags {
-    pub const RESERVED_15_KHR: Self = Self(0b1000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_GET_MEMORY_PROPERTIES_KHR: Self = Self(1_000_023_003);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl BufferUsageFlags {
-    pub const RESERVED_16_KHR: Self = Self(0b1_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_BIND_MEMORY_KHR: Self = Self(1_000_023_004);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl ImageUsageFlags {
-    pub const RESERVED_13_KHR: Self = Self(0b10_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_SESSION_CREATE_INFO_KHR: Self = Self(1_000_023_005);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl ImageUsageFlags {
-    pub const RESERVED_14_KHR: Self = Self(0b100_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_SESSION_PARAMETERS_CREATE_INFO_KHR: Self = Self(1_000_023_006);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl ImageUsageFlags {
-    pub const RESERVED_15_KHR: Self = Self(0b1000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_SESSION_PARAMETERS_UPDATE_INFO_KHR: Self = Self(1_000_023_007);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl FormatFeatureFlags {
-    pub const RESERVED_27_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_BEGIN_CODING_INFO_KHR: Self = Self(1_000_023_008);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
-impl FormatFeatureFlags {
-    pub const RESERVED_28_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_END_CODING_INFO_KHR: Self = Self(1_000_023_009);
 }
-#[doc = "Generated from 'VK_AMD_extension_24'"]
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_CODING_CONTROL_INFO_KHR: Self = Self(1_000_023_010);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_REFERENCE_SLOT_KHR: Self = Self(1_000_023_011);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_QUEUE_FAMILY_PROPERTIES_2_KHR: Self = Self(1_000_023_012);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_PROFILES_KHR: Self = Self(1_000_023_013);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_VIDEO_FORMAT_INFO_KHR: Self = Self(1_000_023_014);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl StructureType {
+    pub const VIDEO_FORMAT_PROPERTIES_KHR: Self = Self(1_000_023_015);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl ObjectType {
+    pub const VIDEO_SESSION_KHR: Self = Self(1_000_023_000);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl ObjectType {
+    pub const VIDEO_SESSION_PARAMETERS_KHR: Self = Self(1_000_023_001);
+}
+#[doc = "Generated from 'VK_KHR_video_queue'"]
 impl QueryType {
-    pub const RESERVED_8: Self = Self(1_000_023_008);
+    pub const RESULT_STATUS_ONLY_KHR: Self = Self(1_000_023_000);
 }
-impl AmdExtension25Fn {
+#[doc = "Generated from 'VK_KHR_video_queue'"]
+impl QueryResultFlags {
+    pub const WITH_STATUS_KHR: Self = Self(0b1_0000);
+}
+impl KhrVideoDecodeQueueFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_25\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_video_decode_queue\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension25Fn {}
-unsafe impl Send for AmdExtension25Fn {}
-unsafe impl Sync for AmdExtension25Fn {}
-impl ::std::clone::Clone for AmdExtension25Fn {
-    fn clone(&self) -> Self {
-        AmdExtension25Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdDecodeVideoKHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_frame_info: *const VideoDecodeInfoKHR,
+);
+#[derive(Clone)]
+pub struct KhrVideoDecodeQueueFn {
+    pub cmd_decode_video_khr: PFN_vkCmdDecodeVideoKHR,
 }
-impl AmdExtension25Fn {
+unsafe impl Send for KhrVideoDecodeQueueFn {}
+unsafe impl Sync for KhrVideoDecodeQueueFn {}
+impl KhrVideoDecodeQueueFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension25Fn {}
+        KhrVideoDecodeQueueFn {
+            cmd_decode_video_khr: unsafe {
+                unsafe extern "system" fn cmd_decode_video_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_frame_info: *const VideoDecodeInfoKHR,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_decode_video_khr)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdDecodeVideoKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_decode_video_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDecodeVideoKHR.html>"]
+    pub unsafe fn cmd_decode_video_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_frame_info: *const VideoDecodeInfoKHR,
+    ) {
+        (self.cmd_decode_video_khr)(command_buffer, p_frame_info)
     }
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl StructureType {
+    pub const VIDEO_DECODE_INFO_KHR: Self = Self(1_000_024_000);
+}
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl QueueFlags {
-    pub const RESERVED_5_KHR: Self = Self(0b10_0000);
+    pub const VIDEO_DECODE_KHR: Self = Self(0b10_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
-impl PipelineStageFlags {
-    pub const RESERVED_26_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl PipelineStageFlags2KHR {
+    pub const VIDEO_DECODE: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
-impl AccessFlags {
-    pub const RESERVED_28_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl AccessFlags2KHR {
+    pub const VIDEO_DECODE_READ: Self = Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
-impl AccessFlags {
-    pub const RESERVED_29_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000_0000);
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl AccessFlags2KHR {
+    pub const VIDEO_DECODE_WRITE: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl BufferUsageFlags {
-    pub const RESERVED_13_KHR: Self = Self(0b10_0000_0000_0000);
+    pub const VIDEO_DECODE_SRC_KHR: Self = Self(0b10_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl BufferUsageFlags {
-    pub const RESERVED_14_KHR: Self = Self(0b100_0000_0000_0000);
+    pub const VIDEO_DECODE_DST_KHR: Self = Self(0b100_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl ImageUsageFlags {
-    pub const RESERVED_10_KHR: Self = Self(0b100_0000_0000);
+    pub const VIDEO_DECODE_DST_KHR: Self = Self(0b100_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl ImageUsageFlags {
-    pub const RESERVED_11_KHR: Self = Self(0b1000_0000_0000);
+    pub const VIDEO_DECODE_SRC_KHR: Self = Self(0b1000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl ImageUsageFlags {
-    pub const RESERVED_12_KHR: Self = Self(0b1_0000_0000_0000);
+    pub const VIDEO_DECODE_DPB_KHR: Self = Self(0b1_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl FormatFeatureFlags {
-    pub const RESERVED_25_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_DECODE_OUTPUT_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl FormatFeatureFlags {
-    pub const RESERVED_26_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_DECODE_DPB_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
 }
-#[doc = "Generated from 'VK_AMD_extension_25'"]
-impl QueryType {
-    pub const RESERVED_4: Self = Self(1_000_024_004);
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_DECODE_DST_KHR: Self = Self(1_000_024_000);
+}
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_DECODE_SRC_KHR: Self = Self(1_000_024_001);
+}
+#[doc = "Generated from 'VK_KHR_video_decode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_DECODE_DPB_KHR: Self = Self(1_000_024_002);
 }
 impl AmdGcnShaderFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -2881,14 +3083,10 @@ impl AmdGcnShaderFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdGcnShaderFn {}
 unsafe impl Send for AmdGcnShaderFn {}
 unsafe impl Sync for AmdGcnShaderFn {}
-impl ::std::clone::Clone for AmdGcnShaderFn {
-    fn clone(&self) -> Self {
-        AmdGcnShaderFn {}
-    }
-}
 impl AmdGcnShaderFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2904,14 +3102,10 @@ impl NvDedicatedAllocationFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvDedicatedAllocationFn {}
 unsafe impl Send for NvDedicatedAllocationFn {}
 unsafe impl Sync for NvDedicatedAllocationFn {}
-impl ::std::clone::Clone for NvDedicatedAllocationFn {
-    fn clone(&self) -> Self {
-        NvDedicatedAllocationFn {}
-    }
-}
 impl NvDedicatedAllocationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2939,14 +3133,10 @@ impl ExtExtension28Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension28Fn {}
 unsafe impl Send for ExtExtension28Fn {}
 unsafe impl Sync for ExtExtension28Fn {}
-impl ::std::clone::Clone for ExtExtension28Fn {
-    fn clone(&self) -> Self {
-        ExtExtension28Fn {}
-    }
-}
 impl ExtExtension28Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -2963,7 +3153,7 @@ impl ExtTransformFeedbackFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBindTransformFeedbackBuffersEXT = extern "system" fn(
+pub type PFN_vkCmdBindTransformFeedbackBuffersEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_binding: u32,
     binding_count: u32,
@@ -2972,7 +3162,7 @@ pub type PFN_vkCmdBindTransformFeedbackBuffersEXT = extern "system" fn(
     p_sizes: *const DeviceSize,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginTransformFeedbackEXT = extern "system" fn(
+pub type PFN_vkCmdBeginTransformFeedbackEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_counter_buffer: u32,
     counter_buffer_count: u32,
@@ -2980,7 +3170,7 @@ pub type PFN_vkCmdBeginTransformFeedbackEXT = extern "system" fn(
     p_counter_buffer_offsets: *const DeviceSize,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndTransformFeedbackEXT = extern "system" fn(
+pub type PFN_vkCmdEndTransformFeedbackEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_counter_buffer: u32,
     counter_buffer_count: u32,
@@ -2988,7 +3178,7 @@ pub type PFN_vkCmdEndTransformFeedbackEXT = extern "system" fn(
     p_counter_buffer_offsets: *const DeviceSize,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginQueryIndexedEXT = extern "system" fn(
+pub type PFN_vkCmdBeginQueryIndexedEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     query_pool: QueryPool,
     query: u32,
@@ -2996,14 +3186,14 @@ pub type PFN_vkCmdBeginQueryIndexedEXT = extern "system" fn(
     index: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndQueryIndexedEXT = extern "system" fn(
+pub type PFN_vkCmdEndQueryIndexedEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     query_pool: QueryPool,
     query: u32,
     index: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDrawIndirectByteCountEXT = extern "system" fn(
+pub type PFN_vkCmdDrawIndirectByteCountEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     instance_count: u32,
     first_instance: u32,
@@ -3012,66 +3202,17 @@ pub type PFN_vkCmdDrawIndirectByteCountEXT = extern "system" fn(
     counter_offset: u32,
     vertex_stride: u32,
 );
+#[derive(Clone)]
 pub struct ExtTransformFeedbackFn {
-    pub cmd_bind_transform_feedback_buffers_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_binding: u32,
-        binding_count: u32,
-        p_buffers: *const Buffer,
-        p_offsets: *const DeviceSize,
-        p_sizes: *const DeviceSize,
-    ),
-    pub cmd_begin_transform_feedback_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_counter_buffer: u32,
-        counter_buffer_count: u32,
-        p_counter_buffers: *const Buffer,
-        p_counter_buffer_offsets: *const DeviceSize,
-    ),
-    pub cmd_end_transform_feedback_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_counter_buffer: u32,
-        counter_buffer_count: u32,
-        p_counter_buffers: *const Buffer,
-        p_counter_buffer_offsets: *const DeviceSize,
-    ),
-    pub cmd_begin_query_indexed_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        query_pool: QueryPool,
-        query: u32,
-        flags: QueryControlFlags,
-        index: u32,
-    ),
-    pub cmd_end_query_indexed_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        query_pool: QueryPool,
-        query: u32,
-        index: u32,
-    ),
-    pub cmd_draw_indirect_byte_count_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        instance_count: u32,
-        first_instance: u32,
-        counter_buffer: Buffer,
-        counter_buffer_offset: DeviceSize,
-        counter_offset: u32,
-        vertex_stride: u32,
-    ),
+    pub cmd_bind_transform_feedback_buffers_ext: PFN_vkCmdBindTransformFeedbackBuffersEXT,
+    pub cmd_begin_transform_feedback_ext: PFN_vkCmdBeginTransformFeedbackEXT,
+    pub cmd_end_transform_feedback_ext: PFN_vkCmdEndTransformFeedbackEXT,
+    pub cmd_begin_query_indexed_ext: PFN_vkCmdBeginQueryIndexedEXT,
+    pub cmd_end_query_indexed_ext: PFN_vkCmdEndQueryIndexedEXT,
+    pub cmd_draw_indirect_byte_count_ext: PFN_vkCmdDrawIndirectByteCountEXT,
 }
 unsafe impl Send for ExtTransformFeedbackFn {}
 unsafe impl Sync for ExtTransformFeedbackFn {}
-impl ::std::clone::Clone for ExtTransformFeedbackFn {
-    fn clone(&self) -> Self {
-        ExtTransformFeedbackFn {
-            cmd_bind_transform_feedback_buffers_ext: self.cmd_bind_transform_feedback_buffers_ext,
-            cmd_begin_transform_feedback_ext: self.cmd_begin_transform_feedback_ext,
-            cmd_end_transform_feedback_ext: self.cmd_end_transform_feedback_ext,
-            cmd_begin_query_indexed_ext: self.cmd_begin_query_indexed_ext,
-            cmd_end_query_indexed_ext: self.cmd_end_query_indexed_ext,
-            cmd_draw_indirect_byte_count_ext: self.cmd_draw_indirect_byte_count_ext,
-        }
-    }
-}
 impl ExtTransformFeedbackFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3079,7 +3220,7 @@ impl ExtTransformFeedbackFn {
     {
         ExtTransformFeedbackFn {
             cmd_bind_transform_feedback_buffers_ext: unsafe {
-                extern "system" fn cmd_bind_transform_feedback_buffers_ext(
+                unsafe extern "system" fn cmd_bind_transform_feedback_buffers_ext(
                     _command_buffer: CommandBuffer,
                     _first_binding: u32,
                     _binding_count: u32,
@@ -3103,7 +3244,7 @@ impl ExtTransformFeedbackFn {
                 }
             },
             cmd_begin_transform_feedback_ext: unsafe {
-                extern "system" fn cmd_begin_transform_feedback_ext(
+                unsafe extern "system" fn cmd_begin_transform_feedback_ext(
                     _command_buffer: CommandBuffer,
                     _first_counter_buffer: u32,
                     _counter_buffer_count: u32,
@@ -3126,7 +3267,7 @@ impl ExtTransformFeedbackFn {
                 }
             },
             cmd_end_transform_feedback_ext: unsafe {
-                extern "system" fn cmd_end_transform_feedback_ext(
+                unsafe extern "system" fn cmd_end_transform_feedback_ext(
                     _command_buffer: CommandBuffer,
                     _first_counter_buffer: u32,
                     _counter_buffer_count: u32,
@@ -3149,7 +3290,7 @@ impl ExtTransformFeedbackFn {
                 }
             },
             cmd_begin_query_indexed_ext: unsafe {
-                extern "system" fn cmd_begin_query_indexed_ext(
+                unsafe extern "system" fn cmd_begin_query_indexed_ext(
                     _command_buffer: CommandBuffer,
                     _query_pool: QueryPool,
                     _query: u32,
@@ -3171,7 +3312,7 @@ impl ExtTransformFeedbackFn {
                 }
             },
             cmd_end_query_indexed_ext: unsafe {
-                extern "system" fn cmd_end_query_indexed_ext(
+                unsafe extern "system" fn cmd_end_query_indexed_ext(
                     _command_buffer: CommandBuffer,
                     _query_pool: QueryPool,
                     _query: u32,
@@ -3192,7 +3333,7 @@ impl ExtTransformFeedbackFn {
                 }
             },
             cmd_draw_indirect_byte_count_ext: unsafe {
-                extern "system" fn cmd_draw_indirect_byte_count_ext(
+                unsafe extern "system" fn cmd_draw_indirect_byte_count_ext(
                     _command_buffer: CommandBuffer,
                     _instance_count: u32,
                     _first_instance: u32,
@@ -3355,28 +3496,232 @@ impl AccessFlags {
 impl PipelineStageFlags {
     pub const TRANSFORM_FEEDBACK_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
 }
-impl NvxExtension30Fn {
+impl NvxBinaryImportFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NVX_extension_30\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NVX_binary_import\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvxExtension30Fn {}
-unsafe impl Send for NvxExtension30Fn {}
-unsafe impl Sync for NvxExtension30Fn {}
-impl ::std::clone::Clone for NvxExtension30Fn {
-    fn clone(&self) -> Self {
-        NvxExtension30Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCreateCuModuleNVX = unsafe extern "system" fn(
+    device: Device,
+    p_create_info: *const CuModuleCreateInfoNVX,
+    p_allocator: *const AllocationCallbacks,
+    p_module: *mut CuModuleNVX,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkCreateCuFunctionNVX = unsafe extern "system" fn(
+    device: Device,
+    p_create_info: *const CuFunctionCreateInfoNVX,
+    p_allocator: *const AllocationCallbacks,
+    p_function: *mut CuFunctionNVX,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkDestroyCuModuleNVX = unsafe extern "system" fn(
+    device: Device,
+    module: CuModuleNVX,
+    p_allocator: *const AllocationCallbacks,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkDestroyCuFunctionNVX = unsafe extern "system" fn(
+    device: Device,
+    function: CuFunctionNVX,
+    p_allocator: *const AllocationCallbacks,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdCuLaunchKernelNVX =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, p_launch_info: *const CuLaunchInfoNVX);
+#[derive(Clone)]
+pub struct NvxBinaryImportFn {
+    pub create_cu_module_nvx: PFN_vkCreateCuModuleNVX,
+    pub create_cu_function_nvx: PFN_vkCreateCuFunctionNVX,
+    pub destroy_cu_module_nvx: PFN_vkDestroyCuModuleNVX,
+    pub destroy_cu_function_nvx: PFN_vkDestroyCuFunctionNVX,
+    pub cmd_cu_launch_kernel_nvx: PFN_vkCmdCuLaunchKernelNVX,
 }
-impl NvxExtension30Fn {
+unsafe impl Send for NvxBinaryImportFn {}
+unsafe impl Sync for NvxBinaryImportFn {}
+impl NvxBinaryImportFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvxExtension30Fn {}
+        NvxBinaryImportFn {
+            create_cu_module_nvx: unsafe {
+                unsafe extern "system" fn create_cu_module_nvx(
+                    _device: Device,
+                    _p_create_info: *const CuModuleCreateInfoNVX,
+                    _p_allocator: *const AllocationCallbacks,
+                    _p_module: *mut CuModuleNVX,
+                ) -> Result {
+                    panic!(concat!("Unable to load ", stringify!(create_cu_module_nvx)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCreateCuModuleNVX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    create_cu_module_nvx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            create_cu_function_nvx: unsafe {
+                unsafe extern "system" fn create_cu_function_nvx(
+                    _device: Device,
+                    _p_create_info: *const CuFunctionCreateInfoNVX,
+                    _p_allocator: *const AllocationCallbacks,
+                    _p_function: *mut CuFunctionNVX,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(create_cu_function_nvx)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCreateCuFunctionNVX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    create_cu_function_nvx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            destroy_cu_module_nvx: unsafe {
+                unsafe extern "system" fn destroy_cu_module_nvx(
+                    _device: Device,
+                    _module: CuModuleNVX,
+                    _p_allocator: *const AllocationCallbacks,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(destroy_cu_module_nvx)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkDestroyCuModuleNVX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    destroy_cu_module_nvx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            destroy_cu_function_nvx: unsafe {
+                unsafe extern "system" fn destroy_cu_function_nvx(
+                    _device: Device,
+                    _function: CuFunctionNVX,
+                    _p_allocator: *const AllocationCallbacks,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(destroy_cu_function_nvx)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkDestroyCuFunctionNVX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    destroy_cu_function_nvx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_cu_launch_kernel_nvx: unsafe {
+                unsafe extern "system" fn cmd_cu_launch_kernel_nvx(
+                    _command_buffer: CommandBuffer,
+                    _p_launch_info: *const CuLaunchInfoNVX,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_cu_launch_kernel_nvx)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdCuLaunchKernelNVX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_cu_launch_kernel_nvx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateCuModuleNVX.html>"]
+    pub unsafe fn create_cu_module_nvx(
+        &self,
+        device: Device,
+        p_create_info: *const CuModuleCreateInfoNVX,
+        p_allocator: *const AllocationCallbacks,
+        p_module: *mut CuModuleNVX,
+    ) -> Result {
+        (self.create_cu_module_nvx)(device, p_create_info, p_allocator, p_module)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateCuFunctionNVX.html>"]
+    pub unsafe fn create_cu_function_nvx(
+        &self,
+        device: Device,
+        p_create_info: *const CuFunctionCreateInfoNVX,
+        p_allocator: *const AllocationCallbacks,
+        p_function: *mut CuFunctionNVX,
+    ) -> Result {
+        (self.create_cu_function_nvx)(device, p_create_info, p_allocator, p_function)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyCuModuleNVX.html>"]
+    pub unsafe fn destroy_cu_module_nvx(
+        &self,
+        device: Device,
+        module: CuModuleNVX,
+        p_allocator: *const AllocationCallbacks,
+    ) {
+        (self.destroy_cu_module_nvx)(device, module, p_allocator)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyCuFunctionNVX.html>"]
+    pub unsafe fn destroy_cu_function_nvx(
+        &self,
+        device: Device,
+        function: CuFunctionNVX,
+        p_allocator: *const AllocationCallbacks,
+    ) {
+        (self.destroy_cu_function_nvx)(device, function, p_allocator)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCuLaunchKernelNVX.html>"]
+    pub unsafe fn cmd_cu_launch_kernel_nvx(
+        &self,
+        command_buffer: CommandBuffer,
+        p_launch_info: *const CuLaunchInfoNVX,
+    ) {
+        (self.cmd_cu_launch_kernel_nvx)(command_buffer, p_launch_info)
+    }
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl StructureType {
+    pub const CU_MODULE_CREATE_INFO_NVX: Self = Self(1_000_029_000);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl StructureType {
+    pub const CU_FUNCTION_CREATE_INFO_NVX: Self = Self(1_000_029_001);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl StructureType {
+    pub const CU_LAUNCH_INFO_NVX: Self = Self(1_000_029_002);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl ObjectType {
+    pub const CU_MODULE_NVX: Self = Self(1_000_029_000);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl ObjectType {
+    pub const CU_FUNCTION_NVX: Self = Self(1_000_029_001);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl DebugReportObjectTypeEXT {
+    pub const CU_MODULE_NVX: Self = Self(1_000_029_000);
+}
+#[doc = "Generated from 'VK_NVX_binary_import'"]
+impl DebugReportObjectTypeEXT {
+    pub const CU_FUNCTION_NVX: Self = Self(1_000_029_001);
 }
 impl NvxImageViewHandleFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -3387,32 +3732,20 @@ impl NvxImageViewHandleFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetImageViewHandleNVX =
-    extern "system" fn(device: Device, p_info: *const ImageViewHandleInfoNVX) -> u32;
+    unsafe extern "system" fn(device: Device, p_info: *const ImageViewHandleInfoNVX) -> u32;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetImageViewAddressNVX = extern "system" fn(
+pub type PFN_vkGetImageViewAddressNVX = unsafe extern "system" fn(
     device: Device,
     image_view: ImageView,
     p_properties: *mut ImageViewAddressPropertiesNVX,
 ) -> Result;
+#[derive(Clone)]
 pub struct NvxImageViewHandleFn {
-    pub get_image_view_handle_nvx:
-        extern "system" fn(device: Device, p_info: *const ImageViewHandleInfoNVX) -> u32,
-    pub get_image_view_address_nvx: extern "system" fn(
-        device: Device,
-        image_view: ImageView,
-        p_properties: *mut ImageViewAddressPropertiesNVX,
-    ) -> Result,
+    pub get_image_view_handle_nvx: PFN_vkGetImageViewHandleNVX,
+    pub get_image_view_address_nvx: PFN_vkGetImageViewAddressNVX,
 }
 unsafe impl Send for NvxImageViewHandleFn {}
 unsafe impl Sync for NvxImageViewHandleFn {}
-impl ::std::clone::Clone for NvxImageViewHandleFn {
-    fn clone(&self) -> Self {
-        NvxImageViewHandleFn {
-            get_image_view_handle_nvx: self.get_image_view_handle_nvx,
-            get_image_view_address_nvx: self.get_image_view_address_nvx,
-        }
-    }
-}
 impl NvxImageViewHandleFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3420,7 +3753,7 @@ impl NvxImageViewHandleFn {
     {
         NvxImageViewHandleFn {
             get_image_view_handle_nvx: unsafe {
-                extern "system" fn get_image_view_handle_nvx(
+                unsafe extern "system" fn get_image_view_handle_nvx(
                     _device: Device,
                     _p_info: *const ImageViewHandleInfoNVX,
                 ) -> u32 {
@@ -3439,7 +3772,7 @@ impl NvxImageViewHandleFn {
                 }
             },
             get_image_view_address_nvx: unsafe {
-                extern "system" fn get_image_view_address_nvx(
+                unsafe extern "system" fn get_image_view_address_nvx(
                     _device: Device,
                     _image_view: ImageView,
                     _p_properties: *mut ImageViewAddressPropertiesNVX,
@@ -3493,14 +3826,10 @@ impl AmdExtension32Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension32Fn {}
 unsafe impl Send for AmdExtension32Fn {}
 unsafe impl Sync for AmdExtension32Fn {}
-impl ::std::clone::Clone for AmdExtension32Fn {
-    fn clone(&self) -> Self {
-        AmdExtension32Fn {}
-    }
-}
 impl AmdExtension32Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3516,14 +3845,10 @@ impl AmdExtension33Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension33Fn {}
 unsafe impl Send for AmdExtension33Fn {}
 unsafe impl Sync for AmdExtension33Fn {}
-impl ::std::clone::Clone for AmdExtension33Fn {
-    fn clone(&self) -> Self {
-        AmdExtension33Fn {}
-    }
-}
 impl AmdExtension33Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3540,7 +3865,7 @@ impl AmdDrawIndirectCountFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDrawIndirectCount = extern "system" fn(
+pub type PFN_vkCmdDrawIndirectCount = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     buffer: Buffer,
     offset: DeviceSize,
@@ -3550,7 +3875,7 @@ pub type PFN_vkCmdDrawIndirectCount = extern "system" fn(
     stride: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDrawIndexedIndirectCount = extern "system" fn(
+pub type PFN_vkCmdDrawIndexedIndirectCount = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     buffer: Buffer,
     offset: DeviceSize,
@@ -3559,36 +3884,13 @@ pub type PFN_vkCmdDrawIndexedIndirectCount = extern "system" fn(
     max_draw_count: u32,
     stride: u32,
 );
+#[derive(Clone)]
 pub struct AmdDrawIndirectCountFn {
-    pub cmd_draw_indirect_count_amd: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ),
-    pub cmd_draw_indexed_indirect_count_amd: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ),
+    pub cmd_draw_indirect_count_amd: PFN_vkCmdDrawIndirectCount,
+    pub cmd_draw_indexed_indirect_count_amd: PFN_vkCmdDrawIndexedIndirectCount,
 }
 unsafe impl Send for AmdDrawIndirectCountFn {}
 unsafe impl Sync for AmdDrawIndirectCountFn {}
-impl ::std::clone::Clone for AmdDrawIndirectCountFn {
-    fn clone(&self) -> Self {
-        AmdDrawIndirectCountFn {
-            cmd_draw_indirect_count_amd: self.cmd_draw_indirect_count_amd,
-            cmd_draw_indexed_indirect_count_amd: self.cmd_draw_indexed_indirect_count_amd,
-        }
-    }
-}
 impl AmdDrawIndirectCountFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3596,7 +3898,7 @@ impl AmdDrawIndirectCountFn {
     {
         AmdDrawIndirectCountFn {
             cmd_draw_indirect_count_amd: unsafe {
-                extern "system" fn cmd_draw_indirect_count_amd(
+                unsafe extern "system" fn cmd_draw_indirect_count_amd(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -3620,7 +3922,7 @@ impl AmdDrawIndirectCountFn {
                 }
             },
             cmd_draw_indexed_indirect_count_amd: unsafe {
-                extern "system" fn cmd_draw_indexed_indirect_count_amd(
+                unsafe extern "system" fn cmd_draw_indexed_indirect_count_amd(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -3696,14 +3998,10 @@ impl AmdExtension35Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension35Fn {}
 unsafe impl Send for AmdExtension35Fn {}
 unsafe impl Sync for AmdExtension35Fn {}
-impl ::std::clone::Clone for AmdExtension35Fn {
-    fn clone(&self) -> Self {
-        AmdExtension35Fn {}
-    }
-}
 impl AmdExtension35Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3719,14 +4017,10 @@ impl AmdNegativeViewportHeightFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdNegativeViewportHeightFn {}
 unsafe impl Send for AmdNegativeViewportHeightFn {}
 unsafe impl Sync for AmdNegativeViewportHeightFn {}
-impl ::std::clone::Clone for AmdNegativeViewportHeightFn {
-    fn clone(&self) -> Self {
-        AmdNegativeViewportHeightFn {}
-    }
-}
 impl AmdNegativeViewportHeightFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3742,14 +4036,10 @@ impl AmdGpuShaderHalfFloatFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct AmdGpuShaderHalfFloatFn {}
 unsafe impl Send for AmdGpuShaderHalfFloatFn {}
 unsafe impl Sync for AmdGpuShaderHalfFloatFn {}
-impl ::std::clone::Clone for AmdGpuShaderHalfFloatFn {
-    fn clone(&self) -> Self {
-        AmdGpuShaderHalfFloatFn {}
-    }
-}
 impl AmdGpuShaderHalfFloatFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3765,14 +4055,10 @@ impl AmdShaderBallotFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderBallotFn {}
 unsafe impl Send for AmdShaderBallotFn {}
 unsafe impl Sync for AmdShaderBallotFn {}
-impl ::std::clone::Clone for AmdShaderBallotFn {
-    fn clone(&self) -> Self {
-        AmdShaderBallotFn {}
-    }
-}
 impl AmdShaderBallotFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3781,74 +4067,138 @@ impl AmdShaderBallotFn {
         AmdShaderBallotFn {}
     }
 }
-impl AmdExtension39Fn {
+impl ExtVideoEncodeH264Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_39\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_video_encode_h264\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension39Fn {}
-unsafe impl Send for AmdExtension39Fn {}
-unsafe impl Sync for AmdExtension39Fn {}
-impl ::std::clone::Clone for AmdExtension39Fn {
-    fn clone(&self) -> Self {
-        AmdExtension39Fn {}
-    }
-}
-impl AmdExtension39Fn {
+#[derive(Clone)]
+pub struct ExtVideoEncodeH264Fn {}
+unsafe impl Send for ExtVideoEncodeH264Fn {}
+unsafe impl Sync for ExtVideoEncodeH264Fn {}
+impl ExtVideoEncodeH264Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension39Fn {}
+        ExtVideoEncodeH264Fn {}
     }
 }
-impl AmdExtension40Fn {
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_CAPABILITIES_EXT: Self = Self(1_000_038_000);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_SESSION_CREATE_INFO_EXT: Self = Self(1_000_038_001);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_038_002);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_038_003);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_VCL_FRAME_INFO_EXT: Self = Self(1_000_038_004);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_038_005);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_NALU_SLICE_EXT: Self = Self(1_000_038_006);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT: Self = Self(1_000_038_007);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_H264_PROFILE_EXT: Self = Self(1_000_038_008);
+}
+#[doc = "Generated from 'VK_EXT_video_encode_h264'"]
+impl VideoCodecOperationFlagsKHR {
+    pub const ENCODE_H264_EXT: Self = Self(0b1_0000_0000_0000_0000);
+}
+impl ExtVideoEncodeH265Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_40\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_video_encode_h265\0")
             .expect("Wrong extension string")
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
-pub struct AmdExtension40Fn {}
-unsafe impl Send for AmdExtension40Fn {}
-unsafe impl Sync for AmdExtension40Fn {}
-impl ::std::clone::Clone for AmdExtension40Fn {
-    fn clone(&self) -> Self {
-        AmdExtension40Fn {}
-    }
-}
-impl AmdExtension40Fn {
+#[derive(Clone)]
+pub struct ExtVideoEncodeH265Fn {}
+unsafe impl Send for ExtVideoEncodeH265Fn {}
+unsafe impl Sync for ExtVideoEncodeH265Fn {}
+impl ExtVideoEncodeH265Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension40Fn {}
+        ExtVideoEncodeH265Fn {}
     }
 }
-impl AmdExtension41Fn {
+impl ExtVideoDecodeH264Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_41\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_video_decode_h264\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension41Fn {}
-unsafe impl Send for AmdExtension41Fn {}
-unsafe impl Sync for AmdExtension41Fn {}
-impl ::std::clone::Clone for AmdExtension41Fn {
-    fn clone(&self) -> Self {
-        AmdExtension41Fn {}
-    }
-}
-impl AmdExtension41Fn {
+#[derive(Clone)]
+pub struct ExtVideoDecodeH264Fn {}
+unsafe impl Send for ExtVideoDecodeH264Fn {}
+unsafe impl Sync for ExtVideoDecodeH264Fn {}
+impl ExtVideoDecodeH264Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension41Fn {}
+        ExtVideoDecodeH264Fn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_CAPABILITIES_EXT: Self = Self(1_000_040_000);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_SESSION_CREATE_INFO_EXT: Self = Self(1_000_040_001);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_PICTURE_INFO_EXT: Self = Self(1_000_040_002);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_MVC_EXT: Self = Self(1_000_040_003);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_PROFILE_EXT: Self = Self(1_000_040_004);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_040_005);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_040_006);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_040_007);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h264'"]
+impl VideoCodecOperationFlagsKHR {
+    pub const DECODE_H264_EXT: Self = Self(0b1);
 }
 impl AmdTextureGatherBiasLodFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -3857,14 +4207,10 @@ impl AmdTextureGatherBiasLodFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdTextureGatherBiasLodFn {}
 unsafe impl Send for AmdTextureGatherBiasLodFn {}
 unsafe impl Sync for AmdTextureGatherBiasLodFn {}
-impl ::std::clone::Clone for AmdTextureGatherBiasLodFn {
-    fn clone(&self) -> Self {
-        AmdTextureGatherBiasLodFn {}
-    }
-}
 impl AmdTextureGatherBiasLodFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3885,7 +4231,7 @@ impl AmdShaderInfoFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetShaderInfoAMD = extern "system" fn(
+pub type PFN_vkGetShaderInfoAMD = unsafe extern "system" fn(
     device: Device,
     pipeline: Pipeline,
     shader_stage: ShaderStageFlags,
@@ -3893,25 +4239,12 @@ pub type PFN_vkGetShaderInfoAMD = extern "system" fn(
     p_info_size: *mut usize,
     p_info: *mut c_void,
 ) -> Result;
+#[derive(Clone)]
 pub struct AmdShaderInfoFn {
-    pub get_shader_info_amd: extern "system" fn(
-        device: Device,
-        pipeline: Pipeline,
-        shader_stage: ShaderStageFlags,
-        info_type: ShaderInfoTypeAMD,
-        p_info_size: *mut usize,
-        p_info: *mut c_void,
-    ) -> Result,
+    pub get_shader_info_amd: PFN_vkGetShaderInfoAMD,
 }
 unsafe impl Send for AmdShaderInfoFn {}
 unsafe impl Sync for AmdShaderInfoFn {}
-impl ::std::clone::Clone for AmdShaderInfoFn {
-    fn clone(&self) -> Self {
-        AmdShaderInfoFn {
-            get_shader_info_amd: self.get_shader_info_amd,
-        }
-    }
-}
 impl AmdShaderInfoFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3919,7 +4252,7 @@ impl AmdShaderInfoFn {
     {
         AmdShaderInfoFn {
             get_shader_info_amd: unsafe {
-                extern "system" fn get_shader_info_amd(
+                unsafe extern "system" fn get_shader_info_amd(
                     _device: Device,
                     _pipeline: Pipeline,
                     _shader_stage: ShaderStageFlags,
@@ -3967,14 +4300,10 @@ impl AmdExtension44Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension44Fn {}
 unsafe impl Send for AmdExtension44Fn {}
 unsafe impl Sync for AmdExtension44Fn {}
-impl ::std::clone::Clone for AmdExtension44Fn {
-    fn clone(&self) -> Self {
-        AmdExtension44Fn {}
-    }
-}
 impl AmdExtension44Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -3990,14 +4319,10 @@ impl AmdExtension45Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension45Fn {}
 unsafe impl Send for AmdExtension45Fn {}
 unsafe impl Sync for AmdExtension45Fn {}
-impl ::std::clone::Clone for AmdExtension45Fn {
-    fn clone(&self) -> Self {
-        AmdExtension45Fn {}
-    }
-}
 impl AmdExtension45Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4006,6 +4331,14 @@ impl AmdExtension45Fn {
         AmdExtension45Fn {}
     }
 }
+#[doc = "Generated from 'VK_AMD_extension_45'"]
+impl PipelineCreateFlags {
+    pub const RESERVED_21_AMD: Self = Self(0b10_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_AMD_extension_45'"]
+impl PipelineCreateFlags {
+    pub const RESERVED_22_AMD: Self = Self(0b100_0000_0000_0000_0000_0000);
+}
 impl AmdExtension46Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_46\0")
@@ -4013,14 +4346,10 @@ impl AmdExtension46Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension46Fn {}
 unsafe impl Send for AmdExtension46Fn {}
 unsafe impl Sync for AmdExtension46Fn {}
-impl ::std::clone::Clone for AmdExtension46Fn {
-    fn clone(&self) -> Self {
-        AmdExtension46Fn {}
-    }
-}
 impl AmdExtension46Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4036,14 +4365,10 @@ impl AmdShaderImageLoadStoreLodFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderImageLoadStoreLodFn {}
 unsafe impl Send for AmdShaderImageLoadStoreLodFn {}
 unsafe impl Sync for AmdShaderImageLoadStoreLodFn {}
-impl ::std::clone::Clone for AmdShaderImageLoadStoreLodFn {
-    fn clone(&self) -> Self {
-        AmdShaderImageLoadStoreLodFn {}
-    }
-}
 impl AmdShaderImageLoadStoreLodFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4059,14 +4384,10 @@ impl NvxExtension48Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvxExtension48Fn {}
 unsafe impl Send for NvxExtension48Fn {}
 unsafe impl Sync for NvxExtension48Fn {}
-impl ::std::clone::Clone for NvxExtension48Fn {
-    fn clone(&self) -> Self {
-        NvxExtension48Fn {}
-    }
-}
 impl NvxExtension48Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4082,14 +4403,10 @@ impl GoogleExtension49Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension49Fn {}
 unsafe impl Send for GoogleExtension49Fn {}
 unsafe impl Sync for GoogleExtension49Fn {}
-impl ::std::clone::Clone for GoogleExtension49Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension49Fn {}
-    }
-}
 impl GoogleExtension49Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4106,29 +4423,18 @@ impl GgpStreamDescriptorSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateStreamDescriptorSurfaceGGP = extern "system" fn(
+pub type PFN_vkCreateStreamDescriptorSurfaceGGP = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const StreamDescriptorSurfaceCreateInfoGGP,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct GgpStreamDescriptorSurfaceFn {
-    pub create_stream_descriptor_surface_ggp: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const StreamDescriptorSurfaceCreateInfoGGP,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_stream_descriptor_surface_ggp: PFN_vkCreateStreamDescriptorSurfaceGGP,
 }
 unsafe impl Send for GgpStreamDescriptorSurfaceFn {}
 unsafe impl Sync for GgpStreamDescriptorSurfaceFn {}
-impl ::std::clone::Clone for GgpStreamDescriptorSurfaceFn {
-    fn clone(&self) -> Self {
-        GgpStreamDescriptorSurfaceFn {
-            create_stream_descriptor_surface_ggp: self.create_stream_descriptor_surface_ggp,
-        }
-    }
-}
 impl GgpStreamDescriptorSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4136,7 +4442,7 @@ impl GgpStreamDescriptorSurfaceFn {
     {
         GgpStreamDescriptorSurfaceFn {
             create_stream_descriptor_surface_ggp: unsafe {
-                extern "system" fn create_stream_descriptor_surface_ggp(
+                unsafe extern "system" fn create_stream_descriptor_surface_ggp(
                     _instance: Instance,
                     _p_create_info: *const StreamDescriptorSurfaceCreateInfoGGP,
                     _p_allocator: *const AllocationCallbacks,
@@ -4181,14 +4487,10 @@ impl NvCornerSampledImageFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct NvCornerSampledImageFn {}
 unsafe impl Send for NvCornerSampledImageFn {}
 unsafe impl Sync for NvCornerSampledImageFn {}
-impl ::std::clone::Clone for NvCornerSampledImageFn {
-    fn clone(&self) -> Self {
-        NvCornerSampledImageFn {}
-    }
-}
 impl NvCornerSampledImageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4212,14 +4514,10 @@ impl NvExtension52Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension52Fn {}
 unsafe impl Send for NvExtension52Fn {}
 unsafe impl Sync for NvExtension52Fn {}
-impl ::std::clone::Clone for NvExtension52Fn {
-    fn clone(&self) -> Self {
-        NvExtension52Fn {}
-    }
-}
 impl NvExtension52Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4243,14 +4541,10 @@ impl NvExtension53Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension53Fn {}
 unsafe impl Send for NvExtension53Fn {}
 unsafe impl Sync for NvExtension53Fn {}
-impl ::std::clone::Clone for NvExtension53Fn {
-    fn clone(&self) -> Self {
-        NvExtension53Fn {}
-    }
-}
 impl NvExtension53Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4266,14 +4560,10 @@ impl KhrMultiviewFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrMultiviewFn {}
 unsafe impl Send for KhrMultiviewFn {}
 unsafe impl Sync for KhrMultiviewFn {}
-impl ::std::clone::Clone for KhrMultiviewFn {
-    fn clone(&self) -> Self {
-        KhrMultiviewFn {}
-    }
-}
 impl KhrMultiviewFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4284,22 +4574,21 @@ impl KhrMultiviewFn {
 }
 #[doc = "Generated from 'VK_KHR_multiview'"]
 impl StructureType {
-    pub const RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR: Self =
-        StructureType::RENDER_PASS_MULTIVIEW_CREATE_INFO;
+    pub const RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR: Self = Self::RENDER_PASS_MULTIVIEW_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_multiview'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
+        Self::PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_multiview'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES;
+        Self::PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_multiview'"]
 impl DependencyFlags {
-    pub const VIEW_LOCAL_KHR: Self = DependencyFlags::VIEW_LOCAL;
+    pub const VIEW_LOCAL_KHR: Self = Self::VIEW_LOCAL;
 }
 impl ImgFormatPvrtcFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -4308,14 +4597,10 @@ impl ImgFormatPvrtcFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ImgFormatPvrtcFn {}
 unsafe impl Send for ImgFormatPvrtcFn {}
 unsafe impl Sync for ImgFormatPvrtcFn {}
-impl ::std::clone::Clone for ImgFormatPvrtcFn {
-    fn clone(&self) -> Self {
-        ImgFormatPvrtcFn {}
-    }
-}
 impl ImgFormatPvrtcFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4364,18 +4649,8 @@ impl NvExternalMemoryCapabilitiesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceExternalImageFormatPropertiesNV = extern "system" fn(
-    physical_device: PhysicalDevice,
-    format: Format,
-    ty: ImageType,
-    tiling: ImageTiling,
-    usage: ImageUsageFlags,
-    flags: ImageCreateFlags,
-    external_handle_type: ExternalMemoryHandleTypeFlagsNV,
-    p_external_image_format_properties: *mut ExternalImageFormatPropertiesNV,
-) -> Result;
-pub struct NvExternalMemoryCapabilitiesFn {
-    pub get_physical_device_external_image_format_properties_nv: extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceExternalImageFormatPropertiesNV =
+    unsafe extern "system" fn(
         physical_device: PhysicalDevice,
         format: Format,
         ty: ImageType,
@@ -4384,18 +4659,14 @@ pub struct NvExternalMemoryCapabilitiesFn {
         flags: ImageCreateFlags,
         external_handle_type: ExternalMemoryHandleTypeFlagsNV,
         p_external_image_format_properties: *mut ExternalImageFormatPropertiesNV,
-    ) -> Result,
+    ) -> Result;
+#[derive(Clone)]
+pub struct NvExternalMemoryCapabilitiesFn {
+    pub get_physical_device_external_image_format_properties_nv:
+        PFN_vkGetPhysicalDeviceExternalImageFormatPropertiesNV,
 }
 unsafe impl Send for NvExternalMemoryCapabilitiesFn {}
 unsafe impl Sync for NvExternalMemoryCapabilitiesFn {}
-impl ::std::clone::Clone for NvExternalMemoryCapabilitiesFn {
-    fn clone(&self) -> Self {
-        NvExternalMemoryCapabilitiesFn {
-            get_physical_device_external_image_format_properties_nv: self
-                .get_physical_device_external_image_format_properties_nv,
-        }
-    }
-}
 impl NvExternalMemoryCapabilitiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4403,7 +4674,7 @@ impl NvExternalMemoryCapabilitiesFn {
     {
         NvExternalMemoryCapabilitiesFn {
             get_physical_device_external_image_format_properties_nv: unsafe {
-                extern "system" fn get_physical_device_external_image_format_properties_nv(
+                unsafe extern "system" fn get_physical_device_external_image_format_properties_nv(
                     _physical_device: PhysicalDevice,
                     _format: Format,
                     _ty: ImageType,
@@ -4461,14 +4732,10 @@ impl NvExternalMemoryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvExternalMemoryFn {}
 unsafe impl Send for NvExternalMemoryFn {}
 unsafe impl Sync for NvExternalMemoryFn {}
-impl ::std::clone::Clone for NvExternalMemoryFn {
-    fn clone(&self) -> Self {
-        NvExternalMemoryFn {}
-    }
-}
 impl NvExternalMemoryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4493,29 +4760,18 @@ impl NvExternalMemoryWin32Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryWin32HandleNV = extern "system" fn(
+pub type PFN_vkGetMemoryWin32HandleNV = unsafe extern "system" fn(
     device: Device,
     memory: DeviceMemory,
     handle_type: ExternalMemoryHandleTypeFlagsNV,
     p_handle: *mut HANDLE,
 ) -> Result;
+#[derive(Clone)]
 pub struct NvExternalMemoryWin32Fn {
-    pub get_memory_win32_handle_nv: extern "system" fn(
-        device: Device,
-        memory: DeviceMemory,
-        handle_type: ExternalMemoryHandleTypeFlagsNV,
-        p_handle: *mut HANDLE,
-    ) -> Result,
+    pub get_memory_win32_handle_nv: PFN_vkGetMemoryWin32HandleNV,
 }
 unsafe impl Send for NvExternalMemoryWin32Fn {}
 unsafe impl Sync for NvExternalMemoryWin32Fn {}
-impl ::std::clone::Clone for NvExternalMemoryWin32Fn {
-    fn clone(&self) -> Self {
-        NvExternalMemoryWin32Fn {
-            get_memory_win32_handle_nv: self.get_memory_win32_handle_nv,
-        }
-    }
-}
 impl NvExternalMemoryWin32Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4523,7 +4779,7 @@ impl NvExternalMemoryWin32Fn {
     {
         NvExternalMemoryWin32Fn {
             get_memory_win32_handle_nv: unsafe {
-                extern "system" fn get_memory_win32_handle_nv(
+                unsafe extern "system" fn get_memory_win32_handle_nv(
                     _device: Device,
                     _memory: DeviceMemory,
                     _handle_type: ExternalMemoryHandleTypeFlagsNV,
@@ -4571,14 +4827,10 @@ impl NvWin32KeyedMutexFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct NvWin32KeyedMutexFn {}
 unsafe impl Send for NvWin32KeyedMutexFn {}
 unsafe impl Sync for NvWin32KeyedMutexFn {}
-impl ::std::clone::Clone for NvWin32KeyedMutexFn {
-    fn clone(&self) -> Self {
-        NvWin32KeyedMutexFn {}
-    }
-}
 impl NvWin32KeyedMutexFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4599,98 +4851,60 @@ impl KhrGetPhysicalDeviceProperties2Fn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceFeatures2 =
-    extern "system" fn(physical_device: PhysicalDevice, p_features: *mut PhysicalDeviceFeatures2);
+pub type PFN_vkGetPhysicalDeviceFeatures2 = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    p_features: *mut PhysicalDeviceFeatures2,
+);
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_properties: *mut PhysicalDeviceProperties2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceFormatProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceFormatProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     format: Format,
     p_format_properties: *mut FormatProperties2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceImageFormatProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceImageFormatProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_image_format_info: *const PhysicalDeviceImageFormatInfo2,
     p_image_format_properties: *mut ImageFormatProperties2,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceQueueFamilyProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceQueueFamilyProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_queue_family_property_count: *mut u32,
     p_queue_family_properties: *mut QueueFamilyProperties2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceMemoryProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceMemoryProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_memory_properties: *mut PhysicalDeviceMemoryProperties2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSparseImageFormatProperties2 = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSparseImageFormatProperties2 = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_format_info: *const PhysicalDeviceSparseImageFormatInfo2,
     p_property_count: *mut u32,
     p_properties: *mut SparseImageFormatProperties2,
 );
+#[derive(Clone)]
 pub struct KhrGetPhysicalDeviceProperties2Fn {
-    pub get_physical_device_features2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_features: *mut PhysicalDeviceFeatures2,
-    ),
-    pub get_physical_device_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_properties: *mut PhysicalDeviceProperties2,
-    ),
-    pub get_physical_device_format_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        format: Format,
-        p_format_properties: *mut FormatProperties2,
-    ),
-    pub get_physical_device_image_format_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_image_format_info: *const PhysicalDeviceImageFormatInfo2,
-        p_image_format_properties: *mut ImageFormatProperties2,
-    ) -> Result,
-    pub get_physical_device_queue_family_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_queue_family_property_count: *mut u32,
-        p_queue_family_properties: *mut QueueFamilyProperties2,
-    ),
-    pub get_physical_device_memory_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_memory_properties: *mut PhysicalDeviceMemoryProperties2,
-    ),
-    pub get_physical_device_sparse_image_format_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_format_info: *const PhysicalDeviceSparseImageFormatInfo2,
-        p_property_count: *mut u32,
-        p_properties: *mut SparseImageFormatProperties2,
-    ),
+    pub get_physical_device_features2_khr: PFN_vkGetPhysicalDeviceFeatures2,
+    pub get_physical_device_properties2_khr: PFN_vkGetPhysicalDeviceProperties2,
+    pub get_physical_device_format_properties2_khr: PFN_vkGetPhysicalDeviceFormatProperties2,
+    pub get_physical_device_image_format_properties2_khr:
+        PFN_vkGetPhysicalDeviceImageFormatProperties2,
+    pub get_physical_device_queue_family_properties2_khr:
+        PFN_vkGetPhysicalDeviceQueueFamilyProperties2,
+    pub get_physical_device_memory_properties2_khr: PFN_vkGetPhysicalDeviceMemoryProperties2,
+    pub get_physical_device_sparse_image_format_properties2_khr:
+        PFN_vkGetPhysicalDeviceSparseImageFormatProperties2,
 }
 unsafe impl Send for KhrGetPhysicalDeviceProperties2Fn {}
 unsafe impl Sync for KhrGetPhysicalDeviceProperties2Fn {}
-impl ::std::clone::Clone for KhrGetPhysicalDeviceProperties2Fn {
-    fn clone(&self) -> Self {
-        KhrGetPhysicalDeviceProperties2Fn {
-            get_physical_device_features2_khr: self.get_physical_device_features2_khr,
-            get_physical_device_properties2_khr: self.get_physical_device_properties2_khr,
-            get_physical_device_format_properties2_khr: self
-                .get_physical_device_format_properties2_khr,
-            get_physical_device_image_format_properties2_khr: self
-                .get_physical_device_image_format_properties2_khr,
-            get_physical_device_queue_family_properties2_khr: self
-                .get_physical_device_queue_family_properties2_khr,
-            get_physical_device_memory_properties2_khr: self
-                .get_physical_device_memory_properties2_khr,
-            get_physical_device_sparse_image_format_properties2_khr: self
-                .get_physical_device_sparse_image_format_properties2_khr,
-        }
-    }
-}
 impl KhrGetPhysicalDeviceProperties2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -4698,7 +4912,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
     {
         KhrGetPhysicalDeviceProperties2Fn {
             get_physical_device_features2_khr: unsafe {
-                extern "system" fn get_physical_device_features2_khr(
+                unsafe extern "system" fn get_physical_device_features2_khr(
                     _physical_device: PhysicalDevice,
                     _p_features: *mut PhysicalDeviceFeatures2,
                 ) {
@@ -4718,7 +4932,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_properties2_khr(
+                unsafe extern "system" fn get_physical_device_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_properties: *mut PhysicalDeviceProperties2,
                 ) {
@@ -4738,7 +4952,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_format_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_format_properties2_khr(
+                unsafe extern "system" fn get_physical_device_format_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _format: Format,
                     _p_format_properties: *mut FormatProperties2,
@@ -4759,7 +4973,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_image_format_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_image_format_properties2_khr(
+                unsafe extern "system" fn get_physical_device_image_format_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_image_format_info: *const PhysicalDeviceImageFormatInfo2,
                     _p_image_format_properties: *mut ImageFormatProperties2,
@@ -4780,7 +4994,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_queue_family_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_queue_family_properties2_khr(
+                unsafe extern "system" fn get_physical_device_queue_family_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_queue_family_property_count: *mut u32,
                     _p_queue_family_properties: *mut QueueFamilyProperties2,
@@ -4801,7 +5015,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_memory_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_memory_properties2_khr(
+                unsafe extern "system" fn get_physical_device_memory_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_memory_properties: *mut PhysicalDeviceMemoryProperties2,
                 ) {
@@ -4821,7 +5035,7 @@ impl KhrGetPhysicalDeviceProperties2Fn {
                 }
             },
             get_physical_device_sparse_image_format_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_sparse_image_format_properties2_khr(
+                unsafe extern "system" fn get_physical_device_sparse_image_format_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_format_info: *const PhysicalDeviceSparseImageFormatInfo2,
                     _p_property_count: *mut u32,
@@ -4925,43 +5139,42 @@ impl KhrGetPhysicalDeviceProperties2Fn {
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_FEATURES_2_KHR: Self = StructureType::PHYSICAL_DEVICE_FEATURES_2;
+    pub const PHYSICAL_DEVICE_FEATURES_2_KHR: Self = Self::PHYSICAL_DEVICE_FEATURES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_PROPERTIES_2_KHR: Self = StructureType::PHYSICAL_DEVICE_PROPERTIES_2;
+    pub const PHYSICAL_DEVICE_PROPERTIES_2_KHR: Self = Self::PHYSICAL_DEVICE_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const FORMAT_PROPERTIES_2_KHR: Self = StructureType::FORMAT_PROPERTIES_2;
+    pub const FORMAT_PROPERTIES_2_KHR: Self = Self::FORMAT_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const IMAGE_FORMAT_PROPERTIES_2_KHR: Self = StructureType::IMAGE_FORMAT_PROPERTIES_2;
+    pub const IMAGE_FORMAT_PROPERTIES_2_KHR: Self = Self::IMAGE_FORMAT_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2;
+        Self::PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const QUEUE_FAMILY_PROPERTIES_2_KHR: Self = StructureType::QUEUE_FAMILY_PROPERTIES_2;
+    pub const QUEUE_FAMILY_PROPERTIES_2_KHR: Self = Self::QUEUE_FAMILY_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_MEMORY_PROPERTIES_2_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
+        Self::PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
-    pub const SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR: Self =
-        StructureType::SPARSE_IMAGE_FORMAT_PROPERTIES_2;
+    pub const SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR: Self = Self::SPARSE_IMAGE_FORMAT_PROPERTIES_2;
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2;
+        Self::PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2;
 }
 impl KhrDeviceGroupFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -4971,7 +5184,7 @@ impl KhrDeviceGroupFn {
     pub const SPEC_VERSION: u32 = 4u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceGroupPeerMemoryFeatures = extern "system" fn(
+pub type PFN_vkGetDeviceGroupPeerMemoryFeatures = unsafe extern "system" fn(
     device: Device,
     heap_index: u32,
     local_device_index: u32,
@@ -4980,9 +5193,9 @@ pub type PFN_vkGetDeviceGroupPeerMemoryFeatures = extern "system" fn(
 );
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDeviceMask =
-    extern "system" fn(command_buffer: CommandBuffer, device_mask: u32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, device_mask: u32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDispatchBase = extern "system" fn(
+pub type PFN_vkCmdDispatchBase = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     base_group_x: u32,
     base_group_y: u32,
@@ -4991,65 +5204,21 @@ pub type PFN_vkCmdDispatchBase = extern "system" fn(
     group_count_y: u32,
     group_count_z: u32,
 );
+#[derive(Clone)]
 pub struct KhrDeviceGroupFn {
-    pub get_device_group_peer_memory_features_khr: extern "system" fn(
-        device: Device,
-        heap_index: u32,
-        local_device_index: u32,
-        remote_device_index: u32,
-        p_peer_memory_features: *mut PeerMemoryFeatureFlags,
-    ),
-    pub cmd_set_device_mask_khr:
-        extern "system" fn(command_buffer: CommandBuffer, device_mask: u32),
-    pub cmd_dispatch_base_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        base_group_x: u32,
-        base_group_y: u32,
-        base_group_z: u32,
-        group_count_x: u32,
-        group_count_y: u32,
-        group_count_z: u32,
-    ),
-    pub get_device_group_present_capabilities_khr: extern "system" fn(
-        device: Device,
-        p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
-    ) -> Result,
-    pub get_device_group_surface_present_modes_khr: extern "system" fn(
-        device: Device,
-        surface: SurfaceKHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result,
-    pub get_physical_device_present_rectangles_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_rect_count: *mut u32,
-        p_rects: *mut Rect2D,
-    ) -> Result,
-    pub acquire_next_image2_khr: extern "system" fn(
-        device: Device,
-        p_acquire_info: *const AcquireNextImageInfoKHR,
-        p_image_index: *mut u32,
-    ) -> Result,
+    pub get_device_group_peer_memory_features_khr: PFN_vkGetDeviceGroupPeerMemoryFeatures,
+    pub cmd_set_device_mask_khr: PFN_vkCmdSetDeviceMask,
+    pub cmd_dispatch_base_khr: PFN_vkCmdDispatchBase,
+    pub get_device_group_present_capabilities_khr:
+        crate::vk::PFN_vkGetDeviceGroupPresentCapabilitiesKHR,
+    pub get_device_group_surface_present_modes_khr:
+        crate::vk::PFN_vkGetDeviceGroupSurfacePresentModesKHR,
+    pub get_physical_device_present_rectangles_khr:
+        crate::vk::PFN_vkGetPhysicalDevicePresentRectanglesKHR,
+    pub acquire_next_image2_khr: crate::vk::PFN_vkAcquireNextImage2KHR,
 }
 unsafe impl Send for KhrDeviceGroupFn {}
 unsafe impl Sync for KhrDeviceGroupFn {}
-impl ::std::clone::Clone for KhrDeviceGroupFn {
-    fn clone(&self) -> Self {
-        KhrDeviceGroupFn {
-            get_device_group_peer_memory_features_khr: self
-                .get_device_group_peer_memory_features_khr,
-            cmd_set_device_mask_khr: self.cmd_set_device_mask_khr,
-            cmd_dispatch_base_khr: self.cmd_dispatch_base_khr,
-            get_device_group_present_capabilities_khr: self
-                .get_device_group_present_capabilities_khr,
-            get_device_group_surface_present_modes_khr: self
-                .get_device_group_surface_present_modes_khr,
-            get_physical_device_present_rectangles_khr: self
-                .get_physical_device_present_rectangles_khr,
-            acquire_next_image2_khr: self.acquire_next_image2_khr,
-        }
-    }
-}
 impl KhrDeviceGroupFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5057,7 +5226,7 @@ impl KhrDeviceGroupFn {
     {
         KhrDeviceGroupFn {
             get_device_group_peer_memory_features_khr: unsafe {
-                extern "system" fn get_device_group_peer_memory_features_khr(
+                unsafe extern "system" fn get_device_group_peer_memory_features_khr(
                     _device: Device,
                     _heap_index: u32,
                     _local_device_index: u32,
@@ -5080,7 +5249,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             cmd_set_device_mask_khr: unsafe {
-                extern "system" fn cmd_set_device_mask_khr(
+                unsafe extern "system" fn cmd_set_device_mask_khr(
                     _command_buffer: CommandBuffer,
                     _device_mask: u32,
                 ) {
@@ -5099,7 +5268,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             cmd_dispatch_base_khr: unsafe {
-                extern "system" fn cmd_dispatch_base_khr(
+                unsafe extern "system" fn cmd_dispatch_base_khr(
                     _command_buffer: CommandBuffer,
                     _base_group_x: u32,
                     _base_group_y: u32,
@@ -5123,7 +5292,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             get_device_group_present_capabilities_khr: unsafe {
-                extern "system" fn get_device_group_present_capabilities_khr(
+                unsafe extern "system" fn get_device_group_present_capabilities_khr(
                     _device: Device,
                     _p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
                 ) -> Result {
@@ -5143,7 +5312,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             get_device_group_surface_present_modes_khr: unsafe {
-                extern "system" fn get_device_group_surface_present_modes_khr(
+                unsafe extern "system" fn get_device_group_surface_present_modes_khr(
                     _device: Device,
                     _surface: SurfaceKHR,
                     _p_modes: *mut DeviceGroupPresentModeFlagsKHR,
@@ -5164,7 +5333,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             get_physical_device_present_rectangles_khr: unsafe {
-                extern "system" fn get_physical_device_present_rectangles_khr(
+                unsafe extern "system" fn get_physical_device_present_rectangles_khr(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_rect_count: *mut u32,
@@ -5186,7 +5355,7 @@ impl KhrDeviceGroupFn {
                 }
             },
             acquire_next_image2_khr: unsafe {
-                extern "system" fn acquire_next_image2_khr(
+                unsafe extern "system" fn acquire_next_image2_khr(
                     _device: Device,
                     _p_acquire_info: *const AcquireNextImageInfoKHR,
                     _p_image_index: *mut u32,
@@ -5296,69 +5465,67 @@ impl KhrDeviceGroupFn {
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
-    pub const MEMORY_ALLOCATE_FLAGS_INFO_KHR: Self = StructureType::MEMORY_ALLOCATE_FLAGS_INFO;
+    pub const MEMORY_ALLOCATE_FLAGS_INFO_KHR: Self = Self::MEMORY_ALLOCATE_FLAGS_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
     pub const DEVICE_GROUP_RENDER_PASS_BEGIN_INFO_KHR: Self =
-        StructureType::DEVICE_GROUP_RENDER_PASS_BEGIN_INFO;
+        Self::DEVICE_GROUP_RENDER_PASS_BEGIN_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
     pub const DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO_KHR: Self =
-        StructureType::DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
+        Self::DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
-    pub const DEVICE_GROUP_SUBMIT_INFO_KHR: Self = StructureType::DEVICE_GROUP_SUBMIT_INFO;
+    pub const DEVICE_GROUP_SUBMIT_INFO_KHR: Self = Self::DEVICE_GROUP_SUBMIT_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
-    pub const DEVICE_GROUP_BIND_SPARSE_INFO_KHR: Self =
-        StructureType::DEVICE_GROUP_BIND_SPARSE_INFO;
+    pub const DEVICE_GROUP_BIND_SPARSE_INFO_KHR: Self = Self::DEVICE_GROUP_BIND_SPARSE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PeerMemoryFeatureFlags {
-    pub const COPY_SRC_KHR: Self = PeerMemoryFeatureFlags::COPY_SRC;
+    pub const COPY_SRC_KHR: Self = Self::COPY_SRC;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PeerMemoryFeatureFlags {
-    pub const COPY_DST_KHR: Self = PeerMemoryFeatureFlags::COPY_DST;
+    pub const COPY_DST_KHR: Self = Self::COPY_DST;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PeerMemoryFeatureFlags {
-    pub const GENERIC_SRC_KHR: Self = PeerMemoryFeatureFlags::GENERIC_SRC;
+    pub const GENERIC_SRC_KHR: Self = Self::GENERIC_SRC;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PeerMemoryFeatureFlags {
-    pub const GENERIC_DST_KHR: Self = PeerMemoryFeatureFlags::GENERIC_DST;
+    pub const GENERIC_DST_KHR: Self = Self::GENERIC_DST;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl MemoryAllocateFlags {
-    pub const DEVICE_MASK_KHR: Self = MemoryAllocateFlags::DEVICE_MASK;
+    pub const DEVICE_MASK_KHR: Self = Self::DEVICE_MASK;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PipelineCreateFlags {
-    pub const VIEW_INDEX_FROM_DEVICE_INDEX_KHR: Self =
-        PipelineCreateFlags::VIEW_INDEX_FROM_DEVICE_INDEX;
+    pub const VIEW_INDEX_FROM_DEVICE_INDEX_KHR: Self = Self::VIEW_INDEX_FROM_DEVICE_INDEX;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl DependencyFlags {
-    pub const DEVICE_GROUP_KHR: Self = DependencyFlags::DEVICE_GROUP;
+    pub const DEVICE_GROUP_KHR: Self = Self::DEVICE_GROUP;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
     pub const BIND_BUFFER_MEMORY_DEVICE_GROUP_INFO_KHR: Self =
-        StructureType::BIND_BUFFER_MEMORY_DEVICE_GROUP_INFO;
+        Self::BIND_BUFFER_MEMORY_DEVICE_GROUP_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
     pub const BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO_KHR: Self =
-        StructureType::BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
+        Self::BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl ImageCreateFlags {
-    pub const SPLIT_INSTANCE_BIND_REGIONS_KHR: Self = ImageCreateFlags::SPLIT_INSTANCE_BIND_REGIONS;
+    pub const SPLIT_INSTANCE_BIND_REGIONS_KHR: Self = Self::SPLIT_INSTANCE_BIND_REGIONS;
 }
 impl ExtValidationFlagsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -5367,14 +5534,10 @@ impl ExtValidationFlagsFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtValidationFlagsFn {}
 unsafe impl Send for ExtValidationFlagsFn {}
 unsafe impl Sync for ExtValidationFlagsFn {}
-impl ::std::clone::Clone for ExtValidationFlagsFn {
-    fn clone(&self) -> Self {
-        ExtValidationFlagsFn {}
-    }
-}
 impl ExtValidationFlagsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5395,29 +5558,18 @@ impl NnViSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateViSurfaceNN = extern "system" fn(
+pub type PFN_vkCreateViSurfaceNN = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const ViSurfaceCreateInfoNN,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct NnViSurfaceFn {
-    pub create_vi_surface_nn: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const ViSurfaceCreateInfoNN,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_vi_surface_nn: PFN_vkCreateViSurfaceNN,
 }
 unsafe impl Send for NnViSurfaceFn {}
 unsafe impl Sync for NnViSurfaceFn {}
-impl ::std::clone::Clone for NnViSurfaceFn {
-    fn clone(&self) -> Self {
-        NnViSurfaceFn {
-            create_vi_surface_nn: self.create_vi_surface_nn,
-        }
-    }
-}
 impl NnViSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5425,7 +5577,7 @@ impl NnViSurfaceFn {
     {
         NnViSurfaceFn {
             create_vi_surface_nn: unsafe {
-                extern "system" fn create_vi_surface_nn(
+                unsafe extern "system" fn create_vi_surface_nn(
                     _instance: Instance,
                     _p_create_info: *const ViSurfaceCreateInfoNN,
                     _p_allocator: *const AllocationCallbacks,
@@ -5466,14 +5618,10 @@ impl KhrShaderDrawParametersFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderDrawParametersFn {}
 unsafe impl Send for KhrShaderDrawParametersFn {}
 unsafe impl Sync for KhrShaderDrawParametersFn {}
-impl ::std::clone::Clone for KhrShaderDrawParametersFn {
-    fn clone(&self) -> Self {
-        KhrShaderDrawParametersFn {}
-    }
-}
 impl KhrShaderDrawParametersFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5489,14 +5637,10 @@ impl ExtShaderSubgroupBallotFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderSubgroupBallotFn {}
 unsafe impl Send for ExtShaderSubgroupBallotFn {}
 unsafe impl Sync for ExtShaderSubgroupBallotFn {}
-impl ::std::clone::Clone for ExtShaderSubgroupBallotFn {
-    fn clone(&self) -> Self {
-        ExtShaderSubgroupBallotFn {}
-    }
-}
 impl ExtShaderSubgroupBallotFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5512,14 +5656,10 @@ impl ExtShaderSubgroupVoteFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderSubgroupVoteFn {}
 unsafe impl Send for ExtShaderSubgroupVoteFn {}
 unsafe impl Sync for ExtShaderSubgroupVoteFn {}
-impl ::std::clone::Clone for ExtShaderSubgroupVoteFn {
-    fn clone(&self) -> Self {
-        ExtShaderSubgroupVoteFn {}
-    }
-}
 impl ExtShaderSubgroupVoteFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5535,14 +5675,10 @@ impl ExtTextureCompressionAstcHdrFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtTextureCompressionAstcHdrFn {}
 unsafe impl Send for ExtTextureCompressionAstcHdrFn {}
 unsafe impl Sync for ExtTextureCompressionAstcHdrFn {}
-impl ::std::clone::Clone for ExtTextureCompressionAstcHdrFn {
-    fn clone(&self) -> Self {
-        ExtTextureCompressionAstcHdrFn {}
-    }
-}
 impl ExtTextureCompressionAstcHdrFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5618,14 +5754,10 @@ impl ExtAstcDecodeModeFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtAstcDecodeModeFn {}
 unsafe impl Send for ExtAstcDecodeModeFn {}
 unsafe impl Sync for ExtAstcDecodeModeFn {}
-impl ::std::clone::Clone for ExtAstcDecodeModeFn {
-    fn clone(&self) -> Self {
-        ExtAstcDecodeModeFn {}
-    }
-}
 impl ExtAstcDecodeModeFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5649,14 +5781,10 @@ impl ImgExtension69Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ImgExtension69Fn {}
 unsafe impl Send for ImgExtension69Fn {}
 unsafe impl Sync for ImgExtension69Fn {}
-impl ::std::clone::Clone for ImgExtension69Fn {
-    fn clone(&self) -> Self {
-        ImgExtension69Fn {}
-    }
-}
 impl ImgExtension69Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5673,21 +5801,17 @@ impl KhrMaintenance1Fn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkTrimCommandPool =
-    extern "system" fn(device: Device, command_pool: CommandPool, flags: CommandPoolTrimFlags);
+pub type PFN_vkTrimCommandPool = unsafe extern "system" fn(
+    device: Device,
+    command_pool: CommandPool,
+    flags: CommandPoolTrimFlags,
+);
+#[derive(Clone)]
 pub struct KhrMaintenance1Fn {
-    pub trim_command_pool_khr:
-        extern "system" fn(device: Device, command_pool: CommandPool, flags: CommandPoolTrimFlags),
+    pub trim_command_pool_khr: PFN_vkTrimCommandPool,
 }
 unsafe impl Send for KhrMaintenance1Fn {}
 unsafe impl Sync for KhrMaintenance1Fn {}
-impl ::std::clone::Clone for KhrMaintenance1Fn {
-    fn clone(&self) -> Self {
-        KhrMaintenance1Fn {
-            trim_command_pool_khr: self.trim_command_pool_khr,
-        }
-    }
-}
 impl KhrMaintenance1Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5695,7 +5819,7 @@ impl KhrMaintenance1Fn {
     {
         KhrMaintenance1Fn {
             trim_command_pool_khr: unsafe {
-                extern "system" fn trim_command_pool_khr(
+                unsafe extern "system" fn trim_command_pool_khr(
                     _device: Device,
                     _command_pool: CommandPool,
                     _flags: CommandPoolTrimFlags,
@@ -5728,19 +5852,19 @@ impl KhrMaintenance1Fn {
 }
 #[doc = "Generated from 'VK_KHR_maintenance1'"]
 impl Result {
-    pub const ERROR_OUT_OF_POOL_MEMORY_KHR: Self = Result::ERROR_OUT_OF_POOL_MEMORY;
+    pub const ERROR_OUT_OF_POOL_MEMORY_KHR: Self = Self::ERROR_OUT_OF_POOL_MEMORY;
 }
 #[doc = "Generated from 'VK_KHR_maintenance1'"]
 impl FormatFeatureFlags {
-    pub const TRANSFER_SRC_KHR: Self = FormatFeatureFlags::TRANSFER_SRC;
+    pub const TRANSFER_SRC_KHR: Self = Self::TRANSFER_SRC;
 }
 #[doc = "Generated from 'VK_KHR_maintenance1'"]
 impl FormatFeatureFlags {
-    pub const TRANSFER_DST_KHR: Self = FormatFeatureFlags::TRANSFER_DST;
+    pub const TRANSFER_DST_KHR: Self = Self::TRANSFER_DST;
 }
 #[doc = "Generated from 'VK_KHR_maintenance1'"]
 impl ImageCreateFlags {
-    pub const TYPE_2D_ARRAY_COMPATIBLE_KHR: Self = ImageCreateFlags::TYPE_2D_ARRAY_COMPATIBLE;
+    pub const TYPE_2D_ARRAY_COMPATIBLE_KHR: Self = Self::TYPE_2D_ARRAY_COMPATIBLE;
 }
 impl KhrDeviceGroupCreationFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -5750,27 +5874,17 @@ impl KhrDeviceGroupCreationFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkEnumeratePhysicalDeviceGroups = extern "system" fn(
+pub type PFN_vkEnumeratePhysicalDeviceGroups = unsafe extern "system" fn(
     instance: Instance,
     p_physical_device_group_count: *mut u32,
     p_physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrDeviceGroupCreationFn {
-    pub enumerate_physical_device_groups_khr: extern "system" fn(
-        instance: Instance,
-        p_physical_device_group_count: *mut u32,
-        p_physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
-    ) -> Result,
+    pub enumerate_physical_device_groups_khr: PFN_vkEnumeratePhysicalDeviceGroups,
 }
 unsafe impl Send for KhrDeviceGroupCreationFn {}
 unsafe impl Sync for KhrDeviceGroupCreationFn {}
-impl ::std::clone::Clone for KhrDeviceGroupCreationFn {
-    fn clone(&self) -> Self {
-        KhrDeviceGroupCreationFn {
-            enumerate_physical_device_groups_khr: self.enumerate_physical_device_groups_khr,
-        }
-    }
-}
 impl KhrDeviceGroupCreationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5778,7 +5892,7 @@ impl KhrDeviceGroupCreationFn {
     {
         KhrDeviceGroupCreationFn {
             enumerate_physical_device_groups_khr: unsafe {
-                extern "system" fn enumerate_physical_device_groups_khr(
+                unsafe extern "system" fn enumerate_physical_device_groups_khr(
                     _instance: Instance,
                     _p_physical_device_group_count: *mut u32,
                     _p_physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
@@ -5816,17 +5930,15 @@ impl KhrDeviceGroupCreationFn {
 }
 #[doc = "Generated from 'VK_KHR_device_group_creation'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_GROUP_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_GROUP_PROPERTIES;
+    pub const PHYSICAL_DEVICE_GROUP_PROPERTIES_KHR: Self = Self::PHYSICAL_DEVICE_GROUP_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_device_group_creation'"]
 impl StructureType {
-    pub const DEVICE_GROUP_DEVICE_CREATE_INFO_KHR: Self =
-        StructureType::DEVICE_GROUP_DEVICE_CREATE_INFO;
+    pub const DEVICE_GROUP_DEVICE_CREATE_INFO_KHR: Self = Self::DEVICE_GROUP_DEVICE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_device_group_creation'"]
 impl MemoryHeapFlags {
-    pub const MULTI_INSTANCE_KHR: Self = MemoryHeapFlags::MULTI_INSTANCE;
+    pub const MULTI_INSTANCE_KHR: Self = Self::MULTI_INSTANCE;
 }
 impl KhrExternalMemoryCapabilitiesFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -5836,28 +5948,18 @@ impl KhrExternalMemoryCapabilitiesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceExternalBufferProperties = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceExternalBufferProperties = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_external_buffer_info: *const PhysicalDeviceExternalBufferInfo,
     p_external_buffer_properties: *mut ExternalBufferProperties,
 );
+#[derive(Clone)]
 pub struct KhrExternalMemoryCapabilitiesFn {
-    pub get_physical_device_external_buffer_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_external_buffer_info: *const PhysicalDeviceExternalBufferInfo,
-        p_external_buffer_properties: *mut ExternalBufferProperties,
-    ),
+    pub get_physical_device_external_buffer_properties_khr:
+        PFN_vkGetPhysicalDeviceExternalBufferProperties,
 }
 unsafe impl Send for KhrExternalMemoryCapabilitiesFn {}
 unsafe impl Sync for KhrExternalMemoryCapabilitiesFn {}
-impl ::std::clone::Clone for KhrExternalMemoryCapabilitiesFn {
-    fn clone(&self) -> Self {
-        KhrExternalMemoryCapabilitiesFn {
-            get_physical_device_external_buffer_properties_khr: self
-                .get_physical_device_external_buffer_properties_khr,
-        }
-    }
-}
 impl KhrExternalMemoryCapabilitiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5865,7 +5967,7 @@ impl KhrExternalMemoryCapabilitiesFn {
     {
         KhrExternalMemoryCapabilitiesFn {
             get_physical_device_external_buffer_properties_khr: unsafe {
-                extern "system" fn get_physical_device_external_buffer_properties_khr(
+                unsafe extern "system" fn get_physical_device_external_buffer_properties_khr(
                     _physical_device: PhysicalDevice,
                     _p_external_buffer_info: *const PhysicalDeviceExternalBufferInfo,
                     _p_external_buffer_properties: *mut ExternalBufferProperties,
@@ -5904,66 +6006,64 @@ impl KhrExternalMemoryCapabilitiesFn {
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO;
+        Self::PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl StructureType {
-    pub const EXTERNAL_IMAGE_FORMAT_PROPERTIES_KHR: Self =
-        StructureType::EXTERNAL_IMAGE_FORMAT_PROPERTIES;
+    pub const EXTERNAL_IMAGE_FORMAT_PROPERTIES_KHR: Self = Self::EXTERNAL_IMAGE_FORMAT_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO;
+        Self::PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl StructureType {
-    pub const EXTERNAL_BUFFER_PROPERTIES_KHR: Self = StructureType::EXTERNAL_BUFFER_PROPERTIES;
+    pub const EXTERNAL_BUFFER_PROPERTIES_KHR: Self = Self::EXTERNAL_BUFFER_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_ID_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_ID_PROPERTIES;
+    pub const PHYSICAL_DEVICE_ID_PROPERTIES_KHR: Self = Self::PHYSICAL_DEVICE_ID_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const OPAQUE_FD_KHR: Self = ExternalMemoryHandleTypeFlags::OPAQUE_FD;
+    pub const OPAQUE_FD_KHR: Self = Self::OPAQUE_FD;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const OPAQUE_WIN32_KHR: Self = ExternalMemoryHandleTypeFlags::OPAQUE_WIN32;
+    pub const OPAQUE_WIN32_KHR: Self = Self::OPAQUE_WIN32;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const OPAQUE_WIN32_KMT_KHR: Self = ExternalMemoryHandleTypeFlags::OPAQUE_WIN32_KMT;
+    pub const OPAQUE_WIN32_KMT_KHR: Self = Self::OPAQUE_WIN32_KMT;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const D3D11_TEXTURE_KHR: Self = ExternalMemoryHandleTypeFlags::D3D11_TEXTURE;
+    pub const D3D11_TEXTURE_KHR: Self = Self::D3D11_TEXTURE;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const D3D11_TEXTURE_KMT_KHR: Self = ExternalMemoryHandleTypeFlags::D3D11_TEXTURE_KMT;
+    pub const D3D11_TEXTURE_KMT_KHR: Self = Self::D3D11_TEXTURE_KMT;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const D3D12_HEAP_KHR: Self = ExternalMemoryHandleTypeFlags::D3D12_HEAP;
+    pub const D3D12_HEAP_KHR: Self = Self::D3D12_HEAP;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryHandleTypeFlags {
-    pub const D3D12_RESOURCE_KHR: Self = ExternalMemoryHandleTypeFlags::D3D12_RESOURCE;
+    pub const D3D12_RESOURCE_KHR: Self = Self::D3D12_RESOURCE;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryFeatureFlags {
-    pub const DEDICATED_ONLY_KHR: Self = ExternalMemoryFeatureFlags::DEDICATED_ONLY;
+    pub const DEDICATED_ONLY_KHR: Self = Self::DEDICATED_ONLY;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryFeatureFlags {
-    pub const EXPORTABLE_KHR: Self = ExternalMemoryFeatureFlags::EXPORTABLE;
+    pub const EXPORTABLE_KHR: Self = Self::EXPORTABLE;
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryFeatureFlags {
-    pub const IMPORTABLE_KHR: Self = ExternalMemoryFeatureFlags::IMPORTABLE;
+    pub const IMPORTABLE_KHR: Self = Self::IMPORTABLE;
 }
 impl KhrExternalMemoryFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -5972,14 +6072,10 @@ impl KhrExternalMemoryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrExternalMemoryFn {}
 unsafe impl Send for KhrExternalMemoryFn {}
 unsafe impl Sync for KhrExternalMemoryFn {}
-impl ::std::clone::Clone for KhrExternalMemoryFn {
-    fn clone(&self) -> Self {
-        KhrExternalMemoryFn {}
-    }
-}
 impl KhrExternalMemoryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -5991,20 +6087,19 @@ impl KhrExternalMemoryFn {
 #[doc = "Generated from 'VK_KHR_external_memory'"]
 impl StructureType {
     pub const EXTERNAL_MEMORY_BUFFER_CREATE_INFO_KHR: Self =
-        StructureType::EXTERNAL_MEMORY_BUFFER_CREATE_INFO;
+        Self::EXTERNAL_MEMORY_BUFFER_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_memory'"]
 impl StructureType {
-    pub const EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHR: Self =
-        StructureType::EXTERNAL_MEMORY_IMAGE_CREATE_INFO;
+    pub const EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHR: Self = Self::EXTERNAL_MEMORY_IMAGE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_memory'"]
 impl StructureType {
-    pub const EXPORT_MEMORY_ALLOCATE_INFO_KHR: Self = StructureType::EXPORT_MEMORY_ALLOCATE_INFO;
+    pub const EXPORT_MEMORY_ALLOCATE_INFO_KHR: Self = Self::EXPORT_MEMORY_ALLOCATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_memory'"]
 impl Result {
-    pub const ERROR_INVALID_EXTERNAL_HANDLE_KHR: Self = Result::ERROR_INVALID_EXTERNAL_HANDLE;
+    pub const ERROR_INVALID_EXTERNAL_HANDLE_KHR: Self = Self::ERROR_INVALID_EXTERNAL_HANDLE;
 }
 impl KhrExternalMemoryWin32Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -6014,41 +6109,25 @@ impl KhrExternalMemoryWin32Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryWin32HandleKHR = extern "system" fn(
+pub type PFN_vkGetMemoryWin32HandleKHR = unsafe extern "system" fn(
     device: Device,
     p_get_win32_handle_info: *const MemoryGetWin32HandleInfoKHR,
     p_handle: *mut HANDLE,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryWin32HandlePropertiesKHR = extern "system" fn(
+pub type PFN_vkGetMemoryWin32HandlePropertiesKHR = unsafe extern "system" fn(
     device: Device,
     handle_type: ExternalMemoryHandleTypeFlags,
     handle: HANDLE,
     p_memory_win32_handle_properties: *mut MemoryWin32HandlePropertiesKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalMemoryWin32Fn {
-    pub get_memory_win32_handle_khr: extern "system" fn(
-        device: Device,
-        p_get_win32_handle_info: *const MemoryGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result,
-    pub get_memory_win32_handle_properties_khr: extern "system" fn(
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        handle: HANDLE,
-        p_memory_win32_handle_properties: *mut MemoryWin32HandlePropertiesKHR,
-    ) -> Result,
+    pub get_memory_win32_handle_khr: PFN_vkGetMemoryWin32HandleKHR,
+    pub get_memory_win32_handle_properties_khr: PFN_vkGetMemoryWin32HandlePropertiesKHR,
 }
 unsafe impl Send for KhrExternalMemoryWin32Fn {}
 unsafe impl Sync for KhrExternalMemoryWin32Fn {}
-impl ::std::clone::Clone for KhrExternalMemoryWin32Fn {
-    fn clone(&self) -> Self {
-        KhrExternalMemoryWin32Fn {
-            get_memory_win32_handle_khr: self.get_memory_win32_handle_khr,
-            get_memory_win32_handle_properties_khr: self.get_memory_win32_handle_properties_khr,
-        }
-    }
-}
 impl KhrExternalMemoryWin32Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6056,7 +6135,7 @@ impl KhrExternalMemoryWin32Fn {
     {
         KhrExternalMemoryWin32Fn {
             get_memory_win32_handle_khr: unsafe {
-                extern "system" fn get_memory_win32_handle_khr(
+                unsafe extern "system" fn get_memory_win32_handle_khr(
                     _device: Device,
                     _p_get_win32_handle_info: *const MemoryGetWin32HandleInfoKHR,
                     _p_handle: *mut HANDLE,
@@ -6076,7 +6155,7 @@ impl KhrExternalMemoryWin32Fn {
                 }
             },
             get_memory_win32_handle_properties_khr: unsafe {
-                extern "system" fn get_memory_win32_handle_properties_khr(
+                unsafe extern "system" fn get_memory_win32_handle_properties_khr(
                     _device: Device,
                     _handle_type: ExternalMemoryHandleTypeFlags,
                     _handle: HANDLE,
@@ -6148,41 +6227,25 @@ impl KhrExternalMemoryFdFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryFdKHR = extern "system" fn(
+pub type PFN_vkGetMemoryFdKHR = unsafe extern "system" fn(
     device: Device,
     p_get_fd_info: *const MemoryGetFdInfoKHR,
     p_fd: *mut c_int,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryFdPropertiesKHR = extern "system" fn(
+pub type PFN_vkGetMemoryFdPropertiesKHR = unsafe extern "system" fn(
     device: Device,
     handle_type: ExternalMemoryHandleTypeFlags,
     fd: c_int,
     p_memory_fd_properties: *mut MemoryFdPropertiesKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalMemoryFdFn {
-    pub get_memory_fd_khr: extern "system" fn(
-        device: Device,
-        p_get_fd_info: *const MemoryGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result,
-    pub get_memory_fd_properties_khr: extern "system" fn(
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        fd: c_int,
-        p_memory_fd_properties: *mut MemoryFdPropertiesKHR,
-    ) -> Result,
+    pub get_memory_fd_khr: PFN_vkGetMemoryFdKHR,
+    pub get_memory_fd_properties_khr: PFN_vkGetMemoryFdPropertiesKHR,
 }
 unsafe impl Send for KhrExternalMemoryFdFn {}
 unsafe impl Sync for KhrExternalMemoryFdFn {}
-impl ::std::clone::Clone for KhrExternalMemoryFdFn {
-    fn clone(&self) -> Self {
-        KhrExternalMemoryFdFn {
-            get_memory_fd_khr: self.get_memory_fd_khr,
-            get_memory_fd_properties_khr: self.get_memory_fd_properties_khr,
-        }
-    }
-}
 impl KhrExternalMemoryFdFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6190,7 +6253,7 @@ impl KhrExternalMemoryFdFn {
     {
         KhrExternalMemoryFdFn {
             get_memory_fd_khr: unsafe {
-                extern "system" fn get_memory_fd_khr(
+                unsafe extern "system" fn get_memory_fd_khr(
                     _device: Device,
                     _p_get_fd_info: *const MemoryGetFdInfoKHR,
                     _p_fd: *mut c_int,
@@ -6206,7 +6269,7 @@ impl KhrExternalMemoryFdFn {
                 }
             },
             get_memory_fd_properties_khr: unsafe {
-                extern "system" fn get_memory_fd_properties_khr(
+                unsafe extern "system" fn get_memory_fd_properties_khr(
                     _device: Device,
                     _handle_type: ExternalMemoryHandleTypeFlags,
                     _fd: c_int,
@@ -6268,14 +6331,10 @@ impl KhrWin32KeyedMutexFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrWin32KeyedMutexFn {}
 unsafe impl Send for KhrWin32KeyedMutexFn {}
 unsafe impl Sync for KhrWin32KeyedMutexFn {}
-impl ::std::clone::Clone for KhrWin32KeyedMutexFn {
-    fn clone(&self) -> Self {
-        KhrWin32KeyedMutexFn {}
-    }
-}
 impl KhrWin32KeyedMutexFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6296,28 +6355,18 @@ impl KhrExternalSemaphoreCapabilitiesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceExternalSemaphoreProperties = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceExternalSemaphoreProperties = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_external_semaphore_info: *const PhysicalDeviceExternalSemaphoreInfo,
     p_external_semaphore_properties: *mut ExternalSemaphoreProperties,
 );
+#[derive(Clone)]
 pub struct KhrExternalSemaphoreCapabilitiesFn {
-    pub get_physical_device_external_semaphore_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_external_semaphore_info: *const PhysicalDeviceExternalSemaphoreInfo,
-        p_external_semaphore_properties: *mut ExternalSemaphoreProperties,
-    ),
+    pub get_physical_device_external_semaphore_properties_khr:
+        PFN_vkGetPhysicalDeviceExternalSemaphoreProperties,
 }
 unsafe impl Send for KhrExternalSemaphoreCapabilitiesFn {}
 unsafe impl Sync for KhrExternalSemaphoreCapabilitiesFn {}
-impl ::std::clone::Clone for KhrExternalSemaphoreCapabilitiesFn {
-    fn clone(&self) -> Self {
-        KhrExternalSemaphoreCapabilitiesFn {
-            get_physical_device_external_semaphore_properties_khr: self
-                .get_physical_device_external_semaphore_properties_khr,
-        }
-    }
-}
 impl KhrExternalSemaphoreCapabilitiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6325,7 +6374,7 @@ impl KhrExternalSemaphoreCapabilitiesFn {
     {
         KhrExternalSemaphoreCapabilitiesFn {
             get_physical_device_external_semaphore_properties_khr: unsafe {
-                extern "system" fn get_physical_device_external_semaphore_properties_khr(
+                unsafe extern "system" fn get_physical_device_external_semaphore_properties_khr(
                     _physical_device: PhysicalDevice,
                     _p_external_semaphore_info: *const PhysicalDeviceExternalSemaphoreInfo,
                     _p_external_semaphore_properties: *mut ExternalSemaphoreProperties,
@@ -6364,40 +6413,39 @@ impl KhrExternalSemaphoreCapabilitiesFn {
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO;
+        Self::PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl StructureType {
-    pub const EXTERNAL_SEMAPHORE_PROPERTIES_KHR: Self =
-        StructureType::EXTERNAL_SEMAPHORE_PROPERTIES;
+    pub const EXTERNAL_SEMAPHORE_PROPERTIES_KHR: Self = Self::EXTERNAL_SEMAPHORE_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreHandleTypeFlags {
-    pub const OPAQUE_FD_KHR: Self = ExternalSemaphoreHandleTypeFlags::OPAQUE_FD;
+    pub const OPAQUE_FD_KHR: Self = Self::OPAQUE_FD;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreHandleTypeFlags {
-    pub const OPAQUE_WIN32_KHR: Self = ExternalSemaphoreHandleTypeFlags::OPAQUE_WIN32;
+    pub const OPAQUE_WIN32_KHR: Self = Self::OPAQUE_WIN32;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreHandleTypeFlags {
-    pub const OPAQUE_WIN32_KMT_KHR: Self = ExternalSemaphoreHandleTypeFlags::OPAQUE_WIN32_KMT;
+    pub const OPAQUE_WIN32_KMT_KHR: Self = Self::OPAQUE_WIN32_KMT;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreHandleTypeFlags {
-    pub const D3D12_FENCE_KHR: Self = ExternalSemaphoreHandleTypeFlags::D3D12_FENCE;
+    pub const D3D12_FENCE_KHR: Self = Self::D3D12_FENCE;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreHandleTypeFlags {
-    pub const SYNC_FD_KHR: Self = ExternalSemaphoreHandleTypeFlags::SYNC_FD;
+    pub const SYNC_FD_KHR: Self = Self::SYNC_FD;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreFeatureFlags {
-    pub const EXPORTABLE_KHR: Self = ExternalSemaphoreFeatureFlags::EXPORTABLE;
+    pub const EXPORTABLE_KHR: Self = Self::EXPORTABLE;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreFeatureFlags {
-    pub const IMPORTABLE_KHR: Self = ExternalSemaphoreFeatureFlags::IMPORTABLE;
+    pub const IMPORTABLE_KHR: Self = Self::IMPORTABLE;
 }
 impl KhrExternalSemaphoreFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -6406,14 +6454,10 @@ impl KhrExternalSemaphoreFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrExternalSemaphoreFn {}
 unsafe impl Send for KhrExternalSemaphoreFn {}
 unsafe impl Sync for KhrExternalSemaphoreFn {}
-impl ::std::clone::Clone for KhrExternalSemaphoreFn {
-    fn clone(&self) -> Self {
-        KhrExternalSemaphoreFn {}
-    }
-}
 impl KhrExternalSemaphoreFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6424,11 +6468,11 @@ impl KhrExternalSemaphoreFn {
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore'"]
 impl StructureType {
-    pub const EXPORT_SEMAPHORE_CREATE_INFO_KHR: Self = StructureType::EXPORT_SEMAPHORE_CREATE_INFO;
+    pub const EXPORT_SEMAPHORE_CREATE_INFO_KHR: Self = Self::EXPORT_SEMAPHORE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore'"]
 impl SemaphoreImportFlags {
-    pub const TEMPORARY_KHR: Self = SemaphoreImportFlags::TEMPORARY;
+    pub const TEMPORARY_KHR: Self = Self::TEMPORARY;
 }
 impl KhrExternalSemaphoreWin32Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -6438,37 +6482,23 @@ impl KhrExternalSemaphoreWin32Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkImportSemaphoreWin32HandleKHR = extern "system" fn(
+pub type PFN_vkImportSemaphoreWin32HandleKHR = unsafe extern "system" fn(
     device: Device,
     p_import_semaphore_win32_handle_info: *const ImportSemaphoreWin32HandleInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSemaphoreWin32HandleKHR = extern "system" fn(
+pub type PFN_vkGetSemaphoreWin32HandleKHR = unsafe extern "system" fn(
     device: Device,
     p_get_win32_handle_info: *const SemaphoreGetWin32HandleInfoKHR,
     p_handle: *mut HANDLE,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalSemaphoreWin32Fn {
-    pub import_semaphore_win32_handle_khr: extern "system" fn(
-        device: Device,
-        p_import_semaphore_win32_handle_info: *const ImportSemaphoreWin32HandleInfoKHR,
-    ) -> Result,
-    pub get_semaphore_win32_handle_khr: extern "system" fn(
-        device: Device,
-        p_get_win32_handle_info: *const SemaphoreGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result,
+    pub import_semaphore_win32_handle_khr: PFN_vkImportSemaphoreWin32HandleKHR,
+    pub get_semaphore_win32_handle_khr: PFN_vkGetSemaphoreWin32HandleKHR,
 }
 unsafe impl Send for KhrExternalSemaphoreWin32Fn {}
 unsafe impl Sync for KhrExternalSemaphoreWin32Fn {}
-impl ::std::clone::Clone for KhrExternalSemaphoreWin32Fn {
-    fn clone(&self) -> Self {
-        KhrExternalSemaphoreWin32Fn {
-            import_semaphore_win32_handle_khr: self.import_semaphore_win32_handle_khr,
-            get_semaphore_win32_handle_khr: self.get_semaphore_win32_handle_khr,
-        }
-    }
-}
 impl KhrExternalSemaphoreWin32Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6476,7 +6506,7 @@ impl KhrExternalSemaphoreWin32Fn {
     {
         KhrExternalSemaphoreWin32Fn {
             import_semaphore_win32_handle_khr: unsafe {
-                extern "system" fn import_semaphore_win32_handle_khr(
+                unsafe extern "system" fn import_semaphore_win32_handle_khr(
                     _device: Device,
                     _p_import_semaphore_win32_handle_info: *const ImportSemaphoreWin32HandleInfoKHR,
                 ) -> Result {
@@ -6496,7 +6526,7 @@ impl KhrExternalSemaphoreWin32Fn {
                 }
             },
             get_semaphore_win32_handle_khr: unsafe {
-                extern "system" fn get_semaphore_win32_handle_khr(
+                unsafe extern "system" fn get_semaphore_win32_handle_khr(
                     _device: Device,
                     _p_get_win32_handle_info: *const SemaphoreGetWin32HandleInfoKHR,
                     _p_handle: *mut HANDLE,
@@ -6560,37 +6590,23 @@ impl KhrExternalSemaphoreFdFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkImportSemaphoreFdKHR = extern "system" fn(
+pub type PFN_vkImportSemaphoreFdKHR = unsafe extern "system" fn(
     device: Device,
     p_import_semaphore_fd_info: *const ImportSemaphoreFdInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSemaphoreFdKHR = extern "system" fn(
+pub type PFN_vkGetSemaphoreFdKHR = unsafe extern "system" fn(
     device: Device,
     p_get_fd_info: *const SemaphoreGetFdInfoKHR,
     p_fd: *mut c_int,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalSemaphoreFdFn {
-    pub import_semaphore_fd_khr: extern "system" fn(
-        device: Device,
-        p_import_semaphore_fd_info: *const ImportSemaphoreFdInfoKHR,
-    ) -> Result,
-    pub get_semaphore_fd_khr: extern "system" fn(
-        device: Device,
-        p_get_fd_info: *const SemaphoreGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result,
+    pub import_semaphore_fd_khr: PFN_vkImportSemaphoreFdKHR,
+    pub get_semaphore_fd_khr: PFN_vkGetSemaphoreFdKHR,
 }
 unsafe impl Send for KhrExternalSemaphoreFdFn {}
 unsafe impl Sync for KhrExternalSemaphoreFdFn {}
-impl ::std::clone::Clone for KhrExternalSemaphoreFdFn {
-    fn clone(&self) -> Self {
-        KhrExternalSemaphoreFdFn {
-            import_semaphore_fd_khr: self.import_semaphore_fd_khr,
-            get_semaphore_fd_khr: self.get_semaphore_fd_khr,
-        }
-    }
-}
 impl KhrExternalSemaphoreFdFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6598,7 +6614,7 @@ impl KhrExternalSemaphoreFdFn {
     {
         KhrExternalSemaphoreFdFn {
             import_semaphore_fd_khr: unsafe {
-                extern "system" fn import_semaphore_fd_khr(
+                unsafe extern "system" fn import_semaphore_fd_khr(
                     _device: Device,
                     _p_import_semaphore_fd_info: *const ImportSemaphoreFdInfoKHR,
                 ) -> Result {
@@ -6617,7 +6633,7 @@ impl KhrExternalSemaphoreFdFn {
                 }
             },
             get_semaphore_fd_khr: unsafe {
-                extern "system" fn get_semaphore_fd_khr(
+                unsafe extern "system" fn get_semaphore_fd_khr(
                     _device: Device,
                     _p_get_fd_info: *const SemaphoreGetFdInfoKHR,
                     _p_fd: *mut c_int,
@@ -6669,7 +6685,7 @@ impl KhrPushDescriptorFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdPushDescriptorSetKHR = extern "system" fn(
+pub type PFN_vkCmdPushDescriptorSetKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     pipeline_bind_point: PipelineBindPoint,
     layout: PipelineLayout,
@@ -6678,41 +6694,20 @@ pub type PFN_vkCmdPushDescriptorSetKHR = extern "system" fn(
     p_descriptor_writes: *const WriteDescriptorSet,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdPushDescriptorSetWithTemplateKHR = extern "system" fn(
+pub type PFN_vkCmdPushDescriptorSetWithTemplateKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     descriptor_update_template: DescriptorUpdateTemplate,
     layout: PipelineLayout,
     set: u32,
     p_data: *const c_void,
 );
+#[derive(Clone)]
 pub struct KhrPushDescriptorFn {
-    pub cmd_push_descriptor_set_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        pipeline_bind_point: PipelineBindPoint,
-        layout: PipelineLayout,
-        set: u32,
-        descriptor_write_count: u32,
-        p_descriptor_writes: *const WriteDescriptorSet,
-    ),
-    pub cmd_push_descriptor_set_with_template_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        layout: PipelineLayout,
-        set: u32,
-        p_data: *const c_void,
-    ),
+    pub cmd_push_descriptor_set_khr: PFN_vkCmdPushDescriptorSetKHR,
+    pub cmd_push_descriptor_set_with_template_khr: PFN_vkCmdPushDescriptorSetWithTemplateKHR,
 }
 unsafe impl Send for KhrPushDescriptorFn {}
 unsafe impl Sync for KhrPushDescriptorFn {}
-impl ::std::clone::Clone for KhrPushDescriptorFn {
-    fn clone(&self) -> Self {
-        KhrPushDescriptorFn {
-            cmd_push_descriptor_set_khr: self.cmd_push_descriptor_set_khr,
-            cmd_push_descriptor_set_with_template_khr: self
-                .cmd_push_descriptor_set_with_template_khr,
-        }
-    }
-}
 impl KhrPushDescriptorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6720,7 +6715,7 @@ impl KhrPushDescriptorFn {
     {
         KhrPushDescriptorFn {
             cmd_push_descriptor_set_khr: unsafe {
-                extern "system" fn cmd_push_descriptor_set_khr(
+                unsafe extern "system" fn cmd_push_descriptor_set_khr(
                     _command_buffer: CommandBuffer,
                     _pipeline_bind_point: PipelineBindPoint,
                     _layout: PipelineLayout,
@@ -6743,7 +6738,7 @@ impl KhrPushDescriptorFn {
                 }
             },
             cmd_push_descriptor_set_with_template_khr: unsafe {
-                extern "system" fn cmd_push_descriptor_set_with_template_khr(
+                unsafe extern "system" fn cmd_push_descriptor_set_with_template_khr(
                     _command_buffer: CommandBuffer,
                     _descriptor_update_template: DescriptorUpdateTemplate,
                     _layout: PipelineLayout,
@@ -6824,29 +6819,20 @@ impl ExtConditionalRenderingFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginConditionalRenderingEXT = extern "system" fn(
+pub type PFN_vkCmdBeginConditionalRenderingEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_conditional_rendering_begin: *const ConditionalRenderingBeginInfoEXT,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndConditionalRenderingEXT = extern "system" fn(command_buffer: CommandBuffer);
+pub type PFN_vkCmdEndConditionalRenderingEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer);
+#[derive(Clone)]
 pub struct ExtConditionalRenderingFn {
-    pub cmd_begin_conditional_rendering_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_conditional_rendering_begin: *const ConditionalRenderingBeginInfoEXT,
-    ),
-    pub cmd_end_conditional_rendering_ext: extern "system" fn(command_buffer: CommandBuffer),
+    pub cmd_begin_conditional_rendering_ext: PFN_vkCmdBeginConditionalRenderingEXT,
+    pub cmd_end_conditional_rendering_ext: PFN_vkCmdEndConditionalRenderingEXT,
 }
 unsafe impl Send for ExtConditionalRenderingFn {}
 unsafe impl Sync for ExtConditionalRenderingFn {}
-impl ::std::clone::Clone for ExtConditionalRenderingFn {
-    fn clone(&self) -> Self {
-        ExtConditionalRenderingFn {
-            cmd_begin_conditional_rendering_ext: self.cmd_begin_conditional_rendering_ext,
-            cmd_end_conditional_rendering_ext: self.cmd_end_conditional_rendering_ext,
-        }
-    }
-}
 impl ExtConditionalRenderingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6854,7 +6840,7 @@ impl ExtConditionalRenderingFn {
     {
         ExtConditionalRenderingFn {
             cmd_begin_conditional_rendering_ext: unsafe {
-                extern "system" fn cmd_begin_conditional_rendering_ext(
+                unsafe extern "system" fn cmd_begin_conditional_rendering_ext(
                     _command_buffer: CommandBuffer,
                     _p_conditional_rendering_begin: *const ConditionalRenderingBeginInfoEXT,
                 ) {
@@ -6874,7 +6860,7 @@ impl ExtConditionalRenderingFn {
                 }
             },
             cmd_end_conditional_rendering_ext: unsafe {
-                extern "system" fn cmd_end_conditional_rendering_ext(
+                unsafe extern "system" fn cmd_end_conditional_rendering_ext(
                     _command_buffer: CommandBuffer,
                 ) {
                     panic!(concat!(
@@ -6938,14 +6924,10 @@ impl KhrShaderFloat16Int8Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderFloat16Int8Fn {}
 unsafe impl Send for KhrShaderFloat16Int8Fn {}
 unsafe impl Sync for KhrShaderFloat16Int8Fn {}
-impl ::std::clone::Clone for KhrShaderFloat16Int8Fn {
-    fn clone(&self) -> Self {
-        KhrShaderFloat16Int8Fn {}
-    }
-}
 impl KhrShaderFloat16Int8Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6957,12 +6939,12 @@ impl KhrShaderFloat16Int8Fn {
 #[doc = "Generated from 'VK_KHR_shader_float16_int8'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+        Self::PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_shader_float16_int8'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_FLOAT16_INT8_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+        Self::PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
 }
 impl Khr16bitStorageFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -6971,14 +6953,10 @@ impl Khr16bitStorageFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct Khr16bitStorageFn {}
 unsafe impl Send for Khr16bitStorageFn {}
 unsafe impl Sync for Khr16bitStorageFn {}
-impl ::std::clone::Clone for Khr16bitStorageFn {
-    fn clone(&self) -> Self {
-        Khr16bitStorageFn {}
-    }
-}
 impl Khr16bitStorageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -6990,23 +6968,19 @@ impl Khr16bitStorageFn {
 #[doc = "Generated from 'VK_KHR_16bit_storage'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
+        Self::PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
 }
 impl KhrIncrementalPresentFn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_incremental_present\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 1u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct KhrIncrementalPresentFn {}
 unsafe impl Send for KhrIncrementalPresentFn {}
 unsafe impl Sync for KhrIncrementalPresentFn {}
-impl ::std::clone::Clone for KhrIncrementalPresentFn {
-    fn clone(&self) -> Self {
-        KhrIncrementalPresentFn {}
-    }
-}
 impl KhrIncrementalPresentFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7027,64 +7001,35 @@ impl KhrDescriptorUpdateTemplateFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDescriptorUpdateTemplate = extern "system" fn(
+pub type PFN_vkCreateDescriptorUpdateTemplate = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const DescriptorUpdateTemplateCreateInfo,
     p_allocator: *const AllocationCallbacks,
     p_descriptor_update_template: *mut DescriptorUpdateTemplate,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyDescriptorUpdateTemplate = extern "system" fn(
+pub type PFN_vkDestroyDescriptorUpdateTemplate = unsafe extern "system" fn(
     device: Device,
     descriptor_update_template: DescriptorUpdateTemplate,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkUpdateDescriptorSetWithTemplate = extern "system" fn(
+pub type PFN_vkUpdateDescriptorSetWithTemplate = unsafe extern "system" fn(
     device: Device,
     descriptor_set: DescriptorSet,
     descriptor_update_template: DescriptorUpdateTemplate,
     p_data: *const c_void,
 );
+#[derive(Clone)]
 pub struct KhrDescriptorUpdateTemplateFn {
-    pub create_descriptor_update_template_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const DescriptorUpdateTemplateCreateInfo,
-        p_allocator: *const AllocationCallbacks,
-        p_descriptor_update_template: *mut DescriptorUpdateTemplate,
-    ) -> Result,
-    pub destroy_descriptor_update_template_khr: extern "system" fn(
-        device: Device,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub update_descriptor_set_with_template_khr: extern "system" fn(
-        device: Device,
-        descriptor_set: DescriptorSet,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        p_data: *const c_void,
-    ),
-    pub cmd_push_descriptor_set_with_template_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        layout: PipelineLayout,
-        set: u32,
-        p_data: *const c_void,
-    ),
+    pub create_descriptor_update_template_khr: PFN_vkCreateDescriptorUpdateTemplate,
+    pub destroy_descriptor_update_template_khr: PFN_vkDestroyDescriptorUpdateTemplate,
+    pub update_descriptor_set_with_template_khr: PFN_vkUpdateDescriptorSetWithTemplate,
+    pub cmd_push_descriptor_set_with_template_khr:
+        crate::vk::PFN_vkCmdPushDescriptorSetWithTemplateKHR,
 }
 unsafe impl Send for KhrDescriptorUpdateTemplateFn {}
 unsafe impl Sync for KhrDescriptorUpdateTemplateFn {}
-impl ::std::clone::Clone for KhrDescriptorUpdateTemplateFn {
-    fn clone(&self) -> Self {
-        KhrDescriptorUpdateTemplateFn {
-            create_descriptor_update_template_khr: self.create_descriptor_update_template_khr,
-            destroy_descriptor_update_template_khr: self.destroy_descriptor_update_template_khr,
-            update_descriptor_set_with_template_khr: self.update_descriptor_set_with_template_khr,
-            cmd_push_descriptor_set_with_template_khr: self
-                .cmd_push_descriptor_set_with_template_khr,
-        }
-    }
-}
 impl KhrDescriptorUpdateTemplateFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7092,7 +7037,7 @@ impl KhrDescriptorUpdateTemplateFn {
     {
         KhrDescriptorUpdateTemplateFn {
             create_descriptor_update_template_khr: unsafe {
-                extern "system" fn create_descriptor_update_template_khr(
+                unsafe extern "system" fn create_descriptor_update_template_khr(
                     _device: Device,
                     _p_create_info: *const DescriptorUpdateTemplateCreateInfo,
                     _p_allocator: *const AllocationCallbacks,
@@ -7114,7 +7059,7 @@ impl KhrDescriptorUpdateTemplateFn {
                 }
             },
             destroy_descriptor_update_template_khr: unsafe {
-                extern "system" fn destroy_descriptor_update_template_khr(
+                unsafe extern "system" fn destroy_descriptor_update_template_khr(
                     _device: Device,
                     _descriptor_update_template: DescriptorUpdateTemplate,
                     _p_allocator: *const AllocationCallbacks,
@@ -7135,7 +7080,7 @@ impl KhrDescriptorUpdateTemplateFn {
                 }
             },
             update_descriptor_set_with_template_khr: unsafe {
-                extern "system" fn update_descriptor_set_with_template_khr(
+                unsafe extern "system" fn update_descriptor_set_with_template_khr(
                     _device: Device,
                     _descriptor_set: DescriptorSet,
                     _descriptor_update_template: DescriptorUpdateTemplate,
@@ -7157,7 +7102,7 @@ impl KhrDescriptorUpdateTemplateFn {
                 }
             },
             cmd_push_descriptor_set_with_template_khr: unsafe {
-                extern "system" fn cmd_push_descriptor_set_with_template_khr(
+                unsafe extern "system" fn cmd_push_descriptor_set_with_template_khr(
                     _command_buffer: CommandBuffer,
                     _descriptor_update_template: DescriptorUpdateTemplate,
                     _layout: PipelineLayout,
@@ -7245,20 +7190,19 @@ impl KhrDescriptorUpdateTemplateFn {
 #[doc = "Generated from 'VK_KHR_descriptor_update_template'"]
 impl StructureType {
     pub const DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO_KHR: Self =
-        StructureType::DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO;
+        Self::DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_descriptor_update_template'"]
 impl ObjectType {
-    pub const DESCRIPTOR_UPDATE_TEMPLATE_KHR: Self = ObjectType::DESCRIPTOR_UPDATE_TEMPLATE;
+    pub const DESCRIPTOR_UPDATE_TEMPLATE_KHR: Self = Self::DESCRIPTOR_UPDATE_TEMPLATE;
 }
 #[doc = "Generated from 'VK_KHR_descriptor_update_template'"]
 impl DescriptorUpdateTemplateType {
-    pub const DESCRIPTOR_SET_KHR: Self = DescriptorUpdateTemplateType::DESCRIPTOR_SET;
+    pub const DESCRIPTOR_SET_KHR: Self = Self::DESCRIPTOR_SET;
 }
 #[doc = "Generated from 'VK_KHR_descriptor_update_template'"]
 impl DebugReportObjectTypeEXT {
-    pub const DESCRIPTOR_UPDATE_TEMPLATE_KHR: Self =
-        DebugReportObjectTypeEXT::DESCRIPTOR_UPDATE_TEMPLATE;
+    pub const DESCRIPTOR_UPDATE_TEMPLATE_KHR: Self = Self::DESCRIPTOR_UPDATE_TEMPLATE;
 }
 impl NvxDeviceGeneratedCommandsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -7267,14 +7211,10 @@ impl NvxDeviceGeneratedCommandsFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct NvxDeviceGeneratedCommandsFn {}
 unsafe impl Send for NvxDeviceGeneratedCommandsFn {}
 unsafe impl Sync for NvxDeviceGeneratedCommandsFn {}
-impl ::std::clone::Clone for NvxDeviceGeneratedCommandsFn {
-    fn clone(&self) -> Self {
-        NvxDeviceGeneratedCommandsFn {}
-    }
-}
 impl NvxDeviceGeneratedCommandsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7291,29 +7231,18 @@ impl NvClipSpaceWScalingFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetViewportWScalingNV = extern "system" fn(
+pub type PFN_vkCmdSetViewportWScalingNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_viewport: u32,
     viewport_count: u32,
     p_viewport_w_scalings: *const ViewportWScalingNV,
 );
+#[derive(Clone)]
 pub struct NvClipSpaceWScalingFn {
-    pub cmd_set_viewport_w_scaling_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_viewport: u32,
-        viewport_count: u32,
-        p_viewport_w_scalings: *const ViewportWScalingNV,
-    ),
+    pub cmd_set_viewport_w_scaling_nv: PFN_vkCmdSetViewportWScalingNV,
 }
 unsafe impl Send for NvClipSpaceWScalingFn {}
 unsafe impl Sync for NvClipSpaceWScalingFn {}
-impl ::std::clone::Clone for NvClipSpaceWScalingFn {
-    fn clone(&self) -> Self {
-        NvClipSpaceWScalingFn {
-            cmd_set_viewport_w_scaling_nv: self.cmd_set_viewport_w_scaling_nv,
-        }
-    }
-}
 impl NvClipSpaceWScalingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7321,7 +7250,7 @@ impl NvClipSpaceWScalingFn {
     {
         NvClipSpaceWScalingFn {
             cmd_set_viewport_w_scaling_nv: unsafe {
-                extern "system" fn cmd_set_viewport_w_scaling_nv(
+                unsafe extern "system" fn cmd_set_viewport_w_scaling_nv(
                     _command_buffer: CommandBuffer,
                     _first_viewport: u32,
                     _viewport_count: u32,
@@ -7377,20 +7306,13 @@ impl ExtDirectModeDisplayFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkReleaseDisplayEXT =
-    extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result;
+    unsafe extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result;
+#[derive(Clone)]
 pub struct ExtDirectModeDisplayFn {
-    pub release_display_ext:
-        extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result,
+    pub release_display_ext: PFN_vkReleaseDisplayEXT,
 }
 unsafe impl Send for ExtDirectModeDisplayFn {}
 unsafe impl Sync for ExtDirectModeDisplayFn {}
-impl ::std::clone::Clone for ExtDirectModeDisplayFn {
-    fn clone(&self) -> Self {
-        ExtDirectModeDisplayFn {
-            release_display_ext: self.release_display_ext,
-        }
-    }
-}
 impl ExtDirectModeDisplayFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7398,7 +7320,7 @@ impl ExtDirectModeDisplayFn {
     {
         ExtDirectModeDisplayFn {
             release_display_ext: unsafe {
-                extern "system" fn release_display_ext(
+                unsafe extern "system" fn release_display_ext(
                     _physical_device: PhysicalDevice,
                     _display: DisplayKHR,
                 ) -> Result {
@@ -7432,41 +7354,25 @@ impl ExtAcquireXlibDisplayFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkAcquireXlibDisplayEXT = extern "system" fn(
+pub type PFN_vkAcquireXlibDisplayEXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     dpy: *mut Display,
     display: DisplayKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetRandROutputDisplayEXT = extern "system" fn(
+pub type PFN_vkGetRandROutputDisplayEXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     dpy: *mut Display,
     rr_output: RROutput,
     p_display: *mut DisplayKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtAcquireXlibDisplayFn {
-    pub acquire_xlib_display_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        dpy: *mut Display,
-        display: DisplayKHR,
-    ) -> Result,
-    pub get_rand_r_output_display_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        dpy: *mut Display,
-        rr_output: RROutput,
-        p_display: *mut DisplayKHR,
-    ) -> Result,
+    pub acquire_xlib_display_ext: PFN_vkAcquireXlibDisplayEXT,
+    pub get_rand_r_output_display_ext: PFN_vkGetRandROutputDisplayEXT,
 }
 unsafe impl Send for ExtAcquireXlibDisplayFn {}
 unsafe impl Sync for ExtAcquireXlibDisplayFn {}
-impl ::std::clone::Clone for ExtAcquireXlibDisplayFn {
-    fn clone(&self) -> Self {
-        ExtAcquireXlibDisplayFn {
-            acquire_xlib_display_ext: self.acquire_xlib_display_ext,
-            get_rand_r_output_display_ext: self.get_rand_r_output_display_ext,
-        }
-    }
-}
 impl ExtAcquireXlibDisplayFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7474,7 +7380,7 @@ impl ExtAcquireXlibDisplayFn {
     {
         ExtAcquireXlibDisplayFn {
             acquire_xlib_display_ext: unsafe {
-                extern "system" fn acquire_xlib_display_ext(
+                unsafe extern "system" fn acquire_xlib_display_ext(
                     _physical_device: PhysicalDevice,
                     _dpy: *mut Display,
                     _display: DisplayKHR,
@@ -7494,7 +7400,7 @@ impl ExtAcquireXlibDisplayFn {
                 }
             },
             get_rand_r_output_display_ext: unsafe {
-                extern "system" fn get_rand_r_output_display_ext(
+                unsafe extern "system" fn get_rand_r_output_display_ext(
                     _physical_device: PhysicalDevice,
                     _dpy: *mut Display,
                     _rr_output: RROutput,
@@ -7545,28 +7451,18 @@ impl ExtDisplaySurfaceCounterFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     surface: SurfaceKHR,
     p_surface_capabilities: *mut SurfaceCapabilities2EXT,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtDisplaySurfaceCounterFn {
-    pub get_physical_device_surface_capabilities2_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_capabilities: *mut SurfaceCapabilities2EXT,
-    ) -> Result,
+    pub get_physical_device_surface_capabilities2_ext:
+        PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT,
 }
 unsafe impl Send for ExtDisplaySurfaceCounterFn {}
 unsafe impl Sync for ExtDisplaySurfaceCounterFn {}
-impl ::std::clone::Clone for ExtDisplaySurfaceCounterFn {
-    fn clone(&self) -> Self {
-        ExtDisplaySurfaceCounterFn {
-            get_physical_device_surface_capabilities2_ext: self
-                .get_physical_device_surface_capabilities2_ext,
-        }
-    }
-}
 impl ExtDisplaySurfaceCounterFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7574,7 +7470,7 @@ impl ExtDisplaySurfaceCounterFn {
     {
         ExtDisplaySurfaceCounterFn {
             get_physical_device_surface_capabilities2_ext: unsafe {
-                extern "system" fn get_physical_device_surface_capabilities2_ext(
+                unsafe extern "system" fn get_physical_device_surface_capabilities2_ext(
                     _physical_device: PhysicalDevice,
                     _surface: SurfaceKHR,
                     _p_surface_capabilities: *mut SurfaceCapabilities2EXT,
@@ -7616,7 +7512,7 @@ impl StructureType {
 }
 #[doc = "Generated from 'VK_EXT_display_surface_counter'"]
 impl StructureType {
-    pub const SURFACE_CAPABILITIES2_EXT: Self = StructureType::SURFACE_CAPABILITIES_2_EXT;
+    pub const SURFACE_CAPABILITIES2_EXT: Self = Self::SURFACE_CAPABILITIES_2_EXT;
 }
 impl ExtDisplayControlFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -7626,20 +7522,20 @@ impl ExtDisplayControlFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkDisplayPowerControlEXT = extern "system" fn(
+pub type PFN_vkDisplayPowerControlEXT = unsafe extern "system" fn(
     device: Device,
     display: DisplayKHR,
     p_display_power_info: *const DisplayPowerInfoEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkRegisterDeviceEventEXT = extern "system" fn(
+pub type PFN_vkRegisterDeviceEventEXT = unsafe extern "system" fn(
     device: Device,
     p_device_event_info: *const DeviceEventInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_fence: *mut Fence,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkRegisterDisplayEventEXT = extern "system" fn(
+pub type PFN_vkRegisterDisplayEventEXT = unsafe extern "system" fn(
     device: Device,
     display: DisplayKHR,
     p_display_event_info: *const DisplayEventInfoEXT,
@@ -7647,50 +7543,21 @@ pub type PFN_vkRegisterDisplayEventEXT = extern "system" fn(
     p_fence: *mut Fence,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetSwapchainCounterEXT = extern "system" fn(
+pub type PFN_vkGetSwapchainCounterEXT = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     counter: SurfaceCounterFlagsEXT,
     p_counter_value: *mut u64,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtDisplayControlFn {
-    pub display_power_control_ext: extern "system" fn(
-        device: Device,
-        display: DisplayKHR,
-        p_display_power_info: *const DisplayPowerInfoEXT,
-    ) -> Result,
-    pub register_device_event_ext: extern "system" fn(
-        device: Device,
-        p_device_event_info: *const DeviceEventInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_fence: *mut Fence,
-    ) -> Result,
-    pub register_display_event_ext: extern "system" fn(
-        device: Device,
-        display: DisplayKHR,
-        p_display_event_info: *const DisplayEventInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_fence: *mut Fence,
-    ) -> Result,
-    pub get_swapchain_counter_ext: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        counter: SurfaceCounterFlagsEXT,
-        p_counter_value: *mut u64,
-    ) -> Result,
+    pub display_power_control_ext: PFN_vkDisplayPowerControlEXT,
+    pub register_device_event_ext: PFN_vkRegisterDeviceEventEXT,
+    pub register_display_event_ext: PFN_vkRegisterDisplayEventEXT,
+    pub get_swapchain_counter_ext: PFN_vkGetSwapchainCounterEXT,
 }
 unsafe impl Send for ExtDisplayControlFn {}
 unsafe impl Sync for ExtDisplayControlFn {}
-impl ::std::clone::Clone for ExtDisplayControlFn {
-    fn clone(&self) -> Self {
-        ExtDisplayControlFn {
-            display_power_control_ext: self.display_power_control_ext,
-            register_device_event_ext: self.register_device_event_ext,
-            register_display_event_ext: self.register_display_event_ext,
-            get_swapchain_counter_ext: self.get_swapchain_counter_ext,
-        }
-    }
-}
 impl ExtDisplayControlFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7698,7 +7565,7 @@ impl ExtDisplayControlFn {
     {
         ExtDisplayControlFn {
             display_power_control_ext: unsafe {
-                extern "system" fn display_power_control_ext(
+                unsafe extern "system" fn display_power_control_ext(
                     _device: Device,
                     _display: DisplayKHR,
                     _p_display_power_info: *const DisplayPowerInfoEXT,
@@ -7718,7 +7585,7 @@ impl ExtDisplayControlFn {
                 }
             },
             register_device_event_ext: unsafe {
-                extern "system" fn register_device_event_ext(
+                unsafe extern "system" fn register_device_event_ext(
                     _device: Device,
                     _p_device_event_info: *const DeviceEventInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -7739,7 +7606,7 @@ impl ExtDisplayControlFn {
                 }
             },
             register_display_event_ext: unsafe {
-                extern "system" fn register_display_event_ext(
+                unsafe extern "system" fn register_display_event_ext(
                     _device: Device,
                     _display: DisplayKHR,
                     _p_display_event_info: *const DisplayEventInfoEXT,
@@ -7761,7 +7628,7 @@ impl ExtDisplayControlFn {
                 }
             },
             get_swapchain_counter_ext: unsafe {
-                extern "system" fn get_swapchain_counter_ext(
+                unsafe extern "system" fn get_swapchain_counter_ext(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _counter: SurfaceCounterFlagsEXT,
@@ -7854,41 +7721,25 @@ impl GoogleDisplayTimingFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetRefreshCycleDurationGOOGLE = extern "system" fn(
+pub type PFN_vkGetRefreshCycleDurationGOOGLE = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     p_display_timing_properties: *mut RefreshCycleDurationGOOGLE,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPastPresentationTimingGOOGLE = extern "system" fn(
+pub type PFN_vkGetPastPresentationTimingGOOGLE = unsafe extern "system" fn(
     device: Device,
     swapchain: SwapchainKHR,
     p_presentation_timing_count: *mut u32,
     p_presentation_timings: *mut PastPresentationTimingGOOGLE,
 ) -> Result;
+#[derive(Clone)]
 pub struct GoogleDisplayTimingFn {
-    pub get_refresh_cycle_duration_google: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_display_timing_properties: *mut RefreshCycleDurationGOOGLE,
-    ) -> Result,
-    pub get_past_presentation_timing_google: extern "system" fn(
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_presentation_timing_count: *mut u32,
-        p_presentation_timings: *mut PastPresentationTimingGOOGLE,
-    ) -> Result,
+    pub get_refresh_cycle_duration_google: PFN_vkGetRefreshCycleDurationGOOGLE,
+    pub get_past_presentation_timing_google: PFN_vkGetPastPresentationTimingGOOGLE,
 }
 unsafe impl Send for GoogleDisplayTimingFn {}
 unsafe impl Sync for GoogleDisplayTimingFn {}
-impl ::std::clone::Clone for GoogleDisplayTimingFn {
-    fn clone(&self) -> Self {
-        GoogleDisplayTimingFn {
-            get_refresh_cycle_duration_google: self.get_refresh_cycle_duration_google,
-            get_past_presentation_timing_google: self.get_past_presentation_timing_google,
-        }
-    }
-}
 impl GoogleDisplayTimingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7896,7 +7747,7 @@ impl GoogleDisplayTimingFn {
     {
         GoogleDisplayTimingFn {
             get_refresh_cycle_duration_google: unsafe {
-                extern "system" fn get_refresh_cycle_duration_google(
+                unsafe extern "system" fn get_refresh_cycle_duration_google(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _p_display_timing_properties: *mut RefreshCycleDurationGOOGLE,
@@ -7917,7 +7768,7 @@ impl GoogleDisplayTimingFn {
                 }
             },
             get_past_presentation_timing_google: unsafe {
-                extern "system" fn get_past_presentation_timing_google(
+                unsafe extern "system" fn get_past_presentation_timing_google(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                     _p_presentation_timing_count: *mut u32,
@@ -7976,14 +7827,10 @@ impl NvSampleMaskOverrideCoverageFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvSampleMaskOverrideCoverageFn {}
 unsafe impl Send for NvSampleMaskOverrideCoverageFn {}
 unsafe impl Sync for NvSampleMaskOverrideCoverageFn {}
-impl ::std::clone::Clone for NvSampleMaskOverrideCoverageFn {
-    fn clone(&self) -> Self {
-        NvSampleMaskOverrideCoverageFn {}
-    }
-}
 impl NvSampleMaskOverrideCoverageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -7999,14 +7846,10 @@ impl NvGeometryShaderPassthroughFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvGeometryShaderPassthroughFn {}
 unsafe impl Send for NvGeometryShaderPassthroughFn {}
 unsafe impl Sync for NvGeometryShaderPassthroughFn {}
-impl ::std::clone::Clone for NvGeometryShaderPassthroughFn {
-    fn clone(&self) -> Self {
-        NvGeometryShaderPassthroughFn {}
-    }
-}
 impl NvGeometryShaderPassthroughFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8022,14 +7865,10 @@ impl NvViewportArray2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvViewportArray2Fn {}
 unsafe impl Send for NvViewportArray2Fn {}
 unsafe impl Sync for NvViewportArray2Fn {}
-impl ::std::clone::Clone for NvViewportArray2Fn {
-    fn clone(&self) -> Self {
-        NvViewportArray2Fn {}
-    }
-}
 impl NvViewportArray2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8045,14 +7884,10 @@ impl NvxMultiviewPerViewAttributesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvxMultiviewPerViewAttributesFn {}
 unsafe impl Send for NvxMultiviewPerViewAttributesFn {}
 unsafe impl Sync for NvxMultiviewPerViewAttributesFn {}
-impl ::std::clone::Clone for NvxMultiviewPerViewAttributesFn {
-    fn clone(&self) -> Self {
-        NvxMultiviewPerViewAttributesFn {}
-    }
-}
 impl NvxMultiviewPerViewAttributesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8081,14 +7916,10 @@ impl NvViewportSwizzleFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvViewportSwizzleFn {}
 unsafe impl Send for NvViewportSwizzleFn {}
 unsafe impl Sync for NvViewportSwizzleFn {}
-impl ::std::clone::Clone for NvViewportSwizzleFn {
-    fn clone(&self) -> Self {
-        NvViewportSwizzleFn {}
-    }
-}
 impl NvViewportSwizzleFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8109,29 +7940,18 @@ impl ExtDiscardRectanglesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDiscardRectangleEXT = extern "system" fn(
+pub type PFN_vkCmdSetDiscardRectangleEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_discard_rectangle: u32,
     discard_rectangle_count: u32,
     p_discard_rectangles: *const Rect2D,
 );
+#[derive(Clone)]
 pub struct ExtDiscardRectanglesFn {
-    pub cmd_set_discard_rectangle_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_discard_rectangle: u32,
-        discard_rectangle_count: u32,
-        p_discard_rectangles: *const Rect2D,
-    ),
+    pub cmd_set_discard_rectangle_ext: PFN_vkCmdSetDiscardRectangleEXT,
 }
 unsafe impl Send for ExtDiscardRectanglesFn {}
 unsafe impl Sync for ExtDiscardRectanglesFn {}
-impl ::std::clone::Clone for ExtDiscardRectanglesFn {
-    fn clone(&self) -> Self {
-        ExtDiscardRectanglesFn {
-            cmd_set_discard_rectangle_ext: self.cmd_set_discard_rectangle_ext,
-        }
-    }
-}
 impl ExtDiscardRectanglesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8139,7 +7959,7 @@ impl ExtDiscardRectanglesFn {
     {
         ExtDiscardRectanglesFn {
             cmd_set_discard_rectangle_ext: unsafe {
-                extern "system" fn cmd_set_discard_rectangle_ext(
+                unsafe extern "system" fn cmd_set_discard_rectangle_ext(
                     _command_buffer: CommandBuffer,
                     _first_discard_rectangle: u32,
                     _discard_rectangle_count: u32,
@@ -8197,14 +8017,10 @@ impl NvExtension101Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension101Fn {}
 unsafe impl Send for NvExtension101Fn {}
 unsafe impl Sync for NvExtension101Fn {}
-impl ::std::clone::Clone for NvExtension101Fn {
-    fn clone(&self) -> Self {
-        NvExtension101Fn {}
-    }
-}
 impl NvExtension101Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8220,14 +8036,10 @@ impl ExtConservativeRasterizationFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtConservativeRasterizationFn {}
 unsafe impl Send for ExtConservativeRasterizationFn {}
 unsafe impl Sync for ExtConservativeRasterizationFn {}
-impl ::std::clone::Clone for ExtConservativeRasterizationFn {
-    fn clone(&self) -> Self {
-        ExtConservativeRasterizationFn {}
-    }
-}
 impl ExtConservativeRasterizationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8251,14 +8063,10 @@ impl ExtDepthClipEnableFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtDepthClipEnableFn {}
 unsafe impl Send for ExtDepthClipEnableFn {}
 unsafe impl Sync for ExtDepthClipEnableFn {}
-impl ::std::clone::Clone for ExtDepthClipEnableFn {
-    fn clone(&self) -> Self {
-        ExtDepthClipEnableFn {}
-    }
-}
 impl ExtDepthClipEnableFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8282,14 +8090,10 @@ impl NvExtension104Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension104Fn {}
 unsafe impl Send for NvExtension104Fn {}
 unsafe impl Sync for NvExtension104Fn {}
-impl ::std::clone::Clone for NvExtension104Fn {
-    fn clone(&self) -> Self {
-        NvExtension104Fn {}
-    }
-}
 impl NvExtension104Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8305,14 +8109,10 @@ impl ExtSwapchainColorspaceFn {
     }
     pub const SPEC_VERSION: u32 = 4u32;
 }
+#[derive(Clone)]
 pub struct ExtSwapchainColorspaceFn {}
 unsafe impl Send for ExtSwapchainColorspaceFn {}
 unsafe impl Sync for ExtSwapchainColorspaceFn {}
-impl ::std::clone::Clone for ExtSwapchainColorspaceFn {
-    fn clone(&self) -> Self {
-        ExtSwapchainColorspaceFn {}
-    }
-}
 impl ExtSwapchainColorspaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8379,7 +8179,7 @@ impl ColorSpaceKHR {
 }
 #[doc = "Generated from 'VK_EXT_swapchain_colorspace'"]
 impl ColorSpaceKHR {
-    pub const DCI_P3_LINEAR_EXT: Self = ColorSpaceKHR::DISPLAY_P3_LINEAR_EXT;
+    pub const DCI_P3_LINEAR_EXT: Self = Self::DISPLAY_P3_LINEAR_EXT;
 }
 impl ExtHdrMetadataFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -8389,29 +8189,18 @@ impl ExtHdrMetadataFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetHdrMetadataEXT = extern "system" fn(
+pub type PFN_vkSetHdrMetadataEXT = unsafe extern "system" fn(
     device: Device,
     swapchain_count: u32,
     p_swapchains: *const SwapchainKHR,
     p_metadata: *const HdrMetadataEXT,
 );
+#[derive(Clone)]
 pub struct ExtHdrMetadataFn {
-    pub set_hdr_metadata_ext: extern "system" fn(
-        device: Device,
-        swapchain_count: u32,
-        p_swapchains: *const SwapchainKHR,
-        p_metadata: *const HdrMetadataEXT,
-    ),
+    pub set_hdr_metadata_ext: PFN_vkSetHdrMetadataEXT,
 }
 unsafe impl Send for ExtHdrMetadataFn {}
 unsafe impl Sync for ExtHdrMetadataFn {}
-impl ::std::clone::Clone for ExtHdrMetadataFn {
-    fn clone(&self) -> Self {
-        ExtHdrMetadataFn {
-            set_hdr_metadata_ext: self.set_hdr_metadata_ext,
-        }
-    }
-}
 impl ExtHdrMetadataFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8419,7 +8208,7 @@ impl ExtHdrMetadataFn {
     {
         ExtHdrMetadataFn {
             set_hdr_metadata_ext: unsafe {
-                extern "system" fn set_hdr_metadata_ext(
+                unsafe extern "system" fn set_hdr_metadata_ext(
                     _device: Device,
                     _swapchain_count: u32,
                     _p_swapchains: *const SwapchainKHR,
@@ -8460,14 +8249,10 @@ impl ImgExtension107Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ImgExtension107Fn {}
 unsafe impl Send for ImgExtension107Fn {}
 unsafe impl Sync for ImgExtension107Fn {}
-impl ::std::clone::Clone for ImgExtension107Fn {
-    fn clone(&self) -> Self {
-        ImgExtension107Fn {}
-    }
-}
 impl ImgExtension107Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8483,14 +8268,10 @@ impl ImgExtension108Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ImgExtension108Fn {}
 unsafe impl Send for ImgExtension108Fn {}
 unsafe impl Sync for ImgExtension108Fn {}
-impl ::std::clone::Clone for ImgExtension108Fn {
-    fn clone(&self) -> Self {
-        ImgExtension108Fn {}
-    }
-}
 impl ImgExtension108Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8506,14 +8287,10 @@ impl KhrImagelessFramebufferFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrImagelessFramebufferFn {}
 unsafe impl Send for KhrImagelessFramebufferFn {}
 unsafe impl Sync for KhrImagelessFramebufferFn {}
-impl ::std::clone::Clone for KhrImagelessFramebufferFn {
-    fn clone(&self) -> Self {
-        KhrImagelessFramebufferFn {}
-    }
-}
 impl KhrImagelessFramebufferFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8525,26 +8302,24 @@ impl KhrImagelessFramebufferFn {
 #[doc = "Generated from 'VK_KHR_imageless_framebuffer'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES;
+        Self::PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_imageless_framebuffer'"]
 impl StructureType {
     pub const FRAMEBUFFER_ATTACHMENTS_CREATE_INFO_KHR: Self =
-        StructureType::FRAMEBUFFER_ATTACHMENTS_CREATE_INFO;
+        Self::FRAMEBUFFER_ATTACHMENTS_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_imageless_framebuffer'"]
 impl StructureType {
-    pub const FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR: Self =
-        StructureType::FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
+    pub const FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR: Self = Self::FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_imageless_framebuffer'"]
 impl StructureType {
-    pub const RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR: Self =
-        StructureType::RENDER_PASS_ATTACHMENT_BEGIN_INFO;
+    pub const RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR: Self = Self::RENDER_PASS_ATTACHMENT_BEGIN_INFO;
 }
 #[doc = "Generated from 'VK_KHR_imageless_framebuffer'"]
 impl FramebufferCreateFlags {
-    pub const IMAGELESS_KHR: Self = FramebufferCreateFlags::IMAGELESS;
+    pub const IMAGELESS_KHR: Self = Self::IMAGELESS;
 }
 impl KhrCreateRenderpass2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -8554,61 +8329,38 @@ impl KhrCreateRenderpass2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateRenderPass2 = extern "system" fn(
+pub type PFN_vkCreateRenderPass2 = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const RenderPassCreateInfo2,
     p_allocator: *const AllocationCallbacks,
     p_render_pass: *mut RenderPass,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginRenderPass2 = extern "system" fn(
+pub type PFN_vkCmdBeginRenderPass2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_render_pass_begin: *const RenderPassBeginInfo,
     p_subpass_begin_info: *const SubpassBeginInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdNextSubpass2 = extern "system" fn(
+pub type PFN_vkCmdNextSubpass2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_subpass_begin_info: *const SubpassBeginInfo,
     p_subpass_end_info: *const SubpassEndInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndRenderPass2 =
-    extern "system" fn(command_buffer: CommandBuffer, p_subpass_end_info: *const SubpassEndInfo);
+pub type PFN_vkCmdEndRenderPass2 = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_subpass_end_info: *const SubpassEndInfo,
+);
+#[derive(Clone)]
 pub struct KhrCreateRenderpass2Fn {
-    pub create_render_pass2_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const RenderPassCreateInfo2,
-        p_allocator: *const AllocationCallbacks,
-        p_render_pass: *mut RenderPass,
-    ) -> Result,
-    pub cmd_begin_render_pass2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_render_pass_begin: *const RenderPassBeginInfo,
-        p_subpass_begin_info: *const SubpassBeginInfo,
-    ),
-    pub cmd_next_subpass2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_subpass_begin_info: *const SubpassBeginInfo,
-        p_subpass_end_info: *const SubpassEndInfo,
-    ),
-    pub cmd_end_render_pass2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_subpass_end_info: *const SubpassEndInfo,
-    ),
+    pub create_render_pass2_khr: PFN_vkCreateRenderPass2,
+    pub cmd_begin_render_pass2_khr: PFN_vkCmdBeginRenderPass2,
+    pub cmd_next_subpass2_khr: PFN_vkCmdNextSubpass2,
+    pub cmd_end_render_pass2_khr: PFN_vkCmdEndRenderPass2,
 }
 unsafe impl Send for KhrCreateRenderpass2Fn {}
 unsafe impl Sync for KhrCreateRenderpass2Fn {}
-impl ::std::clone::Clone for KhrCreateRenderpass2Fn {
-    fn clone(&self) -> Self {
-        KhrCreateRenderpass2Fn {
-            create_render_pass2_khr: self.create_render_pass2_khr,
-            cmd_begin_render_pass2_khr: self.cmd_begin_render_pass2_khr,
-            cmd_next_subpass2_khr: self.cmd_next_subpass2_khr,
-            cmd_end_render_pass2_khr: self.cmd_end_render_pass2_khr,
-        }
-    }
-}
 impl KhrCreateRenderpass2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8616,7 +8368,7 @@ impl KhrCreateRenderpass2Fn {
     {
         KhrCreateRenderpass2Fn {
             create_render_pass2_khr: unsafe {
-                extern "system" fn create_render_pass2_khr(
+                unsafe extern "system" fn create_render_pass2_khr(
                     _device: Device,
                     _p_create_info: *const RenderPassCreateInfo2,
                     _p_allocator: *const AllocationCallbacks,
@@ -8637,7 +8389,7 @@ impl KhrCreateRenderpass2Fn {
                 }
             },
             cmd_begin_render_pass2_khr: unsafe {
-                extern "system" fn cmd_begin_render_pass2_khr(
+                unsafe extern "system" fn cmd_begin_render_pass2_khr(
                     _command_buffer: CommandBuffer,
                     _p_render_pass_begin: *const RenderPassBeginInfo,
                     _p_subpass_begin_info: *const SubpassBeginInfo,
@@ -8657,7 +8409,7 @@ impl KhrCreateRenderpass2Fn {
                 }
             },
             cmd_next_subpass2_khr: unsafe {
-                extern "system" fn cmd_next_subpass2_khr(
+                unsafe extern "system" fn cmd_next_subpass2_khr(
                     _command_buffer: CommandBuffer,
                     _p_subpass_begin_info: *const SubpassBeginInfo,
                     _p_subpass_end_info: *const SubpassEndInfo,
@@ -8677,7 +8429,7 @@ impl KhrCreateRenderpass2Fn {
                 }
             },
             cmd_end_render_pass2_khr: unsafe {
-                extern "system" fn cmd_end_render_pass2_khr(
+                unsafe extern "system" fn cmd_end_render_pass2_khr(
                     _command_buffer: CommandBuffer,
                     _p_subpass_end_info: *const SubpassEndInfo,
                 ) {
@@ -8736,31 +8488,31 @@ impl KhrCreateRenderpass2Fn {
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const ATTACHMENT_DESCRIPTION_2_KHR: Self = StructureType::ATTACHMENT_DESCRIPTION_2;
+    pub const ATTACHMENT_DESCRIPTION_2_KHR: Self = Self::ATTACHMENT_DESCRIPTION_2;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const ATTACHMENT_REFERENCE_2_KHR: Self = StructureType::ATTACHMENT_REFERENCE_2;
+    pub const ATTACHMENT_REFERENCE_2_KHR: Self = Self::ATTACHMENT_REFERENCE_2;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const SUBPASS_DESCRIPTION_2_KHR: Self = StructureType::SUBPASS_DESCRIPTION_2;
+    pub const SUBPASS_DESCRIPTION_2_KHR: Self = Self::SUBPASS_DESCRIPTION_2;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const SUBPASS_DEPENDENCY_2_KHR: Self = StructureType::SUBPASS_DEPENDENCY_2;
+    pub const SUBPASS_DEPENDENCY_2_KHR: Self = Self::SUBPASS_DEPENDENCY_2;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const RENDER_PASS_CREATE_INFO_2_KHR: Self = StructureType::RENDER_PASS_CREATE_INFO_2;
+    pub const RENDER_PASS_CREATE_INFO_2_KHR: Self = Self::RENDER_PASS_CREATE_INFO_2;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const SUBPASS_BEGIN_INFO_KHR: Self = StructureType::SUBPASS_BEGIN_INFO;
+    pub const SUBPASS_BEGIN_INFO_KHR: Self = Self::SUBPASS_BEGIN_INFO;
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
-    pub const SUBPASS_END_INFO_KHR: Self = StructureType::SUBPASS_END_INFO;
+    pub const SUBPASS_END_INFO_KHR: Self = Self::SUBPASS_END_INFO;
 }
 impl ImgExtension111Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -8769,14 +8521,10 @@ impl ImgExtension111Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ImgExtension111Fn {}
 unsafe impl Send for ImgExtension111Fn {}
 unsafe impl Sync for ImgExtension111Fn {}
-impl ::std::clone::Clone for ImgExtension111Fn {
-    fn clone(&self) -> Self {
-        ImgExtension111Fn {}
-    }
-}
 impl ImgExtension111Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8794,20 +8542,13 @@ impl KhrSharedPresentableImageFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetSwapchainStatusKHR =
-    extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
+    unsafe extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
+#[derive(Clone)]
 pub struct KhrSharedPresentableImageFn {
-    pub get_swapchain_status_khr:
-        extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result,
+    pub get_swapchain_status_khr: PFN_vkGetSwapchainStatusKHR,
 }
 unsafe impl Send for KhrSharedPresentableImageFn {}
 unsafe impl Sync for KhrSharedPresentableImageFn {}
-impl ::std::clone::Clone for KhrSharedPresentableImageFn {
-    fn clone(&self) -> Self {
-        KhrSharedPresentableImageFn {
-            get_swapchain_status_khr: self.get_swapchain_status_khr,
-        }
-    }
-}
 impl KhrSharedPresentableImageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8815,7 +8556,7 @@ impl KhrSharedPresentableImageFn {
     {
         KhrSharedPresentableImageFn {
             get_swapchain_status_khr: unsafe {
-                extern "system" fn get_swapchain_status_khr(
+                unsafe extern "system" fn get_swapchain_status_khr(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                 ) -> Result {
@@ -8868,28 +8609,18 @@ impl KhrExternalFenceCapabilitiesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceExternalFenceProperties = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceExternalFenceProperties = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_external_fence_info: *const PhysicalDeviceExternalFenceInfo,
     p_external_fence_properties: *mut ExternalFenceProperties,
 );
+#[derive(Clone)]
 pub struct KhrExternalFenceCapabilitiesFn {
-    pub get_physical_device_external_fence_properties_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_external_fence_info: *const PhysicalDeviceExternalFenceInfo,
-        p_external_fence_properties: *mut ExternalFenceProperties,
-    ),
+    pub get_physical_device_external_fence_properties_khr:
+        PFN_vkGetPhysicalDeviceExternalFenceProperties,
 }
 unsafe impl Send for KhrExternalFenceCapabilitiesFn {}
 unsafe impl Sync for KhrExternalFenceCapabilitiesFn {}
-impl ::std::clone::Clone for KhrExternalFenceCapabilitiesFn {
-    fn clone(&self) -> Self {
-        KhrExternalFenceCapabilitiesFn {
-            get_physical_device_external_fence_properties_khr: self
-                .get_physical_device_external_fence_properties_khr,
-        }
-    }
-}
 impl KhrExternalFenceCapabilitiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8897,7 +8628,7 @@ impl KhrExternalFenceCapabilitiesFn {
     {
         KhrExternalFenceCapabilitiesFn {
             get_physical_device_external_fence_properties_khr: unsafe {
-                extern "system" fn get_physical_device_external_fence_properties_khr(
+                unsafe extern "system" fn get_physical_device_external_fence_properties_khr(
                     _physical_device: PhysicalDevice,
                     _p_external_fence_info: *const PhysicalDeviceExternalFenceInfo,
                     _p_external_fence_properties: *mut ExternalFenceProperties,
@@ -8936,35 +8667,35 @@ impl KhrExternalFenceCapabilitiesFn {
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO;
+        Self::PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl StructureType {
-    pub const EXTERNAL_FENCE_PROPERTIES_KHR: Self = StructureType::EXTERNAL_FENCE_PROPERTIES;
+    pub const EXTERNAL_FENCE_PROPERTIES_KHR: Self = Self::EXTERNAL_FENCE_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceHandleTypeFlags {
-    pub const OPAQUE_FD_KHR: Self = ExternalFenceHandleTypeFlags::OPAQUE_FD;
+    pub const OPAQUE_FD_KHR: Self = Self::OPAQUE_FD;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceHandleTypeFlags {
-    pub const OPAQUE_WIN32_KHR: Self = ExternalFenceHandleTypeFlags::OPAQUE_WIN32;
+    pub const OPAQUE_WIN32_KHR: Self = Self::OPAQUE_WIN32;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceHandleTypeFlags {
-    pub const OPAQUE_WIN32_KMT_KHR: Self = ExternalFenceHandleTypeFlags::OPAQUE_WIN32_KMT;
+    pub const OPAQUE_WIN32_KMT_KHR: Self = Self::OPAQUE_WIN32_KMT;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceHandleTypeFlags {
-    pub const SYNC_FD_KHR: Self = ExternalFenceHandleTypeFlags::SYNC_FD;
+    pub const SYNC_FD_KHR: Self = Self::SYNC_FD;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceFeatureFlags {
-    pub const EXPORTABLE_KHR: Self = ExternalFenceFeatureFlags::EXPORTABLE;
+    pub const EXPORTABLE_KHR: Self = Self::EXPORTABLE;
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceFeatureFlags {
-    pub const IMPORTABLE_KHR: Self = ExternalFenceFeatureFlags::IMPORTABLE;
+    pub const IMPORTABLE_KHR: Self = Self::IMPORTABLE;
 }
 impl KhrExternalFenceFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -8973,14 +8704,10 @@ impl KhrExternalFenceFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrExternalFenceFn {}
 unsafe impl Send for KhrExternalFenceFn {}
 unsafe impl Sync for KhrExternalFenceFn {}
-impl ::std::clone::Clone for KhrExternalFenceFn {
-    fn clone(&self) -> Self {
-        KhrExternalFenceFn {}
-    }
-}
 impl KhrExternalFenceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -8991,11 +8718,11 @@ impl KhrExternalFenceFn {
 }
 #[doc = "Generated from 'VK_KHR_external_fence'"]
 impl StructureType {
-    pub const EXPORT_FENCE_CREATE_INFO_KHR: Self = StructureType::EXPORT_FENCE_CREATE_INFO;
+    pub const EXPORT_FENCE_CREATE_INFO_KHR: Self = Self::EXPORT_FENCE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_external_fence'"]
 impl FenceImportFlags {
-    pub const TEMPORARY_KHR: Self = FenceImportFlags::TEMPORARY;
+    pub const TEMPORARY_KHR: Self = Self::TEMPORARY;
 }
 impl KhrExternalFenceWin32Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -9005,37 +8732,23 @@ impl KhrExternalFenceWin32Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkImportFenceWin32HandleKHR = extern "system" fn(
+pub type PFN_vkImportFenceWin32HandleKHR = unsafe extern "system" fn(
     device: Device,
     p_import_fence_win32_handle_info: *const ImportFenceWin32HandleInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetFenceWin32HandleKHR = extern "system" fn(
+pub type PFN_vkGetFenceWin32HandleKHR = unsafe extern "system" fn(
     device: Device,
     p_get_win32_handle_info: *const FenceGetWin32HandleInfoKHR,
     p_handle: *mut HANDLE,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalFenceWin32Fn {
-    pub import_fence_win32_handle_khr: extern "system" fn(
-        device: Device,
-        p_import_fence_win32_handle_info: *const ImportFenceWin32HandleInfoKHR,
-    ) -> Result,
-    pub get_fence_win32_handle_khr: extern "system" fn(
-        device: Device,
-        p_get_win32_handle_info: *const FenceGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result,
+    pub import_fence_win32_handle_khr: PFN_vkImportFenceWin32HandleKHR,
+    pub get_fence_win32_handle_khr: PFN_vkGetFenceWin32HandleKHR,
 }
 unsafe impl Send for KhrExternalFenceWin32Fn {}
 unsafe impl Sync for KhrExternalFenceWin32Fn {}
-impl ::std::clone::Clone for KhrExternalFenceWin32Fn {
-    fn clone(&self) -> Self {
-        KhrExternalFenceWin32Fn {
-            import_fence_win32_handle_khr: self.import_fence_win32_handle_khr,
-            get_fence_win32_handle_khr: self.get_fence_win32_handle_khr,
-        }
-    }
-}
 impl KhrExternalFenceWin32Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9043,7 +8756,7 @@ impl KhrExternalFenceWin32Fn {
     {
         KhrExternalFenceWin32Fn {
             import_fence_win32_handle_khr: unsafe {
-                extern "system" fn import_fence_win32_handle_khr(
+                unsafe extern "system" fn import_fence_win32_handle_khr(
                     _device: Device,
                     _p_import_fence_win32_handle_info: *const ImportFenceWin32HandleInfoKHR,
                 ) -> Result {
@@ -9063,7 +8776,7 @@ impl KhrExternalFenceWin32Fn {
                 }
             },
             get_fence_win32_handle_khr: unsafe {
-                extern "system" fn get_fence_win32_handle_khr(
+                unsafe extern "system" fn get_fence_win32_handle_khr(
                     _device: Device,
                     _p_get_win32_handle_info: *const FenceGetWin32HandleInfoKHR,
                     _p_handle: *mut HANDLE,
@@ -9122,37 +8835,23 @@ impl KhrExternalFenceFdFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkImportFenceFdKHR = extern "system" fn(
+pub type PFN_vkImportFenceFdKHR = unsafe extern "system" fn(
     device: Device,
     p_import_fence_fd_info: *const ImportFenceFdInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetFenceFdKHR = extern "system" fn(
+pub type PFN_vkGetFenceFdKHR = unsafe extern "system" fn(
     device: Device,
     p_get_fd_info: *const FenceGetFdInfoKHR,
     p_fd: *mut c_int,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrExternalFenceFdFn {
-    pub import_fence_fd_khr: extern "system" fn(
-        device: Device,
-        p_import_fence_fd_info: *const ImportFenceFdInfoKHR,
-    ) -> Result,
-    pub get_fence_fd_khr: extern "system" fn(
-        device: Device,
-        p_get_fd_info: *const FenceGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result,
+    pub import_fence_fd_khr: PFN_vkImportFenceFdKHR,
+    pub get_fence_fd_khr: PFN_vkGetFenceFdKHR,
 }
 unsafe impl Send for KhrExternalFenceFdFn {}
 unsafe impl Sync for KhrExternalFenceFdFn {}
-impl ::std::clone::Clone for KhrExternalFenceFdFn {
-    fn clone(&self) -> Self {
-        KhrExternalFenceFdFn {
-            import_fence_fd_khr: self.import_fence_fd_khr,
-            get_fence_fd_khr: self.get_fence_fd_khr,
-        }
-    }
-}
 impl KhrExternalFenceFdFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9160,7 +8859,7 @@ impl KhrExternalFenceFdFn {
     {
         KhrExternalFenceFdFn {
             import_fence_fd_khr: unsafe {
-                extern "system" fn import_fence_fd_khr(
+                unsafe extern "system" fn import_fence_fd_khr(
                     _device: Device,
                     _p_import_fence_fd_info: *const ImportFenceFdInfoKHR,
                 ) -> Result {
@@ -9176,7 +8875,7 @@ impl KhrExternalFenceFdFn {
                 }
             },
             get_fence_fd_khr: unsafe {
-                extern "system" fn get_fence_fd_khr(
+                unsafe extern "system" fn get_fence_fd_khr(
                     _device: Device,
                     _p_get_fd_info: *const FenceGetFdInfoKHR,
                     _p_fd: *mut c_int,
@@ -9228,7 +8927,7 @@ impl KhrPerformanceQueryFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR =
-    extern "system" fn(
+    unsafe extern "system" fn(
         physical_device: PhysicalDevice,
         queue_family_index: u32,
         p_counter_count: *mut u32,
@@ -9236,48 +8935,28 @@ pub type PFN_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR =
         p_counter_descriptions: *mut PerformanceCounterDescriptionKHR,
     ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR = extern "system" fn(
-    physical_device: PhysicalDevice,
-    p_performance_query_create_info: *const QueryPoolPerformanceCreateInfoKHR,
-    p_num_passes: *mut u32,
-);
-#[allow(non_camel_case_types)]
-pub type PFN_vkAcquireProfilingLockKHR =
-    extern "system" fn(device: Device, p_info: *const AcquireProfilingLockInfoKHR) -> Result;
-#[allow(non_camel_case_types)]
-pub type PFN_vkReleaseProfilingLockKHR = extern "system" fn(device: Device);
-pub struct KhrPerformanceQueryFn {
-    pub enumerate_physical_device_queue_family_performance_query_counters_khr:
-        extern "system" fn(
-            physical_device: PhysicalDevice,
-            queue_family_index: u32,
-            p_counter_count: *mut u32,
-            p_counters: *mut PerformanceCounterKHR,
-            p_counter_descriptions: *mut PerformanceCounterDescriptionKHR,
-        ) -> Result,
-    pub get_physical_device_queue_family_performance_query_passes_khr: extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR =
+    unsafe extern "system" fn(
         physical_device: PhysicalDevice,
         p_performance_query_create_info: *const QueryPoolPerformanceCreateInfoKHR,
         p_num_passes: *mut u32,
-    ),
-    pub acquire_profiling_lock_khr:
-        extern "system" fn(device: Device, p_info: *const AcquireProfilingLockInfoKHR) -> Result,
-    pub release_profiling_lock_khr: extern "system" fn(device: Device),
+    );
+#[allow(non_camel_case_types)]
+pub type PFN_vkAcquireProfilingLockKHR =
+    unsafe extern "system" fn(device: Device, p_info: *const AcquireProfilingLockInfoKHR) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkReleaseProfilingLockKHR = unsafe extern "system" fn(device: Device);
+#[derive(Clone)]
+pub struct KhrPerformanceQueryFn {
+    pub enumerate_physical_device_queue_family_performance_query_counters_khr:
+        PFN_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR,
+    pub get_physical_device_queue_family_performance_query_passes_khr:
+        PFN_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR,
+    pub acquire_profiling_lock_khr: PFN_vkAcquireProfilingLockKHR,
+    pub release_profiling_lock_khr: PFN_vkReleaseProfilingLockKHR,
 }
 unsafe impl Send for KhrPerformanceQueryFn {}
 unsafe impl Sync for KhrPerformanceQueryFn {}
-impl ::std::clone::Clone for KhrPerformanceQueryFn {
-    fn clone(&self) -> Self {
-        KhrPerformanceQueryFn {
-            enumerate_physical_device_queue_family_performance_query_counters_khr: self
-                .enumerate_physical_device_queue_family_performance_query_counters_khr,
-            get_physical_device_queue_family_performance_query_passes_khr: self
-                .get_physical_device_queue_family_performance_query_passes_khr,
-            acquire_profiling_lock_khr: self.acquire_profiling_lock_khr,
-            release_profiling_lock_khr: self.release_profiling_lock_khr,
-        }
-    }
-}
 impl KhrPerformanceQueryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9285,7 +8964,7 @@ impl KhrPerformanceQueryFn {
     {
         KhrPerformanceQueryFn {
             enumerate_physical_device_queue_family_performance_query_counters_khr: unsafe {
-                extern "system" fn enumerate_physical_device_queue_family_performance_query_counters_khr(
+                unsafe extern "system" fn enumerate_physical_device_queue_family_performance_query_counters_khr(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _p_counter_count: *mut u32,
@@ -9310,7 +8989,7 @@ impl KhrPerformanceQueryFn {
                 }
             },
             get_physical_device_queue_family_performance_query_passes_khr: unsafe {
-                extern "system" fn get_physical_device_queue_family_performance_query_passes_khr(
+                unsafe extern "system" fn get_physical_device_queue_family_performance_query_passes_khr(
                     _physical_device: PhysicalDevice,
                     _p_performance_query_create_info: *const QueryPoolPerformanceCreateInfoKHR,
                     _p_num_passes: *mut u32,
@@ -9331,7 +9010,7 @@ impl KhrPerformanceQueryFn {
                 }
             },
             acquire_profiling_lock_khr: unsafe {
-                extern "system" fn acquire_profiling_lock_khr(
+                unsafe extern "system" fn acquire_profiling_lock_khr(
                     _device: Device,
                     _p_info: *const AcquireProfilingLockInfoKHR,
                 ) -> Result {
@@ -9350,7 +9029,7 @@ impl KhrPerformanceQueryFn {
                 }
             },
             release_profiling_lock_khr: unsafe {
-                extern "system" fn release_profiling_lock_khr(_device: Device) {
+                unsafe extern "system" fn release_profiling_lock_khr(_device: Device) {
                     panic!(concat!(
                         "Unable to load ",
                         stringify!(release_profiling_lock_khr)
@@ -9449,14 +9128,10 @@ impl KhrMaintenance2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrMaintenance2Fn {}
 unsafe impl Send for KhrMaintenance2Fn {}
 unsafe impl Sync for KhrMaintenance2Fn {}
-impl ::std::clone::Clone for KhrMaintenance2Fn {
-    fn clone(&self) -> Self {
-        KhrMaintenance2Fn {}
-    }
-}
 impl KhrMaintenance2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9467,56 +9142,56 @@ impl KhrMaintenance2Fn {
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl ImageCreateFlags {
-    pub const BLOCK_TEXEL_VIEW_COMPATIBLE_KHR: Self = ImageCreateFlags::BLOCK_TEXEL_VIEW_COMPATIBLE;
+    pub const BLOCK_TEXEL_VIEW_COMPATIBLE_KHR: Self = Self::BLOCK_TEXEL_VIEW_COMPATIBLE;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl ImageCreateFlags {
-    pub const EXTENDED_USAGE_KHR: Self = ImageCreateFlags::EXTENDED_USAGE;
+    pub const EXTENDED_USAGE_KHR: Self = Self::EXTENDED_USAGE;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES;
+        Self::PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl StructureType {
     pub const RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO_KHR: Self =
-        StructureType::RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO;
+        Self::RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl StructureType {
-    pub const IMAGE_VIEW_USAGE_CREATE_INFO_KHR: Self = StructureType::IMAGE_VIEW_USAGE_CREATE_INFO;
+    pub const IMAGE_VIEW_USAGE_CREATE_INFO_KHR: Self = Self::IMAGE_VIEW_USAGE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl StructureType {
     pub const PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO_KHR: Self =
-        StructureType::PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO;
+        Self::PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl ImageLayout {
     pub const DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL_KHR: Self =
-        ImageLayout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+        Self::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl ImageLayout {
     pub const DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR: Self =
-        ImageLayout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+        Self::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl PointClippingBehavior {
-    pub const ALL_CLIP_PLANES_KHR: Self = PointClippingBehavior::ALL_CLIP_PLANES;
+    pub const ALL_CLIP_PLANES_KHR: Self = Self::ALL_CLIP_PLANES;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl PointClippingBehavior {
-    pub const USER_CLIP_PLANES_ONLY_KHR: Self = PointClippingBehavior::USER_CLIP_PLANES_ONLY;
+    pub const USER_CLIP_PLANES_ONLY_KHR: Self = Self::USER_CLIP_PLANES_ONLY;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl TessellationDomainOrigin {
-    pub const UPPER_LEFT_KHR: Self = TessellationDomainOrigin::UPPER_LEFT;
+    pub const UPPER_LEFT_KHR: Self = Self::UPPER_LEFT;
 }
 #[doc = "Generated from 'VK_KHR_maintenance2'"]
 impl TessellationDomainOrigin {
-    pub const LOWER_LEFT_KHR: Self = TessellationDomainOrigin::LOWER_LEFT;
+    pub const LOWER_LEFT_KHR: Self = Self::LOWER_LEFT;
 }
 impl KhrExtension119Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -9525,14 +9200,10 @@ impl KhrExtension119Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension119Fn {}
 unsafe impl Send for KhrExtension119Fn {}
 unsafe impl Sync for KhrExtension119Fn {}
-impl ::std::clone::Clone for KhrExtension119Fn {
-    fn clone(&self) -> Self {
-        KhrExtension119Fn {}
-    }
-}
 impl KhrExtension119Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9549,42 +9220,26 @@ impl KhrGetSurfaceCapabilities2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceCapabilities2KHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceCapabilities2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
     p_surface_capabilities: *mut SurfaceCapabilities2KHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfaceFormats2KHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfaceFormats2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
     p_surface_format_count: *mut u32,
     p_surface_formats: *mut SurfaceFormat2KHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrGetSurfaceCapabilities2Fn {
-    pub get_physical_device_surface_capabilities2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_surface_capabilities: *mut SurfaceCapabilities2KHR,
-    ) -> Result,
-    pub get_physical_device_surface_formats2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_surface_format_count: *mut u32,
-        p_surface_formats: *mut SurfaceFormat2KHR,
-    ) -> Result,
+    pub get_physical_device_surface_capabilities2_khr:
+        PFN_vkGetPhysicalDeviceSurfaceCapabilities2KHR,
+    pub get_physical_device_surface_formats2_khr: PFN_vkGetPhysicalDeviceSurfaceFormats2KHR,
 }
 unsafe impl Send for KhrGetSurfaceCapabilities2Fn {}
 unsafe impl Sync for KhrGetSurfaceCapabilities2Fn {}
-impl ::std::clone::Clone for KhrGetSurfaceCapabilities2Fn {
-    fn clone(&self) -> Self {
-        KhrGetSurfaceCapabilities2Fn {
-            get_physical_device_surface_capabilities2_khr: self
-                .get_physical_device_surface_capabilities2_khr,
-            get_physical_device_surface_formats2_khr: self.get_physical_device_surface_formats2_khr,
-        }
-    }
-}
 impl KhrGetSurfaceCapabilities2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9592,7 +9247,7 @@ impl KhrGetSurfaceCapabilities2Fn {
     {
         KhrGetSurfaceCapabilities2Fn {
             get_physical_device_surface_capabilities2_khr: unsafe {
-                extern "system" fn get_physical_device_surface_capabilities2_khr(
+                unsafe extern "system" fn get_physical_device_surface_capabilities2_khr(
                     _physical_device: PhysicalDevice,
                     _p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
                     _p_surface_capabilities: *mut SurfaceCapabilities2KHR,
@@ -9613,7 +9268,7 @@ impl KhrGetSurfaceCapabilities2Fn {
                 }
             },
             get_physical_device_surface_formats2_khr: unsafe {
-                extern "system" fn get_physical_device_surface_formats2_khr(
+                unsafe extern "system" fn get_physical_device_surface_formats2_khr(
                     _physical_device: PhysicalDevice,
                     _p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
                     _p_surface_format_count: *mut u32,
@@ -9684,14 +9339,10 @@ impl KhrVariablePointersFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrVariablePointersFn {}
 unsafe impl Send for KhrVariablePointersFn {}
 unsafe impl Sync for KhrVariablePointersFn {}
-impl ::std::clone::Clone for KhrVariablePointersFn {
-    fn clone(&self) -> Self {
-        KhrVariablePointersFn {}
-    }
-}
 impl KhrVariablePointersFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9703,12 +9354,12 @@ impl KhrVariablePointersFn {
 #[doc = "Generated from 'VK_KHR_variable_pointers'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
+        Self::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_variable_pointers'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR;
+        Self::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR;
 }
 impl KhrGetDisplayProperties2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -9718,67 +9369,40 @@ impl KhrGetDisplayProperties2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceDisplayProperties2KHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceDisplayProperties2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_property_count: *mut u32,
     p_properties: *mut DisplayProperties2KHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceDisplayPlaneProperties2KHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceDisplayPlaneProperties2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_property_count: *mut u32,
     p_properties: *mut DisplayPlaneProperties2KHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDisplayModeProperties2KHR = extern "system" fn(
+pub type PFN_vkGetDisplayModeProperties2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     display: DisplayKHR,
     p_property_count: *mut u32,
     p_properties: *mut DisplayModeProperties2KHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDisplayPlaneCapabilities2KHR = extern "system" fn(
+pub type PFN_vkGetDisplayPlaneCapabilities2KHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_display_plane_info: *const DisplayPlaneInfo2KHR,
     p_capabilities: *mut DisplayPlaneCapabilities2KHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrGetDisplayProperties2Fn {
-    pub get_physical_device_display_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayProperties2KHR,
-    ) -> Result,
-    pub get_physical_device_display_plane_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPlaneProperties2KHR,
-    ) -> Result,
-    pub get_display_mode_properties2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayModeProperties2KHR,
-    ) -> Result,
-    pub get_display_plane_capabilities2_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_display_plane_info: *const DisplayPlaneInfo2KHR,
-        p_capabilities: *mut DisplayPlaneCapabilities2KHR,
-    ) -> Result,
+    pub get_physical_device_display_properties2_khr: PFN_vkGetPhysicalDeviceDisplayProperties2KHR,
+    pub get_physical_device_display_plane_properties2_khr:
+        PFN_vkGetPhysicalDeviceDisplayPlaneProperties2KHR,
+    pub get_display_mode_properties2_khr: PFN_vkGetDisplayModeProperties2KHR,
+    pub get_display_plane_capabilities2_khr: PFN_vkGetDisplayPlaneCapabilities2KHR,
 }
 unsafe impl Send for KhrGetDisplayProperties2Fn {}
 unsafe impl Sync for KhrGetDisplayProperties2Fn {}
-impl ::std::clone::Clone for KhrGetDisplayProperties2Fn {
-    fn clone(&self) -> Self {
-        KhrGetDisplayProperties2Fn {
-            get_physical_device_display_properties2_khr: self
-                .get_physical_device_display_properties2_khr,
-            get_physical_device_display_plane_properties2_khr: self
-                .get_physical_device_display_plane_properties2_khr,
-            get_display_mode_properties2_khr: self.get_display_mode_properties2_khr,
-            get_display_plane_capabilities2_khr: self.get_display_plane_capabilities2_khr,
-        }
-    }
-}
 impl KhrGetDisplayProperties2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9786,7 +9410,7 @@ impl KhrGetDisplayProperties2Fn {
     {
         KhrGetDisplayProperties2Fn {
             get_physical_device_display_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_display_properties2_khr(
+                unsafe extern "system" fn get_physical_device_display_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_property_count: *mut u32,
                     _p_properties: *mut DisplayProperties2KHR,
@@ -9807,7 +9431,7 @@ impl KhrGetDisplayProperties2Fn {
                 }
             },
             get_physical_device_display_plane_properties2_khr: unsafe {
-                extern "system" fn get_physical_device_display_plane_properties2_khr(
+                unsafe extern "system" fn get_physical_device_display_plane_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _p_property_count: *mut u32,
                     _p_properties: *mut DisplayPlaneProperties2KHR,
@@ -9828,7 +9452,7 @@ impl KhrGetDisplayProperties2Fn {
                 }
             },
             get_display_mode_properties2_khr: unsafe {
-                extern "system" fn get_display_mode_properties2_khr(
+                unsafe extern "system" fn get_display_mode_properties2_khr(
                     _physical_device: PhysicalDevice,
                     _display: DisplayKHR,
                     _p_property_count: *mut u32,
@@ -9850,7 +9474,7 @@ impl KhrGetDisplayProperties2Fn {
                 }
             },
             get_display_plane_capabilities2_khr: unsafe {
-                extern "system" fn get_display_plane_capabilities2_khr(
+                unsafe extern "system" fn get_display_plane_capabilities2_khr(
                     _physical_device: PhysicalDevice,
                     _p_display_plane_info: *const DisplayPlaneInfo2KHR,
                     _p_capabilities: *mut DisplayPlaneCapabilities2KHR,
@@ -9955,29 +9579,18 @@ impl MvkIosSurfaceFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateIOSSurfaceMVK = extern "system" fn(
+pub type PFN_vkCreateIOSSurfaceMVK = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const IOSSurfaceCreateInfoMVK,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct MvkIosSurfaceFn {
-    pub create_ios_surface_mvk: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const IOSSurfaceCreateInfoMVK,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_ios_surface_mvk: PFN_vkCreateIOSSurfaceMVK,
 }
 unsafe impl Send for MvkIosSurfaceFn {}
 unsafe impl Sync for MvkIosSurfaceFn {}
-impl ::std::clone::Clone for MvkIosSurfaceFn {
-    fn clone(&self) -> Self {
-        MvkIosSurfaceFn {
-            create_ios_surface_mvk: self.create_ios_surface_mvk,
-        }
-    }
-}
 impl MvkIosSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -9985,7 +9598,7 @@ impl MvkIosSurfaceFn {
     {
         MvkIosSurfaceFn {
             create_ios_surface_mvk: unsafe {
-                extern "system" fn create_ios_surface_mvk(
+                unsafe extern "system" fn create_ios_surface_mvk(
                     _instance: Instance,
                     _p_create_info: *const IOSSurfaceCreateInfoMVK,
                     _p_allocator: *const AllocationCallbacks,
@@ -10030,29 +9643,18 @@ impl MvkMacosSurfaceFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateMacOSSurfaceMVK = extern "system" fn(
+pub type PFN_vkCreateMacOSSurfaceMVK = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const MacOSSurfaceCreateInfoMVK,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct MvkMacosSurfaceFn {
-    pub create_mac_os_surface_mvk: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const MacOSSurfaceCreateInfoMVK,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_mac_os_surface_mvk: PFN_vkCreateMacOSSurfaceMVK,
 }
 unsafe impl Send for MvkMacosSurfaceFn {}
 unsafe impl Sync for MvkMacosSurfaceFn {}
-impl ::std::clone::Clone for MvkMacosSurfaceFn {
-    fn clone(&self) -> Self {
-        MvkMacosSurfaceFn {
-            create_mac_os_surface_mvk: self.create_mac_os_surface_mvk,
-        }
-    }
-}
 impl MvkMacosSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10060,7 +9662,7 @@ impl MvkMacosSurfaceFn {
     {
         MvkMacosSurfaceFn {
             create_mac_os_surface_mvk: unsafe {
-                extern "system" fn create_mac_os_surface_mvk(
+                unsafe extern "system" fn create_mac_os_surface_mvk(
                     _instance: Instance,
                     _p_create_info: *const MacOSSurfaceCreateInfoMVK,
                     _p_allocator: *const AllocationCallbacks,
@@ -10103,14 +9705,10 @@ impl MvkMoltenvkFn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct MvkMoltenvkFn {}
 unsafe impl Send for MvkMoltenvkFn {}
 unsafe impl Sync for MvkMoltenvkFn {}
-impl ::std::clone::Clone for MvkMoltenvkFn {
-    fn clone(&self) -> Self {
-        MvkMoltenvkFn {}
-    }
-}
 impl MvkMoltenvkFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10126,14 +9724,10 @@ impl ExtExternalMemoryDmaBufFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtExternalMemoryDmaBufFn {}
 unsafe impl Send for ExtExternalMemoryDmaBufFn {}
 unsafe impl Sync for ExtExternalMemoryDmaBufFn {}
-impl ::std::clone::Clone for ExtExternalMemoryDmaBufFn {
-    fn clone(&self) -> Self {
-        ExtExternalMemoryDmaBufFn {}
-    }
-}
 impl ExtExternalMemoryDmaBufFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10153,14 +9747,10 @@ impl ExtQueueFamilyForeignFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtQueueFamilyForeignFn {}
 unsafe impl Send for ExtQueueFamilyForeignFn {}
 unsafe impl Sync for ExtQueueFamilyForeignFn {}
-impl ::std::clone::Clone for ExtQueueFamilyForeignFn {
-    fn clone(&self) -> Self {
-        ExtQueueFamilyForeignFn {}
-    }
-}
 impl ExtQueueFamilyForeignFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10176,14 +9766,10 @@ impl KhrDedicatedAllocationFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct KhrDedicatedAllocationFn {}
 unsafe impl Send for KhrDedicatedAllocationFn {}
 unsafe impl Sync for KhrDedicatedAllocationFn {}
-impl ::std::clone::Clone for KhrDedicatedAllocationFn {
-    fn clone(&self) -> Self {
-        KhrDedicatedAllocationFn {}
-    }
-}
 impl KhrDedicatedAllocationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10194,13 +9780,11 @@ impl KhrDedicatedAllocationFn {
 }
 #[doc = "Generated from 'VK_KHR_dedicated_allocation'"]
 impl StructureType {
-    pub const MEMORY_DEDICATED_REQUIREMENTS_KHR: Self =
-        StructureType::MEMORY_DEDICATED_REQUIREMENTS;
+    pub const MEMORY_DEDICATED_REQUIREMENTS_KHR: Self = Self::MEMORY_DEDICATED_REQUIREMENTS;
 }
 #[doc = "Generated from 'VK_KHR_dedicated_allocation'"]
 impl StructureType {
-    pub const MEMORY_DEDICATED_ALLOCATE_INFO_KHR: Self =
-        StructureType::MEMORY_DEDICATED_ALLOCATE_INFO;
+    pub const MEMORY_DEDICATED_ALLOCATE_INFO_KHR: Self = Self::MEMORY_DEDICATED_ALLOCATE_INFO;
 }
 impl ExtDebugUtilsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -10210,101 +9794,71 @@ impl ExtDebugUtilsFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetDebugUtilsObjectNameEXT =
-    extern "system" fn(device: Device, p_name_info: *const DebugUtilsObjectNameInfoEXT) -> Result;
+pub type PFN_vkSetDebugUtilsObjectNameEXT = unsafe extern "system" fn(
+    device: Device,
+    p_name_info: *const DebugUtilsObjectNameInfoEXT,
+) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetDebugUtilsObjectTagEXT =
-    extern "system" fn(device: Device, p_tag_info: *const DebugUtilsObjectTagInfoEXT) -> Result;
+pub type PFN_vkSetDebugUtilsObjectTagEXT = unsafe extern "system" fn(
+    device: Device,
+    p_tag_info: *const DebugUtilsObjectTagInfoEXT,
+) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkQueueBeginDebugUtilsLabelEXT =
-    extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT);
+    unsafe extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT);
 #[allow(non_camel_case_types)]
-pub type PFN_vkQueueEndDebugUtilsLabelEXT = extern "system" fn(queue: Queue);
+pub type PFN_vkQueueEndDebugUtilsLabelEXT = unsafe extern "system" fn(queue: Queue);
 #[allow(non_camel_case_types)]
 pub type PFN_vkQueueInsertDebugUtilsLabelEXT =
-    extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT);
+    unsafe extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginDebugUtilsLabelEXT =
-    extern "system" fn(command_buffer: CommandBuffer, p_label_info: *const DebugUtilsLabelEXT);
+pub type PFN_vkCmdBeginDebugUtilsLabelEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_label_info: *const DebugUtilsLabelEXT,
+);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndDebugUtilsLabelEXT = extern "system" fn(command_buffer: CommandBuffer);
+pub type PFN_vkCmdEndDebugUtilsLabelEXT = unsafe extern "system" fn(command_buffer: CommandBuffer);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdInsertDebugUtilsLabelEXT =
-    extern "system" fn(command_buffer: CommandBuffer, p_label_info: *const DebugUtilsLabelEXT);
+pub type PFN_vkCmdInsertDebugUtilsLabelEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_label_info: *const DebugUtilsLabelEXT,
+);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDebugUtilsMessengerEXT = extern "system" fn(
+pub type PFN_vkCreateDebugUtilsMessengerEXT = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const DebugUtilsMessengerCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_messenger: *mut DebugUtilsMessengerEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyDebugUtilsMessengerEXT = extern "system" fn(
+pub type PFN_vkDestroyDebugUtilsMessengerEXT = unsafe extern "system" fn(
     instance: Instance,
     messenger: DebugUtilsMessengerEXT,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkSubmitDebugUtilsMessageEXT = extern "system" fn(
+pub type PFN_vkSubmitDebugUtilsMessageEXT = unsafe extern "system" fn(
     instance: Instance,
     message_severity: DebugUtilsMessageSeverityFlagsEXT,
     message_types: DebugUtilsMessageTypeFlagsEXT,
     p_callback_data: *const DebugUtilsMessengerCallbackDataEXT,
 );
+#[derive(Clone)]
 pub struct ExtDebugUtilsFn {
-    pub set_debug_utils_object_name_ext: extern "system" fn(
-        device: Device,
-        p_name_info: *const DebugUtilsObjectNameInfoEXT,
-    ) -> Result,
-    pub set_debug_utils_object_tag_ext:
-        extern "system" fn(device: Device, p_tag_info: *const DebugUtilsObjectTagInfoEXT) -> Result,
-    pub queue_begin_debug_utils_label_ext:
-        extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT),
-    pub queue_end_debug_utils_label_ext: extern "system" fn(queue: Queue),
-    pub queue_insert_debug_utils_label_ext:
-        extern "system" fn(queue: Queue, p_label_info: *const DebugUtilsLabelEXT),
-    pub cmd_begin_debug_utils_label_ext:
-        extern "system" fn(command_buffer: CommandBuffer, p_label_info: *const DebugUtilsLabelEXT),
-    pub cmd_end_debug_utils_label_ext: extern "system" fn(command_buffer: CommandBuffer),
-    pub cmd_insert_debug_utils_label_ext:
-        extern "system" fn(command_buffer: CommandBuffer, p_label_info: *const DebugUtilsLabelEXT),
-    pub create_debug_utils_messenger_ext: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const DebugUtilsMessengerCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_messenger: *mut DebugUtilsMessengerEXT,
-    ) -> Result,
-    pub destroy_debug_utils_messenger_ext: extern "system" fn(
-        instance: Instance,
-        messenger: DebugUtilsMessengerEXT,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub submit_debug_utils_message_ext: extern "system" fn(
-        instance: Instance,
-        message_severity: DebugUtilsMessageSeverityFlagsEXT,
-        message_types: DebugUtilsMessageTypeFlagsEXT,
-        p_callback_data: *const DebugUtilsMessengerCallbackDataEXT,
-    ),
+    pub set_debug_utils_object_name_ext: PFN_vkSetDebugUtilsObjectNameEXT,
+    pub set_debug_utils_object_tag_ext: PFN_vkSetDebugUtilsObjectTagEXT,
+    pub queue_begin_debug_utils_label_ext: PFN_vkQueueBeginDebugUtilsLabelEXT,
+    pub queue_end_debug_utils_label_ext: PFN_vkQueueEndDebugUtilsLabelEXT,
+    pub queue_insert_debug_utils_label_ext: PFN_vkQueueInsertDebugUtilsLabelEXT,
+    pub cmd_begin_debug_utils_label_ext: PFN_vkCmdBeginDebugUtilsLabelEXT,
+    pub cmd_end_debug_utils_label_ext: PFN_vkCmdEndDebugUtilsLabelEXT,
+    pub cmd_insert_debug_utils_label_ext: PFN_vkCmdInsertDebugUtilsLabelEXT,
+    pub create_debug_utils_messenger_ext: PFN_vkCreateDebugUtilsMessengerEXT,
+    pub destroy_debug_utils_messenger_ext: PFN_vkDestroyDebugUtilsMessengerEXT,
+    pub submit_debug_utils_message_ext: PFN_vkSubmitDebugUtilsMessageEXT,
 }
 unsafe impl Send for ExtDebugUtilsFn {}
 unsafe impl Sync for ExtDebugUtilsFn {}
-impl ::std::clone::Clone for ExtDebugUtilsFn {
-    fn clone(&self) -> Self {
-        ExtDebugUtilsFn {
-            set_debug_utils_object_name_ext: self.set_debug_utils_object_name_ext,
-            set_debug_utils_object_tag_ext: self.set_debug_utils_object_tag_ext,
-            queue_begin_debug_utils_label_ext: self.queue_begin_debug_utils_label_ext,
-            queue_end_debug_utils_label_ext: self.queue_end_debug_utils_label_ext,
-            queue_insert_debug_utils_label_ext: self.queue_insert_debug_utils_label_ext,
-            cmd_begin_debug_utils_label_ext: self.cmd_begin_debug_utils_label_ext,
-            cmd_end_debug_utils_label_ext: self.cmd_end_debug_utils_label_ext,
-            cmd_insert_debug_utils_label_ext: self.cmd_insert_debug_utils_label_ext,
-            create_debug_utils_messenger_ext: self.create_debug_utils_messenger_ext,
-            destroy_debug_utils_messenger_ext: self.destroy_debug_utils_messenger_ext,
-            submit_debug_utils_message_ext: self.submit_debug_utils_message_ext,
-        }
-    }
-}
 impl ExtDebugUtilsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10312,7 +9866,7 @@ impl ExtDebugUtilsFn {
     {
         ExtDebugUtilsFn {
             set_debug_utils_object_name_ext: unsafe {
-                extern "system" fn set_debug_utils_object_name_ext(
+                unsafe extern "system" fn set_debug_utils_object_name_ext(
                     _device: Device,
                     _p_name_info: *const DebugUtilsObjectNameInfoEXT,
                 ) -> Result {
@@ -10332,7 +9886,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             set_debug_utils_object_tag_ext: unsafe {
-                extern "system" fn set_debug_utils_object_tag_ext(
+                unsafe extern "system" fn set_debug_utils_object_tag_ext(
                     _device: Device,
                     _p_tag_info: *const DebugUtilsObjectTagInfoEXT,
                 ) -> Result {
@@ -10352,7 +9906,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             queue_begin_debug_utils_label_ext: unsafe {
-                extern "system" fn queue_begin_debug_utils_label_ext(
+                unsafe extern "system" fn queue_begin_debug_utils_label_ext(
                     _queue: Queue,
                     _p_label_info: *const DebugUtilsLabelEXT,
                 ) {
@@ -10372,7 +9926,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             queue_end_debug_utils_label_ext: unsafe {
-                extern "system" fn queue_end_debug_utils_label_ext(_queue: Queue) {
+                unsafe extern "system" fn queue_end_debug_utils_label_ext(_queue: Queue) {
                     panic!(concat!(
                         "Unable to load ",
                         stringify!(queue_end_debug_utils_label_ext)
@@ -10389,7 +9943,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             queue_insert_debug_utils_label_ext: unsafe {
-                extern "system" fn queue_insert_debug_utils_label_ext(
+                unsafe extern "system" fn queue_insert_debug_utils_label_ext(
                     _queue: Queue,
                     _p_label_info: *const DebugUtilsLabelEXT,
                 ) {
@@ -10409,7 +9963,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             cmd_begin_debug_utils_label_ext: unsafe {
-                extern "system" fn cmd_begin_debug_utils_label_ext(
+                unsafe extern "system" fn cmd_begin_debug_utils_label_ext(
                     _command_buffer: CommandBuffer,
                     _p_label_info: *const DebugUtilsLabelEXT,
                 ) {
@@ -10429,7 +9983,9 @@ impl ExtDebugUtilsFn {
                 }
             },
             cmd_end_debug_utils_label_ext: unsafe {
-                extern "system" fn cmd_end_debug_utils_label_ext(_command_buffer: CommandBuffer) {
+                unsafe extern "system" fn cmd_end_debug_utils_label_ext(
+                    _command_buffer: CommandBuffer,
+                ) {
                     panic!(concat!(
                         "Unable to load ",
                         stringify!(cmd_end_debug_utils_label_ext)
@@ -10446,7 +10002,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             cmd_insert_debug_utils_label_ext: unsafe {
-                extern "system" fn cmd_insert_debug_utils_label_ext(
+                unsafe extern "system" fn cmd_insert_debug_utils_label_ext(
                     _command_buffer: CommandBuffer,
                     _p_label_info: *const DebugUtilsLabelEXT,
                 ) {
@@ -10466,7 +10022,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             create_debug_utils_messenger_ext: unsafe {
-                extern "system" fn create_debug_utils_messenger_ext(
+                unsafe extern "system" fn create_debug_utils_messenger_ext(
                     _instance: Instance,
                     _p_create_info: *const DebugUtilsMessengerCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -10488,7 +10044,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             destroy_debug_utils_messenger_ext: unsafe {
-                extern "system" fn destroy_debug_utils_messenger_ext(
+                unsafe extern "system" fn destroy_debug_utils_messenger_ext(
                     _instance: Instance,
                     _messenger: DebugUtilsMessengerEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -10509,7 +10065,7 @@ impl ExtDebugUtilsFn {
                 }
             },
             submit_debug_utils_message_ext: unsafe {
-                extern "system" fn submit_debug_utils_message_ext(
+                unsafe extern "system" fn submit_debug_utils_message_ext(
                     _instance: Instance,
                     _message_severity: DebugUtilsMessageSeverityFlagsEXT,
                     _message_types: DebugUtilsMessageTypeFlagsEXT,
@@ -10657,41 +10213,25 @@ impl AndroidExternalMemoryAndroidHardwareBufferFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetAndroidHardwareBufferPropertiesANDROID = extern "system" fn(
+pub type PFN_vkGetAndroidHardwareBufferPropertiesANDROID = unsafe extern "system" fn(
     device: Device,
     buffer: *const AHardwareBuffer,
     p_properties: *mut AndroidHardwareBufferPropertiesANDROID,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryAndroidHardwareBufferANDROID = extern "system" fn(
+pub type PFN_vkGetMemoryAndroidHardwareBufferANDROID = unsafe extern "system" fn(
     device: Device,
     p_info: *const MemoryGetAndroidHardwareBufferInfoANDROID,
     p_buffer: *mut *mut AHardwareBuffer,
 ) -> Result;
+#[derive(Clone)]
 pub struct AndroidExternalMemoryAndroidHardwareBufferFn {
-    pub get_android_hardware_buffer_properties_android: extern "system" fn(
-        device: Device,
-        buffer: *const AHardwareBuffer,
-        p_properties: *mut AndroidHardwareBufferPropertiesANDROID,
-    ) -> Result,
-    pub get_memory_android_hardware_buffer_android: extern "system" fn(
-        device: Device,
-        p_info: *const MemoryGetAndroidHardwareBufferInfoANDROID,
-        p_buffer: *mut *mut AHardwareBuffer,
-    ) -> Result,
+    pub get_android_hardware_buffer_properties_android:
+        PFN_vkGetAndroidHardwareBufferPropertiesANDROID,
+    pub get_memory_android_hardware_buffer_android: PFN_vkGetMemoryAndroidHardwareBufferANDROID,
 }
 unsafe impl Send for AndroidExternalMemoryAndroidHardwareBufferFn {}
 unsafe impl Sync for AndroidExternalMemoryAndroidHardwareBufferFn {}
-impl ::std::clone::Clone for AndroidExternalMemoryAndroidHardwareBufferFn {
-    fn clone(&self) -> Self {
-        AndroidExternalMemoryAndroidHardwareBufferFn {
-            get_android_hardware_buffer_properties_android: self
-                .get_android_hardware_buffer_properties_android,
-            get_memory_android_hardware_buffer_android: self
-                .get_memory_android_hardware_buffer_android,
-        }
-    }
-}
 impl AndroidExternalMemoryAndroidHardwareBufferFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10699,7 +10239,7 @@ impl AndroidExternalMemoryAndroidHardwareBufferFn {
     {
         AndroidExternalMemoryAndroidHardwareBufferFn {
             get_android_hardware_buffer_properties_android: unsafe {
-                extern "system" fn get_android_hardware_buffer_properties_android(
+                unsafe extern "system" fn get_android_hardware_buffer_properties_android(
                     _device: Device,
                     _buffer: *const AHardwareBuffer,
                     _p_properties: *mut AndroidHardwareBufferPropertiesANDROID,
@@ -10720,7 +10260,7 @@ impl AndroidExternalMemoryAndroidHardwareBufferFn {
                 }
             },
             get_memory_android_hardware_buffer_android: unsafe {
-                extern "system" fn get_memory_android_hardware_buffer_android(
+                unsafe extern "system" fn get_memory_android_hardware_buffer_android(
                     _device: Device,
                     _p_info: *const MemoryGetAndroidHardwareBufferInfoANDROID,
                     _p_buffer: *mut *mut AHardwareBuffer,
@@ -10796,14 +10336,10 @@ impl ExtSamplerFilterMinmaxFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtSamplerFilterMinmaxFn {}
 unsafe impl Send for ExtSamplerFilterMinmaxFn {}
 unsafe impl Sync for ExtSamplerFilterMinmaxFn {}
-impl ::std::clone::Clone for ExtSamplerFilterMinmaxFn {
-    fn clone(&self) -> Self {
-        ExtSamplerFilterMinmaxFn {}
-    }
-}
 impl ExtSamplerFilterMinmaxFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10815,29 +10351,28 @@ impl ExtSamplerFilterMinmaxFn {
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES;
+        Self::PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES;
 }
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl StructureType {
     pub const SAMPLER_REDUCTION_MODE_CREATE_INFO_EXT: Self =
-        StructureType::SAMPLER_REDUCTION_MODE_CREATE_INFO;
+        Self::SAMPLER_REDUCTION_MODE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl FormatFeatureFlags {
-    pub const SAMPLED_IMAGE_FILTER_MINMAX_EXT: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX;
+    pub const SAMPLED_IMAGE_FILTER_MINMAX_EXT: Self = Self::SAMPLED_IMAGE_FILTER_MINMAX;
 }
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl SamplerReductionMode {
-    pub const WEIGHTED_AVERAGE_EXT: Self = SamplerReductionMode::WEIGHTED_AVERAGE;
+    pub const WEIGHTED_AVERAGE_EXT: Self = Self::WEIGHTED_AVERAGE;
 }
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl SamplerReductionMode {
-    pub const MIN_EXT: Self = SamplerReductionMode::MIN;
+    pub const MIN_EXT: Self = Self::MIN;
 }
 #[doc = "Generated from 'VK_EXT_sampler_filter_minmax'"]
 impl SamplerReductionMode {
-    pub const MAX_EXT: Self = SamplerReductionMode::MAX;
+    pub const MAX_EXT: Self = Self::MAX;
 }
 impl KhrStorageBufferStorageClassFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -10846,14 +10381,10 @@ impl KhrStorageBufferStorageClassFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrStorageBufferStorageClassFn {}
 unsafe impl Send for KhrStorageBufferStorageClassFn {}
 unsafe impl Sync for KhrStorageBufferStorageClassFn {}
-impl ::std::clone::Clone for KhrStorageBufferStorageClassFn {
-    fn clone(&self) -> Self {
-        KhrStorageBufferStorageClassFn {}
-    }
-}
 impl KhrStorageBufferStorageClassFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10869,14 +10400,10 @@ impl AmdGpuShaderInt16Fn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct AmdGpuShaderInt16Fn {}
 unsafe impl Send for AmdGpuShaderInt16Fn {}
 unsafe impl Sync for AmdGpuShaderInt16Fn {}
-impl ::std::clone::Clone for AmdGpuShaderInt16Fn {
-    fn clone(&self) -> Self {
-        AmdGpuShaderInt16Fn {}
-    }
-}
 impl AmdGpuShaderInt16Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10892,14 +10419,10 @@ impl AmdExtension134Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension134Fn {}
 unsafe impl Send for AmdExtension134Fn {}
 unsafe impl Sync for AmdExtension134Fn {}
-impl ::std::clone::Clone for AmdExtension134Fn {
-    fn clone(&self) -> Self {
-        AmdExtension134Fn {}
-    }
-}
 impl AmdExtension134Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10915,14 +10438,10 @@ impl AmdExtension135Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension135Fn {}
 unsafe impl Send for AmdExtension135Fn {}
 unsafe impl Sync for AmdExtension135Fn {}
-impl ::std::clone::Clone for AmdExtension135Fn {
-    fn clone(&self) -> Self {
-        AmdExtension135Fn {}
-    }
-}
 impl AmdExtension135Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10938,14 +10457,10 @@ impl AmdExtension136Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension136Fn {}
 unsafe impl Send for AmdExtension136Fn {}
 unsafe impl Sync for AmdExtension136Fn {}
-impl ::std::clone::Clone for AmdExtension136Fn {
-    fn clone(&self) -> Self {
-        AmdExtension136Fn {}
-    }
-}
 impl AmdExtension136Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10961,14 +10476,10 @@ impl AmdMixedAttachmentSamplesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdMixedAttachmentSamplesFn {}
 unsafe impl Send for AmdMixedAttachmentSamplesFn {}
 unsafe impl Sync for AmdMixedAttachmentSamplesFn {}
-impl ::std::clone::Clone for AmdMixedAttachmentSamplesFn {
-    fn clone(&self) -> Self {
-        AmdMixedAttachmentSamplesFn {}
-    }
-}
 impl AmdMixedAttachmentSamplesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -10984,14 +10495,10 @@ impl AmdShaderFragmentMaskFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderFragmentMaskFn {}
 unsafe impl Send for AmdShaderFragmentMaskFn {}
 unsafe impl Sync for AmdShaderFragmentMaskFn {}
-impl ::std::clone::Clone for AmdShaderFragmentMaskFn {
-    fn clone(&self) -> Self {
-        AmdShaderFragmentMaskFn {}
-    }
-}
 impl AmdShaderFragmentMaskFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11007,14 +10514,10 @@ impl ExtInlineUniformBlockFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtInlineUniformBlockFn {}
 unsafe impl Send for ExtInlineUniformBlockFn {}
 unsafe impl Sync for ExtInlineUniformBlockFn {}
-impl ::std::clone::Clone for ExtInlineUniformBlockFn {
-    fn clone(&self) -> Self {
-        ExtInlineUniformBlockFn {}
-    }
-}
 impl ExtInlineUniformBlockFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11050,14 +10553,10 @@ impl AmdExtension140Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension140Fn {}
 unsafe impl Send for AmdExtension140Fn {}
 unsafe impl Sync for AmdExtension140Fn {}
-impl ::std::clone::Clone for AmdExtension140Fn {
-    fn clone(&self) -> Self {
-        AmdExtension140Fn {}
-    }
-}
 impl AmdExtension140Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11073,14 +10572,10 @@ impl ExtShaderStencilExportFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderStencilExportFn {}
 unsafe impl Send for ExtShaderStencilExportFn {}
 unsafe impl Sync for ExtShaderStencilExportFn {}
-impl ::std::clone::Clone for ExtShaderStencilExportFn {
-    fn clone(&self) -> Self {
-        ExtShaderStencilExportFn {}
-    }
-}
 impl ExtShaderStencilExportFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11096,14 +10591,10 @@ impl AmdExtension142Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension142Fn {}
 unsafe impl Send for AmdExtension142Fn {}
 unsafe impl Sync for AmdExtension142Fn {}
-impl ::std::clone::Clone for AmdExtension142Fn {
-    fn clone(&self) -> Self {
-        AmdExtension142Fn {}
-    }
-}
 impl AmdExtension142Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11119,14 +10610,10 @@ impl AmdExtension143Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension143Fn {}
 unsafe impl Send for AmdExtension143Fn {}
 unsafe impl Sync for AmdExtension143Fn {}
-impl ::std::clone::Clone for AmdExtension143Fn {
-    fn clone(&self) -> Self {
-        AmdExtension143Fn {}
-    }
-}
 impl AmdExtension143Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11143,38 +10630,24 @@ impl ExtSampleLocationsFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetSampleLocationsEXT = extern "system" fn(
+pub type PFN_vkCmdSetSampleLocationsEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_sample_locations_info: *const SampleLocationsInfoEXT,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceMultisamplePropertiesEXT = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceMultisamplePropertiesEXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     samples: SampleCountFlags,
     p_multisample_properties: *mut MultisamplePropertiesEXT,
 );
+#[derive(Clone)]
 pub struct ExtSampleLocationsFn {
-    pub cmd_set_sample_locations_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_sample_locations_info: *const SampleLocationsInfoEXT,
-    ),
-    pub get_physical_device_multisample_properties_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        samples: SampleCountFlags,
-        p_multisample_properties: *mut MultisamplePropertiesEXT,
-    ),
+    pub cmd_set_sample_locations_ext: PFN_vkCmdSetSampleLocationsEXT,
+    pub get_physical_device_multisample_properties_ext:
+        PFN_vkGetPhysicalDeviceMultisamplePropertiesEXT,
 }
 unsafe impl Send for ExtSampleLocationsFn {}
 unsafe impl Sync for ExtSampleLocationsFn {}
-impl ::std::clone::Clone for ExtSampleLocationsFn {
-    fn clone(&self) -> Self {
-        ExtSampleLocationsFn {
-            cmd_set_sample_locations_ext: self.cmd_set_sample_locations_ext,
-            get_physical_device_multisample_properties_ext: self
-                .get_physical_device_multisample_properties_ext,
-        }
-    }
-}
 impl ExtSampleLocationsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11182,7 +10655,7 @@ impl ExtSampleLocationsFn {
     {
         ExtSampleLocationsFn {
             cmd_set_sample_locations_ext: unsafe {
-                extern "system" fn cmd_set_sample_locations_ext(
+                unsafe extern "system" fn cmd_set_sample_locations_ext(
                     _command_buffer: CommandBuffer,
                     _p_sample_locations_info: *const SampleLocationsInfoEXT,
                 ) {
@@ -11202,7 +10675,7 @@ impl ExtSampleLocationsFn {
                 }
             },
             get_physical_device_multisample_properties_ext: unsafe {
-                extern "system" fn get_physical_device_multisample_properties_ext(
+                unsafe extern "system" fn get_physical_device_multisample_properties_ext(
                     _physical_device: PhysicalDevice,
                     _samples: SampleCountFlags,
                     _p_multisample_properties: *mut MultisamplePropertiesEXT,
@@ -11281,14 +10754,10 @@ impl KhrRelaxedBlockLayoutFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrRelaxedBlockLayoutFn {}
 unsafe impl Send for KhrRelaxedBlockLayoutFn {}
 unsafe impl Sync for KhrRelaxedBlockLayoutFn {}
-impl ::std::clone::Clone for KhrRelaxedBlockLayoutFn {
-    fn clone(&self) -> Self {
-        KhrRelaxedBlockLayoutFn {}
-    }
-}
 impl KhrRelaxedBlockLayoutFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11305,54 +10774,32 @@ impl KhrGetMemoryRequirements2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetImageMemoryRequirements2 = extern "system" fn(
+pub type PFN_vkGetImageMemoryRequirements2 = unsafe extern "system" fn(
     device: Device,
     p_info: *const ImageMemoryRequirementsInfo2,
     p_memory_requirements: *mut MemoryRequirements2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetBufferMemoryRequirements2 = extern "system" fn(
+pub type PFN_vkGetBufferMemoryRequirements2 = unsafe extern "system" fn(
     device: Device,
     p_info: *const BufferMemoryRequirementsInfo2,
     p_memory_requirements: *mut MemoryRequirements2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetImageSparseMemoryRequirements2 = extern "system" fn(
+pub type PFN_vkGetImageSparseMemoryRequirements2 = unsafe extern "system" fn(
     device: Device,
     p_info: *const ImageSparseMemoryRequirementsInfo2,
     p_sparse_memory_requirement_count: *mut u32,
     p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
 );
+#[derive(Clone)]
 pub struct KhrGetMemoryRequirements2Fn {
-    pub get_image_memory_requirements2_khr: extern "system" fn(
-        device: Device,
-        p_info: *const ImageMemoryRequirementsInfo2,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ),
-    pub get_buffer_memory_requirements2_khr: extern "system" fn(
-        device: Device,
-        p_info: *const BufferMemoryRequirementsInfo2,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ),
-    pub get_image_sparse_memory_requirements2_khr: extern "system" fn(
-        device: Device,
-        p_info: *const ImageSparseMemoryRequirementsInfo2,
-        p_sparse_memory_requirement_count: *mut u32,
-        p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
-    ),
+    pub get_image_memory_requirements2_khr: PFN_vkGetImageMemoryRequirements2,
+    pub get_buffer_memory_requirements2_khr: PFN_vkGetBufferMemoryRequirements2,
+    pub get_image_sparse_memory_requirements2_khr: PFN_vkGetImageSparseMemoryRequirements2,
 }
 unsafe impl Send for KhrGetMemoryRequirements2Fn {}
 unsafe impl Sync for KhrGetMemoryRequirements2Fn {}
-impl ::std::clone::Clone for KhrGetMemoryRequirements2Fn {
-    fn clone(&self) -> Self {
-        KhrGetMemoryRequirements2Fn {
-            get_image_memory_requirements2_khr: self.get_image_memory_requirements2_khr,
-            get_buffer_memory_requirements2_khr: self.get_buffer_memory_requirements2_khr,
-            get_image_sparse_memory_requirements2_khr: self
-                .get_image_sparse_memory_requirements2_khr,
-        }
-    }
-}
 impl KhrGetMemoryRequirements2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11360,7 +10807,7 @@ impl KhrGetMemoryRequirements2Fn {
     {
         KhrGetMemoryRequirements2Fn {
             get_image_memory_requirements2_khr: unsafe {
-                extern "system" fn get_image_memory_requirements2_khr(
+                unsafe extern "system" fn get_image_memory_requirements2_khr(
                     _device: Device,
                     _p_info: *const ImageMemoryRequirementsInfo2,
                     _p_memory_requirements: *mut MemoryRequirements2,
@@ -11381,7 +10828,7 @@ impl KhrGetMemoryRequirements2Fn {
                 }
             },
             get_buffer_memory_requirements2_khr: unsafe {
-                extern "system" fn get_buffer_memory_requirements2_khr(
+                unsafe extern "system" fn get_buffer_memory_requirements2_khr(
                     _device: Device,
                     _p_info: *const BufferMemoryRequirementsInfo2,
                     _p_memory_requirements: *mut MemoryRequirements2,
@@ -11402,7 +10849,7 @@ impl KhrGetMemoryRequirements2Fn {
                 }
             },
             get_image_sparse_memory_requirements2_khr: unsafe {
-                extern "system" fn get_image_sparse_memory_requirements2_khr(
+                unsafe extern "system" fn get_image_sparse_memory_requirements2_khr(
                     _device: Device,
                     _p_info: *const ImageSparseMemoryRequirementsInfo2,
                     _p_sparse_memory_requirement_count: *mut u32,
@@ -11461,27 +10908,25 @@ impl KhrGetMemoryRequirements2Fn {
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
-    pub const BUFFER_MEMORY_REQUIREMENTS_INFO_2_KHR: Self =
-        StructureType::BUFFER_MEMORY_REQUIREMENTS_INFO_2;
+    pub const BUFFER_MEMORY_REQUIREMENTS_INFO_2_KHR: Self = Self::BUFFER_MEMORY_REQUIREMENTS_INFO_2;
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
-    pub const IMAGE_MEMORY_REQUIREMENTS_INFO_2_KHR: Self =
-        StructureType::IMAGE_MEMORY_REQUIREMENTS_INFO_2;
+    pub const IMAGE_MEMORY_REQUIREMENTS_INFO_2_KHR: Self = Self::IMAGE_MEMORY_REQUIREMENTS_INFO_2;
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
     pub const IMAGE_SPARSE_MEMORY_REQUIREMENTS_INFO_2_KHR: Self =
-        StructureType::IMAGE_SPARSE_MEMORY_REQUIREMENTS_INFO_2;
+        Self::IMAGE_SPARSE_MEMORY_REQUIREMENTS_INFO_2;
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
-    pub const MEMORY_REQUIREMENTS_2_KHR: Self = StructureType::MEMORY_REQUIREMENTS_2;
+    pub const MEMORY_REQUIREMENTS_2_KHR: Self = Self::MEMORY_REQUIREMENTS_2;
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
     pub const SPARSE_IMAGE_MEMORY_REQUIREMENTS_2_KHR: Self =
-        StructureType::SPARSE_IMAGE_MEMORY_REQUIREMENTS_2;
+        Self::SPARSE_IMAGE_MEMORY_REQUIREMENTS_2;
 }
 impl KhrImageFormatListFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -11490,14 +10935,10 @@ impl KhrImageFormatListFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrImageFormatListFn {}
 unsafe impl Send for KhrImageFormatListFn {}
 unsafe impl Sync for KhrImageFormatListFn {}
-impl ::std::clone::Clone for KhrImageFormatListFn {
-    fn clone(&self) -> Self {
-        KhrImageFormatListFn {}
-    }
-}
 impl KhrImageFormatListFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11508,8 +10949,7 @@ impl KhrImageFormatListFn {
 }
 #[doc = "Generated from 'VK_KHR_image_format_list'"]
 impl StructureType {
-    pub const IMAGE_FORMAT_LIST_CREATE_INFO_KHR: Self =
-        StructureType::IMAGE_FORMAT_LIST_CREATE_INFO;
+    pub const IMAGE_FORMAT_LIST_CREATE_INFO_KHR: Self = Self::IMAGE_FORMAT_LIST_CREATE_INFO;
 }
 impl ExtBlendOperationAdvancedFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -11518,14 +10958,10 @@ impl ExtBlendOperationAdvancedFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtBlendOperationAdvancedFn {}
 unsafe impl Send for ExtBlendOperationAdvancedFn {}
 unsafe impl Sync for ExtBlendOperationAdvancedFn {}
-impl ::std::clone::Clone for ExtBlendOperationAdvancedFn {
-    fn clone(&self) -> Self {
-        ExtBlendOperationAdvancedFn {}
-    }
-}
 impl ExtBlendOperationAdvancedFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11741,14 +11177,10 @@ impl NvFragmentCoverageToColorFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvFragmentCoverageToColorFn {}
 unsafe impl Send for NvFragmentCoverageToColorFn {}
 unsafe impl Sync for NvFragmentCoverageToColorFn {}
-impl ::std::clone::Clone for NvFragmentCoverageToColorFn {
-    fn clone(&self) -> Self {
-        NvFragmentCoverageToColorFn {}
-    }
-}
 impl NvFragmentCoverageToColorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -11769,27 +11201,27 @@ impl KhrAccelerationStructureFn {
     pub const SPEC_VERSION: u32 = 11u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkCreateAccelerationStructureKHR = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const AccelerationStructureCreateInfoKHR,
     p_allocator: *const AllocationCallbacks,
     p_acceleration_structure: *mut AccelerationStructureKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkDestroyAccelerationStructureKHR = unsafe extern "system" fn(
     device: Device,
     acceleration_structure: AccelerationStructureKHR,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBuildAccelerationStructuresKHR = extern "system" fn(
+pub type PFN_vkCmdBuildAccelerationStructuresKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     info_count: u32,
     p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
     pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBuildAccelerationStructuresIndirectKHR = extern "system" fn(
+pub type PFN_vkCmdBuildAccelerationStructuresIndirectKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     info_count: u32,
     p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
@@ -11798,7 +11230,7 @@ pub type PFN_vkCmdBuildAccelerationStructuresIndirectKHR = extern "system" fn(
     pp_max_primitive_counts: *const *const u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkBuildAccelerationStructuresKHR = extern "system" fn(
+pub type PFN_vkBuildAccelerationStructuresKHR = unsafe extern "system" fn(
     device: Device,
     deferred_operation: DeferredOperationKHR,
     info_count: u32,
@@ -11806,25 +11238,25 @@ pub type PFN_vkBuildAccelerationStructuresKHR = extern "system" fn(
     pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCopyAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkCopyAccelerationStructureKHR = unsafe extern "system" fn(
     device: Device,
     deferred_operation: DeferredOperationKHR,
     p_info: *const CopyAccelerationStructureInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCopyAccelerationStructureToMemoryKHR = extern "system" fn(
+pub type PFN_vkCopyAccelerationStructureToMemoryKHR = unsafe extern "system" fn(
     device: Device,
     deferred_operation: DeferredOperationKHR,
     p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCopyMemoryToAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkCopyMemoryToAccelerationStructureKHR = unsafe extern "system" fn(
     device: Device,
     deferred_operation: DeferredOperationKHR,
     p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkWriteAccelerationStructuresPropertiesKHR = extern "system" fn(
+pub type PFN_vkWriteAccelerationStructuresPropertiesKHR = unsafe extern "system" fn(
     device: Device,
     acceleration_structure_count: u32,
     p_acceleration_structures: *const AccelerationStructureKHR,
@@ -11834,27 +11266,28 @@ pub type PFN_vkWriteAccelerationStructuresPropertiesKHR = extern "system" fn(
     stride: usize,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkCmdCopyAccelerationStructureKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_info: *const CopyAccelerationStructureInfoKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyAccelerationStructureToMemoryKHR = extern "system" fn(
+pub type PFN_vkCmdCopyAccelerationStructureToMemoryKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyMemoryToAccelerationStructureKHR = extern "system" fn(
+pub type PFN_vkCmdCopyMemoryToAccelerationStructureKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetAccelerationStructureDeviceAddressKHR = extern "system" fn(
-    device: Device,
-    p_info: *const AccelerationStructureDeviceAddressInfoKHR,
-) -> DeviceAddress;
+pub type PFN_vkGetAccelerationStructureDeviceAddressKHR =
+    unsafe extern "system" fn(
+        device: Device,
+        p_info: *const AccelerationStructureDeviceAddressInfoKHR,
+    ) -> DeviceAddress;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdWriteAccelerationStructuresPropertiesKHR = extern "system" fn(
+pub type PFN_vkCmdWriteAccelerationStructuresPropertiesKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     acceleration_structure_count: u32,
     p_acceleration_structures: *const AccelerationStructureKHR,
@@ -11863,147 +11296,47 @@ pub type PFN_vkCmdWriteAccelerationStructuresPropertiesKHR = extern "system" fn(
     first_query: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceAccelerationStructureCompatibilityKHR = extern "system" fn(
+pub type PFN_vkGetDeviceAccelerationStructureCompatibilityKHR = unsafe extern "system" fn(
     device: Device,
     p_version_info: *const AccelerationStructureVersionInfoKHR,
     p_compatibility: *mut AccelerationStructureCompatibilityKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetAccelerationStructureBuildSizesKHR = extern "system" fn(
+pub type PFN_vkGetAccelerationStructureBuildSizesKHR = unsafe extern "system" fn(
     device: Device,
     build_type: AccelerationStructureBuildTypeKHR,
     p_build_info: *const AccelerationStructureBuildGeometryInfoKHR,
     p_max_primitive_counts: *const u32,
     p_size_info: *mut AccelerationStructureBuildSizesInfoKHR,
 );
+#[derive(Clone)]
 pub struct KhrAccelerationStructureFn {
-    pub create_acceleration_structure_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const AccelerationStructureCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_acceleration_structure: *mut AccelerationStructureKHR,
-    ) -> Result,
-    pub destroy_acceleration_structure_khr: extern "system" fn(
-        device: Device,
-        acceleration_structure: AccelerationStructureKHR,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub cmd_build_acceleration_structures_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
-    ),
-    pub cmd_build_acceleration_structures_indirect_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        p_indirect_device_addresses: *const DeviceAddress,
-        p_indirect_strides: *const u32,
-        pp_max_primitive_counts: *const *const u32,
-    ),
-    pub build_acceleration_structures_khr: extern "system" fn(
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
-    ) -> Result,
-    pub copy_acceleration_structure_khr: extern "system" fn(
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyAccelerationStructureInfoKHR,
-    ) -> Result,
-    pub copy_acceleration_structure_to_memory_khr: extern "system" fn(
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
-    ) -> Result,
-    pub copy_memory_to_acceleration_structure_khr: extern "system" fn(
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
-    ) -> Result,
-    pub write_acceleration_structures_properties_khr: extern "system" fn(
-        device: Device,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureKHR,
-        query_type: QueryType,
-        data_size: usize,
-        p_data: *mut c_void,
-        stride: usize,
-    ) -> Result,
-    pub cmd_copy_acceleration_structure_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_info: *const CopyAccelerationStructureInfoKHR,
-    ),
-    pub cmd_copy_acceleration_structure_to_memory_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
-    ),
-    pub cmd_copy_memory_to_acceleration_structure_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
-    ),
-    pub get_acceleration_structure_device_address_khr: extern "system" fn(
-        device: Device,
-        p_info: *const AccelerationStructureDeviceAddressInfoKHR,
-    ) -> DeviceAddress,
-    pub cmd_write_acceleration_structures_properties_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureKHR,
-        query_type: QueryType,
-        query_pool: QueryPool,
-        first_query: u32,
-    ),
-    pub get_device_acceleration_structure_compatibility_khr: extern "system" fn(
-        device: Device,
-        p_version_info: *const AccelerationStructureVersionInfoKHR,
-        p_compatibility: *mut AccelerationStructureCompatibilityKHR,
-    ),
-    pub get_acceleration_structure_build_sizes_khr: extern "system" fn(
-        device: Device,
-        build_type: AccelerationStructureBuildTypeKHR,
-        p_build_info: *const AccelerationStructureBuildGeometryInfoKHR,
-        p_max_primitive_counts: *const u32,
-        p_size_info: *mut AccelerationStructureBuildSizesInfoKHR,
-    ),
+    pub create_acceleration_structure_khr: PFN_vkCreateAccelerationStructureKHR,
+    pub destroy_acceleration_structure_khr: PFN_vkDestroyAccelerationStructureKHR,
+    pub cmd_build_acceleration_structures_khr: PFN_vkCmdBuildAccelerationStructuresKHR,
+    pub cmd_build_acceleration_structures_indirect_khr:
+        PFN_vkCmdBuildAccelerationStructuresIndirectKHR,
+    pub build_acceleration_structures_khr: PFN_vkBuildAccelerationStructuresKHR,
+    pub copy_acceleration_structure_khr: PFN_vkCopyAccelerationStructureKHR,
+    pub copy_acceleration_structure_to_memory_khr: PFN_vkCopyAccelerationStructureToMemoryKHR,
+    pub copy_memory_to_acceleration_structure_khr: PFN_vkCopyMemoryToAccelerationStructureKHR,
+    pub write_acceleration_structures_properties_khr:
+        PFN_vkWriteAccelerationStructuresPropertiesKHR,
+    pub cmd_copy_acceleration_structure_khr: PFN_vkCmdCopyAccelerationStructureKHR,
+    pub cmd_copy_acceleration_structure_to_memory_khr:
+        PFN_vkCmdCopyAccelerationStructureToMemoryKHR,
+    pub cmd_copy_memory_to_acceleration_structure_khr:
+        PFN_vkCmdCopyMemoryToAccelerationStructureKHR,
+    pub get_acceleration_structure_device_address_khr:
+        PFN_vkGetAccelerationStructureDeviceAddressKHR,
+    pub cmd_write_acceleration_structures_properties_khr:
+        PFN_vkCmdWriteAccelerationStructuresPropertiesKHR,
+    pub get_device_acceleration_structure_compatibility_khr:
+        PFN_vkGetDeviceAccelerationStructureCompatibilityKHR,
+    pub get_acceleration_structure_build_sizes_khr: PFN_vkGetAccelerationStructureBuildSizesKHR,
 }
 unsafe impl Send for KhrAccelerationStructureFn {}
 unsafe impl Sync for KhrAccelerationStructureFn {}
-impl ::std::clone::Clone for KhrAccelerationStructureFn {
-    fn clone(&self) -> Self {
-        KhrAccelerationStructureFn {
-            create_acceleration_structure_khr: self.create_acceleration_structure_khr,
-            destroy_acceleration_structure_khr: self.destroy_acceleration_structure_khr,
-            cmd_build_acceleration_structures_khr: self.cmd_build_acceleration_structures_khr,
-            cmd_build_acceleration_structures_indirect_khr: self
-                .cmd_build_acceleration_structures_indirect_khr,
-            build_acceleration_structures_khr: self.build_acceleration_structures_khr,
-            copy_acceleration_structure_khr: self.copy_acceleration_structure_khr,
-            copy_acceleration_structure_to_memory_khr: self
-                .copy_acceleration_structure_to_memory_khr,
-            copy_memory_to_acceleration_structure_khr: self
-                .copy_memory_to_acceleration_structure_khr,
-            write_acceleration_structures_properties_khr: self
-                .write_acceleration_structures_properties_khr,
-            cmd_copy_acceleration_structure_khr: self.cmd_copy_acceleration_structure_khr,
-            cmd_copy_acceleration_structure_to_memory_khr: self
-                .cmd_copy_acceleration_structure_to_memory_khr,
-            cmd_copy_memory_to_acceleration_structure_khr: self
-                .cmd_copy_memory_to_acceleration_structure_khr,
-            get_acceleration_structure_device_address_khr: self
-                .get_acceleration_structure_device_address_khr,
-            cmd_write_acceleration_structures_properties_khr: self
-                .cmd_write_acceleration_structures_properties_khr,
-            get_device_acceleration_structure_compatibility_khr: self
-                .get_device_acceleration_structure_compatibility_khr,
-            get_acceleration_structure_build_sizes_khr: self
-                .get_acceleration_structure_build_sizes_khr,
-        }
-    }
-}
 impl KhrAccelerationStructureFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -12011,7 +11344,7 @@ impl KhrAccelerationStructureFn {
     {
         KhrAccelerationStructureFn {
             create_acceleration_structure_khr: unsafe {
-                extern "system" fn create_acceleration_structure_khr(
+                unsafe extern "system" fn create_acceleration_structure_khr(
                     _device: Device,
                     _p_create_info: *const AccelerationStructureCreateInfoKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -12033,7 +11366,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             destroy_acceleration_structure_khr: unsafe {
-                extern "system" fn destroy_acceleration_structure_khr(
+                unsafe extern "system" fn destroy_acceleration_structure_khr(
                     _device: Device,
                     _acceleration_structure: AccelerationStructureKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -12054,7 +11387,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_build_acceleration_structures_khr: unsafe {
-                extern "system" fn cmd_build_acceleration_structures_khr(
+                unsafe extern "system" fn cmd_build_acceleration_structures_khr(
                     _command_buffer: CommandBuffer,
                     _info_count: u32,
                     _p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
@@ -12076,7 +11409,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_build_acceleration_structures_indirect_khr: unsafe {
-                extern "system" fn cmd_build_acceleration_structures_indirect_khr(
+                unsafe extern "system" fn cmd_build_acceleration_structures_indirect_khr(
                     _command_buffer: CommandBuffer,
                     _info_count: u32,
                     _p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
@@ -12100,7 +11433,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             build_acceleration_structures_khr: unsafe {
-                extern "system" fn build_acceleration_structures_khr(
+                unsafe extern "system" fn build_acceleration_structures_khr(
                     _device: Device,
                     _deferred_operation: DeferredOperationKHR,
                     _info_count: u32,
@@ -12123,7 +11456,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             copy_acceleration_structure_khr: unsafe {
-                extern "system" fn copy_acceleration_structure_khr(
+                unsafe extern "system" fn copy_acceleration_structure_khr(
                     _device: Device,
                     _deferred_operation: DeferredOperationKHR,
                     _p_info: *const CopyAccelerationStructureInfoKHR,
@@ -12144,7 +11477,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             copy_acceleration_structure_to_memory_khr: unsafe {
-                extern "system" fn copy_acceleration_structure_to_memory_khr(
+                unsafe extern "system" fn copy_acceleration_structure_to_memory_khr(
                     _device: Device,
                     _deferred_operation: DeferredOperationKHR,
                     _p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
@@ -12165,7 +11498,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             copy_memory_to_acceleration_structure_khr: unsafe {
-                extern "system" fn copy_memory_to_acceleration_structure_khr(
+                unsafe extern "system" fn copy_memory_to_acceleration_structure_khr(
                     _device: Device,
                     _deferred_operation: DeferredOperationKHR,
                     _p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
@@ -12186,7 +11519,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             write_acceleration_structures_properties_khr: unsafe {
-                extern "system" fn write_acceleration_structures_properties_khr(
+                unsafe extern "system" fn write_acceleration_structures_properties_khr(
                     _device: Device,
                     _acceleration_structure_count: u32,
                     _p_acceleration_structures: *const AccelerationStructureKHR,
@@ -12211,7 +11544,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_copy_acceleration_structure_khr: unsafe {
-                extern "system" fn cmd_copy_acceleration_structure_khr(
+                unsafe extern "system" fn cmd_copy_acceleration_structure_khr(
                     _command_buffer: CommandBuffer,
                     _p_info: *const CopyAccelerationStructureInfoKHR,
                 ) {
@@ -12231,7 +11564,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_copy_acceleration_structure_to_memory_khr: unsafe {
-                extern "system" fn cmd_copy_acceleration_structure_to_memory_khr(
+                unsafe extern "system" fn cmd_copy_acceleration_structure_to_memory_khr(
                     _command_buffer: CommandBuffer,
                     _p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
                 ) {
@@ -12251,7 +11584,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_copy_memory_to_acceleration_structure_khr: unsafe {
-                extern "system" fn cmd_copy_memory_to_acceleration_structure_khr(
+                unsafe extern "system" fn cmd_copy_memory_to_acceleration_structure_khr(
                     _command_buffer: CommandBuffer,
                     _p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
                 ) {
@@ -12271,7 +11604,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             get_acceleration_structure_device_address_khr: unsafe {
-                extern "system" fn get_acceleration_structure_device_address_khr(
+                unsafe extern "system" fn get_acceleration_structure_device_address_khr(
                     _device: Device,
                     _p_info: *const AccelerationStructureDeviceAddressInfoKHR,
                 ) -> DeviceAddress {
@@ -12291,7 +11624,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             cmd_write_acceleration_structures_properties_khr: unsafe {
-                extern "system" fn cmd_write_acceleration_structures_properties_khr(
+                unsafe extern "system" fn cmd_write_acceleration_structures_properties_khr(
                     _command_buffer: CommandBuffer,
                     _acceleration_structure_count: u32,
                     _p_acceleration_structures: *const AccelerationStructureKHR,
@@ -12315,7 +11648,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             get_device_acceleration_structure_compatibility_khr: unsafe {
-                extern "system" fn get_device_acceleration_structure_compatibility_khr(
+                unsafe extern "system" fn get_device_acceleration_structure_compatibility_khr(
                     _device: Device,
                     _p_version_info: *const AccelerationStructureVersionInfoKHR,
                     _p_compatibility: *mut AccelerationStructureCompatibilityKHR,
@@ -12336,7 +11669,7 @@ impl KhrAccelerationStructureFn {
                 }
             },
             get_acceleration_structure_build_sizes_khr: unsafe {
-                extern "system" fn get_acceleration_structure_build_sizes_khr(
+                unsafe extern "system" fn get_acceleration_structure_build_sizes_khr(
                     _device: Device,
                     _build_type: AccelerationStructureBuildTypeKHR,
                     _p_build_info: *const AccelerationStructureBuildGeometryInfoKHR,
@@ -12683,7 +12016,7 @@ impl KhrRayTracingPipelineFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdTraceRaysKHR = extern "system" fn(
+pub type PFN_vkCmdTraceRaysKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
     p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
@@ -12694,7 +12027,7 @@ pub type PFN_vkCmdTraceRaysKHR = extern "system" fn(
     depth: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateRayTracingPipelinesKHR = extern "system" fn(
+pub type PFN_vkCreateRayTracingPipelinesKHR = unsafe extern "system" fn(
     device: Device,
     deferred_operation: DeferredOperationKHR,
     pipeline_cache: PipelineCache,
@@ -12704,7 +12037,7 @@ pub type PFN_vkCreateRayTracingPipelinesKHR = extern "system" fn(
     p_pipelines: *mut Pipeline,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetRayTracingShaderGroupHandlesKHR = extern "system" fn(
+pub type PFN_vkGetRayTracingShaderGroupHandlesKHR = unsafe extern "system" fn(
     device: Device,
     pipeline: Pipeline,
     first_group: u32,
@@ -12713,16 +12046,17 @@ pub type PFN_vkGetRayTracingShaderGroupHandlesKHR = extern "system" fn(
     p_data: *mut c_void,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR = extern "system" fn(
-    device: Device,
-    pipeline: Pipeline,
-    first_group: u32,
-    group_count: u32,
-    data_size: usize,
-    p_data: *mut c_void,
-) -> Result;
+pub type PFN_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR =
+    unsafe extern "system" fn(
+        device: Device,
+        pipeline: Pipeline,
+        first_group: u32,
+        group_count: u32,
+        data_size: usize,
+        p_data: *mut c_void,
+    ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdTraceRaysIndirectKHR = extern "system" fn(
+pub type PFN_vkCmdTraceRaysIndirectKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
     p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
@@ -12731,7 +12065,7 @@ pub type PFN_vkCmdTraceRaysIndirectKHR = extern "system" fn(
     indirect_device_address: DeviceAddress,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetRayTracingShaderGroupStackSizeKHR = extern "system" fn(
+pub type PFN_vkGetRayTracingShaderGroupStackSizeKHR = unsafe extern "system" fn(
     device: Device,
     pipeline: Pipeline,
     group: u32,
@@ -12739,78 +12073,20 @@ pub type PFN_vkGetRayTracingShaderGroupStackSizeKHR = extern "system" fn(
 ) -> DeviceSize;
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetRayTracingPipelineStackSizeKHR =
-    extern "system" fn(command_buffer: CommandBuffer, pipeline_stack_size: u32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, pipeline_stack_size: u32);
+#[derive(Clone)]
 pub struct KhrRayTracingPipelineFn {
-    pub cmd_trace_rays_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_hit_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_callable_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        width: u32,
-        height: u32,
-        depth: u32,
-    ),
-    pub create_ray_tracing_pipelines_khr: extern "system" fn(
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        pipeline_cache: PipelineCache,
-        create_info_count: u32,
-        p_create_infos: *const RayTracingPipelineCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_pipelines: *mut Pipeline,
-    ) -> Result,
-    pub get_ray_tracing_shader_group_handles_khr: extern "system" fn(
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result,
-    pub get_ray_tracing_capture_replay_shader_group_handles_khr: extern "system" fn(
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result,
-    pub cmd_trace_rays_indirect_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_hit_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_callable_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        indirect_device_address: DeviceAddress,
-    ),
-    pub get_ray_tracing_shader_group_stack_size_khr: extern "system" fn(
-        device: Device,
-        pipeline: Pipeline,
-        group: u32,
-        group_shader: ShaderGroupShaderKHR,
-    ) -> DeviceSize,
-    pub cmd_set_ray_tracing_pipeline_stack_size_khr:
-        extern "system" fn(command_buffer: CommandBuffer, pipeline_stack_size: u32),
+    pub cmd_trace_rays_khr: PFN_vkCmdTraceRaysKHR,
+    pub create_ray_tracing_pipelines_khr: PFN_vkCreateRayTracingPipelinesKHR,
+    pub get_ray_tracing_shader_group_handles_khr: PFN_vkGetRayTracingShaderGroupHandlesKHR,
+    pub get_ray_tracing_capture_replay_shader_group_handles_khr:
+        PFN_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR,
+    pub cmd_trace_rays_indirect_khr: PFN_vkCmdTraceRaysIndirectKHR,
+    pub get_ray_tracing_shader_group_stack_size_khr: PFN_vkGetRayTracingShaderGroupStackSizeKHR,
+    pub cmd_set_ray_tracing_pipeline_stack_size_khr: PFN_vkCmdSetRayTracingPipelineStackSizeKHR,
 }
 unsafe impl Send for KhrRayTracingPipelineFn {}
 unsafe impl Sync for KhrRayTracingPipelineFn {}
-impl ::std::clone::Clone for KhrRayTracingPipelineFn {
-    fn clone(&self) -> Self {
-        KhrRayTracingPipelineFn {
-            cmd_trace_rays_khr: self.cmd_trace_rays_khr,
-            create_ray_tracing_pipelines_khr: self.create_ray_tracing_pipelines_khr,
-            get_ray_tracing_shader_group_handles_khr: self.get_ray_tracing_shader_group_handles_khr,
-            get_ray_tracing_capture_replay_shader_group_handles_khr: self
-                .get_ray_tracing_capture_replay_shader_group_handles_khr,
-            cmd_trace_rays_indirect_khr: self.cmd_trace_rays_indirect_khr,
-            get_ray_tracing_shader_group_stack_size_khr: self
-                .get_ray_tracing_shader_group_stack_size_khr,
-            cmd_set_ray_tracing_pipeline_stack_size_khr: self
-                .cmd_set_ray_tracing_pipeline_stack_size_khr,
-        }
-    }
-}
 impl KhrRayTracingPipelineFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -12818,7 +12094,7 @@ impl KhrRayTracingPipelineFn {
     {
         KhrRayTracingPipelineFn {
             cmd_trace_rays_khr: unsafe {
-                extern "system" fn cmd_trace_rays_khr(
+                unsafe extern "system" fn cmd_trace_rays_khr(
                     _command_buffer: CommandBuffer,
                     _p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
                     _p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
@@ -12839,7 +12115,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             create_ray_tracing_pipelines_khr: unsafe {
-                extern "system" fn create_ray_tracing_pipelines_khr(
+                unsafe extern "system" fn create_ray_tracing_pipelines_khr(
                     _device: Device,
                     _deferred_operation: DeferredOperationKHR,
                     _pipeline_cache: PipelineCache,
@@ -12864,7 +12140,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             get_ray_tracing_shader_group_handles_khr: unsafe {
-                extern "system" fn get_ray_tracing_shader_group_handles_khr(
+                unsafe extern "system" fn get_ray_tracing_shader_group_handles_khr(
                     _device: Device,
                     _pipeline: Pipeline,
                     _first_group: u32,
@@ -12888,7 +12164,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             get_ray_tracing_capture_replay_shader_group_handles_khr: unsafe {
-                extern "system" fn get_ray_tracing_capture_replay_shader_group_handles_khr(
+                unsafe extern "system" fn get_ray_tracing_capture_replay_shader_group_handles_khr(
                     _device: Device,
                     _pipeline: Pipeline,
                     _first_group: u32,
@@ -12912,7 +12188,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             cmd_trace_rays_indirect_khr: unsafe {
-                extern "system" fn cmd_trace_rays_indirect_khr(
+                unsafe extern "system" fn cmd_trace_rays_indirect_khr(
                     _command_buffer: CommandBuffer,
                     _p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
                     _p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
@@ -12935,7 +12211,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             get_ray_tracing_shader_group_stack_size_khr: unsafe {
-                extern "system" fn get_ray_tracing_shader_group_stack_size_khr(
+                unsafe extern "system" fn get_ray_tracing_shader_group_stack_size_khr(
                     _device: Device,
                     _pipeline: Pipeline,
                     _group: u32,
@@ -12957,7 +12233,7 @@ impl KhrRayTracingPipelineFn {
                 }
             },
             cmd_set_ray_tracing_pipeline_stack_size_khr: unsafe {
-                extern "system" fn cmd_set_ray_tracing_pipeline_stack_size_khr(
+                unsafe extern "system" fn cmd_set_ray_tracing_pipeline_stack_size_khr(
                     _command_buffer: CommandBuffer,
                     _pipeline_stack_size: u32,
                 ) {
@@ -13194,14 +12470,10 @@ impl KhrRayQueryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrRayQueryFn {}
 unsafe impl Send for KhrRayQueryFn {}
 unsafe impl Sync for KhrRayQueryFn {}
-impl ::std::clone::Clone for KhrRayQueryFn {
-    fn clone(&self) -> Self {
-        KhrRayQueryFn {}
-    }
-}
 impl KhrRayQueryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13221,14 +12493,10 @@ impl NvExtension152Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension152Fn {}
 unsafe impl Send for NvExtension152Fn {}
 unsafe impl Sync for NvExtension152Fn {}
-impl ::std::clone::Clone for NvExtension152Fn {
-    fn clone(&self) -> Self {
-        NvExtension152Fn {}
-    }
-}
 impl NvExtension152Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13244,14 +12512,10 @@ impl NvFramebufferMixedSamplesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvFramebufferMixedSamplesFn {}
 unsafe impl Send for NvFramebufferMixedSamplesFn {}
 unsafe impl Sync for NvFramebufferMixedSamplesFn {}
-impl ::std::clone::Clone for NvFramebufferMixedSamplesFn {
-    fn clone(&self) -> Self {
-        NvFramebufferMixedSamplesFn {}
-    }
-}
 impl NvFramebufferMixedSamplesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13271,14 +12535,10 @@ impl NvFillRectangleFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvFillRectangleFn {}
 unsafe impl Send for NvFillRectangleFn {}
 unsafe impl Sync for NvFillRectangleFn {}
-impl ::std::clone::Clone for NvFillRectangleFn {
-    fn clone(&self) -> Self {
-        NvFillRectangleFn {}
-    }
-}
 impl NvFillRectangleFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13298,14 +12558,10 @@ impl NvShaderSmBuiltinsFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvShaderSmBuiltinsFn {}
 unsafe impl Send for NvShaderSmBuiltinsFn {}
 unsafe impl Sync for NvShaderSmBuiltinsFn {}
-impl ::std::clone::Clone for NvShaderSmBuiltinsFn {
-    fn clone(&self) -> Self {
-        NvShaderSmBuiltinsFn {}
-    }
-}
 impl NvShaderSmBuiltinsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13329,14 +12585,10 @@ impl ExtPostDepthCoverageFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtPostDepthCoverageFn {}
 unsafe impl Send for ExtPostDepthCoverageFn {}
 unsafe impl Sync for ExtPostDepthCoverageFn {}
-impl ::std::clone::Clone for ExtPostDepthCoverageFn {
-    fn clone(&self) -> Self {
-        ExtPostDepthCoverageFn {}
-    }
-}
 impl ExtPostDepthCoverageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13353,41 +12605,25 @@ impl KhrSamplerYcbcrConversionFn {
     pub const SPEC_VERSION: u32 = 14u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateSamplerYcbcrConversion = extern "system" fn(
+pub type PFN_vkCreateSamplerYcbcrConversion = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const SamplerYcbcrConversionCreateInfo,
     p_allocator: *const AllocationCallbacks,
     p_ycbcr_conversion: *mut SamplerYcbcrConversion,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroySamplerYcbcrConversion = extern "system" fn(
+pub type PFN_vkDestroySamplerYcbcrConversion = unsafe extern "system" fn(
     device: Device,
     ycbcr_conversion: SamplerYcbcrConversion,
     p_allocator: *const AllocationCallbacks,
 );
+#[derive(Clone)]
 pub struct KhrSamplerYcbcrConversionFn {
-    pub create_sampler_ycbcr_conversion_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const SamplerYcbcrConversionCreateInfo,
-        p_allocator: *const AllocationCallbacks,
-        p_ycbcr_conversion: *mut SamplerYcbcrConversion,
-    ) -> Result,
-    pub destroy_sampler_ycbcr_conversion_khr: extern "system" fn(
-        device: Device,
-        ycbcr_conversion: SamplerYcbcrConversion,
-        p_allocator: *const AllocationCallbacks,
-    ),
+    pub create_sampler_ycbcr_conversion_khr: PFN_vkCreateSamplerYcbcrConversion,
+    pub destroy_sampler_ycbcr_conversion_khr: PFN_vkDestroySamplerYcbcrConversion,
 }
 unsafe impl Send for KhrSamplerYcbcrConversionFn {}
 unsafe impl Sync for KhrSamplerYcbcrConversionFn {}
-impl ::std::clone::Clone for KhrSamplerYcbcrConversionFn {
-    fn clone(&self) -> Self {
-        KhrSamplerYcbcrConversionFn {
-            create_sampler_ycbcr_conversion_khr: self.create_sampler_ycbcr_conversion_khr,
-            destroy_sampler_ycbcr_conversion_khr: self.destroy_sampler_ycbcr_conversion_khr,
-        }
-    }
-}
 impl KhrSamplerYcbcrConversionFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13395,7 +12631,7 @@ impl KhrSamplerYcbcrConversionFn {
     {
         KhrSamplerYcbcrConversionFn {
             create_sampler_ycbcr_conversion_khr: unsafe {
-                extern "system" fn create_sampler_ycbcr_conversion_khr(
+                unsafe extern "system" fn create_sampler_ycbcr_conversion_khr(
                     _device: Device,
                     _p_create_info: *const SamplerYcbcrConversionCreateInfo,
                     _p_allocator: *const AllocationCallbacks,
@@ -13417,7 +12653,7 @@ impl KhrSamplerYcbcrConversionFn {
                 }
             },
             destroy_sampler_ycbcr_conversion_khr: unsafe {
-                extern "system" fn destroy_sampler_ycbcr_conversion_khr(
+                unsafe extern "system" fn destroy_sampler_ycbcr_conversion_khr(
                     _device: Device,
                     _ycbcr_conversion: SamplerYcbcrConversion,
                     _p_allocator: *const AllocationCallbacks,
@@ -13467,276 +12703,274 @@ impl KhrSamplerYcbcrConversionFn {
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
     pub const SAMPLER_YCBCR_CONVERSION_CREATE_INFO_KHR: Self =
-        StructureType::SAMPLER_YCBCR_CONVERSION_CREATE_INFO;
+        Self::SAMPLER_YCBCR_CONVERSION_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
-    pub const SAMPLER_YCBCR_CONVERSION_INFO_KHR: Self =
-        StructureType::SAMPLER_YCBCR_CONVERSION_INFO;
+    pub const SAMPLER_YCBCR_CONVERSION_INFO_KHR: Self = Self::SAMPLER_YCBCR_CONVERSION_INFO;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
-    pub const BIND_IMAGE_PLANE_MEMORY_INFO_KHR: Self = StructureType::BIND_IMAGE_PLANE_MEMORY_INFO;
+    pub const BIND_IMAGE_PLANE_MEMORY_INFO_KHR: Self = Self::BIND_IMAGE_PLANE_MEMORY_INFO;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
     pub const IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO_KHR: Self =
-        StructureType::IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO;
+        Self::IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES;
+        Self::PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl StructureType {
     pub const SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES_KHR: Self =
-        StructureType::SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES;
+        Self::SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl DebugReportObjectTypeEXT {
-    pub const SAMPLER_YCBCR_CONVERSION_KHR: Self =
-        DebugReportObjectTypeEXT::SAMPLER_YCBCR_CONVERSION;
+    pub const SAMPLER_YCBCR_CONVERSION_KHR: Self = Self::SAMPLER_YCBCR_CONVERSION;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ObjectType {
-    pub const SAMPLER_YCBCR_CONVERSION_KHR: Self = ObjectType::SAMPLER_YCBCR_CONVERSION;
+    pub const SAMPLER_YCBCR_CONVERSION_KHR: Self = Self::SAMPLER_YCBCR_CONVERSION;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8B8G8R8_422_UNORM_KHR: Self = Format::G8B8G8R8_422_UNORM;
+    pub const G8B8G8R8_422_UNORM_KHR: Self = Self::G8B8G8R8_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const B8G8R8G8_422_UNORM_KHR: Self = Format::B8G8R8G8_422_UNORM;
+    pub const B8G8R8G8_422_UNORM_KHR: Self = Self::B8G8R8G8_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8_B8_R8_3PLANE_420_UNORM_KHR: Self = Format::G8_B8_R8_3PLANE_420_UNORM;
+    pub const G8_B8_R8_3PLANE_420_UNORM_KHR: Self = Self::G8_B8_R8_3PLANE_420_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8_B8R8_2PLANE_420_UNORM_KHR: Self = Format::G8_B8R8_2PLANE_420_UNORM;
+    pub const G8_B8R8_2PLANE_420_UNORM_KHR: Self = Self::G8_B8R8_2PLANE_420_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8_B8_R8_3PLANE_422_UNORM_KHR: Self = Format::G8_B8_R8_3PLANE_422_UNORM;
+    pub const G8_B8_R8_3PLANE_422_UNORM_KHR: Self = Self::G8_B8_R8_3PLANE_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8_B8R8_2PLANE_422_UNORM_KHR: Self = Format::G8_B8R8_2PLANE_422_UNORM;
+    pub const G8_B8R8_2PLANE_422_UNORM_KHR: Self = Self::G8_B8R8_2PLANE_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G8_B8_R8_3PLANE_444_UNORM_KHR: Self = Format::G8_B8_R8_3PLANE_444_UNORM;
+    pub const G8_B8_R8_3PLANE_444_UNORM_KHR: Self = Self::G8_B8_R8_3PLANE_444_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const R10X6_UNORM_PACK16_KHR: Self = Format::R10X6_UNORM_PACK16;
+    pub const R10X6_UNORM_PACK16_KHR: Self = Self::R10X6_UNORM_PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const R10X6G10X6_UNORM_2PACK16_KHR: Self = Format::R10X6G10X6_UNORM_2PACK16;
+    pub const R10X6G10X6_UNORM_2PACK16_KHR: Self = Self::R10X6G10X6_UNORM_2PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const R10X6G10X6B10X6A10X6_UNORM_4PACK16_KHR: Self =
-        Format::R10X6G10X6B10X6A10X6_UNORM_4PACK16;
+        Self::R10X6G10X6B10X6A10X6_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6B10X6G10X6R10X6_422_UNORM_4PACK16_KHR: Self =
-        Format::G10X6B10X6G10X6R10X6_422_UNORM_4PACK16;
+        Self::G10X6B10X6G10X6R10X6_422_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const B10X6G10X6R10X6G10X6_422_UNORM_4PACK16_KHR: Self =
-        Format::B10X6G10X6R10X6G10X6_422_UNORM_4PACK16;
+        Self::B10X6G10X6R10X6G10X6_422_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR: Self =
-        Format::G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16;
+        Self::G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR: Self =
-        Format::G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16;
+        Self::G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR: Self =
-        Format::G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16;
+        Self::G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR: Self =
-        Format::G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16;
+        Self::G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR: Self =
-        Format::G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16;
+        Self::G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const R12X4_UNORM_PACK16_KHR: Self = Format::R12X4_UNORM_PACK16;
+    pub const R12X4_UNORM_PACK16_KHR: Self = Self::R12X4_UNORM_PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const R12X4G12X4_UNORM_2PACK16_KHR: Self = Format::R12X4G12X4_UNORM_2PACK16;
+    pub const R12X4G12X4_UNORM_2PACK16_KHR: Self = Self::R12X4G12X4_UNORM_2PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const R12X4G12X4B12X4A12X4_UNORM_4PACK16_KHR: Self =
-        Format::R12X4G12X4B12X4A12X4_UNORM_4PACK16;
+        Self::R12X4G12X4B12X4A12X4_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4B12X4G12X4R12X4_422_UNORM_4PACK16_KHR: Self =
-        Format::G12X4B12X4G12X4R12X4_422_UNORM_4PACK16;
+        Self::G12X4B12X4G12X4R12X4_422_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const B12X4G12X4R12X4G12X4_422_UNORM_4PACK16_KHR: Self =
-        Format::B12X4G12X4R12X4G12X4_422_UNORM_4PACK16;
+        Self::B12X4G12X4R12X4G12X4_422_UNORM_4PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR: Self =
-        Format::G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16;
+        Self::G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR: Self =
-        Format::G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16;
+        Self::G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR: Self =
-        Format::G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16;
+        Self::G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR: Self =
-        Format::G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16;
+        Self::G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
     pub const G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR: Self =
-        Format::G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16;
+        Self::G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16B16G16R16_422_UNORM_KHR: Self = Format::G16B16G16R16_422_UNORM;
+    pub const G16B16G16R16_422_UNORM_KHR: Self = Self::G16B16G16R16_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const B16G16R16G16_422_UNORM_KHR: Self = Format::B16G16R16G16_422_UNORM;
+    pub const B16G16R16G16_422_UNORM_KHR: Self = Self::B16G16R16G16_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16_B16_R16_3PLANE_420_UNORM_KHR: Self = Format::G16_B16_R16_3PLANE_420_UNORM;
+    pub const G16_B16_R16_3PLANE_420_UNORM_KHR: Self = Self::G16_B16_R16_3PLANE_420_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16_B16R16_2PLANE_420_UNORM_KHR: Self = Format::G16_B16R16_2PLANE_420_UNORM;
+    pub const G16_B16R16_2PLANE_420_UNORM_KHR: Self = Self::G16_B16R16_2PLANE_420_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16_B16_R16_3PLANE_422_UNORM_KHR: Self = Format::G16_B16_R16_3PLANE_422_UNORM;
+    pub const G16_B16_R16_3PLANE_422_UNORM_KHR: Self = Self::G16_B16_R16_3PLANE_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16_B16R16_2PLANE_422_UNORM_KHR: Self = Format::G16_B16R16_2PLANE_422_UNORM;
+    pub const G16_B16R16_2PLANE_422_UNORM_KHR: Self = Self::G16_B16R16_2PLANE_422_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl Format {
-    pub const G16_B16_R16_3PLANE_444_UNORM_KHR: Self = Format::G16_B16_R16_3PLANE_444_UNORM;
+    pub const G16_B16_R16_3PLANE_444_UNORM_KHR: Self = Self::G16_B16_R16_3PLANE_444_UNORM;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ImageAspectFlags {
-    pub const PLANE_0_KHR: Self = ImageAspectFlags::PLANE_0;
+    pub const PLANE_0_KHR: Self = Self::PLANE_0;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ImageAspectFlags {
-    pub const PLANE_1_KHR: Self = ImageAspectFlags::PLANE_1;
+    pub const PLANE_1_KHR: Self = Self::PLANE_1;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ImageAspectFlags {
-    pub const PLANE_2_KHR: Self = ImageAspectFlags::PLANE_2;
+    pub const PLANE_2_KHR: Self = Self::PLANE_2;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ImageCreateFlags {
-    pub const DISJOINT_KHR: Self = ImageCreateFlags::DISJOINT;
+    pub const DISJOINT_KHR: Self = Self::DISJOINT;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
-    pub const MIDPOINT_CHROMA_SAMPLES_KHR: Self = FormatFeatureFlags::MIDPOINT_CHROMA_SAMPLES;
+    pub const MIDPOINT_CHROMA_SAMPLES_KHR: Self = Self::MIDPOINT_CHROMA_SAMPLES;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
     pub const SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_KHR: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER;
+        Self::SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
     pub const SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_KHR: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER;
+        Self::SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
     pub const SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_KHR: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT;
+        Self::SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
     pub const SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_KHR: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE;
+        Self::SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
-    pub const DISJOINT_KHR: Self = FormatFeatureFlags::DISJOINT;
+    pub const DISJOINT_KHR: Self = Self::DISJOINT;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl FormatFeatureFlags {
-    pub const COSITED_CHROMA_SAMPLES_KHR: Self = FormatFeatureFlags::COSITED_CHROMA_SAMPLES;
+    pub const COSITED_CHROMA_SAMPLES_KHR: Self = Self::COSITED_CHROMA_SAMPLES;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrModelConversion {
-    pub const RGB_IDENTITY_KHR: Self = SamplerYcbcrModelConversion::RGB_IDENTITY;
+    pub const RGB_IDENTITY_KHR: Self = Self::RGB_IDENTITY;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrModelConversion {
-    pub const YCBCR_IDENTITY_KHR: Self = SamplerYcbcrModelConversion::YCBCR_IDENTITY;
+    pub const YCBCR_IDENTITY_KHR: Self = Self::YCBCR_IDENTITY;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrModelConversion {
-    pub const YCBCR_709_KHR: Self = SamplerYcbcrModelConversion::YCBCR_709;
+    pub const YCBCR_709_KHR: Self = Self::YCBCR_709;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrModelConversion {
-    pub const YCBCR_601_KHR: Self = SamplerYcbcrModelConversion::YCBCR_601;
+    pub const YCBCR_601_KHR: Self = Self::YCBCR_601;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrModelConversion {
-    pub const YCBCR_2020_KHR: Self = SamplerYcbcrModelConversion::YCBCR_2020;
+    pub const YCBCR_2020_KHR: Self = Self::YCBCR_2020;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrRange {
-    pub const ITU_FULL_KHR: Self = SamplerYcbcrRange::ITU_FULL;
+    pub const ITU_FULL_KHR: Self = Self::ITU_FULL;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl SamplerYcbcrRange {
-    pub const ITU_NARROW_KHR: Self = SamplerYcbcrRange::ITU_NARROW;
+    pub const ITU_NARROW_KHR: Self = Self::ITU_NARROW;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ChromaLocation {
-    pub const COSITED_EVEN_KHR: Self = ChromaLocation::COSITED_EVEN;
+    pub const COSITED_EVEN_KHR: Self = Self::COSITED_EVEN;
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
 impl ChromaLocation {
-    pub const MIDPOINT_KHR: Self = ChromaLocation::MIDPOINT;
+    pub const MIDPOINT_KHR: Self = Self::MIDPOINT;
 }
 impl KhrBindMemory2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -13746,39 +12980,24 @@ impl KhrBindMemory2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkBindBufferMemory2 = extern "system" fn(
+pub type PFN_vkBindBufferMemory2 = unsafe extern "system" fn(
     device: Device,
     bind_info_count: u32,
     p_bind_infos: *const BindBufferMemoryInfo,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkBindImageMemory2 = extern "system" fn(
+pub type PFN_vkBindImageMemory2 = unsafe extern "system" fn(
     device: Device,
     bind_info_count: u32,
     p_bind_infos: *const BindImageMemoryInfo,
 ) -> Result;
+#[derive(Clone)]
 pub struct KhrBindMemory2Fn {
-    pub bind_buffer_memory2_khr: extern "system" fn(
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindBufferMemoryInfo,
-    ) -> Result,
-    pub bind_image_memory2_khr: extern "system" fn(
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindImageMemoryInfo,
-    ) -> Result,
+    pub bind_buffer_memory2_khr: PFN_vkBindBufferMemory2,
+    pub bind_image_memory2_khr: PFN_vkBindImageMemory2,
 }
 unsafe impl Send for KhrBindMemory2Fn {}
 unsafe impl Sync for KhrBindMemory2Fn {}
-impl ::std::clone::Clone for KhrBindMemory2Fn {
-    fn clone(&self) -> Self {
-        KhrBindMemory2Fn {
-            bind_buffer_memory2_khr: self.bind_buffer_memory2_khr,
-            bind_image_memory2_khr: self.bind_image_memory2_khr,
-        }
-    }
-}
 impl KhrBindMemory2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13786,7 +13005,7 @@ impl KhrBindMemory2Fn {
     {
         KhrBindMemory2Fn {
             bind_buffer_memory2_khr: unsafe {
-                extern "system" fn bind_buffer_memory2_khr(
+                unsafe extern "system" fn bind_buffer_memory2_khr(
                     _device: Device,
                     _bind_info_count: u32,
                     _p_bind_infos: *const BindBufferMemoryInfo,
@@ -13806,7 +13025,7 @@ impl KhrBindMemory2Fn {
                 }
             },
             bind_image_memory2_khr: unsafe {
-                extern "system" fn bind_image_memory2_khr(
+                unsafe extern "system" fn bind_image_memory2_khr(
                     _device: Device,
                     _bind_info_count: u32,
                     _p_bind_infos: *const BindImageMemoryInfo,
@@ -13848,15 +13067,15 @@ impl KhrBindMemory2Fn {
 }
 #[doc = "Generated from 'VK_KHR_bind_memory2'"]
 impl StructureType {
-    pub const BIND_BUFFER_MEMORY_INFO_KHR: Self = StructureType::BIND_BUFFER_MEMORY_INFO;
+    pub const BIND_BUFFER_MEMORY_INFO_KHR: Self = Self::BIND_BUFFER_MEMORY_INFO;
 }
 #[doc = "Generated from 'VK_KHR_bind_memory2'"]
 impl StructureType {
-    pub const BIND_IMAGE_MEMORY_INFO_KHR: Self = StructureType::BIND_IMAGE_MEMORY_INFO;
+    pub const BIND_IMAGE_MEMORY_INFO_KHR: Self = Self::BIND_IMAGE_MEMORY_INFO;
 }
 #[doc = "Generated from 'VK_KHR_bind_memory2'"]
 impl ImageCreateFlags {
-    pub const ALIAS_KHR: Self = ImageCreateFlags::ALIAS;
+    pub const ALIAS_KHR: Self = Self::ALIAS;
 }
 impl ExtImageDrmFormatModifierFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -13866,28 +13085,17 @@ impl ExtImageDrmFormatModifierFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetImageDrmFormatModifierPropertiesEXT = extern "system" fn(
+pub type PFN_vkGetImageDrmFormatModifierPropertiesEXT = unsafe extern "system" fn(
     device: Device,
     image: Image,
     p_properties: *mut ImageDrmFormatModifierPropertiesEXT,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtImageDrmFormatModifierFn {
-    pub get_image_drm_format_modifier_properties_ext: extern "system" fn(
-        device: Device,
-        image: Image,
-        p_properties: *mut ImageDrmFormatModifierPropertiesEXT,
-    ) -> Result,
+    pub get_image_drm_format_modifier_properties_ext: PFN_vkGetImageDrmFormatModifierPropertiesEXT,
 }
 unsafe impl Send for ExtImageDrmFormatModifierFn {}
 unsafe impl Sync for ExtImageDrmFormatModifierFn {}
-impl ::std::clone::Clone for ExtImageDrmFormatModifierFn {
-    fn clone(&self) -> Self {
-        ExtImageDrmFormatModifierFn {
-            get_image_drm_format_modifier_properties_ext: self
-                .get_image_drm_format_modifier_properties_ext,
-        }
-    }
-}
 impl ExtImageDrmFormatModifierFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -13895,7 +13103,7 @@ impl ExtImageDrmFormatModifierFn {
     {
         ExtImageDrmFormatModifierFn {
             get_image_drm_format_modifier_properties_ext: unsafe {
-                extern "system" fn get_image_drm_format_modifier_properties_ext(
+                unsafe extern "system" fn get_image_drm_format_modifier_properties_ext(
                     _device: Device,
                     _image: Image,
                     _p_properties: *mut ImageDrmFormatModifierPropertiesEXT,
@@ -13978,14 +13186,10 @@ impl ExtExtension160Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension160Fn {}
 unsafe impl Send for ExtExtension160Fn {}
 unsafe impl Sync for ExtExtension160Fn {}
-impl ::std::clone::Clone for ExtExtension160Fn {
-    fn clone(&self) -> Self {
-        ExtExtension160Fn {}
-    }
-}
 impl ExtExtension160Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14002,69 +13206,41 @@ impl ExtValidationCacheFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateValidationCacheEXT = extern "system" fn(
+pub type PFN_vkCreateValidationCacheEXT = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const ValidationCacheCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_validation_cache: *mut ValidationCacheEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyValidationCacheEXT = extern "system" fn(
+pub type PFN_vkDestroyValidationCacheEXT = unsafe extern "system" fn(
     device: Device,
     validation_cache: ValidationCacheEXT,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkMergeValidationCachesEXT = extern "system" fn(
+pub type PFN_vkMergeValidationCachesEXT = unsafe extern "system" fn(
     device: Device,
     dst_cache: ValidationCacheEXT,
     src_cache_count: u32,
     p_src_caches: *const ValidationCacheEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetValidationCacheDataEXT = extern "system" fn(
+pub type PFN_vkGetValidationCacheDataEXT = unsafe extern "system" fn(
     device: Device,
     validation_cache: ValidationCacheEXT,
     p_data_size: *mut usize,
     p_data: *mut c_void,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtValidationCacheFn {
-    pub create_validation_cache_ext: extern "system" fn(
-        device: Device,
-        p_create_info: *const ValidationCacheCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_validation_cache: *mut ValidationCacheEXT,
-    ) -> Result,
-    pub destroy_validation_cache_ext: extern "system" fn(
-        device: Device,
-        validation_cache: ValidationCacheEXT,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub merge_validation_caches_ext: extern "system" fn(
-        device: Device,
-        dst_cache: ValidationCacheEXT,
-        src_cache_count: u32,
-        p_src_caches: *const ValidationCacheEXT,
-    ) -> Result,
-    pub get_validation_cache_data_ext: extern "system" fn(
-        device: Device,
-        validation_cache: ValidationCacheEXT,
-        p_data_size: *mut usize,
-        p_data: *mut c_void,
-    ) -> Result,
+    pub create_validation_cache_ext: PFN_vkCreateValidationCacheEXT,
+    pub destroy_validation_cache_ext: PFN_vkDestroyValidationCacheEXT,
+    pub merge_validation_caches_ext: PFN_vkMergeValidationCachesEXT,
+    pub get_validation_cache_data_ext: PFN_vkGetValidationCacheDataEXT,
 }
 unsafe impl Send for ExtValidationCacheFn {}
 unsafe impl Sync for ExtValidationCacheFn {}
-impl ::std::clone::Clone for ExtValidationCacheFn {
-    fn clone(&self) -> Self {
-        ExtValidationCacheFn {
-            create_validation_cache_ext: self.create_validation_cache_ext,
-            destroy_validation_cache_ext: self.destroy_validation_cache_ext,
-            merge_validation_caches_ext: self.merge_validation_caches_ext,
-            get_validation_cache_data_ext: self.get_validation_cache_data_ext,
-        }
-    }
-}
 impl ExtValidationCacheFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14072,7 +13248,7 @@ impl ExtValidationCacheFn {
     {
         ExtValidationCacheFn {
             create_validation_cache_ext: unsafe {
-                extern "system" fn create_validation_cache_ext(
+                unsafe extern "system" fn create_validation_cache_ext(
                     _device: Device,
                     _p_create_info: *const ValidationCacheCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -14094,7 +13270,7 @@ impl ExtValidationCacheFn {
                 }
             },
             destroy_validation_cache_ext: unsafe {
-                extern "system" fn destroy_validation_cache_ext(
+                unsafe extern "system" fn destroy_validation_cache_ext(
                     _device: Device,
                     _validation_cache: ValidationCacheEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -14115,7 +13291,7 @@ impl ExtValidationCacheFn {
                 }
             },
             merge_validation_caches_ext: unsafe {
-                extern "system" fn merge_validation_caches_ext(
+                unsafe extern "system" fn merge_validation_caches_ext(
                     _device: Device,
                     _dst_cache: ValidationCacheEXT,
                     _src_cache_count: u32,
@@ -14137,7 +13313,7 @@ impl ExtValidationCacheFn {
                 }
             },
             get_validation_cache_data_ext: unsafe {
-                extern "system" fn get_validation_cache_data_ext(
+                unsafe extern "system" fn get_validation_cache_data_ext(
                     _device: Device,
                     _validation_cache: ValidationCacheEXT,
                     _p_data_size: *mut usize,
@@ -14219,14 +13395,10 @@ impl ExtDescriptorIndexingFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtDescriptorIndexingFn {}
 unsafe impl Send for ExtDescriptorIndexingFn {}
 unsafe impl Sync for ExtDescriptorIndexingFn {}
-impl ::std::clone::Clone for ExtDescriptorIndexingFn {
-    fn clone(&self) -> Self {
-        ExtDescriptorIndexingFn {}
-    }
-}
 impl ExtDescriptorIndexingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14238,58 +13410,55 @@ impl ExtDescriptorIndexingFn {
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl StructureType {
     pub const DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT: Self =
-        StructureType::DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+        Self::DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+        Self::PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
+        Self::PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl StructureType {
     pub const DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT: Self =
-        StructureType::DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO;
+        Self::DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl StructureType {
     pub const DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT_EXT: Self =
-        StructureType::DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT;
+        Self::DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorBindingFlags {
-    pub const UPDATE_AFTER_BIND_EXT: Self = DescriptorBindingFlags::UPDATE_AFTER_BIND;
+    pub const UPDATE_AFTER_BIND_EXT: Self = Self::UPDATE_AFTER_BIND;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorBindingFlags {
-    pub const UPDATE_UNUSED_WHILE_PENDING_EXT: Self =
-        DescriptorBindingFlags::UPDATE_UNUSED_WHILE_PENDING;
+    pub const UPDATE_UNUSED_WHILE_PENDING_EXT: Self = Self::UPDATE_UNUSED_WHILE_PENDING;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorBindingFlags {
-    pub const PARTIALLY_BOUND_EXT: Self = DescriptorBindingFlags::PARTIALLY_BOUND;
+    pub const PARTIALLY_BOUND_EXT: Self = Self::PARTIALLY_BOUND;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorBindingFlags {
-    pub const VARIABLE_DESCRIPTOR_COUNT_EXT: Self =
-        DescriptorBindingFlags::VARIABLE_DESCRIPTOR_COUNT;
+    pub const VARIABLE_DESCRIPTOR_COUNT_EXT: Self = Self::VARIABLE_DESCRIPTOR_COUNT;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorPoolCreateFlags {
-    pub const UPDATE_AFTER_BIND_EXT: Self = DescriptorPoolCreateFlags::UPDATE_AFTER_BIND;
+    pub const UPDATE_AFTER_BIND_EXT: Self = Self::UPDATE_AFTER_BIND;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl DescriptorSetLayoutCreateFlags {
-    pub const UPDATE_AFTER_BIND_POOL_EXT: Self =
-        DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND_POOL;
+    pub const UPDATE_AFTER_BIND_POOL_EXT: Self = Self::UPDATE_AFTER_BIND_POOL;
 }
 #[doc = "Generated from 'VK_EXT_descriptor_indexing'"]
 impl Result {
-    pub const ERROR_FRAGMENTATION_EXT: Self = Result::ERROR_FRAGMENTATION;
+    pub const ERROR_FRAGMENTATION_EXT: Self = Self::ERROR_FRAGMENTATION;
 }
 impl ExtShaderViewportIndexLayerFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -14298,14 +13467,10 @@ impl ExtShaderViewportIndexLayerFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderViewportIndexLayerFn {}
 unsafe impl Send for ExtShaderViewportIndexLayerFn {}
 unsafe impl Sync for ExtShaderViewportIndexLayerFn {}
-impl ::std::clone::Clone for ExtShaderViewportIndexLayerFn {
-    fn clone(&self) -> Self {
-        ExtShaderViewportIndexLayerFn {}
-    }
-}
 impl ExtShaderViewportIndexLayerFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14321,14 +13486,10 @@ impl KhrPortabilitySubsetFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrPortabilitySubsetFn {}
 unsafe impl Send for KhrPortabilitySubsetFn {}
 unsafe impl Sync for KhrPortabilitySubsetFn {}
-impl ::std::clone::Clone for KhrPortabilitySubsetFn {
-    fn clone(&self) -> Self {
-        KhrPortabilitySubsetFn {}
-    }
-}
 impl KhrPortabilitySubsetFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14353,55 +13514,33 @@ impl NvShadingRateImageFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBindShadingRateImageNV = extern "system" fn(
+pub type PFN_vkCmdBindShadingRateImageNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     image_view: ImageView,
     image_layout: ImageLayout,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetViewportShadingRatePaletteNV = extern "system" fn(
+pub type PFN_vkCmdSetViewportShadingRatePaletteNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_viewport: u32,
     viewport_count: u32,
     p_shading_rate_palettes: *const ShadingRatePaletteNV,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetCoarseSampleOrderNV = extern "system" fn(
+pub type PFN_vkCmdSetCoarseSampleOrderNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     sample_order_type: CoarseSampleOrderTypeNV,
     custom_sample_order_count: u32,
     p_custom_sample_orders: *const CoarseSampleOrderCustomNV,
 );
+#[derive(Clone)]
 pub struct NvShadingRateImageFn {
-    pub cmd_bind_shading_rate_image_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        image_view: ImageView,
-        image_layout: ImageLayout,
-    ),
-    pub cmd_set_viewport_shading_rate_palette_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_viewport: u32,
-        viewport_count: u32,
-        p_shading_rate_palettes: *const ShadingRatePaletteNV,
-    ),
-    pub cmd_set_coarse_sample_order_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        sample_order_type: CoarseSampleOrderTypeNV,
-        custom_sample_order_count: u32,
-        p_custom_sample_orders: *const CoarseSampleOrderCustomNV,
-    ),
+    pub cmd_bind_shading_rate_image_nv: PFN_vkCmdBindShadingRateImageNV,
+    pub cmd_set_viewport_shading_rate_palette_nv: PFN_vkCmdSetViewportShadingRatePaletteNV,
+    pub cmd_set_coarse_sample_order_nv: PFN_vkCmdSetCoarseSampleOrderNV,
 }
 unsafe impl Send for NvShadingRateImageFn {}
 unsafe impl Sync for NvShadingRateImageFn {}
-impl ::std::clone::Clone for NvShadingRateImageFn {
-    fn clone(&self) -> Self {
-        NvShadingRateImageFn {
-            cmd_bind_shading_rate_image_nv: self.cmd_bind_shading_rate_image_nv,
-            cmd_set_viewport_shading_rate_palette_nv: self.cmd_set_viewport_shading_rate_palette_nv,
-            cmd_set_coarse_sample_order_nv: self.cmd_set_coarse_sample_order_nv,
-        }
-    }
-}
 impl NvShadingRateImageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14409,7 +13548,7 @@ impl NvShadingRateImageFn {
     {
         NvShadingRateImageFn {
             cmd_bind_shading_rate_image_nv: unsafe {
-                extern "system" fn cmd_bind_shading_rate_image_nv(
+                unsafe extern "system" fn cmd_bind_shading_rate_image_nv(
                     _command_buffer: CommandBuffer,
                     _image_view: ImageView,
                     _image_layout: ImageLayout,
@@ -14430,7 +13569,7 @@ impl NvShadingRateImageFn {
                 }
             },
             cmd_set_viewport_shading_rate_palette_nv: unsafe {
-                extern "system" fn cmd_set_viewport_shading_rate_palette_nv(
+                unsafe extern "system" fn cmd_set_viewport_shading_rate_palette_nv(
                     _command_buffer: CommandBuffer,
                     _first_viewport: u32,
                     _viewport_count: u32,
@@ -14452,7 +13591,7 @@ impl NvShadingRateImageFn {
                 }
             },
             cmd_set_coarse_sample_order_nv: unsafe {
-                extern "system" fn cmd_set_coarse_sample_order_nv(
+                unsafe extern "system" fn cmd_set_coarse_sample_order_nv(
                     _command_buffer: CommandBuffer,
                     _sample_order_type: CoarseSampleOrderTypeNV,
                     _custom_sample_order_count: u32,
@@ -14529,7 +13668,7 @@ impl StructureType {
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl ImageLayout {
-    pub const SHADING_RATE_OPTIMAL_NV: Self = Self(1_000_164_003);
+    pub const SHADING_RATE_OPTIMAL_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR;
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl DynamicState {
@@ -14537,15 +13676,15 @@ impl DynamicState {
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl AccessFlags {
-    pub const SHADING_RATE_IMAGE_READ_NV: Self = Self(0b1000_0000_0000_0000_0000_0000);
+    pub const SHADING_RATE_IMAGE_READ_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_READ_KHR;
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl ImageUsageFlags {
-    pub const SHADING_RATE_IMAGE_NV: Self = Self(0b1_0000_0000);
+    pub const SHADING_RATE_IMAGE_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_KHR;
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl PipelineStageFlags {
-    pub const SHADING_RATE_IMAGE_NV: Self = Self(0b100_0000_0000_0000_0000_0000);
+    pub const SHADING_RATE_IMAGE_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_KHR;
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl StructureType {
@@ -14564,32 +13703,32 @@ impl NvRayTracingFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateAccelerationStructureNV = extern "system" fn(
+pub type PFN_vkCreateAccelerationStructureNV = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const AccelerationStructureCreateInfoNV,
     p_allocator: *const AllocationCallbacks,
     p_acceleration_structure: *mut AccelerationStructureNV,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyAccelerationStructureNV = extern "system" fn(
+pub type PFN_vkDestroyAccelerationStructureNV = unsafe extern "system" fn(
     device: Device,
     acceleration_structure: AccelerationStructureNV,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetAccelerationStructureMemoryRequirementsNV = extern "system" fn(
+pub type PFN_vkGetAccelerationStructureMemoryRequirementsNV = unsafe extern "system" fn(
     device: Device,
     p_info: *const AccelerationStructureMemoryRequirementsInfoNV,
     p_memory_requirements: *mut MemoryRequirements2KHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkBindAccelerationStructureMemoryNV = extern "system" fn(
+pub type PFN_vkBindAccelerationStructureMemoryNV = unsafe extern "system" fn(
     device: Device,
     bind_info_count: u32,
     p_bind_infos: *const BindAccelerationStructureMemoryInfoNV,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBuildAccelerationStructureNV = extern "system" fn(
+pub type PFN_vkCmdBuildAccelerationStructureNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_info: *const AccelerationStructureInfoNV,
     instance_data: Buffer,
@@ -14601,14 +13740,14 @@ pub type PFN_vkCmdBuildAccelerationStructureNV = extern "system" fn(
     scratch_offset: DeviceSize,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyAccelerationStructureNV = extern "system" fn(
+pub type PFN_vkCmdCopyAccelerationStructureNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     dst: AccelerationStructureNV,
     src: AccelerationStructureNV,
     mode: CopyAccelerationStructureModeKHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdTraceRaysNV = extern "system" fn(
+pub type PFN_vkCmdTraceRaysNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     raygen_shader_binding_table_buffer: Buffer,
     raygen_shader_binding_offset: DeviceSize,
@@ -14626,7 +13765,7 @@ pub type PFN_vkCmdTraceRaysNV = extern "system" fn(
     depth: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateRayTracingPipelinesNV = extern "system" fn(
+pub type PFN_vkCreateRayTracingPipelinesNV = unsafe extern "system" fn(
     device: Device,
     pipeline_cache: PipelineCache,
     create_info_count: u32,
@@ -14635,23 +13774,14 @@ pub type PFN_vkCreateRayTracingPipelinesNV = extern "system" fn(
     p_pipelines: *mut Pipeline,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetAccelerationStructureHandleNV = extern "system" fn(
-    device: Device,
-    pipeline: Pipeline,
-    first_group: u32,
-    group_count: u32,
-    data_size: usize,
-    p_data: *mut c_void,
-) -> Result;
-#[allow(non_camel_case_types)]
-pub type PFN_vkCmdWriteAccelerationStructuresPropertiesNV = extern "system" fn(
+pub type PFN_vkGetAccelerationStructureHandleNV = unsafe extern "system" fn(
     device: Device,
     acceleration_structure: AccelerationStructureNV,
     data_size: usize,
     p_data: *mut c_void,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCompileDeferredNV = extern "system" fn(
+pub type PFN_vkCmdWriteAccelerationStructuresPropertiesNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     acceleration_structure_count: u32,
     p_acceleration_structures: *const AccelerationStructureNV,
@@ -14659,117 +13789,29 @@ pub type PFN_vkCompileDeferredNV = extern "system" fn(
     query_pool: QueryPool,
     first_query: u32,
 );
+#[allow(non_camel_case_types)]
+pub type PFN_vkCompileDeferredNV =
+    unsafe extern "system" fn(device: Device, pipeline: Pipeline, shader: u32) -> Result;
+#[derive(Clone)]
 pub struct NvRayTracingFn {
-    pub create_acceleration_structure_nv: extern "system" fn(
-        device: Device,
-        p_create_info: *const AccelerationStructureCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_acceleration_structure: *mut AccelerationStructureNV,
-    ) -> Result,
-    pub destroy_acceleration_structure_nv: extern "system" fn(
-        device: Device,
-        acceleration_structure: AccelerationStructureNV,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub get_acceleration_structure_memory_requirements_nv: extern "system" fn(
-        device: Device,
-        p_info: *const AccelerationStructureMemoryRequirementsInfoNV,
-        p_memory_requirements: *mut MemoryRequirements2KHR,
-    ),
-    pub bind_acceleration_structure_memory_nv: extern "system" fn(
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindAccelerationStructureMemoryInfoNV,
-    ) -> Result,
-    pub cmd_build_acceleration_structure_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_info: *const AccelerationStructureInfoNV,
-        instance_data: Buffer,
-        instance_offset: DeviceSize,
-        update: Bool32,
-        dst: AccelerationStructureNV,
-        src: AccelerationStructureNV,
-        scratch: Buffer,
-        scratch_offset: DeviceSize,
-    ),
-    pub cmd_copy_acceleration_structure_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        dst: AccelerationStructureNV,
-        src: AccelerationStructureNV,
-        mode: CopyAccelerationStructureModeKHR,
-    ),
-    pub cmd_trace_rays_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        raygen_shader_binding_table_buffer: Buffer,
-        raygen_shader_binding_offset: DeviceSize,
-        miss_shader_binding_table_buffer: Buffer,
-        miss_shader_binding_offset: DeviceSize,
-        miss_shader_binding_stride: DeviceSize,
-        hit_shader_binding_table_buffer: Buffer,
-        hit_shader_binding_offset: DeviceSize,
-        hit_shader_binding_stride: DeviceSize,
-        callable_shader_binding_table_buffer: Buffer,
-        callable_shader_binding_offset: DeviceSize,
-        callable_shader_binding_stride: DeviceSize,
-        width: u32,
-        height: u32,
-        depth: u32,
-    ),
-    pub create_ray_tracing_pipelines_nv: extern "system" fn(
-        device: Device,
-        pipeline_cache: PipelineCache,
-        create_info_count: u32,
-        p_create_infos: *const RayTracingPipelineCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_pipelines: *mut Pipeline,
-    ) -> Result,
-    pub get_ray_tracing_shader_group_handles_nv: extern "system" fn(
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result,
-    pub get_acceleration_structure_handle_nv: extern "system" fn(
-        device: Device,
-        acceleration_structure: AccelerationStructureNV,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result,
-    pub cmd_write_acceleration_structures_properties_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureNV,
-        query_type: QueryType,
-        query_pool: QueryPool,
-        first_query: u32,
-    ),
-    pub compile_deferred_nv:
-        extern "system" fn(device: Device, pipeline: Pipeline, shader: u32) -> Result,
+    pub create_acceleration_structure_nv: PFN_vkCreateAccelerationStructureNV,
+    pub destroy_acceleration_structure_nv: PFN_vkDestroyAccelerationStructureNV,
+    pub get_acceleration_structure_memory_requirements_nv:
+        PFN_vkGetAccelerationStructureMemoryRequirementsNV,
+    pub bind_acceleration_structure_memory_nv: PFN_vkBindAccelerationStructureMemoryNV,
+    pub cmd_build_acceleration_structure_nv: PFN_vkCmdBuildAccelerationStructureNV,
+    pub cmd_copy_acceleration_structure_nv: PFN_vkCmdCopyAccelerationStructureNV,
+    pub cmd_trace_rays_nv: PFN_vkCmdTraceRaysNV,
+    pub create_ray_tracing_pipelines_nv: PFN_vkCreateRayTracingPipelinesNV,
+    pub get_ray_tracing_shader_group_handles_nv:
+        crate::vk::PFN_vkGetRayTracingShaderGroupHandlesKHR,
+    pub get_acceleration_structure_handle_nv: PFN_vkGetAccelerationStructureHandleNV,
+    pub cmd_write_acceleration_structures_properties_nv:
+        PFN_vkCmdWriteAccelerationStructuresPropertiesNV,
+    pub compile_deferred_nv: PFN_vkCompileDeferredNV,
 }
 unsafe impl Send for NvRayTracingFn {}
 unsafe impl Sync for NvRayTracingFn {}
-impl ::std::clone::Clone for NvRayTracingFn {
-    fn clone(&self) -> Self {
-        NvRayTracingFn {
-            create_acceleration_structure_nv: self.create_acceleration_structure_nv,
-            destroy_acceleration_structure_nv: self.destroy_acceleration_structure_nv,
-            get_acceleration_structure_memory_requirements_nv: self
-                .get_acceleration_structure_memory_requirements_nv,
-            bind_acceleration_structure_memory_nv: self.bind_acceleration_structure_memory_nv,
-            cmd_build_acceleration_structure_nv: self.cmd_build_acceleration_structure_nv,
-            cmd_copy_acceleration_structure_nv: self.cmd_copy_acceleration_structure_nv,
-            cmd_trace_rays_nv: self.cmd_trace_rays_nv,
-            create_ray_tracing_pipelines_nv: self.create_ray_tracing_pipelines_nv,
-            get_ray_tracing_shader_group_handles_nv: self.get_ray_tracing_shader_group_handles_nv,
-            get_acceleration_structure_handle_nv: self.get_acceleration_structure_handle_nv,
-            cmd_write_acceleration_structures_properties_nv: self
-                .cmd_write_acceleration_structures_properties_nv,
-            compile_deferred_nv: self.compile_deferred_nv,
-        }
-    }
-}
 impl NvRayTracingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -14777,7 +13819,7 @@ impl NvRayTracingFn {
     {
         NvRayTracingFn {
             create_acceleration_structure_nv: unsafe {
-                extern "system" fn create_acceleration_structure_nv(
+                unsafe extern "system" fn create_acceleration_structure_nv(
                     _device: Device,
                     _p_create_info: *const AccelerationStructureCreateInfoNV,
                     _p_allocator: *const AllocationCallbacks,
@@ -14799,7 +13841,7 @@ impl NvRayTracingFn {
                 }
             },
             destroy_acceleration_structure_nv: unsafe {
-                extern "system" fn destroy_acceleration_structure_nv(
+                unsafe extern "system" fn destroy_acceleration_structure_nv(
                     _device: Device,
                     _acceleration_structure: AccelerationStructureNV,
                     _p_allocator: *const AllocationCallbacks,
@@ -14820,7 +13862,7 @@ impl NvRayTracingFn {
                 }
             },
             get_acceleration_structure_memory_requirements_nv: unsafe {
-                extern "system" fn get_acceleration_structure_memory_requirements_nv(
+                unsafe extern "system" fn get_acceleration_structure_memory_requirements_nv(
                     _device: Device,
                     _p_info: *const AccelerationStructureMemoryRequirementsInfoNV,
                     _p_memory_requirements: *mut MemoryRequirements2KHR,
@@ -14841,7 +13883,7 @@ impl NvRayTracingFn {
                 }
             },
             bind_acceleration_structure_memory_nv: unsafe {
-                extern "system" fn bind_acceleration_structure_memory_nv(
+                unsafe extern "system" fn bind_acceleration_structure_memory_nv(
                     _device: Device,
                     _bind_info_count: u32,
                     _p_bind_infos: *const BindAccelerationStructureMemoryInfoNV,
@@ -14862,7 +13904,7 @@ impl NvRayTracingFn {
                 }
             },
             cmd_build_acceleration_structure_nv: unsafe {
-                extern "system" fn cmd_build_acceleration_structure_nv(
+                unsafe extern "system" fn cmd_build_acceleration_structure_nv(
                     _command_buffer: CommandBuffer,
                     _p_info: *const AccelerationStructureInfoNV,
                     _instance_data: Buffer,
@@ -14889,7 +13931,7 @@ impl NvRayTracingFn {
                 }
             },
             cmd_copy_acceleration_structure_nv: unsafe {
-                extern "system" fn cmd_copy_acceleration_structure_nv(
+                unsafe extern "system" fn cmd_copy_acceleration_structure_nv(
                     _command_buffer: CommandBuffer,
                     _dst: AccelerationStructureNV,
                     _src: AccelerationStructureNV,
@@ -14911,7 +13953,7 @@ impl NvRayTracingFn {
                 }
             },
             cmd_trace_rays_nv: unsafe {
-                extern "system" fn cmd_trace_rays_nv(
+                unsafe extern "system" fn cmd_trace_rays_nv(
                     _command_buffer: CommandBuffer,
                     _raygen_shader_binding_table_buffer: Buffer,
                     _raygen_shader_binding_offset: DeviceSize,
@@ -14939,7 +13981,7 @@ impl NvRayTracingFn {
                 }
             },
             create_ray_tracing_pipelines_nv: unsafe {
-                extern "system" fn create_ray_tracing_pipelines_nv(
+                unsafe extern "system" fn create_ray_tracing_pipelines_nv(
                     _device: Device,
                     _pipeline_cache: PipelineCache,
                     _create_info_count: u32,
@@ -14963,7 +14005,7 @@ impl NvRayTracingFn {
                 }
             },
             get_ray_tracing_shader_group_handles_nv: unsafe {
-                extern "system" fn get_ray_tracing_shader_group_handles_nv(
+                unsafe extern "system" fn get_ray_tracing_shader_group_handles_nv(
                     _device: Device,
                     _pipeline: Pipeline,
                     _first_group: u32,
@@ -14987,7 +14029,7 @@ impl NvRayTracingFn {
                 }
             },
             get_acceleration_structure_handle_nv: unsafe {
-                extern "system" fn get_acceleration_structure_handle_nv(
+                unsafe extern "system" fn get_acceleration_structure_handle_nv(
                     _device: Device,
                     _acceleration_structure: AccelerationStructureNV,
                     _data_size: usize,
@@ -15009,7 +14051,7 @@ impl NvRayTracingFn {
                 }
             },
             cmd_write_acceleration_structures_properties_nv: unsafe {
-                extern "system" fn cmd_write_acceleration_structures_properties_nv(
+                unsafe extern "system" fn cmd_write_acceleration_structures_properties_nv(
                     _command_buffer: CommandBuffer,
                     _acceleration_structure_count: u32,
                     _p_acceleration_structures: *const AccelerationStructureNV,
@@ -15033,7 +14075,7 @@ impl NvRayTracingFn {
                 }
             },
             compile_deferred_nv: unsafe {
-                extern "system" fn compile_deferred_nv(
+                unsafe extern "system" fn compile_deferred_nv(
                     _device: Device,
                     _pipeline: Pipeline,
                     _shader: u32,
@@ -15297,44 +14339,43 @@ impl StructureType {
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const RAYGEN_NV: Self = ShaderStageFlags::RAYGEN_KHR;
+    pub const RAYGEN_NV: Self = Self::RAYGEN_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const ANY_HIT_NV: Self = ShaderStageFlags::ANY_HIT_KHR;
+    pub const ANY_HIT_NV: Self = Self::ANY_HIT_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const CLOSEST_HIT_NV: Self = ShaderStageFlags::CLOSEST_HIT_KHR;
+    pub const CLOSEST_HIT_NV: Self = Self::CLOSEST_HIT_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const MISS_NV: Self = ShaderStageFlags::MISS_KHR;
+    pub const MISS_NV: Self = Self::MISS_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const INTERSECTION_NV: Self = ShaderStageFlags::INTERSECTION_KHR;
+    pub const INTERSECTION_NV: Self = Self::INTERSECTION_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl ShaderStageFlags {
-    pub const CALLABLE_NV: Self = ShaderStageFlags::CALLABLE_KHR;
+    pub const CALLABLE_NV: Self = Self::CALLABLE_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl PipelineStageFlags {
-    pub const RAY_TRACING_SHADER_NV: Self = PipelineStageFlags::RAY_TRACING_SHADER_KHR;
+    pub const RAY_TRACING_SHADER_NV: Self = Self::RAY_TRACING_SHADER_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl PipelineStageFlags {
-    pub const ACCELERATION_STRUCTURE_BUILD_NV: Self =
-        PipelineStageFlags::ACCELERATION_STRUCTURE_BUILD_KHR;
+    pub const ACCELERATION_STRUCTURE_BUILD_NV: Self = Self::ACCELERATION_STRUCTURE_BUILD_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BufferUsageFlags {
-    pub const RAY_TRACING_NV: Self = BufferUsageFlags::SHADER_BINDING_TABLE_KHR;
+    pub const RAY_TRACING_NV: Self = Self::SHADER_BINDING_TABLE_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl PipelineBindPoint {
-    pub const RAY_TRACING_NV: Self = PipelineBindPoint::RAY_TRACING_KHR;
+    pub const RAY_TRACING_NV: Self = Self::RAY_TRACING_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl DescriptorType {
@@ -15342,11 +14383,11 @@ impl DescriptorType {
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl AccessFlags {
-    pub const ACCELERATION_STRUCTURE_READ_NV: Self = AccessFlags::ACCELERATION_STRUCTURE_READ_KHR;
+    pub const ACCELERATION_STRUCTURE_READ_NV: Self = Self::ACCELERATION_STRUCTURE_READ_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl AccessFlags {
-    pub const ACCELERATION_STRUCTURE_WRITE_NV: Self = AccessFlags::ACCELERATION_STRUCTURE_WRITE_KHR;
+    pub const ACCELERATION_STRUCTURE_WRITE_NV: Self = Self::ACCELERATION_STRUCTURE_WRITE_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl QueryType {
@@ -15366,90 +14407,87 @@ impl DebugReportObjectTypeEXT {
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl IndexType {
-    pub const NONE_NV: Self = IndexType::NONE_KHR;
+    pub const NONE_NV: Self = Self::NONE_KHR;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl RayTracingShaderGroupTypeKHR {
-    pub const GENERAL_NV: Self = RayTracingShaderGroupTypeKHR::GENERAL;
+    pub const GENERAL_NV: Self = Self::GENERAL;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl RayTracingShaderGroupTypeKHR {
-    pub const TRIANGLES_HIT_GROUP_NV: Self = RayTracingShaderGroupTypeKHR::TRIANGLES_HIT_GROUP;
+    pub const TRIANGLES_HIT_GROUP_NV: Self = Self::TRIANGLES_HIT_GROUP;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl RayTracingShaderGroupTypeKHR {
-    pub const PROCEDURAL_HIT_GROUP_NV: Self = RayTracingShaderGroupTypeKHR::PROCEDURAL_HIT_GROUP;
+    pub const PROCEDURAL_HIT_GROUP_NV: Self = Self::PROCEDURAL_HIT_GROUP;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryTypeKHR {
-    pub const TRIANGLES_NV: Self = GeometryTypeKHR::TRIANGLES;
+    pub const TRIANGLES_NV: Self = Self::TRIANGLES;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryTypeKHR {
-    pub const AABBS_NV: Self = GeometryTypeKHR::AABBS;
+    pub const AABBS_NV: Self = Self::AABBS;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl AccelerationStructureTypeKHR {
-    pub const TOP_LEVEL_NV: Self = AccelerationStructureTypeKHR::TOP_LEVEL;
+    pub const TOP_LEVEL_NV: Self = Self::TOP_LEVEL;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl AccelerationStructureTypeKHR {
-    pub const BOTTOM_LEVEL_NV: Self = AccelerationStructureTypeKHR::BOTTOM_LEVEL;
+    pub const BOTTOM_LEVEL_NV: Self = Self::BOTTOM_LEVEL;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryFlagsKHR {
-    pub const OPAQUE_NV: Self = GeometryFlagsKHR::OPAQUE;
+    pub const OPAQUE_NV: Self = Self::OPAQUE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryFlagsKHR {
-    pub const NO_DUPLICATE_ANY_HIT_INVOCATION_NV: Self =
-        GeometryFlagsKHR::NO_DUPLICATE_ANY_HIT_INVOCATION;
+    pub const NO_DUPLICATE_ANY_HIT_INVOCATION_NV: Self = Self::NO_DUPLICATE_ANY_HIT_INVOCATION;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryInstanceFlagsKHR {
-    pub const TRIANGLE_CULL_DISABLE_NV: Self =
-        GeometryInstanceFlagsKHR::TRIANGLE_FACING_CULL_DISABLE;
+    pub const TRIANGLE_CULL_DISABLE_NV: Self = Self::TRIANGLE_FACING_CULL_DISABLE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryInstanceFlagsKHR {
-    pub const TRIANGLE_FRONT_COUNTERCLOCKWISE_NV: Self =
-        GeometryInstanceFlagsKHR::TRIANGLE_FRONT_COUNTERCLOCKWISE;
+    pub const TRIANGLE_FRONT_COUNTERCLOCKWISE_NV: Self = Self::TRIANGLE_FRONT_COUNTERCLOCKWISE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryInstanceFlagsKHR {
-    pub const FORCE_OPAQUE_NV: Self = GeometryInstanceFlagsKHR::FORCE_OPAQUE;
+    pub const FORCE_OPAQUE_NV: Self = Self::FORCE_OPAQUE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl GeometryInstanceFlagsKHR {
-    pub const FORCE_NO_OPAQUE_NV: Self = GeometryInstanceFlagsKHR::FORCE_NO_OPAQUE;
+    pub const FORCE_NO_OPAQUE_NV: Self = Self::FORCE_NO_OPAQUE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BuildAccelerationStructureFlagsKHR {
-    pub const ALLOW_UPDATE_NV: Self = BuildAccelerationStructureFlagsKHR::ALLOW_UPDATE;
+    pub const ALLOW_UPDATE_NV: Self = Self::ALLOW_UPDATE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BuildAccelerationStructureFlagsKHR {
-    pub const ALLOW_COMPACTION_NV: Self = BuildAccelerationStructureFlagsKHR::ALLOW_COMPACTION;
+    pub const ALLOW_COMPACTION_NV: Self = Self::ALLOW_COMPACTION;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BuildAccelerationStructureFlagsKHR {
-    pub const PREFER_FAST_TRACE_NV: Self = BuildAccelerationStructureFlagsKHR::PREFER_FAST_TRACE;
+    pub const PREFER_FAST_TRACE_NV: Self = Self::PREFER_FAST_TRACE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BuildAccelerationStructureFlagsKHR {
-    pub const PREFER_FAST_BUILD_NV: Self = BuildAccelerationStructureFlagsKHR::PREFER_FAST_BUILD;
+    pub const PREFER_FAST_BUILD_NV: Self = Self::PREFER_FAST_BUILD;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl BuildAccelerationStructureFlagsKHR {
-    pub const LOW_MEMORY_NV: Self = BuildAccelerationStructureFlagsKHR::LOW_MEMORY;
+    pub const LOW_MEMORY_NV: Self = Self::LOW_MEMORY;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl CopyAccelerationStructureModeKHR {
-    pub const CLONE_NV: Self = CopyAccelerationStructureModeKHR::CLONE;
+    pub const CLONE_NV: Self = Self::CLONE;
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl CopyAccelerationStructureModeKHR {
-    pub const COMPACT_NV: Self = CopyAccelerationStructureModeKHR::COMPACT;
+    pub const COMPACT_NV: Self = Self::COMPACT;
 }
 impl NvRepresentativeFragmentTestFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -15458,14 +14496,10 @@ impl NvRepresentativeFragmentTestFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct NvRepresentativeFragmentTestFn {}
 unsafe impl Send for NvRepresentativeFragmentTestFn {}
 unsafe impl Sync for NvRepresentativeFragmentTestFn {}
-impl ::std::clone::Clone for NvRepresentativeFragmentTestFn {
-    fn clone(&self) -> Self {
-        NvRepresentativeFragmentTestFn {}
-    }
-}
 impl NvRepresentativeFragmentTestFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15490,14 +14524,10 @@ impl NvExtension168Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension168Fn {}
 unsafe impl Send for NvExtension168Fn {}
 unsafe impl Sync for NvExtension168Fn {}
-impl ::std::clone::Clone for NvExtension168Fn {
-    fn clone(&self) -> Self {
-        NvExtension168Fn {}
-    }
-}
 impl NvExtension168Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15514,27 +14544,17 @@ impl KhrMaintenance3Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDescriptorSetLayoutSupport = extern "system" fn(
+pub type PFN_vkGetDescriptorSetLayoutSupport = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const DescriptorSetLayoutCreateInfo,
     p_support: *mut DescriptorSetLayoutSupport,
 );
+#[derive(Clone)]
 pub struct KhrMaintenance3Fn {
-    pub get_descriptor_set_layout_support_khr: extern "system" fn(
-        device: Device,
-        p_create_info: *const DescriptorSetLayoutCreateInfo,
-        p_support: *mut DescriptorSetLayoutSupport,
-    ),
+    pub get_descriptor_set_layout_support_khr: PFN_vkGetDescriptorSetLayoutSupport,
 }
 unsafe impl Send for KhrMaintenance3Fn {}
 unsafe impl Sync for KhrMaintenance3Fn {}
-impl ::std::clone::Clone for KhrMaintenance3Fn {
-    fn clone(&self) -> Self {
-        KhrMaintenance3Fn {
-            get_descriptor_set_layout_support_khr: self.get_descriptor_set_layout_support_khr,
-        }
-    }
-}
 impl KhrMaintenance3Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15542,7 +14562,7 @@ impl KhrMaintenance3Fn {
     {
         KhrMaintenance3Fn {
             get_descriptor_set_layout_support_khr: unsafe {
-                extern "system" fn get_descriptor_set_layout_support_khr(
+                unsafe extern "system" fn get_descriptor_set_layout_support_khr(
                     _device: Device,
                     _p_create_info: *const DescriptorSetLayoutCreateInfo,
                     _p_support: *mut DescriptorSetLayoutSupport,
@@ -15577,12 +14597,11 @@ impl KhrMaintenance3Fn {
 #[doc = "Generated from 'VK_KHR_maintenance3'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES;
+        Self::PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_maintenance3'"]
 impl StructureType {
-    pub const DESCRIPTOR_SET_LAYOUT_SUPPORT_KHR: Self =
-        StructureType::DESCRIPTOR_SET_LAYOUT_SUPPORT;
+    pub const DESCRIPTOR_SET_LAYOUT_SUPPORT_KHR: Self = Self::DESCRIPTOR_SET_LAYOUT_SUPPORT;
 }
 impl KhrDrawIndirectCountFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -15591,36 +14610,13 @@ impl KhrDrawIndirectCountFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrDrawIndirectCountFn {
-    pub cmd_draw_indirect_count_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ),
-    pub cmd_draw_indexed_indirect_count_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ),
+    pub cmd_draw_indirect_count_khr: crate::vk::PFN_vkCmdDrawIndirectCount,
+    pub cmd_draw_indexed_indirect_count_khr: crate::vk::PFN_vkCmdDrawIndexedIndirectCount,
 }
 unsafe impl Send for KhrDrawIndirectCountFn {}
 unsafe impl Sync for KhrDrawIndirectCountFn {}
-impl ::std::clone::Clone for KhrDrawIndirectCountFn {
-    fn clone(&self) -> Self {
-        KhrDrawIndirectCountFn {
-            cmd_draw_indirect_count_khr: self.cmd_draw_indirect_count_khr,
-            cmd_draw_indexed_indirect_count_khr: self.cmd_draw_indexed_indirect_count_khr,
-        }
-    }
-}
 impl KhrDrawIndirectCountFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15628,7 +14624,7 @@ impl KhrDrawIndirectCountFn {
     {
         KhrDrawIndirectCountFn {
             cmd_draw_indirect_count_khr: unsafe {
-                extern "system" fn cmd_draw_indirect_count_khr(
+                unsafe extern "system" fn cmd_draw_indirect_count_khr(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -15652,7 +14648,7 @@ impl KhrDrawIndirectCountFn {
                 }
             },
             cmd_draw_indexed_indirect_count_khr: unsafe {
-                extern "system" fn cmd_draw_indexed_indirect_count_khr(
+                unsafe extern "system" fn cmd_draw_indexed_indirect_count_khr(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -15728,14 +14724,10 @@ impl ExtFilterCubicFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct ExtFilterCubicFn {}
 unsafe impl Send for ExtFilterCubicFn {}
 unsafe impl Sync for ExtFilterCubicFn {}
-impl ::std::clone::Clone for ExtFilterCubicFn {
-    fn clone(&self) -> Self {
-        ExtFilterCubicFn {}
-    }
-}
 impl ExtFilterCubicFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15746,12 +14738,11 @@ impl ExtFilterCubicFn {
 }
 #[doc = "Generated from 'VK_EXT_filter_cubic'"]
 impl Filter {
-    pub const CUBIC_EXT: Self = Filter::CUBIC_IMG;
+    pub const CUBIC_EXT: Self = Self::CUBIC_IMG;
 }
 #[doc = "Generated from 'VK_EXT_filter_cubic'"]
 impl FormatFeatureFlags {
-    pub const SAMPLED_IMAGE_FILTER_CUBIC_EXT: Self =
-        FormatFeatureFlags::SAMPLED_IMAGE_FILTER_CUBIC_IMG;
+    pub const SAMPLED_IMAGE_FILTER_CUBIC_EXT: Self = Self::SAMPLED_IMAGE_FILTER_CUBIC_IMG;
 }
 #[doc = "Generated from 'VK_EXT_filter_cubic'"]
 impl StructureType {
@@ -15768,14 +14759,10 @@ impl QcomRenderPassShaderResolveFn {
     }
     pub const SPEC_VERSION: u32 = 4u32;
 }
+#[derive(Clone)]
 pub struct QcomRenderPassShaderResolveFn {}
 unsafe impl Send for QcomRenderPassShaderResolveFn {}
 unsafe impl Sync for QcomRenderPassShaderResolveFn {}
-impl ::std::clone::Clone for QcomRenderPassShaderResolveFn {
-    fn clone(&self) -> Self {
-        QcomRenderPassShaderResolveFn {}
-    }
-}
 impl QcomRenderPassShaderResolveFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15799,14 +14786,10 @@ impl QcomExtension173Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension173Fn {}
 unsafe impl Send for QcomExtension173Fn {}
 unsafe impl Sync for QcomExtension173Fn {}
-impl ::std::clone::Clone for QcomExtension173Fn {
-    fn clone(&self) -> Self {
-        QcomExtension173Fn {}
-    }
-}
 impl QcomExtension173Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15834,14 +14817,10 @@ impl QcomExtension174Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension174Fn {}
 unsafe impl Send for QcomExtension174Fn {}
 unsafe impl Sync for QcomExtension174Fn {}
-impl ::std::clone::Clone for QcomExtension174Fn {
-    fn clone(&self) -> Self {
-        QcomExtension174Fn {}
-    }
-}
 impl QcomExtension174Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15857,14 +14836,10 @@ impl ExtGlobalPriorityFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtGlobalPriorityFn {}
 unsafe impl Send for ExtGlobalPriorityFn {}
 unsafe impl Sync for ExtGlobalPriorityFn {}
-impl ::std::clone::Clone for ExtGlobalPriorityFn {
-    fn clone(&self) -> Self {
-        ExtGlobalPriorityFn {}
-    }
-}
 impl ExtGlobalPriorityFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15888,14 +14863,10 @@ impl KhrShaderSubgroupExtendedTypesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderSubgroupExtendedTypesFn {}
 unsafe impl Send for KhrShaderSubgroupExtendedTypesFn {}
 unsafe impl Sync for KhrShaderSubgroupExtendedTypesFn {}
-impl ::std::clone::Clone for KhrShaderSubgroupExtendedTypesFn {
-    fn clone(&self) -> Self {
-        KhrShaderSubgroupExtendedTypesFn {}
-    }
-}
 impl KhrShaderSubgroupExtendedTypesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15907,7 +14878,7 @@ impl KhrShaderSubgroupExtendedTypesFn {
 #[doc = "Generated from 'VK_KHR_shader_subgroup_extended_types'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES;
+        Self::PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES;
 }
 impl ExtExtension177Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -15916,14 +14887,10 @@ impl ExtExtension177Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension177Fn {}
 unsafe impl Send for ExtExtension177Fn {}
 unsafe impl Sync for ExtExtension177Fn {}
-impl ::std::clone::Clone for ExtExtension177Fn {
-    fn clone(&self) -> Self {
-        ExtExtension177Fn {}
-    }
-}
 impl ExtExtension177Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15939,14 +14906,10 @@ impl Khr8bitStorageFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct Khr8bitStorageFn {}
 unsafe impl Send for Khr8bitStorageFn {}
 unsafe impl Sync for Khr8bitStorageFn {}
-impl ::std::clone::Clone for Khr8bitStorageFn {
-    fn clone(&self) -> Self {
-        Khr8bitStorageFn {}
-    }
-}
 impl Khr8bitStorageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15958,7 +14921,7 @@ impl Khr8bitStorageFn {
 #[doc = "Generated from 'VK_KHR_8bit_storage'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
+        Self::PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
 }
 impl ExtExternalMemoryHostFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -15968,29 +14931,18 @@ impl ExtExternalMemoryHostFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetMemoryHostPointerPropertiesEXT = extern "system" fn(
+pub type PFN_vkGetMemoryHostPointerPropertiesEXT = unsafe extern "system" fn(
     device: Device,
     handle_type: ExternalMemoryHandleTypeFlags,
     p_host_pointer: *const c_void,
     p_memory_host_pointer_properties: *mut MemoryHostPointerPropertiesEXT,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtExternalMemoryHostFn {
-    pub get_memory_host_pointer_properties_ext: extern "system" fn(
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        p_host_pointer: *const c_void,
-        p_memory_host_pointer_properties: *mut MemoryHostPointerPropertiesEXT,
-    ) -> Result,
+    pub get_memory_host_pointer_properties_ext: PFN_vkGetMemoryHostPointerPropertiesEXT,
 }
 unsafe impl Send for ExtExternalMemoryHostFn {}
 unsafe impl Sync for ExtExternalMemoryHostFn {}
-impl ::std::clone::Clone for ExtExternalMemoryHostFn {
-    fn clone(&self) -> Self {
-        ExtExternalMemoryHostFn {
-            get_memory_host_pointer_properties_ext: self.get_memory_host_pointer_properties_ext,
-        }
-    }
-}
 impl ExtExternalMemoryHostFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -15998,7 +14950,7 @@ impl ExtExternalMemoryHostFn {
     {
         ExtExternalMemoryHostFn {
             get_memory_host_pointer_properties_ext: unsafe {
-                extern "system" fn get_memory_host_pointer_properties_ext(
+                unsafe extern "system" fn get_memory_host_pointer_properties_ext(
                     _device: Device,
                     _handle_type: ExternalMemoryHandleTypeFlags,
                     _p_host_pointer: *const c_void,
@@ -16065,31 +15017,19 @@ impl AmdBufferMarkerFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdWriteBufferMarkerAMD = extern "system" fn(
+pub type PFN_vkCmdWriteBufferMarkerAMD = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     pipeline_stage: PipelineStageFlags,
     dst_buffer: Buffer,
     dst_offset: DeviceSize,
     marker: u32,
 );
+#[derive(Clone)]
 pub struct AmdBufferMarkerFn {
-    pub cmd_write_buffer_marker_amd: extern "system" fn(
-        command_buffer: CommandBuffer,
-        pipeline_stage: PipelineStageFlags,
-        dst_buffer: Buffer,
-        dst_offset: DeviceSize,
-        marker: u32,
-    ),
+    pub cmd_write_buffer_marker_amd: PFN_vkCmdWriteBufferMarkerAMD,
 }
 unsafe impl Send for AmdBufferMarkerFn {}
 unsafe impl Sync for AmdBufferMarkerFn {}
-impl ::std::clone::Clone for AmdBufferMarkerFn {
-    fn clone(&self) -> Self {
-        AmdBufferMarkerFn {
-            cmd_write_buffer_marker_amd: self.cmd_write_buffer_marker_amd,
-        }
-    }
-}
 impl AmdBufferMarkerFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16097,7 +15037,7 @@ impl AmdBufferMarkerFn {
     {
         AmdBufferMarkerFn {
             cmd_write_buffer_marker_amd: unsafe {
-                extern "system" fn cmd_write_buffer_marker_amd(
+                unsafe extern "system" fn cmd_write_buffer_marker_amd(
                     _command_buffer: CommandBuffer,
                     _pipeline_stage: PipelineStageFlags,
                     _dst_buffer: Buffer,
@@ -16145,14 +15085,10 @@ impl KhrShaderAtomicInt64Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderAtomicInt64Fn {}
 unsafe impl Send for KhrShaderAtomicInt64Fn {}
 unsafe impl Sync for KhrShaderAtomicInt64Fn {}
-impl ::std::clone::Clone for KhrShaderAtomicInt64Fn {
-    fn clone(&self) -> Self {
-        KhrShaderAtomicInt64Fn {}
-    }
-}
 impl KhrShaderAtomicInt64Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16164,7 +15100,7 @@ impl KhrShaderAtomicInt64Fn {
 #[doc = "Generated from 'VK_KHR_shader_atomic_int64'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES;
+        Self::PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES;
 }
 impl KhrShaderClockFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -16173,14 +15109,10 @@ impl KhrShaderClockFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderClockFn {}
 unsafe impl Send for KhrShaderClockFn {}
 unsafe impl Sync for KhrShaderClockFn {}
-impl ::std::clone::Clone for KhrShaderClockFn {
-    fn clone(&self) -> Self {
-        KhrShaderClockFn {}
-    }
-}
 impl KhrShaderClockFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16200,14 +15132,10 @@ impl AmdExtension183Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension183Fn {}
 unsafe impl Send for AmdExtension183Fn {}
 unsafe impl Sync for AmdExtension183Fn {}
-impl ::std::clone::Clone for AmdExtension183Fn {
-    fn clone(&self) -> Self {
-        AmdExtension183Fn {}
-    }
-}
 impl AmdExtension183Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16223,14 +15151,10 @@ impl AmdPipelineCompilerControlFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdPipelineCompilerControlFn {}
 unsafe impl Send for AmdPipelineCompilerControlFn {}
 unsafe impl Sync for AmdPipelineCompilerControlFn {}
-impl ::std::clone::Clone for AmdPipelineCompilerControlFn {
-    fn clone(&self) -> Self {
-        AmdPipelineCompilerControlFn {}
-    }
-}
 impl AmdPipelineCompilerControlFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16248,47 +15172,30 @@ impl ExtCalibratedTimestampsFn {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_calibrated_timestamps\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 1u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_time_domain_count: *mut u32,
     p_time_domains: *mut TimeDomainEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetCalibratedTimestampsEXT = extern "system" fn(
+pub type PFN_vkGetCalibratedTimestampsEXT = unsafe extern "system" fn(
     device: Device,
     timestamp_count: u32,
     p_timestamp_infos: *const CalibratedTimestampInfoEXT,
     p_timestamps: *mut u64,
     p_max_deviation: *mut u64,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtCalibratedTimestampsFn {
-    pub get_physical_device_calibrateable_time_domains_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_time_domain_count: *mut u32,
-        p_time_domains: *mut TimeDomainEXT,
-    ) -> Result,
-    pub get_calibrated_timestamps_ext: extern "system" fn(
-        device: Device,
-        timestamp_count: u32,
-        p_timestamp_infos: *const CalibratedTimestampInfoEXT,
-        p_timestamps: *mut u64,
-        p_max_deviation: *mut u64,
-    ) -> Result,
+    pub get_physical_device_calibrateable_time_domains_ext:
+        PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+    pub get_calibrated_timestamps_ext: PFN_vkGetCalibratedTimestampsEXT,
 }
 unsafe impl Send for ExtCalibratedTimestampsFn {}
 unsafe impl Sync for ExtCalibratedTimestampsFn {}
-impl ::std::clone::Clone for ExtCalibratedTimestampsFn {
-    fn clone(&self) -> Self {
-        ExtCalibratedTimestampsFn {
-            get_physical_device_calibrateable_time_domains_ext: self
-                .get_physical_device_calibrateable_time_domains_ext,
-            get_calibrated_timestamps_ext: self.get_calibrated_timestamps_ext,
-        }
-    }
-}
 impl ExtCalibratedTimestampsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16296,7 +15203,7 @@ impl ExtCalibratedTimestampsFn {
     {
         ExtCalibratedTimestampsFn {
             get_physical_device_calibrateable_time_domains_ext: unsafe {
-                extern "system" fn get_physical_device_calibrateable_time_domains_ext(
+                unsafe extern "system" fn get_physical_device_calibrateable_time_domains_ext(
                     _physical_device: PhysicalDevice,
                     _p_time_domain_count: *mut u32,
                     _p_time_domains: *mut TimeDomainEXT,
@@ -16317,7 +15224,7 @@ impl ExtCalibratedTimestampsFn {
                 }
             },
             get_calibrated_timestamps_ext: unsafe {
-                extern "system" fn get_calibrated_timestamps_ext(
+                unsafe extern "system" fn get_calibrated_timestamps_ext(
                     _device: Device,
                     _timestamp_count: u32,
                     _p_timestamp_infos: *const CalibratedTimestampInfoEXT,
@@ -16383,14 +15290,10 @@ impl AmdShaderCorePropertiesFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderCorePropertiesFn {}
 unsafe impl Send for AmdShaderCorePropertiesFn {}
 unsafe impl Sync for AmdShaderCorePropertiesFn {}
-impl ::std::clone::Clone for AmdShaderCorePropertiesFn {
-    fn clone(&self) -> Self {
-        AmdShaderCorePropertiesFn {}
-    }
-}
 impl AmdShaderCorePropertiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16410,14 +15313,10 @@ impl AmdExtension187Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension187Fn {}
 unsafe impl Send for AmdExtension187Fn {}
 unsafe impl Sync for AmdExtension187Fn {}
-impl ::std::clone::Clone for AmdExtension187Fn {
-    fn clone(&self) -> Self {
-        AmdExtension187Fn {}
-    }
-}
 impl AmdExtension187Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16426,28 +15325,56 @@ impl AmdExtension187Fn {
         AmdExtension187Fn {}
     }
 }
-impl AmdExtension188Fn {
+impl ExtVideoDecodeH265Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_188\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_video_decode_h265\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension188Fn {}
-unsafe impl Send for AmdExtension188Fn {}
-unsafe impl Sync for AmdExtension188Fn {}
-impl ::std::clone::Clone for AmdExtension188Fn {
-    fn clone(&self) -> Self {
-        AmdExtension188Fn {}
-    }
-}
-impl AmdExtension188Fn {
+#[derive(Clone)]
+pub struct ExtVideoDecodeH265Fn {}
+unsafe impl Send for ExtVideoDecodeH265Fn {}
+unsafe impl Sync for ExtVideoDecodeH265Fn {}
+impl ExtVideoDecodeH265Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension188Fn {}
+        ExtVideoDecodeH265Fn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_CAPABILITIES_EXT: Self = Self(1_000_187_000);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_SESSION_CREATE_INFO_EXT: Self = Self(1_000_187_001);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_187_002);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_187_003);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_PROFILE_EXT: Self = Self(1_000_187_004);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_PICTURE_INFO_EXT: Self = Self(1_000_187_005);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl StructureType {
+    pub const VIDEO_DECODE_H265_DPB_SLOT_INFO_EXT: Self = Self(1_000_187_006);
+}
+#[doc = "Generated from 'VK_EXT_video_decode_h265'"]
+impl VideoCodecOperationFlagsKHR {
+    pub const DECODE_H265_EXT: Self = Self(0b10);
 }
 impl AmdExtension189Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -16456,14 +15383,10 @@ impl AmdExtension189Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension189Fn {}
 unsafe impl Send for AmdExtension189Fn {}
 unsafe impl Sync for AmdExtension189Fn {}
-impl ::std::clone::Clone for AmdExtension189Fn {
-    fn clone(&self) -> Self {
-        AmdExtension189Fn {}
-    }
-}
 impl AmdExtension189Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16479,14 +15402,10 @@ impl AmdMemoryOverallocationBehaviorFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdMemoryOverallocationBehaviorFn {}
 unsafe impl Send for AmdMemoryOverallocationBehaviorFn {}
 unsafe impl Sync for AmdMemoryOverallocationBehaviorFn {}
-impl ::std::clone::Clone for AmdMemoryOverallocationBehaviorFn {
-    fn clone(&self) -> Self {
-        AmdMemoryOverallocationBehaviorFn {}
-    }
-}
 impl AmdMemoryOverallocationBehaviorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16506,14 +15425,10 @@ impl ExtVertexAttributeDivisorFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct ExtVertexAttributeDivisorFn {}
 unsafe impl Send for ExtVertexAttributeDivisorFn {}
 unsafe impl Sync for ExtVertexAttributeDivisorFn {}
-impl ::std::clone::Clone for ExtVertexAttributeDivisorFn {
-    fn clone(&self) -> Self {
-        ExtVertexAttributeDivisorFn {}
-    }
-}
 impl ExtVertexAttributeDivisorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16541,14 +15456,10 @@ impl GgpFrameTokenFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct GgpFrameTokenFn {}
 unsafe impl Send for GgpFrameTokenFn {}
 unsafe impl Sync for GgpFrameTokenFn {}
-impl ::std::clone::Clone for GgpFrameTokenFn {
-    fn clone(&self) -> Self {
-        GgpFrameTokenFn {}
-    }
-}
 impl GgpFrameTokenFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16568,14 +15479,10 @@ impl ExtPipelineCreationFeedbackFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtPipelineCreationFeedbackFn {}
 unsafe impl Send for ExtPipelineCreationFeedbackFn {}
 unsafe impl Sync for ExtPipelineCreationFeedbackFn {}
-impl ::std::clone::Clone for ExtPipelineCreationFeedbackFn {
-    fn clone(&self) -> Self {
-        ExtPipelineCreationFeedbackFn {}
-    }
-}
 impl ExtPipelineCreationFeedbackFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16595,14 +15502,10 @@ impl GoogleExtension194Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension194Fn {}
 unsafe impl Send for GoogleExtension194Fn {}
 unsafe impl Sync for GoogleExtension194Fn {}
-impl ::std::clone::Clone for GoogleExtension194Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension194Fn {}
-    }
-}
 impl GoogleExtension194Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16618,14 +15521,10 @@ impl GoogleExtension195Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension195Fn {}
 unsafe impl Send for GoogleExtension195Fn {}
 unsafe impl Sync for GoogleExtension195Fn {}
-impl ::std::clone::Clone for GoogleExtension195Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension195Fn {}
-    }
-}
 impl GoogleExtension195Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16641,14 +15540,10 @@ impl GoogleExtension196Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension196Fn {}
 unsafe impl Send for GoogleExtension196Fn {}
 unsafe impl Sync for GoogleExtension196Fn {}
-impl ::std::clone::Clone for GoogleExtension196Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension196Fn {}
-    }
-}
 impl GoogleExtension196Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16668,14 +15563,10 @@ impl KhrDriverPropertiesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrDriverPropertiesFn {}
 unsafe impl Send for KhrDriverPropertiesFn {}
 unsafe impl Sync for KhrDriverPropertiesFn {}
-impl ::std::clone::Clone for KhrDriverPropertiesFn {
-    fn clone(&self) -> Self {
-        KhrDriverPropertiesFn {}
-    }
-}
 impl KhrDriverPropertiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16686,56 +15577,55 @@ impl KhrDriverPropertiesFn {
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_DRIVER_PROPERTIES;
+    pub const PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR: Self = Self::PHYSICAL_DEVICE_DRIVER_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const AMD_PROPRIETARY_KHR: Self = DriverId::AMD_PROPRIETARY;
+    pub const AMD_PROPRIETARY_KHR: Self = Self::AMD_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const AMD_OPEN_SOURCE_KHR: Self = DriverId::AMD_OPEN_SOURCE;
+    pub const AMD_OPEN_SOURCE_KHR: Self = Self::AMD_OPEN_SOURCE;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const MESA_RADV_KHR: Self = DriverId::MESA_RADV;
+    pub const MESA_RADV_KHR: Self = Self::MESA_RADV;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const NVIDIA_PROPRIETARY_KHR: Self = DriverId::NVIDIA_PROPRIETARY;
+    pub const NVIDIA_PROPRIETARY_KHR: Self = Self::NVIDIA_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const INTEL_PROPRIETARY_WINDOWS_KHR: Self = DriverId::INTEL_PROPRIETARY_WINDOWS;
+    pub const INTEL_PROPRIETARY_WINDOWS_KHR: Self = Self::INTEL_PROPRIETARY_WINDOWS;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const INTEL_OPEN_SOURCE_MESA_KHR: Self = DriverId::INTEL_OPEN_SOURCE_MESA;
+    pub const INTEL_OPEN_SOURCE_MESA_KHR: Self = Self::INTEL_OPEN_SOURCE_MESA;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const IMAGINATION_PROPRIETARY_KHR: Self = DriverId::IMAGINATION_PROPRIETARY;
+    pub const IMAGINATION_PROPRIETARY_KHR: Self = Self::IMAGINATION_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const QUALCOMM_PROPRIETARY_KHR: Self = DriverId::QUALCOMM_PROPRIETARY;
+    pub const QUALCOMM_PROPRIETARY_KHR: Self = Self::QUALCOMM_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const ARM_PROPRIETARY_KHR: Self = DriverId::ARM_PROPRIETARY;
+    pub const ARM_PROPRIETARY_KHR: Self = Self::ARM_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const GOOGLE_SWIFTSHADER_KHR: Self = DriverId::GOOGLE_SWIFTSHADER;
+    pub const GOOGLE_SWIFTSHADER_KHR: Self = Self::GOOGLE_SWIFTSHADER;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const GGP_PROPRIETARY_KHR: Self = DriverId::GGP_PROPRIETARY;
+    pub const GGP_PROPRIETARY_KHR: Self = Self::GGP_PROPRIETARY;
 }
 #[doc = "Generated from 'VK_KHR_driver_properties'"]
 impl DriverId {
-    pub const BROADCOM_PROPRIETARY_KHR: Self = DriverId::BROADCOM_PROPRIETARY;
+    pub const BROADCOM_PROPRIETARY_KHR: Self = Self::BROADCOM_PROPRIETARY;
 }
 impl KhrShaderFloatControlsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -16744,14 +15634,10 @@ impl KhrShaderFloatControlsFn {
     }
     pub const SPEC_VERSION: u32 = 4u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderFloatControlsFn {}
 unsafe impl Send for KhrShaderFloatControlsFn {}
 unsafe impl Sync for KhrShaderFloatControlsFn {}
-impl ::std::clone::Clone for KhrShaderFloatControlsFn {
-    fn clone(&self) -> Self {
-        KhrShaderFloatControlsFn {}
-    }
-}
 impl KhrShaderFloatControlsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16763,19 +15649,19 @@ impl KhrShaderFloatControlsFn {
 #[doc = "Generated from 'VK_KHR_shader_float_controls'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES;
+        Self::PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_shader_float_controls'"]
 impl ShaderFloatControlsIndependence {
-    pub const TYPE_32_ONLY_KHR: Self = ShaderFloatControlsIndependence::TYPE_32_ONLY;
+    pub const TYPE_32_ONLY_KHR: Self = Self::TYPE_32_ONLY;
 }
 #[doc = "Generated from 'VK_KHR_shader_float_controls'"]
 impl ShaderFloatControlsIndependence {
-    pub const ALL_KHR: Self = ShaderFloatControlsIndependence::ALL;
+    pub const ALL_KHR: Self = Self::ALL;
 }
 #[doc = "Generated from 'VK_KHR_shader_float_controls'"]
 impl ShaderFloatControlsIndependence {
-    pub const NONE_KHR: Self = ShaderFloatControlsIndependence::NONE;
+    pub const NONE_KHR: Self = Self::NONE;
 }
 impl NvShaderSubgroupPartitionedFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -16784,14 +15670,10 @@ impl NvShaderSubgroupPartitionedFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvShaderSubgroupPartitionedFn {}
 unsafe impl Send for NvShaderSubgroupPartitionedFn {}
 unsafe impl Sync for NvShaderSubgroupPartitionedFn {}
-impl ::std::clone::Clone for NvShaderSubgroupPartitionedFn {
-    fn clone(&self) -> Self {
-        NvShaderSubgroupPartitionedFn {}
-    }
-}
 impl NvShaderSubgroupPartitionedFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16811,14 +15693,10 @@ impl KhrDepthStencilResolveFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrDepthStencilResolveFn {}
 unsafe impl Send for KhrDepthStencilResolveFn {}
 unsafe impl Sync for KhrDepthStencilResolveFn {}
-impl ::std::clone::Clone for KhrDepthStencilResolveFn {
-    fn clone(&self) -> Self {
-        KhrDepthStencilResolveFn {}
-    }
-}
 impl KhrDepthStencilResolveFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16830,32 +15708,32 @@ impl KhrDepthStencilResolveFn {
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES;
+        Self::PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl StructureType {
     pub const SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR: Self =
-        StructureType::SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE;
+        Self::SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl ResolveModeFlags {
-    pub const NONE_KHR: Self = ResolveModeFlags::NONE;
+    pub const NONE_KHR: Self = Self::NONE;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl ResolveModeFlags {
-    pub const SAMPLE_ZERO_KHR: Self = ResolveModeFlags::SAMPLE_ZERO;
+    pub const SAMPLE_ZERO_KHR: Self = Self::SAMPLE_ZERO;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl ResolveModeFlags {
-    pub const AVERAGE_KHR: Self = ResolveModeFlags::AVERAGE;
+    pub const AVERAGE_KHR: Self = Self::AVERAGE;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl ResolveModeFlags {
-    pub const MIN_KHR: Self = ResolveModeFlags::MIN;
+    pub const MIN_KHR: Self = Self::MIN;
 }
 #[doc = "Generated from 'VK_KHR_depth_stencil_resolve'"]
 impl ResolveModeFlags {
-    pub const MAX_KHR: Self = ResolveModeFlags::MAX;
+    pub const MAX_KHR: Self = Self::MAX;
 }
 impl KhrSwapchainMutableFormatFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -16864,14 +15742,10 @@ impl KhrSwapchainMutableFormatFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrSwapchainMutableFormatFn {}
 unsafe impl Send for KhrSwapchainMutableFormatFn {}
 unsafe impl Sync for KhrSwapchainMutableFormatFn {}
-impl ::std::clone::Clone for KhrSwapchainMutableFormatFn {
-    fn clone(&self) -> Self {
-        KhrSwapchainMutableFormatFn {}
-    }
-}
 impl KhrSwapchainMutableFormatFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16891,14 +15765,10 @@ impl NvComputeShaderDerivativesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvComputeShaderDerivativesFn {}
 unsafe impl Send for NvComputeShaderDerivativesFn {}
 unsafe impl Sync for NvComputeShaderDerivativesFn {}
-impl ::std::clone::Clone for NvComputeShaderDerivativesFn {
-    fn clone(&self) -> Self {
-        NvComputeShaderDerivativesFn {}
-    }
-}
 impl NvComputeShaderDerivativesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16920,9 +15790,9 @@ impl NvMeshShaderFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdDrawMeshTasksNV =
-    extern "system" fn(command_buffer: CommandBuffer, task_count: u32, first_task: u32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, task_count: u32, first_task: u32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDrawMeshTasksIndirectNV = extern "system" fn(
+pub type PFN_vkCmdDrawMeshTasksIndirectNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     buffer: Buffer,
     offset: DeviceSize,
@@ -16930,7 +15800,7 @@ pub type PFN_vkCmdDrawMeshTasksIndirectNV = extern "system" fn(
     stride: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdDrawMeshTasksIndirectCountNV = extern "system" fn(
+pub type PFN_vkCmdDrawMeshTasksIndirectCountNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     buffer: Buffer,
     offset: DeviceSize,
@@ -16939,37 +15809,14 @@ pub type PFN_vkCmdDrawMeshTasksIndirectCountNV = extern "system" fn(
     max_draw_count: u32,
     stride: u32,
 );
+#[derive(Clone)]
 pub struct NvMeshShaderFn {
-    pub cmd_draw_mesh_tasks_nv:
-        extern "system" fn(command_buffer: CommandBuffer, task_count: u32, first_task: u32),
-    pub cmd_draw_mesh_tasks_indirect_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        draw_count: u32,
-        stride: u32,
-    ),
-    pub cmd_draw_mesh_tasks_indirect_count_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ),
+    pub cmd_draw_mesh_tasks_nv: PFN_vkCmdDrawMeshTasksNV,
+    pub cmd_draw_mesh_tasks_indirect_nv: PFN_vkCmdDrawMeshTasksIndirectNV,
+    pub cmd_draw_mesh_tasks_indirect_count_nv: PFN_vkCmdDrawMeshTasksIndirectCountNV,
 }
 unsafe impl Send for NvMeshShaderFn {}
 unsafe impl Sync for NvMeshShaderFn {}
-impl ::std::clone::Clone for NvMeshShaderFn {
-    fn clone(&self) -> Self {
-        NvMeshShaderFn {
-            cmd_draw_mesh_tasks_nv: self.cmd_draw_mesh_tasks_nv,
-            cmd_draw_mesh_tasks_indirect_nv: self.cmd_draw_mesh_tasks_indirect_nv,
-            cmd_draw_mesh_tasks_indirect_count_nv: self.cmd_draw_mesh_tasks_indirect_count_nv,
-        }
-    }
-}
 impl NvMeshShaderFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -16977,7 +15824,7 @@ impl NvMeshShaderFn {
     {
         NvMeshShaderFn {
             cmd_draw_mesh_tasks_nv: unsafe {
-                extern "system" fn cmd_draw_mesh_tasks_nv(
+                unsafe extern "system" fn cmd_draw_mesh_tasks_nv(
                     _command_buffer: CommandBuffer,
                     _task_count: u32,
                     _first_task: u32,
@@ -16997,7 +15844,7 @@ impl NvMeshShaderFn {
                 }
             },
             cmd_draw_mesh_tasks_indirect_nv: unsafe {
-                extern "system" fn cmd_draw_mesh_tasks_indirect_nv(
+                unsafe extern "system" fn cmd_draw_mesh_tasks_indirect_nv(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -17020,7 +15867,7 @@ impl NvMeshShaderFn {
                 }
             },
             cmd_draw_mesh_tasks_indirect_count_nv: unsafe {
-                extern "system" fn cmd_draw_mesh_tasks_indirect_count_nv(
+                unsafe extern "system" fn cmd_draw_mesh_tasks_indirect_count_nv(
                     _command_buffer: CommandBuffer,
                     _buffer: Buffer,
                     _offset: DeviceSize,
@@ -17119,14 +15966,10 @@ impl NvFragmentShaderBarycentricFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvFragmentShaderBarycentricFn {}
 unsafe impl Send for NvFragmentShaderBarycentricFn {}
 unsafe impl Sync for NvFragmentShaderBarycentricFn {}
-impl ::std::clone::Clone for NvFragmentShaderBarycentricFn {
-    fn clone(&self) -> Self {
-        NvFragmentShaderBarycentricFn {}
-    }
-}
 impl NvFragmentShaderBarycentricFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17146,14 +15989,10 @@ impl NvShaderImageFootprintFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct NvShaderImageFootprintFn {}
 unsafe impl Send for NvShaderImageFootprintFn {}
 unsafe impl Sync for NvShaderImageFootprintFn {}
-impl ::std::clone::Clone for NvShaderImageFootprintFn {
-    fn clone(&self) -> Self {
-        NvShaderImageFootprintFn {}
-    }
-}
 impl NvShaderImageFootprintFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17174,29 +16013,18 @@ impl NvScissorExclusiveFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetExclusiveScissorNV = extern "system" fn(
+pub type PFN_vkCmdSetExclusiveScissorNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_exclusive_scissor: u32,
     exclusive_scissor_count: u32,
     p_exclusive_scissors: *const Rect2D,
 );
+#[derive(Clone)]
 pub struct NvScissorExclusiveFn {
-    pub cmd_set_exclusive_scissor_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_exclusive_scissor: u32,
-        exclusive_scissor_count: u32,
-        p_exclusive_scissors: *const Rect2D,
-    ),
+    pub cmd_set_exclusive_scissor_nv: PFN_vkCmdSetExclusiveScissorNV,
 }
 unsafe impl Send for NvScissorExclusiveFn {}
 unsafe impl Sync for NvScissorExclusiveFn {}
-impl ::std::clone::Clone for NvScissorExclusiveFn {
-    fn clone(&self) -> Self {
-        NvScissorExclusiveFn {
-            cmd_set_exclusive_scissor_nv: self.cmd_set_exclusive_scissor_nv,
-        }
-    }
-}
 impl NvScissorExclusiveFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17204,7 +16032,7 @@ impl NvScissorExclusiveFn {
     {
         NvScissorExclusiveFn {
             cmd_set_exclusive_scissor_nv: unsafe {
-                extern "system" fn cmd_set_exclusive_scissor_nv(
+                unsafe extern "system" fn cmd_set_exclusive_scissor_nv(
                     _command_buffer: CommandBuffer,
                     _first_exclusive_scissor: u32,
                     _exclusive_scissor_count: u32,
@@ -17264,32 +16092,20 @@ impl NvDeviceDiagnosticCheckpointsFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetCheckpointNV =
-    extern "system" fn(command_buffer: CommandBuffer, p_checkpoint_marker: *const c_void);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, p_checkpoint_marker: *const c_void);
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetQueueCheckpointDataNV = extern "system" fn(
+pub type PFN_vkGetQueueCheckpointDataNV = unsafe extern "system" fn(
     queue: Queue,
     p_checkpoint_data_count: *mut u32,
     p_checkpoint_data: *mut CheckpointDataNV,
 );
+#[derive(Clone)]
 pub struct NvDeviceDiagnosticCheckpointsFn {
-    pub cmd_set_checkpoint_nv:
-        extern "system" fn(command_buffer: CommandBuffer, p_checkpoint_marker: *const c_void),
-    pub get_queue_checkpoint_data_nv: extern "system" fn(
-        queue: Queue,
-        p_checkpoint_data_count: *mut u32,
-        p_checkpoint_data: *mut CheckpointDataNV,
-    ),
+    pub cmd_set_checkpoint_nv: PFN_vkCmdSetCheckpointNV,
+    pub get_queue_checkpoint_data_nv: PFN_vkGetQueueCheckpointDataNV,
 }
 unsafe impl Send for NvDeviceDiagnosticCheckpointsFn {}
 unsafe impl Sync for NvDeviceDiagnosticCheckpointsFn {}
-impl ::std::clone::Clone for NvDeviceDiagnosticCheckpointsFn {
-    fn clone(&self) -> Self {
-        NvDeviceDiagnosticCheckpointsFn {
-            cmd_set_checkpoint_nv: self.cmd_set_checkpoint_nv,
-            get_queue_checkpoint_data_nv: self.get_queue_checkpoint_data_nv,
-        }
-    }
-}
 impl NvDeviceDiagnosticCheckpointsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17297,7 +16113,7 @@ impl NvDeviceDiagnosticCheckpointsFn {
     {
         NvDeviceDiagnosticCheckpointsFn {
             cmd_set_checkpoint_nv: unsafe {
-                extern "system" fn cmd_set_checkpoint_nv(
+                unsafe extern "system" fn cmd_set_checkpoint_nv(
                     _command_buffer: CommandBuffer,
                     _p_checkpoint_marker: *const c_void,
                 ) {
@@ -17316,7 +16132,7 @@ impl NvDeviceDiagnosticCheckpointsFn {
                 }
             },
             get_queue_checkpoint_data_nv: unsafe {
-                extern "system" fn get_queue_checkpoint_data_nv(
+                unsafe extern "system" fn get_queue_checkpoint_data_nv(
                     _queue: Queue,
                     _p_checkpoint_data_count: *mut u32,
                     _p_checkpoint_data: *mut CheckpointDataNV,
@@ -17373,38 +16189,24 @@ impl KhrTimelineSemaphoreFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetSemaphoreCounterValue =
-    extern "system" fn(device: Device, semaphore: Semaphore, p_value: *mut u64) -> Result;
+    unsafe extern "system" fn(device: Device, semaphore: Semaphore, p_value: *mut u64) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkWaitSemaphores = extern "system" fn(
+pub type PFN_vkWaitSemaphores = unsafe extern "system" fn(
     device: Device,
     p_wait_info: *const SemaphoreWaitInfo,
     timeout: u64,
 ) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkSignalSemaphore =
-    extern "system" fn(device: Device, p_signal_info: *const SemaphoreSignalInfo) -> Result;
+    unsafe extern "system" fn(device: Device, p_signal_info: *const SemaphoreSignalInfo) -> Result;
+#[derive(Clone)]
 pub struct KhrTimelineSemaphoreFn {
-    pub get_semaphore_counter_value_khr:
-        extern "system" fn(device: Device, semaphore: Semaphore, p_value: *mut u64) -> Result,
-    pub wait_semaphores_khr: extern "system" fn(
-        device: Device,
-        p_wait_info: *const SemaphoreWaitInfo,
-        timeout: u64,
-    ) -> Result,
-    pub signal_semaphore_khr:
-        extern "system" fn(device: Device, p_signal_info: *const SemaphoreSignalInfo) -> Result,
+    pub get_semaphore_counter_value_khr: PFN_vkGetSemaphoreCounterValue,
+    pub wait_semaphores_khr: PFN_vkWaitSemaphores,
+    pub signal_semaphore_khr: PFN_vkSignalSemaphore,
 }
 unsafe impl Send for KhrTimelineSemaphoreFn {}
 unsafe impl Sync for KhrTimelineSemaphoreFn {}
-impl ::std::clone::Clone for KhrTimelineSemaphoreFn {
-    fn clone(&self) -> Self {
-        KhrTimelineSemaphoreFn {
-            get_semaphore_counter_value_khr: self.get_semaphore_counter_value_khr,
-            wait_semaphores_khr: self.wait_semaphores_khr,
-            signal_semaphore_khr: self.signal_semaphore_khr,
-        }
-    }
-}
 impl KhrTimelineSemaphoreFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17412,7 +16214,7 @@ impl KhrTimelineSemaphoreFn {
     {
         KhrTimelineSemaphoreFn {
             get_semaphore_counter_value_khr: unsafe {
-                extern "system" fn get_semaphore_counter_value_khr(
+                unsafe extern "system" fn get_semaphore_counter_value_khr(
                     _device: Device,
                     _semaphore: Semaphore,
                     _p_value: *mut u64,
@@ -17433,7 +16235,7 @@ impl KhrTimelineSemaphoreFn {
                 }
             },
             wait_semaphores_khr: unsafe {
-                extern "system" fn wait_semaphores_khr(
+                unsafe extern "system" fn wait_semaphores_khr(
                     _device: Device,
                     _p_wait_info: *const SemaphoreWaitInfo,
                     _timeout: u64,
@@ -17450,7 +16252,7 @@ impl KhrTimelineSemaphoreFn {
                 }
             },
             signal_semaphore_khr: unsafe {
-                extern "system" fn signal_semaphore_khr(
+                unsafe extern "system" fn signal_semaphore_khr(
                     _device: Device,
                     _p_signal_info: *const SemaphoreSignalInfo,
                 ) -> Result {
@@ -17497,41 +16299,40 @@ impl KhrTimelineSemaphoreFn {
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
+        Self::PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES;
+        Self::PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
-    pub const SEMAPHORE_TYPE_CREATE_INFO_KHR: Self = StructureType::SEMAPHORE_TYPE_CREATE_INFO;
+    pub const SEMAPHORE_TYPE_CREATE_INFO_KHR: Self = Self::SEMAPHORE_TYPE_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
-    pub const TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR: Self =
-        StructureType::TIMELINE_SEMAPHORE_SUBMIT_INFO;
+    pub const TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR: Self = Self::TIMELINE_SEMAPHORE_SUBMIT_INFO;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
-    pub const SEMAPHORE_WAIT_INFO_KHR: Self = StructureType::SEMAPHORE_WAIT_INFO;
+    pub const SEMAPHORE_WAIT_INFO_KHR: Self = Self::SEMAPHORE_WAIT_INFO;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl StructureType {
-    pub const SEMAPHORE_SIGNAL_INFO_KHR: Self = StructureType::SEMAPHORE_SIGNAL_INFO;
+    pub const SEMAPHORE_SIGNAL_INFO_KHR: Self = Self::SEMAPHORE_SIGNAL_INFO;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl SemaphoreType {
-    pub const BINARY_KHR: Self = SemaphoreType::BINARY;
+    pub const BINARY_KHR: Self = Self::BINARY;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl SemaphoreType {
-    pub const TIMELINE_KHR: Self = SemaphoreType::TIMELINE;
+    pub const TIMELINE_KHR: Self = Self::TIMELINE;
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl SemaphoreWaitFlags {
-    pub const ANY_KHR: Self = SemaphoreWaitFlags::ANY;
+    pub const ANY_KHR: Self = Self::ANY;
 }
 impl KhrExtension209Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -17540,14 +16341,10 @@ impl KhrExtension209Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension209Fn {}
 unsafe impl Send for KhrExtension209Fn {}
 unsafe impl Sync for KhrExtension209Fn {}
-impl ::std::clone::Clone for KhrExtension209Fn {
-    fn clone(&self) -> Self {
-        KhrExtension209Fn {}
-    }
-}
 impl KhrExtension209Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17563,14 +16360,10 @@ impl IntelShaderIntegerFunctions2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct IntelShaderIntegerFunctions2Fn {}
 unsafe impl Send for IntelShaderIntegerFunctions2Fn {}
 unsafe impl Sync for IntelShaderIntegerFunctions2Fn {}
-impl ::std::clone::Clone for IntelShaderIntegerFunctions2Fn {
-    fn clone(&self) -> Self {
-        IntelShaderIntegerFunctions2Fn {}
-    }
-}
 impl IntelShaderIntegerFunctions2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17591,96 +16384,61 @@ impl IntelPerformanceQueryFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkInitializePerformanceApiINTEL = extern "system" fn(
+pub type PFN_vkInitializePerformanceApiINTEL = unsafe extern "system" fn(
     device: Device,
     p_initialize_info: *const InitializePerformanceApiInfoINTEL,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkUninitializePerformanceApiINTEL = extern "system" fn(device: Device);
+pub type PFN_vkUninitializePerformanceApiINTEL = unsafe extern "system" fn(device: Device);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetPerformanceMarkerINTEL = extern "system" fn(
+pub type PFN_vkCmdSetPerformanceMarkerINTEL = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_marker_info: *const PerformanceMarkerInfoINTEL,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetPerformanceStreamMarkerINTEL = extern "system" fn(
+pub type PFN_vkCmdSetPerformanceStreamMarkerINTEL = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_marker_info: *const PerformanceStreamMarkerInfoINTEL,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetPerformanceOverrideINTEL = extern "system" fn(
+pub type PFN_vkCmdSetPerformanceOverrideINTEL = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_override_info: *const PerformanceOverrideInfoINTEL,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkAcquirePerformanceConfigurationINTEL = extern "system" fn(
+pub type PFN_vkAcquirePerformanceConfigurationINTEL = unsafe extern "system" fn(
     device: Device,
     p_acquire_info: *const PerformanceConfigurationAcquireInfoINTEL,
     p_configuration: *mut PerformanceConfigurationINTEL,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkReleasePerformanceConfigurationINTEL =
-    extern "system" fn(device: Device, configuration: PerformanceConfigurationINTEL) -> Result;
+pub type PFN_vkReleasePerformanceConfigurationINTEL = unsafe extern "system" fn(
+    device: Device,
+    configuration: PerformanceConfigurationINTEL,
+) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkQueueSetPerformanceConfigurationINTEL =
-    extern "system" fn(queue: Queue, configuration: PerformanceConfigurationINTEL) -> Result;
+    unsafe extern "system" fn(queue: Queue, configuration: PerformanceConfigurationINTEL) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPerformanceParameterINTEL = extern "system" fn(
+pub type PFN_vkGetPerformanceParameterINTEL = unsafe extern "system" fn(
     device: Device,
     parameter: PerformanceParameterTypeINTEL,
     p_value: *mut PerformanceValueINTEL,
 ) -> Result;
+#[derive(Clone)]
 pub struct IntelPerformanceQueryFn {
-    pub initialize_performance_api_intel: extern "system" fn(
-        device: Device,
-        p_initialize_info: *const InitializePerformanceApiInfoINTEL,
-    ) -> Result,
-    pub uninitialize_performance_api_intel: extern "system" fn(device: Device),
-    pub cmd_set_performance_marker_intel: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_marker_info: *const PerformanceMarkerInfoINTEL,
-    ) -> Result,
-    pub cmd_set_performance_stream_marker_intel: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_marker_info: *const PerformanceStreamMarkerInfoINTEL,
-    ) -> Result,
-    pub cmd_set_performance_override_intel: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_override_info: *const PerformanceOverrideInfoINTEL,
-    ) -> Result,
-    pub acquire_performance_configuration_intel: extern "system" fn(
-        device: Device,
-        p_acquire_info: *const PerformanceConfigurationAcquireInfoINTEL,
-        p_configuration: *mut PerformanceConfigurationINTEL,
-    ) -> Result,
-    pub release_performance_configuration_intel:
-        extern "system" fn(device: Device, configuration: PerformanceConfigurationINTEL) -> Result,
-    pub queue_set_performance_configuration_intel:
-        extern "system" fn(queue: Queue, configuration: PerformanceConfigurationINTEL) -> Result,
-    pub get_performance_parameter_intel: extern "system" fn(
-        device: Device,
-        parameter: PerformanceParameterTypeINTEL,
-        p_value: *mut PerformanceValueINTEL,
-    ) -> Result,
+    pub initialize_performance_api_intel: PFN_vkInitializePerformanceApiINTEL,
+    pub uninitialize_performance_api_intel: PFN_vkUninitializePerformanceApiINTEL,
+    pub cmd_set_performance_marker_intel: PFN_vkCmdSetPerformanceMarkerINTEL,
+    pub cmd_set_performance_stream_marker_intel: PFN_vkCmdSetPerformanceStreamMarkerINTEL,
+    pub cmd_set_performance_override_intel: PFN_vkCmdSetPerformanceOverrideINTEL,
+    pub acquire_performance_configuration_intel: PFN_vkAcquirePerformanceConfigurationINTEL,
+    pub release_performance_configuration_intel: PFN_vkReleasePerformanceConfigurationINTEL,
+    pub queue_set_performance_configuration_intel: PFN_vkQueueSetPerformanceConfigurationINTEL,
+    pub get_performance_parameter_intel: PFN_vkGetPerformanceParameterINTEL,
 }
 unsafe impl Send for IntelPerformanceQueryFn {}
 unsafe impl Sync for IntelPerformanceQueryFn {}
-impl ::std::clone::Clone for IntelPerformanceQueryFn {
-    fn clone(&self) -> Self {
-        IntelPerformanceQueryFn {
-            initialize_performance_api_intel: self.initialize_performance_api_intel,
-            uninitialize_performance_api_intel: self.uninitialize_performance_api_intel,
-            cmd_set_performance_marker_intel: self.cmd_set_performance_marker_intel,
-            cmd_set_performance_stream_marker_intel: self.cmd_set_performance_stream_marker_intel,
-            cmd_set_performance_override_intel: self.cmd_set_performance_override_intel,
-            acquire_performance_configuration_intel: self.acquire_performance_configuration_intel,
-            release_performance_configuration_intel: self.release_performance_configuration_intel,
-            queue_set_performance_configuration_intel: self
-                .queue_set_performance_configuration_intel,
-            get_performance_parameter_intel: self.get_performance_parameter_intel,
-        }
-    }
-}
 impl IntelPerformanceQueryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -17688,7 +16446,7 @@ impl IntelPerformanceQueryFn {
     {
         IntelPerformanceQueryFn {
             initialize_performance_api_intel: unsafe {
-                extern "system" fn initialize_performance_api_intel(
+                unsafe extern "system" fn initialize_performance_api_intel(
                     _device: Device,
                     _p_initialize_info: *const InitializePerformanceApiInfoINTEL,
                 ) -> Result {
@@ -17708,7 +16466,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             uninitialize_performance_api_intel: unsafe {
-                extern "system" fn uninitialize_performance_api_intel(_device: Device) {
+                unsafe extern "system" fn uninitialize_performance_api_intel(_device: Device) {
                     panic!(concat!(
                         "Unable to load ",
                         stringify!(uninitialize_performance_api_intel)
@@ -17725,7 +16483,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             cmd_set_performance_marker_intel: unsafe {
-                extern "system" fn cmd_set_performance_marker_intel(
+                unsafe extern "system" fn cmd_set_performance_marker_intel(
                     _command_buffer: CommandBuffer,
                     _p_marker_info: *const PerformanceMarkerInfoINTEL,
                 ) -> Result {
@@ -17745,7 +16503,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             cmd_set_performance_stream_marker_intel: unsafe {
-                extern "system" fn cmd_set_performance_stream_marker_intel(
+                unsafe extern "system" fn cmd_set_performance_stream_marker_intel(
                     _command_buffer: CommandBuffer,
                     _p_marker_info: *const PerformanceStreamMarkerInfoINTEL,
                 ) -> Result {
@@ -17765,7 +16523,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             cmd_set_performance_override_intel: unsafe {
-                extern "system" fn cmd_set_performance_override_intel(
+                unsafe extern "system" fn cmd_set_performance_override_intel(
                     _command_buffer: CommandBuffer,
                     _p_override_info: *const PerformanceOverrideInfoINTEL,
                 ) -> Result {
@@ -17785,7 +16543,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             acquire_performance_configuration_intel: unsafe {
-                extern "system" fn acquire_performance_configuration_intel(
+                unsafe extern "system" fn acquire_performance_configuration_intel(
                     _device: Device,
                     _p_acquire_info: *const PerformanceConfigurationAcquireInfoINTEL,
                     _p_configuration: *mut PerformanceConfigurationINTEL,
@@ -17806,7 +16564,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             release_performance_configuration_intel: unsafe {
-                extern "system" fn release_performance_configuration_intel(
+                unsafe extern "system" fn release_performance_configuration_intel(
                     _device: Device,
                     _configuration: PerformanceConfigurationINTEL,
                 ) -> Result {
@@ -17826,7 +16584,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             queue_set_performance_configuration_intel: unsafe {
-                extern "system" fn queue_set_performance_configuration_intel(
+                unsafe extern "system" fn queue_set_performance_configuration_intel(
                     _queue: Queue,
                     _configuration: PerformanceConfigurationINTEL,
                 ) -> Result {
@@ -17846,7 +16604,7 @@ impl IntelPerformanceQueryFn {
                 }
             },
             get_performance_parameter_intel: unsafe {
-                extern "system" fn get_performance_parameter_intel(
+                unsafe extern "system" fn get_performance_parameter_intel(
                     _device: Device,
                     _parameter: PerformanceParameterTypeINTEL,
                     _p_value: *mut PerformanceValueINTEL,
@@ -17946,7 +16704,7 @@ impl StructureType {
 #[doc = "Generated from 'VK_INTEL_performance_query'"]
 impl StructureType {
     pub const QUERY_POOL_CREATE_INFO_INTEL: Self =
-        StructureType::QUERY_POOL_PERFORMANCE_QUERY_CREATE_INFO_INTEL;
+        Self::QUERY_POOL_PERFORMANCE_QUERY_CREATE_INFO_INTEL;
 }
 #[doc = "Generated from 'VK_INTEL_performance_query'"]
 impl StructureType {
@@ -17983,14 +16741,10 @@ impl KhrVulkanMemoryModelFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct KhrVulkanMemoryModelFn {}
 unsafe impl Send for KhrVulkanMemoryModelFn {}
 unsafe impl Sync for KhrVulkanMemoryModelFn {}
-impl ::std::clone::Clone for KhrVulkanMemoryModelFn {
-    fn clone(&self) -> Self {
-        KhrVulkanMemoryModelFn {}
-    }
-}
 impl KhrVulkanMemoryModelFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18002,7 +16756,7 @@ impl KhrVulkanMemoryModelFn {
 #[doc = "Generated from 'VK_KHR_vulkan_memory_model'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES;
+        Self::PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES;
 }
 impl ExtPciBusInfoFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -18011,14 +16765,10 @@ impl ExtPciBusInfoFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtPciBusInfoFn {}
 unsafe impl Send for ExtPciBusInfoFn {}
 unsafe impl Sync for ExtPciBusInfoFn {}
-impl ::std::clone::Clone for ExtPciBusInfoFn {
-    fn clone(&self) -> Self {
-        ExtPciBusInfoFn {}
-    }
-}
 impl ExtPciBusInfoFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18039,21 +16789,17 @@ impl AmdDisplayNativeHdrFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetLocalDimmingAMD =
-    extern "system" fn(device: Device, swap_chain: SwapchainKHR, local_dimming_enable: Bool32);
+pub type PFN_vkSetLocalDimmingAMD = unsafe extern "system" fn(
+    device: Device,
+    swap_chain: SwapchainKHR,
+    local_dimming_enable: Bool32,
+);
+#[derive(Clone)]
 pub struct AmdDisplayNativeHdrFn {
-    pub set_local_dimming_amd:
-        extern "system" fn(device: Device, swap_chain: SwapchainKHR, local_dimming_enable: Bool32),
+    pub set_local_dimming_amd: PFN_vkSetLocalDimmingAMD,
 }
 unsafe impl Send for AmdDisplayNativeHdrFn {}
 unsafe impl Sync for AmdDisplayNativeHdrFn {}
-impl ::std::clone::Clone for AmdDisplayNativeHdrFn {
-    fn clone(&self) -> Self {
-        AmdDisplayNativeHdrFn {
-            set_local_dimming_amd: self.set_local_dimming_amd,
-        }
-    }
-}
 impl AmdDisplayNativeHdrFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18061,7 +16807,7 @@ impl AmdDisplayNativeHdrFn {
     {
         AmdDisplayNativeHdrFn {
             set_local_dimming_amd: unsafe {
-                extern "system" fn set_local_dimming_amd(
+                unsafe extern "system" fn set_local_dimming_amd(
                     _device: Device,
                     _swap_chain: SwapchainKHR,
                     _local_dimming_enable: Bool32,
@@ -18112,29 +16858,18 @@ impl FuchsiaImagepipeSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateImagePipeSurfaceFUCHSIA = extern "system" fn(
+pub type PFN_vkCreateImagePipeSurfaceFUCHSIA = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const ImagePipeSurfaceCreateInfoFUCHSIA,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct FuchsiaImagepipeSurfaceFn {
-    pub create_image_pipe_surface_fuchsia: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const ImagePipeSurfaceCreateInfoFUCHSIA,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_image_pipe_surface_fuchsia: PFN_vkCreateImagePipeSurfaceFUCHSIA,
 }
 unsafe impl Send for FuchsiaImagepipeSurfaceFn {}
 unsafe impl Sync for FuchsiaImagepipeSurfaceFn {}
-impl ::std::clone::Clone for FuchsiaImagepipeSurfaceFn {
-    fn clone(&self) -> Self {
-        FuchsiaImagepipeSurfaceFn {
-            create_image_pipe_surface_fuchsia: self.create_image_pipe_surface_fuchsia,
-        }
-    }
-}
 impl FuchsiaImagepipeSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18142,7 +16877,7 @@ impl FuchsiaImagepipeSurfaceFn {
     {
         FuchsiaImagepipeSurfaceFn {
             create_image_pipe_surface_fuchsia: unsafe {
-                extern "system" fn create_image_pipe_surface_fuchsia(
+                unsafe extern "system" fn create_image_pipe_surface_fuchsia(
                     _instance: Instance,
                     _p_create_info: *const ImagePipeSurfaceCreateInfoFUCHSIA,
                     _p_allocator: *const AllocationCallbacks,
@@ -18187,14 +16922,10 @@ impl KhrShaderTerminateInvocationFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderTerminateInvocationFn {}
 unsafe impl Send for KhrShaderTerminateInvocationFn {}
 unsafe impl Sync for KhrShaderTerminateInvocationFn {}
-impl ::std::clone::Clone for KhrShaderTerminateInvocationFn {
-    fn clone(&self) -> Self {
-        KhrShaderTerminateInvocationFn {}
-    }
-}
 impl KhrShaderTerminateInvocationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18214,14 +16945,10 @@ impl GoogleExtension217Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension217Fn {}
 unsafe impl Send for GoogleExtension217Fn {}
 unsafe impl Sync for GoogleExtension217Fn {}
-impl ::std::clone::Clone for GoogleExtension217Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension217Fn {}
-    }
-}
 impl GoogleExtension217Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18238,29 +16965,18 @@ impl ExtMetalSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateMetalSurfaceEXT = extern "system" fn(
+pub type PFN_vkCreateMetalSurfaceEXT = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const MetalSurfaceCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtMetalSurfaceFn {
-    pub create_metal_surface_ext: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const MetalSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_metal_surface_ext: PFN_vkCreateMetalSurfaceEXT,
 }
 unsafe impl Send for ExtMetalSurfaceFn {}
 unsafe impl Sync for ExtMetalSurfaceFn {}
-impl ::std::clone::Clone for ExtMetalSurfaceFn {
-    fn clone(&self) -> Self {
-        ExtMetalSurfaceFn {
-            create_metal_surface_ext: self.create_metal_surface_ext,
-        }
-    }
-}
 impl ExtMetalSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18268,7 +16984,7 @@ impl ExtMetalSurfaceFn {
     {
         ExtMetalSurfaceFn {
             create_metal_surface_ext: unsafe {
-                extern "system" fn create_metal_surface_ext(
+                unsafe extern "system" fn create_metal_surface_ext(
                     _instance: Instance,
                     _p_create_info: *const MetalSurfaceCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -18312,14 +17028,10 @@ impl ExtFragmentDensityMapFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtFragmentDensityMapFn {}
 unsafe impl Send for ExtFragmentDensityMapFn {}
 unsafe impl Sync for ExtFragmentDensityMapFn {}
-impl ::std::clone::Clone for ExtFragmentDensityMapFn {
-    fn clone(&self) -> Self {
-        ExtFragmentDensityMapFn {}
-    }
-}
 impl ExtFragmentDensityMapFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18383,14 +17095,10 @@ impl ExtExtension220Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension220Fn {}
 unsafe impl Send for ExtExtension220Fn {}
 unsafe impl Sync for ExtExtension220Fn {}
-impl ::std::clone::Clone for ExtExtension220Fn {
-    fn clone(&self) -> Self {
-        ExtExtension220Fn {}
-    }
-}
 impl ExtExtension220Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18406,14 +17114,10 @@ impl KhrExtension221Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension221Fn {}
 unsafe impl Send for KhrExtension221Fn {}
 unsafe impl Sync for KhrExtension221Fn {}
-impl ::std::clone::Clone for KhrExtension221Fn {
-    fn clone(&self) -> Self {
-        KhrExtension221Fn {}
-    }
-}
 impl KhrExtension221Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18433,14 +17137,10 @@ impl ExtScalarBlockLayoutFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtScalarBlockLayoutFn {}
 unsafe impl Send for ExtScalarBlockLayoutFn {}
 unsafe impl Sync for ExtScalarBlockLayoutFn {}
-impl ::std::clone::Clone for ExtScalarBlockLayoutFn {
-    fn clone(&self) -> Self {
-        ExtScalarBlockLayoutFn {}
-    }
-}
 impl ExtScalarBlockLayoutFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18452,7 +17152,7 @@ impl ExtScalarBlockLayoutFn {
 #[doc = "Generated from 'VK_EXT_scalar_block_layout'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
+        Self::PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
 }
 impl ExtExtension223Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -18461,14 +17161,10 @@ impl ExtExtension223Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension223Fn {}
 unsafe impl Send for ExtExtension223Fn {}
 unsafe impl Sync for ExtExtension223Fn {}
-impl ::std::clone::Clone for ExtExtension223Fn {
-    fn clone(&self) -> Self {
-        ExtExtension223Fn {}
-    }
-}
 impl ExtExtension223Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18484,14 +17180,10 @@ impl GoogleHlslFunctionality1Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct GoogleHlslFunctionality1Fn {}
 unsafe impl Send for GoogleHlslFunctionality1Fn {}
 unsafe impl Sync for GoogleHlslFunctionality1Fn {}
-impl ::std::clone::Clone for GoogleHlslFunctionality1Fn {
-    fn clone(&self) -> Self {
-        GoogleHlslFunctionality1Fn {}
-    }
-}
 impl GoogleHlslFunctionality1Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18507,14 +17199,10 @@ impl GoogleDecorateStringFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct GoogleDecorateStringFn {}
 unsafe impl Send for GoogleDecorateStringFn {}
 unsafe impl Sync for GoogleDecorateStringFn {}
-impl ::std::clone::Clone for GoogleDecorateStringFn {
-    fn clone(&self) -> Self {
-        GoogleDecorateStringFn {}
-    }
-}
 impl GoogleDecorateStringFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18530,14 +17218,10 @@ impl ExtSubgroupSizeControlFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtSubgroupSizeControlFn {}
 unsafe impl Send for ExtSubgroupSizeControlFn {}
 unsafe impl Sync for ExtSubgroupSizeControlFn {}
-impl ::std::clone::Clone for ExtSubgroupSizeControlFn {
-    fn clone(&self) -> Self {
-        ExtSubgroupSizeControlFn {}
-    }
-}
 impl ExtSubgroupSizeControlFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18575,40 +17259,25 @@ impl KhrFragmentShadingRateFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_fragment_shading_rate_count: *mut u32,
     p_fragment_shading_rates: *mut PhysicalDeviceFragmentShadingRateKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetFragmentShadingRateKHR = extern "system" fn(
+pub type PFN_vkCmdSetFragmentShadingRateKHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_fragment_size: *const Extent2D,
     combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
 );
+#[derive(Clone)]
 pub struct KhrFragmentShadingRateFn {
-    pub get_physical_device_fragment_shading_rates_khr: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_fragment_shading_rate_count: *mut u32,
-        p_fragment_shading_rates: *mut PhysicalDeviceFragmentShadingRateKHR,
-    ) -> Result,
-    pub cmd_set_fragment_shading_rate_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_fragment_size: *const Extent2D,
-        combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
-    ),
+    pub get_physical_device_fragment_shading_rates_khr:
+        PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR,
+    pub cmd_set_fragment_shading_rate_khr: PFN_vkCmdSetFragmentShadingRateKHR,
 }
 unsafe impl Send for KhrFragmentShadingRateFn {}
 unsafe impl Sync for KhrFragmentShadingRateFn {}
-impl ::std::clone::Clone for KhrFragmentShadingRateFn {
-    fn clone(&self) -> Self {
-        KhrFragmentShadingRateFn {
-            get_physical_device_fragment_shading_rates_khr: self
-                .get_physical_device_fragment_shading_rates_khr,
-            cmd_set_fragment_shading_rate_khr: self.cmd_set_fragment_shading_rate_khr,
-        }
-    }
-}
 impl KhrFragmentShadingRateFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18616,7 +17285,7 @@ impl KhrFragmentShadingRateFn {
     {
         KhrFragmentShadingRateFn {
             get_physical_device_fragment_shading_rates_khr: unsafe {
-                extern "system" fn get_physical_device_fragment_shading_rates_khr(
+                unsafe extern "system" fn get_physical_device_fragment_shading_rates_khr(
                     _physical_device: PhysicalDevice,
                     _p_fragment_shading_rate_count: *mut u32,
                     _p_fragment_shading_rates: *mut PhysicalDeviceFragmentShadingRateKHR,
@@ -18637,7 +17306,7 @@ impl KhrFragmentShadingRateFn {
                 }
             },
             cmd_set_fragment_shading_rate_khr: unsafe {
-                extern "system" fn cmd_set_fragment_shading_rate_khr(
+                unsafe extern "system" fn cmd_set_fragment_shading_rate_khr(
                     _command_buffer: CommandBuffer,
                     _p_fragment_size: *const Extent2D,
                     _combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
@@ -18684,8 +17353,7 @@ impl KhrFragmentShadingRateFn {
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl ImageLayout {
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR: Self =
-        ImageLayout::SHADING_RATE_OPTIMAL_NV;
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR: Self = Self(1_000_164_003);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl DynamicState {
@@ -18714,16 +17382,15 @@ impl StructureType {
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl AccessFlags {
     pub const FRAGMENT_SHADING_RATE_ATTACHMENT_READ_KHR: Self =
-        AccessFlags::SHADING_RATE_IMAGE_READ_NV;
+        Self(0b1000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl ImageUsageFlags {
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self = ImageUsageFlags::SHADING_RATE_IMAGE_NV;
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self = Self(0b1_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl PipelineStageFlags {
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self =
-        PipelineStageFlags::SHADING_RATE_IMAGE_NV;
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self = Self(0b100_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl FormatFeatureFlags {
@@ -18737,14 +17404,10 @@ impl AmdShaderCoreProperties2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdShaderCoreProperties2Fn {}
 unsafe impl Send for AmdShaderCoreProperties2Fn {}
 unsafe impl Sync for AmdShaderCoreProperties2Fn {}
-impl ::std::clone::Clone for AmdShaderCoreProperties2Fn {
-    fn clone(&self) -> Self {
-        AmdShaderCoreProperties2Fn {}
-    }
-}
 impl AmdShaderCoreProperties2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18764,14 +17427,10 @@ impl AmdExtension229Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension229Fn {}
 unsafe impl Send for AmdExtension229Fn {}
 unsafe impl Sync for AmdExtension229Fn {}
-impl ::std::clone::Clone for AmdExtension229Fn {
-    fn clone(&self) -> Self {
-        AmdExtension229Fn {}
-    }
-}
 impl AmdExtension229Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18787,14 +17446,10 @@ impl AmdDeviceCoherentMemoryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct AmdDeviceCoherentMemoryFn {}
 unsafe impl Send for AmdDeviceCoherentMemoryFn {}
 unsafe impl Sync for AmdDeviceCoherentMemoryFn {}
-impl ::std::clone::Clone for AmdDeviceCoherentMemoryFn {
-    fn clone(&self) -> Self {
-        AmdDeviceCoherentMemoryFn {}
-    }
-}
 impl AmdDeviceCoherentMemoryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18822,14 +17477,10 @@ impl AmdExtension231Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension231Fn {}
 unsafe impl Send for AmdExtension231Fn {}
 unsafe impl Sync for AmdExtension231Fn {}
-impl ::std::clone::Clone for AmdExtension231Fn {
-    fn clone(&self) -> Self {
-        AmdExtension231Fn {}
-    }
-}
 impl AmdExtension231Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18845,14 +17496,10 @@ impl AmdExtension232Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension232Fn {}
 unsafe impl Send for AmdExtension232Fn {}
 unsafe impl Sync for AmdExtension232Fn {}
-impl ::std::clone::Clone for AmdExtension232Fn {
-    fn clone(&self) -> Self {
-        AmdExtension232Fn {}
-    }
-}
 impl AmdExtension232Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18868,14 +17515,10 @@ impl AmdExtension233Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension233Fn {}
 unsafe impl Send for AmdExtension233Fn {}
 unsafe impl Sync for AmdExtension233Fn {}
-impl ::std::clone::Clone for AmdExtension233Fn {
-    fn clone(&self) -> Self {
-        AmdExtension233Fn {}
-    }
-}
 impl AmdExtension233Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18891,14 +17534,10 @@ impl AmdExtension234Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension234Fn {}
 unsafe impl Send for AmdExtension234Fn {}
 unsafe impl Sync for AmdExtension234Fn {}
-impl ::std::clone::Clone for AmdExtension234Fn {
-    fn clone(&self) -> Self {
-        AmdExtension234Fn {}
-    }
-}
 impl AmdExtension234Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18914,14 +17553,10 @@ impl ExtShaderImageAtomicInt64Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderImageAtomicInt64Fn {}
 unsafe impl Send for ExtShaderImageAtomicInt64Fn {}
 unsafe impl Sync for ExtShaderImageAtomicInt64Fn {}
-impl ::std::clone::Clone for ExtShaderImageAtomicInt64Fn {
-    fn clone(&self) -> Self {
-        ExtShaderImageAtomicInt64Fn {}
-    }
-}
 impl ExtShaderImageAtomicInt64Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18941,14 +17576,10 @@ impl AmdExtension236Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension236Fn {}
 unsafe impl Send for AmdExtension236Fn {}
 unsafe impl Sync for AmdExtension236Fn {}
-impl ::std::clone::Clone for AmdExtension236Fn {
-    fn clone(&self) -> Self {
-        AmdExtension236Fn {}
-    }
-}
 impl AmdExtension236Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18964,14 +17595,10 @@ impl KhrSpirv14Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrSpirv14Fn {}
 unsafe impl Send for KhrSpirv14Fn {}
 unsafe impl Sync for KhrSpirv14Fn {}
-impl ::std::clone::Clone for KhrSpirv14Fn {
-    fn clone(&self) -> Self {
-        KhrSpirv14Fn {}
-    }
-}
 impl KhrSpirv14Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -18987,14 +17614,10 @@ impl ExtMemoryBudgetFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtMemoryBudgetFn {}
 unsafe impl Send for ExtMemoryBudgetFn {}
 unsafe impl Sync for ExtMemoryBudgetFn {}
-impl ::std::clone::Clone for ExtMemoryBudgetFn {
-    fn clone(&self) -> Self {
-        ExtMemoryBudgetFn {}
-    }
-}
 impl ExtMemoryBudgetFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19014,14 +17637,10 @@ impl ExtMemoryPriorityFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtMemoryPriorityFn {}
 unsafe impl Send for ExtMemoryPriorityFn {}
 unsafe impl Sync for ExtMemoryPriorityFn {}
-impl ::std::clone::Clone for ExtMemoryPriorityFn {
-    fn clone(&self) -> Self {
-        ExtMemoryPriorityFn {}
-    }
-}
 impl ExtMemoryPriorityFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19045,14 +17664,10 @@ impl KhrSurfaceProtectedCapabilitiesFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrSurfaceProtectedCapabilitiesFn {}
 unsafe impl Send for KhrSurfaceProtectedCapabilitiesFn {}
 unsafe impl Sync for KhrSurfaceProtectedCapabilitiesFn {}
-impl ::std::clone::Clone for KhrSurfaceProtectedCapabilitiesFn {
-    fn clone(&self) -> Self {
-        KhrSurfaceProtectedCapabilitiesFn {}
-    }
-}
 impl KhrSurfaceProtectedCapabilitiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19072,14 +17687,10 @@ impl NvDedicatedAllocationImageAliasingFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvDedicatedAllocationImageAliasingFn {}
 unsafe impl Send for NvDedicatedAllocationImageAliasingFn {}
 unsafe impl Sync for NvDedicatedAllocationImageAliasingFn {}
-impl ::std::clone::Clone for NvDedicatedAllocationImageAliasingFn {
-    fn clone(&self) -> Self {
-        NvDedicatedAllocationImageAliasingFn {}
-    }
-}
 impl NvDedicatedAllocationImageAliasingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19100,14 +17711,10 @@ impl KhrSeparateDepthStencilLayoutsFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrSeparateDepthStencilLayoutsFn {}
 unsafe impl Send for KhrSeparateDepthStencilLayoutsFn {}
 unsafe impl Sync for KhrSeparateDepthStencilLayoutsFn {}
-impl ::std::clone::Clone for KhrSeparateDepthStencilLayoutsFn {
-    fn clone(&self) -> Self {
-        KhrSeparateDepthStencilLayoutsFn {}
-    }
-}
 impl KhrSeparateDepthStencilLayoutsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19119,33 +17726,33 @@ impl KhrSeparateDepthStencilLayoutsFn {
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES;
+        Self::PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl StructureType {
     pub const ATTACHMENT_REFERENCE_STENCIL_LAYOUT_KHR: Self =
-        StructureType::ATTACHMENT_REFERENCE_STENCIL_LAYOUT;
+        Self::ATTACHMENT_REFERENCE_STENCIL_LAYOUT;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl StructureType {
     pub const ATTACHMENT_DESCRIPTION_STENCIL_LAYOUT_KHR: Self =
-        StructureType::ATTACHMENT_DESCRIPTION_STENCIL_LAYOUT;
+        Self::ATTACHMENT_DESCRIPTION_STENCIL_LAYOUT;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl ImageLayout {
-    pub const DEPTH_ATTACHMENT_OPTIMAL_KHR: Self = ImageLayout::DEPTH_ATTACHMENT_OPTIMAL;
+    pub const DEPTH_ATTACHMENT_OPTIMAL_KHR: Self = Self::DEPTH_ATTACHMENT_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl ImageLayout {
-    pub const DEPTH_READ_ONLY_OPTIMAL_KHR: Self = ImageLayout::DEPTH_READ_ONLY_OPTIMAL;
+    pub const DEPTH_READ_ONLY_OPTIMAL_KHR: Self = Self::DEPTH_READ_ONLY_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl ImageLayout {
-    pub const STENCIL_ATTACHMENT_OPTIMAL_KHR: Self = ImageLayout::STENCIL_ATTACHMENT_OPTIMAL;
+    pub const STENCIL_ATTACHMENT_OPTIMAL_KHR: Self = Self::STENCIL_ATTACHMENT_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_separate_depth_stencil_layouts'"]
 impl ImageLayout {
-    pub const STENCIL_READ_ONLY_OPTIMAL_KHR: Self = ImageLayout::STENCIL_READ_ONLY_OPTIMAL;
+    pub const STENCIL_READ_ONLY_OPTIMAL_KHR: Self = Self::STENCIL_READ_ONLY_OPTIMAL;
 }
 impl IntelExtension243Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -19154,14 +17761,10 @@ impl IntelExtension243Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct IntelExtension243Fn {}
 unsafe impl Send for IntelExtension243Fn {}
 unsafe impl Sync for IntelExtension243Fn {}
-impl ::std::clone::Clone for IntelExtension243Fn {
-    fn clone(&self) -> Self {
-        IntelExtension243Fn {}
-    }
-}
 impl IntelExtension243Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19177,14 +17780,10 @@ impl MesaExtension244Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct MesaExtension244Fn {}
 unsafe impl Send for MesaExtension244Fn {}
 unsafe impl Sync for MesaExtension244Fn {}
-impl ::std::clone::Clone for MesaExtension244Fn {
-    fn clone(&self) -> Self {
-        MesaExtension244Fn {}
-    }
-}
 impl MesaExtension244Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19201,21 +17800,16 @@ impl ExtBufferDeviceAddressFn {
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetBufferDeviceAddress =
-    extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> DeviceAddress;
+pub type PFN_vkGetBufferDeviceAddress = unsafe extern "system" fn(
+    device: Device,
+    p_info: *const BufferDeviceAddressInfo,
+) -> DeviceAddress;
+#[derive(Clone)]
 pub struct ExtBufferDeviceAddressFn {
-    pub get_buffer_device_address_ext:
-        extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> DeviceAddress,
+    pub get_buffer_device_address_ext: PFN_vkGetBufferDeviceAddress,
 }
 unsafe impl Send for ExtBufferDeviceAddressFn {}
 unsafe impl Sync for ExtBufferDeviceAddressFn {}
-impl ::std::clone::Clone for ExtBufferDeviceAddressFn {
-    fn clone(&self) -> Self {
-        ExtBufferDeviceAddressFn {
-            get_buffer_device_address_ext: self.get_buffer_device_address_ext,
-        }
-    }
-}
 impl ExtBufferDeviceAddressFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19223,7 +17817,7 @@ impl ExtBufferDeviceAddressFn {
     {
         ExtBufferDeviceAddressFn {
             get_buffer_device_address_ext: unsafe {
-                extern "system" fn get_buffer_device_address_ext(
+                unsafe extern "system" fn get_buffer_device_address_ext(
                     _device: Device,
                     _p_info: *const BufferDeviceAddressInfo,
                 ) -> DeviceAddress {
@@ -19260,11 +17854,11 @@ impl StructureType {
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_BUFFER_ADDRESS_FEATURES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
+        Self::PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl StructureType {
-    pub const BUFFER_DEVICE_ADDRESS_INFO_EXT: Self = StructureType::BUFFER_DEVICE_ADDRESS_INFO;
+    pub const BUFFER_DEVICE_ADDRESS_INFO_EXT: Self = Self::BUFFER_DEVICE_ADDRESS_INFO;
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl StructureType {
@@ -19272,16 +17866,15 @@ impl StructureType {
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl BufferUsageFlags {
-    pub const SHADER_DEVICE_ADDRESS_EXT: Self = BufferUsageFlags::SHADER_DEVICE_ADDRESS;
+    pub const SHADER_DEVICE_ADDRESS_EXT: Self = Self::SHADER_DEVICE_ADDRESS;
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl BufferCreateFlags {
-    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_EXT: Self =
-        BufferCreateFlags::DEVICE_ADDRESS_CAPTURE_REPLAY;
+    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_EXT: Self = Self::DEVICE_ADDRESS_CAPTURE_REPLAY;
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl Result {
-    pub const ERROR_INVALID_DEVICE_ADDRESS_EXT: Self = Result::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS;
+    pub const ERROR_INVALID_DEVICE_ADDRESS_EXT: Self = Self::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS;
 }
 impl ExtToolingInfoFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -19291,27 +17884,17 @@ impl ExtToolingInfoFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceToolPropertiesEXT = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceToolPropertiesEXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_tool_count: *mut u32,
     p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtToolingInfoFn {
-    pub get_physical_device_tool_properties_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_tool_count: *mut u32,
-        p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
-    ) -> Result,
+    pub get_physical_device_tool_properties_ext: PFN_vkGetPhysicalDeviceToolPropertiesEXT,
 }
 unsafe impl Send for ExtToolingInfoFn {}
 unsafe impl Sync for ExtToolingInfoFn {}
-impl ::std::clone::Clone for ExtToolingInfoFn {
-    fn clone(&self) -> Self {
-        ExtToolingInfoFn {
-            get_physical_device_tool_properties_ext: self.get_physical_device_tool_properties_ext,
-        }
-    }
-}
 impl ExtToolingInfoFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19319,7 +17902,7 @@ impl ExtToolingInfoFn {
     {
         ExtToolingInfoFn {
             get_physical_device_tool_properties_ext: unsafe {
-                extern "system" fn get_physical_device_tool_properties_ext(
+                unsafe extern "system" fn get_physical_device_tool_properties_ext(
                     _physical_device: PhysicalDevice,
                     _p_tool_count: *mut u32,
                     _p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
@@ -19374,14 +17957,10 @@ impl ExtSeparateStencilUsageFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtSeparateStencilUsageFn {}
 unsafe impl Send for ExtSeparateStencilUsageFn {}
 unsafe impl Sync for ExtSeparateStencilUsageFn {}
-impl ::std::clone::Clone for ExtSeparateStencilUsageFn {
-    fn clone(&self) -> Self {
-        ExtSeparateStencilUsageFn {}
-    }
-}
 impl ExtSeparateStencilUsageFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19392,24 +17971,19 @@ impl ExtSeparateStencilUsageFn {
 }
 #[doc = "Generated from 'VK_EXT_separate_stencil_usage'"]
 impl StructureType {
-    pub const IMAGE_STENCIL_USAGE_CREATE_INFO_EXT: Self =
-        StructureType::IMAGE_STENCIL_USAGE_CREATE_INFO;
+    pub const IMAGE_STENCIL_USAGE_CREATE_INFO_EXT: Self = Self::IMAGE_STENCIL_USAGE_CREATE_INFO;
 }
 impl ExtValidationFeaturesFn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_validation_features\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 4u32;
+    pub const SPEC_VERSION: u32 = 5u32;
 }
+#[derive(Clone)]
 pub struct ExtValidationFeaturesFn {}
 unsafe impl Send for ExtValidationFeaturesFn {}
 unsafe impl Sync for ExtValidationFeaturesFn {}
-impl ::std::clone::Clone for ExtValidationFeaturesFn {
-    fn clone(&self) -> Self {
-        ExtValidationFeaturesFn {}
-    }
-}
 impl ExtValidationFeaturesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19422,28 +17996,66 @@ impl ExtValidationFeaturesFn {
 impl StructureType {
     pub const VALIDATION_FEATURES_EXT: Self = Self(1_000_247_000);
 }
-impl KhrExtension249Fn {
+impl KhrPresentWaitFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_249\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_present_wait\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct KhrExtension249Fn {}
-unsafe impl Send for KhrExtension249Fn {}
-unsafe impl Sync for KhrExtension249Fn {}
-impl ::std::clone::Clone for KhrExtension249Fn {
-    fn clone(&self) -> Self {
-        KhrExtension249Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkWaitForPresentKHR = unsafe extern "system" fn(
+    device: Device,
+    swapchain: SwapchainKHR,
+    present_id: u64,
+    timeout: u64,
+) -> Result;
+#[derive(Clone)]
+pub struct KhrPresentWaitFn {
+    pub wait_for_present_khr: PFN_vkWaitForPresentKHR,
 }
-impl KhrExtension249Fn {
+unsafe impl Send for KhrPresentWaitFn {}
+unsafe impl Sync for KhrPresentWaitFn {}
+impl KhrPresentWaitFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        KhrExtension249Fn {}
+        KhrPresentWaitFn {
+            wait_for_present_khr: unsafe {
+                unsafe extern "system" fn wait_for_present_khr(
+                    _device: Device,
+                    _swapchain: SwapchainKHR,
+                    _present_id: u64,
+                    _timeout: u64,
+                ) -> Result {
+                    panic!(concat!("Unable to load ", stringify!(wait_for_present_khr)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkWaitForPresentKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    wait_for_present_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitForPresentKHR.html>"]
+    pub unsafe fn wait_for_present_khr(
+        &self,
+        device: Device,
+        swapchain: SwapchainKHR,
+        present_id: u64,
+        timeout: u64,
+    ) -> Result {
+        (self.wait_for_present_khr)(device, swapchain, present_id, timeout)
+    }
+}
+#[doc = "Generated from 'VK_KHR_present_wait'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: Self = Self(1_000_248_000);
 }
 impl NvCooperativeMatrixFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -19453,28 +18065,19 @@ impl NvCooperativeMatrixFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_property_count: *mut u32,
     p_properties: *mut CooperativeMatrixPropertiesNV,
-) -> Result;
+)
+    -> Result;
+#[derive(Clone)]
 pub struct NvCooperativeMatrixFn {
-    pub get_physical_device_cooperative_matrix_properties_nv: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut CooperativeMatrixPropertiesNV,
-    ) -> Result,
+    pub get_physical_device_cooperative_matrix_properties_nv:
+        PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV,
 }
 unsafe impl Send for NvCooperativeMatrixFn {}
 unsafe impl Sync for NvCooperativeMatrixFn {}
-impl ::std::clone::Clone for NvCooperativeMatrixFn {
-    fn clone(&self) -> Self {
-        NvCooperativeMatrixFn {
-            get_physical_device_cooperative_matrix_properties_nv: self
-                .get_physical_device_cooperative_matrix_properties_nv,
-        }
-    }
-}
 impl NvCooperativeMatrixFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19482,7 +18085,7 @@ impl NvCooperativeMatrixFn {
     {
         NvCooperativeMatrixFn {
             get_physical_device_cooperative_matrix_properties_nv: unsafe {
-                extern "system" fn get_physical_device_cooperative_matrix_properties_nv(
+                unsafe extern "system" fn get_physical_device_cooperative_matrix_properties_nv(
                     _physical_device: PhysicalDevice,
                     _p_property_count: *mut u32,
                     _p_properties: *mut CooperativeMatrixPropertiesNV,
@@ -19539,29 +18142,18 @@ impl NvCoverageReductionModeFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV =
-    extern "system" fn(
+    unsafe extern "system" fn(
         physical_device: PhysicalDevice,
         p_combination_count: *mut u32,
         p_combinations: *mut FramebufferMixedSamplesCombinationNV,
     ) -> Result;
+#[derive(Clone)]
 pub struct NvCoverageReductionModeFn {
     pub get_physical_device_supported_framebuffer_mixed_samples_combinations_nv:
-        extern "system" fn(
-            physical_device: PhysicalDevice,
-            p_combination_count: *mut u32,
-            p_combinations: *mut FramebufferMixedSamplesCombinationNV,
-        ) -> Result,
+        PFN_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV,
 }
 unsafe impl Send for NvCoverageReductionModeFn {}
 unsafe impl Sync for NvCoverageReductionModeFn {}
-impl ::std::clone::Clone for NvCoverageReductionModeFn {
-    fn clone(&self) -> Self {
-        NvCoverageReductionModeFn {
-            get_physical_device_supported_framebuffer_mixed_samples_combinations_nv: self
-                .get_physical_device_supported_framebuffer_mixed_samples_combinations_nv,
-        }
-    }
-}
 impl NvCoverageReductionModeFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19569,7 +18161,7 @@ impl NvCoverageReductionModeFn {
     {
         NvCoverageReductionModeFn {
             get_physical_device_supported_framebuffer_mixed_samples_combinations_nv: unsafe {
-                extern "system" fn get_physical_device_supported_framebuffer_mixed_samples_combinations_nv(
+                unsafe extern "system" fn get_physical_device_supported_framebuffer_mixed_samples_combinations_nv(
                     _physical_device: PhysicalDevice,
                     _p_combination_count: *mut u32,
                     _p_combinations: *mut FramebufferMixedSamplesCombinationNV,
@@ -19626,14 +18218,10 @@ impl ExtFragmentShaderInterlockFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtFragmentShaderInterlockFn {}
 unsafe impl Send for ExtFragmentShaderInterlockFn {}
 unsafe impl Sync for ExtFragmentShaderInterlockFn {}
-impl ::std::clone::Clone for ExtFragmentShaderInterlockFn {
-    fn clone(&self) -> Self {
-        ExtFragmentShaderInterlockFn {}
-    }
-}
 impl ExtFragmentShaderInterlockFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19653,14 +18241,10 @@ impl ExtYcbcrImageArraysFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtYcbcrImageArraysFn {}
 unsafe impl Send for ExtYcbcrImageArraysFn {}
 unsafe impl Sync for ExtYcbcrImageArraysFn {}
-impl ::std::clone::Clone for ExtYcbcrImageArraysFn {
-    fn clone(&self) -> Self {
-        ExtYcbcrImageArraysFn {}
-    }
-}
 impl ExtYcbcrImageArraysFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19680,14 +18264,10 @@ impl KhrUniformBufferStandardLayoutFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrUniformBufferStandardLayoutFn {}
 unsafe impl Send for KhrUniformBufferStandardLayoutFn {}
 unsafe impl Sync for KhrUniformBufferStandardLayoutFn {}
-impl ::std::clone::Clone for KhrUniformBufferStandardLayoutFn {
-    fn clone(&self) -> Self {
-        KhrUniformBufferStandardLayoutFn {}
-    }
-}
 impl KhrUniformBufferStandardLayoutFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19699,30 +18279,39 @@ impl KhrUniformBufferStandardLayoutFn {
 #[doc = "Generated from 'VK_KHR_uniform_buffer_standard_layout'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES;
+        Self::PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES;
 }
-impl ExtExtension255Fn {
+impl ExtProvokingVertexFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_255\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_provoking_vertex\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct ExtExtension255Fn {}
-unsafe impl Send for ExtExtension255Fn {}
-unsafe impl Sync for ExtExtension255Fn {}
-impl ::std::clone::Clone for ExtExtension255Fn {
-    fn clone(&self) -> Self {
-        ExtExtension255Fn {}
-    }
-}
-impl ExtExtension255Fn {
+#[derive(Clone)]
+pub struct ExtProvokingVertexFn {}
+unsafe impl Send for ExtProvokingVertexFn {}
+unsafe impl Sync for ExtProvokingVertexFn {}
+impl ExtProvokingVertexFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        ExtExtension255Fn {}
+        ExtProvokingVertexFn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_provoking_vertex'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT: Self = Self(1_000_254_000);
+}
+#[doc = "Generated from 'VK_EXT_provoking_vertex'"]
+impl StructureType {
+    pub const PIPELINE_RASTERIZATION_PROVOKING_VERTEX_STATE_CREATE_INFO_EXT: Self =
+        Self(1_000_254_001);
+}
+#[doc = "Generated from 'VK_EXT_provoking_vertex'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: Self = Self(1_000_254_002);
 }
 impl ExtFullScreenExclusiveFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -19732,7 +18321,7 @@ impl ExtFullScreenExclusiveFn {
     pub const SPEC_VERSION: u32 = 4u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT = extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
     p_present_mode_count: *mut u32,
@@ -19740,47 +18329,26 @@ pub type PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT = extern "system" fn(
 ) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkAcquireFullScreenExclusiveModeEXT =
-    extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
+    unsafe extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkReleaseFullScreenExclusiveModeEXT =
-    extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
+    unsafe extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceGroupSurfacePresentModes2EXT = extern "system" fn(
+pub type PFN_vkGetDeviceGroupSurfacePresentModes2EXT = unsafe extern "system" fn(
     device: Device,
     p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
     p_modes: *mut DeviceGroupPresentModeFlagsKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtFullScreenExclusiveFn {
-    pub get_physical_device_surface_present_modes2_ext: extern "system" fn(
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_present_mode_count: *mut u32,
-        p_present_modes: *mut PresentModeKHR,
-    ) -> Result,
-    pub acquire_full_screen_exclusive_mode_ext:
-        extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result,
-    pub release_full_screen_exclusive_mode_ext:
-        extern "system" fn(device: Device, swapchain: SwapchainKHR) -> Result,
-    pub get_device_group_surface_present_modes2_ext: extern "system" fn(
-        device: Device,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result,
+    pub get_physical_device_surface_present_modes2_ext:
+        PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT,
+    pub acquire_full_screen_exclusive_mode_ext: PFN_vkAcquireFullScreenExclusiveModeEXT,
+    pub release_full_screen_exclusive_mode_ext: PFN_vkReleaseFullScreenExclusiveModeEXT,
+    pub get_device_group_surface_present_modes2_ext: PFN_vkGetDeviceGroupSurfacePresentModes2EXT,
 }
 unsafe impl Send for ExtFullScreenExclusiveFn {}
 unsafe impl Sync for ExtFullScreenExclusiveFn {}
-impl ::std::clone::Clone for ExtFullScreenExclusiveFn {
-    fn clone(&self) -> Self {
-        ExtFullScreenExclusiveFn {
-            get_physical_device_surface_present_modes2_ext: self
-                .get_physical_device_surface_present_modes2_ext,
-            acquire_full_screen_exclusive_mode_ext: self.acquire_full_screen_exclusive_mode_ext,
-            release_full_screen_exclusive_mode_ext: self.release_full_screen_exclusive_mode_ext,
-            get_device_group_surface_present_modes2_ext: self
-                .get_device_group_surface_present_modes2_ext,
-        }
-    }
-}
 impl ExtFullScreenExclusiveFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19788,7 +18356,7 @@ impl ExtFullScreenExclusiveFn {
     {
         ExtFullScreenExclusiveFn {
             get_physical_device_surface_present_modes2_ext: unsafe {
-                extern "system" fn get_physical_device_surface_present_modes2_ext(
+                unsafe extern "system" fn get_physical_device_surface_present_modes2_ext(
                     _physical_device: PhysicalDevice,
                     _p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
                     _p_present_mode_count: *mut u32,
@@ -19810,7 +18378,7 @@ impl ExtFullScreenExclusiveFn {
                 }
             },
             acquire_full_screen_exclusive_mode_ext: unsafe {
-                extern "system" fn acquire_full_screen_exclusive_mode_ext(
+                unsafe extern "system" fn acquire_full_screen_exclusive_mode_ext(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                 ) -> Result {
@@ -19830,7 +18398,7 @@ impl ExtFullScreenExclusiveFn {
                 }
             },
             release_full_screen_exclusive_mode_ext: unsafe {
-                extern "system" fn release_full_screen_exclusive_mode_ext(
+                unsafe extern "system" fn release_full_screen_exclusive_mode_ext(
                     _device: Device,
                     _swapchain: SwapchainKHR,
                 ) -> Result {
@@ -19850,7 +18418,7 @@ impl ExtFullScreenExclusiveFn {
                 }
             },
             get_device_group_surface_present_modes2_ext: unsafe {
-                extern "system" fn get_device_group_surface_present_modes2_ext(
+                unsafe extern "system" fn get_device_group_surface_present_modes2_ext(
                     _device: Device,
                     _p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
                     _p_modes: *mut DeviceGroupPresentModeFlagsKHR,
@@ -19937,29 +18505,18 @@ impl ExtHeadlessSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateHeadlessSurfaceEXT = extern "system" fn(
+pub type PFN_vkCreateHeadlessSurfaceEXT = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const HeadlessSurfaceCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct ExtHeadlessSurfaceFn {
-    pub create_headless_surface_ext: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const HeadlessSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
+    pub create_headless_surface_ext: PFN_vkCreateHeadlessSurfaceEXT,
 }
 unsafe impl Send for ExtHeadlessSurfaceFn {}
 unsafe impl Sync for ExtHeadlessSurfaceFn {}
-impl ::std::clone::Clone for ExtHeadlessSurfaceFn {
-    fn clone(&self) -> Self {
-        ExtHeadlessSurfaceFn {
-            create_headless_surface_ext: self.create_headless_surface_ext,
-        }
-    }
-}
 impl ExtHeadlessSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -19967,7 +18524,7 @@ impl ExtHeadlessSurfaceFn {
     {
         ExtHeadlessSurfaceFn {
             create_headless_surface_ext: unsafe {
-                extern "system" fn create_headless_surface_ext(
+                unsafe extern "system" fn create_headless_surface_ext(
                     _instance: Instance,
                     _p_create_info: *const HeadlessSurfaceCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -20014,32 +18571,20 @@ impl KhrBufferDeviceAddressFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetBufferOpaqueCaptureAddress =
-    extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> DeviceAddress;
+    unsafe extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> u64;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceMemoryOpaqueCaptureAddress =
-    extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> u64;
+pub type PFN_vkGetDeviceMemoryOpaqueCaptureAddress = unsafe extern "system" fn(
+    device: Device,
+    p_info: *const DeviceMemoryOpaqueCaptureAddressInfo,
+) -> u64;
+#[derive(Clone)]
 pub struct KhrBufferDeviceAddressFn {
-    pub get_buffer_device_address_khr:
-        extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> DeviceAddress,
-    pub get_buffer_opaque_capture_address_khr:
-        extern "system" fn(device: Device, p_info: *const BufferDeviceAddressInfo) -> u64,
-    pub get_device_memory_opaque_capture_address_khr: extern "system" fn(
-        device: Device,
-        p_info: *const DeviceMemoryOpaqueCaptureAddressInfo,
-    ) -> u64,
+    pub get_buffer_device_address_khr: crate::vk::PFN_vkGetBufferDeviceAddress,
+    pub get_buffer_opaque_capture_address_khr: PFN_vkGetBufferOpaqueCaptureAddress,
+    pub get_device_memory_opaque_capture_address_khr: PFN_vkGetDeviceMemoryOpaqueCaptureAddress,
 }
 unsafe impl Send for KhrBufferDeviceAddressFn {}
 unsafe impl Sync for KhrBufferDeviceAddressFn {}
-impl ::std::clone::Clone for KhrBufferDeviceAddressFn {
-    fn clone(&self) -> Self {
-        KhrBufferDeviceAddressFn {
-            get_buffer_device_address_khr: self.get_buffer_device_address_khr,
-            get_buffer_opaque_capture_address_khr: self.get_buffer_opaque_capture_address_khr,
-            get_device_memory_opaque_capture_address_khr: self
-                .get_device_memory_opaque_capture_address_khr,
-        }
-    }
-}
 impl KhrBufferDeviceAddressFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20047,7 +18592,7 @@ impl KhrBufferDeviceAddressFn {
     {
         KhrBufferDeviceAddressFn {
             get_buffer_device_address_khr: unsafe {
-                extern "system" fn get_buffer_device_address_khr(
+                unsafe extern "system" fn get_buffer_device_address_khr(
                     _device: Device,
                     _p_info: *const BufferDeviceAddressInfo,
                 ) -> DeviceAddress {
@@ -20067,7 +18612,7 @@ impl KhrBufferDeviceAddressFn {
                 }
             },
             get_buffer_opaque_capture_address_khr: unsafe {
-                extern "system" fn get_buffer_opaque_capture_address_khr(
+                unsafe extern "system" fn get_buffer_opaque_capture_address_khr(
                     _device: Device,
                     _p_info: *const BufferDeviceAddressInfo,
                 ) -> u64 {
@@ -20087,7 +18632,7 @@ impl KhrBufferDeviceAddressFn {
                 }
             },
             get_device_memory_opaque_capture_address_khr: unsafe {
-                extern "system" fn get_device_memory_opaque_capture_address_khr(
+                unsafe extern "system" fn get_device_memory_opaque_capture_address_khr(
                     _device: Device,
                     _p_info: *const DeviceMemoryOpaqueCaptureAddressInfo,
                 ) -> u64 {
@@ -20136,49 +18681,47 @@ impl KhrBufferDeviceAddressFn {
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR: Self =
-        StructureType::PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+        Self::PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl StructureType {
-    pub const BUFFER_DEVICE_ADDRESS_INFO_KHR: Self = StructureType::BUFFER_DEVICE_ADDRESS_INFO;
+    pub const BUFFER_DEVICE_ADDRESS_INFO_KHR: Self = Self::BUFFER_DEVICE_ADDRESS_INFO;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl StructureType {
     pub const BUFFER_OPAQUE_CAPTURE_ADDRESS_CREATE_INFO_KHR: Self =
-        StructureType::BUFFER_OPAQUE_CAPTURE_ADDRESS_CREATE_INFO;
+        Self::BUFFER_OPAQUE_CAPTURE_ADDRESS_CREATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl StructureType {
     pub const MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO_KHR: Self =
-        StructureType::MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO;
+        Self::MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl StructureType {
     pub const DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO_KHR: Self =
-        StructureType::DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO;
+        Self::DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl BufferUsageFlags {
-    pub const SHADER_DEVICE_ADDRESS_KHR: Self = BufferUsageFlags::SHADER_DEVICE_ADDRESS;
+    pub const SHADER_DEVICE_ADDRESS_KHR: Self = Self::SHADER_DEVICE_ADDRESS;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl BufferCreateFlags {
-    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_KHR: Self =
-        BufferCreateFlags::DEVICE_ADDRESS_CAPTURE_REPLAY;
+    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_KHR: Self = Self::DEVICE_ADDRESS_CAPTURE_REPLAY;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl MemoryAllocateFlags {
-    pub const DEVICE_ADDRESS_KHR: Self = MemoryAllocateFlags::DEVICE_ADDRESS;
+    pub const DEVICE_ADDRESS_KHR: Self = Self::DEVICE_ADDRESS;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl MemoryAllocateFlags {
-    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_KHR: Self =
-        MemoryAllocateFlags::DEVICE_ADDRESS_CAPTURE_REPLAY;
+    pub const DEVICE_ADDRESS_CAPTURE_REPLAY_KHR: Self = Self::DEVICE_ADDRESS_CAPTURE_REPLAY;
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl Result {
     pub const ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: Self =
-        Result::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS;
+        Self::ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS;
 }
 impl ExtExtension259Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -20187,14 +18730,10 @@ impl ExtExtension259Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension259Fn {}
 unsafe impl Send for ExtExtension259Fn {}
 unsafe impl Sync for ExtExtension259Fn {}
-impl ::std::clone::Clone for ExtExtension259Fn {
-    fn clone(&self) -> Self {
-        ExtExtension259Fn {}
-    }
-}
 impl ExtExtension259Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20211,27 +18750,17 @@ impl ExtLineRasterizationFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetLineStippleEXT = extern "system" fn(
+pub type PFN_vkCmdSetLineStippleEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     line_stipple_factor: u32,
     line_stipple_pattern: u16,
 );
+#[derive(Clone)]
 pub struct ExtLineRasterizationFn {
-    pub cmd_set_line_stipple_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        line_stipple_factor: u32,
-        line_stipple_pattern: u16,
-    ),
+    pub cmd_set_line_stipple_ext: PFN_vkCmdSetLineStippleEXT,
 }
 unsafe impl Send for ExtLineRasterizationFn {}
 unsafe impl Sync for ExtLineRasterizationFn {}
-impl ::std::clone::Clone for ExtLineRasterizationFn {
-    fn clone(&self) -> Self {
-        ExtLineRasterizationFn {
-            cmd_set_line_stipple_ext: self.cmd_set_line_stipple_ext,
-        }
-    }
-}
 impl ExtLineRasterizationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20239,7 +18768,7 @@ impl ExtLineRasterizationFn {
     {
         ExtLineRasterizationFn {
             cmd_set_line_stipple_ext: unsafe {
-                extern "system" fn cmd_set_line_stipple_ext(
+                unsafe extern "system" fn cmd_set_line_stipple_ext(
                     _command_buffer: CommandBuffer,
                     _line_stipple_factor: u32,
                     _line_stipple_pattern: u16,
@@ -20293,14 +18822,10 @@ impl ExtShaderAtomicFloatFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderAtomicFloatFn {}
 unsafe impl Send for ExtShaderAtomicFloatFn {}
 unsafe impl Sync for ExtShaderAtomicFloatFn {}
-impl ::std::clone::Clone for ExtShaderAtomicFloatFn {
-    fn clone(&self) -> Self {
-        ExtShaderAtomicFloatFn {}
-    }
-}
 impl ExtShaderAtomicFloatFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20321,25 +18846,18 @@ impl ExtHostQueryResetFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkResetQueryPool =
-    extern "system" fn(device: Device, query_pool: QueryPool, first_query: u32, query_count: u32);
+pub type PFN_vkResetQueryPool = unsafe extern "system" fn(
+    device: Device,
+    query_pool: QueryPool,
+    first_query: u32,
+    query_count: u32,
+);
+#[derive(Clone)]
 pub struct ExtHostQueryResetFn {
-    pub reset_query_pool_ext: extern "system" fn(
-        device: Device,
-        query_pool: QueryPool,
-        first_query: u32,
-        query_count: u32,
-    ),
+    pub reset_query_pool_ext: PFN_vkResetQueryPool,
 }
 unsafe impl Send for ExtHostQueryResetFn {}
 unsafe impl Sync for ExtHostQueryResetFn {}
-impl ::std::clone::Clone for ExtHostQueryResetFn {
-    fn clone(&self) -> Self {
-        ExtHostQueryResetFn {
-            reset_query_pool_ext: self.reset_query_pool_ext,
-        }
-    }
-}
 impl ExtHostQueryResetFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20347,7 +18865,7 @@ impl ExtHostQueryResetFn {
     {
         ExtHostQueryResetFn {
             reset_query_pool_ext: unsafe {
-                extern "system" fn reset_query_pool_ext(
+                unsafe extern "system" fn reset_query_pool_ext(
                     _device: Device,
                     _query_pool: QueryPool,
                     _first_query: u32,
@@ -20380,7 +18898,7 @@ impl ExtHostQueryResetFn {
 #[doc = "Generated from 'VK_EXT_host_query_reset'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES_EXT: Self =
-        StructureType::PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES;
+        Self::PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES;
 }
 impl GgpExtension263Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -20389,14 +18907,10 @@ impl GgpExtension263Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GgpExtension263Fn {}
 unsafe impl Send for GgpExtension263Fn {}
 unsafe impl Sync for GgpExtension263Fn {}
-impl ::std::clone::Clone for GgpExtension263Fn {
-    fn clone(&self) -> Self {
-        GgpExtension263Fn {}
-    }
-}
 impl GgpExtension263Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20412,14 +18926,10 @@ impl BrcmExtension264Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct BrcmExtension264Fn {}
 unsafe impl Send for BrcmExtension264Fn {}
 unsafe impl Sync for BrcmExtension264Fn {}
-impl ::std::clone::Clone for BrcmExtension264Fn {
-    fn clone(&self) -> Self {
-        BrcmExtension264Fn {}
-    }
-}
 impl BrcmExtension264Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20435,14 +18945,10 @@ impl BrcmExtension265Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct BrcmExtension265Fn {}
 unsafe impl Send for BrcmExtension265Fn {}
 unsafe impl Sync for BrcmExtension265Fn {}
-impl ::std::clone::Clone for BrcmExtension265Fn {
-    fn clone(&self) -> Self {
-        BrcmExtension265Fn {}
-    }
-}
 impl BrcmExtension265Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20458,14 +18964,10 @@ impl ExtIndexTypeUint8Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtIndexTypeUint8Fn {}
 unsafe impl Send for ExtIndexTypeUint8Fn {}
 unsafe impl Sync for ExtIndexTypeUint8Fn {}
-impl ::std::clone::Clone for ExtIndexTypeUint8Fn {
-    fn clone(&self) -> Self {
-        ExtIndexTypeUint8Fn {}
-    }
-}
 impl ExtIndexTypeUint8Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20489,14 +18991,10 @@ impl ExtExtension267Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension267Fn {}
 unsafe impl Send for ExtExtension267Fn {}
 unsafe impl Sync for ExtExtension267Fn {}
-impl ::std::clone::Clone for ExtExtension267Fn {
-    fn clone(&self) -> Self {
-        ExtExtension267Fn {}
-    }
-}
 impl ExtExtension267Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20514,27 +19012,27 @@ impl ExtExtendedDynamicStateFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetCullModeEXT =
-    extern "system" fn(command_buffer: CommandBuffer, cull_mode: CullModeFlags);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, cull_mode: CullModeFlags);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetFrontFaceEXT =
-    extern "system" fn(command_buffer: CommandBuffer, front_face: FrontFace);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, front_face: FrontFace);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetPrimitiveTopologyEXT =
-    extern "system" fn(command_buffer: CommandBuffer, primitive_topology: PrimitiveTopology);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, primitive_topology: PrimitiveTopology);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetViewportWithCountEXT = extern "system" fn(
+pub type PFN_vkCmdSetViewportWithCountEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     viewport_count: u32,
     p_viewports: *const Viewport,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetScissorWithCountEXT = extern "system" fn(
+pub type PFN_vkCmdSetScissorWithCountEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     scissor_count: u32,
     p_scissors: *const Rect2D,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBindVertexBuffers2EXT = extern "system" fn(
+pub type PFN_vkCmdBindVertexBuffers2EXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_binding: u32,
     binding_count: u32,
@@ -20545,21 +19043,21 @@ pub type PFN_vkCmdBindVertexBuffers2EXT = extern "system" fn(
 );
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDepthTestEnableEXT =
-    extern "system" fn(command_buffer: CommandBuffer, depth_test_enable: Bool32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, depth_test_enable: Bool32);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDepthWriteEnableEXT =
-    extern "system" fn(command_buffer: CommandBuffer, depth_write_enable: Bool32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, depth_write_enable: Bool32);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDepthCompareOpEXT =
-    extern "system" fn(command_buffer: CommandBuffer, depth_compare_op: CompareOp);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, depth_compare_op: CompareOp);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDepthBoundsTestEnableEXT =
-    extern "system" fn(command_buffer: CommandBuffer, depth_bounds_test_enable: Bool32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, depth_bounds_test_enable: Bool32);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetStencilTestEnableEXT =
-    extern "system" fn(command_buffer: CommandBuffer, stencil_test_enable: Bool32);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, stencil_test_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetStencilOpEXT = extern "system" fn(
+pub type PFN_vkCmdSetStencilOpEXT = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     face_mask: StencilFaceFlags,
     fail_op: StencilOp,
@@ -20567,71 +19065,23 @@ pub type PFN_vkCmdSetStencilOpEXT = extern "system" fn(
     depth_fail_op: StencilOp,
     compare_op: CompareOp,
 );
+#[derive(Clone)]
 pub struct ExtExtendedDynamicStateFn {
-    pub cmd_set_cull_mode_ext:
-        extern "system" fn(command_buffer: CommandBuffer, cull_mode: CullModeFlags),
-    pub cmd_set_front_face_ext:
-        extern "system" fn(command_buffer: CommandBuffer, front_face: FrontFace),
-    pub cmd_set_primitive_topology_ext:
-        extern "system" fn(command_buffer: CommandBuffer, primitive_topology: PrimitiveTopology),
-    pub cmd_set_viewport_with_count_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        viewport_count: u32,
-        p_viewports: *const Viewport,
-    ),
-    pub cmd_set_scissor_with_count_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        scissor_count: u32,
-        p_scissors: *const Rect2D,
-    ),
-    pub cmd_bind_vertex_buffers2_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        first_binding: u32,
-        binding_count: u32,
-        p_buffers: *const Buffer,
-        p_offsets: *const DeviceSize,
-        p_sizes: *const DeviceSize,
-        p_strides: *const DeviceSize,
-    ),
-    pub cmd_set_depth_test_enable_ext:
-        extern "system" fn(command_buffer: CommandBuffer, depth_test_enable: Bool32),
-    pub cmd_set_depth_write_enable_ext:
-        extern "system" fn(command_buffer: CommandBuffer, depth_write_enable: Bool32),
-    pub cmd_set_depth_compare_op_ext:
-        extern "system" fn(command_buffer: CommandBuffer, depth_compare_op: CompareOp),
-    pub cmd_set_depth_bounds_test_enable_ext:
-        extern "system" fn(command_buffer: CommandBuffer, depth_bounds_test_enable: Bool32),
-    pub cmd_set_stencil_test_enable_ext:
-        extern "system" fn(command_buffer: CommandBuffer, stencil_test_enable: Bool32),
-    pub cmd_set_stencil_op_ext: extern "system" fn(
-        command_buffer: CommandBuffer,
-        face_mask: StencilFaceFlags,
-        fail_op: StencilOp,
-        pass_op: StencilOp,
-        depth_fail_op: StencilOp,
-        compare_op: CompareOp,
-    ),
+    pub cmd_set_cull_mode_ext: PFN_vkCmdSetCullModeEXT,
+    pub cmd_set_front_face_ext: PFN_vkCmdSetFrontFaceEXT,
+    pub cmd_set_primitive_topology_ext: PFN_vkCmdSetPrimitiveTopologyEXT,
+    pub cmd_set_viewport_with_count_ext: PFN_vkCmdSetViewportWithCountEXT,
+    pub cmd_set_scissor_with_count_ext: PFN_vkCmdSetScissorWithCountEXT,
+    pub cmd_bind_vertex_buffers2_ext: PFN_vkCmdBindVertexBuffers2EXT,
+    pub cmd_set_depth_test_enable_ext: PFN_vkCmdSetDepthTestEnableEXT,
+    pub cmd_set_depth_write_enable_ext: PFN_vkCmdSetDepthWriteEnableEXT,
+    pub cmd_set_depth_compare_op_ext: PFN_vkCmdSetDepthCompareOpEXT,
+    pub cmd_set_depth_bounds_test_enable_ext: PFN_vkCmdSetDepthBoundsTestEnableEXT,
+    pub cmd_set_stencil_test_enable_ext: PFN_vkCmdSetStencilTestEnableEXT,
+    pub cmd_set_stencil_op_ext: PFN_vkCmdSetStencilOpEXT,
 }
 unsafe impl Send for ExtExtendedDynamicStateFn {}
 unsafe impl Sync for ExtExtendedDynamicStateFn {}
-impl ::std::clone::Clone for ExtExtendedDynamicStateFn {
-    fn clone(&self) -> Self {
-        ExtExtendedDynamicStateFn {
-            cmd_set_cull_mode_ext: self.cmd_set_cull_mode_ext,
-            cmd_set_front_face_ext: self.cmd_set_front_face_ext,
-            cmd_set_primitive_topology_ext: self.cmd_set_primitive_topology_ext,
-            cmd_set_viewport_with_count_ext: self.cmd_set_viewport_with_count_ext,
-            cmd_set_scissor_with_count_ext: self.cmd_set_scissor_with_count_ext,
-            cmd_bind_vertex_buffers2_ext: self.cmd_bind_vertex_buffers2_ext,
-            cmd_set_depth_test_enable_ext: self.cmd_set_depth_test_enable_ext,
-            cmd_set_depth_write_enable_ext: self.cmd_set_depth_write_enable_ext,
-            cmd_set_depth_compare_op_ext: self.cmd_set_depth_compare_op_ext,
-            cmd_set_depth_bounds_test_enable_ext: self.cmd_set_depth_bounds_test_enable_ext,
-            cmd_set_stencil_test_enable_ext: self.cmd_set_stencil_test_enable_ext,
-            cmd_set_stencil_op_ext: self.cmd_set_stencil_op_ext,
-        }
-    }
-}
 impl ExtExtendedDynamicStateFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -20639,7 +19089,7 @@ impl ExtExtendedDynamicStateFn {
     {
         ExtExtendedDynamicStateFn {
             cmd_set_cull_mode_ext: unsafe {
-                extern "system" fn cmd_set_cull_mode_ext(
+                unsafe extern "system" fn cmd_set_cull_mode_ext(
                     _command_buffer: CommandBuffer,
                     _cull_mode: CullModeFlags,
                 ) {
@@ -20658,7 +19108,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_front_face_ext: unsafe {
-                extern "system" fn cmd_set_front_face_ext(
+                unsafe extern "system" fn cmd_set_front_face_ext(
                     _command_buffer: CommandBuffer,
                     _front_face: FrontFace,
                 ) {
@@ -20677,7 +19127,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_primitive_topology_ext: unsafe {
-                extern "system" fn cmd_set_primitive_topology_ext(
+                unsafe extern "system" fn cmd_set_primitive_topology_ext(
                     _command_buffer: CommandBuffer,
                     _primitive_topology: PrimitiveTopology,
                 ) {
@@ -20697,7 +19147,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_viewport_with_count_ext: unsafe {
-                extern "system" fn cmd_set_viewport_with_count_ext(
+                unsafe extern "system" fn cmd_set_viewport_with_count_ext(
                     _command_buffer: CommandBuffer,
                     _viewport_count: u32,
                     _p_viewports: *const Viewport,
@@ -20718,7 +19168,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_scissor_with_count_ext: unsafe {
-                extern "system" fn cmd_set_scissor_with_count_ext(
+                unsafe extern "system" fn cmd_set_scissor_with_count_ext(
                     _command_buffer: CommandBuffer,
                     _scissor_count: u32,
                     _p_scissors: *const Rect2D,
@@ -20739,7 +19189,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_bind_vertex_buffers2_ext: unsafe {
-                extern "system" fn cmd_bind_vertex_buffers2_ext(
+                unsafe extern "system" fn cmd_bind_vertex_buffers2_ext(
                     _command_buffer: CommandBuffer,
                     _first_binding: u32,
                     _binding_count: u32,
@@ -20764,7 +19214,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_depth_test_enable_ext: unsafe {
-                extern "system" fn cmd_set_depth_test_enable_ext(
+                unsafe extern "system" fn cmd_set_depth_test_enable_ext(
                     _command_buffer: CommandBuffer,
                     _depth_test_enable: Bool32,
                 ) {
@@ -20784,7 +19234,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_depth_write_enable_ext: unsafe {
-                extern "system" fn cmd_set_depth_write_enable_ext(
+                unsafe extern "system" fn cmd_set_depth_write_enable_ext(
                     _command_buffer: CommandBuffer,
                     _depth_write_enable: Bool32,
                 ) {
@@ -20804,7 +19254,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_depth_compare_op_ext: unsafe {
-                extern "system" fn cmd_set_depth_compare_op_ext(
+                unsafe extern "system" fn cmd_set_depth_compare_op_ext(
                     _command_buffer: CommandBuffer,
                     _depth_compare_op: CompareOp,
                 ) {
@@ -20823,7 +19273,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_depth_bounds_test_enable_ext: unsafe {
-                extern "system" fn cmd_set_depth_bounds_test_enable_ext(
+                unsafe extern "system" fn cmd_set_depth_bounds_test_enable_ext(
                     _command_buffer: CommandBuffer,
                     _depth_bounds_test_enable: Bool32,
                 ) {
@@ -20843,7 +19293,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_stencil_test_enable_ext: unsafe {
-                extern "system" fn cmd_set_stencil_test_enable_ext(
+                unsafe extern "system" fn cmd_set_stencil_test_enable_ext(
                     _command_buffer: CommandBuffer,
                     _stencil_test_enable: Bool32,
                 ) {
@@ -20863,7 +19313,7 @@ impl ExtExtendedDynamicStateFn {
                 }
             },
             cmd_set_stencil_op_ext: unsafe {
-                extern "system" fn cmd_set_stencil_op_ext(
+                unsafe extern "system" fn cmd_set_stencil_op_ext(
                     _command_buffer: CommandBuffer,
                     _face_mask: StencilFaceFlags,
                     _fail_op: StencilOp,
@@ -21070,58 +19520,36 @@ impl KhrDeferredHostOperationsFn {
     pub const SPEC_VERSION: u32 = 4u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDeferredOperationKHR = extern "system" fn(
+pub type PFN_vkCreateDeferredOperationKHR = unsafe extern "system" fn(
     device: Device,
     p_allocator: *const AllocationCallbacks,
     p_deferred_operation: *mut DeferredOperationKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyDeferredOperationKHR = extern "system" fn(
+pub type PFN_vkDestroyDeferredOperationKHR = unsafe extern "system" fn(
     device: Device,
     operation: DeferredOperationKHR,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetDeferredOperationMaxConcurrencyKHR =
-    extern "system" fn(device: Device, operation: DeferredOperationKHR) -> u32;
+    unsafe extern "system" fn(device: Device, operation: DeferredOperationKHR) -> u32;
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetDeferredOperationResultKHR =
-    extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result;
+    unsafe extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkDeferredOperationJoinKHR =
-    extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result;
+    unsafe extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result;
+#[derive(Clone)]
 pub struct KhrDeferredHostOperationsFn {
-    pub create_deferred_operation_khr: extern "system" fn(
-        device: Device,
-        p_allocator: *const AllocationCallbacks,
-        p_deferred_operation: *mut DeferredOperationKHR,
-    ) -> Result,
-    pub destroy_deferred_operation_khr: extern "system" fn(
-        device: Device,
-        operation: DeferredOperationKHR,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub get_deferred_operation_max_concurrency_khr:
-        extern "system" fn(device: Device, operation: DeferredOperationKHR) -> u32,
-    pub get_deferred_operation_result_khr:
-        extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result,
-    pub deferred_operation_join_khr:
-        extern "system" fn(device: Device, operation: DeferredOperationKHR) -> Result,
+    pub create_deferred_operation_khr: PFN_vkCreateDeferredOperationKHR,
+    pub destroy_deferred_operation_khr: PFN_vkDestroyDeferredOperationKHR,
+    pub get_deferred_operation_max_concurrency_khr: PFN_vkGetDeferredOperationMaxConcurrencyKHR,
+    pub get_deferred_operation_result_khr: PFN_vkGetDeferredOperationResultKHR,
+    pub deferred_operation_join_khr: PFN_vkDeferredOperationJoinKHR,
 }
 unsafe impl Send for KhrDeferredHostOperationsFn {}
 unsafe impl Sync for KhrDeferredHostOperationsFn {}
-impl ::std::clone::Clone for KhrDeferredHostOperationsFn {
-    fn clone(&self) -> Self {
-        KhrDeferredHostOperationsFn {
-            create_deferred_operation_khr: self.create_deferred_operation_khr,
-            destroy_deferred_operation_khr: self.destroy_deferred_operation_khr,
-            get_deferred_operation_max_concurrency_khr: self
-                .get_deferred_operation_max_concurrency_khr,
-            get_deferred_operation_result_khr: self.get_deferred_operation_result_khr,
-            deferred_operation_join_khr: self.deferred_operation_join_khr,
-        }
-    }
-}
 impl KhrDeferredHostOperationsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21129,7 +19557,7 @@ impl KhrDeferredHostOperationsFn {
     {
         KhrDeferredHostOperationsFn {
             create_deferred_operation_khr: unsafe {
-                extern "system" fn create_deferred_operation_khr(
+                unsafe extern "system" fn create_deferred_operation_khr(
                     _device: Device,
                     _p_allocator: *const AllocationCallbacks,
                     _p_deferred_operation: *mut DeferredOperationKHR,
@@ -21150,7 +19578,7 @@ impl KhrDeferredHostOperationsFn {
                 }
             },
             destroy_deferred_operation_khr: unsafe {
-                extern "system" fn destroy_deferred_operation_khr(
+                unsafe extern "system" fn destroy_deferred_operation_khr(
                     _device: Device,
                     _operation: DeferredOperationKHR,
                     _p_allocator: *const AllocationCallbacks,
@@ -21171,7 +19599,7 @@ impl KhrDeferredHostOperationsFn {
                 }
             },
             get_deferred_operation_max_concurrency_khr: unsafe {
-                extern "system" fn get_deferred_operation_max_concurrency_khr(
+                unsafe extern "system" fn get_deferred_operation_max_concurrency_khr(
                     _device: Device,
                     _operation: DeferredOperationKHR,
                 ) -> u32 {
@@ -21191,7 +19619,7 @@ impl KhrDeferredHostOperationsFn {
                 }
             },
             get_deferred_operation_result_khr: unsafe {
-                extern "system" fn get_deferred_operation_result_khr(
+                unsafe extern "system" fn get_deferred_operation_result_khr(
                     _device: Device,
                     _operation: DeferredOperationKHR,
                 ) -> Result {
@@ -21211,7 +19639,7 @@ impl KhrDeferredHostOperationsFn {
                 }
             },
             deferred_operation_join_khr: unsafe {
-                extern "system" fn deferred_operation_join_khr(
+                unsafe extern "system" fn deferred_operation_join_khr(
                     _device: Device,
                     _operation: DeferredOperationKHR,
                 ) -> Result {
@@ -21303,58 +19731,36 @@ impl KhrPipelineExecutablePropertiesFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPipelineExecutablePropertiesKHR = extern "system" fn(
+pub type PFN_vkGetPipelineExecutablePropertiesKHR = unsafe extern "system" fn(
     device: Device,
     p_pipeline_info: *const PipelineInfoKHR,
     p_executable_count: *mut u32,
     p_properties: *mut PipelineExecutablePropertiesKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPipelineExecutableStatisticsKHR = extern "system" fn(
+pub type PFN_vkGetPipelineExecutableStatisticsKHR = unsafe extern "system" fn(
     device: Device,
     p_executable_info: *const PipelineExecutableInfoKHR,
     p_statistic_count: *mut u32,
     p_statistics: *mut PipelineExecutableStatisticKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPipelineExecutableInternalRepresentationsKHR = extern "system" fn(
-    device: Device,
-    p_executable_info: *const PipelineExecutableInfoKHR,
-    p_internal_representation_count: *mut u32,
-    p_internal_representations: *mut PipelineExecutableInternalRepresentationKHR,
-) -> Result;
-pub struct KhrPipelineExecutablePropertiesFn {
-    pub get_pipeline_executable_properties_khr: extern "system" fn(
-        device: Device,
-        p_pipeline_info: *const PipelineInfoKHR,
-        p_executable_count: *mut u32,
-        p_properties: *mut PipelineExecutablePropertiesKHR,
-    ) -> Result,
-    pub get_pipeline_executable_statistics_khr: extern "system" fn(
-        device: Device,
-        p_executable_info: *const PipelineExecutableInfoKHR,
-        p_statistic_count: *mut u32,
-        p_statistics: *mut PipelineExecutableStatisticKHR,
-    ) -> Result,
-    pub get_pipeline_executable_internal_representations_khr: extern "system" fn(
+pub type PFN_vkGetPipelineExecutableInternalRepresentationsKHR =
+    unsafe extern "system" fn(
         device: Device,
         p_executable_info: *const PipelineExecutableInfoKHR,
         p_internal_representation_count: *mut u32,
         p_internal_representations: *mut PipelineExecutableInternalRepresentationKHR,
-    ) -> Result,
+    ) -> Result;
+#[derive(Clone)]
+pub struct KhrPipelineExecutablePropertiesFn {
+    pub get_pipeline_executable_properties_khr: PFN_vkGetPipelineExecutablePropertiesKHR,
+    pub get_pipeline_executable_statistics_khr: PFN_vkGetPipelineExecutableStatisticsKHR,
+    pub get_pipeline_executable_internal_representations_khr:
+        PFN_vkGetPipelineExecutableInternalRepresentationsKHR,
 }
 unsafe impl Send for KhrPipelineExecutablePropertiesFn {}
 unsafe impl Sync for KhrPipelineExecutablePropertiesFn {}
-impl ::std::clone::Clone for KhrPipelineExecutablePropertiesFn {
-    fn clone(&self) -> Self {
-        KhrPipelineExecutablePropertiesFn {
-            get_pipeline_executable_properties_khr: self.get_pipeline_executable_properties_khr,
-            get_pipeline_executable_statistics_khr: self.get_pipeline_executable_statistics_khr,
-            get_pipeline_executable_internal_representations_khr: self
-                .get_pipeline_executable_internal_representations_khr,
-        }
-    }
-}
 impl KhrPipelineExecutablePropertiesFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21362,7 +19768,7 @@ impl KhrPipelineExecutablePropertiesFn {
     {
         KhrPipelineExecutablePropertiesFn {
             get_pipeline_executable_properties_khr: unsafe {
-                extern "system" fn get_pipeline_executable_properties_khr(
+                unsafe extern "system" fn get_pipeline_executable_properties_khr(
                     _device: Device,
                     _p_pipeline_info: *const PipelineInfoKHR,
                     _p_executable_count: *mut u32,
@@ -21384,7 +19790,7 @@ impl KhrPipelineExecutablePropertiesFn {
                 }
             },
             get_pipeline_executable_statistics_khr: unsafe {
-                extern "system" fn get_pipeline_executable_statistics_khr(
+                unsafe extern "system" fn get_pipeline_executable_statistics_khr(
                     _device: Device,
                     _p_executable_info: *const PipelineExecutableInfoKHR,
                     _p_statistic_count: *mut u32,
@@ -21406,7 +19812,7 @@ impl KhrPipelineExecutablePropertiesFn {
                 }
             },
             get_pipeline_executable_internal_representations_khr: unsafe {
-                extern "system" fn get_pipeline_executable_internal_representations_khr(
+                unsafe extern "system" fn get_pipeline_executable_internal_representations_khr(
                     _device: Device,
                     _p_executable_info: *const PipelineExecutableInfoKHR,
                     _p_internal_representation_count: *mut u32,
@@ -21515,14 +19921,10 @@ impl IntelExtension271Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct IntelExtension271Fn {}
 unsafe impl Send for IntelExtension271Fn {}
 unsafe impl Sync for IntelExtension271Fn {}
-impl ::std::clone::Clone for IntelExtension271Fn {
-    fn clone(&self) -> Self {
-        IntelExtension271Fn {}
-    }
-}
 impl IntelExtension271Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21538,14 +19940,10 @@ impl IntelExtension272Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct IntelExtension272Fn {}
 unsafe impl Send for IntelExtension272Fn {}
 unsafe impl Sync for IntelExtension272Fn {}
-impl ::std::clone::Clone for IntelExtension272Fn {
-    fn clone(&self) -> Self {
-        IntelExtension272Fn {}
-    }
-}
 impl IntelExtension272Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21561,14 +19959,10 @@ impl IntelExtension273Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct IntelExtension273Fn {}
 unsafe impl Send for IntelExtension273Fn {}
 unsafe impl Sync for IntelExtension273Fn {}
-impl ::std::clone::Clone for IntelExtension273Fn {
-    fn clone(&self) -> Self {
-        IntelExtension273Fn {}
-    }
-}
 impl IntelExtension273Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21577,28 +19971,28 @@ impl IntelExtension273Fn {
         IntelExtension273Fn {}
     }
 }
-impl IntelExtension274Fn {
+impl ExtShaderAtomicFloat2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_INTEL_extension_274\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_shader_atomic_float2\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct IntelExtension274Fn {}
-unsafe impl Send for IntelExtension274Fn {}
-unsafe impl Sync for IntelExtension274Fn {}
-impl ::std::clone::Clone for IntelExtension274Fn {
-    fn clone(&self) -> Self {
-        IntelExtension274Fn {}
-    }
-}
-impl IntelExtension274Fn {
+#[derive(Clone)]
+pub struct ExtShaderAtomicFloat2Fn {}
+unsafe impl Send for ExtShaderAtomicFloat2Fn {}
+unsafe impl Sync for ExtShaderAtomicFloat2Fn {}
+impl ExtShaderAtomicFloat2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        IntelExtension274Fn {}
+        ExtShaderAtomicFloat2Fn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_shader_atomic_float2'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT: Self = Self(1_000_273_000);
 }
 impl KhrExtension275Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -21607,14 +20001,10 @@ impl KhrExtension275Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension275Fn {}
 unsafe impl Send for KhrExtension275Fn {}
 unsafe impl Sync for KhrExtension275Fn {}
-impl ::std::clone::Clone for KhrExtension275Fn {
-    fn clone(&self) -> Self {
-        KhrExtension275Fn {}
-    }
-}
 impl KhrExtension275Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21630,14 +20020,10 @@ impl KhrExtension276Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension276Fn {}
 unsafe impl Send for KhrExtension276Fn {}
 unsafe impl Sync for KhrExtension276Fn {}
-impl ::std::clone::Clone for KhrExtension276Fn {
-    fn clone(&self) -> Self {
-        KhrExtension276Fn {}
-    }
-}
 impl KhrExtension276Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21653,14 +20039,10 @@ impl ExtShaderDemoteToHelperInvocationFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtShaderDemoteToHelperInvocationFn {}
 unsafe impl Send for ExtShaderDemoteToHelperInvocationFn {}
 unsafe impl Sync for ExtShaderDemoteToHelperInvocationFn {}
-impl ::std::clone::Clone for ExtShaderDemoteToHelperInvocationFn {
-    fn clone(&self) -> Self {
-        ExtShaderDemoteToHelperInvocationFn {}
-    }
-}
 impl ExtShaderDemoteToHelperInvocationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21682,90 +20064,54 @@ impl NvDeviceGeneratedCommandsFn {
     pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetGeneratedCommandsMemoryRequirementsNV = extern "system" fn(
+pub type PFN_vkGetGeneratedCommandsMemoryRequirementsNV = unsafe extern "system" fn(
     device: Device,
     p_info: *const GeneratedCommandsMemoryRequirementsInfoNV,
     p_memory_requirements: *mut MemoryRequirements2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdPreprocessGeneratedCommandsNV = extern "system" fn(
+pub type PFN_vkCmdPreprocessGeneratedCommandsNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_generated_commands_info: *const GeneratedCommandsInfoNV,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdExecuteGeneratedCommandsNV = extern "system" fn(
+pub type PFN_vkCmdExecuteGeneratedCommandsNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     is_preprocessed: Bool32,
     p_generated_commands_info: *const GeneratedCommandsInfoNV,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBindPipelineShaderGroupNV = extern "system" fn(
+pub type PFN_vkCmdBindPipelineShaderGroupNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     pipeline_bind_point: PipelineBindPoint,
     pipeline: Pipeline,
     group_index: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateIndirectCommandsLayoutNV = extern "system" fn(
+pub type PFN_vkCreateIndirectCommandsLayoutNV = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const IndirectCommandsLayoutCreateInfoNV,
     p_allocator: *const AllocationCallbacks,
     p_indirect_commands_layout: *mut IndirectCommandsLayoutNV,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyIndirectCommandsLayoutNV = extern "system" fn(
+pub type PFN_vkDestroyIndirectCommandsLayoutNV = unsafe extern "system" fn(
     device: Device,
     indirect_commands_layout: IndirectCommandsLayoutNV,
     p_allocator: *const AllocationCallbacks,
 );
+#[derive(Clone)]
 pub struct NvDeviceGeneratedCommandsFn {
-    pub get_generated_commands_memory_requirements_nv: extern "system" fn(
-        device: Device,
-        p_info: *const GeneratedCommandsMemoryRequirementsInfoNV,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ),
-    pub cmd_preprocess_generated_commands_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_generated_commands_info: *const GeneratedCommandsInfoNV,
-    ),
-    pub cmd_execute_generated_commands_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        is_preprocessed: Bool32,
-        p_generated_commands_info: *const GeneratedCommandsInfoNV,
-    ),
-    pub cmd_bind_pipeline_shader_group_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        pipeline_bind_point: PipelineBindPoint,
-        pipeline: Pipeline,
-        group_index: u32,
-    ),
-    pub create_indirect_commands_layout_nv: extern "system" fn(
-        device: Device,
-        p_create_info: *const IndirectCommandsLayoutCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_indirect_commands_layout: *mut IndirectCommandsLayoutNV,
-    ) -> Result,
-    pub destroy_indirect_commands_layout_nv: extern "system" fn(
-        device: Device,
-        indirect_commands_layout: IndirectCommandsLayoutNV,
-        p_allocator: *const AllocationCallbacks,
-    ),
+    pub get_generated_commands_memory_requirements_nv:
+        PFN_vkGetGeneratedCommandsMemoryRequirementsNV,
+    pub cmd_preprocess_generated_commands_nv: PFN_vkCmdPreprocessGeneratedCommandsNV,
+    pub cmd_execute_generated_commands_nv: PFN_vkCmdExecuteGeneratedCommandsNV,
+    pub cmd_bind_pipeline_shader_group_nv: PFN_vkCmdBindPipelineShaderGroupNV,
+    pub create_indirect_commands_layout_nv: PFN_vkCreateIndirectCommandsLayoutNV,
+    pub destroy_indirect_commands_layout_nv: PFN_vkDestroyIndirectCommandsLayoutNV,
 }
 unsafe impl Send for NvDeviceGeneratedCommandsFn {}
 unsafe impl Sync for NvDeviceGeneratedCommandsFn {}
-impl ::std::clone::Clone for NvDeviceGeneratedCommandsFn {
-    fn clone(&self) -> Self {
-        NvDeviceGeneratedCommandsFn {
-            get_generated_commands_memory_requirements_nv: self
-                .get_generated_commands_memory_requirements_nv,
-            cmd_preprocess_generated_commands_nv: self.cmd_preprocess_generated_commands_nv,
-            cmd_execute_generated_commands_nv: self.cmd_execute_generated_commands_nv,
-            cmd_bind_pipeline_shader_group_nv: self.cmd_bind_pipeline_shader_group_nv,
-            create_indirect_commands_layout_nv: self.create_indirect_commands_layout_nv,
-            destroy_indirect_commands_layout_nv: self.destroy_indirect_commands_layout_nv,
-        }
-    }
-}
 impl NvDeviceGeneratedCommandsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -21773,7 +20119,7 @@ impl NvDeviceGeneratedCommandsFn {
     {
         NvDeviceGeneratedCommandsFn {
             get_generated_commands_memory_requirements_nv: unsafe {
-                extern "system" fn get_generated_commands_memory_requirements_nv(
+                unsafe extern "system" fn get_generated_commands_memory_requirements_nv(
                     _device: Device,
                     _p_info: *const GeneratedCommandsMemoryRequirementsInfoNV,
                     _p_memory_requirements: *mut MemoryRequirements2,
@@ -21794,7 +20140,7 @@ impl NvDeviceGeneratedCommandsFn {
                 }
             },
             cmd_preprocess_generated_commands_nv: unsafe {
-                extern "system" fn cmd_preprocess_generated_commands_nv(
+                unsafe extern "system" fn cmd_preprocess_generated_commands_nv(
                     _command_buffer: CommandBuffer,
                     _p_generated_commands_info: *const GeneratedCommandsInfoNV,
                 ) {
@@ -21814,7 +20160,7 @@ impl NvDeviceGeneratedCommandsFn {
                 }
             },
             cmd_execute_generated_commands_nv: unsafe {
-                extern "system" fn cmd_execute_generated_commands_nv(
+                unsafe extern "system" fn cmd_execute_generated_commands_nv(
                     _command_buffer: CommandBuffer,
                     _is_preprocessed: Bool32,
                     _p_generated_commands_info: *const GeneratedCommandsInfoNV,
@@ -21835,7 +20181,7 @@ impl NvDeviceGeneratedCommandsFn {
                 }
             },
             cmd_bind_pipeline_shader_group_nv: unsafe {
-                extern "system" fn cmd_bind_pipeline_shader_group_nv(
+                unsafe extern "system" fn cmd_bind_pipeline_shader_group_nv(
                     _command_buffer: CommandBuffer,
                     _pipeline_bind_point: PipelineBindPoint,
                     _pipeline: Pipeline,
@@ -21857,7 +20203,7 @@ impl NvDeviceGeneratedCommandsFn {
                 }
             },
             create_indirect_commands_layout_nv: unsafe {
-                extern "system" fn create_indirect_commands_layout_nv(
+                unsafe extern "system" fn create_indirect_commands_layout_nv(
                     _device: Device,
                     _p_create_info: *const IndirectCommandsLayoutCreateInfoNV,
                     _p_allocator: *const AllocationCallbacks,
@@ -21879,7 +20225,7 @@ impl NvDeviceGeneratedCommandsFn {
                 }
             },
             destroy_indirect_commands_layout_nv: unsafe {
-                extern "system" fn destroy_indirect_commands_layout_nv(
+                unsafe extern "system" fn destroy_indirect_commands_layout_nv(
                     _device: Device,
                     _indirect_commands_layout: IndirectCommandsLayoutNV,
                     _p_allocator: *const AllocationCallbacks,
@@ -22023,28 +20369,32 @@ impl AccessFlags {
 impl ObjectType {
     pub const INDIRECT_COMMANDS_LAYOUT_NV: Self = Self(1_000_277_000);
 }
-impl NvExtension279Fn {
+impl NvInheritedViewportScissorFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_279\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_inherited_viewport_scissor\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvExtension279Fn {}
-unsafe impl Send for NvExtension279Fn {}
-unsafe impl Sync for NvExtension279Fn {}
-impl ::std::clone::Clone for NvExtension279Fn {
-    fn clone(&self) -> Self {
-        NvExtension279Fn {}
-    }
-}
-impl NvExtension279Fn {
+#[derive(Clone)]
+pub struct NvInheritedViewportScissorFn {}
+unsafe impl Send for NvInheritedViewportScissorFn {}
+unsafe impl Sync for NvInheritedViewportScissorFn {}
+impl NvInheritedViewportScissorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvExtension279Fn {}
+        NvInheritedViewportScissorFn {}
     }
+}
+#[doc = "Generated from 'VK_NV_inherited_viewport_scissor'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_INHERITED_VIEWPORT_SCISSOR_FEATURES_NV: Self = Self(1_000_278_000);
+}
+#[doc = "Generated from 'VK_NV_inherited_viewport_scissor'"]
+impl StructureType {
+    pub const COMMAND_BUFFER_INHERITANCE_VIEWPORT_SCISSOR_INFO_NV: Self = Self(1_000_278_001);
 }
 impl KhrExtension280Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -22053,14 +20403,10 @@ impl KhrExtension280Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension280Fn {}
 unsafe impl Send for KhrExtension280Fn {}
 unsafe impl Sync for KhrExtension280Fn {}
-impl ::std::clone::Clone for KhrExtension280Fn {
-    fn clone(&self) -> Self {
-        KhrExtension280Fn {}
-    }
-}
 impl KhrExtension280Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22076,14 +20422,10 @@ impl ArmExtension281Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ArmExtension281Fn {}
 unsafe impl Send for ArmExtension281Fn {}
 unsafe impl Sync for ArmExtension281Fn {}
-impl ::std::clone::Clone for ArmExtension281Fn {
-    fn clone(&self) -> Self {
-        ArmExtension281Fn {}
-    }
-}
 impl ArmExtension281Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22099,14 +20441,10 @@ impl ExtTexelBufferAlignmentFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtTexelBufferAlignmentFn {}
 unsafe impl Send for ExtTexelBufferAlignmentFn {}
 unsafe impl Sync for ExtTexelBufferAlignmentFn {}
-impl ::std::clone::Clone for ExtTexelBufferAlignmentFn {
-    fn clone(&self) -> Self {
-        ExtTexelBufferAlignmentFn {}
-    }
-}
 impl ExtTexelBufferAlignmentFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22128,16 +20466,12 @@ impl QcomRenderPassTransformFn {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_QCOM_render_pass_transform\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 1u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct QcomRenderPassTransformFn {}
 unsafe impl Send for QcomRenderPassTransformFn {}
 unsafe impl Sync for QcomRenderPassTransformFn {}
-impl ::std::clone::Clone for QcomRenderPassTransformFn {
-    fn clone(&self) -> Self {
-        QcomRenderPassTransformFn {}
-    }
-}
 impl QcomRenderPassTransformFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22166,14 +20500,10 @@ impl ExtExtension284Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension284Fn {}
 unsafe impl Send for ExtExtension284Fn {}
 unsafe impl Sync for ExtExtension284Fn {}
-impl ::std::clone::Clone for ExtExtension284Fn {
-    fn clone(&self) -> Self {
-        ExtExtension284Fn {}
-    }
-}
 impl ExtExtension284Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22189,14 +20519,10 @@ impl ExtDeviceMemoryReportFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct ExtDeviceMemoryReportFn {}
 unsafe impl Send for ExtDeviceMemoryReportFn {}
 unsafe impl Sync for ExtDeviceMemoryReportFn {}
-impl ::std::clone::Clone for ExtDeviceMemoryReportFn {
-    fn clone(&self) -> Self {
-        ExtDeviceMemoryReportFn {}
-    }
-}
 impl ExtDeviceMemoryReportFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22217,27 +20543,97 @@ impl StructureType {
 impl StructureType {
     pub const DEVICE_MEMORY_REPORT_CALLBACK_DATA_EXT: Self = Self(1_000_284_002);
 }
-impl ExtExtension286Fn {
+impl ExtAcquireDrmDisplayFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_286\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_acquire_drm_display\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct ExtExtension286Fn {}
-unsafe impl Send for ExtExtension286Fn {}
-unsafe impl Sync for ExtExtension286Fn {}
-impl ::std::clone::Clone for ExtExtension286Fn {
-    fn clone(&self) -> Self {
-        ExtExtension286Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkAcquireDrmDisplayEXT = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    drm_fd: i32,
+    display: DisplayKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetDrmDisplayEXT = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    drm_fd: i32,
+    connector_id: u32,
+    display: *mut DisplayKHR,
+) -> Result;
+#[derive(Clone)]
+pub struct ExtAcquireDrmDisplayFn {
+    pub acquire_drm_display_ext: PFN_vkAcquireDrmDisplayEXT,
+    pub get_drm_display_ext: PFN_vkGetDrmDisplayEXT,
 }
-impl ExtExtension286Fn {
+unsafe impl Send for ExtAcquireDrmDisplayFn {}
+unsafe impl Sync for ExtAcquireDrmDisplayFn {}
+impl ExtAcquireDrmDisplayFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        ExtExtension286Fn {}
+        ExtAcquireDrmDisplayFn {
+            acquire_drm_display_ext: unsafe {
+                unsafe extern "system" fn acquire_drm_display_ext(
+                    _physical_device: PhysicalDevice,
+                    _drm_fd: i32,
+                    _display: DisplayKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(acquire_drm_display_ext)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkAcquireDrmDisplayEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    acquire_drm_display_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_drm_display_ext: unsafe {
+                unsafe extern "system" fn get_drm_display_ext(
+                    _physical_device: PhysicalDevice,
+                    _drm_fd: i32,
+                    _connector_id: u32,
+                    _display: *mut DisplayKHR,
+                ) -> Result {
+                    panic!(concat!("Unable to load ", stringify!(get_drm_display_ext)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkGetDrmDisplayEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    get_drm_display_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireDrmDisplayEXT.html>"]
+    pub unsafe fn acquire_drm_display_ext(
+        &self,
+        physical_device: PhysicalDevice,
+        drm_fd: i32,
+        display: DisplayKHR,
+    ) -> Result {
+        (self.acquire_drm_display_ext)(physical_device, drm_fd, display)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDrmDisplayEXT.html>"]
+    pub unsafe fn get_drm_display_ext(
+        &self,
+        physical_device: PhysicalDevice,
+        drm_fd: i32,
+        connector_id: u32,
+        display: *mut DisplayKHR,
+    ) -> Result {
+        (self.get_drm_display_ext)(physical_device, drm_fd, connector_id, display)
     }
 }
 impl ExtRobustness2Fn {
@@ -22247,14 +20643,10 @@ impl ExtRobustness2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtRobustness2Fn {}
 unsafe impl Send for ExtRobustness2Fn {}
 unsafe impl Sync for ExtRobustness2Fn {}
-impl ::std::clone::Clone for ExtRobustness2Fn {
-    fn clone(&self) -> Self {
-        ExtRobustness2Fn {}
-    }
-}
 impl ExtRobustness2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22278,14 +20670,10 @@ impl ExtCustomBorderColorFn {
     }
     pub const SPEC_VERSION: u32 = 12u32;
 }
+#[derive(Clone)]
 pub struct ExtCustomBorderColorFn {}
 unsafe impl Send for ExtCustomBorderColorFn {}
 unsafe impl Sync for ExtCustomBorderColorFn {}
-impl ::std::clone::Clone for ExtCustomBorderColorFn {
-    fn clone(&self) -> Self {
-        ExtCustomBorderColorFn {}
-    }
-}
 impl ExtCustomBorderColorFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22321,14 +20709,10 @@ impl ExtExtension289Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension289Fn {}
 unsafe impl Send for ExtExtension289Fn {}
 unsafe impl Sync for ExtExtension289Fn {}
-impl ::std::clone::Clone for ExtExtension289Fn {
-    fn clone(&self) -> Self {
-        ExtExtension289Fn {}
-    }
-}
 impl ExtExtension289Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22464,14 +20848,10 @@ impl GoogleUserTypeFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct GoogleUserTypeFn {}
 unsafe impl Send for GoogleUserTypeFn {}
 unsafe impl Sync for GoogleUserTypeFn {}
-impl ::std::clone::Clone for GoogleUserTypeFn {
-    fn clone(&self) -> Self {
-        GoogleUserTypeFn {}
-    }
-}
 impl GoogleUserTypeFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22487,14 +20867,10 @@ impl KhrPipelineLibraryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrPipelineLibraryFn {}
 unsafe impl Send for KhrPipelineLibraryFn {}
 unsafe impl Sync for KhrPipelineLibraryFn {}
-impl ::std::clone::Clone for KhrPipelineLibraryFn {
-    fn clone(&self) -> Self {
-        KhrPipelineLibraryFn {}
-    }
-}
 impl KhrPipelineLibraryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22518,14 +20894,10 @@ impl NvExtension292Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension292Fn {}
 unsafe impl Send for NvExtension292Fn {}
 unsafe impl Sync for NvExtension292Fn {}
-impl ::std::clone::Clone for NvExtension292Fn {
-    fn clone(&self) -> Self {
-        NvExtension292Fn {}
-    }
-}
 impl NvExtension292Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22541,14 +20913,10 @@ impl NvExtension293Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension293Fn {}
 unsafe impl Send for NvExtension293Fn {}
 unsafe impl Sync for NvExtension293Fn {}
-impl ::std::clone::Clone for NvExtension293Fn {
-    fn clone(&self) -> Self {
-        NvExtension293Fn {}
-    }
-}
 impl NvExtension293Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22564,14 +20932,10 @@ impl KhrShaderNonSemanticInfoFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrShaderNonSemanticInfoFn {}
 unsafe impl Send for KhrShaderNonSemanticInfoFn {}
 unsafe impl Sync for KhrShaderNonSemanticInfoFn {}
-impl ::std::clone::Clone for KhrShaderNonSemanticInfoFn {
-    fn clone(&self) -> Self {
-        KhrShaderNonSemanticInfoFn {}
-    }
-}
 impl KhrShaderNonSemanticInfoFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22580,28 +20944,32 @@ impl KhrShaderNonSemanticInfoFn {
         KhrShaderNonSemanticInfoFn {}
     }
 }
-impl KhrExtension295Fn {
+impl KhrPresentIdFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_295\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_present_id\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct KhrExtension295Fn {}
-unsafe impl Send for KhrExtension295Fn {}
-unsafe impl Sync for KhrExtension295Fn {}
-impl ::std::clone::Clone for KhrExtension295Fn {
-    fn clone(&self) -> Self {
-        KhrExtension295Fn {}
-    }
-}
-impl KhrExtension295Fn {
+#[derive(Clone)]
+pub struct KhrPresentIdFn {}
+unsafe impl Send for KhrPresentIdFn {}
+unsafe impl Sync for KhrPresentIdFn {}
+impl KhrPresentIdFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        KhrExtension295Fn {}
+        KhrPresentIdFn {}
     }
+}
+#[doc = "Generated from 'VK_KHR_present_id'"]
+impl StructureType {
+    pub const PRESENT_ID_KHR: Self = Self(1_000_294_000);
+}
+#[doc = "Generated from 'VK_KHR_present_id'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: Self = Self(1_000_294_001);
 }
 impl ExtPrivateDataFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -22611,20 +20979,20 @@ impl ExtPrivateDataFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreatePrivateDataSlotEXT = extern "system" fn(
+pub type PFN_vkCreatePrivateDataSlotEXT = unsafe extern "system" fn(
     device: Device,
     p_create_info: *const PrivateDataSlotCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_private_data_slot: *mut PrivateDataSlotEXT,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyPrivateDataSlotEXT = extern "system" fn(
+pub type PFN_vkDestroyPrivateDataSlotEXT = unsafe extern "system" fn(
     device: Device,
     private_data_slot: PrivateDataSlotEXT,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetPrivateDataEXT = extern "system" fn(
+pub type PFN_vkSetPrivateDataEXT = unsafe extern "system" fn(
     device: Device,
     object_type: ObjectType,
     object_handle: u64,
@@ -22632,52 +21000,22 @@ pub type PFN_vkSetPrivateDataEXT = extern "system" fn(
     data: u64,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPrivateDataEXT = extern "system" fn(
+pub type PFN_vkGetPrivateDataEXT = unsafe extern "system" fn(
     device: Device,
     object_type: ObjectType,
     object_handle: u64,
     private_data_slot: PrivateDataSlotEXT,
     p_data: *mut u64,
 );
+#[derive(Clone)]
 pub struct ExtPrivateDataFn {
-    pub create_private_data_slot_ext: extern "system" fn(
-        device: Device,
-        p_create_info: *const PrivateDataSlotCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_private_data_slot: *mut PrivateDataSlotEXT,
-    ) -> Result,
-    pub destroy_private_data_slot_ext: extern "system" fn(
-        device: Device,
-        private_data_slot: PrivateDataSlotEXT,
-        p_allocator: *const AllocationCallbacks,
-    ),
-    pub set_private_data_ext: extern "system" fn(
-        device: Device,
-        object_type: ObjectType,
-        object_handle: u64,
-        private_data_slot: PrivateDataSlotEXT,
-        data: u64,
-    ) -> Result,
-    pub get_private_data_ext: extern "system" fn(
-        device: Device,
-        object_type: ObjectType,
-        object_handle: u64,
-        private_data_slot: PrivateDataSlotEXT,
-        p_data: *mut u64,
-    ),
+    pub create_private_data_slot_ext: PFN_vkCreatePrivateDataSlotEXT,
+    pub destroy_private_data_slot_ext: PFN_vkDestroyPrivateDataSlotEXT,
+    pub set_private_data_ext: PFN_vkSetPrivateDataEXT,
+    pub get_private_data_ext: PFN_vkGetPrivateDataEXT,
 }
 unsafe impl Send for ExtPrivateDataFn {}
 unsafe impl Sync for ExtPrivateDataFn {}
-impl ::std::clone::Clone for ExtPrivateDataFn {
-    fn clone(&self) -> Self {
-        ExtPrivateDataFn {
-            create_private_data_slot_ext: self.create_private_data_slot_ext,
-            destroy_private_data_slot_ext: self.destroy_private_data_slot_ext,
-            set_private_data_ext: self.set_private_data_ext,
-            get_private_data_ext: self.get_private_data_ext,
-        }
-    }
-}
 impl ExtPrivateDataFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22685,7 +21023,7 @@ impl ExtPrivateDataFn {
     {
         ExtPrivateDataFn {
             create_private_data_slot_ext: unsafe {
-                extern "system" fn create_private_data_slot_ext(
+                unsafe extern "system" fn create_private_data_slot_ext(
                     _device: Device,
                     _p_create_info: *const PrivateDataSlotCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -22707,7 +21045,7 @@ impl ExtPrivateDataFn {
                 }
             },
             destroy_private_data_slot_ext: unsafe {
-                extern "system" fn destroy_private_data_slot_ext(
+                unsafe extern "system" fn destroy_private_data_slot_ext(
                     _device: Device,
                     _private_data_slot: PrivateDataSlotEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -22728,7 +21066,7 @@ impl ExtPrivateDataFn {
                 }
             },
             set_private_data_ext: unsafe {
-                extern "system" fn set_private_data_ext(
+                unsafe extern "system" fn set_private_data_ext(
                     _device: Device,
                     _object_type: ObjectType,
                     _object_handle: u64,
@@ -22747,7 +21085,7 @@ impl ExtPrivateDataFn {
                 }
             },
             get_private_data_ext: unsafe {
-                extern "system" fn get_private_data_ext(
+                unsafe extern "system" fn get_private_data_ext(
                     _device: Device,
                     _object_type: ObjectType,
                     _object_handle: u64,
@@ -22838,14 +21176,10 @@ impl KhrExtension297Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension297Fn {}
 unsafe impl Send for KhrExtension297Fn {}
 unsafe impl Sync for KhrExtension297Fn {}
-impl ::std::clone::Clone for KhrExtension297Fn {
-    fn clone(&self) -> Self {
-        KhrExtension297Fn {}
-    }
-}
 impl KhrExtension297Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22865,14 +21199,10 @@ impl ExtPipelineCreationCacheControlFn {
     }
     pub const SPEC_VERSION: u32 = 3u32;
 }
+#[derive(Clone)]
 pub struct ExtPipelineCreationCacheControlFn {}
 unsafe impl Send for ExtPipelineCreationCacheControlFn {}
 unsafe impl Sync for ExtPipelineCreationCacheControlFn {}
-impl ::std::clone::Clone for ExtPipelineCreationCacheControlFn {
-    fn clone(&self) -> Self {
-        ExtPipelineCreationCacheControlFn {}
-    }
-}
 impl ExtPipelineCreationCacheControlFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22900,7 +21230,7 @@ impl Result {
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl Result {
-    pub const ERROR_PIPELINE_COMPILE_REQUIRED_EXT: Self = Result::PIPELINE_COMPILE_REQUIRED_EXT;
+    pub const ERROR_PIPELINE_COMPILE_REQUIRED_EXT: Self = Self::PIPELINE_COMPILE_REQUIRED_EXT;
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl PipelineCacheCreateFlags {
@@ -22913,14 +21243,10 @@ impl KhrExtension299Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension299Fn {}
 unsafe impl Send for KhrExtension299Fn {}
 unsafe impl Sync for KhrExtension299Fn {}
-impl ::std::clone::Clone for KhrExtension299Fn {
-    fn clone(&self) -> Self {
-        KhrExtension299Fn {}
-    }
-}
 impl KhrExtension299Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22929,28 +21255,136 @@ impl KhrExtension299Fn {
         KhrExtension299Fn {}
     }
 }
-impl KhrExtension300Fn {
+#[doc = "Generated from 'VK_KHR_extension_299'"]
+impl MemoryHeapFlags {
+    pub const RESERVED_2_KHR: Self = Self(0b100);
+}
+#[doc = "Generated from 'VK_KHR_extension_299'"]
+impl PipelineCacheCreateFlags {
+    pub const RESERVED_1_KHR: Self = Self::RESERVED_1_EXT;
+}
+#[doc = "Generated from 'VK_KHR_extension_299'"]
+impl PipelineCacheCreateFlags {
+    pub const RESERVED_2_KHR: Self = Self(0b100);
+}
+impl KhrVideoEncodeQueueFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_300\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_video_encode_queue\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
-pub struct KhrExtension300Fn {}
-unsafe impl Send for KhrExtension300Fn {}
-unsafe impl Sync for KhrExtension300Fn {}
-impl ::std::clone::Clone for KhrExtension300Fn {
-    fn clone(&self) -> Self {
-        KhrExtension300Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdEncodeVideoKHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_encode_info: *const VideoEncodeInfoKHR,
+);
+#[derive(Clone)]
+pub struct KhrVideoEncodeQueueFn {
+    pub cmd_encode_video_khr: PFN_vkCmdEncodeVideoKHR,
 }
-impl KhrExtension300Fn {
+unsafe impl Send for KhrVideoEncodeQueueFn {}
+unsafe impl Sync for KhrVideoEncodeQueueFn {}
+impl KhrVideoEncodeQueueFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        KhrExtension300Fn {}
+        KhrVideoEncodeQueueFn {
+            cmd_encode_video_khr: unsafe {
+                unsafe extern "system" fn cmd_encode_video_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_encode_info: *const VideoEncodeInfoKHR,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_encode_video_khr)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdEncodeVideoKHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_encode_video_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEncodeVideoKHR.html>"]
+    pub unsafe fn cmd_encode_video_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_encode_info: *const VideoEncodeInfoKHR,
+    ) {
+        (self.cmd_encode_video_khr)(command_buffer, p_encode_info)
+    }
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl PipelineStageFlags2KHR {
+    pub const VIDEO_ENCODE: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl AccessFlags2KHR {
+    pub const VIDEO_ENCODE_READ: Self = Self(0b10_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl AccessFlags2KHR {
+    pub const VIDEO_ENCODE_WRITE: Self = Self(0b100_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_INFO_KHR: Self = Self(1_000_299_000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl StructureType {
+    pub const VIDEO_ENCODE_RATE_CONTROL_INFO_KHR: Self = Self(1_000_299_001);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl QueueFlags {
+    pub const VIDEO_ENCODE_KHR: Self = Self(0b100_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl BufferUsageFlags {
+    pub const VIDEO_ENCODE_DST_KHR: Self = Self(0b1000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl BufferUsageFlags {
+    pub const VIDEO_ENCODE_SRC_KHR: Self = Self(0b1_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageUsageFlags {
+    pub const VIDEO_ENCODE_DST_KHR: Self = Self(0b10_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageUsageFlags {
+    pub const VIDEO_ENCODE_SRC_KHR: Self = Self(0b100_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageUsageFlags {
+    pub const VIDEO_ENCODE_DPB_KHR: Self = Self(0b1000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl FormatFeatureFlags {
+    pub const VIDEO_ENCODE_INPUT_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl FormatFeatureFlags {
+    pub const VIDEO_ENCODE_DPB_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_ENCODE_DST_KHR: Self = Self(1_000_299_000);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_ENCODE_SRC_KHR: Self = Self(1_000_299_001);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl ImageLayout {
+    pub const VIDEO_ENCODE_DPB_KHR: Self = Self(1_000_299_002);
+}
+#[doc = "Generated from 'VK_KHR_video_encode_queue'"]
+impl QueryType {
+    pub const VIDEO_ENCODESTREAM_BUFFER_RANGE_KHR: Self = Self(1_000_299_000);
 }
 impl NvDeviceDiagnosticsConfigFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -22959,14 +21393,10 @@ impl NvDeviceDiagnosticsConfigFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct NvDeviceDiagnosticsConfigFn {}
 unsafe impl Send for NvDeviceDiagnosticsConfigFn {}
 unsafe impl Sync for NvDeviceDiagnosticsConfigFn {}
-impl ::std::clone::Clone for NvDeviceDiagnosticsConfigFn {
-    fn clone(&self) -> Self {
-        NvDeviceDiagnosticsConfigFn {}
-    }
-}
 impl NvDeviceDiagnosticsConfigFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -22990,14 +21420,10 @@ impl QcomRenderPassStoreOpsFn {
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
+#[derive(Clone)]
 pub struct QcomRenderPassStoreOpsFn {}
 unsafe impl Send for QcomRenderPassStoreOpsFn {}
 unsafe impl Sync for QcomRenderPassStoreOpsFn {}
-impl ::std::clone::Clone for QcomRenderPassStoreOpsFn {
-    fn clone(&self) -> Self {
-        QcomRenderPassStoreOpsFn {}
-    }
-}
 impl QcomRenderPassStoreOpsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23017,14 +21443,10 @@ impl QcomExtension303Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension303Fn {}
 unsafe impl Send for QcomExtension303Fn {}
 unsafe impl Sync for QcomExtension303Fn {}
-impl ::std::clone::Clone for QcomExtension303Fn {
-    fn clone(&self) -> Self {
-        QcomExtension303Fn {}
-    }
-}
 impl QcomExtension303Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23040,14 +21462,10 @@ impl QcomExtension304Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension304Fn {}
 unsafe impl Send for QcomExtension304Fn {}
 unsafe impl Sync for QcomExtension304Fn {}
-impl ::std::clone::Clone for QcomExtension304Fn {
-    fn clone(&self) -> Self {
-        QcomExtension304Fn {}
-    }
-}
 impl QcomExtension304Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23063,14 +21481,10 @@ impl QcomExtension305Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension305Fn {}
 unsafe impl Send for QcomExtension305Fn {}
 unsafe impl Sync for QcomExtension305Fn {}
-impl ::std::clone::Clone for QcomExtension305Fn {
-    fn clone(&self) -> Self {
-        QcomExtension305Fn {}
-    }
-}
 impl QcomExtension305Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23086,14 +21500,10 @@ impl QcomExtension306Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension306Fn {}
 unsafe impl Send for QcomExtension306Fn {}
 unsafe impl Sync for QcomExtension306Fn {}
-impl ::std::clone::Clone for QcomExtension306Fn {
-    fn clone(&self) -> Self {
-        QcomExtension306Fn {}
-    }
-}
 impl QcomExtension306Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23109,14 +21519,10 @@ impl QcomExtension307Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension307Fn {}
 unsafe impl Send for QcomExtension307Fn {}
 unsafe impl Sync for QcomExtension307Fn {}
-impl ::std::clone::Clone for QcomExtension307Fn {
-    fn clone(&self) -> Self {
-        QcomExtension307Fn {}
-    }
-}
 impl QcomExtension307Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23132,14 +21538,10 @@ impl NvExtension308Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension308Fn {}
 unsafe impl Send for NvExtension308Fn {}
 unsafe impl Sync for NvExtension308Fn {}
-impl ::std::clone::Clone for NvExtension308Fn {
-    fn clone(&self) -> Self {
-        NvExtension308Fn {}
-    }
-}
 impl NvExtension308Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23155,14 +21557,10 @@ impl KhrExtension309Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension309Fn {}
 unsafe impl Send for KhrExtension309Fn {}
 unsafe impl Sync for KhrExtension309Fn {}
-impl ::std::clone::Clone for KhrExtension309Fn {
-    fn clone(&self) -> Self {
-        KhrExtension309Fn {}
-    }
-}
 impl KhrExtension309Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23171,10 +21569,6 @@ impl KhrExtension309Fn {
         KhrExtension309Fn {}
     }
 }
-#[doc = "Generated from 'VK_KHR_extension_309'"]
-impl MemoryHeapFlags {
-    pub const RESERVED_2_KHR: Self = Self(0b100);
-}
 impl QcomExtension310Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_QCOM_extension_310\0")
@@ -23182,14 +21576,10 @@ impl QcomExtension310Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension310Fn {}
 unsafe impl Send for QcomExtension310Fn {}
 unsafe impl Sync for QcomExtension310Fn {}
-impl ::std::clone::Clone for QcomExtension310Fn {
-    fn clone(&self) -> Self {
-        QcomExtension310Fn {}
-    }
-}
 impl QcomExtension310Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23209,14 +21599,10 @@ impl NvExtension311Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension311Fn {}
 unsafe impl Send for NvExtension311Fn {}
 unsafe impl Sync for NvExtension311Fn {}
-impl ::std::clone::Clone for NvExtension311Fn {
-    fn clone(&self) -> Self {
-        NvExtension311Fn {}
-    }
-}
 impl NvExtension311Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23232,14 +21618,10 @@ impl ExtExtension312Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension312Fn {}
 unsafe impl Send for ExtExtension312Fn {}
 unsafe impl Sync for ExtExtension312Fn {}
-impl ::std::clone::Clone for ExtExtension312Fn {
-    fn clone(&self) -> Self {
-        ExtExtension312Fn {}
-    }
-}
 impl ExtExtension312Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23255,14 +21637,10 @@ impl ExtExtension313Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension313Fn {}
 unsafe impl Send for ExtExtension313Fn {}
 unsafe impl Sync for ExtExtension313Fn {}
-impl ::std::clone::Clone for ExtExtension313Fn {
-    fn clone(&self) -> Self {
-        ExtExtension313Fn {}
-    }
-}
 impl ExtExtension313Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23278,14 +21656,10 @@ impl AmdExtension314Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension314Fn {}
 unsafe impl Send for AmdExtension314Fn {}
 unsafe impl Sync for AmdExtension314Fn {}
-impl ::std::clone::Clone for AmdExtension314Fn {
-    fn clone(&self) -> Self {
-        AmdExtension314Fn {}
-    }
-}
 impl AmdExtension314Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23294,28 +21668,479 @@ impl AmdExtension314Fn {
         AmdExtension314Fn {}
     }
 }
-impl AmdExtension315Fn {
+impl KhrSynchronization2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_315\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_synchronization2\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct AmdExtension315Fn {}
-unsafe impl Send for AmdExtension315Fn {}
-unsafe impl Sync for AmdExtension315Fn {}
-impl ::std::clone::Clone for AmdExtension315Fn {
-    fn clone(&self) -> Self {
-        AmdExtension315Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetEvent2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    event: Event,
+    p_dependency_info: *const DependencyInfoKHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdResetEvent2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    event: Event,
+    stage_mask: PipelineStageFlags2KHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdWaitEvents2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    event_count: u32,
+    p_events: *const Event,
+    p_dependency_infos: *const DependencyInfoKHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdPipelineBarrier2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_dependency_info: *const DependencyInfoKHR,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdWriteTimestamp2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    stage: PipelineStageFlags2KHR,
+    query_pool: QueryPool,
+    query: u32,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkQueueSubmit2KHR = unsafe extern "system" fn(
+    queue: Queue,
+    submit_count: u32,
+    p_submits: *const SubmitInfo2KHR,
+    fence: Fence,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdWriteBufferMarker2AMD = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    stage: PipelineStageFlags2KHR,
+    dst_buffer: Buffer,
+    dst_offset: DeviceSize,
+    marker: u32,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetQueueCheckpointData2NV = unsafe extern "system" fn(
+    queue: Queue,
+    p_checkpoint_data_count: *mut u32,
+    p_checkpoint_data: *mut CheckpointData2NV,
+);
+#[derive(Clone)]
+pub struct KhrSynchronization2Fn {
+    pub cmd_set_event2_khr: PFN_vkCmdSetEvent2KHR,
+    pub cmd_reset_event2_khr: PFN_vkCmdResetEvent2KHR,
+    pub cmd_wait_events2_khr: PFN_vkCmdWaitEvents2KHR,
+    pub cmd_pipeline_barrier2_khr: PFN_vkCmdPipelineBarrier2KHR,
+    pub cmd_write_timestamp2_khr: PFN_vkCmdWriteTimestamp2KHR,
+    pub queue_submit2_khr: PFN_vkQueueSubmit2KHR,
+    pub cmd_write_buffer_marker2_amd: PFN_vkCmdWriteBufferMarker2AMD,
+    pub get_queue_checkpoint_data2_nv: PFN_vkGetQueueCheckpointData2NV,
 }
-impl AmdExtension315Fn {
+unsafe impl Send for KhrSynchronization2Fn {}
+unsafe impl Sync for KhrSynchronization2Fn {}
+impl KhrSynchronization2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdExtension315Fn {}
+        KhrSynchronization2Fn {
+            cmd_set_event2_khr: unsafe {
+                unsafe extern "system" fn cmd_set_event2_khr(
+                    _command_buffer: CommandBuffer,
+                    _event: Event,
+                    _p_dependency_info: *const DependencyInfoKHR,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_set_event2_khr)))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdSetEvent2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_event2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_reset_event2_khr: unsafe {
+                unsafe extern "system" fn cmd_reset_event2_khr(
+                    _command_buffer: CommandBuffer,
+                    _event: Event,
+                    _stage_mask: PipelineStageFlags2KHR,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_reset_event2_khr)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdResetEvent2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_reset_event2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_wait_events2_khr: unsafe {
+                unsafe extern "system" fn cmd_wait_events2_khr(
+                    _command_buffer: CommandBuffer,
+                    _event_count: u32,
+                    _p_events: *const Event,
+                    _p_dependency_infos: *const DependencyInfoKHR,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_wait_events2_khr)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdWaitEvents2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_wait_events2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_pipeline_barrier2_khr: unsafe {
+                unsafe extern "system" fn cmd_pipeline_barrier2_khr(
+                    _command_buffer: CommandBuffer,
+                    _p_dependency_info: *const DependencyInfoKHR,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_pipeline_barrier2_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdPipelineBarrier2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_pipeline_barrier2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_write_timestamp2_khr: unsafe {
+                unsafe extern "system" fn cmd_write_timestamp2_khr(
+                    _command_buffer: CommandBuffer,
+                    _stage: PipelineStageFlags2KHR,
+                    _query_pool: QueryPool,
+                    _query: u32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_write_timestamp2_khr)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdWriteTimestamp2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_write_timestamp2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            queue_submit2_khr: unsafe {
+                unsafe extern "system" fn queue_submit2_khr(
+                    _queue: Queue,
+                    _submit_count: u32,
+                    _p_submits: *const SubmitInfo2KHR,
+                    _fence: Fence,
+                ) -> Result {
+                    panic!(concat!("Unable to load ", stringify!(queue_submit2_khr)))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkQueueSubmit2KHR\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    queue_submit2_khr
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_write_buffer_marker2_amd: unsafe {
+                unsafe extern "system" fn cmd_write_buffer_marker2_amd(
+                    _command_buffer: CommandBuffer,
+                    _stage: PipelineStageFlags2KHR,
+                    _dst_buffer: Buffer,
+                    _dst_offset: DeviceSize,
+                    _marker: u32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_write_buffer_marker2_amd)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdWriteBufferMarker2AMD\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_write_buffer_marker2_amd
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_queue_checkpoint_data2_nv: unsafe {
+                unsafe extern "system" fn get_queue_checkpoint_data2_nv(
+                    _queue: Queue,
+                    _p_checkpoint_data_count: *mut u32,
+                    _p_checkpoint_data: *mut CheckpointData2NV,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_queue_checkpoint_data2_nv)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetQueueCheckpointData2NV\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_queue_checkpoint_data2_nv
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetEvent2KHR.html>"]
+    pub unsafe fn cmd_set_event2_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        event: Event,
+        p_dependency_info: *const DependencyInfoKHR,
+    ) {
+        (self.cmd_set_event2_khr)(command_buffer, event, p_dependency_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdResetEvent2KHR.html>"]
+    pub unsafe fn cmd_reset_event2_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        event: Event,
+        stage_mask: PipelineStageFlags2KHR,
+    ) {
+        (self.cmd_reset_event2_khr)(command_buffer, event, stage_mask)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWaitEvents2KHR.html>"]
+    pub unsafe fn cmd_wait_events2_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        event_count: u32,
+        p_events: *const Event,
+        p_dependency_infos: *const DependencyInfoKHR,
+    ) {
+        (self.cmd_wait_events2_khr)(command_buffer, event_count, p_events, p_dependency_infos)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPipelineBarrier2KHR.html>"]
+    pub unsafe fn cmd_pipeline_barrier2_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        p_dependency_info: *const DependencyInfoKHR,
+    ) {
+        (self.cmd_pipeline_barrier2_khr)(command_buffer, p_dependency_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteTimestamp2KHR.html>"]
+    pub unsafe fn cmd_write_timestamp2_khr(
+        &self,
+        command_buffer: CommandBuffer,
+        stage: PipelineStageFlags2KHR,
+        query_pool: QueryPool,
+        query: u32,
+    ) {
+        (self.cmd_write_timestamp2_khr)(command_buffer, stage, query_pool, query)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueSubmit2KHR.html>"]
+    pub unsafe fn queue_submit2_khr(
+        &self,
+        queue: Queue,
+        submit_count: u32,
+        p_submits: *const SubmitInfo2KHR,
+        fence: Fence,
+    ) -> Result {
+        (self.queue_submit2_khr)(queue, submit_count, p_submits, fence)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteBufferMarker2AMD.html>"]
+    pub unsafe fn cmd_write_buffer_marker2_amd(
+        &self,
+        command_buffer: CommandBuffer,
+        stage: PipelineStageFlags2KHR,
+        dst_buffer: Buffer,
+        dst_offset: DeviceSize,
+        marker: u32,
+    ) {
+        (self.cmd_write_buffer_marker2_amd)(command_buffer, stage, dst_buffer, dst_offset, marker)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetQueueCheckpointData2NV.html>"]
+    pub unsafe fn get_queue_checkpoint_data2_nv(
+        &self,
+        queue: Queue,
+        p_checkpoint_data_count: *mut u32,
+        p_checkpoint_data: *mut CheckpointData2NV,
+    ) {
+        (self.get_queue_checkpoint_data2_nv)(queue, p_checkpoint_data_count, p_checkpoint_data)
+    }
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const BUFFER_MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_001);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const IMAGE_MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_002);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const DEPENDENCY_INFO_KHR: Self = Self(1_000_314_003);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const SUBMIT_INFO_2_KHR: Self = Self(1_000_314_004);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const SEMAPHORE_SUBMIT_INFO_KHR: Self = Self(1_000_314_005);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const COMMAND_BUFFER_SUBMIT_INFO_KHR: Self = Self(1_000_314_006);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR: Self = Self(1_000_314_007);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl EventCreateFlags {
+    pub const DEVICE_ONLY_KHR: Self = Self(0b1);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl ImageLayout {
+    pub const READ_ONLY_OPTIMAL_KHR: Self = Self(1_000_314_000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl ImageLayout {
+    pub const ATTACHMENT_OPTIMAL_KHR: Self = Self(1_000_314_001);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags {
+    pub const NONE_KHR: Self = Self(0);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags {
+    pub const NONE_KHR: Self = Self(0);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const TRANSFORM_FEEDBACK_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const TRANSFORM_FEEDBACK_WRITE_EXT: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const TRANSFORM_FEEDBACK_COUNTER_READ_EXT: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const TRANSFORM_FEEDBACK_COUNTER_WRITE_EXT: Self =
+        Self(0b1000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const CONDITIONAL_RENDERING_EXT: Self = Self(0b100_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const CONDITIONAL_RENDERING_READ_EXT: Self = Self(0b1_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const COMMAND_PREPROCESS_NV: Self = Self(0b10_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const COMMAND_PREPROCESS_READ_NV: Self = Self(0b10_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const COMMAND_PREPROCESS_WRITE_NV: Self = Self(0b100_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT: Self = Self(0b100_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_READ: Self = Self(0b1000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const SHADING_RATE_IMAGE_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const SHADING_RATE_IMAGE_READ_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_READ;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_BUILD: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_READ: Self = Self(0b10_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_WRITE: Self = Self(0b100_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const RAY_TRACING_SHADER: Self = Self(0b10_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const RAY_TRACING_SHADER_NV: Self = Self::RAY_TRACING_SHADER;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_BUILD_NV: Self = Self::ACCELERATION_STRUCTURE_BUILD;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_READ_NV: Self = Self::ACCELERATION_STRUCTURE_READ;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const ACCELERATION_STRUCTURE_WRITE_NV: Self = Self::ACCELERATION_STRUCTURE_WRITE;
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const FRAGMENT_DENSITY_PROCESS_EXT: Self = Self(0b1000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const FRAGMENT_DENSITY_MAP_READ_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl AccessFlags2KHR {
+    pub const COLOR_ATTACHMENT_READ_NONCOHERENT_EXT: Self = Self(0b1000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const TASK_SHADER_NV: Self = Self(0b1000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl PipelineStageFlags2KHR {
+    pub const MESH_SHADER_NV: Self = Self(0b1_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const QUEUE_FAMILY_CHECKPOINT_PROPERTIES_2_NV: Self = Self(1_000_314_008);
+}
+#[doc = "Generated from 'VK_KHR_synchronization2'"]
+impl StructureType {
+    pub const CHECKPOINT_DATA_2_NV: Self = Self(1_000_314_009);
 }
 impl AmdExtension316Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -23324,14 +22149,10 @@ impl AmdExtension316Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension316Fn {}
 unsafe impl Send for AmdExtension316Fn {}
 unsafe impl Sync for AmdExtension316Fn {}
-impl ::std::clone::Clone for AmdExtension316Fn {
-    fn clone(&self) -> Self {
-        AmdExtension316Fn {}
-    }
-}
 impl AmdExtension316Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23347,14 +22168,10 @@ impl AmdExtension317Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension317Fn {}
 unsafe impl Send for AmdExtension317Fn {}
 unsafe impl Sync for AmdExtension317Fn {}
-impl ::std::clone::Clone for AmdExtension317Fn {
-    fn clone(&self) -> Self {
-        AmdExtension317Fn {}
-    }
-}
 impl AmdExtension317Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23370,14 +22187,10 @@ impl AmdExtension318Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension318Fn {}
 unsafe impl Send for AmdExtension318Fn {}
 unsafe impl Sync for AmdExtension318Fn {}
-impl ::std::clone::Clone for AmdExtension318Fn {
-    fn clone(&self) -> Self {
-        AmdExtension318Fn {}
-    }
-}
 impl AmdExtension318Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23393,14 +22206,10 @@ impl AmdExtension319Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension319Fn {}
 unsafe impl Send for AmdExtension319Fn {}
 unsafe impl Sync for AmdExtension319Fn {}
-impl ::std::clone::Clone for AmdExtension319Fn {
-    fn clone(&self) -> Self {
-        AmdExtension319Fn {}
-    }
-}
 impl AmdExtension319Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23409,6 +22218,14 @@ impl AmdExtension319Fn {
         AmdExtension319Fn {}
     }
 }
+#[doc = "Generated from 'VK_AMD_extension_319'"]
+impl DescriptorSetLayoutCreateFlags {
+    pub const RESERVED_3_AMD: Self = Self(0b1000);
+}
+#[doc = "Generated from 'VK_AMD_extension_319'"]
+impl PipelineLayoutCreateFlags {
+    pub const RESERVED_0_AMD: Self = Self(0b1);
+}
 impl AmdExtension320Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_320\0")
@@ -23416,14 +22233,10 @@ impl AmdExtension320Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension320Fn {}
 unsafe impl Send for AmdExtension320Fn {}
 unsafe impl Sync for AmdExtension320Fn {}
-impl ::std::clone::Clone for AmdExtension320Fn {
-    fn clone(&self) -> Self {
-        AmdExtension320Fn {}
-    }
-}
 impl AmdExtension320Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23439,14 +22252,10 @@ impl AmdExtension321Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension321Fn {}
 unsafe impl Send for AmdExtension321Fn {}
 unsafe impl Sync for AmdExtension321Fn {}
-impl ::std::clone::Clone for AmdExtension321Fn {
-    fn clone(&self) -> Self {
-        AmdExtension321Fn {}
-    }
-}
 impl AmdExtension321Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23455,6 +22264,14 @@ impl AmdExtension321Fn {
         AmdExtension321Fn {}
     }
 }
+#[doc = "Generated from 'VK_AMD_extension_321'"]
+impl PipelineCreateFlags {
+    pub const RESERVED_23_AMD: Self = Self(0b1000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_AMD_extension_321'"]
+impl PipelineCreateFlags {
+    pub const RESERVED_10_AMD: Self = Self(0b100_0000_0000);
+}
 impl AmdExtension322Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_AMD_extension_322\0")
@@ -23462,14 +22279,10 @@ impl AmdExtension322Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension322Fn {}
 unsafe impl Send for AmdExtension322Fn {}
 unsafe impl Sync for AmdExtension322Fn {}
-impl ::std::clone::Clone for AmdExtension322Fn {
-    fn clone(&self) -> Self {
-        AmdExtension322Fn {}
-    }
-}
 impl AmdExtension322Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23485,14 +22298,10 @@ impl AmdExtension323Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct AmdExtension323Fn {}
 unsafe impl Send for AmdExtension323Fn {}
 unsafe impl Sync for AmdExtension323Fn {}
-impl ::std::clone::Clone for AmdExtension323Fn {
-    fn clone(&self) -> Self {
-        AmdExtension323Fn {}
-    }
-}
 impl AmdExtension323Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23501,28 +22310,29 @@ impl AmdExtension323Fn {
         AmdExtension323Fn {}
     }
 }
-impl KhrExtension324Fn {
+impl KhrShaderSubgroupUniformControlFlowFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_324\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_shader_subgroup_uniform_control_flow\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct KhrExtension324Fn {}
-unsafe impl Send for KhrExtension324Fn {}
-unsafe impl Sync for KhrExtension324Fn {}
-impl ::std::clone::Clone for KhrExtension324Fn {
-    fn clone(&self) -> Self {
-        KhrExtension324Fn {}
-    }
-}
-impl KhrExtension324Fn {
+#[derive(Clone)]
+pub struct KhrShaderSubgroupUniformControlFlowFn {}
+unsafe impl Send for KhrShaderSubgroupUniformControlFlowFn {}
+unsafe impl Sync for KhrShaderSubgroupUniformControlFlowFn {}
+impl KhrShaderSubgroupUniformControlFlowFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        KhrExtension324Fn {}
+        KhrShaderSubgroupUniformControlFlowFn {}
     }
+}
+#[doc = "Generated from 'VK_KHR_shader_subgroup_uniform_control_flow'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR: Self =
+        Self(1_000_323_000);
 }
 impl KhrExtension325Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -23531,14 +22341,10 @@ impl KhrExtension325Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension325Fn {}
 unsafe impl Send for KhrExtension325Fn {}
 unsafe impl Sync for KhrExtension325Fn {}
-impl ::std::clone::Clone for KhrExtension325Fn {
-    fn clone(&self) -> Self {
-        KhrExtension325Fn {}
-    }
-}
 impl KhrExtension325Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23554,14 +22360,10 @@ impl KhrZeroInitializeWorkgroupMemoryFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrZeroInitializeWorkgroupMemoryFn {}
 unsafe impl Send for KhrZeroInitializeWorkgroupMemoryFn {}
 unsafe impl Sync for KhrZeroInitializeWorkgroupMemoryFn {}
-impl ::std::clone::Clone for KhrZeroInitializeWorkgroupMemoryFn {
-    fn clone(&self) -> Self {
-        KhrZeroInitializeWorkgroupMemoryFn {}
-    }
-}
 impl KhrZeroInitializeWorkgroupMemoryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23583,27 +22385,17 @@ impl NvFragmentShadingRateEnumsFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetFragmentShadingRateEnumNV = extern "system" fn(
+pub type PFN_vkCmdSetFragmentShadingRateEnumNV = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     shading_rate: FragmentShadingRateNV,
     combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
 );
+#[derive(Clone)]
 pub struct NvFragmentShadingRateEnumsFn {
-    pub cmd_set_fragment_shading_rate_enum_nv: extern "system" fn(
-        command_buffer: CommandBuffer,
-        shading_rate: FragmentShadingRateNV,
-        combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
-    ),
+    pub cmd_set_fragment_shading_rate_enum_nv: PFN_vkCmdSetFragmentShadingRateEnumNV,
 }
 unsafe impl Send for NvFragmentShadingRateEnumsFn {}
 unsafe impl Sync for NvFragmentShadingRateEnumsFn {}
-impl ::std::clone::Clone for NvFragmentShadingRateEnumsFn {
-    fn clone(&self) -> Self {
-        NvFragmentShadingRateEnumsFn {
-            cmd_set_fragment_shading_rate_enum_nv: self.cmd_set_fragment_shading_rate_enum_nv,
-        }
-    }
-}
 impl NvFragmentShadingRateEnumsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23611,7 +22403,7 @@ impl NvFragmentShadingRateEnumsFn {
     {
         NvFragmentShadingRateEnumsFn {
             cmd_set_fragment_shading_rate_enum_nv: unsafe {
-                extern "system" fn cmd_set_fragment_shading_rate_enum_nv(
+                unsafe extern "system" fn cmd_set_fragment_shading_rate_enum_nv(
                     _command_buffer: CommandBuffer,
                     _shading_rate: FragmentShadingRateNV,
                     _combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
@@ -23655,36 +22447,48 @@ impl StructureType {
 impl StructureType {
     pub const PIPELINE_FRAGMENT_SHADING_RATE_ENUM_STATE_CREATE_INFO_NV: Self = Self(1_000_326_002);
 }
-impl NvExtension328Fn {
+impl NvRayTracingMotionBlurFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_328\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_ray_tracing_motion_blur\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvExtension328Fn {}
-unsafe impl Send for NvExtension328Fn {}
-unsafe impl Sync for NvExtension328Fn {}
-impl ::std::clone::Clone for NvExtension328Fn {
-    fn clone(&self) -> Self {
-        NvExtension328Fn {}
-    }
-}
-impl NvExtension328Fn {
+#[derive(Clone)]
+pub struct NvRayTracingMotionBlurFn {}
+unsafe impl Send for NvRayTracingMotionBlurFn {}
+unsafe impl Sync for NvRayTracingMotionBlurFn {}
+impl NvRayTracingMotionBlurFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvExtension328Fn {}
+        NvRayTracingMotionBlurFn {}
     }
 }
-#[doc = "Generated from 'VK_NV_extension_328'"]
-impl BuildAccelerationStructureFlagsKHR {
-    pub const RESERVED_5_NV: Self = Self(0b10_0000);
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
+impl StructureType {
+    pub const ACCELERATION_STRUCTURE_GEOMETRY_MOTION_TRIANGLES_DATA_NV: Self = Self(1_000_327_000);
 }
-#[doc = "Generated from 'VK_NV_extension_328'"]
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV: Self = Self(1_000_327_001);
+}
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
+impl StructureType {
+    pub const ACCELERATION_STRUCTURE_MOTION_INFO_NV: Self = Self(1_000_327_002);
+}
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
+impl BuildAccelerationStructureFlagsKHR {
+    pub const MOTION_NV: Self = Self(0b10_0000);
+}
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
 impl AccelerationStructureCreateFlagsKHR {
-    pub const RESERVED_2_NV: Self = Self(0b100);
+    pub const MOTION_NV: Self = Self(0b100);
+}
+#[doc = "Generated from 'VK_NV_ray_tracing_motion_blur'"]
+impl PipelineCreateFlags {
+    pub const RAY_TRACING_ALLOW_MOTION_NV: Self = Self(0b1_0000_0000_0000_0000_0000);
 }
 impl NvExtension329Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -23693,14 +22497,10 @@ impl NvExtension329Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension329Fn {}
 unsafe impl Send for NvExtension329Fn {}
 unsafe impl Sync for NvExtension329Fn {}
-impl ::std::clone::Clone for NvExtension329Fn {
-    fn clone(&self) -> Self {
-        NvExtension329Fn {}
-    }
-}
 impl NvExtension329Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23716,14 +22516,10 @@ impl NvExtension330Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension330Fn {}
 unsafe impl Send for NvExtension330Fn {}
 unsafe impl Sync for NvExtension330Fn {}
-impl ::std::clone::Clone for NvExtension330Fn {
-    fn clone(&self) -> Self {
-        NvExtension330Fn {}
-    }
-}
 impl NvExtension330Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23732,28 +22528,44 @@ impl NvExtension330Fn {
         NvExtension330Fn {}
     }
 }
-impl NvExtension331Fn {
+impl ExtYcbcr2plane444FormatsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_331\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_ycbcr_2plane_444_formats\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvExtension331Fn {}
-unsafe impl Send for NvExtension331Fn {}
-unsafe impl Sync for NvExtension331Fn {}
-impl ::std::clone::Clone for NvExtension331Fn {
-    fn clone(&self) -> Self {
-        NvExtension331Fn {}
-    }
-}
-impl NvExtension331Fn {
+#[derive(Clone)]
+pub struct ExtYcbcr2plane444FormatsFn {}
+unsafe impl Send for ExtYcbcr2plane444FormatsFn {}
+unsafe impl Sync for ExtYcbcr2plane444FormatsFn {}
+impl ExtYcbcr2plane444FormatsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvExtension331Fn {}
+        ExtYcbcr2plane444FormatsFn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT: Self = Self(1_000_330_000);
+}
+#[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
+impl Format {
+    pub const G8_B8R8_2PLANE_444_UNORM_EXT: Self = Self(1_000_330_000);
+}
+#[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
+impl Format {
+    pub const G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT: Self = Self(1_000_330_001);
+}
+#[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
+impl Format {
+    pub const G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT: Self = Self(1_000_330_002);
+}
+#[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
+impl Format {
+    pub const G16_B16R16_2PLANE_444_UNORM_EXT: Self = Self(1_000_330_003);
 }
 impl NvExtension332Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -23762,14 +22574,10 @@ impl NvExtension332Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension332Fn {}
 unsafe impl Send for NvExtension332Fn {}
 unsafe impl Sync for NvExtension332Fn {}
-impl ::std::clone::Clone for NvExtension332Fn {
-    fn clone(&self) -> Self {
-        NvExtension332Fn {}
-    }
-}
 impl NvExtension332Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23785,14 +22593,10 @@ impl ExtFragmentDensityMap2Fn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtFragmentDensityMap2Fn {}
 unsafe impl Send for ExtFragmentDensityMap2Fn {}
 unsafe impl Sync for ExtFragmentDensityMap2Fn {}
-impl ::std::clone::Clone for ExtFragmentDensityMap2Fn {
-    fn clone(&self) -> Self {
-        ExtFragmentDensityMap2Fn {}
-    }
-}
 impl ExtFragmentDensityMap2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23818,16 +22622,12 @@ impl QcomRotatedCopyCommandsFn {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_QCOM_rotated_copy_commands\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct QcomRotatedCopyCommandsFn {}
 unsafe impl Send for QcomRotatedCopyCommandsFn {}
 unsafe impl Sync for QcomRotatedCopyCommandsFn {}
-impl ::std::clone::Clone for QcomRotatedCopyCommandsFn {
-    fn clone(&self) -> Self {
-        QcomRotatedCopyCommandsFn {}
-    }
-}
 impl QcomRotatedCopyCommandsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23847,14 +22647,10 @@ impl KhrExtension335Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension335Fn {}
 unsafe impl Send for KhrExtension335Fn {}
 unsafe impl Sync for KhrExtension335Fn {}
-impl ::std::clone::Clone for KhrExtension335Fn {
-    fn clone(&self) -> Self {
-        KhrExtension335Fn {}
-    }
-}
 impl KhrExtension335Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23870,14 +22666,10 @@ impl ExtImageRobustnessFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ExtImageRobustnessFn {}
 unsafe impl Send for ExtImageRobustnessFn {}
 unsafe impl Sync for ExtImageRobustnessFn {}
-impl ::std::clone::Clone for ExtImageRobustnessFn {
-    fn clone(&self) -> Self {
-        ExtImageRobustnessFn {}
-    }
-}
 impl ExtImageRobustnessFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23897,14 +22689,10 @@ impl KhrWorkgroupMemoryExplicitLayoutFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct KhrWorkgroupMemoryExplicitLayoutFn {}
 unsafe impl Send for KhrWorkgroupMemoryExplicitLayoutFn {}
 unsafe impl Sync for KhrWorkgroupMemoryExplicitLayoutFn {}
-impl ::std::clone::Clone for KhrWorkgroupMemoryExplicitLayoutFn {
-    fn clone(&self) -> Self {
-        KhrWorkgroupMemoryExplicitLayoutFn {}
-    }
-}
 impl KhrWorkgroupMemoryExplicitLayoutFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23926,71 +22714,46 @@ impl KhrCopyCommands2Fn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyBuffer2KHR = extern "system" fn(
+pub type PFN_vkCmdCopyBuffer2KHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_copy_buffer_info: *const CopyBufferInfo2KHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyImage2KHR =
-    extern "system" fn(command_buffer: CommandBuffer, p_copy_image_info: *const CopyImageInfo2KHR);
+pub type PFN_vkCmdCopyImage2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_copy_image_info: *const CopyImageInfo2KHR,
+);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyBufferToImage2KHR = extern "system" fn(
+pub type PFN_vkCmdCopyBufferToImage2KHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyImageToBuffer2KHR = extern "system" fn(
+pub type PFN_vkCmdCopyImageToBuffer2KHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBlitImage2KHR =
-    extern "system" fn(command_buffer: CommandBuffer, p_blit_image_info: *const BlitImageInfo2KHR);
+pub type PFN_vkCmdBlitImage2KHR = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    p_blit_image_info: *const BlitImageInfo2KHR,
+);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdResolveImage2KHR = extern "system" fn(
+pub type PFN_vkCmdResolveImage2KHR = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     p_resolve_image_info: *const ResolveImageInfo2KHR,
 );
+#[derive(Clone)]
 pub struct KhrCopyCommands2Fn {
-    pub cmd_copy_buffer2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_copy_buffer_info: *const CopyBufferInfo2KHR,
-    ),
-    pub cmd_copy_image2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_copy_image_info: *const CopyImageInfo2KHR,
-    ),
-    pub cmd_copy_buffer_to_image2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
-    ),
-    pub cmd_copy_image_to_buffer2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
-    ),
-    pub cmd_blit_image2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_blit_image_info: *const BlitImageInfo2KHR,
-    ),
-    pub cmd_resolve_image2_khr: extern "system" fn(
-        command_buffer: CommandBuffer,
-        p_resolve_image_info: *const ResolveImageInfo2KHR,
-    ),
+    pub cmd_copy_buffer2_khr: PFN_vkCmdCopyBuffer2KHR,
+    pub cmd_copy_image2_khr: PFN_vkCmdCopyImage2KHR,
+    pub cmd_copy_buffer_to_image2_khr: PFN_vkCmdCopyBufferToImage2KHR,
+    pub cmd_copy_image_to_buffer2_khr: PFN_vkCmdCopyImageToBuffer2KHR,
+    pub cmd_blit_image2_khr: PFN_vkCmdBlitImage2KHR,
+    pub cmd_resolve_image2_khr: PFN_vkCmdResolveImage2KHR,
 }
 unsafe impl Send for KhrCopyCommands2Fn {}
 unsafe impl Sync for KhrCopyCommands2Fn {}
-impl ::std::clone::Clone for KhrCopyCommands2Fn {
-    fn clone(&self) -> Self {
-        KhrCopyCommands2Fn {
-            cmd_copy_buffer2_khr: self.cmd_copy_buffer2_khr,
-            cmd_copy_image2_khr: self.cmd_copy_image2_khr,
-            cmd_copy_buffer_to_image2_khr: self.cmd_copy_buffer_to_image2_khr,
-            cmd_copy_image_to_buffer2_khr: self.cmd_copy_image_to_buffer2_khr,
-            cmd_blit_image2_khr: self.cmd_blit_image2_khr,
-            cmd_resolve_image2_khr: self.cmd_resolve_image2_khr,
-        }
-    }
-}
 impl KhrCopyCommands2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -23998,7 +22761,7 @@ impl KhrCopyCommands2Fn {
     {
         KhrCopyCommands2Fn {
             cmd_copy_buffer2_khr: unsafe {
-                extern "system" fn cmd_copy_buffer2_khr(
+                unsafe extern "system" fn cmd_copy_buffer2_khr(
                     _command_buffer: CommandBuffer,
                     _p_copy_buffer_info: *const CopyBufferInfo2KHR,
                 ) {
@@ -24014,7 +22777,7 @@ impl KhrCopyCommands2Fn {
                 }
             },
             cmd_copy_image2_khr: unsafe {
-                extern "system" fn cmd_copy_image2_khr(
+                unsafe extern "system" fn cmd_copy_image2_khr(
                     _command_buffer: CommandBuffer,
                     _p_copy_image_info: *const CopyImageInfo2KHR,
                 ) {
@@ -24030,7 +22793,7 @@ impl KhrCopyCommands2Fn {
                 }
             },
             cmd_copy_buffer_to_image2_khr: unsafe {
-                extern "system" fn cmd_copy_buffer_to_image2_khr(
+                unsafe extern "system" fn cmd_copy_buffer_to_image2_khr(
                     _command_buffer: CommandBuffer,
                     _p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
                 ) {
@@ -24050,7 +22813,7 @@ impl KhrCopyCommands2Fn {
                 }
             },
             cmd_copy_image_to_buffer2_khr: unsafe {
-                extern "system" fn cmd_copy_image_to_buffer2_khr(
+                unsafe extern "system" fn cmd_copy_image_to_buffer2_khr(
                     _command_buffer: CommandBuffer,
                     _p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
                 ) {
@@ -24070,7 +22833,7 @@ impl KhrCopyCommands2Fn {
                 }
             },
             cmd_blit_image2_khr: unsafe {
-                extern "system" fn cmd_blit_image2_khr(
+                unsafe extern "system" fn cmd_blit_image2_khr(
                     _command_buffer: CommandBuffer,
                     _p_blit_image_info: *const BlitImageInfo2KHR,
                 ) {
@@ -24086,7 +22849,7 @@ impl KhrCopyCommands2Fn {
                 }
             },
             cmd_resolve_image2_khr: unsafe {
-                extern "system" fn cmd_resolve_image2_khr(
+                unsafe extern "system" fn cmd_resolve_image2_khr(
                     _command_buffer: CommandBuffer,
                     _p_resolve_image_info: *const ResolveImageInfo2KHR,
                 ) {
@@ -24206,14 +22969,10 @@ impl ArmExtension339Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ArmExtension339Fn {}
 unsafe impl Send for ArmExtension339Fn {}
 unsafe impl Sync for ArmExtension339Fn {}
-impl ::std::clone::Clone for ArmExtension339Fn {
-    fn clone(&self) -> Self {
-        ArmExtension339Fn {}
-    }
-}
 impl ArmExtension339Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24229,14 +22988,10 @@ impl ExtExtension340Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension340Fn {}
 unsafe impl Send for ExtExtension340Fn {}
 unsafe impl Sync for ExtExtension340Fn {}
-impl ::std::clone::Clone for ExtExtension340Fn {
-    fn clone(&self) -> Self {
-        ExtExtension340Fn {}
-    }
-}
 impl ExtExtension340Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24245,6 +23000,10 @@ impl ExtExtension340Fn {
         ExtExtension340Fn {}
     }
 }
+#[doc = "Generated from 'VK_EXT_extension_340'"]
+impl ImageUsageFlags {
+    pub const RESERVED_19_EXT: Self = Self(0b1000_0000_0000_0000_0000);
+}
 impl Ext4444FormatsFn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_4444_formats\0")
@@ -24252,14 +23011,10 @@ impl Ext4444FormatsFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct Ext4444FormatsFn {}
 unsafe impl Send for Ext4444FormatsFn {}
 unsafe impl Sync for Ext4444FormatsFn {}
-impl ::std::clone::Clone for Ext4444FormatsFn {
-    fn clone(&self) -> Self {
-        Ext4444FormatsFn {}
-    }
-}
 impl Ext4444FormatsFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24287,14 +23042,10 @@ impl ExtExtension342Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension342Fn {}
 unsafe impl Send for ExtExtension342Fn {}
 unsafe impl Sync for ExtExtension342Fn {}
-impl ::std::clone::Clone for ExtExtension342Fn {
-    fn clone(&self) -> Self {
-        ExtExtension342Fn {}
-    }
-}
 impl ExtExtension342Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24310,14 +23061,10 @@ impl ArmExtension343Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ArmExtension343Fn {}
 unsafe impl Send for ArmExtension343Fn {}
 unsafe impl Sync for ArmExtension343Fn {}
-impl ::std::clone::Clone for ArmExtension343Fn {
-    fn clone(&self) -> Self {
-        ArmExtension343Fn {}
-    }
-}
 impl ArmExtension343Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24333,14 +23080,10 @@ impl ArmExtension344Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ArmExtension344Fn {}
 unsafe impl Send for ArmExtension344Fn {}
 unsafe impl Sync for ArmExtension344Fn {}
-impl ::std::clone::Clone for ArmExtension344Fn {
-    fn clone(&self) -> Self {
-        ArmExtension344Fn {}
-    }
-}
 impl ArmExtension344Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24356,14 +23099,10 @@ impl ArmExtension345Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ArmExtension345Fn {}
 unsafe impl Send for ArmExtension345Fn {}
 unsafe impl Sync for ArmExtension345Fn {}
-impl ::std::clone::Clone for ArmExtension345Fn {
-    fn clone(&self) -> Self {
-        ArmExtension345Fn {}
-    }
-}
 impl ArmExtension345Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24381,32 +23120,20 @@ impl NvAcquireWinrtDisplayFn {
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkAcquireWinrtDisplayNV =
-    extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result;
+    unsafe extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetWinrtDisplayNV = extern "system" fn(
+pub type PFN_vkGetWinrtDisplayNV = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     device_relative_id: u32,
     p_display: *mut DisplayKHR,
 ) -> Result;
+#[derive(Clone)]
 pub struct NvAcquireWinrtDisplayFn {
-    pub acquire_winrt_display_nv:
-        extern "system" fn(physical_device: PhysicalDevice, display: DisplayKHR) -> Result,
-    pub get_winrt_display_nv: extern "system" fn(
-        physical_device: PhysicalDevice,
-        device_relative_id: u32,
-        p_display: *mut DisplayKHR,
-    ) -> Result,
+    pub acquire_winrt_display_nv: PFN_vkAcquireWinrtDisplayNV,
+    pub get_winrt_display_nv: PFN_vkGetWinrtDisplayNV,
 }
 unsafe impl Send for NvAcquireWinrtDisplayFn {}
 unsafe impl Sync for NvAcquireWinrtDisplayFn {}
-impl ::std::clone::Clone for NvAcquireWinrtDisplayFn {
-    fn clone(&self) -> Self {
-        NvAcquireWinrtDisplayFn {
-            acquire_winrt_display_nv: self.acquire_winrt_display_nv,
-            get_winrt_display_nv: self.get_winrt_display_nv,
-        }
-    }
-}
 impl NvAcquireWinrtDisplayFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24414,7 +23141,7 @@ impl NvAcquireWinrtDisplayFn {
     {
         NvAcquireWinrtDisplayFn {
             acquire_winrt_display_nv: unsafe {
-                extern "system" fn acquire_winrt_display_nv(
+                unsafe extern "system" fn acquire_winrt_display_nv(
                     _physical_device: PhysicalDevice,
                     _display: DisplayKHR,
                 ) -> Result {
@@ -24433,7 +23160,7 @@ impl NvAcquireWinrtDisplayFn {
                 }
             },
             get_winrt_display_nv: unsafe {
-                extern "system" fn get_winrt_display_nv(
+                unsafe extern "system" fn get_winrt_display_nv(
                     _physical_device: PhysicalDevice,
                     _device_relative_id: u32,
                     _p_display: *mut DisplayKHR,
@@ -24477,42 +23204,27 @@ impl ExtDirectfbSurfaceFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreateDirectFBSurfaceEXT = extern "system" fn(
+pub type PFN_vkCreateDirectFBSurfaceEXT = unsafe extern "system" fn(
     instance: Instance,
     p_create_info: *const DirectFBSurfaceCreateInfoEXT,
     p_allocator: *const AllocationCallbacks,
     p_surface: *mut SurfaceKHR,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceDirectFBPresentationSupportEXT = extern "system" fn(
-    physical_device: PhysicalDevice,
-    queue_family_index: u32,
-    dfb: *mut IDirectFB,
-) -> Bool32;
-pub struct ExtDirectfbSurfaceFn {
-    pub create_direct_fb_surface_ext: extern "system" fn(
-        instance: Instance,
-        p_create_info: *const DirectFBSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result,
-    pub get_physical_device_direct_fb_presentation_support_ext: extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceDirectFBPresentationSupportEXT =
+    unsafe extern "system" fn(
         physical_device: PhysicalDevice,
         queue_family_index: u32,
         dfb: *mut IDirectFB,
-    ) -> Bool32,
+    ) -> Bool32;
+#[derive(Clone)]
+pub struct ExtDirectfbSurfaceFn {
+    pub create_direct_fb_surface_ext: PFN_vkCreateDirectFBSurfaceEXT,
+    pub get_physical_device_direct_fb_presentation_support_ext:
+        PFN_vkGetPhysicalDeviceDirectFBPresentationSupportEXT,
 }
 unsafe impl Send for ExtDirectfbSurfaceFn {}
 unsafe impl Sync for ExtDirectfbSurfaceFn {}
-impl ::std::clone::Clone for ExtDirectfbSurfaceFn {
-    fn clone(&self) -> Self {
-        ExtDirectfbSurfaceFn {
-            create_direct_fb_surface_ext: self.create_direct_fb_surface_ext,
-            get_physical_device_direct_fb_presentation_support_ext: self
-                .get_physical_device_direct_fb_presentation_support_ext,
-        }
-    }
-}
 impl ExtDirectfbSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24520,7 +23232,7 @@ impl ExtDirectfbSurfaceFn {
     {
         ExtDirectfbSurfaceFn {
             create_direct_fb_surface_ext: unsafe {
-                extern "system" fn create_direct_fb_surface_ext(
+                unsafe extern "system" fn create_direct_fb_surface_ext(
                     _instance: Instance,
                     _p_create_info: *const DirectFBSurfaceCreateInfoEXT,
                     _p_allocator: *const AllocationCallbacks,
@@ -24542,7 +23254,7 @@ impl ExtDirectfbSurfaceFn {
                 }
             },
             get_physical_device_direct_fb_presentation_support_ext: unsafe {
-                extern "system" fn get_physical_device_direct_fb_presentation_support_ext(
+                unsafe extern "system" fn get_physical_device_direct_fb_presentation_support_ext(
                     _physical_device: PhysicalDevice,
                     _queue_family_index: u32,
                     _dfb: *mut IDirectFB,
@@ -24599,14 +23311,10 @@ impl KhrExtension350Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension350Fn {}
 unsafe impl Send for KhrExtension350Fn {}
 unsafe impl Sync for KhrExtension350Fn {}
-impl ::std::clone::Clone for KhrExtension350Fn {
-    fn clone(&self) -> Self {
-        KhrExtension350Fn {}
-    }
-}
 impl KhrExtension350Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24615,10 +23323,6 @@ impl KhrExtension350Fn {
         KhrExtension350Fn {}
     }
 }
-#[doc = "Generated from 'VK_KHR_extension_350'"]
-impl PipelineCacheCreateFlags {
-    pub const RESERVED_2_EXT: Self = Self(0b100);
-}
 impl NvExtension351Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_351\0")
@@ -24626,14 +23330,10 @@ impl NvExtension351Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension351Fn {}
 unsafe impl Send for NvExtension351Fn {}
 unsafe impl Sync for NvExtension351Fn {}
-impl ::std::clone::Clone for NvExtension351Fn {
-    fn clone(&self) -> Self {
-        NvExtension351Fn {}
-    }
-}
 impl NvExtension351Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24649,14 +23349,10 @@ impl ValveMutableDescriptorTypeFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
+#[derive(Clone)]
 pub struct ValveMutableDescriptorTypeFn {}
 unsafe impl Send for ValveMutableDescriptorTypeFn {}
 unsafe impl Sync for ValveMutableDescriptorTypeFn {}
-impl ::std::clone::Clone for ValveMutableDescriptorTypeFn {
-    fn clone(&self) -> Self {
-        ValveMutableDescriptorTypeFn {}
-    }
-}
 impl ValveMutableDescriptorTypeFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24685,51 +23381,113 @@ impl DescriptorPoolCreateFlags {
 impl DescriptorSetLayoutCreateFlags {
     pub const HOST_ONLY_POOL_VALVE: Self = Self(0b100);
 }
-impl ExtExtension353Fn {
+impl ExtVertexInputDynamicStateFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_353\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_vertex_input_dynamic_state\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
-pub struct ExtExtension353Fn {}
-unsafe impl Send for ExtExtension353Fn {}
-unsafe impl Sync for ExtExtension353Fn {}
-impl ::std::clone::Clone for ExtExtension353Fn {
-    fn clone(&self) -> Self {
-        ExtExtension353Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetVertexInputEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    vertex_binding_description_count: u32,
+    p_vertex_binding_descriptions: *const VertexInputBindingDescription2EXT,
+    vertex_attribute_description_count: u32,
+    p_vertex_attribute_descriptions: *const VertexInputAttributeDescription2EXT,
+);
+#[derive(Clone)]
+pub struct ExtVertexInputDynamicStateFn {
+    pub cmd_set_vertex_input_ext: PFN_vkCmdSetVertexInputEXT,
 }
-impl ExtExtension353Fn {
+unsafe impl Send for ExtVertexInputDynamicStateFn {}
+unsafe impl Sync for ExtVertexInputDynamicStateFn {}
+impl ExtVertexInputDynamicStateFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        ExtExtension353Fn {}
+        ExtVertexInputDynamicStateFn {
+            cmd_set_vertex_input_ext: unsafe {
+                unsafe extern "system" fn cmd_set_vertex_input_ext(
+                    _command_buffer: CommandBuffer,
+                    _vertex_binding_description_count: u32,
+                    _p_vertex_binding_descriptions: *const VertexInputBindingDescription2EXT,
+                    _vertex_attribute_description_count: u32,
+                    _p_vertex_attribute_descriptions: *const VertexInputAttributeDescription2EXT,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_vertex_input_ext)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdSetVertexInputEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_vertex_input_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetVertexInputEXT.html>"]
+    pub unsafe fn cmd_set_vertex_input_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        vertex_binding_description_count: u32,
+        p_vertex_binding_descriptions: *const VertexInputBindingDescription2EXT,
+        vertex_attribute_description_count: u32,
+        p_vertex_attribute_descriptions: *const VertexInputAttributeDescription2EXT,
+    ) {
+        (self.cmd_set_vertex_input_ext)(
+            command_buffer,
+            vertex_binding_description_count,
+            p_vertex_binding_descriptions,
+            vertex_attribute_description_count,
+            p_vertex_attribute_descriptions,
+        )
     }
 }
-impl ExtExtension354Fn {
+#[doc = "Generated from 'VK_EXT_vertex_input_dynamic_state'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT: Self = Self(1_000_352_000);
+}
+#[doc = "Generated from 'VK_EXT_vertex_input_dynamic_state'"]
+impl StructureType {
+    pub const VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT: Self = Self(1_000_352_001);
+}
+#[doc = "Generated from 'VK_EXT_vertex_input_dynamic_state'"]
+impl StructureType {
+    pub const VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT: Self = Self(1_000_352_002);
+}
+#[doc = "Generated from 'VK_EXT_vertex_input_dynamic_state'"]
+impl DynamicState {
+    pub const VERTEX_INPUT_EXT: Self = Self(1_000_352_000);
+}
+impl ExtPhysicalDeviceDrmFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_354\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_physical_device_drm\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct ExtExtension354Fn {}
-unsafe impl Send for ExtExtension354Fn {}
-unsafe impl Sync for ExtExtension354Fn {}
-impl ::std::clone::Clone for ExtExtension354Fn {
-    fn clone(&self) -> Self {
-        ExtExtension354Fn {}
-    }
-}
-impl ExtExtension354Fn {
+#[derive(Clone)]
+pub struct ExtPhysicalDeviceDrmFn {}
+unsafe impl Send for ExtPhysicalDeviceDrmFn {}
+unsafe impl Sync for ExtPhysicalDeviceDrmFn {}
+impl ExtPhysicalDeviceDrmFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        ExtExtension354Fn {}
+        ExtPhysicalDeviceDrmFn {}
     }
+}
+#[doc = "Generated from 'VK_EXT_physical_device_drm'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_DRM_PROPERTIES_EXT: Self = Self(1_000_353_000);
 }
 impl ExtExtension355Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -24738,14 +23496,10 @@ impl ExtExtension355Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension355Fn {}
 unsafe impl Send for ExtExtension355Fn {}
 unsafe impl Sync for ExtExtension355Fn {}
-impl ::std::clone::Clone for ExtExtension355Fn {
-    fn clone(&self) -> Self {
-        ExtExtension355Fn {}
-    }
-}
 impl ExtExtension355Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24761,14 +23515,10 @@ impl ExtVertexAttributeAliasingFn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtVertexAttributeAliasingFn {}
 unsafe impl Send for ExtVertexAttributeAliasingFn {}
 unsafe impl Sync for ExtVertexAttributeAliasingFn {}
-impl ::std::clone::Clone for ExtVertexAttributeAliasingFn {
-    fn clone(&self) -> Self {
-        ExtVertexAttributeAliasingFn {}
-    }
-}
 impl ExtVertexAttributeAliasingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24783,14 +23533,10 @@ impl ExtExtension357Fn {
             .expect("Wrong extension string")
     }
 }
+#[derive(Clone)]
 pub struct ExtExtension357Fn {}
 unsafe impl Send for ExtExtension357Fn {}
 unsafe impl Sync for ExtExtension357Fn {}
-impl ::std::clone::Clone for ExtExtension357Fn {
-    fn clone(&self) -> Self {
-        ExtExtension357Fn {}
-    }
-}
 impl ExtExtension357Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24806,14 +23552,10 @@ impl KhrExtension358Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension358Fn {}
 unsafe impl Send for KhrExtension358Fn {}
 unsafe impl Sync for KhrExtension358Fn {}
-impl ::std::clone::Clone for KhrExtension358Fn {
-    fn clone(&self) -> Self {
-        KhrExtension358Fn {}
-    }
-}
 impl KhrExtension358Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24828,14 +23570,10 @@ impl ExtExtension359Fn {
             .expect("Wrong extension string")
     }
 }
+#[derive(Clone)]
 pub struct ExtExtension359Fn {}
 unsafe impl Send for ExtExtension359Fn {}
 unsafe impl Sync for ExtExtension359Fn {}
-impl ::std::clone::Clone for ExtExtension359Fn {
-    fn clone(&self) -> Self {
-        ExtExtension359Fn {}
-    }
-}
 impl ExtExtension359Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24850,14 +23588,10 @@ impl ExtExtension360Fn {
             .expect("Wrong extension string")
     }
 }
+#[derive(Clone)]
 pub struct ExtExtension360Fn {}
 unsafe impl Send for ExtExtension360Fn {}
 unsafe impl Sync for ExtExtension360Fn {}
-impl ::std::clone::Clone for ExtExtension360Fn {
-    fn clone(&self) -> Self {
-        ExtExtension360Fn {}
-    }
-}
 impl ExtExtension360Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24872,14 +23606,10 @@ impl KhrExtension361Fn {
             .expect("Wrong extension string")
     }
 }
+#[derive(Clone)]
 pub struct KhrExtension361Fn {}
 unsafe impl Send for KhrExtension361Fn {}
 unsafe impl Sync for KhrExtension361Fn {}
-impl ::std::clone::Clone for KhrExtension361Fn {
-    fn clone(&self) -> Self {
-        KhrExtension361Fn {}
-    }
-}
 impl KhrExtension361Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24895,14 +23625,10 @@ impl ExtExtension362Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension362Fn {}
 unsafe impl Send for ExtExtension362Fn {}
 unsafe impl Sync for ExtExtension362Fn {}
-impl ::std::clone::Clone for ExtExtension362Fn {
-    fn clone(&self) -> Self {
-        ExtExtension362Fn {}
-    }
-}
 impl ExtExtension362Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24918,14 +23644,10 @@ impl ExtExtension363Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension363Fn {}
 unsafe impl Send for ExtExtension363Fn {}
 unsafe impl Sync for ExtExtension363Fn {}
-impl ::std::clone::Clone for ExtExtension363Fn {
-    fn clone(&self) -> Self {
-        ExtExtension363Fn {}
-    }
-}
 impl ExtExtension363Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24941,14 +23663,10 @@ impl FuchsiaExtension364Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct FuchsiaExtension364Fn {}
 unsafe impl Send for FuchsiaExtension364Fn {}
 unsafe impl Sync for FuchsiaExtension364Fn {}
-impl ::std::clone::Clone for FuchsiaExtension364Fn {
-    fn clone(&self) -> Self {
-        FuchsiaExtension364Fn {}
-    }
-}
 impl FuchsiaExtension364Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -24957,51 +23675,232 @@ impl FuchsiaExtension364Fn {
         FuchsiaExtension364Fn {}
     }
 }
-impl FuchsiaExtension365Fn {
+impl FuchsiaExternalMemoryFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FUCHSIA_extension_365\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FUCHSIA_external_memory\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct FuchsiaExtension365Fn {}
-unsafe impl Send for FuchsiaExtension365Fn {}
-unsafe impl Sync for FuchsiaExtension365Fn {}
-impl ::std::clone::Clone for FuchsiaExtension365Fn {
-    fn clone(&self) -> Self {
-        FuchsiaExtension365Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetMemoryZirconHandleFUCHSIA = unsafe extern "system" fn(
+    device: Device,
+    p_get_zircon_handle_info: *const MemoryGetZirconHandleInfoFUCHSIA,
+    p_zircon_handle: *mut zx_handle_t,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetMemoryZirconHandlePropertiesFUCHSIA = unsafe extern "system" fn(
+    device: Device,
+    handle_type: ExternalMemoryHandleTypeFlags,
+    zircon_handle: zx_handle_t,
+    p_memory_zircon_handle_properties: *mut MemoryZirconHandlePropertiesFUCHSIA,
+) -> Result;
+#[derive(Clone)]
+pub struct FuchsiaExternalMemoryFn {
+    pub get_memory_zircon_handle_fuchsia: PFN_vkGetMemoryZirconHandleFUCHSIA,
+    pub get_memory_zircon_handle_properties_fuchsia: PFN_vkGetMemoryZirconHandlePropertiesFUCHSIA,
 }
-impl FuchsiaExtension365Fn {
+unsafe impl Send for FuchsiaExternalMemoryFn {}
+unsafe impl Sync for FuchsiaExternalMemoryFn {}
+impl FuchsiaExternalMemoryFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        FuchsiaExtension365Fn {}
+        FuchsiaExternalMemoryFn {
+            get_memory_zircon_handle_fuchsia: unsafe {
+                unsafe extern "system" fn get_memory_zircon_handle_fuchsia(
+                    _device: Device,
+                    _p_get_zircon_handle_info: *const MemoryGetZirconHandleInfoFUCHSIA,
+                    _p_zircon_handle: *mut zx_handle_t,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_memory_zircon_handle_fuchsia)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetMemoryZirconHandleFUCHSIA\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_memory_zircon_handle_fuchsia
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_memory_zircon_handle_properties_fuchsia: unsafe {
+                unsafe extern "system" fn get_memory_zircon_handle_properties_fuchsia(
+                    _device: Device,
+                    _handle_type: ExternalMemoryHandleTypeFlags,
+                    _zircon_handle: zx_handle_t,
+                    _p_memory_zircon_handle_properties: *mut MemoryZirconHandlePropertiesFUCHSIA,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_memory_zircon_handle_properties_fuchsia)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetMemoryZirconHandlePropertiesFUCHSIA\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_memory_zircon_handle_properties_fuchsia
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryZirconHandleFUCHSIA.html>"]
+    pub unsafe fn get_memory_zircon_handle_fuchsia(
+        &self,
+        device: Device,
+        p_get_zircon_handle_info: *const MemoryGetZirconHandleInfoFUCHSIA,
+        p_zircon_handle: *mut zx_handle_t,
+    ) -> Result {
+        (self.get_memory_zircon_handle_fuchsia)(device, p_get_zircon_handle_info, p_zircon_handle)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryZirconHandlePropertiesFUCHSIA.html>"]
+    pub unsafe fn get_memory_zircon_handle_properties_fuchsia(
+        &self,
+        device: Device,
+        handle_type: ExternalMemoryHandleTypeFlags,
+        zircon_handle: zx_handle_t,
+        p_memory_zircon_handle_properties: *mut MemoryZirconHandlePropertiesFUCHSIA,
+    ) -> Result {
+        (self.get_memory_zircon_handle_properties_fuchsia)(
+            device,
+            handle_type,
+            zircon_handle,
+            p_memory_zircon_handle_properties,
+        )
     }
 }
-impl FuchsiaExtension366Fn {
+#[doc = "Generated from 'VK_FUCHSIA_external_memory'"]
+impl StructureType {
+    pub const IMPORT_MEMORY_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_364_000);
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_memory'"]
+impl StructureType {
+    pub const MEMORY_ZIRCON_HANDLE_PROPERTIES_FUCHSIA: Self = Self(1_000_364_001);
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_memory'"]
+impl StructureType {
+    pub const MEMORY_GET_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_364_002);
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_memory'"]
+impl ExternalMemoryHandleTypeFlags {
+    pub const ZIRCON_VMO_FUCHSIA: Self = Self(0b1000_0000_0000);
+}
+impl FuchsiaExternalSemaphoreFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FUCHSIA_extension_366\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FUCHSIA_external_semaphore\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct FuchsiaExtension366Fn {}
-unsafe impl Send for FuchsiaExtension366Fn {}
-unsafe impl Sync for FuchsiaExtension366Fn {}
-impl ::std::clone::Clone for FuchsiaExtension366Fn {
-    fn clone(&self) -> Self {
-        FuchsiaExtension366Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkImportSemaphoreZirconHandleFUCHSIA = unsafe extern "system" fn(
+    device: Device,
+    p_import_semaphore_zircon_handle_info: *const ImportSemaphoreZirconHandleInfoFUCHSIA,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetSemaphoreZirconHandleFUCHSIA = unsafe extern "system" fn(
+    device: Device,
+    p_get_zircon_handle_info: *const SemaphoreGetZirconHandleInfoFUCHSIA,
+    p_zircon_handle: *mut zx_handle_t,
+) -> Result;
+#[derive(Clone)]
+pub struct FuchsiaExternalSemaphoreFn {
+    pub import_semaphore_zircon_handle_fuchsia: PFN_vkImportSemaphoreZirconHandleFUCHSIA,
+    pub get_semaphore_zircon_handle_fuchsia: PFN_vkGetSemaphoreZirconHandleFUCHSIA,
 }
-impl FuchsiaExtension366Fn {
+unsafe impl Send for FuchsiaExternalSemaphoreFn {}
+unsafe impl Sync for FuchsiaExternalSemaphoreFn {}
+impl FuchsiaExternalSemaphoreFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        FuchsiaExtension366Fn {}
+        FuchsiaExternalSemaphoreFn {
+            import_semaphore_zircon_handle_fuchsia: unsafe {
+                unsafe extern "system" fn import_semaphore_zircon_handle_fuchsia(
+                    _device: Device,
+                    _p_import_semaphore_zircon_handle_info : * const ImportSemaphoreZirconHandleInfoFUCHSIA,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(import_semaphore_zircon_handle_fuchsia)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkImportSemaphoreZirconHandleFUCHSIA\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    import_semaphore_zircon_handle_fuchsia
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_semaphore_zircon_handle_fuchsia: unsafe {
+                unsafe extern "system" fn get_semaphore_zircon_handle_fuchsia(
+                    _device: Device,
+                    _p_get_zircon_handle_info: *const SemaphoreGetZirconHandleInfoFUCHSIA,
+                    _p_zircon_handle: *mut zx_handle_t,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_semaphore_zircon_handle_fuchsia)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetSemaphoreZirconHandleFUCHSIA\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_semaphore_zircon_handle_fuchsia
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportSemaphoreZirconHandleFUCHSIA.html>"]
+    pub unsafe fn import_semaphore_zircon_handle_fuchsia(
+        &self,
+        device: Device,
+        p_import_semaphore_zircon_handle_info: *const ImportSemaphoreZirconHandleInfoFUCHSIA,
+    ) -> Result {
+        (self.import_semaphore_zircon_handle_fuchsia)(device, p_import_semaphore_zircon_handle_info)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreZirconHandleFUCHSIA.html>"]
+    pub unsafe fn get_semaphore_zircon_handle_fuchsia(
+        &self,
+        device: Device,
+        p_get_zircon_handle_info: *const SemaphoreGetZirconHandleInfoFUCHSIA,
+        p_zircon_handle: *mut zx_handle_t,
+    ) -> Result {
+        (self.get_semaphore_zircon_handle_fuchsia)(
+            device,
+            p_get_zircon_handle_info,
+            p_zircon_handle,
+        )
+    }
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_semaphore'"]
+impl StructureType {
+    pub const IMPORT_SEMAPHORE_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_365_000);
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_semaphore'"]
+impl StructureType {
+    pub const SEMAPHORE_GET_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_365_001);
+}
+#[doc = "Generated from 'VK_FUCHSIA_external_semaphore'"]
+impl ExternalSemaphoreHandleTypeFlags {
+    pub const ZIRCON_EVENT_FUCHSIA: Self = Self(0b1000_0000);
 }
 impl FuchsiaExtension367Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -25010,14 +23909,10 @@ impl FuchsiaExtension367Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct FuchsiaExtension367Fn {}
 unsafe impl Send for FuchsiaExtension367Fn {}
 unsafe impl Sync for FuchsiaExtension367Fn {}
-impl ::std::clone::Clone for FuchsiaExtension367Fn {
-    fn clone(&self) -> Self {
-        FuchsiaExtension367Fn {}
-    }
-}
 impl FuchsiaExtension367Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25033,14 +23928,10 @@ impl FuchsiaExtension368Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct FuchsiaExtension368Fn {}
 unsafe impl Send for FuchsiaExtension368Fn {}
 unsafe impl Sync for FuchsiaExtension368Fn {}
-impl ::std::clone::Clone for FuchsiaExtension368Fn {
-    fn clone(&self) -> Self {
-        FuchsiaExtension368Fn {}
-    }
-}
 impl FuchsiaExtension368Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25056,14 +23947,10 @@ impl QcomExtension369Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct QcomExtension369Fn {}
 unsafe impl Send for QcomExtension369Fn {}
 unsafe impl Sync for QcomExtension369Fn {}
-impl ::std::clone::Clone for QcomExtension369Fn {
-    fn clone(&self) -> Self {
-        QcomExtension369Fn {}
-    }
-}
 impl QcomExtension369Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25076,82 +23963,268 @@ impl QcomExtension369Fn {
 impl DescriptorBindingFlags {
     pub const RESERVED_4_QCOM: Self = Self(0b1_0000);
 }
-impl HuaweiExtension370Fn {
+impl HuaweiSubpassShadingFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_extension_370\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_subpass_shading\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
-pub struct HuaweiExtension370Fn {}
-unsafe impl Send for HuaweiExtension370Fn {}
-unsafe impl Sync for HuaweiExtension370Fn {}
-impl ::std::clone::Clone for HuaweiExtension370Fn {
-    fn clone(&self) -> Self {
-        HuaweiExtension370Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI = unsafe extern "system" fn(
+    device: Device,
+    renderpass: RenderPass,
+    p_max_workgroup_size: *mut Extent2D,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSubpassShadingHUAWEI = unsafe extern "system" fn(command_buffer: CommandBuffer);
+#[derive(Clone)]
+pub struct HuaweiSubpassShadingFn {
+    pub get_device_subpass_shading_max_workgroup_size_huawei:
+        PFN_vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI,
+    pub cmd_subpass_shading_huawei: PFN_vkCmdSubpassShadingHUAWEI,
 }
-impl HuaweiExtension370Fn {
+unsafe impl Send for HuaweiSubpassShadingFn {}
+unsafe impl Sync for HuaweiSubpassShadingFn {}
+impl HuaweiSubpassShadingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        HuaweiExtension370Fn {}
+        HuaweiSubpassShadingFn {
+            get_device_subpass_shading_max_workgroup_size_huawei: unsafe {
+                unsafe extern "system" fn get_device_subpass_shading_max_workgroup_size_huawei(
+                    _device: Device,
+                    _renderpass: RenderPass,
+                    _p_max_workgroup_size: *mut Extent2D,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_device_subpass_shading_max_workgroup_size_huawei)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_device_subpass_shading_max_workgroup_size_huawei
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_subpass_shading_huawei: unsafe {
+                unsafe extern "system" fn cmd_subpass_shading_huawei(
+                    _command_buffer: CommandBuffer,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_subpass_shading_huawei)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdSubpassShadingHUAWEI\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_subpass_shading_huawei
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI.html>"]
+    pub unsafe fn get_device_subpass_shading_max_workgroup_size_huawei(
+        &self,
+        device: Device,
+        renderpass: RenderPass,
+        p_max_workgroup_size: *mut Extent2D,
+    ) -> Result {
+        (self.get_device_subpass_shading_max_workgroup_size_huawei)(
+            device,
+            renderpass,
+            p_max_workgroup_size,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSubpassShadingHUAWEI.html>"]
+    pub unsafe fn cmd_subpass_shading_huawei(&self, command_buffer: CommandBuffer) {
+        (self.cmd_subpass_shading_huawei)(command_buffer)
     }
 }
-impl HuaweiExtension371Fn {
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl StructureType {
+    pub const SUBPASS_SHADING_PIPELINE_CREATE_INFO_HUAWEI: Self = Self(1_000_369_000);
+}
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI: Self = Self(1_000_369_001);
+}
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_SUBPASS_SHADING_PROPERTIES_HUAWEI: Self = Self(1_000_369_002);
+}
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl PipelineBindPoint {
+    pub const SUBPASS_SHADING_HUAWEI: Self = Self(1_000_369_003);
+}
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl PipelineStageFlags2KHR {
+    pub const SUBPASS_SHADING_HUAWEI: Self =
+        Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
+impl ShaderStageFlags {
+    pub const SUBPASS_SHADING_HUAWEI: Self = Self(0b100_0000_0000_0000);
+}
+impl HuaweiInvocationMaskFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_extension_371\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_invocation_mask\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct HuaweiExtension371Fn {}
-unsafe impl Send for HuaweiExtension371Fn {}
-unsafe impl Sync for HuaweiExtension371Fn {}
-impl ::std::clone::Clone for HuaweiExtension371Fn {
-    fn clone(&self) -> Self {
-        HuaweiExtension371Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdBindInvocationMaskHUAWEI = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    image_view: ImageView,
+    image_layout: ImageLayout,
+);
+#[derive(Clone)]
+pub struct HuaweiInvocationMaskFn {
+    pub cmd_bind_invocation_mask_huawei: PFN_vkCmdBindInvocationMaskHUAWEI,
 }
-impl HuaweiExtension371Fn {
+unsafe impl Send for HuaweiInvocationMaskFn {}
+unsafe impl Sync for HuaweiInvocationMaskFn {}
+impl HuaweiInvocationMaskFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        HuaweiExtension371Fn {}
+        HuaweiInvocationMaskFn {
+            cmd_bind_invocation_mask_huawei: unsafe {
+                unsafe extern "system" fn cmd_bind_invocation_mask_huawei(
+                    _command_buffer: CommandBuffer,
+                    _image_view: ImageView,
+                    _image_layout: ImageLayout,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_bind_invocation_mask_huawei)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdBindInvocationMaskHUAWEI\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_bind_invocation_mask_huawei
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindInvocationMaskHUAWEI.html>"]
+    pub unsafe fn cmd_bind_invocation_mask_huawei(
+        &self,
+        command_buffer: CommandBuffer,
+        image_view: ImageView,
+        image_layout: ImageLayout,
+    ) {
+        (self.cmd_bind_invocation_mask_huawei)(command_buffer, image_view, image_layout)
     }
 }
-impl NvExtension372Fn {
+#[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: Self = Self(1_000_370_000);
+}
+#[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
+impl AccessFlags2KHR {
+    pub const INVOCATION_MASK_READ_HUAWEI: Self =
+        Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
+impl ImageUsageFlags {
+    pub const INVOCATION_MASK_HUAWEI: Self = Self(0b100_0000_0000_0000_0000);
+}
+#[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
+impl PipelineStageFlags2KHR {
+    pub const INVOCATION_MASK_HUAWEI: Self =
+        Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+impl NvExternalMemoryRdmaFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_372\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_external_memory_rdma\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvExtension372Fn {}
-unsafe impl Send for NvExtension372Fn {}
-unsafe impl Sync for NvExtension372Fn {}
-impl ::std::clone::Clone for NvExtension372Fn {
-    fn clone(&self) -> Self {
-        NvExtension372Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetMemoryRemoteAddressNV = unsafe extern "system" fn(
+    device: Device,
+    p_memory_get_remote_address_info: *const MemoryGetRemoteAddressInfoNV,
+    p_address: *mut RemoteAddressNV,
+) -> Result;
+#[derive(Clone)]
+pub struct NvExternalMemoryRdmaFn {
+    pub get_memory_remote_address_nv: PFN_vkGetMemoryRemoteAddressNV,
 }
-impl NvExtension372Fn {
+unsafe impl Send for NvExternalMemoryRdmaFn {}
+unsafe impl Sync for NvExternalMemoryRdmaFn {}
+impl NvExternalMemoryRdmaFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvExtension372Fn {}
+        NvExternalMemoryRdmaFn {
+            get_memory_remote_address_nv: unsafe {
+                unsafe extern "system" fn get_memory_remote_address_nv(
+                    _device: Device,
+                    _p_memory_get_remote_address_info: *const MemoryGetRemoteAddressInfoNV,
+                    _p_address: *mut RemoteAddressNV,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_memory_remote_address_nv)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetMemoryRemoteAddressNV\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_memory_remote_address_nv
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryRemoteAddressNV.html>"]
+    pub unsafe fn get_memory_remote_address_nv(
+        &self,
+        device: Device,
+        p_memory_get_remote_address_info: *const MemoryGetRemoteAddressInfoNV,
+        p_address: *mut RemoteAddressNV,
+    ) -> Result {
+        (self.get_memory_remote_address_nv)(device, p_memory_get_remote_address_info, p_address)
     }
 }
-#[doc = "Generated from 'VK_NV_extension_372'"]
-impl BufferCreateFlags {
-    pub const RESERVED_5_NV: Self = Self(0b10_0000);
+#[doc = "Generated from 'VK_NV_external_memory_rdma'"]
+impl StructureType {
+    pub const MEMORY_GET_REMOTE_ADDRESS_INFO_NV: Self = Self(1_000_371_000);
 }
-#[doc = "Generated from 'VK_NV_extension_372'"]
-impl ImageCreateFlags {
-    pub const RESERVED_15_NV: Self = Self(0b1000_0000_0000_0000);
+#[doc = "Generated from 'VK_NV_external_memory_rdma'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: Self = Self(1_000_371_001);
+}
+#[doc = "Generated from 'VK_NV_external_memory_rdma'"]
+impl MemoryPropertyFlags {
+    pub const RDMA_CAPABLE_NV: Self = Self(0b1_0000_0000);
+}
+#[doc = "Generated from 'VK_NV_external_memory_rdma'"]
+impl ExternalMemoryHandleTypeFlags {
+    pub const RDMA_ADDRESS_NV: Self = Self(0b1_0000_0000_0000);
 }
 impl NvExtension373Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -25160,14 +24233,10 @@ impl NvExtension373Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension373Fn {}
 unsafe impl Send for NvExtension373Fn {}
 unsafe impl Sync for NvExtension373Fn {}
-impl ::std::clone::Clone for NvExtension373Fn {
-    fn clone(&self) -> Self {
-        NvExtension373Fn {}
-    }
-}
 impl NvExtension373Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25183,14 +24252,10 @@ impl NvExtension374Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension374Fn {}
 unsafe impl Send for NvExtension374Fn {}
 unsafe impl Sync for NvExtension374Fn {}
-impl ::std::clone::Clone for NvExtension374Fn {
-    fn clone(&self) -> Self {
-        NvExtension374Fn {}
-    }
-}
 impl NvExtension374Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25207,6 +24272,14 @@ impl ExternalFenceHandleTypeFlags {
 impl ExternalFenceHandleTypeFlags {
     pub const RESERVED_5_NV: Self = Self(0b10_0000);
 }
+#[doc = "Generated from 'VK_NV_extension_374'"]
+impl ExternalSemaphoreHandleTypeFlags {
+    pub const RESERVED_5_NV: Self = Self(0b10_0000);
+}
+#[doc = "Generated from 'VK_NV_extension_374'"]
+impl ExternalSemaphoreHandleTypeFlags {
+    pub const RESERVED_6_NV: Self = Self(0b100_0000);
+}
 impl NvExtension375Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
         ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_375\0")
@@ -25214,14 +24287,10 @@ impl NvExtension375Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct NvExtension375Fn {}
 unsafe impl Send for NvExtension375Fn {}
 unsafe impl Sync for NvExtension375Fn {}
-impl ::std::clone::Clone for NvExtension375Fn {
-    fn clone(&self) -> Self {
-        NvExtension375Fn {}
-    }
-}
 impl NvExtension375Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25231,12 +24300,8 @@ impl NvExtension375Fn {
     }
 }
 #[doc = "Generated from 'VK_NV_extension_375'"]
-impl ExternalSemaphoreHandleTypeFlags {
-    pub const RESERVED_5_NV: Self = Self(0b10_0000);
-}
-#[doc = "Generated from 'VK_NV_extension_375'"]
-impl ExternalSemaphoreHandleTypeFlags {
-    pub const RESERVED_6_NV: Self = Self(0b100_0000);
+impl ExternalMemoryHandleTypeFlags {
+    pub const RESERVED_13_NV: Self = Self(0b10_0000_0000_0000);
 }
 impl ExtExtension376Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -25245,14 +24310,10 @@ impl ExtExtension376Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension376Fn {}
 unsafe impl Send for ExtExtension376Fn {}
 unsafe impl Sync for ExtExtension376Fn {}
-impl ::std::clone::Clone for ExtExtension376Fn {
-    fn clone(&self) -> Self {
-        ExtExtension376Fn {}
-    }
-}
 impl ExtExtension376Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25268,14 +24329,10 @@ impl ExtExtension377Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension377Fn {}
 unsafe impl Send for ExtExtension377Fn {}
 unsafe impl Sync for ExtExtension377Fn {}
-impl ::std::clone::Clone for ExtExtension377Fn {
-    fn clone(&self) -> Self {
-        ExtExtension377Fn {}
-    }
-}
 impl ExtExtension377Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25284,28 +24341,202 @@ impl ExtExtension377Fn {
         ExtExtension377Fn {}
     }
 }
-impl NvExtension378Fn {
+impl ExtExtendedDynamicState2Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_378\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extended_dynamic_state2\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct NvExtension378Fn {}
-unsafe impl Send for NvExtension378Fn {}
-unsafe impl Sync for NvExtension378Fn {}
-impl ::std::clone::Clone for NvExtension378Fn {
-    fn clone(&self) -> Self {
-        NvExtension378Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetPatchControlPointsEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, patch_control_points: u32);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetRasterizerDiscardEnableEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, rasterizer_discard_enable: Bool32);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetDepthBiasEnableEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, depth_bias_enable: Bool32);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetLogicOpEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, logic_op: LogicOp);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetPrimitiveRestartEnableEXT =
+    unsafe extern "system" fn(command_buffer: CommandBuffer, primitive_restart_enable: Bool32);
+#[derive(Clone)]
+pub struct ExtExtendedDynamicState2Fn {
+    pub cmd_set_patch_control_points_ext: PFN_vkCmdSetPatchControlPointsEXT,
+    pub cmd_set_rasterizer_discard_enable_ext: PFN_vkCmdSetRasterizerDiscardEnableEXT,
+    pub cmd_set_depth_bias_enable_ext: PFN_vkCmdSetDepthBiasEnableEXT,
+    pub cmd_set_logic_op_ext: PFN_vkCmdSetLogicOpEXT,
+    pub cmd_set_primitive_restart_enable_ext: PFN_vkCmdSetPrimitiveRestartEnableEXT,
 }
-impl NvExtension378Fn {
+unsafe impl Send for ExtExtendedDynamicState2Fn {}
+unsafe impl Sync for ExtExtendedDynamicState2Fn {}
+impl ExtExtendedDynamicState2Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        NvExtension378Fn {}
+        ExtExtendedDynamicState2Fn {
+            cmd_set_patch_control_points_ext: unsafe {
+                unsafe extern "system" fn cmd_set_patch_control_points_ext(
+                    _command_buffer: CommandBuffer,
+                    _patch_control_points: u32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_patch_control_points_ext)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdSetPatchControlPointsEXT\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_patch_control_points_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_set_rasterizer_discard_enable_ext: unsafe {
+                unsafe extern "system" fn cmd_set_rasterizer_discard_enable_ext(
+                    _command_buffer: CommandBuffer,
+                    _rasterizer_discard_enable: Bool32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_rasterizer_discard_enable_ext)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdSetRasterizerDiscardEnableEXT\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_rasterizer_discard_enable_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_set_depth_bias_enable_ext: unsafe {
+                unsafe extern "system" fn cmd_set_depth_bias_enable_ext(
+                    _command_buffer: CommandBuffer,
+                    _depth_bias_enable: Bool32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_depth_bias_enable_ext)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdSetDepthBiasEnableEXT\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_depth_bias_enable_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_set_logic_op_ext: unsafe {
+                unsafe extern "system" fn cmd_set_logic_op_ext(
+                    _command_buffer: CommandBuffer,
+                    _logic_op: LogicOp,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_set_logic_op_ext)))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdSetLogicOpEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_logic_op_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_set_primitive_restart_enable_ext: unsafe {
+                unsafe extern "system" fn cmd_set_primitive_restart_enable_ext(
+                    _command_buffer: CommandBuffer,
+                    _primitive_restart_enable: Bool32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_primitive_restart_enable_ext)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdSetPrimitiveRestartEnableEXT\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_primitive_restart_enable_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPatchControlPointsEXT.html>"]
+    pub unsafe fn cmd_set_patch_control_points_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        patch_control_points: u32,
+    ) {
+        (self.cmd_set_patch_control_points_ext)(command_buffer, patch_control_points)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetRasterizerDiscardEnableEXT.html>"]
+    pub unsafe fn cmd_set_rasterizer_discard_enable_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        rasterizer_discard_enable: Bool32,
+    ) {
+        (self.cmd_set_rasterizer_discard_enable_ext)(command_buffer, rasterizer_discard_enable)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthBiasEnableEXT.html>"]
+    pub unsafe fn cmd_set_depth_bias_enable_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        depth_bias_enable: Bool32,
+    ) {
+        (self.cmd_set_depth_bias_enable_ext)(command_buffer, depth_bias_enable)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetLogicOpEXT.html>"]
+    pub unsafe fn cmd_set_logic_op_ext(&self, command_buffer: CommandBuffer, logic_op: LogicOp) {
+        (self.cmd_set_logic_op_ext)(command_buffer, logic_op)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPrimitiveRestartEnableEXT.html>"]
+    pub unsafe fn cmd_set_primitive_restart_enable_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        primitive_restart_enable: Bool32,
+    ) {
+        (self.cmd_set_primitive_restart_enable_ext)(command_buffer, primitive_restart_enable)
+    }
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: Self = Self(1_000_377_000);
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl DynamicState {
+    pub const PATCH_CONTROL_POINTS_EXT: Self = Self(1_000_377_000);
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl DynamicState {
+    pub const RASTERIZER_DISCARD_ENABLE_EXT: Self = Self(1_000_377_001);
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl DynamicState {
+    pub const DEPTH_BIAS_ENABLE_EXT: Self = Self(1_000_377_002);
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl DynamicState {
+    pub const LOGIC_OP_EXT: Self = Self(1_000_377_003);
+}
+#[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
+impl DynamicState {
+    pub const PRIMITIVE_RESTART_ENABLE_EXT: Self = Self(1_000_377_004);
 }
 impl QnxScreenSurfaceFn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -25314,20 +24545,99 @@ impl QnxScreenSurfaceFn {
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct QnxScreenSurfaceFn {}
+#[allow(non_camel_case_types)]
+pub type PFN_vkCreateScreenSurfaceQNX = unsafe extern "system" fn(
+    instance: Instance,
+    p_create_info: *const ScreenSurfaceCreateInfoQNX,
+    p_allocator: *const AllocationCallbacks,
+    p_surface: *mut SurfaceKHR,
+) -> Result;
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetPhysicalDeviceScreenPresentationSupportQNX = unsafe extern "system" fn(
+    physical_device: PhysicalDevice,
+    queue_family_index: u32,
+    window: *mut _screen_window,
+) -> Bool32;
+#[derive(Clone)]
+pub struct QnxScreenSurfaceFn {
+    pub create_screen_surface_qnx: PFN_vkCreateScreenSurfaceQNX,
+    pub get_physical_device_screen_presentation_support_qnx:
+        PFN_vkGetPhysicalDeviceScreenPresentationSupportQNX,
+}
 unsafe impl Send for QnxScreenSurfaceFn {}
 unsafe impl Sync for QnxScreenSurfaceFn {}
-impl ::std::clone::Clone for QnxScreenSurfaceFn {
-    fn clone(&self) -> Self {
-        QnxScreenSurfaceFn {}
-    }
-}
 impl QnxScreenSurfaceFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        QnxScreenSurfaceFn {}
+        QnxScreenSurfaceFn {
+            create_screen_surface_qnx: unsafe {
+                unsafe extern "system" fn create_screen_surface_qnx(
+                    _instance: Instance,
+                    _p_create_info: *const ScreenSurfaceCreateInfoQNX,
+                    _p_allocator: *const AllocationCallbacks,
+                    _p_surface: *mut SurfaceKHR,
+                ) -> Result {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(create_screen_surface_qnx)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCreateScreenSurfaceQNX\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    create_screen_surface_qnx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_physical_device_screen_presentation_support_qnx: unsafe {
+                unsafe extern "system" fn get_physical_device_screen_presentation_support_qnx(
+                    _physical_device: PhysicalDevice,
+                    _queue_family_index: u32,
+                    _window: *mut _screen_window,
+                ) -> Bool32 {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_physical_device_screen_presentation_support_qnx)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetPhysicalDeviceScreenPresentationSupportQNX\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_physical_device_screen_presentation_support_qnx
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateScreenSurfaceQNX.html>"]
+    pub unsafe fn create_screen_surface_qnx(
+        &self,
+        instance: Instance,
+        p_create_info: *const ScreenSurfaceCreateInfoQNX,
+        p_allocator: *const AllocationCallbacks,
+        p_surface: *mut SurfaceKHR,
+    ) -> Result {
+        (self.create_screen_surface_qnx)(instance, p_create_info, p_allocator, p_surface)
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceScreenPresentationSupportQNX.html>"]
+    pub unsafe fn get_physical_device_screen_presentation_support_qnx(
+        &self,
+        physical_device: PhysicalDevice,
+        queue_family_index: u32,
+        window: *mut _screen_window,
+    ) -> Bool32 {
+        (self.get_physical_device_screen_presentation_support_qnx)(
+            physical_device,
+            queue_family_index,
+            window,
+        )
     }
 }
 #[doc = "Generated from 'VK_QNX_screen_surface'"]
@@ -25341,14 +24651,10 @@ impl KhrExtension380Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension380Fn {}
 unsafe impl Send for KhrExtension380Fn {}
 unsafe impl Sync for KhrExtension380Fn {}
-impl ::std::clone::Clone for KhrExtension380Fn {
-    fn clone(&self) -> Self {
-        KhrExtension380Fn {}
-    }
-}
 impl KhrExtension380Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25364,14 +24670,10 @@ impl KhrExtension381Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension381Fn {}
 unsafe impl Send for KhrExtension381Fn {}
 unsafe impl Sync for KhrExtension381Fn {}
-impl ::std::clone::Clone for KhrExtension381Fn {
-    fn clone(&self) -> Self {
-        KhrExtension381Fn {}
-    }
-}
 impl KhrExtension381Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25380,28 +24682,79 @@ impl KhrExtension381Fn {
         KhrExtension381Fn {}
     }
 }
-impl ExtExtension382Fn {
+impl ExtColorWriteEnableFn {
     pub fn name() -> &'static ::std::ffi::CStr {
-        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_382\0")
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_color_write_enable\0")
             .expect("Wrong extension string")
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
-pub struct ExtExtension382Fn {}
-unsafe impl Send for ExtExtension382Fn {}
-unsafe impl Sync for ExtExtension382Fn {}
-impl ::std::clone::Clone for ExtExtension382Fn {
-    fn clone(&self) -> Self {
-        ExtExtension382Fn {}
-    }
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdSetColorWriteEnableEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    attachment_count: u32,
+    p_color_write_enables: *const Bool32,
+);
+#[derive(Clone)]
+pub struct ExtColorWriteEnableFn {
+    pub cmd_set_color_write_enable_ext: PFN_vkCmdSetColorWriteEnableEXT,
 }
-impl ExtExtension382Fn {
+unsafe impl Send for ExtColorWriteEnableFn {}
+unsafe impl Sync for ExtColorWriteEnableFn {}
+impl ExtColorWriteEnableFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        ExtExtension382Fn {}
+        ExtColorWriteEnableFn {
+            cmd_set_color_write_enable_ext: unsafe {
+                unsafe extern "system" fn cmd_set_color_write_enable_ext(
+                    _command_buffer: CommandBuffer,
+                    _attachment_count: u32,
+                    _p_color_write_enables: *const Bool32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_set_color_write_enable_ext)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkCmdSetColorWriteEnableEXT\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_set_color_write_enable_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetColorWriteEnableEXT.html>"]
+    pub unsafe fn cmd_set_color_write_enable_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        attachment_count: u32,
+        p_color_write_enables: *const Bool32,
+    ) {
+        (self.cmd_set_color_write_enable_ext)(
+            command_buffer,
+            attachment_count,
+            p_color_write_enables,
+        )
+    }
+}
+#[doc = "Generated from 'VK_EXT_color_write_enable'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT: Self = Self(1_000_381_000);
+}
+#[doc = "Generated from 'VK_EXT_color_write_enable'"]
+impl StructureType {
+    pub const PIPELINE_COLOR_WRITE_CREATE_INFO_EXT: Self = Self(1_000_381_001);
+}
+#[doc = "Generated from 'VK_EXT_color_write_enable'"]
+impl DynamicState {
+    pub const COLOR_WRITE_ENABLE_EXT: Self = Self(1_000_381_000);
 }
 impl ExtExtension383Fn {
     pub fn name() -> &'static ::std::ffi::CStr {
@@ -25410,14 +24763,10 @@ impl ExtExtension383Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension383Fn {}
 unsafe impl Send for ExtExtension383Fn {}
 unsafe impl Sync for ExtExtension383Fn {}
-impl ::std::clone::Clone for ExtExtension383Fn {
-    fn clone(&self) -> Self {
-        ExtExtension383Fn {}
-    }
-}
 impl ExtExtension383Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25433,14 +24782,10 @@ impl ExtExtension384Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct ExtExtension384Fn {}
 unsafe impl Send for ExtExtension384Fn {}
 unsafe impl Sync for ExtExtension384Fn {}
-impl ::std::clone::Clone for ExtExtension384Fn {
-    fn clone(&self) -> Self {
-        ExtExtension384Fn {}
-    }
-}
 impl ExtExtension384Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25456,14 +24801,10 @@ impl MesaExtension385Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct MesaExtension385Fn {}
 unsafe impl Send for MesaExtension385Fn {}
 unsafe impl Sync for MesaExtension385Fn {}
-impl ::std::clone::Clone for MesaExtension385Fn {
-    fn clone(&self) -> Self {
-        MesaExtension385Fn {}
-    }
-}
 impl MesaExtension385Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25479,14 +24820,10 @@ impl GoogleExtension386Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct GoogleExtension386Fn {}
 unsafe impl Send for GoogleExtension386Fn {}
 unsafe impl Sync for GoogleExtension386Fn {}
-impl ::std::clone::Clone for GoogleExtension386Fn {
-    fn clone(&self) -> Self {
-        GoogleExtension386Fn {}
-    }
-}
 impl GoogleExtension386Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
@@ -25502,19 +24839,783 @@ impl KhrExtension387Fn {
     }
     pub const SPEC_VERSION: u32 = 0u32;
 }
+#[derive(Clone)]
 pub struct KhrExtension387Fn {}
 unsafe impl Send for KhrExtension387Fn {}
 unsafe impl Sync for KhrExtension387Fn {}
-impl ::std::clone::Clone for KhrExtension387Fn {
-    fn clone(&self) -> Self {
-        KhrExtension387Fn {}
-    }
-}
 impl KhrExtension387Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
         KhrExtension387Fn {}
+    }
+}
+impl ExtExtension388Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_388\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension388Fn {}
+unsafe impl Send for ExtExtension388Fn {}
+unsafe impl Sync for ExtExtension388Fn {}
+impl ExtExtension388Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension388Fn {}
+    }
+}
+impl ExtGlobalPriorityQueryFn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_global_priority_query\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 1u32;
+}
+#[derive(Clone)]
+pub struct ExtGlobalPriorityQueryFn {}
+unsafe impl Send for ExtGlobalPriorityQueryFn {}
+unsafe impl Sync for ExtGlobalPriorityQueryFn {}
+impl ExtGlobalPriorityQueryFn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtGlobalPriorityQueryFn {}
+    }
+}
+#[doc = "Generated from 'VK_EXT_global_priority_query'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_EXT: Self = Self(1_000_388_000);
+}
+#[doc = "Generated from 'VK_EXT_global_priority_query'"]
+impl StructureType {
+    pub const QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_EXT: Self = Self(1_000_388_001);
+}
+impl ExtExtension390Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_390\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension390Fn {}
+unsafe impl Send for ExtExtension390Fn {}
+unsafe impl Sync for ExtExtension390Fn {}
+impl ExtExtension390Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension390Fn {}
+    }
+}
+impl ExtExtension391Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_391\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension391Fn {}
+unsafe impl Send for ExtExtension391Fn {}
+unsafe impl Sync for ExtExtension391Fn {}
+impl ExtExtension391Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension391Fn {}
+    }
+}
+impl ExtExtension392Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_392\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension392Fn {}
+unsafe impl Send for ExtExtension392Fn {}
+unsafe impl Sync for ExtExtension392Fn {}
+impl ExtExtension392Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension392Fn {}
+    }
+}
+impl ExtMultiDrawFn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_multi_draw\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 1u32;
+}
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdDrawMultiEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    draw_count: u32,
+    p_vertex_info: *const MultiDrawInfoEXT,
+    instance_count: u32,
+    first_instance: u32,
+    stride: u32,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkCmdDrawMultiIndexedEXT = unsafe extern "system" fn(
+    command_buffer: CommandBuffer,
+    draw_count: u32,
+    p_index_info: *const MultiDrawIndexedInfoEXT,
+    instance_count: u32,
+    first_instance: u32,
+    stride: u32,
+    p_vertex_offset: *const i32,
+);
+#[derive(Clone)]
+pub struct ExtMultiDrawFn {
+    pub cmd_draw_multi_ext: PFN_vkCmdDrawMultiEXT,
+    pub cmd_draw_multi_indexed_ext: PFN_vkCmdDrawMultiIndexedEXT,
+}
+unsafe impl Send for ExtMultiDrawFn {}
+unsafe impl Sync for ExtMultiDrawFn {}
+impl ExtMultiDrawFn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtMultiDrawFn {
+            cmd_draw_multi_ext: unsafe {
+                unsafe extern "system" fn cmd_draw_multi_ext(
+                    _command_buffer: CommandBuffer,
+                    _draw_count: u32,
+                    _p_vertex_info: *const MultiDrawInfoEXT,
+                    _instance_count: u32,
+                    _first_instance: u32,
+                    _stride: u32,
+                ) {
+                    panic!(concat!("Unable to load ", stringify!(cmd_draw_multi_ext)))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdDrawMultiEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_draw_multi_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            cmd_draw_multi_indexed_ext: unsafe {
+                unsafe extern "system" fn cmd_draw_multi_indexed_ext(
+                    _command_buffer: CommandBuffer,
+                    _draw_count: u32,
+                    _p_index_info: *const MultiDrawIndexedInfoEXT,
+                    _instance_count: u32,
+                    _first_instance: u32,
+                    _stride: u32,
+                    _p_vertex_offset: *const i32,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(cmd_draw_multi_indexed_ext)
+                    ))
+                }
+                let cname =
+                    ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"vkCmdDrawMultiIndexedEXT\0");
+                let val = _f(cname);
+                if val.is_null() {
+                    cmd_draw_multi_indexed_ext
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMultiEXT.html>"]
+    pub unsafe fn cmd_draw_multi_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        draw_count: u32,
+        p_vertex_info: *const MultiDrawInfoEXT,
+        instance_count: u32,
+        first_instance: u32,
+        stride: u32,
+    ) {
+        (self.cmd_draw_multi_ext)(
+            command_buffer,
+            draw_count,
+            p_vertex_info,
+            instance_count,
+            first_instance,
+            stride,
+        )
+    }
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMultiIndexedEXT.html>"]
+    pub unsafe fn cmd_draw_multi_indexed_ext(
+        &self,
+        command_buffer: CommandBuffer,
+        draw_count: u32,
+        p_index_info: *const MultiDrawIndexedInfoEXT,
+        instance_count: u32,
+        first_instance: u32,
+        stride: u32,
+        p_vertex_offset: *const i32,
+    ) {
+        (self.cmd_draw_multi_indexed_ext)(
+            command_buffer,
+            draw_count,
+            p_index_info,
+            instance_count,
+            first_instance,
+            stride,
+            p_vertex_offset,
+        )
+    }
+}
+#[doc = "Generated from 'VK_EXT_multi_draw'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT: Self = Self(1_000_392_000);
+}
+#[doc = "Generated from 'VK_EXT_multi_draw'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT: Self = Self(1_000_392_001);
+}
+impl ExtExtension394Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_394\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension394Fn {}
+unsafe impl Send for ExtExtension394Fn {}
+unsafe impl Sync for ExtExtension394Fn {}
+impl ExtExtension394Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension394Fn {}
+    }
+}
+impl KhrExtension395Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_395\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct KhrExtension395Fn {}
+unsafe impl Send for KhrExtension395Fn {}
+unsafe impl Sync for KhrExtension395Fn {}
+impl KhrExtension395Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        KhrExtension395Fn {}
+    }
+}
+impl KhrExtension396Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_396\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct KhrExtension396Fn {}
+unsafe impl Send for KhrExtension396Fn {}
+unsafe impl Sync for KhrExtension396Fn {}
+impl KhrExtension396Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        KhrExtension396Fn {}
+    }
+}
+impl NvExtension397Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_397\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension397Fn {}
+unsafe impl Send for NvExtension397Fn {}
+unsafe impl Sync for NvExtension397Fn {}
+impl NvExtension397Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        NvExtension397Fn {}
+    }
+}
+impl NvExtension398Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_398\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension398Fn {}
+unsafe impl Send for NvExtension398Fn {}
+unsafe impl Sync for NvExtension398Fn {}
+impl NvExtension398Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        NvExtension398Fn {}
+    }
+}
+impl JuiceExtension399Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_JUICE_extension_399\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct JuiceExtension399Fn {}
+unsafe impl Send for JuiceExtension399Fn {}
+unsafe impl Sync for JuiceExtension399Fn {}
+impl JuiceExtension399Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        JuiceExtension399Fn {}
+    }
+}
+impl JuiceExtension400Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_JUICE_extension_400\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct JuiceExtension400Fn {}
+unsafe impl Send for JuiceExtension400Fn {}
+unsafe impl Sync for JuiceExtension400Fn {}
+impl JuiceExtension400Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        JuiceExtension400Fn {}
+    }
+}
+impl KhrExtension401Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_401\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct KhrExtension401Fn {}
+unsafe impl Send for KhrExtension401Fn {}
+unsafe impl Sync for KhrExtension401Fn {}
+impl KhrExtension401Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        KhrExtension401Fn {}
+    }
+}
+impl FbExtension402Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FB_extension_402\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct FbExtension402Fn {}
+unsafe impl Send for FbExtension402Fn {}
+unsafe impl Sync for FbExtension402Fn {}
+impl FbExtension402Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        FbExtension402Fn {}
+    }
+}
+impl FbExtension403Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FB_extension_403\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct FbExtension403Fn {}
+unsafe impl Send for FbExtension403Fn {}
+unsafe impl Sync for FbExtension403Fn {}
+impl FbExtension403Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        FbExtension403Fn {}
+    }
+}
+impl FbExtension404Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_FB_extension_404\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct FbExtension404Fn {}
+unsafe impl Send for FbExtension404Fn {}
+unsafe impl Sync for FbExtension404Fn {}
+impl FbExtension404Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        FbExtension404Fn {}
+    }
+}
+impl HuaweiExtension405Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_extension_405\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct HuaweiExtension405Fn {}
+unsafe impl Send for HuaweiExtension405Fn {}
+unsafe impl Sync for HuaweiExtension405Fn {}
+impl HuaweiExtension405Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        HuaweiExtension405Fn {}
+    }
+}
+impl HuaweiExtension406Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_extension_406\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct HuaweiExtension406Fn {}
+unsafe impl Send for HuaweiExtension406Fn {}
+unsafe impl Sync for HuaweiExtension406Fn {}
+impl HuaweiExtension406Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        HuaweiExtension406Fn {}
+    }
+}
+impl GgpExtension407Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_GGP_extension_407\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GgpExtension407Fn {}
+unsafe impl Send for GgpExtension407Fn {}
+unsafe impl Sync for GgpExtension407Fn {}
+impl GgpExtension407Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        GgpExtension407Fn {}
+    }
+}
+impl GgpExtension408Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_GGP_extension_408\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GgpExtension408Fn {}
+unsafe impl Send for GgpExtension408Fn {}
+unsafe impl Sync for GgpExtension408Fn {}
+impl GgpExtension408Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        GgpExtension408Fn {}
+    }
+}
+impl GgpExtension409Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_GGP_extension_409\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GgpExtension409Fn {}
+unsafe impl Send for GgpExtension409Fn {}
+unsafe impl Sync for GgpExtension409Fn {}
+impl GgpExtension409Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        GgpExtension409Fn {}
+    }
+}
+impl GgpExtension410Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_GGP_extension_410\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GgpExtension410Fn {}
+unsafe impl Send for GgpExtension410Fn {}
+unsafe impl Sync for GgpExtension410Fn {}
+impl GgpExtension410Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        GgpExtension410Fn {}
+    }
+}
+impl GgpExtension411Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_GGP_extension_411\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GgpExtension411Fn {}
+unsafe impl Send for GgpExtension411Fn {}
+unsafe impl Sync for GgpExtension411Fn {}
+impl GgpExtension411Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        GgpExtension411Fn {}
+    }
+}
+impl NvExtension412Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_412\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension412Fn {}
+unsafe impl Send for NvExtension412Fn {}
+unsafe impl Sync for NvExtension412Fn {}
+impl NvExtension412Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        NvExtension412Fn {}
+    }
+}
+impl NvExtension413Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_413\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension413Fn {}
+unsafe impl Send for NvExtension413Fn {}
+unsafe impl Sync for NvExtension413Fn {}
+impl NvExtension413Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        NvExtension413Fn {}
+    }
+}
+impl NvExtension414Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_NV_extension_414\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension414Fn {}
+unsafe impl Send for NvExtension414Fn {}
+unsafe impl Sync for NvExtension414Fn {}
+impl NvExtension414Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        NvExtension414Fn {}
+    }
+}
+impl HuaweiExtension415Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_HUAWEI_extension_415\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct HuaweiExtension415Fn {}
+unsafe impl Send for HuaweiExtension415Fn {}
+unsafe impl Sync for HuaweiExtension415Fn {}
+impl HuaweiExtension415Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        HuaweiExtension415Fn {}
+    }
+}
+impl ArmExtension416Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_ARM_extension_416\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ArmExtension416Fn {}
+unsafe impl Send for ArmExtension416Fn {}
+unsafe impl Sync for ArmExtension416Fn {}
+impl ArmExtension416Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ArmExtension416Fn {}
+    }
+}
+impl KhrExtension417Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_417\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct KhrExtension417Fn {}
+unsafe impl Send for KhrExtension417Fn {}
+unsafe impl Sync for KhrExtension417Fn {}
+impl KhrExtension417Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        KhrExtension417Fn {}
+    }
+}
+impl ArmExtension418Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_ARM_extension_418\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ArmExtension418Fn {}
+unsafe impl Send for ArmExtension418Fn {}
+unsafe impl Sync for ArmExtension418Fn {}
+impl ArmExtension418Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ArmExtension418Fn {}
+    }
+}
+impl ExtExtension419Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_419\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension419Fn {}
+unsafe impl Send for ExtExtension419Fn {}
+unsafe impl Sync for ExtExtension419Fn {}
+impl ExtExtension419Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension419Fn {}
+    }
+}
+impl ExtExtension420Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_EXT_extension_420\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension420Fn {}
+unsafe impl Send for ExtExtension420Fn {}
+unsafe impl Sync for ExtExtension420Fn {}
+impl ExtExtension420Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        ExtExtension420Fn {}
+    }
+}
+impl KhrExtension421Fn {
+    pub fn name() -> &'static ::std::ffi::CStr {
+        ::std::ffi::CStr::from_bytes_with_nul(b"VK_KHR_extension_421\0")
+            .expect("Wrong extension string")
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct KhrExtension421Fn {}
+unsafe impl Send for KhrExtension421Fn {}
+unsafe impl Sync for KhrExtension421Fn {}
+impl KhrExtension421Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        KhrExtension421Fn {}
     }
 }

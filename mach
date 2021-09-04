@@ -125,27 +125,23 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 
-def load_mach(dir_path, mach_path):
-    if sys.version_info < (3, 5):
-        import imp
-        mach_bootstrap = imp.load_source('mach_bootstrap', mach_path)
-    else:
-        import importlib.util
-        spec = importlib.util.spec_from_file_location('mach_bootstrap', mach_path)
-        mach_bootstrap = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mach_bootstrap)
 
-    return mach_bootstrap.bootstrap(dir_path)
+def load_mach(dir_path, mach_path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('mach_initialize', mach_path)
+    mach_initialize = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mach_initialize)
+    return mach_initialize.initialize(dir_path)
 
 
 def check_and_get_mach(dir_path):
-    bootstrap_paths = (
-        'build/mach_bootstrap.py',
-        # test package bootstrap
-        'tools/mach_bootstrap.py',
+    initialize_paths = (
+        'build/mach_initialize.py',
+        # test package initialize
+        'tools/mach_initialize.py',
     )
-    for bootstrap_path in bootstrap_paths:
-        mach_path = os.path.join(dir_path, bootstrap_path)
+    for initialize_path in initialize_paths:
+        mach_path = os.path.join(dir_path, initialize_path)
         if os.path.isfile(mach_path):
             return load_mach(dir_path, mach_path)
     return None

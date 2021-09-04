@@ -34,16 +34,16 @@ struct FileIOMarker {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable,
-              MS::Location::timelineFileIO};
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+              MS::Location::TimelineFileIO};
     schema.AddKeyLabelFormatSearchable("operation", "Operation",
-                                       MS::Format::string,
-                                       MS::Searchable::searchable);
-    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::string,
-                                       MS::Searchable::searchable);
+                                       MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::String,
+                                       MS::Searchable::Searchable);
     schema.AddKeyLabelFormatSearchable("filename", "Filename",
-                                       MS::Format::filePath,
-                                       MS::Searchable::searchable);
+                                       MS::Format::FilePath,
+                                       MS::Searchable::Searchable);
     return schema;
   }
 };

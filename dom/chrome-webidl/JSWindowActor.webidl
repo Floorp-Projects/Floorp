@@ -27,6 +27,14 @@ interface JSWindowActorParent {
    */
   readonly attribute WindowGlobalParent? manager;
 
+  /**
+   * The WindowContext associated with this JSWindowActorParent. For
+   * JSWindowActorParent this is identical to `manager`, but is also exposed as
+   * `windowContext` for consistency with `JSWindowActorChild`. Until the actor
+   * is initialized, accesses to windowContext will fail.
+   */
+  readonly attribute WindowContext? windowContext;
+
   [Throws]
   readonly attribute CanonicalBrowsingContext? browsingContext;
 };
@@ -43,6 +51,12 @@ interface JSWindowActorChild {
    * manager will fail.
    */
   readonly attribute WindowGlobalChild? manager;
+
+  /**
+   * The WindowContext associated with this JSWindowActorChild. Until the actor
+   * is initialized, accesses to windowContext will fail.
+   */
+  readonly attribute WindowContext? windowContext;
 
   [Throws]
   readonly attribute Document? document;

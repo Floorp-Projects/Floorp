@@ -550,7 +550,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
           baseprofiler::SpliceableJSONWriter& aWriter) {}
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
         return schema;
       }
     };

@@ -1,6 +1,5 @@
-#![allow(dead_code)]
-use crate::version::{DeviceV1_0, InstanceV1_0};
 use crate::vk;
+use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 
@@ -11,12 +10,11 @@ pub struct DrawIndirectCount {
 }
 
 impl DrawIndirectCount {
-    pub fn new<I: InstanceV1_0, D: DeviceV1_0>(instance: &I, device: &D) -> DrawIndirectCount {
+    pub fn new(instance: &Instance, device: &Device) -> Self {
         let draw_indirect_count_fn = vk::KhrDrawIndirectCountFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-
-        DrawIndirectCount {
+        Self {
             handle: device.handle(),
             draw_indirect_count_fn,
         }

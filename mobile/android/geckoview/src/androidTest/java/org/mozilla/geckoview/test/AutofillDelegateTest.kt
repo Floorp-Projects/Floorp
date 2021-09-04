@@ -237,6 +237,24 @@ class AutofillDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Test fun autofillUnknownValue() {
+        // Test parts of the Oreo auto-fill API; there is another autofill test in
+        // SessionAccessibility for a11y auto-fill support.
+        mainSession.loadTestPath(FORMS_HTML_PATH)
+        // Wait for the auto-fill nodes to populate.
+        sessionRule.waitUntilCalled(object : Autofill.Delegate {
+            @AssertCalled(count = 1)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+            }
+        })
+
+        val autofillValues = SparseArray<CharSequence>()
+        autofillValues.append(-1, "lobster")
+        mainSession.autofill(autofillValues)
+    }
+
     private fun countAutofillNodes(cond: (Autofill.Node) -> Boolean =
                                    { it.inputType != Autofill.InputType.NONE },
                            root: Autofill.Node? = null): Int {

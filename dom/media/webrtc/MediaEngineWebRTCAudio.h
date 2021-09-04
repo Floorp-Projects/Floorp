@@ -141,9 +141,13 @@ class AudioInputProcessing : public AudioDataListener {
             GraphTime aTrackEnd, AudioSegment* aSegment,
             bool aLastPullThisIteration, bool* aEnded);
 
-  void NotifyOutputData(MediaTrackGraphImpl* aGraph, BufferInfo aInfo) override;
+  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                        size_t aFrames, TrackRate aRate,
+                        uint32_t aChannels) override;
   void NotifyInputStopped(MediaTrackGraphImpl* aGraph) override;
-  void NotifyInputData(MediaTrackGraphImpl* aGraph, const BufferInfo aInfo,
+  void NotifyInputData(MediaTrackGraphImpl* aGraph,
+                       const AudioDataValue* aBuffer, size_t aFrames,
+                       TrackRate aRate, uint32_t aChannels,
                        uint32_t aAlreadyBuffered) override;
   bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
@@ -241,7 +245,7 @@ class AudioInputProcessing : public AudioDataListener {
   // Whether or not we've ended and removed the AudioInputTrack.
   bool mEnded;
   // Store the unprocessed interleaved audio input data
-  Maybe<BufferInfo> mInputData;
+  AudioInputSamples mPendingData;
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.

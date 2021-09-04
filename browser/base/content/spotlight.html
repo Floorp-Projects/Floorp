@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+  <link rel="stylesheet" type="text/css" href="chrome://browser/skin/spotlight.css">
+  <link rel="localization" href="branding/brand.ftl">
+  <link rel="localization" href="browser/branding/brandings.ftl">
+  <link rel="localization" href="browser/newtab/asrouter.ftl">
+</head>
+<body role="dialog" aria-labelledby="title" aria-describedby="content">
+  <template id="logo-and-content">
+    <div id="dialog-content">
+      <img class="logo" alt="" src=""/>
+      <h1 id="title" class="title"></h1>
+      <p id="content" class="text"></p>
+      <button id="primary" class="primary"></button>
+      <button id="secondary" class="secondary text-link"></button>
+    </div>
+  </template>
+  <script src="chrome://browser/content/spotlight.js"></script>
+</body>
+</html>

@@ -10,7 +10,7 @@ use bencher::Bencher;
 use bencher::black_box;
 
 fn extend_with_constant(b: &mut Bencher) {
-    let mut v = ArrayVec::<[u8; 512]>::new();
+    let mut v = ArrayVec::<u8, 512>::new();
     let cap = v.capacity();
     b.iter(|| {
         v.clear();
@@ -22,7 +22,7 @@ fn extend_with_constant(b: &mut Bencher) {
 }
 
 fn extend_with_range(b: &mut Bencher) {
-    let mut v = ArrayVec::<[u8; 512]>::new();
+    let mut v = ArrayVec::<u8, 512>::new();
     let cap = v.capacity();
     b.iter(|| {
         v.clear();
@@ -34,7 +34,7 @@ fn extend_with_range(b: &mut Bencher) {
 }
 
 fn extend_with_slice(b: &mut Bencher) {
-    let mut v = ArrayVec::<[u8; 512]>::new();
+    let mut v = ArrayVec::<u8, 512>::new();
     let data = [1; 512];
     b.iter(|| {
         v.clear();
@@ -46,7 +46,7 @@ fn extend_with_slice(b: &mut Bencher) {
 }
 
 fn extend_with_write(b: &mut Bencher) {
-    let mut v = ArrayVec::<[u8; 512]>::new();
+    let mut v = ArrayVec::<u8, 512>::new();
     let data = [1; 512];
     b.iter(|| {
         v.clear();
@@ -57,7 +57,7 @@ fn extend_with_write(b: &mut Bencher) {
 }
 
 fn extend_from_slice(b: &mut Bencher) {
-    let mut v = ArrayVec::<[u8; 512]>::new();
+    let mut v = ArrayVec::<u8, 512>::new();
     let data = [1; 512];
     b.iter(|| {
         v.clear();

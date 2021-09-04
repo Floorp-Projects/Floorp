@@ -55,7 +55,7 @@ def get_state_dir(srcdir=False):
     )
 
     if not os.path.isdir(state_dir):
-        # We create the srcdir here rather than 'mach_bootstrap.py' so direct
+        # We create the srcdir here rather than 'mach_initialize.py' so direct
         # consumers of this function don't create the directory inconsistently.
         print("Creating local state directory: %s" % state_dir)
         os.makedirs(state_dir, mode=0o770)

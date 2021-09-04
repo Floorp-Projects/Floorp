@@ -1761,33 +1761,33 @@ TEST(GeckoProfiler, Markers)
       // that correctly matches StreamJSONMarkerData data above! Instead we only
       // test that it outputs the expected JSON at the end.
       using MS = mozilla::MarkerSchema;
-      MS schema{MS::Location::markerChart,      MS::Location::markerTable,
-                MS::Location::timelineOverview, MS::Location::timelineMemory,
-                MS::Location::timelineIPC,      MS::Location::timelineFileIO,
-                MS::Location::stackChart};
+      MS schema{MS::Location::MarkerChart,      MS::Location::MarkerTable,
+                MS::Location::TimelineOverview, MS::Location::TimelineMemory,
+                MS::Location::TimelineIPC,      MS::Location::TimelineFileIO,
+                MS::Location::StackChart};
       // All label functions.
       schema.SetChartLabel("chart label");
       schema.SetTooltipLabel("tooltip label");
       schema.SetTableLabel("table label");
       // All data functions, all formats, all "searchable" values.
-      schema.AddKeyFormat("key with url", MS::Format::url);
+      schema.AddKeyFormat("key with url", MS::Format::Url);
       schema.AddKeyLabelFormat("key with label filePath", "label filePath",
-                               MS::Format::filePath);
+                               MS::Format::FilePath);
       schema.AddKeyFormatSearchable("key with string not-searchable",
-                                    MS::Format::string,
-                                    MS::Searchable::notSearchable);
+                                    MS::Format::String,
+                                    MS::Searchable::NotSearchable);
       schema.AddKeyLabelFormatSearchable("key with label duration searchable",
-                                         "label duration", MS::Format::duration,
-                                         MS::Searchable::searchable);
-      schema.AddKeyFormat("key with time", MS::Format::time);
-      schema.AddKeyFormat("key with seconds", MS::Format::seconds);
-      schema.AddKeyFormat("key with milliseconds", MS::Format::milliseconds);
-      schema.AddKeyFormat("key with microseconds", MS::Format::microseconds);
-      schema.AddKeyFormat("key with nanoseconds", MS::Format::nanoseconds);
-      schema.AddKeyFormat("key with bytes", MS::Format::bytes);
-      schema.AddKeyFormat("key with percentage", MS::Format::percentage);
-      schema.AddKeyFormat("key with integer", MS::Format::integer);
-      schema.AddKeyFormat("key with decimal", MS::Format::decimal);
+                                         "label duration", MS::Format::Duration,
+                                         MS::Searchable::Searchable);
+      schema.AddKeyFormat("key with time", MS::Format::Time);
+      schema.AddKeyFormat("key with seconds", MS::Format::Seconds);
+      schema.AddKeyFormat("key with milliseconds", MS::Format::Milliseconds);
+      schema.AddKeyFormat("key with microseconds", MS::Format::Microseconds);
+      schema.AddKeyFormat("key with nanoseconds", MS::Format::Nanoseconds);
+      schema.AddKeyFormat("key with bytes", MS::Format::Bytes);
+      schema.AddKeyFormat("key with percentage", MS::Format::Percentage);
+      schema.AddKeyFormat("key with integer", MS::Format::Integer);
+      schema.AddKeyFormat("key with decimal", MS::Format::Decimal);
       schema.AddStaticLabelValue("static label", "static value");
       return schema;
     }

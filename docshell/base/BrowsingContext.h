@@ -412,7 +412,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindowContext` does not
   // cross toplevel content browser boundaries.
   WindowContext* GetParentWindowContext() const { return mParentWindow; }
-  WindowContext* GetTopWindowContext();
+  WindowContext* GetTopWindowContext() const;
 
   already_AddRefed<BrowsingContext> GetOpener() const {
     RefPtr<BrowsingContext> opener(Get(GetOpenerId()));
@@ -857,7 +857,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void FlushSessionStore();
 
-  bool IsInBFCache() const { return mIsInBFCache; }
+  bool IsInBFCache() const;
 
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }

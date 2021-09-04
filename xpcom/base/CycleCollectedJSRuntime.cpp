@@ -1017,8 +1017,8 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
         }
         static mozilla::MarkerSchema MarkerTypeDisplay() {
           using MS = mozilla::MarkerSchema;
-          MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                    MS::Location::timelineMemory};
+          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                    MS::Location::TimelineMemory};
           schema.AddStaticLabelValue(
               "Description",
               "Summary data for an entire major GC, encompassing a set of "
@@ -1052,8 +1052,8 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
         }
         static mozilla::MarkerSchema MarkerTypeDisplay() {
           using MS = mozilla::MarkerSchema;
-          MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                    MS::Location::timelineMemory};
+          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                    MS::Location::TimelineMemory};
           schema.AddStaticLabelValue(
               "Description",
               "One slice of an incremental garbage collection (GC). The main "
@@ -1160,8 +1160,8 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
       }
       static mozilla::MarkerSchema MarkerTypeDisplay() {
         using MS = mozilla::MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                  MS::Location::timelineMemory};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                  MS::Location::TimelineMemory};
         schema.AddStaticLabelValue(
             "Description",
             "A minor GC (aka nursery collection) to clear out the buffer used "

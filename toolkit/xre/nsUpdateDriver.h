@@ -26,6 +26,16 @@ typedef pid_t ProcessType;
 typedef PRProcess* ProcessType;
 #endif
 
+#ifdef XP_WIN
+#  define UPDATER_BIN "updater.exe"
+#  define MAINTENANCE_SVC_NAME L"MozillaMaintenance"
+#elif XP_MACOSX
+#  define UPDATER_APP "updater.app"
+#  define UPDATER_BIN "org.mozilla.updater"
+#else
+#  define UPDATER_BIN "updater"
+#endif
+
 /**
  * This function processes any available updates.  As part of that process, it
  * may exit the current process and relaunch it at a later time.

@@ -210,6 +210,44 @@ const MESSAGES = () => [
       patterns: ["*://*/*.pdf"],
     },
   },
+  {
+    id: "SPOTLIGHT_MESSAGE_93",
+    template: "spotlight",
+    content: {
+      template: "logo-and-content",
+      logoImageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-header",
+          },
+        },
+        text: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-body",
+          },
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-primary-button",
+          },
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/en-US/products/vpn/",
+              where: "tabshifted",
+            },
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-public-wifi-vpn-link",
+          },
+        },
+      },
+    },
+    frequency: { lifetime: 3 },
+  },
 ];
 
 const PanelTestProvider = {

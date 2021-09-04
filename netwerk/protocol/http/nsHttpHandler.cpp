@@ -64,6 +64,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/SocketProcessParent.h"
+#include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -2650,14 +2651,48 @@ bool nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(
          when <= mLastActiveTabLoadOptimizationHit;
 }
 
-void nsHttpHandler::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+void nsHttpHandler::ExcludeHttp2OrHttp3Internal(
+    const nsHttpConnectionInfo* ci) {
+  LOG(("nsHttpHandler::ExcludeHttp2OrHttp3Internal ci=%s",
+       ci->HashKey().get()));
+  // The excluded list needs to be stayed synced between parent process and
+  // socket process, so we send this information to the parent process here.
+  if (XRE_IsSocketProcess()) {
+    MOZ_ASSERT(OnSocketThread());
 
-  mConnMgr->ExcludeHttp2(ci);
-  if (!mExcludedHttp2Origins.Contains(ci->GetOrigin())) {
-    MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp2Origins.Insert(ci->GetOrigin());
+    RefPtr<nsHttpConnectionInfo> cinfo = ci->Clone();
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "nsHttpHandler::ExcludeHttp2OrHttp3Internal",
+        [cinfo{std::move(cinfo)}]() {
+          HttpConnectionInfoCloneArgs connInfoArgs;
+          nsHttpConnectionInfo::SerializeHttpConnectionInfo(cinfo,
+                                                            connInfoArgs);
+          Unused << SocketProcessChild::GetSingleton()->SendExcludeHttp2OrHttp3(
+              connInfoArgs);
+        }));
   }
+
+  MOZ_ASSERT_IF(nsIOService::UseSocketProcess() && XRE_IsParentProcess(),
+                NS_IsMainThread());
+  MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(), OnSocketThread());
+
+  if (ci->IsHttp3()) {
+    if (!mExcludedHttp3Origins.Contains(ci->GetRoutedHost())) {
+      MutexAutoLock lock(mHttpExclusionLock);
+      mExcludedHttp3Origins.Insert(ci->GetRoutedHost());
+    }
+    mConnMgr->ExcludeHttp3(ci);
+  } else {
+    if (!mExcludedHttp2Origins.Contains(ci->GetOrigin())) {
+      MutexAutoLock lock(mHttpExclusionLock);
+      mExcludedHttp2Origins.Insert(ci->GetOrigin());
+    }
+    mConnMgr->ExcludeHttp2(ci);
+  }
+}
+
+void nsHttpHandler::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
+  ExcludeHttp2OrHttp3Internal(ci);
 }
 
 bool nsHttpHandler::IsHttp2Excluded(const nsHttpConnectionInfo* ci) {
@@ -2666,13 +2701,8 @@ bool nsHttpHandler::IsHttp2Excluded(const nsHttpConnectionInfo* ci) {
 }
 
 void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  if (!mExcludedHttp3Origins.Contains(ci->GetRoutedHost())) {
-    MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp3Origins.Insert(ci->GetRoutedHost());
-  }
-  mConnMgr->ExcludeHttp3(ci);
+  MOZ_ASSERT(ci->IsHttp3());
+  ExcludeHttp2OrHttp3Internal(ci);
 }
 
 bool nsHttpHandler::IsHttp3Excluded(const nsACString& aRoutedHost) {

@@ -56,11 +56,11 @@ def patch_vcs(monkeypatch):
 
 @pytest.fixture(scope="session")
 def run_mach():
-    import mach_bootstrap
+    import mach_initialize
     from mach.config import ConfigSettings
     from tryselect.tasks import build
 
-    mach = mach_bootstrap.bootstrap(build.topsrcdir)
+    mach = mach_initialize.initialize(build.topsrcdir)
 
     def inner(args):
         mach.settings = ConfigSettings()

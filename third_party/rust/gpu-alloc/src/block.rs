@@ -67,18 +67,12 @@ pub(crate) enum MemoryBlockFlavor<M> {
     Dedicated {
         memory: M,
     },
-    Linear {
-        chunk: u64,
-        ptr: Option<NonNull<u8>>,
-        memory: Arc<M>,
-    },
     Buddy {
         chunk: usize,
         index: usize,
         ptr: Option<NonNull<u8>>,
         memory: Arc<M>,
     },
-    #[cfg(feature = "freelist")]
     FreeList {
         chunk: u64,
         ptr: Option<NonNull<u8>>,
@@ -93,9 +87,6 @@ impl<M> MemoryBlock<M> {
         match &self.flavor {
             MemoryBlockFlavor::Dedicated { memory } => memory,
             MemoryBlockFlavor::Buddy { memory, .. } => &**memory,
-            MemoryBlockFlavor::Linear { memory, .. } => &**memory,
-
-            #[cfg(feature = "freelist")]
             MemoryBlockFlavor::FreeList { memory, .. } => &**memory,
         }
     }
@@ -181,18 +172,8 @@ impl<M> MemoryBlock<M> {
                     }
                 }
             }
-
-            MemoryBlockFlavor::Linear { ptr: Some(ptr), .. }
+            MemoryBlockFlavor::FreeList { ptr: Some(ptr), .. }
             | MemoryBlockFlavor::Buddy { ptr: Some(ptr), .. } => {
-                if !acquire_mapping(&mut self.mapped) {
-                    return Err(MapError::AlreadyMapped);
-                }
-                let offset_isize = isize::try_from(offset)
-                    .expect("Buddy and linear block should fit host address space");
-                ptr.as_ptr().offset(offset_isize)
-            }
-            #[cfg(feature = "freelist")]
-            MemoryBlockFlavor::FreeList { ptr: Some(ptr), .. } => {
                 if !acquire_mapping(&mut self.mapped) {
                     return Err(MapError::AlreadyMapped);
                 }
@@ -225,10 +206,7 @@ impl<M> MemoryBlock<M> {
             MemoryBlockFlavor::Dedicated { memory } => {
                 device.unmap_memory(memory);
             }
-            MemoryBlockFlavor::Linear { .. } => {}
             MemoryBlockFlavor::Buddy { .. } => {}
-
-            #[cfg(feature = "freelist")]
             MemoryBlockFlavor::FreeList { .. } => {}
         }
         true

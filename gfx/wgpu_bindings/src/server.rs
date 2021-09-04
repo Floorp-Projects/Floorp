@@ -4,8 +4,7 @@
 
 use crate::{
     cow_label, identity::IdentityRecyclerFactory, AdapterInformation, ByteBuf,
-    CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, RawString,
-    ShaderModuleSource, TextureAction,
+    CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, RawString, TextureAction,
 };
 
 use wgc::{gfx_select, id};
@@ -63,7 +62,7 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
     let global = Global(wgc::hub::Global::new(
         "wgpu",
         factory,
-        wgt::BackendBit::PRIMARY,
+        wgt::Backends::PRIMARY | wgt::Backends::GL,
     ));
     Box::into_raw(Box::new(global))
 }
@@ -231,19 +230,19 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
 }
 
 trait GlobalExt {
-    fn device_action<B: wgc::hub::GfxBackend>(
+    fn device_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::DeviceId,
         action: DeviceAction,
         error_buf: ErrorBuffer,
     );
-    fn texture_action<B: wgc::hub::GfxBackend>(
+    fn texture_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::TextureId,
         action: TextureAction,
         error_buf: ErrorBuffer,
     );
-    fn command_encoder_action<B: wgc::hub::GfxBackend>(
+    fn command_encoder_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::CommandEncoderId,
         action: CommandEncoderAction,
@@ -252,7 +251,7 @@ trait GlobalExt {
 }
 
 impl GlobalExt for Global {
-    fn device_action<B: wgc::hub::GfxBackend>(
+    fn device_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::DeviceId,
         action: DeviceAction,
@@ -260,49 +259,44 @@ impl GlobalExt for Global {
     ) {
         match action {
             DeviceAction::CreateBuffer(id, desc) => {
-                let (_, error) = self.device_create_buffer::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_buffer::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateTexture(id, desc) => {
-                let (_, error) = self.device_create_texture::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateSampler(id, desc) => {
-                let (_, error) = self.device_create_sampler::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_sampler::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateBindGroupLayout(id, desc) => {
-                let (_, error) = self.device_create_bind_group_layout::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_bind_group_layout::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreatePipelineLayout(id, desc) => {
-                let (_, error) = self.device_create_pipeline_layout::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_pipeline_layout::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateBindGroup(id, desc) => {
-                let (_, error) = self.device_create_bind_group::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_bind_group::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
-            DeviceAction::CreateShaderModule(id, desc, source) => {
-                let source = match source {
-                    ShaderModuleSource::SpirV(data) => {
-                        wgc::pipeline::ShaderModuleSource::SpirV(data)
-                    }
-                    ShaderModuleSource::Wgsl(data) => wgc::pipeline::ShaderModuleSource::Wgsl(data),
-                };
-                let (_, error) = self.device_create_shader_module::<B>(self_id, &desc, source, id);
+            DeviceAction::CreateShaderModule(id, desc, code) => {
+                let source = wgc::pipeline::ShaderModuleSource::Wgsl(code);
+                let (_, error) = self.device_create_shader_module::<A>(self_id, &desc, source, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -315,7 +309,7 @@ impl GlobalExt for Global {
                         group_ids: &imp.bind_groups,
                     });
                 let (_, error) =
-                    self.device_create_compute_pipeline::<B>(self_id, &desc, id, implicit_ids);
+                    self.device_create_compute_pipeline::<A>(self_id, &desc, id, implicit_ids);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -328,19 +322,19 @@ impl GlobalExt for Global {
                         group_ids: &imp.bind_groups,
                     });
                 let (_, error) =
-                    self.device_create_render_pipeline::<B>(self_id, &desc, id, implicit_ids);
+                    self.device_create_render_pipeline::<A>(self_id, &desc, id, implicit_ids);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateRenderBundle(id, encoder, desc) => {
-                let (_, error) = self.render_bundle_encoder_finish::<B>(encoder, &desc, id);
+                let (_, error) = self.render_bundle_encoder_finish::<A>(encoder, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::CreateCommandEncoder(id, desc) => {
-                let (_, error) = self.device_create_command_encoder::<B>(self_id, &desc, id);
+                let (_, error) = self.device_create_command_encoder::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -348,7 +342,7 @@ impl GlobalExt for Global {
         }
     }
 
-    fn texture_action<B: wgc::hub::GfxBackend>(
+    fn texture_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::TextureId,
         action: TextureAction,
@@ -356,7 +350,7 @@ impl GlobalExt for Global {
     ) {
         match action {
             TextureAction::CreateView(id, desc) => {
-                let (_, error) = self.texture_create_view::<B>(self_id, &desc, id);
+                let (_, error) = self.texture_create_view::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
@@ -364,7 +358,7 @@ impl GlobalExt for Global {
         }
     }
 
-    fn command_encoder_action<B: wgc::hub::GfxBackend>(
+    fn command_encoder_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::CommandEncoderId,
         action: CommandEncoderAction,
@@ -378,7 +372,7 @@ impl GlobalExt for Global {
                 dst_offset,
                 size,
             } => {
-                if let Err(err) = self.command_encoder_copy_buffer_to_buffer::<B>(
+                if let Err(err) = self.command_encoder_copy_buffer_to_buffer::<A>(
                     self_id, src, src_offset, dst, dst_offset, size,
                 ) {
                     error_buf.init(err);
@@ -386,28 +380,28 @@ impl GlobalExt for Global {
             }
             CommandEncoderAction::CopyBufferToTexture { src, dst, size } => {
                 if let Err(err) =
-                    self.command_encoder_copy_buffer_to_texture::<B>(self_id, &src, &dst, &size)
+                    self.command_encoder_copy_buffer_to_texture::<A>(self_id, &src, &dst, &size)
                 {
                     error_buf.init(err);
                 }
             }
             CommandEncoderAction::CopyTextureToBuffer { src, dst, size } => {
                 if let Err(err) =
-                    self.command_encoder_copy_texture_to_buffer::<B>(self_id, &src, &dst, &size)
+                    self.command_encoder_copy_texture_to_buffer::<A>(self_id, &src, &dst, &size)
                 {
                     error_buf.init(err);
                 }
             }
             CommandEncoderAction::CopyTextureToTexture { src, dst, size } => {
                 if let Err(err) =
-                    self.command_encoder_copy_texture_to_texture::<B>(self_id, &src, &dst, &size)
+                    self.command_encoder_copy_texture_to_texture::<A>(self_id, &src, &dst, &size)
                 {
                     error_buf.init(err);
                 }
             }
             CommandEncoderAction::RunComputePass { base } => {
                 if let Err(err) =
-                    self.command_encoder_run_compute_pass_impl::<B>(self_id, base.as_ref())
+                    self.command_encoder_run_compute_pass_impl::<A>(self_id, base.as_ref())
                 {
                     error_buf.init(err);
                 }
@@ -417,7 +411,7 @@ impl GlobalExt for Global {
                 query_index,
             } => {
                 if let Err(err) =
-                    self.command_encoder_write_timestamp::<B>(self_id, query_set_id, query_index)
+                    self.command_encoder_write_timestamp::<A>(self_id, query_set_id, query_index)
                 {
                     error_buf.init(err);
                 }
@@ -429,7 +423,7 @@ impl GlobalExt for Global {
                 destination,
                 destination_offset,
             } => {
-                if let Err(err) = self.command_encoder_resolve_query_set::<B>(
+                if let Err(err) = self.command_encoder_resolve_query_set::<A>(
                     self_id,
                     query_set_id,
                     start_query,
@@ -445,7 +439,7 @@ impl GlobalExt for Global {
                 target_colors,
                 target_depth_stencil,
             } => {
-                if let Err(err) = self.command_encoder_run_render_pass_impl::<B>(
+                if let Err(err) = self.command_encoder_run_render_pass_impl::<A>(
                     self_id,
                     base.as_ref(),
                     &target_colors,
@@ -455,7 +449,7 @@ impl GlobalExt for Global {
                 }
             }
             CommandEncoderAction::ClearBuffer { dst, offset, size } => {
-                if let Err(err) = self.command_encoder_clear_buffer::<B>(self_id, dst, offset, size)
+                if let Err(err) = self.command_encoder_clear_buffer::<A>(self_id, dst, offset, size)
                 {
                     error_buf.init(err);
                 }
@@ -465,7 +459,7 @@ impl GlobalExt for Global {
                 ref subresource_range,
             } => {
                 if let Err(err) =
-                    self.command_encoder_clear_image::<B>(self_id, dst, subresource_range)
+                    self.command_encoder_clear_image::<A>(self_id, dst, subresource_range)
                 {
                     error_buf.init(err);
                 }

@@ -7,7 +7,6 @@
 
 #include "gfxUtils.h"
 #include "gfxTypes.h"
-#include "gfxASurface.h"
 #include "gfxPlatform.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"

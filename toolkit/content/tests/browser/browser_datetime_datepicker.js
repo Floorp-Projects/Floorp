@@ -921,3 +921,59 @@ add_task(async function test_datetime_local_min_select_invalid() {
 
   await helper.tearDown();
 });
+
+/**
+ * Test that date picker opens to the minium valid date when the value property is lower than the min property
+ */
+add_task(async function test_datepicker_value_lower_than_min() {
+  const date = new Date();
+  const inputValue = "2001-02-03";
+  const minValue = "2004-05-06";
+  const maxValue = "2007-08-09";
+
+  await helper.openPicker(
+    `data:text/html, <input type='date' value="${inputValue}" min="${minValue}" max="${maxValue}">`
+  );
+
+  if (date.getMonth() === new Date().getMonth()) {
+    Assert.equal(
+      helper.getElement(MONTH_YEAR).textContent,
+      DATE_FORMAT(new Date(minValue))
+    );
+  } else {
+    Assert.ok(
+      true,
+      "Skipping datepicker value lower than min test if month changes when opening picker."
+    );
+  }
+
+  await helper.tearDown();
+});
+
+/**
+ * Test that date picker opens to the maximum valid date when the value property is higher than the max property
+ */
+add_task(async function test_datepicker_value_higher_than_max() {
+  const date = new Date();
+  const minValue = "2001-02-03";
+  const maxValue = "2004-05-06";
+  const inputValue = "2007-08-09";
+
+  await helper.openPicker(
+    `data:text/html, <input type='date' value="${inputValue}" min="${minValue}" max="${maxValue}">`
+  );
+
+  if (date.getMonth() === new Date().getMonth()) {
+    Assert.equal(
+      helper.getElement(MONTH_YEAR).textContent,
+      DATE_FORMAT(new Date(maxValue))
+    );
+  } else {
+    Assert.ok(
+      true,
+      "Skipping datepicker value higher than max test if month changes when opening picker."
+    );
+  }
+
+  await helper.tearDown();
+});

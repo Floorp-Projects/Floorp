@@ -121,6 +121,9 @@ class SocketProcessParent final
 
   mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
 
+  mozilla::ipc::IPCResult RecvExcludeHttp2OrHttp3(
+      const HttpConnectionInfoCloneArgs& aArgs);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;

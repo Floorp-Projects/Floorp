@@ -65,9 +65,7 @@ class PdfjsParent extends JSWindowActorParent {
   }
 
   didDestroy() {
-    if (this._boundToFindbar) {
-      this._removeEventListener();
-    }
+    this._removeEventListener();
   }
 
   receiveMessage(aMsg) {
@@ -184,6 +182,25 @@ class PdfjsParent extends JSWindowActorParent {
       return;
     }
 
+    if (type == "SwapDocShells") {
+      this._removeEventListener();
+      let newBrowser = aEvent.detail;
+      newBrowser.addEventListener(
+        "EndSwapDocShells",
+        evt => {
+          this._hookupEventListeners(newBrowser);
+        },
+        { once: true }
+      );
+      return;
+    }
+
+    // Ignore events findbar events which arrive while the Pdfjs document is in
+    // the BFCache.
+    if (this.windowContext.isInBFCache) {
+      return;
+    }
+
     // To avoid forwarding the message as a CPOW, create a structured cloneable
     // version of the event for both performance, and ease of usage, reasons.
     let detail = null;
@@ -241,10 +258,13 @@ class PdfjsParent extends JSWindowActorParent {
     } else {
       tab.addEventListener("TabFindInitialized", this);
     }
+    aBrowser.addEventListener("SwapDocShells", this);
     return !!findbar;
   }
 
   _removeEventListener() {
+    let browser = this.browser;
+
     // make sure the listener has been removed.
     let findbar = this._boundToFindbar;
     if (findbar) {
@@ -253,9 +273,18 @@ class PdfjsParent extends JSWindowActorParent {
         var type = gFindTypes[i];
         findbar.removeEventListener(type, this, true);
       }
+    } else if (browser) {
+      // If we registered a `TabFindInitialized` listener which never fired,
+      // make sure we remove it.
+      let tabbrowser = browser.getTabBrowser();
+      let tab = tabbrowser.getTabForBrowser(browser);
+      tab?.removeEventListener("TabFindInitialized", this);
     }
 
     this._boundToFindbar = null;
+
+    // Clean up any SwapDocShells event listeners.
+    browser?.removeEventListener("SwapDocShells", this);
   }
 
   /*

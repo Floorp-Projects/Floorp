@@ -64,19 +64,6 @@ APPLICATIONS = OrderedDict(
     ]
 )
 
-STATE_DIR_INFO = """
-The Firefox build system and related tools store shared, persistent state
-in a common directory on the filesystem. On this machine, that directory
-is:
-
-  {statedir}
-
-If you would like to use a different directory, hit CTRL+c and set the
-MOZBUILD_STATE_PATH environment variable to the directory you'd like to
-use and re-run the bootstrapper.
-
-Would you like to create this directory?"""
-
 FINISHED = """
 Your system should be ready to build %s!
 """
@@ -226,36 +213,6 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
-    def create_state_dir(self):
-        # Global build system and mach state is stored in a central directory. By
-        # default, this is ~/.mozbuild. However, it can be defined via an
-        # environment variable. We detect first run (by lack of this directory
-        # existing) and notify the user that it will be created. The logic for
-        # creation is much simpler for the "advanced" environment variable use
-        # case. For default behavior, we educate users and give them an opportunity
-        # to react.
-        state_dir = get_state_dir()
-
-        if not os.path.exists(state_dir):
-            should_create_state_dir = True
-            if not self.instance.no_interactive:
-                should_create_state_dir = self.instance.prompt_yesno(
-                    prompt=STATE_DIR_INFO.format(statedir=state_dir)
-                )
-
-            # This directory is by default in $HOME, or overridden via an env
-            # var, so we probably shouldn't gate it on --no-system-changes.
-            if should_create_state_dir:
-                print("Creating global state directory: %s" % state_dir)
-                os.makedirs(state_dir, mode=0o770)
-            else:
-                raise UserError(
-                    "Need permission to create global state "
-                    "directory at %s" % state_dir
-                )
-
-        return state_dir
-
     def maybe_install_private_packages_or_exit(
         self, state_dir, checkout_root, application
     ):
@@ -337,7 +294,29 @@ class Bootstrapper(object):
 
         self.instance.warn_if_pythonpath_is_set()
 
-        state_dir = self.create_state_dir()
+        if sys.platform.startswith("darwin") and not os.environ.get(
+            "MACH_I_DO_WANT_TO_USE_ROSETTA"
+        ):
+            # If running on arm64 mac, check whether we're running under
+            # Rosetta and advise against it.
+            proc = subprocess.run(
+                ["sysctl", "-n", "sysctl.proc_translated"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+            if (
+                proc.returncode == 0
+                and proc.stdout.decode("ascii", "replace").strip() == "1"
+            ):
+                print(
+                    "Python is being emulated under Rosetta. Please use a native "
+                    "Python instead. If you still really want to go ahead, set "
+                    "the MACH_I_DO_WANT_TO_USE_ROSETTA environment variable.",
+                    file=sys.stderr,
+                )
+                return 1
+
+        state_dir = get_state_dir()
         self.instance.state_dir = state_dir
 
         # We need to enable the loading of hgrc in case extensions are
