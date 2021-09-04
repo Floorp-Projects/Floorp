@@ -342,6 +342,14 @@
     }                                                \
   }
 
+#define NS_LOCALFILESTREAM_CONTRACTID "@mozilla.org/network/file-stream;1"
+#define NS_LOCALFILESTREAM_CID                       \
+  { /* 648705e9-757a-4d4b-a5bF-0248e512c309 */       \
+    0x648705e9, 0x757a, 0x4d4b, {                    \
+      0xa5, 0xbF, 0x02, 0x48, 0xe5, 0x12, 0xc3, 0x09 \
+    }                                                \
+  }
+
 #define NS_BUFFEREDINPUTSTREAM_CONTRACTID \
   "@mozilla.org/network/buffered-input-stream;1"
 #define NS_BUFFEREDINPUTSTREAM_CID                   \
