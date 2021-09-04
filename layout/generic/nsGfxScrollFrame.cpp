@@ -2199,7 +2199,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mRestorePos(-1, -1),
       mLastPos(-1, -1),
       mApzScrollPos(0, 0),
-      mScrollPosForLayerPixelAlignment(-1, -1),
       mLastUpdateFramesPos(-1, -1),
       mDisplayPortAtLastFrameUpdate(),
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
@@ -2950,9 +2949,6 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   gfxSize scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
   nsPoint curPos = GetScrollPosition();
 
-  nsPoint alignWithPos = mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)
-                             ? curPos
-                             : mScrollPosForLayerPixelAlignment;
   // Try to align aPt with curPos so they have an integer number of layer
   // pixels between them. This gives us the best chance of scrolling without
   // having to invalidate due to changes in subpixel rendering.
@@ -2963,9 +2959,8 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // and are relative to the scrollport top-left. This difference doesn't
   // actually matter since all we are about is that there be an integer number
   // of layer pixels between pt and curPos.
-  nsPoint pt =
-      ClampAndAlignWithLayerPixels(aPt, GetLayoutScrollRange(), aRange,
-                                   alignWithPos, appUnitsPerDevPixel, scale);
+  nsPoint pt = ClampAndAlignWithLayerPixels(aPt, GetLayoutScrollRange(), aRange,
+                                            curPos, appUnitsPerDevPixel, scale);
   if (pt == curPos) {
     // Even if we are bailing out due to no-op main-thread scroll position
     // change, we might need to cancel an APZ smooth scroll that we already
@@ -3639,16 +3634,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
-
-  if (aBuilder->IsPaintingToWindow()) {
-    if (IsScrollingActive() && !gfxVars::UseWebRender()) {
-      if (mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)) {
-        mScrollPosForLayerPixelAlignment = GetScrollPosition();
-      }
-    } else {
-      mScrollPosForLayerPixelAlignment = nsPoint(-1, -1);
-    }
-  }
 
   bool isRootContent =
       mIsRoot && mOuter->PresContext()->IsRootContentDocumentCrossProcess();
