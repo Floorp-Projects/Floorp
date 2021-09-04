@@ -215,17 +215,22 @@ const MESSAGES = () => [
     template: "spotlight",
     content: {
       template: "logo-and-content",
-      logoImageURL: "chrome://branding/content/about-logo.svg",
+      logoImageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
       body: {
         title: {
-          label: "Looks like you're using public Wi-Fi",
+          label: {
+            string_id: "spotlight-public-wifi-vpn-header",
+          },
         },
         text: {
-          label:
-            "To hide your location and browsing activity, consider a Virtual Private Network. It will help keep you protected when browsing in public spaces like airports and coffee shops.",
+          label: {
+            string_id: "spotlight-public-wifi-vpn-body",
+          },
         },
         primary: {
-          label: "Stay private with Mozilla VPN",
+          label: {
+            string_id: "spotlight-public-wifi-vpn-primary-button",
+          },
           action: {
             type: "OPEN_URL",
             data: {
@@ -236,7 +241,7 @@ const MESSAGES = () => [
         },
         secondary: {
           label: {
-            string_id: "cfr-doorhanger-extension-cancel-button",
+            string_id: "spotlight-public-wifi-vpn-link",
           },
         },
       },
