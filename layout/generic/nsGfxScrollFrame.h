@@ -395,10 +395,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
     return mWillBuildScrollableLayer;
   }
 
-  void ResetScrollPositionForLayerPixelAlignment() {
-    mScrollPosForLayerPixelAlignment = GetScrollPosition();
-  }
-
   bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
   void UpdateSticky();
@@ -613,7 +609,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsExpirationState mActivityExpirationState;
 
   nsCOMPtr<nsITimer> mScrollActivityTimer;
-  nsPoint mScrollPosForLayerPixelAlignment;
 
   // The scroll position where we last updated frame visibility.
   nsPoint mLastUpdateFramesPos;
@@ -1058,9 +1053,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
-  }
-  void ResetScrollPositionForLayerPixelAlignment() final {
-    mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
   bool DidHistoryRestore() const final { return mHelper.mDidHistoryRestore; }
   void ClearDidHistoryRestore() final { mHelper.mDidHistoryRestore = false; }
@@ -1538,9 +1530,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
-  }
-  void ResetScrollPositionForLayerPixelAlignment() final {
-    mHelper.ResetScrollPositionForLayerPixelAlignment();
   }
   bool DidHistoryRestore() const final { return mHelper.mDidHistoryRestore; }
   void ClearDidHistoryRestore() final { mHelper.mDidHistoryRestore = false; }

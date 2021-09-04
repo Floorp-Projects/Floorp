@@ -348,6 +348,9 @@ class LintRoller(object):
 
         # Make sure we never spawn more processes than we have jobs.
         num_procs = min(len(jobs), num_procs) or 1
+        if sys.platform == "win32":
+            # https://github.com/python/cpython/pull/13132
+            num_procs = min(num_procs, 61)
 
         signal.signal(signal.SIGINT, _worker_sigint_handler)
         executor = ProcessPoolExecutor(num_procs)

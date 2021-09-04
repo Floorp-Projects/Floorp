@@ -735,7 +735,7 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
       if (!vertex_desc.IsNull()) {
         const auto& vd = vertex_desc.Value();
         vb_desc.array_stride = vd.mArrayStride;
-        vb_desc.step_mode = ffi::WGPUInputStepMode(vd.mStepMode);
+        vb_desc.step_mode = ffi::WGPUVertexStepMode(vd.mStepMode);
         // Note: we are setting the length but not the pointer
         vb_desc.attributes_length = vd.mAttributes.Length();
         for (const auto& vat : vd.mAttributes) {

@@ -2787,8 +2787,8 @@ struct JavaMarker {
       baseprofiler::SpliceableJSONWriter& aWriter) {}
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::timelineOverview, MS::Location::markerChart,
-              MS::Location::markerTable};
+    MS schema{MS::Location::TimelineOverview, MS::Location::MarkerChart,
+              MS::Location::MarkerTable};
     schema.SetAllLabels("{marker.name}");
     return schema;
   }
@@ -2805,13 +2805,12 @@ struct JavaMarkerWithDetails {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::timelineOverview, MS::Location::markerChart,
-              MS::Location::markerTable};
+    MS schema{MS::Location::TimelineOverview, MS::Location::MarkerChart,
+              MS::Location::MarkerTable};
     schema.SetTooltipLabel("{marker.name}");
     schema.SetChartLabel("{marker.data.details}");
     schema.SetTableLabel("{marker.name} - {marker.data.details}");
-    schema.AddKeyLabelFormat("details", "Details",
-                             MarkerSchema::Format::string);
+    schema.AddKeyLabelFormat("details", "Details", MS::Format::String);
     return schema;
   }
 };

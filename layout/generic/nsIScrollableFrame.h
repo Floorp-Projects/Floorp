@@ -393,11 +393,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsMaybeAsynchronouslyScrolled() = 0;
 
   /**
-   * Call this when the layer(s) induced by active scrolling are being
-   * completely redrawn.
-   */
-  virtual void ResetScrollPositionForLayerPixelAlignment() = 0;
-  /**
    * Was the current presentation state for this frame restored from history?
    */
   virtual bool DidHistoryRestore() const = 0;

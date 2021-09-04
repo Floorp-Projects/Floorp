@@ -161,7 +161,10 @@ class NrSocket : public NrSocketBase, public nsASocketHandler {
   virtual uint64_t ByteCountReceived() override { return 0; }
 
   // nsISupports methods
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(NrSocket, Destroy(),
+                                                     override);
+  virtual void Destroy() { delete this; }
 
   // Implementations of the async_event APIs
   virtual int async_wait(int how, NR_async_cb cb, void* cb_arg, char* function,
@@ -263,6 +266,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
 
  private:
   virtual ~NrUdpSocketIpc();
+  virtual void Destroy();
 
   DISALLOW_COPY_ASSIGN(NrUdpSocketIpc);
 
@@ -274,8 +278,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
   void sendto_i(const net::NetAddr& addr, UniquePtr<MediaPacket> buf);
   void close_i();
 #if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
-  static void destroy_i(dom::UDPSocketChild* aChild,
-                        const nsCOMPtr<nsIEventTarget>& aStsThread);
+  void destroy_i();
 #endif
   // STS thread executor
   void recv_callback_s(RefPtr<nr_udp_message> msg);

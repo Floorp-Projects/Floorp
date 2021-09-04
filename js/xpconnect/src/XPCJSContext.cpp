@@ -989,13 +989,12 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool ergnomicBrandChecksEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
 
-  bool classStaticBlocksEnabled = false;
+  bool classStaticBlocksEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.class_static_blocks");
+
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
-
-  classStaticBlocksEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.class_static_blocks");
 #endif
 
 #ifdef JS_GC_ZEAL

@@ -218,6 +218,7 @@ class TestLoader(object):
                  include_https=True,
                  include_h2=True,
                  include_quic=False,
+                 include_webtransport_h3=False,
                  skip_timeout=False,
                  skip_implementation_status=None,
                  chunker_kwargs=None):
@@ -233,6 +234,7 @@ class TestLoader(object):
         self.include_https = include_https
         self.include_h2 = include_h2
         self.include_quic = include_quic
+        self.include_webtransport_h3 = include_webtransport_h3
         self.skip_timeout = skip_timeout
         self.skip_implementation_status = skip_implementation_status
 

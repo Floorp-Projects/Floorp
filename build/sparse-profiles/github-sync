@@ -2,7 +2,6 @@
 %include build/sparse-profiles/taskgraph
 
 [include]
-path:gfx/wgpu/
 path:gfx/wr/
 path:taskcluster/scripts/misc/
 path:tools/github-sync/

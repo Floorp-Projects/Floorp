@@ -22,6 +22,7 @@
 "use strict";
 var EXPORTED_SYMBOLS = ["PdfJsDefaultPreferences"];
 var PdfJsDefaultPreferences = Object.freeze({
+ "annotationMode": 2,
  "cursorToolOnLoad": 0,
  "defaultZoomValue": "",
  "disablePageLabels": false,
@@ -32,7 +33,6 @@ var PdfJsDefaultPreferences = Object.freeze({
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
  "pdfBugEnabled": false,
- "renderInteractiveForms": true,
  "sidebarViewOnLoad": -1,
  "scrollModeOnLoad": -1,
  "spreadModeOnLoad": -1,

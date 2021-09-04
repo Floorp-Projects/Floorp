@@ -439,5 +439,22 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessParent::RecvExcludeHttp2OrHttp3(
+    const HttpConnectionInfoCloneArgs& aArgs) {
+  RefPtr<nsHttpConnectionInfo> cinfo =
+      nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(aArgs);
+  if (!cinfo) {
+    MOZ_ASSERT(false, "failed to deserizlize http connection info");
+    return IPC_OK();
+  }
+
+  if (cinfo->IsHttp3()) {
+    gHttpHandler->ExcludeHttp3(cinfo);
+  } else {
+    gHttpHandler->ExcludeHttp2(cinfo);
+  }
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla

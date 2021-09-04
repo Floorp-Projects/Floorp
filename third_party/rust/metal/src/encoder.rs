@@ -1026,6 +1026,15 @@ impl ComputeCommandEncoderRef {
         }
     }
 
+    pub fn set_threadgroup_memory_length(&self, at_index: NSUInteger, size: NSUInteger) {
+        unsafe {
+            msg_send![self,
+                setThreadgroupMemoryLength:size
+                atIndex: at_index
+            ]
+        }
+    }
+
     pub fn use_resource(&self, resource: &ResourceRef, usage: MTLResourceUsage) {
         unsafe {
             msg_send![self,

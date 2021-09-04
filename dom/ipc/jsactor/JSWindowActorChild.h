@@ -57,6 +57,7 @@ class JSWindowActorChild final : public JSActor {
   }
 
   WindowGlobalChild* GetManager() const;
+  WindowContext* GetWindowContext() const;
   void Init(const nsACString& aName, WindowGlobalChild* aManager);
   void ClearManager() override;
   Document* GetDocument(ErrorResult& aRv);

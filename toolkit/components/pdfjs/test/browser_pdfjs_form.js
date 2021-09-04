@@ -24,12 +24,12 @@ async function checkFormState(formsEnabled) {
 add_task(async function test_defaults() {
   // Ensure the default preference is set to the expected value.
   let defaultBranch = Services.prefs.getDefaultBranch("pdfjs.");
-  let prefType = defaultBranch.getPrefType("renderInteractiveForms");
-  let renderForms = Services.prefs.getBoolPref("pdfjs.renderInteractiveForms");
+  let prefType = defaultBranch.getPrefType("annotationMode");
+  let renderForms = Services.prefs.getIntPref("pdfjs.annotationMode") === 2;
 
   is(
     prefType,
-    Ci.nsIPrefBranch.PREF_BOOL,
+    Ci.nsIPrefBranch.PREF_INT,
     "The form pref is defined by default"
   );
 
@@ -56,7 +56,7 @@ add_task(async function test_disabling() {
     async function(browser) {
       // First, make sure they are enabled.
       await SpecialPowers.pushPrefEnv({
-        set: [["pdfjs.renderInteractiveForms", true]],
+        set: [["pdfjs.annotationMode", 2]],
       });
       await waitForPdfJSAnnotationLayer(
         browser,
@@ -69,7 +69,7 @@ add_task(async function test_disabling() {
       );
       // Now disable the forms.
       await SpecialPowers.pushPrefEnv({
-        set: [["pdfjs.renderInteractiveForms", false]],
+        set: [["pdfjs.annotationMode", 1]],
       });
       await waitForPdfJSAnnotationLayer(
         browser,

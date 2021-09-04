@@ -7,7 +7,6 @@
 #define widget_windows_WinCompositorWidget_h
 
 #include "CompositorWidget.h"
-#include "gfxASurface.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/gfx/Point.h"

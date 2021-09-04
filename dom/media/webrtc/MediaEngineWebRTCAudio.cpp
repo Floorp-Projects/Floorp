@@ -886,20 +886,21 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
 }
 
 void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                            BufferInfo aInfo) {
+                                            AudioDataValue* aBuffer,
+                                            size_t aFrames, TrackRate aRate,
+                                            uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
 
-  if (!mPacketizerOutput ||
-      mPacketizerOutput->mPacketSize != aInfo.mRate / 100u ||
-      mPacketizerOutput->mChannels != aInfo.mChannels) {
+  if (!mPacketizerOutput || mPacketizerOutput->mPacketSize != aRate / 100u ||
+      mPacketizerOutput->mChannels != aChannels) {
     // It's ok to drop the audio still in the packetizer here: if this changes,
     // we changed devices or something.
     mPacketizerOutput = MakeUnique<AudioPacketizer<AudioDataValue, float>>(
-        aInfo.mRate / 100, aInfo.mChannels);
+        aRate / 100, aChannels);
   }
 
-  mPacketizerOutput->Input(aInfo.mBuffer, aInfo.mFrames);
+  mPacketizerOutput->Input(aBuffer, aFrames);
 
   while (mPacketizerOutput->PacketsAvailable()) {
     uint32_t samplesPerPacket =
@@ -918,11 +919,11 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
     uint32_t channelCountFarend = 0;
     uint32_t framesPerPacketFarend = 0;
 
-    // Downmix from aInfo.mChannels to MAX_CHANNELS if needed. We always have
+    // Downmix from aChannels to MAX_CHANNELS if needed. We always have
     // floats here, the packetized performed the conversion.
-    if (aInfo.mChannels > MAX_CHANNELS) {
+    if (aChannels > MAX_CHANNELS) {
       AudioConverter converter(
-          AudioConfig(aInfo.mChannels, 0, AudioConfig::FORMAT_FLT),
+          AudioConfig(aChannels, 0, AudioConfig::FORMAT_FLT),
           AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_FLT));
       framesPerPacketFarend = mPacketizerOutput->mPacketSize;
       framesPerPacketFarend =
@@ -932,9 +933,9 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
       deinterleavedPacketDataChannelPointers.SetLength(MAX_CHANNELS);
     } else {
       interleavedFarend = packet;
-      channelCountFarend = aInfo.mChannels;
+      channelCountFarend = aChannels;
       framesPerPacketFarend = mPacketizerOutput->mPacketSize;
-      deinterleavedPacketDataChannelPointers.SetLength(aInfo.mChannels);
+      deinterleavedPacketDataChannelPointers.SetLength(aChannels);
     }
 
     MOZ_ASSERT(interleavedFarend &&
@@ -960,7 +961,7 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
 
     // Having the same config for input and output means we potentially save
     // some CPU.
-    StreamConfig inputConfig(aInfo.mRate, channelCountFarend, false);
+    StreamConfig inputConfig(aRate, channelCountFarend, false);
     StreamConfig outputConfig = inputConfig;
 
     // Passing the same pointers here saves a copy inside this function.
@@ -1102,29 +1103,35 @@ void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph);
   MOZ_ASSERT(aGraph->OnGraphThread());
 
-  if (mEnded || !mEnabled || !mLiveBufferingAppended || !mInputData) {
+  if (mEnded || !mEnabled || !mLiveBufferingAppended ||
+      mPendingData.IsEmpty()) {
     return;
   }
 
-  // One NotifyInputData might have multiple following ProcessInput calls, but
-  // we only process one input per NotifyInputData call.
-  BufferInfo inputInfo = mInputData.extract();
+  // The number of NotifyInputData and ProcessInput calls could be different. We
+  // always process the input data from NotifyInputData in the first
+  // ProcessInput after the NotifyInputData
 
   // If some processing is necessary, packetize and insert in the WebRTC.org
   // code. Otherwise, directly insert the mic data in the MTG, bypassing all
   // processing.
   if (PassThrough(aGraph)) {
-    if (aSegment) {
+    if (aSegment && !aSegment->IsEmpty()) {
       mSegment.AppendSegment(aSegment, mPrincipal);
     } else {
-      mSegment.AppendFromInterleavedBuffer(inputInfo.mBuffer, inputInfo.mFrames,
-                                           inputInfo.mChannels, mPrincipal);
+      mSegment.AppendFromInterleavedBuffer(mPendingData.Data(),
+                                           mPendingData.FrameCount(),
+                                           mPendingData.Channels(), mPrincipal);
     }
   } else {
-    MOZ_ASSERT(aGraph->GraphRate() == inputInfo.mRate);
-    PacketizeAndProcess(aGraph, inputInfo.mBuffer, inputInfo.mFrames,
-                        inputInfo.mRate, inputInfo.mChannels);
+    MOZ_ASSERT(aGraph->GraphRate() == mPendingData.Rate());
+    // Bug 1729041: Feed aSegment to PacketizeAndProcess so mPendingData can be
+    // removed, and save a copy.
+    PacketizeAndProcess(aGraph, mPendingData.Data(), mPendingData.FrameCount(),
+                        mPendingData.Rate(), mPendingData.Channels());
   }
+
+  mPendingData.Clear();
 }
 
 void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
@@ -1138,13 +1145,15 @@ void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   if (mPacketizerInput) {
     mPacketizerInput->Clear();
   }
-  mInputData.take();
+  mPendingData.Clear();
 }
 
 // Called back on GraphDriver thread!
 // Note this can be called back after ::Stop()
 void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
-                                           const BufferInfo aInfo,
+                                           const AudioDataValue* aBuffer,
+                                           size_t aFrames, TrackRate aRate,
+                                           uint32_t aChannels,
                                            uint32_t aAlreadyBuffered) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   TRACE("AudioInputProcessing::NotifyInputData");
@@ -1157,7 +1166,7 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
     mLiveBufferingAppended = Some(aAlreadyBuffered);
   }
 
-  mInputData = Some(aInfo);
+  mPendingData.Push(aBuffer, aFrames, aRate, aChannels);
 }
 
 #define ResetProcessingIfNeeded(_processing)                         \
@@ -1191,7 +1200,7 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
 void AudioInputProcessing::End() {
   mEnded = true;
   mSegment.Clear();
-  mInputData.take();
+  mPendingData.Clear();
 }
 
 TrackTime AudioInputProcessing::NumBufferedFrames(

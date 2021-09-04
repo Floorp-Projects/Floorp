@@ -53,18 +53,18 @@ class MOZ_RAII AutoProfilerStyleMarker {
       }
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                  MS::Location::timelineOverview};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                  MS::Location::TimelineOverview};
         schema.AddKeyLabelFormat("elementsTraversed", "Elements traversed",
-                                 MS::Format::integer);
+                                 MS::Format::Integer);
         schema.AddKeyLabelFormat("elementsStyled", "Elements styled",
-                                 MS::Format::integer);
+                                 MS::Format::Integer);
         schema.AddKeyLabelFormat("elementsMatched", "Elements matched",
-                                 MS::Format::integer);
+                                 MS::Format::Integer);
         schema.AddKeyLabelFormat("stylesShared", "Styles shared",
-                                 MS::Format::integer);
+                                 MS::Format::Integer);
         schema.AddKeyLabelFormat("stylesReused", "Styles reused",
-                                 MS::Format::integer);
+                                 MS::Format::Integer);
         return schema;
       }
     };

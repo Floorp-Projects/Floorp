@@ -1,8 +1,7 @@
-#![allow(dead_code)]
 use crate::prelude::*;
-use crate::version::{EntryV1_0, InstanceV1_0};
 use crate::vk;
 use crate::RawPtr;
+use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
 use std::ptr;
@@ -14,11 +13,11 @@ pub struct Surface {
 }
 
 impl Surface {
-    pub fn new<E: EntryV1_0, I: InstanceV1_0>(entry: &E, instance: &I) -> Surface {
+    pub fn new<L>(entry: &EntryCustom<L>, instance: &Instance) -> Self {
         let surface_fn = vk::KhrSurfaceFn::load(|name| unsafe {
             mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
         });
-        Surface {
+        Self {
             handle: instance.handle(),
             surface_fn,
         }
@@ -35,7 +34,7 @@ impl Surface {
         queue_family_index: u32,
         surface: vk::SurfaceKHR,
     ) -> VkResult<bool> {
-        let mut b = mem::zeroed();
+        let mut b = 0;
         self.surface_fn
             .get_physical_device_surface_support_khr(
                 physical_device,

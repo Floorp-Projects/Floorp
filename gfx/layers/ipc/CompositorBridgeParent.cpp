@@ -1563,7 +1563,7 @@ static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
           baseprofiler::SpliceableJSONWriter& aWriter) {}
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
         // Nothing outside the defaults.
         return schema;
       }
@@ -1956,7 +1956,7 @@ int32_t RecordContentFrameTime(
           baseprofiler::SpliceableJSONWriter& aWriter) {}
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
         // Nothing outside the defaults.
         return schema;
       }

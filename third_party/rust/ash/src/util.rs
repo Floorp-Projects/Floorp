@@ -5,12 +5,12 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 use std::{io, slice};
 
-/// `Align` handles dynamic alignment. The is useful for dynamic uniform buffers where
+/// [`Align`] handles dynamic alignment. The is useful for dynamic uniform buffers where
 /// the alignment might be different. For example a 4x4 f32 matrix has a size of 64 bytes
 /// but the min alignment for a dynamic uniform buffer might be 256 bytes. A slice of `&[Mat4x4<f32>]`
 /// has a memory layout of `[[64 bytes], [64 bytes], [64 bytes]]`, but it might need to have a memory
 /// layout of `[[256 bytes], [256 bytes], [256 bytes]]`.
-/// `Align::copy_from_slice` will copy a slice of `&[T]` directly into the host memory without
+/// [`Align::copy_from_slice`] will copy a slice of `&[T]` directly into the host memory without
 /// an additional allocation and with the correct alignment.
 #[derive(Debug, Clone)]
 pub struct Align<T> {

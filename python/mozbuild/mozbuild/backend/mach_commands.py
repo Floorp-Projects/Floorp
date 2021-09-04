@@ -111,7 +111,7 @@ class MachCommands(MachCommandBase):
             visual_studio_workspace_dir = self.get_visualstudio_workspace_path(
                 command_context
             )
-            subprocess.check_call(["explorer.exe", visual_studio_workspace_dir])
+            subprocess.call(["explorer.exe", visual_studio_workspace_dir])
         elif ide == "vscode":
             return self.setup_vscode(command_context, vscode_cmd)
 
@@ -123,7 +123,9 @@ class MachCommands(MachCommandBase):
         )
 
     def get_visualstudio_workspace_path(self, command_context):
-        return os.path.join(command_context.topobjdir, "msvc", "mozilla.sln")
+        return os.path.normpath(
+            os.path.join(command_context.topobjdir, "msvc", "mozilla.sln")
+        )
 
     def find_vscode_cmd(self, command_context):
         import shutil

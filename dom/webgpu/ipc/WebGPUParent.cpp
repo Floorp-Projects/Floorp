@@ -81,10 +81,6 @@ static void FreeDevice(RawId id, void* param) {
     NS_ERROR("Unable FreeDevice");
   }
 }
-static void FreeSwapChain(RawId id, void* param) {
-  Unused << id;
-  Unused << param;
-}
 static void FreeShaderModule(RawId id, void* param) {
   ipc::ByteBuf byteBuf;
   wgpu_server_shader_module_free(id, ToFFI(&byteBuf));
@@ -178,7 +174,6 @@ static ffi::WGPUIdentityRecyclerFactory MakeFactory(void* param) {
   ffi::WGPUIdentityRecyclerFactory factory = {param};
   factory.free_adapter = FreeAdapter;
   factory.free_device = FreeDevice;
-  factory.free_swap_chain = FreeSwapChain;
   factory.free_pipeline_layout = FreePipelineLayout;
   factory.free_shader_module = FreeShaderModule;
   factory.free_bind_group_layout = FreeBindGroupLayout;
@@ -606,8 +601,8 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     bufferId = data->mUnassignedBufferIds.back();
     data->mUnassignedBufferIds.pop_back();
 
-    ffi::WGPUBufferUsage usage =
-        WGPUBufferUsage_COPY_DST | WGPUBufferUsage_MAP_READ;
+    ffi::WGPUBufferUsages usage =
+        WGPUBufferUsages_COPY_DST | WGPUBufferUsages_MAP_READ;
     ffi::WGPUBufferDescriptor desc = {};
     desc.size = bufferSize;
     desc.usage = usage;

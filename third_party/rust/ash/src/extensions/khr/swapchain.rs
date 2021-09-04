@@ -1,8 +1,7 @@
-#![allow(dead_code)]
 use crate::prelude::*;
-use crate::version::{DeviceV1_0, InstanceV1_0};
 use crate::vk;
 use crate::RawPtr;
+use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 use std::ptr;
@@ -14,11 +13,11 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn new<I: InstanceV1_0, D: DeviceV1_0>(instance: &I, device: &D) -> Swapchain {
+    pub fn new(instance: &Instance, device: &Device) -> Self {
         let swapchain_fn = vk::KhrSwapchainFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Swapchain {
+        Self {
             handle: device.handle(),
             swapchain_fn,
         }
@@ -50,7 +49,7 @@ impl Swapchain {
         semaphore: vk::Semaphore,
         fence: vk::Fence,
     ) -> VkResult<(u32, bool)> {
-        let mut index = mem::zeroed();
+        let mut index = 0;
         let err_code = self.swapchain_fn.acquire_next_image_khr(
             self.handle,
             swapchain,

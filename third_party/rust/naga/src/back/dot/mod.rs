@@ -9,7 +9,10 @@ use crate::{
     valid::{FunctionInfo, ModuleInfo},
 };
 
-use std::fmt::{Error as FmtError, Write as _};
+use std::{
+    borrow::Cow,
+    fmt::{Error as FmtError, Write as _},
+};
 
 #[derive(Default)]
 struct StatementGraph {
@@ -120,6 +123,20 @@ impl StatementGraph {
                     self.calls.push((id, function));
                     "Call"
                 }
+                S::Atomic {
+                    pointer,
+                    ref fun,
+                    value,
+                    result,
+                } => {
+                    self.emits.push((id, result));
+                    self.dependencies.push((id, pointer, "pointer"));
+                    self.dependencies.push((id, value, "value"));
+                    if let crate::AtomicFunction::Exchange { compare: Some(cmp) } = *fun {
+                        self.dependencies.push((id, cmp, "cmp"));
+                    }
+                    "Atomic"
+                }
             };
         }
         root
@@ -134,7 +151,7 @@ fn name(option: &Option<String>) -> &str {
     }
 }
 
-/// set39 color scheme from https://graphviz.org/doc/info/colors.html
+/// set39 color scheme from <https://graphviz.org/doc/info/colors.html>
 const COLORS: &[&str] = &[
     "white", // pattern starts at 1
     "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5",
@@ -267,9 +284,9 @@ fn write_fun(
                         if let Some(expr) = level {
                             edges.insert("level", expr);
                         }
-                        std::borrow::Cow::from("ImageSize")
+                        Cow::from("ImageSize")
                     }
-                    _ => format!("{:?}", query).into(),
+                    _ => Cow::Owned(format!("{:?}", query)),
                 };
                 (args, 7)
             }
@@ -327,7 +344,8 @@ fn write_fun(
                 };
                 (string.into(), 3)
             }
-            E::Call(_function) => ("Call".into(), 4),
+            E::CallResult(_function) => ("CallResult".into(), 4),
+            E::AtomicResult { .. } => ("AtomicResult".into(), 4),
             E::ArrayLength(expr) => {
                 edges.insert("", expr);
                 ("ArrayLength".into(), 7)

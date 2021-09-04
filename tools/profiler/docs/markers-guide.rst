@@ -39,9 +39,9 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
       // Where and how to display the marker and its data.
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema(MS::Location::markerChart, MS::Location::markerTable);
+        MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
         schema.SetChartLabel("Number: {marker.data.number}");
-        schema.AddKeyLabelFormat("number", "Number", MS::Format::number);
+        schema.AddKeyLabelFormat("number", "Number", MS::Format::Number);
         return schema;
       }
     };
@@ -372,7 +372,7 @@ Marker Chart and the Marker Table panels:
 .. code-block:: c++
 
     // …
-        MS schema(MS::Location::markerChart, MS::Location::markerTable);
+        MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
 
 Some labels can optionally be specified, to display certain information in different
 locations: ``SetChartLabel``, ``SetTooltipLabel``, and ``SetTableLabel``; or
@@ -420,13 +420,13 @@ Each row may either be:
 
     // …
         schema.AddKeyLabelFormatSearchable(
-            "myString", "My String", MS::Format::string, true);
+            "myString", "My String", MS::Format::String, true);
         schema.AddKeyLabelFormat(
-            "myBytes", "My Bytes", MS::Format::bytes);
+            "myBytes", "My Bytes", MS::Format::Bytes);
         schema.AddKeyLabelFormat(
-            "myUrl", "My URL", MS::Format::url);
+            "myUrl", "My URL", MS::Format::Url);
         schema.AddKeyLabelFormat(
-            "myTime", "Event time", MS::Format::time);
+            "myTime", "Event time", MS::Format::Time);
 
 Finally the ``schema`` object is returned from the function:
 

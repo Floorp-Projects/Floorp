@@ -46,10 +46,10 @@
 #include "mozilla/layers/LayersMessages.h"  // for SpecificLayerAttributes, CompositorAnimations (ptr only), ContainerLayerAt...
 #include "mozilla/layers/LayersTypes.h"  // for EventRegions, operator<<, CompositionPayload, CSSTransformMatrix, MOZ_LAYE...
 #include "nsBaseHashtable.h"  // for nsBaseHashtable<>::Iterator, nsBaseHashtable<>::LookupResult
-#include "nsISupportsUtils.h"              // for NS_ADDREF, NS_RELEASE
-#include "nsPrintfCString.h"               // for nsPrintfCString
-#include "nsRegionFwd.h"                   // for IntRegion
-#include "nsString.h"                      // for nsTSubstring
+#include "nsISupportsUtils.h"  // for NS_ADDREF, NS_RELEASE
+#include "nsPrintfCString.h"   // for nsPrintfCString
+#include "nsRegionFwd.h"       // for IntRegion
+#include "nsString.h"          // for nsTSubstring
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -1411,7 +1411,6 @@ void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
 
 //--------------------------------------------------
 // LayerManager
-
 
 void LayerManager::Log(const char* aPrefix) {
   if (!IsLogEnabled()) return;

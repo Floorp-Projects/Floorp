@@ -6,7 +6,7 @@ use {
         util::{arc_unwrap, is_arc_unique},
         MemoryBounds,
     },
-    alloc::sync::Arc,
+    alloc::{sync::Arc, vec::Vec},
     core::{cmp::Ordering, ptr::NonNull},
     gpu_alloc_types::{AllocationFlags, DeviceMapError, MemoryDevice, MemoryPropertyFlags},
 };
@@ -22,7 +22,6 @@ unsafe fn opt_ptr_add(ptr: Option<NonNull<u8>>, size: u64) -> Option<NonNull<u8>
 #[derive(Debug)]
 pub(super) struct FreeList<M> {
     array: Vec<FreeListRegion<M>>,
-    total: u64,
     counter: u64,
 }
 
@@ -30,7 +29,6 @@ impl<M> FreeList<M> {
     pub fn new() -> Self {
         FreeList {
             array: Vec::new(),
-            total: 0,
             counter: 0,
         }
     }
@@ -53,27 +51,21 @@ impl<M> FreeList<M> {
             start: 0,
             end: memory_size,
         });
-        self.total += memory_size;
         self.get_block_at(self.array.len() - 1, align_mask, size)
     }
 
     pub fn get_block(&mut self, align_mask: u64, size: u64) -> Option<FreeListBlock<M>> {
-        match &self.array[..] {
-            [] => None,
-            [rest @ .., last] => {
-                let (index, _) = std::iter::once((rest.len(), last))
-                    .chain(rest.iter().enumerate())
-                    .find(|(_, region)| match region.end.checked_sub(size) {
-                        Some(start) => {
-                            let aligned_start = align_down(start, align_mask);
-                            aligned_start >= region.start
-                        }
-                        None => false,
-                    })?;
-
-                Some(self.get_block_at(index, align_mask, size))
+        let (index, _) = self.array.iter().enumerate().rev().find(|(_, region)| {
+            match region.end.checked_sub(size) {
+                Some(start) => {
+                    let aligned_start = align_down(start, align_mask);
+                    aligned_start >= region.start
+                }
+                None => false,
             }
-        }
+        })?;
+
+        Some(self.get_block_at(index, align_mask, size))
     }
 
     fn get_block_at(&mut self, index: usize, align_mask: u64, size: u64) -> FreeListBlock<M> {
@@ -92,20 +84,16 @@ impl<M> FreeList<M> {
             };
 
             region.end = aligned_start;
-            self.total -= block.size;
 
             block
         } else {
             debug_assert_eq!(aligned_start, region.start);
             let region = self.array.remove(index);
-            self.total -= region.end - region.start;
             region.into_block()
         }
     }
 
     pub fn insert_block(&mut self, block: FreeListBlock<M>) {
-        let block_size = block.size;
-
         match self.array.binary_search_by(|b| b.cmp(&block)) {
             Ok(_) => {
                 panic!("Overlapping block found in free list");
@@ -128,7 +116,7 @@ impl<M> FreeList<M> {
                     if next.is_prefix_block(&block) {
                         next.merge_prefix_block(block);
 
-                        if prev.consecutive(&next) {
+                        if prev.consecutive(&*next) {
                             let next = self.array.remove(index);
                             let prev = &mut self.array[index - 1];
                             prev.merge(next);
@@ -152,38 +140,34 @@ impl<M> FreeList<M> {
                 }
             },
         }
-        self.total += block_size;
     }
 
-    pub fn drain(&mut self, dealloc_threshold: u64) -> Option<impl Iterator<Item = M> + '_> {
-        if self.total >= dealloc_threshold {
-            // Time to deallocate
+    pub fn drain(&mut self, keep_last: bool) -> Option<impl Iterator<Item = (M, u64)> + '_> {
+        // Time to deallocate
 
-            // This code was adapted from `Vec::retain`
-            let len = self.array.len();
-            let mut del = 0;
-            {
-                let regions = &mut self.array[..];
+        let len = self.array.len();
 
-                for i in 0..len {
-                    if self.total >= dealloc_threshold && is_arc_unique(&mut regions[i].memory) {
-                        del += 1;
-                    } else if del > 0 {
-                        regions.swap(i - del, i);
-                    }
+        let mut del = 0;
+        {
+            let regions = &mut self.array[..];
+
+            for i in 0..len {
+                if (i < len - 1 || !keep_last) && is_arc_unique(&mut regions[i].memory) {
+                    del += 1;
+                } else if del > 0 {
+                    regions.swap(i - del, i);
                 }
             }
-
-            if del > 0 {
-                let total = &mut self.total;
-                return Some(self.array.drain(len - del..).map(move |region| {
-                    debug_assert_eq!(region.start, 0);
-                    *total -= region.end;
-                    unsafe { arc_unwrap(region.memory) }
-                }));
-            }
         }
-        None
+
+        if del > 0 {
+            Some(self.array.drain(len - del..).map(move |region| {
+                debug_assert_eq!(region.start, 0);
+                (unsafe { arc_unwrap(region.memory) }, region.end)
+            }))
+        } else {
+            None
+        }
     }
 }
 
@@ -318,8 +302,8 @@ unsafe impl<M> Send for FreeListBlock<M> where M: Send {}
 #[derive(Debug)]
 pub(crate) struct FreeListAllocator<M> {
     freelist: FreeList<M>,
-    dealloc_threshold: u64,
     chunk_size: u64,
+    final_chunk_size: u64,
     memory_type: u32,
     props: MemoryPropertyFlags,
     atom_mask: u64,
@@ -353,20 +337,26 @@ where
     M: MemoryBounds + 'static,
 {
     pub fn new(
-        chunk_size: u64,
-        dealloc_threshold: u64,
+        starting_chunk_size: u64,
+        final_chunk_size: u64,
         memory_type: u32,
         props: MemoryPropertyFlags,
         atom_mask: u64,
     ) -> Self {
-        debug_assert_eq!(align_down(chunk_size, atom_mask), chunk_size);
+        debug_assert_eq!(
+            align_down(starting_chunk_size, atom_mask),
+            starting_chunk_size
+        );
 
-        let chunk_size = min(chunk_size, isize::max_value());
+        let starting_chunk_size = min(starting_chunk_size, isize::max_value());
+
+        debug_assert_eq!(align_down(final_chunk_size, atom_mask), final_chunk_size);
+        let final_chunk_size = min(final_chunk_size, isize::max_value());
 
         FreeListAllocator {
             freelist: FreeList::new(),
-            chunk_size,
-            dealloc_threshold,
+            chunk_size: starting_chunk_size,
+            final_chunk_size,
             memory_type,
             props,
             atom_mask,
@@ -387,26 +377,37 @@ where
         allocations_remains: &mut u32,
     ) -> Result<FreeListBlock<M>, AllocationError> {
         debug_assert!(
-            self.chunk_size >= size,
+            self.final_chunk_size >= size,
             "GpuAllocator must not request allocations equal or greater to chunks size"
         );
 
         let size = align_up(size, self.atom_mask).expect(
-            "Any value not greater than chunk size (which is aligned) has to fit for alignment",
+            "Any value not greater than final chunk size (which is aligned) has to fit for alignment",
         );
 
         let align_mask = align_mask | self.atom_mask;
         let host_visible = self.host_visible();
 
-        if let Some(block) = self.freelist.get_block(align_mask, size) {
-            self.total_allocations += 1;
-            return Ok(block);
+        if size <= self.chunk_size {
+            // Otherwise there can't be any sufficiently large free blocks
+            if let Some(block) = self.freelist.get_block(align_mask, size) {
+                self.total_allocations += 1;
+                return Ok(block);
+            }
         }
 
         // New allocation is required.
         if *allocations_remains == 0 {
             return Err(AllocationError::TooManyObjects);
         }
+
+        if size > self.chunk_size {
+            let multiple = (size - 1) / self.chunk_size + 1;
+            let multiple = multiple.next_power_of_two();
+
+            self.chunk_size = (self.chunk_size * multiple).min(self.final_chunk_size);
+        }
+
         let mut memory = device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
         *allocations_remains -= 1;
         heap.alloc(self.chunk_size);
@@ -440,6 +441,12 @@ where
             self.freelist
                 .get_block_from_new_memory(memory, self.chunk_size, ptr, align_mask, size);
 
+        if self.chunk_size < self.final_chunk_size {
+            // Double next chunk size
+            // Limit to final value.
+            self.chunk_size = (self.chunk_size * 2).min(self.final_chunk_size);
+        }
+
         self.total_allocations += 1;
         Ok(block)
     }
@@ -457,12 +464,11 @@ where
         self.freelist.insert_block(block);
         self.total_deallocations += 1;
 
-        if let Some(memory) = self.freelist.drain(self.dealloc_threshold) {
-            let chunk_size = self.chunk_size;
-            memory.for_each(|m| {
-                device.deallocate_memory(m);
+        if let Some(memory) = self.freelist.drain(true) {
+            memory.for_each(|(memory, size)| {
+                device.deallocate_memory(memory);
                 *allocations_remains += 1;
-                heap.dealloc(chunk_size);
+                heap.dealloc(size);
             });
         }
     }
@@ -476,23 +482,31 @@ where
     /// * Same `device` instance must be used for all interactions with one `GpuAllocator` instance
     ///   and memory blocks allocated from it
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, device)))]
-    pub unsafe fn cleanup(&mut self, device: &impl MemoryDevice<M>) {
-        if let Some(memory) = self.freelist.drain(0) {
-            memory.for_each(|m| device.deallocate_memory(m));
+    pub unsafe fn cleanup(
+        &mut self,
+        device: &impl MemoryDevice<M>,
+        heap: &mut Heap,
+        allocations_remains: &mut u32,
+    ) {
+        if let Some(memory) = self.freelist.drain(false) {
+            memory.for_each(|(memory, size)| {
+                device.deallocate_memory(memory);
+                *allocations_remains += 1;
+                heap.dealloc(size);
+            });
         }
 
         #[cfg(feature = "tracing")]
         {
-            if self.total_allocations == self.total_deallocations {
-                if !self.freelist.array.is_empty() {
-                    tracing::error!(
-                        "Some regions were not deallocated on cleanup, although all blocks are free.
+            if self.total_allocations == self.total_deallocations && !self.freelist.array.is_empty()
+            {
+                tracing::error!(
+                    "Some regions were not deallocated on cleanup, although all blocks are free.
                         This is a bug in `FreeBlockAllocator`.
                         See array of free blocks left:
                         {:#?}",
-                        self.freelist.array,
-                    );
-                }
+                    self.freelist.array,
+                );
             }
         }
     }

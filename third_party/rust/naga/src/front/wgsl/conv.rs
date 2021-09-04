@@ -5,8 +5,11 @@ pub fn map_storage_class(word: &str, span: Span) -> Result<crate::StorageClass, 
         "private" => Ok(crate::StorageClass::Private),
         "workgroup" => Ok(crate::StorageClass::WorkGroup),
         "uniform" => Ok(crate::StorageClass::Uniform),
-        "storage" => Ok(crate::StorageClass::Storage),
+        "storage" => Ok(crate::StorageClass::Storage {
+            access: crate::StorageAccess::default(),
+        }),
         "push_constant" => Ok(crate::StorageClass::PushConstant),
+        "function" => Ok(crate::StorageClass::Function),
         _ => Err(Error::UnknownStorageClass(span)),
     }
 }
@@ -20,6 +23,7 @@ pub fn map_built_in(word: &str, span: Span) -> Result<crate::BuiltIn, Error<'_>>
         // fragment
         "front_facing" => crate::BuiltIn::FrontFacing,
         "frag_depth" => crate::BuiltIn::FragDepth,
+        "primitive_index" => crate::BuiltIn::PrimitiveIndex,
         "sample_index" => crate::BuiltIn::SampleIndex,
         "sample_mask" => crate::BuiltIn::SampleMask,
         // compute
@@ -28,6 +32,7 @@ pub fn map_built_in(word: &str, span: Span) -> Result<crate::BuiltIn, Error<'_>>
         "local_invocation_index" => crate::BuiltIn::LocalInvocationIndex,
         "workgroup_id" => crate::BuiltIn::WorkGroupId,
         "workgroup_size" => crate::BuiltIn::WorkGroupSize,
+        "num_workgroups" => crate::BuiltIn::NumWorkGroups,
         _ => return Err(Error::UnknownBuiltin(span)),
     })
 }
@@ -52,6 +57,7 @@ pub fn map_interpolation(word: &str, span: Span) -> Result<crate::Interpolation,
 
 pub fn map_sampling(word: &str, span: Span) -> Result<crate::Sampling, Error<'_>> {
     match word {
+        "center" => Ok(crate::Sampling::Center),
         "centroid" => Ok(crate::Sampling::Centroid),
         "sample" => Ok(crate::Sampling::Sample),
         _ => Err(Error::UnknownAttribute(span)),

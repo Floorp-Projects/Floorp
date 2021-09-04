@@ -72,7 +72,7 @@ class MachCommands(MachCommandBase):
             raise UserError("Cannot pass both --requirements and --no-virtualenv.")
 
         if no_virtualenv:
-            from mach_bootstrap import mach_sys_path
+            from mach_initialize import mach_sys_path
 
             python_path = sys.executable
             append_env["PYTHONPATH"] = os.pathsep.join(

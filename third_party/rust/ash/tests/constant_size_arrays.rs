@@ -24,7 +24,6 @@ fn assert_struct_field_is_array() {
 #[test]
 #[allow(dead_code)]
 fn assert_ffi_array_param_is_pointer() {
-    use ash::version::DeviceV1_0;
     // don't run it, just make sure it compiles
     unsafe fn dummy(device: &ash::Device, cmd_buffer: ash::vk::CommandBuffer) {
         let blend_constants: [f32; 4] = [0.0, 0.0, 0.0, 0.0];

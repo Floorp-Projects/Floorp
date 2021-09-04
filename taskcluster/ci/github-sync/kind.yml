@@ -30,18 +30,6 @@ job-defaults:
         using: run-task
 
 jobs:
-    wgpu:
-        description: Sync wgpu to github mirror
-        secret: gecko/gfx-github-sync/token
-        run:
-            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh wgpu gfx/wgpu gfx-rs/wgpu bors'
-        run-on-projects: []
-        when:
-            files-changed:
-                - 'gfx/wgpu/**'
-        treeherder:
-            symbol: GhS(wgpu)
-
     webrender:
         description: Sync webrender to github mirror
         secret: gecko/gfx-github-sync/token

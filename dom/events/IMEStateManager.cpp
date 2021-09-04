@@ -1310,8 +1310,9 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
 
   // Get the input content corresponding to the focused node,
   // which may be an anonymous child of the input content.
-  nsIContent* inputContent = aContent.FindFirstNonChromeOnlyAccessContent();
-  if (!inputContent->IsHTMLElement(nsGkAtoms::input)) {
+  HTMLInputElement* inputElement = HTMLInputElement::FromNode(
+      aContent.FindFirstNonChromeOnlyAccessContent());
+  if (!inputElement) {
     return;
   }
 
@@ -1319,37 +1320,34 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
   // return won't submit the form, use "maybenext".
   bool willSubmit = false;
   bool isLastElement = false;
-  nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
-  if (control) {
-    HTMLFormElement* formElement = control->GetForm();
-    // is this a form and does it have a default submit element?
-    if (formElement) {
-      if (formElement->IsLastActiveElement(control)) {
-        isLastElement = true;
-      }
-
-      if (formElement->GetDefaultSubmitElement()) {
-        willSubmit = true;
-        // is this an html form...
-      } else {
-        // ... and does it only have a single text input element ?
-        if (!formElement->ImplicitSubmissionIsDisabled() ||
-            // ... or is this the last non-disabled element?
-            isLastElement) {
-          willSubmit = true;
-        }
-      }
+  HTMLFormElement* formElement = inputElement->GetForm();
+  // is this a form and does it have a default submit element?
+  if (formElement) {
+    if (formElement->IsLastActiveElement(inputElement)) {
+      isLastElement = true;
     }
 
-    if (!isLastElement && formElement) {
-      // If next tabbable content in form is text control, hint should be "next"
-      // even there is submit in form.
-      if (IsNextFocusableElementTextControl(inputContent->AsElement())) {
-        // This is focusable text control
-        // XXX What good hint for read only field?
-        aActionHint.AssignLiteral("maybenext");
-        return;
+    if (formElement->GetDefaultSubmitElement()) {
+      willSubmit = true;
+      // is this an html form...
+    } else {
+      // ... and does it only have a single text input element ?
+      if (!formElement->ImplicitSubmissionIsDisabled() ||
+          // ... or is this the last non-disabled element?
+          isLastElement) {
+        willSubmit = true;
       }
+    }
+  }
+
+  if (!isLastElement && formElement) {
+    // If next tabbable content in form is text control, hint should be "next"
+    // even there is submit in form.
+    if (IsNextFocusableElementTextControl(inputElement)) {
+      // This is focusable text control
+      // XXX What good hint for read only field?
+      aActionHint.AssignLiteral("maybenext");
+      return;
     }
   }
 
@@ -1357,7 +1355,7 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
     return;
   }
 
-  if (control->ControlType() == FormControlType::InputSearch) {
+  if (inputElement->ControlType() == FormControlType::InputSearch) {
     aActionHint.AssignLiteral("search");
     return;
   }

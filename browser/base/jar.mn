@@ -16,6 +16,7 @@ browser.jar:
         content/browser/logos/etp-mobile.svg          (content/logos/etp-mobile.svg)
         content/browser/logos/lockwise.svg            (content/logos/lockwise.svg)
         content/browser/logos/monitor.svg             (content/logos/monitor.svg)
+        content/browser/logos/vpn-promo-logo.svg      (content/logos/vpn-promo-logo.svg)
         content/browser/logos/proxy-light.svg         (content/logos/proxy-light.svg)
         content/browser/logos/proxy-dark.svg          (content/logos/proxy-dark.svg)
         content/browser/logos/send.svg                (content/logos/send.svg)
@@ -104,6 +105,8 @@ browser.jar:
         content/browser/blockedSite.js                  (content/blockedSite.js)
         content/browser/upgradeDialog.html            (content/upgradeDialog.html)
         content/browser/upgradeDialog.js              (content/upgradeDialog.js)
+        content/browser/spotlight.html                (content/spotlight.html)
+        content/browser/spotlight.js                  (content/spotlight.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/certerror/aboutNetError.xhtml
 

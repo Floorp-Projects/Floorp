@@ -23,8 +23,11 @@ pub struct Config {
     /// This won't make much sense if this value is lesser than `dedicated_threshold`.
     pub transient_dedicated_threshold: u64,
 
-    /// Size in bytes for chunks for linear allocator.
-    pub linear_chunk: u64,
+    /// Size in bytes of first chunk in free-list allocator.
+    pub starting_free_list_chunk: u64,
+
+    /// Upper limit for size in bytes of chunks in free-list allocator.
+    pub final_free_list_chunk: u64,
 
     /// Minimal size for buddy allocator.
     pub minimal_buddy_size: u64,
@@ -52,7 +55,8 @@ impl Config {
             dedicated_threshold: potato.dedicated_threshold * 1024,
             preferred_dedicated_threshold: potato.preferred_dedicated_threshold * 1024,
             transient_dedicated_threshold: potato.transient_dedicated_threshold * 1024,
-            linear_chunk: potato.linear_chunk * 1024,
+            starting_free_list_chunk: potato.starting_free_list_chunk * 1024,
+            final_free_list_chunk: potato.final_free_list_chunk * 1024,
             minimal_buddy_size: potato.minimal_buddy_size * 1024,
             initial_buddy_dedicated_size: potato.initial_buddy_dedicated_size * 1024,
         }
@@ -64,7 +68,8 @@ impl Config {
             dedicated_threshold: 32 * 1024,
             preferred_dedicated_threshold: 1024,
             transient_dedicated_threshold: 128 * 1024,
-            linear_chunk: 128 * 1024,
+            starting_free_list_chunk: 8 * 1024,
+            final_free_list_chunk: 128 * 1024,
             minimal_buddy_size: 1,
             initial_buddy_dedicated_size: 8 * 1024,
         }

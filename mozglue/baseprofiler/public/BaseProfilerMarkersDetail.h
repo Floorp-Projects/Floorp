@@ -227,7 +227,7 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
         }
         static mozilla::MarkerSchema MarkerTypeDisplay() {
           using MS = mozilla::MarkerSchema;
-          MS schema{MS::Location::markerChart, MS::Location::markerTable};
+          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
           // No user data to display.
           return schema;
         }

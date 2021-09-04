@@ -25,7 +25,7 @@ from mach.registrar import Registrar
 from mozbuild.mozconfig import MozconfigLoader
 from mozbuild.base import MachCommandBase
 
-# Command files like this are listed in build/mach_bootstrap.py in alphabetical
+# Command files like this are listed in build/mach_initialize.py in alphabetical
 # order, but we need to access commands earlier in the sorted order to grab
 # their arguments. Force them to load now.
 import mozbuild.artifact_commands  # NOQA: F401
