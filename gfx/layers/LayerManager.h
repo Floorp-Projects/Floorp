@@ -523,18 +523,6 @@ class LayerManager : public WindowRenderer {
 
   virtual TransactionId GetLastTransactionId() { return TransactionId{0}; }
 
-  void RegisterPayload(const CompositionPayload& aPayload) {
-    mPayload.AppendElement(aPayload);
-    MOZ_ASSERT(mPayload.Length() < 10000);
-  }
-
-  void RegisterPayloads(const nsTArray<CompositionPayload>& aPayload) {
-    mPayload.AppendElements(aPayload);
-    MOZ_ASSERT(mPayload.Length() < 10000);
-  }
-
-  virtual void PayloadPresented(const TimeStamp& aTimeStamp);
-
   void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
 
  protected:
@@ -559,14 +547,6 @@ class LayerManager : public WindowRenderer {
   bool mContainsSVG;
   // The count of pixels that were painted in the current transaction.
   uint32_t mPaintedPixelCount;
-  // The payload associated with currently pending painting work, for
-  // client layer managers that typically means payload that is part of the
-  // 'upcoming transaction', for HostLayerManagers this typically means
-  // what has been included in received transactions to be presented on the
-  // next composite.
-  // IMPORTANT: Clients should take care to clear this or risk it slowly
-  // growing out of control.
-  nsTArray<CompositionPayload> mPayload;
 
  public:
   /*

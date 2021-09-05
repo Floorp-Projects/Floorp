@@ -188,11 +188,14 @@ class WebRenderLayerManager final : public LayerManager {
 
   RenderRootStateManager* GetRenderRootStateManager() { return &mStateManager; }
 
-  virtual void PayloadPresented(const TimeStamp& aTimeStamp) override;
-
   void TakeCompositionPayloads(nsTArray<CompositionPayload>& aPayloads);
 
   void GetFrameUniformity(FrameUniformityData* aOutData) override;
+
+  void RegisterPayloads(const nsTArray<CompositionPayload>& aPayload) {
+    mPayload.AppendElements(aPayload);
+    MOZ_ASSERT(mPayload.Length() < 10000);
+  }
 
  private:
   /**
@@ -218,6 +221,15 @@ class WebRenderLayerManager final : public LayerManager {
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
+
+  // The payload associated with currently pending painting work, for
+  // client layer managers that typically means payload that is part of the
+  // 'upcoming transaction', for HostLayerManagers this typically means
+  // what has been included in received transactions to be presented on the
+  // next composite.
+  // IMPORTANT: Clients should take care to clear this or risk it slowly
+  // growing out of control.
+  nsTArray<CompositionPayload> mPayload;
 
   // When we're doing a transaction in order to draw to a non-default
   // target, the layers transaction is only performed in order to send
