@@ -8516,18 +8516,6 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
   aDrawTarget.StrokeLine(p1, p2, aPattern, aStrokeOptions, aDrawOptions);
 }
 
-namespace layout {
-
-void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
-                                      nsPresContext* aPresContext) {
-  auto backendType = aManager->GetBackendType();
-  if (backendType == LayersBackend::LAYERS_CLIENT ||
-      backendType == LayersBackend::LAYERS_WR) {
-    aManager->SetTransactionIdAllocator(aPresContext->RefreshDriver());
-  }
-}
-
-}  // namespace layout
 }  // namespace mozilla
 
 /* static */

@@ -1138,21 +1138,6 @@ void nsWebBrowser::EnsureDocShellTreeOwner() {
   mDocShellTreeOwner->WebBrowser(this);
 }
 
-static void DrawPaintedLayer(PaintedLayer* aLayer, gfxContext* aContext,
-                             const nsIntRegion& aRegionToDraw,
-                             const nsIntRegion& aDirtyRegion,
-                             DrawRegionClip aClip,
-                             const nsIntRegion& aRegionToInvalidate,
-                             void* aCallbackData) {
-  DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
-
-  ColorPattern color(ToDeviceColor(*static_cast<nscolor*>(aCallbackData)));
-  nsIntRect dirtyRect = aRegionToDraw.GetBounds();
-  aDrawTarget.FillRect(
-      Rect(dirtyRect.X(), dirtyRect.Y(), dirtyRect.Width(), dirtyRect.Height()),
-      color);
-}
-
 void nsWebBrowser::WindowActivated() {
 #if defined(DEBUG_smaug)
   RefPtr<dom::Document> document = mDocShell->GetDocument();
@@ -1186,19 +1171,7 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget,
     }
     return true;
   }
-  LayerManager* layerManager = renderer->AsLayerManager();
-  NS_ASSERTION(layerManager, "Must be in paint event");
-
-  layerManager->BeginTransaction();
-  RefPtr<PaintedLayer> root = layerManager->CreatePaintedLayer();
-  if (root) {
-    nsIntRect dirtyRect = aRegion.GetBounds().ToUnknownRect();
-    root->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(dirtyRect));
-    layerManager->SetRoot(root);
-  }
-
-  layerManager->EndTransaction(DrawPaintedLayer, &mBackgroundColor);
-  return true;
+  return false;
 }
 
 void nsWebBrowser::FocusActivate(uint64_t aActionId) {
