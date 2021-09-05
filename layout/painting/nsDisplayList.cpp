@@ -3117,7 +3117,7 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
 nsDisplayBackgroundImage::nsDisplayBackgroundImage(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aInitData,
     nsIFrame* aFrameForBounds)
-    : nsDisplayImageContainer(aBuilder, aFrame),
+    : nsPaintedDisplayItem(aBuilder, aFrame),
       mBackgroundStyle(aInitData.backgroundStyle),
       mImage(aInitData.image),
       mDependentFrame(nullptr),
@@ -3595,13 +3595,6 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
   nsRegion rgn = nsLayoutUtils::RoundedRectIntersectRect(aRoundedRect, aRadii,
                                                          aContainedRect);
   return rgn.Contains(aContainedRect);
-}
-
-nsRect nsDisplayBackgroundImage::GetDestRect() const { return mDestRect; }
-
-already_AddRefed<imgIContainer> nsDisplayBackgroundImage::GetImage() {
-  nsCOMPtr<imgIContainer> image = mImage;
-  return image.forget();
 }
 
 static void CheckForBorderItem(nsDisplayItem* aItem, uint32_t& aFlags) {

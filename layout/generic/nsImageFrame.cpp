@@ -2038,13 +2038,8 @@ void nsDisplayImage::ComputeInvalidationRegion(
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
 
-  nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                     aInvalidRegion);
-}
-
-already_AddRefed<imgIContainer> nsDisplayImage::GetImage() {
-  nsCOMPtr<imgIContainer> image = mImage;
-  return image.forget();
+  nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                  aInvalidRegion);
 }
 
 nsRect nsDisplayImage::GetDestRect() const {

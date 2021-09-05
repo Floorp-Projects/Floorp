@@ -155,20 +155,14 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
 };  // class nsImageBoxFrame
 
 namespace mozilla {
-class nsDisplayXULImage final : public nsDisplayImageContainer {
+class nsDisplayXULImage final : public nsPaintedDisplayItem {
  public:
   nsDisplayXULImage(nsDisplayListBuilder* aBuilder, nsImageBoxFrame* aFrame)
-      : nsDisplayImageContainer(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULImage);
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULImage)
 
-  virtual already_AddRefed<imgIContainer> GetImage() override;
-  virtual nsRect GetDestRect() const override;
-  virtual void UpdateDrawResult(
-      mozilla::image::ImgDrawResult aResult) override {
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, aResult);
-  }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = true;
