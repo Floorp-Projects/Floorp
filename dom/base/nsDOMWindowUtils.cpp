@@ -3186,63 +3186,6 @@ nsDOMWindowUtils::GetDisplayDPI(float* aDPI) {
   return NS_OK;
 }
 
-#ifdef DEBUG
-static bool CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset,
-                            nsIntRegion* aCoveredRegion) {
-  gfx::Matrix transform;
-  if (!aLayer->GetTransform().Is2D(&transform) ||
-      transform.HasNonIntegerTranslation()) {
-    return false;
-  }
-  transform.NudgeToIntegers();
-  IntPoint offset = aOffset + IntPoint::Truncate(transform._31, transform._32);
-
-  Layer* child = aLayer->GetFirstChild();
-  if (child) {
-    while (child) {
-      if (!CheckLeafLayers(child, offset, aCoveredRegion)) return false;
-      child = child->GetNextSibling();
-    }
-  } else {
-    nsIntRegion rgn = aLayer->GetVisibleRegion().ToUnknownRegion();
-    rgn.MoveBy(offset);
-    nsIntRegion tmp;
-    tmp.And(rgn, *aCoveredRegion);
-    if (!tmp.IsEmpty()) return false;
-    aCoveredRegion->Or(*aCoveredRegion, rgn);
-  }
-
-  return true;
-}
-#endif
-
-NS_IMETHODIMP
-nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult) {
-  *aResult = true;
-#ifdef DEBUG
-  nsIWidget* widget = GetWidget();
-  if (!widget) return NS_ERROR_FAILURE;
-  WindowRenderer* renderer = widget->GetWindowRenderer();
-  if (!renderer) return NS_ERROR_FAILURE;
-  LayerManager* manager = renderer->AsLayerManager();
-  if (!manager) return NS_ERROR_FAILURE;
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) return NS_ERROR_FAILURE;
-  Layer* root = manager->GetRoot();
-  if (!root) return NS_ERROR_FAILURE;
-
-  nsIntPoint offset(0, 0);
-  nsIntRegion coveredRegion;
-  if (!CheckLeafLayers(root, offset, &coveredRegion)) {
-    *aResult = false;
-  }
-  if (!coveredRegion.IsEqual(root->GetVisibleRegion().ToUnknownRegion())) {
-    *aResult = false;
-  }
-#endif
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMWindowUtils::CheckAndClearPaintedState(Element* aElement, bool* aResult) {
   if (!aElement) {
