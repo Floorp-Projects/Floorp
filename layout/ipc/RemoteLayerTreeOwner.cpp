@@ -126,9 +126,9 @@ void RemoteLayerTreeOwner::GetTextureFactoryIdentifier(
   RefPtr<WindowRenderer> renderer =
       mBrowserParent ? GetWindowRenderer(mBrowserParent) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
-  if (renderer && renderer->AsLayerManager()) {
+  if (renderer && renderer->AsWebRender()) {
     *aTextureFactoryIdentifier =
-        renderer->AsLayerManager()->GetTextureFactoryIdentifier();
+        renderer->AsWebRender()->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }
