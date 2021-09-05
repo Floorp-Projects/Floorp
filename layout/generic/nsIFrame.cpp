@@ -7352,8 +7352,6 @@ void nsIFrame::InvalidateFrameWithRect(const nsRect& aRect,
 /*static*/
 uint8_t nsIFrame::sLayerIsPrerenderedDataKey;
 
-bool nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult) { return false; }
-
 bool nsIFrame::IsInvalid(nsRect& aRect) {
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
     return false;

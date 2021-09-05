@@ -112,6 +112,7 @@ struct ScrollMetadata;
 class Image;
 class StackingContextHelper;
 class Layer;
+class WebRenderLayerManager;
 
 }  // namespace layers
 }  // namespace mozilla
@@ -2705,9 +2706,9 @@ class nsLayoutUtils {
    * @param aKey The key under which to log the data.
    * @param aValue The value of the data to be logged.
    */
-  static void LogTestDataForPaint(mozilla::layers::LayerManager* aManager,
-                                  ViewID aScrollId, const std::string& aKey,
-                                  const std::string& aValue) {
+  static void LogTestDataForPaint(
+      mozilla::layers::WebRenderLayerManager* aManager, ViewID aScrollId,
+      const std::string& aKey, const std::string& aValue) {
     DoLogTestDataForPaint(aManager, aScrollId, aKey, aValue);
   }
 
@@ -2717,9 +2718,9 @@ class nsLayoutUtils {
    * value. The type passed must support streaming to an std::ostream.
    */
   template <typename Value>
-  static void LogTestDataForPaint(mozilla::layers::LayerManager* aManager,
-                                  ViewID aScrollId, const std::string& aKey,
-                                  const Value& aValue) {
+  static void LogTestDataForPaint(
+      mozilla::layers::WebRenderLayerManager* aManager, ViewID aScrollId,
+      const std::string& aKey, const Value& aValue) {
     DoLogTestDataForPaint(aManager, aScrollId, aKey, mozilla::ToString(aValue));
   }
 
@@ -2760,9 +2761,9 @@ class nsLayoutUtils {
   static ScrollMetadata ComputeScrollMetadata(
       const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
       nsIContent* aContent, const nsIFrame* aReferenceFrame,
-      mozilla::layers::LayerManager* aLayerManager, ViewID aScrollParentId,
-      const nsSize& aScrollPortSize, const mozilla::Maybe<nsRect>& aClipRect,
-      bool aIsRoot);
+      mozilla::layers::WebRenderLayerManager* aLayerManager,
+      ViewID aScrollParentId, const nsSize& aScrollPortSize,
+      const mozilla::Maybe<nsRect>& aClipRect, bool aIsRoot);
 
   /**
    * Returns the metadata to put onto the root layer of a layer tree, if one is
@@ -2771,7 +2772,7 @@ class nsLayoutUtils {
    */
   static mozilla::Maybe<ScrollMetadata> GetRootMetadata(
       nsDisplayListBuilder* aBuilder,
-      mozilla::layers::LayerManager* aLayerManager,
+      mozilla::layers::WebRenderLayerManager* aLayerManager,
       const std::function<bool(ViewID& aScrollId)>& aCallback);
 
   /**
@@ -3009,9 +3010,9 @@ class nsLayoutUtils {
   /**
    * Helper function for LogTestDataForPaint().
    */
-  static void DoLogTestDataForPaint(mozilla::layers::LayerManager* aManager,
-                                    ViewID aScrollId, const std::string& aKey,
-                                    const std::string& aValue);
+  static void DoLogTestDataForPaint(
+      mozilla::layers::WebRenderLayerManager* aManager, ViewID aScrollId,
+      const std::string& aKey, const std::string& aValue);
 
   static bool IsAPZTestLoggingEnabled();
 

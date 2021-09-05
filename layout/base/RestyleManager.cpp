@@ -1068,22 +1068,7 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // layer activity index, so does the restyle count. Therefore, using
       // eCSSProperty_transform should be fine.
       ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_transform);
-      // If we're not already going to do an invalidating paint, see
-      // if we can get away with only updating the transform on a
-      // layer for this frame, and not scheduling an invalidating
-      // paint.
-      if (!needInvalidatingPaint) {
-        nsDisplayItem::Layer* layer;
-        needInvalidatingPaint |= !aFrame->TryUpdateTransformOnly(&layer);
-
-        if (!needInvalidatingPaint) {
-          // Since we're not going to paint, we need to resend animation
-          // data to the layer.
-          MOZ_ASSERT(layer, "this can't happen if there's no layer");
-          nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-              layer, nullptr, nullptr, aFrame, DisplayItemType::TYPE_TRANSFORM);
-        }
-      }
+      needInvalidatingPaint = true;
     }
     if (aChange & nsChangeHint_ChildrenOnlyTransform) {
       needInvalidatingPaint = true;

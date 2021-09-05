@@ -31,7 +31,7 @@ InProcessCompositorSession::InProcessCompositorSession(
 
 /* static */
 RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
-    nsBaseWidget* aWidget, LayerManager* aLayerManager,
+    nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize, uint32_t aNamespace) {

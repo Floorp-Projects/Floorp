@@ -19,7 +19,7 @@ namespace layers {
 
 class CompositorBridgeChild;
 class CompositorManagerParent;
-class LayerManager;
+class WebRenderLayerManager;
 
 class CompositorManagerChild : public PCompositorManagerChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerChild)
@@ -35,12 +35,13 @@ class CompositorManagerChild : public PCompositorManagerChild {
   static bool CreateContentCompositorBridge(uint32_t aNamespace);
 
   static already_AddRefed<CompositorBridgeChild> CreateWidgetCompositorBridge(
-      uint64_t aProcessToken, LayerManager* aLayerManager, uint32_t aNamespace,
-      CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
-      bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize);
+      uint64_t aProcessToken, WebRenderLayerManager* aLayerManager,
+      uint32_t aNamespace, CSSToLayoutDeviceScale aScale,
+      const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
+      const gfx::IntSize& aSurfaceSize);
 
   static already_AddRefed<CompositorBridgeChild>
-  CreateSameProcessWidgetCompositorBridge(LayerManager* aLayerManager,
+  CreateSameProcessWidgetCompositorBridge(WebRenderLayerManager* aLayerManager,
                                           uint32_t aNamespace);
 
   static CompositorManagerChild* GetInstance() {
