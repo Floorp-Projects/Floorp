@@ -9,7 +9,6 @@ namespace mozilla {
 
 using namespace gfx;
 using layers::ImageContainer;
-using layers::LayerManager;
 
 namespace image {
 
@@ -52,10 +51,10 @@ bool FrozenImage::IsNonAnimated() const {
 }
 
 NS_IMETHODIMP_(bool)
-FrozenImage::IsImageContainerAvailable(LayerManager* aManager,
+FrozenImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                        uint32_t aFlags) {
   if (IsNonAnimated()) {
-    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+    return InnerImage()->IsImageContainerAvailable(aRenderer, aFlags);
   }
   return false;
 }

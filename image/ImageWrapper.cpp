@@ -18,7 +18,6 @@ using gfx::IntSize;
 using gfx::SamplingFilter;
 using gfx::SourceSurface;
 using layers::ImageContainer;
-using layers::LayerManager;
 
 namespace image {
 
@@ -166,9 +165,9 @@ NS_IMETHODIMP_(bool)
 ImageWrapper::WillDrawOpaqueNow() { return mInnerImage->WillDrawOpaqueNow(); }
 
 NS_IMETHODIMP_(bool)
-ImageWrapper::IsImageContainerAvailable(LayerManager* aManager,
+ImageWrapper::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                         uint32_t aFlags) {
-  return mInnerImage->IsImageContainerAvailable(aManager, aFlags);
+  return mInnerImage->IsImageContainerAvailable(aRenderer, aFlags);
 }
 
 NS_IMETHODIMP_(ImgDrawResult)

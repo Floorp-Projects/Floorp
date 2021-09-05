@@ -25,7 +25,6 @@ namespace mozilla {
 
 using namespace gfx;
 using layers::ImageContainer;
-using layers::LayerManager;
 using std::make_pair;
 using std::max;
 using std::modf;
@@ -290,10 +289,10 @@ std::pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
 }
 
 NS_IMETHODIMP_(bool)
-ClippedImage::IsImageContainerAvailable(LayerManager* aManager,
+ClippedImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                         uint32_t aFlags) {
   if (!ShouldClip()) {
-    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+    return InnerImage()->IsImageContainerAvailable(aRenderer, aFlags);
   }
   return false;
 }

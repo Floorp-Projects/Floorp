@@ -21,7 +21,6 @@ namespace mozilla {
 
 using namespace gfx;
 using layers::ImageContainer;
-using layers::LayerManager;
 
 namespace image {
 
@@ -148,10 +147,10 @@ OrientedImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
 }
 
 NS_IMETHODIMP_(bool)
-OrientedImage::IsImageContainerAvailable(LayerManager* aManager,
+OrientedImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                          uint32_t aFlags) {
   if (mOrientation.IsIdentity()) {
-    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+    return InnerImage()->IsImageContainerAvailable(aRenderer, aFlags);
   }
   return false;
 }

@@ -19,7 +19,6 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/layers/LayerManager.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
@@ -809,10 +808,10 @@ Tuple<ImgDrawResult, IntSize> VectorImage::GetImageContainerSize(
 }
 
 NS_IMETHODIMP_(bool)
-VectorImage::IsImageContainerAvailable(LayerManager* aManager,
+VectorImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                        uint32_t aFlags) {
   if (mError || !mIsFullyLoaded ||
-      aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
+      aRenderer->GetBackendType() != LayersBackend::LAYERS_WR) {
     return false;
   }
 

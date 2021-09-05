@@ -3615,7 +3615,7 @@ static void CheckForBorderItem(nsDisplayItem* aItem, uint32_t& aFlags) {
 }
 
 bool nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(
-    LayerManager* aManager, nsDisplayListBuilder* aBuilder) {
+    WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder) {
   if (aBuilder) {
     mImageFlags = aBuilder->GetBackgroundPaintFlags();
   }
