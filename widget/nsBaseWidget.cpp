@@ -385,10 +385,10 @@ void nsBaseWidget::DestroyCompositor() {
 // This prevents the layer manager from starting a new transaction during
 // shutdown.
 void nsBaseWidget::RevokeTransactionIdAllocator() {
-  if (!mWindowRenderer || !mWindowRenderer->AsLayerManager()) {
+  if (!mWindowRenderer || !mWindowRenderer->AsWebRender()) {
     return;
   }
-  mWindowRenderer->AsLayerManager()->SetTransactionIdAllocator(nullptr);
+  mWindowRenderer->AsWebRender()->SetTransactionIdAllocator(nullptr);
 }
 
 void nsBaseWidget::ReleaseContentController() {

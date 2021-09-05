@@ -136,6 +136,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/TextEvents.h"  // For WidgetKeyboardEvent
 #include "mozilla/TextEventDispatcherListener.h"
@@ -1147,10 +1148,6 @@ void nsWindow::Destroy() {
    */
   DestroyLayerManager();
 
-  /* We should clear our cached resources now and not wait for the GC to
-   * delete the nsWindow. */
-  ClearCachedResources();
-
   InputDeviceUtils::UnregisterNotification(mDeviceNotifyHandle);
   mDeviceNotifyHandle = nullptr;
 
@@ -1705,10 +1702,6 @@ void nsWindow::Show(bool bState) {
     mOldStyle |= WS_VISIBLE;
   else
     mOldStyle &= ~WS_VISIBLE;
-
-  if (!mIsVisible && wasVisible) {
-    ClearCachedResources();
-  }
 
   if (mWnd) {
     if (bState) {
@@ -4209,30 +4202,15 @@ nsresult nsWindow::OnDefaultButtonLoaded(
 
 void nsWindow::UpdateThemeGeometries(
     const nsTArray<ThemeGeometry>& aThemeGeometries) {
-  RefPtr<LayerManager> layerManager =
-      GetWindowRenderer() ? GetWindowRenderer()->AsLayerManager() : nullptr;
+  RefPtr<WebRenderLayerManager> layerManager =
+      GetWindowRenderer() ? GetWindowRenderer()->AsWebRender() : nullptr;
   if (!layerManager) {
     return;
   }
 
-  nsIntRegion clearRegion;
   if (!HasGlass() ||
       !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-    // Make sure and clear old regions we've set previously. Note HasGlass can
-    // be false for glass desktops if the window we are rendering to doesn't
-    // make use of glass (e.g. fullscreen browsing).
-    layerManager->SetRegionToClear(clearRegion);
     return;
-  }
-
-  // On Win10, force show the top border:
-  if (IsWin10OrLater() && mCustomNonClient && mSizeMode == nsSizeMode_Normal) {
-    RECT rect;
-    ::GetWindowRect(mWnd, &rect);
-    // We want 1 pixel of border for every whole 100% of scaling
-    double borderSize = std::min(1, RoundDown(GetDesktopToDeviceScale().scale));
-    clearRegion.Or(clearRegion, gfx::IntRect::Truncate(
-                                    0, 0, rect.right - rect.left, borderSize));
   }
 
   mWindowButtonsRect = Nothing();
@@ -4249,20 +4227,9 @@ void nsWindow::UpdateThemeGeometries(
         if (!mWindowButtonsRect) {
           mWindowButtonsRect = Some(bounds);
         }
-        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(
-                                        bounds.X(), bounds.Y(), bounds.Width(),
-                                        bounds.Height() - 2.0));
-        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(
-                                        bounds.X() + 1.0, bounds.YMost() - 2.0,
-                                        bounds.Width() - 2.0, 1.0));
-        clearRegion.Or(clearRegion, gfx::IntRect::Truncate(
-                                        bounds.X() + 2.0, bounds.YMost() - 1.0,
-                                        bounds.Width() - 4.0, 1.0));
       }
     }
   }
-
-  layerManager->SetRegionToClear(clearRegion);
 }
 
 void nsWindow::AddWindowOverlayWebRenderCommands(
@@ -8027,22 +7994,6 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent,
     sRollupMsgId = 0;
     sRollupMsgWnd = nullptr;
   }
-}
-
-BOOL CALLBACK nsWindow::ClearResourcesCallback(HWND aWnd, LPARAM aMsg) {
-  nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
-  if (window) {
-    window->ClearCachedResources();
-  }
-  return TRUE;
-}
-
-void nsWindow::ClearCachedResources() {
-  if (mWindowRenderer &&
-      mWindowRenderer->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    mWindowRenderer->AsLayerManager()->ClearCachedResources();
-  }
-  ::EnumChildWindows(mWnd, nsWindow::ClearResourcesCallback, 0);
 }
 
 static bool IsDifferentThreadWindow(HWND aWnd) {

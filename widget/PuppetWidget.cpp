@@ -1009,9 +1009,9 @@ void PuppetWidget::PaintNowIfNeeded() {
 
 void PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
   if (aWhy != MemoryPressureReason::LOW_MEMORY_ONGOING && !mVisible &&
-      mWindowRenderer && mWindowRenderer->AsLayerManager() &&
+      mWindowRenderer && mWindowRenderer->AsWebRender() &&
       XRE_IsContentProcess()) {
-    mWindowRenderer->AsLayerManager()->ClearCachedResources();
+    mWindowRenderer->AsWebRender()->ClearCachedResources();
   }
 }
 

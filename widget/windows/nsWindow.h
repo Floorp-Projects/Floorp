@@ -398,7 +398,6 @@ class nsWindow final : public nsWindowBase {
                                               LPARAM lParam);
   static VOID CALLBACK HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent,
                                           DWORD dwTime);
-  static BOOL CALLBACK ClearResourcesCallback(HWND aChild, LPARAM aParam);
   static BOOL CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
   static BOOL CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
 
@@ -541,7 +540,6 @@ class nsWindow final : public nsWindowBase {
       bool aIntersectWithExisting) override;
   LayoutDeviceIntRegion GetRegionToPaint(bool aForceFullRepaint, PAINTSTRUCT ps,
                                          HDC aDC);
-  void ClearCachedResources();
   nsIWidgetListener* GetPaintListener();
 
   virtual void AddWindowOverlayWebRenderCommands(
