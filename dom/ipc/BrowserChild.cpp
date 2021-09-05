@@ -2674,8 +2674,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
 
   if (mCompositorOptions) {
     MOZ_ASSERT(mPuppetWidget);
-    RefPtr<LayerManager> lm =
-        mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+    RefPtr<WebRenderLayerManager> lm =
+        mPuppetWidget->GetWindowRenderer()->AsWebRender();
     if (lm) {
       // We send the current layer observer epoch to the compositor so that
       // BrowserParent knows whether a layer update notification corresponds to
@@ -2855,8 +2855,8 @@ void BrowserChild::InitRenderingState(
     ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
     gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
     InitAPZState();
-    RefPtr<LayerManager> lm =
-        mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+    RefPtr<WebRenderLayerManager> lm =
+        mPuppetWidget->GetWindowRenderer()->AsWebRender();
     if (lm) {
       lm->SetLayersObserverEpoch(mLayersObserverEpoch);
     }
@@ -3126,8 +3126,8 @@ void BrowserChild::DidComposite(mozilla::layers::TransactionId aTransactionId,
                                 const TimeStamp& aCompositeStart,
                                 const TimeStamp& aCompositeEnd) {
   MOZ_ASSERT(mPuppetWidget);
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+  RefPtr<WebRenderLayerManager> lm =
+      mPuppetWidget->GetWindowRenderer()->AsWebRender();
   MOZ_ASSERT(lm);
 
   if (lm) {
@@ -3161,8 +3161,8 @@ void BrowserChild::DidRequestComposite(const TimeStamp& aCompositeReqStart,
 
 void BrowserChild::ClearCachedResources() {
   MOZ_ASSERT(mPuppetWidget);
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+  RefPtr<WebRenderLayerManager> lm =
+      mPuppetWidget->GetWindowRenderer()->AsWebRender();
   if (lm) {
     lm->ClearCachedResources();
   }
@@ -3234,8 +3234,8 @@ void BrowserChild::ReinitRendering() {
   gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
 
   InitAPZState();
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+  RefPtr<WebRenderLayerManager> lm =
+      mPuppetWidget->GetWindowRenderer()->AsWebRender();
   if (lm) {
     lm->SetLayersObserverEpoch(mLayersObserverEpoch);
   }
@@ -3247,10 +3247,10 @@ void BrowserChild::ReinitRendering() {
 void BrowserChild::ReinitRenderingForDeviceReset() {
   InvalidateLayers();
 
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
-  if (lm && lm->AsWebRenderLayerManager()) {
-    lm->AsWebRenderLayerManager()->DoDestroy(/* aIsSync */ true);
+  RefPtr<WebRenderLayerManager> lm =
+      mPuppetWidget->GetWindowRenderer()->AsWebRender();
+  if (lm) {
+    lm->DoDestroy(/* aIsSync */ true);
   }
 
   // Proceed with destroying and recreating the layer manager.
@@ -3276,8 +3276,8 @@ BrowserChild::OnHideTooltip() {
 void BrowserChild::NotifyJankedAnimations(
     const nsTArray<uint64_t>& aJankedAnimations) {
   MOZ_ASSERT(mPuppetWidget);
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
+  RefPtr<WebRenderLayerManager> lm =
+      mPuppetWidget->GetWindowRenderer()->AsWebRender();
   if (lm) {
     lm->UpdatePartialPrerenderedAnimations(aJankedAnimations);
   }
