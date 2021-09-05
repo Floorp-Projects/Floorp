@@ -6277,7 +6277,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 
   WindowRenderer* renderer = aViewToPaint->GetWidget()->GetWindowRenderer();
   NS_ASSERTION(renderer, "Must be in paint event");
-  LayerManager* layerManager = renderer->AsLayerManager();
+  WebRenderLayerManager* layerManager = renderer->AsWebRender();
   bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
 
   nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
@@ -6318,7 +6318,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
         !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE) &&
         !mNextPaintCompressed) {
       if (layerManager) {
-        MaybeSetupTransactionIdAllocator(layerManager, presContext);
+        layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
       }
 
       if (renderer->EndEmptyTransaction((aFlags & PaintFlags::PaintComposite)
@@ -6374,7 +6374,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                                  wr::ToColorF(ToDeviceColor(bgcolor)));
     WrFiltersHolder wrFilters;
 
-    MaybeSetupTransactionIdAllocator(layerManager, presContext);
+    layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
     layerManager->AsWebRenderLayerManager()->EndTransactionWithoutLayer(
         nullptr, nullptr, std::move(wrFilters), &data, 0);
     return;

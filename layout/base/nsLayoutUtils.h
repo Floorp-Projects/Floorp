@@ -3155,9 +3155,6 @@ class AutoMaybeDisableFontInflation {
   bool mOldValue;
 };
 
-void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
-                                      nsPresContext* aPresContext);
-
 }  // namespace layout
 }  // namespace mozilla
 

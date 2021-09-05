@@ -2333,7 +2333,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     Maybe<double> aDisplayListBuildTime) {
   AUTO_PROFILER_LABEL("nsDisplayList::PaintRoot", GRAPHICS);
 
-  RefPtr<LayerManager> layerManager;
+  RefPtr<WebRenderLayerManager> layerManager;
   WindowRenderer* renderer = nullptr;
   bool widgetTransaction = false;
   bool doBeginTransaction = true;
@@ -2347,11 +2347,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
         MOZ_ASSERT(!(aFlags & PAINT_EXISTING_TRANSACTION));
         renderer = nullptr;
       } else {
-        layerManager = renderer->AsLayerManager();
-        if (layerManager) {
-          layerManager->SetContainsSVG(false);
-        }
-
+        layerManager = renderer->AsWebRender();
         doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
         widgetTransaction = true;
       }
@@ -2383,19 +2379,18 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     MOZ_ASSERT(layerManager);
     if (doBeginTransaction) {
       if (aCtx) {
-        if (!layerManager->BeginTransactionWithTarget(aCtx)) {
+        if (!layerManager->BeginTransactionWithTarget(aCtx, nsCString())) {
           return nullptr;
         }
       } else {
-        if (!layerManager->BeginTransaction()) {
+        if (!layerManager->BeginTransaction(nsCString())) {
           return nullptr;
         }
       }
     }
 
-    bool prevIsCompositingCheap =
-        aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
-    MaybeSetupTransactionIdAllocator(layerManager, presContext);
+    bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(true);
+    layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
 
     bool sent = false;
     if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
@@ -2444,16 +2439,13 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     return layerManager.forget();
   }
 
+  FallbackRenderer* fallback = renderer->AsFallback();
+  MOZ_ASSERT(fallback);
+
   if (doBeginTransaction) {
-    if (aCtx) {
-      MOZ_ASSERT(layerManager);
-      if (!layerManager->BeginTransactionWithTarget(aCtx)) {
-        return nullptr;
-      }
-    } else {
-      if (!renderer->BeginTransaction()) {
-        return nullptr;
-      }
+    MOZ_ASSERT(!aCtx);
+    if (!fallback->BeginTransaction()) {
+      return nullptr;
     }
   }
 
@@ -2463,20 +2455,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     flags = LayerManager::END_NO_COMPOSITE;
   }
 
-  if (layerManager) {
-    MaybeSetupTransactionIdAllocator(layerManager, presContext);
-  }
-
-  bool sent = false;
-  if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
-    sent = renderer->EndEmptyTransaction(flags);
-  }
-
-  if (!sent) {
-    MOZ_ASSERT(renderer->AsFallback());
-    renderer->AsFallback()->EndTransactionWithList(
-        aBuilder, this, presContext->AppUnitsPerDevPixel(), flags);
-  }
+  fallback->EndTransactionWithList(aBuilder, this,
+                                   presContext->AppUnitsPerDevPixel(), flags);
 
   if (widgetTransaction ||
       // SVG-as-an-image docs don't paint as part of the retained layer tree,
@@ -2495,22 +2475,14 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
   if (view) {
     if (shouldInvalidate) {
-      if (!renderer->AsFallback()) {
-        view->GetViewManager()->InvalidateView(view);
-      } else {
-        // If we're the fallback renderer, then we don't need to invalidate
-        // as we've just drawn directly to the window and don't need to do
-        // anything else.
-        NS_ASSERTION(!(aFlags & PAINT_NO_COMPOSITE),
-                     "Must be compositing during fallback");
-      }
+      // If we're the fallback renderer, then we don't need to invalidate
+      // as we've just drawn directly to the window and don't need to do
+      // anything else.
+      NS_ASSERTION(!(aFlags & PAINT_NO_COMPOSITE),
+                   "Must be compositing during fallback");
     }
   }
-
-  if (layerManager) {
-    layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
-  }
-  return layerManager.forget();
+  return nullptr;
 }
 
 nsDisplayItem* nsDisplayList::RemoveBottom() {
