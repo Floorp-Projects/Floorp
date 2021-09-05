@@ -5043,8 +5043,8 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     ctx->SetMatrixDouble(initialTM.PreTranslate(rootOffset));
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    RefPtr<LayerManager> layerManager = rangeInfo->mList.PaintRoot(
-        &rangeInfo->mBuilder, ctx, nsDisplayList::PAINT_DEFAULT, Nothing());
+    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, ctx,
+                               nsDisplayList::PAINT_DEFAULT, Nothing());
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 
@@ -6375,8 +6375,8 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     WrFiltersHolder wrFilters;
 
     layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
-    layerManager->AsWebRenderLayerManager()->EndTransactionWithoutLayer(
-        nullptr, nullptr, std::move(wrFilters), &data, 0);
+    layerManager->EndTransactionWithoutLayer(nullptr, nullptr,
+                                             std::move(wrFilters), &data, 0);
     return;
   }
 

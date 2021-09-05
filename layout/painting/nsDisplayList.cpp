@@ -332,33 +332,6 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   return true;
 }
 
-/* static */
-void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-    Layer* aLayer, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-    nsIFrame* aFrame, DisplayItemType aType) {
-  // This function can be called in two ways:  from
-  // nsDisplay*::BuildLayer while constructing a layer (with all
-  // pointers non-null), or from RestyleManager's handling of
-  // UpdateOpacityLayer/UpdateTransformLayer hints.
-  MOZ_ASSERT(!aBuilder == !aItem,
-             "should only be called in two configurations, with both "
-             "aBuilder and aItem, or with neither");
-  MOZ_ASSERT(!aItem || aFrame == aItem->Frame(), "frame mismatch");
-
-  // Only send animations to a layer that is actually using
-  // off-main-thread compositing.
-  LayersBackend backend = aLayer->Manager()->GetBackendType();
-  if (!(backend == LayersBackend::LAYERS_CLIENT ||
-        backend == LayersBackend::LAYERS_WR)) {
-    return;
-  }
-
-  AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
-  animationInfo.AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType,
-                                            aLayer->Manager());
-  animationInfo.TransferMutatedFlagToLayer(aLayer);
-}
-
 nsDisplayWrapList* nsDisplayListBuilder::MergeItems(
     nsTArray<nsDisplayWrapList*>& aItems) {
   // For merging, we create a temporary item by cloning the last item of the
@@ -2328,9 +2301,9 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
  * single layer representing the display list, and then making it the
  * root of the layer manager, drawing into the PaintedLayers.
  */
-already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
-    nsDisplayListBuilder* aBuilder, gfxContext* aCtx, uint32_t aFlags,
-    Maybe<double> aDisplayListBuildTime) {
+void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
+                              uint32_t aFlags,
+                              Maybe<double> aDisplayListBuildTime) {
   AUTO_PROFILER_LABEL("nsDisplayList::PaintRoot", GRAPHICS);
 
   RefPtr<WebRenderLayerManager> layerManager;
@@ -2362,7 +2335,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   if (!renderer) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
-      return nullptr;
+      return;
     }
     bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(false);
     Paint(aBuilder, aCtx, presContext->AppUnitsPerDevPixel());
@@ -2372,7 +2345,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     }
 
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
-    return nullptr;
+    return;
   }
 
   if (renderer->GetBackendType() == LayersBackend::LAYERS_WR) {
@@ -2380,11 +2353,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     if (doBeginTransaction) {
       if (aCtx) {
         if (!layerManager->BeginTransactionWithTarget(aCtx, nsCString())) {
-          return nullptr;
+          return;
         }
       } else {
         if (!layerManager->BeginTransaction(nsCString())) {
-          return nullptr;
+          return;
         }
       }
     }
@@ -2436,7 +2409,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
                                       frame->GetRect());
     }
 
-    return layerManager.forget();
+    return;
   }
 
   FallbackRenderer* fallback = renderer->AsFallback();
@@ -2445,7 +2418,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   if (doBeginTransaction) {
     MOZ_ASSERT(!aCtx);
     if (!fallback->BeginTransaction()) {
-      return nullptr;
+      return;
     }
   }
 
@@ -2482,7 +2455,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
                    "Must be compositing during fallback");
     }
   }
-  return nullptr;
+  return;
 }
 
 nsDisplayItem* nsDisplayList::RemoveBottom() {
@@ -6174,7 +6147,7 @@ nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
 }
 
 UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
-    nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager) {
+    nsDisplayListBuilder* aBuilder, WebRenderLayerManager* aLayerManager) {
   ScrollMetadata metadata = nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mScrollFrame, mScrollFrame->GetContent(),
       ReferenceFrame(), aLayerManager, mScrollParentId, mScrollFrame->GetSize(),

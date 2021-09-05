@@ -38,7 +38,7 @@ class PVideoBridgeParent;
 class RemoteCompositorSession;
 class InProcessCompositorSession;
 class UiCompositorControllerChild;
-class LayerManager;
+class WebRenderLayerManager;
 }  // namespace layers
 namespace widget {
 class CompositorWidget;
@@ -69,7 +69,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   typedef layers::CompositorSession CompositorSession;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
   typedef layers::IAPZCTreeManager IAPZCTreeManager;
-  typedef layers::LayerManager LayerManager;
+  typedef layers::WebRenderLayerManager WebRenderLayerManager;
   typedef layers::LayersId LayersId;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PCompositorManagerChild PCompositorManagerChild;
@@ -96,7 +96,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   bool EnsureGPUReady();
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
-      nsBaseWidget* aWidget, LayerManager* aLayerManager,
+      nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
       CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
       bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
       bool* aRetry);
@@ -265,7 +265,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   RefPtr<CompositorSession> CreateRemoteSession(
-      nsBaseWidget* aWidget, LayerManager* aLayerManager,
+      nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
       const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
       const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
       const gfx::IntSize& aSurfaceSize);

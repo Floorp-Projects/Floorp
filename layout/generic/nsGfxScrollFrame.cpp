@@ -4498,7 +4498,8 @@ void ScrollFrameHelper::NotifyApzTransaction() {
 }
 
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
-    LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+    WebRenderLayerManager* aLayerManager,
+    const nsIFrame* aContainerReferenceFrame,
     const DisplayItemClip* aClip) const {
   if (!mWillBuildScrollableLayer) {
     return Nothing();

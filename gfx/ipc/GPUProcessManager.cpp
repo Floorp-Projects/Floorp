@@ -840,7 +840,7 @@ void GPUProcessManager::DestroyProcess() {
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
-    nsBaseWidget* aWidget, LayerManager* aLayerManager,
+    nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
     bool* aRetryOut) {
@@ -882,7 +882,7 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
 }
 
 RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
-    nsBaseWidget* aWidget, LayerManager* aLayerManager,
+    nsBaseWidget* aWidget, WebRenderLayerManager* aLayerManager,
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize) {

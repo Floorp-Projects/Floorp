@@ -38,7 +38,7 @@ class PresShell;
 struct ScrollReflowInput;
 namespace layers {
 class Layer;
-class LayerManager;
+class WebRenderLayerManager;
 }  // namespace layers
 namespace layout {
 class ScrollbarActivity;
@@ -53,7 +53,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::WebRenderLayerManager WebRenderLayerManager;
   typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
   using Element = mozilla::dom::Element;
 
@@ -484,7 +484,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
                                bool aApzAnimationInProgress);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      WebRenderLayerManager* aLayerManager,
+      const nsIFrame* aContainerReferenceFrame,
       const mozilla::DisplayItemClip* aClip) const;
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -1083,7 +1084,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      mozilla::layers::WebRenderLayerManager* aLayerManager,
+      const nsIFrame* aContainerReferenceFrame,
       const mozilla::DisplayItemClip* aClip) const final {
     return mHelper.ComputeScrollMetadata(aLayerManager,
                                          aContainerReferenceFrame, aClip);
@@ -1560,7 +1562,8 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      mozilla::layers::WebRenderLayerManager* aLayerManager,
+      const nsIFrame* aContainerReferenceFrame,
       const mozilla::DisplayItemClip* aClip) const final {
     return mHelper.ComputeScrollMetadata(aLayerManager,
                                          aContainerReferenceFrame, aClip);

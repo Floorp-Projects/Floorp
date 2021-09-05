@@ -590,7 +590,7 @@ bool AnimationInfo::AddAnimationsForProperty(
     nsIFrame* aFrame, const EffectSet* aEffects,
     const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
     const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
-    Send aSendFlag, LayerManager* aLayerManager) {
+    Send aSendFlag, WebRenderLayerManager* aLayerManager) {
   bool addedAny = false;
   // Add from first to last (since last overrides)
   for (dom::Animation* anim : aCompositorAnimations) {
@@ -908,7 +908,7 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
 
 void AnimationInfo::AddAnimationsForDisplayItem(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-    DisplayItemType aType, LayerManager* aLayerManager,
+    DisplayItemType aType, WebRenderLayerManager* aLayerManager,
     const Maybe<LayoutDevicePoint>& aPosition) {
   Send sendFlag = !aBuilder ? Send::NextTransaction : Send::Immediate;
   if (sendFlag == Send::NextTransaction) {

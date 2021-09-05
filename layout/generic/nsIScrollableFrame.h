@@ -40,7 +40,7 @@ class nsDisplayListBuilder;
 namespace layers {
 struct ScrollMetadata;
 class Layer;
-class LayerManager;
+class WebRenderLayerManager;
 }  // namespace layers
 namespace layout {
 class ScrollAnchorContainer;
@@ -475,7 +475,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Returns the ScrollMetadata contributed by this frame, if there is one.
    */
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      mozilla::layers::LayerManager* aLayerManager,
+      mozilla::layers::WebRenderLayerManager* aLayerManager,
       const nsIFrame* aContainerReferenceFrame,
       const mozilla::DisplayItemClip* aClip) const = 0;
 
