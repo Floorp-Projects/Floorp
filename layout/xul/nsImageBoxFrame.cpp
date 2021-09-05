@@ -579,26 +579,8 @@ void nsDisplayXULImage::ComputeInvalidationRegion(
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
 
-  nsDisplayImageContainer::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                     aInvalidRegion);
-}
-
-already_AddRefed<imgIContainer> nsDisplayXULImage::GetImage() {
-  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
-  if (!imageFrame->mImageRequest) {
-    return nullptr;
-  }
-
-  nsCOMPtr<imgIContainer> imgCon;
-  imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
-
-  return imgCon.forget();
-}
-
-nsRect nsDisplayXULImage::GetDestRect() const {
-  Maybe<nsPoint> anchorPoint;
-  return static_cast<nsImageBoxFrame*>(mFrame)->GetDestRect(ToReferenceFrame(),
-                                                            anchorPoint);
+  nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                  aInvalidRegion);
 }
 
 bool nsImageBoxFrame::CanOptimizeToImageLayer() {
