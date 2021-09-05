@@ -154,9 +154,5 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
   return d;
 }
 
-void LayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
-  RecordCompositionPayloadsPresented(aTimeStamp, mPayload);
-}
-
 }  // namespace layers
 }  // namespace mozilla

@@ -207,10 +207,6 @@ void WebRenderLayerManager::StopFrameTimeRecording(
   }
 }
 
-void WebRenderLayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
-  MOZ_CRASH("WebRenderLayerManager::PayloadPresented should not be called");
-}
-
 void WebRenderLayerManager::TakeCompositionPayloads(
     nsTArray<CompositionPayload>& aPayloads) {
   aPayloads.Clear();

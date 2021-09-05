@@ -66,6 +66,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/VsyncChild.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/TaskController.h"
 #include "Layers.h"
@@ -2508,8 +2509,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     if (!mCompositionPayloads.IsEmpty()) {
       nsIWidget* widget = mPresContext->GetRootWidget();
       WindowRenderer* renderer = widget ? widget->GetWindowRenderer() : nullptr;
-      if (renderer && renderer->AsLayerManager()) {
-        renderer->AsLayerManager()->RegisterPayloads(mCompositionPayloads);
+      if (renderer && renderer->AsWebRender()) {
+        renderer->AsWebRender()->RegisterPayloads(mCompositionPayloads);
       }
       mCompositionPayloads.Clear();
     }
