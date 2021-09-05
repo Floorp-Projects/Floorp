@@ -178,7 +178,7 @@
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ᱫᱚᱦᱲᱟ ᱞᱟᱫᱤ</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title">ᱵᱷᱩᱞ ᱴᱷᱤᱠᱟᱱᱟᱹ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title">ᱵᱷᱩᱞ ᱴᱷᱤᱠᱬᱟᱹ</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱯᱷᱚᱨᱢᱟᱴ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱫᱚᱭᱟᱠᱟᱛᱮ ᱡᱟᱭᱜᱟ ᱵᱟᱨ ᱨᱮ  ᱵᱷᱩᱞ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</p>
     ]]></string>
