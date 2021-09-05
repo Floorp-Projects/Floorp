@@ -20,7 +20,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::layers::ImageContainer;
-using mozilla::layers::LayerManager;
 
 namespace mozilla {
 namespace image {
@@ -165,7 +164,7 @@ NS_IMETHODIMP_(bool)
 DynamicImage::WillDrawOpaqueNow() { return false; }
 
 NS_IMETHODIMP_(bool)
-DynamicImage::IsImageContainerAvailable(LayerManager* aManager,
+DynamicImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                         uint32_t aFlags) {
   return false;
 }

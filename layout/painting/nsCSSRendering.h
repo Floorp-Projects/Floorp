@@ -36,7 +36,7 @@ namespace layers {
 class ImageContainer;
 class StackingContextHelper;
 class WebRenderParentCommand;
-class LayerManager;
+class WebRenderLayerManager;
 class RenderRootStateManager;
 }  // namespace layers
 
@@ -103,7 +103,7 @@ struct nsCSSRendering {
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
-  typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::WebRenderLayerManager WebRenderLayerManager;
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef nsIFrame::Sides Sides;
 
@@ -505,9 +505,9 @@ struct nsCSSRendering {
       mozilla::ComputedStyle* mBackgroundSC, const nsStyleBorder& aBorder);
 
   static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(
-      LayerManager* aManager, nsPresContext& aPresCtx, nsIFrame* aFrame,
-      const nsStyleBackground* aBackgroundStyle, int32_t aLayer,
-      uint32_t aPaintFlags);
+      WebRenderLayerManager* aManager, nsPresContext& aPresCtx,
+      nsIFrame* aFrame, const nsStyleBackground* aBackgroundStyle,
+      int32_t aLayer, uint32_t aPaintFlags);
   static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayer(
       const PaintBGParams& aParams, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
