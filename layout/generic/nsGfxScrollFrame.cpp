@@ -6335,9 +6335,8 @@ nsSize ScrollFrameHelper::TrueOuterSize(nsDisplayListBuilder* aBuilder) const {
   // toolbar area here.
   // In case of non WebRender, we expand the size dynamically in
   // MoveScrollbarForLayerMargin in AsyncCompositionManager.cpp.
-  LayerManager* layerManager = aBuilder->GetWidgetLayerManager();
-  if (layerManager &&
-      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  WebRenderLayerManager* layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager) {
     displaySize.height += ViewAs<LayoutDevicePixel>(
         mOuter->PresContext()->GetDynamicToolbarMaxHeight(),
         PixelCastJustification::LayoutDeviceIsScreenForBounds);
