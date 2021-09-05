@@ -31,7 +31,6 @@ class SourceSurface;
 
 class WindowRenderer;
 namespace layers {
-class LayerManager;
 class ImageContainer;
 }
 }
@@ -72,7 +71,6 @@ native nsSize(nsSize);
 native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
-[ptr] native LayerManager(mozilla::layers::LayerManager);
 [ptr] native WindowRenderer(mozilla::WindowRenderer);
 native Orientation(mozilla::image::Orientation);
 native ImageResolution(mozilla::image::Resolution);
@@ -319,10 +317,10 @@ interface imgIContainer : nsISupports
 
   /**
    * @return true if getImageContainer() is expected to return a valid
-   *         ImageContainer when passed the given @Manager and @Flags
+   *         ImageContainer when passed the given @Renderer and @Flags
    *         parameters.
    */
-  [noscript, notxpcom] boolean isImageContainerAvailable(in LayerManager aManager,
+  [noscript, notxpcom] boolean isImageContainerAvailable(in WindowRenderer aRenderer,
                                                          in uint32_t aFlags);
 
   /**

@@ -4357,7 +4357,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   }
 
  protected:
-  bool CanBuildWebRenderDisplayItems(LayerManager* aManager,
+  bool CanBuildWebRenderDisplayItems(layers::WebRenderLayerManager* aManager,
                                      nsDisplayListBuilder* aBuilder);
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrameForBounds = nullptr);

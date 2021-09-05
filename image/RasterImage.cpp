@@ -645,7 +645,7 @@ Tuple<ImgDrawResult, IntSize> RasterImage::GetImageContainerSize(
 }
 
 NS_IMETHODIMP_(bool)
-RasterImage::IsImageContainerAvailable(LayerManager* aManager,
+RasterImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                        uint32_t aFlags) {
   return LoadHasSize();
 }

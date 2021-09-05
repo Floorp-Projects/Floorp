@@ -1809,7 +1809,7 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
 }
 
 bool nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(
-    LayerManager* aManager, nsPresContext& aPresCtx, nsIFrame* aFrame,
+    WebRenderLayerManager* aManager, nsPresContext& aPresCtx, nsIFrame* aFrame,
     const nsStyleBackground* aBackgroundStyle, int32_t aLayer,
     uint32_t aPaintFlags) {
   if (!aBackgroundStyle) {
