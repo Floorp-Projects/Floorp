@@ -2262,10 +2262,11 @@ WindowRenderer* nsDisplayListBuilder::GetWidgetWindowRenderer(nsView** aView) {
   return nullptr;
 }
 
-LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
+WebRenderLayerManager* nsDisplayListBuilder::GetWidgetLayerManager(
+    nsView** aView) {
   WindowRenderer* renderer = GetWidgetWindowRenderer();
   if (renderer) {
-    return renderer->AsLayerManager();
+    return renderer->AsWebRender();
   }
   return nullptr;
 }
@@ -8867,9 +8868,7 @@ nsDisplaySVGWrapper::nsDisplaySVGWrapper(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplaySVGWrapper::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
-  return !(layerManager &&
-           layerManager->GetBackendType() == LayersBackend::LAYERS_WR);
+  return !aBuilder->GetWidgetLayerManager();
 }
 
 bool nsDisplaySVGWrapper::CreateWebRenderCommands(
@@ -8894,9 +8893,7 @@ nsDisplayForeignObject::~nsDisplayForeignObject() {
 #endif
 
 bool nsDisplayForeignObject::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
-  return !(layerManager &&
-           layerManager->GetBackendType() == LayersBackend::LAYERS_WR);
+  return !aBuilder->GetWidgetLayerManager();
 }
 
 bool nsDisplayForeignObject::CreateWebRenderCommands(

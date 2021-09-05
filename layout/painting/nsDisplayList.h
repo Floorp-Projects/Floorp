@@ -91,6 +91,7 @@ class ImageContainer;
 class StackingContextHelper;
 class WebRenderScrollData;
 class WebRenderLayerScrollData;
+class WebRenderLayerManager;
 }  // namespace layers
 
 namespace wr {
@@ -424,7 +425,8 @@ class nsDisplayListBuilder {
   }
 
   WindowRenderer* GetWidgetWindowRenderer(nsView** aView = nullptr);
-  layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr);
+  layers::WebRenderLayerManager* GetWidgetLayerManager(
+      nsView** aView = nullptr);
 
   /**
    * @return true if the display is being built in order to determine which

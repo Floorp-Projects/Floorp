@@ -3106,10 +3106,8 @@ struct TemporaryDisplayListBuilder {
   RetainedDisplayListMetrics mMetrics;
 };
 
-void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
-                               nsIFrame* aFrame,
-                               const nsRegion& aDirtyRegion,
-                               nscolor aBackstop,
+void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
+                               const nsRegion& aDirtyRegion, nscolor aBackstop,
                                nsDisplayListBuilderMode aBuilderMode,
                                PaintFrameFlags aFlags) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame", GRAPHICS);
@@ -3425,7 +3423,8 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
   const double geckoDLBuildTime =
       (TimeStamp::Now() - startBuildDisplayList).ToMilliseconds();
-  mozilla::glean::paint::build_displaylist_time.StopAndAccumulate(std::move(dlTimerId));
+  mozilla::glean::paint::build_displaylist_time.StopAndAccumulate(
+      std::move(dlTimerId));
 
   bool consoleNeedsDisplayList =
       (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) &&
@@ -8399,13 +8398,11 @@ void nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
 void nsLayoutUtils::LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
                                           const std::string& aKey,
                                           const std::string& aValue) {
-  LayerManager* manager = aBuilder->GetWidgetLayerManager(nullptr);
+  WebRenderLayerManager* manager = aBuilder->GetWidgetLayerManager(nullptr);
   if (!manager) {
     return;
   }
-  if (WebRenderLayerManager* wrlm = manager->AsWebRenderLayerManager()) {
-    wrlm->LogAdditionalTestData(aKey, aValue);
-  }
+  manager->LogAdditionalTestData(aKey, aValue);
 }
 
 /* static */
