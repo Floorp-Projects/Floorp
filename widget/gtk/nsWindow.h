@@ -510,7 +510,6 @@ class nsWindow final : public nsBaseWidget {
 
   bool GetDragInfo(mozilla::WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
                    gint* aButton, gint* aRootX, gint* aRootY);
-  void ClearCachedResources();
   nsIWidgetListener* GetListener();
 
   nsWindow* GetTransientForWindowIfPopup();
