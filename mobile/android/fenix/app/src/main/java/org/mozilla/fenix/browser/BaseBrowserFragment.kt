@@ -1033,10 +1033,6 @@ abstract class BaseBrowserFragment :
             components.useCases.sessionUseCases.reload()
         }
         hideToolbar()
-
-        components.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)?.let {
-            updateThemeForSession(it)
-        }
     }
 
     @CallSuper
