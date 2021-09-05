@@ -3501,16 +3501,6 @@ class nsIFrame : public nsQueryFrame {
   static uint8_t sLayerIsPrerenderedDataKey;
 
   /**
-   * Try to update this frame's transform without invalidating any
-   * content.  Return true iff successful.  If unsuccessful, the
-   * caller is responsible for scheduling an invalidating paint.
-   *
-   * If the result is true, aLayerResult will be filled in with the
-   * transform layer for the frame.
-   */
-  bool TryUpdateTransformOnly(Layer** aLayerResult);
-
-  /**
    * Checks if a frame has had InvalidateFrame() called on it since the
    * last paint.
    *

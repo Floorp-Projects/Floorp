@@ -23,6 +23,7 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "WebRenderCanvasRenderer.h"
+#include "LayerUserData.h"
 
 #ifdef XP_WIN
 #  include "gfxDWriteFonts.h"
@@ -39,6 +40,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mLatestTransactionId{0},
       mNeedsComposite(false),
       mIsFirstPaint(false),
+      mDestroyed(false),
       mTarget(nullptr),
       mPaintSequenceNumber(0),
       mWebRenderCommandBuilder(this) {
@@ -137,8 +139,8 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
   }
 
   mDLBuilder = nullptr;
-
-  LayerManager::Destroy();
+  mUserData.Destroy();
+  mPartialPrerenderedAnimations.Clear();
 
   mStateManager.Destroy();
 
@@ -166,6 +168,7 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
 
   // Forget the widget pointer in case we outlive our owning widget.
   mWidget = nullptr;
+  mDestroyed = true;
 }
 
 WebRenderLayerManager::~WebRenderLayerManager() {
@@ -318,14 +321,6 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   MakeSnapshotIfRequired(size);
   return true;
-}
-
-void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
-                                           void* aCallbackData,
-                                           EndTransactionFlags aFlags) {
-  // This should never get called, all callers should use
-  // EndTransactionWithoutLayer instead.
-  MOZ_ASSERT(false);
 }
 
 void WebRenderLayerManager::EndTransactionWithoutLayer(
@@ -739,11 +734,6 @@ void WebRenderLayerManager::ScheduleComposite() {
   WrBridge()->SendScheduleComposite();
 }
 
-void WebRenderLayerManager::SetRoot(Layer* aLayer) {
-  // This should never get called
-  MOZ_ASSERT(false);
-}
-
 already_AddRefed<PersistentBufferProvider>
 WebRenderLayerManager::CreatePersistentBufferProvider(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
@@ -760,7 +750,7 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
     return provider.forget();
   }
 
-  return LayerManager::CreatePersistentBufferProvider(aSize, aFormat);
+  return WindowRenderer::CreatePersistentBufferProvider(aSize, aFormat);
 }
 
 void WebRenderLayerManager::ClearAsyncAnimations() {
@@ -774,6 +764,26 @@ void WebRenderLayerManager::WrReleasedImages(
 
 void WebRenderLayerManager::GetFrameUniformity(FrameUniformityData* aOutData) {
   WrBridge()->SendGetFrameUniformity(aOutData);
+}
+
+/*static*/
+void WebRenderLayerManager::LayerUserDataDestroy(void* data) {
+  delete static_cast<LayerUserData*>(data);
+}
+
+UniquePtr<LayerUserData> WebRenderLayerManager::RemoveUserData(void* aKey) {
+  UniquePtr<LayerUserData> d(static_cast<LayerUserData*>(
+      mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
+  return d;
+}
+
+std::unordered_set<ScrollableLayerGuid::ViewID>
+WebRenderLayerManager::ClearPendingScrollInfoUpdate() {
+  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds(
+      mPendingScrollUpdates.Keys().cbegin(),
+      mPendingScrollUpdates.Keys().cend());
+  mPendingScrollUpdates.Clear();
+  return scrollIds;
 }
 
 }  // namespace layers

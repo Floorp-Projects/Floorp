@@ -45,11 +45,10 @@ using mozilla::dom::BrowserChild;
 class IAPZCTreeManager;
 class APZCTreeManagerChild;
 class CanvasChild;
-class ClientLayerManager;
 class CompositorBridgeParent;
 class CompositorManagerChild;
 class CompositorOptions;
-class LayerManager;
+class WebRenderLayerManager;
 class TextureClient;
 class TextureClientPool;
 struct FrameMetrics;
@@ -70,8 +69,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
    */
   void InitForContent(uint32_t aNamespace);
 
-  void InitForWidget(uint64_t aProcessToken, LayerManager* aLayerManager,
-                     uint32_t aNamespace);
+  void InitForWidget(uint64_t aProcessToken,
+                     WebRenderLayerManager* aLayerManager, uint32_t aNamespace);
 
   void Destroy();
 
@@ -246,7 +245,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   RefPtr<CompositorManagerChild> mCompositorManager;
 
-  RefPtr<LayerManager> mLayerManager;
+  RefPtr<WebRenderLayerManager> mLayerManager;
 
   uint32_t mIdNamespace;
   uint32_t mResourceId;

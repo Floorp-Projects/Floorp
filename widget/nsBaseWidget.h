@@ -65,6 +65,7 @@ class APZEventState;
 struct APZEventResult;
 class CompositorSession;
 class ImageContainer;
+class WebRenderLayerManager;
 struct ScrollableLayerGuid;
 class RemoteCompositorSession;
 }  // namespace layers
@@ -787,8 +788,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 #endif
 
  private:
-  already_AddRefed<LayerManager> CreateCompositorSession(
-      int aWidth, int aHeight, mozilla::layers::CompositorOptions* aOptionsOut);
+  already_AddRefed<mozilla::layers::WebRenderLayerManager>
+  CreateCompositorSession(int aWidth, int aHeight,
+                          mozilla::layers::CompositorOptions* aOptionsOut);
 };
 
 #endif  // nsBaseWidget_h__

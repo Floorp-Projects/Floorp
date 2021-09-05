@@ -39,7 +39,7 @@ namespace layers {
 class Animation;
 class CompositorAnimations;
 class Layer;
-class LayerManager;
+class WebRenderLayerManager;
 struct CompositorAnimationData;
 struct PropertyAnimationGroup;
 
@@ -118,7 +118,7 @@ class AnimationInfo final {
 
   void AddAnimationsForDisplayItem(
       nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-      DisplayItemType aType, LayerManager* aLayerManager,
+      DisplayItemType aType, WebRenderLayerManager* aLayerManager,
       const Maybe<LayoutDevicePoint>& aPosition = Nothing());
 
  private:
@@ -136,7 +136,7 @@ class AnimationInfo final {
       nsIFrame* aFrame, const EffectSet* aEffects,
       const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
       const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
-      Send aSendFlag, LayerManager* aLayerManager);
+      Send aSendFlag, WebRenderLayerManager* aLayerManager);
 
   void AddNonAnimatingTransformLikePropertiesStyles(
       const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,

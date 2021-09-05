@@ -53,7 +53,7 @@ class PCompositorBridgeChild;
 class WebRenderBridgeChild;
 class WebRenderParentCommand;
 
-class WebRenderLayerManager final : public LayerManager {
+class WebRenderLayerManager final : public WindowRenderer {
   typedef nsTArray<RefPtr<Layer>> LayerRefArray;
   typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
 
@@ -64,6 +64,7 @@ class WebRenderLayerManager final : public LayerManager {
                   nsCString& aError);
 
   void Destroy() override;
+  bool IsDestroyed() { return mDestroyed; }
 
   void DoDestroy(bool aIsSync);
 
@@ -73,14 +74,12 @@ class WebRenderLayerManager final : public LayerManager {
  public:
   KnowsCompositor* AsKnowsCompositor() override;
   WebRenderLayerManager* AsWebRender() override { return this; }
-  WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
   CompositorBridgeChild* GetCompositorBridgeChild() override;
 
   // WebRender can handle images larger than the max texture size via tiling.
   int32_t GetMaxTextureSize() const override { return INT32_MAX; }
 
-  bool BeginTransactionWithTarget(gfxContext* aTarget,
-                                  const nsCString& aURL) override;
+  bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString& aURL);
   bool BeginTransaction(const nsCString& aURL) override;
   bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
@@ -88,63 +87,48 @@ class WebRenderLayerManager final : public LayerManager {
                                   WrFiltersHolder&& aFilters,
                                   WebRenderBackgroundData* aBackground,
                                   const double aGeckoDLBuildTime);
-  void EndTransaction(DrawPaintedLayerCallback aCallback, void* aCallbackData,
-                      EndTransactionFlags aFlags = END_DEFAULT) override;
 
   LayersBackend GetBackendType() override { return LayersBackend::LAYERS_WR; }
   void GetBackendName(nsAString& name) override;
-  const char* Name() const override { return "WebRender"; }
-
-  void SetRoot(Layer* aLayer) override;
-
-  already_AddRefed<PaintedLayer> CreatePaintedLayer() override {
-    return nullptr;
-  }
-  already_AddRefed<ContainerLayer> CreateContainerLayer() override {
-    return nullptr;
-  }
-  already_AddRefed<ImageLayer> CreateImageLayer() override { return nullptr; }
-  already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
-  already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
   bool NeedsWidgetInvalidation() override { return false; }
 
-  void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) override;
+  void SetLayersObserverEpoch(LayersObserverEpoch aEpoch);
 
   void DidComposite(TransactionId aTransactionId,
                     const mozilla::TimeStamp& aCompositeStart,
-                    const mozilla::TimeStamp& aCompositeEnd) override;
+                    const mozilla::TimeStamp& aCompositeEnd);
 
-  void ClearCachedResources(Layer* aSubtree = nullptr) override;
+  void ClearCachedResources(Layer* aSubtree = nullptr);
   void UpdateTextureFactoryIdentifier(
-      const TextureFactoryIdentifier& aNewIdentifier) override;
-  TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
+      const TextureFactoryIdentifier& aNewIdentifier);
+  TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
-  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override;
-  TransactionId GetLastTransactionId() override;
+  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator);
+  TransactionId GetLastTransactionId();
 
-  void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
-  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
+  void AddDidCompositeObserver(DidCompositeObserver* aObserver);
+  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
 
   void FlushRendering() override;
   void WaitOnTransactionProcessed() override;
 
-  void SendInvalidRegion(const nsIntRegion& aRegion) override;
+  void SendInvalidRegion(const nsIntRegion& aRegion);
 
-  void ScheduleComposite() override;
+  void ScheduleComposite();
 
-  void SetNeedsComposite(bool aNeedsComposite) override {
+  void SetNeedsComposite(bool aNeedsComposite) {
     mNeedsComposite = aNeedsComposite;
   }
-  bool NeedsComposite() const override { return mNeedsComposite; }
-  void SetIsFirstPaint() override { mIsFirstPaint = true; }
-  bool GetIsFirstPaint() const override { return mIsFirstPaint; }
-  void SetFocusTarget(const FocusTarget& aFocusTarget) override;
+  bool NeedsComposite() const { return mNeedsComposite; }
+  void SetIsFirstPaint() { mIsFirstPaint = true; }
+  bool GetIsFirstPaint() const { return mIsFirstPaint; }
+  void SetFocusTarget(const FocusTarget& aFocusTarget);
 
   already_AddRefed<PersistentBufferProvider> CreatePersistentBufferProvider(
       const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
 
-  bool AsyncPanZoomEnabled() const override;
+  bool AsyncPanZoomEnabled() const;
 
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
@@ -197,6 +181,38 @@ class WebRenderLayerManager final : public LayerManager {
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
 
+  static void LayerUserDataDestroy(void* data);
+  /**
+   * This setter can be used anytime. The user data for all keys is
+   * initially null. Ownership pases to the layer manager.
+   */
+  void SetUserData(void* aKey, LayerUserData* aData) {
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData,
+                  LayerUserDataDestroy);
+  }
+  /**
+   * This can be used anytime. Ownership passes to the caller!
+   */
+  UniquePtr<LayerUserData> RemoveUserData(void* aKey);
+
+  /**
+   * This getter can be used anytime.
+   */
+  bool HasUserData(void* aKey) {
+    return mUserData.Has(static_cast<gfx::UserDataKey*>(aKey));
+  }
+  /**
+   * This getter can be used anytime. Ownership is retained by the layer
+   * manager.
+   */
+  LayerUserData* GetUserData(void* aKey) const {
+    return static_cast<LayerUserData*>(
+        mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
+  }
+
+  std::unordered_set<ScrollableLayerGuid::ViewID>
+  ClearPendingScrollInfoUpdate();
+
  private:
   /**
    * Take a snapshot of the parent context, and copy
@@ -214,12 +230,15 @@ class WebRenderLayerManager final : public LayerManager {
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
+  gfx::UserData mUserData;
+
   // This holds the scroll data that we need to send to the compositor for
   // APZ to do it's job
   WebRenderScrollData mScrollData;
 
   bool mNeedsComposite;
   bool mIsFirstPaint;
+  bool mDestroyed;
   FocusTarget mFocusTarget;
 
   // The payload associated with currently pending painting work, for
@@ -252,6 +271,8 @@ class WebRenderLayerManager final : public LayerManager {
   RenderRootStateManager mStateManager;
   DisplayItemCache mDisplayItemCache;
   UniquePtr<wr::DisplayListBuilder> mDLBuilder;
+
+  ScrollUpdatesMap mPendingScrollUpdates;
 };
 
 }  // namespace layers

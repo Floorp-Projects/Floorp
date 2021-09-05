@@ -2986,39 +2986,6 @@ static void ApplyEffectsUpdates(
   }
 }
 
-static void LogPaintedPixelCount(LayerManager* aLayerManager,
-                                 const TimeStamp aPaintStart) {
-  static std::vector<std::pair<TimeStamp, uint32_t>> history;
-
-  const TimeStamp now = TimeStamp::Now();
-  const double rasterizeTime = (now - aPaintStart).ToMilliseconds();
-
-  const uint32_t pixelCount = aLayerManager->GetAndClearPaintedPixelCount();
-  if (pixelCount) {
-    history.push_back(std::make_pair(now, pixelCount));
-  }
-
-  uint32_t paintedInLastSecond = 0;
-  for (auto i = history.begin(); i != history.end(); i++) {
-    if ((now - i->first).ToMilliseconds() > 1000.0f) {
-      // more than 1000ms ago, don't count it
-      continue;
-    }
-
-    if (paintedInLastSecond == 0) {
-      // This is the first one in the last 1000ms, so drop everything earlier
-      history.erase(history.begin(), i);
-      i = history.begin();
-    }
-
-    paintedInLastSecond += i->second;
-    MOZ_ASSERT(paintedInLastSecond);  // all historical pixel counts are > 0
-  }
-
-  printf_stderr("Painted %u pixels in %fms (%u in the last 1000ms)\n",
-                pixelCount, rasterizeTime, paintedInLastSecond);
-}
-
 static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
                                        nsDisplayListBuilder* aBuilder,
                                        nsDisplayList* aList,
@@ -3069,8 +3036,7 @@ static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
 
 static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
                                       nsDisplayListBuilder* aBuilder,
-                                      nsDisplayList* aList,
-                                      LayerManager* aManager) {
+                                      nsDisplayList* aList) {
   *aStream << "Painting --- after optimization:\n";
   nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
                              gfxEnv::DumpPaintToFile());
@@ -3088,9 +3054,6 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
 
   std::stringstream lsStream;
   nsIFrame::PrintDisplayList(aBuilder, *aList, lsStream);
-  if (aManager && aManager->GetRoot()) {
-    aManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
-  }
 }
 
 struct TemporaryDisplayListBuilder {
@@ -3477,8 +3440,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 #endif
 
   TimeStamp paintStart = TimeStamp::Now();
-  RefPtr<LayerManager> layerManager = list->PaintRoot(
-      builder, aRenderingContext, flags, Some(geckoDLBuildTime));
+  list->PaintRoot(builder, aRenderingContext, flags, Some(geckoDLBuildTime));
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_RASTERIZE_TIME, paintStart);
 
   if (builder->IsPaintingToWindow()) {
@@ -3486,12 +3448,8 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
   builder->Check();
 
-  if (StaticPrefs::gfx_logging_painted_pixel_count_enabled()) {
-    LogPaintedPixelCount(layerManager, paintStart);
-  }
-
   if (consoleNeedsDisplayList) {
-    DumpAfterPaintDisplayList(ss, builder, list, layerManager);
+    DumpAfterPaintDisplayList(ss, builder, list);
   }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -8385,14 +8343,12 @@ nsRect nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame) {
 }
 
 /* static */
-void nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
+void nsLayoutUtils::DoLogTestDataForPaint(WebRenderLayerManager* aManager,
                                           ViewID aScrollId,
                                           const std::string& aKey,
                                           const std::string& aValue) {
   MOZ_ASSERT(nsLayoutUtils::IsAPZTestLoggingEnabled(), "don't call me");
-  if (WebRenderLayerManager* wrlm = aManager->AsWebRenderLayerManager()) {
-    wrlm->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
-  }
+  aManager->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
 }
 
 void nsLayoutUtils::LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
@@ -8585,7 +8541,7 @@ bool nsLayoutUtils::CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin) {
 ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
     nsIContent* aContent, const nsIFrame* aReferenceFrame,
-    LayerManager* aLayerManager, ViewID aScrollParentId,
+    WebRenderLayerManager* aLayerManager, ViewID aScrollParentId,
     const nsSize& aScrollPortSize, const Maybe<nsRect>& aClipRect,
     bool aIsRootContent) {
   const nsPresContext* presContext = aForFrame->PresContext();
@@ -8958,7 +8914,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 
 /*static*/
 Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
-    nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager,
+    nsDisplayListBuilder* aBuilder, WebRenderLayerManager* aLayerManager,
     const std::function<bool(ViewID& aScrollId)>& aCallback) {
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
