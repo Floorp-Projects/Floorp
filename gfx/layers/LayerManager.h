@@ -152,8 +152,6 @@ class LayerManager : public WindowRenderer {
   void Destroy() override;
   bool IsDestroyed() { return mDestroyed; }
 
-  virtual LayerManager* AsLayerManager() override { return this; }
-
   virtual WebRenderLayerManager* AsWebRenderLayerManager() { return nullptr; }
 
   /**
