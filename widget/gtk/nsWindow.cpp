@@ -733,8 +733,6 @@ void nsWindow::Destroy() {
   // to avoid double-freeing.
   mSurfaceProvider.CleanupResources();
 
-  ClearCachedResources();
-
   g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
@@ -1110,11 +1108,6 @@ void nsWindow::ApplySizeConstraints(void) {
 
 void nsWindow::Show(bool aState) {
   if (aState == mIsShown) return;
-
-  // Clear our cached resources when the window is hidden.
-  if (mIsShown && !aState) {
-    ClearCachedResources();
-  }
 
   mIsShown = aState;
 
@@ -3444,7 +3437,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   region.ScaleRoundOut(scale, scale);
 
   WindowRenderer* renderer = GetWindowRenderer();
-  LayerManager* layerManager = renderer->AsLayerManager();
+  WebRenderLayerManager* layerManager = renderer->AsWebRender();
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
 
   if (knowsCompositor && layerManager && mCompositorSession) {
@@ -8434,21 +8427,6 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
   } else {
     WaylandStopVsync();
     mCompositorWidgetDelegate = nullptr;
-  }
-}
-
-void nsWindow::ClearCachedResources() {
-  if (mWindowRenderer && mWindowRenderer->GetBackendType() ==
-                             mozilla::layers::LayersBackend::LAYERS_BASIC) {
-    mWindowRenderer->AsLayerManager()->ClearCachedResources();
-  }
-
-  GList* children = gdk_window_peek_children(mGdkWindow);
-  for (GList* list = children; list; list = list->next) {
-    nsWindow* window = get_window_for_gdk_window(GDK_WINDOW(list->data));
-    if (window) {
-      window->ClearCachedResources();
-    }
   }
 }
 
