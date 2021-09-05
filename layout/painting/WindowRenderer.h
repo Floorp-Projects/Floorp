@@ -100,7 +100,6 @@ class WindowRenderer : public FrameRecorder {
 
  public:
   // Cast to implementation types.
-  virtual layers::LayerManager* AsLayerManager() { return nullptr; }
   virtual layers::WebRenderLayerManager* AsWebRender() { return nullptr; }
   virtual FallbackRenderer* AsFallback() { return nullptr; }
 
