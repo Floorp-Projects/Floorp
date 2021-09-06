@@ -50,7 +50,7 @@ use crate::image_tiling::simplify_repeated_primitive;
 use crate::clip::{ClipChainId, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance};
 use crate::clip::{PolygonDataHandle};
-use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex, StaticCoordinateSystemId};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, StaticCoordinateSystemId};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::HitTestingScene;
@@ -474,10 +474,11 @@ impl<'a> SceneBuilder<'a> {
             .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
 
         let spatial_tree = SpatialTree::new();
+        let root_reference_frame_index = spatial_tree.root_reference_frame_index();
 
         // During scene building, we assume a 1:1 picture -> raster pixel scale
         let snap_to_device = SpaceSnapper::new(
-            ROOT_SPATIAL_NODE_INDEX,
+            root_reference_frame_index,
             RasterPixelScale::new(1.0),
         );
 
@@ -500,7 +501,7 @@ impl<'a> SceneBuilder<'a> {
             iframe_size: Vec::new(),
             root_iframe_clip: None,
             quality_settings: view.quality_settings,
-            tile_cache_builder: TileCacheBuilder::new(),
+            tile_cache_builder: TileCacheBuilder::new(root_reference_frame_index),
             snap_to_device,
             picture_graph: PictureGraph::new(),
             plane_splitters: Vec::new(),
@@ -846,7 +847,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.push_reference_frame(
             info.reference_frame.id,
-            Some(parent_space),
+            parent_space,
             pipeline_id,
             info.reference_frame.transform_style,
             transform,
@@ -916,13 +917,13 @@ impl<'a> SceneBuilder<'a> {
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
-            Some(spatial_node_index),
+            spatial_node_index,
             iframe_pipeline_id,
             TransformStyle::Flat,
             PropertyBinding::Value(LayoutTransform::identity()),
             ReferenceFrameKind::Transform {
-                is_2d_scale_translation: false,
-                should_snap: false
+                is_2d_scale_translation: true,
+                should_snap: true,
             },
             bounds.min.to_vector(),
             SpatialNodeUid::root_reference_frame(iframe_pipeline_id),
@@ -1896,7 +1897,7 @@ impl<'a> SceneBuilder<'a> {
             let ancestor_index = self.containing_block_stack
                 .last()
                 .cloned()
-                .unwrap_or(ROOT_SPATIAL_NODE_INDEX);
+                .unwrap_or(self.spatial_tree.root_reference_frame_index());
 
             let plane_splitter_index = plane_splitter_index.unwrap_or_else(|| {
                 let index = self.plane_splitters.len();
@@ -2328,7 +2329,7 @@ impl<'a> SceneBuilder<'a> {
     pub fn push_reference_frame(
         &mut self,
         reference_frame_id: SpatialId,
-        parent_index: Option<SpatialNodeIndex>,
+        parent_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
         transform_style: TransformStyle,
         source_transform: PropertyBinding<LayoutTransform>,
@@ -2362,13 +2363,13 @@ impl<'a> SceneBuilder<'a> {
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(pipeline_id),
-            None,
+            self.spatial_tree.root_reference_frame_index(),
             pipeline_id,
             TransformStyle::Flat,
             PropertyBinding::Value(LayoutTransform::identity()),
             ReferenceFrameKind::Transform {
-                is_2d_scale_translation: false,
-                should_snap: false,
+                is_2d_scale_translation: true,
+                should_snap: true,
             },
             LayoutVector2D::zero(),
             SpatialNodeUid::root_reference_frame(pipeline_id),

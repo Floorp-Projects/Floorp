@@ -14,7 +14,7 @@ use std::{usize, mem};
 use crate::batch::BatchFilter;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
-use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::clip::{ClipInstance, ClipChainInstance};
 use crate::debug_colors;
 use crate::frame_builder::FrameBuilderConfig;
@@ -39,6 +39,7 @@ pub struct FrameVisibilityContext<'a> {
     pub debug_flags: DebugFlags,
     pub scene_properties: &'a SceneProperties,
     pub config: FrameBuilderConfig,
+    pub root_spatial_node_index: SpatialNodeIndex,
 }
 
 pub struct FrameVisibilityState<'a> {
@@ -238,7 +239,7 @@ pub fn update_primitive_visibility(
         .clone();
 
     let map_surface_to_world = SpaceMapper::new_with_target(
-        ROOT_SPATIAL_NODE_INDEX,
+        frame_context.root_spatial_node_index,
         surface.surface_spatial_node_index,
         frame_context.global_screen_world_rect,
         frame_context.spatial_tree,
@@ -674,9 +675,11 @@ pub fn compute_conservative_visible_rect(
     prim_spatial_node_index: SpatialNodeIndex,
     spatial_tree: &SpatialTree,
 ) -> LayoutRect {
+    let root_spatial_node_index = spatial_tree.root_reference_frame_index();
+
     // Mapping from picture space -> world space
     let map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
-        ROOT_SPATIAL_NODE_INDEX,
+        root_spatial_node_index,
         clip_chain.pic_spatial_node_index,
         world_culling_rect,
         spatial_tree,

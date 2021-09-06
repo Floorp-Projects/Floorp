@@ -19,6 +19,8 @@ use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRe
 //            them completely.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum SpatialNodeUidKind {
+    /// The root node of the entire spatial tree
+    Root,
     /// Internal scroll frame created during scene building for each iframe
     InternalScrollFrame {
         pipeline_id: PipelineId,
@@ -41,6 +43,12 @@ pub struct SpatialNodeUid {
 }
 
 impl SpatialNodeUid {
+    pub fn root() -> Self {
+        SpatialNodeUid {
+            kind: SpatialNodeUidKind::Root,
+        }
+    }
+
     pub fn root_scroll_frame(
         pipeline_id: PipelineId,
     ) -> Self {
@@ -992,7 +1000,7 @@ fn test_cst_perspective_relative_scroll() {
     let transform = LayoutTransform::perspective(100.0);
 
     let root = cst.add_reference_frame(
-        None,
+        cst.root_reference_frame_index(),
         TransformStyle::Flat,
         PropertyBinding::Value(LayoutTransform::identity()),
         ReferenceFrameKind::Transform {
@@ -1029,7 +1037,7 @@ fn test_cst_perspective_relative_scroll() {
     );
 
     let ref_frame = cst.add_reference_frame(
-        Some(scroll_frame_2),
+        scroll_frame_2,
         TransformStyle::Preserve3D,
         PropertyBinding::Value(transform),
         ReferenceFrameKind::Perspective {
