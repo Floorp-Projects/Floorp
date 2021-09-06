@@ -1865,6 +1865,11 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
         getPropertyValue(eCSSProperty_text_decoration_line));
   }
 
+  if (!textReset->mTextDecorationThickness.IsAuto()) {
+    valueList->AppendCSSValue(
+        getPropertyValue(eCSSProperty_text_decoration_thickness));
+  }
+
   if (textReset->mTextDecorationStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
     valueList->AppendCSSValue(
         getPropertyValue(eCSSProperty_text_decoration_style));
@@ -1874,11 +1879,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
   valueList->AppendCSSValue(val.forget());
-
-  if (!textReset->mTextDecorationThickness.IsAuto()) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_thickness));
-  }
 
   return valueList.forget();
 }
