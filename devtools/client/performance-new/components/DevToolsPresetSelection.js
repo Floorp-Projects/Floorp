@@ -110,7 +110,7 @@ class DevToolsPresetSelection extends PureComponent {
             null,
             Localized(
               { id: "perftools-devtools-interval-label" },
-              span({ className: "perftools-presets-custom-bold" })
+              span({ className: "perf-presets-custom-bold" })
             ),
             " ",
             Localized({
