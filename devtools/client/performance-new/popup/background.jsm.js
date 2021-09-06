@@ -31,6 +31,7 @@ const AppConstants = ChromeUtils.import(
  * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
  * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
  * @typedef {import("../@types/perf").PageContext} PageContext
+ * @typedef {import("../@types/perf").PrefObserver} PrefObserver
  * @typedef {import("../@types/perf").PrefPostfix} PrefPostfix
  * @typedef {import("../@types/perf").Presets} Presets
  * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
@@ -52,6 +53,8 @@ const DURATION_PREF = "devtools.performance.recording.duration";
 const PRESET_PREF = "devtools.performance.recording.preset";
 /** @type {PerformancePref["PopupFeatureFlag"]} */
 const POPUP_FEATURE_FLAG_PREF = "devtools.performance.popup.feature-flag";
+/* This will be used to observe all profiler-related prefs. */
+const PREF_PREFIX = "devtools.performance.recording.";
 
 // Lazily load the require function, when it's needed.
 ChromeUtils.defineModuleGetter(
@@ -537,6 +540,24 @@ function changePreset(pageContext, presetName, supportedFeatures) {
 }
 
 /**
+ * Add an observer for the profiler-related preferences.
+ * @param {PrefObserver} observer
+ * @return {void}
+ */
+function addPrefObserver(observer) {
+  Services.prefs.addObserver(PREF_PREFIX, observer);
+}
+
+/**
+ * Removes an observer for the profiler-related preferences.
+ * @param {PrefObserver} observer
+ * @return {void}
+ */
+function removePrefObserver(observer) {
+  Services.prefs.removeObserver(PREF_PREFIX, observer);
+}
+
+/**
  * This handler handles any messages coming from the WebChannel from profiler.firefox.com.
  *
  * @param {ProfilerWebChannel} channel
@@ -626,6 +647,8 @@ module.exports = {
   revertRecordingSettings,
   changePreset,
   handleWebChannelMessage,
+  addPrefObserver,
+  removePrefObserver,
 };
 
 // Object.keys() confuses the linting which expects a static array expression.
