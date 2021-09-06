@@ -544,6 +544,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                                     LayoutDeviceIntPoint aPoint,
                                     double aPressure, uint32_t aRotation,
                                     int32_t aTiltX, int32_t aTiltY,
+                                    int32_t aButton,
                                     nsIObserver* aObserver) override {
     MOZ_RELEASE_ASSERT(
         false, "This method is not implemented on the current platform");

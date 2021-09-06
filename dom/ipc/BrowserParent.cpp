@@ -1946,13 +1946,13 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativePenInput(
     const uint32_t& aPointerId, const TouchPointerState& aPointerState,
     const LayoutDeviceIntPoint& aPoint, const double& aPressure,
     const uint32_t& aRotation, const int32_t& aTiltX, const int32_t& aTiltY,
-    const uint64_t& aObserverId) {
+    const int32_t& aButton, const uint64_t& aObserverId) {
   AutoSynthesizedEventResponder responder(this, aObserverId, "peninput");
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
     widget->SynthesizeNativePenInput(aPointerId, aPointerState, aPoint,
                                      aPressure, aRotation, aTiltX, aTiltY,
-                                     responder.GetObserver());
+                                     aButton, responder.GetObserver());
   }
   return IPC_OK();
 }
