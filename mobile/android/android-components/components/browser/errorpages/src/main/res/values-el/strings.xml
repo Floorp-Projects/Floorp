@@ -30,7 +30,7 @@
     ]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Για προχωρημένους…</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Σύνθετα…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
         <label>Κάποιος ίσως προσπαθεί να μιμηθεί την ιστοσελίδα και δεν πρέπει να συνεχίσετε.</label>
@@ -137,7 +137,7 @@
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
       <ul>
-        <li>Παρακαλούμε επικοινωνήστε με τους ιδιοκτήτες της ιστοσελίδες για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
+        <li>Παρακαλώ επικοινωνήστε με τους ιδιοκτήτες του ιστοτόπου για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
       </ul>
     ]]></string>
 
