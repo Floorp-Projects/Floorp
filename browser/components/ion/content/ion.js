@@ -402,10 +402,7 @@ async function updateStudy(studyAddonId) {
 // equivalent to what we use for Telemetry IDs
 // https://searchfox.org/mozilla-central/rev/9193635dca8cfdcb68f114306194ffc860456044/toolkit/components/telemetry/app/TelemetryUtils.jsm#222
 function generateUUID() {
-  let str = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator)
-    .generateUUID()
-    .toString();
+  let str = Services.uuid.generateUUID().toString();
   return str.substring(1, str.length - 1);
 }
 

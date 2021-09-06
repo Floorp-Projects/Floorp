@@ -11,9 +11,7 @@ function create_subdir(dir, subdirname) {
 }
 
 function generate_uuid() {
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
   let uuid = uuidGenerator.generateUUID().toString();
   // ditch the {}
   return uuid.substring(1, uuid.length - 1);

@@ -198,8 +198,7 @@ add_task(async function test_broken_referrer() {
   // application has quarantine data but nothing will be pressent in the
   // quarantine database.  This shouldn't happen in the wild.
   function generateQuarantineGUID() {
-    let str = Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
+    let str = Services.uuid
       .generateUUID()
       .toString()
       .toUpperCase();

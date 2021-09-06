@@ -867,9 +867,7 @@ var PushServiceWebSocket = {
   },
 
   _generateID() {
-    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-      Ci.nsIUUIDGenerator
-    );
+    let uuidGenerator = Services.uuid;
     // generateUUID() gives a UUID surrounded by {...}, slice them off.
     return uuidGenerator
       .generateUUID()

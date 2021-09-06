@@ -106,9 +106,7 @@ function createPendingCrashReports(howMany, accessDate) {
     return Promise.all(promises);
   };
 
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
   // Some annotations are always present in the .extra file and CrashSubmit.jsm
   // expects there to be a ServerURL entry, so we'll add them here.
   let extraFileContents = JSON.stringify({

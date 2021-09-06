@@ -95,9 +95,7 @@ add_task(async function setup() {
 });
 
 add_task(async function testContextMenuSaveImage() {
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
 
   for (let networkIsolation of [true, false]) {
     for (let partitionPerSite of [true, false]) {
@@ -192,9 +190,7 @@ add_task(async function testContextMenuSaveImage() {
 });
 
 add_task(async function testContextMenuSaveVideo() {
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
 
   for (let networkIsolation of [true, false]) {
     for (let partitionPerSite of [true, false]) {

@@ -513,10 +513,7 @@ var CommonUtils = {
    * @return string A hex-formatted UUID string.
    */
   generateUUID: function generateUUID() {
-    let uuid = Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
-      .generateUUID()
-      .toString();
+    let uuid = Services.uuid.generateUUID().toString();
 
     return uuid.substring(1, uuid.length - 1);
   },

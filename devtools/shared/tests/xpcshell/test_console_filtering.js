@@ -34,9 +34,7 @@ registerCleanupFunction(() => {
 });
 
 function createFakeAddonWindow({ addonId } = {}) {
-  const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const uuidGen = Services.uuid;
   const uuid = uuidGen.generateUUID().number.slice(1, -1);
 
   if (policy) {

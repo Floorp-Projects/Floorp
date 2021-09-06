@@ -1199,9 +1199,7 @@ async function mockGfxBlocklistItemsFromDisk(path) {
 }
 
 async function mockGfxBlocklistItems(items) {
-  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const { generateUUID } = Services.uuid;
   let bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
   const client = RemoteSettings(
     Services.prefs.getCharPref("services.blocklist.gfx.collection"),

@@ -18,9 +18,7 @@ var factory = {
   QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
-var newClassID = Cc["@mozilla.org/uuid-generator;1"]
-  .getService(Ci.nsIUUIDGenerator)
-  .generateUUID();
+var newClassID = Services.uuid.generateUUID();
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = registrar.contractIDToCID(CONTRACT_ID);

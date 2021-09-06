@@ -109,9 +109,7 @@ let buttonCount = AppConstants.MOZ_DEV_EDITION ? 2 : 1;
 add_task(async function setup() {
   // Create a fake WebExtensionPolicy that we can use for
   // the add-on hang notification.
-  const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const uuidGen = Services.uuid;
   const uuid = uuidGen.generateUUID().number.slice(1, -1);
   let policy = new WebExtensionPolicy({
     name: "Scapegoat",

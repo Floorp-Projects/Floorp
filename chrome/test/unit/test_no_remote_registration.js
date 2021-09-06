@@ -66,9 +66,7 @@ function run_test() {
     platformVersion: "1.9",
   });
 
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const uuidGenerator = Services.uuid;
 
   let XULAppInfoFactory = {
     // These two are used when we register all our factories (and unregister)

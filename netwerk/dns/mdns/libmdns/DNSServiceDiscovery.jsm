@@ -23,9 +23,7 @@ function log(aMsg) {
 }
 
 function generateUuid() {
-  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  var uuidGenerator = Services.uuid;
   return uuidGenerator.generateUUID().toString();
 }
 

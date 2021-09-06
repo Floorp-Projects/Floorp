@@ -6,9 +6,7 @@ var Cm = Components.manager;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const { generateUUID } = Services.uuid;
 
 function AboutPage(aboutHost, chromeURL, uriFlags) {
   this.chromeURL = chromeURL;

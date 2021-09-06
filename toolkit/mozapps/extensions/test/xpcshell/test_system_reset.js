@@ -35,9 +35,7 @@ registerDirectory("XREAppFeat", distroDir);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 
 function makeUUID() {
-  let uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGen = Services.uuid;
   return uuidGen.generateUUID().toString();
 }
 

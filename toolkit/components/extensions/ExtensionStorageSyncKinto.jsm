@@ -497,9 +497,7 @@ class CryptoCollection {
       // This is a new keyring. Invent an ID for this record. If this
       // changes, it means a client replaced the keyring, so we need to
       // reupload everything.
-      const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(
-        Ci.nsIUUIDGenerator
-      );
+      const uuidgen = Services.uuid;
       const uuid = uuidgen.generateUUID().toString();
       data = { uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID };
     }

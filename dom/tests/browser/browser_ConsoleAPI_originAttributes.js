@@ -64,9 +64,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
   let uuid = uuidGenerator.generateUUID().number;
   uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
 

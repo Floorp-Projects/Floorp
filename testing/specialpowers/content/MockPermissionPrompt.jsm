@@ -12,9 +12,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID, oldFactory;
-var newClassID = Cc["@mozilla.org/uuid-generator;1"]
-  .getService(Ci.nsIUUIDGenerator)
-  .generateUUID();
+var newClassID = Services.uuid.generateUUID();
 var newFactory = {
   createInstance(aOuter, aIID) {
     if (aOuter) {

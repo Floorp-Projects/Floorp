@@ -2,9 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 const environment = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
 );

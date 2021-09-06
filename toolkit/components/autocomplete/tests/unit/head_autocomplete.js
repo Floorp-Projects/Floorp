@@ -176,9 +176,7 @@ AutocompletePopupBase.prototype = {
  */
 function registerAutoCompleteSearch(aSearch) {
   var name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
-  var cid = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator)
-    .generateUUID();
+  var cid = Services.uuid.generateUUID();
 
   var desc = "Test AutoCompleteSearch";
   var componentManager = Components.manager.QueryInterface(

@@ -5,10 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_backgroundtask_deletes_profile() {
-  let sentinel = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator)
-    .generateUUID()
-    .toString();
+  let sentinel = Services.uuid.generateUUID().toString();
   sentinel = sentinel.substring(1, sentinel.length - 1);
 
   let stdoutLines = [];
