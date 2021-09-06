@@ -4498,8 +4498,8 @@ void ScrollFrameHelper::NotifyApzTransaction() {
 }
 
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
-    WebRenderLayerManager* aLayerManager,
-    const nsIFrame* aContainerReferenceFrame,
+    WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
+    const nsPoint& aOffsetToReferenceFrame,
     const DisplayItemClip* aClip) const {
   if (!mWillBuildScrollableLayer) {
     return Nothing();
@@ -4516,9 +4516,9 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
   return Some(nsLayoutUtils::ComputeScrollMetadata(
-      mScrolledFrame, mOuter, mOuter->GetContent(), aContainerReferenceFrame,
-      aLayerManager, mScrollParentID, mScrollPort.Size(), parentLayerClip,
-      isRootContent));
+      mScrolledFrame, mOuter, mOuter->GetContent(), aItemFrame,
+      aOffsetToReferenceFrame, aLayerManager, mScrollParentID,
+      mScrollPort.Size(), parentLayerClip, isRootContent));
 }
 
 bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
