@@ -218,7 +218,7 @@ add_task(async function test_getVariable_no_mutation() {
     Cu.cloneInto(
       {
         branch: {
-          feature: { value: { mochitest: true } },
+          features: [{ featureId: "aboutwelcome", value: { mochitest: true } }],
         },
       },
       {},
