@@ -349,11 +349,6 @@ void Realm::traceWeakObjects(JSTracer* trc) {
   TraceWeakEdge(trc, &global_, "Realm::global_");
 }
 
-void Realm::traceWeakSelfHostingScriptSource(JSTracer* trc) {
-  TraceWeakEdge(trc, &selfHostingScriptSource,
-                "Realm::selfHostingScriptSource");
-}
-
 void Realm::traceWeakEdgesInJitRealm(JSTracer* trc) {
   if (jitRealm_) {
     jitRealm_->traceWeak(trc, this);
