@@ -1,9 +1,10 @@
+from typing import Dict
+from urllib import parse as urlparse
+
 from . import error
 from . import protocol
 from . import transport
 from .bidi.client import BidiSession
-
-from urllib import parse as urlparse
 
 
 def command(func):
@@ -551,6 +552,9 @@ class Session(object):
             body["capabilities"] = self.requested_capabilities
 
         value = self.send_command("POST", "session", body=body)
+        assert isinstance(value["sessionId"], str)
+        assert isinstance(value["capabilities"], Dict)
+
         self.session_id = value["sessionId"]
         self.capabilities = value["capabilities"]
 
