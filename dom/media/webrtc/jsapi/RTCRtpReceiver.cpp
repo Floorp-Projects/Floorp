@@ -298,12 +298,15 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               aConduit->LastRtcpReceived().apply([&](auto& aTimestamp) {
                 RTCRemoteOutboundRtpStreamStats remote;
                 constructCommonRemoteOutboundRtpStats(remote, aTimestamp);
+                if (!audioStats->last_sender_report_timestamp_ms) {
+                  return;
+                }
                 remote.mPacketsSent.Construct(
-                    audioStats->rtcp_sender_packets_sent);
+                    audioStats->sender_reports_packets_sent);
                 remote.mBytesSent.Construct(
-                    audioStats->rtcp_sender_octets_sent);
+                    audioStats->sender_reports_bytes_sent);
                 remote.mRemoteTimestamp.Construct(
-                    audioStats->rtcp_sender_ntp_timestamp_ms);
+                    *audioStats->last_sender_report_remote_timestamp_ms);
                 if (!report->mRemoteOutboundRtpStreamStats.AppendElement(
                         std::move(remote), fallible)) {
                   mozalloc_handle_oom(0);

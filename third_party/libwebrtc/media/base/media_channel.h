@@ -537,6 +537,13 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   // longer than 150 ms).
   int32_t interruption_count = 0;
   int32_t total_interruption_duration_ms = 0;
+  // Remote outbound stats derived by the received RTCP sender reports.
+  // https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*
+  absl::optional<int64_t> last_sender_report_timestamp_ms;
+  absl::optional<int64_t> last_sender_report_remote_timestamp_ms;
+  uint32_t sender_reports_packets_sent = 0;
+  uint64_t sender_reports_bytes_sent = 0;
+  uint64_t sender_reports_reports_count = 0;
 };
 
 struct VideoSenderInfo : public MediaSenderInfo {
