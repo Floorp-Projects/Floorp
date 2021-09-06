@@ -7,7 +7,9 @@
 varying vec2 v_pos;
 
 flat varying vec2 v_scale_dir;
-flat varying float v_start_offset;
+
+// Start offset. Packed in to a vector to work around bug 1630356.
+flat varying vec2 v_start_offset;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -30,12 +32,12 @@ void main(void) {
 
     // Normalize UV and offsets to 0..1 scale.
     v_scale_dir = dir / dot(dir, dir);
-    v_start_offset = dot(aStartPoint, v_scale_dir);
+    v_start_offset.x = dot(aStartPoint, v_scale_dir);
 
     v_scale_dir *= (aTaskRect.zw - aTaskRect.xy);
 
-    v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);
-    v_gradient_address = aGradientStopsAddress;
+    v_gradient_repeat.x = float(aExtendMode == EXTEND_MODE_REPEAT);
+    v_gradient_address.x = aGradientStopsAddress;
 }
 #endif
 
@@ -44,7 +46,7 @@ void main(void) {
 
 void main(void) {
     // Project position onto a direction vector to compute offset.
-    float offset = dot(v_pos, v_scale_dir) - v_start_offset;
+    float offset = dot(v_pos, v_scale_dir) - v_start_offset.x;
 
     oFragColor = sample_gradient(offset);
 }
@@ -52,13 +54,13 @@ void main(void) {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address), int(GRADIENT_ENTRIES + 2.0));
+    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address.x), int(GRADIENT_ENTRIES + 2.0));
     if (address < 0) {
         return;
     }
 
-    float offset = dot(v_pos, v_scale_dir) - v_start_offset;
-    swgl_commitLinearGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat != 0.0,
+    float offset = dot(v_pos, v_scale_dir) - v_start_offset.x;
+    swgl_commitLinearGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat.x != 0.0,
                                    offset);
 }
 #endif
