@@ -156,14 +156,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       sponsoredClickUrl: suggestion.click_url,
       sponsoredBlockId: suggestion.block_id,
       sponsoredAdvertiser: suggestion.advertiser,
-      isSponsored: true,
+      isSponsored: suggestion.is_sponsored,
       helpUrl: this.helpUrl,
       helpL10nId: "firefox-suggest-urlbar-learn-more",
     };
-
-    if (!suggestion.is_sponsored) {
-      payload.sponsoredL10nId = "firefox-suggest-urlbar-nonsponsored-action";
-    }
 
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
