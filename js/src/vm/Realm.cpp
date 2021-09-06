@@ -396,10 +396,6 @@ void Realm::traceWeakObjectRealm(JSTracer* trc) {
 }
 
 void Realm::traceWeakTemplateObjects(JSTracer* trc) {
-  TraceWeakEdge(trc, &mappedArgumentsTemplate_,
-                "Realm::mappedArgumentsTemplate_");
-  TraceWeakEdge(trc, &unmappedArgumentsTemplate_,
-                "Realm::unmappedArgumentsTemplate_");
   TraceWeakEdge(trc, &iterResultTemplate_, "Realm::iterResultTemplate_");
   TraceWeakEdge(trc, &iterResultWithoutPrototypeTemplate_,
                 "Realm::iterResultWithoutPrototypeTemplate_");
