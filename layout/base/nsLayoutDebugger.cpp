@@ -60,8 +60,6 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
   }
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect layerRect = rect - (*aItem->GetAnimatedGeometryRoot())
-                                ->GetOffsetToCrossDoc(aItem->ReferenceFrame());
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
   nsDisplayList* list = aItem->GetChildren();
   const DisplayItemClip& clip = aItem->GetClip();
@@ -79,18 +77,16 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
 
   aStream << nsPrintfCString(
       "%s p=0x%p f=0x%p(%s) key=%d %sbounds(%d,%d,%d,%d) "
-      "layerBounds(%d,%d,%d,%d) "
-      "componentAlpha(%d,%d,%d,%d) clip(%s) asr(%s) clipChain(%s)%s ref=0x%p "
+      "componentAlpha(%d,%d,%d,%d) clip(%s) asr(%s) clipChain(%s)%s "
       "agr=0x%p",
       aItem->Name(), aItem, (void*)f, NS_ConvertUTF16toUTF8(contentData).get(),
       aItem->GetPerFrameKey(),
       (aItem->ZIndex() ? nsPrintfCString("z=%d ", aItem->ZIndex()).get() : ""),
-      rect.x, rect.y, rect.width, rect.height, layerRect.x, layerRect.y,
-      layerRect.width, layerRect.height, component.x, component.y,
+      rect.x, rect.y, rect.width, rect.height, component.x, component.y,
       component.width, component.height, clip.ToString().get(),
       ActiveScrolledRoot::ToString(aItem->GetActiveScrolledRoot()).get(),
       DisplayItemClipChain::ToString(aItem->GetClipChain()).get(),
-      aItem->IsUniform(aBuilder) ? " uniform" : "", aItem->ReferenceFrame(),
+      aItem->IsUniform(aBuilder) ? " uniform" : "",
       aItem->GetAnimatedGeometryRoot()->mFrame);
 
   for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
