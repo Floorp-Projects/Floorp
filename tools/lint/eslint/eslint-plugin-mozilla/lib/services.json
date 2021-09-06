@@ -42,6 +42,7 @@
     "nsITextToSubURI": "textToSubURI",
     "nsIThreadManager": "tm",
     "nsIURLFormatter": "urlFormatter",
+    "nsIUUIDGenerator": "uuid",
     "nsIVersionComparator": "vc",
     "nsIWindowMediator": "wm",
     "nsIWindowWatcher": "ww",
