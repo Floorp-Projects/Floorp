@@ -82,7 +82,7 @@ class InputToolbarIntegration(
         // Use the same background for display/edit modes.
         val urlBackground = ResourcesCompat.getDrawable(
             fragment.resources,
-            R.drawable.toolbar_url_background,
+            R.drawable.toolbar_url_dark_background,
             fragment.context?.theme
         )
 

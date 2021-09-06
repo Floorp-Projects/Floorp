@@ -7,6 +7,7 @@ package org.mozilla.focus.browser.integration
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -15,22 +16,24 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.utils.ColorUtils
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.utils.HardwareUtils
 
 @Suppress("LongParameterList")
 class BrowserToolbarIntegration(
-    store: BrowserStore,
-    toolbar: BrowserToolbar,
-    fragment: BrowserFragment,
+    private val store: BrowserStore,
+    private val toolbar: BrowserToolbar,
+    private val fragment: BrowserFragment,
     controller: BrowserMenuController,
     sessionUseCases: SessionUseCases,
     customTabsUseCases: CustomTabsUseCases,
     private val onUrlLongClicked: () -> Boolean,
-    customTabId: String? = null
+    private val customTabId: String? = null
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,
@@ -88,15 +91,7 @@ class BrowserToolbarIntegration(
             fragment.showTrackingProtectionPanel()
         }
 
-        // Use the same background for display/edit modes.
-        val urlBackground = ResourcesCompat.getDrawable(
-            fragment.resources,
-            R.drawable.toolbar_url_background,
-            fragment.context?.theme
-        )
-
-        toolbar.display.setUrlBackground(urlBackground)
-        toolbar.edit.setUrlBackground(urlBackground)
+        setUrlBackground()
 
         if (customTabId != null) {
             val menu = CustomTabMenu(
@@ -125,6 +120,29 @@ class BrowserToolbarIntegration(
                 customTabId
             )
         }
+    }
+
+    // Use the same background for display/edit modes.
+    private fun setUrlBackground() {
+        var backgroundResId = R.drawable.toolbar_url_dark_background
+
+        // Use a light background for url only when the current tab is a custom tab
+        // with a light background for toolbar
+        store.state.findCustomTabOrSelectedTab(customTabId)?.ifCustomTab()?.let { sessionState ->
+            sessionState.config.toolbarColor?.let { color ->
+                if (!ColorUtils.isDark(color)) {
+                    backgroundResId = R.drawable.toolbar_url_light_background
+                }
+            }
+        }
+
+        val urlBackground = ResourcesCompat.getDrawable(
+            fragment.resources,
+            backgroundResId,
+            fragment.context?.theme
+        )
+        toolbar.display.setUrlBackground(urlBackground)
+        toolbar.edit.setUrlBackground(urlBackground)
     }
 
     override fun start() {

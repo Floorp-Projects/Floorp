@@ -45,7 +45,8 @@
     <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorSecondary">#342F6D</color>
     <color name="menuBackground">@color/colorSecondary</color>
-    <color name="toolbarUrlBackground">#1D1133</color>
+    <color name="toolbarUrlDarkBackground" tools:ignore="MissingDefaultResource">#1D1133</color>
+    <color name="toolbarUrlLightBackground" tools:ignore="MissingDefaultResource">#FBFBFE</color>
     <color name="headerGradientStart">#2B2154</color>
     <color name="headerGradientMiddle">#281D4C</color>
     <color name="headerGradientEnd">#2A2051</color>
@@ -65,4 +66,7 @@
 
     <!-- Toolbar -->
     <color name="toolbar_color" tools:ignore="MissingDefaultResource">#271948</color>
+    <!-- Temporary colors until light theme it will be implemented -->
+    <color name="enabled_toolbar_button_color" tools:ignore="MissingDefaultResource">#000000</color>
+
 </resources>

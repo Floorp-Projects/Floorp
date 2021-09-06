@@ -17,7 +17,9 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.utils.ColorUtils
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.theme.resolveAttribute
 
 class NavigationButtonsIntegration(
@@ -29,10 +31,18 @@ class NavigationButtonsIntegration(
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
-    private val enabledColorRes = context.theme.resolveAttribute(R.attr.primaryText)
-    private val disabledColorRes = context.theme.resolveAttribute(R.attr.disabled)
+    private var enabledColorRes = context.theme.resolveAttribute(R.attr.primaryText)
+    private var disabledColorRes = context.theme.resolveAttribute(R.attr.disabled)
 
     init {
+        store.state.findCustomTabOrSelectedTab(customTabId)?.ifCustomTab()?.let { sessionState ->
+            sessionState.config.toolbarColor?.let { color ->
+                if (!ColorUtils.isDark(color)) {
+                    enabledColorRes = R.color.enabled_toolbar_button_color
+                    disabledColorRes = R.color.disabledText
+                }
+            }
+        }
 
         val backButton = BrowserToolbar.TwoStateButton(
             primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_back)!!,
