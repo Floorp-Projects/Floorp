@@ -9,14 +9,8 @@ varying vec2 vUv;
 flat varying vec4 vUvBounds;
 flat varying vec4 vEdge;
 flat varying vec4 vUvBounds_NoClamp;
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// Work around Adreno 3xx driver bug. See the v_perspective comment in
-// brush_image or bug 1630356 for details.
-flat varying vec2 vClipModeVec;
-#define vClipMode vClipModeVec.x
-#else
-flat varying float vClipMode;
-#endif
+// Clip mode. Packed in to a vector to avoid bug 1630356.
+flat varying vec2 vClipMode;
 
 #define MODE_STRETCH        0
 #define MODE_SIMPLE         1
@@ -80,7 +74,7 @@ void main(void) {
         cmi.base.screen_origin,
         cmi.base.device_pixel_scale
     );
-    vClipMode = float(bs_data.clip_mode);
+    vClipMode.x = float(bs_data.clip_mode);
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
@@ -137,8 +131,8 @@ void main(void) {
 
     float texel = TEX_SAMPLE(sColor0, uv).r;
 
-    float alpha = mix(texel, 1.0 - texel, vClipMode);
-    float result = vLocalPos.w > 0.0 ? mix(vClipMode, alpha, in_shadow_rect) : 0.0;
+    float alpha = mix(texel, 1.0 - texel, vClipMode.x);
+    float result = vLocalPos.w > 0.0 ? mix(vClipMode.x, alpha, in_shadow_rect) : 0.0;
 
     oFragColor = vec4(result);
 }
@@ -224,7 +218,7 @@ void swgl_drawSpanR8() {
     // Fill any initial sections of the span that are clipped out based on clip mode.
     if (swgl_SpanLength > shadow_start_len) {
         int num_before = swgl_SpanLength - shadow_start_len;
-        swgl_commitPartialSolidR8(num_before, vClipMode);
+        swgl_commitPartialSolidR8(num_before, vClipMode.x);
         float steps_before = float(num_before / swgl_StepSize);
         uv_linear += steps_before * uv_linear_step;
         local_pos += steps_before * local_step;
@@ -249,8 +243,8 @@ void swgl_drawSpanR8() {
 
             float texel = TEX_SAMPLE(sColor0, uv).r;
 
-            float alpha = mix(texel, 1.0 - texel, vClipMode);
-            float result = mix(vClipMode, alpha, in_shadow_rect);
+            float alpha = mix(texel, 1.0 - texel, vClipMode.x);
+            float result = mix(vClipMode.x, alpha, in_shadow_rect);
             swgl_commitColorR8(result);
 
             uv_linear += uv_linear_step;
@@ -302,9 +296,9 @@ void swgl_drawSpanR8() {
             if (uv_bounds.xy == uv_bounds.zw) {
                 uv = clamp(uv, uv_bounds.xy, uv_bounds.zw);
                 float texel = TEX_SAMPLE(sColor0, uv).r;
-                float alpha = mix(texel, 1.0 - texel, vClipMode);
+                float alpha = mix(texel, 1.0 - texel, vClipMode.x);
                 swgl_commitPartialSolidR8(num_inside, alpha);
-            } else if (vClipMode != 0.0) {
+            } else if (vClipMode.x != 0.0) {
                 swgl_commitPartialTextureLinearInvertR8(num_inside, sColor0, uv, uv_bounds);
             } else {
                 swgl_commitPartialTextureLinearR8(num_inside, sColor0, uv, uv_bounds);
@@ -320,7 +314,7 @@ void swgl_drawSpanR8() {
 
     // Fill any remaining sections of the span that are clipped out.
     if (swgl_SpanLength > 0) {
-        swgl_commitPartialSolidR8(swgl_SpanLength, vClipMode);
+        swgl_commitPartialSolidR8(swgl_SpanLength, vClipMode.x);
     }
 }
 #endif

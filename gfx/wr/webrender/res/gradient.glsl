@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-flat varying HIGHP_FS_ADDRESS int v_gradient_address;
-
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// Work around Adreno 3xx driver bug. See the v_perspective comment in
-// brush_image or bugs 1630356 and  for details.
-flat varying vec2 v_gradient_repeat_vec;
-#define v_gradient_repeat v_gradient_repeat_vec.x
-#else
+// Gradient GPU cache address.
+// Packed in to a vector to work around bug 1630356.
+flat varying HIGHP_FS_ADDRESS ivec2 v_gradient_address;
 // Repetition along the gradient stops.
-flat varying float v_gradient_repeat;
-#endif
+// Packed in to a vector to work around bug 1630356.
+flat varying vec2 v_gradient_repeat;
 
 #ifdef WR_FRAGMENT_SHADER
 
@@ -49,7 +44,7 @@ float clamp_gradient_entry(float offset) {
 
 vec4 sample_gradient(float offset) {
     // Modulo the offset if the gradient repeats.
-    offset -= floor(offset) * v_gradient_repeat;
+    offset -= floor(offset) * v_gradient_repeat.x;
 
     // Calculate the texel to index into the gradient color entries:
     //     floor(x) is the gradient color entry index
@@ -59,7 +54,7 @@ vec4 sample_gradient(float offset) {
     float entry_fract = x - entry_index;
 
     // Fetch the start and end color. There is a [start, end] color per entry.
-    vec4 texels[2] = fetch_from_gpu_cache_2(v_gradient_address + 2 * int(entry_index));
+    vec4 texels[2] = fetch_from_gpu_cache_2(v_gradient_address.x + 2 * int(entry_index));
 
     // Finally interpolate and apply dithering
     return dither(texels[0] + texels[1] * entry_fract);

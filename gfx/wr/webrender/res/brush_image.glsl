@@ -21,19 +21,9 @@ flat varying vec4 v_uv_bounds;
 // sampling artifacts.
 flat varying vec4 v_uv_sample_bounds;
 
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// On Adreno 3xx devices we have observed that a flat scalar varying used to calculate
-// fragment shader output can result in the entire output being "flat". Here, for example,
-// v_perspective being flat results in the UV coordinate calculated for every fragment
-// being equal to the UV coordinate for the provoking vertex, which results in the entire
-// triangle being rendered a solid color.
-// Packing the varying in a vec2 works around this. See bug 1630356.
-flat varying vec2 v_perspective_vec;
-#define v_perspective v_perspective_vec.x
-#else
 // Flag to allow perspective interpolation of UV.
-flat varying float v_perspective;
-#endif
+// Packed in to vector to work around bug 1630356.
+flat varying vec2 v_perspective;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -174,7 +164,7 @@ void brush_vs(
     }
 
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
-    v_perspective = perspective_interpolate;
+    v_perspective.x = perspective_interpolate;
 
     // Handle case where the UV coords are inverted (e.g. from an
     // external image).
@@ -323,7 +313,7 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
 }
 
 Fragment brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective.x);
     vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
 
     // Clamp the uvs to avoid sampling artifacts.
@@ -368,7 +358,7 @@ void swgl_drawSpanRGBA8() {
         }
     #endif
 
-    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_perspective);
+    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_perspective.x);
 
     #ifdef WR_FEATURE_REPETITION
         // Get the UVs before any repetition, scaling, or offsetting has occurred...

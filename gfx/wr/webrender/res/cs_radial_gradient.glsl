@@ -6,7 +6,8 @@
 
 varying vec2 v_pos;
 
-flat varying float v_start_radius;
+// Start radius. Packed in to a vector to work around bug 1630356.
+flat varying vec2 v_start_radius;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -30,7 +31,7 @@ void main(void) {
     vec2 pos = mix(aTaskRect.xy, aTaskRect.zw, aPosition.xy);
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 
-    v_start_radius = aStartRadius * radius_scale;
+    v_start_radius.x = aStartRadius * radius_scale;
 
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
@@ -40,8 +41,8 @@ void main(void) {
     v_pos = ((aTaskRect.zw - aTaskRect.xy) * aPosition.xy * aScale - aCenter) * radius_scale;
     v_pos.y *= aXYRatio;
 
-    v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);
-    v_gradient_address = aGradientStopsAddress;
+    v_gradient_repeat.x = float(aExtendMode == EXTEND_MODE_REPEAT);
+    v_gradient_address.x = aGradientStopsAddress;
 }
 #endif
 
@@ -50,20 +51,20 @@ void main(void) {
 
 void main(void) {
     // Solve for t in length(pd) = v_start_radius + t * rd
-    float offset = length(v_pos) - v_start_radius;
+    float offset = length(v_pos) - v_start_radius.x;
 
     oFragColor = sample_gradient(offset);
 }
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address),
+    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address.x),
                                         int(GRADIENT_ENTRIES + 2.0));
     if (address < 0) {
         return;
     }
-    swgl_commitRadialGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat != 0.0,
-                                   v_pos, v_start_radius);
+    swgl_commitRadialGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat.x != 0.0,
+                                   v_pos, v_start_radius.x);
 }
 #endif
 
