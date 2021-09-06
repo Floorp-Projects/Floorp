@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Uslig %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -653,6 +653,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Sefsex</string>
 
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Amdal n usnas i usnes n yibeddilen…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iccaren yeldin</string>
@@ -1147,7 +1150,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Kkes</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Sefsex</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Sefsex</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Askar n ugdil ačaran yermed</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1314,7 +1317,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_privacy_notice_read_button">Ɣer tasertit-nneɣ n tbaḍnit</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Mdel</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Mdel</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Bdu tunigin</string>
@@ -1367,11 +1370,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
-    <string name="etp_settings">Iɣewwaṛen n tɣellist</string>
+    <string name="etp_settings">Iɣewwaren n tɣellist</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Ammesten mgal aḍfaṛ yettwaseǧhed</string>
+    <string name="preference_enhanced_tracking_protection">Ammesten yettwasǧehden mgal aḍfar</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Inig war ma ḍefṛen-k</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Inig war ma ḍefṛen-k·kem</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Ḥrez isefka-ik i kečč. %s ad k-yemmesten seg tuget n yineḍfaṛen yettwassnen i yeṭṭafaṛen ayen i txeddmeḍ srid.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1381,28 +1384,28 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Yerked gar tbaḍnit akked temlellit. ISebtar ad d-alin s wudem amagnu.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummeten n tizeɣt mgal aḍfaṛ</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummesten n tizeɣt mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Uḥriṣ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Isewḥal ugar n ineḍfaren akken isebtar ad d-allin s wudem aurad, maca kra n tmahilin n usebter zemrent ad rẓent.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Isewḥal ugar n ineḍfaren akken isebtar ad d-allin s wudem arurad, maca kra n tmahilin n usebter zemrent ad rẓent.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummeten n uḥriṣ mgal aḍfaṛ</string>
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummesten n uḥriṣ mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom">Udmawan</string>
+    <string name="preference_enhanced_tracking_protection_custom">Sagen</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">Fren ineḍfaren akked yisekripten ara tesweḥleḍ.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Fren anwi ineḍfaren akked yisekripten ara tesweḥleḍ.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_custom_info_button">Ayen iweḥlen s ummeten udmawan mgal aḍfaṛ</string>
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Ayen iweḥlen s ummesten udmawan mgal aḍfaṛ</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Inagan n tuqqna</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Ineḍfaṛen gar yismal akked iẓeḍwa inmettiyen</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Ineḍfaṛen gar yismal akked yizeḍwa inmettiyen</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Inagan n tuqqna n yismal ur yettwarzan ara</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Inagan n tuqqna n yismal ur nemẓir ara</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Akk inagan n tuqqna wis kraḍ (zemren ad rẓen isaml web)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Akk inagan n tuqqna n wis kraḍ (zemren ad rẓen isaml web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Akk inagan n tuqqna (ad rẓen isaml web)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
@@ -1410,7 +1413,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Deg iccren meṛṛa</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Deg iccaren usligen kan</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Deg waccaren usligen kan</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Deg iccaren udmawanen kan</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1445,7 +1448,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ad isewḥel adellel, tividyutin akked ugbur-nniḍen i d-yekka beṛṛa n usmel, win i igebren tangalt n uḍfaṛ. Izmer ad iḥaz kra n tmahilin n usmel.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Yal mi ara yili urti d ajenjaṛ, %s isewḥel ineḍfaren ɣef usmel. Sit i wugar n talɣut.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Yal mi ara yili urti d ajenjaṛ, %s isewḥel ineḍfaren ɣef usmel. Sit i wugar n talɣut.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ammesten yermed i usmel-a</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1528,7 +1531,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Urǧin sekles</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Taččart tawurmant</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Taččart tawurmant</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Ččar s wudem awurman %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->

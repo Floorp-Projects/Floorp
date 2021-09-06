@@ -1562,7 +1562,7 @@
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">ᱥᱟᱭᱤᱴ</string>
     <!-- The header for the username for a login -->
-    <string name="preferences_passwords_saved_logins_username">ᱵᱮᱵᱷᱟᱨᱤᱡᱟᱠ ᱭᱩᱛᱩᱢ</string>
+    <string name="preferences_passwords_saved_logins_username">ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱧᱩᱛᱩᱢ</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
@@ -1827,7 +1827,7 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">ᱛᱷᱟᱨ ᱞᱟᱹᱜᱤᱛ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
-    <string name="synced_tabs_no_open_tabs">ᱠᱷᱩᱞᱟᱹᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
+    <string name="synced_tabs_no_open_tabs">ᱠᱷᱩᱞᱟᱹᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
