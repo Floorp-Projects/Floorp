@@ -163,10 +163,12 @@ add_task(
     const expected = ExperimentFakes.experiment("foo", {
       branch: {
         slug: "treatment",
-        feature: {
-          featureId: "foo",
-          value: { enabled: true },
-        },
+        features: [
+          {
+            featureId: "foo",
+            value: { enabled: true },
+          },
+        ],
       },
     });
     const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
@@ -229,10 +231,12 @@ add_task(async function test_record_exposure_event() {
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
-        feature: {
-          featureId: "foo",
-          value: { enabled: false },
-        },
+        features: [
+          {
+            featureId: "foo",
+            value: { enabled: false },
+          },
+        ],
       },
     })
   );
@@ -259,10 +263,12 @@ add_task(async function test_record_exposure_event_once() {
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
-        feature: {
-          featureId: "foo",
-          value: { enabled: false },
-        },
+        features: [
+          {
+            featureId: "foo",
+            value: { enabled: false },
+          },
+        ],
       },
     })
   );
@@ -365,11 +371,13 @@ add_task(async function test_isEnabled_backwards_compatible() {
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
-        feature: {
-          featureId: "foo",
-          enabled: true,
-          value: {},
-        },
+        features: [
+          {
+            featureId: "foo",
+            enabled: true,
+            value: {},
+          },
+        ],
       },
     })
   );
@@ -386,7 +394,15 @@ add_task(async function test_onUpdate_before_store_ready() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
   sandbox.stub(manager.store, "getAllActive").returns([
     ExperimentFakes.experiment("foo-experiment", {
-      branch: { slug: "control", feature: { featureId: "foo", value: null } },
+      branch: {
+        slug: "control",
+        features: [
+          {
+            featureId: "foo",
+            value: null,
+          },
+        ],
+      },
     }),
   ]);
 

@@ -13,12 +13,22 @@ add_task(async function test_recipe_fake_validates() {
 });
 
 add_task(async function test_enrollmentHelper() {
-  let recipe = ExperimentFakes.recipe("bar");
-  recipe.branches.forEach(branch => {
-    // Use a feature that will set the sync pref cache
-    branch.feature.featureId = "aboutwelcome";
+  let recipe = ExperimentFakes.recipe("bar", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [{ featureId: "aboutwelcome", value: {} }],
+      },
+    ],
   });
   let manager = ExperimentFakes.manager();
+
+  Assert.deepEqual(
+    recipe.featureIds,
+    ["aboutwelcome"],
+    "Helper sets correct featureIds"
+  );
 
   await manager.onStartup();
 

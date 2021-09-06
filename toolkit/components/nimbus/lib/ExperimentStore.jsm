@@ -34,14 +34,6 @@ let tryJSONParse = data => {
   return null;
 };
 XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
-  // Pref name changed in bug 1691516 and we want to clear the old pref for users
-  const previousPrefName = "messaging-system.syncdatastore.data";
-  try {
-    if (IS_MAIN_PROCESS) {
-      Services.prefs.clearUserPref(previousPrefName);
-    }
-  } catch (e) {}
-
   let experimentsPrefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
   let defaultsPrefBranch = Services.prefs.getBranch(SYNC_DEFAULTS_PREF_BRANCH);
   return {
@@ -205,6 +197,31 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
 
 const DEFAULT_STORE_ID = "ExperimentStoreData";
 
+/**
+ * Returns all feature ids associated with the branch provided.
+ * Fallback for when `featureIds` was not persisted to disk. Can be removed
+ * after bug 1725240 has reached release.
+ *
+ * @param {Branch} branch
+ * @returns {string[]}
+ */
+function getAllBranchFeatureIds(branch) {
+  return featuresCompat(branch).map(f => f.featureId);
+}
+
+function featuresCompat(branch) {
+  if (!branch || (!branch.feature && !branch.features)) {
+    return [];
+  }
+  let { features } = branch;
+  // In <=v1.5.0 of the Nimbus API, experiments had single feature
+  if (!features) {
+    features = [branch.feature];
+  }
+
+  return features;
+}
+
 class ExperimentStore extends SharedDataMap {
   static SYNC_DATA_PREF_BRANCH = SYNC_DATA_PREF_BRANCH;
   static SYNC_DEFAULTS_PREF_BRANCH = SYNC_DEFAULTS_PREF_BRANCH;
@@ -216,13 +233,10 @@ class ExperimentStore extends SharedDataMap {
   async init() {
     await super.init();
 
-    this.getAllActive().forEach(({ branch }) => {
-      if (branch?.feature?.featureId) {
-        this._emitFeatureUpdate(
-          branch.feature.featureId,
-          "feature-experiment-loaded"
-        );
-      }
+    this.getAllActive().forEach(({ branch, featureIds }) => {
+      (featureIds || getAllBranchFeatureIds(branch)).forEach(featureId =>
+        this._emitFeatureUpdate(featureId, "feature-experiment-loaded")
+      );
     });
 
     Services.tm.idleDispatchToMainThread(() => this._cleanupOldRecipes());
@@ -243,7 +257,7 @@ class ExperimentStore extends SharedDataMap {
         experiment =>
           experiment.featureIds?.includes(featureId) ||
           // Supports <v1.3.0, which was when .featureIds was added
-          experiment.branch?.feature?.featureId === featureId
+          getAllBranchFeatureIds(experiment.branch).includes(featureId)
         // Default to the pref store if data is not yet ready
       ) || syncDataStore.get(featureId)
     );
@@ -305,13 +319,12 @@ class ExperimentStore extends SharedDataMap {
 
   _emitExperimentUpdates(experiment) {
     this.emit(`update:${experiment.slug}`, experiment);
-    if (experiment.branch.feature) {
-      this.emit(`update:${experiment.branch.feature.featureId}`, experiment);
-      this._emitFeatureUpdate(
-        experiment.branch.feature.featureId,
-        "experiment-updated"
-      );
-    }
+    (
+      experiment.featureIds || getAllBranchFeatureIds(experiment.branch)
+    ).forEach(featureId => {
+      this.emit(`update:${featureId}`, experiment);
+      this._emitFeatureUpdate(featureId, "experiment-updated");
+    });
   }
 
   _emitFeatureUpdate(featureId, reason) {
@@ -330,16 +343,26 @@ class ExperimentStore extends SharedDataMap {
    * @param {Enrollment} experiment
    */
   _updateSyncStore(experiment) {
-    let featureId = experiment.branch.feature?.featureId;
-    if (
-      FeatureManifest[featureId]?.isEarlyStartup ||
-      experiment.branch.feature?.isEarlyStartup
-    ) {
-      if (!experiment.active) {
-        // Remove experiments on un-enroll, no need to check if it exists
-        syncDataStore.delete(featureId);
-      } else {
-        syncDataStore.set(featureId, experiment);
+    let features = featuresCompat(experiment.branch);
+    for (let feature of features) {
+      if (
+        FeatureManifest[feature.featureId]?.isEarlyStartup ||
+        feature.isEarlyStartup
+      ) {
+        if (!experiment.active) {
+          // Remove experiments on un-enroll, no need to check if it exists
+          syncDataStore.delete(feature.featureId);
+        } else {
+          syncDataStore.set(feature.featureId, {
+            ...experiment,
+            branch: {
+              ...experiment.branch,
+              feature,
+              // Only store the early startup feature
+              features: null,
+            },
+          });
+        }
       }
     }
   }

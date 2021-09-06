@@ -11,35 +11,38 @@
         "branch": {
           "type": "object",
           "properties": {
-            "feature": {
-              "type": "object",
-              "properties": {
-                "featureId": {
-                  "type": "string",
-                  "description": "The identifier for the feature flag"
+            "features": {
+              "type": "array",
+              "items":  {
+                "type": "object",
+                "properties": {
+                  "featureId": {
+                    "type": "string",
+                    "description": "The identifier for the feature flag"
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional extra params for the feature (this should be validated against a schema)"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "(deprecated)"
+                  }
                 },
-                "value": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "additionalProperties": {}
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "description": "Optional extra params for the feature (this should be validated against a schema)"
-                },
-                "enabled": {
-                  "type": "boolean",
-                  "description": "(deprecated)"
-                }
-              },
-              "required": ["featureId", "value"],
-              "additionalProperties": false
+                "required": ["featureId", "value"],
+                "additionalProperties": false
+              }
             }
           },
-          "required": ["feature"]
+          "required": ["features"]
         },
         "active": {
           "type": "boolean",
@@ -87,7 +90,8 @@
         "experimentType",
         "source",
         "userFacingName",
-        "userFacingDescription"
+        "userFacingDescription",
+        "featureIds"
       ],
       "additionalProperties": false,
       "description": "The experiment definition accessible to:\n1. The Nimbus SDK via Remote Settings\n2. Jetstream via the Experimenter API"

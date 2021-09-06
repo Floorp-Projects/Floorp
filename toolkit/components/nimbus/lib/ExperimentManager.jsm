@@ -35,6 +35,19 @@ const TELEMETRY_DEFAULT_EXPERIMENT_TYPE = "nimbus";
 
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
+function featuresCompat(branch) {
+  if (!branch || (!branch.feature && !branch.features)) {
+    return [];
+  }
+  let { features } = branch;
+  // In <=v1.5.0 of the Nimbus API, experiments had single feature
+  if (!features) {
+    features = [branch.feature];
+  }
+
+  return features;
+}
+
 /**
  * A module for processes Experiment recipes, choosing and storing enrollment state,
  * and sending experiment-related Telemetry.
@@ -184,19 +197,16 @@ class _ExperimentManager {
     }
 
     const branch = await this.chooseBranch(slug, branches);
+    const features = featuresCompat(branch);
+    for (let feature of features) {
+      if (this.store.hasExperimentForFeature(feature?.featureId)) {
+        log.debug(
+          `Skipping enrollment for "${slug}" because there is an existing experiment for its feature.`
+        );
+        this.sendFailureTelemetry("enrollFailed", slug, "feature-conflict");
 
-    if (
-      this.store.hasExperimentForFeature(
-        // Extract out only the feature names from the branch
-        branch.feature?.featureId
-      )
-    ) {
-      log.debug(
-        `Skipping enrollment for "${slug}" because there is an existing experiment for its feature.`
-      );
-      this.sendFailureTelemetry("enrollFailed", slug, "feature-conflict");
-
-      return null;
+        return null;
+      }
     }
 
     return this._enroll(recipe, branch, source);
@@ -250,15 +260,16 @@ class _ExperimentManager {
      * If the experiment has the same slug after unenrollment adding it to the
      * store will overwrite the initial experiment.
      */
-    let experiment = this.store.getExperimentForFeature(
-      branch.feature?.featureId
-    );
-    if (experiment) {
-      log.debug(
-        `Existing experiment found for the same feature ${branch?.feature.featureId}, unenrolling.`
-      );
+    const features = featuresCompat(branch);
+    for (let feature of features) {
+      let experiment = this.store.getExperimentForFeature(feature?.featureId);
+      if (experiment) {
+        log.debug(
+          `Existing experiment found for the same feature ${feature.featureId}, unenrolling.`
+        );
 
-      this.unenroll(experiment.slug, source);
+        this.unenroll(experiment.slug, source);
+      }
     }
 
     recipe.userFacingName = `${recipe.userFacingName} - Forced enrollment`;
