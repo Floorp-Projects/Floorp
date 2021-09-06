@@ -13,8 +13,6 @@ pylint:
         - toolkit/components/telemetry/
     exclude:
         - dom/bindings/Codegen.py
-        - dom/bindings/Configuration.py
-        - security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py
         - security/manager/ssl/tests/unit/test_content_signing/pysign.py
         - security/ct/tests/gtest/createSTHTestData.py
     extensions: ['py']
