@@ -661,12 +661,13 @@ impl Device {
     }
 
     pub fn kill_forward_port(&self, local: u16) -> Result<()> {
-        let command = format!("killforward:tcp:{}", local);
+        let command = format!("host-serial:{}:killforward:tcp:{}", self.serial, local);
         self.execute_host_command(&command, true, false).and(Ok(()))
     }
 
     pub fn kill_forward_all_ports(&self) -> Result<()> {
-        self.execute_host_command(&"killforward-all".to_owned(), false, false)
+        let command = format!("host-serial:{}:killforward-all", self.serial);
+        self.execute_host_command(&command, false, false)
             .and(Ok(()))
     }
 
