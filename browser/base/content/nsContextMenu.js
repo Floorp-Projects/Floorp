@@ -285,7 +285,7 @@ class nsContextMenu {
     }
 
     if (this.contentData.spellInfo) {
-      this.spellSuggesions = this.contentData.spellInfo.spellSuggestions;
+      this.spellSuggestions = this.contentData.spellInfo.spellSuggestions;
     }
 
     if (context.shouldInitInlineSpellCheckerUIWithChildren) {
@@ -775,7 +775,7 @@ class nsContextMenu {
       var numsug = InlineSpellCheckerUI.addSuggestionsToMenu(
         suggestionsSeparator.parentNode,
         suggestionsSeparator,
-        this.spellSuggesions
+        this.spellSuggestions
       );
       this.showItem("spell-no-suggestions", numsug == 0);
     } else {
