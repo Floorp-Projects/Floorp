@@ -3,6 +3,63 @@
     {
       "stash": {
         "blocked": [
+          "DomainQuality@ext:1.0",
+          "reputation_lookup@ext:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1630672667829,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1630694107408,
+      "id": "01822411-aab3-4d93-81a8-fa4c2ebc7192",
+      "last_modified": 1630694262963
+    },
+    {
+      "stash": {
+        "blocked": [
+          "@omnibox_search_set:1.0.0",
+          "@omnibox_search_set:1.0.1",
+          "@newtab_search:1.0.0",
+          "@omnibox_search_set:1.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1630607865842,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1630672508244,
+      "id": "6e00c0d4-306c-44a4-8a50-7cc8a4c5425f",
+      "last_modified": 1630672667766
+    },
+    {
+      "stash": {
+        "blocked": [
+          "privateviewadd18@foxcoo.com:1.0",
+          "privateviewadd11@foxcoo.com:1.0",
+          "{7e07efb7-d7d2-41ef-a518-9ef31929e63a}:2.0.2.12",
+          "privateviewadd12@foxcoo.com:1.0",
+          "privateviewadd15@foxcoo.com:1.0",
+          "{32025ff7-9589-4f51-99c7-4a3ab61a382a}:2.0.2.1",
+          "privateviewadd13@foxcoo.com:1.0",
+          "privateviewadd17@foxcoo.com:1.0",
+          "privateviewadd16@foxcoo.com:1.0",
+          "privateviewadd14@foxcoo.com:1.0",
+          "{32025ff7-9589-4f51-99c7-4a3ab61a382a}:2.0.2.2",
+          "{32025ff7-9589-4f51-99c7-4a3ab61a382a}:2.0.2.3",
+          "privateviewadd19@foxcoo.com:1.0",
+          "{7e07efb7-d7d2-41ef-a518-9ef31929e63a}:2.0.2.14",
+          "{7e07efb7-d7d2-41ef-a518-9ef31929e63a}:2.0.2.13"
+        ],
+        "unblocked": []
+      },
+      "schema": 1630543090279,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1630607708515,
+      "id": "ad4a78da-3aa1-4a83-b811-f81f9d14a4f3",
+      "last_modified": 1630607865779
+    },
+    {
+      "stash": {
+        "blocked": [
           "{eac050f1-b725-46fc-900a-22ff934b71c9}:0.1.5",
           "smartsecurity@digital:2.0.3",
           "{eac050f1-b725-46fc-900a-22ff934b71c9}:0.1.1",
