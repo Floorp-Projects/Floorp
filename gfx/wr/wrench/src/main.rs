@@ -21,6 +21,7 @@ mod premultiply;
 mod rawtest;
 mod reftest;
 mod test_invalidation;
+mod test_shaders;
 mod wrench;
 mod yaml_frame_reader;
 mod yaml_helper;
@@ -757,6 +758,8 @@ fn main() {
         // Wrench::new() unwraps the Renderer initialization, so if
         // we reach this point then we have initialized successfully.
         println!("Initialization successful");
+    } else if let Some(_) = args.subcommand_matches("test_shaders") {
+        test_shaders::test_shaders();
     } else {
         panic!("Should never have gotten here! {:?}", args);
     };
