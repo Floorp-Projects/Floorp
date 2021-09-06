@@ -219,7 +219,7 @@ class CacheStorageService final : public nsICacheStorageService,
    * and uri+id extension.
    */
   nsresult AddStorageEntry(CacheStorage const* aStorage, const nsACString& aURI,
-                           const nsACString& aIdExtension, uint32_t aFlags,
+                           const nsACString& aIdExtension, bool aReplace,
                            CacheEntryHandle** aResult);
 
   /**
@@ -307,7 +307,7 @@ class CacheStorageService final : public nsICacheStorageService,
   nsresult AddStorageEntry(const nsACString& aContextKey,
                            const nsACString& aURI,
                            const nsACString& aIdExtension, bool aWriteToDisk,
-                           bool aSkipSizeCheck, bool aPin, uint32_t aFlags,
+                           bool aSkipSizeCheck, bool aPin, bool aReplace,
                            CacheEntryHandle** aResult);
 
   nsresult ClearOriginInternal(
