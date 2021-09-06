@@ -331,7 +331,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         MOZ_ASSERT(script_->needsArgsObj());
         bool mapped = script_->hasMappedArgsObj();
         ArgumentsObject* templateObj =
-            script_->realm()->maybeArgumentsTemplateObject(mapped);
+            script_->global().maybeArgumentsTemplateObject(mapped);
         if (!AddOpSnapshot<WarpArguments>(alloc_, opSnapshots, offset,
                                           templateObj)) {
           return abort(AbortReason::Alloc);

@@ -337,8 +337,6 @@ class JS::Realm : public JS::shadow::Realm {
   const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
   void* realmPrivate_ = nullptr;
 
-  js::WeakHeapPtr<js::ArgumentsObject*> mappedArgumentsTemplate_{nullptr};
-  js::WeakHeapPtr<js::ArgumentsObject*> unmappedArgumentsTemplate_{nullptr};
   js::WeakHeapPtr<js::PlainObject*> iterResultTemplate_{nullptr};
   js::WeakHeapPtr<js::PlainObject*> iterResultWithoutPrototypeTemplate_{
       nullptr};
@@ -630,10 +628,6 @@ class JS::Realm : public JS::shadow::Realm {
       JSContext* cx, WithObjectPrototype withProto);
 
  public:
-  js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx,
-                                                          bool mapped);
-  js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
-
   //
   // The Debugger observes execution on a frame-by-frame basis. The
   // invariants of Realm's debug mode bits, JSScript::isDebuggee,
