@@ -10,7 +10,6 @@
  * @typedef {import("../@types/perf").InitializedValues} InitializedValues
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
- * @typedef {import("../@types/perf").SetRecordingSettings} SetRecordingSettings
  * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("../@types/perf").PageContext} PageContext
@@ -79,10 +78,6 @@ const getInitializedValues = state => {
   return values;
 };
 
-/** @type {Selector<SetRecordingSettings>} */
-const getSetRecordingSettingsFn = state =>
-  getInitializedValues(state).setRecordingSettings;
-
 /** @type {Selector<PageContext>} */
 const getPageContext = state => getInitializedValues(state).pageContext;
 
@@ -109,7 +104,6 @@ module.exports = {
   getOpenRemoteDevTools,
   getRecordingSettings,
   getInitializedValues,
-  getSetRecordingSettingsFn,
   getPageContext,
   getPromptEnvRestart,
   getSupportedFeatures,

@@ -252,7 +252,7 @@ function recordingSettings(state = DEFAULT_RECORDING_SETTINGS, action) {
             ...state,
             presetName: action.presetName, // it's probably "custom".
           };
-    case "INITIALIZE_STORE":
+    case "UPDATE_SETTINGS_FROM_PREFERENCES":
       return { ...action.recordingSettingsFromPreferences };
     default:
       return state;
@@ -269,7 +269,6 @@ function initializedValues(state = null, action) {
   switch (action.type) {
     case "INITIALIZE_STORE":
       return {
-        setRecordingSettings: action.setRecordingSettings,
         presets: action.presets,
         pageContext: action.pageContext,
         supportedFeatures: action.supportedFeatures,
