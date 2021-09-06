@@ -151,8 +151,8 @@ class SVGIntegrationUtils final {
   struct MOZ_STACK_CLASS PaintFramesParams {
     gfxContext& ctx;
     nsIFrame* frame;
-    nsRect dirtyRect;
-    nsRect borderArea;
+    const nsRect& dirtyRect;
+    const nsRect& borderArea;
     nsDisplayListBuilder* builder;
     layers::LayerManager* layerManager;
     bool handleOpacity;  // If true, PaintMaskAndClipPath/ PaintFilter should

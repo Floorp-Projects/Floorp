@@ -74,10 +74,8 @@ bool nsDisplayColumnRule::CreateWebRenderCommands(
   RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
 
-  bool dummy;
   static_cast<nsColumnSetFrame*>(mFrame)->CreateBorderRenderers(
-      mBorderRenderers, screenRefCtx, GetBounds(aDisplayListBuilder, &dummy),
-      ToReferenceFrame());
+      mBorderRenderers, screenRefCtx, GetPaintRect(), ToReferenceFrame());
 
   if (mBorderRenderers.IsEmpty()) {
     return true;
