@@ -205,37 +205,104 @@ class ProfileBufferEntryReader {
     return ::mozilla::ReadULEB128<T>(*this);
   }
 
-  // Read a sequence of bytes, like memcpy.
-  void ReadBytes(void* aDest, Length aBytes) {
+  // This struct points at a number of bytes through either one span, or two
+  // separate spans (in the rare cases when it is split between two chunks).
+  // So the possibilities are:
+  // - Totally empty: { [] [] }
+  // - First span is not empty: { [content] [] } (Most common case.)
+  // - Both spans are not empty: { [cont] [ent] }
+  // But something like { [] [content] } is not possible.
+  //
+  // Recommended usage patterns:
+  // - Call a utility function like `CopyBytesTo` if you always need to copy the
+  //   data to an outside buffer, e.g., to deserialize an aligned object.
+  // - Access both spans one after the other; Note that the second one may be
+  //   empty; and the fist could be empty as well if there is no data at all.
+  // - Check is the second span is empty, in which case you only need to read
+  //   the first one; and since its part of a chunk, it may be directly passed
+  //   as an unaligned pointer or reference, thereby saving one copy. But
+  //   remember to always handle the double-span case as well.
+  //
+  // Reminder: An empty span still has a non-null pointer, so it's safe to use
+  // with functions like memcpy.
+  struct DoubleSpanOfConstBytes {
+    SpanOfConstBytes mFirstOrOnly;
+    SpanOfConstBytes mSecondOrEmpty;
+
+    void CheckInvariants() const {
+      MOZ_ASSERT(mFirstOrOnly.IsEmpty() ? mSecondOrEmpty.IsEmpty() : true,
+                 "mSecondOrEmpty should not be the only span to contain data");
+    }
+
+    DoubleSpanOfConstBytes() : mFirstOrOnly(), mSecondOrEmpty() {
+      CheckInvariants();
+    }
+
+    DoubleSpanOfConstBytes(const Byte* aOnlyPointer, size_t aOnlyLength)
+        : mFirstOrOnly(aOnlyPointer, aOnlyLength), mSecondOrEmpty() {
+      CheckInvariants();
+    }
+
+    DoubleSpanOfConstBytes(const Byte* aFirstPointer, size_t aFirstLength,
+                           const Byte* aSecondPointer, size_t aSecondLength)
+        : mFirstOrOnly(aFirstPointer, aFirstLength),
+          mSecondOrEmpty(aSecondPointer, aSecondLength) {
+      CheckInvariants();
+    }
+
+    // Is there no data at all?
+    [[nodiscard]] bool IsEmpty() const {
+      // We only need to check the first span, because if it's empty, the second
+      // one must be empty as well.
+      return mFirstOrOnly.IsEmpty();
+    }
+
+    // Total length (in bytes) pointed at by both spans.
+    [[nodiscard]] size_t LengthBytes() const {
+      return mFirstOrOnly.LengthBytes() + mSecondOrEmpty.LengthBytes();
+    }
+
+    // Utility functions to copy all `LengthBytes()` to a given buffer.
+    void CopyBytesTo(void* aDest) const {
+      memcpy(aDest, mFirstOrOnly.Elements(), mFirstOrOnly.LengthBytes());
+      if (MOZ_UNLIKELY(!mSecondOrEmpty.IsEmpty())) {
+        memcpy(static_cast<Byte*>(aDest) + mFirstOrOnly.LengthBytes(),
+               mSecondOrEmpty.Elements(), mSecondOrEmpty.LengthBytes());
+      }
+    }
+
+    // If the second span is empty, only the first span may point at data.
+    [[nodiscard]] bool IsSingleSpan() const { return mSecondOrEmpty.IsEmpty(); }
+  };
+
+  // Get Span(s) to a sequence of bytes, see `DoubleSpanOfConstBytes` for usage.
+  // Note that the reader location is *not* updated, do `+=` on it afterwards.
+  [[nodiscard]] DoubleSpanOfConstBytes PeekSpans(Length aBytes) const {
     MOZ_RELEASE_ASSERT(aBytes <= RemainingBytes());
     if (MOZ_LIKELY(aBytes <= mCurrentSpan.LengthBytes())) {
-      // All bytes are in mCurrentSpan.
-      memcpy(aDest, mCurrentSpan.Elements(), aBytes);
-      // Update mCurrentSpan past the read bytes.
-      mCurrentSpan = mCurrentSpan.From(aBytes);
-      if (mCurrentSpan.IsEmpty() && !mNextSpanOrEmpty.IsEmpty()) {
-        // Don't leave mCurrentSpan empty, move non-empty mNextSpanOrEmpty into
-        // mCurrentSpan.
-        mCurrentSpan = mNextSpanOrEmpty;
-        mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
-      }
-    } else {
-      // mCurrentSpan does not hold enough bytes.
-      // This should only happen at most once: Only for double spans, and when
-      // data crosses the gap.
-      // Split data between the end of mCurrentSpan and the beginning of
-      // mNextSpanOrEmpty.
-      memcpy(aDest, mCurrentSpan.Elements(), mCurrentSpan.LengthBytes());
-      const Length tail =
-          aBytes - static_cast<Length>(mCurrentSpan.LengthBytes());
-      memcpy(reinterpret_cast<Byte*>(aDest) + mCurrentSpan.LengthBytes(),
-             mNextSpanOrEmpty.Elements(), tail);
-      // Move mNextSpanOrEmpty to mCurrentSpan, past the data. So the next call
-      // will go back to the true case above.
-      mCurrentSpan = mNextSpanOrEmpty.From(tail);
-      mNextSpanOrEmpty = mNextSpanOrEmpty.Last(0);
+      // All `aBytes` are in the current chunk, only one span is needed.
+      return DoubleSpanOfConstBytes{mCurrentSpan.Elements(), aBytes};
     }
-    CheckInvariants();
+    // Otherwise the first span covers then end of the current chunk, and the
+    // second span starts in the next chunk.
+    return DoubleSpanOfConstBytes{
+        mCurrentSpan.Elements(), mCurrentSpan.LengthBytes(),
+        mNextSpanOrEmpty.Elements(), aBytes - mCurrentSpan.LengthBytes()};
+  }
+
+  // Get Span(s) to a sequence of bytes, see `DoubleSpanOfConstBytes` for usage,
+  // and move the reader forward.
+  [[nodiscard]] DoubleSpanOfConstBytes ReadSpans(Length aBytes) {
+    DoubleSpanOfConstBytes spans = PeekSpans(aBytes);
+    (*this) += aBytes;
+    return spans;
+  }
+
+  // Read a sequence of bytes, like memcpy.
+  void ReadBytes(void* aDest, Length aBytes) {
+    DoubleSpanOfConstBytes spans = ReadSpans(aBytes);
+    MOZ_ASSERT(spans.LengthBytes() == aBytes);
+    spans.CopyBytesTo(aDest);
   }
 
   template <typename T>
