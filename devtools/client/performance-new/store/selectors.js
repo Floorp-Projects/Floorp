@@ -32,29 +32,32 @@ const getRecordingUnexpectedlyStopped = state =>
 /** @type {Selector<boolean | null>} */
 const getIsSupportedPlatform = state => state.isSupportedPlatform;
 
-/** @type {Selector<number>} */
-const getInterval = state => state.interval;
+/** @type {Selector<RecordingSettings>} */
+const getRecordingSettings = state => state.recordingSettings;
 
 /** @type {Selector<number>} */
-const getEntries = state => state.entries;
+const getInterval = state => getRecordingSettings(state).interval;
+
+/** @type {Selector<number>} */
+const getEntries = state => getRecordingSettings(state).entries;
 
 /** @type {Selector<string[]>} */
-const getFeatures = state => state.features;
+const getFeatures = state => getRecordingSettings(state).features;
 
 /** @type {Selector<string[]>} */
-const getThreads = state => state.threads;
+const getThreads = state => getRecordingSettings(state).threads;
 
 /** @type {Selector<string>} */
 const getThreadsString = state => getThreads(state).join(",");
 
 /** @type {Selector<string[]>} */
-const getObjdirs = state => state.objdirs;
+const getObjdirs = state => getRecordingSettings(state).objdirs;
 
 /** @type {Selector<Presets>} */
 const getPresets = state => getInitializedValues(state).presets;
 
 /** @type {Selector<string>} */
-const getPresetName = state => state.presetName;
+const getPresetName = state => state.recordingSettings.presetName;
 
 /** @type {Selector<ProfilerViewMode | undefined>} */
 const getProfilerViewMode = state => state.profilerViewMode;
@@ -66,43 +69,6 @@ const getProfilerViewMode = state => state.profilerViewMode;
  */
 const getOpenRemoteDevTools = state =>
   getInitializedValues(state).openRemoteDevTools;
-
-/**
- * Warning! This function returns a new object on every run, and so should not
- * be used directly as a React prop.
- *
- * @type {Selector<RecordingSettings>}
- */
-const getRecordingSettings = state => {
-  const presets = getPresets(state);
-  const presetName = getPresetName(state);
-  const preset = presets[presetName];
-  if (preset) {
-    // Use the the settings from the preset.
-    return {
-      presetName: presetName,
-      entries: preset.entries,
-      interval: preset.interval,
-      features: preset.features,
-      threads: preset.threads,
-      objdirs: getObjdirs(state),
-      // The client doesn't implement durations yet. See Bug 1587165.
-      duration: preset.duration,
-    };
-  }
-
-  // Use the the custom settings from the panel.
-  return {
-    presetName: "custom",
-    entries: getEntries(state),
-    interval: getInterval(state),
-    features: getFeatures(state),
-    threads: getThreads(state),
-    objdirs: getObjdirs(state),
-    // The client doesn't implement durations yet. See Bug 1587165.
-    duration: 0,
-  };
-};
 
 /** @type {Selector<InitializedValues>} */
 const getInitializedValues = state => {
