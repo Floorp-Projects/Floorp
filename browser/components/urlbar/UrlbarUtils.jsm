@@ -1307,9 +1307,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       sponsoredImpressionUrl: {
         type: "string",
       },
-      sponsoredL10nId: {
-        type: "string",
-      },
       sponsoredTileId: {
         type: "number",
       },

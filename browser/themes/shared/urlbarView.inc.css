@@ -505,6 +505,56 @@
   opacity: .6;
 }
 
+.urlbarView-row[sponsored][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[sponsored] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-action {
+  opacity: 1;
+}
+
+/* Firefox Suggest sponsored results */
+
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner {
+  /* 0px of top padding because the space between the favicon/title and the top
+     edge of the row is determined by the favicon margin-top and we don't want
+     any extra padding to complicate that. 1px of bottom padding so the bottom
+     edge of the action isn't touching the bottom edge of the row. The space
+     between the bottom edge of the favicon and the bottom edge of the row is
+     determined by this + the action margin-top. */
+  padding-block: 0 1px;
+}
+
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap {
+  /* Wrap the action span onto a new row. */
+  flex-wrap: wrap;
+}
+
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  /* The favicon should be vertically centered in the row. The action span wraps
+     below the favicon and title, leaving the favicon centered with the title,
+     not the row, so we add margin-top. Normally there is 8x between the top
+     edge of the favicon and the top edge of the row. Here 1em = 13.75px, so
+     that's 8 / 13.75 =~ 0.58em. */
+  margin-top: 0.58em;
+}
+
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
+  /* Move the title away from the action a little. This does not affect the
+     height of the row. */
+  margin-top: -0.3em;
+}
+
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
+  flex-basis: 100%;
+  margin-inline-start: calc(@urlbarViewFaviconWidth@ + @urlbarViewIconMarginEnd@);
+  font-size: 0.73em;
+  /* This value + the bottom padding control the space between the bottom edge
+     of the favicon and the bottom edge of the row. The bottom padding is 1px,
+     leaving 8px - 1px = 7px we need to make up here. Here 1em = 0.73 * 13.75 =~
+     10px, so that's 7 / 10 = 0.7em. However, the action itself takes up some of
+     that space, so it's not that simple. The value used here was arrived at by
+     trial and error and is approximately 5px. */
+  margin-top: -0.5em;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   /* The slide-in effect is delayed ~100ms to reduce motion during result
      composition. We set opacity: 0 at the 0% keyframe to ensure the text is not
@@ -558,6 +608,7 @@
 .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   display: none;
 }

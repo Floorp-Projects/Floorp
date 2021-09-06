@@ -39,60 +39,6 @@ const TEST_DATA = [
 const SEEN_DIALOG_PREF = "browser.urlbar.quicksuggest.showedOnboardingDialog";
 
 /**
- * Asserts that a result is a Quick Suggest result.
- *
- * @param {number} [index]
- *   The expected index of the Quick Suggest result.  Pass -1 to use the index
- *   of the last result.
- * @param {boolean} [isSponsored]
- *   True if the result is expected to be sponsored and false if non-sponsored
- *   (i.e., "Firefox Suggest").
- * @param {object} [win]
- *   The window in which to read the results from.
- * @returns {result}
- *   The result at the given index.
- */
-async function assertIsQuickSuggest({
-  index = -1,
-  isSponsored = true,
-  win = window,
-} = {}) {
-  if (index < 0) {
-    index = UrlbarTestUtils.getResultCount(win) - 1;
-    Assert.greater(index, -1, "Sanity check: Result count should be > 0");
-  }
-
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, index);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
-
-  // Confusingly, `isSponsored` is set on the result payload for all quick
-  // suggest results, even non-sponsored ones.  It's just a marker of whether
-  // the result is a quick suggest.
-  Assert.ok(result.isSponsored, "Result isSponsored");
-
-  let url;
-  let actionText;
-  if (isSponsored) {
-    url = `${TEST_URL}?q=frabbits`;
-    actionText = "Sponsored";
-  } else {
-    url = `${TEST_URL}?q=nonsponsored`;
-    actionText = "Firefox Suggest";
-  }
-  Assert.equal(result.url, url, "Result URL");
-  Assert.equal(
-    result.element.row._elements.get("action").textContent,
-    actionText,
-    "Result action text"
-  );
-
-  let helpButton = result.element.row._elements.get("helpButton");
-  Assert.ok(helpButton, "The help button should be present");
-
-  return result;
-}
-
-/**
  * Asserts that none of the results are Quick Suggest results.
  *
  * @param {window} [win]
@@ -181,7 +127,11 @@ add_task(async function sponsored() {
     window,
     value: "fra",
   });
-  await assertIsQuickSuggest({ index: 1 });
+  await assertIsQuickSuggest({
+    index: 1,
+    sponsoredURL: `${TEST_URL}?q=frabbits`,
+    nonsponsoredURL: `${TEST_URL}?q=nonsponsored`,
+  });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
   Assert.equal(
     row.querySelector(".urlbarView-title").firstChild.textContent,
@@ -202,6 +152,11 @@ add_task(async function nonSponsored() {
     window,
     value: "nonspon",
   });
-  await assertIsQuickSuggest({ index: 1, isSponsored: false });
+  await assertIsQuickSuggest({
+    index: 1,
+    isSponsored: false,
+    sponsoredURL: `${TEST_URL}?q=frabbits`,
+    nonsponsoredURL: `${TEST_URL}?q=nonsponsored`,
+  });
   await UrlbarTestUtils.promisePopupClose(window);
 });
