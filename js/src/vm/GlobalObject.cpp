@@ -1217,6 +1217,9 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &iterResultTemplate, "iter-result-template_");
   TraceNullableEdge(trc, &iterResultWithoutPrototypeTemplate,
                     "iter-result-without-prototype-template");
+
+  TraceNullableEdge(trc, &selfHostingScriptSource,
+                    "self-hosting-script-source");
 }
 
 void GlobalObjectData::addSizeOfIncludingThis(

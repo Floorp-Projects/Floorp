@@ -2592,7 +2592,6 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
     r->traceWeakRegExps(trc);
     r->traceWeakSavedStacks(trc);
     r->traceWeakObjects(trc);
-    r->traceWeakSelfHostingScriptSource(trc);
     r->sweepDebugEnvironments();
     r->traceWeakEdgesInJitRealm(trc);
     r->traceWeakObjectRealm(trc);
@@ -5516,7 +5515,6 @@ void GCRuntime::sweepMisc() {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->traceWeakObjects(&trc);
     r->traceWeakSavedStacks(&trc);
-    r->traceWeakSelfHostingScriptSource(&trc);
     r->traceWeakObjectRealm(&trc);
     r->traceWeakRegExps(&trc);
   }

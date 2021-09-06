@@ -207,6 +207,10 @@ class GlobalObjectData {
   HeapPtr<PlainObject*> iterResultTemplate;
   HeapPtr<PlainObject*> iterResultWithoutPrototypeTemplate;
 
+  // Lazily initialized script source object to use for scripts cloned from the
+  // self-hosting stencil.
+  HeapPtr<ScriptSourceObject*> selfHostingScriptSource;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
@@ -987,6 +991,9 @@ class GlobalObject : public NativeObject {
       JSContext* cx, WithObjectPrototype withProto);
 
  public:
+  static ScriptSourceObject* getOrCreateSelfHostingScriptSourceObject(
+      JSContext* cx, Handle<GlobalObject*> global);
+
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
   template <ProtoKind Kind, const JSClass* ProtoClass,
