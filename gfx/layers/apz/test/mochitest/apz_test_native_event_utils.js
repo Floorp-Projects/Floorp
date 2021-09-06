@@ -685,7 +685,7 @@ function sendBasicNativePointerInput(
   aX,
   aY,
   aObserver,
-  { pressure = 1, twist = 0, tiltX = 0, tiltY = 0 } = {}
+  { pressure = 1, twist = 0, tiltX = 0, tiltY = 0, button = 0 } = {}
 ) {
   switch (aPointerType) {
     case "touch":
@@ -701,6 +701,7 @@ function sendBasicNativePointerInput(
         twist,
         tiltX,
         tiltY,
+        button,
         aObserver
       );
       break;

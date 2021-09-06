@@ -1123,7 +1123,8 @@ nsDOMWindowUtils::SendNativePenInput(uint32_t aPointerId,
                                      uint32_t aPointerState, int32_t aScreenX,
                                      int32_t aScreenY, double aPressure,
                                      uint32_t aRotation, int32_t aTiltX,
-                                     int32_t aTiltY, nsIObserver* aObserver) {
+                                     int32_t aTiltY, int32_t aButton,
+                                     nsIObserver* aObserver) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     return NS_ERROR_FAILURE;
@@ -1137,12 +1138,12 @@ nsDOMWindowUtils::SendNativePenInput(uint32_t aPointerId,
   NS_DispatchToMainThread(NativeInputRunnable::Create(
       NewRunnableMethod<uint32_t, nsIWidget::TouchPointerState,
                         LayoutDeviceIntPoint, double, uint32_t, int32_t,
-                        int32_t, nsIObserver*>(
+                        int32_t, int32_t, nsIObserver*>(
           "nsIWidget::SynthesizeNativePenInput", widget,
           &nsIWidget::SynthesizeNativePenInput, aPointerId,
           (nsIWidget::TouchPointerState)aPointerState,
           LayoutDeviceIntPoint(aScreenX, aScreenY), aPressure, aRotation,
-          aTiltX, aTiltY, aObserver)));
+          aTiltX, aTiltY, aButton, aObserver)));
   return NS_OK;
 }
 
