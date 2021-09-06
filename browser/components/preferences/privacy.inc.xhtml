@@ -616,7 +616,7 @@
           data-category="panePrivacy"
           hidden="true"
           data-subcategory="locationBar">
-  <label><html:h2 data-l10n-id="addressbar-header"/></label>
+  <label><html:h2 id="locationBarGroupHeader" data-l10n-id="addressbar-header"/></label>
   <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
   <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
             preference="browser.urlbar.suggest.history"/>
@@ -628,6 +628,24 @@
             preference="browser.urlbar.suggest.topsites"/>
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
+  <!-- #firefoxSuggestContainer is visible only for users enrolled in Firefox Suggest rollouts. -->
+  <vbox id="firefoxSuggestContainer" hidden="true">
+    <hbox align="center">
+      <checkbox id="firefoxSuggestSuggestion"
+                class="tail-with-learn-more"
+                data-l10n-id="addressbar-locbar-firefox-suggest-option"
+                preference="browser.urlbar.suggest.quicksuggest"/>
+      <label id="firefoxSuggestSuggestionLearnMore"
+             class="learnMore"
+             is="text-link"
+             data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
+    </hbox>
+    <description class="indent tip-caption"
+                 data-l10n-id="addressbar-locbar-firefox-suggest-description"/>
+    <checkbox id="firefoxSuggestSponsoredSuggestion"
+              class="indent"
+              data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-option"/>
+  </vbox>
   <label id="openSearchEnginePreferences" is="text-link"
          data-l10n-id="addressbar-suggestions-settings"/>
 </groupbox>
