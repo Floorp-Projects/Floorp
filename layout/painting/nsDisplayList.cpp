@@ -2830,11 +2830,6 @@ void nsDisplayItem::SetClipChain(const DisplayItemClipChain* aClipChain,
                                  bool aStore) {
   mClipChain = aClipChain;
   mClip = DisplayItemClipChain::ClipForASR(aClipChain, mActiveScrolledRoot);
-
-  if (aStore) {
-    mState.mClipChain = mClipChain;
-    mState.mClip = mClip;
-  }
 }
 
 Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
@@ -4782,6 +4777,7 @@ nsDisplayWrapList::nsDisplayWrapList(
 
   mListPtr = &mList;
   mListPtr->AppendToTop(aList);
+  mOriginalClipChain = mClipChain;
   nsDisplayWrapList::UpdateBounds(aBuilder);
 
 #ifdef DEBUG
@@ -4810,6 +4806,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 
   mListPtr = &mList;
   mListPtr->AppendToTop(aItem);
+  mOriginalClipChain = mClipChain;
   nsDisplayWrapList::UpdateBounds(aBuilder);
 
   if (!aFrame || !aFrame->IsTransformed()) {
@@ -5863,8 +5860,7 @@ void nsDisplayStickyPosition::SetClipChain(
              "with it.");
 
   if (aStore) {
-    mState.mClipChain = aClipChain;
-    mState.mClip = mClip;
+    mOriginalClipChain = aClipChain;
   }
 }
 
@@ -6404,7 +6400,6 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
 
 void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
                               nsDisplayList* aChildren) {
-  mShouldFlatten = false;
   mChildren.AppendToTop(aChildren);
   UpdateBounds(aBuilder);
 }
@@ -7818,9 +7813,6 @@ bool nsDisplayText::CanApplyOpacity(WebRenderLayerManager* aManager,
 
 void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   AUTO_PROFILER_LABEL("nsDisplayText::Paint", GRAPHICS);
-
-  DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
-                                                    IsSubpixelAADisabled());
   RenderToContext(aCtx, aBuilder);
 }
 
