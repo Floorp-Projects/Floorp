@@ -83,14 +83,15 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
       branches: [
         {
           slug: "mochitest-active-foo",
-          feature: {
-            enabled: true,
-            featureId: "foo",
-            value: null,
-          },
+          features: [
+            {
+              enabled: true,
+              featureId: "foo",
+              value: null,
+            },
+          ],
         },
       ],
-      active: true,
     })
   );
 
