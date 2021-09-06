@@ -310,17 +310,11 @@ class HTMLEditUtils final {
    * IsVisibleBRElement() and IsInvisibleBRElement() return true if aContent is
    * a visible HTML <br> element, i.e., not a padding <br> element for making
    * last line in a block element visible, or an invisible <br> element.
-   *
-   * If aEditingHost is omitted, this computes parent editable block for you.
-   * But if you call this a lot, please specify proper editing host (or parent
-   * block) for the performance.
    */
-  static bool IsVisibleBRElement(const nsIContent& aContent,
-                                 const Element* aEditingHost = nullptr);
-  static bool IsInvisibleBRElement(const nsIContent& aContent,
-                                   const Element* aEditingHost = nullptr) {
+  static bool IsVisibleBRElement(const nsIContent& aContent);
+  static bool IsInvisibleBRElement(const nsIContent& aContent) {
     return aContent.IsHTMLElement(nsGkAtoms::br) &&
-           !HTMLEditUtils::IsVisibleBRElement(aContent, aEditingHost);
+           !HTMLEditUtils::IsVisibleBRElement(aContent);
   }
 
   /**
