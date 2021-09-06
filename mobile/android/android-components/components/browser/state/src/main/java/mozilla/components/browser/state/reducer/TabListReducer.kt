@@ -186,9 +186,9 @@ internal object TabListReducer {
                 val updatedTabs = state.tabs.filterNot { it.content.private }
                 state.copy(
                     tabs = updatedTabs,
-                    selectedTabId = if (selectionAffected && updatedTabs.isNotEmpty()) {
+                    selectedTabId = if (selectionAffected) {
                         // If the selection is affected, select the last normal tab, if available.
-                        updatedTabs.last().id
+                        updatedTabs.lastOrNull()?.id
                     } else {
                         state.selectedTabId
                     }
