@@ -5,6 +5,7 @@
 package org.mozilla.focus.tips
 
 import android.content.Context
+import androidx.annotation.StringRes
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -12,12 +13,17 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 
-class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: (() -> Unit)? = null) {
+class Tip(
+    @StringRes
+    val id: Int,
+    val appName: String? = null,
+    val shouldDisplay: () -> Boolean,
+    val deepLink: (() -> Unit)? = null
+) {
     companion object {
 
         fun createAllowlistTip(context: Context): Tip {
             val id = R.string.tip_explain_allowlist3
-            val name = context.resources.getString(id)
             val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.ALLOWLIST)
 
             val deepLink = {
@@ -42,12 +48,12 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
                 false
             }
 
-            return Tip(id, name, shouldDisplayAllowListTip, deepLink)
+            return Tip(id, null, shouldDisplayAllowListTip, deepLink)
         }
 
         fun createFreshLookTip(context: Context): Tip {
             val id = R.string.tip_fresh_look
-            val name = context.resources.getString(id, context.getString(R.string.app_name))
+            val name = context.getString(R.string.app_name)
 
             val shouldDisplayFreshLookTip = {
                 Settings.getInstance(context).getAppLaunchCount() == 0
@@ -58,7 +64,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
 
         fun createShortcutsTip(context: Context): Tip {
             val id = R.string.tip_about_shortcuts
-            val name = context.resources.getString(id, context.getString(R.string.app_name))
+            val name = context.getString(R.string.app_name)
 
             val shouldDisplayShortcutsTip = { true }
 
@@ -67,7 +73,6 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
 
         fun createTrackingProtectionTip(context: Context): Tip {
             val id = R.string.tip_disable_tracking_protection3
-            val name = context.resources.getString(id)
 
             val shouldDisplayTrackingProtection = {
                 Settings.getInstance(context).shouldBlockOtherTrackers() ||
@@ -75,12 +80,12 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
                     Settings.getInstance(context).shouldBlockAnalyticTrackers()
             }
 
-            return Tip(id, name, shouldDisplayTrackingProtection)
+            return Tip(id, null, shouldDisplayTrackingProtection)
         }
 
         fun createRequestDesktopTip(context: Context): Tip {
             val id = R.string.tip_request_desktop2
-            val name = String.format(context.resources.getString(id), context.getString(R.string.app_name))
+            val name = context.getString(R.string.app_name)
             val requestDesktopURL =
                 "https://support.mozilla.org/kb/switch-desktop-view-firefox-focus-android"
 

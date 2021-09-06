@@ -35,7 +35,11 @@ class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback
         RecyclerView.ViewHolder(tipView) {
 
         fun bind(tip: Tip) {
-            val tipText = String.format(tip.text, System.getProperty("line.separator"))
+            val tipText = if (tip.appName != null) {
+                String.format(tipView.context.getString(tip.id), tip.appName)
+            } else {
+                tipView.context.getString(tip.id)
+            }
             if (tip.deepLink == null) {
                 tipView.text = tipText
             } else {
@@ -74,6 +78,6 @@ class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback
     class TipsDiffCallback : DiffUtil.ItemCallback<Tip>() {
         override fun areItemsTheSame(oldItem: Tip, newItem: Tip) = oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: Tip, newItem: Tip) = oldItem.text == newItem.text
+        override fun areContentsTheSame(oldItem: Tip, newItem: Tip) = oldItem.id == newItem.id
     }
 }
