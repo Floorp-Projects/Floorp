@@ -280,13 +280,6 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
     }
 
-    // TODO: This is here because we sometimes reuse the previous display list
-    // completely. For optimization, we could only restore the state for reused
-    // display items.
-    if (item->RestoreState()) {
-      item->InvalidateItemCacheEntry();
-    }
-
     // If we're going to keep this linked list and not merge it, then mark the
     // item as used and put it back into the list.
     if (aKeepLinked) {
