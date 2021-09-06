@@ -113,12 +113,8 @@ async def session(capabilities, configuration, request):
             configuration["host"],
             configuration["port"],
             capabilities=caps)
-    try:
-        _current_session.start()
 
-    except webdriver.error.SessionNotCreatedException:
-        if not _current_session.session_id:
-            raise
+    _current_session.start()
 
     # Enforce a fixed default window size and position
     if _current_session.capabilities.get("setWindowRect"):
@@ -159,12 +155,8 @@ async def bidi_session(capabilities, configuration, request):
             capabilities=caps,
             enable_bidi=True)
 
-    try:
-        _current_session.start()
-        await _current_session.bidi_session.start()
-    except webdriver.error.SessionNotCreatedException:
-        if not _current_session.session_id:
-            raise
+    _current_session.start()
+    await _current_session.bidi_session.start()
 
     # Enforce a fixed default window size and position
     _current_session.window.size = defaults.WINDOW_SIZE
