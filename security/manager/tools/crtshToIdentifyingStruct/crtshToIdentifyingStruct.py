@@ -55,7 +55,7 @@ def nameOIDtoString(oid):
 
 def print_block(pemData, identifierType="DN", crtshId=None):
     substrate = pem.readPemFromFile(io.StringIO(pemData.decode("utf-8")))
-    cert, rest = decoder.decode(substrate, asn1Spec=rfc5280.Certificate())
+    cert, _ = decoder.decode(substrate, asn1Spec=rfc5280.Certificate())
     octets = None
 
     if identifierType == "DN":
