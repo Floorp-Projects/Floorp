@@ -16,11 +16,17 @@ flat varying vec4 v_uv_sample_bounds;
 
 // x: Flag to allow perspective interpolation of UV.
 // y: Filter-dependent "amount" parameter.
-// Please ensure that perspective remains packed in a vector. If refactoring,
-// see the v_perspective declaration in brush_image, and bug 1630356.
+// Packed in to a vector to work around bug 1630356.
 flat varying vec2 v_perspective_amount;
-flat varying int v_op;
-flat varying int v_table_address;
+#define v_perspective v_perspective_amount.x
+#define v_amount v_perspective_amount.y
+
+// x: Blend op, y: Lookup table GPU cache address.
+// Packed in to a vector to work around bug 1630356.
+flat varying ivec2 v_op_table_address_vec;
+#define v_op v_op_table_address_vec.x
+#define v_table_address v_op_table_address_vec.y
+
 flat varying mat4 v_color_mat;
 flat varying ivec4 v_funcs;
 flat varying vec4 v_color_offset;
@@ -49,14 +55,14 @@ void brush_vs(
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
     v_uv = uv * inv_texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
-    v_perspective_amount.x = perspective_interpolate;
+    v_perspective = perspective_interpolate;
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) * inv_texture_size.xyxy;
 
     float amount = float(prim_user_data.z) / 65536.0;
 
     v_op = prim_user_data.y & 0xffff;
-    v_perspective_amount.y = amount;
+    v_amount = amount;
 
     // This assignment is only used for component transfer filters but this
     // assignment has to be done here and not in the component transfer case
@@ -83,7 +89,7 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 Fragment brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective_amount.x);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective);
     vec2 uv = v_uv * perspective_divisor;
     // Clamp the uvs to avoid sampling artifacts.
     uv = clamp(uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
@@ -95,7 +101,7 @@ Fragment brush_fs() {
     CalculateFilter(
         Cs,
         v_op,
-        v_perspective_amount.y,
+        v_amount,
         v_table_address,
         v_color_offset,
         v_color_mat,
