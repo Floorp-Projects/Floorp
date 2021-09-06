@@ -20,13 +20,32 @@ firefox-suggest-urlbar-nonsponsored-action = { -firefox-suggest-brand-name }
 firefox-suggest-urlbar-learn-more =
   .title = Learn more about { -firefox-suggest-brand-name }
 
-## These strings are used in the preferences UI (about:preferences).
+## These strings are used in the preferences UI (about:preferences). Their names
+## follow the naming conventions of other strings used in the preferences UI.
 
-# Label for the checkbox that controls whether Firefox Suggest results in the
+# When the user is enrolled in a Firefox Suggest rollout, this text replaces
+# the usual addressbar-header string and becomes the text of the address bar
+# section in the preferences UI.
+addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-name }
+
+# When the user is enrolled in a Firefox Suggest rollout, this text replaces
+# the usual addressbar-suggest string and becomes the text of the description of
+# the address bar section in the preferences UI.
+addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
+
+# The main Firefox Suggest checkbox that controls whether Firefox Suggest
+# results in the urlbar are enabled.
+addressbar-locbar-firefox-suggest-option =
+  .label = Personalized search suggestions
+
+# "Learn more" link text for the main Firefox Suggest checkbox.
+addressbar-locbar-firefox-suggest-learn-more = Learn more
+
+# Text for the informational description that appears under the main Firefox
+# Suggest checkbox.
+addressbar-locbar-firefox-suggest-description = { -brand-short-name } will have access to your location, search queries, and visited sites.
+
+# The checkbox that controls whether sponsored Firefox Suggest results in the
 # urlbar are enabled.
-firefox-suggest-preferences-enable-urlbar-results =
-  .label = Show { -firefox-suggest-brand-name } in the address bar (suggested and sponsored results)
-
-# Learn-more link text for the checkbox.
-firefox-suggest-preferences-enable-urlbar-results-learn-more =
-  .value = Learn more about { -firefox-suggest-brand-name }
+addressbar-locbar-firefox-suggest-sponsored-option =
+  .label = Show sponsored suggestions
