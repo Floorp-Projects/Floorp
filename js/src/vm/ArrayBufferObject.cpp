@@ -1191,6 +1191,54 @@ static inline js::gc::AllocKind GetArrayBufferGCObjectKind(size_t numSlots) {
   return js::gc::AllocKind::ARRAYBUFFER16;
 }
 
+static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
+                                               HandleObject proto_,
+                                               gc::AllocKind allocKind) {
+  RootedObject proto(cx, proto_);
+  if (!proto) {
+    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_ArrayBuffer);
+    if (!proto) {
+      return nullptr;
+    }
+  }
+
+  const JSClass* clasp = &ArrayBufferObject::class_;
+
+  // Array buffers can store data inline so we only use fixed slots to cover the
+  // reserved slots, ignoring the AllocKind.
+  MOZ_ASSERT(ClassCanHaveFixedData(clasp));
+  constexpr size_t nfixed = ArrayBufferObject::RESERVED_SLOTS;
+  static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
+
+  RootedShape shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
+                                                     AsTaggedProto(proto),
+                                                     nfixed, ObjectFlags()));
+  if (!shape) {
+    return nullptr;
+  }
+
+  // Array buffers can't be nursery allocated but can be background-finalized.
+  MOZ_ASSERT(IsBackgroundFinalized(allocKind));
+  MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
+  constexpr gc::InitialHeap heap = gc::TenuredHeap;
+
+  NativeObject* obj = NativeObject::create(cx, allocKind, heap, shape);
+  if (!obj) {
+    return nullptr;
+  }
+
+  return &obj->as<ArrayBufferObject>();
+}
+
+// Creates a new ArrayBufferObject with %ArrayBuffer.prototype% as proto and no
+// space for inline data.
+static ArrayBufferObject* NewArrayBufferObject(JSContext* cx) {
+  // XXX pre-existing: shouldn't this be AllocKind::ARRAYBUFFER4? See next
+  // patch.
+  static_assert(ArrayBufferObject::RESERVED_SLOTS == 4);
+  return NewArrayBufferObject(cx, nullptr, gc::AllocKind::OBJECT4_BACKGROUND);
+}
+
 ArrayBufferObject* ArrayBufferObject::createForContents(
     JSContext* cx, size_t nbytes, BufferContents contents) {
   MOZ_ASSERT(contents);
@@ -1206,7 +1254,7 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   // Some |contents| kinds need to store extra data in the ArrayBuffer beyond a
   // data pointer.  If needed for the particular kind, add extra fixed slots to
   // the ArrayBuffer for use as raw storage to store such information.
-  size_t reservedSlots = JSCLASS_RESERVED_SLOTS(&class_);
+  constexpr size_t reservedSlots = ArrayBufferObject::RESERVED_SLOTS;
 
   size_t nAllocated = 0;
   size_t nslots = reservedSlots;
@@ -1234,8 +1282,7 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
 
   AutoSetNewObjectMetadata metadata(cx);
   Rooted<ArrayBufferObject*> buffer(
-      cx, NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr, allocKind,
-                                                     TenuredObject));
+      cx, NewArrayBufferObject(cx, nullptr, allocKind));
   if (!buffer) {
     return nullptr;
   }
@@ -1264,7 +1311,7 @@ ArrayBufferObject::createBufferAndData(
   // Try fitting the data inline with the object by repurposing fixed-slot
   // storage.  Add extra fixed slots if necessary to accomplish this, but don't
   // exceed the maximum number of fixed slots!
-  size_t nslots = JSCLASS_RESERVED_SLOTS(&class_);
+  size_t nslots = ArrayBufferObject::RESERVED_SLOTS;
   ArrayBufferContents data;
   if (nbytes <= MaxInlineBytes) {
     int newSlots = HowMany(nbytes, sizeof(Value));
@@ -1282,8 +1329,7 @@ ArrayBufferObject::createBufferAndData(
 
   gc::AllocKind allocKind = GetArrayBufferGCObjectKind(nslots);
 
-  ArrayBufferObject* buffer = NewObjectWithClassProto<ArrayBufferObject>(
-      cx, proto, allocKind, GenericObject);
+  ArrayBufferObject* buffer = NewArrayBufferObject(cx, proto, allocKind);
   if (!buffer) {
     return {nullptr, nullptr};
   }
@@ -1345,7 +1391,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
 
 ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
   AutoSetNewObjectMetadata metadata(cx);
-  ArrayBufferObject* obj = NewBuiltinClassInstance<ArrayBufferObject>(cx);
+  ArrayBufferObject* obj = NewArrayBufferObject(cx);
   if (!obj) {
     return nullptr;
   }
@@ -1357,7 +1403,7 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
 ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
     JSContext* cx, WasmArrayRawBuffer* rawBuffer, size_t initialSize) {
   AutoSetNewObjectMetadata metadata(cx);
-  ArrayBufferObject* buffer = NewBuiltinClassInstance<ArrayBufferObject>(cx);
+  ArrayBufferObject* buffer = NewArrayBufferObject(cx);
   if (!buffer) {
     WasmArrayRawBuffer::Release(rawBuffer->dataPointer());
     return nullptr;
