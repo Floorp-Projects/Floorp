@@ -1848,6 +1848,7 @@ dependencies = [
  "env_logger",
  "font-loader",
  "gleam 0.13.1",
+ "glsl",
  "glutin",
  "image",
  "log",
