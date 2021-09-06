@@ -102,9 +102,7 @@ use api::units::*;
 use crate::batch::BatchFilter;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipStore, ClipChainInstance, ClipChainId, ClipInstance};
-use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
-    SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
-};
+use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId, CompositeTileSurface, tile_kind};
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
 use crate::composite::{CompositorTransformIndex};
@@ -424,7 +422,7 @@ impl SpatialNodeComparer {
     /// Construct a new comparer
     fn new() -> Self {
         SpatialNodeComparer {
-            ref_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
+            ref_spatial_node_index: SpatialNodeIndex::INVALID,
             spatial_nodes: FastHashMap::default(),
             compare_cache: FastHashMap::default(),
             referenced_frames: FastHashSet::default(),
@@ -1697,7 +1695,7 @@ impl DirtyRegion {
         spatial_tree: &SpatialTree,
     ) {
         let map_pic_to_world = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            spatial_tree.root_reference_frame_index(),
             self.spatial_node_index,
             WorldRect::max_rect(),
             spatial_tree,
@@ -1724,7 +1722,7 @@ impl DirtyRegion {
         spatial_tree: &SpatialTree,
     ) -> DirtyRegion {
         let map_pic_to_world = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            spatial_tree.root_reference_frame_index(),
             self.spatial_node_index,
             WorldRect::max_rect(),
             spatial_tree,
@@ -2509,7 +2507,7 @@ impl TileCacheInstance {
         self.backdrop = BackdropInfo::empty();
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
@@ -2631,7 +2629,7 @@ impl TileCacheInstance {
         // Get the complete scale-offset from local space to device space
         let local_to_device = get_relative_scale_offset(
             self.spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             frame_context.spatial_tree,
         );
 
@@ -2938,7 +2936,7 @@ impl TileCacheInstance {
         }
 
         let mapper : SpaceMapper<PicturePixel, WorldPixel> = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             prim_spatial_node_index,
             frame_context.global_screen_world_rect,
             &frame_context.spatial_tree);
@@ -3103,7 +3101,7 @@ impl TileCacheInstance {
         }
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
@@ -3122,7 +3120,7 @@ impl TileCacheInstance {
 
         let local_prim_to_device = get_relative_scale_offset(
             prim_spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             frame_context.spatial_tree,
         );
 
@@ -3883,7 +3881,7 @@ impl TileCacheInstance {
         );
 
         let map_pic_to_world = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
@@ -3904,7 +3902,7 @@ impl TileCacheInstance {
         });
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
@@ -4095,7 +4093,7 @@ impl SurfaceInfo {
         scale_factors: (f32, f32),
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            spatial_tree.root_reference_frame_index(),
             surface_spatial_node_index,
             world_rect,
             spatial_tree,
@@ -4724,7 +4722,7 @@ impl PicturePrimitive {
         };
 
         let map_pic_to_world = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
+            frame_context.root_spatial_node_index,
             surface_spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
@@ -4779,7 +4777,7 @@ impl PicturePrimitive {
                             match world_draw_rect {
                                 Some(world_draw_rect) => {
                                     // Only check for occlusion on visible tiles that are fixed position.
-                                    if tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX &&
+                                    if tile_cache.spatial_node_index == frame_context.root_spatial_node_index &&
                                        frame_state.composite_state.occluders.is_tile_occluded(tile.z_id, world_draw_rect) {
                                         // If this tile has an allocated native surface, free it, since it's completely
                                         // occluded. We will need to re-allocate this surface if it becomes visible,
@@ -6138,7 +6136,7 @@ impl PicturePrimitive {
                         // Get the complete scale-offset from local space to device space
                         let local_to_device = get_relative_scale_offset(
                             tile_cache.spatial_node_index,
-                            ROOT_SPATIAL_NODE_INDEX,
+                            frame_context.root_spatial_node_index,
                             frame_context.spatial_tree,
                         );
 
@@ -6303,7 +6301,7 @@ impl PicturePrimitive {
             // with information available during frame building.
             if cluster.flags.contains(ClusterFlags::IS_BACKDROP_FILTER) {
                 let backdrop_to_world_mapper = SpaceMapper::new_with_target(
-                    ROOT_SPATIAL_NODE_INDEX,
+                    frame_context.root_spatial_node_index,
                     cluster.spatial_node_index,
                     LayoutRect::max_rect(),
                     frame_context.spatial_tree,
@@ -6324,7 +6322,7 @@ impl PicturePrimitive {
                             // proper bounding box where the backdrop-filter needs to be processed.
 
                             let prim_to_world_mapper = SpaceMapper::new_with_target(
-                                ROOT_SPATIAL_NODE_INDEX,
+                                frame_context.root_spatial_node_index,
                                 spatial_node_index,
                                 LayoutRect::max_rect(),
                                 frame_context.spatial_tree,
@@ -6575,7 +6573,7 @@ fn create_raster_mappers(
     spatial_tree: &SpatialTree,
 ) -> (SpaceMapper<RasterPixel, WorldPixel>, SpaceMapper<PicturePixel, RasterPixel>) {
     let map_raster_to_world = SpaceMapper::new_with_target(
-        ROOT_SPATIAL_NODE_INDEX,
+        spatial_tree.root_reference_frame_index(),
         raster_spatial_node_index,
         world_rect,
         spatial_tree,

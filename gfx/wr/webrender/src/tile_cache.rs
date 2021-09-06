@@ -12,7 +12,7 @@ use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
 use crate::scene_builder_thread::Interners;
-use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, SpatialTree};
+use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::util::VecHelper;
 
 /*
@@ -53,6 +53,8 @@ pub struct TileCacheBuilder {
     prim_clips_buffer: Vec<ClipInstance>,
     /// Cache the last clip-chain that was added to the shared clips as it's often the same between prims.
     last_checked_clip_chain: ClipChainId,
+    /// Handle to the root reference frame
+    root_spatial_node_index: SpatialNodeIndex,
 }
 
 /// The output of a tile cache builder, containing all details needed to construct the
@@ -84,13 +86,14 @@ impl TileCacheConfig {
 
 impl TileCacheBuilder {
     /// Construct a new tile cache builder.
-    pub fn new() -> Self {
+    pub fn new(root_spatial_node_index: SpatialNodeIndex) -> Self {
         TileCacheBuilder {
             force_new_tile_cache: None,
             pending_tile_caches: Vec::new(),
-            prev_scroll_root_cache: (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX),
+            prev_scroll_root_cache: (SpatialNodeIndex::INVALID, SpatialNodeIndex::INVALID),
             prim_clips_buffer: Vec::new(),
             last_checked_clip_chain: ClipChainId::INVALID,
+            root_spatial_node_index,
         }
     }
 
@@ -170,7 +173,7 @@ impl TileCacheBuilder {
             .iter()
             .max_by_key(|entry | entry.1)
             .map(|(spatial_node_index, _)| *spatial_node_index)
-            .unwrap_or(ROOT_SPATIAL_NODE_INDEX);
+            .unwrap_or(self.root_spatial_node_index);
 
         let mut first = true;
         let prim_clips_buffer = &mut self.prim_clips_buffer;
@@ -290,15 +293,15 @@ impl TileCacheBuilder {
 
         if let Some(current_scroll_root) = current_scroll_root {
             want_new_tile_cache |= match (current_scroll_root, scroll_root) {
-                (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX) => {
+                (_, _) if current_scroll_root == self.root_spatial_node_index && scroll_root == self.root_spatial_node_index => {
                     // Both current slice and this cluster are fixed position, no need to cut
                     false
                 }
-                (ROOT_SPATIAL_NODE_INDEX, _) => {
+                (_, _) if current_scroll_root == self.root_spatial_node_index => {
                     // A real scroll root is being established, so create a cache slice
                     true
                 }
-                (_, ROOT_SPATIAL_NODE_INDEX) => {
+                (_, _) if scroll_root == self.root_spatial_node_index => {
                     // If quality settings force subpixel AA over performance, skip creating
                     // a slice for the fixed position element(s) here.
                     if quality_settings.force_subpixel_aa_where_possible {
@@ -317,7 +320,7 @@ impl TileCacheBuilder {
                         while current_clip_chain_id != ClipChainId::NONE {
                             let clip_chain_node = &clip_store.clip_chain_nodes[current_clip_chain_id.0 as usize];
                             let spatial_root = self.find_scroll_root(clip_chain_node.spatial_node_index, spatial_tree);
-                            if spatial_root != ROOT_SPATIAL_NODE_INDEX {
+                            if spatial_root != self.root_spatial_node_index {
                                 create_slice = false;
                                 break;
                             }
@@ -382,7 +385,7 @@ impl TileCacheBuilder {
                     let params = TileCacheParams {
                         slice,
                         slice_flags: SliceFlags::empty(),
-                        spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
+                        spatial_node_index: self.root_spatial_node_index,
                         background_color: None,
                         shared_clips: Vec::new(),
                         shared_clip_chain: ClipChainId::NONE,
