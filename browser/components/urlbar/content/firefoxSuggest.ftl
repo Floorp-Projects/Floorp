@@ -11,11 +11,6 @@
 
 ## These strings are used in the urlbar panel.
 
-# Action text shown in Firefox Suggest urlbar results, appended after the result
-# title like "Result Title - Action Text". Used for Firefox Suggest results that
-# are non-sponsored.
-firefox-suggest-urlbar-nonsponsored-action = { -firefox-suggest-brand-name }
-
 # Tooltip text for the help button shown in Firefox Suggest urlbar results.
 firefox-suggest-urlbar-learn-more =
   .title = Learn more about { -firefox-suggest-brand-name }

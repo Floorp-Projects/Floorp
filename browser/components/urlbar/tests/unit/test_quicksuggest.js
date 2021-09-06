@@ -70,10 +70,9 @@ const EXPECTED_NONSPONSORED_RESULT = {
     sponsoredClickUrl: "http://click.reporting.test.com/nonsponsored",
     sponsoredBlockId: 2,
     sponsoredAdvertiser: "testadvertisernonsponsored",
-    isSponsored: true,
+    isSponsored: false,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
-    sponsoredL10nId: "firefox-suggest-urlbar-nonsponsored-action",
     displayUrl: "http://test.com/?q=nonsponsored",
   },
 };
