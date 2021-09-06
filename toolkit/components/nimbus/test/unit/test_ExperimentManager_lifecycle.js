@@ -166,7 +166,6 @@ add_task(async function test_onRecipe_isEnrollmentPaused() {
   await manager.enroll(fooRecipe, "test");
   await enrollmentPromise;
   await manager.onRecipe(updatedRecipe, "test");
-  console.log("XXX", manager.updateEnrollment.callCount);
   Assert.equal(
     manager.updateEnrollment.calledWith(updatedRecipe),
     true,
@@ -199,12 +198,12 @@ add_task(async function test_onFinalize_unenroll() {
 
   const recipe1 = ExperimentFakes.recipe("bar");
   // Unique features to prevent overlap
-  recipe1.branches[0].feature.featureId = "red";
-  recipe1.branches[1].feature.featureId = "red";
+  recipe1.branches[0].features[0].featureId = "red";
+  recipe1.branches[1].features[0].featureId = "red";
   await manager.onRecipe(recipe1, "test");
   const recipe2 = ExperimentFakes.recipe("baz");
-  recipe2.branches[0].feature.featureId = "green";
-  recipe2.branches[1].feature.featureId = "green";
+  recipe2.branches[0].features[0].featureId = "green";
+  recipe2.branches[1].features[0].featureId = "green";
   await manager.onRecipe(recipe2, "test");
 
   // Finalize

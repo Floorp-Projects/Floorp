@@ -53,27 +53,28 @@ const ExperimentTestUtils = {
   },
 
   _validateFeatureValueEnum({ branch }) {
-    let { feature } = branch;
-    // If we're not using a real feature skip this check
-    if (!FeatureManifest[feature.featureId]) {
-      return true;
-    }
-    let { variables } = FeatureManifest[feature.featureId];
-    for (let varName of Object.keys(variables)) {
-      let varValue = feature.value[varName];
-      if (
-        varValue &&
-        variables[varName].enum &&
-        !variables[varName].enum.includes(varValue)
-      ) {
-        throw new Error(
-          `${varName} should have one of the following values: ${JSON.stringify(
-            variables[varName].enum
-          )} but has value '${varValue}'`
-        );
+    let { features } = branch;
+    for (let feature of features) {
+      // If we're not using a real feature skip this check
+      if (!FeatureManifest[feature.featureId]) {
+        return true;
+      }
+      let { variables } = FeatureManifest[feature.featureId];
+      for (let varName of Object.keys(variables)) {
+        let varValue = feature.value[varName];
+        if (
+          varValue &&
+          variables[varName].enum &&
+          !variables[varName].enum.includes(varValue)
+        ) {
+          throw new Error(
+            `${varName} should have one of the following values: ${JSON.stringify(
+              variables[varName].enum
+            )} but has value '${varValue}'`
+          );
+        }
       }
     }
-
     return true;
   },
 
@@ -99,6 +100,12 @@ const ExperimentTestUtils = {
         "resource://testing-common/NimbusEnrollment.schema.json"
       )
     ).NimbusExperiment;
+
+    // We still have single feature experiment recipes for backwards
+    // compatibility testing but we don't do schema validation
+    if (!enrollment.branch.features && enrollment.branch.feature) {
+      return true;
+    }
 
     return (
       this._validateFeatureValueEnum(enrollment) &&
@@ -184,7 +191,7 @@ const ExperimentFakes = {
           {
             slug: "control",
             ratio: 1,
-            feature: featureConfig,
+            features: [featureConfig],
           },
         ],
       }
@@ -268,10 +275,12 @@ const ExperimentFakes = {
       enrollmentId: NormandyUtils.generateUuid(),
       branch: {
         slug: "treatment",
-        feature: {
-          featureId: "test-feature",
-          value: { title: "hello", enabled: true },
-        },
+        features: [
+          {
+            featureId: "test-feature",
+            value: { title: "hello", enabled: true },
+          },
+        ],
         ...props,
       },
       source: "NimbusTestUtils",
@@ -279,6 +288,9 @@ const ExperimentFakes = {
       experimentType: "NimbusTestUtils",
       userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
+      featureIds: props?.branch?.features?.map(f => f.featureId) || [
+        "test-feature",
+      ],
       ...props,
     };
   },
@@ -298,15 +310,17 @@ const ExperimentFakes = {
         {
           slug: "control",
           ratio: 1,
-          feature: { featureId: "test-feature", value: { enabled: true } },
+          features: [{ featureId: "test-feature", value: { enabled: true } }],
         },
         {
           slug: "treatment",
           ratio: 1,
-          feature: {
-            featureId: "test-feature",
-            value: { title: "hello", enabled: true },
-          },
+          features: [
+            {
+              featureId: "test-feature",
+              value: { title: "hello", enabled: true },
+            },
+          ],
         },
       ],
       bucketConfig: {
@@ -318,7 +332,9 @@ const ExperimentFakes = {
       },
       userFacingName: "Nimbus recipe",
       userFacingDescription: "NimbusTestUtils recipe",
-      featureIds: ["test-feature"],
+      featureIds: props?.branches?.[0].features?.map(f => f.featureId) || [
+        "test-feature",
+      ],
       ...props,
     };
   },

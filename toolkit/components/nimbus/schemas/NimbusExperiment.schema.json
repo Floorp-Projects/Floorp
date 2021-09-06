@@ -85,28 +85,31 @@
                 "description": "Relative ratio of population for the branch (e.g. if branch A=1 and branch B=3,\nbranch A would get 25% of the population)",
                 "default": 1
               },
-              "feature": {
-                "type": "object",
-                "properties": {
-                  "featureId": {
-                    "type": "string",
-                    "description": "The identifier for the feature flag"
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "featureId": {
+                      "type": "string",
+                      "description": "The identifier for the feature flag"
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional extra params for the feature (this should be validated against a schema)"
+                    }
                   },
-                  "value": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ],
-                    "description": "Optional extra params for the feature (this should be validated against a schema)"
-                  }
-                },
-                "required": ["featureId", "value"],
-                "additionalProperties": false
+                  "required": ["featureId", "value"],
+                  "additionalProperties": false
+                }
               }
             },
             "required": ["slug", "ratio"],
@@ -143,6 +146,11 @@
         "filter_expression": {
           "type": "string",
           "description": "This is NOT used by Nimbus, but has special functionality in Remote Settings.\nSee https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
+        },
+        "featureIds": {
+          "type": "array",
+          "items": [{ "type": "string" }],
+          "description": "Array of strings corresponding to the branch features in the enrollment."
         }
       },
       "required": [
@@ -158,7 +166,8 @@
         "startDate",
         "endDate",
         "proposedEnrollment",
-        "referenceBranch"
+        "referenceBranch",
+        "featureIds"
       ],
       "additionalProperties": true,
       "description": "The experiment definition accessible to:\n1. The Nimbus SDK via Remote Settings\n2. Jetstream via the Experimenter API"
