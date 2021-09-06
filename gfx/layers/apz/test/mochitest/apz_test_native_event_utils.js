@@ -710,6 +710,34 @@ function sendBasicNativePointerInput(
   }
 }
 
+async function promiseNativePointerInput(
+  aTarget,
+  aPointerType,
+  aState,
+  aX,
+  aY,
+  options
+) {
+  const pt = await coordinatesRelativeToScreen({
+    offsetX: aX,
+    offsetY: aY,
+    target: aTarget,
+  });
+  const utils = utilsForTarget(aTarget);
+  return new Promise(resolve => {
+    sendBasicNativePointerInput(
+      utils,
+      options?.pointerId ?? 0,
+      aPointerType,
+      aState,
+      pt.x,
+      pt.y,
+      resolve,
+      options
+    );
+  });
+}
+
 /**
  * Function to generate native pointer events as a sequence.
  * @param aTarget is the element or window whose bounding rect the coordinates are
@@ -906,22 +934,18 @@ function promiseNativePointerDrag(
   aPointerId = 0,
   options
 ) {
-  return new Promise((resolve, reject) => {
-    try {
-      synthesizeNativePointerDrag(
-        aTarget,
-        aPointerType,
-        aX,
-        aY,
-        aDeltaX,
-        aDeltaY,
-        resolve,
-        aPointerId,
-        options
-      );
-    } catch (err) {
-      reject(err);
-    }
+  return new Promise(resolve => {
+    synthesizeNativePointerDrag(
+      aTarget,
+      aPointerType,
+      aX,
+      aY,
+      aDeltaX,
+      aDeltaY,
+      resolve,
+      aPointerId,
+      options
+    );
   });
 }
 
@@ -934,21 +958,31 @@ function promiseNativeTouchDrag(
   aDeltaY,
   aTouchId = 0
 ) {
-  return new Promise((resolve, reject) => {
-    try {
-      synthesizeNativeTouchDrag(
-        aTarget,
-        aX,
-        aY,
-        aDeltaX,
-        aDeltaY,
-        resolve,
-        aTouchId
-      );
-    } catch (err) {
-      reject(err);
-    }
+  return new Promise(resolve => {
+    synthesizeNativeTouchDrag(
+      aTarget,
+      aX,
+      aY,
+      aDeltaX,
+      aDeltaY,
+      resolve,
+      aTouchId
+    );
   });
+}
+
+// Tapping is essentially a dragging with no move
+function promiseNativePointerTap(aTarget, aPointerType, aX, aY, options) {
+  return promiseNativePointerDrag(
+    aTarget,
+    aPointerType,
+    aX,
+    aY,
+    0,
+    0,
+    options?.pointerId ?? 0,
+    options
+  );
 }
 
 async function synthesizeNativeTap(aTarget, aX, aY, aObserver = null) {
