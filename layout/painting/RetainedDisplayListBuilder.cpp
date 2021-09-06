@@ -1169,9 +1169,7 @@ bool RetainedDisplayListBuilder::ProcessFrame(
 
   // TODO: There is almost certainly a faster way of doing this, probably can be
   // combined with the ancestor walk for TransformFrameRectToAncestor.
-  AnimatedGeometryRoot* agr =
-      aBuilder->FindAnimatedGeometryRootFor(aFrame)->GetAsyncAGR();
-  nsIFrame* agrFrame = agr ? agr->mFrame : nullptr;
+  nsIFrame* agrFrame = aBuilder->FindAnimatedGeometryRootFrameFor(aFrame);
 
   CRR_LOG("Processing frame %p with agr %p\n", aFrame, agr->mFrame);
 
