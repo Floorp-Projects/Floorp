@@ -395,12 +395,6 @@ void Realm::traceWeakObjectRealm(JSTracer* trc) {
   objects_.traceWeakNativeIterators(trc);
 }
 
-void Realm::traceWeakTemplateObjects(JSTracer* trc) {
-  TraceWeakEdge(trc, &iterResultTemplate_, "Realm::iterResultTemplate_");
-  TraceWeakEdge(trc, &iterResultWithoutPrototypeTemplate_,
-                "Realm::iterResultWithoutPrototypeTemplate_");
-}
-
 void Realm::fixupAfterMovingGC(JSTracer* trc) {
   purge();
   fixupGlobal();
