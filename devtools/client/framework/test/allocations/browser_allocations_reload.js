@@ -6,7 +6,7 @@
 // Record allocations while reloading the page with the DevTools opened
 
 const TEST_URL =
-  "data:text/html;charset=UTF-8,<div>Target allocations test</div>";
+  "http://example.com/browser/devtools/client/framework/test/allocations/reloaded-page.html";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
