@@ -129,3 +129,57 @@ async function waitForLoadOrTimeout(win = window, timeoutMs = 1000) {
   }
   return event || null;
 }
+
+/**
+ * Asserts a result is a quick suggest result.
+ *
+ * @param {string} sponsoredURL
+ *   The expected sponsored URL.
+ * @param {string} nonsponsoredURL
+ *   The expected nonsponsored URL.
+ * @param {number} [index]
+ *   The expected index of the quick suggest result. Pass -1 to use the index
+ *   of the last result.
+ * @param {boolean} [isSponsored]
+ *   True if the result is expected to be sponsored and false if non-sponsored.
+ * @param {object} [win]
+ * @returns {result}
+ *   The quick suggest result.
+ */
+async function assertIsQuickSuggest({
+  sponsoredURL,
+  nonsponsoredURL,
+  index = -1,
+  isSponsored = true,
+  win = window,
+} = {}) {
+  if (index < 0) {
+    index = UrlbarTestUtils.getResultCount(win) - 1;
+    Assert.greater(index, -1, "Sanity check: Result count should be > 0");
+  }
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, index);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(result.isSponsored, isSponsored, "Result isSponsored");
+
+  let url;
+  let actionText;
+  if (isSponsored) {
+    url = sponsoredURL;
+    actionText = "Sponsored";
+  } else {
+    url = nonsponsoredURL;
+    actionText = "";
+  }
+  Assert.equal(result.url, url, "Result URL");
+  Assert.equal(
+    result.element.row._elements.get("action").textContent,
+    actionText,
+    "Result action text"
+  );
+
+  let helpButton = result.element.row._elements.get("helpButton");
+  Assert.ok(helpButton, "The help button should be present");
+
+  return result;
+}
