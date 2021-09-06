@@ -1194,6 +1194,11 @@ static inline js::gc::AllocKind GetArrayBufferGCObjectKind(size_t numSlots) {
 static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
                                                HandleObject proto_,
                                                gc::AllocKind allocKind) {
+  MOZ_ASSERT(allocKind == gc::AllocKind::ARRAYBUFFER4 ||
+             allocKind == gc::AllocKind::ARRAYBUFFER8 ||
+             allocKind == gc::AllocKind::ARRAYBUFFER12 ||
+             allocKind == gc::AllocKind::ARRAYBUFFER16);
+
   RootedObject proto(cx, proto_);
   if (!proto) {
     proto = GlobalObject::getOrCreatePrototype(cx, JSProto_ArrayBuffer);
@@ -1233,10 +1238,8 @@ static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
 // Creates a new ArrayBufferObject with %ArrayBuffer.prototype% as proto and no
 // space for inline data.
 static ArrayBufferObject* NewArrayBufferObject(JSContext* cx) {
-  // XXX pre-existing: shouldn't this be AllocKind::ARRAYBUFFER4? See next
-  // patch.
   static_assert(ArrayBufferObject::RESERVED_SLOTS == 4);
-  return NewArrayBufferObject(cx, nullptr, gc::AllocKind::OBJECT4_BACKGROUND);
+  return NewArrayBufferObject(cx, nullptr, gc::AllocKind::ARRAYBUFFER4);
 }
 
 ArrayBufferObject* ArrayBufferObject::createForContents(
