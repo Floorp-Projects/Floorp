@@ -2771,8 +2771,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       aBuilder->GetVisibleRect().width >= 0 || !aBuilder->IsForPainting(),
       "visible rect not set");
 
-  nsDisplayItem::SetClipChain(
-      aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder), true);
+  mClipChain = aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder);
 
   // The visible rect is for mCurrentFrame, so we have to use
   // mCurrentOffsetToReferenceFrame
@@ -2809,7 +2808,6 @@ int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex().valueOr(0); }
 void nsDisplayItem::SetClipChain(const DisplayItemClipChain* aClipChain,
                                  bool aStore) {
   mClipChain = aClipChain;
-  mClip = DisplayItemClipChain::ClipForASR(aClipChain, mActiveScrolledRoot);
 }
 
 Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
@@ -2822,6 +2820,12 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
   MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
 #endif
   return Nothing();
+}
+
+const DisplayItemClip& nsDisplayItem::GetClip() const {
+  const DisplayItemClip* clip =
+      DisplayItemClipChain::ClipForASR(mClipChain, mActiveScrolledRoot);
+  return clip ? *clip : DisplayItemClip::NoClip();
 }
 
 void nsDisplayItem::IntersectClip(nsDisplayListBuilder* aBuilder,
@@ -5817,20 +5821,6 @@ nsDisplayStickyPosition::nsDisplayStickyPosition(
       mContainerASR(aContainerASR),
       mClippedToDisplayPort(aClippedToDisplayPort) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
-}
-
-void nsDisplayStickyPosition::SetClipChain(
-    const DisplayItemClipChain* aClipChain, bool aStore) {
-  mClipChain = aClipChain;
-  mClip = nullptr;
-
-  MOZ_ASSERT(!mClip,
-             "There should never be a clip on this item because no clip moves "
-             "with it.");
-
-  if (aStore) {
-    mOriginalClipChain = aClipChain;
-  }
 }
 
 // Returns the smallest distance from "0" to the range [min, max] where
