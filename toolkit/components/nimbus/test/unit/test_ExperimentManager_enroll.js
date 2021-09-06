@@ -129,11 +129,11 @@ add_task(async function test_failure_group_conflict() {
   // These should not be allowed to exist simultaneously.
   const existingBranch = {
     slug: "treatment",
-    features: [{ featureId: "pink", enabled: true, value: {} }],
+    feature: { featureId: "pink", enabled: true, value: {} },
   };
   const newBranch = {
     slug: "treatment",
-    features: [{ featureId: "pink", enabled: true, value: {} }],
+    feature: { featureId: "pink", enabled: true, value: {} },
   };
 
   // simulate adding an experiment with a conflicting group "pink"
@@ -234,7 +234,7 @@ add_task(async function enroll_in_reference_aw_experiment() {
   const branches = ["treatment-a", "treatment-b"].map(slug => ({
     slug,
     ratio: 1,
-    features: [{ value: content, enabled: true, featureId: "aboutwelcome" }],
+    feature: { value: content, enabled: true, featureId: "aboutwelcome" },
   }));
   let recipe = ExperimentFakes.recipe("reference-aw", { branches });
   // Ensure we get enrolled
@@ -276,7 +276,7 @@ add_task(async function test_forceEnroll_cleanup() {
       {
         slug: "treatment",
         ratio: 1,
-        features: [{ featureId: "force-enrollment", enabled: true, value: {} }],
+        feature: { featureId: "force-enrollment", enabled: true, value: {} },
       },
     ],
   });
@@ -285,7 +285,7 @@ add_task(async function test_forceEnroll_cleanup() {
       {
         slug: "treatment",
         ratio: 1,
-        features: [{ featureId: "force-enrollment", enabled: true, value: {} }],
+        feature: { featureId: "force-enrollment", enabled: true, value: {} },
       },
     ],
   });
@@ -325,12 +325,10 @@ add_task(async function test_featuremanifest_enum() {
       {
         slug: "control",
         ratio: 1,
-        features: [
-          {
-            featureId: "privatebrowsing",
-            value: { promoLinkType: "link" },
-          },
-        ],
+        feature: {
+          featureId: "privatebrowsing",
+          value: { promoLinkType: "link" },
+        },
       },
     ],
   });
@@ -358,12 +356,10 @@ add_task(async function test_featuremanifest_enum() {
     branch: {
       slug: "control",
       ratio: 1,
-      features: [
-        {
-          featureId: "privatebrowsing",
-          value: { promoLinkType: "bar" },
-        },
-      ],
+      feature: {
+        featureId: "privatebrowsing",
+        value: { promoLinkType: "bar" },
+      },
     },
   });
 
