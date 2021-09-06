@@ -291,6 +291,7 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-oem1",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
   });
@@ -300,6 +301,7 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-r-oem1",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL01") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
   });
@@ -309,6 +311,7 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-oem2",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
   });
@@ -318,6 +321,7 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-r-oem2",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL02") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
   });
@@ -327,6 +331,7 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-oem3",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
   });
@@ -336,48 +341,9 @@ for (const locale of ["en-US", "en-GB", "fr", "de"]) {
     distribution: "sweetlabs-b-r-oem3",
     test: engines =>
       hasParams(engines, "Bing", "searchbar", "pc=MZSL03") &&
+      hasParams(engines, "Bing", "searchbar", "ptag=MOZZ0000000020") &&
       hasDefault(engines, "Bing") &&
       hasEnginesFirst(engines, ["Bing"]),
-  });
-
-  tests.push({
-    locale,
-    distribution: "sweetlabs-oem1",
-    test: engines =>
-      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
-      hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]) &&
-      hasTelemetryId(engines, "Google", "google-sweetlabs"),
-  });
-
-  tests.push({
-    locale,
-    distribution: "sweetlabs-r-oem1",
-    test: engines =>
-      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem1") &&
-      hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]) &&
-      hasTelemetryId(engines, "Google", "google-sweetlabs"),
-  });
-
-  tests.push({
-    locale,
-    distribution: "sweetlabs-oem2",
-    test: engines =>
-      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
-      hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]) &&
-      hasTelemetryId(engines, "Google", "google-sweetlabs"),
-  });
-
-  tests.push({
-    locale,
-    distribution: "sweetlabs-r-oem2",
-    test: engines =>
-      hasParams(engines, "Google", "searchbar", "client=firefox-b-oem2") &&
-      hasDefault(engines, "Google") &&
-      hasEnginesFirst(engines, ["Google"]) &&
-      hasTelemetryId(engines, "Google", "google-sweetlabs"),
   });
 }
 
