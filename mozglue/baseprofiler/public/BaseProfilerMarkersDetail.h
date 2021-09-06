@@ -431,29 +431,16 @@ struct ProfileBufferEntryReader::Deserializer<ProfilerStringView<CHAR>> {
       aString.mOwnership = ProfilerStringView<CHAR>::Ownership::Literal;
       return;
     }
-    // LSB==1 -> Not a literal string.
-    ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
-        aER.ReadSpans(stringLength * sizeof(CHAR));
-    if (MOZ_LIKELY(spans.IsSingleSpan())) {
-      // Only a single span, we can just refer to it directly, assuming that
-      // this ProfilerStringView will not outlive the chunk.
-      aString.mStringView = std::basic_string_view<CHAR>(
-          reinterpret_cast<const CHAR*>(spans.mFirstOrOnly.Elements()),
-          stringLength);
-      aString.mOwnership = ProfilerStringView<CHAR>::Ownership::Reference;
-    } else {
-      // Two spans, we need to concatenate them.
-      // Allocate a buffer to store the string (plus terminal, for safety), and
-      // give it to the ProfilerStringView; Note that this is a secret use of
-      // ProfilerStringView, which is intended to only be used between
-      // deserialization and JSON streaming.
-      CHAR* buffer = new CHAR[stringLength + 1];
-      spans.CopyBytesTo(buffer);
-      buffer[stringLength] = CHAR(0);
-      aString.mStringView = std::basic_string_view<CHAR>(buffer, stringLength);
-      aString.mOwnership =
-          ProfilerStringView<CHAR>::Ownership::OwnedThroughStringView;
-    }
+    // LSB==1 -> Not a literal string, allocate a buffer to store the string
+    // (plus terminal, for safety), and give it to the ProfilerStringView; Note
+    // that this is a secret use of ProfilerStringView, which is intended to
+    // only be used between deserialization and JSON streaming.
+    CHAR* buffer = new CHAR[stringLength + 1];
+    aER.ReadBytes(buffer, stringLength * sizeof(CHAR));
+    buffer[stringLength] = CHAR(0);
+    aString.mStringView = std::basic_string_view<CHAR>(buffer, stringLength);
+    aString.mOwnership =
+        ProfilerStringView<CHAR>::Ownership::OwnedThroughStringView;
   }
 
   static ProfilerStringView<CHAR> Read(ProfileBufferEntryReader& aER) {
@@ -465,28 +452,16 @@ struct ProfileBufferEntryReader::Deserializer<ProfilerStringView<CHAR>> {
           aER.ReadObject<const CHAR*>(), stringLength,
           ProfilerStringView<CHAR>::Ownership::Literal);
     }
-    // LSB==1 -> Not a literal string.
-    ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
-        aER.ReadSpans(stringLength * sizeof(CHAR));
-    if (MOZ_LIKELY(spans.IsSingleSpan())) {
-      // Only a single span, we can just refer to it directly, assuming that
-      // this ProfilerStringView will not outlive the chunk.
-      return ProfilerStringView<CHAR>(
-          reinterpret_cast<const CHAR*>(spans.mFirstOrOnly.Elements()),
-          stringLength, ProfilerStringView<CHAR>::Ownership::Reference);
-    } else {
-      // Two spans, we need to concatenate them.
-      // Allocate a buffer to store the string (plus terminal, for safety), and
-      // give it to the ProfilerStringView; Note that this is a secret use of
-      // ProfilerStringView, which is intended to only be used between
-      // deserialization and JSON streaming.
-      CHAR* buffer = new CHAR[stringLength + 1];
-      spans.CopyBytesTo(buffer);
-      buffer[stringLength] = CHAR(0);
-      return ProfilerStringView<CHAR>(
-          buffer, stringLength,
-          ProfilerStringView<CHAR>::Ownership::OwnedThroughStringView);
-    }
+    // LSB==1 -> Not a literal string, allocate a buffer to store the string
+    // (plus terminal, for safety), and give it to the ProfilerStringView; Note
+    // that this is a secret use of ProfilerStringView, which is intended to
+    // only be used between deserialization and JSON streaming.
+    CHAR* buffer = new CHAR[stringLength + 1];
+    aER.ReadBytes(buffer, stringLength * sizeof(CHAR));
+    buffer[stringLength] = CHAR(0);
+    return ProfilerStringView<CHAR>(
+        buffer, stringLength,
+        ProfilerStringView<CHAR>::Ownership::OwnedThroughStringView);
   }
 };
 
