@@ -1031,6 +1031,13 @@ class nsDisplayListBuilder {
       const DisplayItemClipChain* aAncestor,
       const DisplayItemClipChain* aLeafClip1,
       const DisplayItemClipChain* aLeafClip2);
+  /**
+   * Same as above, except aAncestor is computed as the nearest common
+   * ancestor of the two provided clips.
+   */
+  const DisplayItemClipChain* CreateClipChainIntersection(
+      const DisplayItemClipChain* aLeafClip1,
+      const DisplayItemClipChain* aLeafClip2);
 
   /**
    * Clone the supplied clip chain's chain items into this builder's arena.
@@ -2182,6 +2189,7 @@ class nsDisplayItem : public nsDisplayItemLink {
  public:
   using Layer = layers::Layer;
   using LayerManager = layers::LayerManager;
+  using WebRenderLayerManager = layers::WebRenderLayerManager;
   using StackingContextHelper = layers::StackingContextHelper;
   using ViewID = layers::ScrollableLayerGuid::ViewID;
 
@@ -3036,19 +3044,13 @@ class nsPaintedDisplayItem : public nsDisplayItem {
   }
 
   /**
-   * Stores the given opacity value to be applied when drawing. It is an error
-   * to call this if CanApplyOpacity returned false.
-   */
-  virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                            const DisplayItemClipChain* aClip) {
-    MOZ_ASSERT(CanApplyOpacity(), "ApplyOpacity is not supported on this type");
-  }
-
-  /**
    * Returns true if this display item would return true from ApplyOpacity
    * without actually applying the opacity. Otherwise returns false.
    */
-  virtual bool CanApplyOpacity() const { return false; }
+  virtual bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aBuilder) const {
+    return false;
+  }
 
   /**
    * Returns true if this item supports PaintWithClip, where the clipping
@@ -4234,13 +4236,6 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
                                     nsIFrame* aFrameForBounds = nullptr);
   ~nsDisplayBackgroundImage() override;
 
-  bool RestoreState() override {
-    bool superChanged = nsPaintedDisplayItem::RestoreState();
-    bool opacityChanged = (mOpacity != 1.0f);
-    mOpacity = 1.0f;
-    return (superChanged || opacityChanged);
-  }
-
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 
   /**
@@ -4271,11 +4266,9 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
                            bool* aSnap) const override;
   Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) const override;
 
-  bool CanApplyOpacity() const override { return true; }
-
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override {
-    mOpacity = aOpacity;
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const override {
+    return CanBuildWebRenderDisplayItems(aManager, aBuilder);
   }
 
   /**
@@ -4344,7 +4337,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
 
  protected:
   bool CanBuildWebRenderDisplayItems(layers::WebRenderLayerManager* aManager,
-                                     nsDisplayListBuilder* aBuilder);
+                                     nsDisplayListBuilder* aBuilder) const;
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrameForBounds = nullptr);
 
@@ -4365,8 +4358,6 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   bool mIsRasterImage;
   /* Whether the image should be treated as fixed to the viewport. */
   bool mShouldFixToViewport;
-  uint32_t mImageFlags;
-  float mOpacity;
 };
 
 /**
@@ -4531,8 +4522,6 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
         mHasStyle(aBackgroundStyle),
         mDependentFrame(nullptr),
         mColor(gfx::sRGBColor::FromABGR(aColor)) {
-    mState.mColor = mColor;
-
     if (mHasStyle) {
       mBottomLayerClip =
           aBackgroundStyle->StyleBackground()->BottomLayer().mClip;
@@ -4548,15 +4537,6 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   }
 
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
-
-  bool RestoreState() override {
-    if (!nsPaintedDisplayItem::RestoreState() && mColor == mState.mColor) {
-      return false;
-    }
-
-    mColor = mState.mColor;
-    return true;
-  }
 
   bool HasBackgroundClipText() const {
     MOZ_ASSERT(mHasStyle);
@@ -4576,10 +4556,8 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) const override;
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override;
-
-  bool CanApplyOpacity() const override;
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const override;
 
   float GetOpacity() const { return mColor.a; }
 
@@ -4649,10 +4627,6 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   StyleGeometryBox mBottomLayerClip;
   nsIFrame* mDependentFrame;
   gfx::sRGBColor mColor;
-
-  struct {
-    gfx::sRGBColor mColor;
-  } mState;
 };
 
 class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
@@ -4701,7 +4675,7 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
 class nsDisplayBoxShadowOuter final : public nsPaintedDisplayItem {
  public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame), mOpacity(1.0f) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
     mBounds = GetBoundsInternal();
   }
@@ -4710,15 +4684,6 @@ class nsDisplayBoxShadowOuter final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("BoxShadowOuter", TYPE_BOX_SHADOW_OUTER)
 
-  bool RestoreState() override {
-    if (!nsPaintedDisplayItem::RestoreState() && mOpacity == 1.0f) {
-      return false;
-    }
-
-    mOpacity = 1.0f;
-    return true;
-  }
-
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
   bool IsInvisibleInRect(const nsRect& aRect) const override;
@@ -4726,21 +4691,12 @@ class nsDisplayBoxShadowOuter final : public nsPaintedDisplayItem {
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion* aInvalidRegion) const override;
 
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override {
-    NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
-    mOpacity = aOpacity;
-    IntersectClip(aBuilder, aClip, false);
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const override {
+    return CanBuildWebRenderDisplayItems();
   }
 
-  bool CanApplyOpacity() const override { return true; }
-
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayBoxShadowOuterGeometry(this, aBuilder, mOpacity);
-  }
-
-  bool CanBuildWebRenderDisplayItems();
+  bool CanBuildWebRenderDisplayItems() const;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -4750,7 +4706,6 @@ class nsDisplayBoxShadowOuter final : public nsPaintedDisplayItem {
 
  private:
   nsRect mBounds;
-  float mOpacity;
 };
 
 /**
@@ -5222,15 +5177,6 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 
-  bool RestoreState() override {
-    if (!nsDisplayWrapList::RestoreState() && mOpacity == mState.mOpacity) {
-      return false;
-    }
-
-    mOpacity = mState.mOpacity;
-    return true;
-  }
-
   void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) override {
     mChildOpacityState = ChildOpacityState::Unknown;
   }
@@ -5263,10 +5209,15 @@ class nsDisplayOpacity : public nsDisplayWrapList {
     }
     return nsDisplayWrapList::IsInvalid(aRect);
   }
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override;
-  bool CanApplyOpacity() const override;
-  bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const override;
+  bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
+    return false;
+  }
+
+  bool CanApplyOpacityToChildren(WebRenderLayerManager* aManager,
+                                 nsDisplayListBuilder* aBuilder,
+                                 float aInheritedOpacity);
 
   bool NeedsGeometryUpdates() const override {
     // For flattened nsDisplayOpacity items, ComputeInvalidationRegion() only
@@ -5301,8 +5252,9 @@ class nsDisplayOpacity : public nsDisplayWrapList {
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
-  bool ApplyToChildren(nsDisplayListBuilder* aBuilder);
-  bool ApplyToFilterOrMask(const bool aUsingLayers);
+  bool CanApplyToChildren(WebRenderLayerManager* aManager,
+                          nsDisplayListBuilder* aBuilder);
+  bool ApplyToMask();
 
   float mOpacity;
   bool mForEventsOnly : 1;
@@ -5321,10 +5273,6 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 #else
   ChildOpacityState mChildOpacityState;
 #endif
-
-  struct {
-    float mOpacity;
-  } mState{};
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
@@ -5985,8 +5933,7 @@ class nsDisplayEffectsBase : public nsDisplayWrapList {
   nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                        const nsDisplayEffectsBase& aOther)
       : nsDisplayWrapList(aBuilder, aOther),
-        mEffectsBounds(aOther.mEffectsBounds),
-        mHandleOpacity(aOther.mHandleOpacity) {
+        mEffectsBounds(aOther.mEffectsBounds) {
     MOZ_COUNT_CTOR(nsDisplayEffectsBase);
   }
 
@@ -5997,24 +5944,9 @@ class nsDisplayEffectsBase : public nsDisplayWrapList {
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
 
-  bool RestoreState() override {
-    if (!nsDisplayWrapList::RestoreState() && !mHandleOpacity) {
-      return false;
-    }
-
-    mHandleOpacity = false;
-    return true;
-  }
-
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
-
-  virtual void SelectOpacityOptimization(const bool /* aUsingLayers */) {
-    SetHandleOpacity();
-  }
-
-  bool ShouldHandleOpacity() const { return mHandleOpacity; }
 
   gfxRect BBoxInUserSpace() const;
   gfxPoint UserSpaceOffset() const;
@@ -6024,13 +5956,10 @@ class nsDisplayEffectsBase : public nsDisplayWrapList {
                                  nsRegion* aInvalidRegion) const override;
 
  protected:
-  void SetHandleOpacity() { mHandleOpacity = true; }
   bool ValidateSVGFrame();
 
   // relative to mFrame
   nsRect mEffectsBounds;
-  // True if we need to handle css opacity in this display item.
-  bool mHandleOpacity;
 };
 
 /**
@@ -6096,11 +6025,9 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
    * return whether the mask layer was painted successfully.
    */
   bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext,
-                 bool* aMaskPainted = nullptr);
+                 bool aHandleOpacity, bool* aMaskPainted = nullptr);
 
   const nsTArray<nsRect>& GetDestRects() { return mDestRects; }
-
-  void SelectOpacityOptimization(const bool aUsingLayers) override;
 
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
@@ -6122,7 +6049,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
   bool CanPaintOnMaskLayer(LayerManager* aManager);
 
   nsTArray<nsRect> mDestRects;
-  bool mApplyOpacityWithSimpleClipPath;
 };
 
 class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
@@ -6253,7 +6179,12 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       const StackingContextHelper& aSc,
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
-  bool CanCreateWebRenderCommands();
+  bool CanCreateWebRenderCommands() const;
+
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const override {
+    return CanCreateWebRenderCommands();
+  }
 
   bool CreatesStackingContextHelper() override { return true; }
 
@@ -6746,15 +6677,6 @@ class nsDisplayText final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
-  bool RestoreState() final {
-    if (!nsPaintedDisplayItem::RestoreState() && mOpacity == 1.0f) {
-      return false;
-    }
-
-    mOpacity = 1.0f;
-    return true;
-  }
-
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const final {
     *aSnap = false;
     return mBounds;
@@ -6794,16 +6716,10 @@ class nsDisplayText final : public nsPaintedDisplayItem {
                                  nsRegion* aInvalidRegion) const final;
 
   void RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
-                       bool aIsRecording = false);
+                       float aOpacity = 1.0f, bool aIsRecording = false);
 
-  bool CanApplyOpacity() const final;
-
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) final {
-    NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
-    mOpacity = aOpacity;
-    IntersectClip(aBuilder, aClip, false);
-  }
+  bool CanApplyOpacity(WebRenderLayerManager* aManager,
+                       nsDisplayListBuilder* aBuilder) const final;
 
   void WriteDebugInfo(std::stringstream& aStream) final;
 
@@ -6842,11 +6758,9 @@ class nsDisplayText final : public nsPaintedDisplayItem {
 
   nscoord& VisIStartEdge() { return mVisIStartEdge; }
   nscoord& VisIEndEdge() { return mVisIEndEdge; }
-  float Opacity() const { return mOpacity; }
 
  private:
   nsRect mBounds;
-  float mOpacity;
 
   // Lengths measured from the visual inline start and end sides
   // (i.e. left and right respectively in horizontal writing modes,
