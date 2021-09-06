@@ -137,7 +137,7 @@ pub mod intern;
 ///
 pub mod render_api;
 
-mod shader_source {
+pub mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
 
