@@ -60,10 +60,7 @@ class ContentPrefsChild extends JSProcessActorChild {
   }
 
   _getRandomId() {
-    return Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
-      .generateUUID()
-      .toString();
+    return Services.uuid.generateUUID().toString();
   }
 
   receiveMessage(msg) {

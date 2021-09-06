@@ -1166,12 +1166,7 @@ class ModalPrompter {
     // It is technically possible for multiple prompts to be sent from a single
     // BrowsingContext. See bug 1266353. We use a randomly generated UUID to
     // differentiate between the different prompts.
-    let id =
-      "id" +
-      Cc["@mozilla.org/uuid-generator;1"]
-        .getService(Ci.nsIUUIDGenerator)
-        .generateUUID()
-        .toString();
+    let id = "id" + Services.uuid.generateUUID().toString();
 
     args._remoteId = id;
 

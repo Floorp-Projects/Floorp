@@ -105,9 +105,7 @@ add_task(async function() {
       let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
         Ci.nsIDirectoryServiceProvider
       );
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-        Ci.nsIUUIDGenerator
-      );
+      let uuidGenerator = Services.uuid;
       let shellSvc = Cc["@mozilla.org/browser/shell-service;1"].getService(
         Ci.nsIShellService
       );

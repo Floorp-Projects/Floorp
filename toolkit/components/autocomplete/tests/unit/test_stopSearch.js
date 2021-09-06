@@ -83,9 +83,7 @@ AutoCompleteSearch.prototype = {
  */
 function registerAutoCompleteSearch(aSearch) {
   let name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
   let cid = uuidGenerator.generateUUID();
   let desc = "Test AutoCompleteSearch";
   let componentManager = Components.manager.QueryInterface(

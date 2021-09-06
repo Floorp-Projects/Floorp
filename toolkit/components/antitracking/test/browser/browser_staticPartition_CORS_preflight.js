@@ -12,9 +12,7 @@ const TEST_PREFLIGHT_PAGE =
   "http://example.net/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_CORS_preflight.sjs";
 
 add_task(async function() {
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  let uuidGenerator = Services.uuid;
 
   for (let networkIsolation of [true, false]) {
     for (let partitionPerSite of [true, false]) {

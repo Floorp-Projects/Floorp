@@ -529,8 +529,7 @@ CrashManager.prototype = Object.freeze({
   generateSubmissionID() {
     return (
       "sub-" +
-      Cc["@mozilla.org/uuid-generator;1"]
-        .getService(Ci.nsIUUIDGenerator)
+      Services.uuid
         .generateUUID()
         .toString()
         .slice(1, -1)
