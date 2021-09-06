@@ -171,8 +171,6 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingSettings = (settings: RecordingSettings) => void;
-
 /**
  * This is the type signature for a function to restart the browser with a given
  * environment variable. Currently only implemented for the popup.
@@ -228,8 +226,6 @@ export interface RecordingSettings {
 export type Reducer<S> = (state: S | undefined, action: Action) => S;
 
 export interface InitializedValues {
-  // A function to set the recording settings.
-  setRecordingSettings: SetRecordingSettings;
   // The current list of presets, loaded in from a JSM.
   presets: Presets;
   // Determine the current page context.
@@ -300,25 +296,25 @@ export type Action =
   | {
       type: "INITIALIZE_STORE";
       isSupportedPlatform: boolean;
-      setRecordingSettings: SetRecordingSettings;
       presets: Presets;
       pageContext: PageContext;
       openRemoteDevTools?: () => void;
-      recordingSettingsFromPreferences: RecordingSettings;
       supportedFeatures: string[];
     }
   | {
       type: "CHANGE_PRESET";
       presetName: string;
       preset: PresetDefinition | undefined;
+    }
+  | {
+      type: "UPDATE_SETTINGS_FROM_PREFERENCES";
+      recordingSettingsFromPreferences: RecordingSettings;
     };
 
 export interface InitializeStoreValues {
   isSupportedPlatform: boolean;
-  setRecordingSettings: SetRecordingSettings;
   presets: Presets;
   pageContext: PageContext;
-  recordingSettings: RecordingSettings;
   supportedFeatures: string[];
   openRemoteDevTools?: () => void;
 }

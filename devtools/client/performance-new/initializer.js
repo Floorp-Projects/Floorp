@@ -56,6 +56,9 @@ const DevToolsPanel = React.createFactory(
 const ProfilerEventHandling = React.createFactory(
   require("devtools/client/performance-new/components/ProfilerEventHandling")
 );
+const ProfilerPreferenceObserver = React.createFactory(
+  require("devtools/client/performance-new/components/ProfilerPreferenceObserver")
+);
 const createStore = require("devtools/client/shared/redux/create-store");
 const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
@@ -67,11 +70,7 @@ const {
 const { createLocalSymbolicationService } = ChromeUtils.import(
   "resource://devtools/client/performance-new/symbolication.jsm.js"
 );
-const {
-  setRecordingSettings,
-  presets,
-  getRecordingSettings,
-} = ChromeUtils.import(
+const { presets } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
@@ -123,18 +122,9 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   store.dispatch(
     actions.initializeStore({
       isSupportedPlatform,
-      recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
       presets,
       supportedFeatures,
       pageContext: "devtools",
-
-      // Go ahead and hide the implementation details for the component on how the
-      // preference information is stored
-      /**
-       * @param {RecordingSettings} newRecordingSettings
-       */
-      setRecordingSettings: newRecordingSettings =>
-        setRecordingSettings(pageContext, newRecordingSettings),
     })
   );
 
@@ -168,6 +158,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
           React.Fragment,
           null,
           ProfilerEventHandling({ perfFront }),
+          ProfilerPreferenceObserver(),
           DevToolsPanel({
             perfFront,
             onProfileReceived,

@@ -42,11 +42,7 @@
  * profiler shortcuts. In order to do this, the background code needs to live in a
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
  */
-const {
-  getRecordingSettings,
-  setRecordingSettings,
-  presets,
-} = ChromeUtils.import(
+const { presets } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
@@ -58,6 +54,9 @@ const {
 } = require("devtools/client/shared/fluent-l10n/fluent-l10n");
 const Provider = React.createFactory(
   require("devtools/client/shared/vendor/react-redux").Provider
+);
+const ProfilerPreferenceObserver = React.createFactory(
+  require("devtools/client/performance-new/components/ProfilerPreferenceObserver")
 );
 const LocalizationProvider = React.createFactory(
   FluentReact.LocalizationProvider
@@ -107,14 +106,6 @@ async function gInit(
       isSupportedPlatform,
       supportedFeatures,
       presets,
-      // Get the preferences from the current browser
-      recordingSettings: getRecordingSettings(pageContext, supportedFeatures),
-      /**
-       * @param {RecordingSettings} newRecordingSettings
-       */
-      setRecordingSettings: newRecordingSettings =>
-        setRecordingSettings(pageContext, newRecordingSettings),
-
       pageContext,
       openRemoteDevTools,
     })
@@ -125,7 +116,12 @@ async function gInit(
       { store },
       LocalizationProvider(
         { bundles: l10n.getBundles() },
-        React.createElement(React.Fragment, null, AboutProfiling())
+        React.createElement(
+          React.Fragment,
+          null,
+          ProfilerPreferenceObserver(),
+          AboutProfiling()
+        )
       )
     ),
     document.querySelector("#root")

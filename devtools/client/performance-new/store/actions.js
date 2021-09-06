@@ -16,6 +16,7 @@ const {
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("../@types/perf").Presets} Presets
  * @typedef {import("../@types/perf").PanelWindow} PanelWindow
  */
@@ -71,48 +72,24 @@ exports.reportPrivateBrowsingStopped = () => ({
 });
 
 /**
- * Dispatch the given action, and then update the recording settings.
- * @param {Action} action
- * @return {ThunkAction<void>}
- */
-function _dispatchAndUpdatePreferences(action) {
-  return ({ dispatch, getState }) => {
-    if (typeof action !== "object") {
-      throw new Error(
-        "This function assumes that the dispatched action is a simple object and " +
-          "synchronous."
-      );
-    }
-    dispatch(action);
-    const setRecordingSettings = selectors.getSetRecordingSettingsFn(
-      getState()
-    );
-    const recordingSettings = selectors.getRecordingSettings(getState());
-    setRecordingSettings(recordingSettings);
-  };
-}
-
-/**
  * Updates the recording settings for the interval.
  * @param {number} interval
- * @return {ThunkAction<void>}
+ * @return {Action}
  */
-exports.changeInterval = interval =>
-  _dispatchAndUpdatePreferences({
-    type: "CHANGE_INTERVAL",
-    interval,
-  });
+exports.changeInterval = interval => ({
+  type: "CHANGE_INTERVAL",
+  interval,
+});
 
 /**
  * Updates the recording settings for the entries.
  * @param {number} entries
- * @return {ThunkAction<void>}
+ * @return {Action}
  */
-exports.changeEntries = entries =>
-  _dispatchAndUpdatePreferences({
-    type: "CHANGE_ENTRIES",
-    entries,
-  });
+exports.changeEntries = entries => ({
+  type: "CHANGE_ENTRIES",
+  entries,
+});
 
 /**
  * Updates the recording settings for the features.
@@ -134,52 +111,47 @@ exports.changeFeatures = features => {
       }
     }
 
-    dispatch(
-      _dispatchAndUpdatePreferences({
-        type: "CHANGE_FEATURES",
-        features,
-        promptEnvRestart,
-      })
-    );
+    dispatch({
+      type: "CHANGE_FEATURES",
+      features,
+      promptEnvRestart,
+    });
   };
 };
 
 /**
  * Updates the recording settings for the threads.
  * @param {string[]} threads
- * @return {ThunkAction<void>}
+ * @return {Action}
  */
-exports.changeThreads = threads =>
-  _dispatchAndUpdatePreferences({
-    type: "CHANGE_THREADS",
-    threads,
-  });
+exports.changeThreads = threads => ({
+  type: "CHANGE_THREADS",
+  threads,
+});
 
 /**
  * Change the preset.
  * @param {Presets} presets
  * @param {string} presetName
- * @return {ThunkAction<void>}
+ * @return {Action}
  */
-exports.changePreset = (presets, presetName) =>
-  _dispatchAndUpdatePreferences({
-    type: "CHANGE_PRESET",
-    presetName,
-    // Also dispatch the preset so that the reducers can pre-fill the values
-    // from a preset.
-    preset: presets[presetName],
-  });
+exports.changePreset = (presets, presetName) => ({
+  type: "CHANGE_PRESET",
+  presetName,
+  // Also dispatch the preset so that the reducers can pre-fill the values
+  // from a preset.
+  preset: presets[presetName],
+});
 
 /**
  * Updates the recording settings for the objdirs.
  * @param {string[]} objdirs
- * @return {ThunkAction<void>}
+ * @return {Action}
  */
-exports.changeObjdirs = objdirs =>
-  _dispatchAndUpdatePreferences({
-    type: "CHANGE_OBJDIRS",
-    objdirs,
-  });
+exports.changeObjdirs = objdirs => ({
+  type: "CHANGE_OBJDIRS",
+  objdirs,
+});
 
 /**
  * Receive the values to initialize the store. See the reducer for what values
@@ -188,11 +160,22 @@ exports.changeObjdirs = objdirs =>
  * @return {Action}
  */
 exports.initializeStore = values => {
-  const { recordingSettings, ...initValues } = values;
   return {
-    ...initValues,
     type: "INITIALIZE_STORE",
-    recordingSettingsFromPreferences: recordingSettings,
+    ...values,
+  };
+};
+
+/**
+ * Whenever the preferences are updated, this action is dispatched to update the
+ * redux store.
+ * @param {RecordingSettings} recordingSettingsFromPreferences
+ * @return {Action}
+ */
+exports.updateSettingsFromPreferences = recordingSettingsFromPreferences => {
+  return {
+    type: "UPDATE_SETTINGS_FROM_PREFERENCES",
+    recordingSettingsFromPreferences,
   };
 };
 

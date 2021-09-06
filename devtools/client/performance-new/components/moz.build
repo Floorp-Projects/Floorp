@@ -12,6 +12,7 @@ DevToolsModules(
     "OnboardingMessage.js",
     "Presets.js",
     "ProfilerEventHandling.js",
+    "ProfilerPreferenceObserver.js",
     "Range.js",
     "RecordingButton.js",
     "Settings.js",
