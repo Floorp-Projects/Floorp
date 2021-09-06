@@ -6595,11 +6595,6 @@
   value: true
   mirror: always
 
-- name: layers.single-tile.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # We allow for configurable and rectangular tile size to avoid wasting memory
 # on devices whose screen size does not align nicely to the default tile size.
 # Although layers can be any size, they are often the same size as the screen,
