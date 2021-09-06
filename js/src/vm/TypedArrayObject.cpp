@@ -311,6 +311,38 @@ uint32_t js::ClampDoubleToUint8(const double x) {
 
 namespace {
 
+static TypedArrayObject* NewTypedArrayObject(JSContext* cx,
+                                             const JSClass* clasp,
+                                             HandleObject proto,
+                                             gc::AllocKind allocKind,
+                                             gc::InitialHeap heap) {
+  MOZ_ASSERT(proto);
+
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, clasp));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
+
+  // Typed arrays can store data inline so we only use fixed slots to cover the
+  // reserved slots, ignoring the AllocKind.
+  MOZ_ASSERT(ClassCanHaveFixedData(clasp));
+  constexpr size_t nfixed = TypedArrayObject::RESERVED_SLOTS;
+  static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
+  static_assert(nfixed == TypedArrayObject::FIXED_DATA_START);
+
+  RootedShape shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
+                                                     AsTaggedProto(proto),
+                                                     nfixed, ObjectFlags()));
+  if (!shape) {
+    return nullptr;
+  }
+
+  NativeObject* obj = NativeObject::create(cx, allocKind, heap, shape);
+  if (!obj) {
+    return nullptr;
+  }
+
+  return &obj->as<TypedArrayObject>();
+}
+
 enum class SpeciesConstructorOverride { None, ArrayBuffer };
 
 template <typename NativeType>
@@ -378,19 +410,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* newBuiltinClassInstance(JSContext* cx,
                                                    gc::AllocKind allocKind,
-                                                   NewObjectKind newKind) {
-    JSObject* obj =
-        NewBuiltinClassInstance(cx, instanceClass(), allocKind, newKind);
-    return obj ? &obj->as<TypedArrayObject>() : nullptr;
+                                                   gc::InitialHeap heap) {
+    RootedObject proto(cx, GlobalObject::getOrCreatePrototype(cx, protoKey()));
+    if (!proto) {
+      return nullptr;
+    }
+    return NewTypedArrayObject(cx, instanceClass(), proto, allocKind, heap);
   }
 
   static TypedArrayObject* makeProtoInstance(JSContext* cx, HandleObject proto,
                                              gc::AllocKind allocKind) {
     MOZ_ASSERT(proto);
-
-    JSObject* obj =
-        NewObjectWithGivenProto(cx, instanceClass(), proto, allocKind);
-    return obj ? &obj->as<TypedArrayObject>() : nullptr;
+    return NewTypedArrayObject(cx, instanceClass(), proto, allocKind,
+                               gc::DefaultHeap);
   }
 
   static TypedArrayObject* makeInstance(
@@ -407,7 +439,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     if (proto) {
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
-      obj = newBuiltinClassInstance(cx, allocKind, GenericObject);
+      obj = newBuiltinClassInstance(cx, allocKind, gc::DefaultHeap);
     }
     if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
       return nullptr;
@@ -428,7 +460,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     AutoSetNewObjectMetadata metadata(cx);
 
     Rooted<TypedArrayObject*> tarray(
-        cx, newBuiltinClassInstance(cx, allocKind, TenuredObject));
+        cx, newBuiltinClassInstance(cx, allocKind, gc::TenuredHeap));
     if (!tarray) {
       return nullptr;
     }
