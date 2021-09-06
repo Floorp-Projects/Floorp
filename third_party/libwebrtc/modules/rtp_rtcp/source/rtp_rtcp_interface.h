@@ -151,6 +151,27 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     RTC_DISALLOW_COPY_AND_ASSIGN(Configuration);
   };
 
+  // Stats for RTCP sender reports (SR) for a specific SSRC.
+  // Refer to https://tools.ietf.org/html/rfc3550#section-6.4.1.
+  struct SenderReportStats {
+    // Arrival NPT timestamp for the last received RTCP SR.
+    NtpTime last_arrival_timestamp;
+    // Received (a.k.a., remote) NTP timestamp for the last received RTCP SR.
+    NtpTime last_remote_timestamp;
+    // Total number of RTP data packets transmitted by the sender since starting
+    // transmission up until the time this SR packet was generated. The count
+    // should be reset if the sender changes its SSRC identifier.
+    uint32_t packets_sent;
+    // Total number of payload octets (i.e., not including header or padding)
+    // transmitted in RTP data packets by the sender since starting transmission
+    // up until the time this SR packet was generated. The count should be reset
+    // if the sender changes its SSRC identifier.
+    uint64_t bytes_sent;
+    // Total number of RTCP SR blocks received.
+    // https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats-reportssent.
+    uint64_t reports_count;
+  };
+
   // **************************************************************************
   // Receiver functions
   // **************************************************************************
@@ -383,6 +404,8 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // ReportBlockData represents the latest Report Block that was received for
   // that pair.
   virtual std::vector<ReportBlockData> GetLatestReportBlockData() const = 0;
+  // Returns stats based on the received RTCP SRs.
+  virtual absl::optional<SenderReportStats> GetSenderReportStats() const = 0;
 
   // (XR) Sets Receiver Reference Time Report (RTTR) status.
   virtual void SetRtcpXrRrtrStatus(bool enable) = 0;

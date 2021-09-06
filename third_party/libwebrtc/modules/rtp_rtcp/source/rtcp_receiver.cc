@@ -177,6 +177,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       remote_sender_rtp_time_(0),
       remote_sender_packet_count_(0),
       remote_sender_octet_count_(0),
+      remote_sender_reports_count_(0),
       xr_rrtr_status_(false),
       xr_rr_rtt_ms_(0),
       oldest_tmmbr_info_ms_(0),
@@ -333,7 +334,10 @@ bool RTCPReceiver::NTP(uint32_t* received_ntp_secs,
                        uint32_t* received_ntp_frac,
                        uint32_t* rtcp_arrival_time_secs,
                        uint32_t* rtcp_arrival_time_frac,
-                       uint32_t* rtcp_timestamp) const {
+                       uint32_t* rtcp_timestamp,
+                       uint32_t* remote_sender_packet_count,
+                       uint64_t* remote_sender_octet_count,
+                       uint64_t* remote_sender_reports_count) const {
   MutexLock lock(&rtcp_receiver_lock_);
   if (!last_received_sr_ntp_.Valid())
     return false;
@@ -343,7 +347,6 @@ bool RTCPReceiver::NTP(uint32_t* received_ntp_secs,
     *received_ntp_secs = remote_sender_ntp_time_.seconds();
   if (received_ntp_frac)
     *received_ntp_frac = remote_sender_ntp_time_.fractions();
-
   // Rtp time from incoming SenderReport.
   if (rtcp_timestamp)
     *rtcp_timestamp = remote_sender_rtp_time_;
@@ -353,6 +356,14 @@ bool RTCPReceiver::NTP(uint32_t* received_ntp_secs,
     *rtcp_arrival_time_secs = last_received_sr_ntp_.seconds();
   if (rtcp_arrival_time_frac)
     *rtcp_arrival_time_frac = last_received_sr_ntp_.fractions();
+
+  // Counters.
+  if (remote_sender_packet_count)
+    *remote_sender_packet_count = remote_sender_packet_count_;
+  if (remote_sender_octet_count)
+    *remote_sender_octet_count = remote_sender_octet_count_;
+  if (remote_sender_reports_count)
+    *remote_sender_reports_count = remote_sender_reports_count_;
 
   return true;
 }
@@ -538,6 +549,7 @@ void RTCPReceiver::HandleSenderReport(const CommonHeader& rtcp_block,
     last_received_sr_ntp_ = TimeMicrosToNtp(clock_->TimeInMicroseconds());
     remote_sender_packet_count_ = sender_report.sender_packet_count();
     remote_sender_octet_count_ = sender_report.sender_octet_count();
+    remote_sender_reports_count_++;
   } else {
     // We will only store the send report from one source, but
     // we will store all the receive blocks.
