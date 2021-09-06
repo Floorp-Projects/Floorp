@@ -2936,8 +2936,10 @@ class nsDisplayItem : public nsDisplayItemLink {
   virtual Maybe<nsRect> GetClipWithRespectToASR(
       nsDisplayListBuilder* aBuilder, const ActiveScrolledRoot* aASR) const;
 
+  const nsRect& GetPaintRect() const { return mBuildingRect; }
+
   virtual const nsRect& GetUntransformedPaintRect() const {
-    return GetBuildingRect();
+    return GetPaintRect();
   }
 
   nsRect GetPaintRect(nsDisplayListBuilder* aBuilder, gfxContext* aCtx);
@@ -6463,6 +6465,11 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
     return UntransformRect(aBuilder, GetBuildingRect(), aOutRect);
   }
 
+  bool UntransformPaintRect(nsDisplayListBuilder* aBuilder,
+                            nsRect* aOutRect) const {
+    return UntransformRect(aBuilder, GetPaintRect(), aOutRect);
+  }
+
   static gfx::Point3D GetDeltaToTransformOrigin(const nsIFrame* aFrame,
                                                 TransformReferenceBox&,
                                                 float aAppUnitsPerPixel);
@@ -6787,7 +6794,7 @@ class nsDisplayText final : public nsPaintedDisplayItem {
                                  nsRegion* aInvalidRegion) const final;
 
   void RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
-                       const nsRect& aVisibleRect, bool aIsRecording = false);
+                       bool aIsRecording = false);
 
   bool CanApplyOpacity() const final;
 
@@ -6839,7 +6846,6 @@ class nsDisplayText final : public nsPaintedDisplayItem {
 
  private:
   nsRect mBounds;
-  nsRect mVisibleRect;
   float mOpacity;
 
   // Lengths measured from the visual inline start and end sides
