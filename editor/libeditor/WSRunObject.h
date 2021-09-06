@@ -936,13 +936,11 @@ class MOZ_STACK_CLASS WSRunScanner final {
     bool StartsFromBRElement() const { return mStart.IsBRElement(); }
     bool StartsFromVisibleBRElement() const {
       return StartsFromBRElement() &&
-             HTMLEditUtils::IsVisibleBRElement(*GetStartReasonContent(),
-                                               mEditingHost);
+             HTMLEditUtils::IsVisibleBRElement(*GetStartReasonContent());
     }
     bool StartsFromInvisibleBRElement() const {
       return StartsFromBRElement() &&
-             HTMLEditUtils::IsInvisibleBRElement(*GetStartReasonContent(),
-                                                 mEditingHost);
+             HTMLEditUtils::IsInvisibleBRElement(*GetStartReasonContent());
     }
     bool StartsFromPreformattedLineBreak() const {
       return mStart.IsPreformattedLineBreak();
@@ -961,12 +959,12 @@ class MOZ_STACK_CLASS WSRunScanner final {
     bool EndsBySpecialContent() const { return mEnd.IsSpecialContent(); }
     bool EndsByBRElement() const { return mEnd.IsBRElement(); }
     bool EndsByVisibleBRElement() const {
-      return EndsByBRElement() && HTMLEditUtils::IsVisibleBRElement(
-                                      *GetEndReasonContent(), mEditingHost);
+      return EndsByBRElement() &&
+             HTMLEditUtils::IsVisibleBRElement(*GetEndReasonContent());
     }
     bool EndsByInvisibleBRElement() const {
-      return EndsByBRElement() && HTMLEditUtils::IsInvisibleBRElement(
-                                      *GetEndReasonContent(), mEditingHost);
+      return EndsByBRElement() &&
+             HTMLEditUtils::IsInvisibleBRElement(*GetEndReasonContent());
     }
     bool EndsByPreformattedLineBreak() const {
       return mEnd.IsPreformattedLineBreak();
