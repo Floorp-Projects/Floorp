@@ -740,13 +740,12 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   MOZ_ASSERT(clasp != &PlainObject::class_);
   MOZ_ASSERT(!clasp->isJSFunction());
 
-  // For objects which can have fixed data following the object, only use
-  // enough fixed slots to cover the number of reserved slots in the object,
-  // regardless of the allocation kind specified.
-  size_t nfixed = ClassCanHaveFixedData(clasp)
-                      ? GetGCKindSlots(gc::GetGCObjectKind(clasp))
-                      : GetGCKindSlots(kind);
+  // Computing nfixed based on the AllocKind isn't right for objects which can
+  // store fixed data inline (TypedArrays and ArrayBuffers) so for simplicity
+  // and performance reasons we don't support such objects here.
+  MOZ_ASSERT(!ClassCanHaveFixedData(clasp));
 
+  size_t nfixed = GetGCKindSlots(kind);
   RootedShape shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
                                        objectFlags));

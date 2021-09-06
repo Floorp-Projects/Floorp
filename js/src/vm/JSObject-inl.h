@@ -132,6 +132,7 @@ inline bool JSObject::isUnqualifiedVarObj() const {
 
 namespace js {
 
+#ifdef DEBUG
 inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   // Normally, the number of fixed slots given an object is the maximum
   // permitted for its size class. For array buffers and non-shared typed
@@ -141,6 +142,7 @@ inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   return !clasp->isNativeObject() || clasp == &js::ArrayBufferObject::class_ ||
          js::IsTypedArrayClass(clasp);
 }
+#endif
 
 class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
   JS::Zone* zone;
