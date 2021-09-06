@@ -29,7 +29,8 @@ from mozharness.mozilla.testing.testbase import TestingMixin
 class TestMode(enum.Enum):
     OPTIMIZED_SHADER_COMPILATION = 0
     UNOPTIMIZED_SHADER_COMPILATION = 1
-    REFTEST = 2
+    SHADER_TEST = 2
+    REFTEST = 3
 
 
 class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
@@ -171,6 +172,8 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
                 argfile.write("--precache test_init")
             elif test_mode == TestMode.UNOPTIMIZED_SHADER_COMPILATION:
                 argfile.write("--precache --use-unoptimized-shaders test_init")
+            elif test_mode == TestMode.SHADER_TEST:
+                argfile.write("--precache test_shaders")
             elif test_mode == TestMode.REFTEST:
                 argfile.write("reftest")
         self.device.push(args_file, "/sdcard/wrench/args")
@@ -271,6 +274,12 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             self.setup_sdcard(TestMode.UNOPTIMIZED_SHADER_COMPILATION)
             self.info("Running unoptimized shader compilation tests...")
             self.run_tests(60)
+
+        if not self._errored:
+            self.info("Setting up SD card...")
+            self.setup_sdcard(TestMode.SHADER_TEST)
+            self.info("Running shader tests...")
+            self.run_tests(60 * 5)
 
         if not self._errored:
             self.info("Setting up SD card...")

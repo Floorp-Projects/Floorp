@@ -184,3 +184,5 @@ subcommands:
               index: 2
     - test_init:
         about: Test for successful initialization then exit immediately
+    - test_shaders:
+        about: run shader tests
