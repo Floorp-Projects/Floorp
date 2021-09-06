@@ -16,6 +16,7 @@
 #include "mozilla/EditorUtils.h"     // for EditorUtils
 #include "mozilla/dom/Element.h"     // for Element, nsINode
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/Text.h"  // for Text
 
 #include "nsAString.h"  // for nsAString::IsEmpty
@@ -437,70 +438,106 @@ bool HTMLEditUtils::IsInVisibleTextFrames(nsPresContext* aPresContext,
   return NS_SUCCEEDED(rv) && isVisible;
 }
 
-bool HTMLEditUtils::IsVisibleBRElement(
-    const nsIContent& aContent, const Element* aEditingHost /* = nullptr */) {
+bool HTMLEditUtils::IsVisibleBRElement(const nsIContent& aContent) {
   if (!aContent.IsHTMLElement(nsGkAtoms::br)) {
     return false;
   }
-  // Check if there is another element or text node in block after current
-  // <br> element.
-  // Note that even if following node is non-editable, it may make the
-  // <br> element visible if it just exists.
-  // E.g., foo<br><button contenteditable="false">button</button>
-  // However, we need to ignore invisible data nodes like comment node.
-  if (!aEditingHost) {
-    aEditingHost = HTMLEditUtils::GetInclusiveAncestorElement(
-        aContent,
-        HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
-    if (NS_WARN_IF(!aEditingHost)) {
-      return false;
+
+  // First, we get a block container because <br> element shouldn't be a
+  // direct child of a Document node.
+  Element* maybeNonEditableAncestorBlock = HTMLEditUtils::GetAncestorElement(
+      aContent, HTMLEditUtils::ClosestBlockElement);
+  if (NS_WARN_IF(!maybeNonEditableAncestorBlock)) {
+    return true;
+  }
+
+  // Then, scan visible content after the <br> elemenet.
+  for (nsIContent* nextContent = HTMLEditUtils::GetNextContent(
+           aContent,
+           {WalkTreeOption::IgnoreDataNodeExceptText,
+            WalkTreeOption::StopAtBlockBoundary},
+           maybeNonEditableAncestorBlock);
+       nextContent; nextContent = HTMLEditUtils::GetNextContent(
+                        *nextContent,
+                        {WalkTreeOption::IgnoreDataNodeExceptText,
+                         WalkTreeOption::StopAtBlockBoundary},
+                        maybeNonEditableAncestorBlock)) {
+    if (nextContent->IsElement()) {
+      // Break is right before a child block, it's not visible
+      if (HTMLEditUtils::IsBlockElement(*nextContent)) {
+        return false;
+      }
+
+      // XXX How about other non-HTML elements?  Assume they are styled as
+      //     blocks for now.
+      if (!nextContent->IsHTMLElement()) {
+        return false;
+      }
+
+      // If followed by another <br> element or an visible element, it's a
+      // visible <br> element.
+      if (nextContent->IsAnyOfHTMLElements(
+              nsGkAtoms::br, nsGkAtoms::applet, nsGkAtoms::iframe,
+              nsGkAtoms::img, nsGkAtoms::meter, nsGkAtoms::progress,
+              nsGkAtoms::select, nsGkAtoms::textarea)) {
+        return true;
+      }
+
+      if (HTMLInputElement* inputElement =
+              HTMLInputElement::FromNode(nextContent)) {
+        if (inputElement->ControlType() == FormControlType::InputHidden) {
+          continue;  // Keep scanning next one due to invisible form control.
+        }
+        return true;  // Followed by a visible form control so that visible
+                      // <br>.
+      }
+
+      continue;
     }
-  }
-  nsIContent* nextContent =
-      HTMLEditUtils::GetNextContent(aContent,
-                                    {WalkTreeOption::IgnoreDataNodeExceptText,
-                                     WalkTreeOption::StopAtBlockBoundary},
-                                    aEditingHost);
-  if (nextContent && nextContent->IsHTMLElement(nsGkAtoms::br)) {
-    return true;
+
+    // If the following text node is not white-spaces only and non-empty,
+    // the <br> element is visible.
+    Text* textNode = Text::FromNode(nextContent);
+    if (!textNode) {
+      continue;  // XXX Is this possible?
+    }
+    if (!textNode->TextLength()) {
+      continue;  // empty invisible text node, keep scanning next one.
+    }
+    if (!textNode->TextIsOnlyWhitespace()) {
+      return true;  // followed by a visible text node, so, visible <br>.
+    }
+    const nsTextFragment& textFragment = textNode->TextFragment();
+    const bool isWhiteSpacePreformatted =
+        EditorUtils::IsWhiteSpacePreformatted(*textNode);
+    const bool isNewLinePreformatted =
+        EditorUtils::IsNewLinePreformatted(*textNode);
+    if (!isWhiteSpacePreformatted && !isNewLinePreformatted) {
+      // if the white-space only text node is not preformatted, ignore it.
+      continue;
+    }
+    for (uint32_t i = 0; i < textFragment.GetLength(); i++) {
+      // If followed by a preformatted new line, the <br> element is visible.
+      if (textFragment.CharAt(AssertedCast<int32_t>(i)) ==
+          HTMLEditUtils::kNewLine) {
+        if (isNewLinePreformatted) {
+          return true;
+        }
+        continue;
+      }
+      // If followed by a preformatted white-space, the <br> element is
+      // visible.
+      if (isWhiteSpacePreformatted) {
+        return true;
+      }
+    }
+    // All white-spaces in the text node is invisible, keep scanning next one.
   }
 
-  // A single line break before a block boundary is not displayed, so e.g.
-  // foo<p>bar<br></p> and foo<br><p>bar</p> display the same as foo<p>bar</p>.
-  // But if there are multiple <br>s in a row, all but the last are visible.
-  if (!nextContent) {
-    // This break is trailer in block, it's not visible
-    return false;
-  }
-  if (HTMLEditUtils::IsBlockElement(*nextContent)) {
-    // Break is right before a block, it's not visible
-    return false;
-  }
-
-  // If there's an inline node after this one that's not a break, and also a
-  // prior break, this break must be visible.
-  // Note that even if previous node is non-editable, it may make the
-  // <br> element visible if it just exists.
-  // E.g., <button contenteditable="false"><br>foo
-  // However, we need to ignore invisible data nodes like comment node.
-  nsIContent* previousContent = HTMLEditUtils::GetPreviousContent(
-      aContent,
-      {WalkTreeOption::IgnoreDataNodeExceptText,
-       WalkTreeOption::StopAtBlockBoundary},
-      aEditingHost);
-  if (previousContent && previousContent->IsHTMLElement(nsGkAtoms::br)) {
-    return true;
-  }
-
-  // Sigh.  We have to use expensive white-space calculation code to
-  // determine what is going on
-  EditorRawDOMPoint afterBRElement(EditorRawDOMPoint::After(aContent));
-  if (NS_WARN_IF(!afterBRElement.IsSet())) {
-    return false;
-  }
-  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              const_cast<Element*>(aEditingHost), afterBRElement)
-              .ReachedBlockBoundary();
+  // There is no visible content and reached current block boundary.  Then,
+  // the <br> element is the last content in the block and invisible.
+  // XXX Should we treat it visible if it's the only child of a block?
+  return false;
 }
 
 bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
