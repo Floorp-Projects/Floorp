@@ -4,6 +4,7 @@
 
 package mozilla.components.compose.browser.awesomebar.internal
 
+import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors
  */
 internal class SuggestionFetcher(
     private val providers: List<AwesomeBar.SuggestionProvider>
-) {
+) : RememberObserver {
     private val dispatcher = Executors.newFixedThreadPool(
         providers.size,
         NamedThreadFactory("SuggestionFetcher")
@@ -70,4 +71,14 @@ internal class SuggestionFetcher(
 
         state.value = updatedSuggestions
     }
+
+    override fun onAbandoned() {
+        dispatcher.close()
+    }
+
+    override fun onForgotten() {
+        dispatcher.close()
+    }
+
+    override fun onRemembered() = Unit
 }
