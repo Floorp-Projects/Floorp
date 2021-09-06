@@ -7567,10 +7567,8 @@ bool nsDisplayTableBorderCollapse::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  bool dummy;
   static_cast<nsTableFrame*>(mFrame)->CreateWebRenderCommandsForBCBorders(
-      aBuilder, aSc, GetBounds(aDisplayListBuilder, &dummy),
-      ToReferenceFrame());
+      aBuilder, aSc, GetPaintRect(), ToReferenceFrame());
   return true;
 }
 
