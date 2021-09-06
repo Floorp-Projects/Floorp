@@ -6794,7 +6794,7 @@ class nsDisplayText final : public nsPaintedDisplayItem {
                                  nsRegion* aInvalidRegion) const final;
 
   void RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
-                       bool aIsRecording = false);
+                       const nsRect& aVisibleRect, bool aIsRecording = false);
 
   bool CanApplyOpacity() const final;
 
@@ -6846,6 +6846,7 @@ class nsDisplayText final : public nsPaintedDisplayItem {
 
  private:
   nsRect mBounds;
+  nsRect mVisibleRect;
   float mOpacity;
 
   // Lengths measured from the visual inline start and end sides
