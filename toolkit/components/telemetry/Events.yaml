@@ -2914,6 +2914,21 @@ contextservices.quicksuggest:
     bug_numbers: [1693126]
     notification_emails:
       - fx-search@mozilla.com
+      - adw@mozilla.com
+    expiry_version: never
+  sponsored_toggled:
+    objects: ["enabled", "disabled"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded when the `browser.urlbar.suggest.quicksuggest.sponsored`
+      boolean pref is toggled.
+    bug_numbers: [1728430]
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
     expiry_version: never
 
 close_tab_warning:

@@ -170,29 +170,32 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include the user's bookmarks.
   ["suggest.bookmark", true],
 
+  // Whether results will include a calculator.
+  ["suggest.calculator", false],
+
+  // Whether results will include search engines (e.g. tab-to-search).
+  ["suggest.engines", true],
+
   // Whether results will include the user's history.
   ["suggest.history", true],
 
   // Whether results will include switch-to-tab results.
   ["suggest.openpage", true],
 
+  // Whether results will include quick suggest suggestions.
+  ["suggest.quicksuggest", false],
+
+  // Whether results will include sponsored quick suggest suggestions.
+  ["suggest.quicksuggest.sponsored", false],
+
   // Whether results will include search suggestions.
   ["suggest.searches", false],
-
-  // Whether results will include search engines (e.g. tab-to-search).
-  ["suggest.engines", true],
 
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 
-  // Whether results will include a calculator.
-  ["suggest.calculator", false],
-
-  // Whether results will include QuickSuggest suggestions.
-  ["suggest.quicksuggest", false],
-
-  // Whether the quick suggest feature is enabled, i.e., sponsored and
-  // recommended results related to the user's search string.
+  // Global toggle for whether the quick suggest feature is enabled, i.e.,
+  // sponsored and recommended results related to the user's search string.
   ["quicksuggest.enabled", false],
 
   // Whether to show QuickSuggest related logs.
