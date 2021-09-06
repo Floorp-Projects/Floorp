@@ -29,6 +29,11 @@ ChromeUtils.defineModuleGetter(
   "SiteDataManager",
   "resource:///modules/SiteDataManager.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+});
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization([
     "branding/brand.ftl",
@@ -137,6 +142,8 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
   { id: "browser.urlbar.suggest.engines", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },
@@ -721,23 +728,7 @@ var gPrivacyPane = {
       }
     }
 
-    // When these prefs are made the default, add this data-l10n-id directly to privacy.inc.xhtml.
-    if (
-      Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-      ) ||
-      Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.customizationMenu.enabled"
-      )
-    ) {
-      document
-        .getElementById("topSitesSuggestion")
-        .setAttribute("data-l10n-id", "addressbar-locbar-shortcuts-option");
-    } else {
-      document
-        .getElementById("topSitesSuggestion")
-        .setAttribute("data-l10n-id", "addressbar-locbar-topsites-option");
-    }
+    this._initAddressBar();
 
     this.initSiteDataControls();
     setEventListener(
@@ -1926,6 +1917,124 @@ var gPrivacyPane = {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml"
     );
+  },
+
+  // ADDRESS BAR
+
+  /**
+   * Initializes the address bar section.
+   */
+  _initAddressBar() {
+    // When these prefs are made the default, add this data-l10n-id directly to
+    // privacy.inc.xhtml.
+    if (
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+      ) ||
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.customizationMenu.enabled"
+      )
+    ) {
+      document
+        .getElementById("topSitesSuggestion")
+        .setAttribute("data-l10n-id", "addressbar-locbar-shortcuts-option");
+    } else {
+      document
+        .getElementById("topSitesSuggestion")
+        .setAttribute("data-l10n-id", "addressbar-locbar-topsites-option");
+    }
+
+    // Update the Firefox Suggest section on Nimbus changes.
+    this._updateFirefoxSuggestSection = this._updateFirefoxSuggestSection.bind(
+      this
+    );
+    NimbusFeatures.urlbar.onUpdate(this._updateFirefoxSuggestSection);
+    window.addEventListener("unload", () =>
+      NimbusFeatures.urlbar.off(this._updateFirefoxSuggestSection)
+    );
+
+    // Set up the sponsored checkbox. When the main checkbox is checked, the
+    // sponsored checkbox should be enabled and its checked status should
+    // reflect the sponsored pref. When the main checkbox is unchecked, the
+    // sponsored checkbox should be disabled and unchecked, but the sponsored
+    // pref should retain its value. Due to this complexity, we manage the
+    // sponsored checkbox manually.
+    Preferences.get("browser.urlbar.suggest.quicksuggest").on("change", () =>
+      // Update the enabled and checked status of the sponsored checkbox when
+      // the main pref changes.
+      this._updateFirefoxSuggestSponsoredCheckbox()
+    );
+    setEventListener("firefoxSuggestSponsoredSuggestion", "command", () => {
+      // Update the sponsored pref value when the sponsored checkbox is
+      // toggled.
+      Preferences.get(
+        "browser.urlbar.suggest.quicksuggest.sponsored"
+      ).value = document.getElementById(
+        "firefoxSuggestSponsoredSuggestion"
+      ).checked;
+    });
+
+    // Set the Firefox Suggest learn-more link URL.
+    document
+      .getElementById("firefoxSuggestSuggestionLearnMore")
+      .setAttribute("href", UrlbarProviderQuickSuggest.helpUrl);
+
+    this._updateFirefoxSuggestSection(true);
+  },
+
+  /**
+   * Updates the Firefox Suggest section (in the address bar section) depending
+   * on whether the user is enrolled in a Firefox Suggest rollout.
+   *
+   * @param {boolean} [onInit]
+   *   Pass true when calling this when initializing the pane.
+   */
+  _updateFirefoxSuggestSection(onInit = false) {
+    let container = document.getElementById("firefoxSuggestContainer");
+
+    if (UrlbarPrefs.get("quickSuggestEnabled")) {
+      // Update the l10n IDs of text elements.
+      let l10nIdByElementId = {
+        locationBarGroupHeader: "addressbar-header-firefox-suggest",
+        locationBarSuggestionLabel: "addressbar-suggest-firefox-suggest",
+      };
+      for (let [elementId, l10nId] of Object.entries(l10nIdByElementId)) {
+        let element = document.getElementById(elementId);
+        element.dataset.l10nIdOriginal = element.dataset.l10nId;
+        element.dataset.l10nId = l10nId;
+      }
+      // Show the container.
+      this._updateFirefoxSuggestSponsoredCheckbox();
+      container.removeAttribute("hidden");
+    } else if (!onInit) {
+      // Firefox Suggest is not enabled. This is the default, so to avoid
+      // accidentally messing anything up, only modify the doc if we're being
+      // called due to a change in the rollout-enabled status (!onInit).
+      container.setAttribute("hidden", "true");
+      let elementIds = ["locationBarGroupHeader", "locationBarSuggestionLabel"];
+      for (let id of elementIds) {
+        let element = document.getElementById(id);
+        element.dataset.l10nId = element.dataset.l10nIdOriginal;
+        delete element.dataset.l10nIdOriginal;
+        document.l10n.translateElements([element]);
+      }
+    }
+  },
+
+  /**
+   * Updates the sponsored Firefox Suggest checkbox (in the address bar section)
+   * depending on the status of the main Firefox Suggest checkbox.
+   */
+  _updateFirefoxSuggestSponsoredCheckbox() {
+    let sponsoredCheckbox = document.getElementById(
+      "firefoxSuggestSponsoredSuggestion"
+    );
+    sponsoredCheckbox.disabled = !Preferences.get(
+      "browser.urlbar.suggest.quicksuggest"
+    ).value;
+    sponsoredCheckbox.checked =
+      !sponsoredCheckbox.disabled &&
+      Preferences.get("browser.urlbar.suggest.quicksuggest.sponsored").value;
   },
 
   // GEOLOCATION
