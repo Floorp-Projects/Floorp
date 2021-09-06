@@ -1487,6 +1487,30 @@ struct ClipChainItem {
   const ActiveScrolledRoot* asr;
 };
 
+static const DisplayItemClipChain* FindCommonAncestorClipForIntersection(
+    const DisplayItemClipChain* aOne, const DisplayItemClipChain* aTwo) {
+  for (const ActiveScrolledRoot* asr =
+           ActiveScrolledRoot::PickDescendant(aOne->mASR, aTwo->mASR);
+       asr; asr = asr->mParent) {
+    if (aOne == aTwo) {
+      return aOne;
+    }
+    if (aOne->mASR == asr) {
+      aOne = aOne->mParent;
+    }
+    if (aTwo->mASR == asr) {
+      aTwo = aTwo->mParent;
+    }
+    if (!aOne) {
+      return aTwo;
+    }
+    if (!aTwo) {
+      return aOne;
+    }
+  }
+  return nullptr;
+}
+
 const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
     const DisplayItemClipChain* aAncestor,
     const DisplayItemClipChain* aLeafClip1,
@@ -1533,6 +1557,21 @@ const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
     parentSC = AllocateDisplayItemClipChain(sc.clip, sc.asr, parentSC);
   }
   return parentSC;
+}
+
+const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
+    const DisplayItemClipChain* aLeafClip1,
+    const DisplayItemClipChain* aLeafClip2) {
+  // aLeafClip2 might be a reference to a clip on the stack. We need to make
+  // sure that CreateClipChainIntersection will allocate the actual intersected
+  // clip in the builder's arena, so for the aLeafClip1 == nullptr case,
+  // we supply nullptr as the common ancestor so that
+  // CreateClipChainIntersection clones the whole chain.
+  const DisplayItemClipChain* ancestorClip =
+      aLeafClip1 ? FindCommonAncestorClipForIntersection(aLeafClip1, aLeafClip2)
+                 : nullptr;
+
+  return CreateClipChainIntersection(ancestorClip, aLeafClip1, aLeafClip2);
 }
 
 const DisplayItemClipChain* nsDisplayListBuilder::CopyWholeChain(
@@ -2821,30 +2860,6 @@ void nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
   }
 }
 
-static const DisplayItemClipChain* FindCommonAncestorClipForIntersection(
-    const DisplayItemClipChain* aOne, const DisplayItemClipChain* aTwo) {
-  for (const ActiveScrolledRoot* asr =
-           ActiveScrolledRoot::PickDescendant(aOne->mASR, aTwo->mASR);
-       asr; asr = asr->mParent) {
-    if (aOne == aTwo) {
-      return aOne;
-    }
-    if (aOne->mASR == asr) {
-      aOne = aOne->mParent;
-    }
-    if (aTwo->mASR == asr) {
-      aTwo = aTwo->mParent;
-    }
-    if (!aOne) {
-      return aTwo;
-    }
-    if (!aTwo) {
-      return aOne;
-    }
-  }
-  return nullptr;
-}
-
 void nsDisplayItem::IntersectClip(nsDisplayListBuilder* aBuilder,
                                   const DisplayItemClipChain* aOther,
                                   bool aStore) {
@@ -3099,9 +3114,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
       mDestRect(aInitData.destArea),
       mLayer(aInitData.layer),
       mIsRasterImage(aInitData.isRasterImage),
-      mShouldFixToViewport(aInitData.shouldFixToViewport),
-      mImageFlags(0),
-      mOpacity(1.0f) {
+      mShouldFixToViewport(aInitData.shouldFixToViewport) {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 #ifdef DEBUG
   if (mBackgroundStyle && mBackgroundStyle != mFrame->Style()) {
@@ -3588,16 +3601,13 @@ static void CheckForBorderItem(nsDisplayItem* aItem, uint32_t& aFlags) {
 }
 
 bool nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(
-    WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder) {
-  if (aBuilder) {
-    mImageFlags = aBuilder->GetBackgroundPaintFlags();
-  }
-
+    WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder) const {
   return mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer].mClip !=
              StyleGeometryBox::Text &&
          nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(
              aManager, *StyleFrame()->PresContext(), StyleFrame(),
-             mBackgroundStyle->StyleBackground(), mLayer, mImageFlags);
+             mBackgroundStyle->StyleBackground(), mLayer,
+             aBuilder->GetBackgroundPaintFlags());
 }
 
 bool nsDisplayBackgroundImage::CreateWebRenderCommands(
@@ -3609,11 +3619,14 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
     return false;
   }
 
-  CheckForBorderItem(this, mImageFlags);
+  uint32_t paintFlags = aDisplayListBuilder->GetBackgroundPaintFlags();
+
+  CheckForBorderItem(this, paintFlags);
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
           *StyleFrame()->PresContext(), GetPaintRect(), mBackgroundRect,
-          StyleFrame(), mImageFlags, mLayer, CompositionOp::OP_OVER, mOpacity);
+          StyleFrame(), paintFlags, mLayer, CompositionOp::OP_OVER,
+          aBuilder.GetInheritedOpacity());
   params.bgClipRect = &mBounds;
   ImgDrawResult result =
       nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
@@ -3666,7 +3679,7 @@ nsRegion nsDisplayBackgroundImage::GetOpaqueRegion(
   nsRegion result;
   *aSnap = false;
 
-  if (!mBackgroundStyle || mOpacity != 1.0f) {
+  if (!mBackgroundStyle) {
     return result;
   }
 
@@ -3755,7 +3768,8 @@ void nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
           *StyleFrame()->PresContext(), aBounds, mBackgroundRect, StyleFrame(),
-          mImageFlags, mLayer, CompositionOp::OP_OVER, mOpacity);
+          aBuilder->GetBackgroundPaintFlags(), mLayer, CompositionOp::OP_OVER,
+          1.0f);
   params.bgClipRect = aClipRect;
   ImgDrawResult result = nsCSSRendering::PaintStyleImageLayer(params, *aCtx);
 
@@ -4012,15 +4026,8 @@ void nsDisplayReflowCount::Paint(nsDisplayListBuilder* aBuilder,
 }
 #endif
 
-void nsDisplayBackgroundColor::ApplyOpacity(nsDisplayListBuilder* aBuilder,
-                                            float aOpacity,
-                                            const DisplayItemClipChain* aClip) {
-  NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
-  mColor.a = mColor.a * aOpacity;
-  IntersectClip(aBuilder, aClip, false);
-}
-
-bool nsDisplayBackgroundColor::CanApplyOpacity() const {
+bool nsDisplayBackgroundColor::CanApplyOpacity(
+    WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder) const {
   // Don't apply opacity if the background color is animated since the color is
   // going to be changed on the compositor.
   return !EffectCompositor::HasAnimationsForCompositor(
@@ -4031,7 +4038,10 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (mColor == sRGBColor() &&
+  gfx::sRGBColor color = mColor;
+  color.a *= aBuilder.GetInheritedOpacity();
+
+  if (color == sRGBColor() &&
       !EffectCompositor::HasAnimationsForCompositor(
           mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return true;
@@ -4058,11 +4068,11 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
         animationsId,
     };
     aBuilder.PushRectWithAnimation(r, r, !BackfaceIsHidden(),
-                                   wr::ToColorF(ToDeviceColor(mColor)), &prop);
+                                   wr::ToColorF(ToDeviceColor(color)), &prop);
   } else {
     aBuilder.StartGroup(this);
     aBuilder.PushRect(r, r, !BackfaceIsHidden(),
-                      wr::ToColorF(ToDeviceColor(mColor)));
+                      wr::ToColorF(ToDeviceColor(color)));
     aBuilder.FinishGroup();
   }
 
@@ -4492,7 +4502,7 @@ void nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
   AUTO_PROFILER_LABEL("nsDisplayBoxShadowOuter::Paint", GRAPHICS);
 
   nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame, borderRect,
-                                      GetPaintRect(aBuilder, aCtx), mOpacity);
+                                      GetPaintRect(aBuilder, aCtx), 1.0f);
 }
 
 nsRect nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder,
@@ -4524,7 +4534,7 @@ bool nsDisplayBoxShadowOuter::IsInvisibleInRect(const nsRect& aRect) const {
   return RoundedRectContainsRect(frameRect, twipsRadii, aRect);
 }
 
-bool nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems() {
+bool nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems() const {
   auto shadows = mFrame->StyleEffects()->mBoxShadow.AsSpan();
   if (shadows.IsEmpty()) {
     return false;
@@ -4583,8 +4593,8 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
 
     float blurRadius =
         float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
-    gfx::sRGBColor shadowColor =
-        nsCSSRendering::GetShadowColor(shadow.base, mFrame, mOpacity);
+    gfx::sRGBColor shadowColor = nsCSSRendering::GetShadowColor(
+        shadow.base, mFrame, aBuilder.GetInheritedOpacity());
 
     // We don't move the shadow rect here since WR does it for us
     // Now translate everything to device pixels.
@@ -4627,11 +4637,10 @@ void nsDisplayBoxShadowOuter::ComputeInvalidationRegion(
     nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
     nsRegion* aInvalidRegion) const {
   const auto* geometry =
-      static_cast<const nsDisplayBoxShadowOuterGeometry*>(aGeometry);
+      static_cast<const nsDisplayItemGenericGeometry*>(aGeometry);
   bool snap;
   if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-      !geometry->mBorderRect.IsEqualInterior(GetBorderRect()) ||
-      mOpacity != geometry->mOpacity) {
+      !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
     nsRegion oldShadow, newShadow;
     nscoord dontCare[8];
     bool hasBorderRadius = mFrame->GetBorderRadii(dontCare);
@@ -4970,7 +4979,6 @@ nsDisplayOpacity::nsDisplayOpacity(
       mNeedsActiveLayer(aNeedsActiveLayer),
       mChildOpacityState(ChildOpacityState::Unknown) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
-  mState.mOpacity = mOpacity;
 }
 
 void nsDisplayOpacity::HitTest(nsDisplayListBuilder* aBuilder,
@@ -5041,15 +5049,8 @@ bool nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder,
           !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(aFrame)));
 }
 
-void nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
-                                    float aOpacity,
-                                    const DisplayItemClipChain* aClip) {
-  NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
-  mOpacity = mOpacity * aOpacity;
-  IntersectClip(aBuilder, aClip, false);
-}
-
-bool nsDisplayOpacity::CanApplyOpacity() const {
+bool nsDisplayOpacity::CanApplyOpacity(WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aBuilder) const {
   return !EffectCompositor::HasAnimationsForCompositor(
       mFrame, DisplayItemType::TYPE_OPACITY);
 }
@@ -5076,7 +5077,9 @@ static const size_t kOpacityMaxListSize = kOpacityMaxChildCount * 2;
  * item that returns false for CanApplyOpacity() is encountered.
  * Otherwise returns true.
  */
-static bool CollectItemsWithOpacity(nsDisplayList* aList,
+static bool CollectItemsWithOpacity(WebRenderLayerManager* aManager,
+                                    nsDisplayListBuilder* aBuilder,
+                                    nsDisplayList* aList,
                                     nsTArray<nsPaintedDisplayItem*>& aArray) {
   if (aList->Count() > kOpacityMaxListSize) {
     // Exit early, since |aList| will likely contain more than
@@ -5095,7 +5098,8 @@ static bool CollectItemsWithOpacity(nsDisplayList* aList,
     if (type == DisplayItemType::TYPE_WRAP_LIST ||
         type == DisplayItemType::TYPE_CONTAINER) {
       // The current display item has children, process them first.
-      if (!CollectItemsWithOpacity(i->GetChildren(), aArray)) {
+      if (!CollectItemsWithOpacity(aManager, aBuilder, i->GetChildren(),
+                                   aArray)) {
         return false;
       }
 
@@ -5107,7 +5111,7 @@ static bool CollectItemsWithOpacity(nsDisplayList* aList,
     }
 
     auto* item = i->AsPaintedDisplayItem();
-    if (!item || !item->CanApplyOpacity()) {
+    if (!item || !item->CanApplyOpacity(aManager, aBuilder)) {
       return false;
     }
 
@@ -5117,7 +5121,8 @@ static bool CollectItemsWithOpacity(nsDisplayList* aList,
   return true;
 }
 
-bool nsDisplayOpacity::ApplyToChildren(nsDisplayListBuilder* aBuilder) {
+bool nsDisplayOpacity::CanApplyToChildren(WebRenderLayerManager* aManager,
+                                          nsDisplayListBuilder* aBuilder) {
   if (mChildOpacityState == ChildOpacityState::Deferred) {
     return false;
   }
@@ -5125,7 +5130,7 @@ bool nsDisplayOpacity::ApplyToChildren(nsDisplayListBuilder* aBuilder) {
   // Iterate through the child display list and copy at most
   // |kOpacityMaxChildCount| child display item pointers to a temporary list.
   AutoTArray<nsPaintedDisplayItem*, kOpacityMaxChildCount> items;
-  if (!CollectItemsWithOpacity(&mList, items)) {
+  if (!CollectItemsWithOpacity(aManager, aBuilder, &mList, items)) {
     mChildOpacityState = ChildOpacityState::Deferred;
     return false;
   }
@@ -5152,10 +5157,6 @@ bool nsDisplayOpacity::ApplyToChildren(nsDisplayListBuilder* aBuilder) {
     }
   }
 
-  for (uint32_t i = 0; i < childCount; i++) {
-    children[i].item->ApplyOpacity(aBuilder, mOpacity, mClipChain);
-  }
-
   mChildOpacityState = ChildOpacityState::Applied;
   return true;
 }
@@ -5165,7 +5166,7 @@ bool nsDisplayOpacity::ApplyToChildren(nsDisplayListBuilder* aBuilder) {
  * that has the same frame as the opacity item, and that supports painting with
  * opacity. In this case the opacity item can be optimized away.
  */
-bool nsDisplayOpacity::ApplyToFilterOrMask(const bool aUsingLayers) {
+bool nsDisplayOpacity::ApplyToMask() {
   if (mList.Count() != 1) {
     return false;
   }
@@ -5177,17 +5178,16 @@ bool nsDisplayOpacity::ApplyToFilterOrMask(const bool aUsingLayers) {
   }
 
   const DisplayItemType type = item->GetType();
-  if (type == DisplayItemType::TYPE_MASK ||
-      type == DisplayItemType::TYPE_FILTER) {
-    auto* filterOrMaskItem = static_cast<nsDisplayEffectsBase*>(item);
-    filterOrMaskItem->SelectOpacityOptimization(aUsingLayers);
+  if (type == DisplayItemType::TYPE_MASK) {
     return true;
   }
 
   return false;
 }
 
-bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
+bool nsDisplayOpacity::CanApplyOpacityToChildren(
+    WebRenderLayerManager* aManager, nsDisplayListBuilder* aBuilder,
+    float aInheritedOpacity) {
   if (mFrame->GetPrevContinuation() || mFrame->GetNextContinuation() ||
       mFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     // If we've been split, then we might need to merge, so
@@ -5207,16 +5207,17 @@ bool nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
     return false;
   }
 
-  const bool usingLayers = !aBuilder->IsPaintingForWebRender();
-
-  if (ApplyToFilterOrMask(usingLayers)) {
+  // We can only flatten opacity items into a mask if we haven't
+  // already flattened an earlier ancestor, since the SVG code pulls the opacity
+  // from style directly, and won't know about the outer opacity value.
+  if (aInheritedOpacity == 1.0f && ApplyToMask()) {
     MOZ_ASSERT(SVGIntegrationUtils::UsingEffectsForFrame(mFrame));
     mChildOpacityState = ChildOpacityState::Applied;
     return true;
   }
 
   // Return true if we successfully applied opacity to child items.
-  return ApplyToChildren(aBuilder);
+  return CanApplyToChildren(aManager, aBuilder);
 }
 
 void nsDisplayOpacity::ComputeInvalidationRegion(
@@ -5254,8 +5255,35 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  // If this is a new (not retained/reused) item, then we need to disable
+  // the display item cache for descendants, since it's possible that some of
+  // them got cached with a flattened opacity values., which may no longer be
+  // applied.
+  Maybe<AutoDisplayItemCacheSuppressor> cacheSuppressor;
+  if (!IsReused()) {
+    cacheSuppressor.emplace(aBuilder.GetDisplayItemCache());
+  }
+
+  if (CanApplyOpacityToChildren(aManager->LayerManager(), aDisplayListBuilder,
+                                aBuilder.GetInheritedOpacity())) {
+    // If all our children support handling the opacity directly, then push
+    // the opacity and clip onto the builder and skip creating a stacking
+    // context.
+    float oldOpacity = aBuilder.GetInheritedOpacity();
+    aBuilder.SetInheritedOpacity(oldOpacity * mOpacity);
+
+    aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
+        &mList, this, aDisplayListBuilder, aSc, aBuilder, aResources);
+
+    aBuilder.SetInheritedOpacity(oldOpacity);
+    return true;
+  }
+
   MOZ_ASSERT(mChildOpacityState != ChildOpacityState::Applied);
-  float* opacityForSC = &mOpacity;
+  float oldOpacity = aBuilder.GetInheritedOpacity();
+  aBuilder.SetInheritedOpacity(1.0f);
+  float opacity = mOpacity * oldOpacity;
+  float* opacityForSC = &opacity;
 
   uint64_t animationsId =
       AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
@@ -5274,6 +5302,7 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
       &mList, this, aDisplayListBuilder, sc, aBuilder, aResources);
+  aBuilder.SetInheritedOpacity(oldOpacity);
   return true;
 }
 
@@ -7760,7 +7789,6 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
 nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
                              nsTextFrame* aFrame)
     : nsPaintedDisplayItem(aBuilder, aFrame),
-      mOpacity(1.0f),
       mVisIStartEdge(0),
       mVisIEndEdge(0) {
   MOZ_COUNT_CTOR(nsDisplayText);
@@ -7769,7 +7797,8 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
-bool nsDisplayText::CanApplyOpacity() const {
+bool nsDisplayText::CanApplyOpacity(WebRenderLayerManager* aManager,
+                                    nsDisplayListBuilder* aBuilder) const {
   auto* f = static_cast<nsTextFrame*>(mFrame);
 
   if (f->IsSelected()) {
@@ -7852,7 +7881,8 @@ bool nsDisplayText::CreateWebRenderCommands(
 
   aBuilder.StartGroup(this);
 
-  RenderToContext(textDrawer, aDisplayListBuilder, true);
+  RenderToContext(textDrawer, aDisplayListBuilder,
+                  aBuilder.GetInheritedOpacity(), true);
   const bool result = textDrawer->GetTextDrawer()->Finish();
 
   if (result) {
@@ -7866,7 +7896,7 @@ bool nsDisplayText::CreateWebRenderCommands(
 
 void nsDisplayText::RenderToContext(gfxContext* aCtx,
                                     nsDisplayListBuilder* aBuilder,
-                                    bool aIsRecording) {
+                                    float aOpacity, bool aIsRecording) {
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
@@ -7927,7 +7957,7 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
   }
 
   f->PaintText(params, mVisIStartEdge, mVisIEndEdge, ToReferenceFrame(),
-               f->IsSelected(), mOpacity);
+               f->IsSelected(), aOpacity);
 
   if (willClip) {
     aCtx->PopClip();
@@ -7941,7 +7971,6 @@ class nsDisplayTextGeometry : public nsDisplayItemGenericGeometry {
  public:
   nsDisplayTextGeometry(nsDisplayText* aItem, nsDisplayListBuilder* aBuilder)
       : nsDisplayItemGenericGeometry(aItem, aBuilder),
-        mOpacity(aItem->Opacity()),
         mVisIStartEdge(aItem->VisIStartEdge()),
         mVisIEndEdge(aItem->VisIEndEdge()) {
     nsTextFrame* f = static_cast<nsTextFrame*>(aItem->Frame());
@@ -7955,7 +7984,6 @@ class nsDisplayTextGeometry : public nsDisplayItemGenericGeometry {
    * styles will only invalidate the parent frame and not this frame.
    */
   nsTextFrame::TextDecorations mDecorations;
-  float mOpacity;
   nscoord mVisIStartEdge;
   nscoord mVisIEndEdge;
 };
@@ -7983,8 +8011,7 @@ void nsDisplayText::ComputeInvalidationRegion(
       mVisIStartEdge != geometry->mVisIStartEdge ||
       mVisIEndEdge != geometry->mVisIEndEdge ||
       !oldRect.IsEqualInterior(newRect) ||
-      !geometry->mBorderRect.IsEqualInterior(GetBorderRect()) ||
-      mOpacity != geometry->mOpacity) {
+      !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
     aInvalidRegion->Or(oldRect, newRect);
   }
 }
@@ -8006,15 +8033,14 @@ nsDisplayEffectsBase::nsDisplayEffectsBase(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot, bool aClearClipChain)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot,
-                        aClearClipChain),
-      mHandleOpacity(false) {
+                        aClearClipChain) {
   MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
 
 nsDisplayEffectsBase::nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame,
                                            nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList), mHandleOpacity(false) {
+    : nsDisplayWrapList(aBuilder, aFrame, aList) {
   MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
 
@@ -8051,9 +8077,7 @@ void nsDisplayEffectsBase::ComputeInvalidationRegion(
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (geometry->mFrameOffsetToReferenceFrame != ToReferenceFrame() ||
       geometry->mUserSpaceOffset != UserSpaceOffset() ||
-      !geometry->mBBox.IsEqualInterior(BBoxInUserSpace()) ||
-      geometry->mOpacity != mFrame->StyleEffects()->mOpacity ||
-      geometry->mHandleOpacity != ShouldHandleOpacity()) {
+      !geometry->mBBox.IsEqualInterior(BBoxInUserSpace())) {
     // Filter and mask output can depend on the location of the frame's user
     // space and on the frame's BBox. We need to invalidate if either of these
     // change relative to the reference frame.
@@ -8147,8 +8171,7 @@ static void ComputeMaskGeometry(PaintFramesParams& aParams) {
 nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot)
-    : nsDisplayEffectsBase(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
-      mApplyOpacityWithSimpleClipPath(false) {
+    : nsDisplayEffectsBase(aBuilder, aFrame, aList, aActiveScrolledRoot, true) {
   MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
 
   nsPresContext* presContext = mFrame->PresContext();
@@ -8205,10 +8228,6 @@ bool nsDisplayMasksAndClipPaths::IsValidMask() {
     return false;
   }
 
-  if (mFrame->StyleEffects()->mOpacity == 0.0f && mHandleOpacity) {
-    return false;
-  }
-
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
 
@@ -8220,6 +8239,7 @@ bool nsDisplayMasksAndClipPaths::IsValidMask() {
 
 bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aMaskContext,
+                                           bool aHandleOpacity,
                                            bool* aMaskPainted) {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
@@ -8227,7 +8247,7 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aMaskContext, mFrame, mBounds,
                                                 borderArea, aBuilder, nullptr,
-                                                mHandleOpacity, imgParams);
+                                                aHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool maskIsComplete = false;
   bool painted = SVGIntegrationUtils::PaintMask(params, maskIsComplete);
@@ -8316,7 +8336,7 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
                                                 borderArea, aBuilder, nullptr,
-                                                mHandleOpacity, imgParams);
+                                                false, imgParams);
 
   ComputeMaskGeometry(params);
 
@@ -8494,6 +8514,8 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   Maybe<wr::WrClipId> clip = CreateWRClipPathAndMasks(
       this, bounds, aResources, aBuilder, aSc, aManager, aDisplayListBuilder);
 
+  float oldOpacity = aBuilder.GetInheritedOpacity();
+
   Maybe<StackingContextHelper> layer;
   const StackingContextHelper* sc = &aSc;
   if (clip) {
@@ -8503,9 +8525,11 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     // The stacking context shouldn't have any offset.
     bounds.MoveTo(0, 0);
 
-    Maybe<float> opacity = mApplyOpacityWithSimpleClipPath
-                               ? Some(mFrame->StyleEffects()->mOpacity)
-                               : Nothing();
+    Maybe<float> opacity =
+        (SVGIntegrationUtils::UsingSimpleClipPathForFrame(mFrame) &&
+         aBuilder.GetInheritedOpacity() != 1.0f)
+            ? Some(aBuilder.GetInheritedOpacity())
+            : Nothing();
 
     wr::StackingContextParams params;
     params.clip = wr::WrStackingContextClip::ClipId(*clip);
@@ -8515,23 +8539,12 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     sc = layer.ptr();
   }
 
+  aBuilder.SetInheritedOpacity(1.0f);
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, *sc,
                                                 aManager, aDisplayListBuilder);
+  aBuilder.SetInheritedOpacity(oldOpacity);
 
   return true;
-}
-
-void nsDisplayMasksAndClipPaths::SelectOpacityOptimization(
-    const bool aUsingLayers) {
-  if (aUsingLayers ||
-      !SVGIntegrationUtils::UsingSimpleClipPathForFrame(mFrame)) {
-    // Handle opacity in mask and clip-path drawing code.
-    SetHandleOpacity();
-    MOZ_ASSERT(!mApplyOpacityWithSimpleClipPath);
-  } else {
-    // Allow WebRender simple clip paths to also handle opacity.
-    mApplyOpacityWithSimpleClipPath = true;
-  }
 }
 
 Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
@@ -8559,10 +8572,6 @@ void nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo) {
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   bool first = true;
   aTo += " effects=(";
-  if (mHandleOpacity) {
-    first = false;
-    aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
-  }
   SVGClipPathFrame* clipPathFrame;
   // XXX Check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
@@ -8712,7 +8721,7 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
                                                 borderArea, aBuilder, nullptr,
-                                                mHandleOpacity, imgParams);
+                                                false, imgParams);
 
   gfxPoint userSpaceToFrameSpaceOffset =
       SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(mFrame, params);
@@ -8729,7 +8738,7 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-bool nsDisplayFilters::CanCreateWebRenderCommands() {
+bool nsDisplayFilters::CanCreateWebRenderCommands() const {
   return SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(mFrame);
 }
 
@@ -8760,17 +8769,19 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     clip = wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   }
 
-  float opacity = mFrame->StyleEffects()->mOpacity;
+  float opacity = aBuilder.GetInheritedOpacity();
+  aBuilder.SetInheritedOpacity(1.0f);
   wr::StackingContextParams params;
   params.mFilters = std::move(wrFilters.filters);
   params.mFilterDatas = std::move(wrFilters.filter_datas);
-  params.opacity = opacity != 1.0f && mHandleOpacity ? &opacity : nullptr;
+  params.opacity = opacity != 1.0f ? &opacity : nullptr;
   params.clip = clip;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                 aManager, aDisplayListBuilder);
+  aBuilder.SetInheritedOpacity(opacity);
 
   return true;
 }
@@ -8781,10 +8792,6 @@ void nsDisplayFilters::PrintEffects(nsACString& aTo) {
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   bool first = true;
   aTo += " effects=(";
-  if (mHandleOpacity) {
-    first = false;
-    aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
-  }
   // We may exist for a mix of CSS filter functions and/or references to SVG
   // filters.  If we have invalid references to SVG filters then we paint
   // nothing, but otherwise we will apply one or more filters.
