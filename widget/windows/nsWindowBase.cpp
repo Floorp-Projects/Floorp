@@ -276,7 +276,7 @@ static bool InitPenInjection() {
 nsresult nsWindowBase::SynthesizeNativePenInput(
     uint32_t aPointerId, nsIWidget::TouchPointerState aPointerState,
     LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
-    int32_t aTiltX, int32_t aTiltY, nsIObserver* aObserver) {
+    int32_t aTiltX, int32_t aTiltY, int32_t aButton, nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "peninput");
   if (!InitPenInjection()) {
     return NS_ERROR_UNEXPECTED;
@@ -321,6 +321,10 @@ nsresult nsWindowBase::SynthesizeNativePenInput(
     info.penInfo.pointerInfo.ptPixelLocation.y = aPoint.y;
 
     info.penInfo.penFlags = PEN_FLAG_NONE;
+    // PEN_FLAG_ERASER is not supported this way, unfortunately.
+    if (aButton == 2) {
+      info.penInfo.penFlags |= PEN_FLAG_BARREL;
+    }
     info.penInfo.penMask = PEN_MASK_PRESSURE | PEN_MASK_ROTATION |
                            PEN_MASK_TILT_X | PEN_MASK_TILT_Y;
     info.penInfo.pressure = pressure;

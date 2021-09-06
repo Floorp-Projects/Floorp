@@ -526,6 +526,7 @@ parent:
                                    uint32_t aRotation,
                                    int32_t aTiltX,
                                    int32_t aTiltY,
+                                   int32_t aButton,
                                    uint64_t aObserverId);
     async SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
                                             uint32_t aModifierFlags);
