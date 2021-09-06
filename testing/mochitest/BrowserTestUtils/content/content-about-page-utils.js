@@ -6,12 +6,10 @@ var Cm = Components.manager;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { generateUUID } = Services.uuid;
-
 function AboutPage(aboutHost, chromeURL, uriFlags) {
   this.chromeURL = chromeURL;
   this.aboutHost = aboutHost;
-  this.classID = Components.ID(generateUUID().number);
+  this.classID = Components.ID(Services.uuid.generateUUID().number);
   this.description = "BrowserTestUtils: " + aboutHost;
   this.uriFlags = uriFlags;
 }

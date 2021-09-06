@@ -23,8 +23,7 @@ function log(aMsg) {
 }
 
 function generateUuid() {
-  var uuidGenerator = Services.uuid;
-  return uuidGenerator.generateUUID().toString();
+  return Services.uuid.generateUUID().toString();
 }
 
 // Helper class to transform return objects to correct type.

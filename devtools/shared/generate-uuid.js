@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
+const Services = require("Services");
 const { generateUUID } = Services.uuid;
 
 /**
