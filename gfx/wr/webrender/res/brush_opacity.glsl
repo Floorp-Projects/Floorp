@@ -14,10 +14,17 @@ varying vec2 v_uv;
 // sampling artifacts.
 flat varying vec4 v_uv_sample_bounds;
 
-flat varying vec2 v_opacity_perspective_vec;
-#define v_opacity v_opacity_perspective_vec.x
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying vec2 v_perspective_vec;
+#define v_perspective v_perspective_vec.x
+#else
 // Flag to allow perspective interpolation of UV.
-#define v_perspective v_opacity_perspective_vec.y
+flat varying float v_perspective;
+#endif
+
+flat varying float v_opacity;
 
 #ifdef WR_VERTEX_SHADER
 void brush_vs(
