@@ -2794,7 +2794,16 @@ GeneratorKind JSRuntime::getSelfHostedFunctionGeneratorKind(
 // Returns the ScriptSourceObject to use for cloned self-hosted scripts in the
 // current realm.
 ScriptSourceObject* js::SelfHostingScriptSourceObject(JSContext* cx) {
-  if (ScriptSourceObject* sso = cx->realm()->selfHostingScriptSource) {
+  return GlobalObject::getOrCreateSelfHostingScriptSourceObject(cx,
+                                                                cx->global());
+}
+
+/* static */
+ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  MOZ_ASSERT(cx->global() == global);
+
+  if (ScriptSourceObject* sso = global->data().selfHostingScriptSource) {
     return sso;
   }
 
@@ -2820,7 +2829,7 @@ ScriptSourceObject* js::SelfHostingScriptSourceObject(JSContext* cx) {
     return nullptr;
   }
 
-  cx->realm()->selfHostingScriptSource.set(sourceObject);
+  global->data().selfHostingScriptSource.init(sourceObject);
   return sourceObject;
 }
 
