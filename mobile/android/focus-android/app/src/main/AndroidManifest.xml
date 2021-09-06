@@ -22,7 +22,11 @@
 
     <!-- Permission needed to publish the app on Samsung AppStore -->
     <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"/>
-    
+
+    <!-- Needed to interact with all apps installed on a device -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:allowBackup="false"
         android:extractNativeLibs="true"
