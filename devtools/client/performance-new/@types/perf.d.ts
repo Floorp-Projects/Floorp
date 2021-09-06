@@ -106,12 +106,7 @@ export interface State {
   recordingState: RecordingState;
   recordingUnexpectedlyStopped: boolean;
   isSupportedPlatform: boolean | null;
-  interval: number;
-  entries: number;
-  features: string[];
-  threads: string[];
-  objdirs: string[];
-  presetName: string;
+  recordingSettings: RecordingSettings;
   profilerViewMode: ProfilerViewMode | undefined;
   initializedValues: InitializedValues | null;
   promptEnvRestart: null | string;
