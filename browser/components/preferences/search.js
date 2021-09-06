@@ -25,22 +25,11 @@ ChromeUtils.defineModuleGetter(
   "UrlbarUtils",
   "resource:///modules/UrlbarUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "NimbusFeatures",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-});
 
 Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
   { id: "browser.search.suggest.enabled.private", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest", type: "bool" },
   { id: "browser.search.hiddenOneOffs", type: "unichar" },
   { id: "browser.search.widget.inNavBar", type: "bool" },
   { id: "browser.urlbar.showSearchSuggestionsFirst", type: "bool" },
@@ -122,12 +111,6 @@ var gSearchPane = {
     this._initDefaultEngines();
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
-    this._updateQuickSuggest = this._updateQuickSuggest.bind(this);
-    NimbusFeatures.urlbar.onUpdate(this._updateQuickSuggest);
-    window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.off(this._updateQuickSuggest);
-    });
-    this._updateQuickSuggest(true);
   },
 
   /**
@@ -185,7 +168,6 @@ var gSearchPane = {
     let privateWindowCheckbox = document.getElementById(
       "showSearchSuggestionsPrivateWindows"
     );
-    let quickSuggestCheckbox = document.getElementById("showQuickSuggest");
 
     urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
     privateWindowCheckbox.disabled = !suggestsPref.value;
@@ -209,59 +191,15 @@ var gSearchPane = {
       positionCheckbox.checked = Preferences.get(
         positionCheckbox.getAttribute("preference")
       ).value;
-      quickSuggestCheckbox.disabled = false;
-      quickSuggestCheckbox.checked = Preferences.get(
-        quickSuggestCheckbox.getAttribute("preference")
-      ).value;
     } else {
       positionCheckbox.disabled = true;
       positionCheckbox.checked = false;
-      quickSuggestCheckbox.disabled = true;
-      quickSuggestCheckbox.checked = false;
     }
 
     let permanentPBLabel = document.getElementById(
       "urlBarSuggestionPermanentPBLabel"
     );
     permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
-  },
-
-  /**
-   * Shows or hides the Quick Suggest checkbox depending on whether the en-US
-   * Quick Suggest experiment is enabled.
-   *
-   * @param {boolean} [onStartup]
-   *   True when this is called from `.init`
-   */
-  _updateQuickSuggest(onStartup = false) {
-    let container = document.getElementById("showQuickSuggestContainer");
-    let desc = document.getElementById("searchSuggestionsDesc");
-
-    if (!UrlbarPrefs.get("quickSuggestEnabled")) {
-      // The experiment is not enabled.  This is the default, so to avoid
-      // accidentally messing anything up, only modify the doc if we're being
-      // called due to a change in the experiment enabled status.
-      if (!onStartup) {
-        container.setAttribute("hidden", "true");
-        if (desc.dataset.l10nIdOriginal) {
-          desc.dataset.l10nId = desc.dataset.l10nIdOriginal;
-          delete desc.dataset.l10nIdOriginal;
-        }
-        document.l10n.translateElements([desc]);
-      }
-      return;
-    }
-
-    // The experiment is enabled.
-    document
-      .getElementById("showQuickSuggestLearnMore")
-      .setAttribute("href", UrlbarProviderQuickSuggest.helpUrl);
-    container.removeAttribute("hidden");
-    if (desc.dataset.l10nId) {
-      desc.dataset.l10nIdOriginal = desc.dataset.l10nId;
-      delete desc.dataset.l10nId;
-    }
-    desc.textContent = "Choose how search suggestions appear.";
   },
 
   _showAddEngineButton() {
