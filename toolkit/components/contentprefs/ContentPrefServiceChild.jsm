@@ -16,6 +16,8 @@ const {
   safeCallback,
 } = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 // We only need one bit of information out of the context.
 function contextArg(context) {
   return context && context.usePrivateBrowsing
