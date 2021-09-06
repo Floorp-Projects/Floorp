@@ -202,6 +202,49 @@ const DEFAULT_RECORDING_SETTINGS = {
 };
 
 /**
+ * This small utility returns true if the parameters contain the same values.
+ * This is essentially a deepEqual operation specific to this structure.
+ * @param {RecordingSettings} a
+ * @param {RecordingSettings} b
+ * @return {boolean}
+ */
+function areSettingsEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+
+  /* Simple properties */
+  /* These types look redundant, but they actually help TypeScript assess that
+   * the following code is correct, as well as prevent typos. */
+  /** @type {Array<"presetName" | "interval" | "entries" | "duration">} */
+  const simpleProperties = ["presetName", "interval", "entries", "duration"];
+
+  /* arrays */
+  /** @type {Array<"features" | "threads" | "objdirs">} */
+  const arrayProperties = ["features", "threads", "objdirs"];
+
+  for (const property of simpleProperties) {
+    if (a[property] !== b[property]) {
+      return false;
+    }
+  }
+
+  for (const property of arrayProperties) {
+    if (a[property].length !== b[property].length) {
+      return false;
+    }
+
+    const arrayA = a[property].slice().sort();
+    const arrayB = b[property].slice().sort();
+    if (arrayA.some((valueA, i) => valueA !== arrayB[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * This handles all values used as recording settings.
  * @type {Reducer<RecordingSettings>}
  */
@@ -253,6 +296,9 @@ function recordingSettings(state = DEFAULT_RECORDING_SETTINGS, action) {
             presetName: action.presetName, // it's probably "custom".
           };
     case "UPDATE_SETTINGS_FROM_PREFERENCES":
+      if (areSettingsEquals(state, action.recordingSettingsFromPreferences)) {
+        return state;
+      }
       return { ...action.recordingSettingsFromPreferences };
     default:
       return state;

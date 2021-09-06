@@ -33,7 +33,12 @@
 
 // These functions live in a JSM file so that this can be used both by this
 // CommonJS DevTools environment and the popup which isn't in such a context.
-const { getRecordingSettings, setRecordingSettings } = ChromeUtils.import(
+const {
+  getRecordingSettings,
+  setRecordingSettings,
+  addPrefObserver,
+  removePrefObserver,
+} = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 const { PureComponent } = require("devtools/client/shared/vendor/react");
@@ -50,6 +55,20 @@ const actions = require("devtools/client/performance-new/store/actions");
  */
 class ProfilerPreferenceObserver extends PureComponent {
   componentDidMount() {
+    this._updateSettingsFromPreferences();
+    addPrefObserver(this._updateSettingsFromPreferences);
+  }
+
+  componentDidUpdate() {
+    const { recordingSettingsFromRedux, pageContext } = this.props;
+    setRecordingSettings(pageContext, recordingSettingsFromRedux);
+  }
+
+  componentWillUnmount() {
+    removePrefObserver(this._updateSettingsFromPreferences);
+  }
+
+  _updateSettingsFromPreferences = () => {
     const {
       updateSettingsFromPreferences,
       pageContext,
@@ -61,14 +80,7 @@ class ProfilerPreferenceObserver extends PureComponent {
       supportedFeatures
     );
     updateSettingsFromPreferences(recordingSettingsFromPrefs);
-  }
-
-  componentDidUpdate() {
-    const { recordingSettingsFromRedux, pageContext } = this.props;
-    setRecordingSettings(pageContext, recordingSettingsFromRedux);
-  }
-
-  componentWillUnmount() {}
+  };
 
   render() {
     return null;
