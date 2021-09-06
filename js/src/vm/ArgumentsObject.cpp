@@ -292,17 +292,14 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
   return obj;
 }
 
-ArgumentsObject* GlobalObject::maybeArgumentsTemplateObject(bool mapped) const {
-  return mapped ? data().mappedArgumentsTemplate
-                : data().unmappedArgumentsTemplate;
+ArgumentsObject* Realm::maybeArgumentsTemplateObject(bool mapped) const {
+  return mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
 }
 
-/* static */
-ArgumentsObject* GlobalObject::getOrCreateArgumentsTemplateObject(JSContext* cx,
-                                                                  bool mapped) {
-  GlobalObjectData& data = cx->global()->data();
-  HeapPtr<ArgumentsObject*>& obj =
-      mapped ? data.mappedArgumentsTemplate : data.unmappedArgumentsTemplate;
+ArgumentsObject* Realm::getOrCreateArgumentsTemplateObject(JSContext* cx,
+                                                           bool mapped) {
+  WeakHeapPtr<ArgumentsObject*>& obj =
+      mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
 
   ArgumentsObject* templateObj = obj;
   if (templateObj) {
@@ -314,7 +311,7 @@ ArgumentsObject* GlobalObject::getOrCreateArgumentsTemplateObject(JSContext* cx,
     return nullptr;
   }
 
-  obj.init(templateObj);
+  obj.set(templateObj);
   return templateObj;
 }
 
@@ -324,7 +321,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
                                          unsigned numActuals, CopyArgs& copy) {
   bool mapped = callee->baseScript()->hasMappedArgsObj();
   ArgumentsObject* templateObj =
-      GlobalObject::getOrCreateArgumentsTemplateObject(cx, mapped);
+      cx->realm()->getOrCreateArgumentsTemplateObject(cx, mapped);
   if (!templateObj) {
     return nullptr;
   }

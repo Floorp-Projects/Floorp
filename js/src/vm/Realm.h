@@ -337,6 +337,12 @@ class JS::Realm : public JS::shadow::Realm {
   const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
   void* realmPrivate_ = nullptr;
 
+  js::WeakHeapPtr<js::ArgumentsObject*> mappedArgumentsTemplate_{nullptr};
+  js::WeakHeapPtr<js::ArgumentsObject*> unmappedArgumentsTemplate_{nullptr};
+  js::WeakHeapPtr<js::PlainObject*> iterResultTemplate_{nullptr};
+  js::WeakHeapPtr<js::PlainObject*> iterResultWithoutPrototypeTemplate_{
+      nullptr};
+
   // There are two ways to enter a realm:
   //
   // (1) AutoRealm (and JSAutoRealm, JS::EnterRealm)
@@ -405,6 +411,12 @@ class JS::Realm : public JS::shadow::Realm {
   js::NewProxyCache newProxyCache;
   js::ArraySpeciesLookup arraySpeciesLookup;
   js::PromiseLookup promiseLookup;
+
+  /*
+   * Lazily initialized script source object to use for scripts cloned
+   * from the self-hosting global.
+   */
+  js::WeakHeapPtrScriptSourceObject selfHostingScriptSource{nullptr};
 
   // Last time at which an animation was played for this realm.
   js::MainThreadData<mozilla::TimeStamp> lastAnimationTime;
@@ -523,6 +535,8 @@ class JS::Realm : public JS::shadow::Realm {
   void sweepDebugEnvironments();
   void traceWeakObjectRealm(JSTracer* trc);
   void traceWeakRegExps(JSTracer* trc);
+  void traceWeakSelfHostingScriptSource(JSTracer* trc);
+  void traceWeakTemplateObjects(JSTracer* trc);
 
   void clearScriptCounts();
   void clearScriptLCov();
@@ -603,6 +617,23 @@ class JS::Realm : public JS::shadow::Realm {
   void setPrincipals(JSPrincipals* principals) { principals_ = principals; }
 
   bool isSystem() const { return isSystem_; }
+
+  static const size_t IterResultObjectValueSlot = 0;
+  static const size_t IterResultObjectDoneSlot = 1;
+  js::PlainObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+  js::PlainObject* getOrCreateIterResultWithoutPrototypeTemplateObject(
+      JSContext* cx);
+
+ private:
+  enum class WithObjectPrototype { No, Yes };
+  js::PlainObject* createIterResultTemplateObject(
+      JSContext* cx, WithObjectPrototype withProto);
+
+ public:
+  js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx,
+                                                          bool mapped);
+  js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
+
   //
   // The Debugger observes execution on a frame-by-frame basis. The
   // invariants of Realm's debug mode bits, JSScript::isDebuggee,
