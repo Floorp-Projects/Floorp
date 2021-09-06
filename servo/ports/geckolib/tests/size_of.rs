@@ -30,7 +30,7 @@ size_of_test!(size_of_pseudo_class, selector_parser::NonTSPseudoClass, 16);
 // The size of this is critical to performance on the bloom-basic microbenchmark.
 // When iterating over a large Rule array, we want to be able to fast-reject
 // selectors (with the inline hashes) with as few cache misses as possible.
-size_of_test!(test_size_of_rule, style::stylist::Rule, 32);
+size_of_test!(test_size_of_rule, style::stylist::Rule, 40);
 
 // Large pages generate tens of thousands of ComputedValues.
 size_of_test!(test_size_of_cv, ComputedValues, 232);
