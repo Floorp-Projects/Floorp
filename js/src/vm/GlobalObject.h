@@ -204,6 +204,9 @@ class GlobalObjectData {
   HeapPtr<ArgumentsObject*> mappedArgumentsTemplate;
   HeapPtr<ArgumentsObject*> unmappedArgumentsTemplate;
 
+  HeapPtr<PlainObject*> iterResultTemplate;
+  HeapPtr<PlainObject*> iterResultWithoutPrototypeTemplate;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
@@ -972,6 +975,19 @@ class GlobalObject : public NativeObject {
                                                              bool mapped);
   ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
 
+  static const size_t IterResultObjectValueSlot = 0;
+  static const size_t IterResultObjectDoneSlot = 1;
+  static js::PlainObject* getOrCreateIterResultTemplateObject(
+      JSContext* cx, Handle<GlobalObject*> global);
+  static js::PlainObject* getOrCreateIterResultWithoutPrototypeTemplateObject(
+      JSContext* cx, Handle<GlobalObject*> global);
+
+ private:
+  enum class WithObjectPrototype { No, Yes };
+  static js::PlainObject* createIterResultTemplateObject(
+      JSContext* cx, WithObjectPrototype withProto);
+
+ public:
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
   template <ProtoKind Kind, const JSClass* ProtoClass,
