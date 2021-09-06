@@ -257,9 +257,9 @@ static bool ReturnUndefined(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<PlainObject*> templateObject(
       cx,
       forAuthorCode == ForAuthorCodeBool::Yes
-          ? GlobalObject::getOrCreateIterResultTemplateObject(cx, cx->global())
-          : GlobalObject::getOrCreateIterResultWithoutPrototypeTemplateObject(
-                cx, cx->global()));
+          ? cx->realm()->getOrCreateIterResultTemplateObject(cx)
+          : cx->realm()->getOrCreateIterResultWithoutPrototypeTemplateObject(
+                cx));
   if (!templateObject) {
     return nullptr;
   }
@@ -273,10 +273,10 @@ static bool ReturnUndefined(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5: Perform CreateDataProperty(obj, "value", value).
-  obj->setSlot(GlobalObject::IterResultObjectValueSlot, value);
+  obj->setSlot(Realm::IterResultObjectValueSlot, value);
 
   // Step 6: Perform CreateDataProperty(obj, "done", done).
-  obj->setSlot(GlobalObject::IterResultObjectDoneSlot, BooleanValue(done));
+  obj->setSlot(Realm::IterResultObjectDoneSlot, BooleanValue(done));
 
   // Step 7: Return obj.
   return obj;
