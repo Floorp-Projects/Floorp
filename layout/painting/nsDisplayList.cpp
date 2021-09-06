@@ -3610,12 +3610,10 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
   }
 
   CheckForBorderItem(this, mImageFlags);
-  bool dummy;
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
-          *StyleFrame()->PresContext(), GetBounds(aDisplayListBuilder, &dummy),
-          mBackgroundRect, StyleFrame(), mImageFlags, mLayer,
-          CompositionOp::OP_OVER, mOpacity);
+          *StyleFrame()->PresContext(), GetPaintRect(), mBackgroundRect,
+          StyleFrame(), mImageFlags, mLayer, CompositionOp::OP_OVER, mOpacity);
   params.bgClipRect = &mBounds;
   ImgDrawResult result =
       nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
@@ -4273,11 +4271,10 @@ bool nsDisplayOutline::CreateWebRenderCommands(
         StyleAppearance::FocusOutline, rect);
   }
 
-  bool dummy;
   Maybe<nsCSSBorderRenderer> borderRenderer =
       nsCSSRendering::CreateBorderRendererForNonThemedOutline(
-          pc, /* aDrawTarget = */ nullptr, mFrame,
-          GetBounds(aDisplayListBuilder, &dummy), rect, mFrame->Style());
+          pc, /* aDrawTarget = */ nullptr, mFrame, GetPaintRect(), rect,
+          mFrame->Style());
 
   if (!borderRenderer) {
     // No border renderer means "there is no outline".
@@ -7770,8 +7767,6 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
   mBounds = mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
   // Bug 748228
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
-  mVisibleRect = aBuilder->GetVisibleRect() +
-                 aBuilder->GetCurrentFrameOffsetToReferenceFrame();
 }
 
 bool nsDisplayText::CanApplyOpacity() const {
@@ -7797,10 +7792,7 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     IsSubpixelAADisabled());
-  // We don't pass mVisibleRect here, since this can be called from within
-  // the WebRender fallback painting path, and we don't want to issue
-  // recorded commands that are dependent on the visible/building rect.
-  RenderToContext(aCtx, aBuilder, GetPaintRect(aBuilder, aCtx));
+  RenderToContext(aCtx, aBuilder);
 }
 
 bool nsDisplayText::CreateWebRenderCommands(
@@ -7850,7 +7842,7 @@ bool nsDisplayText::CreateWebRenderCommands(
   // ::selected and ::inctive-selected pseudo-selectors. So don't do this
   // optimization if we have shadows or a selection.
   if (!(f->IsSelected() || f->StyleText()->HasTextShadow())) {
-    nsRect visible = mVisibleRect;
+    nsRect visible = GetPaintRect();
     visible.Inflate(3 * appUnitsPerDevPixel);
     bounds = bounds.Intersect(visible);
   }
@@ -7860,7 +7852,7 @@ bool nsDisplayText::CreateWebRenderCommands(
 
   aBuilder.StartGroup(this);
 
-  RenderToContext(textDrawer, aDisplayListBuilder, mVisibleRect, true);
+  RenderToContext(textDrawer, aDisplayListBuilder, true);
   const bool result = textDrawer->GetTextDrawer()->Finish();
 
   if (result) {
@@ -7874,7 +7866,6 @@ bool nsDisplayText::CreateWebRenderCommands(
 
 void nsDisplayText::RenderToContext(gfxContext* aCtx,
                                     nsDisplayListBuilder* aBuilder,
-                                    const nsRect& aVisibleRect,
                                     bool aIsRecording) {
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
@@ -7884,7 +7875,7 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
   // extents.
   auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect extraVisible =
-      LayoutDeviceRect::FromAppUnits(aVisibleRect, A2D);
+      LayoutDeviceRect::FromAppUnits(GetPaintRect(), A2D);
   extraVisible.Inflate(1);
 
   gfxRect pixelVisible(extraVisible.x, extraVisible.y, extraVisible.width,
@@ -8316,16 +8307,16 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   // region of the target frame and its out-of-flow and inflow descendants.
   gfxContext* context = aCtx;
 
-  Rect bounds = NSRectToRect(GetPaintRect(aBuilder, aCtx),
+  Rect bounds = NSRectToRect(GetPaintRect(),
                              mFrame->PresContext()->AppUnitsPerDevPixel());
   bounds.RoundOut();
   context->Clip(bounds);
 
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  SVGIntegrationUtils::PaintFramesParams params(
-      *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), borderArea, aBuilder,
-      nullptr, mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+                                                borderArea, aBuilder, nullptr,
+                                                mHandleOpacity, imgParams);
 
   ComputeMaskGeometry(params);
 
@@ -8719,9 +8710,9 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
     const std::function<void(gfxContext* aContext)>& aPaintChildren) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  SVGIntegrationUtils::PaintFramesParams params(
-      *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), borderArea, aBuilder,
-      nullptr, mHandleOpacity, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+                                                borderArea, aBuilder, nullptr,
+                                                mHandleOpacity, imgParams);
 
   gfxPoint userSpaceToFrameSpaceOffset =
       SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(mFrame, params);
