@@ -4354,9 +4354,6 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
 bool ScrollFrameHelper::DecideScrollableLayer(
     nsDisplayListBuilder* aBuilder, nsRect* aVisibleRect, nsRect* aDirtyRect,
     bool aSetBase, bool* aDirtyRectHasBeenOverriden) {
-  // Save and check if this changes so we can recompute the current agr.
-  bool oldWillBuildScrollableLayer = mWillBuildScrollableLayer;
-
   nsIContent* content = mOuter->GetContent();
   // For hit testing purposes with fission we want to create a
   // minimal display port for every scroll frame that could be active. (We only
@@ -4477,13 +4474,6 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   mWillBuildScrollableLayer = usingDisplayPort ||
                               nsContentUtils::HasScrollgrab(content) ||
                               mZoomableByAPZ;
-
-  // The cached animated geometry root for the display builder is out of
-  // date if we just introduced a new animated geometry root.
-  if (oldWillBuildScrollableLayer != mWillBuildScrollableLayer) {
-    aBuilder->RecomputeCurrentAnimatedGeometryRoot();
-  }
-
   return mWillBuildScrollableLayer;
 }
 
