@@ -6769,9 +6769,6 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
   nsTArray<nsFilePickerFilter> filters;
   nsString allExtensionsList;
 
-  bool allMimeTypeFiltersAreValid = true;
-  bool atLeastOneFileExtensionFilter = false;
-
   // Retrieve all filters
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token = tokenizer.nextToken();
@@ -6801,7 +6798,6 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
       }
       extensionListStr = u"*"_ns + token;
       filterName = extensionListStr;
-      atLeastOneFileExtensionFilter = true;
     } else {
       //... if no image/audio/video filter is found, check mime types filters
       nsCOMPtr<nsIMIMEInfo> mimeInfo;
@@ -6810,7 +6806,6 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
                                                    ""_ns,  // No extension
                                                    getter_AddRefs(mimeInfo))) ||
           !mimeInfo) {
-        allMimeTypeFiltersAreValid = false;
         continue;
       }
 
@@ -6842,7 +6837,6 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
 
     if (!filterMask && (extensionListStr.IsEmpty() || filterName.IsEmpty())) {
       // No valid filter found
-      allMimeTypeFiltersAreValid = false;
       continue;
     }
 
@@ -6914,10 +6908,9 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
     }
   }
 
-  if (filters.Length() >= 1 &&
-      (allMimeTypeFiltersAreValid || atLeastOneFileExtensionFilter)) {
+  if (filters.Length() >= 1) {
     // |filterAll| will always use index=0 so we need to set index=1 as the
-    // current filter.
+    // current filter. This will be "All Supported Types" for multiple filters.
     filePicker->SetFilterIndex(1);
   }
 }
