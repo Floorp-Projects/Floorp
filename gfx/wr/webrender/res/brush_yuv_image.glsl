@@ -17,7 +17,9 @@ flat varying vec4 vUvBounds_V;
 
 YUV_PRECISION flat varying vec3 vYcbcrBias;
 YUV_PRECISION flat varying mat3 vRgbFromDebiasedYcbcr;
-flat varying int vFormat;
+
+// YUV format. Packed in to vector to work around bug 1630356.
+flat varying ivec2 vFormat;
 
 #ifdef SWGL_DRAW_SPAN
 flat varying int vRescaleFactor;
@@ -67,22 +69,22 @@ void brush_vs(
     vYcbcrBias = mat_info.ycbcr_bias;
     vRgbFromDebiasedYcbcr = mat_info.rgb_from_debiased_ycbrc;
 
-    vFormat = prim.yuv_format;
+    vFormat.x = prim.yuv_format;
 
     // The additional test for 99 works around a gen6 shader compiler bug: 1708937
-    if (vFormat == YUV_FORMAT_PLANAR || vFormat == 99) {
+    if (vFormat.x == YUV_FORMAT_PLANAR || vFormat.x == 99) {
         ImageSource res_y = fetch_image_source(prim_user_data.x);
         ImageSource res_u = fetch_image_source(prim_user_data.y);
         ImageSource res_v = fetch_image_source(prim_user_data.z);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
         write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, f, TEX_SIZE_YUV(sColor2), vUv_V, vUvBounds_V);
-    } else if (vFormat == YUV_FORMAT_NV12) {
+    } else if (vFormat.x == YUV_FORMAT_NV12) {
         ImageSource res_y = fetch_image_source(prim_user_data.x);
         ImageSource res_u = fetch_image_source(prim_user_data.y);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
-    } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
+    } else if (vFormat.x == YUV_FORMAT_INTERLEAVED) {
         ImageSource res_y = fetch_image_source(prim_user_data.x);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
     }
@@ -93,7 +95,7 @@ void brush_vs(
 
 Fragment brush_fs() {
     vec4 color = sample_yuv(
-        vFormat,
+        vFormat.x,
         vYcbcrBias,
         vRgbFromDebiasedYcbcr,
         vUv_Y,
@@ -116,20 +118,20 @@ Fragment brush_fs() {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    if (vFormat == YUV_FORMAT_PLANAR) {
+    if (vFormat.x == YUV_FORMAT_PLANAR) {
         swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
                                     sColor1, vUv_U, vUvBounds_U,
                                     sColor2, vUv_V, vUvBounds_V,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
                                     vRescaleFactor);
-    } else if (vFormat == YUV_FORMAT_NV12) {
+    } else if (vFormat.x == YUV_FORMAT_NV12) {
         swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
                                     sColor1, vUv_U, vUvBounds_U,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
                                     vRescaleFactor);
-    } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
+    } else if (vFormat.x == YUV_FORMAT_INTERLEAVED) {
         swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,

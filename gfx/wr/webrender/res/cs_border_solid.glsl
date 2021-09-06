@@ -17,15 +17,9 @@ flat varying vec4 vColor1;
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// Work around Adreno 3xx driver bug. See the v_perspective comment in
-// brush_image or bug 1630356 for details.
-flat varying ivec2 vMixColorsVec;
-#define vMixColors vMixColorsVec.x
-#else
 // A boolean indicating that we should be mixing between edge colors.
-flat varying int vMixColors;
-#endif
+// Packed in to a vector to work around bug 1630356.
+flat varying ivec2 vMixColors;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
@@ -110,7 +104,7 @@ void main(void) {
             break;
     }
 
-    vMixColors = mix_colors;
+    vMixColors.x = mix_colors;
     vPos = size * aPosition.xy;
 
     vColor0 = aColor0;
@@ -138,10 +132,10 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float aa_range = compute_aa_range(vPos);
-    bool do_aa = vMixColors != MIX_NO_AA;
+    bool do_aa = vMixColors.x != MIX_NO_AA;
 
     float mix_factor = 0.0;
-    if (vMixColors != DONT_MIX) {
+    if (vMixColors.x != DONT_MIX) {
         float d_line = distance_to_line(vColorLine.xy, vColorLine.zw, vPos);
         if (do_aa) {
             mix_factor = distance_aa(aa_range, -d_line);

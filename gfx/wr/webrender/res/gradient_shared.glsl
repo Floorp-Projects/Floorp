@@ -40,10 +40,10 @@ void write_gradient_vertex(
     // Normalize UV to 0..1 scale.
     v_pos /= v_repeated_size;
 
-    v_gradient_address = prim_user_data.x;
+    v_gradient_address.x = prim_user_data.x;
 
     // Whether to repeat the gradient along the line instead of clamping.
-    v_gradient_repeat = float(extend_mode == EXTEND_MODE_REPEAT);
+    v_gradient_repeat.x = float(extend_mode == EXTEND_MODE_REPEAT);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     v_tile_repeat = tile_repeat;

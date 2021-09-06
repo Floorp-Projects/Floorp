@@ -10,19 +10,18 @@ varying vec2 vInput1Uv;
 varying vec2 vInput2Uv;
 flat varying vec4 vInput1UvRect;
 flat varying vec4 vInput2UvRect;
-flat varying int vFilterInputCount;
-flat varying int vFilterKind;
 flat varying ivec4 vData;
 flat varying vec4 vFilterData0;
 flat varying vec4 vFilterData1;
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// Work around Adreno 3xx driver bug. See the v_perspective comment in
-// brush_image or bug 1630356 for details.
-flat varying vec2 vFloat0Vec;
-#define vFloat0 vFloat0Vec.x
-#else
-flat varying float vFloat0;
-#endif
+
+// x: Filter input count, y: Filter kind.
+// Packed in to a vector to work around bug 1630356.
+flat varying ivec2 vFilterInputCountFilterKindVec;
+#define vFilterInputCount vFilterInputCountFilterKindVec.x
+#define vFilterKind vFilterInputCountFilterKindVec.y
+// Packed in to a vector to work around bug 1630356.
+flat varying vec2 vFloat0;
+
 flat varying mat4 vColorMat;
 flat varying ivec4 vFuncs;
 
@@ -130,7 +129,7 @@ void main(void) {
             vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
             break;
         case FILTER_OPACITY:
-            vFloat0 = filter_task.user_data.x;
+            vFloat0.x = filter_task.user_data.x;
             break;
         case FILTER_COLOR_MATRIX:
             vec4 mat_data[4] = fetch_from_gpu_cache_4_direct(aFilterExtraDataAddress);
@@ -555,7 +554,7 @@ void main(void) {
             break;
         case FILTER_OPACITY:
             result.rgb = Ca.rgb;
-            result.a = Ca.a * vFloat0;
+            result.a = Ca.a * vFloat0.x;
             break;
         case FILTER_COLOR_MATRIX:
             result = vColorMat * Ca + vFilterData0;
