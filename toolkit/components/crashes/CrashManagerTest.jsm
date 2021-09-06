@@ -16,12 +16,17 @@ var EXPORTED_SYMBOLS = [
   "TestingCrashManager",
 ];
 
-const { CrashManager } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CrashManager: "resource://gre/modules/CrashManager.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
 
 var loggingConfigured = false;
 

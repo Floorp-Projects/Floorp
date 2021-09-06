@@ -867,9 +867,8 @@ var PushServiceWebSocket = {
   },
 
   _generateID() {
-    let uuidGenerator = Services.uuid;
     // generateUUID() gives a UUID surrounded by {...}, slice them off.
-    return uuidGenerator
+    return Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1);
