@@ -7770,6 +7770,8 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder,
   mBounds = mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
   // Bug 748228
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
+  mVisibleRect = aBuilder->GetVisibleRect() +
+                 aBuilder->GetCurrentFrameOffsetToReferenceFrame();
 }
 
 bool nsDisplayText::CanApplyOpacity() const {
@@ -7795,7 +7797,10 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     IsSubpixelAADisabled());
-  RenderToContext(aCtx, aBuilder);
+  // We don't pass mVisibleRect here, since this can be called from within
+  // the WebRender fallback painting path, and we don't want to issue
+  // recorded commands that are dependent on the visible/building rect.
+  RenderToContext(aCtx, aBuilder, GetPaintRect(aBuilder, aCtx));
 }
 
 bool nsDisplayText::CreateWebRenderCommands(
@@ -7845,7 +7850,7 @@ bool nsDisplayText::CreateWebRenderCommands(
   // ::selected and ::inctive-selected pseudo-selectors. So don't do this
   // optimization if we have shadows or a selection.
   if (!(f->IsSelected() || f->StyleText()->HasTextShadow())) {
-    nsRect visible = GetPaintRect();
+    nsRect visible = mVisibleRect;
     visible.Inflate(3 * appUnitsPerDevPixel);
     bounds = bounds.Intersect(visible);
   }
@@ -7855,7 +7860,7 @@ bool nsDisplayText::CreateWebRenderCommands(
 
   aBuilder.StartGroup(this);
 
-  RenderToContext(textDrawer, aDisplayListBuilder, true);
+  RenderToContext(textDrawer, aDisplayListBuilder, mVisibleRect, true);
   const bool result = textDrawer->GetTextDrawer()->Finish();
 
   if (result) {
@@ -7869,6 +7874,7 @@ bool nsDisplayText::CreateWebRenderCommands(
 
 void nsDisplayText::RenderToContext(gfxContext* aCtx,
                                     nsDisplayListBuilder* aBuilder,
+                                    const nsRect& aVisibleRect,
                                     bool aIsRecording) {
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
@@ -7878,7 +7884,7 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
   // extents.
   auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect extraVisible =
-      LayoutDeviceRect::FromAppUnits(GetPaintRect(), A2D);
+      LayoutDeviceRect::FromAppUnits(aVisibleRect, A2D);
   extraVisible.Inflate(1);
 
   gfxRect pixelVisible(extraVisible.x, extraVisible.y, extraVisible.width,
