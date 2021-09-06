@@ -23,8 +23,8 @@ function invalidCode(code, name) {
 
 ruleTester.run("use-services", rule, {
   valid: [
-    'Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)',
-    'Components.classes["@mozilla.org/uuid-generator;1"].getService(Components.interfaces.nsIUUIDGenerator)',
+    'Cc["@mozilla.org/fakeservice;1"].getService(Ci.nsIFake)',
+    'Components.classes["@mozilla.org/fakeservice;1"].getService(Components.interfaces.nsIFake)',
     "Services.wm.addListener()",
   ],
   invalid: [
