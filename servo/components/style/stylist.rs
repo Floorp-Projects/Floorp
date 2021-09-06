@@ -2201,6 +2201,7 @@ impl CascadeData {
                                         self.rules_source_order,
                                         CascadeLevel::UANormal,
                                         selector.specificity(),
+                                        current_layer_order,
                                     ));
                                 continue;
                             }
@@ -2703,7 +2704,7 @@ impl Rule {
         level: CascadeLevel,
     ) -> ApplicableDeclarationBlock {
         let source = StyleSource::from_rule(self.style_rule.clone());
-        ApplicableDeclarationBlock::new(source, self.source_order, level, self.specificity())
+        ApplicableDeclarationBlock::new(source, self.source_order, level, self.specificity(), self.layer_order)
     }
 
     /// Creates a new Rule.
