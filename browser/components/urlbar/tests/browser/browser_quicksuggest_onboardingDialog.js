@@ -128,6 +128,7 @@ async function doDialogTest(expectOptIn, callback) {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.urlbar.suggest.quicksuggest", false],
+        ["browser.urlbar.suggest.quicksuggest.sponsored", false],
         ["browser.urlbar.quicksuggest.enabled", true],
         ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
         ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
@@ -139,7 +140,12 @@ async function doDialogTest(expectOptIn, callback) {
     Assert.equal(
       UrlbarPrefs.get("suggest.quicksuggest"),
       expectOptIn,
-      "The feature has been enabled"
+      "Main pref has been enabled"
+    );
+    Assert.equal(
+      UrlbarPrefs.get("suggest.quicksuggest.sponsored"),
+      expectOptIn,
+      "Sponsored pref has been enabled"
     );
 
     await SpecialPowers.popPrefEnv();

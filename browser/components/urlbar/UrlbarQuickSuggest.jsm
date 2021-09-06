@@ -34,7 +34,6 @@ const RS_COLLECTION = "quicksuggest";
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 
 const FEATURE_AVAILABLE = "quickSuggestEnabled";
-const OPTED_IN = "suggest.quicksuggest";
 const SEEN_DIALOG_PREF = "quicksuggest.showedOnboardingDialog";
 const RESTARTS_PREF = "quicksuggest.seenRestarts";
 
@@ -164,15 +163,18 @@ class Suggestions {
 
   /**
    * Called when a urlbar pref changes. The onboarding dialog will set the
-   * `browser.urlbar.suggest.quicksuggest` pref if the user has
-   * opted in, at which point we can start showing results.
+   * `browser.urlbar.suggest.quicksuggest` prefs if the user has opted in, at
+   * which point we can start showing results.
    *
    * @param {string} pref
    *   The name of the pref relative to `browser.urlbar`.
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case OPTED_IN:
+      // Both sponsored and non-sponsored results come from the same remote
+      // settings dataset, so we only need to listen for `suggest.quicksuggest`
+      // and not also `suggest.quicksuggest.sponsored`.
+      case "suggest.quicksuggest":
         this.onEnabledUpdate();
         break;
     }
@@ -182,16 +184,28 @@ class Suggestions {
    * Called when an update that may change whether this feature is enabled
    * or not has occured.
    *
-   * QuickSuggest is controlled by two perferences.
+   * Quick suggest is controlled by the following preferences. All three must be
+   * enabled to show sponsored results. The first two must be enabled to show
+   * non-sponsored results.
    *
-   *   * `quickSuggestEnabled`: this can be configured remotely through Nimbus
-   *     and enables the QuickSuggest feature, but the suggestion won't be
-   *     shown until the user has opted in.
+   * * `quicksuggest.enabled`: The global toggle for the entire quick suggest
+   *   feature. This pref can be overridden by the `quickSuggestEnabled` Nimbus
+   *   variable. If false, neither sponsored nor non-sponsored suggestions will
+   *   be shown. If true, then we look at the individual prefs
+   *   `suggest.quicksuggest` and `suggest.quicksuggest.sponsored`.
    *
-   *   * `suggest.quicksuggest`: whether or not the user has opted in.
+   * * `suggest.quicksuggest`: Whether any quick suggest results are shown. This
+   *    must be true to show both non-sponsored and sponsored results.
+   *
+   * * `suggest.quicksuggest.sponsored`: Whether sponsored quick suggest results
+   *    are shown. Both this pref and `suggest.quicksuggest` must be true to
+   *    show sponsored results.
    */
   onEnabledUpdate() {
-    if (UrlbarPrefs.get(FEATURE_AVAILABLE) && UrlbarPrefs.get(OPTED_IN)) {
+    if (
+      UrlbarPrefs.get(FEATURE_AVAILABLE) &&
+      UrlbarPrefs.get("suggest.quicksuggest")
+    ) {
       this._setupRemoteSettings();
     }
   }
@@ -215,7 +229,8 @@ class Suggestions {
       !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
       !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get(OPTED_IN)
+      UrlbarPrefs.get("suggest.quicksuggest") ||
+      UrlbarPrefs.get("suggest.quicksuggest.sponsored")
     ) {
       return;
     }
@@ -241,7 +256,9 @@ class Suggestions {
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
     if (params.accept) {
-      UrlbarPrefs.set(OPTED_IN, true);
+      // Opting in enables both non-sponsored and sponsored results.
+      UrlbarPrefs.set("suggest.quicksuggest", true);
+      UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
     } else if (params.openSettings) {
       win.openPreferences("search-quickSuggest");
     } else if (params.learnMore) {
