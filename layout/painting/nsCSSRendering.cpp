@@ -728,11 +728,13 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
     flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
   }
 
+  bool dummy;
   image::ImgDrawResult result;
   Maybe<nsCSSBorderImageRenderer> bir =
       nsCSSBorderImageRenderer::CreateBorderImageRenderer(
           aForFrame->PresContext(), aForFrame, aBorderArea, aStyleBorder,
-          aItem->GetPaintRect(), aForFrame->GetSkipSides(), flags, &result);
+          aItem->GetBounds(aDisplayListBuilder, &dummy),
+          aForFrame->GetSkipSides(), flags, &result);
 
   if (!bir) {
     // We aren't ready. Try to fallback to the null border image if present but
