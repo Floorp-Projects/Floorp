@@ -36,17 +36,7 @@ const TEST_DATA = [
   },
 ];
 
-const ABOUT_BLANK = "about:blank";
-const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
-const SUGGESTIONS_PREF = "browser.search.suggest.enabled";
-const PRIVATE_SUGGESTIONS_PREF = "browser.search.suggest.enabled.private";
 const SEEN_DIALOG_PREF = "browser.urlbar.quicksuggest.showedOnboardingDialog";
-const SUGGESTIONS_FIRST_PREF = "browser.urlbar.showSearchSuggestionsFirst";
-
-function sleep(ms) {
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 /**
  * Asserts that a result is a Quick Suggest result.
@@ -119,37 +109,9 @@ async function assertNoQuickSuggestResults(win = window) {
   }
 }
 
-/**
- * Adds a search engine that provides suggestions, calls your callback, and then
- * remove the engine.
- *
- * @param {function} callback
- *   Your callback function.
- */
-async function withSuggestions(callback) {
-  await SpecialPowers.pushPrefEnv({
-    set: [[SUGGESTIONS_PREF, true]],
-  });
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
-  try {
-    await callback(engine);
-  } finally {
-    await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(engine);
-    await SpecialPowers.popPrefEnv();
-  }
-}
-
 add_task(async function init() {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
-  });
 
   Services.prefs.clearUserPref(SEEN_DIALOG_PREF);
   Services.prefs.clearUserPref("browser.urlbar.quicksuggest.seenRestarts");
@@ -161,25 +123,28 @@ add_task(async function init() {
     },
   });
 
-  // Add a mock engine so we don't hit the network loading the SERP.
-  await SearchTestUtils.installSearchExtension();
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(Services.search.getEngineByName("Example"));
-
   await UrlbarQuickSuggest.init();
   await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
   let onEnabled = UrlbarQuickSuggest.onEnabledUpdate;
   UrlbarQuickSuggest.onEnabledUpdate = () => {};
 
   registerCleanupFunction(async function() {
-    Services.search.setDefault(oldDefaultEngine);
-    await PlacesUtils.history.clear();
-    await UrlbarTestUtils.formHistory.clear();
     await doExperimentCleanup();
     UrlbarQuickSuggest.onEnabledUpdate = onEnabled;
+
+    // The onboarding test task causes prefs to be set, so clear them when done
+    // so we leave a blank slate for other tests.
+    UrlbarPrefs.clear("suggest.quicksuggest");
+    UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+    UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+    UrlbarPrefs.clear("quicksuggest.seenRestarts");
   });
 });
 
+// Tests the onboarding dialog. This task must run first because it fully
+// enables the feature (both sponsored and non-sponsored suggestions) by virtue
+// of showing the onboarding.
 add_task(async function test_onboarding() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -210,7 +175,8 @@ add_task(async function test_onboarding() {
   await Promise.all([dialogPromise, prefPromise]);
 });
 
-add_task(async function basic_test() {
+// Tests a sponsored result and keyword highlighting.
+add_task(async function sponsored() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "fra",
@@ -230,71 +196,6 @@ add_task(async function basic_test() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-add_task(async function test_case_insensitive() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: " Frab",
-  });
-  await assertIsQuickSuggest(1);
-  await UrlbarTestUtils.promisePopupClose(window);
-});
-
-add_task(async function test_suggestions_disabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[SUGGESTIONS_PREF, false]] });
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, ABOUT_BLANK);
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "frab",
-  });
-  // We can't waitForResultAt because we don't want a result, give enough time
-  // that a result would most likely have appeared.
-  await sleep(100);
-  Assert.ok(
-    window.gURLBar.view._rows.children.length == 1,
-    "There are no additional suggestions"
-  );
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Neither sponsored nor non-sponsored results should appear in private windows
-// even when suggestions in private windows are enabled.
-add_task(async function test_suggestions_private() {
-  await SpecialPowers.pushPrefEnv({ set: [[SUGGESTIONS_PREF, true]] });
-  let win = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-  });
-
-  // Test with private suggestions enabled and disabled.
-  for (let privateSuggestionsEnabled of [true, false]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [[PRIVATE_SUGGESTIONS_PREF, privateSuggestionsEnabled]],
-    });
-    // Test both sponsored and non-sponsored results.
-    for (let value of ["frab", "nonspon"]) {
-      info(
-        "Private window test: " +
-          JSON.stringify({ privateSuggestionsEnabled, value })
-      );
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window: win,
-        value,
-      });
-      await sleep(100);
-      Assert.ok(
-        win.gURLBar.view._rows.children.length == 1,
-        "There are no additional suggestions"
-      );
-      await assertNoQuickSuggestResults(win);
-      await UrlbarTestUtils.promisePopupClose(win);
-    }
-    await SpecialPowers.popPrefEnv();
-  }
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
-
 // Tests a non-sponsored result.
 add_task(async function nonSponsored() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -303,57 +204,4 @@ add_task(async function nonSponsored() {
   });
   await assertIsQuickSuggest({ index: 1, isSponsored: false });
   await UrlbarTestUtils.promisePopupClose(window);
-});
-
-// When general results are shown before search suggestions and the only general
-// result is a quick suggest result, it should be shown before suggestions.
-add_task(async function generalBeforeSuggestions_only() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[SUGGESTIONS_FIRST_PREF, false]],
-  });
-  await withSuggestions(async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "fra",
-    });
-    Assert.equal(
-      UrlbarTestUtils.getResultCount(window),
-      4,
-      "Heuristic + quick suggest + 2 suggestions = 4 results"
-    );
-    await assertIsQuickSuggest({ index: 1 });
-    await UrlbarTestUtils.promisePopupClose(window);
-  });
-});
-
-// When general results are shown before search suggestions and there are other
-// general results besides quick suggest, the quick suggest result should be the
-// last general result.
-add_task(async function generalBeforeSuggestions_others() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[SUGGESTIONS_FIRST_PREF, false]],
-  });
-
-  // Add some history that will match our query below.
-  let maxResults = UrlbarPrefs.get("maxRichResults");
-  for (let i = 0; i < maxResults; i++) {
-    await PlacesTestUtils.addVisits("http://example.com/frabbits" + i);
-  }
-
-  await withSuggestions(async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "fra",
-    });
-    Assert.equal(
-      UrlbarTestUtils.getResultCount(window),
-      maxResults,
-      "Result count is max result count"
-    );
-    // The quick suggest result should come before the 2 suggestions at the end.
-    await assertIsQuickSuggest({ index: maxResults - 3 });
-    await UrlbarTestUtils.promisePopupClose(window);
-  });
-
-  await PlacesUtils.history.clear();
 });
