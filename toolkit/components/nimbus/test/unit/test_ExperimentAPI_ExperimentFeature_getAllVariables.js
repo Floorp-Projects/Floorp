@@ -76,13 +76,11 @@ add_task(
     const recipe = ExperimentFakes.experiment("awexperiment", {
       branch: {
         slug: "treatment",
-        features: [
-          {
-            featureId: "aboutwelcome",
-            enabled: true,
-            value: { screens: ["test-value"] },
-          },
-        ],
+        feature: {
+          featureId: "aboutwelcome",
+          enabled: true,
+          value: { screens: ["test-value"] },
+        },
       },
     });
 

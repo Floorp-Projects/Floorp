@@ -23,7 +23,7 @@ add_task(async function test_usageBeforeInitialization() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
 
@@ -69,10 +69,7 @@ add_task(async function test_event_updates_main() {
   await store.init();
 
   // Set update cb
-  store.on(
-    `update:${experiment.branch.features[0].featureId}`,
-    updateEventCbStub
-  );
+  store.on(`update:${experiment.branch.feature.featureId}`, updateEventCbStub);
 
   store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
@@ -88,10 +85,7 @@ add_task(async function test_event_updates_main() {
     "Should be called with updated experiment status"
   );
 
-  store.off(
-    `update:${experiment.branch.features[0].featureId}`,
-    updateEventCbStub
-  );
+  store.off(`update:${experiment.branch.feature.featureId}`, updateEventCbStub);
 });
 
 add_task(async function test_getExperimentForGroup() {
@@ -99,7 +93,7 @@ add_task(async function test_getExperimentForGroup() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
 
@@ -200,9 +194,9 @@ add_task(async function test_addExperiment() {
 });
 
 add_task(async function test_updateExperiment() {
-  const features = [{ featureId: "cfr", enabled: true }];
+  const feature = { featureId: "cfr", enabled: true };
   const experiment = Object.freeze(
-    ExperimentFakes.experiment("foo", { features, active: true })
+    ExperimentFakes.experiment("foo", { feature, active: true })
   );
   const store = ExperimentFakes.store();
 
@@ -213,8 +207,8 @@ add_task(async function test_updateExperiment() {
   const actual = store.get("foo");
   Assert.equal(actual.active, false, "should change updated props");
   Assert.deepEqual(
-    actual.branch.features,
-    features,
+    actual.branch.feature,
+    feature,
     "should not update other props"
   );
 });
@@ -227,7 +221,7 @@ add_task(async function test_sync_access_before_init() {
   Assert.equal(store.getAll().length, 0, "Start with an empty store");
 
   const syncAccessExp = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "newtab", enabled: "true" }],
+    feature: { featureId: "newtab", enabled: "true" },
   });
   await store.init();
   store.addExperiment(syncAccessExp);
@@ -259,7 +253,7 @@ add_task(async function test_sync_access_update() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    feature: { featureId: "aboutwelcome", enabled: true },
   });
 
   await store.init();
@@ -268,13 +262,11 @@ add_task(async function test_sync_access_update() {
   store.updateExperiment("foo", {
     branch: {
       ...experiment.branch,
-      features: [
-        {
-          featureId: "aboutwelcome",
-          enabled: true,
-          value: { bar: "bar" },
-        },
-      ],
+      feature: {
+        featureId: "aboutwelcome",
+        enabled: true,
+        value: { bar: "bar" },
+      },
     },
   });
 
@@ -283,8 +275,6 @@ add_task(async function test_sync_access_update() {
 
   Assert.ok(cachedExperiment, "Got back 1 experiment");
   Assert.deepEqual(
-    // `branch.feature` and not `features` because for sync access (early startup)
-    // experiments we only store the `isEarlyStartup` feature
     cachedExperiment.branch.feature.value,
     { bar: "bar" },
     "Got updated value"
@@ -296,7 +286,7 @@ add_task(async function test_sync_features_only() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "cfr", enabled: true }],
+    feature: { featureId: "cfr", enabled: true },
   });
 
   await store.init();
@@ -312,7 +302,7 @@ add_task(async function test_sync_features_remotely() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "cfr", enabled: true, isEarlyStartup: true }],
+    feature: { featureId: "cfr", enabled: true, isEarlyStartup: true },
   });
 
   await store.init();
@@ -332,7 +322,7 @@ add_task(async function test_sync_access_unenroll() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    feature: { featureId: "aboutwelcome", enabled: true },
     active: true,
   });
 
@@ -352,10 +342,10 @@ add_task(async function test_sync_access_unenroll_2() {
 
   let store = ExperimentFakes.store();
   let experiment1 = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "newtab", enabled: true }],
+    feature: { featureId: "newtab", enabled: true },
   });
   let experiment2 = ExperimentFakes.experiment("bar", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    feature: { featureId: "aboutwelcome", enabled: true },
   });
 
   await store.init();
@@ -539,14 +529,12 @@ add_task(async function test_storeValuePerPref_noVariables() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [
-        {
-          // Ensure it gets saved to prefs
-          isEarlyStartup: true,
-          featureId: "purple",
-          enabled: true,
-        },
-      ],
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        enabled: true,
+      },
     },
   });
 
@@ -574,14 +562,12 @@ add_task(async function test_storeValuePerPref_withVariables() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [
-        {
-          // Ensure it gets saved to prefs
-          isEarlyStartup: true,
-          featureId: "purple",
-          value: { color: "purple", enabled: true },
-        },
-      ],
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: { color: "purple", enabled: true },
+      },
     },
   });
 
@@ -590,11 +576,12 @@ add_task(async function test_storeValuePerPref_withVariables() {
 
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
-  let val = Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`);
   Assert.equal(
-    val.indexOf("color"),
+    Services.prefs
+      .getStringPref(`${SYNC_DATA_PREF_BRANCH}purple`)
+      .indexOf("color"),
     -1,
-    `Experiment metadata does not contain variables ${val}`
+    "Experiment metadata does not contain variables"
   );
 
   Assert.equal(branch.getChildList("").length, 2, "Enabled and color");
@@ -612,14 +599,12 @@ add_task(async function test_storeValuePerPref_returnsSameValue() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [
-        {
-          // Ensure it gets saved to prefs
-          isEarlyStartup: true,
-          featureId: "purple",
-          value: { color: "purple", enabled: true },
-        },
-      ],
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: { color: "purple", enabled: true },
+      },
     },
   });
 
@@ -628,11 +613,11 @@ add_task(async function test_storeValuePerPref_returnsSameValue() {
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
   store = ExperimentFakes.store();
-  const cachedExperiment = store.getExperimentForFeature("purple");
-  // Cached experiment format only stores early access feature
-  cachedExperiment.branch.features = [cachedExperiment.branch.feature];
-  delete cachedExperiment.branch.feature;
-  Assert.deepEqual(cachedExperiment, experiment, "Returns the same value");
+  Assert.deepEqual(
+    store.getExperimentForFeature("purple"),
+    experiment,
+    "Returns the same value"
+  );
 
   // Cleanup
   store._updateSyncStore({ ...experiment, active: false });
@@ -660,22 +645,20 @@ add_task(async function test_storeValuePerPref_returnsSameValue_allTypes() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [
-        {
-          // Ensure it gets saved to prefs
-          isEarlyStartup: true,
-          featureId: "purple",
-          value: {
-            string: "string",
-            bool: true,
-            array: [1, 2, 3],
-            number1: 42,
-            number2: 0,
-            number3: -5,
-            json: { jsonValue: true },
-          },
+      feature: {
+        // Ensure it gets saved to prefs
+        isEarlyStartup: true,
+        featureId: "purple",
+        value: {
+          string: "string",
+          bool: true,
+          array: [1, 2, 3],
+          number1: 42,
+          number2: 0,
+          number3: -5,
+          json: { jsonValue: true },
         },
-      ],
+      },
     },
   });
 
@@ -686,7 +669,7 @@ add_task(async function test_storeValuePerPref_returnsSameValue_allTypes() {
   store = ExperimentFakes.store();
   Assert.deepEqual(
     store.getExperimentForFeature("purple").branch.feature.value,
-    experiment.branch.features[0].value,
+    experiment.branch.feature.value,
     "Returns the same value"
   );
 
@@ -707,25 +690,25 @@ add_task(async function test_cleanupOldRecipes() {
   const experiment1 = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
   const experiment2 = ExperimentFakes.experiment("bar", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
   const experiment3 = ExperimentFakes.experiment("baz", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
   const experiment4 = ExperimentFakes.experiment("faz", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      feature: { featureId: "purple", enabled: true },
     },
   });
   // Exp 2 is kept because it's recent (even though it's not active)

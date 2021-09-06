@@ -530,13 +530,11 @@ add_task(async function remote_defaults_active_experiments_check() {
       branches: [
         {
           slug: "mochitest-active-foo",
-          features: [
-            {
-              enabled: true,
-              featureId: "foo",
-              value: null,
-            },
-          ],
+          feature: {
+            enabled: true,
+            featureId: "foo",
+            value: null,
+          },
         },
       ],
       active: true,
