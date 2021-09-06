@@ -1,7 +1,61 @@
 {
   "data": [
     {
-      "schema": 1630439889302,
+      "schema": 1630681084384,
+      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
+      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
+      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
+        "size": 2129,
+        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
+        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
+      "crlite_enrolled": false,
+      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
+      "last_modified": 1630742341441
+    },
+    {
+      "schema": 1630677240010,
+      "derHash": "p+gwVumz2d2xgWuVUY9qXlod/foo9gUzschQhV6qQmM=",
+      "subject": "CN=Telia Domain Validation CA v3,O=Telia Finland Oyj,C=FI",
+      "subjectDN": "MFExCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEmMCQGA1UEAwwdVGVsaWEgRG9tYWluIFZhbGlkYXRpb24gQ0EgdjM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0f8c227df79307dbeec994ba6d8bd832268f9d2b0c636499e29d589ed747a88c",
+        "size": 2353,
+        "filename": "RU2jIfMztj4AADghygjY9gbxUkW13LXRSS7JeONgrxc=.pem",
+        "location": "security-state-staging/intermediates/f38aa272-1880-4c2f-b745-6c01a69b0614.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "RU2jIfMztj4AADghygjY9gbxUkW13LXRSS7JeONgrxc=",
+      "crlite_enrolled": false,
+      "id": "b07c6446-0c44-4a00-bb56-ca8b2b55a54e",
+      "last_modified": 1630677485453
+    },
+    {
+      "schema": 1630634420528,
+      "derHash": "EoGtj6vog/IJ6WNkSNGoDDc9qnaGyBOicPrUj19eWJo=",
+      "subject": "CN=Telia Server CA v3,O=Telia Finland Oyj,C=FI",
+      "subjectDN": "MEYxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEbMBkGA1UEAwwSVGVsaWEgU2VydmVyIENBIHYz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c49599398958207a50863ebc4e7e508a20b8551b440ae2d3d28ab90e317f5c12",
+        "size": 2341,
+        "filename": "TCgTLigAKZ2ouWM1T2dh92G9wUDP8Wlma6sqwmm3aVc=.pem",
+        "location": "security-state-staging/intermediates/bdcf129f-b3fa-4ce1-8a67-6da86c05d54f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "TCgTLigAKZ2ouWM1T2dh92G9wUDP8Wlma6sqwmm3aVc=",
+      "crlite_enrolled": false,
+      "id": "681d294f-17d7-400e-a4ca-507ee1d90a50",
+      "last_modified": 1630677485430
+    },
+    {
+      "schema": 1630591077524,
       "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
       "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -16,7 +70,25 @@
       "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
       "crlite_enrolled": true,
       "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1630461477442
+      "last_modified": 1630634419371
+    },
+    {
+      "schema": 1630496679039,
+      "derHash": "R7LvvDZw59tLQfIsUfwC7oT7Lb8wgqSfLCaIEi6SEKE=",
+      "subject": "CN=emSign SSL CA - G1,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
+      "subjectDN": "MGYxCzAJBgNVBAYTAklOMRMwEQYDVQQLEwplbVNpZ24gUEtJMSUwIwYDVQQKExxlTXVkaHJhIFRlY2hub2xvZ2llcyBMaW1pdGVkMRswGQYDVQQDExJlbVNpZ24gU1NMIENBIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "99a70855fffb043bc441083724ab6299ce68f28ce7c76547b9782e13a92d30ce",
+        "size": 1622,
+        "filename": "qvzNg6-PS7JbCFR-FL-eAfFZOiN6pXXsH1tc9auHlF8=.pem",
+        "location": "security-state-staging/intermediates/bc26b3e5-5243-4ed4-89a5-ee29b7471158.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qvzNg6+PS7JbCFR+FL+eAfFZOiN6pXXsH1tc9auHlF8=",
+      "crlite_enrolled": false,
+      "id": "136071c8-bc0a-49f6-9eed-0f027892d327",
+      "last_modified": 1630591076488
     },
     {
       "schema": 1630396674974,
@@ -881,24 +953,6 @@
       "crlite_enrolled": true,
       "id": "056dcecf-b54d-4dca-bd31-f6fa1134a775",
       "last_modified": 1626361244232
-    },
-    {
-      "schema": 1626335919550,
-      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
-      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
-      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
-        "size": 2129,
-        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
-        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
-      "crlite_enrolled": true,
-      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
-      "last_modified": 1626335941622
     },
     {
       "schema": 1626228253330,
@@ -17405,42 +17459,6 @@
       "crlite_enrolled": true,
       "id": "3395f234-9055-4caa-a4d5-11b4a7f375a3",
       "last_modified": 1601517443761
-    },
-    {
-      "schema": 1601376769979,
-      "derHash": "EoGtj6vog/IJ6WNkSNGoDDc9qnaGyBOicPrUj19eWJo=",
-      "subject": "CN=Telia Server CA v3,O=Telia Finland Oyj,C=FI",
-      "subjectDN": "MEYxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEbMBkGA1UEAwwSVGVsaWEgU2VydmVyIENBIHYz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c49599398958207a50863ebc4e7e508a20b8551b440ae2d3d28ab90e317f5c12",
-        "size": 2341,
-        "filename": "TCgTLigAKZ2ouWM1T2dh92G9wUDP8Wlma6sqwmm3aVc=.pem",
-        "location": "security-state-staging/intermediates/bdcf129f-b3fa-4ce1-8a67-6da86c05d54f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "TCgTLigAKZ2ouWM1T2dh92G9wUDP8Wlma6sqwmm3aVc=",
-      "crlite_enrolled": true,
-      "id": "681d294f-17d7-400e-a4ca-507ee1d90a50",
-      "last_modified": 1601517443744
-    },
-    {
-      "schema": 1601376782315,
-      "derHash": "p+gwVumz2d2xgWuVUY9qXlod/foo9gUzschQhV6qQmM=",
-      "subject": "CN=Telia Domain Validation CA v3,O=Telia Finland Oyj,C=FI",
-      "subjectDN": "MFExCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEmMCQGA1UEAwwdVGVsaWEgRG9tYWluIFZhbGlkYXRpb24gQ0EgdjM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0f8c227df79307dbeec994ba6d8bd832268f9d2b0c636499e29d589ed747a88c",
-        "size": 2353,
-        "filename": "RU2jIfMztj4AADghygjY9gbxUkW13LXRSS7JeONgrxc=.pem",
-        "location": "security-state-staging/intermediates/f38aa272-1880-4c2f-b745-6c01a69b0614.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "RU2jIfMztj4AADghygjY9gbxUkW13LXRSS7JeONgrxc=",
-      "crlite_enrolled": true,
-      "id": "b07c6446-0c44-4a00-bb56-ca8b2b55a54e",
-      "last_modified": 1601517443698
     },
     {
       "schema": 1601376730262,
@@ -35225,24 +35243,6 @@
       "crlite_enrolled": false,
       "id": "fcc67e61-43b8-4146-9df6-e8af510e8ca5",
       "last_modified": 1562108368651
-    },
-    {
-      "schema": 1562108366331,
-      "derHash": "R7LvvDZw59tLQfIsUfwC7oT7Lb8wgqSfLCaIEi6SEKE=",
-      "subject": "CN=emSign SSL CA - G1,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
-      "subjectDN": "MGYxCzAJBgNVBAYTAklOMRMwEQYDVQQLEwplbVNpZ24gUEtJMSUwIwYDVQQKExxlTXVkaHJhIFRlY2hub2xvZ2llcyBMaW1pdGVkMRswGQYDVQQDExJlbVNpZ24gU1NMIENBIC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "99a70855fffb043bc441083724ab6299ce68f28ce7c76547b9782e13a92d30ce",
-        "size": 1622,
-        "filename": "qvzNg6-PS7JbCFR-FL-eAfFZOiN6pXXsH1tc9auHlF8=.pem",
-        "location": "security-state-staging/intermediates/bc26b3e5-5243-4ed4-89a5-ee29b7471158.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qvzNg6+PS7JbCFR+FL+eAfFZOiN6pXXsH1tc9auHlF8=",
-      "crlite_enrolled": true,
-      "id": "136071c8-bc0a-49f6-9eed-0f027892d327",
-      "last_modified": 1562108367113
     },
     {
       "schema": 1562108365569,
