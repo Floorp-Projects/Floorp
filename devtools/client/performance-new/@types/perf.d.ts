@@ -393,6 +393,26 @@ export interface PerformancePref {
   PopupFeatureFlag: "devtools.performance.popup.feature-flag";
 }
 
+/* The next 2 types bring some duplication from gecko.d.ts, but this is simpler
+ * this way. */
+
+/**
+ * This is a function called by a preference observer.
+ */
+export type PrefObserverFunction = (
+  aSubject: nsIPrefBranch,
+  aTopic: "nsPref:changed",
+  aData: string
+) => unknown;
+
+/**
+ * This is the type of an observer we can pass to Service.prefs.addObserver and
+ * Service.prefs.removeObserver.
+ */
+export type PrefObserver =
+  | PrefObserverFunction
+  | { observe: PrefObserverFunction };
+
 /**
  * Scale a number value.
  */

@@ -96,6 +96,30 @@ declare namespace MockedExports {
 
   type GetPref<T> = (prefName: string, defaultValue?: T) => T;
   type SetPref<T> = (prefName: string, value?: T) => T;
+  type nsIPrefBranch = {
+    clearUserPref: (prefName: string) => void;
+    getStringPref: GetPref<string>;
+    setStringPref: SetPref<string>;
+    getCharPref: GetPref<string>;
+    setCharPref: SetPref<string>;
+    getIntPref: GetPref<number>;
+    setIntPref: SetPref<number>;
+    getBoolPref: GetPref<boolean>;
+    setBoolPref: SetPref<boolean>;
+    addObserver: (
+      aDomain: string,
+      aObserver: PrefObserver,
+      aHoldWeak?: boolean
+    ) => void;
+    removeObserver: (aDomain: string, aObserver: PrefObserver) => void;
+  };
+
+  type PrefObserverFunction = (
+    aSubject: nsIPrefBranch,
+    aTopic: "nsPref:changed",
+    aData: string
+  ) => unknown;
+  type PrefObserver = PrefObserverFunction | { observe: PrefObserverFunction };
 
   interface nsIURI {}
 
@@ -112,19 +136,7 @@ declare namespace MockedExports {
   }
 
   type Services = {
-    prefs: {
-      clearUserPref: (prefName: string) => void;
-      getStringPref: GetPref<string>;
-      setStringPref: SetPref<string>;
-      getCharPref: GetPref<string>;
-      setCharPref: SetPref<string>;
-      getIntPref: GetPref<number>;
-      setIntPref: SetPref<number>;
-      getBoolPref: GetPref<boolean>;
-      setBoolPref: SetPref<boolean>;
-      addObserver: any;
-      removeObserver: any;
-    };
+    prefs: nsIPrefBranch;
     profiler: {
       CanProfile: () => boolean;
       StartProfiler: (
@@ -444,3 +456,5 @@ declare interface XULElementWithCommandHandler {
     isCapture?: boolean
   ) => void;
 }
+
+declare type nsIPrefBranch = MockedExports.nsIPrefBranch;
