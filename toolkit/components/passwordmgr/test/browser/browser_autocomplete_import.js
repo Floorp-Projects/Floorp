@@ -53,9 +53,12 @@ add_task(async function test_initialize() {
   const experiment = sinon.stub(ExperimentAPI, "activateBranch").returns({
     slug: "foo",
     ratio: 1,
-    feature: {
-      value: { directMigrateSingleProfile: true },
-    },
+    features: [
+      {
+        featureId: "password-autocomplete",
+        value: { directMigrateSingleProfile: true },
+      },
+    ],
   });
 
   // This makes the last autocomplete test *not* show import suggestions.

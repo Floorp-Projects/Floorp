@@ -140,7 +140,7 @@ add_task(async function test_getExperiment_feature() {
     branch: {
       slug: "treatment",
       value: { title: "hi" },
-      feature: { featureId: "cfr", enabled: true, value: null },
+      features: [{ featureId: "cfr", enabled: true, value: null }],
     },
   });
 
@@ -264,7 +264,7 @@ add_task(async function test_addExperiment_eventEmit_add() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true, value: null },
+      features: [{ featureId: "purple", enabled: true, value: null }],
     },
   });
   const store = ExperimentFakes.store();
@@ -299,7 +299,7 @@ add_task(async function test_updateExperiment_eventEmit_add_and_update() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true, value: null },
+      features: [{ featureId: "purple", enabled: true, value: null }],
     },
   });
   const store = ExperimentFakes.store();
@@ -333,7 +333,7 @@ add_task(async function test_updateExperiment_eventEmit_off() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "purple", enabled: true, value: null },
+      features: [{ featureId: "purple", enabled: true, value: null }],
     },
   });
   const store = ExperimentFakes.store();
@@ -363,7 +363,7 @@ add_task(async function test_activateBranch() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "green", enabled: true, value: null },
+      features: [{ featureId: "green", enabled: true, value: null }],
     },
   });
 
@@ -403,7 +403,7 @@ add_task(async function test_activateBranch_storeFailure() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "green", enabled: true },
+      features: [{ featureId: "green", enabled: true }],
     },
   });
 
@@ -430,7 +430,7 @@ add_task(async function test_activateBranch_noActivationEvent() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      feature: { featureId: "green", enabled: true },
+      features: [{ featureId: "green", enabled: true }],
     },
   });
 

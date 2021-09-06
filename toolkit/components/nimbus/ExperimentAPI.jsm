@@ -57,6 +57,19 @@ function parseJSON(value) {
   return null;
 }
 
+function featuresCompat(branch) {
+  if (!branch) {
+    return [];
+  }
+  let { features } = branch;
+  // In <=v1.5.0 of the Nimbus API, experiments had single feature
+  if (!features) {
+    features = [branch.feature];
+  }
+
+  return features;
+}
+
 const ExperimentAPI = {
   /**
    * @returns {Promise} Resolves when the API has synchronized to the main store
@@ -405,9 +418,13 @@ class _ExperimentFeature {
   isEnabled({ defaultValue = null } = {}) {
     const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
 
+    let feature = featuresCompat(branch).find(
+      ({ featureId }) => featureId === this.featureId
+    );
+
     // First, try to return an experiment value if it exists.
-    if (isBooleanValueDefined(branch?.feature.enabled)) {
-      return branch.feature.enabled;
+    if (isBooleanValueDefined(feature?.enabled)) {
+      return feature.enabled;
     }
 
     if (isBooleanValueDefined(this.getRemoteConfig()?.enabled)) {
@@ -436,12 +453,15 @@ class _ExperimentFeature {
     // Any user pref will override any other configuration
     let userPrefs = this._getUserPrefsValues();
     const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
+    const featureValue = featuresCompat(branch).find(
+      ({ featureId }) => featureId === this.featureId
+    )?.value;
 
     return {
       ...this.prefGetters,
       ...defaultValues,
       ...this.getRemoteConfig()?.variables,
-      ...(branch?.feature?.value || null),
+      ...(featureValue || null),
       ...userPrefs,
     };
   }
@@ -465,9 +485,12 @@ class _ExperimentFeature {
     }
 
     // Next, check if an experiment is defined
-    const experimentValue = ExperimentAPI.activateBranch({
+    const branch = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-    })?.feature?.value?.[variable];
+    });
+    const experimentValue = featuresCompat(branch).find(
+      ({ featureId }) => featureId === this.featureId
+    )?.value?.[variable];
 
     if (typeof experimentValue !== "undefined") {
       return experimentValue;
