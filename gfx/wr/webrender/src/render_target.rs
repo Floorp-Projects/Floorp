@@ -7,7 +7,7 @@ use api::units::*;
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder};
-use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
+use crate::spatial_tree::SpatialTree;
 use crate::clip::ClipStore;
 use crate::composite::CompositeState;
 use crate::frame_builder::{FrameGlobalResources};
@@ -26,6 +26,8 @@ use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
+use crate::spatial_tree::SpatialNodeIndex;
+
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
@@ -60,6 +62,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub screen_world_rect: WorldRect,
     pub globals: &'a FrameGlobalResources,
     pub tile_caches: &'a FastHashMap<SliceId, Box<TileCacheInstance>>,
+    pub root_spatial_node_index: SpatialNodeIndex,
 }
 
 /// Represents a number of rendering operations on a surface.
@@ -272,7 +275,7 @@ impl RenderTarget for ColorRenderTarget {
                         }
                         None => {
                             // This must be the main framebuffer
-                            ROOT_SPATIAL_NODE_INDEX
+                            ctx.root_spatial_node_index
                         }
                     };
 
@@ -533,18 +536,14 @@ impl RenderTarget for AlphaRenderTarget {
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
                     render_tasks,
-                    ctx.resource_cache,
                     gpu_cache,
                     clip_store,
-                    ctx.spatial_tree,
                     transforms,
-                    &ctx.data_stores.clip,
                     task_info.actual_rect,
-                    &ctx.screen_world_rect,
                     task_info.device_pixel_scale,
-                    ctx.global_device_pixel_scale,
                     target_rect.min.to_f32(),
                     task_info.actual_rect.min,
+                    ctx,
                 );
                 if task_info.clear_to_one || clear_to_one {
                     self.one_clears.push(task_id);

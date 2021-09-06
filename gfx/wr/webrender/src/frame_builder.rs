@@ -6,7 +6,7 @@ use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
-use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -178,6 +178,7 @@ pub struct FrameBuildingContext<'a> {
     pub max_local_clip: LayoutRect,
     pub debug_flags: DebugFlags,
     pub fb_config: &'a FrameBuilderConfig,
+    pub root_spatial_node_index: SpatialNodeIndex,
 }
 
 pub struct FrameBuildingState<'a> {
@@ -355,13 +356,14 @@ impl FrameBuilder {
             },
             debug_flags,
             fb_config: &scene.config,
+            root_spatial_node_index: scene.spatial_tree.root_reference_frame_index(),
         };
 
         // Construct a dummy root surface, that represents the
         // main framebuffer surface.
         let root_surface = SurfaceInfo::new(
-            ROOT_SPATIAL_NODE_INDEX,
-            ROOT_SPATIAL_NODE_INDEX,
+            root_spatial_node_index,
+            root_spatial_node_index,
             0.0,
             global_screen_world_rect,
             &scene.spatial_tree,
@@ -403,6 +405,7 @@ impl FrameBuilder {
                 debug_flags,
                 scene_properties,
                 config: scene.config,
+                root_spatial_node_index,
             };
 
             let mut visibility_state = FrameVisibilityState {
@@ -456,7 +459,7 @@ impl FrameBuilder {
         // against the screen world rect, in absence of any
         // other dirty regions.
         let mut default_dirty_region = DirtyRegion::new(
-            ROOT_SPATIAL_NODE_INDEX,
+            root_spatial_node_index,
         );
         default_dirty_region.add_dirty_region(
             frame_context.global_screen_world_rect.cast_unit(),
@@ -632,6 +635,7 @@ impl FrameBuilder {
                     screen_world_rect,
                     globals: &self.globals,
                     tile_caches,
+                    root_spatial_node_index: scene.spatial_tree.root_reference_frame_index(),
                 };
 
                 let pass = build_render_pass(
@@ -670,6 +674,7 @@ impl FrameBuilder {
                 screen_world_rect,
                 globals: &self.globals,
                 tile_caches,
+                root_spatial_node_index: scene.spatial_tree.root_reference_frame_index(),
             };
 
             self.build_composite_pass(
@@ -730,7 +735,7 @@ impl FrameBuilder {
                     // present modes during render, such as partial present etc.
                     let tile_cache = &ctx.tile_caches[&slice_id];
                     let map_local_to_world = SpaceMapper::new_with_target(
-                        ROOT_SPATIAL_NODE_INDEX,
+                        ctx.root_spatial_node_index,
                         tile_cache.spatial_node_index,
                         ctx.screen_world_rect,
                         ctx.spatial_tree,

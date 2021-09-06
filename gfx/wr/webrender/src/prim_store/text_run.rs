@@ -17,7 +17,7 @@ use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
 use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind};
-use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, ROOT_SPATIAL_NODE_INDEX};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::space::SpaceSnapper;
 use crate::util::PrimaryArc;
 
@@ -408,12 +408,14 @@ impl TextRunPrimitive {
                 // the end of a pinch-zoom.
                 RasterSpace::Local(1.0)
             } else {
+                let root_spatial_node_index = spatial_tree.root_reference_frame_index();
+
                 // For high-quality mode, we quantize the exact scale factor as before. However,
                 // we want to _undo_ the effect of the device-pixel scale on the picture cache
                 // tiles (which changes now that they are raster roots). Divide the rounded value
                 // by the device-pixel scale so that the local -> device conversion has no effect.
                 let scale_factors = spatial_tree
-                    .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
+                    .get_relative_transform(prim_spatial_node_index, root_spatial_node_index)
                     .scale_factors();
 
                 // Round the scale up to the nearest power of 2, but don't exceed 8.

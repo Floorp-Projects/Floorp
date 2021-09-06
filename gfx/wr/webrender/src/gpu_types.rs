@@ -6,7 +6,7 @@ use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvRangedColorSpace};
 use api::units::*;
 use crate::composite::CompositeFeatures;
 use crate::segment::EdgeAaSegmentMask;
-use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use crate::internal_types::FastHashMap;
 use crate::prim_store::ClipData;
@@ -692,15 +692,20 @@ pub struct TransformPalette {
     transforms: Vec<TransformData>,
     metadata: Vec<TransformMetadata>,
     map: FastHashMap<RelativeTransformKey, usize>,
+    root_spatial_node_index: SpatialNodeIndex,
 }
 
 impl TransformPalette {
-    pub fn new(count: usize) -> Self {
+    pub fn new(
+        count: usize,
+        root_spatial_node_index: SpatialNodeIndex,
+    ) -> Self {
         let _ = VECS_PER_TRANSFORM;
         TransformPalette {
             transforms: vec![TransformData::invalid(); count],
             metadata: vec![TransformMetadata::invalid(); count],
             map: FastHashMap::default(),
+            root_spatial_node_index,
         }
     }
 
@@ -717,9 +722,10 @@ impl TransformPalette {
             &mut self.metadata,
             &mut self.transforms,
             index,
-            ROOT_SPATIAL_NODE_INDEX,
+            self.root_spatial_node_index,
             // We know the root picture space == world space
             transform.with_destination::<PicturePixel>(),
+            self.root_spatial_node_index,
         );
     }
 
@@ -729,7 +735,7 @@ impl TransformPalette {
         parent_index: SpatialNodeIndex,
         spatial_tree: &SpatialTree,
     ) -> usize {
-        if parent_index == ROOT_SPATIAL_NODE_INDEX {
+        if parent_index == self.root_spatial_node_index {
             child_index.0 as usize
         } else if child_index == parent_index {
             0
@@ -741,6 +747,7 @@ impl TransformPalette {
 
             let metadata = &mut self.metadata;
             let transforms = &mut self.transforms;
+            let root_spatial_node_index = self.root_spatial_node_index;
 
             *self.map
                 .entry(key)
@@ -758,6 +765,7 @@ impl TransformPalette {
                         child_index,
                         parent_index,
                         transform,
+                        root_spatial_node_index,
                     )
                 })
         }
@@ -855,6 +863,7 @@ fn register_transform(
     from_index: SpatialNodeIndex,
     to_index: SpatialNodeIndex,
     transform: LayoutToPictureTransform,
+    root_spatial_node_index: SpatialNodeIndex,
 ) -> usize {
     // TODO: refactor the calling code to not even try
     // registering a non-invertible transform.
@@ -870,7 +879,7 @@ fn register_transform(
         inv_transform,
     };
 
-    if to_index == ROOT_SPATIAL_NODE_INDEX {
+    if to_index == root_spatial_node_index {
         let index = from_index.0 as usize;
         metadatas[index] = metadata;
         transforms[index] = data;
