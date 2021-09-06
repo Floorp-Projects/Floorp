@@ -503,16 +503,24 @@ contextual.services.quicksuggest.*
 contextservices.quicksuggest
   This is event telemetry under the ``contextservices.quicksuggest`` category.
   It's enabled only when the ``browser.urlbar.quicksuggest.enabled`` pref is
-  true. An event is recorded when the user toggles the
-  ``browser.urlbar.suggest.quicksuggest`` pref, which corresponds to the
-  checkbox in about:preferences#search labeled "Show Firefox Suggest in the
-  address bar (suggested and sponsored results)". If the user never toggles
-  the pref, then this event is never recorded.
+  true.
 
-  The full spec for this event is:
+  The following event is recorded when the
+  ``browser.urlbar.suggest.quicksuggest`` pref is toggled:
 
     - Category: ``contextservices.quicksuggest``
     - Method: ``enable_toggled``
+    - Objects: ``enabled``, ``disabled`` -- ``enabled`` is recorded when the
+      pref is flipped from false to true, and ``disabled`` is recorded when the
+      pref is flipped from true to false.
+    - Value: Not used
+    - Extra: Not used
+
+  The following event is recorded when the
+  ``browser.urlbar.suggest.quicksuggest.sponsored`` pref is toggled:
+
+    - Category: ``contextservices.quicksuggest``
+    - Method: ``sponsored_toggled``
     - Objects: ``enabled``, ``disabled`` -- ``enabled`` is recorded when the
       pref is flipped from false to true, and ``disabled`` is recorded when the
       pref is flipped from true to false.

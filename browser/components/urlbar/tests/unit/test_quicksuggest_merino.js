@@ -36,6 +36,7 @@ let gMerinoResponse;
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
 
   // Set up the Merino server.
