@@ -8,9 +8,7 @@ var manifests = [do_get_file("data/test_data_protocol_registration.manifest")];
 registerManifests(manifests);
 
 function run_test() {
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const uuidGenerator = Services.uuid;
 
   let newAppInfo = ChromeUtils.import(
     "resource://testing-common/AppInfo.jsm",

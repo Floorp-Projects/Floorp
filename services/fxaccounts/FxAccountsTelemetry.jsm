@@ -48,8 +48,7 @@ class FxAccountsTelemetry {
   }
 
   generateUUID() {
-    return Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
+    return Services.uuid
       .generateUUID()
       .toString()
       .slice(1, -1);

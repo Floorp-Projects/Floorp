@@ -9,9 +9,7 @@ const svc = Cc["@mozilla.org/win-task-scheduler-service;1"].getService(
   Ci.nsIWinTaskSchedulerService
 );
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 
 function randomName() {
   return (

@@ -6,9 +6,7 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 
 const extensionsDir = gProfD.clone();
 extensionsDir.append("extensions");

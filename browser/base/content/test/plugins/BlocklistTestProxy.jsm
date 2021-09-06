@@ -29,9 +29,7 @@ var BlocklistProxy = {
 
   init() {
     if (!this._uuid) {
-      this._uuid = Cc["@mozilla.org/uuid-generator;1"]
-        .getService(Ci.nsIUUIDGenerator)
-        .generateUUID();
+      this._uuid = Services.uuid.generateUUID();
       Cm.nsIComponentRegistrar.registerFactory(
         this._uuid,
         "",

@@ -54,10 +54,7 @@ TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,
 
   createDummyDump(submitted = false, date = new Date(), hr = false) {
-    let uuid = Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
-      .generateUUID()
-      .toString();
+    let uuid = Services.uuid.generateUUID().toString();
     uuid = uuid.substring(1, uuid.length - 1);
 
     let path;

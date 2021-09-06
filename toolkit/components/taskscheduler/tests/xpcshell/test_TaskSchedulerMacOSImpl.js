@@ -41,9 +41,7 @@ function getFirefoxExecutableFile() {
   return file;
 }
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 
 function randomName() {
   return (

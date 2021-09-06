@@ -2,9 +2,7 @@
 
 const Cm = Components.manager;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 
 var mockNetworkStatusService = {
   contractId: "@mozilla.org/network/network-link-service;1",

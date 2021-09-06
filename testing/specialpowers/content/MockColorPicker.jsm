@@ -18,9 +18,7 @@ Cu.crashIfNotInAutomation();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = "";
-var newClassID = Cc["@mozilla.org/uuid-generator;1"]
-  .getService(Ci.nsIUUIDGenerator)
-  .generateUUID();
+var newClassID = Services.uuid.generateUUID();
 var newFactory = function(window) {
   return {
     createInstance(aOuter, aIID) {

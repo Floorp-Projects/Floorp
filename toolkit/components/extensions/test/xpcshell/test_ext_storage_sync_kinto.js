@@ -649,9 +649,7 @@ const loggedInUser = {
 };
 
 function uuid() {
-  const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
+  const uuidgen = Services.uuid;
   return uuidgen.generateUUID().toString();
 }
 

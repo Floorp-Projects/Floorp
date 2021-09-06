@@ -15,9 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.jsm",
 });
 
-const UUIDGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const UUIDGen = Services.uuid;
 
 class AppTestDelegateParent extends JSWindowActorParent {
   constructor() {

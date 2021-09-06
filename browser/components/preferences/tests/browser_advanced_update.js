@@ -5,9 +5,7 @@
 
 const Cm = Components.manager;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
+const uuidGenerator = Services.uuid;
 
 const mockUpdateManager = {
   contractId: "@mozilla.org/updates/update-manager;1",
