@@ -9,9 +9,13 @@
 varying vec2 v_pos;
 
 flat varying vec2 v_center;
-flat varying float v_start_offset;
-flat varying float v_offset_scale;
-flat varying float v_angle;
+
+// x: start offset, y: offset scale, z: angle
+// Packed in to a vector to work around bug 1630356.
+flat varying vec3 v_start_offset_offset_scale_angle_vec;
+#define v_start_offset v_start_offset_offset_scale_angle_vec.x
+#define v_offset_scale v_start_offset_offset_scale_angle_vec.y
+#define v_angle v_start_offset_offset_scale_angle_vec.z
 
 #ifdef WR_VERTEX_SHADER
 
@@ -43,8 +47,8 @@ void main(void) {
     v_center = aCenter * v_offset_scale;
     v_pos = (aTaskRect.zw - aTaskRect.xy) * aPosition.xy * v_offset_scale * aScale;
 
-    v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);
-    v_gradient_address = aGradientStopsAddress;
+    v_gradient_repeat.x = float(aExtendMode == EXTEND_MODE_REPEAT);
+    v_gradient_address.x = aGradientStopsAddress;
 }
 #endif
 

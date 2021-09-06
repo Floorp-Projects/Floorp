@@ -19,7 +19,8 @@ flat varying vec4 vClipCenter_Radius_BR;
         flat varying vec4 vClipCorner_BR;
     #endif
 #endif
-flat varying float vClipMode;
+// Clip mode. Packed in to a vector to work around bug 1630356.
+flat varying vec2 vClipMode;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -100,7 +101,7 @@ void main(void) {
         cmi.base.device_pixel_scale
     );
 
-    vClipMode = clip.rect.mode;
+    vClipMode.x = clip.rect.mode;
     vLocalPos = vi.local_pos;
 
 #ifdef WR_FEATURE_FAST_PATH
@@ -191,7 +192,7 @@ void main(void) {
     float alpha = distance_aa(aa_range, dist);
 
     // Select alpha or inverse alpha depending on clip in/out.
-    float final_alpha = mix(alpha, 1.0 - alpha, vClipMode);
+    float final_alpha = mix(alpha, 1.0 - alpha, vClipMode.x);
 
     float final_final_alpha = vLocalPos.w > 0.0 ? final_alpha : 0.0;
     oFragColor = vec4(final_final_alpha, 0.0, 0.0, 1.0);
@@ -420,7 +421,7 @@ void swgl_drawSpanR8() {
     // Output fully clear while we're outside the AA region.
     if (swgl_SpanLength > aa_start_len) {
         int num_aa = swgl_SpanLength - aa_start_len;
-        swgl_commitPartialSolidR8(num_aa, vClipMode);
+        swgl_commitPartialSolidR8(num_aa, vClipMode.x);
         local_pos += float(num_aa / swgl_StepSize) * local_step;
     }
     #ifdef AA_CORNER
@@ -435,7 +436,7 @@ void swgl_drawSpanR8() {
                 dot(local_pos - start_plane.xy, start_plane.zw) > 0.0
                     ? AA_CORNER(local_pos, start_corner)
                     : AA_RECT(local_pos));
-            swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode));
+            swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
             local_pos += local_step;
         }
     }
@@ -443,14 +444,14 @@ void swgl_drawSpanR8() {
     // If there's no start corner, just do rect AA until opaque.
     while (swgl_SpanLength > opaque_start_len) {
         float alpha = distance_aa(aa_range, AA_RECT(local_pos));
-        swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode));
+        swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
         local_pos += local_step;
     }
     // Now we're finally in the opaque inner octagon part of the span. Just
     // output a solid run.
     if (swgl_SpanLength > opaque_end_len) {
         int num_opaque = swgl_SpanLength - opaque_end_len;
-        swgl_commitPartialSolidR8(num_opaque, 1.0 - vClipMode);
+        swgl_commitPartialSolidR8(num_opaque, 1.0 - vClipMode.x);
         local_pos += float(num_opaque / swgl_StepSize) * local_step;
     }
     #ifdef AA_CORNER
@@ -466,7 +467,7 @@ void swgl_drawSpanR8() {
                 dot(local_pos - end_plane.xy, end_plane.zw) > 0.0
                     ? AA_CORNER(local_pos, end_corner)
                     : AA_RECT(local_pos));
-            swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode));
+            swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
             local_pos += local_step;
         }
     }
@@ -474,13 +475,13 @@ void swgl_drawSpanR8() {
     // If there's no end corner, just do rect AA until clear.
     while (swgl_SpanLength > aa_end_len) {
         float alpha = distance_aa(aa_range, AA_RECT(local_pos));
-        swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode));
+        swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
         local_pos += local_step;
     }
     // We're now outside the outer AA octagon on the other side. Just output
     // fully clear.
     if (swgl_SpanLength > 0) {
-        swgl_commitPartialSolidR8(swgl_SpanLength, vClipMode);
+        swgl_commitPartialSolidR8(swgl_SpanLength, vClipMode.x);
     }
 }
 #endif

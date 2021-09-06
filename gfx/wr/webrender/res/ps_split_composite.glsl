@@ -9,15 +9,9 @@
 // interpolated UV coordinates to sample.
 varying vec2 vUv;
 
-#if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// Work around Adreno 3xx driver bug. See the v_perspective comment in
-// brush_image or bug 1630356 for details.
-flat varying vec2 vPerspectiveVec;
-#define vPerspective vPerspectiveVec.x
-#else
 // Flag to allow perspective interpolation of UV.
-flat varying float vPerspective;
-#endif
+// Packed in to a vector to work around bug 1630356.
+flat varying vec2 vPerspective;
 
 flat varying vec4 vUvSampleBounds;
 
@@ -116,21 +110,21 @@ void main(void) {
     float perspective_interpolate = float(ph.user_data.y);
 
     vUv = uv / texture_size * mix(gl_Position.w, 1.0, perspective_interpolate);
-    vPerspective = perspective_interpolate;
+    vPerspective.x = perspective_interpolate;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float alpha = do_clip();
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vPerspective);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vPerspective.x);
     vec2 uv = clamp(vUv * perspective_divisor, vUvSampleBounds.xy, vUvSampleBounds.zw);
     write_output(alpha * texture(sColor0, uv));
 }
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, vPerspective);
+    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, vPerspective.x);
     vec2 uv = vUv * perspective_divisor;
 
     swgl_commitTextureRGBA8(sColor0, uv, vUvSampleBounds);

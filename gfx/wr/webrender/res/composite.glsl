@@ -18,7 +18,8 @@
 #ifdef WR_FEATURE_YUV
 YUV_PRECISION flat varying vec3 vYcbcrBias;
 YUV_PRECISION flat varying mat3 vRgbFromDebiasedYcbcr;
-flat varying int vYuvFormat;
+// YUV format. Packed in to vector to avoid bug 1630356.
+flat varying ivec2 vYuvFormat;
 
 #ifdef SWGL_DRAW_SPAN
 flat varying int vRescaleFactor;
@@ -105,7 +106,7 @@ void main(void) {
     vYcbcrBias = mat_info.ycbcr_bias;
     vRgbFromDebiasedYcbcr = mat_info.rgb_from_debiased_ycbrc;
 
-    vYuvFormat = prim.yuv_format;
+    vYuvFormat.x = prim.yuv_format;
 
     write_uv_rect(
         aUvRect0.xy,
@@ -169,7 +170,7 @@ void main(void) {
 void main(void) {
 #ifdef WR_FEATURE_YUV
     vec4 color = sample_yuv(
-        vYuvFormat,
+        vYuvFormat.x,
         vYcbcrBias,
         vRgbFromDebiasedYcbcr,
         vUV_y,
@@ -200,20 +201,20 @@ void main(void) {
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
 #ifdef WR_FEATURE_YUV
-    if (vYuvFormat == YUV_FORMAT_PLANAR) {
+    if (vYuvFormat.x == YUV_FORMAT_PLANAR) {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
                                     sColor1, vUV_u, vUVBounds_u,
                                     sColor2, vUV_v, vUVBounds_v,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
                                     vRescaleFactor);
-    } else if (vYuvFormat == YUV_FORMAT_NV12) {
+    } else if (vYuvFormat.x == YUV_FORMAT_NV12) {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
                                     sColor1, vUV_u, vUVBounds_u,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
                                     vRescaleFactor);
-    } else if (vYuvFormat == YUV_FORMAT_INTERLEAVED) {
+    } else if (vYuvFormat.x == YUV_FORMAT_INTERLEAVED) {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
                                     vYcbcrBias,
                                     vRgbFromDebiasedYcbcr,
