@@ -72,9 +72,10 @@ add_task(async function init() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      [SUGGESTIONS_PREF, true],
       ["browser.urlbar.quicksuggest.enabled", true],
       ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", false],
+      ["browser.urlbar.suggest.quicksuggest", true],
+      ["browser.urlbar.suggest.quicksuggest.sponsored", true],
     ],
   });
 

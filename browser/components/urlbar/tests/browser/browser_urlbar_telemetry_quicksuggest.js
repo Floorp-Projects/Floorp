@@ -63,7 +63,7 @@ add_task(async function init() {
     set: [
       [EXPERIMENT_PREF, true],
       ["browser.urlbar." + SUGGEST_PREF, true],
-      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.suggest.quicksuggest.sponsored", true],
     ],
   });
 
@@ -321,7 +321,42 @@ add_task(async function enableToggled() {
   TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
   await SpecialPowers.popPrefEnv();
 
-  UrlbarPrefs.set(SUGGEST_PREF, true);
+  // Set the pref back to what it was at the start of the task.
+  UrlbarPrefs.set(SUGGEST_PREF, !enabled);
+});
+
+// Tests the contextservices.quicksuggest sponsored_toggled event telemetry by
+// toggling the suggest.quicksuggest.sponsored pref.
+add_task(async function sponsoredToggled() {
+  Services.telemetry.clearEvents();
+
+  // Toggle the suggest.quicksuggest.sponsored pref twice. We should get two
+  // events.
+  let enabled = UrlbarPrefs.get("suggest.quicksuggest.sponsored");
+  for (let i = 0; i < 2; i++) {
+    enabled = !enabled;
+    UrlbarPrefs.set("suggest.quicksuggest.sponsored", enabled);
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "sponsored_toggled",
+        object: enabled ? "enabled" : "disabled",
+      },
+    ]);
+  }
+
+  // Set the main quicksuggest.enabled pref to false and toggle the
+  // suggest.quicksuggest pref again. We shouldn't get any events.
+  await SpecialPowers.pushPrefEnv({
+    set: [[EXPERIMENT_PREF, false]],
+  });
+  enabled = !enabled;
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", enabled);
+  TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
+  await SpecialPowers.popPrefEnv();
+
+  // Set the pref back to what it was at the start of the task.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", !enabled);
 });
 
 // Tests the Nimbus "exposure" event gets recorded when the user is enrolled in
