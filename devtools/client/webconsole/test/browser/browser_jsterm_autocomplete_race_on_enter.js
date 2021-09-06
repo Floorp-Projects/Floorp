@@ -125,13 +125,12 @@ add_task(async function() {
 
   info(`Quickly type "x" and "Enter"`);
   onPopupClosed = autocompletePopup.once("popup-closed");
-  const onMessage = waitForMessage(hud, "1", ".result");
+  const onMessage = waitForMessage(hud, "docx is not defined");
   EventUtils.synthesizeKey("x");
   await waitForTime(5);
   EventUtils.synthesizeKey("KEY_Enter");
-  // TODO: Bug 1726037.
-  // eslint-disable-next-line no-sequences
-  await Promise.all[(onPopupClosed, onMessage)];
+
+  await Promise.all([onPopupClosed, onMessage]);
   is(
     getInputValue(hud),
     "",
