@@ -19,7 +19,7 @@ use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
-use style::stylesheets::import_rule::{ImportSheet, ImportLayer};
+use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::AllowImportRules;
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
@@ -52,7 +52,6 @@ impl StyleStylesheetLoader for StylesheetLoader {
         _context: &ParserContext,
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
-        layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>> {
         // After we get this raw pointer ImportRule will be moved into a lock and Arc
         // and so the Arc<Url> pointer inside will also move,
@@ -71,9 +70,8 @@ impl StyleStylesheetLoader for StylesheetLoader {
         let stylesheet = ImportSheet::new(sheet);
         Arc::new(lock.wrap(ImportRule {
             url,
-            stylesheet,
-            layer,
             source_location,
+            stylesheet,
         }))
     }
 }
@@ -161,14 +159,12 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         _context: &ParserContext,
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
-        layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>> {
         let stylesheet = ImportSheet::new_pending(self.origin, self.quirks_mode);
         let rule = Arc::new(lock.wrap(ImportRule {
             url: url.clone(),
-            stylesheet,
-            layer,
             source_location,
+            stylesheet,
         }));
 
         unsafe {

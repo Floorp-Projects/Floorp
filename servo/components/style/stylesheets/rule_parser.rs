@@ -18,7 +18,6 @@ use crate::stylesheets::font_feature_values_rule::parse_family_name_list;
 use crate::stylesheets::keyframes_rule::parse_keyframe_list;
 use crate::stylesheets::stylesheet::Namespaces;
 use crate::stylesheets::supports_rule::SupportsCondition;
-use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::layer_rule::{LayerName, LayerRuleKind};
 use crate::stylesheets::viewport_rule;
 use crate::stylesheets::AllowImportRules;
@@ -170,7 +169,7 @@ pub enum AtRulePrelude {
     /// A @document rule, with its conditional.
     Document(DocumentCondition),
     /// A @import rule prelude.
-    Import(CssUrl, Arc<Locked<MediaList>>, Option<ImportLayer>),
+    Import(CssUrl, Arc<Locked<MediaList>>),
     /// A @namespace rule prelude.
     Namespace(Option<Prefix>, Namespace),
     /// A @layer rule prelude.
@@ -207,28 +206,10 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                 let url_string = input.expect_url_or_string()?.as_ref().to_owned();
                 let url = CssUrl::parse_from_string(url_string, &self.context, CorsMode::None);
 
-                let layer_keyword = input.try_parse(|input| input.expect_ident_matching("layer")).is_ok();
-                let layer = if layer_keyword {
-                    Some(ImportLayer {
-                        is_anonymous: true,
-                        name: LayerName::new_anonymous(),
-                    })
-                } else {
-                    input.try_parse(|input| {
-                        input.expect_function_matching("layer")?;
-                        input.parse_nested_block(|input| {
-                            LayerName::parse(&self.context, input)
-                        }).map(|name| ImportLayer {
-                            is_anonymous: false,
-                            name,
-                        })
-                    }).ok()
-                };
-
                 let media = MediaList::parse(&self.context, input);
                 let media = Arc::new(self.shared_lock.wrap(media));
 
-                return Ok(AtRulePrelude::Import(url, media, layer));
+                return Ok(AtRulePrelude::Import(url, media));
             },
             "namespace" => {
                 if !self.check_state(State::Namespaces) {
@@ -282,7 +263,7 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
         start: &ParserState,
     ) -> Result<Self::AtRule, ()>  {
         let rule = match prelude {
-            AtRulePrelude::Import(url, media, layer) => {
+            AtRulePrelude::Import(url, media) => {
                 let loader = self
                     .loader
                     .expect("Expected a stylesheet loader for @import");
@@ -293,7 +274,6 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                     &self.context,
                     &self.shared_lock,
                     media,
-                    layer,
                 );
 
                 self.state = State::Imports;
