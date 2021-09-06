@@ -17,40 +17,25 @@
  * naming.
  */
 declare namespace MockedExports {
-
   /**
    * This interface teaches ChromeUtils.import how to find modules.
    */
   interface KnownModules {
-    "resource://gre/modules/Services.jsm":
-      typeof import("resource://gre/modules/Services.jsm");
-    "Services":
-      typeof import("Services");
-    "chrome":
-      typeof import("chrome");
-    "resource://gre/modules/osfile.jsm":
-      typeof import("resource://gre/modules/osfile.jsm");
-    "resource://gre/modules/AppConstants.jsm":
-      typeof import("resource://gre/modules/AppConstants.jsm");
-    "resource:///modules/CustomizableUI.jsm":
-      typeof import("resource:///modules/CustomizableUI.jsm")
-    "resource:///modules/CustomizableWidgets.jsm":
-      typeof import("resource:///modules/CustomizableWidgets.jsm");
-    "resource://devtools/shared/Loader.jsm":
-      typeof import("resource://devtools/shared/Loader.jsm");
-    "resource://devtools/client/performance-new/popup/background.jsm.js":
-      typeof import("resource://devtools/client/performance-new/popup/background.jsm.js");
+    "resource://gre/modules/Services.jsm": typeof import("resource://gre/modules/Services.jsm");
+    Services: typeof import("Services");
+    chrome: typeof import("chrome");
+    "resource://gre/modules/osfile.jsm": typeof import("resource://gre/modules/osfile.jsm");
+    "resource://gre/modules/AppConstants.jsm": typeof import("resource://gre/modules/AppConstants.jsm");
+    "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
+    "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
+    "resource://devtools/shared/Loader.jsm": typeof import("resource://devtools/shared/Loader.jsm");
+    "resource://devtools/client/performance-new/popup/background.jsm.js": typeof import("resource://devtools/client/performance-new/popup/background.jsm.js");
     "resource://devtools/client/shared/browser-loader.js": any;
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js":
-      typeof import("devtools/client/performance-new/popup/menu-button.jsm.js");
-    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js":
-      typeof import("devtools/client/performance-new/typescript-lazy-load.jsm.js");
-    "resource://devtools/client/performance-new/popup/panel.jsm.js":
-      typeof import("devtools/client/performance-new/popup/panel.jsm.js");
-    "resource://devtools/client/performance-new/symbolication.jsm.js":
-      typeof import("resource://devtools/client/performance-new/symbolication.jsm.js");
-    "resource:///modules/PanelMultiView.jsm":
-      typeof import("resource:///modules/PanelMultiView.jsm");
+    "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("devtools/client/performance-new/popup/menu-button.jsm.js");
+    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("devtools/client/performance-new/typescript-lazy-load.jsm.js");
+    "resource://devtools/client/performance-new/popup/panel.jsm.js": typeof import("devtools/client/performance-new/popup/panel.jsm.js");
+    "resource://devtools/client/performance-new/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/symbolication.jsm.js");
+    "resource:///modules/PanelMultiView.jsm": typeof import("resource:///modules/PanelMultiView.jsm");
   }
 
   interface ChromeUtils {
@@ -142,7 +127,14 @@ declare namespace MockedExports {
     };
     profiler: {
       CanProfile: () => boolean;
-      StartProfiler: (entryCount: number, interval: number, features: string[], filters?: string[], activeTabId?: number, duration?: number) => void;
+      StartProfiler: (
+        entryCount: number,
+        interval: number,
+        features: string[],
+        filters?: string[],
+        activeTabId?: number,
+        duration?: number
+      ) => void;
       StopProfiler: () => void;
       IsPaused: () => boolean;
       Pause: () => void;
@@ -153,7 +145,9 @@ declare namespace MockedExports {
       GetFeatures: () => string[];
       getProfileDataAsync: (sinceTime?: number) => Promise<object>;
       getProfileDataAsArrayBuffer: (sinceTime?: number) => Promise<ArrayBuffer>;
-      getProfileDataAsGzippedArrayBuffer: (sinceTime?: number) => Promise<ArrayBuffer>;
+      getProfileDataAsGzippedArrayBuffer: (
+        sinceTime?: number
+      ) => Promise<ArrayBuffer>;
       IsActive: () => boolean;
       sharedLibraries: SharedLibrary[];
     };
@@ -170,12 +164,12 @@ declare namespace MockedExports {
     };
     io: {
       newURI(url: string): nsIURI;
-    },
+    };
     scriptSecurityManager: any;
     startup: {
-      quit: (optionsBitmask: number) => void,
-      eForceQuit: number,
-      eRestart: number
+      quit: (optionsBitmask: number) => void;
+      eForceQuit: number;
+      eRestart: number;
     };
   };
 
@@ -216,10 +210,10 @@ declare namespace MockedExports {
   interface PrincipalStub {}
 
   interface WebChannelTarget {
-    browsingContext: BrowsingContextStub,
-    browser: Browser,
-    eventTarget: null,
-    principal: PrincipalStub,
+    browsingContext: BrowsingContextStub;
+    browser: Browser;
+    eventTarget: null;
+    principal: PrincipalStub;
   }
 
   const WebChannelJSM: any;
@@ -246,8 +240,8 @@ declare namespace MockedExports {
     modeGetFolder: number;
     returnOK: number;
     file: {
-      path: string
-    }
+      path: string;
+    };
   }
 
   // This class is needed by the Cc importing mechanism. e.g.
@@ -262,11 +256,11 @@ declare namespace MockedExports {
 
   interface Cc {
     "@mozilla.org/process/environment;1": {
-      getService(service: nsIEnvironment): Environment
-    },
+      getService(service: nsIEnvironment): Environment;
+    };
     "@mozilla.org/filepicker;1": {
-      createInstance(instance: nsIFilePicker): FilePicker
-    }
+      createInstance(instance: nsIFilePicker): FilePicker;
+    };
   }
 
   interface Ci {
@@ -292,12 +286,11 @@ declare namespace MockedExports {
   }
 
   const chrome: {
-    Cc: Cc,
-    Ci: Ci,
-    Cu: Cu,
+    Cc: Cc;
+    Ci: Ci;
+    Cu: Cu;
   };
 }
-
 
 declare module "devtools/client/shared/vendor/react" {
   import * as React from "react";
@@ -353,12 +346,12 @@ declare module "resource://gre/modules/WebChannel.jsm" {
 
 declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {
   import * as Background from "devtools/client/performance-new/popup/background.jsm.js";
-  export = Background
+  export = Background;
 }
 
 declare module "resource://devtools/client/performance-new/symbolication.jsm.js" {
   import * as PerfSymbolication from "devtools/client/performance-new/symbolication.jsm.js";
-  export = PerfSymbolication
+  export = PerfSymbolication;
 }
 
 declare module "resource:///modules/CustomizableUI.jsm" {
@@ -436,10 +429,18 @@ declare interface MenuListElement extends XULElement {
 }
 
 declare interface XULCommandEvent extends Event {
-  target: XULElement
+  target: XULElement;
 }
 
 declare interface XULElementWithCommandHandler {
-  addEventListener: (type: "command", handler: (event: XULCommandEvent) => void, isCapture?: boolean) => void
-  removeEventListener: (type: "command", handler: (event: XULCommandEvent) => void, isCapture?: boolean) => void
+  addEventListener: (
+    type: "command",
+    handler: (event: XULCommandEvent) => void,
+    isCapture?: boolean
+  ) => void;
+  removeEventListener: (
+    type: "command",
+    handler: (event: XULCommandEvent) => void,
+    isCapture?: boolean
+  ) => void;
 }
