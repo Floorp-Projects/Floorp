@@ -269,8 +269,7 @@ void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
   // Paint the text shadow before doing any foreground stuff
   nsRect drawRect =
       static_cast<nsTextBoxFrame*>(mFrame)->mTextDrawRect + ToReferenceFrame();
-  nsLayoutUtils::PaintTextShadow(mFrame, aCtx, drawRect,
-                                 GetPaintRect(aBuilder, aCtx),
+  nsLayoutUtils::PaintTextShadow(mFrame, aCtx, drawRect, GetPaintRect(),
                                  mFrame->StyleText()->mColor.ToColor(),
                                  PaintTextShadowCallback, (void*)this);
 
@@ -280,8 +279,7 @@ void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
 void nsDisplayXULTextBox::PaintTextToContext(gfxContext* aCtx, nsPoint aOffset,
                                              const nscolor* aColor) {
   static_cast<nsTextBoxFrame*>(mFrame)->PaintTitle(
-      *aCtx, mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame(),
-      ToReferenceFrame() + aOffset, aColor);
+      *aCtx, GetPaintRect(), ToReferenceFrame() + aOffset, aColor);
 }
 
 bool nsDisplayXULTextBox::CreateWebRenderCommands(
