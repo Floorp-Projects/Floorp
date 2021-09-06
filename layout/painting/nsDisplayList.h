@@ -2387,8 +2387,7 @@ class nsDisplayItem : public nsDisplayItemLink {
         mToReferenceFrame(aOther.mToReferenceFrame),
         mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot),
         mActiveScrolledRoot(aOther.mActiveScrolledRoot),
-        mClipChain(aOther.mClipChain),
-        mClip(aOther.mClip) {
+        mClipChain(aOther.mClipChain) {
     MOZ_COUNT_CTOR(nsDisplayItem);
     // TODO: It might be better to remove the flags that aren't copied.
     if (aOther.ForceNotVisible()) {
@@ -2841,9 +2840,7 @@ class nsDisplayItem : public nsDisplayItemLink {
 
   virtual bool SupportsOptimizingToImage() const { return false; }
 
-  const DisplayItemClip& GetClip() const {
-    return mClip ? *mClip : DisplayItemClip::NoClip();
-  }
+  virtual const DisplayItemClip& GetClip() const;
   void IntersectClip(nsDisplayListBuilder* aBuilder,
                      const DisplayItemClipChain* aOther, bool aStore);
 
@@ -2962,7 +2959,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRoot;
   RefPtr<const ActiveScrolledRoot> mActiveScrolledRoot;
   RefPtr<const DisplayItemClipChain> mClipChain;
-  const DisplayItemClip* mClip = nullptr;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
  public:
@@ -5609,8 +5605,9 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayStickyPosition)
 
-  void SetClipChain(const DisplayItemClipChain* aClipChain,
-                    bool aStore) override;
+  const DisplayItemClip& GetClip() const override {
+    return DisplayItemClip::NoClip();
+  }
   bool IsClippedToDisplayPort() const { return mClippedToDisplayPort; }
 
   NS_DISPLAY_DECL_NAME("StickyPosition", TYPE_STICKY_POSITION)
