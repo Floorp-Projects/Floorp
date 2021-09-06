@@ -132,7 +132,11 @@ browser.urlbar.openintab (boolean, default: false)
 
 browser.urlbar.quicksuggest.enabled (boolean, default: false)
   Whether the quick suggest feature is enabled, i.e., sponsored and recommended
-  results related to the user's search string.
+  results related to the user's search string. This pref can be overridden by
+  the ``quickSuggestEnabled`` Nimbus variable. If false, neither sponsored nor
+  non-sponsored quick suggest results will be shown. If true, then we look at
+  the individual prefs ``browser.urlbar.suggest.quicksuggest`` and
+  ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
 browser.urlbar.quicksuggest.log (boolean, default: false)
   Whether to show QuickSuggest related logs, by default only logs Warnings.
@@ -208,9 +212,14 @@ browser.urlbar.update2.emptySearchBehavior (integer, default: 0)
   Controls the empty search behavior in Search Mode: 0. Show nothing, 1. Show
   search history, 2. Show search and browsing history
 
-browser.urlbar.suggest.quicksuggest (boolean, default: true)
-  Whether results will include QuickSuggest suggestions.
-  This is visible in Search Preferences for Firefox Suggest experiments.
+browser.urlbar.suggest.quicksuggest (boolean, default: false)
+  Whether results will include quick suggest suggestions. This pref must be true
+  to show both non-sponsored and sponsored suggestions.
+
+browser.urlbar.suggest.quicksuggest.sponsored (boolean, default: false)
+  Whether results will include sponsored quick suggest suggestions. Both this
+  pref and browser.urlbar.suggest.quicksuggest must be true to show sponsored
+  suggestions.
 
 Deprecated
 ----------
