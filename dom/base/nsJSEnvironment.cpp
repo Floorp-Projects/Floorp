@@ -1055,7 +1055,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
       aShrinking == ShrinkingGC ? JS::GCOptions::Shrink : JS::GCOptions::Normal;
 
   if (aIncremental == NonIncrementalGC ||
-      aReason == JS::GCReason::FULL_GC_TIMER) {
+      aReason == JS::GCReason::FULL_GC_TIMER ||
+      aReason == JS::GCReason::USER_INACTIVE) {
     sScheduler.SetNeedsFullGC();
   }
 
