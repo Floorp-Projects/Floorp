@@ -1047,8 +1047,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 
   virtual bool IsLabelable() const override;
 
-  void GetFormAction(nsString& aValue);
-
   // autocapitalize attribute support
   virtual void GetAutocapitalize(nsAString& aValue) override;
   bool IsAutocapitalizeInheriting() const;
@@ -1148,6 +1146,8 @@ class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
    * node has been changed.
    */
   virtual void NodeInfoChanged(Document* aOldDoc) override;
+
+  void GetFormAction(nsString& aValue);
 
  protected:
   /**
