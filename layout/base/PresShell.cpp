@@ -3505,6 +3505,25 @@ nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
   return NS_OK;
 }
 
+static nsMargin GetScrollMargin(const nsIContent* aContentToScrollTo,
+                                const nsIFrame* aFrame) {
+  MOZ_ASSERT(aContentToScrollTo->GetPrimaryFrame() == aFrame);
+  // If we're focusing something that can't be targeted by content, allow
+  // content to customize the margin.
+  //
+  // TODO: This is also a bit of an issue for delegated focus, see
+  // https://github.com/whatwg/html/issues/7033.
+  if (aContentToScrollTo->ChromeOnlyAccess()) {
+    if (const nsIContent* userContent =
+            aContentToScrollTo->GetChromeOnlyAccessSubtreeRootParent()) {
+      if (const nsIFrame* frame = userContent->GetPrimaryFrame()) {
+        return frame->StyleMargin()->GetScrollMargin();
+      }
+    }
+  }
+  return aFrame->StyleMargin()->GetScrollMargin();
+}
+
 void PresShell::DoScrollContentIntoView() {
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
 
@@ -3540,7 +3559,7 @@ void PresShell::DoScrollContentIntoView() {
 
   // Get the scroll-margin here since |frame| is going to be changed to iterate
   // over all continuation frames below.
-  const nsMargin scrollMargin = frame->StyleMargin()->GetScrollMargin();
+  const nsMargin scrollMargin = GetScrollMargin(mContentToScrollTo, frame);
 
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
