@@ -13,7 +13,6 @@
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/StaticPrefs_widget.h"
-#  include "WindowSurfaceWayland.h"
 #  include "WindowSurfaceWaylandMultiBuffer.h"
 #endif
 #ifdef MOZ_X11
@@ -74,19 +73,7 @@ void WindowSurfaceProvider::CleanupResources() { mWindowSurface = nullptr; }
 RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    if (StaticPrefs::
-            widget_wayland_multi_buffer_software_backend_enabled_AtStartup()) {
-      LOG(
-          ("Drawing to nsWindow %p will use wl_surface. Using multi-buffered "
-           "backend.\n",
-           mWidget.get()));
-      return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget);
-    }
-    LOG(
-        ("Drawing to nsWindow %p will use wl_surface. Using single-buffered "
-         "backend.\n",
-         mWidget.get()));
-    return MakeRefPtr<WindowSurfaceWayland>(mWidget);
+    return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget);
   }
 #endif
 #ifdef MOZ_X11

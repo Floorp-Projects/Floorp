@@ -42,10 +42,8 @@ struct MozContainerWayland {
   gboolean opaque_region_needs_updates;
   gboolean opaque_region_subtract_corners;
   gboolean opaque_region_used;
-  gboolean surface_needs_clear;
   gboolean ready_to_draw;
   gboolean before_first_size_alloc;
-  gboolean container_remapped;
   int buffer_scale;
   std::vector<std::function<void(void)>> initial_draw_cbs;
   // mozcontainer is used from Compositor and Rendering threads
@@ -75,7 +73,6 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, double scale);
 
 gboolean moz_container_wayland_has_egl_window(MozContainer* container);
-gboolean moz_container_wayland_surface_needs_clear(MozContainer* container);
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                int width, int height);
 void moz_container_wayland_set_scale_factor(MozContainer* container);
@@ -88,7 +85,5 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
 gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
 struct wp_viewport* moz_container_wayland_get_viewport(MozContainer* container);
-gboolean moz_container_wayland_get_and_reset_remapped(MozContainer* container);
-gboolean moz_container_wayland_is_inactive(MozContainer* container);
 
 #endif /* __MOZ_CONTAINER_WAYLAND_H__ */
