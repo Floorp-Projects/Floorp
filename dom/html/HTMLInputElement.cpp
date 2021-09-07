@@ -957,7 +957,7 @@ HTMLInputElement::HTMLInputElement(
       mHandlingSelectEvent(false),
       mShouldInitChecked(false),
       mDoneCreating(aFromParser == NOT_FROM_PARSER &&
-                    aFromClone == FromClone::no),
+                    aFromClone == FromClone::No),
       mInInternalActivate(false),
       mCheckedIsToggled(false),
       mIndeterminate(false),
@@ -1076,7 +1076,7 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
   *aResult = nullptr;
 
   RefPtr<HTMLInputElement> it = new (aNodeInfo->NodeInfoManager())
-      HTMLInputElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER, FromClone::yes);
+      HTMLInputElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER, FromClone::Yes);
 
   nsresult rv = const_cast<HTMLInputElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);

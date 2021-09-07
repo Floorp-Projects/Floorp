@@ -121,11 +121,11 @@ class HTMLInputElement final : public TextControlElement,
   using ValueSetterOption = TextControlState::ValueSetterOption;
   using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
-  enum class FromClone { no, yes };
+  enum class FromClone { No, Yes };
 
   HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
                    FromParser aFromParser,
-                   FromClone aFromClone = FromClone::no);
+                   FromClone aFromClone = FromClone::No);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLInputElement, input)
 
