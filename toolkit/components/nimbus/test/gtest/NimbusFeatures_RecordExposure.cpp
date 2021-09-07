@@ -29,14 +29,13 @@ TEST_F(NimbusTelemetryFixture, NimbusFeaturesTelemetry) {
       << "Should fail because not enrolled in experiment";
   // Set the experiment info for `foo`
   Preferences::SetCString(prefName.get(), prefValue);
-  ASSERT_EQ(NimbusFeatures::RecordExposureEvent("foo"_ns), NS_ERROR_ABORT)
-      << "Should fail even though enrolled because this is the 2nd call";
-  ASSERT_EQ(NimbusFeatures::RecordExposureEvent("foo"_ns, true), NS_OK)
-      << "Should work because we set aForce=true";
+  ASSERT_EQ(NimbusFeatures::RecordExposureEvent("foo"_ns), NS_OK)
+      << "Should work for the 2nd call";
+  ASSERT_EQ(NimbusFeatures::RecordExposureEvent("foo"_ns, true), NS_ERROR_ABORT)
+      << "Should abort because we've sent exposure and aOnce is true";
   ASSERT_EQ(NimbusFeatures::RecordExposureEvent("bar"_ns), NS_ERROR_UNEXPECTED)
       << "Should fail because we don't have an experiment for bar";
-  ASSERT_EQ(NimbusFeatures::RecordExposureEvent("foo"_ns), NS_ERROR_ABORT)
-      << "Should abort because we've already send exposure for this featureId";
+
   JS::RootedValue eventsSnapshot(cx.GetJSContext());
   GetEventSnapshot(cx.GetJSContext(), &eventsSnapshot);
   ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, "normandy"_ns,
