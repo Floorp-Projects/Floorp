@@ -3023,7 +3023,7 @@ void HTMLInputElement::Select() {
   TextControlState* state = GetEditorState();
   MOZ_ASSERT(state, "Single line text controls are expected to have a state");
 
-  if (FocusState() != eUnfocusable) {
+  if (FocusState() != FocusTristate::eUnfocusable) {
     RefPtr<nsFrameSelection> fs = state->GetConstFrameSelection();
     if (fs && fs->MouseDownRecorded()) {
       // This means that we're being called while the frame selection has a

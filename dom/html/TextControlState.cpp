@@ -112,6 +112,22 @@ TextControlElement::GetTextControlElementFromEditingHost(nsIContent* aHost) {
   return parent.forget();
 }
 
+TextControlElement::FocusTristate TextControlElement::FocusState() {
+  // We can't be focused if we aren't in a (composed) document
+  Document* doc = GetComposedDoc();
+  if (!doc) {
+    return FocusTristate::eUnfocusable;
+  }
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  if (IsDisabled()) {
+    return FocusTristate::eUnfocusable;
+  }
+
+  return IsInActiveTab(doc) ? FocusTristate::eActiveWindow
+                            : FocusTristate::eInactiveWindow;
+}
+
 using ValueChangeKind = TextControlElement::ValueChangeKind;
 
 MOZ_CAN_RUN_SCRIPT inline nsresult SetEditorFlagsIfNecessary(
