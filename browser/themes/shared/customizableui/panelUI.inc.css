@@ -308,6 +308,8 @@ panelview .toolbaritem-combined-buttons,
   animation-name: confirmation-hint-checkmark-animation;
   animation-fill-mode: forwards;
   animation-timing-function: steps(18);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #confirmation-hint[data-message-id="loginRemoved"] #confirmation-hint-checkmark-image {
