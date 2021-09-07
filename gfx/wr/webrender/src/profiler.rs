@@ -65,7 +65,7 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Timing information for per layout transaction stages.
     (&"Transaction times", &"DisplayList,Scene building,Content send,API send"),
     // Timing information for per-frame stages.
-    (&"Frame times", &"Frame CPU total,Frame building,Visibility,Prepare,Batching,Glyph resolve,Texture cache update,Renderer,GPU"),
+    (&"Frame times", &"Frame CPU total,Frame building,Visibility,Prepare,Batching,Glyph resolve,Texture cache update,Shader build time,Renderer,GPU"),
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
@@ -229,7 +229,9 @@ pub const INTERNED_POLYGONS: usize = 99;
 
 pub const DEPTH_TARGETS_MEM: usize = 100;
 
-pub const NUM_PROFILER_EVENTS: usize = 101;
+pub const SHADER_BUILD_TIME: usize = 101;
+
+pub const NUM_PROFILER_EVENTS: usize = 102;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -383,6 +385,7 @@ impl Profiler {
             int("Interned polygons", "", INTERNED_POLYGONS, Expected::none()),
 
             float("Depth targets mem", "MB", DEPTH_TARGETS_MEM, Expected::none()),
+            float("Shader build time", "ms", SHADER_BUILD_TIME, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());
