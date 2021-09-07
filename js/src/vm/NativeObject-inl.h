@@ -431,8 +431,9 @@ inline NativeObject* NativeObject::create(
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
   MOZ_ASSERT(clasp != &ArrayObject::class_, "should use ArrayObject::create");
 
-  size_t nDynamicSlots =
-      calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(), clasp);
+  const uint32_t nfixed = shape->numFixedSlots();
+  const uint32_t slotSpan = shape->slotSpan();
+  const size_t nDynamicSlots = calculateDynamicSlots(nfixed, slotSpan, clasp);
 
   JSObject* obj =
       js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp, site);
@@ -448,8 +449,8 @@ inline NativeObject* NativeObject::create(
   }
   nobj->setEmptyElements();
 
-  if (size_t span = shape->slotSpan()) {
-    nobj->initializeSlotRange(0, span);
+  if (slotSpan > 0) {
+    nobj->initSlots(nfixed, slotSpan);
   }
 
   if (clasp->shouldDelayMetadataBuilder()) {

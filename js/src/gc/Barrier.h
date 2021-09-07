@@ -860,6 +860,8 @@ class HeapSlot : public WriteBarriered<Value> {
     post(owner, kind, slot, v);
   }
 
+  void initAsUndefined() { value.setUndefined(); }
+
   void destroy() { pre(); }
 
 #ifdef DEBUG

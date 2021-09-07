@@ -62,7 +62,7 @@ namespace js {
   new (aobj->getElementsHeader()) ObjectElements(capacity, length);
 
   if (slotSpan > 0) {
-    aobj->initializeSlotRange(0, slotSpan);
+    aobj->initDynamicSlots(slotSpan);
   }
 
   gc::gcprobes::CreateObject(aobj);
