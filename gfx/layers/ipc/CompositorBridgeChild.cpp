@@ -577,12 +577,6 @@ void CompositorBridgeChild::HandleMemoryPressure() {
   }
 }
 
-void CompositorBridgeChild::ClearTexturePool() {
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->Clear();
-  }
-}
-
 FixedSizeSmallShmemSectionAllocator*
 CompositorBridgeChild::GetTileLockAllocator() {
   if (!IPCOpen()) {
