@@ -6232,8 +6232,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
       for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
         if (Text* text = aOutArrayOfContents[i]->GetAsText()) {
           // Don't select empty text except to empty block
-          if (!HTMLEditUtils::IsVisibleTextNode(*text,
-                                                GetActiveEditingHost())) {
+          if (!HTMLEditUtils::IsVisibleTextNode(*text)) {
             aOutArrayOfContents.RemoveElementAt(i);
           }
         }

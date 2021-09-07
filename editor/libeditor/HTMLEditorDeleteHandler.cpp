@@ -3706,8 +3706,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode(
   }
 
   if (!HTMLEditUtils::IsRemovableFromParentNode(*text) ||
-      HTMLEditUtils::IsVisibleTextNode(*text,
-                                       aHTMLEditor.GetActiveEditingHost())) {
+      HTMLEditUtils::IsVisibleTextNode(*text)) {
     return NS_OK;
   }
 

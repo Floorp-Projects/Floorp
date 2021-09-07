@@ -293,13 +293,8 @@ class HTMLEditUtils final {
   /**
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
    * only white-spaces and they are collapsed, returns false.
-   *
-   * If aEditingHost is omitted, this computes parent editable block for you.
-   * But if you call this a lot, please specify proper editing host (or parent
-   * block) for the performance.
    */
-  static bool IsVisibleTextNode(const Text& aText,
-                                const Element* aEditingHost = nullptr);
+  static bool IsVisibleTextNode(const Text& aText);
 
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
@@ -319,7 +314,7 @@ class HTMLEditUtils final {
     }
     // If followed by a block boundary without visible content, it's invisible
     // <br> element.
-    return !HTMLEditUtils::GetBlockElementOfImmediateBlockBoundary(
+    return !HTMLEditUtils::GetElementOfImmediateBlockBoundary(
         aContent, WalkTreeDirection::Forward);
   }
   static bool IsInvisibleBRElement(const nsIContent& aContent) {
@@ -1709,11 +1704,14 @@ class HTMLEditUtils final {
       const Element* aAncestorLimiter = nullptr);
 
   /**
-   * GetBlockElementOfImmediateBlockBoundary() returns a block element if its
+   * GetElementOfImmediateBlockBoundary() returns a block element if its
    * block boundary and aContent may be first visible thing before/after the
-   * boundary.
+   * boundary.  And it may return a <br> element only when aContent is a
+   * text node and follows a <br> element because only in this case, the
+   * start white-spaces are invisible.  So the <br> element works same as
+   * a block boundary.
    */
-  static Element* GetBlockElementOfImmediateBlockBoundary(
+  static Element* GetElementOfImmediateBlockBoundary(
       const nsIContent& aContent, const WalkTreeDirection aDirection);
 };
 
