@@ -42,7 +42,7 @@ typealias SyncTelemetryPing = mozilla.appservices.sync15.SyncTelemetryPing
  * random numbers, etc. are all examples of things which will result in a
  * concrete `LoginsStorageException`.
  */
-typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageErrorException
+typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageException
 
 /**
  * This indicates that the authentication information (e.g. the [SyncUnlockInfo])
@@ -50,18 +50,18 @@ typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageError
  * stale and should be refreshed with FxA (however, care should be taken not to
  * get into a loop refreshing this information).
  */
-typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsStorageErrorException.SyncAuthInvalid
+typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsStorageException.SyncAuthInvalid
 
 /**
  * This is thrown if `lock()`/`unlock()` pairs don't match up.
  */
-typealias MismatchedLockException = mozilla.appservices.logins.LoginsStorageErrorException.MismatchedLock
+typealias MismatchedLockException = mozilla.appservices.logins.LoginsStorageException.MismatchedLock
 
 /**
  * This is thrown if `update()` is performed with a record whose ID
  * does not exist.
  */
-typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageErrorException.NoSuchRecord
+typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageException.NoSuchRecord
 
 /**
  * This is thrown if `add()` is given a record whose `id` is not blank, and
@@ -70,7 +70,7 @@ typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageErrorE
  * You can avoid ever worrying about this error by always providing blank
  * `id` property when inserting new records.
  */
-typealias IdCollisionException = mozilla.appservices.logins.LoginsStorageErrorException.IdCollision
+typealias IdCollisionException = mozilla.appservices.logins.LoginsStorageException.IdCollision
 
 /**
  * This is thrown on attempts to insert or update a record so that it
@@ -81,7 +81,7 @@ typealias IdCollisionException = mozilla.appservices.logins.LoginsStorageErrorEx
  * - A record that doesn't have a `formSubmitURL` nor a `httpRealm` is invalid.
  * - A record that has both a `formSubmitURL` and a `httpRealm` is invalid.
  */
-typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageErrorException.InvalidRecord
+typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageException.InvalidRecord
 
 /**
  * This error is emitted in two cases:
@@ -91,12 +91,12 @@ typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageError
  *
  * SQLCipher does not give any way to distinguish between these two cases.
  */
-typealias InvalidKeyException = mozilla.appservices.logins.LoginsStorageErrorException.InvalidKey
+typealias InvalidKeyException = mozilla.appservices.logins.LoginsStorageException.InvalidKey
 
 /**
  * This error is emitted if a request to a sync server failed.
  */
-typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageErrorException.RequestFailed
+typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageException.RequestFailed
 
 /**
  * An implementation of [LoginsStorage] backed by application-services' `logins` library.

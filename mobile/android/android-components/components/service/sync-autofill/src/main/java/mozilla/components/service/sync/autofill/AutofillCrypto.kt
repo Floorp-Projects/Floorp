@@ -6,7 +6,7 @@ package mozilla.components.service.sync.autofill
 
 import android.content.Context
 import android.content.SharedPreferences
-import mozilla.appservices.autofill.ErrorException
+import mozilla.appservices.autofill.AutofillException
 import mozilla.appservices.autofill.createKey
 import mozilla.appservices.autofill.decryptString
 import mozilla.appservices.autofill.encryptString
@@ -43,10 +43,10 @@ class AutofillCrypto(
     ): CreditCardNumber.Encrypted? {
         return try {
             CreditCardNumber.Encrypted(encrypt(key, plaintextCardNumber.number))
-        } catch (e: ErrorException.JsonError) {
+        } catch (e: AutofillException.JsonException) {
             logger.warn("Failed to encrypt", e)
             null
-        } catch (e: ErrorException.CryptoError) {
+        } catch (e: AutofillException.CryptoException) {
             logger.warn("Failed to encrypt", e)
             null
         }
@@ -58,10 +58,10 @@ class AutofillCrypto(
     ): CreditCardNumber.Plaintext? {
         return try {
             CreditCardNumber.Plaintext(decrypt(key, encryptedCardNumber.number))
-        } catch (e: ErrorException.JsonError) {
+        } catch (e: AutofillException.JsonException) {
             logger.warn("Failed to decrypt", e)
             null
-        } catch (e: ErrorException.CryptoError) {
+        } catch (e: AutofillException.CryptoException) {
             logger.warn("Failed to decrypt", e)
             null
         }
@@ -109,12 +109,12 @@ class AutofillCrypto(
                     if (CANARY_PHRASE_PLAINTEXT == decryptString(storedKey, encryptedCanaryPhrase)) {
                         ManagedKey(storedKey)
                     } else {
-                        // A bad key should trigger a CryptoError, but check this branch just in case.
+                        // A bad key should trigger a CryptoException, but check this branch just in case.
                         ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Corrupt)
                     }
-                } catch (e: ErrorException.JsonError) {
+                } catch (e: AutofillException.JsonException) {
                     ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Corrupt)
-                } catch (e: ErrorException.CryptoError) {
+                } catch (e: AutofillException.CryptoException) {
                     ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Corrupt)
                 }
             }

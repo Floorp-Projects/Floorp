@@ -44,10 +44,8 @@ interface PushConnection : Closeable {
 
     /**
      * Un-subscribes all push subscriptions.
-     *
-     * @return the invocation result if it was successful.
      */
-    suspend fun unsubscribeAll(): Boolean
+    suspend fun unsubscribeAll()
 
     /**
      * Returns `true` if the specified [scope] has a subscription.
@@ -153,11 +151,11 @@ internal class RustPushConnection(
     }
 
     @GuardedBy("this")
-    override suspend fun unsubscribeAll(): Boolean = synchronized(this) {
+    override suspend fun unsubscribeAll(): Unit = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
 
-        return pushApi.unsubscribeAll()
+        pushApi.unsubscribeAll()
     }
 
     @GuardedBy("this")

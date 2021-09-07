@@ -7,28 +7,28 @@ package mozilla.components.service.fxa
 /**
  * High-level exception class for the exceptions thrown in the Rust library.
  */
-typealias FxaException = mozilla.appservices.fxaclient.FxaErrorException
+typealias FxaException = mozilla.appservices.fxaclient.FxaException
 
 /**
  * Thrown on a network error.
  */
-typealias FxaNetworkException = mozilla.appservices.fxaclient.FxaErrorException.Network
+typealias FxaNetworkException = mozilla.appservices.fxaclient.FxaException.Network
 
 /**
  * Thrown when the Rust library hits an assertion or panic (this is always a bug).
  */
-typealias FxaPanicException = mozilla.appservices.fxaclient.FxaErrorException.Panic
+typealias FxaPanicException = mozilla.appservices.fxaclient.FxaException.Panic
 
 /**
  * Thrown when the operation requires additional authorization.
  */
-typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaErrorException.Authentication
+typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaException.Authentication
 
 /**
  * Thrown when the Rust library hits an unexpected error that isn't a panic.
  * This may indicate library misuse, network errors, etc.
  */
-typealias FxaUnspecifiedException = mozilla.appservices.fxaclient.FxaErrorException.Other
+typealias FxaUnspecifiedException = mozilla.appservices.fxaclient.FxaException.Other
 
 /**
  * @return 'true' if this exception should be re-thrown and eventually crash the app.

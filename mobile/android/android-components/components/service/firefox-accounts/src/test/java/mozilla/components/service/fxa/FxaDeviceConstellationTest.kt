@@ -54,7 +54,7 @@ import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
 import mozilla.appservices.fxaclient.DeviceType as NativeDeviceType
-import mozilla.appservices.fxaclient.FxaErrorException as FxaException
+import mozilla.appservices.fxaclient.FxaException
 import mozilla.appservices.fxaclient.PersistedFirefoxAccount as NativeFirefoxAccount
 import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 
