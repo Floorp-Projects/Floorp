@@ -12,10 +12,49 @@
     <link rel="stylesheet"
           href="chrome://browser/content/tabunloader/aboutUnloads.css"/>
     <link rel="localization" href="browser/aboutUnloads.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
     <script src="chrome://browser/content/tabunloader/aboutUnloads.js">
     </script>
   </head>
   <body>
     <h1 data-l10n-id="about-unloads-page-title"></h1>
+    <p data-l10n-id="about-unloads-intro-1"></p>
+    <p data-l10n-id="about-unloads-intro-2"></p>
+    <div class="control-panel">
+      <div><span id="label-last-updated"></span></div>
+      <button id="button-unload"
+              data-l10n-id="about-unloads-button-unload"></button>
+    </div>
+    <table class="tab-table">
+      <thead>
+        <tr>
+          <th data-l10n-id="about-unloads-column-priority"/>
+          <th data-l10n-id="about-unloads-column-host"/>
+          <th data-l10n-id="about-unloads-column-last-accessed"/>
+          <th data-l10n-id="about-unloads-column-weight"/>
+          <th data-l10n-id="about-unloads-column-sortweight"/>
+          <th data-l10n-id="about-unloads-column-memory"/>
+          <th data-l10n-id="about-unloads-column-processes"/>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="no-unloadable-tab-message">
+          <td data-l10n-id="about-unloads-no-unloadable-tab"
+              colspan="8" ></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <template name="tab-table-row">
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
   </body>
 </html>

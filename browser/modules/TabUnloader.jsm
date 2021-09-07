@@ -235,9 +235,9 @@ var TabUnloader = {
       return a.tab.lastAccessed - b.tab.lastAccessed;
     });
 
-    // If the lowest priority tab is not discardable, don't discard any tabs.
+    // If the lowest priority tab is not discardable, no need to continue.
     if (!tabs.length || !this.isDiscardable(tabs[0])) {
-      return [];
+      return tabs;
     }
 
     // Determine the lowest weight that the tabs have. The tabs with the
@@ -284,6 +284,8 @@ var TabUnloader = {
 
     for (let tabInfo of sortedTabs) {
       if (!this.isDiscardable(tabInfo)) {
+        // Since |sortedTabs| is sorted, once we see an undiscardable tab
+        // no need to continue the loop.
         return false;
       }
 
