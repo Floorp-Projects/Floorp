@@ -916,10 +916,18 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Check for frames that are marked as a part of the region used
     // in calculating glass margins on Windows.
     const nsStyleDisplay* styles = StyleDisplay();
-    if (styles &&
-        styles->EffectiveAppearance() == StyleAppearance::MozWinExcludeGlass) {
+    if (styles->EffectiveAppearance() == StyleAppearance::MozWinExcludeGlass) {
       aBuilder->AddWindowExcludeGlassRegion(
           this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
+    }
+
+    if (mContent->AsElement()->HasAttr(nsGkAtoms::titlebar_max_button)) {
+      if (auto* widget = GetNearestWidget()) {
+        auto rect = LayoutDevicePixel::FromAppUnitsToNearest(
+            nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
+            PresContext()->AppUnitsPerDevPixel());
+        widget->SetMaximizeButtonRect(rect);
+      }
     }
   }
 
