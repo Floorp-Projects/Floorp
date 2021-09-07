@@ -156,7 +156,8 @@
     {
       "login": false,
       "name": "buzzfeed",
-      "test_url": "https://www.buzzfeed.com/"
+      "test_url": "https://www.buzzfeed.com/",
+      "secondary_url": "https://www.buzzfeed.com/quizzes"
     },
     {
       "login": false,
