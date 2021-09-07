@@ -1203,6 +1203,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 92 uses schema version 58
 
+      if (currentSchemaVersion < 59) {
+        rv = MigrateV59Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 94 uses schema version 59
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1319,6 +1326,14 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     // moz_places_metadata_groups_to_snapshots
     rv = mMainConn->ExecuteSimpleSQL(
         CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_session_metadata
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_METADATA);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_session_to_places
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_TO_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The bookmarks roots get initialized in CheckRoots().
@@ -2276,6 +2291,20 @@ nsresult Database::MigrateV58Up() {
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(
         CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult Database::MigrateV59Up() {
+  // Add metadata snapshots tables if necessary.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT id FROM moz_session_metadata"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_METADATA);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_TO_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
