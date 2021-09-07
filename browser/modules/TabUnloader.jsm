@@ -117,13 +117,13 @@ let DefaultTabUnloaderMethods = {
    * @param tabs array of tabs, used only by unit tests
    * @param map of processes returned by getAllProcesses.
    */
-  async calculateMemoryUsage(tabs, processMap) {
+  async calculateMemoryUsage(processMap) {
     let parentProcessInfo = await ChromeUtils.requestProcInfo();
     let childProcessInfoList = parentProcessInfo.children;
     for (let childProcInfo of childProcessInfoList) {
       let processInfo = processMap.get(childProcInfo.pid);
       if (!processInfo) {
-        processInfo = { count: 0, topCount: 0 };
+        processInfo = { count: 0, topCount: 0, tabSet: new Set() };
         processMap.set(childProcInfo.pid, processInfo);
       }
       processInfo.memory = childProcInfo.residentUniqueSize;
@@ -145,6 +145,13 @@ var TabUnloader = {
       Ci.nsIAvailableMemoryWatcherBase
     );
     watcher.registerTabUnloader(this);
+  },
+
+  isDiscardable(tab) {
+    if (!("weight" in tab)) {
+      return false;
+    }
+    return tab.weight < NEVER_DISCARD;
   },
 
   // This method is exposed on nsITabUnloader
@@ -229,7 +236,7 @@ var TabUnloader = {
     });
 
     // If the lowest priority tab is not discardable, don't discard any tabs.
-    if (!tabs.length || tabs[0].weight == NEVER_DISCARD) {
+    if (!tabs.length || !this.isDiscardable(tabs[0])) {
       return [];
     }
 
@@ -253,7 +260,10 @@ var TabUnloader = {
       higherWeightedCount = minCount;
     }
 
-    if (higherWeightedCount < tabs.length) {
+    // If |lowestWeightedCount| is 1, no benefit from calculating
+    // the tab's memory and additional weight.
+    const lowestWeightedCount = tabs.length - higherWeightedCount;
+    if (lowestWeightedCount > 1) {
       let processMap = getAllProcesses(tabs, tabMethods);
 
       let higherWeightedTabs = tabs.splice(-higherWeightedCount);
@@ -273,7 +283,7 @@ var TabUnloader = {
     let sortedTabs = await this.getSortedTabs();
 
     for (let tabInfo of sortedTabs) {
-      if (tabInfo.weight == NEVER_DISCARD) {
+      if (!this.isDiscardable(tabInfo)) {
         return false;
       }
 
@@ -325,6 +335,7 @@ function determineTabBaseWeight(tab, tabMethods) {
  * The map will map process ids to an object with two properties:
  *   count - the number of tabs or subframes that use this process
  *   topCount - the number of top-level tabs that use this process
+ *   tabSet - the indices of the tabs hosted by this process
  *
  * @param tabs array of tabs
  * @param tabMethods an helper object with methods called by this algorithm.
@@ -340,15 +351,37 @@ function getAllProcesses(tabs, tabMethods) {
 
   let processMap = new Map();
 
-  for (let tab of tabs) {
+  for (let tabIndex = 0; tabIndex < tabs.length; ++tabIndex) {
+    const tab = tabs[tabIndex];
+
+    // The per-tab map will map process ids to an object with three properties:
+    //   isTopLevel - whether the process hosts the tab's top-level frame or not
+    //   frameCount - the number of frames hosted by the process
+    //                (a top frame contributes 2 and a sub frame contributes 1)
+    //   entryToProcessMap - the reference to the object in |processMap|
+    tab.processes = new Map();
+
     let topLevel = true;
     for (let pid of tabMethods.iterateProcesses(tab.tab)) {
       let processInfo = processMap.get(pid);
       if (processInfo) {
         processInfo.count++;
+        processInfo.tabSet.add(tabIndex);
       } else {
-        processInfo = { count: 1, topCount: 0 };
+        processInfo = { count: 1, topCount: 0, tabSet: new Set([tabIndex]) };
         processMap.set(pid, processInfo);
+      }
+
+      let tabProcessEntry = tab.processes.get(pid);
+      if (tabProcessEntry) {
+        ++tabProcessEntry.frameCount;
+      } else {
+        tabProcessEntry = {
+          isTopLevel: topLevel,
+          frameCount: 1,
+          entryToProcessMap: processInfo,
+        };
+        tab.processes.set(pid, tabProcessEntry);
       }
 
       if (topLevel) {
@@ -356,6 +389,8 @@ function getAllProcesses(tabs, tabMethods) {
         processInfo.topCount = processInfo.topCount
           ? processInfo.topCount + 1
           : 1;
+        // top-level frame contributes two frame counts
+        ++tabProcessEntry.frameCount;
       }
     }
   }
@@ -372,19 +407,18 @@ function getAllProcesses(tabs, tabMethods) {
  * @param tabMethods an helper object with methods called by this algorithm.
  */
 async function adjustForResourceUse(tabs, processMap, tabMethods) {
-  await tabMethods.calculateMemoryUsage(tabs, processMap);
+  // The second argument is needed for testing.
+  await tabMethods.calculateMemoryUsage(processMap, tabs);
 
   let sortWeight = 0;
   for (let tab of tabs) {
     tab.sortWeight = ++sortWeight;
 
-    let topLevel = true;
     let uniqueCount = 0;
     let totalMemory = 0;
-    for (let pid of tabMethods.iterateProcesses(tab.tab)) {
-      let processInfo = processMap.get(pid);
-      let { count, topCount, memory } = processInfo;
-      if (count == 1) {
+    for (const procEntry of tab.processes.values()) {
+      const processInfo = procEntry.entryToProcessMap;
+      if (processInfo.tabSet.size == 1) {
         uniqueCount++;
       }
 
@@ -395,12 +429,10 @@ async function adjustForResourceUse(tabs, processMap, tabMethods) {
       // So for example, if a process is used in four top level tabs and two
       // subframes, the top level tabs share 80% of the memory and the subframes
       // use 20% of the memory.
-      let perFrameMemory = memory / (topCount * 2 + (count - topCount));
-      if (topLevel) {
-        topLevel = false;
-        perFrameMemory *= 2;
-      }
-      totalMemory += perFrameMemory;
+      const perFrameMemory =
+        processInfo.memory /
+        (processInfo.topCount * 2 + (processInfo.count - processInfo.topCount));
+      totalMemory += perFrameMemory * procEntry.frameCount;
     }
 
     tab.uniqueCount = uniqueCount;
