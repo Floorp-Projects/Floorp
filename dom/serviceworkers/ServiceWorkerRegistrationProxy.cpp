@@ -19,7 +19,8 @@ namespace dom {
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
 class ServiceWorkerRegistrationProxy::DelayedUpdate final
-    : public nsITimerCallback {
+    : public nsITimerCallback,
+      public nsINamed {
   RefPtr<ServiceWorkerRegistrationProxy> mProxy;
   RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
   nsCOMPtr<nsITimer> mTimer;
@@ -30,6 +31,7 @@ class ServiceWorkerRegistrationProxy::DelayedUpdate final
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   DelayedUpdate(RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
                 RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise,
@@ -261,7 +263,7 @@ class UpdateCallback final : public ServiceWorkerUpdateFinishCallback {
 }  // anonymous namespace
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationProxy::DelayedUpdate,
-                  nsITimerCallback)
+                  nsITimerCallback, nsINamed)
 
 ServiceWorkerRegistrationProxy::DelayedUpdate::DelayedUpdate(
     RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
@@ -327,6 +329,12 @@ ServiceWorkerRegistrationProxy::DelayedUpdate::Notify(nsITimer* aTimer) {
   mProxy->mDelayedUpdate = nullptr;
 
   scopeExit.release();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrationProxy::DelayedUpdate::GetName(nsACString& aName) {
+  aName.AssignLiteral("ServiceWorkerRegistrationProxy::DelayedUpdate");
   return NS_OK;
 }
 

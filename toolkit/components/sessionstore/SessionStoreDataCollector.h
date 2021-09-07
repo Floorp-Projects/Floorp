@@ -25,11 +25,14 @@ namespace sessionstore {
 class FormData;
 }
 
-class SessionStoreDataCollector final : public nsITimerCallback {
+class SessionStoreDataCollector final : public nsITimerCallback,
+                                        public nsINamed {
  public:
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(SessionStoreDataCollector)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SessionStoreDataCollector,
+                                           nsITimerCallback)
 
   enum class Change { Input, Scroll };
 

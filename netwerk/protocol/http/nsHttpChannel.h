@@ -75,7 +75,8 @@ class nsHttpChannel final : public HttpBaseChannel,
                             public nsICorsPreflightCallback,
                             public nsIRaceCacheWithNetwork,
                             public nsIRequestTailUnblockCallback,
-                            public nsITimerCallback {
+                            public nsITimerCallback,
+                            public nsINamed {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
@@ -93,6 +94,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
   NS_DECL_NSIRACECACHEWITHNETWORK
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
   NS_DECL_NSIREQUESTTAILUNBLOCKCALLBACK
 
   // nsIHttpAuthenticableChannel. We can't use

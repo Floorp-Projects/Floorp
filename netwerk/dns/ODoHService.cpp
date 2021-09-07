@@ -32,7 +32,7 @@ namespace net {
 ODoHService* gODoHService = nullptr;
 
 NS_IMPL_ISUPPORTS(ODoHService, nsIDNSListener, nsIObserver,
-                  nsISupportsWeakReference, nsITimerCallback,
+                  nsISupportsWeakReference, nsITimerCallback, nsINamed,
                   nsIStreamLoaderObserver)
 
 ODoHService::ODoHService()
@@ -348,6 +348,12 @@ NS_IMETHODIMP
 ODoHService::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mTTLTimer);
   UpdateODoHConfig();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ODoHService::GetName(nsACString& aName) {
+  aName.AssignLiteral("ODoHService");
   return NS_OK;
 }
 

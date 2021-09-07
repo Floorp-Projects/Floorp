@@ -24,11 +24,17 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(ServiceWorkerShutdownBlocker, nsIAsyncShutdownBlocker,
-                  nsITimerCallback)
+                  nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetName(nsAString& aNameOut) {
   aNameOut = nsLiteralString(
       u"ServiceWorkerShutdownBlocker: shutting down Service Workers");
+  return NS_OK;
+}
+
+// nsINamed implementation
+NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetName(nsACString& aNameOut) {
+  aNameOut.AssignLiteral("ServiceWorkerShutdownBlocker");
   return NS_OK;
 }
 

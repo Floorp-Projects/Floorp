@@ -53,7 +53,7 @@ already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
 }
 
 NS_IMPL_ISUPPORTS(CookieServiceChild, nsICookieService, nsIObserver,
-                  nsITimerCallback, nsISupportsWeakReference)
+                  nsITimerCallback, nsINamed, nsISupportsWeakReference)
 
 CookieServiceChild::CookieServiceChild() {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
@@ -113,6 +113,12 @@ CookieServiceChild::Notify(nsITimer* aTimer) {
   } else {
     MOZ_CRASH("Unknown timer");
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieServiceChild::GetName(nsACString& aName) {
+  aName.AssignLiteral("CookieServiceChild");
   return NS_OK;
 }
 

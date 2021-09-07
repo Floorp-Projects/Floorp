@@ -245,6 +245,12 @@ StorageActivityService::Notify(nsITimer* aTimer) {
 }
 
 NS_IMETHODIMP
+StorageActivityService::GetName(nsACString& aName) {
+  aName.AssignLiteral("StorageActivityService");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
                                          nsIArray** aRetval) {
   uint64_t now = PR_Now();
@@ -304,6 +310,7 @@ NS_INTERFACE_MAP_BEGIN(StorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIStorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 

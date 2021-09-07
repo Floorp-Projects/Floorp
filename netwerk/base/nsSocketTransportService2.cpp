@@ -718,7 +718,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
 NS_IMPL_ISUPPORTS(nsSocketTransportService, nsISocketTransportService,
                   nsIRoutedSocketTransportService, nsIEventTarget,
                   nsISerialEventTarget, nsIThreadObserver, nsIRunnable,
-                  nsPISocketTransportService, nsIObserver,
+                  nsPISocketTransportService, nsIObserver, nsINamed,
                   nsIDirectTaskDispatcher)
 
 static const char* gCallbackPrefs[] = {
@@ -1549,6 +1549,12 @@ void nsSocketTransportService::NotifyKeepaliveEnabledPrefChange(
   }
 
   sock->mHandler->OnKeepaliveEnabledPrefChange(mKeepaliveEnabledPref);
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsSocketTransportService");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -194,7 +194,7 @@ UDPServerListener::OnStopListening(nsIUDPSocket*, nsresult) {
 /**
  * Multicast timer callback: detects delivery failure
  */
-class MulticastTimerCallback : public nsITimerCallback {
+class MulticastTimerCallback : public nsITimerCallback, public nsINamed {
  protected:
   virtual ~MulticastTimerCallback();
 
@@ -204,12 +204,13 @@ class MulticastTimerCallback : public nsITimerCallback {
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   nsresult mResult;
   RefPtr<WaitForCondition> mWaiter;
 };
 
-NS_IMPL_ISUPPORTS(MulticastTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(MulticastTimerCallback, nsITimerCallback, nsINamed)
 
 MulticastTimerCallback::~MulticastTimerCallback() = default;
 
@@ -222,6 +223,12 @@ MulticastTimerCallback::Notify(nsITimer* timer) {
   printf("Multicast ping timeout expired\n");
   mResult = NS_ERROR_FAILURE;
   mWaiter->Notify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MulticastTimerCallback::GetName(nsACString& aName) {
+  aName.AssignLiteral("MulticastTimerCallback");
   return NS_OK;
 }
 

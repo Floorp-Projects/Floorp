@@ -187,9 +187,10 @@ class TRRService : public TRRServiceBase,
     CONFIRM_DISABLED = 5,
   };
 
-  class ConfirmationContext final : public nsITimerCallback {
+  class ConfirmationContext final : public nsITimerCallback, public nsINamed {
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSINAMED
 
    private:
     static const size_t RESULTS_SIZE = 32;

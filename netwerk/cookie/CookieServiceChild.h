@@ -29,6 +29,7 @@ class CookieServiceChild final : public PCookieServiceChild,
                                  public nsICookieService,
                                  public nsIObserver,
                                  public nsITimerCallback,
+                                 public nsINamed,
                                  public nsSupportsWeakReference {
   friend class PCookieServiceChild;
 
@@ -37,6 +38,7 @@ class CookieServiceChild final : public PCookieServiceChild,
   NS_DECL_NSICOOKIESERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   typedef nsTArray<RefPtr<Cookie>> CookiesList;
   typedef nsClassHashtable<CookieKey, CookiesList> CookiesMap;

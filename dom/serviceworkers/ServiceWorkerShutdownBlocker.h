@@ -42,7 +42,8 @@ class ServiceWorkerManager;
  * shutdown will be forcefully unblocked.
  */
 class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
-                                           public nsITimerCallback {
+                                           public nsITimerCallback,
+                                           public nsINamed {
  public:
   using Progress = ServiceWorkerShutdownState::Progress;
   static const uint32_t kInvalidShutdownStateId = 0;
@@ -50,6 +51,7 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   /**
    * Returns the registered shutdown blocker if registration succeeded and

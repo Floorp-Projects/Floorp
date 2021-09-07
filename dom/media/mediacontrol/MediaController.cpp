@@ -28,7 +28,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaController, DOMEventTargetHelper)
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(MediaController,
                                              DOMEventTargetHelper,
-                                             nsITimerCallback)
+                                             nsITimerCallback, nsINamed)
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MediaController,
                                                DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -307,6 +307,11 @@ NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
     return NS_OK;
   }
   Deactivate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP MediaController::GetName(nsACString& aName) {
+  aName.AssignLiteral("MediaController");
   return NS_OK;
 }
 

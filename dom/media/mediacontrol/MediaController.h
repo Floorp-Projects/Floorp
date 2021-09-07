@@ -75,10 +75,12 @@ class MediaController final : public DOMEventTargetHelper,
                               public IMediaController,
                               public LinkedListElement<RefPtr<MediaController>>,
                               public MediaStatusManager,
-                              public nsITimerCallback {
+                              public nsITimerCallback,
+                              public nsINamed {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaController,
                                                          DOMEventTargetHelper)
   explicit MediaController(uint64_t aBrowsingContextId);

@@ -64,7 +64,8 @@ NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 NS_IMPL_ADDREF_USING_AGGREGATOR(TRRService::ConfirmationContext, OwningObject())
 NS_IMPL_RELEASE_USING_AGGREGATOR(TRRService::ConfirmationContext,
                                  OwningObject())
-NS_IMPL_QUERY_INTERFACE(TRRService::ConfirmationContext, nsITimerCallback)
+NS_IMPL_QUERY_INTERFACE(TRRService::ConfirmationContext, nsITimerCallback,
+                        nsINamed)
 
 TRRService::TRRService() { MOZ_ASSERT(NS_IsMainThread(), "wrong thread"); }
 
@@ -1041,6 +1042,12 @@ TRRService::ConfirmationContext::Notify(nsITimer* aTimer) {
   }
 
   MOZ_CRASH("Unknown timer");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TRRService::ConfirmationContext::GetName(nsACString& aName) {
+  aName.AssignLiteral("TRRService::ConfirmationContext");
   return NS_OK;
 }
 

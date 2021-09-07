@@ -732,6 +732,12 @@ ReportingHeader::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ReportingHeader::GetName(nsACString& aName) {
+  aName.AssignLiteral("ReportingHeader");
+  return NS_OK;
+}
+
 void ReportingHeader::MaybeCreateCleanupTimer() {
   if (mCleanupTimer) {
     return;
@@ -765,6 +771,7 @@ NS_INTERFACE_MAP_BEGIN(ReportingHeader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(ReportingHeader)

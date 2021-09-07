@@ -49,7 +49,7 @@ namespace net {
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver)
+NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver, nsINamed)
 
 //-----------------------------------------------------------------------------
 
@@ -248,6 +248,16 @@ void nsHttpConnectionMgr::ConditionallyStopTimeoutTick() {
 
   mTimeoutTick->Cancel();
   mTimeoutTickArmed = false;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpConnectionMgr::nsINamed
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpConnectionMgr::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsHttpConnectionMgr");
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
