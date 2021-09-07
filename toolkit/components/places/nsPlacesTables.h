@@ -348,4 +348,26 @@
       "    moz_places_metadata_snapshots(place_id) ON DELETE CASCADE "        \
       ") WITHOUT ROWID")
 
+#define CREATE_MOZ_SESSION_METADATA                        \
+  nsLiteralCString(                                        \
+      "CREATE TABLE IF NOT EXISTS moz_session_metadata ( " \
+      "  id INTEGER PRIMARY KEY, "                         \
+      "  guid TEXT NOT NULL UNIQUE, "                      \
+      "  last_saved_at INTEGER NOT NULL DEFAULT 0, "       \
+      "  data TEXT "                                       \
+      ")")
+
+#define CREATE_MOZ_SESSION_TO_PLACES                                       \
+  nsLiteralCString(                                                        \
+      "CREATE TABLE IF NOT EXISTS moz_session_to_places ( "                \
+      "  session_id INTEGER NOT NULL, "                                    \
+      "  place_id INTEGER NOT NULL , "                                     \
+      "  position INTEGER, "                                               \
+      "  PRIMARY KEY (session_id, place_id), "                             \
+      "  FOREIGN KEY (place_id) REFERENCES moz_places(id) ON DELETE "      \
+      "CASCADE "                                                           \
+      "  FOREIGN KEY (session_id) REFERENCES moz_session_metadata(id) ON " \
+      "DELETE CASCADE "                                                    \
+      ") WITHOUT ROWID")
+
 #endif  // __nsPlacesTables_h__
