@@ -43,6 +43,7 @@ const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
   merinoEnabled: false,
   quickSuggestEnabled: false,
   quickSuggestNonSponsoredIndex: -1,
+  quickSuggestScenario: "history",
   quickSuggestShouldShowOnboardingDialog: true,
   quickSuggestShowOnboardingDialogAfterNRestarts: 0,
   quickSuggestSponsoredIndex: -1,
