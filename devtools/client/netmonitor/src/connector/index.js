@@ -22,6 +22,8 @@ loader.lazyRequireGetter(
   "devtools/client/shared/components/throttling/profiles"
 );
 
+const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
+
 /**
  * Connector to Firefox backend.
  */
@@ -45,6 +47,7 @@ class Connector {
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     this.onResourceUpdated = this.onResourceUpdated.bind(this);
+    this.updatePersist = this.updatePersist.bind(this);
 
     this.networkFront = null;
     this.listenForNetworkEvents = true;
@@ -118,6 +121,16 @@ class Connector {
       onAvailable: this.onResourceAvailable,
       onUpdated: this.onResourceUpdated,
     });
+
+    // Server side persistance of the data across reload is disabled by default.
+    // Ensure enabling it, if the related frontend pref is true.
+    if (Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF)) {
+      await this.updatePersist();
+    }
+    Services.prefs.addObserver(
+      DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+      this.updatePersist
+    );
   }
 
   disconnect() {
@@ -146,6 +159,11 @@ class Connector {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
       }
+    );
+
+    Services.prefs.removeObserver(
+      DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+      this.updatePersist
     );
 
     if (this.actions) {
@@ -275,7 +293,7 @@ class Connector {
 
   willNavigate() {
     if (this.actions) {
-      if (!Services.prefs.getBoolPref("devtools.netmonitor.persistlog")) {
+      if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF)) {
         this.actions.batchReset();
         this.actions.clearRequests();
       } else {
@@ -418,6 +436,28 @@ class Connector {
       return [];
     }
     return this.webConsoleFront.getBlockedUrls();
+  }
+
+  async updatePersist() {
+    const enabled = Services.prefs.getBoolPref(
+      DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF
+    );
+
+    // @backward-compat { version 93 } The network parent actor started exposing setPersist method.
+    // Once we drop support for 92, we can drop the trait, but we will have to keep the other checks
+    // until we stop using legacy listeners entirely. (bug 1689459)
+    const hasServerSupport = this.commands.targetCommand.hasTargetWatcherSupport(
+      "network-persist"
+    );
+    if (
+      hasServerSupport &&
+      this.hasResourceCommandSupport &&
+      this.networkFront
+    ) {
+      await this.networkFront.setPersist(enabled);
+    }
+
+    this.emitForTests(TEST_EVENTS.PERSIST_CHANGED, enabled);
   }
 
   /**
