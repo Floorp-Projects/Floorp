@@ -978,12 +978,16 @@ inline TimeStamp js::Nursery::lastCollectionEndTime() const {
 }
 
 bool js::Nursery::shouldCollect() const {
-  if (minorGCRequested()) {
-    return true;
+  if (!isEnabled()) {
+    return false;
   }
 
   if (isEmpty() && capacity() == tunables().gcMinNurseryBytes()) {
     return false;
+  }
+
+  if (minorGCRequested()) {
+    return true;
   }
 
   // Eagerly collect the nursery in idle time if it's nearly full.
