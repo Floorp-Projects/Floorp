@@ -12,6 +12,9 @@
 template<class T> class nsCOMArray;
 namespace mozilla {
 class TimeStamp;
+namespace net {
+class WebSocketConnectionBase;
+}
 }
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
@@ -40,6 +43,10 @@ interface nsIHttpUpgradeListener : nsISupports
                                          in nsIAsyncOutputStream aSocketOut);
 
     [must_use] void onUpgradeFailed(in nsresult aErrorCode);
+
+%{C++
+    virtual nsresult OnWebSocketConnectionAvailable(mozilla::net::WebSocketConnectionBase* aConnection) = 0;
+%}
 };
 
 /**

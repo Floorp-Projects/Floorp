@@ -59,6 +59,10 @@ class TransportProviderParent final : public PTransportProviderParent,
   NS_DECL_NSIHTTPUPGRADELISTENER
 
   void ActorDestroy(ActorDestroyReason aWhy) override{};
+  nsresult OnWebSocketConnectionAvailable(
+      WebSocketConnectionBase* aConnection) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
  private:
   ~TransportProviderParent() = default;

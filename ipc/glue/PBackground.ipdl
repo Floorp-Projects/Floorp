@@ -50,6 +50,7 @@ include protocol PUDPSocket;
 include protocol PVerifySSLServerCert;
 include protocol PVsync;
 include protocol PRemoteDecoderManager;
+include protocol PWebSocketConnection;
 
 include DOMTypes;
 include IPCBlob;
@@ -123,6 +124,7 @@ namespace ipc {
   manages PServiceWorkerManager;
   manages PServiceWorkerRegistration;
   manages PWebAuthnTransaction;
+  manages PWebSocketConnection;
   manages PUDPSocket;
   manages PVerifySSLServerCert;
   manages PVsync;
@@ -277,6 +279,8 @@ parent:
 
   async EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
+
+  async PWebSocketConnection(uint32_t aListenerId);
 
 child:
   async PCache();

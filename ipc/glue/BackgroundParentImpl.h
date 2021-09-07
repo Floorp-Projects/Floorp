@@ -415,6 +415,11 @@ class BackgroundParentImpl : public PBackgroundParent,
   dom::PMediaTransportParent* AllocPMediaTransportParent() override;
   bool DeallocPMediaTransportParent(
       dom::PMediaTransportParent* aActor) override;
+
+  already_AddRefed<mozilla::net::PWebSocketConnectionParent>
+  AllocPWebSocketConnectionParent(const uint32_t& aListenerId) override;
+  mozilla::ipc::IPCResult RecvPWebSocketConnectionConstructor(
+      PWebSocketConnectionParent* actor, const uint32_t& aListenerId) override;
 };
 
 }  // namespace ipc

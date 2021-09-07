@@ -40,6 +40,8 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
       const HttpConnectionInfoCloneArgs& aConnInfo,
       Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
       Maybe<PAltSvcTransactionChild*> aTrans, const bool& aFetchHTTPSRR);
+  mozilla::ipc::IPCResult RecvStartWebSocketConnection(
+      PHttpTransactionChild* aTransWithStickyConn, uint32_t aListenerId);
 
  private:
   virtual ~HttpConnectionMgrChild();
