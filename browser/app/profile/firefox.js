@@ -393,6 +393,10 @@ pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
 // Whether Remote Settings is enabled as a quick suggest source.
 pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
 
+// The Firefox Suggest scenario in which the user is enrolled, one of:
+// "history", "offline", "online"
+pref("browser.urlbar.quicksuggest.scenario", "history");
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);

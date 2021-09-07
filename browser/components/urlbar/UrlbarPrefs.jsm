@@ -204,6 +204,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether Remote Settings is enabled as a quick suggest source.
   ["quicksuggest.remoteSettings.enabled", true],
 
+  // The Firefox Suggest scenario in which the user is enrolled, one of:
+  // "history", "offline", "online"
+  ["quicksuggest.scenario", "history"],
+
   // Whether to show the quick suggest onboarding dialog.
   ["quicksuggest.shouldShowOnboardingDialog", true],
 
