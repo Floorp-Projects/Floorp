@@ -1126,15 +1126,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   bool IsElementDisabledForEvents(mozilla::WidgetEvent* aEvent,
                                   nsIFrame* aFrame);
 
-  // The focusability state of this form control.  eUnfocusable means that it
-  // shouldn't be focused at all, eInactiveWindow means it's in an inactive
-  // window, eActiveWindow means it's in an active window.
-  enum FocusTristate { eUnfocusable, eInactiveWindow, eActiveWindow };
-
-  // Get our focus state.  If this returns eInactiveWindow, it will set this
-  // element as the focused element for that window.
-  FocusTristate FocusState();
-
   /** The form that contains this control */
   mozilla::dom::HTMLFormElement* mForm;
 
