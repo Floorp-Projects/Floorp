@@ -47,7 +47,7 @@ let TestTabUnloaderMethods = {
     }
   },
 
-  async calculateMemoryUsage(tabs, processMap) {
+  async calculateMemoryUsage(processMap, tabs) {
     let memory = tabs[0].memory;
     for (let pid of processMap.keys()) {
       processMap.get(pid).memory = memory ? memory[pid - 1] : 1;
@@ -360,6 +360,23 @@ let unloadTests = [
     process: ["1", "1", "1", "2", "2,1,1,1", "2,1", "3", "3"],
     memory: ["4000", "1800", "1000"],
     result: "0,1,2,4,3,5,6,7",
+  },
+  {
+    // The tab "1" contains 4 frames, but its uniqueCount is 1 because
+    // all of those frames are backed by the process "1".  As a result,
+    // TabUnloader puts the tab "1" first based on the last access time.
+    tabs: ["1", "2", "3", "4", "5"],
+    process: ["1,1,1,1", "2", "3", "3", "3"],
+    memory: ["100", "100", "100"],
+    result: "0,1,2,3,4",
+  },
+  {
+    // The uniqueCount of the tab "1", "2", and "3" is 1, 2, and 3,
+    // respectively.  As a result the first three tabs are sorted as 2,1,0.
+    tabs: ["1", "2", "3", "4", "5", "6"],
+    process: ["1,7,1,7,1,1,7,1", "7,3,7,2", "4,5,7,4,6,7", "7", "7", "7"],
+    memory: ["100", "100", "100", "100", "100", "100", "100"],
+    result: "2,1,0,3,4,5",
   },
 ];
 
