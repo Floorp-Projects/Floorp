@@ -19,6 +19,7 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannelInternal.h"
+#include "mozilla/net/WebSocketConnectionListener.h"
 #include "BaseWebSocketChannel.h"
 
 #include "nsCOMPtr.h"
@@ -46,6 +47,7 @@ class CallOnStop;
 class CallOnServerClose;
 class CallAcknowledge;
 class WebSocketEventService;
+class WebSocketConnectionBase;
 
 [[nodiscard]] extern nsresult CalculateWebSocketHashedSecret(
     const nsACString& aKey, nsACString& aHash);
@@ -71,7 +73,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink,
-                         public nsINamed {
+                         public nsINamed,
+                         public WebSocketConnectionListener {
   friend class WebSocketFrame;
 
  public:
@@ -115,6 +118,13 @@ class WebSocketChannel : public BaseWebSocketChannel,
   void GetEffectiveURL(nsAString& aEffectiveURL) const override;
   bool IsEncrypted() const override;
 
+  nsresult OnTransportAvailableInternal();
+  nsresult OnWebSocketConnectionAvailable(
+      WebSocketConnectionBase* aConnection) override;
+  void OnError(nsresult aStatus) override;
+  void OnTCPClosed() override;
+  nsresult OnDataReceived(uint8_t* aData, uint32_t aCount) override;
+
   const static uint32_t kControlFrameMask = 0x8;
 
   // First byte of the header
@@ -148,6 +158,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
 
   void EnqueueOutgoingMessage(nsDeque<OutboundMessage>& aQueue,
                               OutboundMessage* aMsg);
+  void DoEnqueueOutgoingMessage();
 
   void PrimeNewOutgoingMessage();
   void DeleteCurrentOutGoingMessage();
@@ -200,7 +211,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
     }
   }
 
-  nsCOMPtr<nsIEventTarget> mSocketThread;
+  nsCOMPtr<nsIEventTarget> mIOThread;
   nsCOMPtr<nsIHttpChannelInternal> mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
   nsCOMPtr<nsICancelable> mCancelable;
@@ -223,6 +234,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCOMPtr<nsISocketTransport> mTransport;
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
+  RefPtr<WebSocketConnectionBase> mConnection;
 
   nsCOMPtr<nsITimer> mCloseTimer;
   uint32_t mCloseTimeout; /* milliseconds */

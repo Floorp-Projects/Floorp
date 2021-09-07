@@ -10,6 +10,7 @@
 #include "HttpConnectionMgrParent.h"
 #include "AltSvcTransactionParent.h"
 #include "mozilla/net/HttpTransactionParent.h"
+#include "mozilla/net/WebSocketConnectionParent.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -19,6 +20,33 @@
 
 namespace mozilla {
 namespace net {
+
+nsTHashMap<uint32_t, nsCOMPtr<nsIHttpUpgradeListener>>
+    HttpConnectionMgrParent::sHttpUpgradeListenerMap;
+uint32_t HttpConnectionMgrParent::sListenerId = 0;
+StaticMutex HttpConnectionMgrParent::sLock;
+
+// static
+uint32_t HttpConnectionMgrParent::AddHttpUpgradeListenerToMap(
+    nsIHttpUpgradeListener* aListener) {
+  StaticMutexAutoLock lock(sLock);
+  uint32_t id = sListenerId++;
+  sHttpUpgradeListenerMap.InsertOrUpdate(id, nsCOMPtr{aListener});
+  return id;
+}
+
+// static
+void HttpConnectionMgrParent::RemoveHttpUpgradeListenerFromMap(uint32_t aId) {
+  StaticMutexAutoLock lock(sLock);
+  sHttpUpgradeListenerMap.Remove(aId);
+}
+
+// static
+Maybe<nsCOMPtr<nsIHttpUpgradeListener>>
+HttpConnectionMgrParent::GetAndRemoveHttpUpgradeListener(uint32_t aId) {
+  StaticMutexAutoLock lock(sLock);
+  return sHttpUpgradeListenerMap.Extract(aId);
+}
 
 NS_IMPL_ISUPPORTS0(HttpConnectionMgrParent)
 
@@ -255,8 +283,27 @@ nsresult HttpConnectionMgrParent::ClearConnectionHistory() {
 
 nsresult HttpConnectionMgrParent::CompleteUpgrade(
     HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener) {
-  // TODO: fix this in bug 1497249
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(aTrans->AsHttpTransactionParent());
+
+  if (!CanSend()) {
+    // OnUpgradeFailed is expected to be called on socket thread.
+    nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+    if (target) {
+      nsCOMPtr<nsIHttpUpgradeListener> listener = aUpgradeListener;
+      target->Dispatch(NS_NewRunnableFunction(
+          "HttpConnectionMgrParent::CompleteUpgrade", [listener]() {
+            Unused << listener->OnUpgradeFailed(NS_ERROR_NOT_AVAILABLE);
+          }));
+    }
+    return NS_OK;
+  }
+
+  // We need to link the id and the upgrade listener here, so
+  // WebSocketConnectionParent can connect to the listener correctly later.
+  uint32_t id = AddHttpUpgradeListenerToMap(aUpgradeListener);
+  Unused << SendStartWebSocketConnection(aTrans->AsHttpTransactionParent(), id);
+  return NS_OK;
 }
 
 nsHttpConnectionMgr* HttpConnectionMgrParent::AsHttpConnectionMgr() {

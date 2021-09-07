@@ -34,6 +34,8 @@ child:
                            SpeculativeConnectionOverriderArgs? aOverriderArgs,
                            uint32_t aCaps, PAltSvcTransaction? aTrans,
                            bool aFetchHTTPSRR);
+  async StartWebSocketConnection(PHttpTransaction aTransWithStickyConn,
+                                 uint32_t aListenerId);
 };
 
 } // namespace net
