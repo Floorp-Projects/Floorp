@@ -3601,14 +3601,9 @@ bool BaseCompiler::emitCatch() {
   masm.bind(&tryCatch.catchInfos.back().label);
 
   // Extract the arguments in the exception package and push them.
-  const ResultType params = moduleEnv_.tags[tagIndex].resultType();
-
-  uint32_t refCount = 0;
-  for (uint32_t i = 0; i < params.length(); i++) {
-    if (params[i].isReference()) {
-      refCount++;
-    }
-  }
+  const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
+  const ValTypeVector& params = tagDesc.argTypes;
+  const TagOffsetVector& offsets = tagDesc.argOffsets;
 
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
@@ -3629,7 +3624,7 @@ bool BaseCompiler::emitCatch() {
   masm.load32(Address(refs, NativeObject::offsetOfFixedElements() +
                                 ObjectElements::offsetOfLength()),
               scratch);
-  masm.branch32(Assembler::Equal, scratch, Imm32(refCount), &ok);
+  masm.branch32(Assembler::Equal, scratch, Imm32(tagDesc.refCount), &ok);
   masm.assumeUnreachable("Array length should be equal to exn ref count.");
   masm.bind(&ok);
   freeI32(scratch);
@@ -3641,40 +3636,37 @@ bool BaseCompiler::emitCatch() {
   pushRef(exn);
 
   masm.loadPtr(Address(values, dataOffset), values);
-  size_t argOffset = 0;
-  // The ref values have been pushed into the ArrayObject in a stacklike
-  // fashion so we need to load them starting from the last element.
-  int32_t refIndex = refCount - 1;
   for (uint32_t i = 0; i < params.length(); i++) {
+    int32_t offset = offsets[i];
     switch (params[i].kind()) {
       case ValType::I32: {
         RegI32 reg = needI32();
-        masm.load32(Address(values, argOffset), reg);
+        masm.load32(Address(values, offset), reg);
         pushI32(reg);
         break;
       }
       case ValType::I64: {
         RegI64 reg = needI64();
-        masm.load64(Address(values, argOffset), reg);
+        masm.load64(Address(values, offset), reg);
         pushI64(reg);
         break;
       }
       case ValType::F32: {
         RegF32 reg = needF32();
-        masm.loadFloat32(Address(values, argOffset), reg);
+        masm.loadFloat32(Address(values, offset), reg);
         pushF32(reg);
         break;
       }
       case ValType::F64: {
         RegF64 reg = needF64();
-        masm.loadDouble(Address(values, argOffset), reg);
+        masm.loadDouble(Address(values, offset), reg);
         pushF64(reg);
         break;
       }
       case ValType::V128: {
 #  ifdef ENABLE_WASM_SIMD
         RegV128 reg = needV128();
-        masm.loadUnalignedSimd128(Address(values, argOffset), reg);
+        masm.loadUnalignedSimd128(Address(values, offset), reg);
         pushV128(reg);
         break;
 #  else
@@ -3686,21 +3678,13 @@ bool BaseCompiler::emitCatch() {
         // TODO/AnyRef-boxing: With boxed immediates and strings, this may need
         // to handle other kinds of values.
         ASSERT_ANYREF_IS_JSOBJECT;
-
         RegRef reg = needRef();
-        NativeObject::elementsSizeMustNotOverflow();
-        uint32_t offset = refIndex * sizeof(Value);
         masm.unboxObjectOrNull(Address(refs, offset), reg);
         pushRef(reg);
-        refIndex--;
         break;
       }
     }
-    if (!params[i].isReference()) {
-      argOffset += SizeOf(params[i]);
-    }
   }
-  MOZ_ASSERT(refIndex == -1);
   freeRef(values);
   freeRef(refs);
 
@@ -3956,19 +3940,13 @@ bool BaseCompiler::emitThrow() {
     return true;
   }
 
-  const ResultType& params = moduleEnv_.tags[exnIndex].resultType();
-
-  // Measure space we need for all the args to put in the exception.
-  uint32_t exnBytes = 0;
-  for (size_t i = 0; i < params.length(); i++) {
-    if (!params[i].isReference()) {
-      exnBytes += SizeOf(params[i]);
-    }
-  }
+  const TagDesc& tagDesc = moduleEnv_.tags[exnIndex];
+  const ResultType& params = tagDesc.resultType();
+  const TagOffsetVector& offsets = tagDesc.argOffsets;
 
   // Create the new exception object that we will throw.
   pushI32(exnIndex);
-  pushI32(exnBytes);
+  pushI32(tagDesc.bufferSize);
   if (!emitInstanceCall(lineOrBytecode, SASigExceptionNew)) {
     return false;
   }
@@ -3983,40 +3961,37 @@ bool BaseCompiler::emitThrow() {
   masm.unboxObject(exnValuesAddress, scratch);
   masm.loadPtr(Address(scratch, dataOffset), scratch);
 
-  size_t argOffset = exnBytes;
   for (int32_t i = params.length() - 1; i >= 0; i--) {
-    if (!params[i].isReference()) {
-      argOffset -= SizeOf(params[i]);
-    }
+    int32_t offset = offsets[i];
     switch (params[i].kind()) {
       case ValType::I32: {
         RegI32 reg = popI32();
-        masm.store32(reg, Address(scratch, argOffset));
+        masm.store32(reg, Address(scratch, offset));
         freeI32(reg);
         break;
       }
       case ValType::I64: {
         RegI64 reg = popI64();
-        masm.store64(reg, Address(scratch, argOffset));
+        masm.store64(reg, Address(scratch, offset));
         freeI64(reg);
         break;
       }
       case ValType::F32: {
         RegF32 reg = popF32();
-        masm.storeFloat32(reg, Address(scratch, argOffset));
+        masm.storeFloat32(reg, Address(scratch, offset));
         freeF32(reg);
         break;
       }
       case ValType::F64: {
         RegF64 reg = popF64();
-        masm.storeDouble(reg, Address(scratch, argOffset));
+        masm.storeDouble(reg, Address(scratch, offset));
         freeF64(reg);
         break;
       }
       case ValType::V128: {
 #  ifdef ENABLE_WASM_SIMD
         RegV128 reg = popV128();
-        masm.storeUnalignedSimd128(reg, Address(scratch, argOffset));
+        masm.storeUnalignedSimd128(reg, Address(scratch, offset));
         freeV128(reg);
         break;
 #  else
@@ -4053,7 +4028,6 @@ bool BaseCompiler::emitThrow() {
       }
     }
   }
-  MOZ_ASSERT(argOffset == 0);
   freeRef(scratch);
 
   deadCode_ = true;
