@@ -356,12 +356,18 @@ p {
   flex: 1;
 }
 
-.promo.top a {
+.promo.top a,
+.promo.below-search a {
   flex: unset;
 }
 
-.promo.top {
+.promo.top,
+.promo.below-search {
   text-align: start;
+}
+
+.promo.below-search {
+  padding: 50px 22px 0;
 }
 
 .promo.bottom {
