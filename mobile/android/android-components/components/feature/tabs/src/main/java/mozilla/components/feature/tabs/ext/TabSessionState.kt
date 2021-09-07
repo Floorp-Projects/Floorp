@@ -16,7 +16,8 @@ internal fun TabSessionState.toTab() = Tab(
     content.thumbnail,
     mediaSessionState?.playbackState,
     mediaSessionState?.controller,
-    lastAccess
+    lastAccess,
+    if (content.searchTerms.isNotEmpty()) content.searchTerms else historyMetadata?.searchTerm ?: ""
 )
 
 /**

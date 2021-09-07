@@ -19,6 +19,8 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property playbackState Current media session playback state for the tab (or null)
  * @property controller Current media session controller for the tab (or null)
  * @property lastAccess The last time this tab was selected.
+ * @property searchTerm the last used search term for this tab or from the originating tab, or an
+ * empty string if no search was executed.
  */
 data class Tab(
     val id: String,
@@ -29,5 +31,6 @@ data class Tab(
     val thumbnail: Bitmap? = null,
     val playbackState: MediaSession.PlaybackState? = null,
     val controller: MediaSession.Controller? = null,
-    val lastAccess: Long = 0L
+    val lastAccess: Long = 0L,
+    val searchTerm: String = ""
 )
