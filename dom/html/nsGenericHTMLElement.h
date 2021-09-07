@@ -1000,17 +1000,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   virtual void SaveState() {}
 
   /**
-   * Restore from presentation state.  You pass in the presentation state for
-   * this form control (generated with GenerateStateKey() + "-C") and the form
-   * control will grab its state from there.
-   *
-   * @param aState the pres state to use to restore the control
-   * @return true if the form control was a checkbox and its
-   *         checked state was restored, false otherwise.
-   */
-  virtual bool RestoreState(mozilla::PresState* aState) { return false; }
-
-  /**
    * This callback is called by a fieldest on all its elements whenever its
    * disabled attribute is changed so the element knows its disabled state
    * might have changed.
@@ -1162,9 +1151,19 @@ class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
 
  protected:
   /**
+   * Restore from presentation state.  You pass in the presentation state for
+   * this form control (generated with GenerateStateKey() + "-C") and the form
+   * control will grab its state from there.
+   *
+   * @param aState the pres state to use to restore the control
+   * @return true if the form control was a checkbox and its
+   *         checked state was restored, false otherwise.
+   */
+  virtual bool RestoreState(mozilla::PresState* aState) { return false; }
+
+  /**
    * Restore the state for a form control in response to the element being
-   * inserted into the document by the parser.  Ends up calling
-   * nsIFormControl::RestoreState().
+   * inserted into the document by the parser.  Ends up calling RestoreState().
    *
    * GenerateStateKey() must already have been called.
    *
