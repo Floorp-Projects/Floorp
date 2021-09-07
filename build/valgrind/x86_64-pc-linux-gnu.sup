@@ -986,3 +986,10 @@
    fun:RacyRegisteredThread
    fun:_ZN16RegisteredThreadC1EP10ThreadInfoP9nsIThreadPv
 }
+
+{
+  Bug 1728618 / 1716579
+  Memcheck:Cond
+  fun:_ZN9webrender8renderer8Renderer20update_texture_cache*
+  fun:_ZN9webrender8renderer8Renderer11render_impl*
+}
