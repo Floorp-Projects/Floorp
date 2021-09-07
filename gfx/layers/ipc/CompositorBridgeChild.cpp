@@ -400,14 +400,6 @@ bool CompositorBridgeChild::SendAdoptChild(const LayersId& id) {
   return PCompositorBridgeChild::SendAdoptChild(id);
 }
 
-bool CompositorBridgeChild::SendMakeSnapshot(
-    const SurfaceDescriptor& inSnapshot, const gfx::IntRect& dirtyRect) {
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeChild::SendMakeSnapshot(inSnapshot, dirtyRect);
-}
-
 bool CompositorBridgeChild::SendFlushRendering() {
   if (!mCanSend) {
     return false;

@@ -87,16 +87,6 @@ already_AddRefed<gfx::DataSourceSurface> GetSurfaceForDescriptor(
                                                        rgb.format());
 }
 
-already_AddRefed<gfx::DrawTarget> GetDrawTargetForDescriptor(
-    const SurfaceDescriptor& aDescriptor) {
-  uint8_t* data = GetAddressFromDescriptor(aDescriptor);
-  auto rgb =
-      aDescriptor.get_SurfaceDescriptorBuffer().desc().get_RGBDescriptor();
-  uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
-  return gfx::Factory::CreateDrawTargetForData(
-      gfx::BackendType::SKIA, data, rgb.size(), stride, rgb.format());
-}
-
 void DestroySurfaceDescriptor(ipc::IShmemAllocator* aAllocator,
                               SurfaceDescriptor* aSurface) {
   MOZ_ASSERT(aSurface);
