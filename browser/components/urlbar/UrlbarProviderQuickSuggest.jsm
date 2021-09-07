@@ -183,7 +183,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (!this._recordedExposureEvent) {
       this._recordedExposureEvent = true;
       Services.tm.idleDispatchToMainThread(() =>
-        NimbusFeatures.urlbar.recordExposureEvent({ once: true })
+        NimbusFeatures.urlbar.recordExposureEvent()
       );
     }
   }
