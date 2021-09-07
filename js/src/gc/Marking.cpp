@@ -3083,18 +3083,10 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
 
 void js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start,
                                           uint32_t end) {
-  HeapSlot* fixedStart;
-  HeapSlot* fixedEnd;
-  HeapSlot* dynStart;
-  HeapSlot* dynEnd;
-  nobj->getSlotRange(start, end, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
-  if (fixedStart) {
-    traceSlots(fixedStart->unbarrieredAddress(),
-               fixedEnd->unbarrieredAddress());
-  }
-  if (dynStart) {
-    traceSlots(dynStart->unbarrieredAddress(), dynEnd->unbarrieredAddress());
-  }
+  auto traceRange = [this](HeapSlot* slotStart, HeapSlot* slotEnd) {
+    traceSlots(slotStart->unbarrieredAddress(), slotEnd->unbarrieredAddress());
+  };
+  nobj->forEachSlotRange(start, end, traceRange);
 }
 
 void js::TenuringTracer::traceSlots(Value* vp, Value* end) {
