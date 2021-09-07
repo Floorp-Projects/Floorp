@@ -123,8 +123,8 @@ class HTMLInputElement final : public TextControlElement,
 
   enum class FromClone { no, yes };
 
-  HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                   mozilla::dom::FromParser aFromParser,
+  HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
+                   FromParser aFromParser,
                    FromClone aFromClone = FromClone::no);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLInputElement, input)
@@ -132,57 +132,56 @@ class HTMLInputElement final : public TextControlElement,
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual int32_t TabIndexDefault() override;
+  int32_t TabIndexDefault() override;
   using nsGenericHTMLElement::Focus;
-  virtual void Blur(ErrorResult& aError) override;
-  virtual void Focus(const FocusOptions& aOptions, const CallerType aCallerType,
-                     ErrorResult& aError) override;
+  void Blur(ErrorResult& aError) override;
+  void Focus(const FocusOptions& aOptions, CallerType aCallerType,
+             ErrorResult& aError) override;
 
   // nsINode
 #if !defined(ANDROID) && !defined(XP_MACOSX)
-  virtual bool IsNodeApzAwareInternal() const override;
+  bool IsNodeApzAwareInternal() const override;
 #endif
 
   // Element
-  virtual bool IsInteractiveHTMLContent() const override;
+  bool IsInteractiveHTMLContent() const override;
 
   // nsGenericHTMLElement
-  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
+  bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   // nsGenericHTMLFormElement
   void SaveState() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool RestoreState(PresState* aState) override;
 
   // EventTarget
-  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+  void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
   // Overriden nsIFormControl methods
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
-  virtual bool AllowDrop() override;
+  bool AllowDrop() override;
 
-  virtual void FieldSetDisabledChanged(bool aNotify) override;
+  void FieldSetDisabledChanged(bool aNotify) override;
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                               int32_t* aTabIndex) override;
+  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                       int32_t* aTabIndex) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                              int32_t aModType) const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
+                                      int32_t aModType) const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
+  nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor);
   MOZ_CAN_RUN_SCRIPT
@@ -194,51 +193,49 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT
   void SetValueOfRangeForUserEvent(Decimal aValue);
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual void DoneCreatingElement() override;
+  void DoneCreatingElement() override;
 
-  virtual void DestroyContent() override;
+  void DestroyContent() override;
 
-  virtual EventStates IntrinsicState() const override;
+  EventStates IntrinsicState() const override;
 
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
-  virtual nsresult SetValueChanged(bool aValueChanged) override;
-  virtual bool IsSingleLineTextControl() const override;
-  virtual bool IsTextArea() const override;
-  virtual bool IsPasswordTextControl() const override;
-  virtual int32_t GetCols() override;
-  virtual int32_t GetWrapCols() override;
-  virtual int32_t GetRows() override;
-  virtual void GetDefaultValueFromContent(nsAString& aValue) override;
-  virtual bool ValueChanged() const override;
-  virtual void GetTextEditorValue(nsAString& aValue,
-                                  bool aIgnoreWrap) const override;
+  nsresult SetValueChanged(bool aValueChanged) override;
+  bool IsSingleLineTextControl() const override;
+  bool IsTextArea() const override;
+  bool IsPasswordTextControl() const override;
+  int32_t GetCols() override;
+  int32_t GetWrapCols() override;
+  int32_t GetRows() override;
+  void GetDefaultValueFromContent(nsAString& aValue) override;
+  bool ValueChanged() const override;
+  void GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
   MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor() override;
-  virtual TextEditor* GetTextEditorWithoutCreation() override;
-  virtual nsISelectionController* GetSelectionController() override;
-  virtual nsFrameSelection* GetConstFrameSelection() override;
-  virtual TextControlState* GetTextControlState() const override {
+  TextEditor* GetTextEditorWithoutCreation() override;
+  nsISelectionController* GetSelectionController() override;
+  nsFrameSelection* GetConstFrameSelection() override;
+  TextControlState* GetTextControlState() const override {
     return GetEditorState();
   }
-  virtual nsresult BindToFrame(nsTextControlFrame* aFrame) override;
-  MOZ_CAN_RUN_SCRIPT virtual void UnbindFromFrame(
-      nsTextControlFrame* aFrame) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult CreateEditor() override;
-  virtual void SetPreviewValue(const nsAString& aValue) override;
-  virtual void GetPreviewValue(nsAString& aValue) override;
-  virtual void EnablePreview() override;
-  virtual bool IsPreviewEnabled() override;
-  virtual void InitializeKeyboardEventListeners() override;
-  virtual void OnValueChanged(ValueChangeKind) override;
-  virtual void GetValueFromSetRangeText(nsAString& aValue) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SetValueFromSetRangeText(
-      const nsAString& aValue) override;
-  virtual bool HasCachedSelection() override;
+  nsresult BindToFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT void UnbindFromFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT nsresult CreateEditor() override;
+  void SetPreviewValue(const nsAString& aValue) override;
+  void GetPreviewValue(nsAString& aValue) override;
+  void EnablePreview() override;
+  bool IsPreviewEnabled() override;
+  void InitializeKeyboardEventListeners() override;
+  void OnValueChanged(ValueChangeKind) override;
+  void GetValueFromSetRangeText(nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetValueFromSetRangeText(const nsAString& aValue) override;
+  bool HasCachedSelection() override;
 
   /**
    * TextEditorValueEquals() is designed for internal use so that aValue
@@ -284,7 +281,7 @@ class HTMLInputElement final : public TextControlElement,
   HTMLInputElement* GetSelectedRadioButton() const;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement, TextControlElement)
 
@@ -863,8 +860,8 @@ class HTMLInputElement final : public TextControlElement,
  protected:
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual ~HTMLInputElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the TextControlElement version.
@@ -948,24 +945,22 @@ class HTMLInputElement final : public TextControlElement,
   /**
    * Called when an attribute is about to be changed
    */
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override;
+  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                         const nsAttrValueOrString* aValue,
+                         bool aNotify) override;
   /**
    * Called when an attribute has just been changed
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
-  virtual void BeforeSetForm(bool aBindToTree) override;
+  void BeforeSetForm(bool aBindToTree) override;
 
-  virtual void AfterClearForm(bool aUnbindOrDelete) override;
+  void AfterClearForm(bool aUnbindOrDelete) override;
 
-  virtual void ResultForDialogSubmit(nsAString& aResult) override;
+  void ResultForDialogSubmit(nsAString& aResult) override;
 
   /**
    * Dispatch a select event.
