@@ -34,6 +34,8 @@ var EXPORTED_SYMBOLS = ["GeckoViewContentChild"];
 
 class GeckoViewContentChild extends GeckoViewActorChild {
   actorCreated() {
+    super.actorCreated();
+
     this.pageShow = new Promise(resolve => {
       this.receivedPageShow = resolve;
     });
