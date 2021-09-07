@@ -2187,6 +2187,8 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       // switch.
       mDoingProcessSwitch = true;
 
+      DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
+
       // XXX(anny) This is currently a dead code path because parent-controlled
       // DC pref is off. When we enable the pref, we might get extra STATE_START
       // progress events
