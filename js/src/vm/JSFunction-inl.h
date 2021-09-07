@@ -64,7 +64,7 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
   nobj->setEmptyElements();
 
   JSFunction* fun = static_cast<JSFunction*>(nobj);
-  fun->initializeSlotRange(0, shape->slotSpan());
+  fun->initFixedSlots(JSCLASS_RESERVED_SLOTS(clasp));
   fun->initFlagsAndArgCount();
   fun->initFixedSlot(NativeJitInfoOrInterpretedScriptSlot,
                      JS::PrivateValue(nullptr));
