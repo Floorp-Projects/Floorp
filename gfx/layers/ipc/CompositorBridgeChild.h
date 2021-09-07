@@ -132,7 +132,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot,
                         const gfx::IntRect& dirtyRect);
   bool SendFlushRendering();
-  bool SendGetTileSize(int32_t* tileWidth, int32_t* tileHeight);
   bool SendStartFrameTimeRecording(const int32_t& bufferSize,
                                    uint32_t* startIndex);
   bool SendStopFrameTimeRecording(const uint32_t& startIndex,
