@@ -127,7 +127,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendPause();
   bool SendResume();
   bool SendResumeAsync();
-  bool SendNotifyChildCreated(const LayersId& id, CompositorOptions* aOptions);
   bool SendAdoptChild(const LayersId& id);
   bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot,
                         const gfx::IntRect& dirtyRect);
