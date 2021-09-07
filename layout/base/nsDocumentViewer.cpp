@@ -3518,6 +3518,10 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
     MOZ_ASSERT(!mPresContext);
     MOZ_ASSERT(!mPresShell);
 
+    if (MOZ_UNLIKELY(!mDocument)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     RefPtr<nsIDeviceContextSpec> devspec = new nsDeviceContextSpecProxy();
     nsresult rv =
         devspec->Init(nullptr, aPrintSettings, /* aIsPrintPreview = */ true);
