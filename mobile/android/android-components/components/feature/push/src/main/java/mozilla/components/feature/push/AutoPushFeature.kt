@@ -17,6 +17,9 @@ import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
 import mozilla.appservices.push.GeneralError
+import mozilla.appservices.push.JSONDeserializeError
+import mozilla.appservices.push.RequestError
+import mozilla.appservices.push.UAIDNotRecognizedError
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
@@ -371,6 +374,8 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
         is GeneralError,
         is CryptoError,
         is CommunicationError,
+        is JSONDeserializeError,
+        is RequestError,
         is CommunicationServerError -> false
         else -> true
     }
