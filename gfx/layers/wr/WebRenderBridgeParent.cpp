@@ -208,8 +208,9 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-LazyLogModule gRenderThreadLog("WebRenderBridgeParent");
-#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+LazyLogModule gWebRenderBridgeParentLog("WebRenderBridgeParent");
+#define LOG(...) \
+  MOZ_LOG(gWebRenderBridgeParentLog, LogLevel::Debug, (__VA_ARGS__))
 
 class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
  public:
