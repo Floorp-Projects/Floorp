@@ -200,14 +200,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   wr::PipelineId GetNextPipelineId();
 
-  // Must only be called from the main thread. Notifies the CompositorBridge
-  // that all work has been submitted to the paint thread or paint worker
-  // threads, and returns whether all paints are completed. If this returns
-  // true, then an AsyncEndLayerTransaction must be queued, otherwise once
-  // NotifyFinishedAsyncWorkerPaint returns true, an AsyncEndLayerTransaction
-  // must be executed.
-  bool NotifyBeginAsyncEndLayerTransaction(SyncObjectClient* aSyncObject);
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
@@ -285,15 +277,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // that was
   size_t mTotalAsyncPaints;
   TimeStamp mAsyncTransactionBegin;
-
-  // Contains the number of outstanding asynchronous paints tied to a
-  // PLayerTransaction on this bridge. This is R/W on both the main and paint
-  // threads, and must be accessed within the paint lock.
-  size_t mOutstandingAsyncPaints;
-
-  // Whether we are waiting for an async paint end transaction
-  bool mOutstandingAsyncEndTransaction;
-  RefPtr<SyncObjectClient> mOutstandingAsyncSyncObject;
 
   // True if this CompositorBridge is currently delaying its messages until the
   // paint thread completes. This is R/W on both the main and paint threads, and

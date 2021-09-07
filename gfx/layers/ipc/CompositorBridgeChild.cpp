@@ -89,8 +89,6 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mSectionAllocator(nullptr),
       mPaintLock("CompositorBridgeChild.mPaintLock"),
       mTotalAsyncPaints(0),
-      mOutstandingAsyncPaints(0),
-      mOutstandingAsyncEndTransaction(false),
       mIsDelayingForAsyncPaints(false),
       mSlowFlushCount(0),
       mTotalFlushCount(0) {
@@ -755,17 +753,6 @@ wr::MaybeExternalImageId CompositorBridgeChild::GetNextExternalImageId() {
 
 wr::PipelineId CompositorBridgeChild::GetNextPipelineId() {
   return wr::AsPipelineId(GetNextResourceId());
-}
-
-bool CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction(
-    SyncObjectClient* aSyncObject) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MonitorAutoLock lock(mPaintLock);
-
-  MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
-  mOutstandingAsyncEndTransaction = true;
-  mOutstandingAsyncSyncObject = aSyncObject;
-  return mOutstandingAsyncPaints == 0;
 }
 
 }  // namespace layers
