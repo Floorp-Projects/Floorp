@@ -1732,21 +1732,20 @@ static void ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
                  "wasm/asm.js array buffer elements allocated outside both the "
                  "malloc heap and the GC heap.");
   }
+  if (classInfo.objectsNonHeapElementsWasmShared > 0) {
+    REPORT_BYTES(
+        path + "objects/non-heap/elements/wasm-shared"_ns, KIND_NONHEAP,
+        classInfo.objectsNonHeapElementsWasmShared,
+        "wasm/asm.js array buffer elements allocated outside both the "
+        "malloc heap and the GC heap. These elements are shared between "
+        "one or more runtimes; the reported size is divided by the "
+        "buffer's refcount.");
+  }
 
   if (classInfo.objectsNonHeapCodeWasm > 0) {
     REPORT_BYTES(path + "objects/non-heap/code/wasm"_ns, KIND_NONHEAP,
                  classInfo.objectsNonHeapCodeWasm,
                  "AOT-compiled wasm/asm.js code.");
-  }
-
-  // Although wasm guard pages aren't committed in memory they can be very
-  // large and contribute greatly to vsize and so are worth reporting.
-  if (classInfo.wasmGuardPages > 0) {
-    REPORT_BYTES(
-        "wasm-guard-pages"_ns, KIND_OTHER, classInfo.wasmGuardPages,
-        "Guard pages mapped after the end of wasm memories, reserved for "
-        "optimization tricks, but not committed and thus never contributing"
-        " to RSS, only vsize.");
   }
 }
 
@@ -2329,6 +2328,16 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
   // Report the numbers for memory used by wasm Runtime state.
   REPORT_BYTES("wasm-runtime"_ns, KIND_OTHER, rtStats.runtime.wasmRuntime,
                "The memory used for wasm runtime bookkeeping.");
+
+  // Although wasm guard pages aren't committed in memory they can be very
+  // large and contribute greatly to vsize and so are worth reporting.
+  if (rtStats.runtime.wasmGuardPages > 0) {
+    REPORT_BYTES(
+        "wasm-guard-pages"_ns, KIND_OTHER, rtStats.runtime.wasmGuardPages,
+        "Guard pages mapped after the end of wasm memories, reserved for "
+        "optimization tricks, but not committed and thus never contributing"
+        " to RSS, only vsize.");
+  }
 
   // Report the numbers for memory outside of realms.
 

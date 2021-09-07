@@ -340,7 +340,8 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
         info.objectsGCHeap += Nursery::nurseryCellHeaderSize();
       }
 
-      obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &info);
+      obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &info,
+                                  &rtStats->runtime);
 
       // These classes require special handling due to shared resources which
       // we must be careful not to report twice.
