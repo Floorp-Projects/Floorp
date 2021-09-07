@@ -11928,15 +11928,6 @@
   mirror: always
 #endif
 
-# Smooth rendering mode for Wayland basic compositor.
-# 0 - direct draw
-# 1 - basic caching
-# 2 - all caching
-- name: widget.wayland-smooth-rendering
-  type: RelaxedAtomicUint32
-  value: 1
-  mirror: always
-
 # Use DMABuf backend for WebGL.
 - name: widget.dmabuf-webgl.enabled
   type: RelaxedAtomicBool
@@ -11959,11 +11950,6 @@
 - name: widget.wayland.fractional_buffer_scale
   type: float
   value: 0.0f
-  mirror: once
-
-- name: widget.wayland.multi-buffer-software-backend.enabled
-  type: bool
-  value: true
   mirror: once
 
 # Use opaque region for MozContainer wl_surface
