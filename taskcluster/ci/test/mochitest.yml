@@ -12,8 +12,8 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux.*64/debug: ['fission', 'wayland']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland']
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     tier:
@@ -58,7 +58,7 @@ mochitest-plain:
 
     variants:
         by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-xorigin', 'wayland']
+            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-xorigin', 'wayland', 'socketprocess_networking']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission', 'fission-xorigin']
             default: ['fission', 'fission-xorigin']
     run-on-projects:
@@ -133,7 +133,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*64(-shippable)?-qr/opt: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-a11y-checks', 'webrender-sw-wayland']
             linux.*64(-asan|-ccov|-devedition|-tsan)-qr/opt: ['webrender-sw', 'webrender-sw-fission']
-            linux.*64-qr/debug: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-wayland']
+            linux.*64-qr/debug: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-wayland', 'socketprocess_networking']
             windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
@@ -294,7 +294,7 @@ mochitest-devtools-chrome:
     variants:
         by-test-platform:
             linux.*64(-shippable)?-qr/opt: ['fission', 'a11y-checks', 'wayland']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
             default: ['fission']
     run-on-projects:
         by-variant:

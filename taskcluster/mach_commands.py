@@ -44,7 +44,7 @@ class TaskgraphConfig(object):
                 "taskgraph.diffcmd",
                 "string",
                 "The command to run with `./mach taskgraph --diff`",
-                "diff --report-identical-files --color=always "
+                "diff --report-identical-files "
                 "--label={attr}@{base} --label={attr}@{cur} -U20",
                 {},
             )
