@@ -254,7 +254,7 @@
 
     <style name="Preference.Summary" parent="Widget.MaterialComponents.TextView">
         <item name="android:textColor">@color/preference_summary_text</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0.03</item>
     </style>
 
