@@ -729,16 +729,6 @@ class BrowserFragment :
                 requireComponents.sessionUseCases.goForward(tabId)
             }
 
-            R.id.help_trackers -> {
-                val url = SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
-                requireComponents.tabsUseCases.addTab(
-                    url,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-            }
-
             R.id.add_to_homescreen -> { showAddToHomescreenDialog() }
 
             R.id.report_site_issue -> {

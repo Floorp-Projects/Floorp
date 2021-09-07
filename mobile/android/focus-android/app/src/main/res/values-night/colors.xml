@@ -3,70 +3,128 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="snackbarBackground">@color/photonInk05</color>
-    <color name="colorPoweredBy">#271948</color>
+    <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
-    <color name="colorAccent_old">@color/focusContrastPink</color>
+    <color name="colorSecondary">@color/photonInk10</color>
+    <color name="primaryText">@color/photonLightGrey05</color>
+    <color name="secondaryText">@color/photonLightGrey50</color>
+
     <color name="focusContrastPink">#e452B9</color>
 
-    <color name="colorSettingsTint">#f9f9fa</color>
-    <color name="colorAccentSettings">@color/accentBright</color>
+    <color name="dialogAccent">@color/focusContrastPink</color>
 
-    <color name="colorGradientStart">#a90742</color>
-    <color name="colorGradientCenter">#970772</color>
-    <color name="colorGradientEnd">#57076a</color>
+    <color name="disabled">@color/photonLightGrey05</color>
+    <color name="disabledText">@color/photonLightGrey50</color>
+    <color name="background">#1D1133</color>
 
-    <color name="colorProgressGradientStart">#FF9400FF</color>
-    <color name="colorProgressGradientCenter">#FFFF4AA2</color>
-    <color name="colorProgressGradientEnd">#FFFF1AD9</color>
+    <color name="colorTextInactive">#80FFFFFF</color>
+    <color name="urlBarHintText">#ffbbbcc5</color>
+    <color name="statusBarBackground">@color/background</color>
 
-    <!-- Find in page bar color palette -->
-    <color name="find_in_page_background">#1D1133</color>
-    <color name="find_in_page_buttons_tint">#FFFFFF</color>
-    <color name="find_in_page_no_matches_color">#FFFFFF</color>
-    <color name="find_in_page_query_color">#FFFFFF</color>
-    <color name="find_in_page_query_hint_color">#FFFFFF</color>
-    <color name="find_in_page_results_color">#FFFFFF</color>
+    <color name="colorCursor">#ccffffff</color>
+    <color name="colorOverlay">#cc000000</color>
 
-    <!-- Add to Home screen dialog color palette -->
-    <color name="home_screen_dialog_bg">@color/colorSecondary</color>
-    <color name="images_removal_warning_background_color">#271948</color>
-    <color name="home_screen_dialog_bg_tint">#FF4AA2</color>
-    <color name="home_screen_dialog_highlight">#FF4AA2</color>
-    <color name="home_screen_dialog_button_text">#FF4AA2</color>
+    <color name="toolbarUrlBackground">@color/background</color>
 
-    <!-- Settings -->
-    <color name="settings_summary_text">#ffbbbcc5</color>
-    <color name="settings_whats_new">@color/accentBright</color>
-
-    <color name="trackingProtectionSheetBackground">#1D1133</color>
-    <color name="primaryTextColor">#FBFBFE</color>
-
-    <color name="colorPrimary">@color/photonInk60</color>
-    <color name="colorSecondary">@color/photonInk05</color>
-    <color name="menuBackground">@color/colorSecondary</color>
-    <color name="toolbarUrlDarkBackground">@color/photonInk05</color>
-    <color name="toolbarUrlLightBackground">#FBFBFE</color>
-    <color name="headerGradientStart">#2B2154</color>
-    <color name="headerGradientMiddle">#281D4C</color>
-    <color name="headerGradientEnd">#2A2051</color>
-    <color name="divider">#342F6D</color>
+    <color name="divider">@color/colorSecondary</color>
     <color name="accentBright">#FF4AA2</color>
     <color name="accent">#C60084</color>
     <color name="destructive">#FF6A75</color>
-    <color name="primaryText">@color/photonLightGrey05</color>
-    <color name="secondaryText">@color/photonLightGrey50</color>
+
+    <!-- Logo and Splash -->
+    <color name="headerGradientStart">#2B2154</color>
+    <color name="headerGradientMiddle">#281D4C</color>
+    <color name="headerGradientEnd">#2A2051</color>
+
+    <!-- Progress Bar -->
+    <color name="colorProgressGradientStart">#FFFF1AD9</color>
+    <color name="colorProgressGradientCenter">#FFFF1AD9</color>
+    <color name="colorProgressGradientEnd">#FFFF1AD9</color>
+
+    <color name="colorErase">@color/photonMagenta70</color>
+    <color name="colorErasePressed">@color/photonMagenta80</color>
+
+    <color name="colorDotHighlight">@color/photonBlue40</color>
+    <color name="colorCrashAccent">@color/photonBlue40</color>
+
+    <!-- Toolbar -->
+    <color name="toolbar_color">@color/colorPrimary</color>
+
+    <color name="images_removal_warning_background_color">#353852</color>
+    <color name="colorPoweredBy">@color/photonLightGrey05</color>
+    <color name="menuBackground">@color/colorSecondary</color>
+
+    <!-- Snackbar-->
+    <color name="snackbarBackground">#FF414146</color>
+    <color name="snackbarTextColor">#ffffffff</color>
+    <color name="snackbarActionText">@color/photonBlue50</color>
+
+    <!-- Search Suggestions -->
+    <color name="searchSuggestionsBackground">@color/photonInk80</color>
+    <color name="searchSuggestionPromptBackground">@color/photonInk80</color>
+    <color name="searchSuggestionPromptTitleColor">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptSubtitleColor">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptBorderColor">@color/colorSecondary</color>
+    <color name="searchSuggestionPromptButtonTextColor">@color/accentBright</color>
+
+    <color name="searchHintTextColor">#ffffffff</color>
+    <color name="searchHintBackgroundColor">@color/photonInk80</color>
+    <color name="urlBarInactiveBackgroundColor">#480f1126</color>
+
+    <!-- Onboarding -->
+    <color name="onboarding_indicator_default">#7FFFFFFF</color>
+    <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
     <!-- Home Tips -->
     <color name="inactive_dot_background">#66FBFBFE</color>
     <color name="active_dot_background">#FBFBFE</color>
-    <color name="tip_text_color">#BFBFC9</color>
+    <color name="tip_text_color">@color/disabledText</color>
     <color name="tip_deeplink_color">#cf3e8c</color>
 
+    <!-- Session -->
+    <color name="colorSession">@color/photonInk80</color>
+    <color name="colorActiveSession">#353852</color>
+    <color name="colorAction">@color/photonBlue50</color>
 
-    <!-- Toolbar -->
-    <color name="toolbar_color">#271948</color>
-    <!-- Temporary colors until light theme it will be implemented -->
-    <color name="enabled_toolbar_button_color">#000000</color>
+    <!-- Dialogs -->
+    <color name="add_to_homescreen_text">#B3FFFFFF</color>
+    <color name="add_to_homescreen_icon_background">#4C0074</color>
 
+    <color name="home_screen_dialog_warning_bg">#353852</color>
+    <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
+
+    <!-- Add to Home screen dialog color palette -->
+    <color name="home_screen_dialog_bg">@color/colorSecondary</color>
+    <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
+    <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
+    <color name="home_screen_dialog_text">@color/photonGrey10</color>
+    <color name="home_screen_dialog_highlight">@color/focusContrastPink</color>
+
+    <!-- Find in Page -->
+    <color name="find_in_page_background">#FFFFFF</color>
+    <color name="find_in_page_buttons_tint">#000000</color>
+    <color name="find_in_page_no_matches_color">#ff000000</color>
+    <color name="find_in_page_query_color">#ff000000</color>
+    <color name="find_in_page_query_hint_color">#ff000000</color>
+    <color name="find_in_page_results_color">#ff000000</color>
+
+    <color name="firefoxInstallHint">@color/focusContrastPink</color>
+
+    <color name="scrollbarThumb">#b2b2b2b2</color>
+    <color name="doorhanger_link">#FF2AA1FE</color>
+
+    <!-- Preferences -->
+    <color name="preference_summary_text">@color/secondaryText</color>
+    <color name="settings_background">@color/background</color>
+    <color name="preference_learn_more_link">@color/accentBright</color>
+    <color name="selected_search_engine">@color/accentBright</color>
+    <color name="settings_whats_new">@color/accentBright</color>
+
+    <color name="colorSettingsTint">@color/photonGrey10</color>
+    <color name="colorAccentSettings">@color/accentBright</color>
+
+    <color name="preference_row_selected">#353852</color>
+    <color name="preference_row_disabled">#B3313131</color>
+
+    <color name="trackingProtectionSheetBackground">@color/background</color>
 </resources>
