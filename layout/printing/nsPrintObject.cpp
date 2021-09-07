@@ -36,7 +36,6 @@ nsPrintObject::nsPrintObject()
       mParent(nullptr),
       mHasBeenPrinted(false),
       mInvisible(false),
-      mDidCreateDocShell(false),
       mShrinkRatio(1.0),
       mZoomRatio(1.0) {
   MOZ_COUNT_CTOR(nsPrintObject);
@@ -46,11 +45,6 @@ nsPrintObject::~nsPrintObject() {
   MOZ_COUNT_DTOR(nsPrintObject);
 
   DestroyPresentation();
-  if (mDidCreateDocShell && mDocShell) {
-    RefPtr<BrowsingContext> bc(mDocShell->GetBrowsingContext());
-    nsDocShell::Cast(mDocShell)->Destroy();
-    bc->Detach();
-  }
   mDocShell = nullptr;
   mTreeOwner = nullptr;  // mTreeOwner must be released after mDocShell;
 }
