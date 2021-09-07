@@ -684,17 +684,6 @@ class DisplayListBuilder final {
     mClipChainLeaf = aClipRect;
   }
 
-  // Used for opacity flattening. When we flatten away an opacity item,
-  // we push the opacity value onto the builder.
-  // Descendant items should pull the inherited opacity during
-  // their CreateWebRenderCommands implementation. This can only happen if all
-  // descendant items reported supporting this functionality, via
-  // nsDisplayItem::CanApplyOpacity.
-  float GetInheritedOpacity() { return mInheritedOpacity; }
-  void SetInheritedOpacity(float aOpacity) { mInheritedOpacity = aOpacity; }
-
-  layers::DisplayItemCache* GetDisplayItemCache() { return mDisplayItemCache; }
-
   // A chain of RAII objects, each holding a (ASR, ViewID, SideBits) tuple of
   // data. The topmost object is pointed to by the mActiveFixedPosTracker
   // pointer in the wr::DisplayListBuilder.
@@ -761,7 +750,6 @@ class DisplayListBuilder final {
 
   layers::DisplayItemCache* mDisplayItemCache;
   Maybe<uint16_t> mCurrentCacheSlot;
-  float mInheritedOpacity = 1.0f;
 
   friend class WebRenderAPI;
   friend class SpaceAndClipChainHelper;

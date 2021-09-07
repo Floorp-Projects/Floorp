@@ -2760,8 +2760,7 @@ class nsLayoutUtils {
 
   static ScrollMetadata ComputeScrollMetadata(
       const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
-      nsIContent* aContent, const nsIFrame* aItemFrame,
-      const nsPoint& aOffsetToReferenceFrame,
+      nsIContent* aContent, const nsIFrame* aReferenceFrame,
       mozilla::layers::WebRenderLayerManager* aLayerManager,
       ViewID aScrollParentId, const nsSize& aScrollPortSize,
       const mozilla::Maybe<nsRect>& aClipRect, bool aIsRoot);
