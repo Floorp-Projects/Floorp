@@ -71,8 +71,9 @@ void MediaKeySystemAccessManager::PendingRequest::RejectPromiseWithTypeError(
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySystemAccessManager)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeySystemAccessManager)
@@ -623,6 +624,11 @@ nsresult MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
       }
     }
   }
+  return NS_OK;
+}
+
+nsresult MediaKeySystemAccessManager::GetName(nsACString& aName) {
+  aName.AssignLiteral("MediaKeySystemAccessManager");
   return NS_OK;
 }
 
