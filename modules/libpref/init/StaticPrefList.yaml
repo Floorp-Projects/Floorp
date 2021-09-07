@@ -6615,26 +6615,6 @@
   value: 512
   mirror: once
 
-- name: layers.tile-initial-pool-size
-  type: uint32_t
-  value: (uint32_t)50
-  mirror: once
-
-- name: layers.tile-pool-unused-size
-  type: uint32_t
-  value: (uint32_t)10
-  mirror: once
-
-- name: layers.tile-pool-shrink-timeout
-  type: uint32_t
-  value: (uint32_t)50
-  mirror: once
-
-- name: layers.tile-pool-clear-timeout
-  type: uint32_t
-  value: (uint32_t)5000
-  mirror: once
-
 # If this is set the tile size will only be treated as a suggestion.
 # On B2G we will round this to the stride of the underlying allocation.
 # On any platform we may later use the screen size and ignore

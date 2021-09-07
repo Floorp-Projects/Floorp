@@ -571,29 +571,6 @@ void CompositorBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
   mTexturesWaitingNotifyNotUsed.erase(aTextureId);
 }
 
-TextureClientPool* CompositorBridgeChild::GetTexturePool(
-    KnowsCompositor* aAllocator, SurfaceFormat aFormat, TextureFlags aFlags) {
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    if (mTexturePools[i]->GetBackend() ==
-            aAllocator->GetCompositorBackendType() &&
-        mTexturePools[i]->GetMaxTextureSize() ==
-            aAllocator->GetMaxTextureSize() &&
-        mTexturePools[i]->GetFormat() == aFormat &&
-        mTexturePools[i]->GetFlags() == aFlags) {
-      return mTexturePools[i];
-    }
-  }
-
-  mTexturePools.AppendElement(new TextureClientPool(
-      aAllocator, aFormat, gfx::gfxVars::TileSize(), aFlags,
-      StaticPrefs::layers_tile_pool_shrink_timeout_AtStartup(),
-      StaticPrefs::layers_tile_pool_clear_timeout_AtStartup(),
-      StaticPrefs::layers_tile_initial_pool_size_AtStartup(),
-      StaticPrefs::layers_tile_pool_unused_size_AtStartup(), this));
-
-  return mTexturePools.LastElement();
-}
-
 void CompositorBridgeChild::HandleMemoryPressure() {
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     mTexturePools[i]->Clear();

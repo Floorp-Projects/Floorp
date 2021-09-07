@@ -162,9 +162,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void CancelWaitForNotifyNotUsed(uint64_t aTextureId) override;
 
-  TextureClientPool* GetTexturePool(KnowsCompositor* aAllocator,
-                                    gfx::SurfaceFormat aFormat,
-                                    TextureFlags aFlags);
   void ClearTexturePool();
 
   FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() override;
