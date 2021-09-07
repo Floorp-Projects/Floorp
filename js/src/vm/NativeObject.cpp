@@ -186,27 +186,6 @@ void js::NativeObject::checkShapeConsistency() {
 }
 #endif
 
-void js::NativeObject::initializeSlotRange(uint32_t start, uint32_t end) {
-  /*
-   * No bounds check, as this is used when the object's shape does not
-   * reflect its allocated slots (updateSlotsForSpan).
-   */
-  HeapSlot* fixedStart;
-  HeapSlot* fixedEnd;
-  HeapSlot* slotsStart;
-  HeapSlot* slotsEnd;
-  getSlotRangeUnchecked(start, end, &fixedStart, &fixedEnd, &slotsStart,
-                        &slotsEnd);
-
-  uint32_t offset = start;
-  for (HeapSlot* sp = fixedStart; sp < fixedEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, offset++, UndefinedValue());
-  }
-  for (HeapSlot* sp = slotsStart; sp < slotsEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, offset++, UndefinedValue());
-  }
-}
-
 #ifdef DEBUG
 
 bool js::NativeObject::slotInRange(uint32_t slot,
