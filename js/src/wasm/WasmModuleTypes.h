@@ -280,15 +280,31 @@ using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 // exception handling proposal and potentially other future proposals.
 
 #ifdef ENABLE_WASM_EXCEPTIONS
+// The TagOffsetVector represents the offsets in the layout of the
+// data stored in a Wasm exception. For non-reference values, it is
+// an offset in the ArrayBuffer and for reference values it is the
+// offset in the elements of the exception's ArrayObject.
+using TagOffsetVector = Vector<int32_t, 0, SystemAllocPolicy>;
+
 struct TagDesc {
   TagKind kind;
-  ValTypeVector type;
+  ValTypeVector argTypes;
+  TagOffsetVector argOffsets;
+  int32_t bufferSize;
+  int32_t refCount;
   bool isExport;
 
-  TagDesc(TagKind kind, ValTypeVector&& type, bool isExport = false)
-      : kind(kind), type(std::move(type)), isExport(isExport) {}
+  TagDesc(TagKind kind, ValTypeVector&& argTypes, TagOffsetVector&& argOffsets,
+          bool isExport = false)
+      : kind(kind),
+        argTypes(std::move(argTypes)),
+        argOffsets(std::move(argOffsets)),
+        bufferSize(0),
+        refCount(0),
+        isExport(isExport) {}
 
-  ResultType resultType() const { return ResultType::Vector(type); }
+  [[nodiscard]] bool computeLayout();
+  ResultType resultType() const { return ResultType::Vector(argTypes); }
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
