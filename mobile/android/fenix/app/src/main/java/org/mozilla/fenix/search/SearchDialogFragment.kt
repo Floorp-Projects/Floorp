@@ -196,7 +196,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         )
 
         val awesomeBar = binding.awesomeBar
-        awesomeBar.customizeForBottomToolbar = requireContext().settings().shouldUseBottomToolbar
 
         awesomeBarView = AwesomeBarView(
             activity,

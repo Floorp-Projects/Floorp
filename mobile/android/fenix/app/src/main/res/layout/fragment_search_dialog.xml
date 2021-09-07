@@ -59,7 +59,7 @@
         app:barrierDirection="top"
         app:constraint_referenced_ids="awesome_bar,pill_wrapper"/>
 
-    <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+    <org.mozilla.fenix.search.awesomebar.AwesomeBarWrapper
         xmlns:mozac="http://schemas.android.com/apk/res-auto"
         android:id="@+id/awesome_bar"
         android:layout_width="0dp"
@@ -73,9 +73,7 @@
         app:layout_constraintBottom_toTopOf="@+id/pill_wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_suggestions_hint"
-        mozac:awesomeBarDescriptionTextColor="?secondaryText"
-        mozac:awesomeBarTitleTextColor="?primaryText" />
+        app:layout_constraintTop_toBottomOf="@id/search_suggestions_hint" />
 
     <View
         android:id="@+id/fill_link_from_clipboard"

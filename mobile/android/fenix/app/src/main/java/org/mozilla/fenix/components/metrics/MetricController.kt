@@ -5,9 +5,9 @@
 package org.mozilla.fenix.components.metrics
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
+import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts as ComposeAwesomeBarFacts
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
@@ -228,8 +228,8 @@ internal class ReleaseMetricController(
 
             null
         }
-        Component.BROWSER_AWESOMEBAR to BrowserAwesomeBarFacts.Items.PROVIDER_DURATION -> {
-            metadata?.get(BrowserAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
+        Component.COMPOSE_AWESOMEBAR to ComposeAwesomeBarFacts.Items.PROVIDER_DURATION -> {
+            metadata?.get(ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
                 require(providerTiming is Pair<*, *>) { "Expected providerTiming to be a Pair" }
                 when (val provider = providerTiming.first as AwesomeBar.SuggestionProvider) {
                     is HistoryStorageSuggestionProvider -> PerfAwesomebar.historySuggestions
