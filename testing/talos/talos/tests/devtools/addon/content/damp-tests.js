@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+const isWindows = Services.appinfo.OS === "WINNT";
 /**
  * This is the registry for all DAMP tests. Tests will be run in the order specified by
  * the DAMP_TESTS array.
@@ -90,6 +92,8 @@ module.exports = [
     path: "accessibility/simple.js",
     description:
       "Measure open/close toolbox on accessibility panel against simple document",
+    // Bug 1660854 - disable on Windows due to frequent failures
+    disabled: isWindows,
   },
   // Run all tests against "complicated" document
   {
