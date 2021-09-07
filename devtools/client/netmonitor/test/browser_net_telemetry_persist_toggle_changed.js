@@ -36,12 +36,16 @@ add_task(async function() {
   TelemetryTestUtils.assertNumberOfEvents(0);
 
   // Click on the toggle - "true" and make sure it was set to correct value
+  let onPersistChanged = monitor.panelWin.api.once(TEST_EVENTS.PERSIST_CHANGED);
   togglePersistLogsOption(monitor);
   await waitUntil(() => ensurePersistLogsCheckedState(monitor, true));
+  await onPersistChanged;
 
   // Click a second time - "false" and make sure it was set to correct value
+  onPersistChanged = monitor.panelWin.api.once(TEST_EVENTS.PERSIST_CHANGED);
   togglePersistLogsOption(monitor);
   await waitUntil(() => ensurePersistLogsCheckedState(monitor, false));
+  await onPersistChanged;
 
   const expectedEvents = [
     {

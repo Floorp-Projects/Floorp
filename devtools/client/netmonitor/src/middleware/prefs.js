@@ -39,10 +39,8 @@ function prefsMiddleware(store) {
         );
         break;
       case ENABLE_PERSISTENT_LOGS:
-        Services.prefs.setBoolPref(
-          "devtools.netmonitor.persistlog",
-          store.getState().ui.persistentLogsEnabled
-        );
+        const enabled = store.getState().ui.persistentLogsEnabled;
+        Services.prefs.setBoolPref("devtools.netmonitor.persistlog", enabled);
         break;
       case DISABLE_BROWSER_CACHE:
         Services.prefs.setBoolPref(

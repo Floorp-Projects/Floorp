@@ -84,13 +84,14 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._referrerPolicy = networkEvent.referrerPolicy;
     this._channelId = networkEvent.channelId;
     this._browsingContextID = networkEvent.browsingContextID;
+    this.innerWindowId = networkEvent.innerWindowId;
     this._serial = networkEvent.serial;
     this._blockedReason = networkEvent.blockedReason;
     this._blockingExtension = networkEvent.blockingExtension;
 
     this._truncated = false;
     this._private = networkEvent.private;
-    this._isNavigationRequest = networkEvent.isNavigationRequest;
+    this.isNavigationRequest = networkEvent.isNavigationRequest;
   },
 
   /**
@@ -113,6 +114,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     return {
       resourceType: NETWORK_EVENT,
       browsingContextID,
+      innerWindowId: this.innerWindowId,
       resourceId: this._channelId,
       actor: this.actorID,
       startedDateTime: this._startedDateTime,
@@ -132,7 +134,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       // For websocket requests the serial is used instead of the channel id.
       stacktraceResourceId:
         this._cause.type == "websocket" ? this._serial : this._channelId,
-      isNavigationRequest: this._isNavigationRequest,
+      isNavigationRequest: this.isNavigationRequest,
     };
   },
 
