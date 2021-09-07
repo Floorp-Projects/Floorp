@@ -10,8 +10,10 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,8 +55,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.support.images.compose.loader.Fallback
+import mozilla.components.support.images.compose.loader.ImageLoader
+import mozilla.components.support.images.compose.loader.Placeholder
+import mozilla.components.support.images.compose.loader.WithImage
+import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /**
@@ -62,6 +75,7 @@ import kotlin.random.Random
 @Composable
 fun PocketStory(
     @PreviewParameter(PocketStoryProvider::class) story: PocketRecommendedStory,
+    client: Client,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -73,19 +87,52 @@ fun PocketStory(
         Card(
             elevation = 6.dp,
             shape = RoundedCornerShape(4.dp),
-            modifier = Modifier
-                .size(160.dp, 87.dp)
-                .padding(bottom = 8.dp)
+            modifier = Modifier.size(160.dp, 87.dp)
         ) {
-            // Don't yet have a easy way to load URLs in Images.
-            // Default to a solid color to make it easy to appreciate dimensions
-            Box(Modifier.background(Color.Blue))
-            // Image(
-            //     painterResource(R.drawable.ic_pdd),
-            //     contentDescription = "hero image",
-            //     contentScale = ContentScale.FillHeight,
-            // )
+            ImageLoader(
+                client = client,
+                // The endpoint allows us to ask for the optimal resolution image.
+                url = story.imageUrl.replace(
+                    "{wh}",
+                    with(LocalDensity.current) {
+                        "${160.dp.toPx().roundToInt()}x${87.dp.toPx().roundToInt()}"
+                    }
+                ),
+                targetSize = 160.dp
+            ) {
+                WithImage { painter ->
+                    Image(
+                        painter,
+                        modifier = Modifier.size(160.dp, 87.dp),
+                        contentDescription = "${story.title} story image"
+                    )
+                }
+
+                Placeholder {
+                    Box(
+                        Modifier.background(
+                            when (isSystemInDarkTheme()) {
+                                true -> Color(0xFF42414D) // DarkGrey30
+                                false -> PhotonColors.LightGrey30
+                            }
+                        )
+                    )
+                }
+
+                Fallback {
+                    Box(
+                        Modifier.background(
+                            when (isSystemInDarkTheme()) {
+                                true -> Color(0xFF42414D) // DarkGrey30
+                                false -> PhotonColors.LightGrey30
+                            }
+                        )
+                    )
+                }
+            }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
@@ -110,7 +157,8 @@ fun PocketStory(
  */
 @Composable
 fun PocketStories(
-    @PreviewParameter(PocketStoryProvider::class) stories: List<PocketRecommendedStory>
+    @PreviewParameter(PocketStoryProvider::class) stories: List<PocketRecommendedStory>,
+    client: Client
 ) {
     // Items will be shown on two rows. Ceil the divide result to show more items on the top row.
     val halfStoriesIndex = (stories.size + 1) / 2
@@ -121,12 +169,12 @@ fun PocketStories(
                 Column(
                     Modifier.padding(end = if (index == halfStoriesIndex) 0.dp else 8.dp)
                 ) {
-                    PocketStory(item)
+                    PocketStory(item, client)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     stories.getOrNull(halfStoriesIndex + index)?.let {
-                        PocketStory(it)
+                        PocketStory(it, client)
                     }
                 }
             }
@@ -169,15 +217,6 @@ fun PocketRecommendations(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         content()
-
-        // Image(
-        //     painterResource(R.drawable.ic_firefox_pocket),
-        //     "Firefox and Pocket logos",
-        //     Modifier
-        //         .size(64.dp, 27.dp)
-        //         .padding(top = 16.dp),
-        //     contentScale = ContentScale.FillHeight
-        // )
 
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             ClickableText(
@@ -245,7 +284,10 @@ fun ExpandableCard(content: @Composable (() -> Unit)) {
 private fun FinalDesign() {
     ExpandableCard {
         PocketRecommendations {
-            PocketStories(stories = getFakePocketStories(7))
+            PocketStories(
+                stories = getFakePocketStories(7),
+                client = FakeClient()
+            )
         }
     }
 }
@@ -272,4 +314,13 @@ private fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
             )
         }
     }
+}
+
+private class FakeClient : Client() {
+    override fun fetch(request: Request) = Response(
+        url = request.url,
+        status = 200,
+        body = Response.Body.empty(),
+        headers = MutableHeaders()
+    )
 }

@@ -272,7 +272,8 @@ class SessionControlAdapter(
         when (viewType) {
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
                 ComposeView(parent.context),
-                store
+                store,
+                components.core.client
             )
         }
 
