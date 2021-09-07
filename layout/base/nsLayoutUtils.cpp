@@ -8540,8 +8540,7 @@ bool nsLayoutUtils::CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin) {
 /* static */
 ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
-    nsIContent* aContent, const nsIFrame* aItemFrame,
-    const nsPoint& aOffsetToReferenceFrame,
+    nsIContent* aContent, const nsIFrame* aReferenceFrame,
     WebRenderLayerManager* aLayerManager, ViewID aScrollParentId,
     const nsSize& aScrollPortSize, const Maybe<nsRect>& aClipRect,
     bool aIsRootContent) {
@@ -8799,8 +8798,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   const nsIFrame* frameForCompositionBoundsCalculation =
       aScrollFrame ? aScrollFrame : aForFrame;
   nsRect compositionBounds(
-      frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aItemFrame) +
-          aOffsetToReferenceFrame,
+      frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(
+          aReferenceFrame),
       frameForCompositionBoundsCalculation->GetSize());
   if (scrollableFrame) {
     // If we have a scrollable frame, restrict the composition bounds to its
@@ -8963,10 +8962,9 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
       scrollPortSize = scrollableFrame->GetScrollPortRect().Size();
     }
     return Some(nsLayoutUtils::ComputeScrollMetadata(
-        frame, rootScrollFrame, content, frame,
-        aBuilder->ToReferenceFrame(frame), aLayerManager,
-        ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize, Nothing(),
-        isRootContent));
+        frame, rootScrollFrame, content, aBuilder->FindReferenceFrameFor(frame),
+        aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize,
+        Nothing(), isRootContent));
   }
 
   return Nothing();
