@@ -139,6 +139,22 @@ class nsIncrementalDownload final : public nsIIncrementalDownload,
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
   nsCString mPartialValidator;
   bool mCacheBust{false};
+
+  // nsITimerCallback is implemented on a subclass so that the name attribute
+  // doesn't conflict with the name attribute of the nsIRequest interface.
+  class TimerCallback final : public nsITimerCallback, public nsINamed {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSINAMED
+
+    explicit TimerCallback(nsIncrementalDownload* aIncrementalDownload);
+
+   private:
+    ~TimerCallback() = default;
+
+    RefPtr<nsIncrementalDownload> mIncrementalDownload;
+  };
 };
 
 nsresult nsIncrementalDownload::FlushChunk() {
@@ -184,8 +200,9 @@ void nsIncrementalDownload::CallOnStopRequest() {
 }
 
 nsresult nsIncrementalDownload::StartTimer(int32_t interval) {
-  return NS_NewTimerWithObserver(getter_AddRefs(mTimer), this, interval * 1000,
-                                 nsITimer::TYPE_ONE_SHOT);
+  auto callback = MakeRefPtr<TimerCallback>(this);
+  return NS_NewTimerWithCallback(getter_AddRefs(mTimer), callback,
+                                 interval * 1000, nsITimer::TYPE_ONE_SHOT);
 }
 
 nsresult nsIncrementalDownload::ProcessTimeout() {
@@ -703,11 +720,34 @@ nsIncrementalDownload::Observe(nsISupports* subject, const char* topic,
     // observer here.  Otherwise, we would notify them after XPCOM has been
     // shutdown or not at all.
     CallOnStopRequest();
-  } else if (strcmp(topic, NS_TIMER_CALLBACK_TOPIC) == 0) {
-    mTimer = nullptr;
-    nsresult rv = ProcessTimeout();
-    if (NS_FAILED(rv)) Cancel(rv);
   }
+  return NS_OK;
+}
+
+// nsITimerCallback
+
+nsIncrementalDownload::TimerCallback::TimerCallback(
+    nsIncrementalDownload* aIncrementalDownload)
+    : mIncrementalDownload(aIncrementalDownload) {}
+
+NS_IMPL_ISUPPORTS(nsIncrementalDownload::TimerCallback, nsITimerCallback,
+                  nsINamed)
+
+NS_IMETHODIMP
+nsIncrementalDownload::TimerCallback::Notify(nsITimer* aTimer) {
+  mIncrementalDownload->mTimer = nullptr;
+
+  nsresult rv = mIncrementalDownload->ProcessTimeout();
+  if (NS_FAILED(rv)) mIncrementalDownload->Cancel(rv);
+
+  return NS_OK;
+}
+
+// nsINamed
+
+NS_IMETHODIMP
+nsIncrementalDownload::TimerCallback::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsIncrementalDownload");
   return NS_OK;
 }
 
