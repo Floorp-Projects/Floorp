@@ -93,7 +93,7 @@ private fun SuggestionTitleAndDescription(
             maxLines = 1,
             modifier = Modifier
                 .width(IntrinsicSize.Max)
-                .padding(start = 8.dp, end = 8.dp)
+                .padding(start = 2.dp, end = 8.dp)
         )
         if (description?.isNotEmpty() == true) {
             Text(
@@ -103,7 +103,7 @@ private fun SuggestionTitleAndDescription(
                 maxLines = 1,
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
-                    .padding(start = 8.dp, end = 8.dp)
+                    .padding(start = 2.dp, end = 8.dp)
             )
         }
     }
