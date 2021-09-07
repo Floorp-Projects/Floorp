@@ -36,6 +36,13 @@ const FeatureManifest = {
         description:
           "Whether Remote Settings is enabled as a quick suggest source",
       },
+      quickSuggestScenario: {
+        type: "string",
+        fallbackPref: "browser.urlbar.quicksuggest.scenario",
+        description:
+          "The Firefox Suggest scenario in which the user is enrolled",
+        enum: ["history", "offline", "online"],
+      },
       quickSuggestShouldShowOnboardingDialog: {
         type: "boolean",
         fallbackPref: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
