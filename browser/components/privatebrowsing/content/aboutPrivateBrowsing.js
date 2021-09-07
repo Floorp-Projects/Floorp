@@ -101,13 +101,17 @@ async function renderPromo({
 
   const titleEl = document.getElementById("private-browsing-vpn-text");
   let linkEl = document.getElementById("private-browsing-vpn-link");
+  const promoHeaderEl = document.getElementById("promo-header");
   const infoContainerEl = document.querySelector(".info");
+  const promoImageLargeEl = document.querySelector(".promo-image-large img");
+  const promoImageSmallEl = document.querySelector(".promo-image-small img");
+
   // Setup the private browsing VPN link.
   const vpnPromoUrl =
     promoLinkUrl || RPMGetFormatURLPref("browser.privatebrowsing.vpnpromourl");
 
-  if (promoLinkType === "link") {
-    linkEl.classList.remove("button");
+  if (promoLinkType === "button") {
+    linkEl.classList.add("button");
   }
 
   if (vpnPromoUrl) {
@@ -133,6 +137,22 @@ async function renderPromo({
         container.remove();
         document.body.insertAdjacentElement("afterbegin", container);
     }
+  }
+
+  if (promoHeader) {
+    promoHeaderEl.innerText = promoHeader;
+  }
+
+  if (promoImageLarge) {
+    promoImageLargeEl.src = promoImageLarge;
+  } else {
+    promoImageLargeEl.parentNode.remove();
+  }
+
+  if (promoImageSmall) {
+    promoImageSmallEl.src = promoImageSmall;
+  } else {
+    promoImageSmallEl.parentNode.remove();
   }
 
   if (!promoTitleEnabled) {
