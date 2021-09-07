@@ -393,14 +393,6 @@ bool CompositorBridgeChild::SendResumeAsync() {
   return PCompositorBridgeChild::SendResumeAsync();
 }
 
-bool CompositorBridgeChild::SendNotifyChildCreated(
-    const LayersId& id, CompositorOptions* aOptions) {
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeChild::SendNotifyChildCreated(id, aOptions);
-}
-
 bool CompositorBridgeChild::SendAdoptChild(const LayersId& id) {
   if (!mCanSend) {
     return false;
