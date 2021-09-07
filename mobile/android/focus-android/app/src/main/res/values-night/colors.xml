@@ -42,7 +42,7 @@
     <color name="trackingProtectionSheetBackground" tools:ignore="MissingDefaultResource">#1D1133</color>
     <color name="primaryTextColor" tools:ignore="MissingDefaultResource">#FBFBFE</color>
 
-    <color name="colorPrimary">#271948</color>
+    <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorSecondary">#342F6D</color>
     <color name="menuBackground">@color/colorSecondary</color>
     <color name="toolbarUrlBackground">#1D1133</color>

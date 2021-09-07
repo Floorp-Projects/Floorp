@@ -14,7 +14,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_gradient_dark"/>
+        android:background="@color/settings_background"/>
 
     <FrameLayout
         android:id="@android:id/list_container"

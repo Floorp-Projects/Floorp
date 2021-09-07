@@ -56,7 +56,7 @@
     <color name="snackbarTextColor">#ffffffff</color>
     <color name="snackbarActionText">@color/photonBlue50</color>
 
-    <color name="statusBarBackground">#1D1133</color>
+    <color name="statusBarBackground">@color/colorPrimary</color>
 
     <color name="searchSuggestionsBackground">@color/photonInk80</color>
 
@@ -125,7 +125,7 @@
     <color name="settings_summary_text">#ffbbbcc5</color>
     <color name="settings_whats_new">@color/accentBright</color>
 
-    <color name="colorPrimary">#271948</color>
+    <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorSecondary">#342F6D</color>
     <color name="menuBackground">@color/colorSecondary</color>
     <color name="toolbarUrlBackground">#FBFBFE</color>
@@ -141,7 +141,7 @@
 
     <!-- Preferences -->
     <color name="preference_summary_text">#BFBFC9</color>
-    <color name="settings_background">#1D1133</color>
+    <color name="settings_background">@color/colorPrimary</color>
     <color name="preference_learn_more_link">#FF4AA2</color>
     <color name="selected_search_engine">#FF4AA2</color>
 
