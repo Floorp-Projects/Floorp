@@ -34,7 +34,8 @@ WebSocketFrame::WebSocketFrame(bool aFinBit, bool aRsvBit1, bool aRsvBit2,
                                uint32_t aMask, const nsCString& aPayload)
     : mData(PR_Now(), aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode, aMaskBit,
             aMask, aPayload) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  // This could be called on the background thread when socket process is
+  // enabled.
   mData.mTimeStamp = PR_Now();
 }
 
