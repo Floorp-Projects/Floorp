@@ -186,8 +186,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   PAPZChild* AllocPAPZChild(const LayersId& aLayersId);
   bool DeallocPAPZChild(PAPZChild* aActor);
 
-  void WillEndTransaction();
-
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(
       const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&,
       const WindowKind&);

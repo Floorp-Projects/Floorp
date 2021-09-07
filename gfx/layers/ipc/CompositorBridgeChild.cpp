@@ -708,8 +708,6 @@ bool CompositorBridgeChild::DeallocPAPZCTreeManagerChild(
 
 // -
 
-void CompositorBridgeChild::WillEndTransaction() { ResetShmemCounter(); }
-
 PWebRenderBridgeChild* CompositorBridgeChild::AllocPWebRenderBridgeChild(
     const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&,
     const WindowKind&) {
