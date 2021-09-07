@@ -180,12 +180,6 @@ Maybe<uint16_t> DisplayItemCache::CanReuseItem(
     return Nothing();
   }
 
-  if (mSuppressed) {
-    slot.mOccupied = false;
-    slotIndex = Nothing();
-    return Nothing();
-  }
-
   if (!(aSpaceAndClip == slot.mSpaceAndClip)) {
     // Spatial id and clip id can change between display lists, if items that
     // generate them change their order.

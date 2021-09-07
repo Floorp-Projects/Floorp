@@ -43,29 +43,6 @@
  * we would have built both in the new list if they intersected. Given that, we
  * can align items that appear in both lists, and any items that appear between
  * matched items can be inserted into the merged list in any order.
- *
- * Frames that are a stacking context, containing blocks for position:fixed
- * descendants, and don't have any continuations (see
- * CanStoreDisplayListBuildingRect) trigger recursion into the algorithm with
- * separate retaining decisions made.
- *
- * RDL defines the concept of an AnimatedGeometryRoot (AGR), the nearest
- * ancestor frame which can be moved asynchronously on the compositor thread.
- * These are currently nsDisplayItems which return true from CanMoveAsync
- * (animated nsDisplayTransform and nsDisplayStickyPosition) and
- * ActiveScrolledRoots.
- *
- * For each context that we run the retaining algorithm, there can only be
- * mutations to one AnimatedGeometryRoot. This is because we are unable to
- * reason about intersections of items that might then move relative to each
- * other without RDL running again. If there are mutations to multiple
- * AnimatedGeometryRoots, then we bail out and rebuild all the items in the
- * context.
- *
- * Otherwise, when mutations are restricted to a single AGR, we pre-process the
- * old display list and mark the frames for all existing (unmodified!) items
- * that belong to a different AGR and ensure that we rebuild those items for
- * correct sorting with the modified ones.
  */
 
 using mozilla::dom::Document;
@@ -124,7 +101,8 @@ static void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList) {
   }
 }
 
-static nsIFrame* SelectAGRForFrame(nsIFrame* aFrame, nsIFrame* aParentAGR) {
+static AnimatedGeometryRoot* SelectAGRForFrame(
+    nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR) {
   if (!aFrame->IsStackingContext() || !aFrame->IsFixedPosContainingBlock()) {
     return aParentAGR;
   }
@@ -136,7 +114,7 @@ static nsIFrame* SelectAGRForFrame(nsIFrame* aFrame, nsIFrame* aParentAGR) {
   nsDisplayListBuilder::DisplayListBuildingData* data =
       aFrame->GetProperty(nsDisplayListBuilder::DisplayListBuildingRect());
 
-  return data && data->mModifiedAGR ? data->mModifiedAGR : nullptr;
+  return data && data->mModifiedAGR ? data->mModifiedAGR.get() : nullptr;
 }
 
 void RetainedDisplayListBuilder::AddSizeOfIncludingThis(
@@ -170,10 +148,9 @@ bool AnyContentAncestorModified(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
 // to mark, as child stacking contexts might. It would be nice if we could
 // jump into those immediately rather than walking the entire thing.
 bool RetainedDisplayListBuilder::PreProcessDisplayList(
-    RetainedDisplayList* aList, nsIFrame* aAGR, PartialUpdateResult& aUpdated,
-    nsIFrame* aAsyncAncestor, const ActiveScrolledRoot* aAsyncAncestorASR,
-    nsIFrame* aOuterFrame, uint32_t aCallerKey, uint32_t aNestingDepth,
-    bool aKeepLinked) {
+    RetainedDisplayList* aList, AnimatedGeometryRoot* aAGR,
+    PartialUpdateResult& aUpdated, nsIFrame* aOuterFrame, uint32_t aCallerKey,
+    uint32_t aNestingDepth, bool aKeepLinked) {
   // The DAG merging algorithm does not have strong mechanisms in place to keep
   // the complexity of the resulting DAG under control. In some cases we can
   // build up edges very quickly. Detect those cases and force a full display
@@ -281,21 +258,10 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
         keepLinked = true;
       }
 
-      // If this item's frame is an AGR (can be moved asynchronously by the
-      // compositor), then use that frame for descendants. Also pass the ASR
-      // for that item, so that descendants can compare to see if any new
-      // ASRs have been pushed since.
-      nsIFrame* asyncAncestor = aAsyncAncestor;
-      const ActiveScrolledRoot* asyncAncestorASR = aAsyncAncestorASR;
-      if (item->CanMoveAsync()) {
-        asyncAncestor = item->Frame();
-        asyncAncestorASR = item->GetActiveScrolledRoot();
-      }
-
-      if (!PreProcessDisplayList(
-              item->GetChildren(), SelectAGRForFrame(f, aAGR), aUpdated,
-              asyncAncestor, asyncAncestorASR, item->Frame(),
-              item->GetPerFrameKey(), aNestingDepth + 1, keepLinked)) {
+      if (!PreProcessDisplayList(item->GetChildren(),
+                                 SelectAGRForFrame(f, aAGR), aUpdated,
+                                 item->Frame(), item->GetPerFrameKey(),
+                                 aNestingDepth + 1, keepLinked)) {
         MOZ_RELEASE_ASSERT(
             !aKeepLinked,
             "Can't early return since we need to move the out list back");
@@ -310,20 +276,15 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
     // sibling of the changed thing to get correct ordering. The changed content
     // is a frame though, and it's hard to map that to container items in this
     // list.
-    // If an ancestor display item is an AGR, and our ASR matches the ASR
-    // of that item, then there can't have been any new ASRs pushed since that
-    // item, so that item is our AGR. Otherwise, our AGR is our ASR.
-    nsIFrame* agrFrame = nullptr;
-    if (aAsyncAncestorASR == item->GetActiveScrolledRoot()) {
-      agrFrame = aAsyncAncestor;
-    } else {
-      MOZ_ASSERT(item->GetActiveScrolledRoot());
-      agrFrame =
-          item->GetActiveScrolledRoot()->mScrollableFrame->GetScrolledFrame();
+    if (aAGR && item->GetAnimatedGeometryRoot()->GetAsyncAGR() != aAGR) {
+      mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
     }
 
-    if (aAGR && agrFrame != aAGR) {
-      mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
+    // TODO: This is here because we sometimes reuse the previous display list
+    // completely. For optimization, we could only restore the state for reused
+    // display items.
+    if (item->RestoreState()) {
+      item->InvalidateItemCacheEntry();
     }
 
     // If we're going to keep this linked list and not merge it, then mark the
@@ -980,7 +941,7 @@ static bool CanStoreDisplayListBuildingRect(nsDisplayListBuilder* aBuilder,
 
 static bool ProcessFrameInternal(nsIFrame* aFrame,
                                  nsDisplayListBuilder* aBuilder,
-                                 nsIFrame** aAGR, nsRect& aOverflow,
+                                 AnimatedGeometryRoot** aAGR, nsRect& aOverflow,
                                  const nsIFrame* aStopAtFrame,
                                  nsTArray<nsIFrame*>& aOutFramesWithProps,
                                  const bool aStopAtStackingContext) {
@@ -1016,7 +977,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
 
       // Tracking AGRs for the placeholder processing is not necessary, as the
       // goal is to only modify the DisplayListBuildingData rect.
-      nsIFrame* dummyAGR = nullptr;
+      AnimatedGeometryRoot* dummyAGR = nullptr;
 
       // Find a common ancestor frame to handle frame continuations.
       // TODO: It might be possible to write a more specific and efficient
@@ -1124,8 +1085,12 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
       // wrapper item and convert into into coordinate relative to the current
       // frame.
       nsRect previousVisible = wrapperItem->GetBuildingRectForChildren();
-      if (wrapperItem->ReferenceFrameForChildren() != wrapperItem->Frame()) {
+      if (wrapperItem->ReferenceFrameForChildren() ==
+          wrapperItem->ReferenceFrame()) {
         previousVisible -= wrapperItem->ToReferenceFrame();
+      } else {
+        MOZ_ASSERT(wrapperItem->ReferenceFrameForChildren() ==
+                   wrapperItem->Frame());
       }
 
       if (!previousVisible.Contains(aOverflow)) {
@@ -1158,7 +1123,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
 bool RetainedDisplayListBuilder::ProcessFrame(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsIFrame* aStopAtFrame,
     nsTArray<nsIFrame*>& aOutFramesWithProps, const bool aStopAtStackingContext,
-    nsRect* aOutDirty, nsIFrame** aOutModifiedAGR) {
+    nsRect* aOutDirty, AnimatedGeometryRoot** aOutModifiedAGR) {
   if (aFrame->HasOverrideDirtyRegion()) {
     aOutFramesWithProps.AppendElement(aFrame);
   }
@@ -1169,7 +1134,8 @@ bool RetainedDisplayListBuilder::ProcessFrame(
 
   // TODO: There is almost certainly a faster way of doing this, probably can be
   // combined with the ancestor walk for TransformFrameRectToAncestor.
-  nsIFrame* agrFrame = aBuilder->FindAnimatedGeometryRootFrameFor(aFrame);
+  AnimatedGeometryRoot* agr =
+      aBuilder->FindAnimatedGeometryRootFor(aFrame)->GetAsyncAGR();
 
   CRR_LOG("Processing frame %p with agr %p\n", aFrame, agr->mFrame);
 
@@ -1191,7 +1157,7 @@ bool RetainedDisplayListBuilder::ProcessFrame(
     overflow.UnionRect(overflow, aBuilder->GetCaretRect());
   }
 
-  if (!ProcessFrameInternal(aFrame, aBuilder, &agrFrame, overflow, aStopAtFrame,
+  if (!ProcessFrameInternal(aFrame, aBuilder, &agr, overflow, aStopAtFrame,
                             aOutFramesWithProps, aStopAtStackingContext)) {
     return false;
   }
@@ -1205,9 +1171,9 @@ bool RetainedDisplayListBuilder::ProcessFrame(
     // really complex to track which items would need to be marked in
     // MarkFramesForDifferentAGR.
     if (!*aOutModifiedAGR) {
-      CRR_LOG("Setting %p as root stacking context AGR\n", agrFrame);
-      *aOutModifiedAGR = agrFrame;
-    } else if (agrFrame && *aOutModifiedAGR != agrFrame) {
+      CRR_LOG("Setting %p as root stacking context AGR\n", agr);
+      *aOutModifiedAGR = agr;
+    } else if (agr && *aOutModifiedAGR != agr) {
       CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
       return false;
     }
@@ -1281,7 +1247,8 @@ static void FindContainingBlocks(nsIFrame* aFrame,
  */
 bool RetainedDisplayListBuilder::ComputeRebuildRegion(
     nsTArray<nsIFrame*>& aModifiedFrames, nsRect* aOutDirty,
-    nsIFrame** aOutModifiedAGR, nsTArray<nsIFrame*>& aOutFramesWithProps) {
+    AnimatedGeometryRoot** aOutModifiedAGR,
+    nsTArray<nsIFrame*>& aOutFramesWithProps) {
   CRR_LOG("Computing rebuild regions for %zu frames:\n",
           aModifiedFrames.Length());
   nsTArray<nsIFrame*> extraFrames;
@@ -1443,13 +1410,12 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   bool shouldBuildPartial = ShouldBuildPartial(modifiedFrames.Frames());
 
   nsRect modifiedDirty;
-  nsIFrame* modifiedAGR = nullptr;
+  AnimatedGeometryRoot* modifiedAGR = nullptr;
   PartialUpdateResult result = PartialUpdateResult::NoChange;
   if (!shouldBuildPartial ||
       !ComputeRebuildRegion(modifiedFrames.Frames(), &modifiedDirty,
                             &modifiedAGR, framesWithProps.Frames()) ||
-      !PreProcessDisplayList(&mList, modifiedAGR, result,
-                             mBuilder.RootReferenceFrame(), nullptr)) {
+      !PreProcessDisplayList(&mList, modifiedAGR, result)) {
     mBuilder.SetPartialBuildFailed(true);
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), nullptr);
     mList.DeleteAll(&mBuilder);

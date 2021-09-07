@@ -91,6 +91,10 @@ void nsDisplayBoxShadowInnerGeometry::MoveBy(const nsPoint& aOffset) {
   mPaddingRect.MoveBy(aOffset);
 }
 
+nsDisplayBoxShadowOuterGeometry::nsDisplayBoxShadowOuterGeometry(
+    nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder, float aOpacity)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder), mOpacity(aOpacity) {}
+
 void nsDisplaySolidColorRegionGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mRegion.MoveBy(aOffset);
@@ -101,7 +105,9 @@ nsDisplaySVGEffectGeometry::nsDisplaySVGEffectGeometry(
     : nsDisplayItemGeometry(aItem, aBuilder),
       mBBox(aItem->BBoxInUserSpace()),
       mUserSpaceOffset(aItem->UserSpaceOffset()),
-      mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame()) {}
+      mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame()),
+      mOpacity(aItem->Frame()->StyleEffects()->mOpacity),
+      mHandleOpacity(aItem->ShouldHandleOpacity()) {}
 
 void nsDisplaySVGEffectGeometry::MoveBy(const nsPoint& aOffset) {
   mBounds.MoveBy(aOffset);
