@@ -12,7 +12,6 @@
 <!ENTITY  listAllTabs.label      "List all tabs">
 
 <!ENTITY tabCmd.label "New Tab">
-<!ENTITY printCmd.label "Print…">
 
 <!ENTITY menubarCmd.label "Menu Bar">
 <!ENTITY menubarCmd.accesskey "M">
@@ -21,16 +20,6 @@ include the word "toolbar" or such, because screen readers already know that
 this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY navbar.accessibleLabel "Navigation">
 <!ENTITY fullScreenCmd.label "Full Screen">
-
-
-<!-- LOCALIZATION NOTE (fxa.menu) Used to define the different labels
-     for the Firefox Account toolbar menu screen. The `Signed in as` text is
-     followed by the user's email. -->
-<!ENTITY fxa.menu.signin.label "Sign in to &brandProductName;">
-
-<!-- LOCALIZATION NOTE (fxa.service) Used to define the different FxA services
-     for the Firefox Account toolbar menu screen.  -->
-<!ENTITY fxa.service.sendTab.description "Send a tab instantly to any device you’re signed in on.">
 
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
@@ -44,14 +33,9 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY historyButton.label            "History">
 
 <!ENTITY downloads.label              "Downloads">
-<!-- LOCALIZATION NOTE (libraryDownloads.label): This label is similar to
-  -  downloads.label, but used in the Library panel. -->
-<!ENTITY libraryDownloads.label       "Downloads">
 
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newPrivateWindow.label     "New Private Window">
-
-<!ENTITY historyMenu.label "History">
 
 <!ENTITY contentSearchSubmit.tooltip  "Submit search">
 
@@ -60,13 +44,9 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY searchInput.placeholder      "Search">
 <!ENTITY searchIcon.tooltip           "Search">
 
-<!ENTITY fullZoom.label                 "Zoom">
-
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
-
-<!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
 <!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
 

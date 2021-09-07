@@ -22,5 +22,12 @@ fxa-menu-turn-on-sync-default = Turn on sync
 fxa-menu-connect-another-device =
     .label = Connect another device…
 
+# This is shown dynamically within "Send tab to device" in fxa menu.
+fxa-menu-send-tab-to-device-syncnotready =
+    .label = Syncing Devices…
+
+# This is shown within "Send tab to device" in fxa menu if account is not configured.
+fxa-menu-send-tab-to-device-description = Send a tab instantly to any device you’re signed in on.
+
 fxa-menu-sign-out =
     .label = Sign out…
