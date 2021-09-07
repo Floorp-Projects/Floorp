@@ -857,7 +857,9 @@ var gSync = {
       "fxa-manage-account-button"
     );
 
-    let headerTitle = menuHeaderTitleEl.getAttribute("defaultLabel");
+    let headerTitle = this.fluentStrings.formatValueSync(
+      "appmenuitem-fxa-sign-in"
+    );
     let headerDescription = this.fluentStrings.formatValueSync(
       "fxa-menu-turn-on-sync-default"
     );
@@ -925,6 +927,7 @@ var gSync = {
     // We remove the data-l10n-id attribute here to prevent the node's value
     // attribute from being overwritten by Fluent when the panel is moved
     // around in the DOM.
+    menuHeaderTitleEl.removeAttribute("data-l10n-id");
     menuHeaderDescriptionEl.removeAttribute("data-l10n-id");
   },
 
