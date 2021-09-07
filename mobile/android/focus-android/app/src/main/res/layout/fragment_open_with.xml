@@ -14,12 +14,11 @@
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:textColor="@color/disabled"
+        android:textColor="@color/primaryText"
         android:textSize="16sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/apps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
 </LinearLayout>

@@ -31,7 +31,7 @@
         android:layout_height="48dp"
         android:layout_weight="1"
         android:layout_marginStart="32dp"
-        android:textColor="#ff212121"
+        android:textColor="@color/primaryText"
         android:textSize="16sp"
         android:lines="1"
         android:ellipsize="end"
