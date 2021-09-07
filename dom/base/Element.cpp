@@ -1180,11 +1180,13 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
     OwnerDoc()->ReportShadowDOMUsage();
   }
 
-  return AttachShadowWithoutNameChecks(aInit.mMode, aInit.mSlotAssignment);
+  return AttachShadowWithoutNameChecks(aInit.mMode, aInit.mDelegatesFocus,
+                                       aInit.mSlotAssignment);
 }
 
 already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
-    ShadowRootMode aMode, SlotAssignmentMode aSlotAssignment) {
+    ShadowRootMode aMode, bool aDelegatesFocus,
+    SlotAssignmentMode aSlotAssignment) {
   nsAutoScriptBlocker scriptBlocker;
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
@@ -1212,8 +1214,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
    *    and mode is init's mode.
    */
   auto* nim = nodeInfo->NodeInfoManager();
-  RefPtr<ShadowRoot> shadowRoot =
-      new (nim) ShadowRoot(this, aMode, aSlotAssignment, nodeInfo.forget());
+  RefPtr<ShadowRoot> shadowRoot = new (nim) ShadowRoot(
+      this, aMode, aDelegatesFocus, aSlotAssignment, nodeInfo.forget());
 
   if (NodeOrAncestorHasDirAuto()) {
     shadowRoot->SetAncestorHasDirAuto();
