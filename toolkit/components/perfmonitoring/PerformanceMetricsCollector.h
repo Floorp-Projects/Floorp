@@ -23,9 +23,10 @@ class Promise;
 class PerformanceMetricsCollector;
 class AggregatedResults;
 
-class IPCTimeout final : public nsIObserver {
+class IPCTimeout final : public nsITimerCallback, public nsINamed {
  public:
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
   NS_DECL_ISUPPORTS
   static IPCTimeout* CreateInstance(AggregatedResults* aResults);
   void Cancel();

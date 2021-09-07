@@ -538,7 +538,7 @@ STDMETHODIMP_(ULONG) nsDataObj::AddRef() {
 }
 
 namespace {
-class RemoveTempFileHelper final : public nsIObserver {
+class RemoveTempFileHelper final : public nsIObserver, public nsINamed {
  public:
   explicit RemoveTempFileHelper(nsIFile* aTempFile) : mTempFile(aTempFile) {
     MOZ_ASSERT(mTempFile);
@@ -568,6 +568,7 @@ class RemoveTempFileHelper final : public nsIObserver {
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
  private:
   ~RemoveTempFileHelper() {
@@ -580,7 +581,7 @@ class RemoveTempFileHelper final : public nsIObserver {
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(RemoveTempFileHelper, nsIObserver);
+NS_IMPL_ISUPPORTS(RemoveTempFileHelper, nsIObserver, nsINamed);
 
 NS_IMETHODIMP
 RemoveTempFileHelper::Observe(nsISupports* aSubject, const char* aTopic,
@@ -605,6 +606,12 @@ RemoveTempFileHelper::Observe(nsISupports* aSubject, const char* aTopic,
     mTempFile->Remove(false);
     mTempFile = nullptr;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoveTempFileHelper::GetName(nsACString& aName) {
+  aName.AssignLiteral("RemoveTempFileHelper");
   return NS_OK;
 }
 }  // namespace
