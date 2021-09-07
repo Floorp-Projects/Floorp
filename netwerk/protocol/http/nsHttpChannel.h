@@ -74,9 +74,7 @@ class nsHttpChannel final : public HttpBaseChannel,
                             public nsSupportsWeakReference,
                             public nsICorsPreflightCallback,
                             public nsIRaceCacheWithNetwork,
-                            public nsIRequestTailUnblockCallback,
-                            public nsITimerCallback,
-                            public nsINamed {
+                            public nsIRequestTailUnblockCallback {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
@@ -93,8 +91,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_DECL_NSIDNSLISTENER
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
   NS_DECL_NSIRACECACHEWITHNETWORK
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
   NS_DECL_NSIREQUESTTAILUNBLOCKCALLBACK
 
   // nsIHttpAuthenticableChannel. We can't use
@@ -733,6 +729,23 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // True if the channel is reading from cache.
   Atomic<bool> mIsReadingFromCache{false};
+
+  // nsITimerCallback is implemented on a subclass so that the name attribute
+  // doesn't conflict with the name attribute of the nsIRequest interface that
+  // might be present on the same object (as seen from JavaScript code).
+  class TimerCallback final : public nsITimerCallback, public nsINamed {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSINAMED
+
+    explicit TimerCallback(nsHttpChannel* aChannel);
+
+   private:
+    ~TimerCallback() = default;
+
+    RefPtr<nsHttpChannel> mChannel;
+  };
 
   // These next members are only used in unit tests to delay the call to
   // cache->AsyncOpenURI in order to race the cache with the network.
