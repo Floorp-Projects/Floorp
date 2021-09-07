@@ -390,7 +390,6 @@ class nsWindow final : public nsBaseWidget {
   void WaylandDragWorkaround(GdkEventButton* aEvent);
 
   wl_display* GetWaylandDisplay();
-  bool WaylandSurfaceNeedsClear();
   virtual void CreateCompositorVsyncDispatcher() override;
   LayoutDeviceIntPoint GetNativePointerLockCenter() {
     return mNativePointerLockCenter;

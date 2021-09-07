@@ -89,7 +89,6 @@ if CONFIG["MOZ_WAYLAND"]:
         "nsClipboardWaylandAsync.cpp",
         "nsWaylandDisplay.cpp",
         "WaylandBuffer.cpp",
-        "WindowSurfaceWayland.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
     EXPORTS.mozilla.widget += [
