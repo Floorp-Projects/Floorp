@@ -13,6 +13,8 @@ pub type OSStatus = i32;
 pub const errSecSuccess: OSStatus = 0;
 
 pub type SecKeyAlgorithm = CFStringRef;
+pub type SecKeyOperationType = CFIndex;
+pub const kSecKeyOperationTypeSign: SecKeyOperationType = 0;
 
 extern "C" {
     // Available starting macOS 10.3
