@@ -3546,7 +3546,8 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
     };
 
     // calls nsHttpChannel::Notify after `mCacheOpenDelay` milliseconds
-    NS_NewTimerWithCallback(getter_AddRefs(mCacheOpenTimer), this,
+    auto callback = MakeRefPtr<TimerCallback>(this);
+    NS_NewTimerWithCallback(getter_AddRefs(mCacheOpenTimer), callback,
                             mCacheOpenDelay, nsITimer::TYPE_ONE_SHOT);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5351,8 +5352,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
   NS_INTERFACE_MAP_ENTRY(nsIRaceCacheWithNetwork)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
@@ -8969,7 +8968,9 @@ nsresult nsHttpChannel::TriggerNetworkWithDelay(uint32_t aDelay) {
   if (!mNetworkTriggerTimer) {
     mNetworkTriggerTimer = NS_NewTimer();
   }
-  mNetworkTriggerTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
+  auto callback = MakeRefPtr<TimerCallback>(this);
+  mNetworkTriggerTimer->InitWithCallback(callback, aDelay,
+                                         nsITimer::TYPE_ONE_SHOT);
   return NS_OK;
 }
 
@@ -9091,20 +9092,24 @@ nsHttpChannel::Test_triggerNetwork(int32_t aTimeout) {
   return TriggerNetworkWithDelay(aTimeout);
 }
 
+nsHttpChannel::TimerCallback::TimerCallback(nsHttpChannel* aChannel)
+    : mChannel(aChannel) {}
+
+NS_IMPL_ISUPPORTS(nsHttpChannel::TimerCallback, nsITimerCallback, nsINamed)
+
 NS_IMETHODIMP
-nsHttpChannel::GetName(nsACString& aName) {
+nsHttpChannel::TimerCallback::GetName(nsACString& aName) {
   aName.AssignLiteral("nsHttpChannel");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::Notify(nsITimer* aTimer) {
-  RefPtr<nsHttpChannel> self(this);
-  if (aTimer == mCacheOpenTimer) {
-    return Test_triggerDelayedOpenCacheEntry();
+nsHttpChannel::TimerCallback::Notify(nsITimer* aTimer) {
+  if (aTimer == mChannel->mCacheOpenTimer) {
+    return mChannel->Test_triggerDelayedOpenCacheEntry();
   }
-  if (aTimer == mNetworkTriggerTimer) {
-    return TriggerNetwork();
+  if (aTimer == mChannel->mNetworkTriggerTimer) {
+    return mChannel->TriggerNetwork();
   }
   MOZ_CRASH("Unknown timer");
 
