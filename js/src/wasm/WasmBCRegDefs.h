@@ -379,7 +379,10 @@ struct SpecificRegs {
   SpecificRegs() : abiReturnRegI64(ReturnReg64) {}
 };
 #elif defined(JS_CODEGEN_ARM64)
-struct SpecificRegs {};
+struct SpecificRegs {
+  // Required by gcc.
+  SpecificRegs() {}
+};
 #elif defined(JS_CODEGEN_MIPS32)
 struct SpecificRegs {
   RegI64 abiReturnRegI64;
@@ -387,7 +390,10 @@ struct SpecificRegs {
   SpecificRegs() : abiReturnRegI64(ReturnReg64) {}
 };
 #elif defined(JS_CODEGEN_MIPS64)
-struct SpecificRegs {};
+struct SpecificRegs {
+  // Required by gcc.
+  SpecificRegs() {}
+};
 #else
 struct SpecificRegs {
 #  ifndef JS_64BIT
