@@ -3913,9 +3913,11 @@ Toolbox.prototype = {
       false
     );
     if (isNewPerfPanel || !this.target.hasActor("performance")) {
-      return promise.resolve();
+      return;
     }
-
+    if (this.target.isDestroyed()) {
+      return;
+    }
     const performanceFront = await this.target.getFront("performance");
     performanceFront.once("console-profile-start", () =>
       this._onPerformanceFrontEvent(performanceFront)
