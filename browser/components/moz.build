@@ -54,6 +54,7 @@ DIRS += [
     "sessionstore",
     "shell",
     "syncedtabs",
+    "tabunloader",
     "uitour",
     "urlbar",
     "translation",
