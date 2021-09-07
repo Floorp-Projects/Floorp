@@ -73,7 +73,6 @@ class nsPrintObject {
   nsPrintObject* mParent;  // This is a non-owning pointer.
   bool mHasBeenPrinted;
   bool mInvisible;  // Indicates PO is set to not visible by CSS
-  bool mDidCreateDocShell;
   float mShrinkRatio;
   float mZoomRatio;
 
