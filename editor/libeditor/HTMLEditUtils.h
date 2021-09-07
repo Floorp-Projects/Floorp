@@ -313,7 +313,15 @@ class HTMLEditUtils final {
    * a visible HTML <br> element, i.e., not a padding <br> element for making
    * last line in a block element visible, or an invisible <br> element.
    */
-  static bool IsVisibleBRElement(const nsIContent& aContent);
+  static bool IsVisibleBRElement(const nsIContent& aContent) {
+    if (!aContent.IsHTMLElement(nsGkAtoms::br)) {
+      return false;
+    }
+    // If followed by a block boundary without visible content, it's invisible
+    // <br> element.
+    return !HTMLEditUtils::GetBlockElementOfImmediateBlockBoundary(
+        aContent, WalkTreeDirection::Forward);
+  }
   static bool IsInvisibleBRElement(const nsIContent& aContent) {
     return aContent.IsHTMLElement(nsGkAtoms::br) &&
            !HTMLEditUtils::IsVisibleBRElement(aContent);
@@ -1699,6 +1707,14 @@ class HTMLEditUtils final {
       const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
       const WalkTreeOptions& aOptions,
       const Element* aAncestorLimiter = nullptr);
+
+  /**
+   * GetBlockElementOfImmediateBlockBoundary() returns a block element if its
+   * block boundary and aContent may be first visible thing before/after the
+   * boundary.
+   */
+  static Element* GetBlockElementOfImmediateBlockBoundary(
+      const nsIContent& aContent, const WalkTreeDirection aDirection);
 };
 
 /**
