@@ -1408,11 +1408,11 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">Ιχνηλάτες μεταξύ ιστοτόπων και κοινωνικών δικτύων</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie από ιστοτόπους που δεν έχετε επισκεφθεί</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookies από ιστοτόπους που δεν έχετε επισκεφθεί</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Όλα τα cookie τρίτων (πιθανή δυσλειτουργία ιστοτόπων)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Όλα τα cookies τρίτων (πιθανή δυσλειτουργία ιστοτόπων)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookie (προκαλεί δυσλειτουργία ιστοτόπων)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookies (προκαλεί δυσλειτουργία ιστοτόπων)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Περιεχόμενο καταγραφής</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1436,9 +1436,9 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Περιορίζει την ικανότητα των κοινωνικών δικτύων να παρακολουθούν τη δραστηριότητά σας στο διαδίκτυο.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">Cookie καταγραφής μεταξύ ιστοτόπων</string>
+    <string name="etp_cookies_title">Cookies καταγραφής μεταξύ ιστοτόπων</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Αποκλείει τα cookie που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
+    <string name="etp_cookies_description">Αποκλείει τα cookies που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominer</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1477,7 +1477,7 @@
     <string name="etp_redirect_trackers_title">Ανακατεύθυνση ιχνηλατών</string>
 
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">Διαγράφει τα cookie από ανακατευθύνσεις σε γνωστούς ιστοτόπους καταγραφής.</string>
+    <string name="etp_redirect_trackers_description">Διαγράφει τα cookies από ανακατευθύνσεις σε γνωστούς ιστοτόπους καταγραφής.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Υποστήριξη</string>

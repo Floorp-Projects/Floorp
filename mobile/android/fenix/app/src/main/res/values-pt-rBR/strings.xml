@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s privativo</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -645,7 +645,7 @@
     <string name="studies_restart_dialog_cancel">Cancelar</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">Fechando o aplicativo para aplicar as alterações…</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Fechando o aplicativo para aplicar as alterações…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -956,7 +956,7 @@
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Bloquear áudio e vídeo apenas em rede móvel</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
-    <string name="preference_option_autoplay_allowed_wifi_subtext">Áudio e vídeo só são reproduzidos automaticamente se o dispositivo estiver conectado a uma rede Wi-Fi</string>
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Áudio e vídeo só são reproduzidos automaticamente se o dispositivo estiver conectado a uma rede WiFi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Bloquear apenas áudio</string>
     <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
@@ -1137,7 +1137,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Excluir</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancelar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancelar</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Entrando no modo de tela inteira</string>
@@ -1304,7 +1304,7 @@
     <string name="onboarding_privacy_notice_read_button">Leia nosso aviso de privacidade</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Fechar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Fechar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Iniciar navegação</string>
@@ -1439,7 +1439,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contêm código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Quando o escudo fica roxo, indica que o %s bloqueou rastreadores no site. Toque no escudo para ver mais informações.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Quando o escudo fica roxo, indica que o %s bloqueou rastreadores no site. Toque no escudo para ver mais informações.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">As proteções estão ATIVADAS neste site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1520,7 +1520,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nunca salvar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Preenchimento automático</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Preenchimento automático</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Preenchimento automático no %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
