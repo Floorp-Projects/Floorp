@@ -208,11 +208,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // must be executed.
   bool NotifyBeginAsyncEndLayerTransaction(SyncObjectClient* aSyncObject);
 
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished all async paints and and may do the
-  // requested texture sync and resume sending messages.
-  void NotifyFinishedAsyncEndLayerTransaction();
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
