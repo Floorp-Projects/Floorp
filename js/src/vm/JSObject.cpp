@@ -1330,7 +1330,9 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     obj->setDictionaryModeSlotSpan(oldDictionarySlotSpan);
   }
 
-  obj->initSlots(values.begin(), values.length());
+  for (size_t i = 0, len = values.length(); i < len; i++) {
+    obj->initSlotUnchecked(i, values[i]);
+  }
 
   return true;
 }
