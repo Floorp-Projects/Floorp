@@ -4051,6 +4051,8 @@ bool BaseCompiler::emitRethrow() {
   RegRef exn = needRef();
   peekRefAt(tryCatch.stackSize, exn);
 
+  deadCode_ = true;
+
   return throwFrom(exn, lineOrBytecode);
 }
 #endif
