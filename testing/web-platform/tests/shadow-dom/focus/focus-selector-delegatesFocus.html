@@ -63,7 +63,7 @@ for (const delegatesFocus of delegatesFocusValues) {
       assert_true(nestedShadowChild.matches(":focus"), "element in nested shadow tree matches :focus");
       assert_true(nestedHost.matches(":focus"), "host of nested shadow tree matches focus");
       assert_true(host.matches(":focus"), "topmost host matches focus");
-}, `:focus applies to host with delegatesFocus=${delegatesFocus} when an element in a nested shadow tree with delegatesFocus=${nestedDelegatesFocus} is focused`);
+    }, `:focus applies to host with delegatesFocus=${delegatesFocus} when an element in a nested shadow tree with delegatesFocus=${nestedDelegatesFocus} is focused`);
   }
 }
 </script>
