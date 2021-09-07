@@ -134,6 +134,51 @@ add_task(async function test_merino() {
   });
 });
 
+add_task(async function test_scenario_online() {
+  await UrlbarTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "online",
+    },
+    callback: () => {
+      Assert.equal(
+        UrlbarPrefs.get("quickSuggestScenario"),
+        "online",
+        "quickSuggestScenario online"
+      );
+    },
+  });
+});
+
+add_task(async function test_scenario_offline() {
+  await UrlbarTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "offline",
+    },
+    callback: () => {
+      Assert.equal(
+        UrlbarPrefs.get("quickSuggestScenario"),
+        "offline",
+        "quickSuggestScenario offline"
+      );
+    },
+  });
+});
+
+add_task(async function test_scenario_history() {
+  await UrlbarTestUtils.withExperiment({
+    valueOverrides: {
+      quickSuggestScenario: "history",
+    },
+    callback: () => {
+      Assert.equal(
+        UrlbarPrefs.get("quickSuggestScenario"),
+        "history",
+        "quickSuggestScenario history"
+      );
+    },
+  });
+});
+
 function clearOnboardingPrefs() {
   UrlbarPrefs.clear("suggest.quicksuggest");
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
