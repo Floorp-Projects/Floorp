@@ -63,6 +63,8 @@ type SecKeyCreateSignatureType =
 type SecKeyCopyAttributesType = unsafe extern "C" fn(SecKeyRef) -> CFDictionaryRef;
 type SecKeyCopyExternalRepresentationType =
     unsafe extern "C" fn(SecKeyRef, *mut CFErrorRef) -> CFDataRef;
+type SecKeyIsAlgorithmSupportedType =
+    unsafe extern "C" fn(SecKeyRef, SecKeyOperationType, SecKeyAlgorithm) -> bool;
 type SecCertificateCopyKeyType = unsafe extern "C" fn(SecCertificateRef) -> SecKeyRef;
 type SecTrustEvaluateWithErrorType =
     unsafe extern "C" fn(trust: SecTrustRef, error: *mut CFErrorRef) -> bool;
@@ -93,6 +95,7 @@ pub struct SecurityFrameworkFunctions<'a> {
     sec_key_create_signature: Symbol<'a, SecKeyCreateSignatureType>,
     sec_key_copy_attributes: Symbol<'a, SecKeyCopyAttributesType>,
     sec_key_copy_external_representation: Symbol<'a, SecKeyCopyExternalRepresentationType>,
+    sec_key_is_algorithm_supported: Symbol<'a, SecKeyIsAlgorithmSupportedType>,
     sec_certificate_copy_key: Symbol<'a, SecCertificateCopyKeyType>,
     sec_trust_evaluate_with_error: Symbol<'a, SecTrustEvaluateWithErrorType>,
     sec_string_constants: BTreeMap<SecStringConstant, String>,
@@ -139,6 +142,9 @@ impl SecurityFramework {
                     .get::<SecKeyCopyExternalRepresentationType>(
                         b"SecKeyCopyExternalRepresentation\0",
                     )
+                    .map_err(|_| ())?;
+                let sec_key_is_algorithm_supported = library
+                    .get::<SecKeyIsAlgorithmSupportedType>(b"SecKeyIsAlgorithmSupported\0")
                     .map_err(|_| ())?;
                 let sec_certificate_copy_key = library
                     .get::<SecCertificateCopyKeyType>(b"SecCertificateCopyKey\0")
@@ -216,6 +222,7 @@ impl SecurityFramework {
                     sec_key_create_signature,
                     sec_key_copy_attributes,
                     sec_key_copy_external_representation,
+                    sec_key_is_algorithm_supported,
                     sec_certificate_copy_key,
                     sec_trust_evaluate_with_error,
                     sec_string_constants,
@@ -289,6 +296,25 @@ impl SecurityFramework {
                     ));
                 }
                 Ok(CFData::wrap_under_create_rule(result))
+            }),
+            None => Err(error_here!(ErrorType::LibraryFailure)),
+        }
+    }
+
+    /// SecKeyIsAlgorithmSupported is available in macOS 10.12
+    fn sec_key_is_algorithm_supported(
+        &self,
+        key: &SecKey,
+        operation: SecKeyOperationType,
+        algorithm: SecKeyAlgorithm,
+    ) -> Result<bool, Error> {
+        match &self.rental {
+            Some(rental) => rental.rent(|framework| unsafe {
+                Ok((framework.sec_key_is_algorithm_supported)(
+                    key.as_concrete_TypeRef(),
+                    operation,
+                    algorithm,
+                ))
             }),
             None => Err(error_here!(ErrorType::LibraryFailure)),
         }
@@ -392,15 +418,19 @@ pub struct Cert {
     issuer: Vec<u8>,
     serial_number: Vec<u8>,
     subject: Vec<u8>,
+    slot_type: SlotType,
 }
 
 impl Cert {
-    fn new_from_identity(identity: &SecIdentity) -> Result<Cert, Error> {
+    fn new_from_identity(identity: &SecIdentity, slot_type: SlotType) -> Result<Cert, Error> {
         let certificate = sec_identity_copy_certificate(identity)?;
-        Cert::new_from_certificate(&certificate)
+        Cert::new_from_certificate(&certificate, slot_type)
     }
 
-    fn new_from_certificate(certificate: &SecCertificate) -> Result<Cert, Error> {
+    fn new_from_certificate(
+        certificate: &SecCertificate,
+        slot_type: SlotType,
+    ) -> Result<Cert, Error> {
         let label = sec_certificate_copy_subject_summary(certificate)?;
         let der = sec_certificate_copy_data(certificate)?;
         let der = der.bytes().to_vec();
@@ -415,6 +445,7 @@ impl Cert {
             issuer,
             serial_number,
             subject,
+            slot_type,
         })
     }
 
@@ -453,14 +484,7 @@ impl Cert {
 
 impl CryptokiObject for Cert {
     fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
-        // The modern/legacy slot distinction in theory enables differentiation
-        // between keys that are from modules that can use modern cryptography
-        // (namely EC keys and RSA-PSS signatures) and those that cannot.
-        // However, the function that would enable this
-        // (SecKeyIsAlgorithmSupported) causes a password dialog to appear on
-        // our test machines, so this backend pretends that everything supports
-        // modern crypto for now.
-        if slot_type != SlotType::Modern {
+        if slot_type != self.slot_type {
             return false;
         }
         for (attr_type, attr_value) in attrs {
@@ -607,6 +631,7 @@ pub struct Key {
     ec_params: Option<Vec<u8>>,
     key_type_enum: KeyType,
     key_handle: Option<SecKey>,
+    slot_type: SlotType,
 }
 
 impl Key {
@@ -621,12 +646,26 @@ impl Key {
         let mut ec_params = None;
         let sec_attr_key_type_ec = SECURITY_FRAMEWORK
             .get_sec_string_constant(SecStringConstant::SecAttrKeyTypeECSECPrimeRandom)?;
-        let (key_type_enum, key_type_attribute) =
+        let (key_type_enum, key_type_attribute, slot_type) =
             if key_type.as_concrete_TypeRef() == unsafe { kSecAttrKeyTypeRSA } {
                 let public_key = SECURITY_FRAMEWORK.sec_key_copy_external_representation(&key)?;
                 let modulus_value = read_rsa_modulus(public_key.bytes())?;
                 modulus = Some(modulus_value);
-                (KeyType::RSA, CKK_RSA)
+                // If this key supports RSA-PSS, it's on the "modern" slot.
+                // Otherwise, it's on the "legacy" slot.
+                let algorithm_id = SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA256;
+                let algorithm = SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?;
+                let private_key = sec_identity_copy_private_key(identity)?;
+                let slot_type = if SECURITY_FRAMEWORK.sec_key_is_algorithm_supported(
+                    &private_key,
+                    kSecKeyOperationTypeSign,
+                    algorithm.as_concrete_TypeRef(),
+                )? {
+                    SlotType::Modern
+                } else {
+                    SlotType::Legacy
+                };
+                (KeyType::RSA, CKK_RSA, slot_type)
             } else if key_type == sec_attr_key_type_ec {
                 // Assume all EC keys are secp256r1, secp384r1, or secp521r1. This
                 // is wrong, but the API doesn't seem to give us a way to determine
@@ -644,7 +683,7 @@ impl Key {
                     _ => return Err(error_here!(ErrorType::UnsupportedInput)),
                 }
                 let coordinate_width = (key_size_in_bits as usize + 7) / 8;
-                (KeyType::EC(coordinate_width), CKK_EC)
+                (KeyType::EC(coordinate_width), CKK_EC, SlotType::Modern)
             } else {
                 return Err(error_here!(ErrorType::LibraryFailure));
             };
@@ -660,6 +699,7 @@ impl Key {
             ec_params,
             key_type_enum,
             key_handle: None,
+            slot_type,
         })
     }
 
@@ -747,14 +787,7 @@ impl Key {
 
 impl CryptokiObject for Key {
     fn matches(&self, slot_type: SlotType, attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)]) -> bool {
-        // The modern/legacy slot distinction in theory enables differentiation
-        // between keys that are from modules that can use modern cryptography
-        // (namely EC keys and RSA-PSS signatures) and those that cannot.
-        // However, the function that would enable this
-        // (SecKeyIsAlgorithmSupported) causes a password dialog to appear on
-        // our test machines, so this backend pretends that everything supports
-        // modern crypto for now.
-        if slot_type != SlotType::Modern {
+        if slot_type != self.slot_type {
             return false;
         }
         for (attr_type, attr_value) in attrs {
@@ -927,17 +960,20 @@ impl ClientCertsBackend for Backend {
         };
         for identity in identities.get_all_values().iter() {
             let identity = unsafe { SecIdentity::wrap_under_get_rule(*identity as SecIdentityRef) };
-            let cert = Cert::new_from_identity(&identity);
-            let key = Key::new(&identity);
-            if let (Ok(cert), Ok(key)) = (cert, key) {
-                certs.push(cert);
-                keys.push(key);
-            } else {
-                continue;
-            }
+            let key = match Key::new(&identity) {
+                Ok(key) => key,
+                Err(_) => continue,
+            };
+            let slot_type = key.slot_type;
+            let cert = match Cert::new_from_identity(&identity, slot_type) {
+                Ok(cert) => cert,
+                Err(_) => continue,
+            };
+            certs.push(cert);
+            keys.push(key);
             if let Ok(issuers) = get_issuers(&identity) {
                 for issuer in issuers {
-                    if let Ok(cert) = Cert::new_from_certificate(&issuer) {
+                    if let Ok(cert) = Cert::new_from_certificate(&issuer, slot_type) {
                         certs.push(cert);
                     }
                 }
