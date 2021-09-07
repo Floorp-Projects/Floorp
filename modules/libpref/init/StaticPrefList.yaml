@@ -11946,7 +11946,7 @@
 # Use async clipboard on Wayland
 - name: widget.wayland.async-clipboard.enabled
   type: bool
-  value: false
+  value: true
   mirror: once
 
 # Use async data getter on Wayland Clipboard
