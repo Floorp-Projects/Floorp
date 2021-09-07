@@ -11760,7 +11760,6 @@ ARGBSetRow_X86
 ??_GShmemTextureReadLock@layers@mozilla@@UEAAPEAXI@Z
 ??4ReadLockDescriptor@layers@mozilla@@QEAAAEAV012@$$QEAV012@@Z
 ??1ReadLockDescriptor@layers@mozilla@@QEAA@XZ
-?HandleMemoryPressure@CompositorBridgeChild@layers@mozilla@@QEAAXXZ
 ?CreateIPDLActor@TextureClient@layers@mozilla@@SAPEAVPTextureChild@23@XZ
 ??0PTextureChild@layers@mozilla@@QEAA@XZ
 ?SendPTextureConstructor@PCompositorBridgeChild@layers@mozilla@@QEAAPEAVPTextureChild@23@PEAV423@AEBVSurfaceDescriptor@23@AEBVReadLockDescriptor@23@AEBW4LayersBackend@23@AEBW4TextureFlags@23@AEBULayersId@23@AEB_KAEBV?$Maybe@UExternalImageId@wr@mozilla@@@3@@Z
