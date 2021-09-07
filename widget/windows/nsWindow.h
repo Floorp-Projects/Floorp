@@ -447,6 +447,9 @@ class nsWindow final : public nsWindowBase {
   static bool ConvertStatus(nsEventStatus aStatus);
   static void PostSleepWakeNotification(const bool aIsSleepMode);
   int32_t ClientMarginHitTestPoint(int32_t mx, int32_t my);
+  void SetMaximizeButtonRect(const LayoutDeviceIntRect& aClientRect) override {
+    mMaximizeBtnRect = aClientRect;
+  }
   TimeStamp GetMessageTimeStamp(LONG aEventTime) const;
   static void UpdateFirstEventTime(DWORD aEventTime);
   void FinishLiveResizing(ResizeState aNewState);
@@ -741,6 +744,9 @@ class nsWindow final : public nsWindowBase {
   bool mRequestFxrOutputPending;
 
   mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
+
+  // Client rect for maximize button.
+  LayoutDeviceIntRect mMaximizeBtnRect;
 };
 
 #endif  // Window_h__
