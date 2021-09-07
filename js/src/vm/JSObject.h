@@ -299,7 +299,8 @@ class JSObject
   }
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              JS::ClassInfo* info);
+                              JS::ClassInfo* info,
+                              JS::RuntimeSizes* runtimeSizes);
 
   // We can only use addSizeOfExcludingThis on tenured objects: it assumes it
   // can apply mallocSizeOf to bits and pieces of the object, whereas objects

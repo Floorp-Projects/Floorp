@@ -3522,7 +3522,8 @@ js::gc::AllocKind JSObject::allocKindForTenure(
 }
 
 void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                      JS::ClassInfo* info) {
+                                      JS::ClassInfo* info,
+                                      JS::RuntimeSizes* runtimeSizes) {
   if (is<NativeObject>() && as<NativeObject>().hasDynamicSlots()) {
     info->objectsMallocHeapSlots +=
         mallocSizeOf(as<NativeObject>().getSlotsHeader());
@@ -3563,9 +3564,10 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
     info->objectsMallocHeapMisc +=
         as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
   } else if (is<ArrayBufferObject>()) {
-    ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
+    ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info,
+                                              runtimeSizes);
   } else if (is<SharedArrayBufferObject>()) {
-    SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
+    SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info, runtimeSizes);
   } else if (is<GlobalObject>()) {
     as<GlobalObject>().addSizeOfData(mallocSizeOf, info);
   } else if (is<WeakCollectionObject>()) {
@@ -3617,7 +3619,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<JSObject>::size(
   }
 
   JS::ClassInfo info;
-  obj.addSizeOfExcludingThis(mallocSizeOf, &info);
+  obj.addSizeOfExcludingThis(mallocSizeOf, &info, nullptr);
   return obj.tenuredSizeOfThis() + info.sizeOfAllThings();
 }
 

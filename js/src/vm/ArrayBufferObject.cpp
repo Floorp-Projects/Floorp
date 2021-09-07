@@ -1537,7 +1537,8 @@ ArrayBufferObject::extractStructuredCloneContents(
 
 /* static */
 void ArrayBufferObject::addSizeOfExcludingThis(
-    JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
+    JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info,
+    JS::RuntimeSizes* runtimeSizes) {
   auto& buffer = obj->as<ArrayBufferObject>();
   switch (buffer.bufferKind()) {
     case INLINE_DATA:
@@ -1568,9 +1569,14 @@ void ArrayBufferObject::addSizeOfExcludingThis(
       info->objectsNonHeapElementsNormal += buffer.byteLength();
       break;
     case WASM:
-      info->objectsNonHeapElementsWasm += buffer.byteLength();
-      MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
-      info->wasmGuardPages += buffer.wasmMappedSize() - buffer.byteLength();
+      if (!buffer.isDetached()) {
+        info->objectsNonHeapElementsWasm += buffer.byteLength();
+        if (runtimeSizes) {
+          MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
+          runtimeSizes->wasmGuardPages +=
+              buffer.wasmMappedSize() - buffer.byteLength();
+        }
+      }
       break;
     case BAD1:
       MOZ_CRASH("bad bufferKind()");
