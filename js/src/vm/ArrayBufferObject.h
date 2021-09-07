@@ -384,7 +384,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static void addSizeOfExcludingThis(JSObject* obj,
                                      mozilla::MallocSizeOf mallocSizeOf,
-                                     JS::ClassInfo* info);
+                                     JS::ClassInfo* info,
+                                     JS::RuntimeSizes* runtimeSizes);
 
   // ArrayBufferObjects (strongly) store the first view added to them, while
   // later views are (weakly) stored in the compartment's InnerViewTable

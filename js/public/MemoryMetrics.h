@@ -192,6 +192,7 @@ struct ClassInfo {
   MACRO(Objects, NonHeap, objectsNonHeapElementsNormal)          \
   MACRO(Objects, NonHeap, objectsNonHeapElementsShared)          \
   MACRO(Objects, NonHeap, objectsNonHeapElementsWasm)            \
+  MACRO(Objects, NonHeap, objectsNonHeapElementsWasmShared)      \
   MACRO(Objects, NonHeap, objectsNonHeapCodeWasm)
 
   ClassInfo() = default;
@@ -224,8 +225,6 @@ struct ClassInfo {
   }
 
   FOR_EACH_SIZE(DECL_SIZE_ZERO);
-
-  size_t wasmGuardPages = 0;
 
 #undef FOR_EACH_SIZE
 };
@@ -512,6 +511,7 @@ struct RuntimeSizes {
   MACRO(_, MallocHeap, scriptData)                  \
   MACRO(_, MallocHeap, tracelogger)                 \
   MACRO(_, MallocHeap, wasmRuntime)                 \
+  MACRO(_, Ignore, wasmGuardPages)                  \
   MACRO(_, MallocHeap, jitLazyLink)
 
   RuntimeSizes() { allScriptSources.emplace(); }

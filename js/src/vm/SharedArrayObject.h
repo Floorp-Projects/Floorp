@@ -227,7 +227,8 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static void addSizeOfExcludingThis(JSObject* obj,
                                      mozilla::MallocSizeOf mallocSizeOf,
-                                     JS::ClassInfo* info);
+                                     JS::ClassInfo* info,
+                                     JS::RuntimeSizes* runtimeSizes);
 
   static void copyData(Handle<SharedArrayBufferObject*> toBuffer,
                        size_t toIndex,
