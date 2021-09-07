@@ -2173,6 +2173,14 @@ class nsIWidget : public nsISupports {
    */
   virtual double GetDefaultScaleInternal() { return 1.0; }
 
+  /**
+   * Layout uses this to alert the widget to the client rect representing
+   * the window maximize button.  An empty rect indicates there is no
+   * maximize button (for example, in fullscreen).  This is only implemented
+   * on Windows.
+   */
+  virtual void SetMaximizeButtonRect(const LayoutDeviceIntRect& aClientRect) {}
+
  protected:
   // keep the list of children.  We also keep track of our siblings.
   // The ownership model is as follows: parent holds a strong ref to
