@@ -66,12 +66,12 @@
                      oncommand="BookmarkingUI.showSubView(this);"/>
       <toolbarbutton id="appMenu-history-button"
                      class="subviewbutton subviewbutton-nav"
-                     label="&historyMenu.label;"
+                     data-l10n-id="appmenuitem-history"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
       <toolbarbutton id="appMenu-downloads-button"
                      class="subviewbutton"
-                     label="&libraryDownloads.label;"
+                     data-l10n-id="appmenuitem-downloads"
                      key="key_openDownloads"
                      command="Tools:Downloads"/>
       <toolbarbutton id="appMenu-passwords-button"
@@ -88,7 +88,7 @@
       <toolbarseparator/>
       <toolbarbutton id="appMenu-print-button2"
                      class="subviewbutton"
-                     label="&printCmd.label;"
+                     data-l10n-id="appmenuitem-print"
                      key="printKb"
 #ifdef XP_MACOSX
                      command="cmd_print"
@@ -107,7 +107,7 @@
                      key="key_find"
                      command="cmd_find"/>
       <toolbaritem id="appMenu-zoom-controls2" class="subviewbutton toolbaritem-combined-buttons" closemenu="none">
-        <label class="toolbarbutton-text" value="&fullZoom.label;"/>
+        <label class="toolbarbutton-text" data-l10n-id="appmenuitem-zoom"/>
         <toolbarbutton id="appMenu-zoomReduce-button2"
                        class="subviewbutton subviewbutton-iconic"
                        command="cmd_fullZoomReduce"
@@ -547,8 +547,7 @@
         <vbox flex="1">
           <label id="fxa-menu-header-title"
                  crop="end"
-                 value="&fxa.menu.signin.label;"
-                 defaultLabel="&fxa.menu.signin.label;"/>
+                 data-l10n-id="appmenuitem-fxa-sign-in"/>
           <label id="fxa-menu-header-description"
                  crop="end"
                  data-l10n-id="fxa-menu-turn-on-sync"/>
@@ -614,7 +613,7 @@
   <panelview id="PanelUI-sendTabToDevice" flex="1" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <toolbarbutton id="PanelUI-sendTabToDevice-syncingDevices" class="subviewbutton subviewbutton-iconic pageAction-sendToDevice-notReady"
-                     label="&sendToDevice.syncNotReady.label;"
+                     data-l10n-id="fxa-menu-send-tab-to-device-syncnotready"
                      disabled="true"/>
     </vbox>
   </panelview>
@@ -622,10 +621,10 @@
   <panelview id="PanelUI-fxa-menu-sendtab-not-configured" flex="1" class="PanelUI-subView">
     <vbox id="PanelUI-fxa-sendtab-not-configured" align="center" class="panel-subview-body">
       <image class="fxaSendToDeviceLogo" role="presentation"/>
-      <label class="PanelUI-fxa-service-description-label">&fxa.service.sendTab.description;</label>
+      <label class="PanelUI-fxa-service-description-label" data-l10n-id="fxa-menu-send-tab-to-device-description"></label>
       <toolbarbutton id="PanelUI-fxa-menu-sendtab-not-configured-button"
                      class="PanelUI-fxa-signin-button"
-                     label="&fxa.menu.signin.label;"
+                     data-l10n-id="appmenuitem-fxa-sign-in"
                      oncommand="gSync.openPrefsFromFxaMenu('send_tab', this);"/>
     </vbox>
   </panelview>
@@ -633,7 +632,7 @@
   <panelview id="PanelUI-fxa-menu-sendtab-no-devices" flex="1" class="PanelUI-subView">
     <vbox id="PanelUI-fxa-sendtab-no-devices" align="center" class="panel-subview-body">
       <image class="fxaSendToDeviceLogo" role="presentation"/>
-      <label class="PanelUI-fxa-service-description-label">&fxa.service.sendTab.description;</label>
+      <label class="PanelUI-fxa-service-description-label" data-l10n-id="fxa-menu-send-tab-to-device-description"></label>
       <toolbarbutton id="PanelUI-fxa-menu-sendtab-connect-device-button"
                      class="PanelUI-fxa-signin-button"
                      data-l10n-id="appmenu-remote-tabs-connectdevice"
@@ -650,12 +649,12 @@
                      oncommand="BookmarkingUI.showSubView(this);"/>
       <toolbarbutton id="appMenu-library-history-button"
                      class="subviewbutton subviewbutton-nav"
-                     label="&historyMenu.label;"
+                     data-l10n-id="appmenuitem-history"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
       <toolbarbutton id="appMenu-library-downloads-button"
                      class="subviewbutton"
-                     label="&libraryDownloads.label;"
+                     data-l10n-id="appmenuitem-downloads"
                      oncommand="DownloadsPanel.showDownloadsHistory();"/>
     </vbox>
   </panelview>
