@@ -40,7 +40,6 @@ def get_default_config(topsrcdir, strings_path):
                     "beta": "releases/mozilla-beta",
                     "release": "releases/mozilla-release",
                     "esr91": "releases/mozilla-esr91",
-                    "esr78": "releases/mozilla-esr78",
                 },
                 "config_files": [
                     "browser/locales/l10n.toml",
@@ -58,7 +57,6 @@ def get_default_config(topsrcdir, strings_path):
                     "comm": "comm-central",
                     "comm-beta": "releases/comm-beta",
                     "comm-esr91": "releases/comm-esr91",
-                    "comm-esr78": "releases/comm-esr78",
                 },
                 "config_files": [
                     "comm/calendar/locales/l10n.toml",
