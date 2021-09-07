@@ -40,11 +40,14 @@ static StaticRefPtr<RequestContextService> gSingleton;
 static bool sShutdown = false;
 
 // nsIRequestContext
-class RequestContext final : public nsIRequestContext, public nsITimerCallback {
+class RequestContext final : public nsIRequestContext,
+                             public nsITimerCallback,
+                             public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTCONTEXT
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   explicit RequestContext(const uint64_t id);
 
@@ -90,7 +93,7 @@ class RequestContext final : public nsIRequestContext, public nsITimerCallback {
   bool mAfterDOMContentLoaded;
 };
 
-NS_IMPL_ISUPPORTS(RequestContext, nsIRequestContext, nsITimerCallback)
+NS_IMPL_ISUPPORTS(RequestContext, nsIRequestContext, nsITimerCallback, nsINamed)
 
 RequestContext::RequestContext(const uint64_t aID)
     : mID(aID),
@@ -321,6 +324,12 @@ RequestContext::Notify(nsITimer* timer) {
 
   ProcessTailQueue(NS_OK);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RequestContext::GetName(nsACString& aName) {
+  aName.AssignLiteral("RequestContext");
   return NS_OK;
 }
 

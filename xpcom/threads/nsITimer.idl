@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include  "nsINamed.idl"
 
 interface nsIObserver;
 interface nsIEventTarget;
@@ -318,4 +319,12 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
 
 #define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
 #define NS_TIMER_CALLBACK_TOPIC "timer-callback"
+
+#undef NS_DECL_NSITIMERCALLBACK
+#define NS_DECL_NSITIMERCALLBACK                                        \
+  NS_IMETHOD Notify(nsITimer *timer) override;                          \
+  inline void _ensure_GetName_exists(void) {                            \
+    static_assert(std::is_convertible<decltype(this), nsINamed*>::value, \
+                  "nsITimerCallback implementations must also implement nsINamed");     \
+  }
 %}

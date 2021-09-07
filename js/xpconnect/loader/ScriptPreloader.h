@@ -68,6 +68,7 @@ using namespace mozilla::loader;
 class ScriptPreloader : public nsIObserver,
                         public nsIMemoryReporter,
                         public nsIRunnable,
+                        public nsINamed,
                         public nsIAsyncShutdownBlocker {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
@@ -78,6 +79,7 @@ class ScriptPreloader : public nsIObserver,
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSINAMED
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   static ScriptPreloader& GetSingleton();

@@ -56,7 +56,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
                                 public nsIInputStreamCallback,
                                 public nsIOutputStreamCallback,
                                 public ARefBase,
-                                public nsITimerCallback {
+                                public nsITimerCallback,
+                                public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
@@ -64,6 +65,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   nsHttpTransaction();
 

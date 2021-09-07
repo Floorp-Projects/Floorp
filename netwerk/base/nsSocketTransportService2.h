@@ -88,6 +88,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
                                        public nsIThreadObserver,
                                        public nsIRunnable,
                                        public nsIObserver,
+                                       public nsINamed,
                                        public nsIDirectTaskDispatcher {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -98,6 +99,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
   NS_DECL_NSIDIRECTTASKDISPATCHER
 
   static const uint32_t SOCKET_LIMIT_MIN = 50U;

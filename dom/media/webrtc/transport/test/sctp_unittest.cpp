@@ -39,13 +39,14 @@ namespace {
 
 class TransportTestPeer;
 
-class SendPeriodic : public nsITimerCallback {
+class SendPeriodic : public nsITimerCallback, public nsINamed {
  public:
   SendPeriodic(TransportTestPeer* peer, int to_send)
       : peer_(peer), to_send_(to_send) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
  protected:
   virtual ~SendPeriodic() = default;
@@ -54,7 +55,7 @@ class SendPeriodic : public nsITimerCallback {
   int to_send_;
 };
 
-NS_IMPL_ISUPPORTS(SendPeriodic, nsITimerCallback)
+NS_IMPL_ISUPPORTS(SendPeriodic, nsITimerCallback, nsINamed)
 
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
@@ -306,6 +307,12 @@ NS_IMETHODIMP SendPeriodic::Notify(nsITimer* timer) {
   if (!to_send_) {
     timer->Cancel();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SendPeriodic::GetName(nsACString& aName) {
+  aName.AssignLiteral("SendPeriodic");
   return NS_OK;
 }
 

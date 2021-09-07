@@ -40,11 +40,13 @@ class nsHttpConnectionMgr;
 using nsConnEventHandler = void (nsHttpConnectionMgr::*)(int32_t, ARefBase*);
 
 class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
-                                  public nsIObserver {
+                                  public nsIObserver,
+                                  nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_HTTPCONNECTIONMGRSHELL
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may only be called on the main thread.

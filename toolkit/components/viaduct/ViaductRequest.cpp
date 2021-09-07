@@ -215,7 +215,7 @@ ViaductRequest::~ViaductRequest() {
   NotifyMonitor();
 }
 
-NS_IMPL_ISUPPORTS(ViaductRequest, nsIStreamListener, nsITimerCallback,
+NS_IMPL_ISUPPORTS(ViaductRequest, nsIStreamListener, nsITimerCallback, nsINamed,
                   nsIChannelEventSink)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -317,6 +317,15 @@ ViaductRequest::Notify(nsITimer* timer) {
     mChannel->Cancel(NS_ERROR_ABORT);
     mChannel = nullptr;
   }
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsINamed implementation
+
+NS_IMETHODIMP
+ViaductRequest::GetName(nsACString& aName) {
+  aName.AssignLiteral("ViaductRequest");
   return NS_OK;
 }
 

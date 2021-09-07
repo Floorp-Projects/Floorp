@@ -85,7 +85,8 @@ static void CFReleaseSafe(CFTypeRef cf) {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsNetworkLinkService, nsINetworkLinkService, nsIObserver, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsNetworkLinkService, nsINetworkLinkService, nsIObserver, nsITimerCallback,
+                  nsINamed)
 
 nsNetworkLinkService::nsNetworkLinkService()
     : mLinkUp(true),
@@ -579,6 +580,12 @@ nsNetworkLinkService::Notify(nsITimer* aTimer) {
 
   mNetworkIdTimer = nullptr;
   calculateNetworkIdWithDelay(0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsNetworkLinkService");
   return NS_OK;
 }
 

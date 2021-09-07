@@ -343,7 +343,7 @@ nsCString PreloaderBase::RedirectRecord::Fragment() const {
 
 // PreloaderBase::UsageTimer
 
-NS_IMPL_ISUPPORTS(PreloaderBase::UsageTimer, nsITimerCallback)
+NS_IMPL_ISUPPORTS(PreloaderBase::UsageTimer, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP PreloaderBase::UsageTimer::Notify(nsITimer* aTimer) {
   if (!mPreload || !mDocument) {
@@ -374,6 +374,12 @@ NS_IMETHODIMP PreloaderBase::UsageTimer::Notify(nsITimer* aTimer) {
                                   mDocument, nsContentUtils::eDOM_PROPERTIES,
                                   "UnusedLinkPreloadPending",
                                   nsTArray<nsString>({std::move(spec)}));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PreloaderBase::UsageTimer::GetName(nsACString& aName) {
+  aName.AssignLiteral("PreloaderBase::UsageTimer");
   return NS_OK;
 }
 
