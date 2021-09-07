@@ -164,8 +164,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() override;
 
-  void HandleMemoryPressure();
-
   nsISerialEventTarget* GetThread() const override { return mThread; }
 
   base::ProcessId GetParentPid() const override { return OtherPid(); }
