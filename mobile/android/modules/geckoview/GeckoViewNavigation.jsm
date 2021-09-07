@@ -329,20 +329,38 @@ class GeckoViewNavigation extends GeckoViewModule {
       return null;
     }
 
+    const newSessionId = Services.uuid
+      .generateUUID()
+      .toString()
+      .slice(1, -1)
+      .replace(/-/g, "");
+
     const message = {
       type: "GeckoView:OnNewSession",
       uri: aUri ? aUri.displaySpec : "",
+      newSessionId,
     };
+
+    // The window might be already open by the time we get the response from
+    // the Java layer, so we need to start waiting before sending the message.
+    const setupPromise = this.waitAndSetupWindow(
+      newSessionId,
+      aOpenWindowInfo,
+      aName
+    );
 
     let browser = undefined;
     this.eventDispatcher
       .sendRequestForResult(message)
-      .then(sessionId => {
-        return this.waitAndSetupWindow(sessionId, aOpenWindowInfo, aName);
+      .then(didOpenSession => {
+        if (!didOpenSession) {
+          return Promise.reject();
+        }
+        return setupPromise;
       })
       .then(
         window => {
-          browser = (window && window.browser) || null;
+          browser = window.browser;
         },
         () => {
           browser = null;
