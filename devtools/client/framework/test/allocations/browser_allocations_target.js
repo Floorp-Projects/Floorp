@@ -34,12 +34,12 @@ add_task(async function() {
   // shutdown of Firefox
   await testScript(tab);
 
-  const recordData = await startRecordingAllocations();
+  await startRecordingAllocations();
 
   // Now, run the test script. This time, we record this run.
   await testScript(tab);
 
-  await stopRecordingAllocations(recordData, "target");
+  await stopRecordingAllocations("target");
 
   gBrowser.removeTab(tab);
 });
