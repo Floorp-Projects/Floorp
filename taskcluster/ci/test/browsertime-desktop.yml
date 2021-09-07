@@ -367,6 +367,7 @@ browsertime-youtube-playback:
     max-run-time:
         by-subtest:
             youtube-playback-hfr: 3600
+            youtube-playback-widevine.*: 3600
             default:
                 by-test-platform:
                     windows10-aarch64/opt: 3600
