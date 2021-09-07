@@ -263,7 +263,7 @@ const FeatureManifest = {
         type: "string",
         description:
           "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
-       },
+      },
     },
   },
   readerMode: {
