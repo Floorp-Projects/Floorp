@@ -710,12 +710,6 @@ class NativeObject : public JSObject {
 
   void initializeSlotRange(uint32_t start, uint32_t end);
 
-  /*
-   * Initialize the object's slots from a flat array. The caller must ensure
-   * that there are enough slots. This is used during brain transplants.
-   */
-  void initSlots(const Value* vector, uint32_t length);
-
 #ifdef DEBUG
   enum SentinelAllowed{SENTINEL_NOT_ALLOWED, SENTINEL_ALLOWED};
 
