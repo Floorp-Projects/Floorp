@@ -11082,8 +11082,8 @@ cloudcontrolled.com
 cloudcontrolapp.com
 
 // Cloudera, Inc. : https://www.cloudera.com/
-// Submitted by Philip Langdale <security@cloudera.com>
-cloudera.site
+// Submitted by Kedarnath Waikar <security@cloudera.com>
+*.cloudera.site
 
 // Cloudflare, Inc. : https://www.cloudflare.com/
 // Submitted by Cloudflare Team <publicsuffixlist@cloudflare.com>
@@ -11257,6 +11257,11 @@ deno-staging.dev
 // deSEC : https://desec.io/
 // Submitted by Peter Thomassen <peter@desec.io>
 dedyn.io
+
+// Diher Solutions : https://diher.solutions
+// Submitted by Didi Hermawan <mail@diher.solutions>
+*.rss.my.id
+*.diher.solutions
 
 // DNS Africa Ltd https://dns.business
 // Submitted by Calvin Browne <calvin@dns.business>
@@ -11675,11 +11680,6 @@ staging.onred.one
 // One.com: https://www.one.com/
 // Submitted by Jacob Bunk Nielsen <jbn@one.com>
 service.one
-
-// Enonic : http://enonic.com/
-// Submitted by Erik Kaareng-Sunde <esu@enonic.com>
-enonic.io
-customer.enonic.io
 
 // EU.org https://eu.org/
 // Submitted by Pierre Beyssac <hostmaster@eu.org>
@@ -12189,6 +12189,10 @@ hashbang.sh
 hasura.app
 hasura-app.io
 
+// Heilbronn University of Applied Sciences - Faculty Informatics (GitLab Pages): https://www.hs-heilbronn.de
+// Submitted by Richard Zowalla <mi-admin@hs-heilbronn.de>
+pages.it.hs-heilbronn.de
+
 // Hepforge : https://www.hepforge.org
 // Submitted by David Grellscheid <admin@hepforge.org>
 hepforge.org
@@ -12534,6 +12538,10 @@ loginline.io
 loginline.services
 loginline.site
 
+// Lokalized : https://lokalized.nl
+// Submitted by Noah Taheij <noah@lokalized.nl>
+servers.run
+
 // Lõhmus Family, The
 // Submitted by Heiki Lõhmus <hostmaster at lohmus dot me>
 lohmus.me
@@ -12574,6 +12582,7 @@ barsy.online
 barsy.org
 barsy.pro
 barsy.pub
+barsy.ro
 barsy.shop
 barsy.site
 barsy.support
@@ -12720,10 +12729,6 @@ for.sale
 that.win
 from.work
 to.work
-
-// NCTU.ME : https://nctu.me/
-// Submitted by Tocknicsu <admin@nctu.me>
-nctu.me
 
 // Netlify : https://www.netlify.com
 // Submitted by Jessica Parsons <jessica@netlify.com>
@@ -13455,6 +13460,10 @@ synology.me
 vpnplus.to
 direct.quickconnect.to
 
+// Tabit Technologies Ltd. : https://tabit.cloud/
+// Submitted by Oren Agiv <oren@tabit.cloud>
+tabitorder.co.il
+
 // TAIFUN Software AG : http://taifun-software.de
 // Submitted by Bjoern Henke <dev-server@taifun-software.de>
 taifun-dns.de
@@ -13713,6 +13722,12 @@ community-pro.de
 diskussionsbereich.de
 community-pro.net
 meinforum.net
+
+// Woods Valldata : https://www.woodsvalldata.co.uk/
+// Submitted by Chris Whittle <chris.whittle@woodsvalldata.co.uk>
+affinitylottery.org.uk
+raffleentry.org.uk
+weeklylottery.org.uk
 
 // WP Engine : https://wpengine.com/
 // Submitted by Michael Smith <michael.smith@wpengine.com>
