@@ -438,49 +438,62 @@ bool HTMLEditUtils::IsInVisibleTextFrames(nsPresContext* aPresContext,
   return NS_SUCCEEDED(rv) && isVisible;
 }
 
-bool HTMLEditUtils::IsVisibleBRElement(const nsIContent& aContent) {
-  if (!aContent.IsHTMLElement(nsGkAtoms::br)) {
-    return false;
-  }
+Element* HTMLEditUtils::GetBlockElementOfImmediateBlockBoundary(
+    const nsIContent& aContent, const WalkTreeDirection aDirection) {
+  MOZ_ASSERT(aContent.IsHTMLElement(nsGkAtoms::br));
 
-  // First, we get a block container because <br> element shouldn't be a
-  // direct child of a Document node.
+  // First, we get a block container.  This is not designed for reaching
+  // no block boundaries in the tree.
   Element* maybeNonEditableAncestorBlock = HTMLEditUtils::GetAncestorElement(
       aContent, HTMLEditUtils::ClosestBlockElement);
   if (NS_WARN_IF(!maybeNonEditableAncestorBlock)) {
-    return true;
+    return nullptr;
   }
 
-  // Then, scan visible content after the <br> elemenet.
-  for (nsIContent* nextContent = HTMLEditUtils::GetNextContent(
-           aContent,
-           {WalkTreeOption::IgnoreDataNodeExceptText,
-            WalkTreeOption::StopAtBlockBoundary},
-           maybeNonEditableAncestorBlock);
-       nextContent; nextContent = HTMLEditUtils::GetNextContent(
-                        *nextContent,
-                        {WalkTreeOption::IgnoreDataNodeExceptText,
-                         WalkTreeOption::StopAtBlockBoundary},
-                        maybeNonEditableAncestorBlock)) {
+  auto getNextContent = [&aDirection, &maybeNonEditableAncestorBlock](
+                            const nsIContent& aContent) -> nsIContent* {
+    return aDirection == WalkTreeDirection::Forward
+               ? HTMLEditUtils::GetNextContent(
+                     aContent,
+                     {WalkTreeOption::IgnoreDataNodeExceptText,
+                      WalkTreeOption::StopAtBlockBoundary},
+                     maybeNonEditableAncestorBlock)
+               : HTMLEditUtils::GetPreviousContent(
+                     aContent,
+                     {WalkTreeOption::IgnoreDataNodeExceptText,
+                      WalkTreeOption::StopAtBlockBoundary},
+                     maybeNonEditableAncestorBlock);
+  };
+
+  // Then, scan block element boundary while we don't see visible things.
+  for (nsIContent* nextContent = getNextContent(aContent); nextContent;
+       nextContent = getNextContent(*nextContent)) {
     if (nextContent->IsElement()) {
       // Break is right before a child block, it's not visible
       if (HTMLEditUtils::IsBlockElement(*nextContent)) {
-        return false;
+        return nextContent->AsElement();
       }
 
       // XXX How about other non-HTML elements?  Assume they are styled as
       //     blocks for now.
       if (!nextContent->IsHTMLElement()) {
-        return false;
+        return nextContent->AsElement();
       }
 
-      // If followed by another <br> element or an visible element, it's a
-      // visible <br> element.
+      // If there is a visible content which generates something visible,
+      // stop scanning.
       if (nextContent->IsAnyOfHTMLElements(
-              nsGkAtoms::br, nsGkAtoms::applet, nsGkAtoms::iframe,
-              nsGkAtoms::img, nsGkAtoms::meter, nsGkAtoms::progress,
-              nsGkAtoms::select, nsGkAtoms::textarea)) {
-        return true;
+              nsGkAtoms::applet, nsGkAtoms::iframe, nsGkAtoms::img,
+              nsGkAtoms::meter, nsGkAtoms::progress, nsGkAtoms::select,
+              nsGkAtoms::textarea)) {
+        return nullptr;
+      }
+
+      // If aContent is a <br> element, another <br> element prevents the block
+      // boundary special handling.
+      if (aContent.IsHTMLElement(nsGkAtoms::br) &&
+          nextContent->IsHTMLElement(nsGkAtoms::br)) {
+        return nullptr;
       }
 
       if (HTMLInputElement* inputElement =
@@ -488,24 +501,22 @@ bool HTMLEditUtils::IsVisibleBRElement(const nsIContent& aContent) {
         if (inputElement->ControlType() == FormControlType::InputHidden) {
           continue;  // Keep scanning next one due to invisible form control.
         }
-        return true;  // Followed by a visible form control so that visible
-                      // <br>.
+        return nullptr;  // Followed by a visible form control so that visible
+                         // <br>.
       }
 
       continue;
     }
 
-    // If the following text node is not white-spaces only and non-empty,
-    // the <br> element is visible.
     Text* textNode = Text::FromNode(nextContent);
-    if (!textNode) {
+    if (NS_WARN_IF(!textNode)) {
       continue;  // XXX Is this possible?
     }
     if (!textNode->TextLength()) {
       continue;  // empty invisible text node, keep scanning next one.
     }
     if (!textNode->TextIsOnlyWhitespace()) {
-      return true;  // followed by a visible text node, so, visible <br>.
+      return nullptr;  // found a visible text node.
     }
     const nsTextFragment& textFragment = textNode->TextFragment();
     const bool isWhiteSpacePreformatted =
@@ -517,18 +528,15 @@ bool HTMLEditUtils::IsVisibleBRElement(const nsIContent& aContent) {
       continue;
     }
     for (uint32_t i = 0; i < textFragment.GetLength(); i++) {
-      // If followed by a preformatted new line, the <br> element is visible.
       if (textFragment.CharAt(AssertedCast<int32_t>(i)) ==
           HTMLEditUtils::kNewLine) {
         if (isNewLinePreformatted) {
-          return true;
+          return nullptr;  // found a visible text node.
         }
         continue;
       }
-      // If followed by a preformatted white-space, the <br> element is
-      // visible.
       if (isWhiteSpacePreformatted) {
-        return true;
+        return nullptr;  // found a visible text node.
       }
     }
     // All white-spaces in the text node is invisible, keep scanning next one.
@@ -537,7 +545,7 @@ bool HTMLEditUtils::IsVisibleBRElement(const nsIContent& aContent) {
   // There is no visible content and reached current block boundary.  Then,
   // the <br> element is the last content in the block and invisible.
   // XXX Should we treat it visible if it's the only child of a block?
-  return false;
+  return maybeNonEditableAncestorBlock;
 }
 
 bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
