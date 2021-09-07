@@ -54,7 +54,7 @@
       <p>O navegador se conectou com sucesso, mas a conexão foi interrompida durante a transferência de informações. Tente novamente.</p>
       <ul>
         <li>O site pode estar temporariamente indisponível ou ocupado demais. Tente novamente daqui a pouco.</li>
-        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou WiFi do seu dispositivo.</li>
       </ul>
     ]]></string>
 
@@ -79,7 +79,7 @@
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
         <li>O site pode estar temporariamente indisponível ou ocupado demais. Tente novamente daqui a pouco.</li>
-        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou WiFi do seu dispositivo.</li>
       </ul>
     ]]></string>
 
@@ -131,7 +131,7 @@
       <p>O link de rede foi interrompido ao negociar uma conexão. Tente novamente.</p>
       <ul>
         <li>O site pode estar temporariamente indisponível ou ocupado demais. Tente novamente daqui a pouco.</li>
-        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou WiFi do seu dispositivo.</li>
       </ul>
     ]]></string>
 
@@ -186,7 +186,7 @@
         <li>Verifique se há erros de digitação no endereço, como
           <strong>ww</strong>.example.com em vez de
           <strong>www</strong>.example.com.</li>
-        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou WiFi do seu dispositivo.</li>
       </ul>
     ]]></string>
 
