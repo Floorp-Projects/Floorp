@@ -4160,6 +4160,10 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction fun,
   ScriptedCaller scriptedCaller;
   SharedCompileArgs compileArgs =
       CompileArgs::build(cx, std::move(scriptedCaller), options);
+  if (!compileArgs) {
+    return nullptr;
+  }
+
   ModuleEnvironment moduleEnv(compileArgs->features);
   CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
                                   OptimizedBackend::Ion, DebugEnabled::False);
