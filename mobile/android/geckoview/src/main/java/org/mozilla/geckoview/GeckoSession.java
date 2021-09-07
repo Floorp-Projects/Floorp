@@ -121,7 +121,7 @@ public class GeckoSession {
     private SessionAccessibility mAccessibility;
     private SessionFinder mFinder;
 
-    private String mId = UUID.randomUUID().toString().replace("-", "");
+    private String mId;
     /* package */ String getId() {
         return mId;
     }
@@ -541,14 +541,15 @@ public class GeckoSession {
                     final String uri = message.getString("uri");
                     final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
                     if (result == null) {
-                        callback.sendSuccess(null);
+                        callback.sendSuccess(false);
                         return;
                     }
 
+                    final String newSessionId = message.getString("newSessionId");
                     callback.resolveTo(result.map(session -> {
                         ThreadUtils.assertOnUiThread();
                         if (session == null) {
-                            return null;
+                            return false;
                         }
 
                         if (session.isOpen()) {
@@ -559,8 +560,8 @@ public class GeckoSession {
                             throw new IllegalArgumentException("Session is not attached to a window");
                         }
 
-                        session.open(GeckoSession.this.mWindow.runtime);
-                        return session.getId();
+                        session.open(GeckoSession.this.mWindow.runtime, newSessionId);
+                        return true;
                     }));
                 }
             }
@@ -1182,14 +1183,6 @@ public class GeckoSession {
         onWindowChanged(WINDOW_TRANSFER_OUT, /* inProgress */ false);
     }
 
-    /* package */ boolean equalsId(final GeckoSession other) {
-        if (other == null) {
-            return false;
-        }
-
-        return mId.equals(other.mId);
-    }
-
     /**
      * Return whether this session is open.
      *
@@ -1234,6 +1227,10 @@ public class GeckoSession {
      */
     @UiThread
     public void open(final @NonNull GeckoRuntime runtime) {
+        open(runtime, UUID.randomUUID().toString().replace("-", ""));
+    }
+
+    /* package */ void open(final @NonNull GeckoRuntime runtime, final String id) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
@@ -1245,6 +1242,7 @@ public class GeckoSession {
         final int screenId = mSettings.getScreenId();
         final boolean isPrivate = mSettings.getUsePrivateMode();
 
+        mId = id;
         mWindow = new Window(runtime, this, mNativeQueue);
         mWebExtensionController.setRuntime(runtime);
 
