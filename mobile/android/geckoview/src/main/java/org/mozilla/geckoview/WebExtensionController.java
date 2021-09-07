@@ -975,22 +975,22 @@ public class WebExtensionController {
         }
 
         if (result == null) {
-            message.callback.sendSuccess(null);
+            message.callback.sendSuccess(false);
             return;
         }
 
+        final String newSessionId = message.bundle.getString("newSessionId");
         message.callback.resolveTo(result.map(session -> {
             if (session == null) {
-                return null;
+                return false;
             }
 
             if (session.isOpen()) {
                 throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
             }
 
-            session.open(mListener.runtime);
-
-            return session.getId();
+            session.open(mListener.runtime, newSessionId);
+            return true;
         }));
     }
 
