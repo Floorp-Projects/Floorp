@@ -41,7 +41,7 @@ fun AwesomeBar(
     ) {
         val fetcher = remember(providers) { SuggestionFetcher(providers) }
 
-        LaunchedEffect(text) {
+        LaunchedEffect(text, fetcher) {
             fetcher.fetch(text)
         }
 
