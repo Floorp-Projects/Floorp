@@ -928,6 +928,57 @@ assertEq(
   1
 );
 
+// Test that rethrow makes the rest of the block dead code.
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag (param i32))
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do (i32.const 1))
+           (catch 0
+             (rethrow 0)
+             (i32.const 2)))))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag (param i32))
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do (try
+                 (do (i32.const 13)
+                     (throw 0))
+                 (catch 0
+                   (rethrow 0)))
+               (unreachable))
+           (catch 0))))`
+  ).exports.f(),
+  13
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag)
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do
+             (try
+               (do (throw 0))
+               (catch 0
+                 (i32.const 4)
+                 (rethrow 0)))
+             (unreachable))
+           (catch 0
+              (i32.const 13)))))`
+  ).exports.f(),
+  13
+);
+
 // Test try-delegate blocks.
 assertEq(
   wasmEvalText(
