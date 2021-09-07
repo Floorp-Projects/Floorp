@@ -221,8 +221,8 @@ const FeatureManifest = {
       promoSectionStyle: {
         type: "string",
         description:
-          "Sets the position of the promo section. Possible values are: top, bottom. Default bottom.",
-        enum: ["top", "bottom"],
+          "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
+        enum: ["top", "below-search", "bottom"],
       },
       promoTitle: {
         type: "string",
