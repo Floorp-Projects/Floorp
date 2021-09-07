@@ -41,7 +41,8 @@ const char kTestingPref[] = "dom.storage.testing";
 
 constexpr auto kPrivateBrowsingPattern = u"{ \"privateBrowsingId\": 1 }"_ns;
 
-NS_IMPL_ISUPPORTS(StorageObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(StorageObserver, nsIObserver, nsINamed,
+                  nsISupportsWeakReference)
 
 StorageObserver* StorageObserver::sSelf = nullptr;
 
@@ -499,6 +500,12 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   NS_ERROR("Unexpected topic");
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+StorageObserver::GetName(nsACString& aName) {
+  aName.AssignLiteral("StorageObserver");
+  return NS_OK;
 }
 
 }  // namespace dom

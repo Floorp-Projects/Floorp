@@ -4337,10 +4337,11 @@ class FullscreenTransitionTask : public Runnable {
     eEnd
   };
 
-  class Observer final : public nsIObserver {
+  class Observer final : public nsIObserver, public nsINamed {
    public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSINAMED
 
     explicit Observer(FullscreenTransitionTask* aTask) : mTask(aTask) {}
 
@@ -4433,7 +4434,7 @@ FullscreenTransitionTask::Run() {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(FullscreenTransitionTask::Observer, nsIObserver)
+NS_IMPL_ISUPPORTS(FullscreenTransitionTask::Observer, nsIObserver, nsINamed)
 
 NS_IMETHODIMP
 FullscreenTransitionTask::Observer::Observe(nsISupports* aSubject,
@@ -4467,6 +4468,12 @@ FullscreenTransitionTask::Observer::Observe(nsISupports* aSubject,
     mTask->mTimer = nullptr;
     mTask->Run();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FullscreenTransitionTask::Observer::GetName(nsACString& aName) {
+  aName.AssignLiteral("FullscreenTransitionTask");
   return NS_OK;
 }
 

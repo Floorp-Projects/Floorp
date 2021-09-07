@@ -86,7 +86,7 @@ class TestGMPVideoDecoder;
  *
  */
 
-class MediaKeySystemAccessManager final : public nsIObserver {
+class MediaKeySystemAccessManager final : public nsIObserver, public nsINamed {
  public:
   explicit MediaKeySystemAccessManager(nsPIDOMWindowInner* aWindow);
 
@@ -94,6 +94,7 @@ class MediaKeySystemAccessManager final : public nsIObserver {
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(MediaKeySystemAccessManager,
                                            nsIObserver)
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
   // Entry point for the navigator to call into the manager.
   void Request(DetailedPromise* aPromise, const nsAString& aKeySystem,
