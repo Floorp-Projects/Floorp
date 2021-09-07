@@ -18,7 +18,6 @@
 
 #include "wasm/WasmTypeDef.h"
 
-#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/JitOptions.h"
@@ -32,7 +31,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::CheckedInt32;
 using mozilla::IsPowerOfTwo;
 
 bool FuncType::canHaveJitEntry() const {
@@ -85,40 +83,31 @@ static inline CheckedInt32 RoundUpToAlignment(CheckedInt32 address,
   return ((address + (align - 1)) / align) * align;
 }
 
-class StructLayout {
-  CheckedInt32 sizeSoFar = 0;
-  uint32_t structAlignment = 1;
+CheckedInt32 StructLayout::addField(FieldType type) {
+  uint32_t fieldSize = type.size();
+  uint32_t fieldAlignment = type.alignmentInStruct();
 
- public:
-  // The field adders return the offset of the the field.
-  CheckedInt32 addField(FieldType type) {
-    uint32_t fieldSize = type.size();
-    uint32_t fieldAlignment = type.alignmentInStruct();
+  // Alignment of the struct is the max of the alignment of its fields.
+  structAlignment = std::max(structAlignment, fieldAlignment);
 
-    // Alignment of the struct is the max of the alignment of its fields.
-    structAlignment = std::max(structAlignment, fieldAlignment);
-
-    // Align the pointer.
-    CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldAlignment);
-    if (!offset.isValid()) {
-      return offset;
-    }
-
-    // Allocate space.
-    sizeSoFar = offset + fieldSize;
-    if (!sizeSoFar.isValid()) {
-      return sizeSoFar;
-    }
-
+  // Align the pointer.
+  CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldAlignment);
+  if (!offset.isValid()) {
     return offset;
   }
 
-  // The close method rounds up the structure size to the appropriate
-  // alignment and returns that size.
-  CheckedInt32 close() {
-    return RoundUpToAlignment(sizeSoFar, structAlignment);
+  // Allocate space.
+  sizeSoFar = offset + fieldSize;
+  if (!sizeSoFar.isValid()) {
+    return sizeSoFar;
   }
-};
+
+  return offset;
+}
+
+CheckedInt32 StructLayout::close() {
+  return RoundUpToAlignment(sizeSoFar, structAlignment);
+}
 
 bool StructType::computeLayout() {
   StructLayout layout;

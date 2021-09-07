@@ -180,6 +180,44 @@ size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return initial_.sizeOfExcludingThis(mallocSizeOf);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+bool TagDesc::computeLayout() {
+  StructLayout layout;
+  int32_t refCount = 0;
+  for (const ValType argType : argTypes) {
+    if (argType.isReference()) {
+      refCount++;
+    }
+  }
+  int32_t refIndex = 0;
+  for (size_t i = 0; i < argTypes.length(); i++) {
+    CheckedInt32 offset;
+    if (argTypes[i].isReference()) {
+      NativeObject::elementsSizeMustNotOverflow();
+      // Reference typed elements need to be loaded in reverse order
+      // as they are pushed stack-like into the exception's Array.
+      offset = (refCount - refIndex - 1) * CheckedInt32(sizeof(Value));
+      refIndex++;
+    } else {
+      offset = layout.addField(FieldType(argTypes[i].packed()));
+    }
+    if (!offset.isValid()) {
+      return false;
+    }
+    argOffsets[i] = offset.value();
+  }
+  this->refCount = refCount;
+
+  CheckedInt32 size = layout.close();
+  if (!size.isValid()) {
+    return false;
+  }
+  this->bufferSize = size.value();
+
+  return true;
+}
+#endif
+
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
          SerializedMaybeSize(offsetIfActive) +

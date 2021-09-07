@@ -789,7 +789,8 @@ bool Module::instantiateLocalTag(JSContext* cx, const TagDesc& ed,
     // If the tag description is exported, create an export tag
     // object for it.
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTag));
-    RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, ed.type, proto));
+    RootedWasmTagObject tagObj(cx,
+                               WasmTagObject::create(cx, ed.argTypes, proto));
     if (!tagObj) {
       return false;
     }
