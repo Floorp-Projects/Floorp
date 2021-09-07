@@ -11490,10 +11490,7 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ?RecvScheduleComposite@LayerTransactionParent@layers@mozilla@@IAE?AVIPCResult@ipc@3@XZ
 ?Copy@nsRegion@@AAEAAV1@ABV1@@Z
 ?GetBufferTarget@DrawTargetRotatedBuffer@layers@mozilla@@UBEPAVDrawTarget@gfx@3@XZ
-?SendNotifyRegionInvalidated@CompositorBridgeChild@layers@mozilla@@QAE_NABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
-?SendNotifyRegionInvalidated@PCompositorBridgeChild@layers@mozilla@@QAE_NABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
 ?ScheduleComposition@CompositorVsyncScheduler@layers@mozilla@@QAEXXZ
-?Msg_NotifyRegionInvalidated@PCompositorBridge@layers@mozilla@@YAPAVMessage@IPC@@H@Z
 ?Read@?$IPDLParamTraits@VInputStreamParams@ipc@mozilla@@@ipc@mozilla@@SA_NPBVMessage@IPC@@PAVPickleIterator@@PAVIProtocol@23@PAVInputStreamParams@23@@Z
 ?Write@?$RegionParamTraits@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@U?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@VRectIterator@?$BaseIntRegion@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@U?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@U?$IntPointTyped@UUnknownUnits@gfx@mozilla@@@23@U?$IntMarginTyped@UUnknownUnits@gfx@mozilla@@@23@@23@@IPC@@SAXPAVMessage@2@ABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@Z
 ?GetSize@DrawTargetSkia@gfx@mozilla@@UBE?AU?$IntSizeTyped@UUnknownUnits@gfx@mozilla@@@23@XZ

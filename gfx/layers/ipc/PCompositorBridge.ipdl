@@ -205,9 +205,6 @@ parent:
   sync StopFrameTimeRecording(uint32_t startIndex)
     returns (float[] intervals);
 
-  // Notify the compositor that a region of the screen has been invalidated.
-  async NotifyRegionInvalidated(nsIntRegion region);
-
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 
   async InitPCanvasParent(Endpoint<PCanvasParent> aEndpoint);

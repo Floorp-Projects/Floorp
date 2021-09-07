@@ -136,7 +136,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
                                    uint32_t* startIndex);
   bool SendStopFrameTimeRecording(const uint32_t& startIndex,
                                   nsTArray<float>* intervals);
-  bool SendNotifyRegionInvalidated(const nsIntRegion& region);
   bool IsSameProcess() const override;
 
   bool IPCOpen() const override { return mCanSend; }

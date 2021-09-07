@@ -73,10 +73,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override {
     return IPC_OK();
   }
-  mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(
-      const nsIntRegion& aRegion) override {
-    return IPC_OK();
-  }
   mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& aBufferSize, uint32_t* aOutStartIndex) override {
     return IPC_OK();

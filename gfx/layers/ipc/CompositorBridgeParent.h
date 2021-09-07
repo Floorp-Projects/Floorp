@@ -224,8 +224,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvAdoptChild(const LayersId& id) = 0;
   virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() = 0;
   virtual mozilla::ipc::IPCResult RecvForcePresent() = 0;
-  virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(
-      const nsIntRegion& region) = 0;
   virtual mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvEndRecordingToDisk(
@@ -322,8 +320,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override;
   mozilla::ipc::IPCResult RecvForcePresent() override;
 
-  mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(
-      const nsIntRegion& aRegion) override;
   mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
   mozilla::ipc::IPCResult RecvStopFrameTimeRecording(

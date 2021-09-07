@@ -548,11 +548,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvForcePresent() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyRegionInvalidated(
-    const nsIntRegion& aRegion) {
-  return IPC_OK();
-}
-
 void CompositorBridgeParent::Invalidate() {}
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvStartFrameTimeRecording(

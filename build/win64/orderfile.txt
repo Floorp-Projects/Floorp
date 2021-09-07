@@ -10993,9 +10993,6 @@ Servo_StyleSet_HasStateDependency
 ?AddRect@nsRegion@@AEAAXAEBUnsRectAbsolute@@@Z
 ?Copy@nsRegion@@AEAAAEAV1@AEBV1@@Z
 ?GetOpenWindowInfo@XULFrameElement@dom@mozilla@@QEBAPEAVnsIOpenWindowInfo@@XZ
-?SendNotifyRegionInvalidated@CompositorBridgeChild@layers@mozilla@@QEAA_NAEBV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
-?SendNotifyRegionInvalidated@PCompositorBridgeChild@layers@mozilla@@QEAA_NAEBV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
-?Msg_NotifyRegionInvalidated@PCompositorBridge@layers@mozilla@@YAPEAVMessage@IPC@@H@Z
 ?Read@?$IPDLParamTraits@VInputStreamParams@ipc@mozilla@@@ipc@mozilla@@SA_NPEBVMessage@IPC@@PEAVPickleIterator@@PEAVIProtocol@23@PEAVInputStreamParams@23@@Z
 ?Write@?$RegionParamTraits@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@U?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@VRectIterator@?$BaseIntRegion@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@U?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@U?$IntPointTyped@UUnknownUnits@gfx@mozilla@@@23@U?$IntMarginTyped@UUnknownUnits@gfx@mozilla@@@23@@23@@IPC@@SAXPEAVMessage@2@AEBV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@Z
 ?ProcessPendingUpdates@nsViewManager@@QEAAXXZ

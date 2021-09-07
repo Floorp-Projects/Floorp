@@ -441,14 +441,6 @@ bool CompositorBridgeChild::SendStopFrameTimeRecording(
                                                             intervals);
 }
 
-bool CompositorBridgeChild::SendNotifyRegionInvalidated(
-    const nsIntRegion& region) {
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeChild::SendNotifyRegionInvalidated(region);
-}
-
 PTextureChild* CompositorBridgeChild::AllocPTextureChild(
     const SurfaceDescriptor&, const ReadLockDescriptor&, const LayersBackend&,
     const TextureFlags&, const LayersId&, const uint64_t& aSerial,
