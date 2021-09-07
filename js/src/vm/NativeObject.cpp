@@ -207,22 +207,6 @@ void js::NativeObject::initializeSlotRange(uint32_t start, uint32_t end) {
   }
 }
 
-void js::NativeObject::initSlots(const Value* vector, uint32_t length) {
-  HeapSlot* fixedStart;
-  HeapSlot* fixedEnd;
-  HeapSlot* slotsStart;
-  HeapSlot* slotsEnd;
-  getSlotRange(0, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-
-  uint32_t offset = 0;
-  for (HeapSlot* sp = fixedStart; sp < fixedEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, offset++, *vector++);
-  }
-  for (HeapSlot* sp = slotsStart; sp < slotsEnd; sp++) {
-    sp->init(this, HeapSlot::Slot, offset++, *vector++);
-  }
-}
-
 #ifdef DEBUG
 
 bool js::NativeObject::slotInRange(uint32_t slot,
