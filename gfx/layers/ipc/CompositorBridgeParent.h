@@ -244,8 +244,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       CompositorOptions* compositorOptions) = 0;
   virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(
       const LayersId& id, CompositorOptions* compositorOptions) = 0;
-  virtual mozilla::ipc::IPCResult RecvMakeSnapshot(
-      const SurfaceDescriptor& inSnapshot, const IntRect& dirtyRect) = 0;
   virtual mozilla::ipc::IPCResult RecvFlushRendering() = 0;
   virtual mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() = 0;
   virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
@@ -313,8 +311,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvNotifyChildRecreated(
       const LayersId& child, CompositorOptions* aOptions) override;
   mozilla::ipc::IPCResult RecvAdoptChild(const LayersId& child) override;
-  mozilla::ipc::IPCResult RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                           const gfx::IntRect& aRect) override;
   mozilla::ipc::IPCResult RecvFlushRendering() override;
   mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
   mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override;

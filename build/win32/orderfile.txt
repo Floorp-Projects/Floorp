@@ -11830,7 +11830,6 @@ ARGBSetRow_X86
 ?SendPTextureConstructor@PCompositorBridgeChild@layers@mozilla@@QAEPAVPTextureChild@23@PAV423@ABVSurfaceDescriptor@23@ABVReadLockDescriptor@23@ABW4LayersBackend@23@ABW4TextureFlags@23@ABULayersId@23@AB_KABV?$Maybe@UExternalImageId@wr@mozilla@@@3@@Z
 ?Read@?$IPDLParamTraits@VReadLockDescriptor@layers@mozilla@@@ipc@mozilla@@SA_NPBVMessage@IPC@@PAVPickleIterator@@PAVIProtocol@23@PAVReadLockDescriptor@layers@3@@Z
 ?Write@?$IPDLParamTraits@PAVPTextureChild@layers@mozilla@@@ipc@mozilla@@SAXPAVMessage@IPC@@PAVIProtocol@23@ABQAVPTextureChild@layers@3@@Z
-?SendMakeSnapshot@PCompositorBridgeChild@layers@mozilla@@QAE_NABVSurfaceDescriptor@23@ABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
 ?Write@?$IPDLParamTraits@VSurfaceDescriptor@layers@mozilla@@@ipc@mozilla@@SAXPAVMessage@IPC@@PAVIProtocol@23@ABVSurfaceDescriptor@layers@3@@Z
 ??4IPCDataTransferData@dom@mozilla@@QAEAAV012@ABVIPCBlob@12@@Z
 ?Write@?$IPDLParamTraits@VReadLockDescriptor@layers@mozilla@@@ipc@mozilla@@SAXPAVMessage@IPC@@PAVIProtocol@23@ABVReadLockDescriptor@layers@3@@Z

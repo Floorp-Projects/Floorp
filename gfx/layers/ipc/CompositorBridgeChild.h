@@ -128,8 +128,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendResume();
   bool SendResumeAsync();
   bool SendAdoptChild(const LayersId& id);
-  bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot,
-                        const gfx::IntRect& dirtyRect);
   bool SendFlushRendering();
   bool SendStartFrameTimeRecording(const int32_t& bufferSize,
                                    uint32_t* startIndex);
