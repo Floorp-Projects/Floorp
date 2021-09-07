@@ -13,6 +13,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.setNavigationIcon
 import org.mozilla.focus.utils.StatusBarUtils
 
 abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
@@ -45,6 +46,6 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
 
         val activity = requireActivity() as AppCompatActivity
         activity.setSupportActionBar(toolbar)
-        activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        activity.setNavigationIcon(R.drawable.ic_back_button)
     }
 }
