@@ -220,6 +220,14 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
 
  protected:
   virtual ~TextControlElement() = default;
+
+  // The focusability state of this form control.  eUnfocusable means that it
+  // shouldn't be focused at all, eInactiveWindow means it's in an inactive
+  // window, eActiveWindow means it's in an active window.
+  enum class FocusTristate { eUnfocusable, eInactiveWindow, eActiveWindow };
+
+  // Get our focus state.
+  FocusTristate FocusState();
 };
 
 }  // namespace mozilla
