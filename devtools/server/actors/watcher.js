@@ -171,6 +171,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
         // @backward-compat { version 93 } Starts supporting setSaveRequestAndResponseBodies on the NetworkParent actor
         saveRequestAndResponseBodies: true,
+        // @backward-compat { version 93 } The network parent actor started exposing setPersist method.
+        "network-persist": true,
       },
     };
   },
