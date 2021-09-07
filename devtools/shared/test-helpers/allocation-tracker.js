@@ -26,7 +26,7 @@
  *   // Do something
  *
  *   // If you want to log all the allocation sites, call this method:
- *   tracker.logAllocationSites();
+ *   tracker.logAllocationLog();
  *   // Or, if you want to only print the number of objects being allocated, call this:
  *   tracker.logCount();
  *   // Once you are done, stop the tracker as it slow down execution a lot.
@@ -138,6 +138,114 @@ exports.allocationTracker = function({
       return dbg.memory.allocationsLogOverflowed;
     },
 
+    async startRecordingAllocations(debug_allocations) {
+      // Do a first pass of GC, to ensure all to-be-freed objects from the first run
+      // are really freed.
+      await this.doGC();
+
+      // Measure the current process memory usage
+      const memory = this.getAllocatedMemory();
+
+      // Then, record how many objects were already allocated, which should not be declared
+      // as potential leaks. For ex, there is all the modules already loaded
+      // in the main DevTools loader.
+      const objects = this.stillAllocatedObjects();
+
+      // Flush the allocations so that the next call to logAllocationLog
+      // ignore allocations which happened before this call.
+      if (debug_allocations == "allocations") {
+        this.flushAllocations();
+      }
+
+      // Retrieve all allocation sites of all the objects already allocated.
+      // So that we can ignore them when we stop the record.
+      const allocations =
+        debug_allocations == "leaks" ? this.getAllAllocations() : null;
+
+      this.data = { memory, objects, allocations };
+      return this.data;
+    },
+
+    async stopRecordingAllocations(debug_allocations) {
+      // Before computing allocations, re-do some GCs in order to free all what is to-be-freed.
+      await this.doGC();
+
+      const memory = this.getAllocatedMemory();
+      const objects = this.stillAllocatedObjects();
+
+      if (debug_allocations == "allocations") {
+        this.logAllocationLog();
+      } else if (debug_allocations == "leaks") {
+        this.logAllocationSitesDiff(this.data.allocations);
+      }
+
+      return {
+        objectsWithoutStack:
+          objects.objectsWithoutStack - this.data.objects.objectsWithoutStack,
+        objectsWithStack:
+          objects.objectsWithStack - this.data.objects.objectsWithStack,
+        memory: memory - this.data.memory,
+      };
+    },
+
+    /**
+     * Return the collection of currently allocated JS Objects.
+     *
+     * This returns an object whose structure is documented in logAllocationSites.
+     */
+    getAllAllocations() {
+      const sensus = dbg.memory.takeCensus({
+        breakdown: { by: "allocationStack" },
+      });
+      const sources = {};
+      for (const [k, v] of sensus.entries()) {
+        const src = k.source || "UNKNOWN";
+        const line = k.line || "?";
+        const count = v.count;
+
+        let item = sources[src];
+        if (!item) {
+          item = sources[src] = { count: 0, lines: {} };
+        }
+        item.count += count;
+        if (line != -1) {
+          if (!item.lines[line]) {
+            item.lines[line] = 0;
+          }
+          item.lines[line] += count;
+        }
+      }
+      return sources;
+    },
+
+    /**
+     * Substract count of `previousSources` from `newSources`.
+     * This help know which allocations where done between `previousSources` and `newSources` records,
+     * and, are still allocated.
+     *
+     * The structure of source objects is documented in logAllocationSites.
+     */
+    sourcesDiff(previousSources, newSources) {
+      for (const src in previousSources) {
+        const previousItem = previousSources[src];
+        const item = newSources[src];
+        if (!item) {
+          continue;
+        }
+        item.count -= previousItem.count;
+
+        for (const line in previousItem.lines) {
+          const count = previousItem.lines[line];
+          if (line != -1) {
+            if (!item.lines[line]) {
+              continue;
+            }
+            item.lines[line] -= count;
+          }
+        }
+      }
+    },
+
     /**
      * Print to stdout data about all recorded allocations
      *
@@ -162,21 +270,59 @@ exports.allocationTracker = function({
      *        Retrieve only the top $first script allocation the most
      *        objects
      */
-    logAllocationSites({ first = 5 } = {}) {
-      // Fetch all allocation sites from Debugger API
-      const allocations = dbg.memory.drainAllocationsLog();
+    logAllocationSites(message, sources, { first = 1000 } = {}) {
+      const allocationList = Object.entries(sources)
+        // Sort by number of total object
+        .sort(([srcA, itemA], [srcB, itemB]) => itemB.count - itemA.count)
+        // Keep only the first n-th sources, with the most allocations
+        .filter((_, i) => i < first)
+        .map(([src, item]) => {
+          const lines = [];
+          Object.entries(item.lines)
+            // Filter out lines where we only freed objects
+            .filter(([line, count]) => count > 0)
+            .sort(([lineA, countA], [lineB, countB]) => {
+              if (countA != countB) {
+                return countB - countA;
+              }
+              return lineB - lineA;
+            })
+            .forEach(([line, count]) => {
+              // Compress the data to make it readable on stdout
+              lines.push(line + ": " + count);
+            });
+          return { src, count: item.count, lines };
+        })
+        // Filter out modules where we only freed objects
+        .filter(({ count }) => count > 0);
+      dump(
+        "DEVTOOLS ALLOCATION: " +
+          message +
+          ":\n" +
+          JSON.stringify(allocationList, null, 2) +
+          "\n"
+      );
+    },
 
-      // Process Debugger API data to store allocations by file
-      // sources = {
-      //   "chrome://devtools/content/framework/toolbox.js": {
-      //     count: 10, // total # of allocs for toolbox.js
-      //     lines: {
-      //       10: 200, // total # of allocs for toolbox.js line 10
-      //       124: 10, // same, for line 124
-      //       ..
-      //     }
-      //   }
-      // }
+    /**
+     * This method requires a previous call to getAllAllocations
+     * and will print only the allocation sites which are still allocated.
+     * Usage:
+     *   const previousSources = this.getAllAllocations();
+     *     ... exercice something, which may leak ...
+     *   this.logAllocationSitesDiff(previousSources);
+     */
+    logAllocationSitesDiff(previousSources) {
+      const newSources = this.getAllAllocations();
+      this.sourcesDiff(previousSources, newSources);
+      return this.logAllocationSites("allocations which leaked", newSources);
+    },
+
+    /**
+     * Convert allocation structure coming out from Memory API's `drainAllocationsLog()`
+     * to source structure documented in logAllocationSites.
+     */
+    allocationsToSources(allocations) {
       const sources = {};
       for (const alloc of allocations) {
         const { frame } = alloc;
@@ -190,7 +336,6 @@ exports.allocationTracker = function({
         } catch (e) {
           // For some frames accessing source throws
         }
-
         let item = sources[src];
         if (!item) {
           item = sources[src] = { count: 0, lines: {} };
@@ -203,34 +348,21 @@ exports.allocationTracker = function({
           item.lines[line]++;
         }
       }
+      return sources;
+    },
 
-      const allocationList = Object.entries(sources)
-        // Sort by number of total object
-        .sort(([srcA, itemA], [srcB, itemB]) => itemA.count < itemB.count)
-        // Keep only the first 5 sources, with the most allocations
-        .filter((_, i) => i < first)
-        .map(([src, item]) => {
-          const lines = [];
-          Object.entries(item.lines)
-            .filter(([line, count]) => count > 5)
-            .sort(([lineA, countA], [lineB, countB]) => {
-              if (countA != countB) {
-                return countA < countB;
-              }
-              return lineA < lineB;
-            })
-            .forEach(([line, count]) => {
-              // Compress the data to make it readable on stdout
-              lines.push(line + ": " + count);
-            });
-          return { src, count: item.count, lines };
-        });
-      dump(
-        "DEVTOOLS ALLOCATION: Javascript object allocations: " +
-          allocations.length +
-          "\n" +
-          JSON.stringify(allocationList, null, 2) +
-          "\n"
+    /**
+     * This method will log all the allocations that happened since the last call
+     * to this method -or- to `flushAllocations`.
+     * Reported allocations may have been freed.
+     * Use `logAllocationSitesDiff` to know what hasn't been freed.
+     */
+    logAllocationLog() {
+      const allocations = dbg.memory.drainAllocationsLog();
+      const sources = this.allocationsToSources(allocations);
+      return this.logAllocationSites(
+        "all allocations (which may be freed or are still allocated)",
+        sources
       );
     },
 
@@ -248,6 +380,10 @@ exports.allocationTracker = function({
       return allocations.length;
     },
 
+    /**
+     * Reset the allocation log, so that the next call to logAllocationLog/drainAllocationsLog
+     * will report all allocations which happened after this call to flushAllocations.
+     */
     flushAllocations() {
       dbg.memory.drainAllocationsLog();
     },

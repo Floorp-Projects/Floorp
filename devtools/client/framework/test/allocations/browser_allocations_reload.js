@@ -47,7 +47,7 @@ add_task(async function() {
   // shutdown of Firefox
   await testScript(toolbox);
 
-  const recordData = await startRecordingAllocations({
+  await startRecordingAllocations({
     alsoRecordContentProcess: true,
   });
 
@@ -56,7 +56,9 @@ add_task(async function() {
     await testScript(toolbox);
   }
 
-  await stopRecordingAllocations(recordData, "reload");
+  await stopRecordingAllocations("reload", {
+    alsoRecordContentProcess: true,
+  });
 
   await toolbox.destroy();
   gBrowser.removeTab(tab);
