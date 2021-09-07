@@ -5352,6 +5352,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
   NS_INTERFACE_MAP_ENTRY(nsIRaceCacheWithNetwork)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
@@ -5488,7 +5489,8 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
 
-  if (mLastStatusReported && !mEndMarkerAdded && profiler_can_accept_markers()) {
+  if (mLastStatusReported && !mEndMarkerAdded &&
+      profiler_can_accept_markers()) {
     // These do allocations/frees/etc; avoid if not active
     // mLastStatusReported can be null if Cancel is called before we added the
     // start marker.
@@ -5807,8 +5809,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 void nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   // We save this timestamp from outside of the if block in case we enable the
   // profiler after AsyncOpen().
-  mLastStatusReported =
-    TimeStamp::Now();
+  mLastStatusReported = TimeStamp::Now();
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -9088,6 +9089,12 @@ NS_IMETHODIMP
 nsHttpChannel::Test_triggerNetwork(int32_t aTimeout) {
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
   return TriggerNetworkWithDelay(aTimeout);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsHttpChannel");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

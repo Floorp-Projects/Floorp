@@ -23,6 +23,7 @@ NS_IMPL_RELEASE_INHERITED(RTCDTMFSender, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCDTMFSender)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 LazyLogModule gDtmfLog("RTCDTMFSender");
@@ -138,6 +139,11 @@ nsresult RTCDTMFSender::Notify(nsITimer* timer) {
       RTCDTMFToneChangeEvent::Constructor(this, u"tonechange"_ns, init);
   DispatchTrustedEvent(event);
 
+  return NS_OK;
+}
+
+nsresult RTCDTMFSender::GetName(nsACString& aName) {
+  aName.AssignLiteral("RTCDTMFSender");
   return NS_OK;
 }
 

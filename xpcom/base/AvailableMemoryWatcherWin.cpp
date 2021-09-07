@@ -30,11 +30,13 @@ namespace mozilla {
 // user-interaction events from the observer service.
 class nsAvailableMemoryWatcher final : public nsIObserver,
                                        public nsITimerCallback,
+                                       public nsINamed,
                                        public nsAvailableMemoryWatcherBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   nsAvailableMemoryWatcher();
   nsresult Init(uint32_t aPollingInterval);
@@ -99,7 +101,7 @@ const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
                             nsAvailableMemoryWatcherBase, nsIObserver,
-                            nsITimerCallback)
+                            nsITimerCallback, nsINamed)
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mMutex("low memory callback mutex"),
@@ -385,6 +387,12 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
     OnHighMemory(lock);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAvailableMemoryWatcher::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsAvailableMemoryWatcher");
   return NS_OK;
 }
 

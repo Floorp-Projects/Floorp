@@ -20,12 +20,14 @@ using prefix_and_netmask = std::pair<in6_addr, in6_addr>;
 
 class nsNetworkLinkService : public nsINetworkLinkService,
                              public nsIObserver,
-                             public nsITimerCallback {
+                             public nsITimerCallback,
+                             public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINETWORKLINKSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   nsNetworkLinkService();
 

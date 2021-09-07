@@ -151,9 +151,10 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   class RedirectSink;
 
   // A timer callback to trigger the unuse warning for this preload
-  class UsageTimer final : public nsITimerCallback {
+  class UsageTimer final : public nsITimerCallback, public nsINamed {
     NS_DECL_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSINAMED
 
     UsageTimer(PreloaderBase* aPreload, dom::Document* aDocument);
 

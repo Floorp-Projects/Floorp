@@ -19,12 +19,14 @@ namespace mozilla {
 
 class ViaductRequest final : public nsIStreamListener,
                              public nsITimerCallback,
+                             public nsINamed,
                              public nsIChannelEventSink {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
   NS_DECL_NSICHANNELEVENTSINK
 
   ViaductRequest()

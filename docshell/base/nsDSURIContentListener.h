@@ -18,10 +18,11 @@ class nsIWebNavigationInfo;
 class nsPIDOMWindowOuter;
 
 // Helper Class to eventually close an already opened window
-class MaybeCloseWindowHelper final : public nsITimerCallback {
+class MaybeCloseWindowHelper final : public nsITimerCallback, public nsINamed {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   explicit MaybeCloseWindowHelper(
       mozilla::dom::BrowsingContext* aContentContext);

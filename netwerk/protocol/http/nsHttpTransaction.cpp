@@ -2767,7 +2767,7 @@ nsHttpTransaction::Release() {
 }
 
 NS_IMPL_QUERY_INTERFACE(nsHttpTransaction, nsIInputStreamCallback,
-                        nsIOutputStreamCallback, nsITimerCallback)
+                        nsIOutputStreamCallback, nsITimerCallback, nsINamed)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIInputStreamCallback
@@ -3326,6 +3326,12 @@ nsHttpTransaction::Notify(nsITimer* aTimer) {
     OnHttp3BackupTimer();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpTransaction::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsHttpTransaction");
   return NS_OK;
 }
 

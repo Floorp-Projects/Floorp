@@ -763,6 +763,7 @@ NS_INTERFACE_MAP_BEGIN(nsProtocolProxyService)
   NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService2)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsProtocolProxyService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolProxyService)
   NS_IMPL_QUERY_CLASSINFO(nsProtocolProxyService)
@@ -942,6 +943,12 @@ NS_IMETHODIMP
 nsProtocolProxyService::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mReloadPACTimer);
   ReloadNetworkPAC();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProtocolProxyService::GetName(nsACString& aName) {
+  aName.AssignLiteral("nsProtocolProxyService");
   return NS_OK;
 }
 

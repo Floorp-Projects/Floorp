@@ -24,11 +24,18 @@ NS_IMPL_CYCLE_COLLECTION(SessionStoreDataCollector, mWindowChild, mTimer)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SessionStoreDataCollector)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SessionStoreDataCollector)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SessionStoreDataCollector)
+
+NS_IMETHODIMP
+SessionStoreDataCollector::GetName(nsACString& aName) {
+  aName.AssignLiteral("SessionStoreDataCollector");
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 SessionStoreDataCollector::Notify(nsITimer* aTimer) {

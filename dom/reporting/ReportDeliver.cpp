@@ -372,6 +372,12 @@ ReportDeliver::Notify(nsITimer* aTimer) {
 }
 
 NS_IMETHODIMP
+ReportDeliver::GetName(nsACString& aName) {
+  aName.AssignLiteral("ReportDeliver");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ReportDeliver::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
@@ -400,6 +406,7 @@ NS_INTERFACE_MAP_BEGIN(ReportDeliver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(ReportDeliver)

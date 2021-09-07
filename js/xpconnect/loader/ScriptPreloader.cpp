@@ -731,6 +731,11 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
   return Ok();
 }
 
+nsresult ScriptPreloader::GetName(nsACString& aName) {
+  aName.AssignLiteral("ScriptPreloader");
+  return NS_OK;
+}
+
 // Runs in the mSaveThread thread, and writes out the cache file for the next
 // session after a reasonable delay.
 nsresult ScriptPreloader::Run() {
@@ -1265,7 +1270,7 @@ already_AddRefed<nsIAsyncShutdownClient> ScriptPreloader::GetShutdownBarrier() {
 }
 
 NS_IMPL_ISUPPORTS(ScriptPreloader, nsIObserver, nsIRunnable, nsIMemoryReporter,
-                  nsIAsyncShutdownBlocker)
+                  nsINamed, nsIAsyncShutdownBlocker)
 
 #undef LOG
 
