@@ -162,8 +162,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void CancelWaitForNotifyNotUsed(uint64_t aTextureId) override;
 
-  void ClearTexturePool();
-
   FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() override;
 
   void HandleMemoryPressure();
