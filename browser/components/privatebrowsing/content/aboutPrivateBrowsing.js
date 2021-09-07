@@ -101,6 +101,7 @@ async function renderPromo({
 
   const titleEl = document.getElementById("private-browsing-vpn-text");
   let linkEl = document.getElementById("private-browsing-vpn-link");
+  const infoContainerEl = document.querySelector(".info");
   // Setup the private browsing VPN link.
   const vpnPromoUrl =
     promoLinkUrl || RPMGetFormatURLPref("browser.privatebrowsing.vpnpromourl");
@@ -123,9 +124,14 @@ async function renderPromo({
   if (promoSectionStyle) {
     container.classList.add(promoSectionStyle);
 
-    if (promoSectionStyle === "top") {
-      container.remove();
-      document.body.insertAdjacentElement("afterbegin", container);
+    switch (promoSectionStyle) {
+      case "below-search":
+        container.remove();
+        infoContainerEl.insertAdjacentElement("beforebegin", container);
+        break;
+      case "top":
+        container.remove();
+        document.body.insertAdjacentElement("afterbegin", container);
     }
   }
 
