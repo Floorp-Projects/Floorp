@@ -69,18 +69,18 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     min-height: $search-height-new;
     margin: 0 auto;
     position: relative;
-    width: $searchbar-width-small-new;
+    width: $searchbar-width-small;
 
     @media (min-width: $break-point-medium) {
-      width: $searchbar-width-medium-new;
+      width: $searchbar-width-medium;
     }
 
     @media (min-width: $break-point-large) {
-      width: $searchbar-width-large-new;
+      width: $searchbar-width-large;
     }
 
     @media (min-width: $break-point-widest) {
-      width: $searchbar-width-largest-new;
+      width: $searchbar-width-largest;
     }
   }
 
