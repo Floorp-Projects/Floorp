@@ -41,20 +41,14 @@ function testCheckbox(wrapper, expected) {
   const checkbox = label.childAt(0);
   expect(checkbox.prop("checked")).toBe(expected.checked);
   expect(checkbox.prop("disabled")).toBe(!!expected.disabled);
-  if (expected.describedby) {
-    expect(checkbox.prop("aria-describedby")).toBe(expected.describedby);
-  }
 }
 
 describe("DisplayTabbingOrder component:", () => {
   it("default render", () => {
-    const DESCRIBEDBY = "test";
     const store = setupStore();
-    const wrapper = mount(
-      Provider({ store }, DisplayTabbingOrder({ describedby: DESCRIBEDBY }))
-    );
+    const wrapper = mount(Provider({ store }, DisplayTabbingOrder()));
 
-    testCheckbox(wrapper, { checked: false, describedby: DESCRIBEDBY });
+    testCheckbox(wrapper, { checked: false });
   });
 
   it("toggle tabbing order overlay", () => {

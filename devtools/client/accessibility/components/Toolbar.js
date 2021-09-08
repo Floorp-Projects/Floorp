@@ -28,7 +28,6 @@ const DisplayTabbingOrder = createFactory(
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 function Toolbar({ audit, simulate, supportsTabbingOrder, toolboxDoc }) {
-  const betaID = "beta";
   const optionalSimulationSection = simulate
     ? [
         div({
@@ -44,15 +43,7 @@ function Toolbar({ audit, simulate, supportsTabbingOrder, toolboxDoc }) {
           role: "separator",
           className: "devtools-separator",
         }),
-        span(
-          {
-            className: "beta",
-            role: "presentation",
-            id: betaID,
-          },
-          L10N.getStr("accessibility.beta")
-        ),
-        DisplayTabbingOrder({ describedby: betaID }),
+        DisplayTabbingOrder(),
       ]
     : [];
 
