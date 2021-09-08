@@ -817,10 +817,11 @@ void TransactionBuilder::AddImage(ImageKey key,
 
 void TransactionBuilder::AddBlobImage(BlobImageKey key,
                                       const ImageDescriptor& aDescriptor,
+                                      uint16_t aTileSize,
                                       wr::Vec<uint8_t>& aBytes,
                                       const wr::DeviceIntRect& aVisibleRect) {
-  wr_resource_updates_add_blob_image(mTxn, key, &aDescriptor, &aBytes.inner,
-                                     aVisibleRect);
+  wr_resource_updates_add_blob_image(mTxn, key, &aDescriptor, aTileSize,
+                                     &aBytes.inner, aVisibleRect);
 }
 
 void TransactionBuilder::AddExternalImage(ImageKey key,

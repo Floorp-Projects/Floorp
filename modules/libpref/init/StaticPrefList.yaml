@@ -5188,6 +5188,11 @@
   value: 10
   mirror: always
 
+- name: gfx.webrender.blob-tile-size
+  type: uint32_t
+  value: 256
+  mirror: always
+
 - name: gfx.webrender.compositor
   type: bool
 #if defined(XP_WIN) || defined(XP_MACOSX)

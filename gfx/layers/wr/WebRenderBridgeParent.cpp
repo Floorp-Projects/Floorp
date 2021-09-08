@@ -336,6 +336,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
 #if defined(MOZ_WIDGET_ANDROID)
       mScreenPixelsTarget(nullptr),
 #endif
+      mBlobTileSize(256),
       mDestroyed(false),
       mReceivedDisplayList(false),
       mIsFirstPaint(true),
@@ -555,7 +556,8 @@ bool WebRenderBridgeParent::UpdateResources(
           gfxCriticalNote << "TOpAddBlobImage failed";
           return false;
         }
-        aUpdates.AddBlobImage(op.key(), op.descriptor(), bytes,
+
+        aUpdates.AddBlobImage(op.key(), op.descriptor(), mBlobTileSize, bytes,
                               wr::ToDeviceIntRect(op.visibleRect()));
         break;
       }
@@ -1653,9 +1655,11 @@ void WebRenderBridgeParent::UpdateMultithreading() {
   mApi->EnableMultithreading(gfxVars::UseWebRenderMultithreading());
 }
 
-void WebRenderBridgeParent::UpdateBatchingParameters() {
+void WebRenderBridgeParent::UpdateParameters() {
   uint32_t count = gfxVars::WebRenderBatchingLookback();
   mApi->SetBatchingLookback(count);
+
+  mBlobTileSize = gfxVars::WebRenderBlobTileSize();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)

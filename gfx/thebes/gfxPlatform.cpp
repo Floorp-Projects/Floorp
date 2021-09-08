@@ -556,6 +556,13 @@ static void WebRenderBatchingPrefChangeCallback(const char* aPrefName, void*) {
   gfx::gfxVars::SetWebRenderBatchingLookback(count);
 }
 
+static void WebRenderBlobTileSizePrefChangeCallback(const char* aPrefName,
+                                                    void*) {
+  uint32_t tileSize = Preferences::GetUint(
+      StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size(), 256);
+  gfx::gfxVars::SetWebRenderBlobTileSize(tileSize);
+}
+
 static uint32_t GetSkiaGlyphCacheSize() {
   // Only increase font cache size on non-android to save memory.
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -1272,6 +1279,10 @@ void gfxPlatform::ShutdownLayersIPC() {
                                       WR_DEBUG_PREF);
       Preferences::UnregisterCallback(WebRendeProfilerUIPrefChangeCallback,
                                       "gfx.webrender.debug.profiler-ui");
+      Preferences::UnregisterCallback(
+          WebRenderBlobTileSizePrefChangeCallback,
+          nsDependentCString(
+              StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
     }
 
   } else {
@@ -2610,6 +2621,11 @@ void gfxPlatform::InitWebRenderConfig() {
         WebRenderBatchingPrefChangeCallback,
         nsDependentCString(
             StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
+
+    Preferences::RegisterCallbackAndCall(
+        WebRenderBlobTileSizePrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
 
     if (WebRenderResourcePathOverride()) {
       CrashReporter::AnnotateCrashReport(
