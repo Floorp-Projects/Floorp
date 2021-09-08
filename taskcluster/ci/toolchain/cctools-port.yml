@@ -18,7 +18,7 @@ linux64-cctools-port-clang-11:
         symbol: TL(cctools-clang-11)
     run:
         script: build-cctools-port.sh
-        toolchain-artifact: public/build/cctools.tar.xz
+        toolchain-artifact: public/build/cctools.tar.zst
         tooltool-downloads: internal
     fetches:
         toolchain:
@@ -31,7 +31,7 @@ linux64-cctools-port-clang-12:
     run:
         script: build-cctools-port.sh
         toolchain-alias: linux64-cctools-port
-        toolchain-artifact: public/build/cctools.tar.xz
+        toolchain-artifact: public/build/cctools.tar.zst
         tooltool-downloads: internal
     fetches:
         toolchain:

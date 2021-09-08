@@ -20,7 +20,7 @@ cp upx.out $INSTALL_DIR/bin/upx
 # --------------
 
 cd $WORKSPACE
-tar caf upx.tar.xz upx
+tar caf upx.tar.zst upx
 
 mkdir -p $UPLOAD_DIR
 cp upx.tar.* $UPLOAD_DIR
