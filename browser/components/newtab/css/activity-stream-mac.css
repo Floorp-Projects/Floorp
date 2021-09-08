@@ -60,10 +60,12 @@ body {
   --newtab-background-button-hover-color: rgba(196, 196, 196, 0.5);
   --newtab-background-button-active-color: rgba(151, 151, 151, 0.5);
   --newtab-button-primary-color: #0060DF;
+  --newtab-button-primary-hover-color: #003EAA;
+  --newtab-button-primary-active-color: #002275;
+  --newtab-button-primary-text-color: #FFF;
   --newtab-button-secondary-color: inherit;
   --newtab-feed-button-background: #EDEDF0;
   --newtab-feed-button-text: #0C0C0D;
-  --newtab-feed-button-background-faded: rgba(237, 237, 240, 0.6);
   --newtab-feed-button-text-faded: rgba(12, 12, 13, 0);
   --newtab-feed-button-spinner: #737373;
   --newtab-contextmenu-background-color: #F9F9FA;
@@ -76,7 +78,6 @@ body {
   --newtab-search-dropdown-color: #FFF;
   --newtab-search-dropdown-header-color: #F9F9FA;
   --newtab-search-header-background-color: rgba(249, 249, 250, 0.95);
-  --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
   --newtab-topsites-background-color: var(--newtab-background-color-secondary);
   --newtab-topsites-outer-card-hover: rgba(0, 0, 0, 0.05);
   --newtab-topsites-context-menu-hover: rgba(0, 0, 0, 0.05);
@@ -146,7 +147,6 @@ body[lwt-newtab-brighttext] {
   --newtab-search-dropdown-color: #38383D;
   --newtab-search-dropdown-header-color: #4A4A4F;
   --newtab-search-header-background-color: rgba(42, 42, 46, 0.95);
-  --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
   --newtab-topsites-outer-card-hover: rgba(180, 180, 180, 0.1);
   --newtab-topsites-context-menu-hover: rgba(180, 180, 180, 0.1);
   --newtab-card-active-outline-color: #4A4A4F;
@@ -444,7 +444,7 @@ a {
 .actions button.done {
   background-color: var(--newtab-button-primary-color);
   border: solid 1px var(--newtab-button-primary-color);
-  color: #FFF;
+  color: var(--newtab-button-primary-text-color);
   margin-inline-start: auto;
 }
 
@@ -807,10 +807,10 @@ main.has-snippet {
 .top-site-outer .search-topsite {
   background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-size: 16px;
-  background-color: #0060DF;
+  background-color: var(--newtab-button-primary-color);
   border-radius: 32px;
   -moz-context-properties: fill;
-  fill: #FFF;
+  fill: var(--newtab-button-primary-text-color);
   box-shadow: var(--newtab-card-shadow);
   transition-duration: 150ms;
   transition-property: background-size, bottom, inset-inline-end, height, width;
@@ -1349,9 +1349,7 @@ main.has-snippet {
   border-radius: 8px;
   color: var(--newtab-search-text-color);
   -moz-context-properties: fill;
-  fill: var(--newtab-search-icon-color);
-  font-weight: 500;
-  font-size: 15px;
+  fill: var(--newtab-icon-secondary-color);
 }
 .search-wrapper .search-handoff-button:dir(rtl),
 .search-wrapper input:dir(rtl) {
@@ -1369,14 +1367,14 @@ main.has-snippet {
   border: 0;
   border-radius: 0 3px 3px 0;
   -moz-context-properties: fill;
-  fill: var(--newtab-search-icon-color);
+  fill: var(--newtab-icon-secondary-color);
   height: 100%;
   inset-inline-end: 0;
   position: absolute;
   width: 48px;
 }
 .search-wrapper .search-button:focus, .search-wrapper .search-button:hover {
-  background-color: rgba(12, 12, 13, 0.1);
+  background-color: var(--newtab-element-hover-color);
   cursor: pointer;
 }
 .search-wrapper .search-button:focus {
@@ -1386,7 +1384,7 @@ main.has-snippet {
   border-radius: 0 8px 8px 0;
 }
 .search-wrapper .search-button:active {
-  background-color: rgba(12, 12, 13, 0.2);
+  background-color: var(--newtab-element-hover-color);
 }
 .search-wrapper .search-button:dir(rtl) {
   transform: scaleX(-1);
@@ -2457,7 +2455,7 @@ main.has-snippet {
   margin-inline-end: 4px;
 }
 .asrouter-admin .json-button:hover {
-  background-color: rgba(237, 237, 240, 0.6);
+  background-color: var(--newtab-element-hover-color);
   box-shadow: none;
 }
 .asrouter-admin table {
@@ -2588,7 +2586,7 @@ main.has-snippet {
 }
 .pocket-logged-in-cta .pocket-cta-button {
   white-space: nowrap;
-  background: #0060DF;
+  background: var(--newtab-button-primary-color);
   letter-spacing: -0.34px;
   color: #FFF;
   border-radius: 4px;
@@ -3590,10 +3588,10 @@ main.has-snippet {
   position: relative;
 }
 .ds-card .playhead {
-  background: #0060DF url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
+  background: var(--newtab-button-primary-color) url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
   border-radius: 20px;
   bottom: -16px;
-  color: rgba(255, 255, 255, 0);
+  color: color-mix(in srgb, var(--newtab-button-primary-text-color) 0%, transparent);
   display: flex;
   flex-direction: column;
   height: 40px;
@@ -3605,7 +3603,7 @@ main.has-snippet {
   transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
 }
 .ds-card .playhead:hover {
-  color: #FFF;
+  color: var(--newtab-button-primary-text-color);
   padding: 0 20px 0 40px;
 }
 .ds-card .playhead span {
@@ -3688,6 +3686,7 @@ main.has-snippet {
   color: #B1B1B3;
 }
 .ds-card .meta .cta-button {
+  background-color: var(--newtab-button-secondary-color);
   width: 100%;
   margin: 12px 0 4px;
   box-shadow: none;
@@ -3696,33 +3695,10 @@ main.has-snippet {
   font-size: 14px;
   font-weight: 600;
   padding: 5px 8px 7px;
-  border: 0;
-  color: #0C0C0D;
-  background: rgba(12, 12, 13, 0.1);
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-button {
-  color: #F9F9FA;
-  background: rgba(12, 12, 13, 0.7);
-}
-.ds-card .meta .cta-button:focus {
-  background: rgba(12, 12, 13, 0.1);
-  box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5);
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-button:focus {
-  background: rgba(12, 12, 13, 0.7);
-  box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5);
-}
-.ds-card .meta .cta-button:hover {
-  background: rgba(12, 12, 13, 0.2);
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-button:hover {
-  background: rgba(12, 12, 13, 0.5);
+  border: 1px solid var(--newtab-border-primary-color);
 }
 .ds-card .meta .cta-button:active {
-  background: rgba(12, 12, 13, 0.3);
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-button:active {
-  background: rgba(12, 12, 13, 0.7);
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
 }
 .ds-card .meta .cta-link {
   color: var(--newtab-link-primary-color);
@@ -3909,34 +3885,16 @@ main.has-snippet {
   background-color: transparent;
 }
 .ds-dismiss .ds-dismiss-button .icon {
-  fill: #737373;
-}
-[lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button .icon {
-  fill: #EDEDF0;
+  fill: var(--newtab-icon-primary-color);
 }
 .ds-dismiss .ds-dismiss-button:hover {
-  background: rgba(12, 12, 13, 0.2);
-}
-[lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover {
-  background: rgba(12, 12, 13, 0.5);
-}
-[lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:hover .icon {
-  fill: #F9F9FA;
-}
-.ds-dismiss .ds-dismiss-button:hover .icon {
-  fill: #2A2A2E;
+  background: var(--newtab-element-hover-color);
 }
 .ds-dismiss .ds-dismiss-button:active {
-  background: rgba(12, 12, 13, 0.3);
-}
-[lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:active {
-  background: rgba(12, 12, 13, 0.7);
+  background: var(--newtab-element-active-color);
 }
 .ds-dismiss .ds-dismiss-button:focus {
-  box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5);
-}
-[lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button:focus {
-  box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5);
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
 }
 
 .ds-message {
@@ -4150,11 +4108,8 @@ main.has-snippet {
   background-color: var(--newtab-link-primary-active-color);
 }
 .ds-chevron-link:focus {
-  box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5);
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   border-radius: 2px;
-}
-[lwt-newtab-brighttext] .ds-chevron-link:focus {
-  box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5);
 }
 .ds-chevron-link::after {
   background-color: var(--newtab-link-primary-color);
@@ -4281,53 +4236,23 @@ main.has-snippet {
 .ASRouterButton.primary {
   border: 1px solid var(--newtab-button-primary-color);
   background-color: var(--newtab-button-primary-color);
-  color: #F9F9FA;
+  color: var(--newtab-button-primary-text-color);
 }
 .ASRouterButton.primary:hover {
-  background-color: #003EAA;
+  background-color: var(--newtab-button-primary-hover-color);
 }
 .ASRouterButton.primary:active {
-  background-color: #002275;
-}
-.ASRouterButton.secondary {
-  background-color: rgba(12, 12, 13, 0.1);
-}
-.ASRouterButton.secondary:hover {
-  background-color: rgba(12, 12, 13, 0.2);
-}
-.ASRouterButton.secondary:active {
-  background-color: rgba(12, 12, 13, 0.3);
-}
-.ASRouterButton.secondary:focus {
-  box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3);
+  background-color: var(--newtab-button-primary-active-color);
 }
 .ASRouterButton.slim {
-  background-color: rgba(12, 12, 13, 0.1);
+  border: 1px solid var(--newtab-border-primary-color);
   margin-inline-start: 0;
   font-size: 12px;
   padding: 6px 12px;
 }
-.ASRouterButton.slim:hover {
-  background-color: rgba(12, 12, 13, 0.2);
-}
-
-[lwt-newtab-brighttext] .secondary {
-  background-color: rgba(249, 249, 250, 0.1);
-}
-[lwt-newtab-brighttext] .secondary:hover {
-  background-color: rgba(249, 249, 250, 0.2);
-}
-[lwt-newtab-brighttext] .secondary:active {
-  background-color: rgba(249, 249, 250, 0.3);
-}
-[lwt-newtab-brighttext] .footer .secondary {
-  background-color: rgba(249, 249, 250, 0.3);
-}
-[lwt-newtab-brighttext] .footer .secondary:hover {
-  background-color: rgba(249, 249, 250, 0.4);
-}
-[lwt-newtab-brighttext] .footer .secondary:active {
-  background-color: rgba(249, 249, 250, 0.5);
+.ASRouterButton.slim:hover, .ASRouterButton.slim:focus {
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  transition: box-shadow 150ms;
 }
 
 .SnippetBaseContainer {
@@ -4519,7 +4444,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   font-size: 15px;
 }
 .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
-  box-shadow: 0 0 0 5px #D7D7DB;
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
   transition: box-shadow 150ms;
 }
 
@@ -4599,7 +4524,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   top: 50%;
 }
 .SimpleBelowSearchSnippet .blockButton:focus {
-  box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3);
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
   border-radius: 2px;
 }
 .SimpleBelowSearchSnippet .title {
@@ -4954,11 +4879,11 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   border-radius: 2px;
 }
 .EOYSnippetForm .donation-amount {
-  color: #0C0C0D;
+  color: var(--newtab-text-primary-color);
   margin-inline-end: 18px;
-  border: 1px solid #B1B1B3;
+  border: 1px solid var(--newtab-textbox-border);
   padding: 5px 14px;
-  background: #F9F9FA;
+  background: var(--newtab-textbox-background-color);
   cursor: pointer;
 }
 .EOYSnippetForm input[type=radio] {
@@ -4966,9 +4891,9 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin-inline-end: -18px;
 }
 .EOYSnippetForm input[type=radio]:checked + .donation-amount {
-  background: #737373;
-  color: #FFF;
-  border: 1px solid #4A4A4F;
+  background: var(--newtab-text-secondary-color);
+  color: var(--newtab-background-color-secondary);
+  border: 1px solid var(--newtab-border-secondary-color);
 }
 .EOYSnippetForm input[type=radio]:checked:focus + .donation-amount, .EOYSnippetForm input[type=radio]:not(:checked):focus + .donation-amount {
   border: 1px dotted var(--newtab-link-primary-color);

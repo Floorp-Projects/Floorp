@@ -8,7 +8,7 @@
 
   .pocket-cta-button {
     white-space: nowrap;
-    background: $blue-60;
+    background: var(--newtab-button-primary-color);
     letter-spacing: -0.34px;
     color: $white;
     border-radius: 4px;
