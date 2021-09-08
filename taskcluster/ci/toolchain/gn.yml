@@ -12,7 +12,7 @@ job-defaults:
     run:
         resources:
             - 'taskcluster/scripts/misc/build-gn-common.sh'
-        toolchain-artifact: public/build/gn.tar.zst
+        toolchain-artifact: public/build/gn.tar.xz
     fetches:
         fetch:
             - gn
@@ -49,6 +49,7 @@ win32-gn:
         script: build-gn-win32.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/gn.tar.bz2
         tooltool-downloads: internal
     fetches:
         fetch:

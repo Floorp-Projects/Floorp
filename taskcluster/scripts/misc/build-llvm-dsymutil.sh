@@ -19,7 +19,7 @@ cmake \
 
 ninja dsymutil llvm-symbolizer
 
-tar --xform='s,^,llvm-dsymutil/,' -caf llvm-dsymutil.tar.zst bin/dsymutil bin/llvm-symbolizer
+tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/dsymutil bin/llvm-symbolizer
 
 mkdir -p $UPLOAD_DIR
-cp llvm-dsymutil.tar.zst $UPLOAD_DIR
+cp llvm-dsymutil.tar.xz $UPLOAD_DIR

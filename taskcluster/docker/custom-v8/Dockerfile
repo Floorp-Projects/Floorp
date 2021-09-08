@@ -18,4 +18,4 @@ RUN apt-get update && \
       tar \
       unzip \
       wget \
-      zstd
+      zip
