@@ -73,7 +73,7 @@ build_gcc() {
   cd $root_dir/tools
   ln -s gcc gcc/bin/cc
 
-  tar caf $root_dir/gcc.tar.xz gcc/
+  tar caf $root_dir/gcc.tar.zst gcc/
   popd
 }
 
@@ -118,6 +118,6 @@ build_gcc_and_mingw() {
   popd
 
   pushd $(dirname $install_dir)
-  tar caf $root_dir/mingw32.tar.xz $(basename $install_dir)/
+  tar caf $root_dir/mingw32.tar.zst $(basename $install_dir)/
   popd
 }

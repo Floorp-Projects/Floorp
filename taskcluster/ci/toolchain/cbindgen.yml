@@ -11,7 +11,7 @@ job-defaults:
         max-run-time: 3600
     run:
         script: build-cbindgen.sh
-        toolchain-artifact: public/build/cbindgen.tar.xz
+        toolchain-artifact: public/build/cbindgen.tar.zst
     run-on-projects: [trunk]
     fetches:
         fetch:
@@ -69,7 +69,6 @@ win64-cbindgen:
         arguments: ['x86_64-pc-windows-msvc']
         resources:
             - taskcluster/scripts/misc/tooltool-download.sh
-        toolchain-artifact: public/build/cbindgen.tar.bz2
         tooltool-downloads: internal
     fetches:
         toolchain:
