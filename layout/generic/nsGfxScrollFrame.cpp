@@ -4499,15 +4499,9 @@ void ScrollFrameHelper::NotifyApzTransaction() {
 
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
     WebRenderLayerManager* aLayerManager,
-    const nsIFrame* aContainerReferenceFrame,
-    const DisplayItemClip* aClip) const {
+    const nsIFrame* aContainerReferenceFrame) const {
   if (!mWillBuildScrollableLayer) {
     return Nothing();
-  }
-
-  Maybe<nsRect> parentLayerClip;
-  if (aClip && mAddClipRectToLayer) {
-    parentLayerClip = Some(aClip->GetClipRect());
   }
 
   bool isRootContent =
@@ -4517,7 +4511,7 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
 
   return Some(nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mOuter, mOuter->GetContent(), aContainerReferenceFrame,
-      aLayerManager, mScrollParentID, mScrollPort.Size(), parentLayerClip,
+      aLayerManager, mScrollParentID, mScrollPort.Size(), Nothing(),
       isRootContent));
 }
 
