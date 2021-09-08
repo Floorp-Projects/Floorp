@@ -683,10 +683,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // display ports removed or made minimal, then we expire our display port.
   bool mIsParentToActiveScrollFrames : 1;
 
-  // If true, add clipping in ScrollFrameHelper::ClipLayerToDisplayPort.
-  // XXX this flag needs some auditing and better documentation, bug 1646686.
-  bool mAddClipRectToLayer : 1;
-
   // True if this frame has been scrolled at least once
   bool mHasBeenScrolled : 1;
 
