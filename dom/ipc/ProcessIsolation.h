@@ -24,6 +24,8 @@ class WindowGlobalParent;
 
 extern mozilla::LazyLogModule gProcessIsolationLog;
 
+constexpr nsLiteralCString kHighValueCOOPPermission = "highValueCOOP"_ns;
+
 // NavigationIsolationOptions is passed through the methods to store the state
 // of the possible process and/or browsing context change.
 struct NavigationIsolationOptions {
