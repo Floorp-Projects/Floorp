@@ -6387,16 +6387,6 @@
   value: false
   mirror: always
 
-- name: layers.compositing-tiles.width
-  type: RelaxedAtomicInt32
-  value: 1024
-  mirror: always
-
-- name: layers.compositing-tiles.height
-  type: RelaxedAtomicInt32
-  value: 1024
-  mirror: always
-
 # 0 is "no change" for contrast, positive values increase it, negative values
 # decrease it until we hit mid gray at -1 contrast, after that it gets weird.
 - name: layers.effect.contrast
@@ -6545,22 +6535,10 @@
   value: false
   mirror: always
 
-- name: layers.low-precision-opacity
-  type: AtomicFloat
-  value: 1.0f
-  mirror: always
-
 - name: layers.low-precision-resolution
   type: AtomicFloat
   value: 0.25f
   mirror: always
-
-# Max number of layers per container. See Overwrite in mobile prefs.
-- name: layers.max-active
-  type: RelaxedAtomicInt32
-  value: -1
-  mirror: always
-
 
 # Whether to animate simple opacity and transforms on the compositor.
 - name: layers.offmainthreadcomposition.async-animations
@@ -6586,11 +6564,6 @@
 - name: layers.offmainthreadcomposition.frame-rate
   type: RelaxedAtomicInt32
   value: -1
-  mirror: always
-
-- name: layers.orientation.sync.timeout
-  type: RelaxedAtomicUint32
-  value: (uint32_t)0
   mirror: always
 
 #ifdef XP_WIN
@@ -6628,36 +6601,6 @@
 - name: layers.tiles.adjust
   type: bool
   value: true
-  mirror: once
-
-- name: layers.tiles.edge-padding
-  type: bool
-  value: @IS_ANDROID@
-  mirror: once
-
-- name: layers.tiles.fade-in.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.tiles.fade-in.duration-ms
-  type: RelaxedAtomicUint32
-  value: 250
-  mirror: always
-
-- name: layers.tiles.retain-back-buffer
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-- name: layers.transaction.warning-ms
-  type: RelaxedAtomicUint32
-  value: 200
-  mirror: always
-
-- name: layers.uniformity-info
-  type: bool
-  value: false
   mirror: once
 
 - name: layers.recycle-allocator-rdd
