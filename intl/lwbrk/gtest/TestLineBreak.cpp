@@ -115,9 +115,9 @@ bool TestASCIIWB(mozilla::intl::WordBreaker* lb, const char* in,
   uint32_t res[256];
   int32_t curr = 0;
 
-  for (i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
+  for (i = 0, curr = lb->Next(eng1.get(), eng1.Length(), curr);
        curr != NS_WORDBREAKER_NEED_MORE_TEXT && i < 256;
-       curr = lb->NextWord(eng1.get(), eng1.Length(), curr), i++) {
+       curr = lb->Next(eng1.get(), eng1.Length(), curr), i++) {
     res[i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
   }
 
@@ -164,13 +164,13 @@ void TestPrintWordWithBreak() {
     NS_ConvertASCIItoUTF16 fragText(wb[i]);
 
     int32_t cur = 0;
-    cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
+    cur = wbk->Next(fragText.get(), fragText.Length(), cur);
     uint32_t start = 0;
     for (uint32_t j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT; j++) {
       result.Append(Substring(fragText, start, cur - start));
       result.Append('^');
       start = (cur >= 0 ? cur : cur - start);
-      cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
+      cur = wbk->Next(fragText.get(), fragText.Length(), cur);
     }
 
     result.Append(Substring(fragText, fragText.Length() - start));
@@ -258,8 +258,7 @@ void TestNextWordBreakWithComplexLanguage() {
 
   int32_t offset = 0;
   while (offset != NS_WORDBREAKER_NEED_MORE_TEXT) {
-    int32_t newOffset =
-        wbk->NextWord(fragText.get(), fragText.Length(), offset);
+    int32_t newOffset = wbk->Next(fragText.get(), fragText.Length(), offset);
     ASSERT_NE(offset, newOffset);
     offset = newOffset;
   }
