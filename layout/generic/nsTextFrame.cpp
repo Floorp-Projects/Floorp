@@ -8120,10 +8120,11 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
 
   int32_t textOffset = aTextFrame->GetContentOffset();
   int32_t textLen = aTextFrame->GetContentLength();
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
+
+  // Allocate an extra element to record the word break at the end of the line
+  // or text run in mWordBreak[textLen].
   mWordBreaks.AppendElements(textLen + 1);
-  memset(mWordBreaks.Elements(), false, (textLen + 1) * sizeof(bool));
+  PodZero(mWordBreaks.Elements(), textLen + 1);
   int32_t textStart;
   if (aDirection > 0) {
     if (aContext.IsEmpty()) {
@@ -8152,6 +8153,10 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     }
     mWordBreaks[nextWord - textStart] = true;
   }
+
+  MOZ_ASSERT(
+      textStart + textLen != int32_t(aContext.Length()) || mWordBreaks[textLen],
+      "There should be a word break at the end of a line or text run!");
 }
 
 nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(

@@ -20,6 +20,17 @@ using mozilla::ArrayLength;
 // Turn off clang-format to align the ruler comments to the test strings.
 
 // clang-format off
+static char teng0[] =
+  //           1         2         3         4         5         6         7
+  // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    "hello world";
+// clang-format on
+
+static uint32_t lexp0[] = {5, 11};
+
+static uint32_t wexp0[] = {5, 6, 11};
+
+// clang-format off
 static char teng1[] =
   //           1         2         3         4         5         6         7
   // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -29,9 +40,9 @@ static char teng1[] =
 static uint32_t lexp1[] = {4,  7,  9,  14, 17, 34, 39, 40, 41,
                            42, 49, 54, 62, 64, 67, 69, 73};
 
-static uint32_t wexp1[] = {4,  5,  7,  8,  9,  10, 14, 15, 17, 18, 22,
-                           23, 33, 34, 35, 39, 43, 48, 49, 50, 54, 55,
-                           56, 57, 62, 63, 64, 65, 67, 68, 69, 70, 72};
+static uint32_t wexp1[] = {4,  5,  7,  8,  9,  10, 14, 15, 17, 18, 22, 23,
+                           33, 34, 35, 39, 43, 48, 49, 50, 54, 55, 56, 57,
+                           62, 63, 64, 65, 67, 68, 69, 70, 72, 73};
 
 // clang-format off
 static char teng2[] =
@@ -43,7 +54,7 @@ static char teng2[] =
 static uint32_t lexp2[] = {17, 22, 23, 30, 44};
 
 static uint32_t wexp2[] = {4,  12, 13, 14, 15, 16, 17, 18, 22,
-                           24, 29, 30, 31, 32, 37, 38, 43};
+                           24, 29, 30, 31, 32, 37, 38, 43, 44};
 
 // clang-format off
 static char teng3[] =
@@ -55,7 +66,7 @@ static char teng3[] =
 static uint32_t lexp3[] = {4, 6, 11, 14, 25, 27, 32, 42};
 
 static uint32_t wexp3[] = {2,  3,  4,  5,  6,  7,  11, 12, 14, 15,
-                           19, 20, 25, 26, 27, 28, 32, 33, 38};
+                           19, 20, 25, 26, 27, 28, 32, 33, 38, 42};
 
 static char ruler1[] =
     "          1         2         3         4         5         6         7  ";
@@ -141,6 +152,7 @@ TEST(LineBreak, LineBreaker)
 
   ASSERT_TRUE(t);
 
+  ASSERT_TRUE(TestASCIILB(t, teng0, lexp0, ArrayLength(lexp0)));
   ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, ArrayLength(lexp1)));
   ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, ArrayLength(lexp2)));
   ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, ArrayLength(lexp3)));
@@ -151,6 +163,7 @@ TEST(LineBreak, WordBreaker)
   RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
   ASSERT_TRUE(t);
 
+  ASSERT_TRUE(TestASCIIWB(t, teng0, wexp0, ArrayLength(wexp0)));
   ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, ArrayLength(wexp1)));
   ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, ArrayLength(wexp2)));
   ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, ArrayLength(wexp3)));
@@ -169,6 +182,8 @@ void TestPrintWordWithBreak() {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
+  // This test generate the result string by appending '^' at every word break
+  // opportunity except the one at end of the text.
   nsAutoString result;
 
   for (uint32_t i = 0; i < numOfFragment; i++) {
@@ -179,12 +194,16 @@ void TestPrintWordWithBreak() {
     uint32_t start = 0;
     while (cur != NS_WORDBREAKER_NEED_MORE_TEXT) {
       result.Append(Substring(fragText, start, cur - start));
-      result.Append('^');
+
+      // Append '^' only if cur is within the fragText. We'll check the word
+      // break opportunity between fragText and nextFragText using
+      // BreakInBetween() below.
+      if (cur < static_cast<int32_t>(fragText.Length())) {
+        result.Append('^');
+      }
       start = (cur >= 0 ? cur : cur - start);
       cur = wbk->Next(fragText.get(), fragText.Length(), cur);
     }
-
-    result.Append(Substring(fragText, fragText.Length() - start));
 
     if (i != numOfFragment - 1) {
       NS_ConvertASCIItoUTF16 nextFragText(wb[i + 1]);
@@ -198,7 +217,7 @@ void TestPrintWordWithBreak() {
       fragText.Assign(nextFragText);
     }
   }
-  ASSERT_STREQ("is^   ^is^ ^a^ ^  is a intzation^ ^work^ation work.",
+  ASSERT_STREQ("This^   ^is^ ^a^ ^internationalization^ ^work^.",
                NS_ConvertUTF16toUTF8(result).get());
 }
 
@@ -274,6 +293,13 @@ void TestNextWordBreakWithComplexLanguage() {
     offset = newOffset;
   }
   ASSERT_TRUE(true);
+}
+
+void TestNextWordBreakWithEmptyString() {
+  RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
+  char16_t empty[] = {};
+  ASSERT_EQ(NS_WORDBREAKER_NEED_MORE_TEXT, wbk->Next(empty, 0, 0));
+  ASSERT_EQ(NS_WORDBREAKER_NEED_MORE_TEXT, wbk->Next(empty, 0, 1));
 }
 
 TEST(LineBreak, WordBreakUsage)
