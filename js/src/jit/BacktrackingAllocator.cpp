@@ -1101,6 +1101,16 @@ bool BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def,
     return tryMergeBundles(def.firstBundle(), input.firstBundle());
   }
 
+  // Avoid merging in very large live ranges as merging has non-linear
+  // complexity.  The cutoff value is hard to gauge.  1M was chosen because it
+  // is "large" and yet usefully caps compile time on AutoCad-for-the-web to
+  // something reasonable on a 2017-era desktop system.
+  const uint32_t RANGE_SIZE_CUTOFF = 1000000;
+  if (inputRange->to() - inputRange->from() > RANGE_SIZE_CUTOFF) {
+    def.setMustCopyInput();
+    return true;
+  }
+
   // The input is live afterwards, either in future instructions or in a
   // safepoint for the reusing instruction. This is impossible to satisfy
   // without copying the input.
