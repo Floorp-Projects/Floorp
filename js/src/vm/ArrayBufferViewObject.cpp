@@ -241,6 +241,11 @@ JS_PUBLIC_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   return length;
 }
 
+bool JS::ArrayBufferView::isDetached() const {
+  MOZ_ASSERT(obj);
+  return obj->as<ArrayBufferViewObject>().hasDetachedBuffer();
+}
+
 JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
