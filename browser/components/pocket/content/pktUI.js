@@ -570,7 +570,8 @@ var pktUIMessaging = (function() {
    */
   function sendMessageToPanel(messageId, payload) {
     var panelFrame = pktUI.getPanelFrame();
-    if (!isPocketPanelFrameValid(panelFrame)) {
+    if (!panelFrame) {
+      console.warn("Pocket panel frame is undefined");
       return;
     }
 
@@ -589,41 +590,6 @@ var pktUIMessaging = (function() {
   function sendErrorMessageToPanel(messageId, error) {
     var errorResponse = { status: "error", error };
     sendMessageToPanel(messageId, errorResponse);
-  }
-
-  /**
-   * Validation
-   */
-
-  function isPocketPanelFrameValid(panelFrame) {
-    // Check if panel is available if not throw a warning and bailout.
-    // We likely try to send to a panel that is not visible anymore
-    if (typeof panelFrame === "undefined") {
-      console.warn("Pocket panel frame is undefined");
-      return false;
-    }
-
-    var contentWindow = panelFrame.contentWindow;
-    if (typeof contentWindow == "undefined") {
-      console.warn("Pocket panel frame content window is undefined");
-      return false;
-    }
-
-    var doc = contentWindow.document;
-    if (typeof doc === "undefined") {
-      console.warn("Pocket panel frame content window document is undefined");
-      return false;
-    }
-
-    var documentElement = doc.documentElement;
-    if (typeof documentElement === "undefined") {
-      console.warn(
-        "Pocket panel frame content window document document element is undefined"
-      );
-      return false;
-    }
-
-    return true;
   }
 
   /**

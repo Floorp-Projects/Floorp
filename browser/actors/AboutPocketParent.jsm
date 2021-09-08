@@ -47,16 +47,16 @@ class AboutPocketParent extends JSWindowActorParent {
       case "PKT_openTabWithUrl": {
         this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithUrl(
           message.data,
-          this.browsingContext.embedderElement.contentDocument.nodePrincipal,
-          this.browsingContext.embedderElement.contentDocument.csp
+          this.browsingContext.embedderElement.contentPrincipal,
+          this.browsingContext.embedderElement.csp
         );
         break;
       }
       case "PKT_openTabWithPocketUrl": {
         this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithPocketUrl(
           message.data,
-          this.browsingContext.embedderElement.contentDocument.nodePrincipal,
-          this.browsingContext.embedderElement.contentDocument.csp
+          this.browsingContext.embedderElement.contentPrincipal,
+          this.browsingContext.embedderElement.csp
         );
         break;
       }
