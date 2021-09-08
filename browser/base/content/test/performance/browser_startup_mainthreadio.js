@@ -487,7 +487,7 @@ const startupPhases = {
       stat: 4,
       fsync: 3,
       read: 44,
-      write: 170,
+      write: 173,
     },
     {
       // bug 1391590
