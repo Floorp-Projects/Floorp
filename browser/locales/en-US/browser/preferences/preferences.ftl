@@ -163,6 +163,15 @@ confirm-on-close-multiple-tabs =
     .label = Confirm before closing multiple tabs
     .accesskey = m
 
+# This string is used for the confirm before quitting preference.
+# Variables:
+#   $quitKey (String) - the quit keyboard shortcut, and formatted
+#                       in the same manner as it would appear,
+#                       for example, in the File menu.
+confirm-on-quit-with-key =
+    .label = Confirm before quitting with { $quitKey }
+    .accesskey = b
+
 warn-on-open-many-tabs =
     .label = Warn you when opening multiple tabs might slow down { -brand-short-name }
     .accesskey = d
