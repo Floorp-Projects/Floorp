@@ -11,6 +11,7 @@
 #include "unicode/ucol.h"
 
 #include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/intl/ICUError.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 
