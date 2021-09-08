@@ -19,7 +19,7 @@ job-defaults:
             - 'toolkit/crashreporter'
             - 'toolkit/crashreporter/google-breakpad/src/processor'
             - 'tools/crashreporter/'
-        toolchain-artifact: public/build/minidump_stackwalk.tar.zst
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
     run-on-projects:
         - trunk
 
@@ -71,7 +71,7 @@ linux64-breakpad-injector:
     description: "breakpad injector toolchain build"
     run:
         script: build-breakpad-injector.sh
-        toolchain-artifact: public/build/injector.tar.zst
+        toolchain-artifact: public/build/injector.tar.xz
     treeherder:
         symbol: TL(injector)
     fetches:

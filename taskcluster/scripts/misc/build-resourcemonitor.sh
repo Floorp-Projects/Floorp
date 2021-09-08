@@ -2,7 +2,7 @@
 set -x -e -v
 
 cd "$MOZ_FETCHES_DIR"/resource-monitor/ || exit 1
-COMPRESS_EXT=zst
+COMPRESS_EXT=xz
 
 PATH="$MOZ_FETCHES_DIR/go/bin:$PATH"
 export PATH

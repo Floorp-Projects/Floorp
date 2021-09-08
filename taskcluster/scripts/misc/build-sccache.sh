@@ -6,13 +6,14 @@ export TARGET="$1"
 
 # This script is for building sccache
 
-COMPRESS_EXT=zst
 case "$(uname -s)" in
 Linux)
+    COMPRESS_EXT=xz
     PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
     ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build
+    COMPRESS_EXT=bz2
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     ;;
@@ -64,7 +65,7 @@ fi
 
 mkdir sccache
 cp $SCCACHE_OUT sccache/
-tar -c sccache | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > sccache.tar.$COMPRESS_EXT
+tar -acf sccache.tar.$COMPRESS_EXT sccache
 mkdir -p $UPLOAD_DIR
 cp sccache.tar.$COMPRESS_EXT $UPLOAD_DIR
 
