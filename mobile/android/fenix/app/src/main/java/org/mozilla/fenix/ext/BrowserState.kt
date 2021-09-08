@@ -19,12 +19,15 @@ import mozilla.components.feature.tabs.ext.hasMediaPlayed
 fun BrowserState.asRecentTabs(): List<TabSessionState> {
     return mutableListOf<TabSessionState>().apply {
         val lastOpenedNormalTab = lastOpenedNormalTab
+        val inProgressMediaTab = inProgressMediaTab
+
         lastOpenedNormalTab?.let { add(it) }
-        inProgressMediaTab
-            ?.takeUnless { it == lastOpenedNormalTab }
-            ?.let {
-                add(it)
-            }
+
+        if (inProgressMediaTab == lastOpenedNormalTab) {
+            secondToLastOpenedNormalTab?.let { add(it) }
+        } else {
+            inProgressMediaTab?.let { add(it) }
+        }
     }
 }
 
@@ -34,6 +37,15 @@ fun BrowserState.asRecentTabs(): List<TabSessionState> {
  */
 val BrowserState.lastOpenedNormalTab: TabSessionState?
     get() = selectedNormalTab ?: normalTabs.maxByOrNull { it.lastAccess }
+
+/**
+ *  Get the second-to-last accessed normal tab.
+ */
+val BrowserState.secondToLastOpenedNormalTab: TabSessionState?
+    get() = when {
+        normalTabs.size <= 1 -> null
+        else -> normalTabs.sortedByDescending { it.lastAccess }[1]
+    }
 
 /**
  * Get the last tab with in progress media.

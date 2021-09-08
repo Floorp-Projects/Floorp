@@ -226,7 +226,7 @@ class RecentTabsListFeatureTest {
 
         feature.start()
         homeStore.waitUntilIdle()
-        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(2, homeStore.state.recentTabs.size)
         assertEquals(initialMediaTab, homeStore.state.recentTabs[0])
 
         browserStore.dispatch(
