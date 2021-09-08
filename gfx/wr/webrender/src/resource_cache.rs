@@ -780,6 +780,11 @@ impl ResourceCache {
         visible_rect: &DeviceIntRect,
         mut tiling: Option<TileSize>,
     ) {
+        if let Some(ref mut tile_size) = tiling {
+            // Sanitize the value since it can be set by a pref.
+            *tile_size = (*tile_size).max(16).min(2048);
+        }
+
         if tiling.is_none() && Self::should_tile(self.tiling_threshold(), &descriptor, &data) {
             // We aren't going to be able to upload a texture this big, so tile it, even
             // if tiling was not requested.

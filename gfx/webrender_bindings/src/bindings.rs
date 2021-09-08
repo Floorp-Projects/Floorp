@@ -2003,6 +2003,7 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
     txn: &mut Transaction,
     image_key: BlobImageKey,
     descriptor: &WrImageDescriptor,
+    tile_size: u16,
     bytes: &mut WrVecU8,
     visible_rect: DeviceIntRect,
 ) {
@@ -2012,7 +2013,7 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
         Arc::new(bytes.flush_into_vec()),
         visible_rect,
         if descriptor.format == ImageFormat::BGRA8 {
-            Some(256)
+            Some(tile_size)
         } else {
             None
         },
