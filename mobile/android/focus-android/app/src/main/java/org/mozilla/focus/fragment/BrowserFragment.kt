@@ -213,7 +213,7 @@ class BrowserFragment :
             PromptFeature(
                 fragment = this,
                 store = components.store,
-                customTabId = tab.id,
+                customTabId = tryGetCustomTabId(),
                 fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
@@ -352,7 +352,7 @@ class BrowserFragment :
                 browserToolbar,
                 fragment = this,
                 controller = controller,
-                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
+                customTabId = tryGetCustomTabId(),
                 customTabsUseCases = requireComponents.customTabsUseCases,
                 sessionUseCases = requireComponents.sessionUseCases,
                 onUrlLongClicked = ::onUrlLongClicked
@@ -881,6 +881,12 @@ class BrowserFragment :
         } else {
             false
         }
+    }
+
+    private fun tryGetCustomTabId() = if (tab.isCustomTab()) {
+        tab.id
+    } else {
+        null
     }
 
     fun handleTabCrash(crash: Crash) {
