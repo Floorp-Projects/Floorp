@@ -22,7 +22,7 @@
 
 #include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot, JS::GetMaybePtrFromReservedSlot
 #include "js/RootingAPI.h"  // JS::Handle
-#include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/ScalarType.h"  // JS::Scalar::Type
 #include "js/Wrapper.h"     // js::CheckedUnwrapStatic
 
 struct JSClass;
@@ -44,9 +44,9 @@ class JS_PUBLIC_API AutoRequireNoGC;
 //   Note that this type is not exposed publicly. Internal files need to
 //   #include <vm/Uint8Clamped.h> to see it.
 //
-// Name - usable as both a js::Scalar::Type value (eg
-//   js::Scalar::Uint8Clamped) and the stem of a full typed array name (eg
-//   Uint8ClampedArray).
+// Name - a name usable as both a JS::Scalar::Type value (eg
+//   JS::Scalar::Uint8Clamped) or the stem of a full typed array name (eg
+//   Uint8ClampedArray)
 //
 #define JS_FOR_EACH_TYPED_ARRAY(MACRO)            \
   MACRO(int8_t, int8_t, Int8)                     \
@@ -177,7 +177,7 @@ extern JS_PUBLIC_API JSObject* JS_GetObjectAsArrayBufferView(
  * be known that it would pass such a test: it is an ArrayBufferView or a
  * wrapper of an ArrayBufferView, and the unwrapping will succeed.
  */
-extern JS_PUBLIC_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj);
+extern JS_PUBLIC_API JS::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj);
 
 /**
  * Return the number of elements in a typed array.
@@ -279,18 +279,18 @@ namespace detail {
 
 // Map from eg Uint8Clamped -> uint8_t, Uint8 -> uint8_t, or Float64 ->
 // double. Used as the DataType within a JS::TypedArray specialization.
-template <js::Scalar::Type ArrayType>
+template <JS::Scalar::Type ArrayType>
 struct ExternalTypeOf {};
 
 #define DEFINE_ELEMENT_TYPES(ExternalT, NativeT, Name) \
   template <>                                          \
-  struct ExternalTypeOf<js::Scalar::Name> {            \
+  struct ExternalTypeOf<JS::Scalar::Name> {            \
     using Type = ExternalT;                            \
   };
 JS_FOR_EACH_TYPED_ARRAY(DEFINE_ELEMENT_TYPES)
 #undef DEFINE_ELEMENT_TYPES
 
-template <js::Scalar::Type ArrayType>
+template <JS::Scalar::Type ArrayType>
 using ExternalTypeOf_t = typename ExternalTypeOf<ArrayType>::Type;
 
 }  // namespace detail
@@ -308,7 +308,7 @@ class JS_PUBLIC_API ArrayBufferOrView {
   // ArrayBufferOrView subclasses will set `obj` to nullptr if wrapping an
   // object of the wrong type. So this allows:
   //
-  //   auto view = JS::TypedArray<js::Scalar::Int8>::fromObject(obj);
+  //   auto view = JS::TypedArray<JS::Scalar::Int8>::fromObject(obj);
   //   if (!view) { ... }
   //
   explicit operator bool() const { return !!obj; }
@@ -437,7 +437,7 @@ class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
   }
 };
 
-template <js::Scalar::Type TypedArrayElementType>
+template <JS::Scalar::Type TypedArrayElementType>
 class JS_PUBLIC_API TypedArray : public TypedArray_base {
  protected:
   explicit TypedArray(JSObject* unwrapped) : TypedArray_base(unwrapped) {}
@@ -445,7 +445,7 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
  public:
   using DataType = detail::ExternalTypeOf_t<TypedArrayElementType>;
 
-  static constexpr js::Scalar::Type Scalar = TypedArrayElementType;
+  static constexpr JS::Scalar::Type Scalar = TypedArrayElementType;
 
   // This cannot be a static data member because on Windows,
   // __declspec(dllexport) causes the class to be instantiated immediately,
@@ -552,7 +552,7 @@ ArrayBufferView ArrayBufferView::fromObject(JSObject* unwrapped) {
                                             bool* isSharedMemory,          \
                                             ExternalType** data) {         \
     MOZ_ASSERT(JS::GetClass(unwrapped) ==                                  \
-               JS::TypedArray<js::Scalar::Name>::clasp());                 \
+               JS::TypedArray<JS::Scalar::Name>::clasp());                 \
     const JS::Value& lenSlot =                                             \
         JS::GetReservedSlot(unwrapped, detail::TypedArrayLengthSlot);      \
     *length = size_t(lenSlot.toPrivate());                                 \
@@ -571,21 +571,21 @@ namespace JS {
 
 #define IMPL_TYPED_ARRAY_CLASS(ExternalType, NativeType, Name)                \
   template <>                                                                 \
-  inline JS::TypedArray<js::Scalar::Name>                                     \
-  JS::TypedArray<js::Scalar::Name>::create(JSContext* cx, size_t nelements) { \
+  inline JS::TypedArray<JS::Scalar::Name>                                     \
+  JS::TypedArray<JS::Scalar::Name>::create(JSContext* cx, size_t nelements) { \
     return fromObject(JS_New##Name##Array(cx, nelements));                    \
   };                                                                          \
                                                                               \
   template <>                                                                 \
-  inline JS::TypedArray<js::Scalar::Name>                                     \
-  JS::TypedArray<js::Scalar::Name>::fromArray(JSContext* cx,                  \
+  inline JS::TypedArray<JS::Scalar::Name>                                     \
+  JS::TypedArray<JS::Scalar::Name>::fromArray(JSContext* cx,                  \
                                               HandleObject other) {           \
     return fromObject(JS_New##Name##ArrayFromArray(cx, other));               \
   };                                                                          \
                                                                               \
   template <>                                                                 \
-  inline JS::TypedArray<js::Scalar::Name>                                     \
-  JS::TypedArray<js::Scalar::Name>::fromBuffer(                               \
+  inline JS::TypedArray<JS::Scalar::Name>                                     \
+  JS::TypedArray<JS::Scalar::Name>::fromBuffer(                               \
       JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,             \
       int64_t length) {                                                       \
     return fromObject(                                                        \
