@@ -14,12 +14,12 @@ DateTimePatternGenerator::~DateTimePatternGenerator() {
 }
 
 /* static */
-Result<UniquePtr<DateTimePatternGenerator>, DateTimePatternGenerator::Error>
+Result<UniquePtr<DateTimePatternGenerator>, ICUError>
 DateTimePatternGenerator::TryCreate(const char* aLocale) {
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* generator = udatpg_open(aLocale, &status);
   if (U_FAILURE(status)) {
-    return Err(Error::InternalError);
+    return Err(ToICUError(status));
   }
   return MakeUnique<DateTimePatternGenerator>(generator);
 };
