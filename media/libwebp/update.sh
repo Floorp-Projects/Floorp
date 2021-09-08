@@ -60,6 +60,7 @@ cp $1/src/dsp/lossless_mips_dsp_r2.c src/dsp
 cp $1/src/dsp/lossless_msa.c src/dsp
 cp $1/src/dsp/lossless_neon.c src/dsp
 cp $1/src/dsp/lossless_sse2.c src/dsp
+cp $1/src/dsp/lossless_sse41.c src/dsp
 cp $1/src/dsp/rescaler.c src/dsp
 cp $1/src/dsp/rescaler_mips32.c src/dsp
 cp $1/src/dsp/rescaler_mips_dsp_r2.c src/dsp

@@ -1,3 +1,15 @@
+- 7/20/2021: version 1.2.1
+  This is a binary compatible release.
+  * minor lossless encoder improvements and x86 color conversion speed up
+  * add ARM64 simulator support to xcframeworkbuild.sh (#510)
+  * further security related hardening in libwebp & examples
+    (issues: #497, #508, #518)
+    (chromium: #1196480, #1196773, #1196775, #1196777, #1196778, #1196850)
+    (oss-fuzz: #28658, #28978)
+  * toolchain updates and bug fixes (#498, #501, #502, #504, #505, #506, #509,
+                                     #533)
+  * use more inclusive language within the source (#507)
+
 - 12/23/2020: version 1.2.0
   * API changes:
     - libwebp:

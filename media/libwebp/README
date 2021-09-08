@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v1.2.0
+               \____/____/\_____/_____/____/v1.2.1
 
 Description:
 ============
@@ -619,7 +619,7 @@ The encoding flow looks like:
   pic.width = width;
   pic.height = height;
   // allocated picture of dimension width x height
-  if (!WebPPictureAllocate(&pic)) {
+  if (!WebPPictureAlloc(&pic)) {
     return 0;   // memory error
   }
   // at this point, 'pic' has been initialized as a container,
