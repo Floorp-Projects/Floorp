@@ -80,11 +80,7 @@ $item-line-height: 20;
   }
 
   a {
-    @include dark-theme-only {
-      color: $grey-10;
-    }
-
-    color: $grey-90;
+    color: var(--newtab-card-header-color);
   }
 }
 
@@ -196,10 +192,7 @@ $item-line-height: 20;
 
   .ds-list-item-excerpt {
     @include limit-visible-lines(2, $item-line-height, $item-font-size);
-    @include dark-theme-only {
-      color: $grey-10-80;
-    }
-    color: $grey-50;
+    color: var(--newtab-text-primary-color);
     margin: 4px 0 8px;
   }
 
@@ -211,11 +204,8 @@ $item-line-height: 20;
 
   .ds-list-item-info {
     @include limit-visible-lines(1, $item-line-height, $item-font-size);
-    @include dark-theme-only {
-      color: $grey-40;
-    }
 
-    color: $grey-50;
+    color: var(--newtab-text-secondary-color);
     font-size: 13px;
   }
 

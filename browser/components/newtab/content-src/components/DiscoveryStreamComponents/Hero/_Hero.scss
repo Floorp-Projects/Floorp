@@ -15,11 +15,7 @@ $card-header-in-hero-line-height: 20;
 
   .excerpt {
     @include limit-visible-lines(3, 24, 15);
-    @include dark-theme-only {
-      color: $grey-10;
-    }
-
-    color: $grey-90;
+    color: var(--newtab-card-header-color);
     margin: 0 0 10px;
   }
 
@@ -59,11 +55,7 @@ $card-header-in-hero-line-height: 20;
   // "1/3 width layout" (aka "Mobile First")
   .wrapper {
     @include ds-border-top;
-    @include dark-theme-only {
-      color: $grey-30;
-    }
-
-    color: $grey-50;
+    color: var(--newtab-text-secondary-color);
     display: block;
     margin: 12px 0 16px;
     padding-top: 16px;
@@ -111,12 +103,8 @@ $card-header-in-hero-line-height: 20;
       }
 
       header {
-        @include dark-theme-only {
-          color: $white;
-        }
-
         @include limit-visible-lines(4, 28, 22);
-        color: $grey-90;
+        color: var(--newtab-card-header-color);
         margin-bottom: 0;
       }
 
@@ -130,12 +118,8 @@ $card-header-in-hero-line-height: 20;
       }
 
       .source {
-        @include dark-theme-only {
-          color: $grey-40;
-        }
-
         font-size: 13px;
-        color: $grey-50;
+        color: var(--newtab-text-secondary-color);
         -webkit-line-clamp: 1;
         margin-bottom: 0;
       }
