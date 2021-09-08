@@ -28,13 +28,7 @@
 
   <vbox id="startupPageBox">
     <checkbox id="browserRestoreSession"
-              data-l10n-id="startup-restore-previous-session"/>
-    <hbox class="indent">
-      <checkbox id="browserRestoreSessionQuitWarning"
-                preference="browser.sessionstore.warnOnQuit"
-                disabled="true"
-                data-l10n-id="startup-restore-warn-on-quit"/>
-    </hbox>
+              data-l10n-id="startup-restore-windows-and-tabs"/>
   </vbox>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -73,14 +67,14 @@
     <checkbox id="linkTargeting" data-l10n-id="open-new-link-as-tabs"
               preference="browser.link.open_newwindow"/>
 
-    <checkbox id="warnCloseMultiple" data-l10n-id="warn-on-close-multiple-tabs"
-              preference="browser.tabs.warnOnClose"/>
-
     <checkbox id="warnOpenMany" data-l10n-id="warn-on-open-many-tabs"
               preference="browser.tabs.warnOnOpen"/>
 
     <checkbox id="switchToNewTabs" data-l10n-id="switch-to-new-tabs"
               preference="browser.tabs.loadInBackground"/>
+
+    <checkbox id="warnCloseMultiple" data-l10n-id="confirm-on-close-multiple-tabs"
+              preference="browser.tabs.warnOnClose"/>
 
 #ifdef XP_WIN
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"

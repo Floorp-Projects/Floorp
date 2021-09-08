@@ -100,7 +100,6 @@ Preferences.addAll([
   // Startup
   { id: "browser.startup.page", type: "int" },
   { id: "browser.privatebrowsing.autostart", type: "bool" },
-  { id: "browser.sessionstore.warnOnQuit", type: "bool" },
 
   // Downloads
   { id: "browser.download.useDownloadDir", type: "bool" },
@@ -423,13 +422,9 @@ var gMainPane = {
       } catch (ex) {}
     }
 
-    // The "closing multiple tabs" and "opening multiple tabs might slow down
-    // &brandShortName;" warnings provide options for not showing these
-    // warnings again. When the user disabled them, we provide checkboxes to
-    // re-enable the warnings.
-    if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnClose")) {
-      document.getElementById("warnCloseMultiple").hidden = true;
-    }
+    // The "opening multiple tabs might slow down Firefox" warning provides
+    // an option for not showing this warning again. When the user disables it,
+    // we provide checkboxes to re-enable the warning.
     if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnOpen")) {
       document.getElementById("warnOpenMany").hidden = true;
     }
@@ -974,26 +969,12 @@ var gMainPane = {
 
     let newValue;
     let checkbox = document.getElementById("browserRestoreSession");
-    let warnOnQuitCheckbox = document.getElementById(
-      "browserRestoreSessionQuitWarning"
-    );
-    if (pbAutoStartPref.value || startupPref.locked) {
-      checkbox.setAttribute("disabled", "true");
-      warnOnQuitCheckbox.setAttribute("disabled", "true");
-    } else {
-      checkbox.removeAttribute("disabled");
-    }
+    checkbox.disabled = pbAutoStartPref.value || startupPref.locked;
     newValue = pbAutoStartPref.value
       ? false
       : startupPref.value === this.STARTUP_PREF_RESTORE_SESSION;
     if (checkbox.checked !== newValue) {
       checkbox.checked = newValue;
-      let warnOnQuitPref = Preferences.get("browser.sessionstore.warnOnQuit");
-      if (newValue && !warnOnQuitPref.locked && !pbAutoStartPref.value) {
-        warnOnQuitCheckbox.removeAttribute("disabled");
-      } else {
-        warnOnQuitCheckbox.setAttribute("disabled", "true");
-      }
     }
   },
   /**
@@ -1240,22 +1221,14 @@ var gMainPane = {
     const startupPref = Preferences.get("browser.startup.page");
     let newValue;
 
-    let warnOnQuitCheckbox = document.getElementById(
-      "browserRestoreSessionQuitWarning"
-    );
     if (value) {
       // We need to restore the blank homepage setting in our other pref
       if (startupPref.value === this.STARTUP_PREF_BLANK) {
         HomePage.safeSet("about:blank");
       }
       newValue = this.STARTUP_PREF_RESTORE_SESSION;
-      let warnOnQuitPref = Preferences.get("browser.sessionstore.warnOnQuit");
-      if (!warnOnQuitPref.locked) {
-        warnOnQuitCheckbox.removeAttribute("disabled");
-      }
     } else {
       newValue = this.STARTUP_PREF_HOMEPAGE;
-      warnOnQuitCheckbox.setAttribute("disabled", "true");
     }
     startupPref.value = newValue;
   },

@@ -2841,19 +2841,7 @@ BrowserGlue.prototype = {
       return;
     }
 
-    // If we're going to automatically restore the session, only warn if the user asked for that.
-    let sessionWillBeRestored =
-      Services.prefs.getIntPref("browser.startup.page") == 3 ||
-      Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-    // In the sessionWillBeRestored case, we only check the sessionstore-specific pref:
-    if (sessionWillBeRestored) {
-      if (
-        !Services.prefs.getBoolPref("browser.sessionstore.warnOnQuit", false)
-      ) {
-        return;
-      }
-      // Otherwise, we check browser.tabs.warnOnClose
-    } else if (!Services.prefs.getBoolPref("browser.tabs.warnOnClose")) {
+    if (!Services.prefs.getBoolPref("browser.tabs.warnOnClose")) {
       return;
     }
 
@@ -2880,11 +2868,6 @@ BrowserGlue.prototype = {
     let flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
-    // Only display the checkbox in the non-sessionrestore case.
-    let checkboxLabel = !sessionWillBeRestored
-      ? gTabbrowserBundle.GetStringFromName("tabs.closeTabsConfirmCheckbox")
-      : null;
-
     // buttonPressed will be 0 for closing, 1 for cancel (don't close/quit)
     let buttonPressed = Services.prompt.confirmEx(
       win,
@@ -2894,14 +2877,15 @@ BrowserGlue.prototype = {
       gTabbrowserBundle.GetStringFromName(buttonLabel),
       null,
       null,
-      checkboxLabel,
+      gTabbrowserBundle.GetStringFromName("tabs.closeTabsConfirmCheckbox"),
       warnOnClose
     );
     Services.telemetry.setEventRecordingEnabled("close_tab_warning", true);
     let warnCheckbox = warnOnClose.value ? "checked" : "unchecked";
-    if (!checkboxLabel) {
-      warnCheckbox = "not-present";
-    }
+
+    let sessionWillBeRestored =
+      Services.prefs.getIntPref("browser.startup.page") == 3 ||
+      Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
     Services.telemetry.recordEvent(
       "close_tab_warning",
       "shown",
@@ -2921,7 +2905,7 @@ BrowserGlue.prototype = {
 
     // If the user has unticked the box, and has confirmed closing, stop showing
     // the warning.
-    if (!sessionWillBeRestored && buttonPressed == 0 && !warnOnClose.value) {
+    if (!buttonPressed == 0 && !warnOnClose.value) {
       Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
     }
     aCancelQuit.data = buttonPressed != 0;
