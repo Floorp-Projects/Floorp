@@ -291,8 +291,7 @@ static mozilla::intl::PluralRules* NewPluralRules(
   options.mMinIntegerDigits =
       mozilla::Some(AssertedCast<uint32_t>(value.toInt32()));
 
-  mozilla::Result<mozilla::UniquePtr<PluralRules>, PluralRules::Error> result =
-      PluralRules::TryCreate(locale.get(), options);
+  auto result = PluralRules::TryCreate(locale.get(), options);
   if (result.isErr()) {
     intl::ReportInternalError(cx);
     return nullptr;
@@ -324,8 +323,7 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
                            PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
 
-  Result<PluralRules::Keyword, PluralRules::Error> keywordResult =
-      pr->Select(x);
+  auto keywordResult = pr->Select(x);
   if (keywordResult.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -370,8 +368,7 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
                            PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
 
-  Result<PluralRules::Keyword, PluralRules::Error> keywordResult =
-      pr->SelectRange(x, y);
+  auto keywordResult = pr->SelectRange(x, y);
   if (keywordResult.isErr()) {
     intl::ReportInternalError(cx);
     return false;
