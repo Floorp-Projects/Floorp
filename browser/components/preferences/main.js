@@ -11,6 +11,10 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { ShortcutUtils } = ChromeUtils.import(
+  "resource://gre/modules/ShortcutUtils.jsm"
+);
+
 var { TransientPrefs } = ChromeUtils.import(
   "resource:///modules/TransientPrefs.jsm"
 );
@@ -122,6 +126,8 @@ Preferences.addAll([
   browser.tabs.warnOnOpen
   - true if the user should be warned if he attempts to open a lot of tabs at
     once (e.g. a large folder of bookmarks), false otherwise
+  browser.warnOnQuitShortcut
+  - true if the user should be warned if they quit using the keyboard shortcut
   browser.taskbar.previews.enable
   - true if tabs are to be shown in the Windows 7 taskbar
   */
@@ -129,6 +135,7 @@ Preferences.addAll([
   { id: "browser.link.open_newwindow", type: "int" },
   { id: "browser.tabs.loadInBackground", type: "bool", inverted: true },
   { id: "browser.tabs.warnOnClose", type: "bool" },
+  { id: "browser.warnOnQuitShortcut", type: "bool" },
   { id: "browser.tabs.warnOnOpen", type: "bool" },
   { id: "browser.ctrlTab.sortByRecentlyUsed", type: "bool" },
 
@@ -427,6 +434,18 @@ var gMainPane = {
     // we provide checkboxes to re-enable the warning.
     if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnOpen")) {
       document.getElementById("warnOpenMany").hidden = true;
+    }
+
+    if (AppConstants.platform != "win") {
+      let quitKeyElement = window.browsingContext.topChromeWindow.document.getElementById(
+        "key_quitApplication"
+      );
+      let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
+      document.l10n.setAttributes(
+        document.getElementById("warnOnQuitKey"),
+        "confirm-on-quit-with-key",
+        { quitKey }
+      );
     }
 
     setEventListener("ctrlTabRecentlyUsedOrder", "command", function() {
@@ -1249,6 +1268,9 @@ var gMainPane = {
    * browser.tabs.warnOnClose - bool
    *   True - If when closing a window with multiple tabs the user is warned and
    *          allowed to cancel the action, false to just close the window.
+   * browser.warnOnQuitShortcut - bool
+   *   True - If the keyboard shortcut (Ctrl/Cmd+Q) is pressed, the user should
+   *          be warned, false to just quit without prompting.
    * browser.tabs.warnOnOpen - bool
    *   True - Whether the user should be warned when trying to open a lot of
    *          tabs at once (e.g. a large folder of bookmarks), allowing to
