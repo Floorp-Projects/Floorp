@@ -203,14 +203,10 @@ $icon-size: 16px;
 $smaller-icon-size: 12px;
 $larger-icon-size: 32px;
 
-$searchbar-width-small: $grid-unit * 2 + $base-gutter * 1;
-$searchbar-width-medium: $grid-unit * 4 + $base-gutter * 3;
-$searchbar-width-large: $grid-unit * 6 + $base-gutter * 5;
-
-$searchbar-width-small-new: ($grid-unit * 2 + $base-gutter * 1) - 24px;
-$searchbar-width-medium-new: ($grid-unit * 4 + $base-gutter * 3) - 120px;
-$searchbar-width-large-new: ($grid-unit * 6 + $base-gutter * 5) - 136px;
-$searchbar-width-largest-new: ($grid-unit * 6 + $base-gutter * 5) - 16px;
+$searchbar-width-small: ($grid-unit * 2 + $base-gutter * 1) - 24px;
+$searchbar-width-medium: ($grid-unit * 4 + $base-gutter * 3) - 120px;
+$searchbar-width-large: ($grid-unit * 6 + $base-gutter * 5) - 136px;
+$searchbar-width-largest: ($grid-unit * 6 + $base-gutter * 5) - 16px;
 
 $wrapper-default-width: $grid-unit * 2 + $base-gutter * 1 + $section-horizontal-padding * 2; // 2 top sites
 $wrapper-max-width-medium: $grid-unit * 4 + $base-gutter * 3 + $section-horizontal-padding * 2; // 4 top sites
@@ -230,8 +226,7 @@ $break-point-widest: $wrapper-max-width-widest + $base-gutter * 2 + $scrollbar-w
 
 $section-title-font-size: 17px;
 
-$card-width: $grid-unit * 2 + $base-gutter;
-$card-width-nte: $grid-unit-small * 2 + $base-gutter;
+$card-width: $grid-unit-small * 2 + $base-gutter;
 
 $card-height: 266px;
 $card-preview-image-height: 122px;
