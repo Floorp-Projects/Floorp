@@ -16,4 +16,4 @@ export PATH=$PATH:$MOZ_FETCHES_DIR/node/bin
 # browsertime/{package.json,node_modules}.
 mkdir -p  /builds/worker/artifacts
 cd tools
-tar cjf /builds/worker/artifacts/browsertime.tar.bz2 browsertime
+tar caf /builds/worker/artifacts/browsertime.tar.zst browsertime
