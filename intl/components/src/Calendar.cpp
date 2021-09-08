@@ -9,7 +9,7 @@
 namespace mozilla::intl {
 
 /* static */
-Result<UniquePtr<Calendar>, Calendar::Error> Calendar::TryCreate(
+Result<UniquePtr<Calendar>, ICUError> Calendar::TryCreate(
     const char* aLocale, Maybe<Span<const char16_t>> aTimeZoneOverride) {
   UErrorCode status = U_ZERO_ERROR;
   const UChar* zoneID = nullptr;
@@ -23,41 +23,41 @@ Result<UniquePtr<Calendar>, Calendar::Error> Calendar::TryCreate(
       ucal_open(zoneID, zoneIDLen, aLocale, UCAL_DEFAULT, &status);
 
   if (U_FAILURE(status)) {
-    return Err(Calendar::Error::InternalError);
+    return Err(ToICUError(status));
   }
 
   return MakeUnique<Calendar>(calendar);
 }
 
-Result<const char*, Calendar::Error> Calendar::GetBcp47Type() {
+Result<const char*, ICUError> Calendar::GetBcp47Type() {
   UErrorCode status = U_ZERO_ERROR;
   const char* oldType = ucal_getType(mCalendar, &status);
   if (U_FAILURE(status)) {
-    return Err(Error::InternalError);
+    return Err(ToICUError(status));
   }
   const char* bcp47Type = uloc_toUnicodeLocaleType("calendar", oldType);
 
   if (!bcp47Type) {
-    return Err(Error::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return bcp47Type;
 }
 
-Result<int32_t, Calendar::Error> Calendar::GetDefaultTimeZoneOffsetMs() {
+Result<int32_t, ICUError> Calendar::GetDefaultTimeZoneOffsetMs() {
   UErrorCode status = U_ZERO_ERROR;
   int32_t offset = ucal_get(mCalendar, UCAL_ZONE_OFFSET, &status);
   if (U_FAILURE(status)) {
-    return Err(Error::InternalError);
+    return Err(ToICUError(status));
   }
   return offset;
 }
 
-Result<Ok, Calendar::Error> Calendar::SetTimeInMs(double aUnixEpoch) {
+Result<Ok, ICUError> Calendar::SetTimeInMs(double aUnixEpoch) {
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, aUnixEpoch, &status);
   if (U_FAILURE(status)) {
-    return Err(Error::InternalError);
+    return Err(ToICUError(status));
   }
   return Ok{};
 }
