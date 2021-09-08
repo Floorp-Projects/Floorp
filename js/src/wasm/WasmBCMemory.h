@@ -37,19 +37,19 @@ struct Atomic32Temps : mozilla::Array<RegI32, Count> {
   void maybeFree(BaseCompiler* bc);
 };
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
 using AtomicRMW32Temps = Atomic32Temps<3>;
 #else
 using AtomicRMW32Temps = Atomic32Temps<1>;
 #endif
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
 using AtomicCmpXchg32Temps = Atomic32Temps<3>;
 #else
 using AtomicCmpXchg32Temps = Atomic32Temps<0>;
 #endif
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
 using AtomicXchg32Temps = Atomic32Temps<3>;
 #else
 using AtomicXchg32Temps = Atomic32Temps<0>;
