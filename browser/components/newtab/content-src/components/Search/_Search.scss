@@ -108,7 +108,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   input:focus {
     border: 1px solid var(--newtab-focus-border);
     outline: 0;
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+    box-shadow: $shadow-focus;
   }
 
   .search-button {
@@ -131,7 +131,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     &:focus {
       outline: 0;
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+      box-shadow: $shadow-focus;
       border: 1px solid var(--newtab-focus-border);
       border-radius: 0 $border-radius-new $border-radius-new 0;
     }
@@ -148,7 +148,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   &.fake-focus:not(.search.disabled) {
     .search-handoff-button {
       border: 1px solid var(--newtab-focus-border);
-      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+      box-shadow: $shadow-focus;
     }
   }
 

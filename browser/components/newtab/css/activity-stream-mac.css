@@ -1089,7 +1089,7 @@ main.has-snippet {
   right: -8px;
 }
 .topsite-form [type=checkbox]:checked + label .tile {
-  box-shadow: 0 0 0 2px var(--newtab-link-primary-color);
+  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
 }
 .topsite-form [type=checkbox]:not(:checked) + label::after {
   opacity: 0;
@@ -1649,7 +1649,7 @@ main.has-snippet {
 }
 
 .confirmation-dialog .modal {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   left: 0;
   margin: auto;
   position: fixed;
@@ -2793,7 +2793,6 @@ main.has-snippet {
   box-shadow: var(--newtab-card-first-shadow);
 }
 [lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
-  box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
   background: var(--newtab-card-background-color);
 }
 .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {

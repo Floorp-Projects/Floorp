@@ -579,7 +579,7 @@ $letter-fallback-color: $white;
   // when selected, highlight the tile
   [type='checkbox']:checked + label {
     .tile {
-      box-shadow: 0 0 0 2px var(--newtab-link-primary-color);
+      box-shadow: $shadow-focus;
     }
   }
 

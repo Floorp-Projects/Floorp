@@ -17,6 +17,9 @@ $input-error-border: 1px solid $red-60;
 $input-error-boxshadow: textbox-shadow($red-60);
 $shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
+$shadow-large: 0 1px 15px 0 $black-30;
+$shadow-focus: 0 0 0 2px var(--newtab-focus-outline);
+$shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
 // Default theme
 body {
