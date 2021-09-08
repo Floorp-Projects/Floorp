@@ -29,7 +29,6 @@ body {
   --newtab-element-hover-color: #{$grey-20};
   --newtab-icon-primary-color: #{$grey-90-80};
   --newtab-icon-secondary-color: #{$grey-90-60};
-  --newtab-icon-tertiary-color: #{$grey-30};
   --newtab-inner-box-shadow-color: #{$black-10};
 
   --newtab-link-primary-color: #{$blue-60};
@@ -74,19 +73,15 @@ body {
   --newtab-search-dropdown-header-color: #{$grey-10};
   --newtab-search-header-background-color: #{$grey-10-95};
   --newtab-search-icon-color: #{$grey-90-40};
-  --newtab-search-wordmark-color: #{$firefox-wordmark-default-color};
 
   // Top Sites
   --newtab-topsites-background-color: var(--newtab-background-color-secondary);
-  --newtab-topsites-icon-shadow: inset #{$inner-box-shadow};
-  --newtab-topsites-label-color: inherit;
   --newtab-topsites-outer-card-hover: #{$newtab-card-hover-color};
   --newtab-topsites-context-menu-hover: #{$newtab-card-hover-color};
 
   // Cards
   --newtab-card-active-outline-color: #{$grey-30};
   --newtab-card-background-color: var(--newtab-background-color-secondary);
-  --newtab-card-hairline-color: #{$black-10};
   --newtab-card-placeholder-color: #{$grey-30};
   --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
 
@@ -130,7 +125,6 @@ body {
     --newtab-element-hover-color: #{$grey-10-10};
     --newtab-icon-primary-color: #{$grey-10-80};
     --newtab-icon-secondary-color: #{$grey-10-40};
-    --newtab-icon-tertiary-color: #{$grey-10-40};
     --newtab-inner-box-shadow-color: #{$grey-10-20};
     --newtab-link-primary-color: #{$blue-40};
     --newtab-link-secondary-color: #{$pocket-teal};
@@ -168,17 +162,13 @@ body {
     --newtab-search-dropdown-header-color: #{$grey-60};
     --newtab-search-header-background-color: #{$grey-80-95};
     --newtab-search-icon-color: #{$grey-10-60};
-    --newtab-search-wordmark-color: #{$firefox-wordmark-darktheme-color};
 
     // Top Sites
-    --newtab-topsites-icon-shadow: none;
-    --newtab-topsites-label-color: #{$grey-10-80};
     --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};
     --newtab-topsites-context-menu-hover: #{$newtab-card-darktheme-hover-color};
 
     // Cards
     --newtab-card-active-outline-color: #{$grey-60};
-    --newtab-card-hairline-color: #{$grey-10-10};
     --newtab-card-placeholder-color: #{$grey-60};
     --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
 
@@ -205,6 +195,6 @@ body {
     --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
     --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
     --newtab-card-first-shadow: #{$newtab-card-darktheme-firstshadow};
-    --newtab-wordmark-color: #{$firefox-wordmark-darktheme-color};
+    --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
   }
 }
