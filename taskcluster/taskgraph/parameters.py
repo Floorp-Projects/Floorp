@@ -2,11 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-import logging
-import os.path
+import hashlib
 import json
+import logging
+import os
 from datetime import datetime
+from pprint import pformat
+from urllib.parse import urlparse
 
 from mozbuild.util import ReadOnlyDict, memoize
 from mozversioncontrol import get_repository_object
@@ -115,12 +117,46 @@ class Parameters(ReadOnlyDict):
 
     def __init__(self, strict=True, **kwargs):
         self.strict = strict
+        self.spec = kwargs.pop("spec", "defaults")
+        self._id = None
 
         if not self.strict:
             # apply defaults to missing parameters
             kwargs = Parameters._fill_defaults(**kwargs)
 
         ReadOnlyDict.__init__(self, **kwargs)
+
+    @property
+    def id(self):
+        if not self._id:
+            self._id = hashlib.sha256(
+                json.dumps(self, sort_keys=True).encode("utf-8")
+            ).hexdigest()[:12]
+
+        return self._id
+
+    @staticmethod
+    def format_spec(spec):
+        """
+        Get a friendly identifier from a parameters specifier.
+
+        Args:
+            spec (str): Parameters specifier.
+
+        Returns:
+            str: Name to identify parameters by.
+        """
+        if spec is None:
+            return "defaults"
+
+        if any(spec.startswith(s) for s in ("task-id=", "project=")):
+            return spec
+
+        result = urlparse(spec)
+        if result.scheme in ("http", "https"):
+            spec = result.path
+
+        return os.path.splitext(os.path.basename(spec))[0]
 
     @staticmethod
     def _fill_defaults(**kwargs):
@@ -227,8 +263,14 @@ class Parameters(ReadOnlyDict):
         """
         return release_level(self["project"])
 
+    def __str__(self):
+        return f"Parameters(id={self.id}) (from {self.format_spec(self.spec)})"
 
-def load_parameters_file(filename, strict=True, overrides=None, trust_domain=None):
+    def __repr__(self):
+        return pformat(dict(self), indent=2)
+
+
+def load_parameters_file(spec, strict=True, overrides=None, trust_domain=None):
     """
     Load parameters from a path, url, decision task-id or project.
 
@@ -243,18 +285,18 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
     if overrides is None:
         overrides = {}
 
-    if not filename:
+    if not spec:
         return Parameters(strict=strict, **overrides)
 
     try:
         # reading parameters from a local parameters.yml file
-        f = open(filename)
+        f = open(spec)
     except OSError:
         # fetching parameters.yml using task task-id, project or supplied url
         task_id = None
-        if filename.startswith("task-id="):
-            task_id = filename.split("=")[1]
-        elif filename.startswith("project="):
+        if spec.startswith("task-id="):
+            task_id = spec.split("=")[1]
+        elif spec.startswith("project="):
             if trust_domain is None:
                 raise ValueError(
                     "Can't specify parameters by project "
@@ -262,33 +304,33 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
                 )
             index = "{trust_domain}.v2.{project}.latest.taskgraph.decision".format(
                 trust_domain=trust_domain,
-                project=filename.split("=")[1],
+                project=spec.split("=")[1],
             )
             task_id = find_task_id(index)
 
         if task_id:
-            filename = get_artifact_url(task_id, "public/parameters.yml")
-        logger.info(f"Loading parameters from {filename}")
-        resp = requests.get(filename, stream=True)
+            spec = get_artifact_url(task_id, "public/parameters.yml")
+        logger.info(f"Loading parameters from {spec}")
+        resp = requests.get(spec, stream=True)
         resp.raise_for_status()
         f = resp.raw
 
-    if filename.endswith(".yml"):
+    if spec.endswith(".yml"):
         kwargs = yaml.load_stream(f)
-    elif filename.endswith(".json"):
+    elif spec.endswith(".json"):
         kwargs = json.load(f)
     else:
-        raise TypeError(f"Parameters file `{filename}` is not JSON or YAML")
+        raise TypeError(f"Parameters file `{spec}` is not JSON or YAML")
 
     kwargs.update(overrides)
 
     return Parameters(strict=strict, **kwargs)
 
 
-def parameters_loader(filename, strict=True, overrides=None):
+def parameters_loader(spec, strict=True, overrides=None):
     def get_parameters(graph_config):
         parameters = load_parameters_file(
-            filename,
+            spec,
             strict=strict,
             overrides=overrides,
             trust_domain=graph_config["trust-domain"],
