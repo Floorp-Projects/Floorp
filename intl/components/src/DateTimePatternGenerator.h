@@ -11,6 +11,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/intl/ICUError.h"
 
 namespace mozilla::intl {
 
@@ -35,9 +36,7 @@ class DateTimePatternGenerator final {
 
   ~DateTimePatternGenerator();
 
-  enum class Error { InternalError };
-
-  static Result<UniquePtr<DateTimePatternGenerator>, Error> TryCreate(
+  static Result<UniquePtr<DateTimePatternGenerator>, ICUError> TryCreate(
       const char* aLocale);
 
   enum class PatternMatchOption {
