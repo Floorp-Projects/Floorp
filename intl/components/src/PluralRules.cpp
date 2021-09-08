@@ -28,20 +28,20 @@ PluralRules::PluralRules(UPluralRules*& aPluralRules,
   aPluralRules = nullptr;
 }
 
-Result<UniquePtr<PluralRules>, PluralRules::Error> PluralRules::TryCreate(
+Result<UniquePtr<PluralRules>, ICUError> PluralRules::TryCreate(
     const std::string_view aLocale, const PluralRulesOptions& aOptions) {
   auto numberFormat =
       NumberFormat::TryCreate(aLocale, aOptions.ToNumberFormatOptions());
 
   if (numberFormat.isErr()) {
-    return Err(PluralRules::Error::InternalError);
+    return Err(numberFormat.unwrapErr());
   }
 
   auto numberRangeFormat = NumberRangeFormat::TryCreate(
       aLocale, aOptions.ToNumberRangeFormatOptions());
 
   if (numberRangeFormat.isErr()) {
-    return Err(PluralRules::Error::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   UErrorCode status = U_ZERO_ERROR;
@@ -52,14 +52,14 @@ Result<UniquePtr<PluralRules>, PluralRules::Error> PluralRules::TryCreate(
       uplrules_openForType(aLocale.data(), pluralType, &status);
 
   if (U_FAILURE(status)) {
-    return Err(PluralRules::Error::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return UniquePtr<PluralRules>(new PluralRules(
       pluralRules, numberFormat.unwrap(), numberRangeFormat.unwrap()));
 }
 
-Result<PluralRules::Keyword, PluralRules::Error> PluralRules::Select(
+Result<PluralRules::Keyword, ICUError> PluralRules::Select(
     const double aNumber) const {
   char16_t keyword[MAX_KEYWORD_LENGTH];
 
@@ -67,14 +67,14 @@ Result<PluralRules::Keyword, PluralRules::Error> PluralRules::Select(
       aNumber, keyword, MAX_KEYWORD_LENGTH, mPluralRules);
 
   if (lengthResult.isErr()) {
-    return Err(PluralRules::Error::FormatError);
+    return Err(lengthResult.unwrapErr());
   }
 
   return KeywordFromUtf16(Span(keyword, lengthResult.unwrap()));
 }
 
 #ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
-Result<PluralRules::Keyword, PluralRules::Error> PluralRules::SelectRange(
+Result<PluralRules::Keyword, ICUError> PluralRules::SelectRange(
     double aStart, double aEnd) const {
   char16_t keyword[MAX_KEYWORD_LENGTH];
 
@@ -82,19 +82,19 @@ Result<PluralRules::Keyword, PluralRules::Error> PluralRules::SelectRange(
       aStart, aEnd, keyword, MAX_KEYWORD_LENGTH, mPluralRules);
 
   if (lengthResult.isErr()) {
-    return Err(PluralRules::Error::FormatError);
+    return Err(lengthResult.unwrapErr());
   }
 
   return KeywordFromUtf16(Span(keyword, lengthResult.unwrap()));
 }
 #endif
 
-Result<EnumSet<PluralRules::Keyword>, PluralRules::Error>
-PluralRules::Categories() const {
+Result<EnumSet<PluralRules::Keyword>, ICUError> PluralRules::Categories()
+    const {
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = uplrules_getKeywords(mPluralRules, &status);
   if (U_FAILURE(status)) {
-    return Err(PluralRules::Error::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   ScopedICUObject<UEnumeration, uenum_close> closeEnum(enumeration);
@@ -104,7 +104,7 @@ PluralRules::Categories() const {
     int32_t keywordLength;
     const char* keyword = uenum_next(enumeration, &keywordLength, &status);
     if (U_FAILURE(status)) {
-      return Err(PluralRules::Error::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     if (!keyword) {
