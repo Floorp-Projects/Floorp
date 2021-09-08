@@ -5,11 +5,7 @@
 
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const {
-  div,
-  span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 const AccessibilityTreeFilter = createFactory(
   require("devtools/client/accessibility/components/AccessibilityTreeFilter")
 );
