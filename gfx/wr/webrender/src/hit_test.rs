@@ -354,10 +354,8 @@ impl HitTester {
     ) {
         self.spatial_nodes.clear();
 
-        self.spatial_nodes.reserve(spatial_tree.spatial_nodes.len());
-        for (index, node) in spatial_tree.spatial_nodes.iter().enumerate() {
-            let index = SpatialNodeIndex::new(index);
-
+        self.spatial_nodes.reserve(spatial_tree.spatial_node_count());
+        spatial_tree.iter_nodes(|index, node| {
             // If we haven't already seen a node for this pipeline, record this one as the root
             // node.
             self.pipeline_root_nodes.entry(node.pipeline_id).or_insert(index);
@@ -376,7 +374,7 @@ impl HitTester {
                     .into_fast_transform(),
                 external_scroll_offset: spatial_tree.external_scroll_offset(index),
             });
-        }
+        });
     }
 
     pub fn hit_test(&self, test: HitTest) -> HitTestResult {

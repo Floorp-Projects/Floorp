@@ -397,7 +397,7 @@ impl TextRunPrimitive {
         device_pixel_scale: DevicePixelScale,
         spatial_tree: &SpatialTree,
     ) -> RasterSpace {
-        let prim_spatial_node = &spatial_tree.spatial_nodes[prim_spatial_node_index.0 as usize];
+        let prim_spatial_node = spatial_tree.get_spatial_node(prim_spatial_node_index);
         if prim_spatial_node.is_ancestor_or_self_zooming {
             if low_quality_pinch_zoom {
                 // In low-quality mode, we set the scale to be 1.0. However, the device-pixel
