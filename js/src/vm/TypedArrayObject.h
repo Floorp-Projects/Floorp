@@ -21,19 +21,6 @@
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 
-#define JS_FOR_EACH_TYPED_ARRAY(MACRO) \
-  MACRO(int8_t, Int8)                  \
-  MACRO(uint8_t, Uint8)                \
-  MACRO(int16_t, Int16)                \
-  MACRO(uint16_t, Uint16)              \
-  MACRO(int32_t, Int32)                \
-  MACRO(uint32_t, Uint32)              \
-  MACRO(float, Float32)                \
-  MACRO(double, Float64)               \
-  MACRO(uint8_clamped, Uint8Clamped)   \
-  MACRO(int64_t, BigInt64)             \
-  MACRO(uint64_t, BigUint64)
-
 namespace js {
 
 /*

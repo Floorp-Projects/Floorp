@@ -33,98 +33,68 @@ class JS_PUBLIC_API AutoRequireNoGC;
 
 }  // namespace JS
 
+// JS_FOR_EACH_TYPED_ARRAY(MACRO) expands MACRO once for each specific
+// typed array subtype (Int8Array, Float64Array, ...), passing arguments
+// as MACRO(ExternalT, NativeT, Name) where
+//
+// ExternalT - externally-exposed element type (eg uint8_t)
+//
+// NativeT - element type used for the implementation (eg js::uint8_clamped_t)
+//   Note that this type is not exposed publicly. Internal files need to
+//   #include <vm/Uint8Clamped.h> to see it.
+//
+// Name - usable as both a js::Scalar::Type value (eg
+//   js::Scalar::Uint8Clamped) and the stem of a full typed array name (eg
+//   Uint8ClampedArray).
+//
+#define JS_FOR_EACH_TYPED_ARRAY(MACRO)            \
+  MACRO(int8_t, int8_t, Int8)                     \
+  MACRO(uint8_t, uint8_t, Uint8)                  \
+  MACRO(int16_t, int16_t, Int16)                  \
+  MACRO(uint16_t, uint16_t, Uint16)               \
+  MACRO(int32_t, int32_t, Int32)                  \
+  MACRO(uint32_t, uint32_t, Uint32)               \
+  MACRO(float, float, Float32)                    \
+  MACRO(double, double, Float64)                  \
+  MACRO(uint8_t, js::uint8_clamped, Uint8Clamped) \
+  MACRO(int64_t, int64_t, BigInt64)               \
+  MACRO(uint64_t, uint64_t, BigUint64)
+
 /*
+ * JS_New(type)Array:
+ *
  * Create a new typed array with nelements elements.
  *
  * These functions (except the WithBuffer variants) fill in the array with
  * zeros.
- */
-
-extern JS_PUBLIC_API JSObject* JS_NewInt8Array(JSContext* cx, size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewUint8Array(JSContext* cx,
-                                                size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewUint8ClampedArray(JSContext* cx,
-                                                       size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewInt16Array(JSContext* cx,
-                                                size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewUint16Array(JSContext* cx,
-                                                 size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewInt32Array(JSContext* cx,
-                                                size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewUint32Array(JSContext* cx,
-                                                 size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewFloat32Array(JSContext* cx,
-                                                  size_t nelements);
-extern JS_PUBLIC_API JSObject* JS_NewFloat64Array(JSContext* cx,
-                                                  size_t nelements);
-
-/*
+ *
+ * JS_New(type)ArrayFromArray:
+ *
  * Create a new typed array and copy in values from the given object. The
  * object is used as if it were an array; that is, the new array (if
  * successfully created) will have length given by array.length, and its
  * elements will be those specified by array[0], array[1], and so on, after
  * conversion to the typed array element type.
- */
-
-extern JS_PUBLIC_API JSObject* JS_NewInt8ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewUint8ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewUint8ClampedArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewInt16ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewUint16ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewInt32ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewUint32ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewFloat32ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-extern JS_PUBLIC_API JSObject* JS_NewFloat64ArrayFromArray(
-    JSContext* cx, JS::Handle<JSObject*> array);
-
-/*
+ *
+ * JS_New(type)ArrayWithBuffer:
+ *
  * Create a new typed array using the given ArrayBuffer or
  * SharedArrayBuffer for storage.  The length value is optional; if -1
  * is passed, enough elements to use up the remainder of the byte
  * array is used as the default value.
  */
 
-extern JS_PUBLIC_API JSObject* JS_NewInt8ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewUint8ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewUint8ClampedArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewInt16ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewUint16ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewInt32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewUint32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewBigInt64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewBigUint64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewFloat32ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
-extern JS_PUBLIC_API JSObject* JS_NewFloat64ArrayWithBuffer(
-    JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset,
-    int64_t length);
+#define DECLARE_TYPED_ARRAY_CREATION_API(ExternalType, NativeType, Name)   \
+  extern JS_PUBLIC_API JSObject* JS_New##Name##Array(JSContext* cx,        \
+                                                     size_t nelements);    \
+  extern JS_PUBLIC_API JSObject* JS_New##Name##ArrayFromArray(             \
+      JSContext* cx, JS::Handle<JSObject*> array);                         \
+  extern JS_PUBLIC_API JSObject* JS_New##Name##ArrayWithBuffer(            \
+      JSContext* cx, JS::Handle<JSObject*> arrayBuffer, size_t byteOffset, \
+      int64_t length);
+
+JS_FOR_EACH_TYPED_ARRAY(DECLARE_TYPED_ARRAY_CREATION_API)
+#undef DECLARE_TYPED_ARRAY_CREATION_API
 
 /**
  * Check whether obj supports JS_GetTypedArray* APIs. Note that this may return
@@ -192,46 +162,10 @@ extern JS_PUBLIC_API JSObject* UnwrapReadableStream(JSObject* obj);
 
 namespace detail {
 
-extern JS_PUBLIC_DATA const JSClass* const Int8ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Uint8ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Uint8ClampedArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Int16ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Uint16ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Int32ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Uint32ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const BigInt64ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const BigUint64ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Float32ArrayClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const Float64ArrayClassPtr;
-
 constexpr size_t TypedArrayLengthSlot = 1;
 constexpr size_t TypedArrayDataSlot = 3;
 
 }  // namespace detail
-
-#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                         \
-  inline void Get##Type##ArrayLengthAndData(                                   \
-      JSObject* obj, size_t* length, bool* isSharedMemory, type** data) {      \
-    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);              \
-    const JS::Value& lenSlot =                                                 \
-        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);                \
-    *length = size_t(lenSlot.toPrivate());                                     \
-    *isSharedMemory = JS_GetTypedArraySharedness(obj);                         \
-    *data = JS::GetMaybePtrFromReservedSlot<type>(obj,                         \
-                                                  detail::TypedArrayDataSlot); \
-  }
-
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int8, int8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Uint8, uint8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Uint8Clamped, uint8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int16, int16_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Uint16, uint16_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int32, int32_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Uint32, uint32_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float32, float)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float64, double)
-
-#undef JS_DEFINE_DATA_AND_LENGTH_ACCESSOR
 
 // This one isn't inlined because it's rather tricky (by dint of having to deal
 // with a dozen-plus classes and varying slot layouts.
@@ -332,46 +266,6 @@ extern JS_PUBLIC_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj);
  */
 extern JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj);
 
-/*
- * Return a pointer to the start of the data referenced by a typed array. The
- * data is still owned by the typed array, and should not be modified on
- * another thread. Furthermore, the pointer can become invalid on GC (if the
- * data is small and fits inside the array's GC header), so callers must take
- * care not to hold on across anything that could GC.
- *
- * |obj| must have passed a JS_Is*Array test, or somehow be known that it would
- * pass such a test: it is a typed array or a wrapper of a typed array, and the
- * unwrapping will succeed.
- *
- * |*isSharedMemory| will be set to true if the typed array maps a
- * SharedArrayBuffer, otherwise to false.
- */
-
-extern JS_PUBLIC_API int8_t* JS_GetInt8ArrayData(JSObject* obj,
-                                                 bool* isSharedMemory,
-                                                 const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API uint8_t* JS_GetUint8ArrayData(JSObject* obj,
-                                                   bool* isSharedMemory,
-                                                   const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API uint8_t* JS_GetUint8ClampedArrayData(
-    JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API int16_t* JS_GetInt16ArrayData(JSObject* obj,
-                                                   bool* isSharedMemory,
-                                                   const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API uint16_t* JS_GetUint16ArrayData(
-    JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API int32_t* JS_GetInt32ArrayData(JSObject* obj,
-                                                   bool* isSharedMemory,
-                                                   const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API uint32_t* JS_GetUint32ArrayData(
-    JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API float* JS_GetFloat32ArrayData(JSObject* obj,
-                                                   bool* isSharedMemory,
-                                                   const JS::AutoRequireNoGC&);
-extern JS_PUBLIC_API double* JS_GetFloat64ArrayData(JSObject* obj,
-                                                    bool* isSharedMemory,
-                                                    const JS::AutoRequireNoGC&);
-
 /**
  * Same as above, but for any kind of ArrayBufferView. Prefer the type-specific
  * versions when possible.
@@ -429,6 +323,208 @@ namespace JS {
  * |obj| must pass a JS_IsArrayBufferViewObject test.
  */
 JS_PUBLIC_API bool IsLargeArrayBufferView(JSObject* obj);
+
+namespace detail {
+
+// Map from eg Uint8Clamped -> uint8_t, Uint8 -> uint8_t, or Float64 ->
+// double. Used as the DataType within a JS::TypedArray specialization.
+template <js::Scalar::Type ArrayType>
+struct ExternalTypeOf {};
+
+#define DEFINE_ELEMENT_TYPES(ExternalT, NativeT, Name) \
+  template <>                                          \
+  struct ExternalTypeOf<js::Scalar::Name> {            \
+    using Type = ExternalT;                            \
+  };
+JS_FOR_EACH_TYPED_ARRAY(DEFINE_ELEMENT_TYPES)
+#undef DEFINE_ELEMENT_TYPES
+
+template <js::Scalar::Type ArrayType>
+using ExternalTypeOf_t = typename ExternalTypeOf<ArrayType>::Type;
+
+}  // namespace detail
+
+// A class holding a JSObject referring to a buffer of data. Either an
+// ArrayBufferObject or some sort of ArrayBufferViewObject (see below).
+// Note that this will always hold an unwrapped object.
+class JS_PUBLIC_API ArrayBufferOrView {
+ protected:
+  Heap<JSObject*> obj;
+
+  explicit ArrayBufferOrView(JSObject* unwrapped) : obj(unwrapped) {}
+
+ public:
+  // ArrayBufferOrView subclasses will set `obj` to nullptr if wrapping an
+  // object of the wrong type. So this allows:
+  //
+  //   auto view = JS::TypedArray<js::Scalar::Int8>::fromObject(obj);
+  //   if (!view) { ... }
+  //
+  explicit operator bool() const { return !!obj; }
+
+  // Allow use as Rooted<JS::ArrayBufferOrView>.
+  void trace(JSTracer* trc) {
+    TraceEdge(trc, &obj, "ArrayBufferOrView object");
+  }
+
+  void reset() { obj = nullptr; }
+
+  JSObject* asObject() const { return obj; }
+};
+
+// A view into an ArrayBuffer, either a DataViewObject or a Typed Array variant.
+class JS_PUBLIC_API ArrayBufferView : public ArrayBufferOrView {
+ protected:
+  explicit ArrayBufferView(JSObject* unwrapped)
+      : ArrayBufferOrView(unwrapped) {}
+};
+
+// Base type of all Typed Array variants.
+class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
+ protected:
+  explicit TypedArray_base(JSObject* unwrapped) : ArrayBufferView(unwrapped) {}
+
+  static const JSClass* const classes;
+
+ public:
+  static TypedArray_base fromObject(JSObject* unwrapped);
+};
+
+template <js::Scalar::Type TypedArrayElementType>
+class JS_PUBLIC_API TypedArray : public TypedArray_base {
+ protected:
+  explicit TypedArray(JSObject* obj) : TypedArray_base(obj) {}
+
+ public:
+  using DataType = detail::ExternalTypeOf_t<TypedArrayElementType>;
+
+  static constexpr js::Scalar::Type Scalar = TypedArrayElementType;
+
+  // This cannot be a static data member because on Windows,
+  // __declspec(dllexport) causes the class to be instantiated immediately,
+  // leading to errors when later explicit specializations of inline member
+  // functions are encountered ("error: explicit specialization of 'ClassPtr'
+  // after instantiation"). And those inlines need to be defined outside of the
+  // class due to order dependencies. This is the only way I could get it to
+  // work on both Windows and POSIX.
+  static const JSClass* clasp() {
+    return &TypedArray_base::classes[static_cast<int>(TypedArrayElementType)];
+  }
+
+  static TypedArray create(JSContext* cx, size_t nelements);
+  static TypedArray fromArray(JSContext* cx, HandleObject other);
+  static TypedArray fromBuffer(JSContext* cx, HandleObject arrayBuffer,
+                               size_t byteOffset, int64_t length);
+
+  // Return an interface wrapper around `obj`, or around nullptr if `obj` is not
+  // an unwrapped typed array of the correct type.
+  static inline TypedArray fromObject(JSObject* unwrapped) {
+    if (GetClass(unwrapped) == clasp()) {
+      return TypedArray(unwrapped);
+    }
+    return TypedArray(nullptr);
+  }
+
+  bool isDetached();
+
+  DataType* getData(bool* isSharedMemory, const JS::AutoRequireNoGC&);
+
+  DataType* getLengthAndData(size_t* length, bool* isSharedMemory);
+};
+
+} /* namespace JS */
+
+/*
+ * ExternalType* JS_Get(type)ArrayData(JSObject* obj,
+ *                                     bool* isSharedMemory,
+ *                                     const JS::AutoRequireNoGC&)
+ *
+ * void js::Get(type)ArrayLengthAndData(JSObject* obj,
+ *                                      size_t* length,
+ *                                      bool* isSharedMemory,
+ *                                      ExternalType** data)
+ *
+ * Return a pointer to the start of the data referenced by a typed array. The
+ * data is still owned by the typed array, and should not be modified on
+ * another thread. Furthermore, the pointer can become invalid on GC (if the
+ * data is small and fits inside the array's GC header), so callers must take
+ * care not to hold on across anything that could GC.
+ *
+ * |obj| must have passed a JS_Is*Array test, or somehow be known that it would
+ * pass such a test: it is a typed array or a wrapper of a typed array, and the
+ * unwrapping will succeed.
+ *
+ * |*isSharedMemory| will be set to true if the typed array maps a
+ * SharedArrayBuffer, otherwise to false.
+ */
+
+#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(ExternalType, NativeType, Name) \
+  extern JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayData(              \
+      JSObject* maybeWrapped, bool* isSharedMemory,                        \
+      const JS::AutoRequireNoGC&);                                         \
+                                                                           \
+  namespace js {                                                           \
+  inline void Get##Name##ArrayLengthAndData(JSObject* unwrapped,           \
+                                            size_t* length,                \
+                                            bool* isSharedMemory,          \
+                                            ExternalType** data) {         \
+    MOZ_ASSERT(JS::GetClass(unwrapped) ==                                  \
+               JS::TypedArray<js::Scalar::Name>::clasp());                 \
+    const JS::Value& lenSlot =                                             \
+        JS::GetReservedSlot(unwrapped, detail::TypedArrayLengthSlot);      \
+    *length = size_t(lenSlot.toPrivate());                                 \
+    *isSharedMemory = JS_GetTypedArraySharedness(unwrapped);               \
+    *data = JS::GetMaybePtrFromReservedSlot<ExternalType>(                 \
+        unwrapped, detail::TypedArrayDataSlot);                            \
+  }                                                                        \
+  } /* namespace js */
+
+JS_FOR_EACH_TYPED_ARRAY(JS_DEFINE_DATA_AND_LENGTH_ACCESSOR)
+#undef JS_DEFINE_DATA_AND_LENGTH_ACCESSOR
+
+namespace JS {
+
+#define IMPL_TYPED_ARRAY_CLASS(ExternalType, NativeType, Name)                \
+  template <>                                                                 \
+  inline JS::TypedArray<js::Scalar::Name>                                     \
+  JS::TypedArray<js::Scalar::Name>::create(JSContext* cx, size_t nelements) { \
+    return fromObject(JS_New##Name##Array(cx, nelements));                    \
+  };                                                                          \
+                                                                              \
+  template <>                                                                 \
+  inline JS::TypedArray<js::Scalar::Name>                                     \
+  JS::TypedArray<js::Scalar::Name>::fromArray(JSContext* cx,                  \
+                                              HandleObject other) {           \
+    return fromObject(JS_New##Name##ArrayFromArray(cx, other));               \
+  };                                                                          \
+                                                                              \
+  template <>                                                                 \
+  inline JS::TypedArray<js::Scalar::Name>                                     \
+  JS::TypedArray<js::Scalar::Name>::fromBuffer(                               \
+      JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,             \
+      int64_t length) {                                                       \
+    return fromObject(                                                        \
+        JS_New##Name##ArrayWithBuffer(cx, arrayBuffer, byteOffset, length));  \
+  };                                                                          \
+                                                                              \
+  template <>                                                                 \
+  inline ExternalType* JS::TypedArray<js::Scalar::Name>::getData(             \
+      bool* isSharedMemory, const JS::AutoRequireNoGC& nogc) {                \
+    MOZ_ASSERT(!isDetached());                                                \
+    return JS_Get##Name##ArrayData(obj, isSharedMemory, nogc);                \
+  };                                                                          \
+                                                                              \
+  template <>                                                                 \
+  inline ExternalType* JS::TypedArray<js::Scalar::Name>::getLengthAndData(    \
+      size_t* length, bool* isSharedMemory) {                                 \
+    MOZ_ASSERT(!isDetached());                                                \
+    JS::TypedArray<js::Scalar::Name>::DataType* data;                         \
+    js::Get##Name##ArrayLengthAndData(obj, length, isSharedMemory, &data);    \
+    return data;                                                              \
+  };
+
+JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_CLASS)
+#undef IMPL_TYPED_ARRAY_CLASS
 
 }  // namespace JS
 
