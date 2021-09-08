@@ -239,17 +239,8 @@ export class TopSiteForm extends React.PureComponent {
       ? this.onPreviewButtonClick
       : this.onDoneButtonClick;
 
-    // When the newNewtabExperience is enabled by default, use only shortcut ids.
-    const addTopsitesHeaderL10nId =
-      this.props.newNewtabExperienceEnabled ||
-      this.props.customizationMenuEnabled
-        ? "newtab-topsites-add-shortcut-header"
-        : "newtab-topsites-add-topsites-header";
-    const editTopsitesHeaderL10nId =
-      this.props.newNewtabExperienceEnabled ||
-      this.props.customizationMenuEnabled
-        ? "newtab-topsites-edit-shortcut-header"
-        : "newtab-topsites-edit-topsites-header";
+    const addTopsitesHeaderL10nId = "newtab-topsites-add-shortcut-header";
+    const editTopsitesHeaderL10nId = "newtab-topsites-edit-shortcut-header";
     return (
       <form className="topsite-form" onSubmit={onSubmit}>
         <div className="form-input-container">
@@ -290,7 +281,6 @@ export class TopSiteForm extends React.PureComponent {
               link={previewLink}
               defaultStyle={requestFailed}
               title={this.state.label}
-              newNewtabExperienceEnabled={this.props.newNewtabExperienceEnabled}
             />
           </div>
         </div>

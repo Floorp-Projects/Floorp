@@ -2595,30 +2595,26 @@ main.has-snippet {
 .outer-wrapper.newtab-experience .collapsible-section[data-section-id=topsites] .section-top-bar {
   display: none;
 }
-.outer-wrapper.newtab-experience .collapsible-section .click-target-container .click-target span {
+.outer-wrapper.newtab-experience .collapsible-section .section-title {
   cursor: default;
   font-weight: 600;
   font-size: 17px;
   color: var(--newtab-background-primary-text-color);
 }
 
-.outer-wrapper:not(.newtab-experience) .collapsible-section .section-title span {
+.outer-wrapper:not(.newtab-experience) .collapsible-section .section-title {
   vertical-align: middle;
 }
 
 .collapsible-section {
   padding: 10px 25px;
-  transition-delay: 100ms;
-  transition-duration: 100ms;
-  transition-property: background-color;
+}
+.collapsible-section .section-title-container {
+  margin: 0;
 }
 .collapsible-section .section-title {
   font-size: 13px;
   font-weight: bold;
-  margin: 0;
-}
-.collapsible-section .section-title.grey-title,
-.collapsible-section .section-title span {
   color: var(--newtab-section-header-text-color);
   display: inline-block;
   fill: var(--newtab-section-header-text-color);
@@ -2626,28 +2622,20 @@ main.has-snippet {
 .collapsible-section .section-title.grey-title {
   vertical-align: middle;
 }
-.collapsible-section .section-title .click-target-container {
+.collapsible-section .section-title .section-title-contents {
   vertical-align: top;
 }
 @media (max-width: 609px) {
-  .collapsible-section .section-title .click-target-container {
+  .collapsible-section .section-title .section-title-contents {
     display: block;
   }
-  .collapsible-section .section-title .click-target-container .learn-more-link-wrapper {
+  .collapsible-section .section-title .section-title-contents .learn-more-link-wrapper {
     display: block;
     text-align: center;
   }
-  .collapsible-section .section-title .click-target-container .learn-more-link-wrapper .learn-more-link {
+  .collapsible-section .section-title .section-title-contents .learn-more-link-wrapper .learn-more-link {
     margin-inline-start: 0;
   }
-}
-.collapsible-section .section-title .click-target-container .click-target {
-  white-space: nowrap;
-  cursor: pointer;
-}
-.collapsible-section .section-title .collapsible-arrow {
-  margin-inline-start: 8px;
-  margin-top: -1px;
 }
 .collapsible-section .section-top-bar {
   min-height: 19px;
@@ -2694,7 +2682,7 @@ main.has-snippet {
   fill: var(--newtab-section-active-contextmenu-color);
 }
 .collapsible-section .learn-more-link {
-  font-size: 11px;
+  font-size: 13px;
   margin-inline-start: 12px;
 }
 .collapsible-section .learn-more-link a {
@@ -2710,16 +2698,6 @@ main.has-snippet {
 .collapsible-section .section-body.animating {
   overflow: hidden;
   pointer-events: none;
-}
-.collapsible-section.animation-enabled .section-title .collapsible-arrow {
-  transition: transform 0.5s cubic-bezier(0.07, 0.95, 0, 1);
-}
-.collapsible-section.animation-enabled .section-body {
-  transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1);
-}
-.collapsible-section.collapsed .section-body {
-  max-height: 0;
-  overflow: hidden;
 }
 @media (min-width: 610px) and (max-width: 865px) {
   .collapsible-section[data-section-id=topstories] .card-outer:first-child {

@@ -116,12 +116,6 @@ const FeatureManifest = {
     description: "The about:newtab page",
     isEarlyStartup: true,
     variables: {
-      newNewtabExperienceEnabled: {
-        type: "boolean",
-        fallbackPref:
-          "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
-        description: "Is the new UI enabled?",
-      },
       customizationMenuEnabled: {
         type: "boolean",
         fallbackPref:

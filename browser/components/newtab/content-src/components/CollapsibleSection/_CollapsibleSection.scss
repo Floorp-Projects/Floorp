@@ -6,15 +6,11 @@
       }
     }
 
-    .click-target-container {
-      .click-target {
-        span {
-          cursor: default;
-          font-weight: 600;
-          font-size: 17px;
-          color: var(--newtab-background-primary-text-color);
-        }
-      }
+    .section-title {
+      cursor: default;
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--newtab-background-primary-text-color);
     }
   }
 }
@@ -22,36 +18,30 @@
 .outer-wrapper:not(.newtab-experience) {
   .collapsible-section {
     .section-title {
-      span {
-        vertical-align: middle;
-      }
+      vertical-align: middle;
     }
   }
 }
 
 .collapsible-section {
   padding: $section-vertical-padding $section-horizontal-padding;
-  transition-delay: 100ms;
-  transition-duration: 100ms;
-  transition-property: background-color;
+
+  .section-title-container {
+    margin: 0;
+  }
 
   .section-title {
     font-size: $section-title-font-size;
     font-weight: bold;
-    margin: 0;
-
-    &.grey-title,
-    span {
-      color: var(--newtab-section-header-text-color);
-      display: inline-block;
-      fill: var(--newtab-section-header-text-color);
-    }
+    color: var(--newtab-section-header-text-color);
+    display: inline-block;
+    fill: var(--newtab-section-header-text-color);
 
     &.grey-title {
       vertical-align: middle;
     }
 
-    .click-target-container {
+    .section-title-contents {
       // Center "What's Pocket?" for "mobile" viewport
       @media (max-width: $break-point-medium - 1) {
         display: block;
@@ -67,16 +57,6 @@
       }
 
       vertical-align: top;
-
-      .click-target {
-        white-space: nowrap;
-        cursor: pointer;
-      }
-    }
-
-    .collapsible-arrow {
-      margin-inline-start: 8px;
-      margin-top: -1px;
     }
   }
 
@@ -135,7 +115,7 @@
   }
 
   .learn-more-link {
-    font-size: 11px;
+    font-size: 13px;
     margin-inline-start: 12px;
 
     a {
@@ -159,25 +139,6 @@
     }
   }
 
-  &.animation-enabled {
-    .section-title {
-      .collapsible-arrow {
-        transition: transform 0.5s $photon-easing;
-      }
-    }
-
-    .section-body {
-      transition: max-height 0.5s $photon-easing;
-    }
-  }
-
-  &.collapsed {
-    .section-body {
-      max-height: 0;
-      overflow: hidden;
-    }
-  }
-
   // Hide first story card for the medium breakpoint to prevent orphaned third story
   &[data-section-id='topstories'] .card-outer:first-child {
     @media (min-width: $break-point-medium) and (max-width: $break-point-large - 1) {
@@ -185,4 +146,3 @@
     }
   }
 }
-
