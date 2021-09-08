@@ -4,36 +4,6 @@ $header-line-height: 24;
 $excerpt-font-size: 14;
 $excerpt-line-height: 20;
 
-.outer-wrapper:not(.newtab-experience) {
-  .ds-card {
-    .ds-card-link {
-      &:hover {
-        @include ds-fade-in($grey-30);
-
-        @include dark-theme-only {
-          @include ds-fade-in($grey-60);
-        }
-      }
-
-      &:focus {
-        @include ds-fade-in;
-
-        @include dark-theme-only {
-          @include ds-fade-in($blue-40-40);
-        }
-      }
-
-      &:active {
-        @include ds-fade-in($grey-30);
-
-        @include dark-theme-only {
-          @include ds-fade-in($grey-60);
-        }
-      }
-    }
-  }
-}
-
 .ds-card {
   display: flex;
   flex-direction: column;
@@ -109,6 +79,10 @@ $excerpt-line-height: 20;
     }
 
     &:focus {
+      @include ds-focus;
+
+      transition: none;
+
       header {
         @include dark-theme-only {
           color: $blue-40;
@@ -278,36 +252,5 @@ $excerpt-line-height: 20;
     line-height: $excerpt-line-height * 1px;
     color: $grey-90;
     margin: 0;
-  }
-}
-
-// Special styling for the New Tab Experience styles,
-// This is to be incorporated once the styles are made permanent
-.outer-wrapper.newtab-experience {
-  .ds-card {
-    // Temporary fix to have the context button focus blend in with other New Tab Experience context menu focus
-    .context-menu-button {
-      &:is(:active, :focus) {
-        outline: 0;
-        fill: var(--newtab-primary-action-background);
-        border: 1px solid var(--newtab-primary-action-background);
-      }
-    }
-
-    .ds-card-link {
-      &:focus {
-        @include ds-focus-nte;
-
-        transition: none;
-
-        header {
-          @include dark-theme-only {
-            color: $blue-40;
-          }
-
-          color: $blue-60;
-        }
-      }
-    }
   }
 }

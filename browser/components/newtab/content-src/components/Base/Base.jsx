@@ -199,7 +199,6 @@ export class BaseContent extends React.PureComponent {
         "fixed-search",
       prefs.showSearch && noSectionsEnabled && "only-search",
       prefs["logowordmark.alwaysVisible"] && "visible-logo",
-      "newtab-experience",
     ]
       .filter(v => v)
       .join(" ");

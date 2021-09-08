@@ -1,28 +1,3 @@
-.outer-wrapper.newtab-experience {
-  .collapsible-section {
-    &[data-section-id='topsites'] {
-      .section-top-bar {
-        display: none;
-      }
-    }
-
-    .section-title {
-      cursor: default;
-      font-weight: 600;
-      font-size: 17px;
-      color: var(--newtab-background-primary-text-color);
-    }
-  }
-}
-
-.outer-wrapper:not(.newtab-experience) {
-  .collapsible-section {
-    .section-title {
-      vertical-align: middle;
-    }
-  }
-}
-
 .collapsible-section {
   padding: $section-vertical-padding $section-horizontal-padding;
 
@@ -32,12 +7,13 @@
 
   .section-title {
     font-size: $section-title-font-size;
-    font-weight: bold;
-    color: var(--newtab-section-header-text-color);
-    display: inline-block;
-    fill: var(--newtab-section-header-text-color);
+    font-weight: 600;
+    color: var(--newtab-background-primary-text-color);
 
     &.grey-title {
+      color: var(--newtab-section-header-text-color);
+      display: inline-block;
+      fill: var(--newtab-section-header-text-color);
       vertical-align: middle;
     }
 
@@ -93,6 +69,12 @@
     &.animating {
       overflow: hidden;
       pointer-events: none;
+    }
+  }
+
+  &[data-section-id='topsites'] {
+    .section-top-bar {
+      display: none;
     }
   }
 

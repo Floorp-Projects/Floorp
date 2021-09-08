@@ -1,74 +1,28 @@
 @use 'sass:math';
 
-// Special styling for the New Tab Experience styles,
-// This is to be incorporated once the styles are made permanent
-.outer-wrapper.newtab-experience {
-  .card-outer {
-    border-radius: $border-radius-new;
-
-    &:is(:focus):not(.placeholder) {
-      @include ds-focus-nte;
-
-      transition: none;
-    }
-
-    &:hover {
-      box-shadow: none;
-      transition: none;
-    }
-
-    .card {
-      box-shadow: var(--newtab-card-first-shadow);
-      border-radius: $border-radius-new;
-    }
-
-    .card-preview-image-outer {
-      border-radius: $border-radius-new $border-radius-new 0 0;
-    }
-
-    // Temporary fix to have the context button focus blend in with other New Tab Experience context menu focus
-    .context-menu-button {
-      &:is(:active, :focus) {
-        outline: 0;
-        fill: var(--newtab-primary-action-background);
-        border: 1px solid var(--newtab-primary-action-background);
-      }
-    }
-
-    > a {
-      &:is(:focus) {
-        .card {
-          @include ds-focus-nte;
-        }
-      }
-    }
-  }
-}
-
-.outer-wrapper:not(.newtab-experience) {
-  .card-outer {
-    &:is(:hover, :focus, .active):not(.placeholder) {
-      @include fade-in-card;
-    }
-  }
-}
-
 .card-outer {
   @include context-menu-button;
   background: var(--newtab-card-background-color);
-  border-radius: $border-radius;
+  border-radius: $border-radius-new;
   display: inline-block;
   height: $card-height;
   margin-inline-end: $base-gutter;
   position: relative;
   width: 100%;
 
+  &:is(:focus):not(.placeholder) {
+    @include ds-focus;
+
+    transition: none;
+  }
+
+  &:hover {
+    box-shadow: none;
+    transition: none;
+  }
+
   &.placeholder {
     background: transparent;
-
-    .card {
-      box-shadow: inset $inner-box-shadow;
-    }
 
     .card-preview-image-outer,
     .card-context {
@@ -77,8 +31,8 @@
   }
 
   .card {
-    border-radius: $border-radius;
-    box-shadow: var(--newtab-card-shadow);
+    border-radius: $border-radius-new;
+    box-shadow: var(--newtab-card-first-shadow);
     height: 100%;
   }
 
@@ -89,6 +43,12 @@
     outline: none;
     position: absolute;
     width: 100%;
+
+    &:is(:focus) {
+      .card {
+        @include ds-focus;
+      }
+    }
 
     &:is(.active, :focus) {
       .card {
@@ -120,7 +80,7 @@
 
   .card-preview-image-outer {
     background-color: $grey-30;
-    border-radius: $border-radius $border-radius 0 0;
+    border-radius: $border-radius-new $border-radius-new 0 0;
     height: $card-preview-image-height;
     overflow: hidden;
     position: relative;

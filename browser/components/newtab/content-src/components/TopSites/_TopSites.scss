@@ -20,6 +20,12 @@ $letter-fallback-color: $white;
   margin: 0 (-$half-base-gutter);
   padding: 0;
 
+  &:not(.dnd-active) {
+    .top-site-outer:is(.active, :focus, :hover) {
+      background: var(--newtab-topsites-outer-card-hover);
+    }
+  }
+
   // Two columns
   @media (max-width: $break-point-medium) {
     > :nth-child(2n+1) {
@@ -37,31 +43,31 @@ $letter-fallback-color: $white;
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width) {
+  @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width-nte) {
     :nth-child(4n+3) {
       @include context-menu-open-left;
     }
   }
 
   // Six columns
-  @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width) {
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width-nte) {
     :nth-child(6n) {
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width) {
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width-nte) {
     :nth-child(6n+5) {
       @include context-menu-open-left;
     }
   }
 
   // Eight columns
-  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width-nte) {
     :nth-child(8n) {
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width) {
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width-nte) {
     :nth-child(8n+7) {
       @include context-menu-open-left;
     }
@@ -92,7 +98,10 @@ $letter-fallback-color: $white;
 
 // container for drop zone
 .top-site-outer {
-  padding: 0 $half-base-gutter;
+  width: 120px;
+  padding: 20px $half-base-gutter 4px;
+  border-radius: 8px;
+
   display: inline-block;
 
   // container for context menu
@@ -106,9 +115,44 @@ $letter-fallback-color: $white;
     }
   }
 
+  &:is(:hover) {
+    .context-menu-button {
+      opacity: 1;
+    }
+  }
+
+  .context-menu-button {
+    background-image: url('chrome://global/skin/icons/more.svg');
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    fill: var(--newtab-icon-primary-color);
+    -moz-context-properties: fill;
+    height: 20px;
+    width: 20px;
+    inset-inline-end: -9px;
+    opacity: 0;
+    position: absolute;
+    top: -20px;
+    transition: opacity 200ms;
+
+    &:is(:active, :focus) {
+      outline: 0;
+      opacity: 1;
+      background-color: var(--newtab-topsites-context-menu-hover);
+      fill: var(--newtab-primary-action-background);
+    }
+  }
+
   .tile { // sass-lint:disable-block property-sort-order
-    border-radius: $top-sites-border-radius;
-    box-shadow: inset $inner-box-shadow, var(--newtab-card-shadow);
+    border-radius: $nt-experience-top-sites-border-radius;
+    box-shadow: $newtab-card-firstshadow;
+    background-color: var(--newtab-topsites-background-color);
+    justify-content: center;
+    margin: 0 auto;
+    height: $top-sites-size-nte;
+    width: $top-sites-size-nte;
+
     cursor: pointer;
     position: relative;
 
@@ -118,7 +162,6 @@ $letter-fallback-color: $white;
     display: flex;
     font-size: 32px;
     font-weight: 200;
-    justify-content: center;
     text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
 
     .icon-wrapper {
@@ -167,8 +210,8 @@ $letter-fallback-color: $white;
   .default-icon,
   .search-topsite {
     background-size: $default-icon-size;
-    height: $default-icon-wrapper-size;
-    width: $default-icon-wrapper-size;
+    height: $nt-experience-default-icon-wrapper-size;
+    width: $nt-experience-default-icon-wrapper-size;
 
     // for corner letter fallback
     align-items: center;
@@ -183,7 +226,7 @@ $letter-fallback-color: $white;
 
   .search-topsite {
     background-image: url('chrome://global/skin/icons/search-glass.svg');
-    background-size: 26px;
+    background-size: 16px;
     background-color: $blue-60;
     border-radius: $default-icon-wrapper-size;
     -moz-context-properties: fill;
@@ -191,21 +234,32 @@ $letter-fallback-color: $white;
     box-shadow: var(--newtab-card-shadow);
     transition-duration: $hover-transition-duration;
     transition-property: background-size, bottom, inset-inline-end, height, width;
-    height: $search-icon-wrapper-size;
-    width: $search-icon-wrapper-size;
+    height: 32px;
+    width: 32px;
     bottom: -$default-icon-offset;
     inset-inline-end: -$default-icon-offset;
   }
 
+  &:hover .search-topsite {
+    $hover-icon-wrapper-size: $search-icon-wrapper-size + 4;
+  }
+
+  &.placeholder {
+    .tile {
+      box-shadow: $inner-box-shadow;
+    }
+  }
+
   .title {
-    color: var(--newtab-topsites-label-color);
-    font: message-box;
-    padding-top: 4px;
+    color: var(--newtab-background-primary-text-color);
+    padding-top: 8px;
+    font: caption;
     text-align: center;
     position: relative;
 
     .icon {
-      fill: var(--newtab-icon-tertiary-color);
+      margin-inline-end: 2px;
+      fill: var(--newtab-background-primary-text-color);
     }
 
     span {
@@ -551,214 +605,6 @@ $letter-fallback-color: $white;
   [type='checkbox']:not(:checked):focus + label::before {
     border: 1px dotted var(--newtab-link-primary-color);
   }
-}
-
-.outer-wrapper {
-  // Special styling for when we are using the old new tab styling,
-  // this is to be removed once the changes are made permanent
-  &:not(.newtab-experience) {
-    .top-site-outer {
-      @include context-menu-button;
-
-      .tile {
-        height: $top-sites-size;
-        width: $top-sites-size;
-        transition: box-shadow $hover-transition-duration;
-      }
-
-      .top-site-icon {
-        box-shadow: var(--newtab-topsites-icon-shadow);
-      }
-
-      .title {
-        width: $top-sites-size;
-
-        &.has-icon {
-          span {
-            padding: 0 13px;
-          }
-        }
-
-        .icon {
-          inset-inline-start: 0;
-          position: absolute;
-          top: 0.5em;
-        }
-      }
-
-      // container for context menu
-      .top-site-inner {
-        position: relative;
-
-        > a {
-          color: inherit;
-          display: block;
-          outline: none;
-
-          &:is(.active, :focus) {
-            .tile {
-              @include fade-in;
-            }
-          }
-        }
-      }
-
-      .default-icon,
-      .search-topsite {
-        bottom: -$default-icon-offset;
-        inset-inline-end: -$default-icon-offset;
-      }
-
-      &:hover .search-topsite {
-        $hover-icon-wrapper-size: $default-icon-wrapper-size + 4;
-        $hover-icon-offset: -$default-icon-offset - 3;
-
-        background-size: 28px;
-        border-radius: $hover-icon-wrapper-size;
-        bottom: $hover-icon-offset;
-        height: $hover-icon-wrapper-size;
-        inset-inline-end: $hover-icon-offset;
-        width: $hover-icon-wrapper-size;
-      }
-
-      &.placeholder {
-        .tile {
-          box-shadow: inset $inner-box-shadow;
-        }
-      }
-    }
-
-    .top-sites-list {
-      &:not(.dnd-active) {
-        .top-site-outer:is(.active, :focus, :hover) {
-          .tile {
-            @include fade-in;
-          }
-
-          @include context-menu-button-hover;
-        }
-      }
-
-      li {
-        margin: 0 0 $top-sites-vertical-space;
-      }
-    }
-  }
-
-  // Special styling for the New Tab Experience styles,
-  // This is to be incorporated once the styles are made permanent
-  &.newtab-experience {
-    .top-site-outer {
-      @include context-menu-button-newtab-experience;
-      width: 120px;
-      padding-block: 20px 4px;
-      border-radius: 8px;
-
-      .edit-button {
-        background-image: url('#{$image-path}glyph-edit-16.svg');
-      }
-
-      .tile {
-        border-radius: $nt-experience-top-sites-border-radius;
-        box-shadow: $newtab-card-firstshadow;
-        background-color: var(--newtab-topsites-background-color);
-        justify-content: center;
-        margin: 0 auto;
-        height: $top-sites-size-nte;
-        width: $top-sites-size-nte;
-      }
-
-      .title {
-        color: var(--newtab-background-primary-text-color);
-        padding-top: 8px;
-        font: caption;
-
-        .icon {
-          margin-inline-end: 2px;
-          fill: var(--newtab-background-primary-text-color);
-        }
-      }
-
-      .default-icon,
-      .search-topsite {
-        height: $nt-experience-default-icon-wrapper-size;
-        width: $nt-experience-default-icon-wrapper-size;
-      }
-
-      .search-topsite {
-        background-size: 16px;
-        height: 32px;
-        width: 32px;
-      }
-
-      &:hover .search-topsite {
-        $hover-icon-wrapper-size: $search-icon-wrapper-size + 4;
-      }
-
-      &.placeholder {
-        .tile {
-          box-shadow: $inner-box-shadow;
-        }
-      }
-    }
-
-    .top-sites-list {
-      // Two columns
-      @media (max-width: $break-point-medium) {
-        > :nth-child(2n+1) {
-          @include context-menu-open-middle;
-        }
-
-        > :nth-child(2n) {
-          @include context-menu-open-left;
-        }
-      }
-
-      // Four columns
-      @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
-        :nth-child(4n) {
-          @include context-menu-open-left;
-        }
-      }
-      @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width-nte) {
-        :nth-child(4n+3) {
-          @include context-menu-open-left;
-        }
-      }
-
-      // Six columns
-      @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width-nte) {
-        :nth-child(6n) {
-          @include context-menu-open-left;
-        }
-      }
-      @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width-nte) {
-        :nth-child(6n+5) {
-          @include context-menu-open-left;
-        }
-      }
-
-      // Eight columns
-      @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width-nte) {
-        :nth-child(8n) {
-          @include context-menu-open-left;
-        }
-      }
-      @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width-nte) {
-        :nth-child(8n+7) {
-          @include context-menu-open-left;
-        }
-      }
-    }
-
-    &:not(.dnd-active) {
-      .top-site-outer:is(.active, :focus, :hover) {
-        @include nt-experience-context-menu-button-hover;
-        background: var(--newtab-topsites-outer-card-hover);
-      }
-    }
-  }
-
 }
 
 //used for tooltips below form element
