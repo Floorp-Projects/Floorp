@@ -97,7 +97,7 @@ static ICUResult FillBufferWithICUCall(Buffer& buffer,
     MOZ_ASSERT(length == length2);
   }
   if (!ICUSuccessForStringSpan(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   buffer.written(length);
@@ -127,7 +127,7 @@ static ICUResult FillVectorWithICUCall(Vector<CharType, InlineSize>& vector,
     MOZ_ASSERT(length == length2);
   }
   if (!ICUSuccessForStringSpan(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   mozilla::DebugOnly<bool> result = vector.resizeUninitialized(length);

@@ -4,6 +4,7 @@
 
 #include "mozilla/intl/PluralRules.h"
 
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/NumberRangeFormat.h"
 #include "mozilla/Utf8.h"
@@ -40,7 +41,7 @@ Result<UniquePtr<PluralRules>, ICUError> PluralRules::TryCreate(
       aLocale, aOptions.ToNumberRangeFormatOptions());
 
   if (numberRangeFormat.isErr()) {
-    return Err(ICUError::InternalError);
+    return Err(numberRangeFormat.unwrapErr());
   }
 
   UErrorCode status = U_ZERO_ERROR;
@@ -51,7 +52,7 @@ Result<UniquePtr<PluralRules>, ICUError> PluralRules::TryCreate(
       uplrules_openForType(aLocale.data(), pluralType, &status);
 
   if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   return UniquePtr<PluralRules>(new PluralRules(
@@ -93,7 +94,7 @@ Result<EnumSet<PluralRules::Keyword>, ICUError> PluralRules::Categories()
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = uplrules_getKeywords(mPluralRules, &status);
   if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   ScopedICUObject<UEnumeration, uenum_close> closeEnum(enumeration);
@@ -103,7 +104,7 @@ Result<EnumSet<PluralRules::Keyword>, ICUError> PluralRules::Categories()
     int32_t keywordLength;
     const char* keyword = uenum_next(enumeration, &keywordLength, &status);
     if (U_FAILURE(status)) {
-      return Err(ICUError::InternalError);
+      return Err(ToICUError(status));
     }
 
     if (!keyword) {

@@ -39,9 +39,10 @@ Result<Ok, ICUError> NumberFormat::initialize(
   if (mNumberFormatter) {
     UErrorCode status = U_ZERO_ERROR;
     mFormattedNumber = unumf_openResult(&status);
-    if (U_SUCCESS(status)) {
-      return Ok();
+    if (U_FAILURE(status)) {
+      return Err(ToICUError(status));
     }
+    return Ok();
   }
   return Err(ICUError::InternalError);
 }
@@ -52,15 +53,13 @@ Result<int32_t, ICUError> NumberFormat::selectFormatted(
   MOZ_ASSERT(keyword && pluralRules);
   UErrorCode status = U_ZERO_ERROR;
 
-  if (format(number).isErr()) {
-    return Err(ICUError::InternalError);
-  }
+  MOZ_TRY(format(number));
 
   int32_t utf16KeywordLength = uplrules_selectFormatted(
       pluralRules, mFormattedNumber, keyword, keywordSize, &status);
 
   if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   return utf16KeywordLength;
@@ -98,14 +97,14 @@ Result<std::u16string_view, ICUError> NumberFormat::formatResult() const {
   const UFormattedValue* formattedValue =
       unumf_resultAsValue(mFormattedNumber, &status);
   if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
+    return Err(ToICUError(status));
   }
 
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
