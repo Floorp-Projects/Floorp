@@ -401,22 +401,30 @@ TEST(MediaEventSource, MoveLambda)
   listener2.Disconnect();
 }
 
-class ClassForDestroyCheck final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ClassForDestroyCheck);
-
-  explicit ClassForDestroyCheck(bool* aIsDestroyed)
-      : mIsDestroyed(aIsDestroyed) {
-    EXPECT_FALSE(*aIsDestroyed);
+template <typename Bool>
+struct DestroyChecker {
+  explicit DestroyChecker(Bool* aIsDestroyed) : mIsDestroyed(aIsDestroyed) {
+    EXPECT_FALSE(*mIsDestroyed);
   }
-
-  int32_t RefCountNums() const { return mRefCnt; }
-
- private:
-  ~ClassForDestroyCheck() {
+  ~DestroyChecker() {
     EXPECT_FALSE(*mIsDestroyed);
     *mIsDestroyed = true;
   }
-  bool* const mIsDestroyed;
+
+ private:
+  Bool* const mIsDestroyed;
+};
+
+class ClassForDestroyCheck final : private DestroyChecker<bool> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ClassForDestroyCheck);
+
+  explicit ClassForDestroyCheck(bool* aIsDestroyed)
+      : DestroyChecker(aIsDestroyed) {}
+
+  int32_t RefCountNums() const { return mRefCnt; }
+
+ protected:
+  ~ClassForDestroyCheck() = default;
 };
 
 TEST(MediaEventSource, ResetFuncReferenceAfterDisconnect)
@@ -447,5 +455,27 @@ TEST(MediaEventSource, ResetFuncReferenceAfterDisconnect)
   // No one is holding reference to object, it should be destroyed
   // immediately.
   object = nullptr;
+  EXPECT_TRUE(isDestroyed);
+}
+
+class TestTaskQueue : public TaskQueue, private DestroyChecker<Atomic<bool>> {
+ public:
+  TestTaskQueue(already_AddRefed<nsIEventTarget> aTarget,
+                Atomic<bool>* aIsDestroyed)
+      : TaskQueue(std::move(aTarget)), DestroyChecker(aIsDestroyed) {}
+};
+
+TEST(MediaEventSource, ResetTargetAfterDisconnect)
+{
+  Atomic<bool> isDestroyed(false);
+  RefPtr<TaskQueue> queue = new TestTaskQueue(
+      GetMediaThreadPool(MediaThreadType::SUPERVISOR), &isDestroyed);
+  MediaEventProducer<void> source;
+  MediaEventListener listener = source.Connect(queue, [] {});
+
+  // MediaEventListener::Disconnect eventually gives up its target
+  listener.Disconnect();
+  queue->AwaitIdle();
+  queue = nullptr;
   EXPECT_TRUE(isDestroyed);
 }
