@@ -54,6 +54,7 @@ Examples:
     ./mach lint --outgoing origin/master
     ./mach lint -wo
 
+.. _lint-vcs-hook:
 
 Using a VCS Hook
 ----------------
