@@ -58,8 +58,8 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             return
         }
 
-        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
+        let ref_spatial_node = spatial_tree.get_spatial_node(self.ref_spatial_node_index);
+        let target_spatial_node = spatial_tree.get_spatial_node(target_node_index);
         self.visible_face = VisibleFace::Front;
 
         self.kind = if self.ref_spatial_node_index == target_node_index {
@@ -72,7 +72,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         } else {
             let transform = spatial_tree
                 .get_relative_transform_with_face(
-                    target_node_index, 
+                    target_node_index,
                     self.ref_spatial_node_index,
                     Some(&mut self.visible_face),
                 )
@@ -215,8 +215,8 @@ impl SpaceSnapper {
             return
         }
 
-        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
+        let ref_spatial_node = spatial_tree.get_spatial_node(self.ref_spatial_node_index);
+        let target_spatial_node = spatial_tree.get_spatial_node(target_node_index);
 
         self.current_target_spatial_node_index = target_node_index;
         self.snapping_transform = match (ref_spatial_node.snapping_transform, target_spatial_node.snapping_transform) {

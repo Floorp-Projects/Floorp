@@ -146,37 +146,6 @@ pub struct SpatialNode {
     pub is_ancestor_or_self_zooming: bool,
 }
 
-fn compute_offset_from(
-    mut current: Option<SpatialNodeIndex>,
-    external_id: ExternalScrollId,
-    previous_spatial_nodes: &[SpatialNode],
-) -> LayoutVector2D {
-    let mut offset = LayoutVector2D::zero();
-    while let Some(parent_index) = current {
-        let ancestor = &previous_spatial_nodes[parent_index.0 as usize];
-        match ancestor.node_type {
-            SpatialNodeType::ReferenceFrame(..) => {
-                // We don't want to scroll across reference frames.
-                break;
-            },
-            SpatialNodeType::ScrollFrame(ref info) => {
-                if info.external_id == external_id {
-                    break;
-                }
-
-                // External scroll offsets are not propagated across
-                // reference frame boundaries, so undo them here.
-                offset += info.offset + info.external_scroll_offset;
-            },
-            SpatialNodeType::StickyFrame(ref info) => {
-                offset += info.current_offset;
-            },
-        }
-        current = ancestor.parent;
-    }
-    offset
-}
-
 /// Snap an offset to be incorporated into a transform, where the local space
 /// may be considered the world space. We assume raster scale is 1.0, which
 /// may not always be correct if there are intermediate surfaces used, however
@@ -355,11 +324,12 @@ impl SpatialNode {
 
     pub fn update(
         &mut self,
-        state: &mut TransformUpdateState,
+        state_stack: &[TransformUpdateState],
         coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
-        previous_spatial_nodes: &[SpatialNode],
     ) {
+        let state = state_stack.last().unwrap();
+
         // If any of our parents was not rendered, we are not rendered either and can just
         // quit here.
         if !state.invertible {
@@ -367,7 +337,11 @@ impl SpatialNode {
             return;
         }
 
-        self.update_transform(state, coord_systems, scene_properties, previous_spatial_nodes);
+        self.update_transform(
+            state_stack,
+            coord_systems,
+            scene_properties,
+        );
         //TODO: remove the field entirely?
         self.transform_kind = if self.coordinate_system_id.0 == 0 {
             TransformedRectKind::AxisAligned
@@ -375,11 +349,7 @@ impl SpatialNode {
             TransformedRectKind::Complex
         };
 
-        let is_parent_zooming = match self.parent {
-            Some(parent) => previous_spatial_nodes[parent.0 as usize].is_ancestor_or_self_zooming,
-            _ => false,
-        };
-        self.is_ancestor_or_self_zooming = self.is_async_zooming | is_parent_zooming;
+        self.is_ancestor_or_self_zooming = self.is_async_zooming | state.is_ancestor_or_self_zooming;
 
         // If this node is a reference frame, we check if it has a non-invertible matrix.
         // For non-reference-frames we assume that they will produce only additional
@@ -394,14 +364,16 @@ impl SpatialNode {
 
     pub fn update_transform(
         &mut self,
-        state: &mut TransformUpdateState,
+        state_stack: &[TransformUpdateState],
         coord_systems: &mut Vec<CoordinateSystem>,
         scene_properties: &SceneProperties,
-        previous_spatial_nodes: &[SpatialNode],
     ) {
+        let state = state_stack.last().unwrap();
+
         match self.node_type {
             SpatialNodeType::ReferenceFrame(ref mut info) => {
                 let mut cs_scale_offset = ScaleOffset::identity();
+                let mut coordinate_system_id = state.current_coordinate_system_id;
 
                 if info.invertible {
                     // Resolve the transform against any property bindings.
@@ -418,11 +390,17 @@ impl SpatialNode {
                     // the scroll offset.
                     let source_transform = match info.kind {
                         ReferenceFrameKind::Perspective { scrolling_relative_to: Some(external_id) } => {
-                            let scroll_offset = compute_offset_from(
-                                self.parent,
-                                external_id,
-                                previous_spatial_nodes,
-                            );
+                            let mut scroll_offset = LayoutVector2D::zero();
+
+                            for parent_state in state_stack.iter().rev() {
+                                if let Some(parent_external_id) = parent_state.external_id {
+                                    if parent_external_id == external_id {
+                                        break;
+                                    }
+                                }
+
+                                scroll_offset += parent_state.scroll_offset;
+                            }
 
                             // Do a change-basis operation on the
                             // perspective matrix using the scroll offset.
@@ -503,7 +481,7 @@ impl SpatialNode {
                                 parent: Some(state.current_coordinate_system_id),
                             }
                         };
-                        state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                        coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
                         coord_systems.push(coord_system);
                     }
                 }
@@ -511,7 +489,7 @@ impl SpatialNode {
                 // Ensure that the current coordinate system ID is propagated to child
                 // nodes, even if we encounter a node that is not invertible. This ensures
                 // that the invariant in get_relative_transform is not violated.
-                self.coordinate_system_id = state.current_coordinate_system_id;
+                self.coordinate_system_id = coordinate_system_id;
                 self.viewport_transform = cs_scale_offset;
                 self.content_transform = cs_scale_offset;
                 self.invertible = info.invertible;
@@ -663,10 +641,9 @@ impl SpatialNode {
     }
 
     pub fn prepare_state_for_children(&self, state: &mut TransformUpdateState) {
-        if !self.invertible {
-            state.invertible = false;
-            return;
-        }
+        state.current_coordinate_system_id = self.coordinate_system_id;
+        state.is_ancestor_or_self_zooming = self.is_async_zooming;
+        state.invertible &= self.invertible;
 
         // The transformation we are passing is the transformation of the parent
         // reference frame and the offset is the accumulated offset of all the nodes
@@ -682,14 +659,20 @@ impl SpatialNode {
                 // we applied as well.
                 state.nearest_scrolling_ancestor_offset += info.current_offset;
                 state.preserves_3d = false;
+                state.external_id = None;
+                state.scroll_offset = info.current_offset;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
                 state.parent_accumulated_scroll_offset += scrolling.offset;
                 state.nearest_scrolling_ancestor_offset = scrolling.offset;
                 state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
                 state.preserves_3d = false;
+                state.external_id = Some(scrolling.external_id);
+                state.scroll_offset = scrolling.offset + scrolling.external_scroll_offset;
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
+                state.external_id = None;
+                state.scroll_offset = LayoutVector2D::zero();
                 state.preserves_3d = info.transform_style == TransformStyle::Preserve3D;
                 state.parent_accumulated_scroll_offset = LayoutVector2D::zero();
                 state.coordinate_system_relative_scale_offset = self.content_transform;
@@ -992,12 +975,12 @@ fn test_cst_perspective_relative_scroll() {
     // supports this, we could also verify with a reftest.
 
     use crate::spatial_tree::SpatialTree;
-    use euclid::approxeq::ApproxEq;
+    use euclid::Angle;
 
     let mut cst = SpatialTree::new();
     let pipeline_id = PipelineId::dummy();
     let ext_scroll_id = ExternalScrollId(1, pipeline_id);
-    let transform = LayoutTransform::perspective(100.0);
+    let transform = LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::degrees(45.0));
 
     let root = cst.add_reference_frame(
         cst.root_reference_frame_index(),
@@ -1050,12 +1033,8 @@ fn test_cst_perspective_relative_scroll() {
 
     cst.update_tree(&SceneProperties::new());
 
-    let scroll_offset = compute_offset_from(
-        cst.spatial_nodes[ref_frame.0 as usize].parent,
-        ext_scroll_id,
-        &cst.spatial_nodes,
-    );
-
-    assert!(scroll_offset.x.approx_eq(&0.0));
-    assert!(scroll_offset.y.approx_eq(&0.0));
+    let world_transform = cst.get_world_transform(ref_frame).into_transform().cast_unit();
+    let ref_transform = transform.then_translate(LayoutVector3D::new(0.0, -50.0, 0.0));
+    assert!(world_transform.approx_eq(&ref_transform));
 }
+

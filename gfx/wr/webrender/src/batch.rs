@@ -3396,8 +3396,7 @@ impl ClipBatcher {
         }
 
         let mask_screen_rect_size = mask_screen_rect.size().to_i32();
-        let clip_spatial_node = &spatial_tree
-            .spatial_nodes[clip_spatial_node_index.0 as usize];
+        let clip_spatial_node = spatial_tree.get_spatial_node(clip_spatial_node_index);
 
         // Only support clips that are axis-aligned to the root coordinate space,
         // for now, to simplify the logic below. This handles the vast majority
@@ -3607,7 +3606,7 @@ impl ClipBatcher {
                             });
                     };
 
-                    let clip_spatial_node = &ctx.spatial_tree.spatial_nodes[clip_instance.spatial_node_index.0 as usize];
+                    let clip_spatial_node = ctx.spatial_tree.get_spatial_node(clip_instance.spatial_node_index);
                     let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
 
                     if clip_instance.has_visible_tiles() {
