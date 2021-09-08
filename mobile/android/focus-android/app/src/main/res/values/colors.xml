@@ -9,6 +9,9 @@
     <color name="primaryText">@color/photonLightGrey05</color>
     <color name="secondaryText">@color/photonLightGrey50</color>
 
+    <color name="contrastColor">@android:color/black</color>
+
+    <color name="error">@color/photonRed70</color>
     <color name="focusContrastPink">#e452B9</color>
 
     <color name="dialogAccent">@color/focusContrastPink</color>

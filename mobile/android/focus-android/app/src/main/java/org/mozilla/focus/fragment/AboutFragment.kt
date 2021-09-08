@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -144,7 +143,7 @@ private fun LogoIcon() {
 private fun VersionInfo(aboutVersion: String) {
     Text(
         text = aboutVersion,
-        color = Color.White,
+        color = colorResource(R.color.contrastColor),
         fontSize = 16.sp,
         lineHeight = 24.sp,
         modifier = Modifier
@@ -156,7 +155,7 @@ private fun VersionInfo(aboutVersion: String) {
 private fun AboutContent(content: String) {
     Text(
         text = content,
-        color = Color.White,
+        color = colorResource(R.color.contrastColor),
         fontSize = 16.sp,
         lineHeight = 24.sp,
         modifier = Modifier

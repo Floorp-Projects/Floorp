@@ -32,14 +32,14 @@ class InputToolbarIntegration(
             indicators = emptyList()
             hint = fragment.getString(R.string.urlbar_hint)
             colors = toolbar.display.colors.copy(
-                hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
+                hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
                 text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
             )
         }
         toolbar.edit.hint = fragment.getString(R.string.urlbar_hint)
         toolbar.private = true
         toolbar.edit.colors = toolbar.edit.colors.copy(
-            hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
+            hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
             text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
         )
 

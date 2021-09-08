@@ -5,7 +5,6 @@
 package org.mozilla.focus.exceptions
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -17,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
@@ -294,7 +294,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         }
 
         fun onSelected() {
-            itemView.setBackgroundColor(Color.DKGRAY)
+            itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.disabledText))
         }
 
         fun onCleared() {

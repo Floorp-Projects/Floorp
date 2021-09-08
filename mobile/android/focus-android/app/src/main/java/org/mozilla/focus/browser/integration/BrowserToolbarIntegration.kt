@@ -64,7 +64,7 @@ class BrowserToolbarIntegration(
 
         toolbar.display.apply {
             colors = colors.copy(
-                hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
+                hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
                 securityIconInsecure = Color.TRANSPARENT,
                 text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
             )

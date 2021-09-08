@@ -95,7 +95,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         biometricErrorText.setTextColor(
             ContextCompat.getColor(
                 biometricErrorText.context,
-                R.color.photonRed50
+                R.color.error
             )
         )
     }

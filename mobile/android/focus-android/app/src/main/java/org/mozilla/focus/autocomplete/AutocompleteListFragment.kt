@@ -5,7 +5,6 @@
 package org.mozilla.focus.autocomplete
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -17,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -302,7 +302,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
         }
 
         fun onSelected() {
-            itemView.setBackgroundColor(Color.DKGRAY)
+            itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.disabledText))
         }
 
         fun onCleared() {
