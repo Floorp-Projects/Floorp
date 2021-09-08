@@ -9885,7 +9885,6 @@ _ZN5style10properties19animated_properties14AnimationValue20from_computed_values
 ?RootLayerTreeId@CompositorBridgeParent@layers@mozilla@@QAE?AULayersId@23@XZ
 ?GetClientInfo@LoadInfo@net@mozilla@@UAEABV?$Maybe@VClientInfo@dom@mozilla@@@3@XZ
 ?Initialize@ClientLayerManager@layers@mozilla@@QAE_NPAVPCompositorBridgeChild@23@_NPAUTextureFactoryIdentifier@23@@Z
-?GetCompositorBackends@gfxPlatform@@QAEX_NAAV?$nsTArray@W4LayersBackend@layers@mozilla@@@@@Z
 ?AllocPLayerTransactionChild@CompositorBridgeChild@layers@mozilla@@AAEPAVPLayerTransactionChild@23@ABV?$nsTArray@W4LayersBackend@layers@mozilla@@@@ABULayersId@23@@Z
 ??0PLayerTransactionChild@layers@mozilla@@QAE@XZ
 ?OnMessageReceived@PCompositorManagerParent@layers@mozilla@@UAE?AW4Result@HasResultCodes@ipc@3@ABVMessage@IPC@@@Z
