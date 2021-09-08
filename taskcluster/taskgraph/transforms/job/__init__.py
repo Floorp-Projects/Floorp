@@ -352,6 +352,19 @@ def use_fetches(config, jobs):
                 if scope not in job.setdefault("scopes", []):
                     job["scopes"].append(scope)
 
+        artifacts = {}
+        for f in job_fetches:
+            _, __, artifact = f["artifact"].rpartition("/")
+            if "dest" in f:
+                artifact = f"{f['dest']}/{artifact}"
+            task = f["task"][1:-1]
+            if artifact in artifacts:
+                raise Exception(
+                    f"Task {name} depends on {artifacts[artifact]} and {task} "
+                    f"that both provide {artifact}"
+                )
+            artifacts[artifact] = task
+
         env = worker.setdefault("env", {})
         env["MOZ_FETCHES"] = {
             "task-reference": json.dumps(
