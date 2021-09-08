@@ -80,19 +80,11 @@ $card-header-in-hero-line-height: 20;
     }
 
     &:hover .meta header {
-      @include dark-theme-only {
-        color: $blue-40;
-      }
-
-      color: $blue-60;
+      color: var(--newtab-link-primary-color);
     }
 
     &:active .meta header {
-      @include dark-theme-only {
-        color: $blue-40;
-      }
-
-      color: $blue-70;
+      color: var(--newtab-link-primary-active-color);
     }
 
     .img-wrapper {
@@ -134,11 +126,7 @@ $card-header-in-hero-line-height: 20;
       }
 
       .context {
-        @include dark-theme-only {
-          color: $teal-10;
-        }
-
-        color: $teal-70;
+        color: var(--newtab-link-secondary-color);
       }
 
       .source {
@@ -254,20 +242,20 @@ $card-header-in-hero-line-height: 20;
             background: none;
 
             .title {
-              color: $blue-40;
+              color: var(--newtab-link-primary-color);
             }
           }
         }
 
         &:active .title {
           @include dark-theme-only {
-            color: $blue-50;
+            color: var(--newtab-link-primary-active-color);
           }
         }
 
         .title {
           @include dark-theme-only {
-            color: $white;
+            color: var(--newtab-text-primary-color);
           }
 
           @include limit-visible-lines(3, 20, 14);

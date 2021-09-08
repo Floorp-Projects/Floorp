@@ -44,6 +44,7 @@ body {
   --newtab-icon-secondary-color: rgba(12, 12, 13, 0.6);
   --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
   --newtab-link-primary-color: #0060DF;
+  --newtab-link-primary-active-color: #003EAA;
   --newtab-link-secondary-color: #008EA4;
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-text-primary-color: #15141a;
@@ -117,6 +118,7 @@ body[lwt-newtab-brighttext] {
   --newtab-icon-secondary-color: rgba(249, 249, 250, 0.4);
   --newtab-inner-box-shadow-color: rgba(249, 249, 250, 0.2);
   --newtab-link-primary-color: #45A1FF;
+  --newtab-link-primary-active-color: #0060DF;
   --newtab-link-secondary-color: #50BCB6;
   --newtab-text-conditional-color: #F9F9FA;
   --newtab-text-primary-color: #fbfbfe;
@@ -2948,16 +2950,10 @@ main.has-snippet {
 }
 
 .ds-hero .wrapper:hover .meta header {
-  color: #0060DF;
-}
-[lwt-newtab-brighttext] .ds-hero .wrapper:hover .meta header {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-color);
 }
 .ds-hero .wrapper:active .meta header {
-  color: #003EAA;
-}
-[lwt-newtab-brighttext] .ds-hero .wrapper:active .meta header {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-active-color);
 }
 .ds-hero .wrapper .img-wrapper {
   width: 100%;
@@ -2993,10 +2989,7 @@ main.has-snippet {
   margin: 0 0 4px;
 }
 .ds-hero .wrapper .meta .context {
-  color: #008EA4;
-}
-[lwt-newtab-brighttext] .ds-hero .wrapper .meta .context {
-  color: #A7FFFE;
+  color: var(--newtab-link-secondary-color);
 }
 .ds-hero .wrapper .meta .source {
   font-size: 13px;
@@ -3090,10 +3083,10 @@ main.has-snippet {
   background: none;
 }
 [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-10 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-11 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-12 .ds-hero .cards .ds-card:hover .title {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-color);
 }
 [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-10 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-11 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-12 .ds-hero .cards .ds-card:active .title {
-  color: #0A84FF;
+  color: var(--newtab-link-primary-active-color);
 }
 .ds-column-9 .ds-hero .cards .ds-card .title, .ds-column-10 .ds-hero .cards .ds-card .title, .ds-column-11 .ds-hero .cards .ds-card .title, .ds-column-12 .ds-hero .cards .ds-card .title {
   font-size: 14px;
@@ -3101,7 +3094,7 @@ main.has-snippet {
   line-height: 20px;
 }
 [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext] .ds-column-10 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext] .ds-column-11 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext] .ds-column-12 .ds-hero .cards .ds-card .title {
-  color: #FFF;
+  color: var(--newtab-text-primary-color);
 }
 .ds-hero.empty {
   grid-template-columns: auto;
@@ -3206,7 +3199,7 @@ main.has-snippet {
   padding-inline-start: 41px;
 }
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link::before {
-  background-color: #50BCB6;
+  background-color: var(--newtab-link-secondary-color);
   border-radius: 32px;
   color: #FFF;
   content: counter(list);
@@ -3219,20 +3212,11 @@ main.has-snippet {
   text-align: center;
   width: 32px;
 }
-[lwt-newtab-brighttext] .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link::before {
-  background-color: #008EA4;
-}
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:hover::before {
-  background-color: #45A1FF;
-}
-[lwt-newtab-brighttext] .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:hover::before {
-  background-color: #45A1FF;
+  background-color: var(--newtab-link-primary-color);
 }
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:active::before {
-  background-color: #003EAA;
-}
-[lwt-newtab-brighttext] .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:active::before {
-  background-color: #0060DF;
+  background-color: var(--newtab-link-primary-active-color);
 }
 
 .ds-list-borders {
@@ -3352,10 +3336,10 @@ main.has-snippet {
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
 }
 .ds-list-item:hover .ds-list-item-title {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-color);
 }
 .ds-list-item:active .ds-list-item-title {
-  color: #003EAA;
+  color: var(--newtab-link-primary-active-color);
 }
 
 .ds-navigation {
@@ -3653,10 +3637,7 @@ main.has-snippet {
   flex-direction: column;
 }
 .ds-card .ds-card-link:hover header {
-  color: #0060DF;
-}
-[lwt-newtab-brighttext] .ds-card .ds-card-link:hover header {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-color);
 }
 .ds-card .ds-card-link:focus {
   border: 0;
@@ -3665,16 +3646,10 @@ main.has-snippet {
   transition: none;
 }
 .ds-card .ds-card-link:focus header {
-  color: #0060DF;
-}
-[lwt-newtab-brighttext] .ds-card .ds-card-link:focus header {
-  color: #45A1FF;
+  color: var(--newtab-link-primary-color);
 }
 .ds-card .ds-card-link:active header {
-  color: #003EAA;
-}
-[lwt-newtab-brighttext] .ds-card .ds-card-link:active header {
-  color: #0A84FF;
+  color: var(--newtab-link-primary-active-color);
 }
 .ds-card.video-card .meta {
   margin-top: 4px;
@@ -3746,6 +3721,8 @@ main.has-snippet {
   background: rgba(12, 12, 13, 0.7);
 }
 .ds-card .meta .cta-link {
+  color: var(--newtab-link-primary-color);
+  fill: var(--newtab-link-primary-color);
   font-size: 15px;
   font-weight: 600;
   line-height: 24px;
@@ -3754,29 +3731,15 @@ main.has-snippet {
   background-size: auto;
   background-position: right 1.5px;
   padding-right: 9px;
-  color: #0060DF;
-  fill: #0060DF;
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-link {
-  color: #45A1FF;
-  fill: #45A1FF;
 }
 .ds-card .meta .cta-link:focus {
-  box-shadow: 0 0 0 1px #FFF, 0 0 0 4px rgba(10, 132, 255, 0.5);
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
   border-radius: 4px;
   outline: 0;
 }
-[lwt-newtab-brighttext] .ds-card .meta .cta-link:focus {
-  box-shadow: 0 0 0 1px #2A2A2E, 0 0 0 4px rgba(10, 132, 255, 0.5);
-}
 .ds-card .meta .cta-link:active {
-  color: #003EAA;
-  fill: #003EAA;
-  box-shadow: none;
-}
-[lwt-newtab-brighttext] .ds-card .meta .cta-link:active {
-  color: #0A84FF;
-  fill: #0A84FF;
+  color: var(--newtab-link-primary-active-color);
+  fill: var(--newtab-link-primary-active-color);
   box-shadow: none;
 }
 .ds-card .meta .cta-link:hover {
@@ -4169,7 +4132,7 @@ main.has-snippet {
 }
 
 .ds-chevron-link {
-  color: #0060DF;
+  color: var(--newtab-link-primary-color);
   display: inline-block;
   outline: 0;
 }
@@ -4177,16 +4140,10 @@ main.has-snippet {
   text-decoration: underline;
 }
 .ds-chevron-link:active {
-  color: #003EAA;
-}
-[lwt-newtab-brighttext] .ds-chevron-link:active {
-  color: #0A84FF;
+  color: var(--newtab-link-primary-active-color);
 }
 .ds-chevron-link:active::after {
-  background-color: #003EAA;
-}
-[lwt-newtab-brighttext] .ds-chevron-link:active::after {
-  background-color: #0A84FF;
+  background-color: var(--newtab-link-primary-active-color);
 }
 .ds-chevron-link:focus {
   box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5);
@@ -4196,17 +4153,14 @@ main.has-snippet {
   box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5);
 }
 .ds-chevron-link::after {
+  background-color: var(--newtab-link-primary-color);
   content: " ";
   mask: url("chrome://global/skin/icons/arrow-right-12.svg") 0 -8px no-repeat;
-  background-color: #0060DF;
   margin: 0 0 0 4px;
   width: 5px;
   height: 8px;
   text-decoration: none;
   display: inline-block;
-}
-[lwt-newtab-brighttext] .ds-chevron-link::after {
-  background-color: #45A1FF;
 }
 
 .ds-signup {
@@ -4263,7 +4217,7 @@ main.has-snippet {
   margin: 0 0 8px;
   border: 0;
   padding: 0;
-  color: #0060DF;
+  color: var(--newtab-link-primary-color);
   width: max-content;
 }
 .ds-privacy-modal .modal-link:hover {
@@ -4272,7 +4226,7 @@ main.has-snippet {
 }
 .ds-privacy-modal .modal-link::before {
   -moz-context-properties: fill;
-  fill: #0060DF;
+  fill: var(--newtab-link-primary-color);
   content: "";
   display: inline-block;
   width: 16px;

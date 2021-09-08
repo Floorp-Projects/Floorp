@@ -105,11 +105,7 @@ $item-line-height: 20;
     padding-inline-start: $counter-padded-size;
 
     &::before {
-      @include dark-theme-only {
-        background-color: $teal-70;
-      }
-
-      background-color: $pocket-teal;
+      background-color: var(--newtab-link-secondary-color);
       border-radius: $counter-size;
       color: $white;
       content: counter(list);
@@ -124,19 +120,11 @@ $item-line-height: 20;
     }
 
     &:hover::before {
-      @include dark-theme-only {
-        background-color: $blue-40;
-      }
-
-      background-color: $blue-40;
+      background-color: var(--newtab-link-primary-color);
     }
 
     &:active::before {
-      @include dark-theme-only {
-        background-color: $blue-60;
-      }
-
-      background-color: $blue-70;
+      background-color: var(--newtab-link-primary-active-color);
     }
   }
 }
@@ -259,13 +247,13 @@ $item-line-height: 20;
 
   &:hover {
     .ds-list-item-title {
-      color: $blue-40;
+      color: var(--newtab-link-primary-color);
     }
   }
 
   &:active {
     .ds-list-item-title {
-      color: $blue-70;
+      color: var(--newtab-link-primary-active-color);
     }
   }
 }
