@@ -4262,6 +4262,22 @@
   value: false
   mirror: always
 
+# The strategy used to control how sites are isolated into separate processes
+# when Fisison is enabled. This pref has no effect if Fission is disabled.
+# See the `WebContentIsolationStrategy` enum in `ProcessIsolation.cpp`.
+- name: fission.webContentIsolationStrategy
+  type: uint32_t
+  value: 1
+  mirror: always
+
+# Time in seconds before a site loaded with the Cross-Origin-Opener-Policy
+# header is no longer considered high-value and isolated in the "highValueCOOP"
+# configuration.
+- name: fission.highValue.coop.expiration
+  type: uint32_t
+  value: 2592000   # 30 days (in seconds)
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
