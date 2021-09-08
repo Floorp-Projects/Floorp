@@ -185,7 +185,7 @@ void BaseCompiler::pushHeapBase() {
   RegI64 heapBase = needI64();
   moveI64(RegI64(Register64(HeapReg)), heapBase);
   pushI64(heapBase);
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
+#elif defined(JS_CODEGEN_ARM)
   RegI32 heapBase = needI32();
   moveI32(RegI32(HeapReg), heapBase);
   pushI32(heapBase);
@@ -295,9 +295,8 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
   }
 }
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
 BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                   AccessCheck* check,
                                                   RegI32 tls, RegI32 ptr) {
@@ -375,7 +374,7 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
     // there's no constraint on what the output register may be.
     masm.wasmLoad(*access, srcAddr, dest.any());
   }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   if (IsUnaligned(*access)) {
     switch (dest.tag) {
       case AnyReg::I64:
@@ -469,7 +468,7 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
   } else {
     masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
   }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   if (IsUnaligned(*access)) {
     switch (src.tag) {
       case AnyReg::I64:
@@ -530,7 +529,7 @@ void BaseCompiler::atomicRMW32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
       masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], temps[1],
                              temps[2], rd);
 #else
@@ -574,7 +573,7 @@ void BaseCompiler::atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
       masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps[0],
                                temps[1], temps[2], rd);
 #else
@@ -608,7 +607,7 @@ void BaseCompiler::atomicXchg32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
       masm.wasmAtomicExchange(access, srcAddr, rv, temps[0], temps[1], temps[2],
                               rd);
 #else
@@ -701,7 +700,7 @@ class PopAtomicCmpXchg32Regs : public PopBase<RegI32> {
     bc->freeI32(rnew);
     bc->freeI32(rexpect);
   }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type,
                                   Scalar::Type viewType)
       : Base(bc) {
@@ -776,8 +775,7 @@ class PopAtomicCmpXchg64Regs : public PopBase<RegI64> {
     bc->freeI64(rexpect);
     bc->freeI64(rnew);
   }
-#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
     rnew = bc->popI64();
     rexpect = bc->popI64();
@@ -828,7 +826,7 @@ class PopAtomicLoad64Regs : public PopBase<RegI64> {
   explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
     setRd(bc->needI64Pair());
   }
-#  elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#  elif defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
     setRd(bc->needI64());
   }
@@ -844,7 +842,7 @@ class PopAtomicLoad64Regs : public PopBase<RegI64> {
     MOZ_ASSERT(ebx == js::jit::ebx);
     bc->masm.wasmAtomicLoad64(access, srcAddr, bc->specific_.ecx_ebx, getRd());
   }
-#  else  // ARM, MIPS32
+#  else  // ARM
   template <typename T>
   void atomicLoad64(const MemoryAccessDesc& access, T srcAddr) {
     bc->masm.wasmAtomicLoad64(access, srcAddr, RegI64::Invalid(), getRd());
@@ -913,7 +911,7 @@ class PopAtomicRMW32Regs : public PopBase<RegI32> {
     bc->freeI32(rv);
     temps.maybeFree(bc);
   }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type,
                               Scalar::Type viewType, AtomicOp op)
       : Base(bc) {
@@ -999,8 +997,7 @@ class PopAtomicRMW64Regs : public PopBase<RegI64> {
     bc->freeI64(rv);
     bc->freeI64(temp);
   }
-#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
     rv = bc->popI64();
     temp = bc->needI64();
@@ -1053,7 +1050,7 @@ class PopAtomicXchg32Regs : public PopBase<RegI32> {
     setRd(bc->needI32());
   }
   ~PopAtomicXchg32Regs() { bc->freeI32(rv); }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type,
                                Scalar::Type viewType)
       : Base(bc) {
@@ -1118,7 +1115,7 @@ class PopAtomicXchg64Regs : public PopBase<RegI64> {
     setRd(bc->needI64Pair());
   }
   ~PopAtomicXchg64Regs() { bc->freeI64(rv); }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
     rv = bc->popI64ToSpecific(bc->needI64());
     setRd(bc->needI64());
@@ -1382,7 +1379,7 @@ RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
 bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
                               ValType type) {
   RegI32 tls, temp;
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
   temp = needI32();
 #endif
 
@@ -1464,7 +1461,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
 bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
                                ValType resultType) {
   RegI32 tls, temp;
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
   temp = needI32();
 #endif
 

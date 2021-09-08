@@ -86,7 +86,7 @@ class ABIResult {
   static constexpr size_t StackSizeOfPtr = sizeof(intptr_t);
   static constexpr size_t StackSizeOfInt32 = StackSizeOfPtr;
   static constexpr size_t StackSizeOfInt64 = sizeof(int64_t);
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
+#if defined(JS_CODEGEN_ARM)
   static constexpr size_t StackSizeOfFloat = sizeof(float);
 #else
   static constexpr size_t StackSizeOfFloat = sizeof(double);

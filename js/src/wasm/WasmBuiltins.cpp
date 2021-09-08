@@ -1257,10 +1257,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast(Instance::pushRefIntoExn, *abiType);
 #endif
 
-#if defined(JS_CODEGEN_MIPS32)
-    case SymbolicAddress::js_jit_gAtomic64Lock:
-      return &js::jit::gAtomic64Lock;
-#endif
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
       *abiType = Args_General1;
@@ -1327,9 +1323,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CoerceInPlace_ToBigInt:
     case SymbolicAddress::BoxValue_Anyref:
     case SymbolicAddress::InlineTypedObjectClass:
-#if defined(JS_CODEGEN_MIPS32)
-    case SymbolicAddress::js_jit_gAtomic64Lock:
-#endif
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
     case SymbolicAddress::PrintPtr:
