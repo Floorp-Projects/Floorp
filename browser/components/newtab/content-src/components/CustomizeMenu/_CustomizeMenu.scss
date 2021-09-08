@@ -31,7 +31,7 @@
   }
 
   &:focus-visible {
-    @include ds-focus-nte;
+    @include ds-focus;
   }
 
   &.personalize-animate-exit-done {

@@ -1,29 +1,6 @@
 $col4-header-line-height: 20;
 $col4-header-font-size: 14;
 
-// Special styling for the New Tab Experience styles,
-// This is to be incorporated once the styles are made permanent
-.outer-wrapper.newtab-experience {
-  .ds-card-grid {
-    &.ds-card-grid-border {
-      .ds-card:not(.placeholder) {
-        border-radius: $border-radius-new;
-        box-shadow: var(--newtab-card-first-shadow);
-
-        .img-wrapper .img img {
-          border-radius: $border-radius-new $border-radius-new 0 0;
-        }
-      }
-    }
-
-    .ds-card-link:focus {
-      @include ds-focus-nte;
-      transition: none;
-      border-radius: $border-radius-new;
-    }
-  }
-}
-
 .ds-card-grid {
   display: grid;
   grid-gap: 24px;
@@ -103,14 +80,13 @@ $col4-header-font-size: 14;
   &.ds-card-grid-border {
     .ds-card:not(.placeholder) {
       @include dark-theme-only {
-        box-shadow: 0 1px 4px $shadow-10;
         background: $proton-dark-grey-30;
       }
-
-      box-shadow: 0 1px 4px 0 $grey-90-10;
+      border-radius: $border-radius-new;
+      box-shadow: var(--newtab-card-first-shadow);
 
       .img-wrapper .img img {
-        border-radius: 4px 4px 0 0;
+        border-radius: $border-radius-new $border-radius-new 0 0;
       }
     }
   }
@@ -123,6 +99,12 @@ $col4-header-font-size: 14;
         padding: 12px 0;
       }
     }
+  }
+
+  .ds-card-link:focus {
+    @include ds-focus;
+    transition: none;
+    border-radius: $border-radius-new;
   }
 
   // "2/3 width layout"
