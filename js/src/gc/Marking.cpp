@@ -1627,7 +1627,7 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
   // mark stack, and processing just the top element with processMarkStackTop
   // without recursing into reachable objects.
   while (queuePos < markQueue.length()) {
-    Value val = markQueue[queuePos++].get().unbarrieredGet();
+    Value val = markQueue[queuePos++].get();
     if (val.isObject()) {
       JSObject* obj = &val.toObject();
       JS::Zone* zone = obj->zone();

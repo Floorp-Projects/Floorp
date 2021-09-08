@@ -4964,7 +4964,7 @@ static bool AddEdgesForMarkQueue(GCMarker& marker) {
   // group comes up, or will be skipped if their sweep group is already past.
   JS::Zone* prevZone = nullptr;
   for (size_t i = 0; i < marker.markQueue.length(); i++) {
-    Value val = marker.markQueue[i].get().unbarrieredGet();
+    Value val = marker.markQueue[i].get();
     if (!val.isObject()) {
       continue;
     }
