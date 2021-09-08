@@ -19,7 +19,6 @@ import mozilla.appservices.push.CryptoError
 import mozilla.appservices.push.GeneralError
 import mozilla.appservices.push.JSONDeserializeError
 import mozilla.appservices.push.RequestError
-import mozilla.appservices.push.UAIDNotRecognizedError
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
