@@ -319,6 +319,17 @@ var DownloadsCommon = {
    * Removes a Download object from both session and history downloads.
    */
   async deleteDownload(download) {
+    // Check hasBlockedData to avoid double counting if you click the X button
+    // in the Libarary view and then delete the download from the history.
+    if (
+      download.error?.becauseBlockedByReputationCheck &&
+      download.hasBlockedData
+    ) {
+      Services.telemetry
+        .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
+        .add(download.error.reputationCheckVerdict, 1); // confirm block
+    }
+
     // Remove the associated history element first, if any, so that the views
     // that combine history and session downloads won't resurrect the history
     // download into the view just before it is deleted permanently.

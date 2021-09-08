@@ -652,6 +652,12 @@ Download.prototype = {
       );
     }
 
+    if (this.error?.becauseBlockedByReputationCheck) {
+      Services.telemetry
+        .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
+        .add(this.error.reputationCheckVerdict, 2); // unblock
+    }
+
     if (
       this.error?.reputationCheckVerdict == DownloadError.BLOCK_VERDICT_INSECURE
     ) {
@@ -729,6 +735,16 @@ Download.prototype = {
       return Promise.reject(
         new Error("Download is being unblocked, cannot confirmBlock.")
       );
+    }
+
+    if (this.error?.becauseBlockedByReputationCheck) {
+      // We have to record the telemetry in both DownloadsCommon.deleteDownload
+      // and confirmBlock here. The former is for cases where users click
+      // "Remove file" in the download panel and the latter is when
+      // users click "X" button in about:downloads.
+      Services.telemetry
+        .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
+        .add(this.error.reputationCheckVerdict, 1); // confirm block
     }
 
     if (!this.hasBlockedData) {
@@ -2482,6 +2498,10 @@ DownloadCopySaver.prototype = {
       verdict,
     } = await DownloadIntegration.shouldBlockForReputationCheck(download);
     if (shouldBlock) {
+      Services.telemetry
+        .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
+        .add(verdict, 0);
+
       let newProperties = { progress: 100, hasPartialData: false };
 
       // We will remove the potentially dangerous file if instructed by

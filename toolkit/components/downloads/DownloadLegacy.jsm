@@ -14,6 +14,8 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.defineModuleGetter(
   this,
   "Downloads",
@@ -386,6 +388,10 @@ DownloadLegacyTransfer.prototype = {
     // it is already canceled, so we need to generate and attach the
     // corresponding error to the download.
     if (aDownloadClassification == Ci.nsITransfer.DOWNLOAD_POTENTIALLY_UNSAFE) {
+      Services.telemetry
+        .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
+        .add(DownloadError.BLOCK_VERDICT_INSECURE, 0);
+
       serialisedDownload.errorObj = {
         becauseBlockedByReputationCheck: true,
         reputationCheckVerdict: DownloadError.BLOCK_VERDICT_INSECURE,
