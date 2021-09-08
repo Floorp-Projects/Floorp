@@ -833,7 +833,7 @@ class gfxFontFamily {
         mCheckForFallbackFaces(false),
         mCheckedForLegacyFamilyNames(false) {}
 
-  const nsCString& Name() { return mName; }
+  const nsCString& Name() const { return mName; }
 
   virtual void LocalizedName(nsACString& aLocalizedName);
   virtual bool HasOtherFamilyNames();
