@@ -191,8 +191,8 @@ menubar > menu:-moz-lwtheme:not([disabled="true"]) {
 }
 
 menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
-  background-color: Highlight;
-  color: HighlightText !important;
+  background-color: SelectedItem;
+  color: SelectedItemText !important;
   text-shadow: none;
 }
 
