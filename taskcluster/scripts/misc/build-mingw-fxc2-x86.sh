@@ -19,7 +19,7 @@ cp dll/d3dcompiler_47_32.dll $INSTALL_DIR/bin/d3dcompiler_47.dll
 # --------------
 
 cd $WORKSPACE
-tar caf fxc2.tar.xz fxc2
+tar caf fxc2.tar.zst fxc2
 
 mkdir -p $UPLOAD_DIR
 cp fxc2.tar.* $UPLOAD_DIR

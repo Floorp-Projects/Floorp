@@ -31,4 +31,4 @@ cat >$STAGE/README<<EOF
 Source is available as a taskcluster artifact:
 $queue_base/task/$(python -c 'import json, os; print "{task}/artifacts/{artifact}".format(**next(f for f in json.loads(os.environ["MOZ_FETCHES"]) if "libdmg-hfsplus" in f["artifact"]))')
 EOF
-tar cf - -C $WORKSPACE `basename $STAGE` | xz > $UPLOAD_DIR/dmg.tar.xz
+tar caf $UPLOAD_DIR/dmg.tar.zst -C $WORKSPACE `basename $STAGE`

@@ -94,4 +94,4 @@ done)
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-tar cJf $UPLOAD_DIR/cctools.tar.xz -C $CROSSTOOLS_BUILD_DIR/.. `basename $CROSSTOOLS_BUILD_DIR`
+tar caf $UPLOAD_DIR/cctools.tar.zst -C $CROSSTOOLS_BUILD_DIR/.. `basename $CROSSTOOLS_BUILD_DIR`
