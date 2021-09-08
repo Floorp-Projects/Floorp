@@ -31,8 +31,8 @@ label {
 }
 
 :host([native]:not([open="true"]):focus) > #label-box {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 :host([native]:not([open="true"]):-moz-focusring) > #label-box {
