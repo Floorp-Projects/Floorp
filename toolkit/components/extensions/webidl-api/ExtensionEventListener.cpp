@@ -59,11 +59,11 @@ class SendResponseCallback final : public nsISupports {
     // Create a promise monitor that invalidates the sendResponse
     // callback if the promise has been already resolved or rejected.
     mPromiseListener = new dom::DomPromiseListener(
-        mPromise,
         [self = RefPtr{this}](JSContext* aCx, JS::Handle<JS::Value> aValue) {
           self->Cleanup();
         },
         [self = RefPtr{this}](nsresult aError) { self->Cleanup(); });
+    mPromise->AppendNativeHandler(mPromiseListener);
   }
 
   void Cleanup(bool aIsDestroying = false) {
@@ -73,11 +73,9 @@ class SendResponseCallback final : public nsISupports {
     }
 
     NS_WARNING("SendResponseCallback::Cleanup");
-    // Override the promise listener's resolvers to release the
+    // Clear the promise listener's resolvers to release the
     // RefPtr captured by the ones initially set.
-    mPromiseListener->SetResolvers(
-        [](JSContext* aCx, JS::Handle<JS::Value> aValue) {},
-        [](nsresult aError) {});
+    mPromiseListener->Clear();
     mPromiseListener = nullptr;
 
     if (mPromise) {
