@@ -18,17 +18,6 @@ typedef struct {
   uint32_t mEnd;
 } WordRange;
 
-enum WordBreakClass : uint8_t {
-  kWbClassSpace = 0,
-  kWbClassAlphaLetter,
-  kWbClassPunct,
-  kWbClassHanLetter,
-  kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter,
-  kWbClassHWKatakanaLetter,
-  kWbClassScriptioContinua
-};
-
 class WordBreaker {
  public:
   NS_INLINE_DECL_REFCOUNTING(WordBreaker)
@@ -41,10 +30,21 @@ class WordBreaker {
                      uint32_t aOffset);
   int32_t NextWord(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
-  static WordBreakClass GetClass(char16_t aChar);
-
  private:
   ~WordBreaker() = default;
+
+  enum WordBreakClass : uint8_t {
+    kWbClassSpace = 0,
+    kWbClassAlphaLetter,
+    kWbClassPunct,
+    kWbClassHanLetter,
+    kWbClassKatakanaLetter,
+    kWbClassHiraganaLetter,
+    kWbClassHWKatakanaLetter,
+    kWbClassScriptioContinua
+  };
+
+  static WordBreakClass GetClass(char16_t aChar);
 };
 
 }  // namespace intl
