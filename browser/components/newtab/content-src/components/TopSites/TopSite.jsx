@@ -4,8 +4,8 @@
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import {
-  MIN_CORNER_FAVICON_SIZE,
   MIN_RICH_FAVICON_SIZE,
+  MIN_SMALL_FAVICON_SIZE,
   TOP_SITES_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS,
@@ -184,14 +184,12 @@ export class TopSiteLink extends React.PureComponent {
     let imageStyle;
     let showSmallFavicon = false;
     let smallFaviconStyle;
-    let smallFaviconFallback;
     let hasScreenshotImage =
       this.state.screenshotImage && this.state.screenshotImage.url;
     let selectedColor;
 
     if (defaultStyle) {
       // force no styles (letter fallback) even if the link has imagery
-      smallFaviconFallback = false;
       selectedColor = this.generateColor();
     } else if (link.searchTopSite) {
       imageClassName = "top-site-icon rich-icon";
@@ -221,27 +219,16 @@ export class TopSiteLink extends React.PureComponent {
         backgroundColor: link.backgroundColor,
         backgroundImage: `url(${tippyTopIcon || link.favicon})`,
       };
+    } else if (faviconSize >= MIN_SMALL_FAVICON_SIZE) {
+      showSmallFavicon = true;
+      smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
     } else {
-      // styles and class names for top sites with screenshot + small icon in top left corner
-      imageClassName = `screenshot${hasScreenshotImage ? " active" : ""}`;
-      imageStyle = {
-        backgroundImage: hasScreenshotImage
-          ? `url(${this.state.screenshotImage.url})`
-          : "none",
-      };
-      // only show a favicon in top left if it's greater than 16x16
-      if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
-        showSmallFavicon = true;
-        smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
-      } else {
-        selectedColor = this.generateColor();
-        imageClassName = "";
-      }
+      selectedColor = this.generateColor();
+      imageClassName = "";
     }
 
     return {
       showSmallFavicon,
-      smallFaviconFallback,
       smallFaviconStyle,
       imageStyle,
       imageClassName,
@@ -266,7 +253,6 @@ export class TopSiteLink extends React.PureComponent {
     const [letterFallback] = title;
     const {
       showSmallFavicon,
-      smallFaviconFallback,
       smallFaviconStyle,
       imageStyle,
       imageClassName,
@@ -317,7 +303,7 @@ export class TopSiteLink extends React.PureComponent {
                 {showSmallFavicon && (
                   <div
                     className="top-site-icon default-icon"
-                    data-fallback={smallFaviconFallback && letterFallback}
+                    data-fallback={smallFaviconStyle ? "" : letterFallback}
                     style={smallFaviconStyle}
                   />
                 )}

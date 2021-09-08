@@ -3,11 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import {
-  MIN_CORNER_FAVICON_SIZE,
-  MIN_RICH_FAVICON_SIZE,
-  TOP_SITES_SOURCE,
-} from "./TopSitesConstants";
+import { MIN_RICH_FAVICON_SIZE, TOP_SITES_SOURCE } from "./TopSitesConstants";
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { ComponentPerfTimer } from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
 import { connect } from "react-redux";
@@ -28,9 +24,6 @@ function topSiteIconType(link) {
   if (link.faviconSize >= MIN_RICH_FAVICON_SIZE) {
     return "rich_icon";
   }
-  if (link.screenshot && link.faviconSize >= MIN_CORNER_FAVICON_SIZE) {
-    return "screenshot_with_icon";
-  }
   if (link.screenshot) {
     return "screenshot";
   }
@@ -50,7 +43,6 @@ function countTopSitesIconsTypes(topSites) {
 
   return topSites.reduce(countTopSitesTypes, {
     custom_screenshot: 0,
-    screenshot_with_icon: 0,
     screenshot: 0,
     tippytop: 0,
     rich_icon: 0,

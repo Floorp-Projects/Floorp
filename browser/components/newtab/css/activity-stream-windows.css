@@ -823,9 +823,6 @@ main.has-snippet {
 .top-site-outer .edit-button {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg");
 }
-.top-site-outer.placeholder .screenshot {
-  display: none;
-}
 .top-site-outer.dragged .tile {
   background: #EDEDF0;
   box-shadow: none;
@@ -1130,23 +1127,6 @@ main.has-snippet {
 .outer-wrapper:not(.newtab-experience) .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
   box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), 0 0 0 5px var(--newtab-card-active-outline-color);
   transition: box-shadow 150ms;
-}
-.outer-wrapper:not(.newtab-experience) .top-site-outer .screenshot {
-  background-color: #FFF;
-  background-position: top left;
-  background-size: cover;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
-  height: 100%;
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: opacity 1s;
-  width: 100%;
-}
-.outer-wrapper:not(.newtab-experience) .top-site-outer .screenshot.active {
-  opacity: 1;
 }
 .outer-wrapper:not(.newtab-experience) .top-site-outer .default-icon,
 .outer-wrapper:not(.newtab-experience) .top-site-outer .search-topsite {
