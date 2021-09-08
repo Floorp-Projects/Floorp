@@ -2609,11 +2609,13 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
         // Gather pipeline stats.
         nsString localId = u"outbound_rtp_"_ns + idstr;
         nsString remoteId;
+
         Maybe<uint32_t> ssrc;
-        std::vector<unsigned int> ssrcvals =
-            aPipeline->mConduit->GetLocalSSRCs();
+        Maybe<uint16_t> base_seq;
+        std::vector<uint32_t> ssrcvals = aPipeline->mConduit->GetLocalSSRCs();
         if (!ssrcvals.empty()) {
           ssrc = Some(ssrcvals[0]);
+          base_seq = aPipeline->mConduit->RtpSendBaseSeqFor(ssrcvals[0]);
         }
 
         auto constructCommonRemoteInboundRtpStats =
@@ -2630,18 +2632,18 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                   kind);  // mediaType is the old name for kind.
               aRemote.mKind.Construct(kind);
               aRemote.mLocalId.Construct(localId);
-              aReportBlockData.apply([&](auto& aData) {
-                aPipeline->RtpSendBaseSeq().apply([&](uint32_t aBaseSeq) {
-                  if (aData.report_block().extended_highest_sequence_number <
-                      aBaseSeq) {
-                    aRemote.mPacketsReceived.Construct(0);
-                  } else {
-                    aRemote.mPacketsReceived.Construct(
-                        aData.report_block().extended_highest_sequence_number -
-                        aData.report_block().packets_lost - aBaseSeq + 1);
-                  }
-                });
-              });
+              if (aReportBlockData && base_seq) {
+                if (aReportBlockData->report_block()
+                        .extended_highest_sequence_number < *base_seq) {
+                  aRemote.mPacketsReceived.Construct(0);
+                } else {
+                  aRemote.mPacketsReceived.Construct(
+                      aReportBlockData->report_block()
+                          .extended_highest_sequence_number -
+                      aReportBlockData->report_block().packets_lost -
+                      *base_seq + 1);
+                }
+              }
             };
 
         auto constructCommonOutboundRtpStats =

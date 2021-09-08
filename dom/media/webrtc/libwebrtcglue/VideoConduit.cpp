@@ -904,6 +904,9 @@ void WebrtcVideoConduit::DeleteSendStream() {
   mCall->Call()->DestroyVideoSendStream(mSendStream);
   mEngineTransmitting = false;
   mSendStream = nullptr;
+
+  // Reset base_seqs in case ssrcs get re-used.
+  mRtpSendBaseSeqs.clear();
 }
 
 void WebrtcVideoConduit::CreateSendStream() {
@@ -1506,6 +1509,15 @@ Maybe<DOMHighResTimeStamp> WebrtcVideoConduit::LastRtcpReceived() const {
   return mLastRtcpReceived;
 }
 
+Maybe<uint16_t> WebrtcVideoConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+  auto it = mRtpSendBaseSeqs.find(aSsrc);
+  if (it == mRtpSendBaseSeqs.end()) {
+    return Nothing();
+  }
+  return Some(it->second);
+}
+
 DOMHighResTimeStamp WebrtcVideoConduit::GetNow() const {
   return mCall->GetNow();
 }
@@ -1585,12 +1597,14 @@ void WebrtcVideoConduit::StartReceiving() {
 
 bool WebrtcVideoConduit::SendRtp(const uint8_t* aData, size_t aLength,
                                  const webrtc::PacketOptions& aOptions) {
+  MOZ_ASSERT(aLength >= 12);
+  const uint16_t seqno = ntohs(*((uint16_t*)&aData[2]));
+  const uint32_t ssrc = ntohl(*((uint32_t*)&aData[8]));
+
   CSFLogVerbose(
       LOGTAG,
       "VideoConduit %p: Sending RTP Packet seq# %u, len %zu, SSRC %u (0x%x)",
-      this, (uint16_t)ntohs(*((uint16_t*)&aData[2])), aLength,
-      (uint32_t)ntohl(*((uint32_t*)&aData[8])),
-      (uint32_t)ntohl(*((uint32_t*)&aData[8])));
+      this, seqno, aLength, ssrc, ssrc);
 
   if (!mTransportActive) {
     CSFLogError(LOGTAG, "VideoConduit %p: RTP Packet Send Failed", this);
@@ -1602,12 +1616,21 @@ bool WebrtcVideoConduit::SendRtp(const uint8_t* aData, size_t aLength,
   packet.SetType(MediaPacket::RTP);
   mSenderRtpSendEvent.Notify(std::move(packet));
 
-  if (aOptions.packet_id >= 0) {
+  // Parse the sequence number of the first rtp packet as base_seq.
+  const auto inserted = mRtpSendBaseSeqs_n.insert({ssrc, seqno}).second;
+
+  if (inserted || aOptions.packet_id >= 0) {
     int64_t now_ms = PR_Now() / 1000;
     MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
-        __func__, [call = mCall, packet_id = aOptions.packet_id, now_ms] {
-          if (call->Call()) {
-            call->Call()->OnSentPacket({packet_id, now_ms});
+        __func__, [this, self = RefPtr<WebrtcVideoConduit>(this),
+                   packet_id = aOptions.packet_id, now_ms, ssrc, seqno] {
+          mRtpSendBaseSeqs.insert({ssrc, seqno});
+          if (packet_id >= 0) {
+            if (mCall->Call()) {
+              // TODO: This notification should ideally happen after the
+              // transport layer has sent the packet on the wire.
+              mCall->Call()->OnSentPacket({packet_id, now_ms});
+            }
           }
         })));
   }

@@ -489,12 +489,6 @@ void MediaPipeline::IncrementRtpPacketsSent(const MediaPacket& aPacket) {
   ++mRtpPacketsSent;
   mRtpBytesSent += aPacket.len();
 
-  if (!mRtpSendBaseSeq) {
-    MOZ_ASSERT(aPacket.len() >= 4);
-    // Parse the sequence number of the first rtp packet as base_seq.
-    mRtpSendBaseSeq.emplace((aPacket.data()[2] << 8) | aPacket.data()[3]);
-  }
-
   if (!(mRtpPacketsSent % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
             ("RTP sent packet count for %s Pipeline %p: %u (%" PRId64 " bytes)",

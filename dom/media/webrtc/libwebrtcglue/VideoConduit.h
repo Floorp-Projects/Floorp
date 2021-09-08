@@ -82,6 +82,8 @@ class WebrtcVideoConduit
   void DetachRenderer() override;
 
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
+  Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
+
   DOMHighResTimeStamp GetNow() const override;
 
   void StopTransmitting();
@@ -472,6 +474,12 @@ class WebrtcVideoConduit
 
   // Call thread only
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
+
+  // Call thread only. ssrc -> base_seq
+  std::map<uint32_t, uint16_t> mRtpSendBaseSeqs;
+  // libwebrtc network thread only. ssrc -> base_seq.
+  // To track changes needed to mRtpSendBaseSeqs.
+  std::map<uint32_t, uint16_t> mRtpSendBaseSeqs_n;
 
   // Tracking the attributes of received frames over time
   // Protected by mRendererMonitor

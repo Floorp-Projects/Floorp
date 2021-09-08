@@ -133,7 +133,10 @@ class MediaSessionConduit {
   virtual void ConnectSenderRtcpEvent(
       MediaEventSourceExc<MediaPacket>& aEvent) = 0;
 
+  // Sts thread only.
   virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
+  virtual Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const = 0;
+
   virtual DOMHighResTimeStamp GetNow() const = 0;
 
   virtual Ssrcs GetLocalSSRCs() const = 0;
