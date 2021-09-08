@@ -76,6 +76,23 @@ add_test(function test_ipv4_loopback() {
     Assert.ok(false, "unexpected exception: " + e);
   }
 
+  // Now with localhost connections disabled in offline mode.
+  Services.prefs.setBoolPref("network.disable-localhost-when-offline", true);
+  socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(
+    Ci.nsIUDPSocket
+  );
+
+  Assert.throws(() => {
+    socket.init2(
+      "127.0.0.1",
+      -1,
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      true
+    );
+  }, /NS_ERROR_OFFLINE/);
+
+  Services.prefs.setBoolPref("network.disable-localhost-when-offline", false);
+
   run_next_test();
 });
 
@@ -95,14 +112,33 @@ add_test(function test_ipv6_loopback() {
     Assert.ok(false, "unexpected exception: " + e);
   }
 
+  // Now with localhost connections disabled in offline mode.
+  Services.prefs.setBoolPref("network.disable-localhost-when-offline", true);
+  socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(
+    Ci.nsIUDPSocket
+  );
+
+  Assert.throws(() => {
+    socket.init2(
+      "::1",
+      -1,
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      true
+    );
+  }, /NS_ERROR_OFFLINE/);
+
+  Services.prefs.setBoolPref("network.disable-localhost-when-offline", false);
+
   run_next_test();
 });
 
 function run_test() {
   // jshint ignore:line
   Services.io.offline = true;
+  Services.prefs.setBoolPref("network.disable-localhost-when-offline", false);
   registerCleanupFunction(() => {
     Services.io.offline = false;
+    Services.prefs.clearUserPref("network.disable-localhost-when-offline");
   });
   run_next_test();
 }
