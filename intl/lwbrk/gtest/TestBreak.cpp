@@ -5,19 +5,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
-#include "nsXPCOM.h"
+
+#include "gtest/gtest.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/WordBreaker.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "gtest/gtest.h"
+#include "nsXPCOM.h"
 
-#include "mozilla/intl/LineBreaker.h"
-#include "mozilla/intl/WordBreaker.h"
+using mozilla::ArrayLength;
 
+// Turn off clang-format to align the ruler comments to the test strings.
+
+// clang-format off
 static char teng1[] =
-    //          1         2         3         4         5         6         7
-    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+  //           1         2         3         4         5         6         7
+  // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
     "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
+// clang-format on
 
 static uint32_t lexp1[] = {4,  7,  9,  14, 17, 34, 39, 40, 41,
                            42, 49, 54, 62, 64, 67, 69, 73};
@@ -26,20 +33,24 @@ static uint32_t wexp1[] = {4,  5,  7,  8,  9,  10, 14, 15, 17, 18, 22,
                            23, 33, 34, 35, 39, 43, 48, 49, 50, 54, 55,
                            56, 57, 62, 63, 64, 65, 67, 68, 69, 70, 72};
 
+// clang-format off
 static char teng2[] =
-    //          1         2         3         4         5         6         7
-    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+  //           1         2         3         4         5         6         7
+  // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
     "()((reasonab(l)e) line  break. .01123=45x48.";
+// clang-format on
 
 static uint32_t lexp2[] = {17, 22, 23, 30, 44};
 
 static uint32_t wexp2[] = {4,  12, 13, 14, 15, 16, 17, 18, 22,
                            24, 29, 30, 31, 32, 37, 38, 43};
 
+// clang-format off
 static char teng3[] =
-    //          1         2         3         4         5         6         7
-    // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+  //           1         2         3         4         5         6         7
+  // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
     "It's a test to test(ronae ) line break....";
+// clang-format on
 
 static uint32_t lexp3[] = {4, 6, 11, 14, 25, 27, 32, 42};
 
@@ -107,7 +118,7 @@ bool TestASCIILB(mozilla::intl::LineBreaker* lb, const char* in,
   return Check(in, out, outlen, i, res);
 }
 
-bool TestASCIIWB(mozilla::intl::WordBreaker* lb, const char* in,
+bool TestASCIIWB(mozilla::intl::WordBreaker* wb, const char* in,
                  const uint32_t* out, uint32_t outlen) {
   NS_ConvertASCIItoUTF16 eng1(in);
 
@@ -115,9 +126,9 @@ bool TestASCIIWB(mozilla::intl::WordBreaker* lb, const char* in,
   uint32_t res[256];
   int32_t curr = 0;
 
-  for (i = 0, curr = lb->Next(eng1.get(), eng1.Length(), curr);
+  for (i = 0, curr = wb->Next(eng1.get(), eng1.Length(), curr);
        curr != NS_WORDBREAKER_NEED_MORE_TEXT && i < 256;
-       curr = lb->Next(eng1.get(), eng1.Length(), curr), i++) {
+       curr = wb->Next(eng1.get(), eng1.Length(), curr), i++) {
     res[i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
   }
 
@@ -130,9 +141,9 @@ TEST(LineBreak, LineBreaker)
 
   ASSERT_TRUE(t);
 
-  ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, sizeof(lexp1) / sizeof(uint32_t)));
-  ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, sizeof(lexp2) / sizeof(uint32_t)));
-  ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, sizeof(lexp3) / sizeof(uint32_t)));
+  ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, ArrayLength(lexp1)));
+  ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, ArrayLength(lexp2)));
+  ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, ArrayLength(lexp3)));
 }
 
 TEST(LineBreak, WordBreaker)
@@ -140,9 +151,9 @@ TEST(LineBreak, WordBreaker)
   RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
   ASSERT_TRUE(t);
 
-  ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, sizeof(wexp1) / sizeof(uint32_t)));
-  ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, sizeof(wexp2) / sizeof(uint32_t)));
-  ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, sizeof(wexp3) / sizeof(uint32_t)));
+  ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, ArrayLength(wexp1)));
+  ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, ArrayLength(wexp2)));
+  ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, ArrayLength(wexp3)));
 }
 
 //                         012345678901234
@@ -166,7 +177,7 @@ void TestPrintWordWithBreak() {
     int32_t cur = 0;
     cur = wbk->Next(fragText.get(), fragText.Length(), cur);
     uint32_t start = 0;
-    for (uint32_t j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT; j++) {
+    while (cur != NS_WORDBREAKER_NEED_MORE_TEXT) {
       result.Append(Substring(fragText, start, cur - start));
       result.Append('^');
       start = (cur >= 0 ? cur : cur - start);
