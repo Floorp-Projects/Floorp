@@ -416,6 +416,13 @@ def show_taskgraph(options):
 
             print(diff_output)
 
+        if options["format"] != "json":
+            print(
+                "If you were expecting differences in task bodies "
+                'you should pass "-J"\n',
+                file=sys.stderr,
+            )
+
     if len(parameters) > 1:
         print("See '{}' for logs".format(logdir), file=sys.stderr)
 
