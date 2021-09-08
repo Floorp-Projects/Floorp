@@ -35,6 +35,7 @@ input {
 
 body {
   --newtab-background-color: #F9F9FB;
+  --newtab-background-color-secondary: #FFF;
   --newtab-border-primary-color: #B1B1B3;
   --newtab-border-secondary-color: #D7D7DB;
   --newtab-element-active-color: rgba(215, 215, 219, 0.6);
@@ -48,7 +49,7 @@ body {
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-text-primary-color: #15141a;
   --newtab-text-secondary-color: #737373;
-  --newtab-textbox-background-color: #FFF;
+  --newtab-textbox-background-color: var(--newtab-background-color-secondary);
   --newtab-textbox-border: rgba(12, 12, 13, 0.2);
   --newtab-textbox-focus-color: #0060DF;
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #0060DF, 0 0 0 4px rgba(0, 96, 223, 0.3);
@@ -62,8 +63,8 @@ body {
   --newtab-feed-button-text-faded: rgba(12, 12, 13, 0);
   --newtab-feed-button-spinner: #737373;
   --newtab-contextmenu-background-color: #F9F9FA;
-  --newtab-contextmenu-button-color: #FFF;
-  --newtab-modal-color: #FFF;
+  --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
+  --newtab-modal-color: var(--newtab-background-color-secondary);
   --newtab-overlay-color: rgba(237, 237, 240, 0.8);
   --newtab-section-header-text-color: #737373;
   --newtab-section-navigation-text-color: #737373;
@@ -73,17 +74,17 @@ body {
   --newtab-search-header-background-color: rgba(249, 249, 250, 0.95);
   --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
   --newtab-search-wordmark-color: #363959;
-  --newtab-topsites-background-color: #FFF;
+  --newtab-topsites-background-color: var(--newtab-background-color-secondary);
   --newtab-topsites-icon-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
   --newtab-topsites-label-color: inherit;
   --newtab-topsites-outer-card-hover: rgba(0, 0, 0, 0.05);
   --newtab-topsites-context-menu-hover: rgba(0, 0, 0, 0.05);
   --newtab-card-active-outline-color: #D7D7DB;
-  --newtab-card-background-color: #FFF;
+  --newtab-card-background-color: var(--newtab-background-color-secondary);
   --newtab-card-hairline-color: rgba(0, 0, 0, 0.1);
   --newtab-card-placeholder-color: #D7D7DB;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
-  --newtab-snippets-background-color: #FFF;
+  --newtab-snippets-background-color: var(--newtab-background-color-secondary);
   --newtab-snippets-hairline-color: transparent;
   --newtab-background-primary-text-color: #151515;
   --newtab-focus-outline: rgba(0, 96, 223, 0.25);
@@ -93,9 +94,9 @@ body {
   --newtab-primary-action-background: #0060DF;
   --newtab-primary-action-background-off: #E9E9E9;
   --customize-menu-primary-text-color: #20123A;
-  --customize-menu-check-fill: #FFF;
+  --customize-menu-check-fill: #20123A;
   --customize-menu-check-fill-contrast: #000;
-  --customize-menu-background: #FFF;
+  --customize-menu-background: var(--newtab-background-color-secondary);
   --customize-menu-secondary-action-background: #F9F9FA;
   --customize-menu-secondary-action-background-hover: #EDEDF0;
   --customize-menu-secondary-action-background-active: #E2E2E6;
@@ -110,6 +111,7 @@ body {
 }
 body[lwt-newtab-brighttext] {
   --newtab-background-color: #2B2A33;
+  --newtab-background-color-secondary: #42414d;
   --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
   --newtab-border-secondary-color: rgba(249, 249, 250, 0.1);
   --newtab-button-primary-color: #0060DF;
@@ -125,7 +127,6 @@ body[lwt-newtab-brighttext] {
   --newtab-text-conditional-color: #F9F9FA;
   --newtab-text-primary-color: #fbfbfe;
   --newtab-text-secondary-color: rgba(249, 249, 250, 0.8);
-  --newtab-textbox-background-color: #38383D;
   --newtab-textbox-border: rgba(249, 249, 250, 0.2);
   --newtab-textbox-focus-color: #45A1FF;
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #45A1FF, 0 0 0 4px rgba(69, 161, 255, 0.3);
@@ -148,17 +149,14 @@ body[lwt-newtab-brighttext] {
   --newtab-search-header-background-color: rgba(42, 42, 46, 0.95);
   --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
   --newtab-search-wordmark-color: #FFF;
-  --newtab-topsites-background-color: #42414d;
   --newtab-topsites-icon-shadow: none;
   --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
   --newtab-topsites-outer-card-hover: rgba(180, 180, 180, 0.1);
   --newtab-topsites-context-menu-hover: rgba(180, 180, 180, 0.1);
   --newtab-card-active-outline-color: #4A4A4F;
-  --newtab-card-background-color: #42414d;
   --newtab-card-hairline-color: rgba(249, 249, 250, 0.1);
   --newtab-card-placeholder-color: #4A4A4F;
   --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
-  --newtab-snippets-background-color: #38383D;
   --newtab-snippets-hairline-color: rgba(255, 255, 255, 0.1);
   --newtab-background-primary-text-color: #CDCDD4;
   --newtab-focus-outline: rgba(80, 145, 241, 0.5);
@@ -169,7 +167,6 @@ body[lwt-newtab-brighttext] {
   --newtab-seperator-line-color: #53515F;
   --customize-menu-primary-text-color: #E0E0E6;
   --customize-menu-check-fill: #E0E0E6;
-  --customize-menu-background: #38383D;
   --customize-menu-secondary-action-background: #515156;
   --customize-menu-secondary-action-background-hover: #606065;
   --customize-menu-secondary-action-background-active: #6F6F74;
@@ -2803,7 +2800,8 @@ main.has-snippet {
   box-shadow: var(--newtab-card-first-shadow);
 }
 [lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
-  background: #42414d;
+  box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
+  background: var(--newtab-card-background-color);
 }
 .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
   border-radius: 8px 8px 0 0;

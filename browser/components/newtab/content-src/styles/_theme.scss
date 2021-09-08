@@ -22,6 +22,7 @@ $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 body {
   // General styles
   --newtab-background-color: #{$in-content-page-background};
+  --newtab-background-color-secondary: #{$newtab-background-secondary};
   --newtab-border-primary-color: #{$grey-40};
   --newtab-border-secondary-color: #{$grey-30};
   --newtab-element-active-color: #{$grey-30-60};
@@ -36,7 +37,7 @@ body {
   --newtab-text-conditional-color: #{$grey-60};
   --newtab-text-primary-color: #{$in-content-page-color};
   --newtab-text-secondary-color: #{$grey-50};
-  --newtab-textbox-background-color: #{$white};
+  --newtab-textbox-background-color: var(--newtab-background-color-secondary);
   --newtab-textbox-border: #{$grey-90-20};
   @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
 
@@ -57,10 +58,10 @@ body {
 
   // Context menu
   --newtab-contextmenu-background-color: #{$grey-10};
-  --newtab-contextmenu-button-color: #{$white};
+  --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
 
   // Modal + overlay
-  --newtab-modal-color: #{$white};
+  --newtab-modal-color: var(--newtab-background-color-secondary);
   --newtab-overlay-color: #{$grey-20-80};
 
   // Sections
@@ -76,7 +77,7 @@ body {
   --newtab-search-wordmark-color: #{$firefox-wordmark-default-color};
 
   // Top Sites
-  --newtab-topsites-background-color: #{$white};
+  --newtab-topsites-background-color: var(--newtab-background-color-secondary);
   --newtab-topsites-icon-shadow: inset #{$inner-box-shadow};
   --newtab-topsites-label-color: inherit;
   --newtab-topsites-outer-card-hover: #{$newtab-card-hover-color};
@@ -84,13 +85,13 @@ body {
 
   // Cards
   --newtab-card-active-outline-color: #{$grey-30};
-  --newtab-card-background-color: #{$white};
+  --newtab-card-background-color: var(--newtab-background-color-secondary);
   --newtab-card-hairline-color: #{$black-10};
   --newtab-card-placeholder-color: #{$grey-30};
   --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
 
   // Snippets
-  --newtab-snippets-background-color: #{$white};
+  --newtab-snippets-background-color: var(--newtab-background-color-secondary);
   --newtab-snippets-hairline-color: transparent;
 
   // New New Tab
@@ -102,9 +103,9 @@ body {
   --newtab-primary-action-background: #{$blue-60};
   --newtab-primary-action-background-off: #{$newtab-primary-action-background-off};
   --customize-menu-primary-text-color: #{$newtab-card-primary-text-color};
-  --customize-menu-check-fill: #{$white};
+  --customize-menu-check-fill: #{$newtab-card-primary-text-color};
   --customize-menu-check-fill-contrast: #{$black};
-  --customize-menu-background: #{$white};
+  --customize-menu-background: var(--newtab-background-color-secondary);
   --customize-menu-secondary-action-background: #{$grey-10};
   --customize-menu-secondary-action-background-hover: #{$grey-20};
   --customize-menu-secondary-action-background-active: #{$newtab-card-secondary-action-background-active};
@@ -120,6 +121,7 @@ body {
   &[lwt-newtab-brighttext] {
     // General styles
     --newtab-background-color: #{$in-content-page-background-dark};
+    --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
     --newtab-border-primary-color: #{$grey-10-80};
     --newtab-border-secondary-color: #{$grey-10-10};
     --newtab-button-primary-color: #{$blue-60};
@@ -135,7 +137,6 @@ body {
     --newtab-text-conditional-color: #{$grey-10};
     --newtab-text-primary-color: #{$in-content-page-color-dark};
     --newtab-text-secondary-color: #{$grey-10-80};
-    --newtab-textbox-background-color: #{$grey-70};
     --newtab-textbox-border: #{$grey-10-20};
     @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
 
@@ -171,7 +172,6 @@ body {
     --newtab-search-wordmark-color: #{$firefox-wordmark-darktheme-color};
 
     // Top Sites
-    --newtab-topsites-background-color: #{$proton-dark-grey-30};
     --newtab-topsites-icon-shadow: none;
     --newtab-topsites-label-color: #{$grey-10-80};
     --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};
@@ -179,13 +179,11 @@ body {
 
     // Cards
     --newtab-card-active-outline-color: #{$grey-60};
-    --newtab-card-background-color: #{$proton-dark-grey-30};
     --newtab-card-hairline-color: #{$grey-10-10};
     --newtab-card-placeholder-color: #{$grey-60};
     --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
 
     // Snippets
-    --newtab-snippets-background-color: #{$grey-70};
     --newtab-snippets-hairline-color: #{$white-10};
 
     // New New Tab
@@ -198,7 +196,6 @@ body {
     --newtab-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
     --customize-menu-primary-text-color: #{$newtab-card-darktheme-primary-text-color};
     --customize-menu-check-fill: #{$newtab-card-darktheme-primary-text-color};
-    --customize-menu-background: #{$grey-70};
     --customize-menu-secondary-action-background: #{$newtab-card-darktheme-secondary-action-background};
     --customize-menu-secondary-action-background-hover: #{$newtab-card-darktheme-secondary-action-background-hover};
     --customize-menu-secondary-action-background-active: #{$newtab-card-darktheme-secondary-action-background-active};
