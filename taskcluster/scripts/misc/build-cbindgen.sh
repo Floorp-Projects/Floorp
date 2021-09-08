@@ -3,11 +3,14 @@ set -x -e -v
 
 # Needed by osx-cross-linker.
 export TARGET="$1"
-COMPRESS_EXT=zst
 
 case "$(uname -s)" in
+Linux)
+    COMPRESS_EXT=xz
+    ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build
+    COMPRESS_EXT=bz2
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
 
@@ -46,7 +49,7 @@ cargo build --verbose --release --target "$TARGET"
 
 mkdir cbindgen
 cp target/$TARGET/release/cbindgen* cbindgen/
-tar -c cbindgen | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > cbindgen.tar.$COMPRESS_EXT
+tar -acf cbindgen.tar.$COMPRESS_EXT cbindgen
 mkdir -p $UPLOAD_DIR
 cp cbindgen.tar.$COMPRESS_EXT $UPLOAD_DIR
 
