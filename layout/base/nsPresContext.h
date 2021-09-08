@@ -163,6 +163,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet);
 
+  FontVisibility GetFontVisibility() const { return mFontVisibility; }
+
   /**
    * Get the nsFontMetrics that describe the properties of
    * an nsFont.
@@ -1149,6 +1151,11 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // mDynamicToolbarMaxHeight or `app units per device pixels` changes.
   void AdjustSizeForViewportUnits();
 
+  // Call in response to prefs changes that might affect what fonts should be
+  // visibile to CSS. Returns whether the current visibility value actually
+  // changed (in which case content should be reflowed).
+  bool UpdateFontVisibility();
+
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1353,6 +1360,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 #ifdef DEBUG
   unsigned mInitialized : 1;
 #endif
+
+  FontVisibility mFontVisibility = FontVisibility::Unknown;
 
  protected:
   virtual ~nsPresContext();

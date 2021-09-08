@@ -273,7 +273,7 @@ bool gfxDWriteFont::GetFakeMetricsForArialBlack(
   style.weight = FontWeight(700);
 
   gfxFontEntry* fe = gfxPlatformFontList::PlatformFontList()->FindFontForFamily(
-      "Arial"_ns, &style);
+      nullptr, "Arial"_ns, &style);
   if (!fe || fe == mFontEntry) {
     return false;
   }
