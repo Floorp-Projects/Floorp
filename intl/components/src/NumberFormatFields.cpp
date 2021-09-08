@@ -9,8 +9,7 @@
 #include "unicode/unum.h"
 #include "unicode/unumberformatter.h"
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 bool NumberFormatFields::append(NumberPartType type, int32_t begin,
                                 int32_t end) {
@@ -324,5 +323,4 @@ Result<std::u16string_view, ICUError> FormatResultToParts(
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
 }
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl

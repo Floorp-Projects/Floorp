@@ -24,8 +24,7 @@
 
 struct UPluralRules;
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 struct PluralRulesOptions;
 
@@ -443,7 +442,6 @@ class NumberFormat final {
   }
 };
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl
 
 #endif
