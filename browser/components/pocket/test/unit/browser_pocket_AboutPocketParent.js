@@ -30,10 +30,8 @@ function test_runner(test) {
         },
       },
       embedderElement: {
-        contentDocument: {
-          nodePrincipal: "nodePrincipal",
-          csp: "csp",
-        },
+        csp: "csp",
+        contentPrincipal: "contentPrincipal",
       },
     };
 
@@ -152,7 +150,7 @@ test_runner(
     );
     Assert.deepEqual(
       args,
-      [{ foo: 1 }, "nodePrincipal", "csp"],
+      [{ foo: 1 }, "contentPrincipal", "csp"],
       "Should fire onOpenTabWithUrl with proper args from PKT_openTabWithUrl"
     );
   }
@@ -178,7 +176,7 @@ test_runner(
     );
     Assert.deepEqual(
       args,
-      [{ foo: 1 }, "nodePrincipal", "csp"],
+      [{ foo: 1 }, "contentPrincipal", "csp"],
       "Should fire onOpenTabWithPocketUrl with proper args from PKT_openTabWithPocketUrl"
     );
   }

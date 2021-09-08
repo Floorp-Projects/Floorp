@@ -56,6 +56,7 @@ var PocketCustomizableWidget = {
         let frame = doc.createXULElement("browser");
 
         frame.setAttribute("type", "content");
+        frame.setAttribute("remote", true);
         panelNode.appendChild(frame);
 
         SaveToPocket.onShownInToolbarPanel(panelNode, frame);
