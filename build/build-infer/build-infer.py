@@ -31,7 +31,7 @@ def build_tar_package(tar, name, base, directories):
     name = os.path.realpath(name)
     run_in(
         base,
-        [tar, "-c", "-%s" % ("J" if ".xz" in name else "j"), "-f", name] + directories,
+        [tar, "-c", "-a", "-f", name] + directories,
     )
 
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         )
         build_tar_package(
             "tar",
-            "%s.tar.xz" % (package_name),
+            "%s.tar.zst" % (package_name),
             infer_package_with_pref,
             [
                 os.path.join("infer", "bin"),

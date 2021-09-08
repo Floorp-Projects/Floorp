@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x -e -v
 
-COMPRESS_EXT=bz2
+COMPRESS_EXT=zst
 
 if [ -n "$TOOLTOOL_MANIFEST" ]; then
   . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh

@@ -9,7 +9,7 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-grcov.sh
-        toolchain-artifact: public/build/grcov.tar.xz
+        toolchain-artifact: public/build/grcov.tar.zst
     fetches:
         fetch:
             - grcov
@@ -42,7 +42,6 @@ win64-grcov:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
-        toolchain-artifact: public/build/grcov.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal

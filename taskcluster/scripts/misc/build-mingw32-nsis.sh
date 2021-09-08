@@ -41,7 +41,7 @@ scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS 
 
 cd $MOZ_FETCHES_DIR
 
-tar caf nsis.tar.xz mingw32
+tar caf nsis.tar.zst mingw32
 
 mkdir -p $UPLOAD_DIR
 cp nsis.tar.* $UPLOAD_DIR
