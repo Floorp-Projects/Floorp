@@ -8145,8 +8145,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
   mozilla::intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   int32_t nextWord = textStart > 0 ? textStart - 1 : textStart;
   while (true) {
-    nextWord =
-        wordBreaker->NextWord(aContext.get(), aContext.Length(), nextWord);
+    nextWord = wordBreaker->Next(aContext.get(), aContext.Length(), nextWord);
     if (NS_WORDBREAKER_NEED_MORE_TEXT == nextWord ||
         nextWord > textStart + textLen) {
       break;
