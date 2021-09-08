@@ -29,6 +29,7 @@
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
+#include "nsISupports.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
 #include "nsDocShell.h"
@@ -1388,20 +1389,17 @@ void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady() {
     return;
   }
 
-  // Wait for our blocker promise to resolve, if present.
-  if (mPrepareToChangePromise) {
-    mPrepareToChangePromise->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [self = RefPtr{this}](bool) { self->Finish(); },
-        [self = RefPtr{this}](nsresult aRv) { self->Cancel(aRv); });
+  MOZ_ASSERT(!mProcessReady);
+  mProcessReady = true;
+  MaybeFinish();
+}
+
+void CanonicalBrowsingContext::PendingRemotenessChange::MaybeFinish() {
+  if (!mPromise) {
     return;
   }
 
-  Finish();
-}
-
-void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
-  if (!mPromise) {
+  if (!mProcessReady || mWaitingForPrepareToChange) {
     return;
   }
 
@@ -1703,7 +1701,6 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
   mPromise = nullptr;
   mTarget = nullptr;
-  mPrepareToChangePromise = nullptr;
 }
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
@@ -1715,8 +1712,7 @@ CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
       mOptions(aOptions) {}
 
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
-  MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup &&
-                 !mPrepareToChangePromise,
+  MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup,
              "should've already been Cancel() or Complete()-ed");
 }
 
@@ -1788,6 +1784,8 @@ CanonicalBrowsingContext::ChangeRemoteness(
   }
 
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
+  promise->UseDirectTaskDispatch(__func__);
+
   RefPtr<PendingRemotenessChange> change =
       new PendingRemotenessChange(this, promise, aPendingSwitchId, aOptions);
   mPendingRemotenessChange = change;
@@ -1815,7 +1813,18 @@ CanonicalBrowsingContext::ChangeRemoteness(
       change->Cancel(rv);
       return promise.forget();
     }
-    change->mPrepareToChangePromise = GenericPromise::FromDomPromise(blocker);
+
+    // Mark prepareToChange as unresolved, and wait for it to become resolved.
+    if (blocker && blocker->State() != Promise::PromiseState::Resolved) {
+      change->mWaitingForPrepareToChange = true;
+      RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+          [change](JSContext* aCx, JS::HandleValue aValue) {
+            change->mWaitingForPrepareToChange = false;
+            change->MaybeFinish();
+          },
+          [change](nsresult aRv) { change->Cancel(aRv); });
+      blocker->AppendNativeHandler(listener);
+    }
   }
 
   // Switching a subframe to be local within it's embedding process.
@@ -1830,7 +1839,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
         "their embedder");
     MOZ_DIAGNOSTIC_ASSERT(!aOptions.mReplaceBrowsingContext);
     MOZ_DIAGNOSTIC_ASSERT(!aOptions.mRemoteType.IsEmpty());
-    MOZ_DIAGNOSTIC_ASSERT(!change->mPrepareToChangePromise);
+    MOZ_DIAGNOSTIC_ASSERT(!change->mWaitingForPrepareToChange);
     MOZ_DIAGNOSTIC_ASSERT(!change->mSpecificGroup);
 
     // Switching to local, so we don't need to create a new process, and will
@@ -1875,10 +1884,14 @@ CanonicalBrowsingContext::ChangeRemoteness(
   // the change is complete. This should prevent the process dying before
   // we're ready to use it.
   change->mContentParent->AddKeepAlive();
-  change->mContentParent->WaitForLaunchAsync()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [change](ContentParent*) { change->ProcessLaunched(); },
-      [change](LaunchError) { change->Cancel(NS_ERROR_FAILURE); });
+  if (change->mContentParent->IsLaunching()) {
+    change->mContentParent->WaitForLaunchAsync()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [change](ContentParent*) { change->ProcessLaunched(); },
+        [change](LaunchError) { change->Cancel(NS_ERROR_FAILURE); });
+  } else {
+    change->ProcessLaunched();
+  }
   return promise.forget();
 }
 
