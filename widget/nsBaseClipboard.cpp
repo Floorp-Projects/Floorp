@@ -5,16 +5,9 @@
 
 #include "nsBaseClipboard.h"
 
-#include "mozilla/Logging.h"
-
 #include "nsIClipboardOwner.h"
 #include "nsCOMPtr.h"
-#include "nsError.h"
 #include "nsXPCOM.h"
-
-using mozilla::LogLevel;
-
-static mozilla::LazyLogModule sBaseClipboardLog("BaseClipboard");
 
 nsBaseClipboard::nsBaseClipboard()
     : mEmptyingForSetData(false), mIgnoreEmptyNotification(false) {}
@@ -36,13 +29,8 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
-  MOZ_LOG(sBaseClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
-
-  if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
-    MOZ_LOG(sBaseClipboardLog, LogLevel::Debug,
-            ("%s: skipping update.", __FUNCTION__));
+  if (aTransferable == mTransferable && anOwner == mClipboardOwner)
     return NS_OK;
-  }
   bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   bool findClipPresent;
@@ -52,10 +40,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     return NS_ERROR_FAILURE;
 
   mEmptyingForSetData = true;
-  if (NS_FAILED(EmptyClipboard(aWhichClipboard))) {
-    MOZ_LOG(sBaseClipboardLog, LogLevel::Debug,
-            ("%s: emptying clipboard failed.", __FUNCTION__));
-  }
+  EmptyClipboard(aWhichClipboard);
   mEmptyingForSetData = false;
 
   mClipboardOwner = anOwner;
@@ -64,10 +49,6 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   nsresult rv = NS_ERROR_FAILURE;
   if (mTransferable) {
     rv = SetNativeClipboardData(aWhichClipboard);
-  }
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(sBaseClipboardLog, LogLevel::Debug,
-            ("%s: setting native clipboard data failed"));
   }
 
   return rv;
@@ -80,8 +61,6 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
 NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
-
-  MOZ_LOG(sBaseClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
   bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
@@ -98,9 +77,6 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
-  MOZ_LOG(sBaseClipboardLog, LogLevel::Debug,
-          ("%s: clipboard=%i", __FUNCTION__, aWhichClipboard));
-
   bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   bool findClipPresent;
