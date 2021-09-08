@@ -70,6 +70,3 @@ text-action-spell-add-dictionaries =
 text-action-spell-dictionaries =
     .label = Languages
     .accesskey = L
-
-text-action-search-text-box-clear =
-    .title = Clear
