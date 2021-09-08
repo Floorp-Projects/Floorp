@@ -96,25 +96,10 @@ describe("<BaseContent>", () => {
     );
   });
 
-  it("should render the PrefsButton component with featureConfig values", () => {
-    const wrapper = shallow(
-      <BaseContent
-        {...DEFAULT_PROPS}
-        Prefs={{ values: { featureConfig: { prefsButtonIcon: "icon-foo" } } }}
-      />
-    );
-    assert.lengthOf(wrapper.find(PrefsButton), 1);
-    assert.equal(wrapper.find(PrefsButton).prop("icon"), "icon-foo");
-  });
-
   it("should dispatch a user event when the customize menu is opened or closed", () => {
     const dispatch = sinon.stub();
     const wrapper = shallow(
-      <BaseContent
-        {...DEFAULT_PROPS}
-        Prefs={{ values: { "newNewtabExperience.enabled": "true" } }}
-        dispatch={dispatch}
-      />
+      <BaseContent {...DEFAULT_PROPS} dispatch={dispatch} />
     );
     wrapper.instance().openCustomizationMenu();
     assert.calledWith(dispatch, ac.UserEvent({ event: "SHOW_PERSONALIZE" }));

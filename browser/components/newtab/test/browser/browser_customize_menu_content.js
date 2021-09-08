@@ -3,8 +3,6 @@
 test_newtab({
   async before({ pushPrefs }) {
     await pushPrefs(
-      ["browser.newtabpage.activity-stream.newNewtabExperience.enabled", true],
-      ["browser.newtabpage.activity-stream.customizationMenu.enabled", true],
       ["browser.newtabpage.activity-stream.feeds.topsites", false],
       ["browser.newtabpage.activity-stream.feeds.section.topstories", false],
       ["browser.newtabpage.activity-stream.feeds.section.highlights", false]
@@ -111,12 +109,6 @@ test_newtab({
   },
   async after() {
     Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-    );
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.customizationMenu.enabled"
-    );
-    Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.feeds.topsites"
     );
     Services.prefs.clearUserPref(
@@ -129,12 +121,6 @@ test_newtab({
 });
 
 test_newtab({
-  async before({ pushPrefs }) {
-    await pushPrefs([
-      "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
-      true,
-    ]);
-  },
   test: async function test_open_close_customizeMenu() {
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     await ContentTaskUtils.waitForCondition(
@@ -231,11 +217,6 @@ test_newtab({
           content.document.querySelector(".customize-menu")
         ).transform !== defaultPos,
       "Customize Menu should not be visible anymore"
-    );
-  },
-  async after() {
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
     );
   },
 });
