@@ -3,32 +3,7 @@
 //* -------------------------------------------------------------------------- */
 // Proton colors
 
-$proton-white: rgb(255, 255, 255);
-$proton-grey-10: rgb(249, 249, 251);
-$proton-grey-20: rgb(240, 240, 244);
-$proton-grey-30: rgb(224, 224, 230);
-$proton-grey-40: rgb(207, 207, 216);
-
-$proton-dark-grey-05: rgb(91, 91, 102);
-$proton-dark-grey-10: rgb(82, 82, 94);
 $proton-dark-grey-30: rgb(66, 65, 77);
-$proton-dark-grey-60: rgb(43, 42, 51);
-$proton-dark-grey-80: rgb(28, 27, 34);
-
-$proton-red-60: rgb(226, 40, 80);
-$proton-red-70: rgb(197, 0, 66);
-$proton-red-80: rgb(129, 2, 32);
-
-$proton-blue-05: rgb(170, 242, 255);
-$proton-blue-10: rgb(128, 235, 255);
-$proton-blue-20: rgb(0, 221, 255);
-$proton-blue-40: rgb(0, 144, 237);
-$proton-blue-50: rgb(0, 97, 224);
-$proton-blue-60: rgb(2, 80, 187);
-$proton-blue-70: rgb(5, 62, 148);
-
-$proton-green-40: rgb(82, 255, 189);
-$proton-green-60: rgb(41, 194, 161);
 
 //* -------------------------------------------------------------------------- */
 // Photon colors from http://design.firefox.com/photon/visuals/color.html
@@ -48,9 +23,7 @@ $grey-70: #38383D;
 $grey-80: #2A2A2E;
 $grey-90: #0C0C0D;
 $teal-10: #A7FFFE;
-$teal-60: #00C8D7;
 $teal-70: #008EA4;
-$teal-80: #005A71;
 $red-60: #D70022;
 $yellow-50: #FFE900;
 
@@ -69,9 +42,7 @@ $grey-10-95: rgba($grey-10, 0.95);
 $grey-20-60: rgba($grey-20, 0.6);
 $grey-20-80: rgba($grey-20, 0.8);
 $grey-30-60: rgba($grey-30, 0.6);
-$grey-60-60: rgba($grey-60, 0.6);
 $grey-60-70: rgba($grey-60, 0.7);
-$grey-70-40: rgba($grey-70, 0.4);
 $grey-70-60: rgba($grey-70, 0.6);
 $grey-80-95: rgba($grey-80, 0.95);
 $grey-90-00: rgba($grey-90, 0);
@@ -83,17 +54,13 @@ $grey-90-50: rgba($grey-90, 0.5);
 $grey-90-60: rgba($grey-90, 0.6);
 $grey-90-70: rgba($grey-90, 0.7);
 $grey-90-80: rgba($grey-90, 0.8);
-$grey-90-90: rgba($grey-90, 0.9);
 
 $blue-40-40: rgba($blue-40, 0.4);
 $blue-50-50: rgba($blue-50, 0.5);
 $blue-50-30: rgba($blue-50, 0.3);
-$blue-50-50: rgba($blue-50, 0.5);
 
 $black: #000;
-$black-5: rgba($black, 0.05);
 $black-10: rgba($black, 0.1);
-$black-12: rgba($black, 0.12);
 $black-15: rgba($black, 0.15);
 $black-20: rgba($black, 0.2);
 $black-25: rgba($black, 0.25);
@@ -105,26 +72,16 @@ $black-30: rgba($black, 0.3);
 $white: #FFF;
 $white-0: rgba($white, 0);
 $white-10: rgba($white, 0.1);
-$white-50: rgba($white, 0.5);
-$white-60: rgba($white, 0.6);
-$white-70: rgba($white, 0.7);
-$white-100: rgba($white, 1);
-$ghost-white: #FAFAFC;
 $pocket-teal: #50BCB6;
-$pocket-red: #EF4056;
 $shadow-10: rgba(12, 12, 13, 0.1);
 $bookmark-icon-fill: #0A84FF;
 $download-icon-fill: #12BC00;
 $pocket-icon-fill: #D70022;
-$email-input-focus: rgba($blue-50, 0.3);
 $email-input-invalid: rgba($red-60, 0.3);
 $aw-extra-blue-1: #004EC2;
 $aw-extra-blue-2: #0080FF;
 $aw-extra-blue-3: #00C7FF;
 $about-welcome-gradient: linear-gradient(to bottom, $blue-70 40%, $aw-extra-blue-1 60%, $blue-60 80%, $aw-extra-blue-2 90%, $aw-extra-blue-3 100%);
-$about-welcome-extra-links: #676F7E;
-$firefox-wordmark-default-color: #363959;
-$firefox-wordmark-darktheme-color: $white;
 
 // New New Tab Experience colors.
 $newtab-background-button-default-color: rgba(223, 223, 223, 0.5);
@@ -138,6 +95,7 @@ $newtab-background-button-darktheme-active-color: rgba(173, 173, 173, 0.5);
 $newtab-background-primary-text-color: #151515;
 $newtab-background-darktheme-primary-text-color: #CDCDD4;
 $newtab-wordmark-default-color: #20123A;
+$newtab-wordmark-darktheme-color: rgb(251, 251, 254);
 
 $in-content-page-color: rgb(21, 20, 26);
 $in-content-page-color-dark: rgb(251, 251, 254);

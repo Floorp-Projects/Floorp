@@ -3,10 +3,8 @@
 $top-sites-size: $grid-unit-small;
 $top-sites-border-radius: 8px;
 $top-sites-icon-border-radius: 4px;
-$top-sites-vertical-space: 8px;
 $rich-icon-size: 96px;
 $default-icon-wrapper-size: 32px;
-$search-icon-wrapper-size: 42px;
 $default-icon-size: 32px;
 $default-icon-offset: 6px;
 $half-base-gutter: math.div($base-gutter, 2);
@@ -236,10 +234,6 @@ $letter-fallback-color: $white;
     width: 32px;
     bottom: -$default-icon-offset;
     inset-inline-end: -$default-icon-offset;
-  }
-
-  &:hover .search-topsite {
-    $hover-icon-wrapper-size: $search-icon-wrapper-size + 4;
   }
 
   &.placeholder {
