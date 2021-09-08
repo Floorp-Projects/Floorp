@@ -23,8 +23,8 @@ richlistitem[selected="true"] {
 }
 
 richlistbox:where(:focus) > richlistitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 richlistbox.theme-listbox > richlistitem {
