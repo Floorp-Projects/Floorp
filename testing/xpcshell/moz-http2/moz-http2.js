@@ -346,6 +346,13 @@ function handleRequest(req, res) {
       return null;
     }
 
+    if (u.query.corruptedAnswer) {
+      // DNS response header is 12 bytes, we check for this minimum length
+      // at the start of decoding so this is the simplest way to force
+      // a decode error.
+      return "<12bytes";
+    }
+
     function responseData() {
       if (
         packet.questions.length > 0 &&
