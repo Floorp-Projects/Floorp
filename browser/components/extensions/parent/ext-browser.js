@@ -365,6 +365,10 @@ class TabTracker extends TabTrackerBase {
     if (!nativeTab.parentNode) {
       throw new Error("Cannot attach ID to a destroyed tab.");
     }
+    if (nativeTab.ownerGlobal.closed) {
+      throw new Error("Cannot attach ID to a tab in a closed window.");
+    }
+
     this._tabs.set(nativeTab, id);
     if (nativeTab.linkedBrowser) {
       this._browsers.set(nativeTab.linkedBrowser, id);
