@@ -8,7 +8,7 @@
   url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/releasenotes/"
 - type: show-url
   # yamllint disable-line rule:line-length
-  url: "https://www.mozilla.org/{product}/{version}/whatsnew/all/?oldversion=%OLD_VERSION%"
+  url: "https://www.mozilla.org/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
   conditions:
       blob-types: [wnp]
       release-types: [release, release-rc]
