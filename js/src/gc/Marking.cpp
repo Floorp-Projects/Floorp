@@ -2436,9 +2436,11 @@ void GCMarker::setMarkColorUnchecked(gc::MarkColor newColor) {
 }
 
 void GCMarker::setMainStackColor(gc::MarkColor newColor) {
+  MOZ_ASSERT(isMarkStackEmpty());
   if (newColor != mainStackColor) {
-    MOZ_ASSERT(isMarkStackEmpty());
     mainStackColor = newColor;
+
+    // Update currentStackPtr without changing the mark color.
     setMarkColorUnchecked(color);
   }
 }
