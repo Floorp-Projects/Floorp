@@ -7,6 +7,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/RWLock.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsIThread.h"
 #include "gtest/gtest.h"
 
@@ -79,4 +80,129 @@ TEST(RWLock, SmokeTest)
   }
 
   EXPECT_EQ(data, (sOuterIterations / sWriteLockIteration) * sNumThreads);
+}
+
+template <typename Function>
+static std::invoke_result_t<Function> RunOnBackgroundThread(
+    Function&& aFunction) {
+  using Result = std::invoke_result_t<Function>;
+  nsCOMPtr<nsISerialEventTarget> thread;
+  MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
+      "TestRWLock Background Thread", getter_AddRefs(thread)));
+  Maybe<Result> tryResult;
+  RefPtr<nsIRunnable> runnable =
+      NS_NewRunnableFunction(__func__, [&] { tryResult.emplace(aFunction()); });
+  MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(thread.get(), runnable));
+  return *tryResult;
+}
+
+TEST(RWLock, AutoTryReadLock)
+{
+  RWLock l1("autotryreadlock");
+  {
+    AutoTryReadLock autol1(l1);
+
+    EXPECT_TRUE(autol1);
+
+    AutoTryReadLock autol2(l1);
+    EXPECT_TRUE(autol2);
+
+    EXPECT_TRUE(RunOnBackgroundThread([&] {
+      AutoTryReadLock lock(l1);
+      return !!lock;
+    }));
+
+    EXPECT_TRUE(autol1);
+    EXPECT_TRUE(autol2);
+
+    {
+      RWLock l2("autotryreadlock2");
+      AutoTryReadLock autol3(l2);
+
+      EXPECT_TRUE(autol3);
+    }
+
+    EXPECT_TRUE(autol1);
+    EXPECT_TRUE(autol2);
+  }
+
+  {
+    AutoWriteLock autol4(l1);
+    MOZ_ASSERT(l1.LockedForWritingByCurrentThread());
+
+    AutoTryReadLock autol5(l1);
+    EXPECT_FALSE(autol5);
+
+    EXPECT_FALSE(RunOnBackgroundThread([&] {
+      AutoTryReadLock lock(l1);
+      return !!lock;
+    }));
+  }
+
+  AutoTryReadLock autol6(l1);
+  EXPECT_TRUE(autol6);
+
+  EXPECT_TRUE(RunOnBackgroundThread([&] {
+    AutoTryReadLock lock(l1);
+    return !!lock;
+  }));
+}
+
+TEST(RWLock, AutoTryWriteLock)
+{
+  RWLock l1("autotrywritelock");
+  {
+    AutoTryWriteLock autol1(l1);
+
+    EXPECT_TRUE(autol1);
+
+    AutoTryReadLock autol2(l1);
+    EXPECT_FALSE(autol2);
+
+    EXPECT_FALSE(RunOnBackgroundThread([&] {
+      AutoTryWriteLock lock(l1);
+      return !!lock;
+    }));
+
+    EXPECT_TRUE(autol1);
+    EXPECT_FALSE(autol2);
+
+    {
+      RWLock l2("autotrywritelock2");
+      AutoTryWriteLock autol3(l2);
+
+      EXPECT_TRUE(autol3);
+    }
+
+    EXPECT_TRUE(autol1);
+    EXPECT_FALSE(autol2);
+  }
+
+  {
+    AutoReadLock autol4(l1);
+
+    AutoTryWriteLock autol5(l1);
+    EXPECT_FALSE(autol5);
+
+    EXPECT_FALSE(RunOnBackgroundThread([&] {
+      AutoTryWriteLock lock(l1);
+      return !!lock;
+    }));
+  }
+
+  {
+    AutoWriteLock autol6(l1);
+    MOZ_ASSERT(l1.LockedForWritingByCurrentThread());
+
+    AutoTryWriteLock autol7(l1);
+    EXPECT_FALSE(autol7);
+
+    EXPECT_FALSE(RunOnBackgroundThread([&] {
+      AutoTryWriteLock lock(l1);
+      return !!lock;
+    }));
+  }
+
+  AutoTryWriteLock autol8(l1);
+  EXPECT_TRUE(autol8);
 }
