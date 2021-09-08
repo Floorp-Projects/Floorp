@@ -49,7 +49,8 @@ class DisplayTabbingOrder extends PureComponent {
     const { describedby, tabbingOrderDisplayed } = this.props;
     return label(
       {
-        className: "accessibility-tabbing-order devtools-checkbox-label",
+        className:
+          "accessibility-tabbing-order devtools-checkbox-label devtools-ellipsis-text",
         htmlFor: "devtools-display-tabbing-order-checkbox",
         title: L10N.getStr("accessibility.toolbar.displayTabbingOrder.tooltip"),
       },
