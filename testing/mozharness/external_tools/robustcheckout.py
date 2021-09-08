@@ -495,23 +495,27 @@ def _docheckout(
             # Assume all SSL errors are due to the network, as Mercurial
             # should convert non-transport errors like cert validation failures
             # to error.Abort.
-            ui.warn(b"ssl error: %s\n" % e)
+            ui.warn(b"ssl error: %s\n" % pycompat.bytestr(str(e)))
             handlenetworkfailure()
             return True
         elif isinstance(e, urllibcompat.urlerr.urlerror):
             if isinstance(e.reason, socket.error):
-                ui.warn(b"socket error: %s\n" % pycompat.bytestr(e.reason))
+                ui.warn(b"socket error: %s\n" % pycompat.bytestr(str(e.reason)))
                 handlenetworkfailure()
                 return True
             else:
                 ui.warn(
                     b"unhandled URLError; reason type: %s; value: %s\n"
-                    % (e.reason.__class__.__name__, e.reason)
+                    % (
+                        pycompat.bytestr(e.reason.__class__.__name__),
+                        pycompat.bytestr(str(e.reason)),
+                    )
                 )
         else:
             ui.warn(
                 b"unhandled exception during network operation; type: %s; "
-                b"value: %s\n" % (e.__class__.__name__, e)
+                b"value: %s\n"
+                % (pycompat.bytestr(e.__class__.__name__), pycompat.bytestr(str(e)))
             )
 
         return False
