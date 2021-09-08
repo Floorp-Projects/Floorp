@@ -76,6 +76,10 @@
     <checkbox id="warnCloseMultiple" data-l10n-id="confirm-on-close-multiple-tabs"
               preference="browser.tabs.warnOnClose"/>
 
+#ifndef XP_WIN
+    <checkbox id="warnOnQuitKey" preference="browser.warnOnQuitShortcut"/>
+#endif
+
 #ifdef XP_WIN
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
