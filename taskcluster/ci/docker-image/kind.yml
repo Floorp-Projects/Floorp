@@ -107,7 +107,7 @@ jobs:
             - deb10-mmdebstrap
     custom-v8:
         symbol: I(custom-v8)
-        parent: debian10-base
+        parent: debian11-base
     valgrind-build:
         symbol: I(vb)
         parent: debian11-amd64-build
