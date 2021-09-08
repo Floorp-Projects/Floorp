@@ -32,7 +32,7 @@ job-template:
     description: Upload Symbols
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: "debian10-base"}
+        docker-image: {in-tree: "debian11-base"}
         max-run-time: 900
         env:
             # {level} gets replaced in the upload_symbols transform
