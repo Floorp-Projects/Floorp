@@ -1,4 +1,4 @@
-FROM freedesktopsdk/flatpak:20.08-x86_64
+FROM freedesktopsdk/flatpak:21.08-x86_64
 MAINTAINER release@mozilla.com
 
 RUN mkdir /scripts/
