@@ -143,10 +143,9 @@ number of cores on your system.
 
 .. code:: bash
 
-   mk_add_options MOZ_MAKE_FLAGS="-j4"
+   mk_add_options MOZ_PARALLEL_BUILD=4
 
-If your machine is overheating, you might want to try a lower value,
-e.g. ``-j1``.
+If your machine is overheating, you might want to try a lower value.
 
 
 Choose an application
@@ -355,7 +354,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 .. code::
 
    # add common options here, such as making an optimized release build
-   mk_add_options MOZ_MAKE_FLAGS="-j4"
+   mk_add_options MOZ_PARALLEL_BUILD=4
    ac_add_options --enable-optimize --disable-debug
 
 ``mozconfig-firefox``:

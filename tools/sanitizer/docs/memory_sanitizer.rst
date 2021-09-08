@@ -67,7 +67,6 @@ content in your Mozilla-central directory:
 .. code::
 
    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-ff-msan
-   mk_add_options MOZ_MAKE_FLAGS=-j12
 
    # Enable LLVM specific code and build workarounds
    ac_add_options --enable-memory-sanitizer
