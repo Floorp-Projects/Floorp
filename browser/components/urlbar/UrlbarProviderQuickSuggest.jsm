@@ -267,11 +267,23 @@ class ProviderQuickSuggest extends UrlbarProvider {
         sponsoredClickUrl,
         sponsoredBlockId,
       } = result.payload;
+
+      let searchQuery = "";
+      let matchedKeywords = "";
+      let scenario = UrlbarPrefs.get("quickSuggestScenario");
+      // Only collect the search query and matched keywords for "online" scenario.
+      // For other scenarios, those fields are set as empty strings.
+      if (scenario === "online") {
+        matchedKeywords = qsSuggestion || details.searchString;
+        searchQuery = details.searchString;
+      }
+
       // impression
       PartnerLinkAttribution.sendContextualServicesPing(
         {
-          search_query: details.searchString,
-          matched_keywords: qsSuggestion || details.searchString,
+          scenario,
+          search_query: searchQuery,
+          matched_keywords: matchedKeywords,
           advertiser: sponsoredAdvertiser,
           block_id: sponsoredBlockId,
           position: telemetryResultIndex,
@@ -284,6 +296,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       if (isQuickSuggestLinkClicked) {
         PartnerLinkAttribution.sendContextualServicesPing(
           {
+            scenario,
             advertiser: sponsoredAdvertiser,
             block_id: sponsoredBlockId,
             position: telemetryResultIndex,
