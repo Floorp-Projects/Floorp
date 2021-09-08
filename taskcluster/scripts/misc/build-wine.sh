@@ -23,7 +23,7 @@ make install
 # --------------
 
 cd $WORKSPACE/
-tar caf wine.tar.xz wine
+tar caf wine.tar.zst wine
 
 mkdir -p $UPLOAD_DIR
 cp wine.tar.* $UPLOAD_DIR
