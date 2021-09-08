@@ -1880,10 +1880,10 @@ bool imgLoader::ValidateEntry(
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
   // If the expiration time is zero, then the request has not gotten far enough
-  // to know when it will expire.
+  // to know when it will expire, or we know it will never expire (see
+  // nsContentUtils::GetSubresourceCacheValidationInfo).
   uint32_t expiryTime = aEntry->GetExpiryTime();
-  bool hasExpired =
-      expiryTime != 0 && expiryTime <= SecondsFromPRTime(PR_Now());
+  bool hasExpired = expiryTime && expiryTime <= SecondsFromPRTime(PR_Now());
 
   nsresult rv;
 
