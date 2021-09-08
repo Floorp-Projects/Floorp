@@ -6655,11 +6655,6 @@
   value: false
   mirror: once
 
-- name: layers.use-image-offscreen-surfaces
-  type: bool
-  value: true
-  mirror: once
-
 - name: layers.recycle-allocator-rdd
   type: bool
   value: true

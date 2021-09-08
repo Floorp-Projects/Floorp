@@ -405,11 +405,6 @@ double gfxPlatformGtk::GetFontScaleFactor() {
   return round(dpi / 96.0);
 }
 
-bool gfxPlatformGtk::UseImageOffscreenSurfaces() {
-  return GetDefaultContentBackend() != mozilla::gfx::BackendType::CAIRO ||
-         StaticPrefs::layers_use_image_offscreen_surfaces_AtStartup();
-}
-
 gfxImageFormat gfxPlatformGtk::GetOffscreenFormat() {
   // Make sure there is a screen
   GdkScreen* screen = gdk_screen_get_default();
