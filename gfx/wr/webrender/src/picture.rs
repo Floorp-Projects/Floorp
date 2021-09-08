@@ -3725,10 +3725,10 @@ impl TileCacheInstance {
                     //  - Same coord system as picture cache (ensures rects are axis-aligned).
                     //  - No clip masks exist.
                     let same_coord_system = {
-                        let prim_spatial_node = &frame_context.spatial_tree
-                            .spatial_nodes[prim_spatial_node_index.0 as usize];
+                        let prim_spatial_node = frame_context.spatial_tree
+                            .get_spatial_node(prim_spatial_node_index);
                         let surface_spatial_node = &frame_context.spatial_tree
-                            .spatial_nodes[self.spatial_node_index.0 as usize];
+                            .get_spatial_node(self.spatial_node_index);
 
                         prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
                     };
@@ -6130,7 +6130,7 @@ impl PicturePrimitive {
                     // frame to be drawn.
                     let update_raster_scale =
                         !frame_context.fb_config.low_quality_pinch_zoom ||
-                        !frame_context.spatial_tree.spatial_nodes[tile_cache.spatial_node_index.0 as usize].is_ancestor_or_self_zooming;
+                        !frame_context.spatial_tree.get_spatial_node(tile_cache.spatial_node_index).is_ancestor_or_self_zooming;
 
                     if update_raster_scale {
                         // Get the complete scale-offset from local space to device space
@@ -6292,7 +6292,7 @@ impl PicturePrimitive {
             // No point including this cluster if it can't be transformed
             let spatial_node = &frame_context
                 .spatial_tree
-                .spatial_nodes[cluster.spatial_node_index.0 as usize];
+                .get_spatial_node(cluster.spatial_node_index);
             if !spatial_node.invertible {
                 continue;
             }

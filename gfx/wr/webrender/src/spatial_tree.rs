@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
+use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle, PropertyBindingId};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollSensitivity, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
@@ -14,6 +14,7 @@ use crate::spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyF
 use crate::spatial_node::{SpatialNodeUid, ScrollFrameKind};
 use std::{ops, u32};
 use crate::util::{FastTransform, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset, scale_factors};
+use smallvec::SmallVec;
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
@@ -122,9 +123,6 @@ pub struct SpatialTree {
     /// tree is drained.
     pub pipelines_to_discard: FastHashSet<PipelineId>,
 
-    /// Temporary stack of nodes to update when traversing the tree.
-    nodes_to_update: Vec<(SpatialNodeIndex, TransformUpdateState)>,
-
     /// Next id to assign when creating a new static coordinate system
     next_static_coord_system_id: u32,
 
@@ -133,6 +131,9 @@ pub struct SpatialTree {
     spatial_node_uids: FastHashSet<SpatialNodeUid>,
 
     root_reference_frame_index: SpatialNodeIndex,
+
+    /// Stack of current state for each parent node while traversing and updating tree
+    update_state_stack: Vec<TransformUpdateState>,
 }
 
 #[derive(Clone)]
@@ -158,8 +159,16 @@ pub struct TransformUpdateState {
 
     /// True if this node is a part of Preserve3D hierarchy.
     pub preserves_3d: bool,
-}
 
+    /// True if the any parent nodes are currently zooming
+    pub is_ancestor_or_self_zooming: bool,
+
+    /// Set to true if this state represents a scroll node with external id
+    pub external_id: Option<ExternalScrollId>,
+
+    /// The node scroll offset if this state is a scroll/sticky node. Zero if a reference frame.
+    pub scroll_offset: LayoutVector2D,
+}
 
 /// Transformation between two nodes in the spatial tree that can sometimes be
 /// encoded more efficiently than with a full matrix.
@@ -249,15 +258,46 @@ impl SpatialTree {
             coord_systems: Vec::new(),
             pending_scroll_offsets: FastHashMap::default(),
             pipelines_to_discard: FastHashSet::default(),
-            nodes_to_update: Vec::new(),
             next_static_coord_system_id: 1,
             spatial_node_uids: FastHashSet::default(),
             root_reference_frame_index: SpatialNodeIndex(0),
+            update_state_stack: Vec::new(),
         };
 
         tree.add_spatial_node(node, SpatialNodeUid::root());
 
         tree
+    }
+
+    /// Get total number of spatial nodes
+    pub fn spatial_node_count(&self) -> usize {
+        self.spatial_nodes.len()
+    }
+
+    /// Get a reference to a given spatial node
+    pub fn get_spatial_node(&self, index: SpatialNodeIndex) -> &SpatialNode {
+        &self.spatial_nodes[index.0 as usize]
+    }
+
+    /// Iterate all nodes and invoke a closure on each node
+    pub fn iter_nodes<F>(&self, mut f: F) where F: FnMut(SpatialNodeIndex, &SpatialNode) {
+        for (index, node) in self.spatial_nodes.iter().enumerate() {
+            f(SpatialNodeIndex(index as u32), node);
+        }
+    }
+
+    /// Get a node, if it exists, that matches a given animation binding id
+    pub fn get_node_by_anim_id(
+        &mut self,
+        id: PropertyBindingId,
+    ) -> Option<&mut SpatialNode> {
+        for node in &mut self.spatial_nodes {
+            if node.is_transform_bound_to_property(id) {
+                return Some(node);
+            }
+        }
+
+        None
     }
 
     /// Calculate the accumulated external scroll offset for
@@ -267,7 +307,7 @@ impl SpatialTree {
         let mut current_node = Some(node_index);
 
         while let Some(node_index) = current_node {
-            let node = &self.spatial_nodes[node_index.0 as usize];
+            let node = self.get_spatial_node(node_index);
 
             match node.node_type {
                 SpatialNodeType::ScrollFrame(ref scrolling) => {
@@ -313,8 +353,8 @@ impl SpatialTree {
             return CoordinateSpaceMapping::Local;
         }
 
-        let child = &self.spatial_nodes[child_index.0 as usize];
-        let parent = &self.spatial_nodes[parent_index.0 as usize];
+        let child = self.get_spatial_node(child_index);
+        let parent = self.get_spatial_node(parent_index);
 
         if child.coordinate_system_id == parent.coordinate_system_id {
             let scale_offset = parent.content_transform
@@ -395,8 +435,8 @@ impl SpatialTree {
             return false;
         }
 
-        let child = &self.spatial_nodes[child_index.0 as usize];
-        let parent = &self.spatial_nodes[parent_index.0 as usize];
+        let child = self.get_spatial_node(child_index);
+        let parent = self.get_spatial_node(parent_index);
 
         child.coordinate_system_id != parent.coordinate_system_id
     }
@@ -406,7 +446,7 @@ impl SpatialTree {
         index: SpatialNodeIndex,
         scroll: TransformScroll,
     ) -> CoordinateSpaceMapping<LayoutPixel, WorldPixel> {
-        let child = &self.spatial_nodes[index.0 as usize];
+        let child = self.get_spatial_node(index);
 
         if child.coordinate_system_id.0 == 0 {
             if index == self.root_reference_frame_index {
@@ -512,6 +552,8 @@ impl SpatialTree {
         self.coord_systems.push(CoordinateSystem::root());
 
         let root_node_index = self.root_reference_frame_index();
+        assert!(self.update_state_stack.is_empty());
+
         let state = TransformUpdateState {
             parent_reference_frame_transform: LayoutVector2D::zero().into(),
             parent_accumulated_scroll_offset: LayoutVector2D::zero(),
@@ -521,27 +563,49 @@ impl SpatialTree {
             coordinate_system_relative_scale_offset: ScaleOffset::identity(),
             invertible: true,
             preserves_3d: false,
+            is_ancestor_or_self_zooming: false,
+            external_id: None,
+            scroll_offset: LayoutVector2D::zero(),
         };
-        debug_assert!(self.nodes_to_update.is_empty());
-        self.nodes_to_update.push((root_node_index, state));
+        self.update_state_stack.push(state);
 
-        while let Some((node_index, mut state)) = self.nodes_to_update.pop() {
-            let (previous, following) = self.spatial_nodes.split_at_mut(node_index.0 as usize);
-            let node = match following.get_mut(0) {
-                Some(node) => node,
-                None => continue,
-            };
+        self.update_node(
+            root_node_index,
+            scene_properties,
+        );
 
-            node.update(&mut state, &mut self.coord_systems, scene_properties, &*previous);
+        self.update_state_stack.pop().unwrap();
+    }
 
-            if !node.children.is_empty() {
-                node.prepare_state_for_children(&mut state);
-                self.nodes_to_update.extend(node.children
-                    .iter()
-                    .rev()
-                    .map(|child_index| (*child_index, state.clone()))
+    fn update_node(
+        &mut self,
+        node_index: SpatialNodeIndex,
+        scene_properties: &SceneProperties,
+    ) {
+        let node = &mut self.spatial_nodes[node_index.0 as usize];
+
+        node.update(
+            &self.update_state_stack,
+            &mut self.coord_systems,
+            scene_properties,
+        );
+
+        if !node.children.is_empty() {
+            let mut child_state = self.update_state_stack.last().unwrap().clone();
+            node.prepare_state_for_children(&mut child_state);
+            self.update_state_stack.push(child_state);
+
+            let mut child_indices: SmallVec<[SpatialNodeIndex; 8]> = SmallVec::new();
+            child_indices.extend_from_slice(&node.children);
+
+            for child_index in child_indices {
+                self.update_node(
+                    child_index,
+                    scene_properties,
                 );
             }
+
+            self.update_state_stack.pop().unwrap();
         }
     }
 
@@ -579,7 +643,7 @@ impl SpatialTree {
 
     /// Get the static coordinate system for a given spatial node index
     pub fn get_static_coordinate_system_id(&self, node_index: SpatialNodeIndex) -> StaticCoordinateSystemId {
-        self.spatial_nodes[node_index.0 as usize].static_coordinate_system_id
+        self.get_spatial_node(node_index).static_coordinate_system_id
     }
 
     pub fn add_scroll_frame(
@@ -727,7 +791,7 @@ impl SpatialTree {
         let mut current_node = maybe_child;
 
         while current_node != self.root_reference_frame_index {
-            let node = &self.spatial_nodes[current_node.0 as usize];
+            let node = self.get_spatial_node(current_node);
             current_node = node.parent.expect("bug: no parent");
 
             if current_node == maybe_parent {
@@ -750,7 +814,7 @@ impl SpatialTree {
         let mut node_index = spatial_node_index;
 
         while node_index != self.root_reference_frame_index {
-            let node = &self.spatial_nodes[node_index.0 as usize];
+            let node = self.get_spatial_node(node_index);
             match node.node_type {
                 SpatialNodeType::ReferenceFrame(ref info) => {
                     match info.kind {
@@ -824,7 +888,7 @@ impl SpatialTree {
         index: SpatialNodeIndex,
         pt: &mut T,
     ) {
-        let node = &self.spatial_nodes[index.0 as usize];
+        let node = self.get_spatial_node(index);
         match node.node_type {
             SpatialNodeType::StickyFrame(ref sticky_frame_info) => {
                 pt.new_level(format!("StickyFrame"));
@@ -863,7 +927,7 @@ impl SpatialTree {
 
     /// Get the visible face of the transfrom from the specified node to its parent.
     pub fn get_local_visible_face(&self, node_index: SpatialNodeIndex) -> VisibleFace {
-        let node = &self.spatial_nodes[node_index.0 as usize];
+        let node = self.get_spatial_node(node_index);
         let mut face = VisibleFace::Front;
         if let Some(parent_index) = node.parent {
             self.get_relative_transform_with_face(node_index, parent_index, Some(&mut face));

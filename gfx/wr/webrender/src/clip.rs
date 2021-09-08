@@ -553,10 +553,8 @@ impl ClipSpaceConversion {
         //Note: this code is different from `get_relative_transform` in a way that we only try
         // getting the relative transform if it's Local or ScaleOffset,
         // falling back to the world transform otherwise.
-        let clip_spatial_node = &spatial_tree
-            .spatial_nodes[clip_spatial_node_index.0 as usize];
-        let prim_spatial_node = &spatial_tree
-            .spatial_nodes[prim_spatial_node_index.0 as usize];
+        let clip_spatial_node = spatial_tree.get_spatial_node(clip_spatial_node_index);
+        let prim_spatial_node = spatial_tree.get_spatial_node(prim_spatial_node_index);
 
         if prim_spatial_node_index == clip_spatial_node_index {
             ClipSpaceConversion::Local
@@ -981,7 +979,7 @@ impl ClipChainStack {
         //           knowing if a reference frame exists in the chain between the
         //           clip's spatial node and the picture cache reference spatial node).
         for clip in maybe_shared_clips {
-            let spatial_node = &spatial_tree.spatial_nodes[clip.spatial_node_index.0 as usize];
+            let spatial_node = spatial_tree.get_spatial_node(clip.spatial_node_index);
             if spatial_node.coordinate_system_id == CoordinateSystemId::root() {
                 shared_clips.push(*clip);
             }
@@ -2130,11 +2128,11 @@ fn add_clip_node_to_current_chain(
                 // never used in Gecko, and we aim to remove support in WR for that
                 // in future to simplify the clipping pipeline.
                 let pic_coord_system = spatial_tree
-                    .spatial_nodes[pic_spatial_node_index.0 as usize]
+                    .get_spatial_node(pic_spatial_node_index)
                     .coordinate_system_id;
 
                 let clip_coord_system = spatial_tree
-                    .spatial_nodes[node.spatial_node_index.0 as usize]
+                    .get_spatial_node(node.spatial_node_index)
                     .coordinate_system_id;
 
                 if pic_coord_system == clip_coord_system {
