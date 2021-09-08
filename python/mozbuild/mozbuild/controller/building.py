@@ -1190,8 +1190,8 @@ class BuildDriver(MozbuildObject):
                 ]
                 self.run_process(args, cwd=self.topobjdir, pass_thru=True)
 
-            if jobs == 0 and "make_extra" in self.mozconfig:
-                for param in self.mozconfig["make_extra"]:
+            if jobs == 0:
+                for param in self.mozconfig.get("make_extra") or []:
                     key, value = param.split("=", 1)
                     if key == "MOZ_PARALLEL_BUILD":
                         jobs = int(value)
