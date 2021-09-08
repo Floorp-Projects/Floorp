@@ -884,10 +884,11 @@ gfxDWriteFontList::gfxDWriteFontList() : mForceGDIClassicMaxFontSize(0.0) {
 //   Arial to avoid this.
 
 FontFamily gfxDWriteFontList::GetDefaultFontForPlatform(
-    const gfxFontStyle* aStyle, nsAtom* aLanguage) {
+    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    nsAtom* aLanguage) {
   // try Arial first
   FontFamily ff;
-  ff = FindFamily("Arial"_ns);
+  ff = FindFamily(aPresContext, "Arial"_ns);
   if (!ff.IsNull()) {
     return ff;
   }
@@ -899,17 +900,19 @@ FontFamily gfxDWriteFontList::GetDefaultFontForPlatform(
       ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
 
   if (status) {
-    ff = FindFamily(NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
+    ff = FindFamily(aPresContext,
+                    NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
   }
 
   return ff;
 }
 
 gfxFontEntry* gfxDWriteFontList::LookupLocalFont(
-    const nsACString& aFontName, WeightRange aWeightForEntry,
-    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) {
+    nsPresContext* aPresContext, const nsACString& aFontName,
+    WeightRange aWeightForEntry, StretchRange aStretchForEntry,
+    SlantStyleRange aStyleForEntry) {
   if (SharedFontList()) {
-    return LookupInSharedFaceNameList(aFontName, aWeightForEntry,
+    return LookupInSharedFaceNameList(aPresContext, aFontName, aWeightForEntry,
                                       aStretchForEntry, aStyleForEntry);
   }
 
@@ -1985,9 +1988,10 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
 }
 
 bool gfxDWriteFontList::FindAndAddFamilies(
-    StyleGenericFontFamily aGeneric, const nsACString& aFamily,
-    nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
-    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
+    nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
+    const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
+    FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
+    gfxFloat aDevToCssSize) {
   nsAutoCString keyName(aFamily);
   BuildKeyNameFromFontName(keyName);
 
@@ -1998,7 +2002,9 @@ bool gfxDWriteFontList::FindAndAddFamilies(
     }
   } else {
     gfxFontFamily* ff = mFontSubstitutes.GetWeak(keyName);
-    if (ff) {
+    FontVisibility level =
+        aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+    if (ff && IsVisibleToCSS(*ff, level)) {
       aOutput->AppendElement(FamilyAndGeneric(ff, aGeneric));
       return true;
     }
@@ -2009,7 +2015,8 @@ bool gfxDWriteFontList::FindAndAddFamilies(
   }
 
   return gfxPlatformFontList::FindAndAddFamilies(
-      aGeneric, keyName, aOutput, aFlags, aStyle, aLanguage, aDevToCssSize);
+      aPresContext, aGeneric, keyName, aOutput, aFlags, aStyle, aLanguage,
+      aDevToCssSize);
 }
 
 void gfxDWriteFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
@@ -2104,8 +2111,8 @@ IFACEMETHODIMP DWriteFontFallbackRenderer::DrawGlyphRun(
 }
 
 gfxFontEntry* gfxDWriteFontList::PlatformGlobalFontFallback(
-    const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
-    FontFamily& aMatchedFamily) {
+    nsPresContext* aPresContext, const uint32_t aCh, Script aRunScript,
+    const gfxFontStyle* aMatchStyle, FontFamily& aMatchedFamily) {
   HRESULT hr;
 
   RefPtr<IDWriteFactory> dwFactory = Factory::GetDWriteFactory();
@@ -2169,7 +2176,8 @@ gfxFontEntry* gfxDWriteFontList::PlatformGlobalFontFallback(
     return nullptr;
   }
 
-  FontFamily family = FindFamily(mFallbackRenderer->FallbackFamilyName());
+  FontFamily family =
+      FindFamily(aPresContext, mFallbackRenderer->FallbackFamilyName());
   if (!family.IsNull()) {
     gfxFontEntry* fontEntry = nullptr;
     if (family.mIsShared) {

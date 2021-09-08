@@ -23,6 +23,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsPresContext.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/MemoryReporting.h"
@@ -665,7 +666,8 @@ int CALLBACK gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW* lpelfe,
   return 1;
 }
 
-gfxFontEntry* gfxGDIFontList::LookupLocalFont(const nsACString& aFontName,
+gfxFontEntry* gfxGDIFontList::LookupLocalFont(nsPresContext* aPresContext,
+                                              const nsACString& aFontName,
                                               WeightRange aWeightForEntry,
                                               StretchRange aStretchForEntry,
                                               SlantStyleRange aStyleForEntry) {
@@ -829,7 +831,8 @@ gfxFontEntry* gfxGDIFontList::MakePlatformFont(const nsACString& aFontName,
   return fe;
 }
 
-bool gfxGDIFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
+bool gfxGDIFontList::FindAndAddFamilies(nsPresContext* aPresContext,
+                                        StyleGenericFontFamily aGeneric,
                                         const nsACString& aFamily,
                                         nsTArray<FamilyAndGeneric>* aOutput,
                                         FindFamiliesFlags aFlags,
@@ -840,7 +843,9 @@ bool gfxGDIFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
   NS_ConvertUTF16toUTF8 keyName(key16);
 
   gfxFontFamily* ff = mFontSubstitutes.GetWeak(keyName);
-  if (ff) {
+  FontVisibility level =
+      aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+  if (ff && IsVisibleToCSS(*ff, level)) {
     aOutput->AppendElement(FamilyAndGeneric(ff, aGeneric));
     return true;
   }
@@ -850,11 +855,13 @@ bool gfxGDIFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
   }
 
   return gfxPlatformFontList::FindAndAddFamilies(
-      aGeneric, aFamily, aOutput, aFlags, aStyle, aLanguage, aDevToCssSize);
+      aPresContext, aGeneric, aFamily, aOutput, aFlags, aStyle, aLanguage,
+      aDevToCssSize);
 }
 
-FontFamily gfxGDIFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
-                                                     nsAtom* aLanguage) {
+FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
+    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    nsAtom* aLanguage) {
   FontFamily ff;
 
   // this really shouldn't fail to find a font....
@@ -863,7 +870,8 @@ FontFamily gfxGDIFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
   BOOL status =
       ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
   if (status) {
-    ff = FindFamily(NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
+    ff = FindFamily(aPresContext,
+                    NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
     if (!ff.IsNull()) {
       return ff;
     }
@@ -873,7 +881,7 @@ FontFamily gfxGDIFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
   HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
   LOGFONTW logFont;
   if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
-    ff = FindFamily(NS_ConvertUTF16toUTF8(logFont.lfFaceName));
+    ff = FindFamily(aPresContext, NS_ConvertUTF16toUTF8(logFont.lfFaceName));
   }
 
   return ff;
