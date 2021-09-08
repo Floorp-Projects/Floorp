@@ -185,24 +185,72 @@ void Performance::GetEntriesByName(
   RefPtr<nsAtom> entryType =
       aEntryType.WasPassed() ? NS_Atomize(aEntryType.Value()) : nullptr;
 
+  if (entryType) {
+    if (entryType == nsGkAtoms::mark || entryType == nsGkAtoms::measure) {
+      for (PerformanceEntry* entry : mUserEntries) {
+        if (entry->GetName() == name && entry->GetEntryType() == entryType) {
+          aRetval.AppendElement(entry);
+        }
+      }
+      return;
+    }
+    if (entryType == nsGkAtoms::resource) {
+      for (PerformanceEntry* entry : mResourceEntries) {
+        MOZ_ASSERT(entry->GetEntryType() == entryType);
+        if (entry->GetName() == name) {
+          aRetval.AppendElement(entry);
+        }
+      }
+      return;
+    }
+    // Invalid entryType
+    return;
+  }
+
+  nsTArray<PerformanceEntry*> qualifiedResourceEntries;
+  nsTArray<PerformanceEntry*> qualifiedUserEntries;
   // ::Measure expects that results from this function are already
   // passed through ReduceTimePrecision. mResourceEntries and mUserEntries
   // are, so the invariant holds.
   for (PerformanceEntry* entry : mResourceEntries) {
-    if (entry->GetName() == name &&
-        (!entryType || entry->GetEntryType() == entryType)) {
-      aRetval.AppendElement(entry);
+    if (entry->GetName() == name) {
+      qualifiedResourceEntries.AppendElement(entry);
     }
   }
 
   for (PerformanceEntry* entry : mUserEntries) {
-    if (entry->GetName() == name &&
-        (!entryType || entry->GetEntryType() == entryType)) {
-      aRetval.AppendElement(entry);
+    if (entry->GetName() == name) {
+      qualifiedUserEntries.AppendElement(entry);
     }
   }
 
-  aRetval.Sort(PerformanceEntryComparator());
+  size_t resourceEntriesIdx = 0, userEntriesIdx = 0;
+  aRetval.SetCapacity(qualifiedResourceEntries.Length() +
+                      qualifiedUserEntries.Length());
+
+  PerformanceEntryComparator comparator;
+
+  while (resourceEntriesIdx < qualifiedResourceEntries.Length() &&
+         userEntriesIdx < qualifiedUserEntries.Length()) {
+    if (comparator.LessThan(qualifiedResourceEntries[resourceEntriesIdx],
+                            qualifiedUserEntries[userEntriesIdx])) {
+      aRetval.AppendElement(qualifiedResourceEntries[resourceEntriesIdx]);
+      ++resourceEntriesIdx;
+    } else {
+      aRetval.AppendElement(qualifiedUserEntries[userEntriesIdx]);
+      ++userEntriesIdx;
+    }
+  }
+
+  while (resourceEntriesIdx < qualifiedResourceEntries.Length()) {
+    aRetval.AppendElement(qualifiedResourceEntries[resourceEntriesIdx]);
+    ++resourceEntriesIdx;
+  }
+
+  while (userEntriesIdx < qualifiedUserEntries.Length()) {
+    aRetval.AppendElement(qualifiedUserEntries[userEntriesIdx]);
+    ++userEntriesIdx;
+  }
 }
 
 void Performance::GetEntriesByTypeForObserver(
