@@ -31,6 +31,7 @@
 #include "nsICancelable.h"
 #include "nsWrapperCacheInlines.h"
 #include "HttpConnectionUDP.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 namespace net {
@@ -72,7 +73,9 @@ static nsresult CheckIOStatus(const NetAddr* aAddr) {
     return NS_ERROR_FAILURE;
   }
 
-  if (gIOService->IsOffline() && !aAddr->IsLoopbackAddr()) {
+  if (gIOService->IsOffline() &&
+      (StaticPrefs::network_disable_localhost_when_offline() ||
+       !aAddr->IsLoopbackAddr())) {
     return NS_ERROR_OFFLINE;
   }
 

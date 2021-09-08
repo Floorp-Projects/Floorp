@@ -1204,7 +1204,9 @@ nsresult nsSocketTransport::InitiateSocket() {
     return NS_ERROR_ABORT;
   }
   if (gIOService->IsOffline()) {
-    if (!isLocal) return NS_ERROR_OFFLINE;
+    if (StaticPrefs::network_disable_localhost_when_offline() || !isLocal) {
+      return NS_ERROR_OFFLINE;
+    }
   } else if (!isLocal) {
 #ifdef DEBUG
     // all IP networking has to be done from the parent
