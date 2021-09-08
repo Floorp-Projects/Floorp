@@ -13,8 +13,8 @@ $border-secondary: 1px solid var(--newtab-border-secondary-color);
 $inner-box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
 $input-border: 1px solid var(--newtab-textbox-border);
 $input-border-active: 1px solid var(--newtab-textbox-focus-color);
-$input-error-border: 1px solid $red-60;
-$input-error-boxshadow: textbox-shadow($red-60);
+$input-error-border: 1px solid var(--newtab-status-error);
+$input-error-boxshadow: textbox-shadow(var(--newtab-status-error));
 $shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 $shadow-large: 0 1px 15px 0 $black-30;
@@ -40,8 +40,12 @@ body {
   --newtab-text-conditional-color: #{$grey-60};
   --newtab-text-primary-color: #{$in-content-page-color};
   --newtab-text-secondary-color: #{$grey-50};
+  --newtab-text-emphasis-background: #{$yellow-50};
+  --newtab-text-empahsis-text-color: #{$grey-90};
   --newtab-textbox-background-color: var(--newtab-background-color-secondary);
   --newtab-textbox-border: #{$grey-90-20};
+  --newtab-status-success: #{$status-green};
+  --newtab-status-error: #{$red-60};
   @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
 
   // Background buttons
@@ -89,6 +93,7 @@ body {
   --newtab-card-background-color: var(--newtab-background-color-secondary);
   --newtab-card-placeholder-color: #{$grey-30};
   --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
+  --newtab-card-header-color: #{$grey-90};
 
   // Snippets
   --newtab-snippets-background-color: var(--newtab-background-color-secondary);
@@ -138,6 +143,7 @@ body {
     --newtab-text-primary-color: #{$in-content-page-color-dark};
     --newtab-text-secondary-color: #{$grey-10-80};
     --newtab-textbox-border: #{$grey-10-20};
+    --newtab-status-success: #{$status-dark-green};
     @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
 
     // Background buttons.
@@ -176,6 +182,7 @@ body {
     --newtab-card-active-outline-color: #{$grey-60};
     --newtab-card-placeholder-color: #{$grey-60};
     --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
+    --newtab-card-header-color: #{$grey-10};
 
     // Snippets
     --newtab-snippets-hairline-color: #{$white-10};

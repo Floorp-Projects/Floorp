@@ -4,11 +4,7 @@
   overflow: hidden;
 
   &.hovering {
-    @include dark-theme-only {
-      background: $grey-90-30;
-    }
-
-    background: $grey-90-10;
+    background: var(--newtab-element-hover-color);
   }
 
   .ds-dismiss-button {
@@ -48,23 +44,16 @@
   }
 
   h3 {
-    @include dark-theme-only {
-      color: $grey-10;
-    }
-
+    color: var(--newtab-card-header-color);
     margin: 0;
     font-weight: 600;
     font-size: 15px;
   }
 
   .subtitle {
-    @include dark-theme-only {
-      color: $grey-40;
-    }
-
     font-size: 13px;
     margin: 0;
-    color: $grey-50;
+    color: var(--newtab-text-primary-color);
   }
 }
 

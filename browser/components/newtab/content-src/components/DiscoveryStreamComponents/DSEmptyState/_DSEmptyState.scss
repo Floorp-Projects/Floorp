@@ -35,11 +35,7 @@
       }
 
       &:hover {
-        @include ds-fade-in($grey-30);
-
-        @include dark-theme-only {
-          @include ds-fade-in($grey-60);
-        }
+        @include ds-fade-in(var(--newtab-card-placeholder-color));
       }
     }
 

@@ -22,22 +22,14 @@
     margin-bottom: 12px;
 
     .title {
-      @include dark-theme-only {
-        color: $grey-30;
-      }
-
-      color: $grey-90;
+      color: var(--newtab-card-header-color);
       font-weight: 600;
       font-size: 17px;
       line-height: 24px;
     }
 
     .ds-context {
-      @include dark-theme-only {
-        color: $grey-40;
-      }
-
-      color: $grey-50;
+      color: var(--newtab-text-secondary-color);
       font-weight: normal;
       font-size: 13px;
       line-height: 24px;

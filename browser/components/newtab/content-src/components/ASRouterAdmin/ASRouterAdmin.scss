@@ -159,7 +159,7 @@
 
     &.isDisabled {
       background: $email-input-invalid;
-      color: $red-60;
+      color: var(--newtab-status-error);
     }
   }
 
@@ -227,7 +227,7 @@
   }
 
   .errorState {
-    border: 1px solid $red-60;
+    border: $input-error-border;
   }
 
   .helpLink {

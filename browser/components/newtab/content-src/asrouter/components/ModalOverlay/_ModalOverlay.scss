@@ -49,7 +49,7 @@ $modal-scrollbar-z-index: 1100;
   }
 
   h2 {
-    color: $grey-60;
+    color: var(--newtab-section-header-text-color);
     text-align: center;
     font-weight: 200;
     margin-top: 30px;
@@ -67,7 +67,7 @@ $modal-scrollbar-z-index: 1100;
   }
 
   .footer {
-    border-top: 1px solid $grey-30;
+    border-top: $border-secondary;
     border-radius: 4px;
     height: 70px;
     width: 100%;

@@ -121,14 +121,10 @@ $excerpt-line-height: 20;
     }
 
     .source {
-      @include dark-theme-only {
-        color: $grey-40;
-      }
-
       -webkit-line-clamp: 1;
       margin-bottom: 2px;
       font-size: 13px;
-      color: $grey-50;
+      color: var(--newtab-text-secondary-color);
     }
 
     .cta-button {
@@ -181,23 +177,15 @@ $excerpt-line-height: 20;
   }
 
   header {
-    @include dark-theme-only {
-      color: $grey-10;
-    }
-
     line-height: $header-line-height * 1px;
     font-size: $header-font-size * 1px;
-    color: $grey-90;
+    color: var(--newtab-card-header-color);
   }
 
   p {
-    @include dark-theme-only {
-      color: $grey-10;
-    }
-
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
-    color: $grey-90;
+    color: var(--newtab-card-header-color);
     margin: 0;
   }
 }
