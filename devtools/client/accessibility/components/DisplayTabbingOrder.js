@@ -21,7 +21,6 @@ const {
 class DisplayTabbingOrder extends PureComponent {
   static get propTypes() {
     return {
-      describedby: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       tabbingOrderDisplayed: PropTypes.bool.isRequired,
     };
@@ -46,7 +45,7 @@ class DisplayTabbingOrder extends PureComponent {
   }
 
   render() {
-    const { describedby, tabbingOrderDisplayed } = this.props;
+    const { tabbingOrderDisplayed } = this.props;
     return label(
       {
         className:
@@ -61,7 +60,6 @@ class DisplayTabbingOrder extends PureComponent {
         checked: tabbingOrderDisplayed,
         disabled: this.state.disabled,
         onChange: this.onChange,
-        "aria-describedby": describedby,
       }),
       L10N.getStr("accessibility.toolbar.displayTabbingOrder.label")
     );
