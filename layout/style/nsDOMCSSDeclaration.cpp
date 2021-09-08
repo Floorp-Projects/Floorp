@@ -238,7 +238,7 @@ void nsDOMCSSDeclaration::RemoveProperty(const nsACString& aPropertyName,
 
 /* static */ nsDOMCSSDeclaration::ParsingEnvironment
 nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule,
-                                                  uint16_t aRuleType) {
+                                                  StyleCssRuleType aRuleType) {
   if (!aRule) {
     return {};
   }

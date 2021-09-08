@@ -11,8 +11,7 @@
 #include "mozilla/css/Rule.h"
 #include "nsICSSDeclaration.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // A CSSFontFaceRuleDecl is always embeded in a CSSFontFaceRule.
 class CSSFontFaceRule;
@@ -68,7 +67,7 @@ class CSSFontFaceRule final : public css::Rule {
   void SetRawAfterClone(RefPtr<RawServoFontFaceRule>);
 
   // WebIDL interface
-  uint16_t Type() const final;
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   nsICSSDeclaration* Style();
 
@@ -100,7 +99,6 @@ inline const CSSFontFaceRule* CSSFontFaceRuleDecl::ContainingRule() const {
       reinterpret_cast<const char*>(this) - offsetof(CSSFontFaceRule, mDecl));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_CSSFontFaceRule_h

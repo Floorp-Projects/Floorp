@@ -148,7 +148,7 @@ class DeclarationBlock final {
 
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsACString& aCssText, URLExtraData* aExtraData,
-      nsCompatibility aMode, css::Loader* aLoader, uint16_t aRuleType) {
+      nsCompatibility aMode, css::Loader* aLoader, StyleCssRuleType aRuleType) {
     RefPtr<RawServoDeclarationBlock> raw =
         Servo_ParseStyleAttribute(&aCssText, aExtraData, aMode, aLoader,
                                   aRuleType)
@@ -158,7 +158,7 @@ class DeclarationBlock final {
 
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsAString& aCssText, URLExtraData* aExtraData,
-      nsCompatibility aMode, css::Loader* aLoader, uint16_t aRuleType) {
+      nsCompatibility aMode, css::Loader* aLoader, StyleCssRuleType aRuleType) {
     NS_ConvertUTF16toUTF8 value(aCssText);
     return FromCssText(value, aExtraData, aMode, aLoader, aRuleType);
   }

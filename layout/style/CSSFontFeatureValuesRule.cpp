@@ -8,13 +8,16 @@
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "mozilla/ServoBindings.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 size_t CSSFontFeatureValuesRule::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
+}
+
+StyleCssRuleType CSSFontFeatureValuesRule::Type() const {
+  return StyleCssRuleType::FontFeatureValues;
 }
 
 #ifdef DEBUG
@@ -78,5 +81,4 @@ JSObject* CSSFontFeatureValuesRule::WrapObject(
   return CSSFontFeatureValuesRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

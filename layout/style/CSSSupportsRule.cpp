@@ -12,8 +12,7 @@
 
 using namespace mozilla::css;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 CSSSupportsRule::CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
                                  StyleSheet* aSheet, css::Rule* aParentRule,
@@ -40,6 +39,10 @@ void CSSSupportsRule::List(FILE* out, int32_t aIndent) const {
   fprintf_stderr(out, "%s\n", str.get());
 }
 #endif
+
+StyleCssRuleType CSSSupportsRule::Type() const {
+  return StyleCssRuleType::Supports;
+}
 
 void CSSSupportsRule::GetConditionText(nsACString& aConditionText) {
   Servo_SupportsRule_GetConditionText(mRawRule, &aConditionText);
@@ -78,5 +81,4 @@ JSObject* CSSSupportsRule::WrapObject(JSContext* aCx,
   return CSSSupportsRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

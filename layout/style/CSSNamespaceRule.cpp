@@ -8,9 +8,7 @@
 
 #include "mozilla/ServoBindings.h"
 
-using namespace mozilla::dom;
-
-namespace mozilla {
+namespace mozilla::dom {
 
 CSSNamespaceRule::~CSSNamespaceRule() = default;
 
@@ -24,6 +22,10 @@ void CSSNamespaceRule::List(FILE* out, int32_t aIndent) const {
   fprintf_stderr(out, "%s\n", str.get());
 }
 #endif
+
+StyleCssRuleType CSSNamespaceRule::Type() const {
+  return StyleCssRuleType::Namespace;
+}
 
 nsAtom* CSSNamespaceRule::GetPrefix() const {
   return Servo_NamespaceRule_GetPrefix(mRawRule);
@@ -46,4 +48,4 @@ size_t CSSNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-}  // namespace mozilla
+}  // namespace mozilla::dom

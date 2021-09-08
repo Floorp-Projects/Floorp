@@ -51,7 +51,7 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
   }
 }
 
-static constexpr uint16_t STYLE_RULE = 1;
+static constexpr auto STYLE_RULE = StyleCssRuleType::Style;
 
 static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block =

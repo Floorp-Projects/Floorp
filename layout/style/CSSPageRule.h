@@ -67,7 +67,7 @@ class CSSPageRule final : public css::Rule {
   void SetRawAfterClone(RefPtr<RawServoPageRule>);
 
   // WebIDL interfaces
-  uint16_t Type() const final { return CSSRule_Binding::PAGE_RULE; }
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   nsICSSDeclaration* Style();
 

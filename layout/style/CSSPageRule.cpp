@@ -10,8 +10,7 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoBindings.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // -- CSSPageRuleDeclaration ---------------------------------------
 
@@ -87,7 +86,7 @@ nsresult CSSPageRuleDeclaration::SetCSSDeclaration(
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSPageRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {
-  return GetParsingEnvironmentForRule(Rule(), CSSRule_Binding::PAGE_RULE);
+  return GetParsingEnvironmentForRule(Rule(), StyleCssRuleType::Page);
 }
 
 // -- CSSPageRule --------------------------------------------------
@@ -144,6 +143,8 @@ void CSSPageRule::SetRawAfterClone(RefPtr<RawServoPageRule> aRaw) {
   mDecls.SetRawAfterClone(Servo_PageRule_GetStyle(mRawRule.get()).Consume());
 }
 
+StyleCssRuleType CSSPageRule::Type() const { return StyleCssRuleType::Page; }
+
 size_t CSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
@@ -175,5 +176,4 @@ JSObject* CSSPageRule::WrapObject(JSContext* aCx,
   return CSSPageRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

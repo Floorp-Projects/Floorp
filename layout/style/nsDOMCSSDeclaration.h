@@ -23,6 +23,7 @@ struct JSContext;
 class JSObject;
 
 namespace mozilla {
+enum class StyleCssRuleType : uint8_t;
 class DeclarationBlock;
 struct DeclarationBlockMutationClosure;
 namespace css {
@@ -132,7 +133,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
     RefPtr<mozilla::URLExtraData> mUrlExtraData;
     nsCompatibility mCompatMode = eCompatibility_FullStandards;
     mozilla::css::Loader* mLoader = nullptr;
-    uint16_t mRuleType{0};
+    mozilla::StyleCssRuleType mRuleType{1 /* Style */};
   };
 
  protected:
@@ -182,7 +183,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   // The RuleType argument is just to avoid a virtual call, since all callers
   // know it statically. Should be equal to aRule->Type().
   static ParsingEnvironment GetParsingEnvironmentForRule(
-      const mozilla::css::Rule* aRule, uint16_t aRuleType);
+      const mozilla::css::Rule* aRule, mozilla::StyleCssRuleType);
 
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsACString& aPropValue, bool aIsImportant,

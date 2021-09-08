@@ -73,6 +73,10 @@ void CSSImportRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
+StyleCssRuleType CSSImportRule::Type() const {
+  return StyleCssRuleType::Import;
+}
+
 void CSSImportRule::SetRawAfterClone(RefPtr<RawServoImportRule> aRaw) {
   mRawRule = std::move(aRaw);
   if (mChildSheet) {

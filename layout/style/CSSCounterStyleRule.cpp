@@ -27,8 +27,8 @@ void CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-uint16_t CSSCounterStyleRule::Type() const {
-  return CSSRule_Binding::COUNTER_STYLE_RULE;
+StyleCssRuleType CSSCounterStyleRule::Type() const {
+  return StyleCssRuleType::CounterStyle;
 }
 
 void CSSCounterStyleRule::SetRawAfterClone(
