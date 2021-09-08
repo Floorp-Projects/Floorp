@@ -1447,9 +1447,6 @@ pref("prompts.windowPromptSubDialog", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Preference to enable the entire new newtab experience at once.
-pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", true);
-
 // A preference which allows us to enable the fly out customization overlay
 // on the newtab page.
 pref("browser.newtabpage.activity-stream.customizationMenu.enabled", false);

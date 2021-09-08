@@ -164,9 +164,6 @@ export class BaseContent extends React.PureComponent {
     const { initialized } = App;
     const prefs = props.Prefs.values;
 
-    // Values from experiment data
-    const { prefsButtonIcon } = prefs.featureConfig || {};
-
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(
@@ -180,12 +177,7 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const { customizationMenuEnabled, newNewtabExperienceEnabled } =
-      prefs.featureConfig || {};
-    const canShowCustomizationMenu =
-      customizationMenuEnabled || newNewtabExperienceEnabled;
-    const showCustomizationMenu =
-      canShowCustomizationMenu && this.state.customizeMenuVisible;
+    const showCustomizationMenu = this.state.customizeMenuVisible;
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -207,7 +199,7 @@ export class BaseContent extends React.PureComponent {
         "fixed-search",
       prefs.showSearch && noSectionsEnabled && "only-search",
       prefs["logowordmark.alwaysVisible"] && "visible-logo",
-      newNewtabExperienceEnabled && "newtab-experience",
+      "newtab-experience",
     ]
       .filter(v => v)
       .join(" ");
@@ -220,20 +212,16 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div>
-        {canShowCustomizationMenu ? (
-          <CustomizeMenu
-            onClose={this.closeCustomizationMenu}
-            onOpen={this.openCustomizationMenu}
-            openPreferences={this.openPreferences}
-            setPref={this.setPref}
-            enabledSections={enabledSections}
-            pocketRegion={pocketRegion}
-            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-            showing={showCustomizationMenu}
-          />
-        ) : (
-          <PrefsButton onClick={this.openPreferences} icon={prefsButtonIcon} />
-        )}
+        <CustomizeMenu
+          onClose={this.closeCustomizationMenu}
+          onOpen={this.openCustomizationMenu}
+          openPreferences={this.openPreferences}
+          setPref={this.setPref}
+          enabledSections={enabledSections}
+          pocketRegion={pocketRegion}
+          mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+          showing={showCustomizationMenu}
+        />
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div className={outerClassName} onClick={this.closeCustomizationMenu}>
           <main className={hasSnippet ? "has-snippet" : ""}>

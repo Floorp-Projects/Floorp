@@ -12,50 +12,22 @@ const DEFAULT_SECTION_MENU_OPTIONS = [
   "MoveUp",
   "MoveDown",
   "Separator",
-  "RemoveSection",
-  "CheckCollapsed",
-  "Separator",
   "ManageSection",
 ];
 const WEBEXT_SECTION_MENU_OPTIONS = [
   "MoveUp",
   "MoveDown",
   "Separator",
-  "CheckCollapsed",
-  "Separator",
   "ManageWebExtension",
 ];
 
 export class _SectionMenu extends React.PureComponent {
-  handleAddWhileCollapsed() {
-    const { action, userEvent } = SectionMenuOptions.ExpandSection(this.props);
-    this.props.dispatch(action);
-    if (userEvent) {
-      this.props.dispatch(
-        ac.UserEvent({
-          event: userEvent,
-          source: this.props.source,
-        })
-      );
-    }
-  }
-
   getOptions() {
     const { props } = this;
 
     const propOptions = props.isWebExtension
       ? [...WEBEXT_SECTION_MENU_OPTIONS]
       : [...DEFAULT_SECTION_MENU_OPTIONS];
-
-    // Remove Collapse/Expand related option if the `newNewtabExperience.enabled`
-    // pref is set to true.
-    if (props.Prefs.values.featureConfig.newNewtabExperienceEnabled) {
-      if (props.isWebExtension) {
-        propOptions.splice(2, 2);
-      } else {
-        propOptions.splice(4, 1);
-      }
-    }
 
     // Remove the move related options if the section is fixed
     if (props.isFixed) {
@@ -76,14 +48,6 @@ export class _SectionMenu extends React.PureComponent {
         const { action, id, type, userEvent } = option;
         if (!type && id) {
           option.onClick = () => {
-            const hasAddEvent =
-              userEvent === "MENU_ADD_TOPSITE" ||
-              userEvent === "MENU_ADD_SEARCH";
-
-            if (props.collapsed && hasAddEvent) {
-              this.handleAddWhileCollapsed();
-            }
-
             props.dispatch(action);
             if (userEvent) {
               props.dispatch(
