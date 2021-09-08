@@ -19,12 +19,19 @@ namespace Scalar {
 
 // Scalar types that can appear in typed arrays.
 // The enum values must be kept in sync with:
+//
 //  * the TYPEDARRAY_KIND constants
 //  * the SCTAG_TYPED_ARRAY constants
 //  * JS_FOR_EACH_TYPEDARRAY
 //  * JS_FOR_PROTOTYPES_
 //  * JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE
 //  * JIT compilation
+//
+// and the existing entries here must not be renumbered, since they are
+// necessary for backwards compatibility with structured clones from previous
+// versions. (It is fine to add new entries and increment
+// MaxTypedArrayViewType, or change anything at or after
+// MaxTypedArrayViewType.)
 enum Type {
   Int8 = 0,
   Uint8,
