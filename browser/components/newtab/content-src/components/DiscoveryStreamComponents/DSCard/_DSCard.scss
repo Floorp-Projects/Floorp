@@ -70,11 +70,7 @@ $excerpt-line-height: 20;
 
     &:hover {
       header {
-        @include dark-theme-only {
-          color: $blue-40;
-        }
-
-        color: $blue-60;
+        color: var(--newtab-link-primary-color);
       }
     }
 
@@ -84,21 +80,13 @@ $excerpt-line-height: 20;
       transition: none;
 
       header {
-        @include dark-theme-only {
-          color: $blue-40;
-        }
-
-        color: $blue-60;
+        color: var(--newtab-link-primary-color);
       }
     }
 
     &:active {
       header {
-        @include dark-theme-only {
-          color: $blue-50;
-        }
-
-        color: $blue-70;
+        color: var(--newtab-link-primary-active-color);
       }
     }
   }
@@ -189,10 +177,8 @@ $excerpt-line-height: 20;
     }
 
     .cta-link {
-      @include dark-theme-only {
-        color: $blue-40;
-        fill: $blue-40;
-      }
+      color: var(--newtab-link-primary-color);
+      fill: var(--newtab-link-primary-color);
 
       font-size: 15px;
       font-weight: 600;
@@ -202,28 +188,17 @@ $excerpt-line-height: 20;
       background-size: auto;
       background-position: right 1.5px;
       padding-right: 9px;
-      color: $blue-60;
-      fill: $blue-60;
 
       &:focus {
-        @include dark-theme-only {
-          box-shadow: 0 0 0 1px $grey-80, 0 0 0 4px $blue-50-50;
-        }
+        box-shadow: $shadow-primary;
 
-        box-shadow: 0 0 0 1px $white, 0 0 0 4px $blue-50-50;
         border-radius: 4px;
         outline: 0;
       }
 
       &:active {
-        @include dark-theme-only {
-          color: $blue-50;
-          fill: $blue-50;
-          box-shadow: none;
-        }
-
-        color: $blue-70;
-        fill: $blue-70;
+        color: var(--newtab-link-primary-active-color);
+        fill: var(--newtab-link-primary-active-color);
         box-shadow: none;
       }
 

@@ -5,7 +5,7 @@
     margin: 0 0 8px;
     border: 0;
     padding: 0;
-    color: $blue-60;
+    color: var(--newtab-link-primary-color);
     width: max-content;
 
     &:hover {
@@ -15,7 +15,7 @@
 
     &::before {
       -moz-context-properties: fill;
-      fill: $blue-60;
+      fill: var(--newtab-link-primary-color);
       content: '';
       display: inline-block;
       width: 16px;

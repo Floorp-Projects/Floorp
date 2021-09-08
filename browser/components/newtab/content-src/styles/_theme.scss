@@ -32,6 +32,7 @@ body {
   --newtab-inner-box-shadow-color: #{$black-10};
 
   --newtab-link-primary-color: #{$blue-60};
+  --newtab-link-primary-active-color: #{$blue-70};
   --newtab-link-secondary-color: #{$teal-70};
   --newtab-text-conditional-color: #{$grey-60};
   --newtab-text-primary-color: #{$in-content-page-color};
@@ -127,6 +128,7 @@ body {
     --newtab-icon-secondary-color: #{$grey-10-40};
     --newtab-inner-box-shadow-color: #{$grey-10-20};
     --newtab-link-primary-color: #{$blue-40};
+    --newtab-link-primary-active-color: #{$blue-60};
     --newtab-link-secondary-color: #{$pocket-teal};
     --newtab-text-conditional-color: #{$grey-10};
     --newtab-text-primary-color: #{$in-content-page-color-dark};
