@@ -2230,7 +2230,7 @@ nsresult Http2Session::RecvWindowUpdate(Http2Session* self) {
     if (!self->mInputFrameDataStream) {
       LOG3(("Http2Session::RecvWindowUpdate %p lookup streamID 0x%X failed.\n",
             self, self->mInputFrameID));
-      // only resest the session if the ID is one we haven't ever opened
+      // only reset the session if the ID is one we haven't ever opened
       if (self->mInputFrameID >= self->mNextStreamID) {
         self->GenerateRstStream(PROTOCOL_ERROR, self->mInputFrameID);
       }
