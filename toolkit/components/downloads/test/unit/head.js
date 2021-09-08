@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
@@ -360,6 +361,9 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
         let isPrivate = aOptions && aOptions.isPrivate;
         let referrerInfo = aOptions ? aOptions.referrerInfo : null;
         let cookieJarSettings = aOptions ? aOptions.cookieJarSettings : null;
+        let classification =
+          aOptions?.downloadClassification ??
+          Ci.nsITransfer.DOWNLOAD_ACCEPTABLE;
         // Initialize the components so they reference each other.  This will cause
         // the Download object to be created and added to the public downloads.
         transfer.init(
@@ -371,7 +375,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           null,
           persist,
           isPrivate,
-          Ci.nsITransfer.DOWNLOAD_ACCEPTABLE,
+          classification,
           null
         );
         persist.progressListener = transfer;
@@ -747,6 +751,7 @@ async function promisePartFileReady(aDownload) {
  *           keepPartialData: bool,
  *           keepBlockedData: bool,
  *           useLegacySaver: bool,
+ *           verdict: string indicating the detailed reason for the block,
  *        }
  * @return {Promise}
  * @resolves The reputation blocked download.
@@ -756,12 +761,13 @@ async function promiseBlockedDownload({
   keepPartialData,
   keepBlockedData,
   useLegacySaver,
+  verdict = Downloads.Error.BLOCK_VERDICT_UNCOMMON,
 } = {}) {
   let blockFn = base => ({
     shouldBlockForReputationCheck: () =>
       Promise.resolve({
         shouldBlock: true,
-        verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+        verdict,
       }),
     shouldKeepBlockedData: () => Promise.resolve(keepBlockedData),
   });
@@ -795,15 +801,9 @@ async function promiseBlockedDownload({
       throw ex;
     }
     Assert.ok(ex.becauseBlockedByReputationCheck);
-    Assert.equal(
-      ex.reputationCheckVerdict,
-      Downloads.Error.BLOCK_VERDICT_UNCOMMON
-    );
+    Assert.equal(ex.reputationCheckVerdict, verdict);
     Assert.ok(download.error.becauseBlockedByReputationCheck);
-    Assert.equal(
-      download.error.reputationCheckVerdict,
-      Downloads.Error.BLOCK_VERDICT_UNCOMMON
-    );
+    Assert.equal(download.error.reputationCheckVerdict, verdict);
   }
 
   Assert.ok(download.stopped);
