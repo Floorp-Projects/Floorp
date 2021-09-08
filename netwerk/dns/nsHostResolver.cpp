@@ -1338,9 +1338,14 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
       addrRec->RecordReason(TRRSkippedReason::TRR_OK);
     }
 
+    bool shouldAttemptNative =
+        !StaticPrefs::network_trr_strict_native_fallback() ||
+        aReason == TRRSkippedReason::TRR_NXDOMAIN ||
+        aReason == TRRSkippedReason::TRR_DISABLED_FLAG;
+
     if (NS_FAILED(status) &&
         addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
-        status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+        status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST && shouldAttemptNative) {
       MOZ_ASSERT(!addrRec->mResolving);
       NativeLookup(addrRec, aLock);
       MOZ_ASSERT(addrRec->mResolving);
