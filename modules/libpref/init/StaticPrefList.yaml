@@ -9363,6 +9363,12 @@
   value: false
   mirror: always
 
+# If set to true, disallow localhost connections when offline.
+- name: network.disable-localhost-when-offline
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
