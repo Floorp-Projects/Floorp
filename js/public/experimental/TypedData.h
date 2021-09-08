@@ -23,6 +23,7 @@
 #include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot, JS::GetMaybePtrFromReservedSlot
 #include "js/RootingAPI.h"  // JS::Handle
 #include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/Wrapper.h"     // js::CheckedUnwrapStatic
 
 struct JSClass;
 class JS_PUBLIC_API JSObject;
@@ -143,18 +144,6 @@ extern JS_PUBLIC_API bool JS_GetTypedArraySharedness(JSObject* obj);
  */
 
 namespace js {
-
-extern JS_PUBLIC_API JSObject* UnwrapInt8Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapUint8Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapUint8ClampedArray(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapInt16Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapUint16Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapInt32Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapUint32Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapBigInt64Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapBigUint64Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapFloat32Array(JSObject* obj);
-extern JS_PUBLIC_API JSObject* UnwrapFloat64Array(JSObject* obj);
 
 extern JS_PUBLIC_API JSObject* UnwrapArrayBufferView(JSObject* obj);
 
@@ -362,6 +351,13 @@ class JS_PUBLIC_API ArrayBufferOrView {
   //
   explicit operator bool() const { return !!obj; }
 
+  // `obj` must be an unwrapped ArrayBuffer or view, or nullptr.
+  static inline ArrayBufferOrView fromObject(JSObject* unwrapped);
+
+  // Unwrap an ArrayBuffer or view. Returns ArrayBufferOrView(nullptr) if
+  // `maybeWrapped` is the wrong type or fails unwrapping. Never throw.
+  static ArrayBufferOrView unwrap(JSObject* maybeWrapped);
+
   // Allow use as Rooted<JS::ArrayBufferOrView>.
   void trace(JSTracer* trc) {
     TraceEdge(trc, &obj, "ArrayBufferOrView object");
@@ -374,13 +370,89 @@ class JS_PUBLIC_API ArrayBufferOrView {
   JSObject* asObject() const { return obj; }
 };
 
+class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
+ protected:
+  explicit ArrayBuffer(JSObject* unwrapped) : ArrayBufferOrView(unwrapped) {}
+
+ public:
+  static const JSClass* const UnsharedClass;
+  static const JSClass* const SharedClass;
+
+  static ArrayBuffer fromObject(JSObject* unwrapped) {
+    if (unwrapped) {
+      const JSClass* clasp = GetClass(unwrapped);
+      if (clasp == UnsharedClass || clasp == SharedClass) {
+        return ArrayBuffer(unwrapped);
+      }
+    }
+    return ArrayBuffer(nullptr);
+  }
+
+  static ArrayBuffer create(JSContext* cx, size_t nbytes);
+
+  bool isDetached() const;
+  bool isSharedMemory() const;
+
+  uint8_t* getLengthAndData(size_t* length, bool* isSharedMemory,
+                            const JS::AutoRequireNoGC&);
+
+  uint8_t* getData(bool* isSharedMemory, const JS::AutoRequireNoGC& nogc) {
+    size_t length;
+    return getLengthAndData(&length, isSharedMemory, nogc);
+  }
+};
+
 // A view into an ArrayBuffer, either a DataViewObject or a Typed Array variant.
 class JS_PUBLIC_API ArrayBufferView : public ArrayBufferOrView {
  protected:
   explicit ArrayBufferView(JSObject* unwrapped)
       : ArrayBufferOrView(unwrapped) {}
 
+ public:
+  static inline ArrayBufferView fromObject(JSObject* unwrapped);
+  static ArrayBufferView unwrap(JSObject* maybeWrapped) {
+    ArrayBufferView view = fromObject(maybeWrapped);
+    if (view) {
+      return view;
+    }
+    return fromObject(js::CheckedUnwrapStatic(maybeWrapped));
+  }
+
   bool isDetached() const;
+  bool isSharedMemory() const;
+
+  uint8_t* getLengthAndData(size_t* length, bool* isSharedMemory,
+                            const JS::AutoRequireNoGC&);
+  uint8_t* getData(bool* isSharedMemory, const JS::AutoRequireNoGC& nogc) {
+    size_t length;
+    return getLengthAndData(&length, isSharedMemory, nogc);
+  }
+
+  // Must only be called if !isDetached().
+  size_t getByteLength(const JS::AutoRequireNoGC&);
+};
+
+class JS_PUBLIC_API DataView : public ArrayBufferView {
+ protected:
+  explicit DataView(JSObject* unwrapped) : ArrayBufferView(unwrapped) {}
+
+ public:
+  static const JSClass* const ClassPtr;
+
+  static DataView fromObject(JSObject* unwrapped) {
+    if (unwrapped && GetClass(unwrapped) == ClassPtr) {
+      return DataView(unwrapped);
+    }
+    return DataView(nullptr);
+  }
+
+  static DataView unwrap(JSObject* maybeWrapped) {
+    DataView view = fromObject(maybeWrapped);
+    if (view) {
+      return view;
+    }
+    return fromObject(js::CheckedUnwrapStatic(maybeWrapped));
+  }
 };
 
 // Base type of all Typed Array variants.
@@ -392,12 +464,20 @@ class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
 
  public:
   static TypedArray_base fromObject(JSObject* unwrapped);
+
+  static TypedArray_base unwrap(JSObject* maybeWrapped) {
+    TypedArray_base view = fromObject(maybeWrapped);
+    if (view) {
+      return view;
+    }
+    return fromObject(js::CheckedUnwrapStatic(maybeWrapped));
+  }
 };
 
 template <js::Scalar::Type TypedArrayElementType>
 class JS_PUBLIC_API TypedArray : public TypedArray_base {
  protected:
-  explicit TypedArray(JSObject* obj) : TypedArray_base(obj) {}
+  explicit TypedArray(JSObject* unwrapped) : TypedArray_base(unwrapped) {}
 
  public:
   using DataType = detail::ExternalTypeOf_t<TypedArrayElementType>;
@@ -429,6 +509,11 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
     return TypedArray(nullptr);
   }
 
+  static TypedArray unwrap(JSObject* maybeWrapped) {
+    TypedArray view = fromObject(maybeWrapped);
+    return view ? view : fromObject(js::CheckedUnwrapStatic(maybeWrapped));
+  }
+
   // Return a pointer to the start of the data referenced by a typed array. The
   // data is still owned by the typed array, and should not be modified on
   // another thread. Furthermore, the pointer can become invalid on GC (if the
@@ -451,17 +536,32 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
   }
 };
 
+ArrayBufferOrView ArrayBufferOrView::fromObject(JSObject* obj) {
+  if (ArrayBuffer::fromObject(obj) || ArrayBufferView::fromObject(obj)) {
+    return ArrayBufferOrView(obj);
+  }
+  return ArrayBufferOrView(nullptr);
+}
+
+ArrayBufferView ArrayBufferView::fromObject(JSObject* unwrapped) {
+  if (TypedArray_base::fromObject(unwrapped) ||
+      DataView::fromObject(unwrapped)) {
+    return ArrayBufferView(unwrapped);
+  }
+  return ArrayBufferView(nullptr);
+}
+
 } /* namespace JS */
 
 /*
- * ExternalType* JS_Get(type)ArrayData(JSObject* obj,
- *                                     bool* isSharedMemory,
- *                                     const JS::AutoRequireNoGC&)
+ * JS_Get(type)ArrayData(JSObject* obj,
+ *                       bool* isSharedMemory,
+ *                       const JS::AutoRequireNoGC&)
  *
- * void js::Get(type)ArrayLengthAndData(JSObject* obj,
- *                                      size_t* length,
- *                                      bool* isSharedMemory,
- *                                      ExternalType** data)
+ * js::Get(type)ArrayLengthAndData(JSObject* obj,
+ *                                 size_t* length,
+ *                                 bool* isSharedMemory,
+ *                                 const JS::AutoRequireNoGC&)
  *
  * Return a pointer to the start of the data referenced by a typed array. The
  * data is still owned by the typed array, and should not be modified on
@@ -496,6 +596,8 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
     *data = JS::GetMaybePtrFromReservedSlot<ExternalType>(                 \
         unwrapped, detail::TypedArrayDataSlot);                            \
   }                                                                        \
+                                                                           \
+  JS_PUBLIC_API JSObject* Unwrap##Name##Array(JSObject* maybeWrapped);     \
   } /* namespace js */
 
 JS_FOR_EACH_TYPED_ARRAY(JS_DEFINE_DATA_AND_LENGTH_ACCESSOR)
