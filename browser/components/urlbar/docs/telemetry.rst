@@ -447,6 +447,8 @@ QuickSuggest Impression
     The Name of the advertiser.
   - ``reporting_url``
     The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
+  - ``scenario``
+    The scenario of the QuickSuggest, could be one of "history", "offline", and "online".
 
 QuickSuggest Click
   This records a click ping when a QuickSuggest link is clicked by the user.
@@ -462,6 +464,8 @@ QuickSuggest Click
     The placement of the QuickSuggest link in the Urlbar (1-based).
   - ``reporting_url``
     The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
+  - ``scenario``
+    The scenario of the QuickSuggest, could be one of "history", "offline", and "online".
 
 
 Other telemetry relevant to the Address Bar
