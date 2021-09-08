@@ -3117,14 +3117,6 @@ void gfxPlatform::GetAcceleratedCompositorBackends(
   }
 }
 
-void gfxPlatform::GetCompositorBackends(
-    bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends) {
-  if (useAcceleration) {
-    GetAcceleratedCompositorBackends(aBackends);
-  }
-  aBackends.AppendElement(LayersBackend::LAYERS_BASIC);
-}
-
 void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
   if (mCompositorBackend == aBackend) {
     return;
