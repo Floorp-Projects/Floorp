@@ -5112,7 +5112,7 @@ void GCRuntime::getNextSweepGroup() {
  * push the referring object onto the list.
  *
  * The list is traversed and then unlinked in
- * GCRuntime::markIncomingCrossCompartmentPointers.
+ * GCRuntime::markIncomingGrayCrossCompartmentPointers.
  */
 
 static bool IsGrayListObject(JSObject* obj) {
@@ -5200,42 +5200,28 @@ void js::gc::DelayCrossCompartmentGrayMarking(JSObject* src) {
 #endif
 }
 
-void GCRuntime::markIncomingCrossCompartmentPointers(MarkColor color) {
-  gcstats::AutoPhase ap(stats(),
-                        color == MarkColor::Black
-                            ? gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK
-                            : gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY);
-
-  bool unlinkList = color == MarkColor::Gray;
+void GCRuntime::markIncomingGrayCrossCompartmentPointers() {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY);
 
   for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
-    MOZ_ASSERT(c->zone()->isGCMarking());
-    MOZ_ASSERT_IF(color == MarkColor::Gray,
-                  c->zone()->isGCMarkingBlackAndGray());
+    MOZ_ASSERT(c->zone()->isGCMarkingBlackAndGray());
     MOZ_ASSERT_IF(c->gcIncomingGrayPointers,
                   IsGrayListObject(c->gcIncomingGrayPointers));
 
     for (JSObject* src = c->gcIncomingGrayPointers; src;
-         src = NextIncomingCrossCompartmentPointer(src, unlinkList)) {
+         src = NextIncomingCrossCompartmentPointer(src, true)) {
       JSObject* dst = CrossCompartmentPointerReferent(src);
       MOZ_ASSERT(dst->compartment() == c);
+      MOZ_ASSERT_IF(src->asTenured().isMarkedBlack(),
+                    dst->asTenured().isMarkedBlack());
 
-      if (color == MarkColor::Gray) {
-        if (src->asTenured().isMarkedGray()) {
-          TraceManuallyBarrieredEdge(&marker, &dst,
-                                     "cross-compartment gray pointer");
-        }
-      } else {
-        if (src->asTenured().isMarkedBlack()) {
-          TraceManuallyBarrieredEdge(&marker, &dst,
-                                     "cross-compartment black pointer");
-        }
+      if (src->asTenured().isMarkedGray()) {
+        TraceManuallyBarrieredEdge(&marker, &dst,
+                                   "cross-compartment gray pointer");
       }
     }
 
-    if (unlinkList) {
-      c->gcIncomingGrayPointers = nullptr;
-    }
+    c->gcIncomingGrayPointers = nullptr;
   }
 }
 
@@ -5388,12 +5374,6 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  // Mark any incoming gray pointers from previously swept compartments that
-  // have subsequently been marked black. This can occur when gray cells
-  // become black by the action of UnmarkGray.
-  markIncomingCrossCompartmentPointers(MarkColor::Black);
-  drainMarkStack();
-
   // Change state of current group to MarkGray to restrict marking to this
   // group.  Note that there may be pointers to the atoms zone, and
   // these will be marked through, as they are not marked with
@@ -5406,7 +5386,7 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
   marker.setMainStackColor(MarkColor::Gray);
 
   // Mark incoming gray pointers from previously swept compartments.
-  markIncomingCrossCompartmentPointers(MarkColor::Gray);
+  markIncomingGrayCrossCompartmentPointers();
 
   markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
 
