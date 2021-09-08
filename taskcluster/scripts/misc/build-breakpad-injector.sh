@@ -3,7 +3,7 @@ set -x -e -v
 
 # This script is for building libbreakpadinjector.so, currently for linux only
 
-COMPRESS_EXT=xz
+COMPRESS_EXT=zst
 
 cd $GECKO_PATH
 
