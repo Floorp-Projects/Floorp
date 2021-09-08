@@ -301,6 +301,36 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `GIVEN saveLoginPrompt is visible WHEN prompt is removed from state THEN dismiss saveLoginPrompt`() {
+        // given
+        val saveLoginPrompt: SaveLoginDialogFragment = mock()
+        val promptRequest: PromptRequest.SaveLoginPrompt = mock()
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest))
+            .joinBlocking()
+        store.waitUntilIdle()
+
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager
+            ) { }
+        )
+
+        feature.start()
+        feature.activePrompt = WeakReference(saveLoginPrompt)
+        feature.activePromptRequest = promptRequest
+
+        // when
+        store.dispatch(ContentAction.ConsumePromptRequestAction(tabId, promptRequest))
+            .joinBlocking()
+
+        // then
+        verify(saveLoginPrompt).dismissAllowingStateLoss()
+    }
+
+    @Test
     fun `GIVEN loginPickerView is not visible WHEN dismissSelectPrompts THEN dismissCurrentLoginSelect called and false returned`() {
         // given
         val loginPickerView: SelectablePromptView<Login> = mock()

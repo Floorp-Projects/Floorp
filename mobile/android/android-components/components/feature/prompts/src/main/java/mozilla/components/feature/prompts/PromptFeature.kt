@@ -298,12 +298,14 @@ class PromptFeature private constructor(
                     arrayOf(it?.content?.promptRequests, it?.content?.loading)
                 }
                 .collect { state ->
-                    state?.content?.let {
-                        if (it.promptRequests.lastOrNull() != activePromptRequest) {
+                    state?.content?.let { content ->
+                        if (content.promptRequests.lastOrNull() != activePromptRequest) {
                             // Dismiss any active select login or credit card prompt if it does
                             // not match the current prompt request for the session.
                             if (activePromptRequest is SelectLoginPrompt) {
                                 loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
+                            } else if (activePromptRequest is SaveLoginPrompt) {
+                                (activePrompt?.get() as? SaveLoginDialogFragment)?.dismissAllowingStateLoss()
                             } else if (activePromptRequest is SelectCreditCard) {
                                 creditCardPicker?.dismissSelectCreditCardRequest(
                                     activePromptRequest as SelectCreditCard
@@ -311,13 +313,13 @@ class PromptFeature private constructor(
                             }
 
                             onPromptRequested(state)
-                        } else if (!it.loading) {
+                        } else if (!content.loading) {
                             promptAbuserDetector.resetJSAlertAbuseState()
-                        } else if (it.loading) {
+                        } else if (content.loading) {
                             dismissSelectPrompts()
                         }
 
-                        activePromptRequest = it.promptRequests.lastOrNull()
+                        activePromptRequest = content.promptRequests.lastOrNull()
                     }
                 }
         }

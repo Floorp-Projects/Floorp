@@ -75,6 +75,11 @@ abstract class EngineSession(
         fun onPromptRequest(promptRequest: PromptRequest) = Unit
 
         /**
+         * The engine has requested a prompt be dismissed.
+         */
+        fun onPromptDismissed(promptRequest: PromptRequest) = Unit
+
+        /**
          * User cancelled a repost prompt. Page will not be reloaded.
          */
         fun onRepostPromptCancelled() = Unit

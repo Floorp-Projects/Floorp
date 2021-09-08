@@ -125,7 +125,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     logins = prompt.options.map { it.value.toLogin() },
                     onConfirm = onConfirmSave,
                     onDismiss = onDismiss
-                )
+                ).also {
+                    prompt.delegate = PromptInstanceDismissDelegate(
+                        geckoEngineSession, it
+                    )
+                }
             )
         }
         return geckoResult

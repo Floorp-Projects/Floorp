@@ -683,6 +683,26 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `Calling onLoginSave must set a PromptInstanceDismissDelegate`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var loginSaveRequest: PromptRequest.SaveLoginPrompt = mock()
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
+            }
+        })
+        val login = createLogin()
+        val saveOption = Autocomplete.LoginSaveOption(login.toLoginEntry())
+        val saveLoginPrompt = spy(geckoLoginSavePrompt(arrayOf(saveOption)))
+
+        promptDelegate.onLoginSave(mock(), saveLoginPrompt)
+
+        assertNotNull(loginSaveRequest)
+        assertNotNull(saveLoginPrompt.delegate)
+    }
+
+    @Test
     fun `Calling onLoginSelect must provide an SelectLoginPrompt PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var onLoginSelected = false
