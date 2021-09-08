@@ -3280,13 +3280,11 @@ template bool gfxFont::SplitAndInitTextRun(
     nsAtom* aLanguage, ShapedTextFlags aOrientation);
 
 template <>
-bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
-                                   gfxTextRun* aTextRun, const char16_t* aText,
-                                   uint32_t aOffset, uint32_t aLength,
-                                   FontMatchType aMatchType,
-                                   gfx::ShapedTextFlags aOrientation,
-                                   Script aScript, nsAtom* aLanguage,
-                                   bool aSyntheticLower, bool aSyntheticUpper) {
+bool gfxFont::InitFakeSmallCapsRun(
+    nsPresContext* aPresContext, DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
+    const char16_t* aText, uint32_t aOffset, uint32_t aLength,
+    FontMatchType aMatchType, gfx::ShapedTextFlags aOrientation, Script aScript,
+    nsAtom* aLanguage, bool aSyntheticLower, bool aSyntheticUpper) {
   bool ok = true;
 
   RefPtr<gfxFont> smallCapsFont = GetSmallCapsFont();
@@ -3435,19 +3433,18 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
 }
 
 template <>
-bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
-                                   gfxTextRun* aTextRun, const uint8_t* aText,
-                                   uint32_t aOffset, uint32_t aLength,
-                                   FontMatchType aMatchType,
-                                   gfx::ShapedTextFlags aOrientation,
-                                   Script aScript, nsAtom* aLanguage,
-                                   bool aSyntheticLower, bool aSyntheticUpper) {
+bool gfxFont::InitFakeSmallCapsRun(
+    nsPresContext* aPresContext, DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
+    const uint8_t* aText, uint32_t aOffset, uint32_t aLength,
+    FontMatchType aMatchType, gfx::ShapedTextFlags aOrientation, Script aScript,
+    nsAtom* aLanguage, bool aSyntheticLower, bool aSyntheticUpper) {
   NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aText),
                                        aLength);
-  return InitFakeSmallCapsRun(
-      aDrawTarget, aTextRun, static_cast<const char16_t*>(unicodeString.get()),
-      aOffset, aLength, aMatchType, aOrientation, aScript, aLanguage,
-      aSyntheticLower, aSyntheticUpper);
+  return InitFakeSmallCapsRun(aPresContext, aDrawTarget, aTextRun,
+                              static_cast<const char16_t*>(unicodeString.get()),
+                              aOffset, aLength, aMatchType, aOrientation,
+                              aScript, aLanguage, aSyntheticLower,
+                              aSyntheticUpper);
 }
 
 gfxFont* gfxFont::GetSmallCapsFont() {
