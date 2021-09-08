@@ -1925,25 +1925,6 @@ var gPrivacyPane = {
    * Initializes the address bar section.
    */
   _initAddressBar() {
-    // When these prefs are made the default, add this data-l10n-id directly to
-    // privacy.inc.xhtml.
-    if (
-      Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-      ) ||
-      Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.customizationMenu.enabled"
-      )
-    ) {
-      document
-        .getElementById("topSitesSuggestion")
-        .setAttribute("data-l10n-id", "addressbar-locbar-shortcuts-option");
-    } else {
-      document
-        .getElementById("topSitesSuggestion")
-        .setAttribute("data-l10n-id", "addressbar-locbar-topsites-option");
-    }
-
     // Update the Firefox Suggest section on Nimbus changes.
     this._updateFirefoxSuggestSection = this._updateFirefoxSuggestSection.bind(
       this
