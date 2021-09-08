@@ -262,7 +262,7 @@ $letter-fallback-color: $white;
     }
 
     .sponsored-label {
-      color: $grey-50;
+      color: var(--newtab-text-secondary-color);
       font-size: 0.9em;
     }
 
@@ -284,9 +284,6 @@ $letter-fallback-color: $white;
 
   &.dragged {
     .tile {
-      background: $grey-20;
-      box-shadow: none;
-
       *,
       &::before {
         display: none;
@@ -431,7 +428,7 @@ $letter-fallback-color: $white;
         width: 960px;
         height: 16px;
         -moz-context-properties: fill;
-        fill: $blue-50;
+        fill: var(--newtab-link-primary-color);
         background-image: url('chrome://browser/skin/tabbrowser/loading.svg');
         animation: tab-throbber-animation 1.05s steps(60) infinite;
 
@@ -470,7 +467,7 @@ $letter-fallback-color: $white;
 
     .error-tooltip {
       animation: fade-up-tt 450ms;
-      background: $red-60;
+      background: var(--newtab-status-error);
       border-radius: 2px;
       color: $white;
       inset-inline-start: 3px;
@@ -481,7 +478,7 @@ $letter-fallback-color: $white;
 
       // tooltip caret
       &::before {
-        background: $red-60;
+        background: var(--newtab-status-error);
         bottom: -8px;
         content: '.';
         height: 16px;

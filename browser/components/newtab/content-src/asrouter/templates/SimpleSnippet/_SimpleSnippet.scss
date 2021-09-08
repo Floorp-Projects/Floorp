@@ -7,9 +7,9 @@ $icon-width: 54px; // width of primary icon + margin
   }
 
   p em {
-    color: $grey-90;
+    color: var(--newtab-text-empahsis-text-color);
     font-style: normal;
-    background: $yellow-50;
+    background: var(--newtab-text-emphasis-background);
   }
 
   &.bold,

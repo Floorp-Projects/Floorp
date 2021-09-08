@@ -43,7 +43,7 @@
       }
 
       &:active {
-        color: $blue-70;
+        color: var(--newtab-link-primary-active-color);
       }
     }
   }
