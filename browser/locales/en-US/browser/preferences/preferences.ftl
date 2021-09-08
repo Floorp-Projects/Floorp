@@ -139,8 +139,8 @@ set-as-my-default-browser =
     .label = Make Default…
     .accesskey = D
 
-startup-restore-previous-session =
-    .label = Restore previous session
+startup-restore-windows-and-tabs =
+    .label = Open previous windows and tabs
     .accesskey = s
 
 startup-restore-warn-on-quit =
@@ -159,8 +159,8 @@ open-new-link-as-tabs =
     .label = Open links in tabs instead of new windows
     .accesskey = w
 
-warn-on-close-multiple-tabs =
-    .label = Warn you when closing multiple tabs
+confirm-on-close-multiple-tabs =
+    .label = Confirm before closing multiple tabs
     .accesskey = m
 
 warn-on-open-many-tabs =
