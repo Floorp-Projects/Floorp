@@ -1815,7 +1815,7 @@ void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
 void MTypedArrayElementSize::computeRange(TempAllocator& alloc) {
   constexpr auto MaxTypedArraySize = sizeof(double);
 
-#define ASSERT_MAX_SIZE(T, N)                   \
+#define ASSERT_MAX_SIZE(_, T, N)                \
   static_assert(sizeof(T) <= MaxTypedArraySize, \
                 "unexpected typed array type exceeding 64-bits storage");
   JS_FOR_EACH_TYPED_ARRAY(ASSERT_MAX_SIZE)
