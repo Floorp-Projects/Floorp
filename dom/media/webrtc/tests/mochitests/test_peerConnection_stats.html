@@ -496,7 +496,10 @@ const pedanticChecks = report => {
           `${stat.kind} test. value=${stat.packetsSent}`);
 
       // bytesSent
-      ok(stat.bytesSent > 0 && stat.bytesSent < 300000,
+      const audio1Min = 16000 * 60; // 128kbps
+      const video1Min = 250000 * 60; // 2Mbps
+      ok(stat.bytesSent > 0 &&
+         stat.bytesSent < (stat.kind == "video" ? video1Min : audio1Min),
           `${stat.type}.bytesSent is a sane number for a short ` +
           `${stat.kind} test. value=${stat.bytesSent}`);
 
@@ -540,7 +543,10 @@ const pedanticChecks = report => {
           `${stat.kind} test. value=${stat.packetsSent}`);
 
       // bytesSent
-      ok(stat.bytesSent > 0 && stat.bytesSent < 300000,
+      const audio1Min = 16000 * 60; // 128kbps
+      const video1Min = 250000 * 60; // 2Mbps
+      ok(stat.bytesSent > 0 &&
+         stat.bytesSent < (stat.kind == "video" ? video1Min : audio1Min),
          `${stat.type}.bytesSent is a sane number for a short ` +
           `${stat.kind} test. value=${stat.bytesSent}`);
 
