@@ -537,9 +537,10 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
   }
 };
 
-ArrayBufferOrView ArrayBufferOrView::fromObject(JSObject* obj) {
-  if (ArrayBuffer::fromObject(obj) || ArrayBufferView::fromObject(obj)) {
-    return ArrayBufferOrView(obj);
+ArrayBufferOrView ArrayBufferOrView::fromObject(JSObject* unwrapped) {
+  if (ArrayBuffer::fromObject(unwrapped) ||
+      ArrayBufferView::fromObject(unwrapped)) {
+    return ArrayBufferOrView(unwrapped);
   }
   return ArrayBufferOrView(nullptr);
 }
@@ -631,6 +632,12 @@ namespace JS {
 
 JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_CLASS)
 #undef IMPL_TYPED_ARRAY_CLASS
+
+// Create simple names like Int8Array, Float32Array, etc.
+#define JS_DECLARE_CLASS_ALIAS(ExternalType, NativeType, Name) \
+  using Name##Array = TypedArray<js::Scalar::Name>;
+JS_FOR_EACH_TYPED_ARRAY(JS_DECLARE_CLASS_ALIAS)
+#undef JS_DECLARE_CLASS_ALIAS
 
 }  // namespace JS
 
