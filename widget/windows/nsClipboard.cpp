@@ -253,6 +253,8 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
+  MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_FAILURE;
   }
