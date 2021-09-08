@@ -619,9 +619,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void UpdateWebRenderMultithreading();
 
   /**
-   * Notify the compositor webrender batching parameters have been updated.
+   * Notify the compositor some webrender parameters have been updated.
    */
-  static void UpdateWebRenderBatchingParameters();
+  static void UpdateWebRenderParameters();
 
   /**
    * Notify the compositor webrender profiler UI string has been updated.
