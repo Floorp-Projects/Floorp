@@ -793,7 +793,7 @@ class GCRuntime {
   IncrementalProgress markGrayReferencesInCurrentGroup(JSFreeOp* fop,
                                                        SliceBudget& budget);
   IncrementalProgress endMarkingSweepGroup(JSFreeOp* fop, SliceBudget& budget);
-  void markIncomingCrossCompartmentPointers(MarkColor color);
+  void markIncomingGrayCrossCompartmentPointers();
   IncrementalProgress beginSweepingSweepGroup(JSFreeOp* fop,
                                               SliceBudget& budget);
   IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
