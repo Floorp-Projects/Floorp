@@ -96,8 +96,7 @@ $modal-scrollbar-z-index: 1100;
       &:focus,
       &.active,
       &:hover {
-        box-shadow: 0 0 0 5px $grey-30;
-        transition: box-shadow 150ms;
+        @include fade-in-card;
       }
     }
   }

@@ -82,7 +82,7 @@
     top: 50%;
 
     &:focus {
-      box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 4px $blue-50-30;
+      box-shadow: $shadow-primary;
       border-radius: 2px;
     }
   }

@@ -47,11 +47,13 @@ body {
 
   // Buttons
   --newtab-button-primary-color: #{$blue-60};
+  --newtab-button-primary-hover-color: #{$blue-70};
+  --newtab-button-primary-active-color: #{$blue-80};
+  --newtab-button-primary-text-color: #{$white};
   --newtab-button-secondary-color: inherit;
   // Feed buttons
   --newtab-feed-button-background: #{$grey-20};
   --newtab-feed-button-text: #{$grey-90};
-  --newtab-feed-button-background-faded: #{$grey-20-60};
   --newtab-feed-button-text-faded: #{$grey-90-00};
   --newtab-feed-button-spinner: #{$grey-50};
 
@@ -73,7 +75,6 @@ body {
   --newtab-search-dropdown-color: #{$white};
   --newtab-search-dropdown-header-color: #{$grey-10};
   --newtab-search-header-background-color: #{$grey-10-95};
-  --newtab-search-icon-color: #{$grey-90-40};
 
   // Top Sites
   --newtab-topsites-background-color: var(--newtab-background-color-secondary);
@@ -163,7 +164,6 @@ body {
     --newtab-search-dropdown-color: #{$grey-70};
     --newtab-search-dropdown-header-color: #{$grey-60};
     --newtab-search-header-background-color: #{$grey-80-95};
-    --newtab-search-icon-color: #{$grey-10-60};
 
     // Top Sites
     --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};

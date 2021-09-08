@@ -26,43 +26,19 @@
     background-color: transparent;
 
     .icon {
-      @include dark-theme-only {
-        fill: $grey-20;
-      }
-
-      fill: $grey-50;
+      fill: var(--newtab-icon-primary-color);
     }
 
     &:hover {
-      @include dark-theme-only {
-        background: $grey-90-50;
-
-        .icon {
-          fill: $grey-10;
-        }
-      }
-
-      background: $grey-90-20;
-
-      .icon {
-        fill: $grey-80;
-      }
+      background: var(--newtab-element-hover-color);
     }
 
     &:active {
-      @include dark-theme-only {
-        background: $grey-90-70;
-      }
-
-      background: $grey-90-30;
+      background: var(--newtab-element-active-color);
     }
 
     &:focus {
-      @include dark-theme-only {
-        box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
-      }
-
-      box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
+      box-shadow: $shadow-secondary;
     }
   }
 }

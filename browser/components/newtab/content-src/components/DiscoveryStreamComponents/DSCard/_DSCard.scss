@@ -10,10 +10,10 @@ $excerpt-line-height: 20;
   position: relative;
 
   .playhead {
-    background: $blue-60 url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
+    background: var(--newtab-button-primary-color) url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
     border-radius: 20px;
     bottom: -16px;
-    color: $white-0;
+    color: color-mix(in srgb, var(--newtab-button-primary-text-color) 0%, transparent);
     display: flex;
     flex-direction: column;
     height: 40px;
@@ -25,7 +25,7 @@ $excerpt-line-height: 20;
     transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
 
     &:hover {
-      color: $white;
+      color: var(--newtab-button-primary-text-color);
       padding: 0 20px 0 40px;
     }
 
@@ -132,11 +132,7 @@ $excerpt-line-height: 20;
     }
 
     .cta-button {
-      @include dark-theme-only {
-        color: $grey-10;
-        background: $grey-90-70;
-      }
-
+      background-color: var(--newtab-button-secondary-color);
       width: 100%;
       margin: 12px 0 4px;
       box-shadow: none;
@@ -145,34 +141,10 @@ $excerpt-line-height: 20;
       font-size: 14px;
       font-weight: 600;
       padding: 5px 8px 7px;
-      border: 0;
-      color: $grey-90;
-      background: $grey-90-10;
-
-      &:focus {
-        @include dark-theme-only {
-          background: $grey-90-70;
-          box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
-        }
-
-        background: $grey-90-10;
-        box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
-      }
-
-      &:hover {
-        @include dark-theme-only {
-          background: $grey-90-50;
-        }
-
-        background: $grey-90-20;
-      }
+      border: $border-primary;
 
       &:active {
-        @include dark-theme-only {
-          background: $grey-90-70;
-        }
-
-        background: $grey-90-30;
+        box-shadow: $shadow-primary;
       }
     }
 

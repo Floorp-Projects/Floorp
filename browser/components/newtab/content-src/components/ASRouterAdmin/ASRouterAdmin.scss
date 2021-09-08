@@ -110,7 +110,7 @@
     margin-inline-end: 4px;
 
     &:hover {
-      background-color: $grey-20-60;
+      background-color: var(--newtab-element-hover-color);
       box-shadow: none;
     }
   }
