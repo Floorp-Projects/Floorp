@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace dom {
 
+class Promise;
+
 /*
  * PromiseNativeHandler allows C++ to react to a Promise being
  * rejected/resolved. A PromiseNativeHandler can be appended to a Promise using
@@ -45,18 +47,18 @@ class DomPromiseListener final : public PromiseNativeHandler {
       std::function<void(JSContext*, JS::Handle<JS::Value>)>;
   using CallbackTypeRejected = std::function<void(nsresult)>;
 
-  DomPromiseListener(CallbackTypeResolved&& aResolve,
+  explicit DomPromiseListener(Promise* aDOMPromise);
+  DomPromiseListener(Promise* aDOMPromise, CallbackTypeResolved&& aResolve,
                      CallbackTypeRejected&& aReject);
-
-  void Clear();
-
+  void SetResolvers(CallbackTypeResolved&& aResolve,
+                    CallbackTypeRejected&& aReject);
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
  private:
   ~DomPromiseListener();
-  CallbackTypeResolved mResolve;
-  CallbackTypeRejected mReject;
+  Maybe<CallbackTypeResolved> mResolve;
+  Maybe<CallbackTypeRejected> mReject;
 };
 
 }  // namespace dom
