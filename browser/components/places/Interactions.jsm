@@ -160,6 +160,11 @@ class _Interactions {
   #store = undefined;
 
   /**
+   * Whether the component has been initialized.
+   */
+  #initialized = false;
+
+  /**
    * Initializes, sets up actors and observers.
    */
   init() {
@@ -192,13 +197,16 @@ class _Interactions {
     }
     Services.obs.addObserver(this, DOMWINDOW_OPENED_TOPIC, true);
     idleService.addIdleObserver(this, pageViewIdleTime);
+    this.#initialized = true;
   }
 
   /**
    * Uninitializes, removes any observers that need cleaning up manually.
    */
   uninit() {
-    idleService.removeIdleObserver(this, pageViewIdleTime);
+    if (this.#initialized) {
+      idleService.removeIdleObserver(this, pageViewIdleTime);
+    }
   }
 
   /**
