@@ -695,12 +695,7 @@ describe("<TopSiteLink>", () => {
 
     it("should generate a random color but always pick the same color for the same string", async () => {
       let wrapper = shallow(
-        <TopSiteLink
-          newNewtabExperienceEnabled={true}
-          colors={colors}
-          title={"food"}
-          link={link}
-        />
+        <TopSiteLink colors={colors} title={"food"} link={link} />
       );
 
       assert.equal(wrapper.find(".icon-wrapper").prop("data-fallback"), "f");
@@ -713,12 +708,7 @@ describe("<TopSiteLink>", () => {
 
     it("should generate a different random color", async () => {
       let wrapper = shallow(
-        <TopSiteLink
-          newNewtabExperienceEnabled={true}
-          colors={colors}
-          title={"fam"}
-          link={link}
-        />
+        <TopSiteLink colors={colors} title={"fam"} link={link} />
       );
 
       assert.equal(
@@ -729,13 +719,7 @@ describe("<TopSiteLink>", () => {
     });
 
     it("should generate a third random color", async () => {
-      let wrapper = shallow(
-        <TopSiteLink
-          newNewtabExperienceEnabled={true}
-          colors={colors}
-          title={"foo"}
-        />
-      );
+      let wrapper = shallow(<TopSiteLink colors={colors} title={"foo"} />);
 
       assert.equal(wrapper.find(".icon-wrapper").prop("data-fallback"), "f");
       assert.equal(
@@ -1107,7 +1091,7 @@ describe("<TopSiteForm>", () => {
         wrapper.findWhere(
           n =>
             n.length &&
-            n.prop("data-l10n-id") === "newtab-topsites-add-topsites-header"
+            n.prop("data-l10n-id") === "newtab-topsites-add-shortcut-header"
         ).length,
         1
       );
@@ -1204,7 +1188,7 @@ describe("<TopSiteForm>", () => {
     it("should have the correct header", () => {
       assert.equal(
         wrapper.findWhere(
-          n => n.prop("data-l10n-id") === "newtab-topsites-edit-topsites-header"
+          n => n.prop("data-l10n-id") === "newtab-topsites-edit-shortcut-header"
         ).length,
         1
       );
