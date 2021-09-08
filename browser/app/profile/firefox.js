@@ -1044,9 +1044,6 @@ pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
 // Amount of failed SessionFile writes until we restart the worker.
 pref("browser.sessionstore.max_write_failures", 5);
 
-// Whether to warn the user when quitting, even though their tabs will be restored.
-pref("browser.sessionstore.warnOnQuit", false);
-
 // Don't quit the browser when Ctrl + Q is pressed.
 pref("browser.quitShortcut.disabled", false);
 
@@ -1330,7 +1327,6 @@ pref("services.sync.prefs.sync.browser.safebrowsing.malware.enabled", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.phishing.enabled", true);
 pref("services.sync.prefs.sync.browser.search.update", true);
 pref("services.sync.prefs.sync.browser.search.widget.inNavBar", true);
-pref("services.sync.prefs.sync.browser.sessionstore.warnOnQuit", true);
 pref("services.sync.prefs.sync.browser.startup.homepage", true);
 pref("services.sync.prefs.sync.browser.startup.page", true);
 pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
