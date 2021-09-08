@@ -16,10 +16,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsISupports.h"
 
-using namespace mozilla::dom;
-
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // -- CSSStyleRuleDeclaration ---------------------------------------
 
@@ -104,7 +101,7 @@ Document* CSSStyleRuleDeclaration::DocToUpdate() { return nullptr; }
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSStyleRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {
-  return GetParsingEnvironmentForRule(Rule(), CSSRule_Binding::STYLE_RULE);
+  return GetParsingEnvironmentForRule(Rule(), StyleCssRuleType::Style);
 }
 
 // -- CSSStyleRule --------------------------------------------------
@@ -175,6 +172,8 @@ void CSSStyleRule::List(FILE* out, int32_t aIndent) const {
 
 /* CSSRule implementation */
 
+StyleCssRuleType CSSStyleRule::Type() const { return StyleCssRuleType::Style; }
+
 void CSSStyleRule::GetCssText(nsACString& aCssText) const {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
 }
@@ -243,5 +242,4 @@ NotNull<DeclarationBlock*> CSSStyleRule::GetDeclarationBlock() const {
   return WrapNotNull(mDecls.mDecls);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

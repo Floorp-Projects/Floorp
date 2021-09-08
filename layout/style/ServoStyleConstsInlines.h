@@ -41,6 +41,7 @@ template struct StyleStrong<RawServoAnimationValue>;
 template struct StyleStrong<RawServoDeclarationBlock>;
 template struct StyleStrong<RawServoStyleSheetContents>;
 template struct StyleStrong<RawServoKeyframe>;
+template struct StyleStrong<RawServoLayerRule>;
 template struct StyleStrong<RawServoMediaList>;
 template struct StyleStrong<RawServoStyleRule>;
 template struct StyleStrong<RawServoImportRule>;

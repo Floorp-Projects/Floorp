@@ -76,7 +76,7 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
   NotNull<DeclarationBlock*> GetDeclarationBlock() const override;
 
   // WebIDL interface
-  uint16_t Type() const final { return dom::CSSRule_Binding::STYLE_RULE; }
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   void GetSelectorText(nsACString& aSelectorText) final;
   void SetSelectorText(const nsACString& aSelectorText) final;

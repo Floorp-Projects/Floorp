@@ -87,7 +87,7 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoMediaList,
+    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerRule, RawServoMediaList,
     RawServoMediaRule, RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule,
     RawServoSharedMemoryBuilder, RawServoStyleSet, RawServoStyleSheetContents,
     RawServoSupportsRule, ServoCssRules,
@@ -119,12 +119,14 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
-use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
-use style::stylesheets::{AllowImportRules, SanitizationData, SanitizationKind};
-use style::stylesheets::{CounterStyleRule, CssRule, CssRuleType, CssRules, CssRulesHelpers};
-use style::stylesheets::{DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule};
-use style::stylesheets::{KeyframesRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule};
-use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraData};
+use style::stylesheets::{
+    StylesheetLoader as StyleStylesheetLoader, AllowImportRules,
+    SanitizationData, SanitizationKind, CounterStyleRule, CssRule, CssRuleType,
+    CssRules, CssRulesHelpers, DocumentRule, FontFaceRule,
+    FontFeatureValuesRule, ImportRule, KeyframesRule, LayerRule, MediaRule,
+    NamespaceRule, Origin, OriginSet, PageRule, StyleRule, StylesheetContents,
+    SupportsRule, UrlExtraData,
+};
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
 use style::traversal::resolve_style;
@@ -2106,7 +2108,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
     loader: *mut Loader,
     allow_import_rules: AllowImportRules,
     gecko_stylesheet: *mut DomStyleSheet,
-    rule_type: *mut u16,
+    rule_type: &mut CssRuleType,
 ) -> nsresult {
     let loader = if loader.is_null() {
         None
@@ -2137,7 +2139,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
 
     match result {
         Ok(new_rule) => {
-            *unsafe { rule_type.as_mut().unwrap() } = new_rule.rule_type() as u16;
+            *rule_type = new_rule.rule_type();
             nsresult::NS_OK
         },
         Err(err) => err.into(),
@@ -2315,6 +2317,24 @@ impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     debug: Servo_SupportsRule_Debug,
     to_css: Servo_SupportsRule_GetCssText,
     changed: Servo_StyleSet_SupportsRuleChanged,
+}
+
+impl_basic_rule_funcs! { (Layer, LayerRule, RawServoLayerRule),
+    getter: Servo_CssRules_GetLayerRuleAt,
+    debug: Servo_LayerRule_Debug,
+    to_css: Servo_LayerRule_GetCssText,
+    changed: Servo_StyleSet_LayerRuleChanged,
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_LayerRule_GetRules(rule: &RawServoLayerRule) -> Strong<ServoCssRules> {
+    use style::stylesheets::layer_rule::LayerRuleKind;
+    read_locked_arc(rule, |rule: &LayerRule| {
+        match rule.kind {
+            LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
+            LayerRuleKind::Statement { .. } => Strong::null(),
+        }
+    })
 }
 
 impl_group_rule_funcs! { (Document, DocumentRule, RawServoMozDocumentRule),
@@ -4160,7 +4180,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
-    rule_type: u16,
+    rule_type: CssRuleType,
 ) -> Strong<RawServoDeclarationBlock> {
     let id = get_property_id_from_nscsspropertyid!(property, Strong::null());
     let mut declarations = SourcePropertyDeclaration::new();
@@ -4174,7 +4194,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
         data,
         parsing_mode,
         quirks_mode.into(),
-        to_rule_type(rule_type),
+        rule_type,
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
     );
 
@@ -4298,7 +4318,7 @@ pub unsafe extern "C" fn Servo_ParseStyleAttribute(
     raw_extra_data: *mut URLExtraData,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
-    rule_type: u16,
+    rule_type: CssRuleType,
 ) -> Strong<RawServoDeclarationBlock> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let value = data.as_str_unchecked();
@@ -4309,7 +4329,7 @@ pub unsafe extern "C" fn Servo_ParseStyleAttribute(
         url_data,
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
         quirks_mode.into(),
-        to_rule_type(rule_type),
+        rule_type,
     )))
     .into_strong()
 }
@@ -4563,12 +4583,6 @@ fn set_property(
     )
 }
 
-#[inline]
-fn to_rule_type(ty: u16) -> CssRuleType {
-    use num_traits::FromPrimitive;
-    CssRuleType::from_u16(ty).unwrap_or(CssRuleType::Style)
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     declarations: &RawServoDeclarationBlock,
@@ -4579,7 +4593,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
-    rule_type: u16,
+    rule_type: CssRuleType,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
@@ -4591,7 +4605,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
         parsing_mode,
         quirks_mode.into(),
         loader,
-        to_rule_type(rule_type),
+        rule_type,
         before_change_closure,
     )
 }
@@ -4623,7 +4637,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
-    rule_type: u16,
+    rule_type: CssRuleType,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
@@ -4635,7 +4649,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
         parsing_mode,
         quirks_mode.into(),
         loader,
-        to_rule_type(rule_type),
+        rule_type,
         before_change_closure,
     )
 }

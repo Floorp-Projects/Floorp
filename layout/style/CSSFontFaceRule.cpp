@@ -197,8 +197,8 @@ void CSSFontFaceRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-uint16_t CSSFontFaceRule::Type() const {
-  return CSSRule_Binding::FONT_FACE_RULE;
+StyleCssRuleType CSSFontFaceRule::Type() const {
+  return StyleCssRuleType::FontFace;
 }
 
 void CSSFontFaceRule::SetRawAfterClone(RefPtr<RawServoFontFaceRule> aRaw) {

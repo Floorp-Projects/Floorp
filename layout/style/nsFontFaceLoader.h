@@ -22,6 +22,7 @@
 #include "nsTHashtable.h"
 
 class nsIPrincipal;
+class nsITimer;
 
 class nsFontFaceLoader final : public nsIStreamLoaderObserver,
                                public nsIRequestObserver,

@@ -15,12 +15,12 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/ServoBindings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-namespace mozilla {
-namespace css {
+namespace mozilla::css {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Rule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Rule)
@@ -93,6 +93,21 @@ void Rule::SetCssText(const nsACString& aCssText) {
 
 Rule* Rule::GetParentRule() const { return mParentRule; }
 
+#ifdef DEBUG
+void Rule::AssertParentRuleType() {
+  // Would be nice to check that this->Type() is KEYFRAME_RULE when
+  // mParentRule->Tye() is KEYFRAMES_RULE, but we can't call
+  // this->Type() here since it's virtual.
+  if (mParentRule) {
+    auto type = mParentRule->Type();
+    MOZ_ASSERT(
+        type == StyleCssRuleType::Media || type == StyleCssRuleType::Document ||
+        type == StyleCssRuleType::Supports ||
+        type == StyleCssRuleType::Keyframes || type == StyleCssRuleType::Layer);
+  }
+}
+#endif
+
 bool Rule::IsReadOnly() const {
   MOZ_ASSERT(!mSheet || !mParentRule ||
                  mSheet->IsReadOnly() == mParentRule->IsReadOnly(),
@@ -102,12 +117,11 @@ bool Rule::IsReadOnly() const {
 }
 
 bool Rule::IsIncompleteImportRule() const {
-  if (Type() != CSSRule_Binding::IMPORT_RULE) {
+  if (Type() != StyleCssRuleType::Import) {
     return false;
   }
   auto* sheet = static_cast<const dom::CSSImportRule*>(this)->GetStyleSheet();
   return !sheet || !sheet->IsComplete();
 }
 
-}  // namespace css
-}  // namespace mozilla
+}  // namespace mozilla::css

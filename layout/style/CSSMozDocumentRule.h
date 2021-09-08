@@ -34,7 +34,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
   void SetRawAfterClone(RefPtr<RawServoMozDocumentRule>);
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRule_Binding::DOCUMENT_RULE; }
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
   void SetConditionText(const nsACString& aConditionText,

@@ -1739,7 +1739,7 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   auto data = MakeRefPtr<URLExtraData>(baseURI, referrerInfo, principal);
   RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
       aString, data, ownerDoc->GetCompatibilityMode(), ownerDoc->CSSLoader(),
-      dom::CSSRule_Binding::STYLE_RULE);
+      StyleCssRuleType::Style);
   if (!decl) {
     return false;
   }

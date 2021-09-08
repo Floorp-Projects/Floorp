@@ -12,8 +12,7 @@
 
 struct RawServoCounterStyleRule;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CSSCounterStyleRule final : public css::Rule {
  public:
@@ -41,7 +40,7 @@ class CSSCounterStyleRule final : public css::Rule {
 #endif
 
   // WebIDL interface
-  uint16_t Type() const override;
+  StyleCssRuleType Type() const override;
   void GetCssText(nsACString& aCssText) const override;
   void GetName(nsAString& aName);
   void SetName(const nsAString& aName);
@@ -59,7 +58,6 @@ class CSSCounterStyleRule final : public css::Rule {
   RefPtr<RawServoCounterStyleRule> mRawRule;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_CSSCounterStyleRule_h

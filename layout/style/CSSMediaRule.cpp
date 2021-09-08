@@ -10,8 +10,7 @@
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/ServoBindings.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 CSSMediaRule::CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
@@ -67,6 +66,8 @@ void CSSMediaRule::SetRawAfterClone(RefPtr<RawServoMediaRule> aRaw) {
       Servo_MediaRule_GetRules(mRawRule).Consume());
 }
 
+StyleCssRuleType CSSMediaRule::Type() const { return StyleCssRuleType::Media; }
+
 #ifdef DEBUG
 /* virtual */
 void CSSMediaRule::List(FILE* out, int32_t aIndent) const {
@@ -116,5 +117,4 @@ JSObject* CSSMediaRule::WrapObject(JSContext* aCx,
   return CSSMediaRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
