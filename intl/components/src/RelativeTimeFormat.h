@@ -5,6 +5,7 @@
 #define intl_components_RelativeTimeFormat_h_
 
 #include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/intl/ICUError.h"
 #include "mozilla/intl/NumberFormatFields.h"
 
 #include "unicode/ureldatefmt.h"
