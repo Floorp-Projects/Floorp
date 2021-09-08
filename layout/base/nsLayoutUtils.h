@@ -2762,8 +2762,7 @@ class nsLayoutUtils {
       const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
       nsIContent* aContent, const nsIFrame* aReferenceFrame,
       mozilla::layers::WebRenderLayerManager* aLayerManager,
-      ViewID aScrollParentId, const nsSize& aScrollPortSize,
-      const mozilla::Maybe<nsRect>& aClipRect, bool aIsRoot);
+      ViewID aScrollParentId, const nsSize& aScrollPortSize, bool aIsRoot);
 
   /**
    * Returns the metadata to put onto the root layer of a layer tree, if one is
