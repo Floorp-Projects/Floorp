@@ -389,7 +389,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     ~PendingRemotenessChange();
     void ProcessLaunched();
     void ProcessReady();
-    void MaybeFinish();
+    void Finish();
     void Clear();
 
     nsresult FinishTopContent();
@@ -397,11 +397,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
     RefPtr<CanonicalBrowsingContext> mTarget;
     RefPtr<RemotenessPromise::Private> mPromise;
+    RefPtr<GenericPromise> mPrepareToChangePromise;
     RefPtr<ContentParent> mContentParent;
     RefPtr<BrowsingContextGroup> mSpecificGroup;
-
-    bool mProcessReady = false;
-    bool mWaitingForPrepareToChange = false;
 
     uint64_t mPendingSwitchId;
     NavigationIsolationOptions mOptions;
