@@ -82,6 +82,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
@@ -2810,6 +2811,11 @@ BrowserGlue.prototype = {
       return;
     }
 
+    // browser.warnOnQuit is a hidden global boolean to override all quit prompts.
+    if (!Services.prefs.getBoolPref("browser.warnOnQuit")) {
+      return;
+    }
+
     var windowcount = 0;
     var pagecount = 0;
     let pinnedcount = 0;
@@ -2828,7 +2834,23 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (pagecount < 2) {
+    // No windows open so no need for a warning.
+    if (!windowcount) {
+      return;
+    }
+
+    // browser.warnOnQuitShortcut is checked when quitting using the shortcut key.
+    // The warning will appear even when only one window/tab is open. For other
+    // methods of quitting, the warning only appears when there is more than one
+    // window or tab open.
+    if (this._quitSource == "shortcut") {
+      if (!Services.prefs.getBoolPref("browser.warnOnQuitShortcut")) {
+        return;
+      }
+    } else if (
+      pagecount < 2 ||
+      !Services.prefs.getBoolPref("browser.tabs.warnOnClose")
+    ) {
       return;
     }
 
@@ -2836,35 +2858,63 @@ BrowserGlue.prototype = {
       aQuitType = "quit";
     }
 
-    // browser.warnOnQuit is a hidden global boolean to override all quit prompts
-    if (!Services.prefs.getBoolPref("browser.warnOnQuit")) {
-      return;
-    }
-
-    if (!Services.prefs.getBoolPref("browser.tabs.warnOnClose")) {
-      return;
-    }
-
     let win = BrowserWindowTracker.getTopWindow();
 
     // Our prompt for quitting is most important, so replace others.
     win.gDialogBox.replaceDialogIfOpen();
 
-    let title;
+    let title, buttonLabel;
     // More than 1 window. Compose our own message.
     if (windowcount > 1) {
       title = gTabbrowserBundle.GetStringFromName("tabs.closeWindowsTitle");
       title = PluralForm.get(windowcount, title).replace(/#1/, windowcount);
+
+      buttonLabel =
+        AppConstants.platform == "win"
+          ? "tabs.closeWindowsButtonWin"
+          : "tabs.closeWindowsButton";
+      buttonLabel = gTabbrowserBundle.GetStringFromName(buttonLabel);
     } else {
       title = gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
       title = PluralForm.get(pagecount, title).replace("#1", pagecount);
+
+      if (this._quitSource == "shortcut") {
+        let productName = gBrandBundle.GetStringFromName("brandShorterName");
+        title = gTabbrowserBundle.formatStringFromName(
+          "tabs.closeTabsWithKeyTitle",
+          [productName]
+        );
+        buttonLabel = gTabbrowserBundle.formatStringFromName(
+          "tabs.closeTabsWithKeyButton",
+          [productName]
+        );
+      } else {
+        title = gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
+        title = PluralForm.get(pagecount, title).replace("#1", pagecount);
+        buttonLabel = gTabbrowserBundle.GetStringFromName(
+          "tabs.closeTabsButton"
+        );
+      }
+    }
+
+    // The checkbox label is different depending on whether the shortcut
+    // was used to quit or not.
+    let checkboxLabel;
+    if (this._quitSource == "shortcut") {
+      let quitKeyElement = win.document.getElementById("key_quitApplication");
+      let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
+
+      checkboxLabel = gTabbrowserBundle.formatStringFromName(
+        "tabs.closeTabsWithKeyConfirmCheckbox",
+        [quitKey]
+      );
+    } else {
+      checkboxLabel = gTabbrowserBundle.GetStringFromName(
+        "tabs.closeTabsConfirmCheckbox"
+      );
     }
 
     let warnOnClose = { value: true };
-    let buttonLabel =
-      AppConstants.platform == "win"
-        ? "tabs.closeWindowsButtonWin"
-        : "tabs.closeWindowsButton";
     let flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
@@ -2874,10 +2924,10 @@ BrowserGlue.prototype = {
       title,
       null,
       flags,
-      gTabbrowserBundle.GetStringFromName(buttonLabel),
+      buttonLabel,
       null,
       null,
-      gTabbrowserBundle.GetStringFromName("tabs.closeTabsConfirmCheckbox"),
+      checkboxLabel,
       warnOnClose
     );
     Services.telemetry.setEventRecordingEnabled("close_tab_warning", true);
@@ -2901,13 +2951,18 @@ BrowserGlue.prototype = {
       }
     );
 
-    this._quitSource = "unknown";
-
     // If the user has unticked the box, and has confirmed closing, stop showing
     // the warning.
-    if (!buttonPressed == 0 && !warnOnClose.value) {
-      Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+    if (buttonPressed == 0 && !warnOnClose.value) {
+      if (this._quitSource == "shortcut") {
+        Services.prefs.setBoolPref("browser.warnOnQuitShortcut", false);
+      } else {
+        Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+      }
     }
+
+    this._quitSource = "unknown";
+
     aCancelQuit.data = buttonPressed != 0;
   },
 
