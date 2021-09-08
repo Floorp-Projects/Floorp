@@ -10310,7 +10310,6 @@ ZN5style10properties19animated_properties14AnimationValue20from_computed_values1
 ?GetController@ClientSourceParent@dom@mozilla@@QEBAAEBV?$Maybe@VServiceWorkerDescriptor@dom@mozilla@@@3@XZ
 ?DoResolveOrReject@ThenValueBase@?$MozPromise@V?$Endpoint@VPRemoteDecoderManagerChild@mozilla@@@ipc@mozilla@@W4nsresult@@$00@mozilla@@IEAAXAEAVResolveOrRejectValue@23@@Z
 ?Initialize@ClientLayerManager@layers@mozilla@@QEAA_NPEAVPCompositorBridgeChild@23@_NPEAUTextureFactoryIdentifier@23@@Z
-?GetCompositorBackends@gfxPlatform@@QEAAX_NAEAV?$nsTArray@W4LayersBackend@layers@mozilla@@@@@Z
 ?AllocPLayerTransactionChild@CompositorBridgeChild@layers@mozilla@@AEAAPEAVPLayerTransactionChild@23@AEBV?$nsTArray@W4LayersBackend@layers@mozilla@@@@AEBULayersId@23@@Z
 ??0PLayerTransactionChild@layers@mozilla@@QEAA@XZ
 ?SendPLayerTransactionConstructor@PCompositorBridgeChild@layers@mozilla@@QEAAPEAVPLayerTransactionChild@23@PEAV423@AEBV?$nsTArray@W4LayersBackend@layers@mozilla@@@@AEBULayersId@23@@Z
