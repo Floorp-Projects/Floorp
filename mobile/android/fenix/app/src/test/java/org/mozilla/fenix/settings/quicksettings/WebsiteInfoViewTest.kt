@@ -52,7 +52,7 @@ class WebsiteInfoViewTest {
         verify { icons.loadIntoView(binding.faviconImage, IconRequest(websiteUrl)) }
 
         assertEquals("mozilla.org", binding.url.text)
-        assertEquals("Secure Connection", binding.securityInfo.text)
+        assertEquals("Connection is secure", binding.securityInfo.text)
     }
 
     @Test
@@ -68,6 +68,6 @@ class WebsiteInfoViewTest {
 
         verify { view.bindConnectionDetailsListener() }
 
-        assertEquals("Insecure Connection", binding.securityInfo.text)
+        assertEquals("Connection is not secure", binding.securityInfo.text)
     }
 }
