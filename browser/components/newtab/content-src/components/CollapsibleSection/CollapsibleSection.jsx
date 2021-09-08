@@ -33,23 +33,6 @@ export class _CollapsibleSection extends React.PureComponent {
     this.sectionBody = node;
   }
 
-  renderIcon() {
-    const { icon } = this.props;
-    if (icon && icon.startsWith("moz-extension://")) {
-      return (
-        <span
-          className="icon icon-small-spacer"
-          style={{ backgroundImage: `url('${icon}')` }}
-        />
-      );
-    }
-    return (
-      <span
-        className={`icon icon-small-spacer icon-${icon || "webextension"}`}
-      />
-    );
-  }
-
   onMenuButtonMouseEnter() {
     this.setState({ menuButtonHover: true });
   }

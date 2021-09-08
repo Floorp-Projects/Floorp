@@ -153,7 +153,6 @@ export class _TopSites extends React.PureComponent {
       >
         <CollapsibleSection
           className="top-sites"
-          icon="topsites"
           id="topsites"
           title={props.title || { id: "newtab-section-header-topsites" }}
           hideTitle={true}

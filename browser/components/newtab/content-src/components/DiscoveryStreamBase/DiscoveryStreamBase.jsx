@@ -327,7 +327,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             className="ds-layout"
             collapsed={topStories.pref.collapsed}
             dispatch={this.props.dispatch}
-            icon={topStories.icon}
             id={topStories.id}
             isFixed={true}
             learnMore={{

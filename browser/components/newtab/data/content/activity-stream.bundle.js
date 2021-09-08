@@ -3396,7 +3396,6 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_13___default.a
       className: "ds-layout",
       collapsed: topStories.pref.collapsed,
       dispatch: this.props.dispatch,
-      icon: topStories.icon,
       id: topStories.id,
       isFixed: true,
       learnMore: {
@@ -5663,25 +5662,6 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
     this.sectionBody = node;
   }
 
-  renderIcon() {
-    const {
-      icon
-    } = this.props;
-
-    if (icon && icon.startsWith("moz-extension://")) {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", {
-        className: "icon icon-small-spacer",
-        style: {
-          backgroundImage: `url('${icon}')`
-        }
-      });
-    }
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", {
-      className: `icon icon-small-spacer icon-${icon || "webextension"}`
-    });
-  }
-
   onMenuButtonMouseEnter() {
     this.setState({
       menuButtonHover: true
@@ -7011,7 +6991,6 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
       id,
       eventSource,
       title,
-      icon,
       rows,
       Pocket,
       topics,
@@ -7092,7 +7071,6 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_3__["ComponentPerfTimer"], this.props, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__["CollapsibleSection"], {
       className: sectionClassName,
-      icon: icon,
       title: title,
       id: id,
       eventSource: eventSource,
@@ -7115,14 +7093,7 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
       className: "section-empty-state"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
       className: "empty-state"
-    }, emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("span", {
-      className: "empty-state-icon icon",
-      style: {
-        "background-image": `url('${emptyState.icon}')`
-      }
-    }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("span", {
-      className: `empty-state-icon icon icon-${emptyState.icon}`
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_4__["FluentOrText"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_4__["FluentOrText"], {
       message: emptyState.message
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("p", {
       className: "empty-state-message"
@@ -8211,7 +8182,6 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       dispatch: props.dispatch
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_2__["CollapsibleSection"], {
       className: "top-sites",
-      icon: "topsites",
       id: "topsites",
       title: props.title || {
         id: "newtab-section-header-topsites"
