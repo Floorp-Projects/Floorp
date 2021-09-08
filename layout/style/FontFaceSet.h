@@ -66,6 +66,10 @@ class FontFaceSet final : public DOMEventTargetHelper,
                           : nullptr;
     }
 
+    nsPresContext* GetPresContext() const final {
+      return mFontFaceSet ? mFontFaceSet->GetPresContext() : nullptr;
+    }
+
     bool IsFontLoadAllowed(const gfxFontFaceSrc&) final;
 
     void DispatchFontLoadViolations(

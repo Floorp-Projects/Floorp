@@ -46,6 +46,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIMemory.h"
 #include "nsMemory.h"
+#include "nsPresContext.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/EndianUtils.h"
@@ -1719,18 +1720,25 @@ gfxFontEntry* gfxFT2FontList::CreateFontEntry(fontlist::Face* aFace,
 // called for each family name, based on the assumption that the
 // first part of the full name is the family name
 
-gfxFontEntry* gfxFT2FontList::LookupLocalFont(const nsACString& aFontName,
+gfxFontEntry* gfxFT2FontList::LookupLocalFont(nsPresContext* aPresContext,
+                                              const nsACString& aFontName,
                                               WeightRange aWeightForEntry,
                                               StretchRange aStretchForEntry,
                                               SlantStyleRange aStyleForEntry) {
   if (SharedFontList()) {
-    return LookupInSharedFaceNameList(aFontName, aWeightForEntry,
+    return LookupInSharedFaceNameList(aPresContext, aFontName, aWeightForEntry,
                                       aStretchForEntry, aStyleForEntry);
   }
   // walk over list of names
   FT2FontEntry* fontEntry = nullptr;
+  FontVisibility level =
+      aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
 
   for (const RefPtr<gfxFontFamily>& fontFamily : mFontFamilies.Values()) {
+    if (!IsVisibleToCSS(*fontFamily, level)) {
+      continue;
+    }
+
     // Check family name, based on the assumption that the
     // first part of the full name is the family name
 
@@ -1784,13 +1792,14 @@ searchDone:
   return fe;
 }
 
-FontFamily gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
-                                                     nsAtom* aLanguage) {
+FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
+    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    nsAtom* aLanguage) {
   FontFamily ff;
 #if defined(MOZ_WIDGET_ANDROID)
-  ff = FindFamily("Roboto"_ns);
+  ff = FindFamily(aPresContext, "Roboto"_ns);
   if (ff.IsNull()) {
-    ff = FindFamily("Droid Sans"_ns);
+    ff = FindFamily(aPresContext, "Droid Sans"_ns);
   }
 #endif
   /* TODO: what about Qt or other platforms that may use this? */
