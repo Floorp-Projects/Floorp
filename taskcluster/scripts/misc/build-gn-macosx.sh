@@ -4,7 +4,7 @@ set -e -v
 # This script is for building GN.
 
 WORKSPACE=$HOME/workspace
-COMPRESS_EXT=xz
+COMPRESS_EXT=zst
 
 CROSS_CCTOOLS_PATH=$MOZ_FETCHES_DIR/cctools
 CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.12.sdk
