@@ -13,7 +13,7 @@ job-defaults:
     run:
         script: build-resourcemonitor.sh
         sparse-profile: null
-        toolchain-artifact: public/build/resource-monitor.tar.xz
+        toolchain-artifact: public/build/resource-monitor.tar.zst
 
 linux64-resource-monitor:
     description: "linux64 resourcemonitor toolchain build"
