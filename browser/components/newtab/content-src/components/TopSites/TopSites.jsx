@@ -139,7 +139,6 @@ export class _TopSites extends React.PureComponent {
     const { props } = this;
     const { editForm, showSearchShortcutsForm } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
-    const { customizationMenuEnabled } = props.Prefs.values.featureConfig;
     const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
@@ -187,7 +186,6 @@ export class _TopSites extends React.PureComponent {
                     onClose={this.onEditFormClose}
                     dispatch={this.props.dispatch}
                     {...editForm}
-                    customizationMenuEnabled={customizationMenuEnabled}
                   />
                 </ModalOverlayWrapper>
               </div>

@@ -1447,9 +1447,6 @@ pref("prompts.windowPromptSubDialog", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// A preference which allows us to enable the fly out customization overlay
-// on the newtab page.
-pref("browser.newtabpage.activity-stream.customizationMenu.enabled", false);
 pref("browser.newtabpage.activity-stream.newNewtabExperience.colors", "#0090ED,#FF4F5F,#2AC3A2,#FF7139,#A172FF,#FFA437,#FF2A8A");
 
 // Activity Stream prefs that control to which page to redirect
