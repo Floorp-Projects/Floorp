@@ -5,14 +5,11 @@ PROJECT=dump_syms
 # Needed by osx-cross-linker.
 export TARGET=$1
 
+COMPRESS_EXT=zst
 # This script is for building dump_syms
 case "$(uname -s)" in
-Linux)
-    COMPRESS_EXT=xz
-    ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build
-    COMPRESS_EXT=bz2
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     ;;
@@ -65,7 +62,7 @@ if [ -n "$TARGET" ]; then
     PROJECT_OUT=target/${TARGET}/release/${PROJECT}*
 fi
 cp ${PROJECT_OUT} ${PROJECT}/
-tar -acf ${PROJECT}.tar.$COMPRESS_EXT $PROJECT
+tar -c $PROJECT | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > ${PROJECT}.tar.$COMPRESS_EXT
 mkdir -p $UPLOAD_DIR
 cp ${PROJECT}.tar.$COMPRESS_EXT $UPLOAD_DIR
 
