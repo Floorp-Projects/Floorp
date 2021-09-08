@@ -42,8 +42,6 @@ class gfxPlatformGtk final : public gfxPlatform {
   static int32_t GetFontScaleDPI();
   static double GetFontScaleFactor();
 
-  bool UseImageOffscreenSurfaces();
-
   gfxImageFormat GetOffscreenFormat() override;
 
   bool SupportsApzWheelInput() const override { return true; }
