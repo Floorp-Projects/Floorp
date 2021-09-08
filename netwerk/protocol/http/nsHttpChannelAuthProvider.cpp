@@ -1125,6 +1125,12 @@ nsresult nsHttpChannelAuthProvider::GetAuthenticator(
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
+  if (!authenticator) {
+    // If called during shutdown it's possible that the singleton authenticator
+    // was already cleared so we have a null one here.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   MOZ_ASSERT(authenticator);
   authenticator.forget(auth);
 
