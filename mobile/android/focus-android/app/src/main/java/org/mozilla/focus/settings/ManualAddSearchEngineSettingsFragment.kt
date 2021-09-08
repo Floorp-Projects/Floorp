@@ -206,7 +206,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             )
 
             return try {
-                client.fetch(request).status < VALID_RESPONSE_CODE_UPPER_BOUND
+                val response = client.fetch(request)
+                // Close the response stream to ensure the body is closed correctly. See https://bugzilla.mozilla.org/show_bug.cgi?id=1603114.
+                response.body.close()
+
+                response.status < VALID_RESPONSE_CODE_UPPER_BOUND
             } catch (e: IOException) {
                 Log.d(LOGTAG, "Failure to get response code from server: returning invalid search query")
                 false
