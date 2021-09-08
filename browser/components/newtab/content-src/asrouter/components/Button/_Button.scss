@@ -25,70 +25,27 @@
   &.primary {
     border: 1px solid var(--newtab-button-primary-color);
     background-color: var(--newtab-button-primary-color);
-    color: $grey-10;
+    color: var(--newtab-button-primary-text-color);
 
     &:hover {
-      background-color: $blue-70;
+      background-color: var(--newtab-button-primary-hover-color);
     }
 
     &:active {
-      background-color: $blue-80;
-    }
-  }
-
-  &.secondary {
-    background-color: $grey-90-10;
-
-    &:hover {
-      background-color: $grey-90-20;
-    }
-
-    &:active {
-      background-color: $grey-90-30;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 4px $blue-50-30;
+      background-color: var(--newtab-button-primary-active-color);
     }
   }
 
   &.slim {
-    background-color: $grey-90-10;
+    border: $border-primary;
     margin-inline-start: 0;
     font-size: 12px;
     padding: 6px 12px;
 
-    &:hover {
-      background-color: $grey-90-20;
-    }
-  }
-}
-
-[lwt-newtab-brighttext] {
-  .secondary {
-    background-color: $grey-10-10;
-
-    &:hover {
-      background-color: $grey-10-20;
-    }
-
-    &:active {
-      background-color: $grey-10-30;
-    }
-  }
-
-  // Snippets scene 2 footer
-  .footer {
-    .secondary {
-      background-color: $grey-10-30;
-
-      &:hover {
-        background-color: $grey-10-40;
-      }
-
-      &:active {
-        background-color: $grey-10-50;
-      }
+    &:hover,
+    &:focus {
+      box-shadow: $shadow-primary;
+      transition: box-shadow 150ms;
     }
   }
 }

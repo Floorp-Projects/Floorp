@@ -223,10 +223,10 @@ $letter-fallback-color: $white;
   .search-topsite {
     background-image: url('chrome://global/skin/icons/search-glass.svg');
     background-size: 16px;
-    background-color: $blue-60;
+    background-color: var(--newtab-button-primary-color);
     border-radius: $default-icon-wrapper-size;
     -moz-context-properties: fill;
-    fill: $white;
+    fill: var(--newtab-button-primary-text-color);
     box-shadow: var(--newtab-card-shadow);
     transition-duration: $hover-transition-duration;
     transition-property: background-size, bottom, inset-inline-end, height, width;

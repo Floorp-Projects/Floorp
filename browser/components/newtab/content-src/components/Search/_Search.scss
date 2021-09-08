@@ -97,9 +97,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     border-radius: 8px;
     color: var(--newtab-search-text-color);
     -moz-context-properties: fill;
-    fill: var(--newtab-search-icon-color);
-    font-weight: 500;
-    font-size: 15px;
+    fill: var(--newtab-icon-secondary-color);
 
     &:dir(rtl) {
       background-position-x: right $search-icon-padding;
@@ -119,7 +117,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     border: 0;
     border-radius: 0 $border-radius $border-radius 0;
     -moz-context-properties: fill;
-    fill: var(--newtab-search-icon-color);
+    fill: var(--newtab-icon-secondary-color);
     height: 100%;
     inset-inline-end: 0;
     position: absolute;
@@ -127,7 +125,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     &:focus,
     &:hover {
-      background-color: $grey-90-10;
+      background-color: var(--newtab-element-hover-color);
       cursor: pointer;
     }
 
@@ -139,7 +137,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     &:active {
-      background-color: $grey-90-20;
+      background-color: var(--newtab-element-hover-color);
     }
 
     &:dir(rtl) {

@@ -86,11 +86,7 @@
   }
 
   &:focus {
-    @include dark-theme-only {
-      box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
-    }
-
-    box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
+    box-shadow: $shadow-secondary;
     border-radius: 2px;
   }
 

@@ -14,11 +14,11 @@
   }
 
   .donation-amount {
-    color: $grey-90;
+    color: var(--newtab-text-primary-color);
     margin-inline-end: 18px;
-    border: 1px solid $grey-40;
+    border: $input-border;
     padding: 5px 14px;
-    background: $grey-10;
+    background: var(--newtab-textbox-background-color);
     cursor: pointer;
   }
 
@@ -28,9 +28,10 @@
       margin-inline-end: -18px;
 
       &:checked + .donation-amount {
-        background: $grey-50;
-        color: $white;
-        border: 1px solid $grey-60;
+        // Use a text color for the background to achieve an inverted look.
+        background: var(--newtab-text-secondary-color);
+        color: var(--newtab-background-color-secondary);
+        border: $border-secondary;
       }
 
       // accessibility

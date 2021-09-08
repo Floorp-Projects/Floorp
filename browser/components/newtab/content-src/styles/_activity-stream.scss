@@ -108,7 +108,7 @@ a {
   &.done {
     background-color: var(--newtab-button-primary-color);
     border: solid 1px var(--newtab-button-primary-color);
-    color: $white;
+    color: var(--newtab-button-primary-text-color);
     margin-inline-start: auto;
   }
 }
