@@ -69,7 +69,7 @@
 }
 
 .ds-chevron-link {
-  color: $blue-60;
+  color: var(--newtab-link-primary-color);
   display: inline-block;
   outline: 0;
 
@@ -78,18 +78,10 @@
   }
 
   &:active {
-    @include dark-theme-only {
-      color: $blue-50;
-    }
-
-    color: $blue-70;
+    color: var(--newtab-link-primary-active-color);
 
     &::after {
-      @include dark-theme-only {
-        background-color: $blue-50;
-      }
-
-      background-color: $blue-70;
+      background-color: var(--newtab-link-primary-active-color);
     }
   }
 
@@ -103,13 +95,9 @@
   }
 
   &::after {
-    @include dark-theme-only {
-      background-color: $blue-40;
-    }
-
+    background-color: var(--newtab-link-primary-color);
     content: ' ';
     mask: url('chrome://global/skin/icons/arrow-right-12.svg') 0 -8px no-repeat;
-    background-color: $blue-60;
     margin: 0 0 0 4px;
     width: 5px;
     height: 8px;
