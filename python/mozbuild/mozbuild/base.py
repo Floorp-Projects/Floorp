@@ -722,7 +722,6 @@ class MozbuildObject(ProcessExecutionMixin):
         target=None,
         log=True,
         srcdir=False,
-        allow_parallel=True,
         line_handler=None,
         append_env=None,
         explicit_env=None,
@@ -776,20 +775,17 @@ class MozbuildObject(ProcessExecutionMixin):
                 else:
                     args.append(flag)
 
-        if allow_parallel:
-            if num_jobs > 0:
-                args.append("-j%d" % num_jobs)
-            else:
-                args.append("-j%d" % multiprocessing.cpu_count())
-        elif num_jobs > 0:
-            args.append("MOZ_PARALLEL_BUILD=%d" % num_jobs)
+        if num_jobs > 0:
+            args.append("-j%d" % num_jobs)
         elif os.environ.get("MOZ_LOW_PARALLELISM_BUILD"):
             cpus = multiprocessing.cpu_count()
             jobs = max(1, int(0.75 * cpus))
             print(
                 "  Low parallelism requested: using %d jobs for %d cores" % (jobs, cpus)
             )
-            args.append("MOZ_PARALLEL_BUILD=%d" % jobs)
+            args.append("-j%d" % jobs)
+        else:
+            args.append("-j%d" % multiprocessing.cpu_count())
 
         if ignore_errors:
             args.append("-k")

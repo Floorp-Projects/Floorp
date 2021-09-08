@@ -36,7 +36,7 @@ def get_build_vars(directory, cmd):
             target="showbuild",
             log=False,
             print_directory=False,
-            allow_parallel=False,
+            num_jobs=1,
             silent=True,
             line_handler=on_line,
         )
