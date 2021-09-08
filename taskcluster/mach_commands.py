@@ -10,10 +10,7 @@ import argparse
 import json
 import logging
 import os
-import shlex
-import subprocess
 import sys
-import tempfile
 import time
 import traceback
 from functools import partial
@@ -27,10 +24,8 @@ from mach.decorators import (
 )
 from mozbuild.base import MachCommandBase
 
-from taskgraph.main import (
-    commands as taskgraph_commands,
-    format_taskgraph,
-)
+import taskgraph.main
+from taskgraph.main import commands as taskgraph_commands
 
 logger = logging.getLogger("taskcluster")
 
@@ -64,35 +59,6 @@ def strtobool(value):
     return bool(strtobool(value))
 
 
-class ShowTaskGraphSubCommand(SubCommand):
-    """A SubCommand with TaskGraph-specific arguments"""
-
-    def __call__(self, func):
-        name = func.__name__.replace("_", "-").split("-", 1)[1]
-        args = taskgraph_commands[name].func.args
-
-        extra_args = [
-            (
-                ["--diff"],
-                {
-                    "const": "default",
-                    "nargs": "?",
-                    "default": None,
-                    "help": "Generate and diff the current taskgraph against another revision. "
-                    "Without args the base revision will be used. A revision specifier such as "
-                    "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
-                },
-            ),
-        ]
-        extra_args.reverse()  # ensures args displayed in same order they're defined
-
-        after = SubCommand.__call__(self, func)
-        for arg in extra_args + args:
-            arg = CommandArgument(*arg[0], **arg[1])
-            after = arg(after)
-        return after
-
-
 def get_taskgraph_command_parser(name):
     """Given a command name, obtain its argument parser.
 
@@ -107,6 +73,7 @@ def get_taskgraph_command_parser(name):
     for arg in command.func.args:
         parser.add_argument(*arg[0], **arg[1])
 
+    parser.set_defaults(func=command.func, **command.defaults)
     return parser
 
 
@@ -192,45 +159,73 @@ class MachCommands(MachCommandBase):
         and that build may further depend on various toolchains, libraries, etc.
         """
 
-    @ShowTaskGraphSubCommand(
-        "taskgraph", "tasks", description="Show all tasks in the taskgraph"
+    @SubCommand(
+        "taskgraph",
+        "tasks",
+        description="Show all tasks in the taskgraph",
+        parser=partial(get_taskgraph_command_parser, "tasks"),
     )
     def taskgraph_tasks(self, command_context, **options):
-        options["graph_attr"] = "full_task_set"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
 
-    @ShowTaskGraphSubCommand("taskgraph", "full", description="Show the full taskgraph")
+    @SubCommand(
+        "taskgraph",
+        "full",
+        description="Show the full taskgraph",
+        parser=partial(get_taskgraph_command_parser, "full"),
+    )
     def taskgraph_full(self, command_context, **options):
-        options["graph_attr"] = "full_task_graph"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
 
-    @ShowTaskGraphSubCommand(
-        "taskgraph", "target", description="Show the target task set"
+    @SubCommand(
+        "taskgraph",
+        "target",
+        description="Show the target task set",
+        parser=partial(get_taskgraph_command_parser, "target"),
     )
     def taskgraph_target(self, command_context, **options):
-        options["graph_attr"] = "target_task_set"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
 
-    @ShowTaskGraphSubCommand(
-        "taskgraph", "target-graph", description="Show the target taskgraph"
+    @SubCommand(
+        "taskgraph",
+        "target-graph",
+        description="Show the target taskgraph",
+        parser=partial(get_taskgraph_command_parser, "target-graph"),
     )
     def taskgraph_target_graph(self, command_context, **options):
-        options["graph_attr"] = "target_task_graph"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
 
-    @ShowTaskGraphSubCommand(
-        "taskgraph", "optimized", description="Show the optimized taskgraph"
+    @SubCommand(
+        "taskgraph",
+        "optimized",
+        description="Show the optimized taskgraph",
+        parser=partial(get_taskgraph_command_parser, "optimized"),
     )
     def taskgraph_optimized(self, command_context, **options):
-        options["graph_attr"] = "optimized_task_graph"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
 
-    @ShowTaskGraphSubCommand(
-        "taskgraph", "morphed", description="Show the morphed taskgraph"
+    @SubCommand(
+        "taskgraph",
+        "morphed",
+        description="Show the morphed taskgraph",
+        parser=partial(get_taskgraph_command_parser, "morphed"),
     )
     def taskgraph_morphed(self, command_context, **options):
-        options["graph_attr"] = "morphed_task_graph"
-        return self.show_taskgraph(command_context, options)
+        return self.run_show_taskgraph(command_context, **options)
+
+    def run_show_taskgraph(self, command_context, **options):
+        # There are cases where we don't want to set up mach logging (e.g logs
+        # are being redirected to disk). By monkeypatching the 'setup_logging'
+        # function we can let 'taskgraph.main' decide whether or not to log to
+        # the terminal.
+        taskgraph.main.setup_logging = partial(
+            self.setup_logging,
+            command_context,
+            quiet=options["quiet"],
+            verbose=options["verbose"],
+        )
+        show_taskgraph = options.pop("func")
+        return show_taskgraph(options)
 
     @SubCommand("taskgraph", "actions", description="Write actions.json to stdout")
     @CommandArgument(
@@ -351,101 +346,6 @@ class MachCommands(MachCommandBase):
 
         # all of the taskgraph logging is unstructured logging
         command_context.log_manager.enable_unstructured()
-
-    def show_taskgraph(self, command_context, options):
-        self.setup_logging(
-            command_context, quiet=options["quiet"], verbose=options["verbose"]
-        )
-        vcs = None
-        base_out = ""
-        base_ref = None
-        cur_ref = None
-
-        if not options["parameters"]:
-            options["parameters"] = "project=mozilla-central"
-
-        if options["diff"]:
-            from mozversioncontrol import get_repository_object
-
-            vcs = get_repository_object(command_context.topsrcdir)
-            with vcs:
-                if not vcs.working_directory_clean():
-                    print("abort: can't diff taskgraph with dirty working directory")
-                    return 1
-
-                # We want to return the working directory to the current state
-                # as best we can after we're done. In all known cases, using
-                # branch or bookmark (which are both available on the VCS object)
-                # as `branch` is preferable to a specific revision.
-                cur_ref = vcs.branch or vcs.head_ref[:12]
-            logger.info("Generating {} @ {}".format(options["graph_attr"], cur_ref))
-
-        out = format_taskgraph(options)
-
-        if options["diff"]:
-            with vcs:
-                # Some transforms use global state for checks, so will fail
-                # when running taskgraph a second time in the same session.
-                # Reload all taskgraph modules to avoid this.
-                for mod in sys.modules.copy():
-                    if mod.startswith("taskgraph"):
-                        del sys.modules[mod]
-
-                if options["diff"] == "default":
-                    base_ref = vcs.base_ref
-                else:
-                    base_ref = options["diff"]
-
-                try:
-                    vcs.update(base_ref)
-                    base_ref = vcs.head_ref[:12]
-                    logger.info(
-                        "Generating {} @ {}".format(options["graph_attr"], base_ref)
-                    )
-                    base_out = format_taskgraph(options)
-                finally:
-                    vcs.update(cur_ref)
-
-            diffcmd = command_context._mach_context.settings["taskgraph"]["diffcmd"]
-            diffcmd = diffcmd.format(
-                attr=options["graph_attr"], base=base_ref, cur=cur_ref
-            )
-
-            with tempfile.NamedTemporaryFile(mode="w") as base:
-                base.write(base_out)
-
-                with tempfile.NamedTemporaryFile(mode="w") as cur:
-                    cur.write(out)
-                    try:
-                        out = subprocess.run(
-                            shlex.split(diffcmd)
-                            + [
-                                base.name,
-                                cur.name,
-                            ],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            check=True,
-                        ).stdout
-                    except subprocess.CalledProcessError as e:
-                        # returncode 1 simply means diffs were found
-                        if e.returncode != 1:
-                            print(e.stderr, file=sys.stderr)
-                            raise
-                        out = e.output
-
-        fh = options["output_file"]
-        if fh:
-            fh = open(fh, "w")
-
-        print(out, file=fh)
-
-        if options["diff"] and options["format"] != "json":
-            logger.info(
-                "If you were expecting differences in task bodies "
-                'you should pass "-J"\n'
-            )
 
     def show_actions(self, command_context, options):
         import taskgraph

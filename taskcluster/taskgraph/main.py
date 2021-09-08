@@ -341,6 +341,11 @@ def show_taskgraph(options):
         logdir = os.path.join(appdirs.user_log_dir("taskgraph"), basename)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
+    else:
+        # Only setup logging if we have a single parameter spec. Otherwise
+        # logging will go to files. This is also used as a hook for Gecko
+        # to setup its `mach` based logging.
+        setup_logging()
 
     generate_taskgraph(options, parameters, logdir)
 
@@ -654,10 +659,14 @@ def create_parser():
     return parser
 
 
-def main():
+def setup_logging():
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
     )
+
+
+def main():
+    setup_logging()
     parser = create_parser()
     args = parser.parse_args()
     try:
