@@ -59,8 +59,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
     void EnableMonitor();
     void DisableMonitor();
 
-    void FrameCallback(uint32_t timestampTime);
-    void Notify();
+    void FrameCallback(uint32_t aTime);
 
     TimeDuration GetVsyncRate() override;
 
@@ -74,17 +73,16 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
    private:
     virtual ~WaylandDisplay() = default;
-    void Refresh();
-    void SetupFrameCallback();
-    void ClearFrameCallback();
-    void CalculateVsyncRate(TimeStamp vsyncTimestamp);
+    void Refresh(const MutexAutoLock& aProofOfLock);
+    void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
+    void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
+                            TimeStamp aVsyncTimestamp);
 
     Mutex mMutex;
     bool mIsShutdown;
     bool mVsyncEnabled;
     bool mMonitorEnabled;
     bool mCallbackRequested;
-    struct wl_display* mDisplay;
     MozContainer* mContainer;
     RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
     TimeDuration mVsyncRate;
