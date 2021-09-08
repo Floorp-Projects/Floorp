@@ -84,6 +84,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   }
 
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
+  Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
+
   DOMHighResTimeStamp GetNow() const override;
 
   void StopTransmitting();
@@ -282,6 +284,12 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Call thread.
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
+
+  // Call thread only. ssrc -> base_seq
+  std::map<uint32_t, uint16_t> mRtpSendBaseSeqs;
+  // libwebrtc network thread only. ssrc -> base_seq.
+  // To track changes needed to mRtpSendBaseSeqs.
+  std::map<uint32_t, uint16_t> mRtpSendBaseSeqs_n;
 
   // Thread safe
   Atomic<bool> mTransportActive = Atomic<bool>(false);
