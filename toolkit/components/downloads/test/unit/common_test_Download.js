@@ -46,81 +46,6 @@ function promiseStartDownload(aSourceUrl) {
 }
 
 /**
- * Creates and starts a new download, configured to keep partial data, and
- * returns only when the first part of "interruptible_resumable.txt" has been
- * saved to disk.  You must call "continueResponses" to allow the interruptible
- * request to continue.
- *
- * This function uses either DownloadCopySaver or DownloadLegacySaver based on
- * the current test run.
- *
- * @return {Promise}
- * @resolves The newly created Download object, still in progress.
- * @rejects JavaScript exception.
- */
-function promiseStartDownload_tryToKeepPartialData() {
-  return (async function() {
-    mustInterruptResponses();
-
-    // Start a new download and configure it to keep partially downloaded data.
-    let download;
-    if (!gUseLegacySaver) {
-      let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
-      download = await Downloads.createDownload({
-        source: httpUrl("interruptible_resumable.txt"),
-        target: {
-          path: targetFilePath,
-          partFilePath: targetFilePath + ".part",
-        },
-      });
-      download.tryToKeepPartialData = true;
-      download.start().catch(() => {});
-    } else {
-      // Start a download using nsIExternalHelperAppService, that is configured
-      // to keep partially downloaded data by default.
-      download = await promiseStartExternalHelperAppServiceDownload();
-    }
-
-    await promiseDownloadMidway(download);
-    await promisePartFileReady(download);
-
-    return download;
-  })();
-}
-
-/**
- * This function should be called after the progress notification for a download
- * is received, and waits for the worker thread of BackgroundFileSaver to
- * receive the data to be written to the ".part" file on disk.
- *
- * @return {Promise}
- * @resolves When the ".part" file has been written to disk.
- * @rejects JavaScript exception.
- */
-function promisePartFileReady(aDownload) {
-  return (async function() {
-    // We don't have control over the file output code in BackgroundFileSaver.
-    // After we receive the download progress notification, we may only check
-    // that the ".part" file has been created, while its size cannot be
-    // determined because the file is currently open.
-    try {
-      do {
-        await promiseTimeout(50);
-      } while (!(await OS.File.exists(aDownload.target.partFilePath)));
-    } catch (ex) {
-      if (!(ex instanceof OS.File.Error)) {
-        throw ex;
-      }
-      // This indicates that the file has been created and cannot be accessed.
-      // The specific error might vary with the platform.
-      info("Expected exception while checking existence: " + ex.toString());
-      // Wait some more time to allow the write to complete.
-      await promiseTimeout(100);
-    }
-  })();
-}
-
-/**
  * Checks that the actual data written to disk matches the expected data as well
  * as the properties of the given DownloadTarget object.
  *
@@ -227,7 +152,9 @@ add_task(async function test_basic() {
  * download is executed using the nsIExternalHelperAppService component.
  */
 add_task(async function test_basic_tryToKeepPartialData() {
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
   continueResponses();
   await promiseDownloadStopped(download);
 
@@ -957,7 +884,9 @@ add_task(async function test_cancel_midway() {
  * both the target file and the ".part" file are deleted.
  */
 add_task(async function test_cancel_midway_tryToKeepPartialData() {
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
 
   Assert.ok(await OS.File.exists(download.target.path));
   Assert.ok(await OS.File.exists(download.target.partFilePath));
@@ -1056,7 +985,9 @@ add_task(async function test_cancel_midway_restart() {
  * Cancels a download and restarts it from where it stopped.
  */
 add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
   await download.cancel();
 
   Assert.ok(download.stopped);
@@ -1112,7 +1043,9 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
  * data and restarts the download from the beginning.
  */
 add_task(async function test_cancel_midway_restart_removePartialData() {
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
   await download.cancel();
   await download.removePartialData();
 
@@ -1141,7 +1074,9 @@ add_task(async function test_cancel_midway_restart_removePartialData() {
  */
 add_task(
   async function test_cancel_midway_restart_tryToKeepPartialData_false() {
-    let download = await promiseStartDownload_tryToKeepPartialData();
+    let download = await promiseStartDownload_tryToKeepPartialData({
+      useLegacySaver: gUseLegacySaver,
+    });
     await download.cancel();
 
     download.tryToKeepPartialData = false;
@@ -1412,7 +1347,9 @@ add_task(async function test_finalize() {
  */
 add_task(async function test_finalize_tryToKeepPartialData() {
   // Check finalization without removing partial data.
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
   await download.finalize();
 
   Assert.ok(download.hasPartialData);
@@ -1423,7 +1360,9 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   await download.removePartialData();
 
   // Check finalization while removing partial data.
-  download = await promiseStartDownload_tryToKeepPartialData();
+  download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
   await download.finalize(true);
 
   Assert.ok(!download.hasPartialData);
@@ -2052,73 +1991,6 @@ add_task(async function test_getSha256Hash() {
 });
 
 /**
- * Create a download which will be reputation blocked.
- *
- * @param options
- *        {
- *           keepPartialData: bool,
- *           keepBlockedData: bool,
- *        }
- * @return {Promise}
- * @resolves The reputation blocked download.
- * @rejects JavaScript exception.
- */
-var promiseBlockedDownload = async function(options) {
-  let blockFn = base => ({
-    shouldBlockForReputationCheck: () =>
-      Promise.resolve({
-        shouldBlock: true,
-        verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
-      }),
-    shouldKeepBlockedData: () => Promise.resolve(options.keepBlockedData),
-  });
-
-  Integration.downloads.register(blockFn);
-  function cleanup() {
-    Integration.downloads.unregister(blockFn);
-  }
-  registerCleanupFunction(cleanup);
-
-  let download;
-
-  try {
-    if (options.keepPartialData) {
-      download = await promiseStartDownload_tryToKeepPartialData();
-      continueResponses();
-    } else if (gUseLegacySaver) {
-      download = await promiseStartLegacyDownload();
-    } else {
-      download = await promiseNewDownload();
-      await download.start();
-      do_throw("The download should have blocked.");
-    }
-
-    await promiseDownloadStopped(download);
-    do_throw("The download should have blocked.");
-  } catch (ex) {
-    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
-      throw ex;
-    }
-    Assert.ok(ex.becauseBlockedByReputationCheck);
-    Assert.equal(
-      ex.reputationCheckVerdict,
-      Downloads.Error.BLOCK_VERDICT_UNCOMMON
-    );
-    Assert.ok(download.error.becauseBlockedByReputationCheck);
-    Assert.equal(
-      download.error.reputationCheckVerdict,
-      Downloads.Error.BLOCK_VERDICT_UNCOMMON
-    );
-  }
-
-  Assert.ok(download.stopped);
-  Assert.ok(!download.succeeded);
-
-  cleanup();
-  return download;
-};
-
-/**
  * Checks that application reputation blocks the download and the target file
  * does not exist.
  */
@@ -2184,7 +2056,9 @@ add_task(async function test_blocked_applicationReputation_race() {
   try {
     // 1. Start the download and get a reference to the promise asociated with
     //    the first attempt, before allowing the response to continue.
-    download = await promiseStartDownload_tryToKeepPartialData();
+    download = await promiseStartDownload_tryToKeepPartialData({
+      useLegacySaver: gUseLegacySaver,
+    });
     let firstAttempt = promiseDownloadStopped(download);
     continueResponses();
 
@@ -2244,6 +2118,7 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   let download = await promiseBlockedDownload({
     keepPartialData: true,
     keepBlockedData: true,
+    useLegacySaver: gUseLegacySaver,
   });
 
   Assert.ok(download.hasBlockedData);
@@ -2654,7 +2529,9 @@ add_task(async function test_history_tryToKeepPartialData() {
 
   // Start a download that is not allowed to finish yet.
   let beforeStartTimeMs = Date.now();
-  let download = await promiseStartDownload_tryToKeepPartialData();
+  let download = await promiseStartDownload_tryToKeepPartialData({
+    useLegacySaver: gUseLegacySaver,
+  });
 
   // The history notifications should be received before the download completes.
   let [time, transitionType] = await promiseVisit;

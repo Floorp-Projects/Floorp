@@ -622,43 +622,195 @@ function promiseNewList(aIsPrivate) {
  * @resolves When the operation completes.
  * @rejects Never.
  */
-function promiseVerifyContents(aPath, aExpectedContents) {
-  return (async function() {
-    let file = new FileUtils.File(aPath);
+async function promiseVerifyContents(aPath, aExpectedContents) {
+  let file = new FileUtils.File(aPath);
 
-    if (!(await OS.File.exists(aPath))) {
-      do_throw("File does not exist: " + aPath);
-    }
+  if (!(await IOUtils.exists(aPath))) {
+    do_throw("File does not exist: " + aPath);
+  }
 
-    if ((await OS.File.stat(aPath)).size == 0) {
-      do_throw("File is empty: " + aPath);
-    }
+  if ((await IOUtils.stat(aPath)).size == 0) {
+    do_throw("File is empty: " + aPath);
+  }
 
-    await new Promise(resolve => {
-      NetUtil.asyncFetch(
-        { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
-        function(aInputStream, aStatus) {
-          Assert.ok(Components.isSuccessCode(aStatus));
-          let contents = NetUtil.readInputStreamToString(
-            aInputStream,
-            aInputStream.available()
-          );
-          if (
-            contents.length > TEST_DATA_SHORT.length * 2 ||
-            /[^\x20-\x7E]/.test(contents)
-          ) {
-            // Do not print the entire content string to the test log.
-            Assert.equal(contents.length, aExpectedContents.length);
-            Assert.ok(contents == aExpectedContents);
-          } else {
-            // Print the string if it is short and made of printable characters.
-            Assert.equal(contents, aExpectedContents);
-          }
-          resolve();
+  await new Promise(resolve => {
+    NetUtil.asyncFetch(
+      { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
+      function(aInputStream, aStatus) {
+        Assert.ok(Components.isSuccessCode(aStatus));
+        let contents = NetUtil.readInputStreamToString(
+          aInputStream,
+          aInputStream.available()
+        );
+        if (
+          contents.length > TEST_DATA_SHORT.length * 2 ||
+          /[^\x20-\x7E]/.test(contents)
+        ) {
+          // Do not print the entire content string to the test log.
+          Assert.equal(contents.length, aExpectedContents.length);
+          Assert.ok(contents == aExpectedContents);
+        } else {
+          // Print the string if it is short and made of printable characters.
+          Assert.equal(contents, aExpectedContents);
         }
-      );
+        resolve();
+      }
+    );
+  });
+}
+
+/**
+ * Creates and starts a new download, configured to keep partial data, and
+ * returns only when the first part of "interruptible_resumable.txt" has been
+ * saved to disk.  You must call "continueResponses" to allow the interruptible
+ * request to continue.
+ *
+ * This function uses either DownloadCopySaver or DownloadLegacySaver based on
+ * the current test run.
+ *
+ * @param aOptions
+ *        An optional object used to control the behavior of this function.
+ *        You may pass an object with a subset of the following fields:
+ *        {
+ *          useLegacySaver: Boolean indicating whether to launch a legacy download.
+ *        }
+ *
+ * @return {Promise}
+ * @resolves The newly created Download object, still in progress.
+ * @rejects JavaScript exception.
+ */
+async function promiseStartDownload_tryToKeepPartialData({
+  useLegacySaver = false,
+} = {}) {
+  mustInterruptResponses();
+
+  // Start a new download and configure it to keep partially downloaded data.
+  let download;
+  if (!useLegacySaver) {
+    let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
+    download = await Downloads.createDownload({
+      source: httpUrl("interruptible_resumable.txt"),
+      target: {
+        path: targetFilePath,
+        partFilePath: targetFilePath + ".part",
+      },
     });
-  })();
+    download.tryToKeepPartialData = true;
+    download.start().catch(() => {});
+  } else {
+    // Start a download using nsIExternalHelperAppService, that is configured
+    // to keep partially downloaded data by default.
+    download = await promiseStartExternalHelperAppServiceDownload();
+  }
+
+  await promiseDownloadMidway(download);
+  await promisePartFileReady(download);
+
+  return download;
+}
+
+/**
+ * This function should be called after the progress notification for a download
+ * is received, and waits for the worker thread of BackgroundFileSaver to
+ * receive the data to be written to the ".part" file on disk.
+ *
+ * @return {Promise}
+ * @resolves When the ".part" file has been written to disk.
+ * @rejects JavaScript exception.
+ */
+async function promisePartFileReady(aDownload) {
+  // We don't have control over the file output code in BackgroundFileSaver.
+  // After we receive the download progress notification, we may only check
+  // that the ".part" file has been created, while its size cannot be
+  // determined because the file is currently open.
+  try {
+    do {
+      await promiseTimeout(50);
+    } while (!(await IOUtils.exists(aDownload.target.partFilePath)));
+  } catch (ex) {
+    if (!(ex instanceof IOUtils.Error)) {
+      throw ex;
+    }
+    // This indicates that the file has been created and cannot be accessed.
+    // The specific error might vary with the platform.
+    info("Expected exception while checking existence: " + ex.toString());
+    // Wait some more time to allow the write to complete.
+    await promiseTimeout(100);
+  }
+}
+
+/**
+ * Create a download which will be reputation blocked.
+ *
+ * @param options
+ *        {
+ *           keepPartialData: bool,
+ *           keepBlockedData: bool,
+ *           useLegacySaver: bool,
+ *        }
+ * @return {Promise}
+ * @resolves The reputation blocked download.
+ * @rejects JavaScript exception.
+ */
+async function promiseBlockedDownload({
+  keepPartialData,
+  keepBlockedData,
+  useLegacySaver,
+} = {}) {
+  let blockFn = base => ({
+    shouldBlockForReputationCheck: () =>
+      Promise.resolve({
+        shouldBlock: true,
+        verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+      }),
+    shouldKeepBlockedData: () => Promise.resolve(keepBlockedData),
+  });
+
+  Integration.downloads.register(blockFn);
+  function cleanup() {
+    Integration.downloads.unregister(blockFn);
+  }
+  registerCleanupFunction(cleanup);
+
+  let download;
+
+  try {
+    if (keepPartialData) {
+      download = await promiseStartDownload_tryToKeepPartialData({
+        useLegacySaver,
+      });
+      continueResponses();
+    } else if (useLegacySaver) {
+      download = await promiseStartLegacyDownload();
+    } else {
+      download = await promiseNewDownload();
+      await download.start();
+      do_throw("The download should have blocked.");
+    }
+
+    await promiseDownloadStopped(download);
+    do_throw("The download should have blocked.");
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
+      throw ex;
+    }
+    Assert.ok(ex.becauseBlockedByReputationCheck);
+    Assert.equal(
+      ex.reputationCheckVerdict,
+      Downloads.Error.BLOCK_VERDICT_UNCOMMON
+    );
+    Assert.ok(download.error.becauseBlockedByReputationCheck);
+    Assert.equal(
+      download.error.reputationCheckVerdict,
+      Downloads.Error.BLOCK_VERDICT_UNCOMMON
+    );
+  }
+
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+
+  cleanup();
+  return download;
 }
 
 /**
