@@ -2,6 +2,12 @@
  * vim: set ts=8 sts=2 et sw=2 tw=80:
  */
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "jsfriendapi.h"
+
 #include "js/ArrayBuffer.h"             // JS::NewArrayBuffer
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Type,ByteLength,Data}, JS_GetObjectAsArrayBufferView, JS_GetObjectAs{{Ui,I}nt{8,16,32},Float{32,64}}Array, JS_IsArrayBufferViewObject, JS_NewDataView, JS_New{{Ui,I}nt{8,16,32},Float{32,64},Uint8Clamped}Array
 #include "js/GlobalObject.h"            // JS_NewGlobalObject
@@ -12,6 +18,7 @@
 #include "vm/Realm.h"
 #include "vm/Uint8Clamped.h"  // js::uint8_clamped_t
 
+#include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/TypedArrayObject-inl.h"  // TypeIDOfType
 
