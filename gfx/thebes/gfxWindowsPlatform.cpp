@@ -1756,18 +1756,6 @@ gfxWindowsPlatform::CreateHardwareVsyncSource() {
   return d3dVsyncSource.forget();
 }
 
-void gfxWindowsPlatform::GetAcceleratedCompositorBackends(
-    nsTArray<LayersBackend>& aBackends) {
-  if (gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING) &&
-      StaticPrefs::layers_prefer_opengl_AtStartup()) {
-    aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
-  }
-
-  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
-  }
-}
-
 void gfxWindowsPlatform::ImportGPUDeviceData(
     const mozilla::gfx::GPUDeviceData& aData) {
   MOZ_ASSERT(XRE_IsParentProcess());

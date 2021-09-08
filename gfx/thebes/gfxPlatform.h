@@ -834,11 +834,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   // platform.
   virtual bool AccelerateLayersByDefault();
 
-  // Returns a prioritized list of available compositor backends for
-  // acceleration.
-  virtual void GetAcceleratedCompositorBackends(
-      nsTArray<mozilla::layers::LayersBackend>& aBackends);
-
   // Returns preferences of canvas and content backends.
   virtual BackendPrefsData GetBackendPrefs() const;
 

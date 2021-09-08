@@ -3099,24 +3099,6 @@ bool gfxPlatform::PerfWarnings() {
   return StaticPrefs::gfx_perf_warnings_enabled();
 }
 
-void gfxPlatform::GetAcceleratedCompositorBackends(
-    nsTArray<LayersBackend>& aBackends) {
-  if (gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING)) {
-    aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
-  } else {
-    static int tell_me_once = 0;
-    if (!tell_me_once) {
-      NS_WARNING("OpenGL-accelerated layers are not supported on this system");
-      tell_me_once = 1;
-    }
-#ifdef MOZ_WIDGET_ANDROID
-    MOZ_CRASH(
-        "OpenGL-accelerated layers are a hard requirement on this platform. "
-        "Cannot continue without support for them");
-#endif
-  }
-}
-
 void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
   if (mCompositorBackend == aBackend) {
     return;

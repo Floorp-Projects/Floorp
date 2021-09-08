@@ -204,8 +204,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
  protected:
   bool AccelerateLayersByDefault() override { return true; }
-  void GetAcceleratedCompositorBackends(
-      nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
   void GetPlatformDisplayInfo(mozilla::widget::InfoObject& aObj) override;
 
