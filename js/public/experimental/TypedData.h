@@ -299,6 +299,11 @@ using ExternalTypeOf_t = typename ExternalTypeOf<ArrayType>::Type;
 // ArrayBufferObject or some sort of ArrayBufferViewObject (see below).
 // Note that this will always hold an unwrapped object.
 class JS_PUBLIC_API ArrayBufferOrView {
+ public:
+  // Typed Arrays will set this to their specific element type.
+  // Everything else just claims to expose things as uint8_t*.
+  using DataType = uint8_t;
+
  protected:
   Heap<JSObject*> obj;
 
