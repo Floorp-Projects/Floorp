@@ -1,13 +1,11 @@
 @use 'sass:math';
 
-$top-sites-size: $grid-unit;
-$top-sites-size-nte: $grid-unit-small;
-$top-sites-border-radius: 4px;
-$nt-experience-top-sites-border-radius: 8px;
+$top-sites-size: $grid-unit-small;
+$top-sites-border-radius: 8px;
+$top-sites-icon-border-radius: 4px;
 $top-sites-vertical-space: 8px;
 $rich-icon-size: 96px;
-$default-icon-wrapper-size: 42px;
-$nt-experience-default-icon-wrapper-size: 32px;
+$default-icon-wrapper-size: 32px;
 $search-icon-wrapper-size: 42px;
 $default-icon-size: 32px;
 $default-icon-offset: 6px;
@@ -43,31 +41,31 @@ $letter-fallback-color: $white;
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width-nte) {
+  @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width) {
     :nth-child(4n+3) {
       @include context-menu-open-left;
     }
   }
 
   // Six columns
-  @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width-nte) {
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + 2 * $card-width) {
     :nth-child(6n) {
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width-nte) {
+  @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width) {
     :nth-child(6n+5) {
       @include context-menu-open-left;
     }
   }
 
   // Eight columns
-  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width-nte) {
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
     :nth-child(8n) {
       @include context-menu-open-left;
     }
   }
-  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width-nte) {
+  @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width) {
     :nth-child(8n+7) {
       @include context-menu-open-left;
     }
@@ -145,13 +143,13 @@ $letter-fallback-color: $white;
   }
 
   .tile { // sass-lint:disable-block property-sort-order
-    border-radius: $nt-experience-top-sites-border-radius;
+    border-radius: $top-sites-border-radius;
     box-shadow: $newtab-card-firstshadow;
     background-color: var(--newtab-topsites-background-color);
     justify-content: center;
     margin: 0 auto;
-    height: $top-sites-size-nte;
-    width: $top-sites-size-nte;
+    height: $top-sites-size;
+    width: $top-sites-size;
 
     cursor: pointer;
     position: relative;
@@ -195,7 +193,7 @@ $letter-fallback-color: $white;
     background-color: var(--newtab-topsites-background-color);
     background-position: center center;
     background-repeat: no-repeat;
-    border-radius: $top-sites-border-radius;
+    border-radius: $top-sites-icon-border-radius;
     position: absolute;
   }
 
@@ -210,8 +208,8 @@ $letter-fallback-color: $white;
   .default-icon,
   .search-topsite {
     background-size: $default-icon-size;
-    height: $nt-experience-default-icon-wrapper-size;
-    width: $nt-experience-default-icon-wrapper-size;
+    height: $default-icon-wrapper-size;
+    width: $default-icon-wrapper-size;
 
     // for corner letter fallback
     align-items: center;

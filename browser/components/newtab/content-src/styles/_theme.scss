@@ -65,7 +65,7 @@ body {
   --newtab-overlay-color: #{$grey-20-80};
 
   // Sections
-  --newtab-section-header-text-color: #{$grey-50};
+  --newtab-section-header-text-color: var(--newtab-background-primary-text-color);
   --newtab-section-navigation-text-color: #{$grey-50};
 
   // Search
@@ -160,7 +160,6 @@ body {
     --newtab-overlay-color: #{$grey-90-80};
 
     // Sections
-    --newtab-section-header-text-color: #{$grey-10-80};
     --newtab-section-navigation-text-color: #{$grey-10-80};
 
     // Search

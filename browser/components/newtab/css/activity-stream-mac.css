@@ -70,7 +70,7 @@ body {
   --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
   --newtab-modal-color: var(--newtab-background-color-secondary);
   --newtab-overlay-color: rgba(237, 237, 240, 0.8);
-  --newtab-section-header-text-color: #737373;
+  --newtab-section-header-text-color: var(--newtab-background-primary-text-color);
   --newtab-section-navigation-text-color: #737373;
   --newtab-search-border-color: transparent;
   --newtab-search-dropdown-color: #FFF;
@@ -145,7 +145,6 @@ body[lwt-newtab-brighttext] {
   --newtab-contextmenu-button-color: #2A2A2E;
   --newtab-modal-color: #2A2A2E;
   --newtab-overlay-color: rgba(12, 12, 13, 0.8);
-  --newtab-section-header-text-color: rgba(249, 249, 250, 0.8);
   --newtab-section-navigation-text-color: rgba(249, 249, 250, 0.8);
   --newtab-search-border-color: rgba(249, 249, 250, 0.2);
   --newtab-search-dropdown-color: #38383D;
@@ -817,7 +816,7 @@ main.has-snippet {
   background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-size: 16px;
   background-color: #0060DF;
-  border-radius: 42px;
+  border-radius: 32px;
   -moz-context-properties: fill;
   fill: #FFF;
   box-shadow: var(--newtab-card-shadow);
@@ -1132,7 +1131,7 @@ main.has-snippet {
 .sections-list .section-list {
   display: grid;
   grid-gap: 32px;
-  grid-template-columns: repeat(auto-fit, 224px);
+  grid-template-columns: repeat(auto-fit, 192px);
   margin: 0;
 }
 @media (max-width: 610px) {
@@ -1151,7 +1150,7 @@ main.has-snippet {
     inset-inline-start: auto;
   }
 }
-@media (min-width: 866px) and (max-width: 1314px) {
+@media (min-width: 866px) and (max-width: 1250px) {
   .sections-list .section-list :nth-child(3n) .context-menu {
     margin-inline-end: 5px;
     margin-inline-start: auto;
@@ -1159,7 +1158,7 @@ main.has-snippet {
     inset-inline-start: auto;
   }
 }
-@media (min-width: 1122px) and (max-width: 1570px) {
+@media (min-width: 1122px) and (max-width: 1506px) {
   .sections-list .section-list :nth-child(3n) .context-menu,
 .sections-list .section-list :nth-child(4n) .context-menu {
     margin-inline-end: 5px;
