@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.perf
 
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -25,7 +24,6 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 private const val EXPECTED_SUPPRESSION_COUNT = 19
 @Suppress("TopLevelPropertyNaming") // it's silly this would have a different naming convention b/c no const
 private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to local runs: increment these together
-private const val EXPECTED_VIEW_HIERARCHY_DEPTH = 12
 private const val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN = 4
 private const val EXPECTED_NUMBER_OF_INFLATION = 12
 
@@ -38,12 +36,6 @@ private val failureMsgRunBlocking = getErrorMessage(
     shortName = "runBlockingIncrement",
     implications = "using runBlocking may block the main thread and have other negative performance implications?"
 )
-
-private val failureMsgViewHierarchyDepth = getErrorMessage(
-    shortName = "view hierarchy depth",
-    implications = "having a deep view hierarchy can slow down measure/layout performance?"
-) + "Please note that we're not sure if this is a useful metric to assert: with your feedback, " +
-    "we'll find out over time if it is or is not."
 
 private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
     shortName = "ConstraintLayout being a common direct descendant of a RecyclerView",
@@ -89,33 +81,18 @@ class StartupExcessiveResourceUseTest {
         val actualRunBlocking = RunBlockingCounter.count.get()
 
         val rootView = activityTestRule.activity.findViewById<LinearLayout>(R.id.rootContainer)
-        val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(rootView, 1)
         val actualRecyclerViewConstraintLayoutChildren = countRecyclerViewConstraintLayoutChildren(rootView, null)
 
         val actualNumberOfInflations = InflationCounter.inflationCount.get()
 
         assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
         assertTrue(failureMsgRunBlocking + "actual: $actualRunBlocking", actualRunBlocking in EXPECTED_RUNBLOCKING_RANGE)
-        assertEquals(failureMsgViewHierarchyDepth, EXPECTED_VIEW_HIERARCHY_DEPTH, actualViewHierarchyDepth)
         assertEquals(
             failureMsgRecyclerViewConstraintLayoutChildren,
             EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN,
             actualRecyclerViewConstraintLayoutChildren
         )
         assertEquals(failureMsgNumberOfInflation, EXPECTED_NUMBER_OF_INFLATION, actualNumberOfInflations)
-    }
-}
-
-private fun countAndLogViewHierarchyDepth(view: View, level: Int): Int {
-    // Log for debugging purposes: not sure if this is actually helpful.
-    val indent = "| ".repeat(level - 1)
-    Log.d("Startup...Test", "${indent}$view")
-
-    return if (view !is ViewGroup) {
-        level
-    } else {
-        val maxDepth = view.children.map { countAndLogViewHierarchyDepth(it, level + 1) }.maxOrNull()
-        maxDepth ?: level
     }
 }
 
