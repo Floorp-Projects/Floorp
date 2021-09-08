@@ -16,6 +16,7 @@
 # If not you may need to specify `--no-binary :<package1>,<package2>:` to get
 # the source distribution instead for those particular packages.
 
+appdirs==1.4.4
 attrs==19.1.0
 blessings==1.7
 compare-locales==8.1.0
