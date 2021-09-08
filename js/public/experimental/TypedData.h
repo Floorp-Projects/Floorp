@@ -387,6 +387,7 @@ class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
     }
     return ArrayBuffer(nullptr);
   }
+  static ArrayBuffer unwrap(JSObject* maybeWrapped);
 
   static ArrayBuffer create(JSContext* cx, size_t nbytes);
 
