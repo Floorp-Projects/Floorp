@@ -130,6 +130,20 @@ FontMatchType& FontMatchType::operator|=(const FontMatchType& aOther) {
   return *this;
 }
 
+// Installation status (base system / langpack / user-installed) may determine
+// whether the font is visible to CSS font-family or src:local() lookups.
+// (Exactly what these mean and how accurate they are may be vary across
+// platforms -- e.g. on Linux there is no clear "base" set of fonts.)
+enum class FontVisibility : uint8_t {
+  Unknown = 0,   // No categorization of families available on this system
+  Base = 1,      // Standard part of the base OS installation
+  LangPack = 2,  // From an optional OS component such as language support
+  User = 3,      // User-installed font (or installed by another app, etc)
+  Hidden = 4,    // Internal system font, should never exposed to users
+  Webfont = 5,   // Webfont defined by @font-face
+  Count = 6,     // Count of values, for IPC serialization
+};
+
 struct HwStretchingSupport {
   uint32_t mBoth;
   uint32_t mWindowOnly;

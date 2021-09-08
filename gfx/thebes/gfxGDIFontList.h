@@ -304,15 +304,14 @@ class gfxGDIFontList final : public gfxPlatformFontList {
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
 
-  bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
-                          const nsACString& aFamily,
-                          nsTArray<FamilyAndGeneric>* aOutput,
-                          FindFamiliesFlags aFlags,
-                          gfxFontStyle* aStyle = nullptr,
-                          nsAtom* aLanguage = nullptr,
-                          gfxFloat aDevToCssSize = 1.0) override;
+  bool FindAndAddFamilies(
+      nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
+      const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
+      FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
+      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) override;
 
-  virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
+  virtual gfxFontEntry* LookupLocalFont(nsPresContext* aPresContext,
+                                        const nsACString& aFontName,
                                         WeightRange aWeightForEntry,
                                         StretchRange aStretchForEntry,
                                         SlantStyleRange aStyleForEntry);
@@ -330,7 +329,8 @@ class gfxGDIFontList final : public gfxPlatformFontList {
                                       FontListSizes* aSizes) const;
 
  protected:
-  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
+  FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
+                                       const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr) override;
 
  private:

@@ -270,6 +270,8 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     // fine to set here.
     mDynamicToolbarMaxHeight = StaticPrefs::layout_dynamic_toolbar_max_height();
   }
+
+  UpdateFontVisibility();
 }
 
 static const char* gExactCallbackPrefs[] = {
@@ -290,7 +292,8 @@ static const char* gExactCallbackPrefs[] = {
 
 static const char* gPrefixCallbackPrefs[] = {
     "font.", "browser.display.",    "browser.viewport.",
-    "bidi.", "gfx.font_rendering.", nullptr,
+    "bidi.", "gfx.font_rendering.", "layout.css.font-visibility.",
+    nullptr,
 };
 
 void nsPresContext::Destroy() {
@@ -638,6 +641,9 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   GetUserPreferences();
 
   FlushFontCache();
+  if (UpdateFontVisibility()) {
+    changeHint |= NS_STYLE_HINT_REFLOW;
+  }
 
   // Preferences require rerunning selector matching because we rebuild
   // the pref style sheet for some preference changes.
@@ -758,6 +764,19 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 #endif
 
   return NS_OK;
+}
+
+bool nsPresContext::UpdateFontVisibility() {
+  FontVisibility oldValue = mFontVisibility;
+  if (StaticPrefs::privacy_resistFingerprinting()) {
+    mFontVisibility = FontVisibility::Base;
+  } else {
+    mFontVisibility = FontVisibility(
+        std::min(int32_t(FontVisibility::User),
+                 std::max(int32_t(FontVisibility::Base),
+                          StaticPrefs::layout_css_font_visibility_level())));
+  }
+  return mFontVisibility != oldValue;
 }
 
 void nsPresContext::InitFontCache() {
