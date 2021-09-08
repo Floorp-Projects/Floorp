@@ -46,4 +46,4 @@ cp $dirname/fsck_hfs.tproj/fsck_hfs hfsplus-tools/fsck_hfs
 
 # Make a package of the built utils
 cd $root_dir
-tar caf $root_dir/hfsplus-tools.tar.xz hfsplus-tools
+tar caf $root_dir/hfsplus-tools.tar.zst hfsplus-tools

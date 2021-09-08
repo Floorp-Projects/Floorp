@@ -9,7 +9,7 @@ job-defaults:
     run:
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
-        toolchain-artifact: public/build/gcc.tar.xz
+        toolchain-artifact: public/build/gcc.tar.zst
     fetches:
         toolchain:
             - linux64-toolchain-sysroot
