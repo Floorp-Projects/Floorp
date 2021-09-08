@@ -12,8 +12,7 @@
 struct UFormattedNumber;
 struct UFormattedValue;
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 enum class NumberPartType : int16_t {
   ApproximatelySign,
@@ -118,7 +117,6 @@ Result<std::u16string_view, ICUError> FormatResultToParts(
     const UFormattedValue* value, Maybe<double> number, bool isNegative,
     bool formatForUnit, NumberPartVector& parts);
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl
 
 #endif
