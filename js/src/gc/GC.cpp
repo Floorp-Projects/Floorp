@@ -1170,7 +1170,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepGroups(nullptr),
       currentSweepGroup(nullptr),
       sweepZone(nullptr),
-      hasMarkedGrayRoots(false),
       abortSweepAfterCurrentGroup(false),
       sweepMarkResult(IncrementalProgress::NotFinished),
       startedCompacting(false),
@@ -5085,8 +5084,6 @@ void GCRuntime::getNextSweepGroup() {
     abortSweepAfterCurrentGroup = false;
     currentSweepGroup = nullptr;
   }
-
-  hasMarkedGrayRoots = false;
 }
 
 /*
@@ -5359,24 +5356,18 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 #endif
 }
 
-IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
+IncrementalProgress GCRuntime::markGrayRootsInCurrentGroup(
     JSFreeOp* fop, SliceBudget& budget) {
   MOZ_ASSERT(!markOnBackgroundThreadDuringSweeping);
   MOZ_ASSERT(marker.isDrained());
-
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
-
-  if (hasMarkedGrayRoots) {
-    return Finished;
-  }
-
   MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  // Change state of current group to MarkGray to restrict marking to this
-  // group.  Note that there may be pointers to the atoms zone, and
-  // these will be marked through, as they are not marked with
+  // Change state of current group to MarkBlackAndGray to restrict gray marking
+  // to this group. Note that there may be pointers to the atoms zone, and these
+  // will be marked through, as they are not marked with
   // TraceCrossCompartmentEdge.
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
@@ -5390,17 +5381,16 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
   markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
 
-  hasMarkedGrayRoots = true;
+  return Finished;
+}
 
-#ifdef JS_GC_ZEAL
-  if (shouldYieldForZeal(ZealMode::YieldWhileGrayMarking)) {
-    return NotFinished;
-  }
-#endif
+IncrementalProgress GCRuntime::markGray(JSFreeOp* fop, SliceBudget& budget) {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
   if (markUntilBudgetExhausted(budget) == NotFinished) {
     return NotFinished;
   }
+
   marker.setMainStackColor(MarkColor::Black);
   return Finished;
 }
@@ -5428,6 +5418,7 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
   }
 
   MOZ_ASSERT(marker.isDrained());
+  marker.setMainStackColor(MarkColor::Black);
 
   // We must not yield after this point before we start sweeping the group.
   safeToYield = false;
@@ -5954,8 +5945,6 @@ void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {
 #endif
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
-
-  hasMarkedGrayRoots = false;
 
   AssertNoWrappersInGrayList(rt);
   dropStringWrappers();
@@ -6524,8 +6513,9 @@ bool GCRuntime::initSweepActions() {
   sweepActions.ref() = RepeatForSweepGroup(
       rt,
       Sequence(
-          Call(&GCRuntime::markGrayReferencesInCurrentGroup),
-          Call(&GCRuntime::endMarkingSweepGroup),
+          Call(&GCRuntime::markGrayRootsInCurrentGroup),
+          MaybeYield(ZealMode::YieldWhileGrayMarking),
+          Call(&GCRuntime::markGray), Call(&GCRuntime::endMarkingSweepGroup),
           Call(&GCRuntime::beginSweepingSweepGroup),
           MaybeYield(ZealMode::IncrementalMultipleSlices),
           MaybeYield(ZealMode::YieldBeforeSweepingAtoms),
