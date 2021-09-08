@@ -19,7 +19,7 @@ linux64-mingw32-gcc:
         script: build-gcc-mingw32.sh
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
-        toolchain-artifact: public/build/mingw32.tar.zst
+        toolchain-artifact: public/build/mingw32.tar.xz
     fetches:
         fetch:
             - binutils-2.27
@@ -38,7 +38,7 @@ linux64-mingw32-nsis:
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
             - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
-        toolchain-artifact: public/build/nsis.tar.zst
+        toolchain-artifact: public/build/nsis.tar.xz
     fetches:
         fetch:
             - nsis-3.01
@@ -55,7 +55,7 @@ linux64-mingw-fxc2-x86:
     run:
         using: toolchain-script
         script: build-mingw-fxc2-x86.sh
-        toolchain-artifact: public/build/fxc2.tar.zst
+        toolchain-artifact: public/build/fxc2.tar.xz
     fetches:
         fetch:
             - fxc2

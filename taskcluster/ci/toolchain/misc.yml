@@ -22,7 +22,7 @@ linux64-infer:
         resources:
             - 'build/build-infer/build-infer.py'
             - 'build/build-infer/infer-linux64.json'
-        toolchain-artifact: public/build/infer.tar.zst
+        toolchain-artifact: public/build/infer.tar.xz
 
 linux64-llvm-dsymutil:
     description: "llvm-dsymutil toolchain build"
@@ -30,7 +30,7 @@ linux64-llvm-dsymutil:
         symbol: TL(dsymutil)
     run:
         script: build-llvm-dsymutil.sh
-        toolchain-artifact: public/build/llvm-dsymutil.tar.zst
+        toolchain-artifact: public/build/llvm-dsymutil.tar.xz
     fetches:
         fetch:
             - clang-11
@@ -45,7 +45,7 @@ linux64-binutils-2.31.1:
         script: build-binutils-linux.sh
         resources:
             - 'build/unix/build-binutils/build-binutils.sh'
-        toolchain-artifact: public/build/binutils.tar.zst
+        toolchain-artifact: public/build/binutils.tar.xz
     fetches:
         fetch:
             - binutils-2.31.1
@@ -64,7 +64,7 @@ linux64-binutils:
         script: build-binutils-linux.sh
         resources:
             - 'build/unix/build-binutils/build-binutils.sh'
-        toolchain-artifact: public/build/binutils.tar.zst
+        toolchain-artifact: public/build/binutils.tar.xz
     fetches:
         fetch:
             - binutils-2.36.1
@@ -83,7 +83,7 @@ linux64-hfsplus:
         script: build-hfsplus-linux.sh
         resources:
             - 'build/unix/build-hfsplus/build-hfsplus.sh'
-        toolchain-artifact: public/build/hfsplus-tools.tar.zst
+        toolchain-artifact: public/build/hfsplus-tools.tar.xz
     fetches:
         fetch:
             - hfsplus-tools
@@ -96,7 +96,7 @@ linux64-libdmg:
         symbol: TL(libdmg-hfs+)
     run:
         script: build-libdmg-hfsplus.sh
-        toolchain-artifact: public/build/dmg.tar.zst
+        toolchain-artifact: public/build/dmg.tar.xz
     fetches:
         fetch:
             - libdmg-hfsplus
@@ -115,7 +115,7 @@ linux64-mar-tools:
     run:
         script: build-mar-tools.sh
         sparse-profile: null
-        toolchain-artifact: public/build/mar-tools.tar.zst
+        toolchain-artifact: public/build/mar-tools.tar.xz
         resources:
             - build/moz.configure
             - modules/libmar/
@@ -132,7 +132,7 @@ linux64-upx:
         tier: 1
     run:
         script: build-upx.sh
-        toolchain-artifact: public/build/upx.tar.zst
+        toolchain-artifact: public/build/upx.tar.xz
 
 linux64-msix-packaging:
     description: "msix-packaging build"
@@ -159,11 +159,11 @@ linux64-custom-v8:
     run:
         script: build-custom-v8.sh
         arguments: [
-            d8.tar.zst,
+            d8.zip,
             is_debug=false,
             target_cpu="x64"
         ]
-        toolchain-artifact: public/build/d8.tar.zst
+        toolchain-artifact: public/build/d8.zip
 
 browsertime:
     description: "npm install browsertime node_modules"
@@ -176,7 +176,7 @@ browsertime:
             - 'tools/browsertime/package.json'
             - 'tools/browsertime/package-lock.json'
             - 'tools/browsertime/mach_commands.py'
-        toolchain-artifact: public/build/browsertime.tar.zst
+        toolchain-artifact: public/build/browsertime.tar.bz2
     fetches:
         toolchain:
             - linux64-node
@@ -193,7 +193,7 @@ wrench-deps:
         resources:
             - 'gfx/wr/Cargo.lock'
             - 'gfx/wr/ci-scripts/install-meson.sh'
-        toolchain-artifact: public/build/wrench-deps.tar.zst
+        toolchain-artifact: public/build/wrench-deps.tar.bz2
     fetches:
         fetch:
             - android-rs-glue
@@ -207,7 +207,7 @@ linux64-liblowercase:
     run:
         script: build-liblowercase.sh
         sparse-profile: liblowercase
-        toolchain-artifact: public/build/liblowercase.tar.zst
+        toolchain-artifact: public/build/liblowercase.tar.xz
         resources:
             - build/liblowercase/
     fetches:
@@ -223,7 +223,7 @@ linux64-wine:
         max-run-time: 10800
     run:
         script: build-wine.sh
-        toolchain-artifact: public/build/wine.tar.zst
+        toolchain-artifact: public/build/wine.tar.xz
     fetches:
         fetch:
             - wine
@@ -235,13 +235,13 @@ win32-pdbstr:
     worker-type: b-win2012
     worker:
         artifacts:
-            - name: project/gecko/pdbstr/pdbstr.tar.zst
-              path: pdbstr.tar.zst
+            - name: project/gecko/pdbstr/pdbstr.tar.bz2
+              path: pdbstr.tar.bz2
               type: file
     run:
         script: exfiltrate-pdbstr.sh
         arguments: ['x86']
-        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
+        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.bz2
 
 win64-pdbstr:
     description: "pdbstr for 64-bits Windows"
@@ -250,13 +250,13 @@ win64-pdbstr:
     worker-type: b-win2012
     worker:
         artifacts:
-            - name: project/gecko/pdbstr/pdbstr.tar.zst
-              path: pdbstr.tar.zst
+            - name: project/gecko/pdbstr/pdbstr.tar.bz2
+              path: pdbstr.tar.bz2
               type: file
     run:
         script: exfiltrate-pdbstr.sh
         arguments: ['x64']
-        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
+        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.bz2
 
 linux64-winchecksec:
     description: "winchecksec"
@@ -264,7 +264,7 @@ linux64-winchecksec:
         symbol: TL(winchecksec)
     run:
         script: build-winchecksec.sh
-        toolchain-artifact: public/build/winchecksec.tar.zst
+        toolchain-artifact: public/build/winchecksec.tar.bz2
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -279,7 +279,7 @@ win64-winchecksec:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         script: build-winchecksec.sh
-        toolchain-artifact: public/build/winchecksec.tar.zst
+        toolchain-artifact: public/build/winchecksec.tar.bz2
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -311,7 +311,7 @@ win64-mozmake:
     worker-type: b-win2012
     run:
         script: build-mozmake.sh
-        toolchain-artifact: public/build/mozmake.tar.zst
+        toolchain-artifact: public/build/mozmake.tar.bz2
         tooltool-downloads: internal
     fetches:
         fetch:

@@ -49,5 +49,5 @@ eval cmake \
 ninja -v
 
 cd ..
-tar -caf winchecksec.tar.zst winchecksec/winchecksec${TOOLTOOL_MANIFEST:+.exe}
-cp winchecksec.tar.zst $UPLOAD_DIR/
+tar -caf winchecksec.tar.bz2 winchecksec/winchecksec${TOOLTOOL_MANIFEST:+.exe}
+cp winchecksec.tar.bz2 $UPLOAD_DIR/

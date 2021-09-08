@@ -6,4 +6,4 @@ set -x -e -v
 mkdir pdbstr
 cp "c:/Program Files (x86)/Windows Kits/10/Debuggers/$1/srcsrv/pdbstr.exe" pdbstr
 
-tar -c pdbstr | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > pdbstr.tar.zst
+tar -jcvf pdbstr.tar.bz2 pdbstr
