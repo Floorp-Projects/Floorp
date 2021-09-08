@@ -76,7 +76,9 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
         Το %1$s διαγράφει το ιστορικό αναζητήσεων και περιήγησης των ιδιωτικών καρτελών όταν κλείνετε αυτές ή την εφαρμογή. Αυτό δεν σας παρέχει ανωνυμία σε ιστοτόπους ή στον πάροχο υπηρεσιών διαδικτύου σας, αλλά σας βοηθά να προστατέψετε το απόρρητό σας από τους άλλους χρήστες αυτής της συσκευής.</string>
-    <string name="private_browsing_common_myths">Κοινοί μύθοι σχετικά με την ιδιωτική περιήγηση</string>
+    <string name="private_browsing_common_myths">
+       Συνήθεις παρανοήσεις σχετικά με την ιδιωτική περιήγηση
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Διαγραφή συνεδρίας</string>
 
