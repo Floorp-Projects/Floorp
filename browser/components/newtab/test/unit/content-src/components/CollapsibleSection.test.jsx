@@ -1,4 +1,3 @@
-import { actionTypes as at } from "common/Actions.jsm";
 import { _CollapsibleSection as CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { mount } from "enzyme";
@@ -46,90 +45,6 @@ describe("CollapsibleSection", () => {
     );
   });
 
-  it("should have collapsed class if 'prefName' pref is true", () => {
-    setup({ collapsed: true });
-    assert.ok(
-      wrapper
-        .find(".collapsible-section")
-        .first()
-        .hasClass("collapsed")
-    );
-  });
-
-  it("should fire a MENU_COLLAPSE user event when section title is clicked", done => {
-    function dispatch(a) {
-      if (a.type === "TELEMETRY_USER_EVENT") {
-        assert.equal(a.data.event, "MENU_COLLAPSE");
-        assert.equal(a.data.source, "foo");
-        done();
-      }
-    }
-
-    setup({ dispatch });
-    wrapper
-      .find(".click-target")
-      .at(0)
-      .simulate("click");
-  });
-
-  it("should fire a MENU_EXPAND user event when section title is collapsed", done => {
-    function dispatch(a) {
-      if (a.type === "TELEMETRY_USER_EVENT") {
-        assert.equal(a.data.event, "MENU_EXPAND");
-        assert.equal(a.data.source, "foo");
-        done();
-      }
-    }
-
-    setup({ dispatch, collapsed: true });
-    wrapper
-      .find(".click-target")
-      .at(0)
-      .simulate("click");
-  });
-
-  it("should fire a pref change event when section title is clicked", done => {
-    function dispatch(a) {
-      if (a.type === at.UPDATE_SECTION_PREFS) {
-        assert.equal(a.data.id, DEFAULT_PROPS.id);
-        assert.equal(a.data.value.collapsed, true);
-        done();
-      }
-    }
-    setup({ dispatch });
-    wrapper
-      .find(".click-target")
-      .at(0)
-      .simulate("click");
-  });
-
-  it("should not fire a pref change when section title is clicked if sectionBody is falsy", () => {
-    const dispatch = sinon.spy();
-    setup({ dispatch });
-    delete wrapper.find(CollapsibleSection).instance().sectionBody;
-
-    wrapper
-      .find(".click-target")
-      .at(0)
-      .simulate("click");
-
-    assert.notCalled(dispatch);
-  });
-
-  it("should enable animations if the tab is visible", () => {
-    wrapper.instance().enableOrDisableAnimation();
-    assert.ok(wrapper.instance().state.enableAnimation);
-  });
-
-  it("should disable animations if the tab is in the background", () => {
-    const doc = Object.assign({}, DEFAULT_PROPS.document, {
-      visibilityState: "hidden",
-    });
-    setup({ document: doc });
-    wrapper.instance().enableOrDisableAnimation();
-    assert.isFalse(wrapper.instance().state.enableAnimation);
-  });
-
   describe("without collapsible pref", () => {
     let dispatch;
     beforeEach(() => {
@@ -148,53 +63,11 @@ describe("CollapsibleSection", () => {
     it("should not render the arrow if no collapsible pref exists for the section", () => {
       assert.lengthOf(wrapper.find(".click-target .collapsible-arrow"), 0);
     });
-
-    it("should not trigger a dispatch when the section title is clicked ", () => {
-      wrapper
-        .find(".click-target")
-        .at(0)
-        .simulate("click");
-
-      assert.notCalled(dispatch);
-    });
   });
 
   describe("icon", () => {
     it("no icon should be shown", () => {
       assert.lengthOf(wrapper.find(".icon"), 0);
-    });
-  });
-
-  describe("maxHeight", () => {
-    const maxHeight = "123px";
-    const setState = state =>
-      wrapper.setState(Object.assign({ maxHeight }, state || {}));
-    const checkHeight = val =>
-      assert.equal(
-        wrapper.find(".section-body").instance().style.maxHeight,
-        val
-      );
-
-    it("should have no max-height normally to avoid unexpected cropping", () => {
-      setState();
-
-      checkHeight("");
-    });
-    it("should have a max-height when animating open to a target height", () => {
-      setState({ isAnimating: true });
-
-      checkHeight(maxHeight);
-    });
-    it("should not have a max-height when already collapsed", () => {
-      setup({ collapsed: true });
-
-      checkHeight("");
-    });
-    it("should not have a max-height when animating closed to a css-set 0", () => {
-      setup({ collapsed: true });
-      setState({ isAnimating: true });
-
-      checkHeight("");
     });
   });
 });
