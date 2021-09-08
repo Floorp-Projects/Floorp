@@ -8,7 +8,7 @@ job-defaults:
         max-run-time: 1800
     run-on-projects: [trunk]
     run:
-        toolchain-artifact: public/build/nasm.tar.zst
+        toolchain-artifact: public/build/nasm.tar.bz2
 
 win64-nasm:
     description: "nasm win64 build"
