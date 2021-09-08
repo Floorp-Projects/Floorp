@@ -115,6 +115,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime) {
 }
 
 //-------------------------------------------------------------------------
+// static
 nsresult nsClipboard::CreateNativeDataObject(nsITransferable* aTransferable,
                                              IDataObject** aDataObj,
                                              nsIURI* uri) {
