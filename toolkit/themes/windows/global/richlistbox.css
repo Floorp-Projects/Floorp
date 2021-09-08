@@ -23,12 +23,12 @@ richlistitem[selected="true"] {
 }
 
 richlistbox:where(:focus) > richlistitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 richlistbox[seltype="multiple"]:focus > richlistitem[current="true"] {
-  outline: 1px dotted Highlight;
+  outline: 1px dotted SelectedItem;
   outline-offset: -1px;
 }
 
@@ -45,7 +45,7 @@ richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] 
 }
 
 richlistbox.theme-listbox:focus > richlistitem[current="true"] {
-  outline: 1px dotted Highlight;
+  outline: 1px dotted SelectedItem;
   outline-offset: -1px;
 }
 
@@ -55,8 +55,8 @@ richlistbox.theme-listbox > richlistitem[selected="true"] {
 }
 
 richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 richlistbox.theme-listbox > richlistitem > label {

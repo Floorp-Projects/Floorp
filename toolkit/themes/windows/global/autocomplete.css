@@ -32,8 +32,8 @@ panel[type="autocomplete-richlistbox"] {
 }
 
 .autocomplete-richlistitem[selected] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 .ac-type-icon {

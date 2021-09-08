@@ -23,8 +23,8 @@
   --today-fill-color: color-mix(in srgb, FieldText 10%, transparent);
   --button-fill-color-active: color-mix(in srgb, FieldText 20%, transparent);
 
-  --selected-font-color: HighlightText;
-  --selected-fill-color: Highlight;
+  --selected-font-color: SelectedItemText;
+  --selected-fill-color: SelectedItem;
 
   /* Use -moz-activehyperlinktext to get a system color that
      by default will be closest to Red */

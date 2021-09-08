@@ -181,10 +181,10 @@
     --in-content-box-border-color: ThreeDShadow;
     --in-content-box-info-background: -moz-Dialog;
 
-    --in-content-item-hover: Highlight;
-    --in-content-item-hover-text: HighlightText;
-    --in-content-item-selected: Highlight;
-    --in-content-item-selected-text: HighlightText;
+    --in-content-item-hover: SelectedItem;
+    --in-content-item-hover-text: SelectedItemText;
+    --in-content-item-selected: SelectedItem;
+    --in-content-item-selected-text: SelectedItemText;
     --in-content-icon-color: -moz-DialogText;
 
     --in-content-accent-color: -moz-DialogText;
@@ -202,15 +202,15 @@
     --in-content-link-color-active: -moz-nativehyperlinktext;
     --in-content-link-color-visited: -moz-nativehyperlinktext;
 
-    --in-content-button-text-color-hover: HighlightText;
+    --in-content-button-text-color-hover: SelectedItemText;
     --in-content-button-background: ButtonFace;
     --in-content-button-text-color: ButtonText;
-    --in-content-button-background-hover: Highlight;
-    --in-content-button-background-active: Highlight;
+    --in-content-button-background-hover: SelectedItem;
+    --in-content-button-background-active: SelectedItem;
 
-    --in-content-primary-button-text-color: HighlightText;
+    --in-content-primary-button-text-color: SelectedItemText;
     --in-content-primary-button-text-color-hover: ButtonText;
-    --in-content-primary-button-background: Highlight;
+    --in-content-primary-button-background: SelectedItem;
     --in-content-primary-button-background-hover: ButtonFace;
     --in-content-primary-button-background-active: ButtonFace;
 
@@ -229,13 +229,12 @@
     --checkbox-unchecked-bgcolor: -moz-Field;
     --checkbox-unchecked-hover-bgcolor: -moz-Field;
     --checkbox-unchecked-active-bgcolor: -moz-Field;
-    --checkbox-checked-bgcolor: Highlight;
-    --checkbox-checked-color: HighlightText;
-    --checkbox-checked-border-color: Highlight;
-    --checkbox-checked-border-color-hover: Highlight;
+    --checkbox-checked-bgcolor: SelectedItem;
+    --checkbox-checked-color: SelectedItemText;
+    --checkbox-checked-border-color: SelectedItem;
+    --checkbox-checked-border-color-hover: SelectedItem;
     --checkbox-checked-hover-bgcolor: -moz-Field;
     --checkbox-checked-active-bgcolor: -moz-Field;
-
   }
 }
 
