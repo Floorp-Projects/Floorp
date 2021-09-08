@@ -1111,6 +1111,31 @@ assertEq(
   44
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $exn (param))
+       (func $g (param i32) (result i32) (i32.const 42))
+       (func (export "f") (result i32)
+         try (result i32)
+           try $t
+             block (result i32)
+               (i32.const 4)
+               (call $g)
+               try
+                 throw $exn
+               delegate $t
+             end
+             drop
+           end
+           i32.const 0
+         catch_all
+           i32.const 1
+         end))`
+  ).exports.f(),
+  1
+);
+
 // Test delegation to function body.
 assertEq(
   wasmEvalText(
