@@ -20,9 +20,6 @@ const DEFAULT_MENU_OPTIONS = [
   "MoveUp",
   "MoveDown",
   "Separator",
-  "RemoveSection",
-  "CheckCollapsed",
-  "Separator",
   "ManageSection",
 ];
 
@@ -137,12 +134,12 @@ describe("<ContextMenu>", () => {
     );
     assert.lengthOf(wrapper.find(ContextMenuItem), 1);
   });
-  it("should add an icon to items that need icons", () => {
+  it("should not add an icon to any items", () => {
     const props = Object.assign({}, DEFAULT_PROPS, {
       options: [{ label: "item1", icon: "icon1" }, { type: "separator" }],
     });
     const wrapper = mountWithProps(props);
-    assert.lengthOf(wrapper.find(".icon-icon1"), 1);
+    assert.lengthOf(wrapper.find(".icon-icon1"), 0);
   });
   it("should be tabbable", () => {
     const props = {
