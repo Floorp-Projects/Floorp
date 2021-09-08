@@ -23,8 +23,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
@@ -2309,6 +2311,56 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   return NS_OK;
 }
 
+// Called when a document request responds with a `Cross-Origin-Opener-Policy`
+// header to add a `highValueCOOP` permission to the permissions database, and
+// make loads of that origin isolated.
+static void AddHighValueCOOPPermission(nsIPrincipal* aResultPrincipal) {
+  RefPtr<PermissionManager> perms = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!perms)) {
+    return;
+  }
+
+  // We can't act on non-content principals, so if the load was sandboxed, try
+  // to use the unsandboxed precursor principal to add the highValueCOOP
+  // permission.
+  nsCOMPtr<nsIPrincipal> resultOrPrecursor(aResultPrincipal);
+  if (!aResultPrincipal->GetIsContentPrincipal()) {
+    resultOrPrecursor = aResultPrincipal->GetPrecursorPrincipal();
+    if (!resultOrPrecursor) {
+      return;
+    }
+  }
+
+  // Use the site-origin principal as we want to add the permission for the
+  // entire site, rather than a specific subdomain, as process isolation acts on
+  // a site granularity.
+  nsAutoCString siteOrigin;
+  if (NS_FAILED(resultOrPrecursor->GetSiteOrigin(siteOrigin))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> sitePrincipal =
+      BasePrincipal::CreateContentPrincipal(siteOrigin);
+  if (!sitePrincipal || !sitePrincipal->GetIsContentPrincipal()) {
+    return;
+  }
+
+  MOZ_LOG(dom::gProcessIsolationLog, LogLevel::Verbose,
+          ("Adding HighValue COOP Permission for site '%s'", siteOrigin.get()));
+
+  // XXX: Would be nice if we could use `TimeStamp` here, but there's
+  // unfortunately no convenient way to recover a time in milliseconds since the
+  // unix epoch from `TimeStamp`.
+  int64_t expirationTime =
+      (PR_Now() / PR_USEC_PER_MSEC) +
+      (int64_t(StaticPrefs::fission_highValue_coop_expiration()) *
+       PR_MSEC_PER_SEC);
+  Unused << perms->AddFromPrincipal(
+      sitePrincipal, mozilla::dom::kHighValueCOOPPermission,
+      nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_TIME,
+      expirationTime);
+}
+
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
 // This method runs steps 1-4 of the algorithm to compare
 // cross-origin-opener policies
@@ -2337,6 +2389,8 @@ static bool CompareCrossOriginOpenerPolicies(
 // This runs steps 1-5 of the algorithm when navigating a top level document.
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
 nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   StoreHasCrossOriginOpenerPolicyMismatch(false);
   if (!StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy()) {
     return NS_OK;
@@ -2363,12 +2417,21 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> resultOrigin;
+  nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      this, getter_AddRefs(resultOrigin));
+
   // Get the policy of the active document, and the policy for the result.
   nsILoadInfo::CrossOriginOpenerPolicy documentPolicy = ctx->GetOpenerPolicy();
   nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   Unused << ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
   mComputedCrossOriginOpenerPolicy = resultPolicy;
+
+  // Add a permission to mark this site as high-value into the permission DB.
+  if (resultPolicy != nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) {
+    AddHighValueCOOPPermission(resultOrigin);
+  }
 
   // If bc's popup sandboxing flag set is not empty and potentialCOOP is
   // non-null, then navigate bc to a network error and abort these steps.
@@ -2381,17 +2444,15 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   }
 
   // In xpcshell-tests we don't always have a current window global
-  if (!ctx->Canonical()->GetCurrentWindowGlobal()) {
+  RefPtr<mozilla::dom::WindowGlobalParent> currentWindowGlobal =
+      ctx->Canonical()->GetCurrentWindowGlobal();
+  if (!currentWindowGlobal) {
     return NS_OK;
   }
 
   // We use the top window principal as the documentOrigin
   nsCOMPtr<nsIPrincipal> documentOrigin =
-      ctx->Canonical()->GetCurrentWindowGlobal()->DocumentPrincipal();
-  nsCOMPtr<nsIPrincipal> resultOrigin;
-
-  nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-      this, getter_AddRefs(resultOrigin));
+      currentWindowGlobal->DocumentPrincipal();
 
   bool compareResult = CompareCrossOriginOpenerPolicies(
       documentPolicy, documentOrigin, resultPolicy, resultOrigin);
@@ -2434,7 +2495,7 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
     return NS_OK;
   }
 
-  if (!ctx->Canonical()->GetCurrentWindowGlobal()->IsInitialDocument()) {
+  if (!currentWindowGlobal->IsInitialDocument()) {
     StoreHasCrossOriginOpenerPolicyMismatch(true);
     return NS_OK;
   }

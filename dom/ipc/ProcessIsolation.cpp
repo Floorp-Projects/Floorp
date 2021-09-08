@@ -21,9 +21,11 @@
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsDocShell.h"
@@ -43,6 +45,27 @@ namespace mozilla::dom {
 mozilla::LazyLogModule gProcessIsolationLog{"ProcessIsolation"};
 
 namespace {
+
+// Strategy used to determine whether or not a particular site should load into
+// a webIsolated content process. The particular strategy chosen is controlled
+// by the `fission.webContentIsolationStrategy` pref, which must hold one of the
+// following values.
+enum class WebContentIsolationStrategy : uint32_t {
+  // All web content is loaded into a shared `web` content process. This is
+  // similar to the non-Fission behaviour, however remote subframes may still
+  // be used for sites with special isolation behaviour, such as extension or
+  // mozillaweb content processes.
+  IsolateNothing = 0,
+  // Web content is always isolated into its own `webIsolated` content process
+  // based on site-origin, and will only load in a shared `web` content process
+  // if site-origin could not be determined.
+  IsolateEverything = 1,
+  // Only isolates web content loaded by sites which are considered "high
+  // value". A site is considered "high value" if it has been granted a
+  // `highValue*` permission by the permission manager, which is done in
+  // response to certain actions.
+  IsolateHighValue = 2,
+};
 
 /**
  * Helper class for caching the result of splitting prefs which are represented
@@ -398,19 +421,72 @@ static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
  */
 static bool ShouldIsolateSite(nsIPrincipal* aPrincipal,
                               CanonicalBrowsingContext* aTopBC) {
+  // If Fission is disabled, we never want to isolate. We check the toplevel BC
+  // if it's available, or the global pref if checking for shared or service
+  // workers.
+  if (aTopBC && !aTopBC->UseRemoteSubframes()) {
+    return false;
+  }
+  if (!aTopBC && !mozilla::FissionAutostart()) {
+    return false;
+  }
+
   // non-content principals currently can't have webIsolated remote types
   // assigned to them, so should not be isolated.
   if (!aPrincipal->GetIsContentPrincipal()) {
     return false;
   }
 
-  // FIXME: This should contain logic to allow enabling/disabling whether a
-  // particular site should be isolated for e.g. android, where we may want to
-  // turn on/off isolating certain sites at runtime.
-  if (aTopBC) {
-    return aTopBC->UseRemoteSubframes();
+  switch (WebContentIsolationStrategy(
+      StaticPrefs::fission_webContentIsolationStrategy())) {
+    case WebContentIsolationStrategy::IsolateNothing:
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Not isolating '%s' as isolation is disabled",
+               OriginString(aPrincipal).get()));
+      return false;
+    case WebContentIsolationStrategy::IsolateEverything:
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Isolating '%s' as isolation is enabled for all sites",
+               OriginString(aPrincipal).get()));
+      return true;
+    case WebContentIsolationStrategy::IsolateHighValue: {
+      RefPtr<PermissionManager> perms = PermissionManager::GetInstance();
+      if (NS_WARN_IF(!perms)) {
+        // If we somehow have no permission manager, fall back to the safest
+        // option, and try to isolate.
+        MOZ_ASSERT_UNREACHABLE("Permission manager is missing");
+        return true;
+      }
+
+      static constexpr nsLiteralCString kHighValuePermissions[] = {
+          mozilla::dom::kHighValueCOOPPermission,
+      };
+
+      for (const auto& type : kHighValuePermissions) {
+        uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+        if (NS_SUCCEEDED(perms->TestPermissionFromPrincipal(aPrincipal, type,
+                                                            &permission)) &&
+            permission == nsIPermissionManager::ALLOW_ACTION) {
+          MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+                  ("Isolating '%s' due to high-value permission '%s'",
+                   OriginString(aPrincipal).get(), type.get()));
+          return true;
+        }
+      }
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Not isolating '%s' as it is not high-value",
+               OriginString(aPrincipal).get()));
+      return false;
+    }
+    default:
+      // An invalid pref value was used. Fall back to the safest option and
+      // isolate everything.
+      NS_WARNING("Invalid pref value for fission.webContentIsolationStrategy");
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+              ("Isolating '%s' due to unknown strategy pref value",
+               OriginString(aPrincipal).get()));
+      return true;
   }
-  return mozilla::FissionAutostart();
 }
 
 enum class WebProcessType {
