@@ -134,7 +134,8 @@ pub fn upload_to_texture_cache(
             let use_batch_upload = renderer.device.use_batched_texture_uploads() &&
                 texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
                 rect.width() <= BATCH_UPLOAD_TEXTURE_SIZE.width &&
-                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height;
+                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height &&
+                rect.area() <= BATCH_UPLOAD_TEXTURE_SIZE.area() / 2;
 
             if use_batch_upload {
                 copy_into_staging_buffer(
