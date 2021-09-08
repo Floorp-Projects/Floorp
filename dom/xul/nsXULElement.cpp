@@ -1542,7 +1542,7 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
     auto data = MakeRefPtr<URLExtraData>(aDocumentURI, referrerInfo, principal);
     RefPtr<DeclarationBlock> declaration = DeclarationBlock::FromCssText(
         aValue, data, eCompatibility_FullStandards, nullptr,
-        CSSRule_Binding::STYLE_RULE);
+        StyleCssRuleType::Style);
     if (declaration) {
       mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);
 

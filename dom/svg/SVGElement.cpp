@@ -1217,7 +1217,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
         mDecl->Raw(), propertyID, &value, false, data,
         ParsingMode::AllowUnitlessLength,
         mElement->OwnerDoc()->GetCompatibilityMode(), mLoader,
-        CSSRule_Binding::STYLE_RULE, {});
+        StyleCssRuleType::Style, {});
 
     // TODO(emilio): If we want to record these from CSSOM more generally, we
     // can pass the document use counters down the FFI call. For now manually

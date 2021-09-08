@@ -13,8 +13,7 @@
 
 #include <limits>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // -------------------------------------------
 // CSSKeyframeList
@@ -207,6 +206,10 @@ bool CSSKeyframesRule::IsCCLeaf() const {
   return Rule::IsCCLeaf() && !mKeyframeList;
 }
 
+StyleCssRuleType CSSKeyframesRule::Type() const {
+  return StyleCssRuleType::Keyframes;
+}
+
 void CSSKeyframesRule::SetRawAfterClone(RefPtr<RawServoKeyframesRule> aRaw) {
   mRawRule = std::move(aRaw);
   if (mKeyframeList) {
@@ -347,5 +350,4 @@ JSObject* CSSKeyframesRule::WrapObject(JSContext* aCx,
   return CSSKeyframesRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

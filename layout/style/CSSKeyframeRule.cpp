@@ -10,8 +10,7 @@
 #include "mozilla/dom/CSSKeyframeRuleBinding.h"
 #include "nsDOMCSSDeclaration.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // -------------------------------------------
 // CSSKeyframeDeclaration
@@ -62,7 +61,7 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
   }
   ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final {
-    return GetParsingEnvironmentForRule(mRule, CSSRule_Binding::KEYFRAME_RULE);
+    return GetParsingEnvironmentForRule(mRule, StyleCssRuleType::Keyframe);
   }
   Document* DocToUpdate() final { return nullptr; }
 
@@ -142,6 +141,10 @@ bool CSSKeyframeRule::IsCCLeaf() const {
   return Rule::IsCCLeaf() && !mDeclaration;
 }
 
+StyleCssRuleType CSSKeyframeRule::Type() const {
+  return StyleCssRuleType::Keyframe;
+}
+
 void CSSKeyframeRule::SetRawAfterClone(RefPtr<RawServoKeyframe> aRaw) {
   mRaw = std::move(aRaw);
 
@@ -214,5 +217,4 @@ JSObject* CSSKeyframeRule::WrapObject(JSContext* aCx,
   return CSSKeyframeRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -25,7 +25,7 @@ interface CSSRule {
   // XXXbz Should we expose the constant anyway?
   // const unsigned short MARGIN_RULE = 9;
   const unsigned short NAMESPACE_RULE = 10;
-  readonly attribute unsigned short type;
+  [BinaryName="typeForBindings"] readonly attribute unsigned short type;
   attribute UTF8String cssText;
   readonly attribute CSSRule? parentRule;
   readonly attribute CSSStyleSheet? parentStyleSheet;

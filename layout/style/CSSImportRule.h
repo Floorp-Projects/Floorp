@@ -32,7 +32,7 @@ class CSSImportRule final : public css::Rule {
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRule_Binding::IMPORT_RULE; }
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const override;
   void GetHref(nsAString& aHref) const;
   dom::MediaList* GetMedia();

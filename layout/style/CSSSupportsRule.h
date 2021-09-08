@@ -28,7 +28,7 @@ class CSSSupportsRule : public css::ConditionRule {
   void SetRawAfterClone(RefPtr<RawServoSupportsRule>);
 
   // WebIDL interface
-  uint16_t Type() const override { return CSSRule_Binding::SUPPORTS_RULE; }
+  StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
   void SetConditionText(const nsACString& aConditionText,
