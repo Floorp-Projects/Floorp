@@ -3132,10 +3132,10 @@
       // solve the problem of windows "obscuring" the prompt.
       // see bug #350299 for more details
       window.focus();
-      let warningMessage = gTabBrowserBundle.GetStringFromName(
-        "tabs.closeWarningMultipleTabs"
+      let warningTitle = gTabBrowserBundle.GetStringFromName(
+        "tabs.closeTabsTitle"
       );
-      warningMessage = PluralForm.get(tabsToClose, warningMessage).replace(
+      warningTitle = PluralForm.get(tabsToClose, warningTitle).replace(
         "#1",
         tabsToClose
       );
@@ -3144,12 +3144,12 @@
         ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1;
       let checkboxLabel =
         aCloseTabs == this.closingTabsEnum.ALL
-          ? gTabBrowserBundle.GetStringFromName("tabs.closeWarningPrompt")
+          ? gTabBrowserBundle.GetStringFromName("tabs.closeTabsConfirmCheckbox")
           : null;
       var buttonPressed = ps.confirmEx(
         window,
-        gTabBrowserBundle.GetStringFromName("tabs.closeTitleTabs"),
-        warningMessage,
+        warningTitle,
+        null,
         flags,
         gTabBrowserBundle.GetStringFromName("tabs.closeButtonMultiple"),
         null,
