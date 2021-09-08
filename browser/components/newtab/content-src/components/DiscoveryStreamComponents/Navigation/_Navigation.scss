@@ -1,15 +1,5 @@
-.outer-wrapper.newtab-experience {
-  .ds-navigation {
-    color: var(--newtab-background-primary-text-color);
-  }
-}
-
 .ds-navigation {
-  @include dark-theme-only {
-    color: $grey-30;
-  }
-
-  color: $grey-50;
+  color: var(--newtab-background-primary-text-color);
   font-size: 11.5px;
   font-weight: 500;
   line-height: 22px;
