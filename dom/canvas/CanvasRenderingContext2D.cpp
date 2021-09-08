@@ -3701,8 +3701,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
   // current text run
   RefPtr<gfxTextRun> mTextRun;
 
-  RefPtr<nsPresContext> mPresContext;
-
   // pointer to a screen reference context used to measure text and such
   RefPtr<DrawTarget> mDrawTarget;
 
@@ -3835,8 +3833,6 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   }
 
   CanvasBidiProcessor processor;
-
-  processor.mPresContext = presContext;
 
   // If we don't have a ComputedStyle, we can't set up vertical-text flags
   // (for now, at least; perhaps we need new Canvas API to control this).
@@ -4036,9 +4032,9 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // Use lazy (re)initialization for the fontGroup since it's rather expensive.
 
   RefPtr<PresShell> presShell = GetPresShell();
-  nsPresContext* pc = presShell ? presShell->GetPresContext() : nullptr;
   gfxTextPerfMetrics* tp = nullptr;
-  if (pc) {
+  if (presShell && !presShell->IsDestroying()) {
+    nsPresContext* pc = presShell->GetPresContext();
     tp = pc->GetTextPerfMetrics();
   }
 
@@ -4074,7 +4070,7 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
       const auto* sans =
           Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
       fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-          pc, sans->families, &style, language, explicitLanguage, tp, nullptr,
+          sans->families, &style, language, explicitLanguage, tp, nullptr,
           devToCssSize);
       if (fontGroup) {
         CurrentState().font = kDefaultFontStyle;

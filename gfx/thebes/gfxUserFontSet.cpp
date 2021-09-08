@@ -423,8 +423,7 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
       gfxFontEntry* fe = nullptr;
       if (!pfl->IsFontFamilyWhitelistActive()) {
         fe = gfxPlatform::GetPlatform()->LookupLocalFont(
-            mFontSet->GetPresContext(), currSrc.mLocalName, Weight(), Stretch(),
-            SlantStyle());
+            currSrc.mLocalName, Weight(), Stretch(), SlantStyle());
         // Note that we've attempted a local lookup, even if it failed,
         // as this means we are dependent on any updates to the font list.
         mSeenLocalSource = true;

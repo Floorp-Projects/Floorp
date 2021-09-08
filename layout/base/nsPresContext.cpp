@@ -27,7 +27,6 @@
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
-#include "nsIConsoleService.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ServoStyleSet.h"
@@ -271,32 +270,27 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     // fine to set here.
     mDynamicToolbarMaxHeight = StaticPrefs::layout_dynamic_toolbar_max_height();
   }
-
-  UpdateFontVisibility();
 }
 
 static const char* gExactCallbackPrefs[] = {
-    "browser.active_color",
-    "browser.anchor_color",
     "browser.underline_anchors",
+    "browser.anchor_color",
+    "browser.active_color",
     "browser.visited_color",
-    "dom.meta-viewport.enabled",
-    "dom.send_after_paint_to_content",
     "image.animation_mode",
-    "intl.accept_languages",
-    "layout.css.devPixelsPerPx",
+    "dom.send_after_paint_to_content",
     "layout.css.dpi",
+    "layout.css.devPixelsPerPx",
     "nglayout.debug.paint_flashing",
     "nglayout.debug.paint_flashing_chrome",
-    "privacy.resistFingerprinting",
-    "privacy.trackingprotection.enabled",
+    "intl.accept_languages",
+    "dom.meta-viewport.enabled",
     nullptr,
 };
 
 static const char* gPrefixCallbackPrefs[] = {
-    "bidi.", "browser.display.",    "browser.viewport.",
-    "font.", "gfx.font_rendering.", "layout.css.font-visibility.",
-    nullptr,
+    "font.", "browser.display.",    "browser.viewport.",
+    "bidi.", "gfx.font_rendering.", nullptr,
 };
 
 void nsPresContext::Destroy() {
@@ -644,9 +638,6 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   GetUserPreferences();
 
   FlushFontCache();
-  if (UpdateFontVisibility()) {
-    changeHint |= NS_STYLE_HINT_REFLOW;
-  }
 
   // Preferences require rerunning selector matching because we rebuild
   // the pref style sheet for some preference changes.
@@ -767,65 +758,6 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 #endif
 
   return NS_OK;
-}
-
-bool nsPresContext::UpdateFontVisibility() {
-  FontVisibility oldValue = mFontVisibility;
-
-  // Is this a private browsing context?
-  bool isPrivate = false;
-  if (nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext()) {
-    isPrivate = loadContext->UsePrivateBrowsing();
-  }
-
-  // Read the relevant pref depending on RFP/trackingProtection state
-  // to determine the visibility level to use.
-  int32_t level;
-  if (StaticPrefs::privacy_resistFingerprinting()) {
-    level = StaticPrefs::layout_css_font_visibility_resistFingerprinting();
-  } else if (StaticPrefs::privacy_trackingprotection_enabled() ||
-             (isPrivate &&
-              StaticPrefs::privacy_trackingprotection_pbmode_enabled())) {
-    level = StaticPrefs::layout_css_font_visibility_trackingprotection();
-  } else {
-    level = StaticPrefs::layout_css_font_visibility_standard();
-  }
-
-  // For private browsing contexts, apply the private-mode limit.
-  if (isPrivate) {
-    int32_t priv = StaticPrefs::layout_css_font_visibility_private();
-    level = std::max(std::min(level, priv), int32_t(FontVisibility::Base));
-  }
-
-  // Clamp result to the valid range of levels.
-  level = std::max(std::min(level, int32_t(FontVisibility::User)),
-                   int32_t(FontVisibility::Base));
-
-  mFontVisibility = FontVisibility(level);
-  return mFontVisibility != oldValue;
-}
-
-void nsPresContext::ReportBlockedFontFamilyName(const nsCString& aFamily,
-                                                FontVisibility aVisibility) {
-  if (!mBlockedFonts.EnsureInserted(aFamily)) {
-    return;
-  }
-  nsAutoString msg;
-  msg.AppendPrintf(
-      "Request for font \"%s\" blocked at visibility level %d (requires %d)\n",
-      aFamily.get(), int(GetFontVisibility()), int(aVisibility));
-  nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::warningFlag,
-                                              "Security"_ns, mDocument);
-}
-
-void nsPresContext::ReportBlockedFontFamily(const fontlist::Family& aFamily) {
-  auto* fontList = gfxPlatformFontList::PlatformFontList()->SharedFontList();
-  const nsCString& name = aFamily.DisplayName().AsString(fontList);
-  ReportBlockedFontFamilyName(name, aFamily.Visibility());
-}
-
-void nsPresContext::ReportBlockedFontFamily(const gfxFontFamily& aFamily) {
-  ReportBlockedFontFamilyName(aFamily.Name(), aFamily.Visibility());
 }
 
 void nsPresContext::InitFontCache() {
