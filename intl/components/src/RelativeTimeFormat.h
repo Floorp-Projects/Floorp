@@ -11,8 +11,7 @@
 #include "unicode/ureldatefmt.h"
 #include "unicode/utypes.h"
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 struct RelativeTimeFormatOptions {
   enum class Style { Short, Narrow, Long };
@@ -142,7 +141,6 @@ class RelativeTimeFormat final {
   URelativeDateTimeUnit ToURelativeDateTimeUnit(FormatUnit unit) const;
 };
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl
 
 #endif

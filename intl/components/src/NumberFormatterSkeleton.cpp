@@ -13,8 +13,7 @@
 
 #include "unicode/unumberrangeformatter.h"
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 NumberFormatterSkeleton::NumberFormatterSkeleton(
     const NumberFormatOptions& options) {
@@ -472,5 +471,4 @@ UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
 }
 #endif
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl

@@ -15,8 +15,7 @@
 #include "unicode/upluralrules.h"
 #include "unicode/ustring.h"
 
-namespace mozilla {
-namespace intl {
+namespace mozilla::intl {
 
 PluralRules::PluralRules(UPluralRules*& aPluralRules,
                          UniquePtr<NumberFormat>&& aNumberFormat,
@@ -179,5 +178,4 @@ PluralRules::~PluralRules() {
   }
 }
 
-}  // namespace intl
-}  // namespace mozilla
+}  // namespace mozilla::intl
