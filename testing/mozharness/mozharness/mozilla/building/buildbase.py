@@ -926,7 +926,7 @@ items from that key's value."
         upload_cmd = ["make", "upload", "AB_CD=multi"]
         self.run_command(
             upload_cmd,
-            env=self.query_mach_build_env(multiLocale=False),
+            partial_env=self.query_mach_build_env(multiLocale=False),
             cwd=objdir,
             halt_on_failure=True,
             output_parser=parser,
