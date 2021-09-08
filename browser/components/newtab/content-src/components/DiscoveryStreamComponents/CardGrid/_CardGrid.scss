@@ -80,7 +80,6 @@ $col4-header-font-size: 14;
   &.ds-card-grid-border {
     .ds-card:not(.placeholder) {
       @include dark-theme-only {
-        box-shadow: 0 1px 4px $shadow-10;
         background: var(--newtab-card-background-color);
       }
       border-radius: $border-radius-new;

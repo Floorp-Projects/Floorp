@@ -30,7 +30,7 @@ $modal-scrollbar-z-index: 1100;
   position: relative;
   margin: auto;
   background: var(--newtab-modal-color);
-  box-shadow: 0 1px 15px 0 $black-30;
+  box-shadow: $shadow-large;
   border-radius: 4px;
   display: none;
   z-index: $modal-scrollbar-z-index;
