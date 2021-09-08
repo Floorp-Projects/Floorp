@@ -9,7 +9,6 @@
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 
-using mozilla::intl::WordBreakClass;
 using mozilla::intl::WordBreaker;
 using mozilla::intl::WordRange;
 using mozilla::unicode::GetGenCategory;
@@ -76,7 +75,7 @@ static bool IsScriptioContinua(char16_t aChar) {
 }
 
 /* static */
-WordBreakClass WordBreaker::GetClass(char16_t c) {
+WordBreaker::WordBreakClass WordBreaker::GetClass(char16_t c) {
   // begin of the hack
 
   if (IS_ALPHABETICAL_SCRIPT(c)) {
