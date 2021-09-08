@@ -1053,9 +1053,8 @@ struct BaseCompiler final {
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr);
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check, RegI32 tls,
                                       RegI32 ptr);

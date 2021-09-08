@@ -360,7 +360,7 @@ static const unsigned SetFP = 16;
 static const unsigned PoppedFP = 4;
 static_assert(BeforePushRetAddr == 0, "Required by StartUnwinding");
 static_assert(PushedFP > PushedRetAddr, "Required by StartUnwinding");
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 12;
 static const unsigned SetFP = 16;
@@ -421,7 +421,7 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   // conserve code space / avoid excessive padding, this difference is made as
   // tight as possible.
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
   {
     *entry = masm.currentOffset();
 
@@ -496,7 +496,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 
   DebugOnly<uint32_t> poppedFP;
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
 
   masm.loadPtr(Address(StackPointer, Frame::callerFPOffset()), FramePointer);
   poppedFP = masm.currentOffset();
@@ -768,7 +768,7 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets) {
     offsets->begin = masm.currentOffset();
     static_assert(BeforePushRetAddr == 0);
     masm.push(lr);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
     offsets->begin = masm.currentOffset();
     masm.push(ra);
 #elif defined(JS_CODEGEN_ARM64)
@@ -1049,7 +1049,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
     case CodeRange::ImportInterpExit:
     case CodeRange::BuiltinThunk:
     case CodeRange::DebugTrap:
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
       if (codeRange->isThunk()) {
         // The FarJumpIsland sequence temporary scrambles ra.
         // Don't unwind to caller.
@@ -1105,7 +1105,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedPC = frame->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_MIPS64)
       } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
                  offsetInCode <= codeRange->ret()) {
         // The fixedFP field of the Frame has been loaded into fp.
@@ -1186,7 +1186,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       // since the Jit entry frame is a jit frame which can be considered as
       // an exit frame.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64)
       if (offsetFromEntry < PushedRetAddr) {
         // We haven't pushed the jit return address yet, thus the jit
         // frame is incomplete. During profiling frame iteration, it means
@@ -1524,10 +1524,6 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native rtt.sub (in wasm)";
     case SymbolicAddress::InlineTypedObjectClass:
       MOZ_CRASH();
-#if defined(JS_CODEGEN_MIPS32)
-    case SymbolicAddress::js_jit_gAtomic64Lock:
-      MOZ_CRASH();
-#endif
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:                     \
     return "call to native " #op " intrinsic (in wasm)";

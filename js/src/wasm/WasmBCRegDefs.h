@@ -100,11 +100,6 @@ static constexpr Register RabaldrScratchI32 = ebx;
 static constexpr Register RabaldrScratchI32 = CallTempReg2;
 #endif
 
-#ifdef JS_CODEGEN_MIPS32
-#  define RABALDR_SCRATCH_I32
-static constexpr Register RabaldrScratchI32 = CallTempReg2;
-#endif
-
 #ifdef JS_CODEGEN_MIPS64
 #  define RABALDR_SCRATCH_I32
 static constexpr Register RabaldrScratchI32 = CallTempReg2;
@@ -382,12 +377,6 @@ struct SpecificRegs {
 struct SpecificRegs {
   // Required by gcc.
   SpecificRegs() {}
-};
-#elif defined(JS_CODEGEN_MIPS32)
-struct SpecificRegs {
-  RegI64 abiReturnRegI64;
-
-  SpecificRegs() : abiReturnRegI64(ReturnReg64) {}
 };
 #elif defined(JS_CODEGEN_MIPS64)
 struct SpecificRegs {

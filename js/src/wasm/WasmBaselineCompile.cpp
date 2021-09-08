@@ -263,7 +263,7 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
   // Jump indirect via table element.
   masm.ma_ldr(DTRAddr(scratch, DtrRegImmShift(switchValue, LSL, 2)), pc, Offset,
               Assembler::Always);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_MIPS64)
   ScratchI32 scratch(*this);
   CodeLabel tableCl;
 
@@ -1180,8 +1180,6 @@ void BaseCompiler::beginCall(FunctionCall& call, UseABI useABI,
 #if defined(JS_CODEGEN_ARM)
     call.hardFP = UseHardFpABI();
     call.abi.setUseHardFp(call.hardFP);
-#elif defined(JS_CODEGEN_MIPS32)
-    call.abi.enforceO32ABI();
 #endif
   } else {
 #if defined(JS_CODEGEN_ARM)
@@ -1352,13 +1350,6 @@ void BaseCompiler::passArg(ValType type, const Stk& arg, FunctionCall* call) {
           loadF64(arg, scratch);
           masm.ma_vxfer(scratch, argLoc.evenGpr(), argLoc.oddGpr());
           break;
-#  elif defined(JS_CODEGEN_MIPS32)
-          ScratchF64 scratch(*this);
-          loadF64(arg, scratch);
-          MOZ_ASSERT(MOZ_LITTLE_ENDIAN());
-          masm.moveFromDoubleLo(scratch, argLoc.evenGpr());
-          masm.moveFromDoubleHi(scratch, argLoc.oddGpr());
-          break;
 #  else
           MOZ_CRASH("BaseCompiler platform hook: passArg F64 pair");
 #  endif
@@ -1501,9 +1492,8 @@ bool BaseCompiler::pushCallResults(const FunctionCall& call, ResultType type,
 RegI32 BaseCompiler::needRotate64Temp() {
 #if defined(JS_CODEGEN_X86)
   return needI32();
-#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||    \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
   return RegI32::Invalid();
 #else
   MOZ_CRASH("BaseCompiler platform hook: needRotate64Temp");
@@ -1539,9 +1529,6 @@ void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
   *temp = needI32();
 #elif defined(JS_CODEGEN_MIPS64)
   pop2xI64(r0, r1);
-#elif defined(JS_CODEGEN_MIPS32)
-  pop2xI64(r0, r1);
-  *temp = needI32();
 #elif defined(JS_CODEGEN_ARM)
   pop2xI64(r0, r1);
   *temp = needI32();
@@ -1888,7 +1875,7 @@ static RegI32 PopcntTemp(BaseCompiler& bc) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : bc.needI32();
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64)
   return bc.needI32();
 #else
   MOZ_CRASH("BaseCompiler platform hook: PopcntTemp");
@@ -9618,7 +9605,7 @@ bool js::wasm::BaselinePlatformSupport() {
 #endif
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||   \
     defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    defined(JS_CODEGEN_MIPS64)
   return true;
 #else
   return false;

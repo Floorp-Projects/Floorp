@@ -121,9 +121,6 @@ enum class SymbolicAddress {
 #endif
   ArrayNew,
   InlineTypedObjectClass,
-#if defined(JS_CODEGEN_MIPS32)
-  js_jit_gAtomic64Lock,
-#endif
 #define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
   FOR_EACH_INTRINSIC(DECL_INTRINSIC_SA)
 #undef DECL_INTRINSIC_SA
