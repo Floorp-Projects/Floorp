@@ -56,8 +56,8 @@ cmd /c build_w32.bat
 mkdir mozmake
 cp WinRel/gnumake.exe mozmake/mozmake.exe
 
-tar -acf mozmake.tar.bz2 mozmake
+tar -c mozmake | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > mozmake.tar.zst
 mkdir -p $UPLOAD_DIR
-cp mozmake.tar.bz2 $UPLOAD_DIR
+cp mozmake.tar.zst $UPLOAD_DIR
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

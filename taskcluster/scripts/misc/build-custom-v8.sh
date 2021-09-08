@@ -2,7 +2,7 @@
 set -x -e -v
 
 # This script is for building a custom version of V8
-ARTIFACT_NAME='d8.zip'
+ARTIFACT_NAME='d8.tar.zst'
 CONFIG='is_debug=false target_cpu="x64"'
 if [[ $# -eq 0 ]]; then
     echo "Using default configuration for v8 build."
@@ -41,7 +41,7 @@ cp -R v8/out/release d8
 cp -R v8/include d8
 chmod -R +x d8
 
-zip -r $ARTIFACT_NAME d8
+tar caf $ARTIFACT_NAME d8
 
 mkdir -p $UPLOAD_DIR
 cp $ARTIFACT_NAME $UPLOAD_DIR

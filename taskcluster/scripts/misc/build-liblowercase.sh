@@ -14,6 +14,6 @@ cargo build --verbose --release --target-dir $WORKSPACE/obj
 mkdir $WORKSPACE/liblowercase
 cp $WORKSPACE/obj/release/liblowercase.so $WORKSPACE/liblowercase
 strip $WORKSPACE/liblowercase/liblowercase.so
-tar -C $WORKSPACE -acf $WORKSPACE/liblowercase.tar.xz liblowercase
+tar -C $WORKSPACE -acf $WORKSPACE/liblowercase.tar.zst liblowercase
 mkdir -p $UPLOAD_DIR
-cp $WORKSPACE/liblowercase.tar.xz $UPLOAD_DIR
+cp $WORKSPACE/liblowercase.tar.zst $UPLOAD_DIR

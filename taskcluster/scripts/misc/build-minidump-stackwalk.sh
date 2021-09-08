@@ -3,7 +3,7 @@ set -x -e -v
 
 # This script is for building minidump_stackwalk
 
-COMPRESS_EXT=xz
+COMPRESS_EXT=zst
 
 cd $GECKO_PATH
 

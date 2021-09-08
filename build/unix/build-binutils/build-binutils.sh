@@ -98,4 +98,4 @@ cd ..
 
 # Make a package of the built binutils
 cd $root_dir/tools
-tar caf $root_dir/binutils.tar.xz binutils/
+tar caf $root_dir/binutils.tar.zst binutils/

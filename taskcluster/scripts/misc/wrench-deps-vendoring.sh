@@ -25,4 +25,4 @@ ci-scripts/install-meson.sh
 mv meson wrench-deps/meson
 
 mkdir -p $UPLOAD_DIR
-tar caf $UPLOAD_DIR/wrench-deps.tar.bz2 wrench-deps
+tar caf $UPLOAD_DIR/wrench-deps.tar.zst wrench-deps
