@@ -166,7 +166,6 @@ export class Section extends React.PureComponent {
       id,
       eventSource,
       title,
-      icon,
       rows,
       Pocket,
       topics,
@@ -266,7 +265,6 @@ export class Section extends React.PureComponent {
       <ComponentPerfTimer {...this.props}>
         <CollapsibleSection
           className={sectionClassName}
-          icon={icon}
           title={title}
           id={id}
           eventSource={eventSource}
@@ -289,17 +287,6 @@ export class Section extends React.PureComponent {
           {shouldShowEmptyState && (
             <div className="section-empty-state">
               <div className="empty-state">
-                {emptyState.icon &&
-                emptyState.icon.startsWith("moz-extension://") ? (
-                  <span
-                    className="empty-state-icon icon"
-                    style={{ "background-image": `url('${emptyState.icon}')` }}
-                  />
-                ) : (
-                  <span
-                    className={`empty-state-icon icon icon-${emptyState.icon}`}
-                  />
-                )}
                 <FluentOrText message={emptyState.message}>
                   <p className="empty-state-message" />
                 </FluentOrText>

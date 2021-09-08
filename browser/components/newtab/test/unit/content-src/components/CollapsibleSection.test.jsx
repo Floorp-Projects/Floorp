@@ -160,32 +160,8 @@ describe("CollapsibleSection", () => {
   });
 
   describe("icon", () => {
-    it("should use the icon prop value as the url if it starts with `moz-extension://`", () => {
-      const icon = "moz-extension://some/extension/path";
-      setup({ icon });
-      const props = wrapper
-        .find(".icon")
-        .first()
-        .props();
-      assert.equal(props.style.backgroundImage, `url('${icon}')`);
-    });
-    it("should use set the icon-* class if a string that doesn't start with `moz-extension://` is provided", () => {
-      setup({ icon: "cool" });
-      assert.ok(
-        wrapper
-          .find(".icon")
-          .first()
-          .hasClass("icon-cool")
-      );
-    });
-    it("should use the icon `webextension` if no other is provided", () => {
-      setup({ icon: undefined });
-      assert.ok(
-        wrapper
-          .find(".icon")
-          .first()
-          .hasClass("icon-webextension")
-      );
+    it("no icon should be shown", () => {
+      assert.lengthOf(wrapper.find(".icon"), 0);
     });
   });
 

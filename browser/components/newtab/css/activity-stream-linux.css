@@ -67,7 +67,6 @@ body {
   --newtab-overlay-color: rgba(237, 237, 240, 0.8);
   --newtab-section-header-text-color: #737373;
   --newtab-section-navigation-text-color: #737373;
-  --newtab-section-active-contextmenu-color: #0C0C0D;
   --newtab-search-border-color: transparent;
   --newtab-search-dropdown-color: #FFF;
   --newtab-search-dropdown-header-color: #F9F9FA;
@@ -143,7 +142,6 @@ body[lwt-newtab-brighttext] {
   --newtab-overlay-color: rgba(12, 12, 13, 0.8);
   --newtab-section-header-text-color: rgba(249, 249, 250, 0.8);
   --newtab-section-navigation-text-color: rgba(249, 249, 250, 0.8);
-  --newtab-section-active-contextmenu-color: #FFF;
   --newtab-search-border-color: rgba(249, 249, 250, 0.2);
   --newtab-search-dropdown-color: #38383D;
   --newtab-search-dropdown-header-color: #4A4A4F;
@@ -2642,44 +2640,9 @@ main.has-snippet {
   margin-bottom: 13px;
   position: relative;
 }
-.collapsible-section .section-top-bar .context-menu-button {
-  background: url("chrome://global/skin/icons/more.svg") no-repeat right center;
-  border: 0;
-  cursor: pointer;
-  fill: var(--newtab-section-header-text-color);
-  height: 100%;
-  inset-inline-end: 0;
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  transition-duration: 200ms;
-  transition-property: opacity;
-  width: 27px;
-}
-.collapsible-section .section-top-bar .context-menu-button:is(:active, :focus, :hover) {
-  fill: var(--newtab-section-header-text-color);
-  opacity: 1;
-}
-.collapsible-section .section-top-bar .context-menu {
-  top: 16px;
-}
-@media (max-width: 1458px) {
-  .collapsible-section .section-top-bar .context-menu {
-    margin-inline-end: 5px;
-    margin-inline-start: auto;
-    inset-inline-end: 0;
-    inset-inline-start: auto;
-  }
-}
-.collapsible-section:hover .section-top-bar .context-menu-button, .collapsible-section.active .section-top-bar .context-menu-button {
-  opacity: 1;
-}
 .collapsible-section.active {
   background: var(--newtab-element-hover-color);
   border-radius: 4px;
-}
-.collapsible-section.active .section-top-bar .context-menu-button {
-  fill: var(--newtab-section-active-contextmenu-color);
 }
 .collapsible-section .learn-more-link {
   font-size: 13px;
