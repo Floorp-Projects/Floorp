@@ -8542,8 +8542,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     const nsIFrame* aForFrame, const nsIFrame* aScrollFrame,
     nsIContent* aContent, const nsIFrame* aReferenceFrame,
     WebRenderLayerManager* aLayerManager, ViewID aScrollParentId,
-    const nsSize& aScrollPortSize, const Maybe<nsRect>& aClipRect,
-    bool aIsRootContent) {
+    const nsSize& aScrollPortSize, bool aIsRootContent) {
   const nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
@@ -8813,13 +8812,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel) *
       metrics.GetCumulativeResolution() * layerToParentLayerScale;
 
-  if (aClipRect) {
-    ParentLayerRect rect =
-        LayoutDeviceRect::FromAppUnits(*aClipRect, auPerDevPixel) *
-        metrics.GetCumulativeResolution() * layerToParentLayerScale;
-    metadata.SetScrollClip(Some(LayerClip(RoundedToInt(rect))));
-  }
-
   // For the root scroll frame of the root content document (RCD-RSF), the above
   // calculation will yield the size of the viewport frame as the composition
   // bounds, which doesn't actually correspond to what is visible when
@@ -8964,7 +8956,7 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
     return Some(nsLayoutUtils::ComputeScrollMetadata(
         frame, rootScrollFrame, content, aBuilder->FindReferenceFrameFor(frame),
         aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize,
-        Nothing(), isRootContent));
+        isRootContent));
   }
 
   return Nothing();

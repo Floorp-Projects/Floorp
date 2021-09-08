@@ -4501,8 +4501,7 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
 
   return Some(nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mOuter, mOuter->GetContent(), aContainerReferenceFrame,
-      aLayerManager, mScrollParentID, mScrollPort.Size(), Nothing(),
-      isRootContent));
+      aLayerManager, mScrollParentID, mScrollPort.Size(), isRootContent));
 }
 
 bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
