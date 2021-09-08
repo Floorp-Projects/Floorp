@@ -10915,7 +10915,7 @@
 # but only with scheme data and contentpolicytype subdocument
 - name: security.disallow_privileged_data_subdocuments_loads
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Disable preloaded static key pins by default.
