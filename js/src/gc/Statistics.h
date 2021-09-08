@@ -116,8 +116,7 @@ struct Trigger {
   _(Compact, "cmpct", PhaseKind::COMPACT)                           \
   _(EndCallback, "endCB", PhaseKind::GC_END)                        \
   _(MinorGC, "minor", PhaseKind::MINOR_GC)                          \
-  _(EvictNursery, "evict", PhaseKind::EVICT_NURSERY)                \
-  _(Barriers, "brrier", PhaseKind::BARRIER)
+  _(EvictNursery, "evict", PhaseKind::EVICT_NURSERY)
 
 const char* ExplainAbortReason(GCAbortReason reason);
 

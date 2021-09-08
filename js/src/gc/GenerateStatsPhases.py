@@ -256,9 +256,6 @@ PhaseKindGraphRoots = [
             getPhaseKind("MARK_ROOTS"),
         ],
     ),
-    addPhaseKind(
-        "BARRIER", "Barriers", 55, [addPhaseKind("UNMARK_GRAY", "Unmark gray", 56)]
-    ),
 ]
 
 
