@@ -25,7 +25,6 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 private const val EXPECTED_SUPPRESSION_COUNT = 19
 @Suppress("TopLevelPropertyNaming") // it's silly this would have a different naming convention b/c no const
 private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to local runs: increment these together
-private const val EXPECTED_COMPONENT_INIT_COUNT = 50
 private const val EXPECTED_VIEW_HIERARCHY_DEPTH = 12
 private const val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN = 4
 private const val EXPECTED_NUMBER_OF_INFLATION = 12
@@ -38,11 +37,6 @@ private val failureMsgStrictMode = getErrorMessage(
 private val failureMsgRunBlocking = getErrorMessage(
     shortName = "runBlockingIncrement",
     implications = "using runBlocking may block the main thread and have other negative performance implications?"
-)
-
-private val failureMsgComponentInit = getErrorMessage(
-    shortName = "Component init",
-    implications = "initializing new components on start up may be an indication that we're doing more work than necessary on start up?"
 )
 
 private val failureMsgViewHierarchyDepth = getErrorMessage(
@@ -93,7 +87,6 @@ class StartupExcessiveResourceUseTest {
         // causing this number to fluctuate depending on device speed. We'll deal with it if it occurs.
         val actualSuppresionCount = activityTestRule.activity.components.strictMode.suppressionCount.get().toInt()
         val actualRunBlocking = RunBlockingCounter.count.get()
-        val actualComponentInitCount = ComponentInitCount.count.get()
 
         val rootView = activityTestRule.activity.findViewById<LinearLayout>(R.id.rootContainer)
         val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(rootView, 1)
@@ -103,7 +96,6 @@ class StartupExcessiveResourceUseTest {
 
         assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
         assertTrue(failureMsgRunBlocking + "actual: $actualRunBlocking", actualRunBlocking in EXPECTED_RUNBLOCKING_RANGE)
-        assertEquals(failureMsgComponentInit, EXPECTED_COMPONENT_INIT_COUNT, actualComponentInitCount)
         assertEquals(failureMsgViewHierarchyDepth, EXPECTED_VIEW_HIERARCHY_DEPTH, actualViewHierarchyDepth)
         assertEquals(
             failureMsgRecyclerViewConstraintLayoutChildren,
