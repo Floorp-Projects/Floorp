@@ -254,8 +254,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
       mozilla::fontlist::Face* aFace,
       const mozilla::fontlist::Family* aFamily) override;
 
-  gfxFontEntry* LookupLocalFont(nsPresContext* aPresContext,
-                                const nsACString& aFontName,
+  gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                 WeightRange aWeightForEntry,
                                 StretchRange aStretchForEntry,
                                 SlantStyleRange aStyleForEntry) override;
@@ -267,11 +266,13 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
                                  const uint8_t* aFontData,
                                  uint32_t aLength) override;
 
-  bool FindAndAddFamilies(
-      nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
-      const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
-      FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
-      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) override;
+  bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
+                          const nsACString& aFamily,
+                          nsTArray<FamilyAndGeneric>* aOutput,
+                          FindFamiliesFlags aFlags,
+                          gfxFontStyle* aStyle = nullptr,
+                          nsAtom* aLanguage = nullptr,
+                          gfxFloat aDevToCssSize = 1.0) override;
 
   bool GetStandardFamilyName(const nsCString& aFontName,
                              nsACString& aFamilyName) override;
@@ -279,8 +280,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   FcConfig* GetLastConfig() const { return mLastConfig; }
 
   // override to use fontconfig lookup for generics
-  void AddGenericFonts(nsPresContext* aPresContext,
-                       mozilla::StyleGenericFontFamily, nsAtom* aLanguage,
+  void AddGenericFonts(mozilla::StyleGenericFontFamily, nsAtom* aLanguage,
                        nsTArray<FamilyAndGeneric>& aFamilyList) override;
 
   void ClearLangGroupPrefFonts() override;
@@ -318,8 +318,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   // figure out which families fontconfig maps a generic to
   // (aGeneric assumed already lowercase)
-  PrefFontList* FindGenericFamilies(nsPresContext* aPresContext,
-                                    const nsCString& aGeneric,
+  PrefFontList* FindGenericFamilies(const nsCString& aGeneric,
                                     nsAtom* aLanguage);
 
   // are all pref font settings set to use fontconfig generics?
@@ -327,8 +326,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   static void CheckFontUpdates(nsITimer* aTimer, void* aThis);
 
-  FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
-                                       const gfxFontStyle* aStyle,
+  FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr) override;
 
   enum class DistroID : int8_t {

@@ -1803,8 +1803,7 @@ class gfxFont {
   }
 
   template <typename T>
-  bool InitFakeSmallCapsRun(nsPresContext* aPresContext,
-                            DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
+  bool InitFakeSmallCapsRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                             const T* aText, uint32_t aOffset, uint32_t aLength,
                             FontMatchType aMatchType,
                             mozilla::gfx::ShapedTextFlags aOrientation,
