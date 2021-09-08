@@ -21,6 +21,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
@@ -509,7 +510,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       mozilla::StyleGenericFontFamily aGenericType);
 
   bool SkipFontFallbackForChar(uint32_t aCh) const {
-    return mCodepointsWithNoFonts.test(aCh);
+    return mCodepointsWithNoFonts[mVisibilityLevel].test(aCh);
   }
 
   // Return whether the given font-family record should be visible to CSS,
@@ -869,13 +870,16 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       mLangGroupPrefFonts;
   mozilla::UniquePtr<PrefFontList> mEmojiPrefFont;
 
-  // when system-wide font lookup fails for a character, cache it to skip future
-  // searches
-  gfxSparseBitSet mCodepointsWithNoFonts;
+  // When system-wide font lookup fails for a character, cache it to skip future
+  // searches. This is an array of bitsets, one for each FontVisibility level.
+  mozilla::EnumeratedArray<FontVisibility, FontVisibility::Count,
+                           gfxSparseBitSet>
+      mCodepointsWithNoFonts;
 
   // the family to use for U+FFFD fallback, to avoid expensive search every time
   // on pages with lots of problems
-  FontFamily mReplacementCharFallbackFamily;
+  mozilla::EnumeratedArray<FontVisibility, FontVisibility::Count, FontFamily>
+      mReplacementCharFallbackFamily;
 
   // Sorted array of lowercased family names; use ContainsSorted to test
   nsTArray<nsCString> mBadUnderlineFamilyNames;
