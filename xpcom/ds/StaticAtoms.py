@@ -640,6 +640,7 @@ STATIC_ATOMS = [
     Atom("maxlength", "maxlength"),
     Atom("maxpos", "maxpos"),
     Atom("maxwidth", "maxwidth"),
+    Atom("measure", "measure"),
     Atom("media", "media"),
     Atom("mediaType", "media-type"),
     Atom("menu", "menu"),
