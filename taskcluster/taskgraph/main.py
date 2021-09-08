@@ -337,7 +337,8 @@ def show_taskgraph(options):
     if len(parameters) > 1:
         # Log to separate files for each process instead of stderr to
         # avoid interleaving.
-        logdir = appdirs.user_log_dir("taskgraph")
+        basename = os.path.basename(os.getcwd())
+        logdir = os.path.join(appdirs.user_log_dir("taskgraph"), basename)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
 
