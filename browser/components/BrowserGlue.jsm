@@ -1943,44 +1943,57 @@ BrowserGlue.prototype = {
    * Application shutdown handler.
    */
   _onQuitApplicationGranted() {
-    // This pref must be set here because SessionStore will use its value
-    // on quit-application.
-    this._setPrefToSaveSession();
+    let tasks = [
+      // This pref must be set here because SessionStore will use its value
+      // on quit-application.
+      () => this._setPrefToSaveSession(),
 
-    // Call trackStartupCrashEnd here in case the delayed call on startup hasn't
-    // yet occurred (see trackStartupCrashEnd caller in browser.js).
-    try {
-      Services.startup.trackStartupCrashEnd();
-    } catch (e) {
-      Cu.reportError(
-        "Could not end startup crash tracking in quit-application-granted: " + e
-      );
-    }
+      // Call trackStartupCrashEnd here in case the delayed call on startup hasn't
+      // yet occurred (see trackStartupCrashEnd caller in browser.js).
+      () => Services.startup.trackStartupCrashEnd(),
 
-    if (this._bookmarksBackupIdleTime) {
-      this._userIdleService.removeIdleObserver(
-        this,
-        this._bookmarksBackupIdleTime
-      );
-      delete this._bookmarksBackupIdleTime;
-    }
+      () => {
+        if (this._bookmarksBackupIdleTime) {
+          this._userIdleService.removeIdleObserver(
+            this,
+            this._bookmarksBackupIdleTime
+          );
+          delete this._bookmarksBackupIdleTime;
+        }
+      },
 
-    for (let mod of Object.values(initializedModules)) {
-      if (mod.uninit) {
-        mod.uninit();
+      () => BrowserUsageTelemetry.uninit(),
+      () => SearchSERPTelemetry.uninit(),
+      () => Interactions.uninit(),
+      () => PageDataService.uninit(),
+      () => PageThumbs.uninit(),
+      () => NewTabUtils.uninit(),
+      () => Normandy.uninit(),
+      () => RFPHelper.uninit(),
+      () => ASRouterNewTabHook.destroy(),
+    ];
+
+    tasks.push(
+      ...Object.values(initializedModules)
+        .filter(m => m.uninit)
+        .map(m => () => m.uninit())
+    );
+
+    for (let task of tasks) {
+      try {
+        task();
+      } catch (ex) {
+        console.error(`Error during quit-application-granted: ${ex}`);
+        if (Cu.isInAutomation) {
+          // This usually happens after the test harness is done collecting
+          // test errors, thus we can't easily add a failure to it. The only
+          // noticeable solution we have is crashing.
+          Cc["@mozilla.org/xpcom/debug;1"]
+            .getService(Ci.nsIDebug2)
+            .abort(ex.filename, ex.lineNumber);
+        }
       }
     }
-
-    BrowserUsageTelemetry.uninit();
-    SearchSERPTelemetry.uninit();
-    Interactions.uninit();
-    PageDataService.uninit();
-    PageThumbs.uninit();
-    NewTabUtils.uninit();
-
-    Normandy.uninit();
-    RFPHelper.uninit();
-    ASRouterNewTabHook.destroy();
   },
 
   // Set up a listener to enable/disable the screenshots extension
