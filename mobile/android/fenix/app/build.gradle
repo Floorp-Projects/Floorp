@@ -201,6 +201,8 @@ android {
 
     packagingOptions {
         exclude 'META-INF/atomicfu.kotlin_module'
+        exclude 'META-INF/AL2.0'
+        exclude 'META-INF/LGPL2.1'
     }
 
     testOptions {
@@ -535,11 +537,11 @@ dependencies {
     implementation Deps.google_play_store // Required for in-app reviews
 
     androidTestImplementation Deps.uiautomator
-// Removed pending AndroidX fixes
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"
     // This Falcon version is added to maven central now required for Screengrab
     implementation 'com.jraska:falcon:2.2.0'
-//    androidTestImplementation "br.com.concretesolutions:kappuccino:1.2.1"
+
+    androidTestImplementation Deps.androidx_compose_ui_test
 
     androidTestImplementation Deps.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'

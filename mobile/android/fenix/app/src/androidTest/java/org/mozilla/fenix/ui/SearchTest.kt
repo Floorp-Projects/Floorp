@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +24,10 @@ import org.mozilla.fenix.ui.robots.homeScreen
 class SearchTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = AndroidComposeTestRule(
+        HomeActivityTestRule(),
+        { it.activity }
+    )
 
     @Test
     fun searchScreenItemsTest() {
@@ -59,10 +63,10 @@ class SearchTest {
         }.goBack {
         }.openSearch {
 //            verifySearchWithText()
-            clickSearchEngineButton("DuckDuckGo")
+            clickSearchEngineButton(activityTestRule, "DuckDuckGo")
             typeSearch("mozilla")
-            verifySearchEngineResults("DuckDuckGo")
-            clickSearchEngineResult("DuckDuckGo")
+            verifySearchEngineResults(activityTestRule, "DuckDuckGo", 4)
+            clickSearchEngineResult(activityTestRule, "DuckDuckGo")
             verifySearchEngineURL("DuckDuckGo")
         }
     }
@@ -77,8 +81,8 @@ class SearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
-            scrollToSearchEngineSettings()
-            clickSearchEngineSettings()
+            scrollToSearchEngineSettings(activityTestRule)
+            clickSearchEngineSettings(activityTestRule)
             verifySearchSettings()
         }
     }

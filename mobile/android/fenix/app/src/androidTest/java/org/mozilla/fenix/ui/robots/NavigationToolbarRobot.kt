@@ -39,8 +39,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
-import org.mozilla.fenix.helpers.assertions.AwesomeBarAssertion.Companion.suggestionsAreEqualTo
-import org.mozilla.fenix.helpers.assertions.AwesomeBarAssertion.Companion.suggestionsAreGreaterThan
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -48,12 +46,6 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  * Implementation of Robot Pattern for the URL toolbar.
  */
 class NavigationToolbarRobot {
-
-    fun verifySearchSuggestionsAreMoreThan(suggestionSize: Int) =
-        assertSuggestionsAreMoreThan(suggestionSize)
-
-    fun verifySearchSuggestionsAreEqualTo(suggestionSize: Int) =
-        assertSuggestionsAreEqualTo(suggestionSize)
 
     fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
 
@@ -278,16 +270,6 @@ fun openEditURLView() {
         Until.findObject(By.res("$packageName:id/mozac_browser_toolbar_edit_url_view")),
         waitingTime
     )
-}
-
-private fun assertSuggestionsAreEqualTo(suggestionSize: Int) {
-    mDevice.waitForIdle()
-    onView(withId(R.id.awesome_bar)).check(suggestionsAreEqualTo(suggestionSize))
-}
-
-private fun assertSuggestionsAreMoreThan(suggestionSize: Int) {
-    mDevice.waitForIdle()
-    onView(withId(R.id.awesome_bar)).check(suggestionsAreGreaterThan(suggestionSize))
 }
 
 private fun assertNoHistoryBookmarks() {

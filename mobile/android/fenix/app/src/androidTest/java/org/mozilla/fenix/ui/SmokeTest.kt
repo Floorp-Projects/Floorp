@@ -5,8 +5,10 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.core.net.toUri
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
@@ -65,7 +67,6 @@ class SmokeTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
     private var awesomeBar: ViewVisibilityIdlingResource? = null
-    private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
@@ -84,9 +85,13 @@ class SmokeTest {
         return searchDialogFragment?.view?.findViewById(R.id.awesome_bar)
     }
 
-    @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule()
     private lateinit var browserStore: BrowserStore
+
+    @get:Rule
+    val activityTestRule = AndroidComposeTestRule(
+        HomeActivityIntentTestRule(),
+        { it.activity }
+    )
 
     @get: Rule
     val intentReceiverActivityTestRule = ActivityTestRule(
@@ -117,10 +122,6 @@ class SmokeTest {
 
         if (awesomeBar != null) {
             IdlingRegistry.getInstance().unregister(awesomeBar!!)
-        }
-
-        if (searchSuggestionsIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
         }
 
         if (addonsListIdlingResource != null) {
@@ -477,38 +478,43 @@ class SmokeTest {
         }.openSearch {
             verifyKeyboardVisibility()
             clickSearchEngineShortcutButton()
-            verifySearchEngineList()
-            changeDefaultSearchEngine("Amazon.com")
+            verifySearchEngineList(activityTestRule)
+            changeDefaultSearchEngine(activityTestRule, "Amazon.com")
             verifySearchEngineIcon("Amazon.com")
         }.goToSearchEngine {
+            mDevice.waitForIdle()
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
             clickSearchEngineShortcutButton()
             mDevice.waitForIdle()
-            changeDefaultSearchEngine("Bing")
+            changeDefaultSearchEngine(activityTestRule, "Bing")
             verifySearchEngineIcon("Bing")
         }.goToSearchEngine {
+            mDevice.waitForIdle()
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
             clickSearchEngineShortcutButton()
             mDevice.waitForIdle()
-            changeDefaultSearchEngine("DuckDuckGo")
+            changeDefaultSearchEngine(activityTestRule, "DuckDuckGo")
             verifySearchEngineIcon("DuckDuckGo")
         }.goToSearchEngine {
+            mDevice.waitForIdle()
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
             clickSearchEngineShortcutButton()
-            changeDefaultSearchEngine("Wikipedia")
+            changeDefaultSearchEngine(activityTestRule, "Wikipedia")
             verifySearchEngineIcon("Wikipedia")
         }.goToSearchEngine {
+            mDevice.waitForIdle()
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
             // Checking whether the next search will be with default or not
         }.openNewTab {
         }.goToSearchEngine {
+            mDevice.waitForIdle()
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openNavigationToolbar {
         }.clickUrlbar {
@@ -532,7 +538,9 @@ class SmokeTest {
         }.openSearch {
             verifyKeyboardVisibility()
             clickSearchEngineShortcutButton()
-            verifyEnginesListShortcutContains("YouTube")
+            mDevice.waitForIdle()
+            activityTestRule.waitForIdle()
+            verifyEnginesListShortcutContains(activityTestRule, "YouTube")
         }
     }
 
@@ -550,11 +558,13 @@ class SmokeTest {
                 awesomeBar = ViewVisibilityIdlingResource(it, View.VISIBLE)
             }
             IdlingRegistry.getInstance().register(awesomeBar!!)
-            searchSuggestionsIdlingResource =
-                RecyclerViewIdlingResource(awesomeBarView as RecyclerView, 1)
-            IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
-            verifySearchSuggestionsAreMoreThan(0)
-            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+
+            activityTestRule.waitForIdle()
+
+            activityTestRule
+                .onNodeWithText("mozilla firefox")
+                .assertExists()
+                .assertIsDisplayed()
         }.goBack {
         }.openThreeDotMenu {
         }.openSettings {
@@ -564,11 +574,12 @@ class SmokeTest {
         }.goBack {
         }.openNavigationToolbar {
             typeSearchTerm("mozilla")
-            searchSuggestionsIdlingResource =
-                RecyclerViewIdlingResource(getAwesomebarView() as RecyclerView)
-            IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
-            verifySearchSuggestionsAreEqualTo(0)
-            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+
+            activityTestRule.waitForIdle()
+
+            activityTestRule
+                .onNodeWithText("mozilla firefox")
+                .assertDoesNotExist()
         }
     }
 
@@ -675,7 +686,7 @@ class SmokeTest {
             IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
             clickInstallAddon(addonName)
             acceptInstallAddon()
-            verifyDownloadAddonPrompt(addonName, activityTestRule)
+            verifyDownloadAddonPrompt(addonName, activityTestRule.activityRule)
             IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
         }.goBack {
         }.openNavigationToolbar {
@@ -1407,7 +1418,7 @@ class SmokeTest {
             clickAlwaysStartOnHomeToggle()
         }
 
-        restartApp(activityTestRule)
+        restartApp(activityTestRule.activityRule)
 
         homeScreen {
             verifyHomeScreen()
