@@ -30,7 +30,6 @@
 #include "nsHashKeys.h"
 #include "nsRect.h"
 #include "nsStringFwd.h"
-#include "nsTHashSet.h"
 #include "nsTHashtable.h"
 #include "nsAtom.h"
 #include "nsIWidgetListener.h"  // for nsSizeMode
@@ -54,7 +53,6 @@ class nsIFrame;
 class nsFrameManager;
 class nsAtom;
 class nsIRunnable;
-class gfxFontFamily;
 class gfxFontFeatureValueSet;
 class gfxUserFontEntry;
 class gfxUserFontSet;
@@ -164,10 +162,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void InitFontCache();
 
   void UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet);
-
-  FontVisibility GetFontVisibility() const { return mFontVisibility; }
-  void ReportBlockedFontFamily(const mozilla::fontlist::Family& aFamily);
-  void ReportBlockedFontFamily(const gfxFontFamily& aFamily);
 
   /**
    * Get the nsFontMetrics that describe the properties of
@@ -1155,13 +1149,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // mDynamicToolbarMaxHeight or `app units per device pixels` changes.
   void AdjustSizeForViewportUnits();
 
-  // Call in response to prefs changes that might affect what fonts should be
-  // visibile to CSS. Returns whether the current visibility value actually
-  // changed (in which case content should be reflowed).
-  bool UpdateFontVisibility();
-  void ReportBlockedFontFamilyName(const nsCString& aFamily,
-                                   FontVisibility aVisibility);
-
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1277,12 +1264,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   nsTArray<RefPtr<mozilla::ManagedPostRefreshObserver>>
       mManagedPostRefreshObservers;
 
-  // If we block the use of a font-family that is explicitly requested,
-  // due to font visibility settings, we log a message to the web console;
-  // this hash-set keeps track of names we've logged for this context, so
-  // that we can avoid repeatedly reporting the same font.
-  nsTHashSet<nsCString> mBlockedFonts;
-
   ScrollStyles mViewportScrollStyles;
 
   uint16_t mImageAnimationMode;
@@ -1372,8 +1353,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 #ifdef DEBUG
   unsigned mInitialized : 1;
 #endif
-
-  FontVisibility mFontVisibility = FontVisibility::Unknown;
 
  protected:
   virtual ~nsPresContext();

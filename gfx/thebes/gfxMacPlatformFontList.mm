@@ -1317,8 +1317,7 @@ void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
   dom::ContentParent::NotifyUpdatedFonts(true);
 }
 
-gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(nsPresContext* aPresContext,
-                                                                 const uint32_t aCh,
+gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
                                                                  Script aRunScript,
                                                                  const gfxFontStyle* aMatchStyle,
                                                                  FontFamily& aMatchedFamily) {
@@ -1368,7 +1367,7 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(nsPresContext* 
                                              familyNameLen);
 
       if (SharedFontList()) {
-        fontlist::Family* family = FindSharedFamily(aPresContext, familyNameString);
+        fontlist::Family* family = FindSharedFamily(familyNameString);
         if (family) {
           fontlist::Face* face = family->FindFaceForStyle(SharedFontList(), *aMatchStyle);
           if (face) {
@@ -1414,8 +1413,7 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(nsPresContext* 
   return fontEntry;
 }
 
-FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(nsPresContext* aPresContext,
-                                                             const gfxFontStyle* aStyle,
+FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
                                                              nsAtom* aLanguage) {
   nsAutoreleasePool localPool;
 
@@ -1423,7 +1421,7 @@ FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(nsPresContext* aPre
   nsAutoString familyName;
 
   GetStringForNSString(defaultFamily, familyName);
-  return FindFamily(aPresContext, NS_ConvertUTF16toUTF8(familyName));
+  return FindFamily(NS_ConvertUTF16toUTF8(familyName));
 }
 
 int32_t gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight) {
@@ -1434,8 +1432,7 @@ int32_t gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight) {
   return gAppleWeightToCSSWeight[aAppleWeight];
 }
 
-gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(nsPresContext* aPresContext,
-                                                      const nsACString& aFontName,
+gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(const nsACString& aFontName,
                                                       WeightRange aWeightForEntry,
                                                       StretchRange aStretchForEntry,
                                                       SlantStyleRange aStyleForEntry) {
@@ -1484,7 +1481,7 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(nsPresContext* aPresContex
   key.Truncate(strlen(key.get()));
   ToLowerCase(key);
   // If the family can't be looked up, this font is not available for use.
-  FontFamily family = FindFamily(aPresContext, key);
+  FontFamily family = FindFamily(key);
   if (family.IsNull()) {
     return nullptr;
   }
@@ -1527,8 +1524,7 @@ gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontNa
 // WebCore/platform/graphics/mac/FontCacheMac.mm
 static const char kSystemFont_system[] = "-apple-system";
 
-bool gfxMacPlatformFontList::FindAndAddFamilies(nsPresContext* aPresContext,
-                                                StyleGenericFontFamily aGeneric,
+bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
                                                 const nsACString& aFamily,
                                                 nsTArray<FamilyAndGeneric>* aOutput,
                                                 FindFamiliesFlags aFlags, gfxFontStyle* aStyle,
@@ -1545,9 +1541,8 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(nsPresContext* aPresContext,
             : mSystemTextFontFamilyName;
     if (SharedFontList() && !nsCocoaFeatures::OnCatalinaOrLater()) {
       FindFamiliesFlags flags = aFlags | FindFamiliesFlags::eSearchHiddenFamilies;
-      return gfxPlatformFontList::FindAndAddFamilies(aPresContext, aGeneric, systemFontFamilyName,
-                                                     aOutput, flags, aStyle, aLanguage,
-                                                     aDevToCssSize);
+      return gfxPlatformFontList::FindAndAddFamilies(aGeneric, systemFontFamilyName, aOutput, flags,
+                                                     aStyle, aLanguage, aDevToCssSize);
     } else {
       if (auto* fam = FindSystemFontFamily(systemFontFamilyName)) {
         aOutput->AppendElement(fam);
@@ -1557,8 +1552,8 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(nsPresContext* aPresContext,
     return false;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(aPresContext, aGeneric, aFamily, aOutput, aFlags,
-                                                 aStyle, aLanguage, aDevToCssSize);
+  return gfxPlatformFontList::FindAndAddFamilies(aGeneric, aFamily, aOutput, aFlags, aStyle,
+                                                 aLanguage, aDevToCssSize);
 }
 
 void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
