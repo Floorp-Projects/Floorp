@@ -164,6 +164,16 @@ bool SheetLoadDataHashKey::KeyEquals(const SheetLoadDataHashKey& aKey) const {
 
   LOG_URI("KeyEquals(%s)\n", mURI);
 
+  if (mParsingMode != aKey.mParsingMode) {
+    LOG((" > Parsing mode mismatch\n"));
+    return false;
+  }
+
+  // Chrome URIs ignore everything else.
+  if (dom::IsChromeURI(mURI)) {
+    return true;
+  }
+
   if (!mPrincipal->Equals(aKey.mPrincipal)) {
     LOG((" > Principal mismatch\n"));
     return false;
@@ -182,11 +192,6 @@ bool SheetLoadDataHashKey::KeyEquals(const SheetLoadDataHashKey& aKey) const {
 
   if (mCORSMode != aKey.mCORSMode) {
     LOG((" > CORS mismatch\n"));
-    return false;
-  }
-
-  if (mParsingMode != aKey.mParsingMode) {
-    LOG((" > Parsing mode mismatch\n"));
     return false;
   }
 
