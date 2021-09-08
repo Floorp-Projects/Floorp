@@ -8,6 +8,9 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
   const cachedFragments = {
+    get entities() {
+      return ["chrome://global/locale/textcontext.dtd"];
+    },
     get editMenuItems() {
       return `
       <menuitem data-l10n-id="text-action-undo" cmd="cmd_undo"></menuitem>
@@ -48,7 +51,8 @@
           <menupopup anonid="spell-dictionaries-menu" onpopupshowing="event.stopPropagation();" onpopuphiding="event.stopPropagation();"></menupopup>
         </menu>
       </menupopup>
-    `
+    `,
+        this.entities
       );
       return this.spellcheck;
     },
