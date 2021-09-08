@@ -174,7 +174,7 @@ jobs:
         definition: toolchain-build
     android-build:
         symbol: I(agb)
-        parent: debian11-base
+        parent: debian10-base
     fetch:
         symbol: I(fetch)
         parent: debian11-raw
