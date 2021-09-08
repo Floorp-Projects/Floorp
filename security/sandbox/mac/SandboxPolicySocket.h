@@ -139,6 +139,10 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
     (subpath "/System/Library/Keychains")
     (subpath "/System/Library/Security")
     (home-subpath "/Library/Keychains"))
+
+  ; For enabling TCSM
+  (allow sysctl-write
+    (sysctl-name "kern.tcsm_enable"))
 )SANDBOX_LITERAL";
 
 }  // namespace mozilla
