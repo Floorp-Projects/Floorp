@@ -180,8 +180,7 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aTextLen,
   return range;
 }
 
-int32_t WordBreaker::NextWord(const char16_t* aText, uint32_t aLen,
-                              uint32_t aPos) {
+int32_t WordBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
   WordBreakClass c1, c2;
   uint32_t cur = aPos;
   if (cur == aLen) {
