@@ -12,15 +12,15 @@ test_newtab({
       "Wait for the top sites section to load"
     );
 
-    let topSitesHeader = content.document.querySelector(
-      ".top-sites .section-title"
+    let topSitesSection = content.document.querySelector(".top-sites");
+    let titleContainer = topSitesSection.querySelector(
+      ".section-title-container"
     );
     ok(
-      topSitesHeader && topSitesHeader.style.visibility === "hidden",
-      "Top sites header should not be visible"
+      titleContainer && titleContainer.style.visibility === "hidden",
+      "Top sites header should  not be visible"
     );
 
-    let topSitesSection = content.document.querySelector(".top-sites");
     let isTopSitesCollapsed = topSitesSection.className.includes("collapsed");
     ok(!isTopSitesCollapsed, "Top sites should not be collapsed on load");
 
