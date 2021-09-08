@@ -3778,6 +3778,8 @@ bool BaseCompiler::emitDelegate() {
   tryNote.entryPoint = tryNote.end;
   tryNote.framePushed = masm.framePushed();
 
+  popBlockResults(ResultType::Empty(), target.stackHeight,
+                  ContinuationKind::Jump);
   masm.jump(&target.otherLabel);
 
   fr.setStackHeight(savedHeight);
