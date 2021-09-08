@@ -44,11 +44,11 @@ treechildren::-moz-tree-row(selected) {
 }
 
 treechildren::-moz-tree-row(selected, focus) {
-  background-color: Highlight;
+  background-color: SelectedItem;
 }
 
 treechildren::-moz-tree-row(current, focus) {
-  border: 1px dotted Highlight;
+  border: 1px dotted SelectedItem;
 }
 
 treechildren::-moz-tree-row(selected, current, focus) {
@@ -74,7 +74,7 @@ treechildren::-moz-tree-cell-text(selected) {
 treechildren::-moz-tree-image(selected, focus),
 treechildren::-moz-tree-twisty(selected, focus),
 treechildren::-moz-tree-cell-text(selected, focus) {
-  color: HighlightText;
+  color: SelectedItemText;
 }
 
 
@@ -85,7 +85,7 @@ treechildren::-moz-tree-line {
 }
 
 treechildren::-moz-tree-line(selected, focus) {
-  border: 1px dotted HighlightText;
+  border: 1px dotted SelectedItemText;
 }
 
 
@@ -100,12 +100,12 @@ treechildren::-moz-tree-separator {
 /* ::::: drop feedback ::::: */
 
 treechildren::-moz-tree-cell-text(primary, dropOn) {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 treechildren::-moz-tree-drop-feedback {
-  background-color: Highlight;
+  background-color: SelectedItem;
   width: 50px;
   height: 2px;
   margin-inline-start: 5px;
@@ -210,7 +210,7 @@ html|input.tree-input {
   left: 0;
   appearance: none;
   -moz-box-flex: 1;
-  border: 1px solid Highlight;
+  border: 1px solid SelectedItem;
   margin: 0;
   margin-inline-start: -4px;
   padding: 1px;
