@@ -22,20 +22,16 @@
 
 class APZCTreeManagerTester : public APZCTesterBase {
  protected:
-  APZCTreeManagerTester() : mLayersOnly(false) {}
+  APZCTreeManagerTester()
+      : mHitTestKind(APZCTreeManager::HitTestKind::WebRender) {}
 
   virtual void SetUp() {
     APZCTesterBase::SetUp();
-    if (mLayersOnly) {
-      SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarWebRender, UseWebRender, false);
-      SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarSoftwareWebRender, UseSoftwareWebRender,
-                                   false);
-    }
 
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 
-    manager = new TestAPZCTreeManager(mcc);
+    manager = new TestAPZCTreeManager(mcc, mHitTestKind);
     updater = new APZUpdater(manager, false);
     sampler = new APZSampler(manager, false);
   }
@@ -45,8 +41,6 @@ class APZCTreeManagerTester : public APZCTesterBase {
       ;
     manager->ClearTree();
     manager->ClearContentController();
-    mVarWebRender.reset();
-    mVarSoftwareWebRender.reset();
   }
 
   /**
@@ -103,9 +97,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   TestWRScrollData layers;
   WebRenderLayerScrollData* root = nullptr;
 
-  SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarWebRender;
-  SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarSoftwareWebRender;
-  bool mLayersOnly;
+  APZCTreeManager::HitTestKind mHitTestKind;
 
  protected:
   static ScrollMetadata BuildScrollMetadata(

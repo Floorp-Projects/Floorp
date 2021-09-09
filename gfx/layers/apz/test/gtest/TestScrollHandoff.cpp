@@ -176,9 +176,11 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
   }
 };
 
-class APZScrollHandoffTesterLayersOnly : public APZScrollHandoffTester {
+class APZScrollHandoffTesterInternal : public APZScrollHandoffTester {
  public:
-  APZScrollHandoffTesterLayersOnly() { mLayersOnly = true; }
+  APZScrollHandoffTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
@@ -269,7 +271,7 @@ TEST_F(APZScrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Test that putting a second finger down on an APZC while a down-chain APZC
 // is overscrolled doesn't result in being stuck in overscroll.
-TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1073250) {
+TEST_F(APZScrollHandoffTesterInternal, StuckInOverscroll_Bug1073250) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -313,7 +315,7 @@ TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1073250) {
 // This is almost exactly like StuckInOverscroll_Bug1073250, except the
 // APZC receiving the input events for the first touch block is the child
 // (and thus not the same APZC that overscrolls, which is the parent).
-TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1231228) {
+TEST_F(APZScrollHandoffTesterInternal, StuckInOverscroll_Bug1231228) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -389,7 +391,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1240202b) {
+TEST_F(APZScrollHandoffTesterInternal, StuckInOverscroll_Bug1240202b) {
   // Enable overscrolling.
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -461,7 +463,7 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the
 // other direction.
-TEST_F(APZScrollHandoffTesterLayersOnly, PartialFlingHandoff) {
+TEST_F(APZScrollHandoffTesterInternal, PartialFlingHandoff) {
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
 
   CreateScrollHandoffLayerTree1();
@@ -555,7 +557,7 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   childApzc->AssertStateIsReset();
 }
 
-TEST_F(APZScrollHandoffTesterLayersOnly, ScrollgrabFlingAcceleration1) {
+TEST_F(APZScrollHandoffTesterInternal, ScrollgrabFlingAcceleration1) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
@@ -568,7 +570,7 @@ TEST_F(APZScrollHandoffTesterLayersOnly, ScrollgrabFlingAcceleration1) {
   TestFlingAcceleration();
 }
 
-TEST_F(APZScrollHandoffTesterLayersOnly, ScrollgrabFlingAcceleration2) {
+TEST_F(APZScrollHandoffTesterInternal, ScrollgrabFlingAcceleration2) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
@@ -647,7 +649,7 @@ TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
   TestCrossApzcAxisLock();
 }
 
-TEST_F(APZScrollHandoffTesterLayersOnly, WheelHandoffAfterDirectionReversal) {
+TEST_F(APZScrollHandoffTesterInternal, WheelHandoffAfterDirectionReversal) {
   // Explicitly set the wheel transaction timeout pref because the test relies
   // on its value.
   SCOPED_GFX_PREF_INT("mousewheel.transaction.timeout", 1500);

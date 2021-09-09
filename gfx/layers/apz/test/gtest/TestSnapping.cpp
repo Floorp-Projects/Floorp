@@ -11,12 +11,14 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 
-class APZCSnappingTesterLayersOnly : public APZCTreeManagerTester {
+class APZCSnappingTesterInternal : public APZCTreeManagerTester {
  public:
-  APZCSnappingTesterLayersOnly() { mLayersOnly = true; }
+  APZCSnappingTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
-TEST_F(APZCSnappingTesterLayersOnly, Bug1265510) {
+TEST_F(APZCSnappingTesterInternal, Bug1265510) {
   const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 100, 100, 100))};
@@ -85,7 +87,7 @@ TEST_F(APZCSnappingTesterLayersOnly, Bug1265510) {
           .y);
 }
 
-TEST_F(APZCSnappingTesterLayersOnly, Snap_After_Pinch) {
+TEST_F(APZCSnappingTesterInternal, Snap_After_Pinch) {
   const char* treeShape = "x";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),

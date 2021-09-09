@@ -1562,16 +1562,18 @@ TEST_F(APZCOverscrollTester, SmallAmountOfOverscroll) {
 }
 #endif
 
-class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
+class APZCOverscrollTesterForInternal : public APZCTreeManagerTester {
  public:
-  APZCOverscrollTesterForLayersOnly() { mLayersOnly = true; }
+  APZCOverscrollTesterForInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 
   UniquePtr<ScopedLayerTreeRegistration> registration;
   TestAsyncPanZoomController* rootApzc;
 };
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
+TEST_F(APZCOverscrollTesterForInternal, OverscrollHandoff) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   const char* treeShape = "x(x)";
@@ -1603,7 +1605,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-TEST_F(APZCOverscrollTesterForLayersOnly,
+TEST_F(APZCOverscrollTesterForInternal,
        VerticalOverscrollHandoffToScrollableRoot) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -1634,7 +1636,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-TEST_F(APZCOverscrollTesterForLayersOnly,
+TEST_F(APZCOverscrollTesterForInternal,
        NoOverscrollHandoffToNonScrollableRoot) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -1666,7 +1668,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-TEST_F(APZCOverscrollTesterForLayersOnly,
+TEST_F(APZCOverscrollTesterForInternal,
        NoOverscrollHandoffOrthogonalPanGesture) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -1698,7 +1700,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
-TEST_F(APZCOverscrollTesterForLayersOnly,
+TEST_F(APZCOverscrollTesterForInternal,
        RetriggerCancelledOverscrollAnimationByNewPanGesture) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
@@ -1768,7 +1770,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
-TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollIntoPreventDefault) {
+TEST_F(APZCOverscrollTesterForInternal, OverscrollIntoPreventDefault) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   const char* treeShape = "x";
