@@ -1,19 +1,19 @@
 //! Lock-free intrusive linked list.
 //!
 //! Ideas from Michael.  High Performance Dynamic Lock-Free Hash Tables and List-Based Sets.  SPAA
-//! 2002.  http://dl.acm.org/citation.cfm?id=564870.564881
+//! 2002.  <http://dl.acm.org/citation.cfm?id=564870.564881>
 
 use core::marker::PhantomData;
 use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 
-use {unprotected, Atomic, Guard, Shared};
+use crate::{unprotected, Atomic, Guard, Shared};
 
 /// An entry in a linked list.
 ///
 /// An Entry is accessed from multiple threads, so it would be beneficial to put it in a different
 /// cache-line than thread-local data in terms of performance.
 #[derive(Debug)]
-pub struct Entry {
+pub(crate) struct Entry {
     /// The next entry in the linked list.
     /// If the tag is 1, this entry is marked as deleted.
     next: Atomic<Entry>,
@@ -64,9 +64,9 @@ pub struct Entry {
 /// }
 /// ```
 ///
-pub trait IsElement<T> {
+pub(crate) trait IsElement<T> {
     /// Returns a reference to this element's `Entry`.
-    fn entry_of(&T) -> &Entry;
+    fn entry_of(_: &T) -> &Entry;
 
     /// Given a reference to an element's entry, returns that element.
     ///
@@ -80,7 +80,7 @@ pub trait IsElement<T> {
     ///
     /// The caller has to guarantee that the `Entry` is called with was retrieved from an instance
     /// of the element type (`T`).
-    unsafe fn element_of(&Entry) -> &T;
+    unsafe fn element_of(_: &Entry) -> &T;
 
     /// The function that is called when an entry is unlinked from list.
     ///
@@ -88,12 +88,12 @@ pub trait IsElement<T> {
     ///
     /// The caller has to guarantee that the `Entry` is called with was retrieved from an instance
     /// of the element type (`T`).
-    unsafe fn finalize(&Entry, &Guard);
+    unsafe fn finalize(_: &Entry, _: &Guard);
 }
 
 /// A lock-free, intrusive linked list of type `T`.
 #[derive(Debug)]
-pub struct List<T, C: IsElement<T> = T> {
+pub(crate) struct List<T, C: IsElement<T> = T> {
     /// The head of the linked list.
     head: Atomic<Entry>,
 
@@ -102,7 +102,7 @@ pub struct List<T, C: IsElement<T> = T> {
 }
 
 /// An iterator used for retrieving values from the list.
-pub struct Iter<'g, T: 'g, C: IsElement<T>> {
+pub(crate) struct Iter<'g, T, C: IsElement<T>> {
     /// The guard that protects the iteration.
     guard: &'g Guard,
 
@@ -122,7 +122,7 @@ pub struct Iter<'g, T: 'g, C: IsElement<T>> {
 
 /// An error that occurs during iteration over the list.
 #[derive(PartialEq, Debug)]
-pub enum IterError {
+pub(crate) enum IterError {
     /// A concurrent thread modified the state of the list at the same place that this iterator
     /// was inspecting. Subsequent iteration will restart from the beginning of the list.
     Stalled,
@@ -145,14 +145,14 @@ impl Entry {
     /// The entry should be a member of a linked list, and it should not have been deleted.
     /// It should be safe to call `C::finalize` on the entry after the `guard` is dropped, where `C`
     /// is the associated helper for the linked list.
-    pub unsafe fn delete(&self, guard: &Guard) {
+    pub(crate) unsafe fn delete(&self, guard: &Guard) {
         self.next.fetch_or(1, Release, guard);
     }
 }
 
 impl<T, C: IsElement<T>> List<T, C> {
     /// Returns a new, empty linked list.
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             head: Atomic::null(),
             _marker: PhantomData,
@@ -169,7 +169,7 @@ impl<T, C: IsElement<T>> List<T, C> {
     /// - `container` is immovable, e.g. inside an `Owned`
     /// - the same `Entry` is not inserted more than once
     /// - the inserted object will be removed before the list is dropped
-    pub unsafe fn insert<'g>(&'g self, container: Shared<'g, T>, guard: &'g Guard) {
+    pub(crate) unsafe fn insert<'g>(&'g self, container: Shared<'g, T>, guard: &'g Guard) {
         // Insert right after head, i.e. at the beginning of the list.
         let to = &self.head;
         // Get the intrusively stored Entry of the new element to insert.
@@ -183,7 +183,7 @@ impl<T, C: IsElement<T>> List<T, C> {
             // Set the Entry of the to-be-inserted element to point to the previous successor of
             // `to`.
             entry.next.store(next, Relaxed);
-            match to.compare_and_set_weak(next, entry_ptr, Release, guard) {
+            match to.compare_exchange_weak(next, entry_ptr, Release, Relaxed, guard) {
                 Ok(_) => break,
                 // We lost the race or weak CAS failed spuriously. Update the successor and try
                 // again.
@@ -204,7 +204,7 @@ impl<T, C: IsElement<T>> List<T, C> {
     /// 2. If an object is deleted during iteration, it may or may not be returned.
     /// 3. The iteration may be aborted when it lost in a race condition. In this case, the winning
     ///    thread will continue to iterate over the same list.
-    pub fn iter<'g>(&'g self, guard: &'g Guard) -> Iter<'g, T, C> {
+    pub(crate) fn iter<'g>(&'g self, guard: &'g Guard) -> Iter<'g, T, C> {
         Iter {
             guard,
             pred: &self.head,
@@ -218,7 +218,7 @@ impl<T, C: IsElement<T>> List<T, C> {
 impl<T, C: IsElement<T>> Drop for List<T, C> {
     fn drop(&mut self) {
         unsafe {
-            let guard = &unprotected();
+            let guard = unprotected();
             let mut curr = self.head.load(Relaxed, guard);
             while let Some(c) = curr.as_ref() {
                 let succ = c.next.load(Relaxed, guard);
@@ -250,7 +250,7 @@ impl<'g, T: 'g, C: IsElement<T>> Iterator for Iter<'g, T, C> {
                 // Try to unlink `curr` from the list, and get the new value of `self.pred`.
                 let succ = match self
                     .pred
-                    .compare_and_set(self.curr, succ, Acquire, self.guard)
+                    .compare_exchange(self.curr, succ, Acquire, Acquire, self.guard)
                 {
                     Ok(_) => {
                         // We succeeded in unlinking `curr`, so we have to schedule
@@ -295,12 +295,12 @@ impl<'g, T: 'g, C: IsElement<T>> Iterator for Iter<'g, T, C> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(crossbeam_loom)))]
 mod tests {
     use super::*;
+    use crate::{Collector, Owned};
     use crossbeam_utils::thread;
     use std::sync::Barrier;
-    use {Collector, Owned};
 
     impl IsElement<Entry> for Entry {
         fn entry_of(entry: &Entry) -> &Entry {

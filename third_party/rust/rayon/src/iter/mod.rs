@@ -61,7 +61,7 @@
 //! If you'd like to build a custom parallel iterator, or to write your own
 //! combinator, then check out the [split] function and the [plumbing] module.
 //!
-//! [regular iterator]: http://doc.rust-lang.org/std/iter/trait.Iterator.html
+//! [regular iterator]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
 //! [`ParallelIterator`]: trait.ParallelIterator.html
 //! [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 //! [split]: fn.split.html
@@ -1966,6 +1966,79 @@ pub trait ParallelIterator: Sized + Send {
     ///
     /// assert_eq!(sync_vec, async_vec);
     /// ```
+    ///
+    /// You can collect a pair of collections like [`unzip`](#method.unzip)
+    /// for paired items:
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    ///
+    /// let a = [(0, 1), (1, 2), (2, 3), (3, 4)];
+    /// let (first, second): (Vec<_>, Vec<_>) = a.into_par_iter().collect();
+    ///
+    /// assert_eq!(first, [0, 1, 2, 3]);
+    /// assert_eq!(second, [1, 2, 3, 4]);
+    /// ```
+    ///
+    /// Or like [`partition_map`](#method.partition_map) for `Either` items:
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// use rayon::iter::Either;
+    ///
+    /// let (left, right): (Vec<_>, Vec<_>) = (0..8).into_par_iter().map(|x| {
+    ///     if x % 2 == 0 {
+    ///         Either::Left(x * 4)
+    ///     } else {
+    ///         Either::Right(x * 3)
+    ///     }
+    /// }).collect();
+    ///
+    /// assert_eq!(left, [0, 8, 16, 24]);
+    /// assert_eq!(right, [3, 9, 15, 21]);
+    /// ```
+    ///
+    /// You can even collect an arbitrarily-nested combination of pairs and `Either`:
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// use rayon::iter::Either;
+    ///
+    /// let (first, (left, right)): (Vec<_>, (Vec<_>, Vec<_>))
+    ///     = (0..8).into_par_iter().map(|x| {
+    ///         if x % 2 == 0 {
+    ///             (x, Either::Left(x * 4))
+    ///         } else {
+    ///             (-x, Either::Right(x * 3))
+    ///         }
+    ///     }).collect();
+    ///
+    /// assert_eq!(first, [0, -1, 2, -3, 4, -5, 6, -7]);
+    /// assert_eq!(left, [0, 8, 16, 24]);
+    /// assert_eq!(right, [3, 9, 15, 21]);
+    /// ```
+    ///
+    /// All of that can _also_ be combined with short-circuiting collection of
+    /// `Result` or `Option` types:
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// use rayon::iter::Either;
+    ///
+    /// let result: Result<(Vec<_>, (Vec<_>, Vec<_>)), _>
+    ///     = (0..8).into_par_iter().map(|x| {
+    ///         if x > 5 {
+    ///             Err(x)
+    ///         } else if x % 2 == 0 {
+    ///             Ok((x, Either::Left(x * 4)))
+    ///         } else {
+    ///             Ok((-x, Either::Right(x * 3)))
+    ///         }
+    ///     }).collect();
+    ///
+    /// let error = result.unwrap_err();
+    /// assert!(error == 6 || error == 7);
+    /// ```
     fn collect<C>(self) -> C
     where
         C: FromParallelIterator<Self::Item>,
@@ -2130,7 +2203,7 @@ pub trait ParallelIterator: Sized + Send {
     /// See the [README] for more details on the internals of parallel
     /// iterators.
     ///
-    /// [README]: README.md
+    /// [README]: https://github.com/rayon-rs/rayon/blob/master/src/iter/plumbing/README.md
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
     where
         C: UnindexedConsumer<Self::Item>;
@@ -2817,7 +2890,7 @@ pub trait IndexedParallelIterator: ParallelIterator {
     /// See the [README] for more details on the internals of parallel
     /// iterators.
     ///
-    /// [README]: README.md
+    /// [README]: https://github.com/rayon-rs/rayon/blob/master/src/iter/plumbing/README.md
     fn drive<C: Consumer<Self::Item>>(self, consumer: C) -> C::Result;
 
     /// Internal method used to define the behavior of this parallel
@@ -2834,7 +2907,7 @@ pub trait IndexedParallelIterator: ParallelIterator {
     /// See the [README] for more details on the internals of parallel
     /// iterators.
     ///
-    /// [README]: README.md
+    /// [README]: https://github.com/rayon-rs/rayon/blob/master/src/iter/plumbing/README.md
     fn with_producer<CB: ProducerCallback<Self::Item>>(self, callback: CB) -> CB::Output;
 }
 

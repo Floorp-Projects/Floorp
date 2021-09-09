@@ -4,8 +4,9 @@
 //! is registered in the default collector.  If initialized, the thread's participant will get
 //! destructed on thread exit, which in turn unregisters the thread.
 
-use collector::{Collector, LocalHandle};
-use guard::Guard;
+use crate::collector::{Collector, LocalHandle};
+use crate::guard::Guard;
+use crate::primitive::{lazy_static, thread_local};
 
 lazy_static! {
     /// The global data for the default garbage collector.
@@ -44,7 +45,7 @@ where
         .unwrap_or_else(|_| f(&COLLECTOR.register()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(crossbeam_loom)))]
 mod tests {
     use crossbeam_utils::thread;
 

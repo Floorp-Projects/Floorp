@@ -1,6 +1,13 @@
-# Version 0.7.4
+# Version 0.8.1
 
-- Fix deque steal race condition.
+- Fix deque steal race condition. (#726)
+- Add `Stealer::len` method. (#708)
+
+# Version 0.8.0
+
+- Bump the minimum supported Rust version to 1.36.
+- Add `Worker::len()` and `Injector::len()` methods.
+- Add `std` (enabled by default) feature for forward compatibility.
 
 # Version 0.7.3
 
