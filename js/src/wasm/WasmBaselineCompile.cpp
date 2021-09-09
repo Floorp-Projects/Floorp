@@ -393,6 +393,8 @@ void BaseCompiler::remainderI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved,
 // Function entry and exit
 
 bool BaseCompiler::beginFunction() {
+  AutoCreatedBy acb(masm, "(wasm)BaseCompiler::beginFunction");
+
   JitSpew(JitSpew_Codegen, "# ========================================");
   JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
   JitSpew(JitSpew_Codegen,
@@ -576,6 +578,8 @@ bool BaseCompiler::beginFunction() {
 }
 
 bool BaseCompiler::endFunction() {
+  AutoCreatedBy acb(masm, "(wasm)BaseCompiler::endFunction");
+
   JitSpew(JitSpew_Codegen, "# endFunction: start of function epilogue");
 
   // Always branch to returnLabel_.
@@ -7647,6 +7651,8 @@ bool BaseCompiler::emitIntrinsic(IntrinsicOp op) {
 // Function bodies - main opcode dispatch loop.
 
 bool BaseCompiler::emitBody() {
+  AutoCreatedBy acb(masm, "(wasm)BaseCompiler::emitBody");
+
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
 
   if (!iter_.startFunction(func_.index)) {
@@ -9509,6 +9515,8 @@ void BaseCompiler::assertStackInvariants() const {
 // Main compilation logic.
 
 bool BaseCompiler::emitFunction() {
+  AutoCreatedBy acb(masm, "(wasm)BaseCompiler::emitFunction");
+
   if (!beginFunction()) {
     return false;
   }

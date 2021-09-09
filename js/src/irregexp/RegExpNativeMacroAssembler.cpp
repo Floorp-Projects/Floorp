@@ -1117,6 +1117,9 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
     return;
   }
 
+  js::jit::AutoCreatedBy acb(masm_,
+                             "SMRegExpMacroAssembler::stackOverflowHandler");
+
   // Called if the backtrack-stack limit has been hit.
   masm_.bind(&stack_overflow_label_);
 
