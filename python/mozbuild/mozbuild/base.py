@@ -43,6 +43,11 @@ from .util import (
     memoized_property,
 )
 
+try:
+    import psutil
+except Exception:
+    psutil = None
+
 
 def ancestors(path):
     """Emit the parent directories of a path."""
@@ -731,6 +736,7 @@ class MozbuildObject(ProcessExecutionMixin):
         print_directory=True,
         pass_thru=False,
         num_jobs=0,
+        job_size=0,
         keep_going=False,
     ):
         """Invoke make.
@@ -775,17 +781,24 @@ class MozbuildObject(ProcessExecutionMixin):
                 else:
                     args.append(flag)
 
-        if num_jobs > 0:
-            args.append("-j%d" % num_jobs)
-        elif os.environ.get("MOZ_LOW_PARALLELISM_BUILD"):
+        if num_jobs == 0:
+            if job_size == 0:
+                job_size = 2.0 if self.substs.get("CC_TYPE") == "gcc" else 1.0  # GiB
+
             cpus = multiprocessing.cpu_count()
-            jobs = max(1, int(0.75 * cpus))
-            print(
-                "  Low parallelism requested: using %d jobs for %d cores" % (jobs, cpus)
-            )
-            args.append("-j%d" % jobs)
-        else:
-            args.append("-j%d" % multiprocessing.cpu_count())
+            if not psutil or not job_size:
+                num_jobs = cpus
+            else:
+                mem_gb = psutil.virtual_memory().total / 1024 ** 3
+                from_mem = round(mem_gb / job_size)
+                num_jobs = max(1, min(cpus, from_mem))
+                print(
+                    "  Parallelism determined by memory: using %d jobs for %d cores "
+                    "based on %.1f GiB RAM and estimated job size of %.1f GiB"
+                    % (num_jobs, cpus, mem_gb, job_size)
+                )
+
+        args.append("-j%d" % num_jobs)
 
         if ignore_errors:
             args.append("-k")

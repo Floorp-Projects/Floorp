@@ -19,7 +19,6 @@ linux64-base-toolchains/opt:
     worker:
         max-run-time: 7200
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
             FORCE_GCC: '1'
     run:
@@ -59,7 +58,6 @@ linux64-base-toolchains/debug:
     worker:
         max-run-time: 7200
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
             FORCE_GCC: '1'
     run:
