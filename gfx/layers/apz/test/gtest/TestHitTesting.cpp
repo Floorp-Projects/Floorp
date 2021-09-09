@@ -55,8 +55,6 @@ class APZHitTestingTester : public APZCTreeManagerTester {
         Matrix4x4(),
     };
     CreateScrollData(treeShape, layerVisibleRegion, transforms);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
 
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
@@ -96,7 +94,6 @@ class APZHitTestingTester : public APZCTreeManagerTester {
                             100)),  // layer(9) in bottom-right (below (8))
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
     SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[4],
@@ -119,7 +116,6 @@ class APZHitTestingTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 0, 200, 200)),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
     SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
   }
 };
@@ -133,8 +129,6 @@ class APZHitTestingTesterLayersOnly : public APZHitTestingTester {
 TEST_F(APZHitTestingTesterLayersOnly, HitTesting1) {
   CreateHitTesting1LayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
 
   // No APZC attached so hit testing will return no APZC at (20,20)
   RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(20, 20));
@@ -214,8 +208,6 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting2) {
 
   CreateHitTesting2LayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
 
   UpdateHitTestingTree();
 
@@ -351,8 +343,6 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
                                        nsIntRegion(IntRect(0, 0, 50, 50))};
   Matrix4x4 transforms[] = {Matrix4x4(), Matrix4x4::Scaling(2, 2, 1)};
   CreateScrollData(treeShape, layerVisibleRegions, transforms);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   // No actual room to scroll
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 200, 200));
@@ -370,7 +360,6 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
 TEST_F(APZHitTestingTesterLayersOnly, ComplexMultiLayerTree) {
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-  auto& layers = scrollData;
   UpdateHitTestingTree();
 
   /* The layer tree looks like this:
@@ -463,7 +452,6 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
-  WebRenderLayerScrollData* root = scrollData[0];
   RefPtr<TestAsyncPanZoomController> apzcroot = ApzcOf(root);
 
   // At this point, the following holds (all coordinates in screen pixels):
@@ -537,7 +525,6 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
-  WebRenderLayerScrollData* root = scrollData[0];
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(3));
@@ -567,7 +554,6 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
-  WebRenderLayerScrollData* root = scrollData[0];
   DisableApzOn(root);
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
@@ -616,7 +602,6 @@ TEST_F(APZHitTestingTester, Bug1148350) {
   CreateBug1148350LayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
-  auto& layers = scrollData;
 
   MockFunction<void(std::string checkPointName)> check;
   {
@@ -661,7 +646,6 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
                                       nsIntRegion(IntRect(0, 0, 200, 200)),
                                       nsIntRegion(IntRect(0, 0, 200, 100))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
 
   // Add root scroll metadata to the first painted layer.
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID,

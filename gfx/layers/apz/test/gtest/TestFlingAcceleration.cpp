@@ -18,7 +18,6 @@ class APZCFlingAccelerationTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 0, 800, 1000)),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    WebRenderLayerScrollData* root = scrollData[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 800, 50000));
     // Scroll somewhere into the middle of the scroll range, so that we have

@@ -22,8 +22,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 100, 200, 100)),  // bottom half
     };
     CreateScrollData(treeShape, layerVisibleRegions);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1],
                               ScrollableLayerGuid::START_SCROLL_ID + 1);
@@ -59,8 +57,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 150, 100, 100)),
     };
     CreateScrollData(treeShape, layerVisibleRegions);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
 
     // Set up the event regions so that the child thebes layer is positioned far
@@ -90,8 +86,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 100, 200, 100))  // [100, 200]
     };
     CreateScrollData(treeShape, layerVisibleRegions);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
 
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
@@ -129,7 +123,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 0, 100, 100)),
     };
     CreateScrollData(treeShape, layerVisibleRegions);
-    auto& layers = scrollData;
 
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1],
@@ -161,7 +154,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
         Matrix4x4(),
     };
     CreateScrollData(treeShape, layerVisibleRegions, layerTransforms);
-    auto& layers = scrollData;
 
     SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 10, 10));
@@ -188,7 +180,6 @@ class APZEventRegionsTesterLayersOnly : public APZEventRegionsTester {
 
 TEST_F(APZEventRegionsTesterLayersOnly, HitRegionImmediateResponse) {
   CreateEventRegionsLayerTree1();
-  auto& layers = scrollData;
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
   TestAsyncPanZoomController* left = ApzcOf(layers[1]);
@@ -265,7 +256,6 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
 TEST_F(APZEventRegionsTesterLayersOnly, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-  auto& layers = scrollData;
 
   UpdateHitTestingTree();
 
@@ -282,7 +272,6 @@ TEST_F(APZEventRegionsTesterLayersOnly, Obscuration) {
 
 TEST_F(APZEventRegionsTester, Bug1119497) {
   CreateBug1119497LayerTree();
-  auto& layers = scrollData;
 
   APZCTreeManager::HitTestResult hit =
       manager->GetTargetAPZC(ScreenPoint(50, 50));
@@ -294,7 +283,6 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
 
 TEST_F(APZEventRegionsTester, Bug1117712) {
   CreateBug1117712LayerTree();
-  auto& layers = scrollData;
 
   TestAsyncPanZoomController* apzc2 = ApzcOf(layers[2]);
 

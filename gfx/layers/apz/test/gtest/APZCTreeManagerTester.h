@@ -61,8 +61,8 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
     bool activeAnimations = false;
 
-    for (size_t i = 0; i < scrollData.GetLayerCount(); ++i) {
-      if (TestAsyncPanZoomController* apzc = ApzcOf(scrollData[i])) {
+    for (size_t i = 0; i < layers.GetLayerCount(); ++i) {
+      if (TestAsyncPanZoomController* apzc = ApzcOf(layers[i])) {
         activeAnimations |=
             apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
       }
@@ -78,28 +78,30 @@ class APZCTreeManagerTester : public APZCTesterBase {
                           Callback aCallback) {
     MOZ_ASSERT(aLayer->GetScrollMetadataCount() == 1);
     ScrollMetadata& metadataRef =
-        APZTestAccess::GetScrollMetadataMut(*aLayer, scrollData, 0);
+        APZTestAccess::GetScrollMetadataMut(*aLayer, layers, 0);
     aCallback(metadataRef, metadataRef.GetMetrics());
   }
 
   // A convenience wrapper for manager->UpdateHitTestingTree().
   void UpdateHitTestingTree(uint32_t aPaintSequenceNumber = 0) {
-    manager->UpdateHitTestingTree(
-        WebRenderScrollDataWrapper{*updater, &scrollData},
-        /* is first paint = */ false, LayersId{0}, aPaintSequenceNumber);
+    manager->UpdateHitTestingTree(WebRenderScrollDataWrapper{*updater, &layers},
+                                  /* is first paint = */ false, LayersId{0},
+                                  aPaintSequenceNumber);
   }
 
   void CreateScrollData(const char* aTreeShape,
                         const nsIntRegion* aVisibleRegions = nullptr,
                         const gfx::Matrix4x4* aTransforms = nullptr) {
-    scrollData = TestWRScrollData::Create(aTreeShape, *updater, aVisibleRegions,
-                                          aTransforms);
+    layers = TestWRScrollData::Create(aTreeShape, *updater, aVisibleRegions,
+                                      aTransforms);
+    root = layers[0];
   }
 
   RefPtr<TestAPZCTreeManager> manager;
   RefPtr<APZSampler> sampler;
   RefPtr<APZUpdater> updater;
-  TestWRScrollData scrollData;
+  TestWRScrollData layers;
+  WebRenderLayerScrollData* root = nullptr;
 
   SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarWebRender;
   SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarSoftwareWebRender;
@@ -128,7 +130,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   void SetEventRegionsBasedOnBottommostMetrics(
       WebRenderLayerScrollData* aLayer) {
     const FrameMetrics& metrics =
-        aLayer->GetScrollMetadata(scrollData, 0).GetMetrics();
+        aLayer->GetScrollMetadata(layers, 0).GetMetrics();
     CSSRect scrollableRect = metrics.GetScrollableRect();
     if (!scrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
       // The purpose of this is to roughly mimic what layout would do in the
@@ -153,7 +155,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
                "single layer");
     if (aLayer->GetScrollMetadataCount() == 0) {
       // Add new metrics
-      aLayer->AppendScrollMetadata(scrollData, aMetadata);
+      aLayer->AppendScrollMetadata(layers, aMetadata);
     } else {
       // Overwrite existing metrics
       ModifyFrameMetrics(
@@ -169,7 +171,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
                "This function can only be used on layers which do not yet have "
                "scroll metadata");
     for (const ScrollMetadata& metadata : aMetadata) {
-      aLayer->AppendScrollMetadata(scrollData, metadata);
+      aLayer->AppendScrollMetadata(layers, metadata);
     }
   }
 
@@ -189,9 +191,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
   bool HasScrollableFrameMetrics(const WebRenderLayerScrollData* aLayer) const {
     for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
-      if (aLayer->GetScrollMetadata(scrollData, i)
-              .GetMetrics()
-              .IsScrollable()) {
+      if (aLayer->GetScrollMetadata(layers, i).GetMetrics().IsScrollable()) {
         return true;
       }
     }
@@ -202,7 +202,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
                         WebRenderLayerScrollData* aParent) {
     ModifyFrameMetrics(aChild, [&](ScrollMetadata& aSm, FrameMetrics&) {
       aSm.SetScrollParentId(
-          aParent->GetScrollMetadata(scrollData, 0).GetMetrics().GetScrollId());
+          aParent->GetScrollMetadata(layers, 0).GetMetrics().GetScrollId());
     });
   }
 
@@ -217,9 +217,8 @@ class APZCTreeManagerTester : public APZCTesterBase {
     // Unlike Layer, WebRenderLayerScrollData does not store the associated
     // APZCs, so look it up using the tree manager instead.
     RefPtr<AsyncPanZoomController> apzc = manager->GetTargetAPZC(
-        LayersId{0}, aLayer->GetScrollMetadata(scrollData, aIndex)
-                         .GetMetrics()
-                         .GetScrollId());
+        LayersId{0},
+        aLayer->GetScrollMetadata(layers, aIndex).GetMetrics().GetScrollId());
     return (TestAsyncPanZoomController*)apzc.get();
   }
 
@@ -229,8 +228,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
         nsIntRegion(IntRect(0, 0, 200, 200)),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    SetScrollableFrameMetrics(scrollData[0],
-                              ScrollableLayerGuid::START_SCROLL_ID,
+    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 500, 500));
   }
 };

@@ -21,7 +21,6 @@ TEST_F(APZCSnappingOnMomentumTesterLayersOnly, Snap_On_Momentum) {
       nsIntRegion(IntRect(0, 0, 100, 100)),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
-  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 500));
 
