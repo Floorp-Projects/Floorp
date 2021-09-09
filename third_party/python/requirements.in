@@ -1,21 +1,3 @@
-# ONLY ADD PACKAGES USED BY PYTHON 3 TO THIS LIST!
-#
-# Python 2-only packages should be vendored manually by running:
-#
-#    $ pip download <package>==<version>
-#
-# Then for the package and each dependency:
-#
-#    $ pip hash <package>.whl  # verify the hash against the one on PyPi (e.g https://pypi.org/project/<package>/<version>/#files)
-#    $ unzip <package>.whl -d <package>
-#    $ echo <version> > <package>/VERSION
-#    $ hg add <package>/VERSION
-#
-# Note `pip download` may return `tar.gz` files if there is no `.whl` (wheel)
-# available. When downloading wheels, make sure that they are cross-platform.
-# If not you may need to specify `--no-binary :<package1>,<package2>:` to get
-# the source distribution instead for those particular packages.
-
 appdirs==1.4.4
 attrs==19.1.0
 blessings==1.7
