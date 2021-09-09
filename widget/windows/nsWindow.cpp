@@ -5928,7 +5928,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       // WM_NCHITTEST handles HTMAXBUTTON so we need to handle clicks here.
       // WM_LBUTTONDOWNs will not be sent for this region.
-      if (wParam == HTMAXBUTTON) {
+      if (wParam == HTMAXBUTTON && mCustomNonClient) {
         DispatchMouseEvent(eMouseDown, wParam, lParamToClient(lParam), false,
                            MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
         DispatchPendingEvents();
