@@ -117,8 +117,8 @@ TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
 
   // As in WebRenderCommandBuilder, the layers need to be added to the
   // WebRenderScrollData in reverse of the order in which they were built.
-  for (auto it = finishedLayers.crbegin(); it != finishedLayers.crend(); ++it) {
-    result.AddLayerData(*it);
+  for (auto it = finishedLayers.rbegin(); it != finishedLayers.rend(); ++it) {
+    result.AddLayerData(std::move(*it));
   }
   // mIndexMap also needs to be adjusted to accout for the reversal above.
   for (auto& [layerIndex, storedIndex] : result.mIndexMap) {

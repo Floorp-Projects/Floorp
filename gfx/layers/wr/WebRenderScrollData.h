@@ -44,6 +44,7 @@ class WebRenderScrollData;
 class WebRenderLayerScrollData final {
  public:
   WebRenderLayerScrollData();  // needed for IPC purposes
+  WebRenderLayerScrollData(WebRenderLayerScrollData&& aOther) = default;
   ~WebRenderLayerScrollData();
 
   using ViewID = ScrollableLayerGuid::ViewID;
@@ -245,7 +246,7 @@ class WebRenderScrollData {
   size_t AddMetadata(const ScrollMetadata& aMetadata);
   // Add the provided WebRenderLayerScrollData and return the index that can
   // be used to look it up via GetLayerData.
-  size_t AddLayerData(const WebRenderLayerScrollData& aData);
+  size_t AddLayerData(WebRenderLayerScrollData&& aData);
 
   size_t GetLayerCount() const;
 
