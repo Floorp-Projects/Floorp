@@ -61,7 +61,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   RefPtr<TestAsyncPanZoomController> childApzc =
       new TestAsyncPanZoomController(LayersId{0}, mcc, tm);
 
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   // LayerID                     0 1
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 300, 300)),
@@ -78,10 +78,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
       2.0f, 1.0f,
       1.0f);  // this is the 2.0 x-axis CSS transform on the child layer
 
-  nsTArray<RefPtr<Layer> > layers;
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion,
-                                       transforms, lm, layers);
+  auto layers = TestWRScrollData::Create(treeShape, *updater,
+                                         layerVisibleRegion, transforms);
 
   ScrollMetadata metadata;
   FrameMetrics& metrics = metadata.GetMetrics();
@@ -100,8 +98,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   FrameMetrics& childMetrics = childMetadata.GetMetrics();
   childMetrics.SetScrollId(ScrollableLayerGuid::START_SCROLL_ID + 1);
 
-  layers[0]->SetScrollMetadata(metadata);
-  layers[1]->SetScrollMetadata(childMetadata);
+  layers[0]->AppendScrollMetadata(layers, metadata);
+  layers[1]->AppendScrollMetadata(layers, childMetadata);
 
   ParentLayerPoint pointOut;
   AsyncTransform viewTransformOut;
