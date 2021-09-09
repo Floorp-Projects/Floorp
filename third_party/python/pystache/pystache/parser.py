@@ -43,7 +43,7 @@ def parse(template, delimiters=None):
 
 def _compile_template_re(delimiters):
     """
-    Return a regular expression object (re.RegexObject) instance.
+    Return a regular expresssion object (re.RegexObject) instance.
 
     """
     # The possible tag type characters following the opening tag,
