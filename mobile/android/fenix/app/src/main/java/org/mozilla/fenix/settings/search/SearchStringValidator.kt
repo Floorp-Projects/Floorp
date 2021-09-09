@@ -28,7 +28,7 @@ object SearchStringValidator {
         }
 
         // read the response stream to ensure the body is closed correctly. workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1603114
-        response.body.string()
+        response.body.close()
         return if (response.isSuccess ||
             isTestQueryParamNotFound(response.status)
         ) Result.Success else Result.CannotReach
