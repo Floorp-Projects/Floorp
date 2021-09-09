@@ -10376,6 +10376,13 @@ MConstant* MDefinition::maybeConstantValue() {
   return nullptr;
 }
 
+#ifdef ENABLE_WASM_SIMD
+MWasmShuffleSimd128* BuildWasmShuffleSimd128(TempAllocator& alloc,
+                                             const int8_t* control,
+                                             MDefinition* lhs,
+                                             MDefinition* rhs);
+#endif  // ENABLE_WASM_SIMD
+
 }  // namespace jit
 }  // namespace js
 
