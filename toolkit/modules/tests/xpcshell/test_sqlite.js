@@ -1,6 +1,6 @@
 "use strict";
 
-do_get_profile();
+const PROFILE_DIR = do_get_profile().path;
 
 const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 const { PromiseUtils } = ChromeUtils.import(
@@ -104,19 +104,20 @@ add_task(async function test_open_with_defaultTransactionType() {
 });
 
 add_task(async function test_open_normal_error() {
-  let currentDir = await OS.File.getCurrentDirectory();
+  let currentDir = do_get_cwd().path;
 
-  let src = OS.Path.join(currentDir, "corrupt.sqlite");
-  Assert.ok(await OS.File.exists(src), "Database file found");
+  let src = PathUtils.join(currentDir, "corrupt.sqlite");
+  Assert.ok(await IOUtils.exists(src), "Database file found");
 
   // Ensure that our database doesn't already exist.
-  let path = OS.Path.join(OS.Constants.Path.profileDir, "corrupt.sqlite");
-  Assert.ok(
-    !(await OS.File.exists(path)),
+  let path = PathUtils.join(PROFILE_DIR, "corrupt.sqlite");
+  await Assert.rejects(
+    IOUtils.stat(path),
+    /Could not stat file\(.*\) because it does not exist/,
     "Database file should not exist yet"
   );
 
-  await OS.File.copy(src, path);
+  await IOUtils.copy(src, path);
 
   let openPromise = Sqlite.openConnection({ path });
   await Assert.rejects(
@@ -129,10 +130,7 @@ add_task(async function test_open_normal_error() {
 });
 
 add_task(async function test_open_unshared() {
-  let path = OS.Path.join(
-    OS.Constants.Path.profileDir,
-    "test_open_unshared.sqlite"
-  );
+  let path = PathUtils.join(PROFILE_DIR, "test_open_unshared.sqlite");
 
   let c = await Sqlite.openConnection({ path, sharedMemoryCache: false });
   await c.close();
@@ -532,10 +530,7 @@ add_task(async function test_multiple_transactions() {
 // an externally opened transaction exists.
 add_task(async function test_wrapped_connection_transaction() {
   let file = new FileUtils.File(
-    OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "test_wrapStorageConnection.sqlite"
-    )
+    PathUtils.join(PROFILE_DIR, "test_wrapStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
@@ -996,10 +991,7 @@ add_task(async function test_direct() {
 // Test Sqlite.cloneStorageConnection.
 add_task(async function test_cloneStorageConnection() {
   let file = new FileUtils.File(
-    OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "test_cloneStorageConnection.sqlite"
-    )
+    PathUtils.join(PROFILE_DIR, "test_cloneStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
@@ -1062,10 +1054,7 @@ add_task(async function test_clone() {
 
 // Test clone(readOnly) method.
 add_task(async function test_readOnly_clone() {
-  let path = OS.Path.join(
-    OS.Constants.Path.profileDir,
-    "test_readOnly_clone.sqlite"
-  );
+  let path = PathUtils.join(PROFILE_DIR, "test_readOnly_clone.sqlite");
   let c = await Sqlite.openConnection({ path, sharedMemoryCache: false });
 
   let clone = await c.clone(true);
@@ -1085,10 +1074,7 @@ add_task(async function test_readOnly_clone() {
 // Test Sqlite.wrapStorageConnection.
 add_task(async function test_wrapStorageConnection() {
   let file = new FileUtils.File(
-    OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "test_wrapStorageConnection.sqlite"
-    )
+    PathUtils.join(PROFILE_DIR, "test_wrapStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
     Services.storage.openAsyncDatabase(file, null, (status, db) => {
