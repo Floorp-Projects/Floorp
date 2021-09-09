@@ -912,7 +912,7 @@ static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
   bc->maybeFree(temps.t2);
 }
 
-#elif defined(JS_CODEGEN_NONE)
+#elif defined(__wasi__)
 
 using Temps = Nothing;
 
