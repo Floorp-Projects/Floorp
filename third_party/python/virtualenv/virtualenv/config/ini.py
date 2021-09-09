@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import os
 
-from appdirs import user_config_dir
+from platformdirs import user_config_dir
 
 from virtualenv.info import PY3
 from virtualenv.util import ConfigParser
@@ -19,8 +19,9 @@ class IniConfig(object):
 
     section = "virtualenv"
 
-    def __init__(self):
-        config_file = os.environ.get(self.VIRTUALENV_CONFIG_FILE_ENV_VAR, None)
+    def __init__(self, env=None):
+        env = os.environ if env is None else env
+        config_file = env.get(self.VIRTUALENV_CONFIG_FILE_ENV_VAR, None)
         self.is_env_var = config_file is not None
         config_file = (
             Path(config_file)
