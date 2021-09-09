@@ -609,4 +609,15 @@ struct AssertionConditionType {
 #undef MOZ_DUMP_ASSERTION_STACK
 #undef MOZ_CRASH_CRASHREPORT
 
+/*
+ * This is only used by Array and nsTArray classes, therefore it is not
+ * required when included from C code.
+ */
+#ifdef __cplusplus
+namespace mozilla::detail {
+MFBT_API MOZ_NORETURN MOZ_COLD void InvalidArrayIndex_CRASH(size_t aIndex,
+                                                            size_t aLength);
+}  // namespace mozilla::detail
+#endif  // __cplusplus
+
 #endif /* mozilla_Assertions_h */
