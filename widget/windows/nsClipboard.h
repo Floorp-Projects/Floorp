@@ -65,6 +65,14 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   static UINT GetCustomClipboardFormat();
 
  protected:
+  // See
+  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olesetclipboard>.
+  static void LogOleSetClipboardResult(HRESULT aHres);
+
+  // See
+  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olesetclipboard>.
+  static void OleSetClipboardResultToString(HRESULT aHres, nsACString& aResult);
+
   NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) override;
