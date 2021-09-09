@@ -1073,11 +1073,17 @@ struct BaseCompiler final {
   [[nodiscard]] bool store(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr, AnyReg src, RegI32 temp);
 
-  bool atomicCmpXchg(MemoryAccessDesc* access, ValType type);
   bool atomicLoad(MemoryAccessDesc* access, ValType type);
-  bool atomicRMW(MemoryAccessDesc* access, ValType type, AtomicOp op);
   bool atomicStore(MemoryAccessDesc* access, ValType type);
-  bool atomicXchg(MemoryAccessDesc* desc, ValType type);
+  void atomicRMW(MemoryAccessDesc* access, ValType type, AtomicOp op);
+  void atomicRMW32(MemoryAccessDesc* access, ValType type, AtomicOp op);
+  void atomicRMW64(MemoryAccessDesc* access, ValType type, AtomicOp op);
+  void atomicXchg(MemoryAccessDesc* desc, ValType type);
+  void atomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
+  void atomicXchg32(MemoryAccessDesc* access, ValType type);
+  void atomicCmpXchg(MemoryAccessDesc* access, ValType type);
+  void atomicCmpXchg32(MemoryAccessDesc* access, ValType type);
+  void atomicCmpXchg64(MemoryAccessDesc* access, ValType type);
 
   RegI32 popMemory32Access(MemoryAccessDesc* access, AccessCheck* check);
   void pushHeapBase();
@@ -1409,7 +1415,6 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitWake();
   [[nodiscard]] bool emitFence();
   [[nodiscard]] bool emitAtomicXchg(ValType type, Scalar::Type viewType);
-  void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   [[nodiscard]] bool emitMemInit();
   [[nodiscard]] bool emitMemCopy();
   [[nodiscard]] bool emitMemCopyCall(uint32_t lineOrBytecode);
