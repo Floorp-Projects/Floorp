@@ -576,6 +576,29 @@ function testValidateDelegate() {
          end))`
   );
 
+  wasmValidateText(
+    `(module
+       (tag $exn (param))
+       (func
+         block
+           try
+             throw $exn
+           delegate 0
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (tag $exn (param))
+       (func
+         try
+         catch $exn
+           try
+             throw $exn
+           delegate 0
+         end))`
+  );
+
   wasmFailValidateText(
     `(module
        (tag $exn (param))
@@ -609,31 +632,6 @@ function testValidateDelegate() {
          catch $exn
          end))`,
     /delegate depth exceeds current nesting level/
-  );
-
-  wasmFailValidateText(
-    `(module
-       (tag $exn (param))
-       (func
-         block
-           try
-             throw $exn
-           delegate 0
-         end))`,
-    /delegate target was not a try or function body/
-  );
-
-  wasmFailValidateText(
-    `(module
-       (tag $exn (param))
-       (func
-         try
-         catch $exn
-           try
-             throw $exn
-           delegate 0
-         end))`,
-    /delegate target was not a try or function body/
   );
 
   wasmFailValidateText(
