@@ -10,9 +10,8 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/APZSampler.h"              // for APZSampler
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
-#include "mozilla/layers/CompositorThread.h"     // for CompositorThreadHolder
-#include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
-#include "mozilla/layers/OMTAController.h"       // for OMTAController
+#include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
+#include "mozilla/layers/OMTAController.h"    // for OMTAController
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
