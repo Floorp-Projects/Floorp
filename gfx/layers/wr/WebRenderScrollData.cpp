@@ -35,6 +35,10 @@ void WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount) {
   mDescendantCount = aDescendantCount;
 }
 
+void WebRenderLayerScrollData::InitializeForTest(int32_t aDescendantCount) {
+  mDescendantCount = aDescendantCount;
+}
+
 void WebRenderLayerScrollData::Initialize(
     WebRenderScrollData& aOwner, nsDisplayItem* aItem, int32_t aDescendantCount,
     const ActiveScrolledRoot* aStopAtAsr,
@@ -231,6 +235,13 @@ size_t WebRenderScrollData::GetLayerCount() const {
 
 const WebRenderLayerScrollData* WebRenderScrollData::GetLayerData(
     size_t aIndex) const {
+  if (aIndex >= mLayerScrollData.Length()) {
+    return nullptr;
+  }
+  return &(mLayerScrollData.ElementAt(aIndex));
+}
+
+WebRenderLayerScrollData* WebRenderScrollData::GetLayerData(size_t aIndex) {
   if (aIndex >= mLayerScrollData.Length()) {
     return nullptr;
   }

@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     "TestSnapping.cpp",
     "TestSnappingOnMomentum.cpp",
     "TestTreeManager.cpp",
+    "TestWRScrollData.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
