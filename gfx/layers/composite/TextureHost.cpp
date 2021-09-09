@@ -479,31 +479,6 @@ void TextureHost::EnsureRenderTexture(
   CreateRenderTexture(mExternalImageId.ref());
 }
 
-void TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("%s (0x%p)", Name(), this).get();
-  // Note: the TextureHost needs to be locked before it is safe to call
-  //       GetSize() and GetFormat() on it.
-  if (Lock()) {
-    aStream << " [size=" << GetSize() << "]"
-            << " [format=" << GetFormat() << "]";
-    Unlock();
-  }
-  aStream << " [flags=" << mFlags << "]";
-#ifdef MOZ_DUMP_PAINTING
-  if (StaticPrefs::layers_dump_texture()) {
-    nsAutoCString pfx(aPrefix);
-    pfx += "  ";
-
-    aStream << "\n" << pfx.get() << "Surface: ";
-    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
-    if (dSurf) {
-      aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
-    }
-  }
-#endif
-}
-
 void TextureHost::Updated(const nsIntRegion* aRegion) {
   UpdatedInternal(aRegion);
 }
