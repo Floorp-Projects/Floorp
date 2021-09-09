@@ -113,6 +113,11 @@ enum class RhsDestOp { True = true };
 // RABALDR_HAS_HEAPREG
 //   The platform has a dedicated HeapReg.
 //
+// RABALDR_ZERO_EXTENDS
+//   The canonical representation of a 32-bit value in a 64-bit register is
+//   zero-extended.  For 64-bit platforms only.  See comment block "64-bit GPRs
+//   carrying 32-bit values" in MacroAssembler.h.
+//
 // RABALDR_CHUNKY_STACK
 //   The platform must allocate the CPU stack in chunks and not word-at-a-time
 //   due to SP alignment requirements (ARM64 for now).
@@ -137,11 +142,13 @@ enum class RhsDestOp { True = true };
 
 #ifdef JS_CODEGEN_X64
 #  define RABALDR_HAS_HEAPREG
+#  define RABALDR_ZERO_EXTENDS
 #endif
 
 #ifdef JS_CODEGEN_ARM64
 #  define RABALDR_CHUNKY_STACK
 #  define RABALDR_HAS_HEAPREG
+#  define RABALDR_ZERO_EXTENDS
 #endif
 
 #ifdef JS_CODEGEN_MIPS64
