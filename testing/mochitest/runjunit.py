@@ -289,7 +289,9 @@ class JUnitTestRunner(MochitestDesktop):
         self.pass_count = 0
         self.fail_count = 0
         self.todo_count = 0
+        self.total_count = 0
         self.runs = 0
+        self.seen_last_test = False
 
         def callback(line):
             # Output callback: Parse the raw junit log messages, translating into
@@ -305,6 +307,12 @@ class JUnitTestRunner(MochitestDesktop):
             match = re.match(r"INSTRUMENTATION_STATUS:\s*test=(.*)", line)
             if match:
                 self.test_name = match.group(1)
+            match = re.match(r"INSTRUMENTATION_STATUS:\s*numtests=(.*)", line)
+            if match:
+                self.total_count = int(match.group(1))
+            match = re.match(r"INSTRUMENTATION_STATUS:\s*current=(.*)", line)
+            if match:
+                self.current_test_id = int(match.group(1))
             match = re.match(r"INSTRUMENTATION_STATUS:\s*stack=(.*)", line)
             if match:
                 self.exception_message = match.group(1)
@@ -321,6 +329,11 @@ class JUnitTestRunner(MochitestDesktop):
                 status = match.group(1)
                 full_name = "%s#%s" % (self.class_name, self.test_name)
                 if full_name == self.current_full_name:
+                    # A crash in the test harness might cause us to ignore tests,
+                    # so we double check that we've actually ran all the tests
+                    if self.total_count == self.current_test_id:
+                        self.seen_last_test = True
+
                     if status == "0":
                         message = ""
                         status = "PASS"
@@ -380,6 +393,7 @@ class JUnitTestRunner(MochitestDesktop):
                 self.exception_message = ""
                 self.test_name = ""
                 self.current_full_name = ""
+                self.current_test_id = 0
                 self.runs += 1
                 self.log.info("launching %s" % cmd)
                 p = self.device.shell(
@@ -393,6 +407,11 @@ class JUnitTestRunner(MochitestDesktop):
             self.log.info("Passed: %d" % self.pass_count)
             self.log.info("Failed: %d" % self.fail_count)
             self.log.info("Todo: %d" % self.todo_count)
+            if not self.seen_last_test:
+                self.log.error(
+                    "TEST-UNEXPECTED-FAIL | runjunit.py | "
+                    "Some tests did not run (probably due to a crash in the harness)"
+                )
         finally:
             self.log.suite_end()
 
