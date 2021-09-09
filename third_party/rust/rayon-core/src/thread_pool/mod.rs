@@ -5,6 +5,7 @@
 
 use crate::join;
 use crate::registry::{Registry, ThreadSpawn, WorkerThread};
+use crate::scope::{do_in_place_scope, do_in_place_scope_fifo};
 use crate::spawn;
 #[allow(deprecated)]
 use crate::Configuration;
@@ -219,6 +220,30 @@ impl ThreadPool {
         R: Send,
     {
         self.install(|| scope_fifo(op))
+    }
+
+    /// Creates a scope that spawns work into this thread-pool.
+    ///
+    /// See also: [the `in_place_scope()` function][in_place_scope].
+    ///
+    /// [in_place_scope]: fn.in_place_scope.html
+    pub fn in_place_scope<'scope, OP, R>(&self, op: OP) -> R
+    where
+        OP: FnOnce(&Scope<'scope>) -> R,
+    {
+        do_in_place_scope(Some(&self.registry), op)
+    }
+
+    /// Creates a scope that spawns work into this thread-pool in FIFO order.
+    ///
+    /// See also: [the `in_place_scope_fifo()` function][in_place_scope_fifo].
+    ///
+    /// [in_place_scope_fifo]: fn.in_place_scope_fifo.html
+    pub fn in_place_scope_fifo<'scope, OP, R>(&self, op: OP) -> R
+    where
+        OP: FnOnce(&ScopeFifo<'scope>) -> R,
+    {
+        do_in_place_scope_fifo(Some(&self.registry), op)
     }
 
     /// Spawns an asynchronous task in this thread-pool. This task will

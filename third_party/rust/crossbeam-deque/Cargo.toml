@@ -10,24 +10,32 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2018"
 name = "crossbeam-deque"
-version = "0.7.4"
+version = "0.8.1"
 authors = ["The Crossbeam Project Developers"]
 description = "Concurrent work-stealing deque"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
 documentation = "https://docs.rs/crossbeam-deque"
-readme = "README.md"
 keywords = ["chase-lev", "lock-free", "scheduler", "scheduling"]
 categories = ["algorithms", "concurrency", "data-structures"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
+[dependencies.cfg-if]
+version = "1"
+
 [dependencies.crossbeam-epoch]
-version = "0.8"
+version = "0.9"
+optional = true
+default-features = false
 
 [dependencies.crossbeam-utils]
-version = "0.7"
-
-[dependencies.maybe-uninit]
-version = "2.0.0"
+version = "0.8"
+optional = true
+default-features = false
 [dev-dependencies.rand]
-version = "0.6"
+version = "0.8"
+
+[features]
+default = ["std"]
+std = ["crossbeam-epoch/std", "crossbeam-utils/std"]

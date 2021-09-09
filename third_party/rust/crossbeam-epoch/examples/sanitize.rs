@@ -1,13 +1,10 @@
-extern crate crossbeam_epoch as epoch;
-extern crate rand;
-
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::{AcqRel, Acquire, Relaxed};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use epoch::{Atomic, Collector, LocalHandle, Owned, Shared};
+use crossbeam_epoch::{self as epoch, Atomic, Collector, LocalHandle, Owned, Shared};
 use rand::Rng;
 
 fn worker(a: Arc<Atomic<AtomicUsize>>, handle: LocalHandle) -> usize {
@@ -17,7 +14,7 @@ fn worker(a: Arc<Atomic<AtomicUsize>>, handle: LocalHandle) -> usize {
     if rng.gen() {
         thread::sleep(Duration::from_millis(1));
     }
-    let timeout = Duration::from_millis(rng.gen_range(0, 10));
+    let timeout = Duration::from_millis(rng.gen_range(0..10));
     let now = Instant::now();
 
     while now.elapsed() < timeout {
