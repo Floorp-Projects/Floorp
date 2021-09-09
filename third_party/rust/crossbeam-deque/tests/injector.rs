@@ -1,15 +1,11 @@
-extern crate crossbeam_deque as deque;
-extern crate crossbeam_utils as utils;
-extern crate rand;
-
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::{Arc, Mutex};
 
-use deque::Steal::{Empty, Success};
-use deque::{Injector, Worker};
+use crossbeam_deque::Steal::{Empty, Success};
+use crossbeam_deque::{Injector, Worker};
+use crossbeam_utils::thread::scope;
 use rand::Rng;
-use utils::thread::scope;
 
 #[test]
 fn smoke() {
@@ -182,7 +178,7 @@ fn stress() {
                         hits.fetch_add(1, SeqCst);
                     }
 
-                    while let Some(_) = w2.pop() {
+                    while w2.pop().is_some() {
                         hits.fetch_add(1, SeqCst);
                     }
                 }
@@ -192,7 +188,7 @@ fn stress() {
         let mut rng = rand::thread_rng();
         let mut expected = 0;
         while expected < COUNT {
-            if rng.gen_range(0, 3) == 0 {
+            if rng.gen_range(0..3) == 0 {
                 while let Success(_) = q.steal() {
                     hits.fetch_add(1, SeqCst);
                 }
@@ -242,7 +238,7 @@ fn no_starvation() {
                         hits.fetch_add(1, SeqCst);
                     }
 
-                    while let Some(_) = w2.pop() {
+                    while w2.pop().is_some() {
                         hits.fetch_add(1, SeqCst);
                     }
                 }
@@ -252,8 +248,8 @@ fn no_starvation() {
         let mut rng = rand::thread_rng();
         let mut my_hits = 0;
         loop {
-            for i in 0..rng.gen_range(0, COUNT) {
-                if rng.gen_range(0, 3) == 0 && my_hits == 0 {
+            for i in 0..rng.gen_range(0..COUNT) {
+                if rng.gen_range(0..3) == 0 && my_hits == 0 {
                     while let Success(_) = q.steal() {
                         my_hits += 1;
                     }
@@ -315,7 +311,7 @@ fn destructors() {
                         remaining.fetch_sub(1, SeqCst);
                     }
 
-                    while let Some(_) = w2.pop() {
+                    while w2.pop().is_some() {
                         cnt += 1;
                         remaining.fetch_sub(1, SeqCst);
                     }
