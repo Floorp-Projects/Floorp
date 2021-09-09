@@ -2588,7 +2588,7 @@
     lhs: Simd128
     rhs: Simd128
   arguments:
-    control: SimdConstant
+    shuffle: SimdShuffle
   type_policy: none
   result_type: Simd128
   movable: true

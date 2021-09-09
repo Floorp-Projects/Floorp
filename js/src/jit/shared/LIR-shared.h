@@ -3614,40 +3614,8 @@ class LWasmSignReplicationSimd128 : public LInstructionHelper<1, 1, 0> {
 // (v128, v128, imm_simd) -> v128 effect-free operation.
 // temp is FPR (and always in use).
 class LWasmShuffleSimd128 : public LInstructionHelper<1, 2, 1> {
- public:
-  // Shuffle operations.  NOTE: these may still be x86-centric, but the set can
-  // accomodate operations from other architectures.
-  enum Op {
-    // Blend bytes.  control_ has the blend mask as an I8x16: 0 to select from
-    // the lhs, -1 to select from the rhs.
-    BLEND_8x16,
-
-    // Blend words.  control_ has the blend mask as an I16x8: 0 to select from
-    // the lhs, -1 to select from the rhs.
-    BLEND_16x8,
-
-    // Concat the lhs in front of the rhs and shift right by bytes, extracting
-    // the low 16 bytes; control_[0] has the shift count.
-    CONCAT_RIGHT_SHIFT_8x16,
-
-    // Interleave qwords/dwords/words/bytes from high/low halves of operands.
-    // The low-order item in the result comes from the lhs, then the next from
-    // the rhs, and so on.  control_ is ignored.
-    INTERLEAVE_HIGH_8x16,
-    INTERLEAVE_HIGH_16x8,
-    INTERLEAVE_HIGH_32x4,
-    INTERLEAVE_HIGH_64x2,
-    INTERLEAVE_LOW_8x16,
-    INTERLEAVE_LOW_16x8,
-    INTERLEAVE_LOW_32x4,
-    INTERLEAVE_LOW_64x2,
-
-    // Fully general shuffle+blend.  control_ has the shuffle mask.
-    SHUFFLE_BLEND_8x16,
-  };
-
  private:
-  Op op_;
+  SimdShuffleOp op_;
   SimdConstant control_;
 
  public:
@@ -3658,7 +3626,8 @@ class LWasmShuffleSimd128 : public LInstructionHelper<1, 2, 1> {
   static constexpr uint32_t Rhs = 1;
 
   LWasmShuffleSimd128(const LAllocation& lhs, const LAllocation& rhs,
-                      const LDefinition& temp, Op op, SimdConstant control)
+                      const LDefinition& temp, SimdShuffleOp op,
+                      SimdConstant control)
       : LInstructionHelper(classOpcode), op_(op), control_(control) {
     setOperand(Lhs, lhs);
     setOperand(Rhs, rhs);
@@ -3669,58 +3638,14 @@ class LWasmShuffleSimd128 : public LInstructionHelper<1, 2, 1> {
   const LAllocation* lhsDest() { return getOperand(LhsDest); }
   const LAllocation* rhs() { return getOperand(Rhs); }
   const LDefinition* temp() { return getTemp(0); }
-  Op op() { return op_; }
+  SimdShuffleOp op() { return op_; }
   SimdConstant control() { return control_; }
 };
 
 // (v128, imm_simd) -> v128 effect-free operation.
 class LWasmPermuteSimd128 : public LInstructionHelper<1, 1, 0> {
- public:
-  // Permutation operations.  NOTE: these may still be x86-centric, but the set
-  // can accomodate operations from other architectures.
-  //
-  // The "low-order" byte is in lane 0 of an 8x16 datum, the "high-order" byte
-  // in lane 15.  The low-order byte is also the "rightmost".  In wasm, the
-  // constant (v128.const i8x16 0 1 2 ... 15) has 0 in the low-order byte and 15
-  // in the high-order byte.
-  enum Op {
-    // A single byte lane is copied into all the other byte lanes.  control_[0]
-    // has the source lane.
-    BROADCAST_8x16,
-
-    // A single word lane is copied into all the other word lanes.  control_[0]
-    // has the source lane.
-    BROADCAST_16x8,
-
-    // Copy input to output.
-    MOVE,
-
-    // control_ has bytes in range 0..15 s.t. control_[i] holds the source lane
-    // for output lane i.
-    PERMUTE_8x16,
-
-    // control_ has int16s in range 0..7, as for 8x16.  In addition, the high
-    // byte of control_[0] has flags detailing the operation, values taken
-    // from the Perm16x8Action enum below.
-    PERMUTE_16x8,
-
-    // control_ has int32s in range 0..3, as for 8x16.
-    PERMUTE_32x4,
-
-    // control_[0] has the number of places to rotate by.
-    ROTATE_RIGHT_8x16,
-
-    // Zeroes are shifted into high-order bytes and low-order bytes are lost.
-    // control_[0] has the number of places to shift by.
-    SHIFT_RIGHT_8x16,
-
-    // Zeroes are shifted into low-order bytes and high-order bytes are lost.
-    // control_[0] has the number of places to shift by.
-    SHIFT_LEFT_8x16,
-  };
-
  private:
-  Op op_;
+  SimdPermuteOp op_;
   SimdConstant control_;
 
  public:
@@ -3728,13 +3653,14 @@ class LWasmPermuteSimd128 : public LInstructionHelper<1, 1, 0> {
 
   static constexpr uint32_t Src = 0;
 
-  LWasmPermuteSimd128(const LAllocation& src, Op op, SimdConstant control)
+  LWasmPermuteSimd128(const LAllocation& src, SimdPermuteOp op,
+                      SimdConstant control)
       : LInstructionHelper(classOpcode), op_(op), control_(control) {
     setOperand(Src, src);
   }
 
   const LAllocation* src() { return getOperand(Src); }
-  Op op() { return op_; }
+  SimdPermuteOp op() { return op_; }
   SimdConstant control() { return control_; }
 };
 
