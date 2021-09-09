@@ -273,19 +273,16 @@ add_task(async function test_record_exposure_event_once() {
     })
   );
 
-  featureInstance.recordExposureEvent({ once: true });
-  featureInstance.recordExposureEvent({ once: true });
-  featureInstance.recordExposureEvent({ once: true });
+  featureInstance.recordExposureEvent();
+  featureInstance.recordExposureEvent();
+  featureInstance.recordExposureEvent();
 
-  Assert.ok(
-    exposureSpy.calledOnce,
-    "Should emit a single exposure event when the once param is true."
-  );
+  Assert.ok(exposureSpy.calledOnce, "Should emit a single exposure event.");
 
   sandbox.restore();
 });
 
-add_task(async function test_allow_multiple_exposure_events() {
+add_task(async function test_prevent_double_exposure() {
   const { sandbox, manager } = await setupForExperimentFeature();
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
@@ -303,11 +300,7 @@ add_task(async function test_allow_multiple_exposure_events() {
   featureInstance.recordExposureEvent();
 
   Assert.ok(exposureSpy.called, "Should emit exposure event");
-  Assert.equal(
-    exposureSpy.callCount,
-    3,
-    "Should emit an exposure event for each function call"
-  );
+  Assert.ok(exposureSpy.calledOnce, "Should emit a single exposure event");
 
   sandbox.restore();
   await doExperimentCleanup();
