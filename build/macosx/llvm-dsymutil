@@ -61,7 +61,7 @@ dir="\$(dirname \$0)"
 exit \$?
 EOF
 chmod +x "$tmpdir/crasher/run-me.sh"
-(cd "$tmpdir"/crasher; DSYMUTIL=/builds/worker/workspace/build/src/llvm-dsymutil/bin/llvm-dsymutil ./run-me.sh > /dev/null 2>&1)
+(cd "$tmpdir"/crasher; DSYMUTIL=$REAL_DSYMUTIL ./run-me.sh > /dev/null 2>&1)
 if [ $? -eq 139 ]; then
   echo "Could reproduce with a reduced testcase. Creating an artifact." >&2
   mkdir -p "$HOME/artifacts"
