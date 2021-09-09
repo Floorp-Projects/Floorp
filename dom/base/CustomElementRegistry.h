@@ -91,8 +91,6 @@ class CustomElementCallback {
 // Each custom element has an associated callback queue and an element is
 // being created flag.
 struct CustomElementData {
-  NS_INLINE_DECL_REFCOUNTING(CustomElementData)
-
   // https://dom.spec.whatwg.org/#concept-element-custom-element-state
   // CustomElementData is only created on the element which is a custom element
   // or an upgrade candidate, so the state of an element without
@@ -101,6 +99,7 @@ struct CustomElementData {
 
   explicit CustomElementData(nsAtom* aType);
   CustomElementData(nsAtom* aType, State aState);
+  ~CustomElementData() = default;
 
   // Custom element state as described in the custom element spec.
   State mState;
@@ -129,8 +128,6 @@ struct CustomElementData {
   }
 
  private:
-  virtual ~CustomElementData() = default;
-
   // Custom element type, for <button is="x-button"> or <x-button>
   // this would be x-button.
   RefPtr<nsAtom> mType;
