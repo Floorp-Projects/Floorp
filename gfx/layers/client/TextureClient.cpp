@@ -1412,27 +1412,6 @@ already_AddRefed<gfx::DataSourceSurface> TextureClient::GetAsSurface() {
   return data.forget();
 }
 
-void TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("TextureClient (0x%p)", this).get()
-          << " [size=" << GetSize() << "]"
-          << " [format=" << GetFormat() << "]"
-          << " [flags=" << mFlags << "]";
-
-#ifdef MOZ_DUMP_PAINTING
-  if (StaticPrefs::layers_dump_texture()) {
-    nsAutoCString pfx(aPrefix);
-    pfx += "  ";
-
-    aStream << "\n" << pfx.get() << "Surface: ";
-    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
-    if (dSurf) {
-      aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
-    }
-  }
-#endif
-}
-
 void TextureClient::GetSurfaceDescriptorRemoteDecoder(
     SurfaceDescriptorRemoteDecoder* const aOutDesc) {
   const auto handle = GetSerial();

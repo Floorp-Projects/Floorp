@@ -487,8 +487,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
    */
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
-
   /**
    * Copies a rectangle from this texture client to a position in aTarget.
    * It is assumed that the necessary locks are in place; so this should at
