@@ -32,7 +32,6 @@
 #include "mozilla/layers/AsyncDragMetrics.h"        // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent, etc
 #include "mozilla/layers/DoubleTapToZoom.h"         // for ZoomTarget
-#include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
@@ -371,7 +370,7 @@ void APZCTreeManager::SetAllowedTouchBehavior(
 }
 
 template <class ScrollNode>
-void  // ScrollNode is a LayerMetricsWrapper or a WebRenderScrollDataWrapper
+void  // ScrollNode is a WebRenderScrollDataWrapper
 APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
                                           bool aIsFirstPaint,
                                           LayersId aOriginatingLayersId,
@@ -703,22 +702,12 @@ void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
   mFocusState.Update(aRootLayerTreeId, aOriginatingLayersId, aFocusTarget);
 }
 
-void APZCTreeManager::UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
-                                           LayersId aOriginatingLayersId,
-                                           uint32_t aPaintSequenceNumber) {
-  AssertOnUpdaterThread();
-
-  LayerMetricsWrapper root(aRoot);
-  UpdateHitTestingTreeImpl(root, aIsFirstPaint, aOriginatingLayersId,
-                           aPaintSequenceNumber);
-}
-
 void APZCTreeManager::UpdateHitTestingTree(
-    const WebRenderScrollDataWrapper& aScrollWrapper, bool aIsFirstPaint,
+    const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
     LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber) {
   AssertOnUpdaterThread();
 
-  UpdateHitTestingTreeImpl(aScrollWrapper, aIsFirstPaint, aOriginatingLayersId,
+  UpdateHitTestingTreeImpl(aRoot, aIsFirstPaint, aOriginatingLayersId,
                            aPaintSequenceNumber);
 }
 
