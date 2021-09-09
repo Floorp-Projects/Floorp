@@ -204,9 +204,11 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
 
         gint dataLength = gtk_selection_data_get_length(selection);
         const guchar* data = gtk_selection_data_get_data(selection);
-
-        LOGCLIP(("  got data %p len %d\n", data, dataLength));
-
+#ifdef MOZ_LOGGING
+        GdkAtom target = gtk_selection_data_get_target(selection);
+        LOGCLIP(("  got data %p len %d MIME %s\n", data, dataLength,
+                 gdk_atom_name(target)));
+#endif
         if (dataLength > 0) {
           mClipboardDataLength = dataLength;
           mClipboardData = moz_xmalloc(dataLength);
@@ -266,14 +268,17 @@ bool nsRetrievalContextX11::WaitForClipboardData(ClipboardDataType aDataType,
 
   switch (aDataType) {
     case CLIPBOARD_DATA:
+      LOGCLIP(("  getting DATA MIME %s\n", aMimeType));
       gtk_clipboard_request_contents(clipboard,
                                      gdk_atom_intern(aMimeType, FALSE),
                                      clipboard_contents_received, handler);
       break;
     case CLIPBOARD_TEXT:
+      LOGCLIP(("  getting TEXT\n"));
       gtk_clipboard_request_text(clipboard, clipboard_text_received, handler);
       break;
     case CLIPBOARD_TARGETS:
+      LOGCLIP(("  getting TARGETS\n"));
       gtk_clipboard_request_contents(clipboard, mTargetMIMEType,
                                      clipboard_contents_received, handler);
       break;
