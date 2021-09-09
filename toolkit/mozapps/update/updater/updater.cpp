@@ -294,9 +294,9 @@ static bool sUsingService = false;
 //    The updater could be run with no callback, but this only happens
 //    when performing a staged update (see calls to ProcessUpdates), and there
 //    are already checks for sStagedUpdate when showing UI or elevating.
-// b) On macOS, the environment variable MOZ_APP_SILENT_RESTART is set and not
-//    empty. This is set when Firefox had no windows open for a while and
-//    restarted to apply updates.
+// b) The environment variable MOZ_APP_SILENT_START is set and not empty. This
+//    is set, for instance, on macOS when Firefox had no windows open for a
+//    while and restarted to apply updates.
 //
 // In these cases, the update should be installed silently, so we shouldn't:
 // a) show progress UI
@@ -2708,11 +2708,11 @@ bool ShouldRunSilently(int argc, NS_tchar** argv) {
   }
 #endif  // MOZ_BACKGROUNDTASKS
 
-#ifdef XP_MACOSX
-  if (EnvHasValue("MOZ_APP_SILENT_RESTART")) {
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  if (EnvHasValue("MOZ_APP_SILENT_START")) {
     return true;
   }
-#endif  // XP_MACOSX
+#endif
 
   return false;
 }

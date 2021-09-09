@@ -442,12 +442,12 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   if (restart) {
     needElevation = !IsRecursivelyWritable(installDirPath.get());
     if (needElevation) {
-      // Normally we would check this via nsIAppStartup::wasSilentlyRestarted,
+      // Normally we would check this via nsIAppStartup::wasSilentlyStarted,
       // but nsIAppStartup isn't available yet.
-      char* mozAppSilentRestart = PR_GetEnv("MOZ_APP_SILENT_RESTART");
-      bool wasSilentlyRestarted =
-          mozAppSilentRestart && (strcmp(mozAppSilentRestart, "") != 0);
-      if (wasSilentlyRestarted) {
+      char* mozAppSilentStart = PR_GetEnv("MOZ_APP_SILENT_START");
+      bool wasSilentlyStarted =
+          mozAppSilentStart && (strcmp(mozAppSilentStart, "") != 0);
+      if (wasSilentlyStarted) {
         // Elevation always requires prompting for credentials on macOS. If we
         // are trying to restart silently, we must not display UI such as this
         // prompt.

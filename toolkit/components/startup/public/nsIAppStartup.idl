@@ -183,9 +183,10 @@ interface nsIAppStartup : nsISupports
 
     /**
      * True if this is the startup following a silent restart, i.e. if the
-     * application was restarted using quit(eSilently*).
+     * application was restarted using quit(eSilently*), or if the application
+     * was started with the "silentmode" command line flag.
      */
-    readonly attribute boolean wasSilentlyRestarted;
+    readonly attribute boolean wasSilentlyStarted;
 
     /**
      * The number of seconds since the OS was last rebooted
