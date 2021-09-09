@@ -1113,7 +1113,7 @@ static bool ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes,
         // The shortest string allowed before this is  (strlen==13):
         // <?xml version
         if ((((char*)aBytes)[i] == 'n') && (i >= 12) &&
-            (0 == PL_strncmp("versio", (char*)(aBytes + i - 6), 6))) {
+            (0 == strncmp("versio", (char*)(aBytes + i - 6), 6))) {
           // Fast forward through version
           char q = 0;
           for (++i; i < aLen; ++i) {
@@ -1138,7 +1138,7 @@ static bool ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes,
         // The shortest allowed string before this (strlen==26):
         // <?xml version="1" encoding
         if ((((char*)aBytes)[i] == 'g') && (i >= 25) &&
-            (0 == PL_strncmp("encodin", (char*)(aBytes + i - 7), 7))) {
+            (0 == strncmp("encodin", (char*)(aBytes + i - 7), 7))) {
           int32_t encStart = 0;
           char q = 0;
           for (++i; i < aLen; ++i) {
