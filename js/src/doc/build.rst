@@ -110,6 +110,7 @@ tests.
 
     $ ./mach jstests
 
+See :doc:`Running Automated JavaScript Tests<test>` for more details.
 
 Optimized Builds
 ~~~~~~~~~~~~~~~~
