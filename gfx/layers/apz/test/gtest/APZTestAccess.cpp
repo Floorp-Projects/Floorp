@@ -16,5 +16,12 @@ void APZTestAccess::InitializeForTest(WebRenderLayerScrollData& aLayer,
   aLayer.InitializeForTest(aDescendantCount);
 }
 
+/*static*/
+ScrollMetadata& APZTestAccess::GetScrollMetadataMut(
+    WebRenderLayerScrollData& aLayer, WebRenderScrollData& aOwner,
+    size_t aIndex) {
+  return aLayer.GetScrollMetadataMut(aOwner, aIndex);
+}
+
 }  // namespace layers
 }  // namespace mozilla
