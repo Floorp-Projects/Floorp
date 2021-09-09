@@ -458,6 +458,8 @@ using TrapMaybeOffsetArray =
     EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>>;
 
 bool ModuleGenerator::linkCallSites() {
+  AutoCreatedBy acb(masm_, "linkCallSites");
+
   masm_.haltingAlign(CodeAlignment);
 
   // Create far jumps for calls that have relative offsets that may otherwise
@@ -605,6 +607,8 @@ static bool AppendForEach(Vec* dstVec, const Vec& srcVec, Op op) {
 }
 
 bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
+  AutoCreatedBy acb(masm_, "ModuleGenerator::linkCompiledCode");
+
   // Before merging in new code, if calls in a prior code range might go out of
   // range, insert far jumps to extend the range.
 
@@ -785,6 +789,8 @@ bool ModuleGenerator::locallyCompileCurrentTask() {
 }
 
 bool ModuleGenerator::finishTask(CompileTask* task) {
+  AutoCreatedBy acb(masm_, "ModuleGenerator::finishTask");
+
   masm_.haltingAlign(CodeAlignment);
 
   if (!linkCompiledCode(task->output)) {
