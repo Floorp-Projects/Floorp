@@ -1574,11 +1574,12 @@ class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
 TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  auto& layers = scrollData;
+  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 200, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1591,8 +1592,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
 
   SetScrollHandoff(layers[1], root);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
   rootApzc->GetFrameMetrics().SetIsRootContent(true);
@@ -1610,11 +1610,12 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Create a layer tree having two vertical scrollable layers.
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  auto& layers = scrollData;
+  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1622,8 +1623,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   SetScrollHandoff(layers[1], root);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
   rootApzc->GetFrameMetrics().SetIsRootContent(true);
@@ -1644,11 +1644,12 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   // Create a layer tree having non-scrollable root and a vertical scrollable
   // child.
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  auto& layers = scrollData;
+  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 100));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1656,8 +1657,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   SetScrollHandoff(layers[1], root);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
   rootApzc->GetFrameMetrics().SetIsRootContent(true);
@@ -1678,11 +1678,12 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   // Create a layer tree having horizontal scrollable root and a vertical
   // scrollable child.
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  auto& layers = scrollData;
+  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 200, 100));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1690,8 +1691,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   SetScrollHandoff(layers[1], root);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
   rootApzc->GetFrameMetrics().SetIsRootContent(true);
@@ -1712,11 +1712,12 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   // Create a layer tree having vertical scrollable root and a horizontal
   // scrollable child.
-  const char* layerTreeSyntax = "c(c)";
+  const char* treeShape = "x(x)";
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  auto& layers = scrollData;
+  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1724,8 +1725,7 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 
   SetScrollHandoff(layers[1], root);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
   rootApzc->GetFrameMetrics().SetIsRootContent(true);
@@ -1781,19 +1781,18 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
 TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollIntoPreventDefault) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
-  const char* layerTreeSyntax = "c";
+  const char* treeShape = "x";
   nsIntRegion layerVisibleRegions[] = {nsIntRegion(IntRect(0, 0, 100, 100))};
-  root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm,
-                         layers);
+  CreateScrollData(treeShape, layerVisibleRegions);
+  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
   // make top 20 pixels dispatch-to-content
   regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 20));
-  root->SetEventRegions(regions);
+  APZTestAccess::SetEventRegions(*root, regions);
 
-  registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
   rootApzc = ApzcOf(root);
 
