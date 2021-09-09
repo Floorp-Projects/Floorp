@@ -1165,29 +1165,6 @@ Shape* SharedShape::getInitialOrPropMapShape(
   return getPropMapShape(cx, nbase, nfixed, map, mapLength, objectFlags);
 }
 
-void NewObjectCache::invalidateEntriesForShape(Shape* shape) {
-  const JSClass* clasp = shape->getObjectClass();
-
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  if (CanChangeToBackgroundAllocKind(kind, clasp)) {
-    kind = ForegroundToBackgroundAllocKind(kind);
-  }
-
-  EntryIndex entry;
-  for (RealmsInZoneIter realm(shape->zone()); !realm.done(); realm.next()) {
-    if (GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal()) {
-      if (lookupGlobal(clasp, global, kind, &entry)) {
-        PodZero(&entries[entry]);
-      }
-    }
-  }
-
-  JSObject* proto = shape->proto().toObject();
-  if (!proto->is<GlobalObject>() && lookupProto(clasp, proto, kind, &entry)) {
-    PodZero(&entries[entry]);
-  }
-}
-
 /* static */
 void SharedShape::insertInitialShape(JSContext* cx, HandleShape shape) {
   using Lookup = InitialShapeHasher::Lookup;
@@ -1217,20 +1194,6 @@ void SharedShape::insertInitialShape(JSContext* cx, HandleShape shape) {
     if (protoObj->shape()->cache().isShapeWithProto()) {
       protoObj->shape()->cacheRef().setNone();
     }
-  }
-
-  /*
-   * This affects the shape that will be produced by the various NewObject
-   * methods, so clear any cache entry referring to the old shape. This is
-   * not required for correctness: the NewObject must always check for a
-   * nativeEmpty() result and generate the appropriate properties if found.
-   * Clearing the cache entry avoids this duplicate regeneration.
-   *
-   * Clearing is not necessary when this context is running off
-   * thread, as it will not use the new object cache for allocations.
-   */
-  if (!cx->isHelperThreadContext()) {
-    cx->caches().newObjectCache.invalidateEntriesForShape(shape);
   }
 }
 

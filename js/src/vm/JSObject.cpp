@@ -763,21 +763,6 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   return obj;
 }
 
-void NewObjectCache::fillProto(EntryIndex entry, const JSClass* clasp,
-                               js::TaggedProto proto, gc::AllocKind kind,
-                               NativeObject* obj) {
-  MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->is<GlobalObject>());
-  MOZ_ASSERT(obj->taggedProto() == proto);
-  return fill(entry, clasp, proto.raw(), kind, obj);
-}
-
-static bool NewObjectWithTaggedProtoIsCachable(JSContext* cx,
-                                               Handle<TaggedProto> proto,
-                                               NewObjectKind newKind) {
-  return !cx->isHelperThreadContext() && proto.isObject() &&
-         newKind == GenericObject && !proto.toObject()->is<GlobalObject>();
-}
-
 NativeObject* js::NewObjectWithGivenTaggedProto(
     JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     gc::AllocKind allocKind, NewObjectKind newKind, ObjectFlags objectFlags) {
@@ -785,37 +770,7 @@ NativeObject* js::NewObjectWithGivenTaggedProto(
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
-  bool isCachable = NewObjectWithTaggedProtoIsCachable(cx, proto, newKind);
-  if (isCachable) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-      NativeObject* obj =
-          cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
-      if (obj) {
-        return obj;
-      }
-    }
-  }
-
-  NativeObject* obj =
-      NewObject(cx, proto, clasp, allocKind, newKind, objectFlags);
-  if (!obj) {
-    return nullptr;
-  }
-
-  if (isCachable && !obj->hasDynamicSlots()) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    cache.lookupProto(clasp, proto.toObject(), allocKind, &entry);
-    cache.fillProto(entry, clasp, proto, allocKind, obj);
-  }
-
-  return obj;
-}
-
-static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind) {
-  return !cx->isHelperThreadContext() && newKind == GenericObject;
+  return NewObject(cx, proto, clasp, allocKind, newKind, objectFlags);
 }
 
 NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
@@ -831,21 +786,6 @@ NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
-  Handle<GlobalObject*> global = cx->global();
-
-  bool isCachable = NewObjectIsCachable(cx, newKind);
-  if (isCachable) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    if (cache.lookupGlobal(clasp, global, allocKind, &entry)) {
-      gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
-      NativeObject* obj = cache.newObjectFromHit(cx, entry, heap);
-      if (obj) {
-        return obj;
-      }
-    }
-  }
-
   // Find the appropriate proto for clasp. Built-in classes have a cached
   // proto on cx->global(); all others get %ObjectPrototype%.
   JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
@@ -859,19 +799,7 @@ NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  NativeObject* obj = NewObject(cx, taggedProto, clasp, allocKind, newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  if (isCachable && !obj->hasDynamicSlots()) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    cache.lookupGlobal(clasp, global, allocKind, &entry);
-    cache.fillGlobal(entry, clasp, global, allocKind, obj);
-  }
-
-  return obj;
+  return NewObject(cx, taggedProto, clasp, allocKind, newKind);
 }
 
 bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
@@ -3567,7 +3495,8 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
     ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info,
                                               runtimeSizes);
   } else if (is<SharedArrayBufferObject>()) {
-    SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info, runtimeSizes);
+    SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info,
+                                                    runtimeSizes);
   } else if (is<GlobalObject>()) {
     as<GlobalObject>().addSizeOfData(mallocSizeOf, info);
   } else if (is<WeakCollectionObject>()) {

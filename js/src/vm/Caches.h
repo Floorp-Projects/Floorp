@@ -74,136 +74,6 @@ struct EvalCacheHashPolicy {
 typedef GCHashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy>
     EvalCache;
 
-/*
- * Cache for speeding up repetitive creation of objects in the VM.
- * When an object is created which matches the criteria in the 'key' section
- * below, an entry is filled with the resulting object.
- */
-class NewObjectCache {
-  static constexpr unsigned MAX_OBJ_SIZE = sizeof(JSObject_Slots16);
-
-  static void staticAsserts() {
-    static_assert(gc::AllocKind::OBJECT_LAST ==
-                  gc::AllocKind::OBJECT16_BACKGROUND);
-  }
-
-  struct Entry {
-    /* Class of the constructed object. */
-    const JSClass* clasp;
-
-    /*
-     * Key with one of two possible values:
-     *
-     * - Global for the object. The object must have a standard class and will
-     *   have this global's builtin prototype for this class as proto.
-     *
-     * - Prototype for the object (non-null). Cannot be a global object because
-     *   that would be ambiguous (see previous case).
-     */
-    JSObject* key;
-
-    /* Allocation kind for the constructed object. */
-    gc::AllocKind kind;
-
-    /* Number of bytes to copy from the template object. */
-    uint32_t nbytes;
-
-    /*
-     * Template object to copy from, with the initial values of fields,
-     * fixed slots (undefined) and private data (nullptr).
-     */
-    char templateObject[MAX_OBJ_SIZE];
-  };
-
-  using EntryArray = Entry[41];  // TODO: reconsider size;
-  EntryArray entries;
-
- public:
-  using EntryIndex = int;
-
-  NewObjectCache()
-      : entries{}  // zeroes out the array
-  {}
-
-  void purge() {
-    new (&entries) EntryArray{};  // zeroes out the array
-  }
-
-  /* Remove any cached items keyed on moved objects. */
-  void clearNurseryObjects(JSRuntime* rt);
-
-  /*
-   * Get the entry index for the given lookup, return whether there was a hit
-   * on an existing entry.
-   */
-  inline bool lookupProto(const JSClass* clasp, JSObject* proto,
-                          gc::AllocKind kind, EntryIndex* pentry);
-  inline bool lookupGlobal(const JSClass* clasp, js::GlobalObject* global,
-                           gc::AllocKind kind, EntryIndex* pentry);
-
-  /*
-   * Return a new object from a cache hit produced by a lookup method, or
-   * nullptr if returning the object could possibly trigger GC (does not
-   * indicate failure).
-   */
-  inline NativeObject* newObjectFromHit(JSContext* cx, EntryIndex entry,
-                                        js::gc::InitialHeap heap,
-                                        gc::AllocSite* site = nullptr);
-
-  /* Fill an entry after a cache miss. */
-  void fillProto(EntryIndex entry, const JSClass* clasp, js::TaggedProto proto,
-                 gc::AllocKind kind, NativeObject* obj);
-
-  inline void fillGlobal(EntryIndex entry, const JSClass* clasp,
-                         js::GlobalObject* global, gc::AllocKind kind,
-                         NativeObject* obj);
-
-  /* Invalidate any entries which might produce an object with shape. */
-  void invalidateEntriesForShape(Shape* shape);
-
- private:
-  EntryIndex makeIndex(const JSClass* clasp, gc::Cell* key,
-                       gc::AllocKind kind) {
-    uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + size_t(kind);
-    return hash % std::size(entries);
-  }
-
-  bool lookup(const JSClass* clasp, JSObject* key, gc::AllocKind kind,
-              EntryIndex* pentry) {
-    *pentry = makeIndex(clasp, key, kind);
-    Entry* entry = &entries[*pentry];
-
-    // N.B. Lookups with the same clasp/key but different kinds map to
-    // different entries.
-    return entry->clasp == clasp && entry->key == key;
-  }
-
-  void fill(EntryIndex entry_, const JSClass* clasp, JSObject* key,
-            gc::AllocKind kind, NativeObject* obj) {
-    MOZ_ASSERT(unsigned(entry_) < std::size(entries));
-    MOZ_ASSERT(entry_ == makeIndex(clasp, key, kind));
-    Entry* entry = &entries[entry_];
-
-    MOZ_ASSERT(!obj->hasDynamicSlots());
-    MOZ_ASSERT(obj->hasEmptyElements() || obj->is<ArrayObject>());
-
-    entry->clasp = clasp;
-    entry->key = key;
-    entry->kind = kind;
-
-    entry->nbytes = gc::Arena::thingSize(kind);
-    js_memcpy(&entry->templateObject, obj, entry->nbytes);
-  }
-
-  static void copyCachedToObject(NativeObject* dst, NativeObject* src,
-                                 gc::AllocKind kind) {
-    js_memcpy(dst, src, gc::Arena::thingSize(kind));
-
-    // Initialize with barriers
-    dst->initShape(src->shape());
-  }
-};
-
 // Cache for AtomizeString, mapping JSLinearString* to the corresponding
 // JSAtom*. Also used by nursery GC to de-duplicate strings to atoms.
 // Purged on minor and major GC.
@@ -248,18 +118,13 @@ class StringToAtomCache {
 class RuntimeCaches {
  public:
   js::GSNCache gsnCache;
-  js::NewObjectCache newObjectCache;
   js::UncompressedSourceCache uncompressedSourceCache;
   js::EvalCache evalCache;
   js::StringToAtomCache stringToAtomCache;
 
-  void purgeForMinorGC(JSRuntime* rt) {
-    newObjectCache.clearNurseryObjects(rt);
-    evalCache.sweep();
-  }
+  void purgeForMinorGC(JSRuntime* rt) { evalCache.sweep(); }
 
   void purgeForCompaction() {
-    newObjectCache.purge();
     evalCache.clear();
     stringToAtomCache.purge();
   }
