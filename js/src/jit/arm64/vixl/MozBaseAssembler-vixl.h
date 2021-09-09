@@ -249,6 +249,7 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
     static_assert(sizeof(instruction) == kInstructionSize);
     // TODO: isBranch is obsolete and should be removed.
     (void)isBranch;
+    MOZ_ASSERT(hasCreator());
     BufferOffset offs = armbuffer_.putInt(*(uint32_t*)(&instruction));
 #ifdef JS_DISASM_ARM64
     if (!isBranch)
@@ -280,6 +281,7 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Emit data inline in the instruction stream.
   BufferOffset EmitData(void const * data, unsigned size) {
     VIXL_ASSERT(size % 4 == 0);
+    MOZ_ASSERT(hasCreator());
     return armbuffer_.allocEntry(size / sizeof(uint32_t), 0, (uint8_t*)(data), nullptr);
   }
 

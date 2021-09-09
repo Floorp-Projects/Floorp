@@ -525,6 +525,7 @@ BEGIN_TEST(testAssemblerBuffer_ARM64) {
   TempAllocator alloc(&lifo);
   JitContext jc(cx, &alloc);
   StackMacroAssembler masm;
+  AutoCreatedBy acb(masm, __func__);
 
   // Branches to an unbound label.
   Label lab1;
