@@ -3419,6 +3419,83 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   ASSERT_TRUE(!profiler_is_active());
 }
 
+static std::string_view GetFeatureName(uint32_t feature) {
+  switch (feature) {
+#  define FEATURE_NAME(n_, str_, Name_, desc_) \
+    case ProfilerFeature::Name_:               \
+      return str_;
+
+    PROFILER_FOR_EACH_FEATURE(FEATURE_NAME)
+
+#  undef FEATURE_NAME
+
+    default:
+      return "?";
+  }
+}
+
+TEST(GeckoProfiler, FeatureCombinations)
+{
+  const char* filters[] = {"*"};
+
+  // List of features to test. Every combination (from none to all of them) will
+  // be tested, so be careful not to add too many to keep the test run at a
+  // reasonable time.
+  uint32_t featureList[] = {ProfilerFeature::JS,
+                            ProfilerFeature::Screenshots,
+                            ProfilerFeature::StackWalk,
+                            ProfilerFeature::NoStackSampling,
+                            ProfilerFeature::NativeAllocations,
+                            ProfilerFeature::CPUUtilization};
+  constexpr uint32_t featureCount = uint32_t(MOZ_ARRAY_LENGTH(featureList));
+  ASSERT_LT(featureCount, 32u);
+  constexpr uint32_t combinationCount = uint32_t(1) << featureCount;
+
+  std::string featuresString;
+
+  for (uint32_t combination = 0u; combination < combinationCount;
+       ++combination) {
+    uint32_t features = 0u;
+    featuresString = "Features:";
+    for (uint32_t featureIndex = 0u; featureIndex < featureCount;
+         ++featureIndex) {
+      if ((combination & (uint32_t(1) << featureIndex)) != 0u) {
+        features |= featureList[featureIndex];
+        featuresString += " ";
+        featuresString += GetFeatureName(featureList[featureIndex]);
+      }
+    }
+
+    if (features == 0) {
+      featuresString += " (none)";
+    }
+
+    SCOPED_TRACE(featuresString.c_str());
+
+    ASSERT_TRUE(!profiler_is_active());
+
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                   features, filters, MOZ_ARRAY_LENGTH(filters), 0);
+
+    ASSERT_TRUE(profiler_is_active());
+
+    // Write some Gecko Profiler samples.
+    EXPECT_EQ(WaitForSamplingState(),
+              (((features & ProfilerFeature::NoStackSampling) != 0) &&
+               ((features & ProfilerFeature::CPUUtilization) == 0))
+                  ? SamplingState::NoStackSamplingCompleted
+                  : SamplingState::SamplingCompleted);
+
+    // Check that the profile looks valid. Note that we don't test feature-
+    // specific changes.
+    UniquePtr<char[]> profile = profiler_get_profile();
+    JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {});
+
+    profiler_stop();
+    ASSERT_TRUE(!profiler_is_active());
+  }
+}
+
 TEST(GeckoProfiler, CPUUsage)
 {
   const char* filters[] = {"GeckoMain"};
