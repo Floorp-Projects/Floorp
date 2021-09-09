@@ -6355,11 +6355,6 @@
 #endif
   mirror: always
 
-- name: layers.draw-layer-info
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.dump
   type: RelaxedAtomicBool
   value: false
