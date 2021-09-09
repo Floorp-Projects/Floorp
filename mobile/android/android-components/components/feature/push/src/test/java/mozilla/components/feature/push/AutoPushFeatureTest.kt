@@ -525,7 +525,7 @@ class AutoPushFeatureTest {
 
         override suspend fun unsubscribe(scope: String): Boolean = true
 
-        override suspend fun unsubscribeAll(): Boolean = true
+        override suspend fun unsubscribeAll(): Unit = Unit
 
         override suspend fun containsSubscription(scope: PushScope) = true
 
