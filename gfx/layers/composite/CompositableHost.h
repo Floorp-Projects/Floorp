@@ -192,8 +192,6 @@ class CompositableHost {
     return nullptr;
   }
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
-
   struct TimedTexture {
     CompositableTextureHostRef mTexture;
     TimeStamp mTimeStamp;

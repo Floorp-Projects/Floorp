@@ -606,7 +606,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   virtual void ForgetBufferActor() {}
 
   virtual const char* Name() { return "TextureHost"; }
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   /**
    * Indicates whether the TextureHost implementation is backed by an

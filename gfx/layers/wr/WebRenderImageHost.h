@@ -52,8 +52,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   gfx::IntSize GetImageSize() override;
 
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
   void Dump(std::stringstream& aStream, const char* aPrefix = "",
             bool aDumpHtml = false) override;
 
