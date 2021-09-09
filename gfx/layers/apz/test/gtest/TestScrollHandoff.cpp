@@ -18,8 +18,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                         nsIntRegion(IntRect(0, 50, 100, 50))};
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
     SetScrollableFrameMetrics(layers[1],
@@ -39,8 +37,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
                                         nsIntRegion(IntRect(0, 0, 100, 100)),
                                         nsIntRegion(IntRect(0, 50, 100, 50))};
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
     SetScrollableFrameMetrics(layers[1],
@@ -68,7 +64,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child 2
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 100, 100));
     SetScrollableFrameMetrics(layers[1],
@@ -98,8 +93,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                         nsIntRegion(IntRect(0, 0, 100, 100))};
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 100));
     SetScrollableFrameMetrics(layers[1],
@@ -118,8 +111,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 20, 100, 80))   // child
     };
     CreateScrollData(treeShape, layerVisibleRegion);
-    auto& layers = scrollData;
-    WebRenderLayerScrollData* root = layers[0];
     float parentHeight = makeParentScrollable ? 120 : 100;
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 100, parentHeight));
@@ -141,7 +132,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     SCOPED_GFX_PREF_FLOAT("apz.fling_accel_min_fling_velocity", 0.0);
     SCOPED_GFX_PREF_FLOAT("apz.fling_accel_min_pan_velocity", 0.0);
 
-    auto& layers = scrollData;
     RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
     // Pan once, enough to fully scroll the scrollgrab parent and then scroll
@@ -178,7 +168,6 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 
     CreateScrollHandoffLayerTree1();
 
-    auto& layers = scrollData;
     RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
     Pan(childApzc, ScreenIntPoint(10, 60), ScreenIntPoint(15, 90),
         PanOptions::KeepFingerDown | PanOptions::ExactCoordinates);
@@ -202,7 +191,6 @@ TEST_F(APZScrollHandoffTester, DeferredInputEventProcessing) {
   // Set up the APZC tree.
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
   // Enable touch-listeners so that we can separate the queueing of input
@@ -235,7 +223,6 @@ TEST_F(APZScrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   // Set up an initial APZC tree.
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
   // Enable touch-listeners so that we can separate the queueing of input
@@ -289,7 +276,6 @@ TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1073250) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
@@ -334,7 +320,6 @@ TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1231228) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
@@ -375,7 +360,6 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
@@ -411,7 +395,6 @@ TEST_F(APZScrollHandoffTesterLayersOnly, StuckInOverscroll_Bug1240202b) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
@@ -463,7 +446,6 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
 
   CreateScrollHandoffLayerTree4();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
   // Pan, causing the child APZC to overscroll.
@@ -489,7 +471,6 @@ TEST_F(APZScrollHandoffTesterLayersOnly, PartialFlingHandoff) {
   // off to the parent APZC.
   Pan(manager, ScreenIntPoint(90, 90), ScreenIntPoint(55, 55));
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> parent = ApzcOf(layers[0]);
   RefPtr<TestAsyncPanZoomController> child = ApzcOf(layers[1]);
 
@@ -512,7 +493,6 @@ TEST_F(APZScrollHandoffTester, SimultaneousFlings) {
   // Set up an initial APZC tree.
   CreateScrollHandoffLayerTree3();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> parent1 = ApzcOf(layers[1]);
   RefPtr<TestAsyncPanZoomController> child1 = ApzcOf(layers[2]);
   RefPtr<TestAsyncPanZoomController> parent2 = ApzcOf(layers[3]);
@@ -546,7 +526,6 @@ TEST_F(APZScrollHandoffTester, Scrollgrab) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
   // Pan on the child, enough to fully scroll the scrollgrab parent (20 px)
@@ -566,7 +545,6 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
   // Pan on the child, not enough to fully scroll the scrollgrab parent.
@@ -602,7 +580,6 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(layers[0]);
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
@@ -629,7 +606,6 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(layers[0]);
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
@@ -679,7 +655,6 @@ TEST_F(APZScrollHandoffTesterLayersOnly, WheelHandoffAfterDirectionReversal) {
   // Set up a basic scroll handoff layer tree.
   CreateScrollHandoffLayerTree1();
 
-  auto& layers = scrollData;
   rootApzc = ApzcOf(layers[0]);
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
   FrameMetrics& rootMetrics = rootApzc->GetFrameMetrics();
