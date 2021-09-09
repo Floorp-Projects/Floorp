@@ -184,7 +184,6 @@ EXPORTS.mozilla.layers += [
     "ipc/VideoBridgeUtils.h",
     "LayerAttributes.h",
     "LayerManager.h",
-    "LayerMetricsWrapper.h",
     "LayersHelpers.h",
     "LayersTypes.h",
     "MemoryPressureObserver.h",
