@@ -611,17 +611,7 @@ impl SpatialTree {
 
     pub fn build_transform_palette(&self) -> TransformPalette {
         profile_scope!("build_transform_palette");
-        let mut palette = TransformPalette::new(
-            self.spatial_nodes.len(),
-            self.root_reference_frame_index(),
-        );
-        //Note: getting the world transform of a node is O(1) operation
-        for i in 0 .. self.spatial_nodes.len() {
-            let index = SpatialNodeIndex(i as u32);
-            let world_transform = self.get_world_transform(index).into_transform();
-            palette.set_world_transform(index, world_transform);
-        }
-        palette
+        TransformPalette::new(self.spatial_nodes.len())
     }
 
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
