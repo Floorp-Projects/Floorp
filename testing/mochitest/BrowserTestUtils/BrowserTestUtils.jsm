@@ -1036,8 +1036,7 @@ var BrowserTestUtils = {
    * @returns {Promise} Resolves with the new window once it is loaded.
    */
   async openNewWindowWithFlushedXULCacheForMozSupports(options) {
-    ChromeUtils.clearStyleSheetCache();
-
+    //
     Services.obs.notifyObservers(null, "chrome-flush-caches");
     await TestUtils.waitForTick();
 

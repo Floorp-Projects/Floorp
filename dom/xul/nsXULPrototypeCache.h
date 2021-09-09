@@ -60,6 +60,18 @@ class nsXULPrototypeCache : public nsIObserver {
   nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
   /**
+   * Get a style sheet by URI. If the style sheet is not in the cache,
+   * returns nullptr.
+   */
+  mozilla::StyleSheet* GetStyleSheet(nsIURI* aURI);
+
+  /**
+   * Store a style sheet in the cache. The key, style sheet's URI is obtained
+   * from the style sheet itself.
+   */
+  nsresult PutStyleSheet(RefPtr<mozilla::StyleSheet>&& aStyleSheet);
+
+  /**
    * Write the XUL prototype document to a cache file. The proto must be
    * fully loaded.
    */
@@ -96,8 +108,11 @@ class nsXULPrototypeCache : public nsIObserver {
 
   static nsXULPrototypeCache* sInstance;
 
+  using StyleSheetTable = nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet>;
+
   nsRefPtrHashtable<nsURIHashKey, nsXULPrototypeDocument>
       mPrototypeTable;  // owns the prototypes
+  StyleSheetTable mStyleSheetTable;
 
   class ScriptHashKey : public nsURIHashKey {
    public:

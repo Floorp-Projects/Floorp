@@ -3271,7 +3271,7 @@ class nsContentUtils {
    * stylesheets.
    */
   static SubresourceCacheValidationInfo GetSubresourceCacheValidationInfo(
-      nsIRequest*, nsIURI*);
+      nsIRequest*);
 
   static uint32_t SecondsFromPRTime(PRTime aTime) {
     return uint32_t(int64_t(aTime) / int64_t(PR_USEC_PER_SEC));
