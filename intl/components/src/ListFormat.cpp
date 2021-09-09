@@ -17,21 +17,12 @@ namespace mozilla::intl {
     return Err(ICUError::InternalError);
   }
 
-  UFormattedList* fl = ulistfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
-  }
-
-  return UniquePtr<ListFormat>(new ListFormat(fmt, fl));
+  return UniquePtr<ListFormat>(new ListFormat(fmt));
 }
 
 ListFormat::~ListFormat() {
   if (mListFormatter) {
     ulistfmt_close(mListFormatter.GetMut());
-  }
-
-  if (mFormattedList) {
-    ulistfmt_closeResult(mFormattedList.GetMut());
   }
 }
 
@@ -62,22 +53,28 @@ ListFormat::~ListFormat() {
   return ULISTFMT_WIDTH_WIDE;
 }
 
-ICUResult ListFormat::FormatToParts(const StringList& list, PartVector& parts) {
+ICUResult ListFormat::FormatToParts(const StringList& list,
+                                    PartsCallback&& callback) {
   UErrorCode status = U_ZERO_ERROR;
 
   mozilla::Vector<const char16_t*, DEFAULT_LIST_LENGTH> u16strings;
   mozilla::Vector<int32_t, DEFAULT_LIST_LENGTH> u16stringLens;
   MOZ_TRY(ConvertStringListToVectors(list, u16strings, u16stringLens));
 
+  UFormattedList* formatted = ulistfmt_openResult(&status);
+  if (U_FAILURE(status)) {
+    return Err(ICUError::InternalError);
+  }
+  ScopedICUObject<UFormattedList, ulistfmt_closeResult> toClose(formatted);
   ulistfmt_formatStringsToResult(mListFormatter.GetConst(), u16strings.begin(),
                                  u16stringLens.begin(), int32_t(list.length()),
-                                 mFormattedList.GetMut(), &status);
+                                 formatted, &status);
   if (U_FAILURE(status)) {
     return Err(ICUError::InternalError);
   }
 
   const UFormattedValue* formattedValue =
-      ulistfmt_resultAsValue(mFormattedList.GetConst(), &status);
+      ulistfmt_resultAsValue(formatted, &status);
   if (U_FAILURE(status)) {
     return Err(ICUError::InternalError);
   }
@@ -93,6 +90,7 @@ ICUResult ListFormat::FormatToParts(const StringList& list, PartVector& parts) {
   mozilla::Span<const char16_t> formattedSpan{formattedChars, formattedSize};
   size_t lastEndIndex = 0;
 
+  PartVector parts;
   auto AppendPart = [&](PartType type, size_t beginIndex, size_t endIndex) {
     if (!parts.emplaceBack(type, formattedSpan.FromTo(beginIndex, endIndex))) {
       return false;
@@ -159,6 +157,9 @@ ICUResult ListFormat::FormatToParts(const StringList& list, PartVector& parts) {
     }
   }
 
+  if (!callback(parts)) {
+    return Err(ICUError::InternalError);
+  }
   return Ok();
 }
 

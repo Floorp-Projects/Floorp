@@ -4,6 +4,8 @@
 #ifndef intl_components_ListFormat_h_
 #define intl_components_ListFormat_h_
 
+#include <functional>
+
 #include "mozilla/CheckedInt.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/Result.h"
@@ -12,7 +14,6 @@
 #include "unicode/ulistformatter.h"
 
 struct UListFormatter;
-struct UFormattedList;
 
 namespace mozilla::intl {
 
@@ -109,27 +110,33 @@ class ListFormat final {
   using Part = std::pair<PartType, mozilla::Span<const char16_t>>;
   using PartVector = mozilla::Vector<Part, DEFAULT_LIST_LENGTH>;
 
+  using PartsCallback = std::function<bool(const PartVector& parts)>;
+
   /**
-   * Format the list to a list of parts, and write the result into parts.
+   * Format the list to a list of parts, and the callback will be called with
+   * the formatted parts.
+   *
+   * In the callback, it has a argument of type PartVector&, which is the vector
+   * of the formatted parts. The life-cycle of the PartVector is valid only
+   * during the callback call, so the caller of FormatToParts needs to copy the
+   * data in PartVector to its own storage during the callback.
+   *
    * The PartVector contains mozilla::Span which point to memory which may be
    * overridden when the next format method is called.
    *
    * https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.formatToParts
    * https://tc39.es/ecma402/#sec-formatlisttoparts
    */
-  ICUResult FormatToParts(const StringList& list, PartVector& parts);
+  ICUResult FormatToParts(const StringList& list, PartsCallback&& callback);
 
  private:
   ListFormat() = delete;
-  ListFormat(UListFormatter* fmt, UFormattedList* fl)
-      : mListFormatter(fmt), mFormattedList(fl) {}
+  explicit ListFormat(UListFormatter* fmt) : mListFormatter(fmt) {}
   ListFormat(const ListFormat&) = delete;
   ListFormat& operator=(const ListFormat&) = delete;
 
   ICUPointer<UListFormatter> mListFormatter =
       ICUPointer<UListFormatter>(nullptr);
-  ICUPointer<UFormattedList> mFormattedList =
-      ICUPointer<UFormattedList>(nullptr);
 
   // Convert StringList to an array of type 'const char16_t*' and an array of
   // int32 for ICU-API.
