@@ -6383,23 +6383,6 @@
   value: false
   mirror: always
 
-# 0 is "no change" for contrast, positive values increase it, negative values
-# decrease it until we hit mid gray at -1 contrast, after that it gets weird.
-- name: layers.effect.contrast
-  type: AtomicFloat
-  value: 0.0f
-  mirror: always
-
-- name: layers.effect.grayscale
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.effect.invert
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.enable-tiles
   type: bool
 #if defined(XP_MACOSX) || defined (XP_OPENBSD)
