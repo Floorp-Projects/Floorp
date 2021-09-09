@@ -30,14 +30,17 @@ class BidiSession:
     interface for running commands in the session, and for attaching
     event handlers to the session. For example:
 
-    async def on_log(data):
+    async def on_log(method, data):
         print(data)
 
     session = BidiSession("ws://localhost:4445", capabilities)
-    session.add_event_listener("log.entryAdded", on_log)
+    remove_listener = session.add_event_listener("log.entryAdded", on_log)
     await session.start()
     await session.subscribe("log.entryAdded")
+
     # Do some stuff with the session
+
+    remove_listener()
     session.end()
 
     If the session id is provided it's assumed that the underlying
@@ -201,7 +204,8 @@ class BidiSession:
 
     def add_event_listener(self,
                            name: Optional[str],
-                           fn: Callable[[str, Mapping[str, Any]], Awaitable[Any]]) -> None:
+                           fn: Callable[[str, Mapping[str, Any]],
+                           Awaitable[Any]]) -> Callable[[], None]:
         """Add a listener for the event with a given name.
 
         If name is None, the listener is called for all messages that are not otherwise
@@ -209,8 +213,12 @@ class BidiSession:
 
         :param name: Name of event to listen for or None to register a default handler
         :param fn: Async callback function that receives event data
+
+        :return: Function to remove the added listener
         """
         self.event_listeners[name].append(fn)
+
+        return lambda: self.event_listeners[name].remove(fn)
 
 
 class Transport:
