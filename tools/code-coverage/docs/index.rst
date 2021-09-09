@@ -88,8 +88,11 @@ Generate report locally
 
 Prerequisites:
 
--  Download the Python script at
-   https://github.com/mozilla/code-coverage/blob/master/report/firefox_code_coverage/codecoverage.py.
+-  Create and activate a new `virtualenv`_, then run:
+
+.. code:: shell
+
+   pip install firefox-code-coverage
 
 Given a treeherder linux64-ccov build (with its branch, e.g.
 \`mozilla-central\` or \`try`, and revision, the tip commit hash of your
@@ -97,13 +100,14 @@ push), run the following command:
 
 .. code:: shell
 
-   python codecoverage.py PATH/TO/MOZILLA/SRC/DIR/ BRANCH REVISION
+   firefox-code-coverage PATH/TO/MOZILLA/SRC/DIR/ BRANCH REVISION
 
 This command will automatically download code coverage artifacts from
 the treeherder build and generate an HTML report of the code coverage
 information. The report will be stored in the **report** subdirectory in
 your current working directory.
 
+.. _virtualenv: https://docs.python.org/3/tutorial/venv.html
 
 Creating your own Coverage Build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
