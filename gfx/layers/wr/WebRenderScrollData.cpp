@@ -143,6 +143,12 @@ const ScrollMetadata& WebRenderLayerScrollData::GetScrollMetadata(
   return aOwner.GetScrollMetadata(mScrollIds[aIndex]);
 }
 
+ScrollMetadata& WebRenderLayerScrollData::GetScrollMetadataMut(
+    WebRenderScrollData& aOwner, size_t aIndex) {
+  MOZ_ASSERT(aIndex < mScrollIds.Length());
+  return aOwner.GetScrollMetadataMut(mScrollIds[aIndex]);
+}
+
 CSSTransformMatrix WebRenderLayerScrollData::GetTransformTyped() const {
   return ViewAs<CSSTransformMatrix>(GetTransform());
 }
@@ -250,6 +256,11 @@ WebRenderLayerScrollData* WebRenderScrollData::GetLayerData(size_t aIndex) {
 
 const ScrollMetadata& WebRenderScrollData::GetScrollMetadata(
     size_t aIndex) const {
+  MOZ_ASSERT(aIndex < mScrollMetadatas.Length());
+  return mScrollMetadatas[aIndex];
+}
+
+ScrollMetadata& WebRenderScrollData::GetScrollMetadataMut(size_t aIndex) {
   MOZ_ASSERT(aIndex < mScrollMetadatas.Length());
   return mScrollMetadatas[aIndex];
 }
