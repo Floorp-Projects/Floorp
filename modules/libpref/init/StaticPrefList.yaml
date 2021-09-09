@@ -6355,21 +6355,6 @@
 #endif
   mirror: always
 
-- name: layers.draw-bigimage-borders
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.draw-borders
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.draw-tile-borders
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.draw-layer-info
   type: RelaxedAtomicBool
   value: false
@@ -6428,11 +6413,6 @@
   value: false
 #endif
   mirror: once
-
-- name: layers.flash-borders
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
 
 # Force all possible layers to be always active layers.
 - name: layers.force-active
