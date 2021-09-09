@@ -431,13 +431,8 @@ struct BaseCompiler final {
   inline void freeV128(RegV128 r);
 #endif
 
-  inline void free(RegI32 r);
-  inline void free(RegI64 r);
-  inline void free(RegF32 r);
-  inline void free(RegF64 r);
-#ifdef ENABLE_WASM_SIMD
-  inline void free(RegV128 r);
-#endif
+  template <typename RegType>
+  inline void free(RegType r);
 
   // Free r if it is not invalid.
   inline void maybeFree(RegI32 r);
@@ -945,6 +940,9 @@ struct BaseCompiler final {
   inline void moveV128(RegV128 src, RegV128 dest);
 #endif
 
+  template <typename RegType>
+  inline void move(RegType src, RegType dest);
+
   //////////////////////////////////////////////////////////////////////
   //
   // Immediate-to-register moves.
@@ -1053,17 +1051,13 @@ struct BaseCompiler final {
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr);
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+#if defined(RABALDR_HAS_HEAPREG)
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check, RegI32 tls,
                                       RegI32 ptr);
-#elif defined(JS_CODEGEN_X86)
-  // Some consumers depend on the address not retaining tls, as tls may be the
-  // scratch register.
-  Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                    AccessCheck* check, RegI32 tls, RegI32 ptr);
 #else
+  // Some consumers depend on the returned Address not incorporating tls, as tls
+  // may be the scratch register.
   Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                     AccessCheck* check, RegI32 tls, RegI32 ptr);
 #endif

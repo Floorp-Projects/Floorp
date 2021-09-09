@@ -33,6 +33,14 @@
 namespace js {
 namespace wasm {
 
+#ifndef RABALDR_HAS_HEAPREG
+#  ifdef JS_CODEGEN_X86
+using ScratchAtomicNoHeapReg = ScratchEBX;
+#  else
+#    error "Unimplemented porting interface"
+#  endif
+#endif
+
 template <size_t Count>
 void Atomic32Temps<Count>::allocate(BaseCompiler* bc, size_t allocate) {
   static_assert(Count != 0);
@@ -179,25 +187,20 @@ RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
   return popI32();
 }
 
+#ifdef RABALDR_HAS_HEAPREG
 void BaseCompiler::pushHeapBase() {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64)
-  RegI64 heapBase = needI64();
-  moveI64(RegI64(Register64(HeapReg)), heapBase);
-  pushI64(heapBase);
-#elif defined(JS_CODEGEN_ARM)
-  RegI32 heapBase = needI32();
-  moveI32(RegI32(HeapReg), heapBase);
-  pushI32(heapBase);
-#elif defined(JS_CODEGEN_X86)
-  RegI32 heapBase = needI32();
+  RegIntptr heapBase = need<RegIntptr>();
+  move(RegIntptr(RegIntptrRegister(HeapReg)), heapBase);
+  push(heapBase);
+}
+#else
+void BaseCompiler::pushHeapBase() {
+  RegIntptr heapBase = need<RegIntptr>();
   fr.loadTlsPtr(heapBase);
   masm.loadPtr(Address(heapBase, offsetof(TlsData, memoryBase)), heapBase);
-  pushI32(heapBase);
-#else
-  MOZ_CRASH("BaseCompiler platform hook: pushHeapBase");
-#endif
+  push(heapBase);
 }
+#endif
 
 void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
                                        AccessCheck* check, RegI32 tls,
@@ -295,8 +298,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
   }
 }
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+#ifdef RABALDR_HAS_HEAPREG
 BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                   AccessCheck* check,
                                                   RegI32 tls, RegI32 ptr) {
@@ -304,10 +306,9 @@ BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
   prepareMemoryAccess(access, check, tls, ptr);
   return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
 }
-#elif defined(JS_CODEGEN_X86)
-// Some consumers depend on the address not retaining tls, as tls may be the
-// scratch register.
-
+#else
+// Some consumers depend on the returned Address not incorporating tls, as tls
+// may be the scratch register.
 Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                 AccessCheck* check, RegI32 tls,
                                                 RegI32 ptr) {
@@ -315,12 +316,6 @@ Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
   prepareMemoryAccess(access, check, tls, ptr);
   masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
   return Address(ptr, access->offset());
-}
-#else
-Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                                AccessCheck* check, RegI32 tls,
-                                                RegI32 ptr) {
-  MOZ_CRASH("BaseCompiler platform hook: prepareAtomicMemoryAccess");
 }
 #endif
 
@@ -1175,16 +1170,16 @@ bool BaseCompiler::atomicCmpXchg(MemoryAccessDesc* access, ValType type) {
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
 
-#ifdef JS_CODEGEN_X86
-  ScratchEBX ebx(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicCmpXchg64(*access, memaddr, ebx);
-#else
+#ifdef RABALDR_HAS_HEAPREG
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   regs.atomicCmpXchg64(*access, memaddr);
   maybeFree(tls);
+#else
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  regs.atomicCmpXchg64(*access, memaddr, scratch);
 #endif
 
   freeI32(rp);
@@ -1209,16 +1204,16 @@ bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
 
-#  ifdef JS_CODEGEN_X86
-  ScratchEBX ebx(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicLoad64(*access, memaddr, ebx);
-#  else
+#  ifdef RABALDR_HAS_HEAPREG
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   regs.atomicLoad64(*access, memaddr);
   maybeFree(tls);
+#  else
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  regs.atomicLoad64(*access, memaddr, scratch);
 #  endif
 
   freeI32(rp);
@@ -1260,23 +1255,25 @@ bool BaseCompiler::atomicRMW(MemoryAccessDesc* access, ValType type,
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
 
-#ifdef JS_CODEGEN_X86
-  ScratchEBX ebx(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-
-  fr.pushGPR(regs.valueHigh());
-  fr.pushGPR(regs.valueLow());
-  Address value(esp, 0);
-
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicRMW64(*access, memaddr, op, value, ebx);
-
-  fr.popBytes(8);
-#else
+#if defined(RABALDR_HAS_HEAPREG)
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   regs.atomicRMW64(*access, memaddr, op);
   maybeFree(tls);
+#elif !defined(JS_64BIT)
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+
+  fr.pushGPR(regs.valueHigh());
+  fr.pushGPR(regs.valueLow());
+  Address value(StackPointer, 0);
+
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  regs.atomicRMW64(*access, memaddr, op, value, scratch);
+
+  fr.popBytes(8);
+#else
+  MOZ_CRASH("Unexpected combination");
 #endif
 
   freeI32(rp);
@@ -1339,16 +1336,16 @@ void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
 
-#ifdef JS_CODEGEN_X86
-  ScratchEBX ebx(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, ebx);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicXchg64(*access, memaddr, ebx);
-#else
+#ifdef RABALDR_HAS_HEAPREG
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
   regs.atomicXchg64(*access, memaddr);
   maybeFree(tls);
+#else
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  regs.atomicXchg64(*access, memaddr, scratch);
 #endif
 
   freeI32(rp);

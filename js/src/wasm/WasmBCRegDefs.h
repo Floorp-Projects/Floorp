@@ -330,6 +330,14 @@ struct AnyReg {
   }
 };
 
+#ifdef JS_64BIT
+using RegIntptr = RegI64;
+using RegIntptrRegister = Register64;
+#else
+using RegIntptr = RegI32;
+using RegIntptrRegister = Register;
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Platform-specific registers.
