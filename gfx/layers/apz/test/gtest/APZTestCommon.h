@@ -19,7 +19,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/StaticPrefs_layout.h"
