@@ -4,7 +4,7 @@ from .base import PluginLoader
 
 
 class Discovery(PluginLoader):
-    """"""
+    """ """
 
 
 def get_discover(parser, args):
@@ -13,10 +13,13 @@ def get_discover(parser, args):
         title="discovery",
         description="discover and provide a target interpreter",
     )
+    choices = _get_default_discovery(discover_types)
+    # prefer the builtin if present, otherwise fallback to first defined type
+    choices = sorted(choices, key=lambda a: 0 if a == "builtin" else 1)
     discovery_parser.add_argument(
         "--discovery",
-        choices=_get_default_discovery(discover_types),
-        default=next(i for i in discover_types.keys()),
+        choices=choices,
+        default=next(iter(choices)),
         required=False,
         help="interpreter discovery method",
     )

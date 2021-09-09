@@ -44,7 +44,7 @@ class AppDataDisabled(AppData):
         raise self.error
 
     def py_info_clear(self):
-        """"""
+        """ """
 
 
 class ContentStoreNA(ContentStore):
@@ -52,14 +52,14 @@ class ContentStoreNA(ContentStore):
         return False
 
     def read(self):
-        """"""
+        """ """
         return None
 
     def write(self, content):
-        """"""
+        """ """
 
     def remove(self):
-        """"""
+        """ """
 
     @contextmanager
     def locked(self):
