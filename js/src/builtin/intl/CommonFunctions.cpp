@@ -97,7 +97,7 @@ void js::intl::ReportInternalError(JSContext* cx,
                                    mozilla::intl::ICUError error) {
   switch (error) {
     case mozilla::intl::ICUError::OutOfMemory:
-      MOZ_ASSERT(cx->isThrowingOutOfMemory());
+      ReportOutOfMemory(cx);
       return;
     case mozilla::intl::ICUError::InternalError:
       ReportInternalError(cx);
