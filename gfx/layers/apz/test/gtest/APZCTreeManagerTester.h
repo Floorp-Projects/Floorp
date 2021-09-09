@@ -61,10 +61,19 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
     bool activeAnimations = false;
 
-    for (const RefPtr<Layer>& layer : layers) {
-      if (TestAsyncPanZoomController* apzc = ApzcOf(layer)) {
-        activeAnimations |=
-            apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
+    if (root) {
+      for (const RefPtr<Layer>& layer : layers) {
+        if (TestAsyncPanZoomController* apzc = ApzcOf(layer)) {
+          activeAnimations |=
+              apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
+        }
+      }
+    } else {
+      for (size_t i = 0; i < scrollData.GetLayerCount(); ++i) {
+        if (TestAsyncPanZoomController* apzc = ApzcOf(scrollData[i])) {
+          activeAnimations |=
+              apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
+        }
       }
     }
 
@@ -209,6 +218,18 @@ class APZCTreeManagerTester : public APZCTesterBase {
     }
   }
 
+  void SetScrollMetadata(WebRenderLayerScrollData* aLayer,
+                         const nsTArray<ScrollMetadata>& aMetadata) {
+    // The reason for this restriction is that WebRenderLayerScrollData does not
+    // have an API to *remove* previous metadata.
+    MOZ_ASSERT(aLayer->GetScrollMetadataCount() == 0,
+               "This function can only be used on layers which do not yet have "
+               "scroll metadata");
+    for (const ScrollMetadata& metadata : aMetadata) {
+      aLayer->AppendScrollMetadata(scrollData, metadata);
+    }
+  }
+
   void SetScrollableFrameMetrics(WebRenderLayerScrollData* aLayer,
                                  ScrollableLayerGuid::ViewID aScrollId,
                                  CSSRect aScrollableRect = CSSRect(-1, -1, -1,
@@ -260,12 +281,19 @@ class APZCTreeManagerTester : public APZCTesterBase {
   }
 
   TestAsyncPanZoomController* ApzcOf(WebRenderLayerScrollData* aLayer) {
+    EXPECT_EQ(1u, aLayer->GetScrollMetadataCount());
+    return ApzcOf(aLayer, 0);
+  }
+
+  TestAsyncPanZoomController* ApzcOf(WebRenderLayerScrollData* aLayer,
+                                     uint32_t aIndex) {
+    EXPECT_LT(aIndex, aLayer->GetScrollMetadataCount());
     // Unlike Layer, WebRenderLayerScrollData does not store the associated
     // APZCs, so look it up using the tree manager instead.
-    EXPECT_EQ(1u, aLayer->GetScrollMetadataCount());
     RefPtr<AsyncPanZoomController> apzc = manager->GetTargetAPZC(
-        LayersId{0},
-        aLayer->GetScrollMetadata(scrollData, 0).GetMetrics().GetScrollId());
+        LayersId{0}, aLayer->GetScrollMetadata(scrollData, aIndex)
+                         .GetMetrics()
+                         .GetScrollId());
     return (TestAsyncPanZoomController*)apzc.get();
   }
 
