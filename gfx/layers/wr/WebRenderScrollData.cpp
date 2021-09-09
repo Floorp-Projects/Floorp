@@ -149,6 +149,10 @@ ScrollMetadata& WebRenderLayerScrollData::GetScrollMetadataMut(
   return aOwner.GetScrollMetadataMut(mScrollIds[aIndex]);
 }
 
+void WebRenderLayerScrollData::SetEventRegions(const EventRegions& aRegions) {
+  mEventRegions = MakeUnique<EventRegions>(aRegions);
+}
+
 CSSTransformMatrix WebRenderLayerScrollData::GetTransformTyped() const {
   return ViewAs<CSSTransformMatrix>(GetTransform());
 }
