@@ -352,7 +352,12 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def analyze(self, command_context, application, shell_objdir, work_dir):
+    @CommandArgument(
+        "extra",
+        nargs=argparse.REMAINDER,
+        help="Remaining non-optional arguments to analyze.py script",
+    )
+    def analyze(self, command_context, application, shell_objdir, work_dir, extra):
         """Analyzed gathered data for rooting hazards"""
 
         shell = self.ensure_shell(command_context, shell_objdir)
@@ -360,9 +365,14 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             os.path.join(self.script_dir(command_context), "analyze.py"),
             "--js",
             shell,
-            "gcTypes",
-            "-v",
         ]
+        if extra:
+            args += extra
+        else:
+            args += [
+                "gcTypes",
+                "-v",
+            ]
 
         self.setup_env_for_tools(os.environ)
         self.setup_env_for_shell(os.environ, shell)
