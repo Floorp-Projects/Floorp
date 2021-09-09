@@ -25,7 +25,9 @@ using mozilla::layers::WebRenderScrollDataWrapper;
 
 /* static */
 TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
-                                          const APZUpdater& aUpdater) {
+                                          const APZUpdater& aUpdater,
+                                          const nsIntRegion* aVisibleRegions,
+                                          const gfx::Matrix4x4* aTransforms) {
   // The WebRenderLayerScrollData tree needs to be created in a fairly
   // particular way (for example, each node needs to know the number of
   // descendants it has), so this function takes care to create the nodes
@@ -56,6 +58,14 @@ TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
 
     WebRenderLayerScrollData layer;
     layer.InitializeForTest(entry.mDescendantCount);
+    if (aVisibleRegions) {
+      layer.SetVisibleRegion(LayerIntRegion::FromUnknownRegion(
+          aVisibleRegions[entry.mLayerIndex]));
+      // TODO: Do we need to set event regions?
+    }
+    if (aTransforms) {
+      layer.SetTransform(aTransforms[entry.mLayerIndex]);
+    }
     finishedLayers.push_back(std::move(layer));
 
     // |finishedLayers| stores the layers in a different order than they

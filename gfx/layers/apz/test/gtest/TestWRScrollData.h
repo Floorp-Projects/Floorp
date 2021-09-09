@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_TestWRScrollData_h
 #define mozilla_layers_TestWRScrollData_h
 
+#include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 
 namespace mozilla {
@@ -34,9 +35,15 @@ class TestWRScrollData : public WebRenderScrollData {
    *        x   x
    *       / \
    *      x   x
+   *
+   * The caller may optionally provide visible regions and/or transforms
+   * for the nodes. If provided, the array should contain one element
+   * for each node, in the same order as in |aTreeShape|.
    */
   static TestWRScrollData Create(const char* aTreeShape,
-                                 const APZUpdater& aUpdater);
+                                 const APZUpdater& aUpdater,
+                                 const nsIntRegion* aVisibleRegions = nullptr,
+                                 const gfx::Matrix4x4* aTransforms = nullptr);
 
   // These methods allow accessing and manipulating layers based on an index
   // representing the order in which they appear in |aTreeShape|.
