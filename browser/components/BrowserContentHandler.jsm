@@ -824,7 +824,7 @@ nsBrowserContentHandler.prototype = {
       var webNavInfo = Cc["@mozilla.org/webnavigation-info;1"].getService(
         Ci.nsIWebNavigationInfo
       );
-      if (!webNavInfo.isTypeSupported(contentType, null)) {
+      if (!webNavInfo.isTypeSupported(contentType)) {
         throw NS_ERROR_WONT_HANDLE_CONTENT;
       }
     } catch (e) {
