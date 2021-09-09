@@ -7424,11 +7424,6 @@
   value: true
   mirror: always
 
-- name: layout.smaller-painted-layers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Pref to stop overlay scrollbars from fading out, for testing purposes.
 - name: layout.testing.overlay-scrollbars.always-visible
   type: bool
