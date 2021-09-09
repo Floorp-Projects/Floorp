@@ -135,7 +135,7 @@ class RaptorRunner(MozbuildObject):
                 if not os.path.isdir(path) or name.startswith("."):
                     continue
 
-                if hasattr(os, "symlink"):
+                if hasattr(os, "symlink") and os.name != "nt":
                     if not os.path.exists(dest):
                         os.symlink(path, dest)
                 else:
