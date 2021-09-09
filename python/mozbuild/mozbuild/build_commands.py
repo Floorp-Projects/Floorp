@@ -40,7 +40,16 @@ class Build(MachCommandBase):
         default="0",
         metavar="jobs",
         type=int,
-        help="Number of concurrent jobs to run. Default is the number of CPUs.",
+        help="Number of concurrent jobs to run. Default is based on the number of "
+        "CPUs and the estimated size of the jobs (see --job-size).",
+    )
+    @CommandArgument(
+        "--job-size",
+        default="0",
+        metavar="size",
+        type=float,
+        help="Estimated RAM required, in GiB, for each parallel job. Used to "
+        "compute a default number of concurrent jobs.",
     )
     @CommandArgument(
         "-C",
@@ -65,6 +74,7 @@ class Build(MachCommandBase):
         command_context,
         what=None,
         jobs=0,
+        job_size=0,
         directory=None,
         verbose=False,
         keep_going=False,
@@ -115,6 +125,7 @@ class Build(MachCommandBase):
                 command_context.metrics,
                 what=what,
                 jobs=jobs,
+                job_size=job_size,
                 directory=directory,
                 verbose=verbose,
                 keep_going=keep_going,
@@ -156,6 +167,7 @@ class Build(MachCommandBase):
             command_context.metrics,
             what=what,
             jobs=jobs,
+            job_size=job_size,
             directory=directory,
             verbose=verbose,
             keep_going=keep_going,

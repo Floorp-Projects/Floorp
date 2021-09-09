@@ -183,7 +183,6 @@ linux64-gcc/opt:
     worker:
         max-run-time: 7200
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: gcc
             FORCE_GCC: '1'
     run:
