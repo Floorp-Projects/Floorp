@@ -7,6 +7,8 @@ package mozilla.components.compose.browser.awesomebar.internal
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -19,7 +21,9 @@ internal fun Suggestions(
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier.testTag("mozac.awesomebar.suggestions")
+    ) {
         items(suggestions) { suggestion ->
             Suggestion(
                 suggestion,
