@@ -27,15 +27,14 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
   }
 
   void CreateSimpleMultiLayerTree() {
-    const char* layerTreeSyntax = "c(tt)";
-    // LayerID                     0 12
+    const char* treeShape = "x(xx)";
+    // LayerID               0 12
     nsIntRegion layerVisibleRegion[] = {
         nsIntRegion(IntRect(0, 0, 100, 100)),
         nsIntRegion(IntRect(0, 0, 100, 50)),
         nsIntRegion(IntRect(0, 50, 100, 50)),
     };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
-                           layers);
+    CreateScrollData(treeShape, layerVisibleRegion);
   }
 
   void CreatePotentiallyLeakingTree() {
@@ -85,6 +84,7 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
 TEST_F(APZCTreeManagerGenericTester, ScrollablePaintedLayers) {
   CreateSimpleMultiLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
+  auto& layers = scrollData;
 
   // both layers have the same scrollId
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
@@ -93,22 +93,9 @@ TEST_F(APZCTreeManagerGenericTester, ScrollablePaintedLayers) {
 
   TestAsyncPanZoomController* nullAPZC = nullptr;
   // so they should have the same APZC
-  EXPECT_FALSE(layers[0]->HasScrollableFrameMetrics());
+  EXPECT_FALSE(HasScrollableFrameMetrics(layers[0]));
   EXPECT_NE(nullAPZC, ApzcOf(layers[1]));
   EXPECT_NE(nullAPZC, ApzcOf(layers[2]));
-  EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
-
-  // Change the scrollId of layers[1], and verify the APZC changes
-  SetScrollableFrameMetrics(layers[1],
-                            ScrollableLayerGuid::START_SCROLL_ID + 1);
-  UpdateHitTestingTree();
-  EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[2]));
-
-  // Change the scrollId of layers[2] to match that of layers[1], ensure we get
-  // the same APZC for both again
-  SetScrollableFrameMetrics(layers[2],
-                            ScrollableLayerGuid::START_SCROLL_ID + 1);
-  UpdateHitTestingTree();
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 }
 
