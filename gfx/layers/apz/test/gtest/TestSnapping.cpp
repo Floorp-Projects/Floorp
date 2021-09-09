@@ -21,8 +21,6 @@ TEST_F(APZCSnappingTesterLayersOnly, Bug1265510) {
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 100, 100, 100))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -93,7 +91,6 @@ TEST_F(APZCSnappingTesterLayersOnly, Snap_After_Pinch) {
       nsIntRegion(IntRect(0, 0, 100, 100)),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
-  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
 

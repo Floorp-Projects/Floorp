@@ -1578,8 +1578,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 200, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1614,8 +1612,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1648,8 +1644,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 100));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1682,8 +1676,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 200, 100));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1716,8 +1708,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly,
   nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
                                       nsIntRegion(IntRect(0, 0, 100, 50))};
   CreateScrollData(treeShape, layerVisibleRegion);
-  auto& layers = scrollData;
-  WebRenderLayerScrollData* root = layers[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
@@ -1784,7 +1774,6 @@ TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollIntoPreventDefault) {
   const char* treeShape = "x";
   nsIntRegion layerVisibleRegions[] = {nsIntRegion(IntRect(0, 0, 100, 100))};
   CreateScrollData(treeShape, layerVisibleRegions);
-  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));

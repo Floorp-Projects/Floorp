@@ -15,18 +15,17 @@ class APZEventResultTester : public APZCTreeManagerTester {
   UniquePtr<ScopedLayerTreeRegistration> registration;
 
   void UpdateOverscrollBehavior(OverscrollBehavior aX, OverscrollBehavior aY) {
-    ModifyFrameMetrics(scrollData[0],
-                       [aX, aY](ScrollMetadata& sm, FrameMetrics& _) {
-                         OverscrollBehaviorInfo overscroll;
-                         overscroll.mBehaviorX = aX;
-                         overscroll.mBehaviorY = aY;
-                         sm.SetOverscrollBehavior(overscroll);
-                       });
+    ModifyFrameMetrics(root, [aX, aY](ScrollMetadata& sm, FrameMetrics& _) {
+      OverscrollBehaviorInfo overscroll;
+      overscroll.mBehaviorX = aX;
+      overscroll.mBehaviorY = aY;
+      sm.SetOverscrollBehavior(overscroll);
+    });
     UpdateHitTestingTree();
   }
 
   void SetScrollOffsetOnMainThread(const CSSPoint& aPoint) {
-    RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(scrollData[0]);
+    RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
 
     ScrollMetadata metadata = apzc->GetScrollMetadata();
     metadata.GetMetrics().SetLayoutScrollOffset(aPoint);
@@ -46,7 +45,6 @@ class APZEventResultTester : public APZCTreeManagerTester {
         nsIntRegion(IntRect(0, 0, 100, 100)),
     };
     CreateScrollData(treeShape, layerVisibleRegions);
-    WebRenderLayerScrollData* root = scrollData[0];
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
     ModifyFrameMetrics(root, [](ScrollMetadata& sm, FrameMetrics& metrics) {
@@ -81,7 +79,7 @@ class APZEventResultTester : public APZCTreeManagerTester {
       PreventDefaultFlag aPreventDefaultFlag) {
     EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
     regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*scrollData[0], regions);
+    APZTestAccess::SetEventRegions(*root, regions);
     UpdateHitTestingTree();
 
     APZHandledPlace expectedPlace =
@@ -155,7 +153,7 @@ class APZEventResultTester : public APZCTreeManagerTester {
       PreventDefaultFlag aPreventDefaultFlag) {
     EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
     regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*scrollData[0], regions);
+    APZTestAccess::SetEventRegions(*root, regions);
     UpdateHitTestingTree();
 
     APZHandledPlace expectedPlace =
@@ -337,7 +335,6 @@ TEST_F(APZEventResultTesterLayersOnly, HandledByRootApzcFlag) {
       nsIntRegion(IntRect(0, 0, 100, 100)),
   };
   CreateScrollData(treeShape, layerVisibleRegions);
-  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
   ModifyFrameMetrics(root, [](ScrollMetadata& sm, FrameMetrics& metrics) {
