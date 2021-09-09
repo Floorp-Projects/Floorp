@@ -5290,7 +5290,8 @@ bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Full());
-  return atomicCmpXchg(&access, type);
+  atomicCmpXchg(&access, type);
+  return true;
 }
 
 bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
@@ -5319,7 +5320,8 @@ bool BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType,
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Full());
-  return atomicRMW(&access, type, op);
+  atomicRMW(&access, type, op);
+  return true;
 }
 
 bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
@@ -5349,7 +5351,8 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Full());
-  return atomicXchg(&access, type);
+  atomicXchg(&access, type);
+  return true;
 }
 
 bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
