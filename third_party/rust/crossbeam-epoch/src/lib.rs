@@ -39,7 +39,7 @@
 //! pinned participants get unpinned. Such objects can be stored into a thread-local or global
 //! storage, where they are kept until the right time for their destruction comes.
 //!
-//! There is a global shared instance of garbage queue. You can [`defer`] the execution of an
+//! There is a global shared instance of garbage queue. You can [`defer`](Guard::defer) the execution of an
 //! arbitrary function until the global epoch is advanced enough. Most notably, concurrent data
 //! structures may defer the deallocation of an object.
 //!
@@ -47,41 +47,116 @@
 //!
 //! For majority of use cases, just use the default garbage collector by invoking [`pin`]. If you
 //! want to create your own garbage collector, use the [`Collector`] API.
-//!
-//! [`Atomic`]: struct.Atomic.html
-//! [`Collector`]: struct.Collector.html
-//! [`Shared`]: struct.Shared.html
-//! [`pin`]: fn.pin.html
-//! [`defer`]: struct.Guard.html#method.defer
 
-#![warn(missing_docs)]
-#![warn(missing_debug_implementations)]
+#![doc(test(
+    no_crate_inject,
+    attr(
+        deny(warnings, rust_2018_idioms),
+        allow(dead_code, unused_assignments, unused_variables)
+    )
+))]
+#![warn(
+    missing_docs,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unreachable_pub
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "nightly", feature(cfg_target_has_atomic))]
+#![cfg_attr(feature = "nightly", feature(const_fn_trait_bound))]
 
-#[macro_use]
-extern crate cfg_if;
-#[cfg(feature = "std")]
-extern crate core;
+#[cfg(crossbeam_loom)]
+extern crate loom_crate as loom;
 
-extern crate maybe_uninit;
+use cfg_if::cfg_if;
 
+#[cfg(crossbeam_loom)]
+#[allow(unused_imports, dead_code)]
+mod primitive {
+    pub(crate) mod cell {
+        pub(crate) use loom::cell::UnsafeCell;
+    }
+    pub(crate) mod sync {
+        pub(crate) mod atomic {
+            use core::sync::atomic::Ordering;
+            pub(crate) use loom::sync::atomic::AtomicUsize;
+            pub(crate) fn fence(ord: Ordering) {
+                if let Ordering::Acquire = ord {
+                } else {
+                    // FIXME: loom only supports acquire fences at the moment.
+                    // https://github.com/tokio-rs/loom/issues/117
+                    // let's at least not panic...
+                    // this may generate some false positives (`SeqCst` is stronger than `Acquire`
+                    // for example), and some false negatives (`Relaxed` is weaker than `Acquire`),
+                    // but it's the best we can do for the time being.
+                }
+                loom::sync::atomic::fence(Ordering::Acquire)
+            }
+
+            // FIXME: loom does not support compiler_fence at the moment.
+            // https://github.com/tokio-rs/loom/issues/117
+            // we use fence as a stand-in for compiler_fence for the time being.
+            // this may miss some races since fence is stronger than compiler_fence,
+            // but it's the best we can do for the time being.
+            pub(crate) use self::fence as compiler_fence;
+        }
+        pub(crate) use loom::sync::Arc;
+    }
+    pub(crate) use loom::lazy_static;
+    pub(crate) use loom::thread_local;
+}
+#[cfg(not(crossbeam_no_atomic_cas))]
+#[cfg(not(crossbeam_loom))]
+#[allow(unused_imports, dead_code)]
+mod primitive {
+    #[cfg(feature = "alloc")]
+    pub(crate) mod cell {
+        #[derive(Debug)]
+        #[repr(transparent)]
+        pub(crate) struct UnsafeCell<T>(::core::cell::UnsafeCell<T>);
+
+        // loom's UnsafeCell has a slightly different API than the standard library UnsafeCell.
+        // Since we want the rest of the code to be agnostic to whether it's running under loom or
+        // not, we write this small wrapper that provides the loom-supported API for the standard
+        // library UnsafeCell. This is also what the loom documentation recommends:
+        // https://github.com/tokio-rs/loom#handling-loom-api-differences
+        impl<T> UnsafeCell<T> {
+            #[inline]
+            pub(crate) fn new(data: T) -> UnsafeCell<T> {
+                UnsafeCell(::core::cell::UnsafeCell::new(data))
+            }
+
+            #[inline]
+            pub(crate) fn with<R>(&self, f: impl FnOnce(*const T) -> R) -> R {
+                f(self.0.get())
+            }
+
+            #[inline]
+            pub(crate) fn with_mut<R>(&self, f: impl FnOnce(*mut T) -> R) -> R {
+                f(self.0.get())
+            }
+        }
+    }
+    #[cfg(feature = "alloc")]
+    pub(crate) mod sync {
+        pub(crate) mod atomic {
+            pub(crate) use core::sync::atomic::compiler_fence;
+            pub(crate) use core::sync::atomic::fence;
+            pub(crate) use core::sync::atomic::AtomicUsize;
+        }
+        pub(crate) use alloc::sync::Arc;
+    }
+
+    #[cfg(feature = "std")]
+    pub(crate) use std::thread_local;
+
+    #[cfg(feature = "std")]
+    pub(crate) use lazy_static::lazy_static;
+}
+
+#[cfg(not(crossbeam_no_atomic_cas))]
 cfg_if! {
     if #[cfg(feature = "alloc")] {
         extern crate alloc;
-    } else if #[cfg(feature = "std")] {
-        extern crate std as alloc;
-    }
-}
-
-#[cfg_attr(feature = "nightly", cfg(target_has_atomic = "ptr"))]
-cfg_if! {
-    if #[cfg(any(feature = "alloc", feature = "std"))] {
-        extern crate crossbeam_utils;
-        #[macro_use]
-        extern crate memoffset;
-        #[macro_use]
-        extern crate scopeguard;
 
         mod atomic;
         mod collector;
@@ -91,17 +166,20 @@ cfg_if! {
         mod internal;
         mod sync;
 
-        pub use self::atomic::{Atomic, CompareAndSetError, CompareAndSetOrdering, Owned, Pointer, Shared};
+        pub use self::atomic::{
+            Pointable, Atomic, CompareExchangeError,
+            Owned, Pointer, Shared,
+        };
         pub use self::collector::{Collector, LocalHandle};
         pub use self::guard::{unprotected, Guard};
+
+        #[allow(deprecated)]
+        pub use self::atomic::{CompareAndSetError, CompareAndSetOrdering};
     }
 }
 
 cfg_if! {
     if #[cfg(feature = "std")] {
-        #[macro_use]
-        extern crate lazy_static;
-
         mod default;
         pub use self::default::{default_collector, is_pinned, pin};
     }

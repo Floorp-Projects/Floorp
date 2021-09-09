@@ -284,7 +284,7 @@ fn collapse(runs: &[Run]) -> Option<usize> {
 /// Otherwise, it sorts the slice into non-descending order.
 ///
 /// This merge sort borrows some (but not all) ideas from TimSort, which is described in detail
-/// [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt).
+/// [here](https://svn.python.org/projects/python/trunk/Objects/listsort.txt).
 ///
 /// The algorithm identifies strictly descending and non-descending subsequences, which are called
 /// natural runs. There is a stack of pending runs yet to be merged. Each newly found run is pushed
@@ -739,12 +739,12 @@ mod tests {
         check(&[1, 2, 2, 2, 2, 3], &[]);
         check(&[], &[1, 2, 2, 2, 2, 3]);
 
-        let mut rng = thread_rng();
+        let ref mut rng = thread_rng();
 
         for _ in 0..100 {
-            let limit: u32 = rng.gen_range(1, 21);
-            let left_len: usize = rng.gen_range(0, 20);
-            let right_len: usize = rng.gen_range(0, 20);
+            let limit: u32 = rng.gen_range(1..21);
+            let left_len: usize = rng.gen_range(0..20);
+            let right_len: usize = rng.gen_range(0..20);
 
             let mut left = rng
                 .sample_iter(&Uniform::new(0, limit))

@@ -95,23 +95,21 @@ macro_rules! span_of {
     };
     // No explicit begin for range.
     (@helper $root:ident, $parent:path, [] ..) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
         ($root as usize,
-         $root as usize + $crate::mem::size_of_val(&(*$root)))
+         $root as usize + $crate::__priv::size_of_pointee($root))
     }};
-    (@helper $root:ident, $parent:path, [] ..= $field:tt) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        ($root as usize,
-         raw_field!($root, $parent, $field) as usize + $crate::mem::size_of_val(&(*$root).$field))
+    (@helper $root:ident, $parent:path, [] ..= $end:tt) => {{
+        let end = raw_field!($root, $parent, $end);
+        ($root as usize, end as usize + $crate::__priv::size_of_pointee(end))
     }};
-    (@helper $root:ident, $parent:path, [] .. $field:tt) => {{
-        ($root as usize, raw_field!($root, $parent, $field) as usize)
+    (@helper $root:ident, $parent:path, [] .. $end:tt) => {{
+        ($root as usize, raw_field!($root, $parent, $end) as usize)
     }};
     // Explicit begin and end for range.
     (@helper $root:ident, $parent:path, # $begin:tt [] ..= $end:tt) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        (raw_field!($root, $parent, $begin) as usize,
-         raw_field!($root, $parent, $end) as usize + $crate::mem::size_of_val(&(*$root).$end))
+        let begin = raw_field!($root, $parent, $begin);
+        let end = raw_field!($root, $parent, $end);
+        (begin as usize, end as usize + $crate::__priv::size_of_pointee(end))
     }};
     (@helper $root:ident, $parent:path, # $begin:tt [] .. $end:tt) => {{
         (raw_field!($root, $parent, $begin) as usize,
@@ -119,19 +117,17 @@ macro_rules! span_of {
     }};
     // No explicit end for range.
     (@helper $root:ident, $parent:path, # $begin:tt [] ..) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
         (raw_field!($root, $parent, $begin) as usize,
-         $root as usize + $crate::mem::size_of_val(&*$root))
+         $root as usize + $crate::__priv::size_of_pointee($root))
     }};
     (@helper $root:ident, $parent:path, # $begin:tt [] ..=) => {{
         _memoffset__compile_error!(
             "Found inclusive range to the end of a struct. Did you mean '..' instead of '..='?")
     }};
     // Just one field.
-    (@helper $root:ident, $parent:path, # $begin:tt []) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        (raw_field!($root, $parent, $begin) as usize,
-         raw_field!($root, $parent, $begin) as usize + $crate::mem::size_of_val(&(*$root).$begin))
+    (@helper $root:ident, $parent:path, # $field:tt []) => {{
+        let field = raw_field!($root, $parent, $field);
+        (field as usize, field as usize + $crate::__priv::size_of_pointee(field))
     }};
     // Parsing.
     (@helper $root:ident, $parent:path, $(# $begin:tt)+ [] $tt:tt $($rest:tt)*) => {{
@@ -143,13 +139,11 @@ macro_rules! span_of {
 
     // Entry point.
     ($sty:path, $($exp:tt)+) => ({
-        unsafe {
-            // Get a base pointer.
-            _memoffset__let_base_ptr!(root, $sty);
-            let base = root as usize;
-            let (begin, end) = span_of!(@helper root, $sty, [] $($exp)*);
-            begin-base..end-base
-        }
+        // Get a base pointer.
+        _memoffset__let_base_ptr!(root, $sty);
+        let base = root as usize;
+        let (begin, end) = span_of!(@helper root, $sty, [] $($exp)*);
+        begin-base..end-base
     });
 }
 
