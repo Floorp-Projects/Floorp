@@ -82,6 +82,10 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
 });
 
 add_task(async function test_experiment_expose_Telemetry() {
+  const featureManifest = {
+    description: "Test feature",
+    exposureDescription: "Used in tests",
+  };
   const cleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "test-feature",
     value: { enabled: false },
@@ -92,7 +96,7 @@ add_task(async function test_experiment_expose_Telemetry() {
   });
 
   const { featureId } = experiment.branch.features[0];
-  const feature = new ExperimentFeature(featureId);
+  const feature = new ExperimentFeature(featureId, featureManifest);
 
   Services.telemetry.clearEvents();
   feature.recordExposureEvent();
