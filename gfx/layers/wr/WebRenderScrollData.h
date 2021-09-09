@@ -180,6 +180,9 @@ class WebRenderLayerScrollData final {
   // GTests don't have a display list so they can't use Initialize().
   void InitializeForTest(int32_t aDescendantCount);
 
+  ScrollMetadata& GetScrollMetadataMut(WebRenderScrollData& aOwner,
+                                       size_t aIndex);
+
  private:
   // The number of descendants this layer has (not including the layer itself).
   // This is needed to reconstruct the depth-first layer tree traversal
@@ -266,6 +269,11 @@ class WebRenderScrollData {
 
   friend std::ostream& operator<<(std::ostream& aOut,
                                   const WebRenderScrollData& aData);
+
+ private:
+  // For test use only.
+  friend class WebRenderLayerScrollData;
+  ScrollMetadata& GetScrollMetadataMut(size_t aIndex);
 
  private:
   // This is called by the ParamTraits implementation to rebuild mScrollIdMap
