@@ -15,6 +15,7 @@ namespace mozilla::intl {
 enum class ICUError : uint8_t {
   OutOfMemory,
   InternalError,
+  OverflowError,
 };
 
 /**

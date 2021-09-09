@@ -64,6 +64,8 @@ class ICUPointer {
   const T* GetConst() const { return const_cast<const T*>(mPointer); }
   T* GetMut() { return mPointer; }
 
+  explicit operator bool() const { return !!mPointer; }
+
  private:
   T* mPointer;
 };

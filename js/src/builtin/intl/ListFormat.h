@@ -15,7 +15,10 @@
 #include "vm/NativeObject.h"
 
 class JSFreeOp;
-struct UListFormatter;
+
+namespace mozilla::intl {
+class ListFormat;
+}  // namespace mozilla::intl
 
 namespace js {
 
@@ -25,7 +28,7 @@ class ListFormatObject : public NativeObject {
   static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
-  static constexpr uint32_t ULIST_FORMATTER_SLOT = 1;
+  static constexpr uint32_t LIST_FORMAT_SLOT = 1;
   static constexpr uint32_t SLOT_COUNT = 2;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
@@ -35,16 +38,16 @@ class ListFormatObject : public NativeObject {
   // Estimated memory use for UListFormatter (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 24;
 
-  UListFormatter* getListFormatter() const {
-    const auto& slot = getFixedSlot(ULIST_FORMATTER_SLOT);
+  mozilla::intl::ListFormat* getListFormatSlot() const {
+    const auto& slot = getFixedSlot(LIST_FORMAT_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
-    return static_cast<UListFormatter*>(slot.toPrivate());
+    return static_cast<mozilla::intl::ListFormat*>(slot.toPrivate());
   }
 
-  void setListFormatter(UListFormatter* formatter) {
-    setFixedSlot(ULIST_FORMATTER_SLOT, PrivateValue(formatter));
+  void setListFormatSlot(mozilla::intl::ListFormat* format) {
+    setFixedSlot(LIST_FORMAT_SLOT, PrivateValue(format));
   }
 
  private:
