@@ -102,6 +102,9 @@ void js::intl::ReportInternalError(JSContext* cx,
     case mozilla::intl::ICUError::InternalError:
       ReportInternalError(cx);
       return;
+    case mozilla::intl::ICUError::OverflowError:
+      ReportAllocationOverflow(cx);
+      return;
   }
   MOZ_CRASH("Unexpected ICU error");
 }
