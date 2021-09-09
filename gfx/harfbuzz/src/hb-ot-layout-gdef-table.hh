@@ -98,8 +98,7 @@ struct AttachList
     | hb_map (glyph_map)
     | hb_sink (new_coverage)
     ;
-    out->coverage.serialize (c->serializer, out)
-		 .serialize (c->serializer, new_coverage.iter ());
+    out->coverage.serialize_serialize (c->serializer, new_coverage.iter ());
     return_trace (bool (new_coverage));
   }
 
@@ -386,8 +385,7 @@ struct LigCaretList
     | hb_map (glyph_map)
     | hb_sink (new_coverage)
     ;
-    out->coverage.serialize (c->serializer, out)
-		 .serialize (c->serializer, new_coverage.iter ());
+    out->coverage.serialize_serialize (c->serializer, new_coverage.iter ());
     return_trace (bool (new_coverage));
   }
 

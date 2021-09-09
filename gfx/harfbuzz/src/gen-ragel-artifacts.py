@@ -4,7 +4,7 @@
 
 import os, os.path, sys, subprocess, shutil
 
-ragel = shutil.which ('ragel')
+ragel = os.getenv ('RAGEL', shutil.which ('ragel'))
 if not ragel:
 	sys.exit ('You have to install ragel if you are going to develop HarfBuzz itself')
 
@@ -19,7 +19,7 @@ outdir = os.path.dirname (OUTPUT)
 shutil.copy (INPUT, outdir)
 rl = os.path.basename (INPUT)
 hh = rl.replace ('.rl', '.hh')
-subprocess.Popen ([ragel, '-e', '-F1', '-o', hh, rl], cwd=outdir).wait ()
+subprocess.Popen (ragel.split() + ['-e', '-F1', '-o', hh, rl], cwd=outdir).wait ()
 
 # copy it also to src/
 shutil.copyfile (os.path.join (outdir, hh), os.path.join (CURRENT_SOURCE_DIR, hh))

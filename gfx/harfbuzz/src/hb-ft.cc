@@ -91,7 +91,7 @@ struct hb_ft_font_t
 static hb_ft_font_t *
 _hb_ft_font_create (FT_Face ft_face, bool symbol, bool unref)
 {
-  hb_ft_font_t *ft_font = (hb_ft_font_t *) calloc (1, sizeof (hb_ft_font_t));
+  hb_ft_font_t *ft_font = (hb_ft_font_t *) hb_calloc (1, sizeof (hb_ft_font_t));
   if (unlikely (!ft_font)) return nullptr;
 
   ft_font->lock.init ();
@@ -125,7 +125,7 @@ _hb_ft_font_destroy (void *data)
 
   ft_font->lock.fini ();
 
-  free (ft_font);
+  hb_free (ft_font);
 }
 
 /**
@@ -642,20 +642,20 @@ _hb_ft_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data
   if (error)
     return nullptr;
 
-  buffer = (FT_Byte *) malloc (length);
+  buffer = (FT_Byte *) hb_malloc (length);
   if (!buffer)
     return nullptr;
 
   error = FT_Load_Sfnt_Table (ft_face, tag, 0, buffer, &length);
   if (error)
   {
-    free (buffer);
+    hb_free (buffer);
     return nullptr;
   }
 
   return hb_blob_create ((const char *) buffer, length,
 			 HB_MEMORY_MODE_WRITABLE,
-			 buffer, free);
+			 buffer, hb_free);
 }
 
 /**
@@ -846,8 +846,8 @@ hb_ft_font_changed (hb_font_t *font)
   FT_MM_Var *mm_var = nullptr;
   if (!FT_Get_MM_Var (ft_face, &mm_var))
   {
-    FT_Fixed *ft_coords = (FT_Fixed *) calloc (mm_var->num_axis, sizeof (FT_Fixed));
-    int *coords = (int *) calloc (mm_var->num_axis, sizeof (int));
+    FT_Fixed *ft_coords = (FT_Fixed *) hb_calloc (mm_var->num_axis, sizeof (FT_Fixed));
+    int *coords = (int *) hb_calloc (mm_var->num_axis, sizeof (int));
     if (coords && ft_coords)
     {
       if (!FT_Get_Var_Blend_Coordinates (ft_face, mm_var->num_axis, ft_coords))
@@ -866,12 +866,12 @@ hb_ft_font_changed (hb_font_t *font)
 	  hb_font_set_var_coords_normalized (font, nullptr, 0);
       }
     }
-    free (coords);
-    free (ft_coords);
+    hb_free (coords);
+    hb_free (ft_coords);
 #ifdef HAVE_FT_DONE_MM_VAR
     FT_Done_MM_Var (ft_face->glyph->library, mm_var);
 #else
-    free (mm_var);
+    hb_free (mm_var);
 #endif
   }
 #endif
@@ -1020,13 +1020,13 @@ hb_ft_font_set_funcs (hb_font_t *font)
   const int *coords = hb_font_get_var_coords_normalized (font, &num_coords);
   if (num_coords)
   {
-    FT_Fixed *ft_coords = (FT_Fixed *) calloc (num_coords, sizeof (FT_Fixed));
+    FT_Fixed *ft_coords = (FT_Fixed *) hb_calloc (num_coords, sizeof (FT_Fixed));
     if (ft_coords)
     {
       for (unsigned int i = 0; i < num_coords; i++)
 	ft_coords[i] = coords[i] * 4;
       FT_Set_Var_Blend_Coordinates (ft_face, num_coords, ft_coords);
-      free (ft_coords);
+      hb_free (ft_coords);
     }
   }
 #endif

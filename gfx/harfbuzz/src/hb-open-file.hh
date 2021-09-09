@@ -35,7 +35,6 @@
 
 namespace OT {
 
-
 /*
  *
  * The OpenType Font File
@@ -102,7 +101,13 @@ typedef struct OpenTypeOffsetTable
   {
     Tag t;
     t = tag;
-    return tables.bfind (t, table_index, HB_BFIND_NOT_FOUND_STORE, Index::NOT_FOUND_INDEX);
+    /* Use lfind for small fonts; there are fonts that have unsorted table entries;
+     * those tend to work in other tools, so tolerate them.
+     * https://github.com/harfbuzz/harfbuzz/issues/3065 */
+    if (tables.len < 16)
+      return tables.lfind (t, table_index, HB_NOT_FOUND_STORE, Index::NOT_FOUND_INDEX);
+    else
+      return tables.bfind (t, table_index, HB_NOT_FOUND_STORE, Index::NOT_FOUND_INDEX);
   }
   const TableRecord& get_table_by_tag (hb_tag_t tag) const
   {
@@ -113,44 +118,53 @@ typedef struct OpenTypeOffsetTable
 
   public:
 
-  template <typename item_t>
+  template <typename Iterator,
+	    hb_requires ((hb_is_source_of<Iterator, hb_pair_t<hb_tag_t, hb_blob_t *>>::value))>
   bool serialize (hb_serialize_context_t *c,
 		  hb_tag_t sfnt_tag,
-		  hb_array_t<item_t> items)
+		  Iterator it)
   {
     TRACE_SERIALIZE (this);
     /* Alloc 12 for the OTHeader. */
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     /* Write sfntVersion (bytes 0..3). */
     sfnt_version = sfnt_tag;
     /* Take space for numTables, searchRange, entrySelector, RangeShift
      * and the TableRecords themselves.  */
-    if (unlikely (!tables.serialize (c, items.length))) return_trace (false);
+    unsigned num_items = it.len ();
+    if (unlikely (!tables.serialize (c, num_items))) return_trace (false);
 
     const char *dir_end = (const char *) c->head;
     HBUINT32 *checksum_adjustment = nullptr;
 
     /* Write OffsetTables, alloc for and write actual table blobs. */
-    for (unsigned int i = 0; i < tables.len; i++)
+    unsigned i = 0;
+    for (hb_pair_t<hb_tag_t, hb_blob_t*> entry : it)
     {
-      TableRecord &rec = tables.arrayZ[i];
-      hb_blob_t *blob = items[i].blob;
-      rec.tag = items[i].tag;
-      rec.length = blob->length;
-      rec.offset.serialize (c, this);
+      hb_blob_t *blob = entry.second;
+      unsigned len = blob->length;
 
       /* Allocate room for the table and copy it. */
-      char *start = (char *) c->allocate_size<void> (rec.length);
+      char *start = (char *) c->allocate_size<void> (len);
       if (unlikely (!start)) return false;
 
-      if (likely (rec.length))
-	memcpy (start, blob->data, rec.length);
+      TableRecord &rec = tables.arrayZ[i];
+      rec.tag = entry.first;
+      rec.length = len;
+      rec.offset = 0;
+      if (unlikely (!c->check_assign (rec.offset,
+				      (unsigned) ((char *) start - (char *) this),
+				      HB_SERIALIZE_ERROR_OFFSET_OVERFLOW)))
+        return_trace (false);
+
+      if (likely (len))
+	memcpy (start, blob->data, len);
 
       /* 4-byte alignment. */
       c->align (4);
       const char *end = (const char *) c->head;
 
-      if (items[i].tag == HB_OT_TAG_head &&
+      if (entry.first == HB_OT_TAG_head &&
 	  (unsigned) (end - start) >= head::static_size)
       {
 	head *h = (head *) start;
@@ -159,6 +173,7 @@ typedef struct OpenTypeOffsetTable
       }
 
       rec.checkSum.set_for_data (start, end - start);
+      i++;
     }
 
     tables.qsort ();
@@ -170,7 +185,7 @@ typedef struct OpenTypeOffsetTable
       /* The following line is a slower version of the following block. */
       //checksum.set_for_data (this, (const char *) c->head - (const char *) this);
       checksum.set_for_data (this, dir_end - (const char *) this);
-      for (unsigned int i = 0; i < items.length; i++)
+      for (unsigned int i = 0; i < num_items; i++)
       {
 	TableRecord &rec = tables.arrayZ[i];
 	checksum = checksum + rec.checkSum;
@@ -477,14 +492,15 @@ struct OpenTypeFontFile
     }
   }
 
-  template <typename item_t>
+  template <typename Iterator,
+	    hb_requires ((hb_is_source_of<Iterator, hb_pair_t<hb_tag_t, hb_blob_t *>>::value))>
   bool serialize_single (hb_serialize_context_t *c,
 			 hb_tag_t sfnt_tag,
-			 hb_array_t<item_t> items)
+			 Iterator items)
   {
     TRACE_SERIALIZE (this);
     assert (sfnt_tag != TTCTag);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     return_trace (u.fontFace.serialize (c, sfnt_tag, items));
   }
 

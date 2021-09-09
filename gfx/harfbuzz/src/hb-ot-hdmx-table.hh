@@ -52,7 +52,7 @@ struct DeviceRecord
 
     unsigned length = it.len ();
 
-    if (unlikely (!c->extend (*this, length)))  return_trace (false);
+    if (unlikely (!c->extend (this, length)))  return_trace (false);
 
     this->pixelSize = pixelSize;
     this->maxWidth =

@@ -31,7 +31,7 @@
 #endif
 
 #ifdef HB_NO_OPEN
-#define hb_blob_create_from_file(x)  hb_blob_get_empty ()
+#define hb_blob_create_from_file_or_fail(x)  hb_blob_get_empty ()
 #endif
 
 int
@@ -42,7 +42,8 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  hb_blob_t *blob = hb_blob_create_from_file (argv[1]);
+  hb_blob_t *blob = hb_blob_create_from_file_or_fail (argv[1]);
+  assert (blob);
   printf ("Opened font file %s: %u bytes long\n", argv[1], hb_blob_get_length (blob));
 
   /* Create the face */

@@ -18,7 +18,7 @@ import sys
 if len (sys.argv) != 8:
 	sys.exit (__doc__)
 
-BLACKLISTED_BLOCKS = [
+DISABLED_BLOCKS = [
 	'Samaritan',
 	'Thai',
 	'Lao',
@@ -137,7 +137,7 @@ for i,d in enumerate (data):
 		if not u in combined:
 			combined[u] = list (defaults)
 		combined[u][i] = v
-combined = {k:v for k,v in combined.items() if v[4] not in BLACKLISTED_BLOCKS}
+combined = {k:v for k,v in combined.items() if v[4] not in DISABLED_BLOCKS}
 data = combined
 del combined
 
