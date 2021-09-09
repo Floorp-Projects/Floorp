@@ -20,6 +20,7 @@ class TestWRScrollData : public WebRenderScrollData {
  public:
   TestWRScrollData() = default;
   TestWRScrollData(TestWRScrollData&& aOther) = default;
+  TestWRScrollData& operator=(TestWRScrollData&& aOther) = default;
 
   /*
    * Create a WebRenderLayerScrollData tree described by |aTreeShape|.
