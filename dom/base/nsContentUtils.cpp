@@ -9819,24 +9819,15 @@ bool nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent) {
  * NOTE Helper method for nsContentUtils::HtmlObjectContentTypeForMIMEType.
  * NOTE Does not take content policy or capabilities into account
  */
-static bool HtmlObjectContentSupportsDocument(const nsCString& aMimeType,
-                                              nsIContent* aContent) {
+static bool HtmlObjectContentSupportsDocument(const nsCString& aMimeType) {
   nsCOMPtr<nsIWebNavigationInfo> info(
       do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID));
   if (!info) {
     return false;
   }
 
-  nsCOMPtr<nsIWebNavigation> webNav;
-  if (aContent) {
-    Document* currentDoc = aContent->GetComposedDoc();
-    if (currentDoc) {
-      webNav = do_GetInterface(currentDoc->GetWindow());
-    }
-  }
-
   uint32_t supported;
-  nsresult rv = info->IsTypeSupported(aMimeType, webNav, &supported);
+  nsresult rv = info->IsTypeSupported(aMimeType, &supported);
 
   if (NS_FAILED(rv)) {
     return false;
@@ -9878,7 +9869,7 @@ already_AddRefed<nsIPluginTag> nsContentUtils::PluginTagForType(
 
 /* static */
 uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
-    const nsCString& aMIMEType, bool aNoFakePlugin, nsIContent* aContent) {
+    const nsCString& aMIMEType, bool aNoFakePlugin) {
   if (aMIMEType.IsEmpty()) {
     return nsIObjectLoadingContent::TYPE_NULL;
   }
@@ -9893,7 +9884,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 
-  if (HtmlObjectContentSupportsDocument(aMIMEType, aContent)) {
+  if (HtmlObjectContentSupportsDocument(aMIMEType)) {
     return nsIObjectLoadingContent::TYPE_DOCUMENT;
   }
 

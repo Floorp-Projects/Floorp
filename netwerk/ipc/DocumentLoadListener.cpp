@@ -217,8 +217,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
   // channel listener so that we forward onto DocumentLoadListener.
   bool TryDefaultContentListener(nsIChannel* aChannel,
                                  const nsCString& aContentType) {
-    uint32_t canHandle = nsWebNavigationInfo::IsTypeSupported(
-        aContentType, mBrowsingContext->GetAllowPlugins());
+    uint32_t canHandle = nsWebNavigationInfo::IsTypeSupported(aContentType);
     if (canHandle != nsIWebNavigationInfo::UNSUPPORTED) {
       m_targetStreamListener = mListener;
       nsLoadFlags loadFlags = 0;

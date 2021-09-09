@@ -2037,7 +2037,7 @@ nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
        this, aMIMEType.get(), thisContent.get()));
   auto ret =
       static_cast<ObjectType>(nsContentUtils::HtmlObjectContentTypeForMIMEType(
-          aMIMEType, aNoFakePlugin, thisContent));
+          aMIMEType, aNoFakePlugin));
   LOG(("OBJLC[%p]: called HtmlObjectContentTypeForMIMEType\n", this));
   return ret;
 }

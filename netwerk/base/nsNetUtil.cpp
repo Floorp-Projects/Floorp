@@ -587,8 +587,8 @@ nsresult NS_GetIsDocumentChannel(nsIChannel* aChannel, bool* aIsDocument) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (nsContentUtils::HtmlObjectContentTypeForMIMEType(
-          mimeType, false, nullptr) == nsIObjectLoadingContent::TYPE_DOCUMENT) {
+  if (nsContentUtils::HtmlObjectContentTypeForMIMEType(mimeType, false) ==
+      nsIObjectLoadingContent::TYPE_DOCUMENT) {
     *aIsDocument = true;
     return NS_OK;
   }

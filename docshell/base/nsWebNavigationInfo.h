@@ -21,10 +21,7 @@ class nsWebNavigationInfo final : public nsIWebNavigationInfo {
 
   NS_DECL_NSIWEBNAVIGATIONINFO
 
-  static uint32_t IsTypeSupported(const nsACString& aType,
-                                  nsIWebNavigation* aWebNav);
-  static uint32_t IsTypeSupported(const nsACString& aType,
-                                  bool aPluginsAllowed);
+  static uint32_t IsTypeSupported(const nsACString& aType);
 
  private:
   ~nsWebNavigationInfo() {}
