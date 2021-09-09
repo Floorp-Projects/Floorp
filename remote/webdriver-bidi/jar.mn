@@ -11,4 +11,13 @@ remote.jar:
 
   # WebDriver BiDi modules
   content/webdriver-bidi/modules/ModuleRegistry.jsm (modules/ModuleRegistry.jsm)
+
+  # WebDriver BiDi root modules
   content/webdriver-bidi/modules/root/session.jsm (modules/root/session.jsm)
+  content/webdriver-bidi/modules/root/log.jsm (modules/root/log.jsm)
+
+  # WebDriver BiDi windowglobal modules
+  content/webdriver-bidi/modules/windowglobal/log.jsm (modules/windowglobal/log.jsm)
+
+  # WebDriver BiDi windowglobal-in-root modules
+  content/webdriver-bidi/modules/windowglobal-in-root/log.jsm (modules/windowglobal-in-root/log.jsm)
