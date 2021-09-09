@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace layers {
 
+struct EventRegions;
 struct ScrollMetadata;
 class WebRenderLayerScrollData;
 class WebRenderScrollData;
@@ -28,6 +29,8 @@ class APZTestAccess {
   static ScrollMetadata& GetScrollMetadataMut(WebRenderLayerScrollData& aLayer,
                                               WebRenderScrollData& aOwner,
                                               size_t aIndex);
+  static void SetEventRegions(WebRenderLayerScrollData& aLayer,
+                              const EventRegions& aRegions);
 };
 
 }  // namespace layers
