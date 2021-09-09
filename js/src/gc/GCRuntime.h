@@ -297,7 +297,6 @@ class GCRuntime {
 
   inline bool hasZealMode(ZealMode mode);
   inline void clearZealMode(ZealMode mode);
-  inline bool upcomingZealousGC();
   inline bool needZealousGC();
   inline bool hasIncrementalTwoSliceZealMode();
 
@@ -1275,8 +1274,6 @@ inline void GCRuntime::clearZealMode(ZealMode mode) {
   MOZ_ASSERT(!hasZealMode(mode));
 }
 
-inline bool GCRuntime::upcomingZealousGC() { return nextScheduled == 1; }
-
 inline bool GCRuntime::needZealousGC() {
   if (nextScheduled > 0 && --nextScheduled == 0) {
     if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::GenerationalGC) ||
@@ -1304,7 +1301,6 @@ inline bool GCRuntime::hasIncrementalTwoSliceZealMode() {
 #else
 inline bool GCRuntime::hasZealMode(ZealMode mode) { return false; }
 inline void GCRuntime::clearZealMode(ZealMode mode) {}
-inline bool GCRuntime::upcomingZealousGC() { return false; }
 inline bool GCRuntime::needZealousGC() { return false; }
 inline bool GCRuntime::hasIncrementalTwoSliceZealMode() { return false; }
 #endif
