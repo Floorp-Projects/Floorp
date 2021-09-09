@@ -1821,23 +1821,6 @@ gfxFontEntry* gfxPlatform::MakePlatformFont(const nsACString& aFontName,
       aLength);
 }
 
-mozilla::layers::DiagnosticTypes gfxPlatform::GetLayerDiagnosticTypes() {
-  mozilla::layers::DiagnosticTypes type = DiagnosticTypes::NO_DIAGNOSTIC;
-  if (StaticPrefs::layers_draw_borders()) {
-    type |= mozilla::layers::DiagnosticTypes::LAYER_BORDERS;
-  }
-  if (StaticPrefs::layers_draw_tile_borders()) {
-    type |= mozilla::layers::DiagnosticTypes::TILE_BORDERS;
-  }
-  if (StaticPrefs::layers_draw_bigimage_borders()) {
-    type |= mozilla::layers::DiagnosticTypes::BIGIMAGE_BORDERS;
-  }
-  if (StaticPrefs::layers_flash_borders()) {
-    type |= mozilla::layers::DiagnosticTypes::FLASH_BORDERS;
-  }
-  return type;
-}
-
 BackendPrefsData gfxPlatform::GetBackendPrefs() const {
   BackendPrefsData data;
 

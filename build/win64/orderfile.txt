@@ -2850,7 +2850,6 @@ nscstring_fallible_append_utf16_to_latin1_lossy_impl
 ??0gfxWindowsPlatform@@QEAA@XZ
 ??0gfxPlatform@@IEAA@XZ
 ??0GfxInfoCollectorBase@widget@mozilla@@QEAA@XZ
-?GetLayerDiagnosticTypes@gfxPlatform@@QEAA?AW4DiagnosticTypes@layers@mozilla@@XZ
 ?InitBackendPrefs@gfxPlatform@@IEAAX$$QEAUBackendPrefsData@@@Z
 ?ParseString@@YAXAEBV?$nsTSubstring@D@@DAEAV?$nsTArray@V?$nsTString@D@@@@@Z
 ?ManagerInit@VRManager@gfx@mozilla@@SAXXZ

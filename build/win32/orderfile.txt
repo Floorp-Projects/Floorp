@@ -4345,7 +4345,6 @@ XPCOMService_GetGfxInfo
 ??0gfxWindowsPlatform@@QAE@XZ
 ??0gfxPlatform@@IAE@XZ
 ??0GfxInfoCollectorBase@widget@mozilla@@QAE@XZ
-?GetLayerDiagnosticTypes@gfxPlatform@@QAE?AW4DiagnosticTypes@layers@mozilla@@XZ
 ?InitBackendPrefs@gfxPlatform@@IAEX$$QAUBackendPrefsData@@@Z
 ?DetachedFromEditor@EditorEventListener@mozilla@@IBE_NXZ
 ?ManagerInit@VRManager@gfx@mozilla@@SAXXZ
