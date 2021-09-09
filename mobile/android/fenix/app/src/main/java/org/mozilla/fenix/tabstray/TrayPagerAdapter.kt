@@ -18,6 +18,8 @@ import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
+import org.mozilla.fenix.tabstray.browser.maxActiveTime
+import org.mozilla.fenix.tabstray.ext.isNormalTabActive
 import org.mozilla.fenix.tabstray.syncedtabs.TabClickDelegate
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
@@ -53,7 +55,7 @@ class TrayPagerAdapter(
                     itemView,
                     store,
                     interactor,
-                    browserStore.state.normalTabs.indexOf(selectedTab)
+                    browserStore.state.normalTabs.filter { it.isNormalTabActive(maxActiveTime) }.indexOf(selectedTab)
                 )
             }
             PrivateBrowserPageViewHolder.LAYOUT_ID -> {
