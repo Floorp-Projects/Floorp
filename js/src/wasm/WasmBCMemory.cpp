@@ -31,40 +31,6 @@
 namespace js {
 namespace wasm {
 
-#ifndef RABALDR_HAS_HEAPREG
-#  ifdef JS_CODEGEN_X86
-using ScratchAtomicNoHeapReg = ScratchEBX;
-#  else
-#    error "Unimplemented porting interface"
-#  endif
-#endif
-
-// A helper class to manage temp registers for atomic operations.
-
-template <size_t Count>
-struct Atomic32Temps : mozilla::Array<RegI32, Count> {
-  // Allocate all temp registers if 'allocate' is not specified.
-  void allocate(BaseCompiler* bc, size_t allocate = Count);
-
-  // Free those that were allocated.
-  void maybeFree(BaseCompiler* bc);
-};
-
-template <size_t Count>
-void Atomic32Temps<Count>::allocate(BaseCompiler* bc, size_t allocate) {
-  static_assert(Count != 0);
-  for (size_t i = 0; i < allocate; ++i) {
-    this->operator[](i) = bc->needI32();
-  }
-}
-
-template <size_t Count>
-void Atomic32Temps<Count>::maybeFree(BaseCompiler* bc) {
-  for (size_t i = 0; i < Count; ++i) {
-    bc->maybeFree(this->operator[](i));
-  }
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Bounds check elimination.
@@ -675,8 +641,17 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 //////////////////////////////////////////////////////////////////////////////
 //
 // Atomic operations.
+//
+// The atomic operations have very diverse per-platform needs for register
+// allocation and temps.  To handle that, the implementations are structured as
+// a per-operation framework method that calls into platform-specific helpers
+// (usually called PopAndAllocate, Perform, and Deallocate) in a per-operation
+// namespace.  This structure results in a little duplication and boilerplate
+// but is otherwise clean and flexible and keeps code and supporting definitions
+// entirely co-located.
 
 #ifdef RABALDR_HAS_HEAPREG
+
 BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                   AccessCheck* check,
                                                   RegI32 tls, RegI32 ptr) {
@@ -684,7 +659,9 @@ BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
   prepareMemoryAccess(access, check, tls, ptr);
   return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
 }
+
 #else
+
 // Some consumers depend on the returned Address not incorporating tls, as tls
 // may be the scratch register.
 Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
@@ -695,704 +672,51 @@ Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
   masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
   return Address(ptr, access->offset());
 }
+
 #endif
 
-#if defined(JS_CODEGEN_MIPS64)
-using AtomicRMW32Temps = Atomic32Temps<3>;
-using AtomicCmpXchg32Temps = Atomic32Temps<3>;
-using AtomicXchg32Temps = Atomic32Temps<3>;
-#else
-using AtomicRMW32Temps = Atomic32Temps<1>;
-using AtomicCmpXchg32Temps = Atomic32Temps<0>;
-using AtomicXchg32Temps = Atomic32Temps<0>;
-#endif
-
-template <typename T>
-static void AtomicRMW32(BaseCompiler* bc, const MemoryAccessDesc& access,
-                        T srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
-                        const AtomicRMW32Temps& temps) {
-  switch (access.type()) {
-    case Scalar::Uint8:
-#ifdef JS_CODEGEN_X86
-    {
-      RegI32 temp = temps[0];
-      // The temp, if used, must be a byte register.
-      MOZ_ASSERT(temp.isInvalid());
-      ScratchI8 scratch(*bc);
-      if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
-        temp = scratch;
-      }
-      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temp, rd);
-      break;
-    }
-#endif
-    case Scalar::Uint16:
-    case Scalar::Int32:
-    case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS64)
-      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], temps[1],
-                                 temps[2], rd);
-#else
-      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], rd);
-#endif
-      break;
-    default: {
-      MOZ_CRASH("Bad type for atomic operation");
-    }
-  }
-}
-
-// On x86, V is Address.  On other platforms, it is Register64.
-// T is BaseIndex or Address.
-template <typename T, typename V>
-static void AtomicRMW64(MacroAssembler& masm, const MemoryAccessDesc& access,
-                        const T& srcAddr, AtomicOp op, V value, Register64 temp,
-                        Register64 rd) {
-  masm.wasmAtomicFetchOp64(access, op, value, srcAddr, temp, rd);
-}
-
-template <typename T>
-static void AtomicCmpXchg32(BaseCompiler* bc, const MemoryAccessDesc& access,
-                            T srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
-                            const AtomicCmpXchg32Temps& temps) {
-  switch (access.type()) {
-    case Scalar::Uint8:
-#if defined(JS_CODEGEN_X86)
-    {
-      ScratchI8 scratch(*bc);
-      MOZ_ASSERT(rd == bc->specific_.eax);
-      if (!bc->ra.isSingleByteI32(rnew)) {
-        // The replacement value must have a byte persona.
-        bc->masm.movl(rnew, scratch);
-        rnew = scratch;
-      }
-      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
-      break;
-    }
-#endif
-    case Scalar::Uint16:
-    case Scalar::Int32:
-    case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS64)
-      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps[0],
-                                   temps[1], temps[2], rd);
-#else
-      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
-#endif
-      break;
-    default:
-      MOZ_CRASH("Bad type for atomic operation");
-  }
-}
-
-template <typename T>
-static void AtomicXchg32(BaseCompiler* bc, const MemoryAccessDesc& access,
-                         T srcAddr, RegI32 rv, RegI32 rd,
-                         const AtomicXchg32Temps& temps) {
-  switch (access.type()) {
-    case Scalar::Uint8:
-#if defined(JS_CODEGEN_X86)
-    {
-      if (!bc->ra.isSingleByteI32(rd)) {
-        ScratchI8 scratch(*bc);
-        // The output register must have a byte persona.
-        bc->masm.wasmAtomicExchange(access, srcAddr, rv, scratch);
-        bc->masm.movl(scratch, rd);
-      } else {
-        bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
-      }
-      break;
-    }
-#endif
-    case Scalar::Uint16:
-    case Scalar::Int32:
-    case Scalar::Uint32:
-#if defined(JS_CODEGEN_MIPS64)
-      bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps[0], temps[1],
-                                  temps[2], rd);
-#else
-      bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
-#endif
-      break;
-    default:
-      MOZ_CRASH("Bad type for atomic operation");
-  }
-}
-
-// The RAII wrappers are used because we sometimes have to free partial
-// registers, as when part of a register is the scratch register that has
-// been temporarily used, or not free a register at all, as when the
-// register is the same as the destination register (but only on some
-// platforms, not on all).  These are called PopX{32,64}Regs where X is the
-// operation being targeted.
-
-// Utility struct that holds the BaseCompiler and the destination, and frees
-// the destination if it has not been extracted.
-
-template <typename T>
-class PopBase {
-  T rd_;
-
-  void maybeFree(RegI32 r) { bc->maybeFree(r); }
-  void maybeFree(RegI64 r) { bc->maybeFree(r); }
-
- protected:
-  BaseCompiler* const bc;
-
-  void setRd(T r) {
-    MOZ_ASSERT(rd_.isInvalid());
-    rd_ = r;
-  }
-  T getRd() const {
-    MOZ_ASSERT(rd_.isValid());
-    return rd_;
-  }
-
- public:
-  explicit PopBase(BaseCompiler* bc) : bc(bc) {}
-  ~PopBase() { maybeFree(rd_); }
-
-  // Take and clear the Rd - use this when pushing Rd.
-  T takeRd() {
-    MOZ_ASSERT(rd_.isValid());
-    T r = rd_;
-    rd_ = T::Invalid();
-    return r;
-  }
-};
-
-class PopAtomicCmpXchg32Regs : public PopBase<RegI32> {
-  using Base = PopBase<RegI32>;
-  RegI32 rexpect, rnew;
-  AtomicCmpXchg32Temps temps;
-
- public:
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type,
-                                  Scalar::Type viewType)
-      : Base(bc) {
-    // For cmpxchg, the expected value and the result are both in eax.
-    bc->needI32(bc->specific_.eax);
-    if (type == ValType::I64) {
-      rnew = bc->popI64ToI32();
-      rexpect = bc->popI64ToSpecificI32(bc->specific_.eax);
-    } else {
-      rnew = bc->popI32();
-      rexpect = bc->popI32ToSpecific(bc->specific_.eax);
-    }
-    setRd(rexpect);
-  }
-  ~PopAtomicCmpXchg32Regs() { bc->freeI32(rnew); }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-  explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type,
-                                  Scalar::Type viewType)
-      : Base(bc) {
-    if (type == ValType::I64) {
-      rnew = bc->popI64ToI32();
-      rexpect = bc->popI64ToI32();
-    } else {
-      rnew = bc->popI32();
-      rexpect = bc->popI32();
-    }
-    setRd(bc->needI32());
-  }
-  ~PopAtomicCmpXchg32Regs() {
-    bc->freeI32(rnew);
-    bc->freeI32(rexpect);
-  }
-#elif defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type,
-                                  Scalar::Type viewType)
-      : Base(bc) {
-    if (type == ValType::I64) {
-      rnew = bc->popI64ToI32();
-      rexpect = bc->popI64ToI32();
-    } else {
-      rnew = bc->popI32();
-      rexpect = bc->popI32();
-    }
-    if (Scalar::byteSize(viewType) < 4) {
-      temps.allocate(bc);
-    }
-    setRd(bc->needI32());
-  }
-  ~PopAtomicCmpXchg32Regs() {
-    bc->freeI32(rnew);
-    bc->freeI32(rexpect);
-    temps.maybeFree(bc);
-  }
-#else
-  explicit PopAtomicCmpXchg32Regs(BaseCompiler* bc, ValType type,
-                                  Scalar::Type viewType)
-      : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicCmpXchg32Regs");
-  }
-#endif
-
-  template <typename T>
-  void atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr) {
-    AtomicCmpXchg32(bc, access, srcAddr, rexpect, rnew, getRd(), temps);
-  }
-};
-
-class PopAtomicCmpXchg64Regs : public PopBase<RegI64> {
-  using Base = PopBase<RegI64>;
-  RegI64 rexpect, rnew;
-
- public:
-#ifdef JS_CODEGEN_X64
-  explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    // For cmpxchg, the expected value and the result are both in rax.
-    bc->needI64(bc->specific_.rax);
-    rnew = bc->popI64();
-    rexpect = bc->popI64ToSpecific(bc->specific_.rax);
-    setRd(rexpect);
-  }
-  ~PopAtomicCmpXchg64Regs() { bc->freeI64(rnew); }
-#elif defined(JS_CODEGEN_X86)
-  explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    // For cmpxchg8b, the expected value and the result are both in
-    // edx:eax, and the replacement value is in ecx:ebx.  But we can't
-    // allocate ebx here, so instead we allocate a temp to hold the low
-    // word of 'new'.
-    bc->needI64(bc->specific_.edx_eax);
-    bc->needI32(bc->specific_.ecx);
-
-    rnew = bc->popI64ToSpecific(
-        RegI64(Register64(bc->specific_.ecx, bc->needI32())));
-    rexpect = bc->popI64ToSpecific(bc->specific_.edx_eax);
-    setRd(rexpect);
-  }
-  ~PopAtomicCmpXchg64Regs() { bc->freeI64(rnew); }
-#elif defined(JS_CODEGEN_ARM)
-  explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    // The replacement value and the result must both be odd/even pairs.
-    rnew = bc->popI64Pair();
-    rexpect = bc->popI64();
-    setRd(bc->needI64Pair());
-  }
-  ~PopAtomicCmpXchg64Regs() {
-    bc->freeI64(rexpect);
-    bc->freeI64(rnew);
-  }
-#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    rnew = bc->popI64();
-    rexpect = bc->popI64();
-    setRd(bc->needI64());
-  }
-  ~PopAtomicCmpXchg64Regs() {
-    bc->freeI64(rexpect);
-    bc->freeI64(rnew);
-  }
-#else
-  explicit PopAtomicCmpXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicCmpXchg64Regs");
-  }
-#endif
-
-#ifdef JS_CODEGEN_X86
-  template <typename T>
-  void atomicCmpXchg64(const MemoryAccessDesc& access, T srcAddr, RegI32 ebx) {
-    MOZ_ASSERT(ebx == js::jit::ebx);
-    bc->masm.move32(rnew.low, ebx);
-    bc->masm.wasmCompareExchange64(access, srcAddr, rexpect,
-                                   bc->specific_.ecx_ebx, getRd());
-  }
-#else
-  template <typename T>
-  void atomicCmpXchg64(const MemoryAccessDesc& access, T srcAddr) {
-    bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, getRd());
-  }
-#endif
-};
-
-#ifndef JS_64BIT
-class PopAtomicLoad64Regs : public PopBase<RegI64> {
-  using Base = PopBase<RegI64>;
-
- public:
-#  if defined(JS_CODEGEN_X86)
-  explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
-    // The result is in edx:eax, and we need ecx:ebx as a temp.  But we
-    // can't reserve ebx yet, so we'll accept it as an argument to the
-    // operation (below).
-    bc->needI32(bc->specific_.ecx);
-    bc->needI64(bc->specific_.edx_eax);
-    setRd(bc->specific_.edx_eax);
-  }
-  ~PopAtomicLoad64Regs() { bc->freeI32(bc->specific_.ecx); }
-#  elif defined(JS_CODEGEN_ARM)
-  explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
-    setRd(bc->needI64Pair());
-  }
-#  elif defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
-    setRd(bc->needI64());
-  }
-#  else
-  explicit PopAtomicLoad64Regs(BaseCompiler* bc) : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicLoad64Regs");
-  }
-#  endif
-
+#ifndef RABALDR_HAS_HEAPREG
 #  ifdef JS_CODEGEN_X86
-  template <typename T>
-  void atomicLoad64(const MemoryAccessDesc& access, T srcAddr, RegI32 ebx) {
-    MOZ_ASSERT(ebx == js::jit::ebx);
-    bc->masm.wasmAtomicLoad64(access, srcAddr, bc->specific_.ecx_ebx, getRd());
-  }
-#  else  // ARM
-  template <typename T>
-  void atomicLoad64(const MemoryAccessDesc& access, T srcAddr) {
-    bc->masm.wasmAtomicLoad64(access, srcAddr, RegI64::Invalid(), getRd());
-  }
-#  endif
-};
-#endif  // JS_64BIT
-
-class PopAtomicRMW32Regs : public PopBase<RegI32> {
-  using Base = PopBase<RegI32>;
-  RegI32 rv;
-  AtomicRMW32Temps temps;
-
- public:
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type,
-                              Scalar::Type viewType, AtomicOp op)
-      : Base(bc) {
-    bc->needI32(bc->specific_.eax);
-    if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
-      // We use xadd, so source and destination are the same.  Using
-      // eax here is overconstraining, but for byte operations on x86
-      // we do need something with a byte register.
-      if (type == ValType::I64) {
-        rv = bc->popI64ToSpecificI32(bc->specific_.eax);
-      } else {
-        rv = bc->popI32ToSpecific(bc->specific_.eax);
-      }
-      setRd(rv);
-    } else {
-      // We use a cmpxchg loop.  The output must be eax; the input
-      // must be in a separate register since it may be used several
-      // times.
-      if (type == ValType::I64) {
-        rv = bc->popI64ToI32();
-      } else {
-        rv = bc->popI32();
-      }
-      setRd(bc->specific_.eax);
-#  if defined(JS_CODEGEN_X86)
-      // Single-byte is a special case handled very locally with
-      // ScratchReg, see atomicRMW32 above.
-      if (Scalar::byteSize(viewType) > 1) {
-        temps.allocate(bc);
-      }
+using ScratchAtomicNoHeapReg = ScratchEBX;
 #  else
-      temps.allocate(bc);
+#    error "Unimplemented porting interface"
 #  endif
-    }
-  }
-  ~PopAtomicRMW32Regs() {
-    if (rv != bc->specific_.eax) {
-      bc->freeI32(rv);
-    }
-    temps.maybeFree(bc);
-  }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-  explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type,
-                              Scalar::Type viewType, AtomicOp op)
-      : Base(bc) {
-    rv = type == ValType::I64 ? bc->popI64ToI32() : bc->popI32();
-    temps.allocate(bc);
-    setRd(bc->needI32());
-  }
-  ~PopAtomicRMW32Regs() {
-    bc->freeI32(rv);
-    temps.maybeFree(bc);
-  }
-#elif defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type,
-                              Scalar::Type viewType, AtomicOp op)
-      : Base(bc) {
-    rv = type == ValType::I64 ? bc->popI64ToI32() : bc->popI32();
-    if (Scalar::byteSize(viewType) < 4) {
-      temps.allocate(bc);
-    }
-
-    setRd(bc->needI32());
-  }
-  ~PopAtomicRMW32Regs() {
-    bc->freeI32(rv);
-    temps.maybeFree(bc);
-  }
-#else
-  explicit PopAtomicRMW32Regs(BaseCompiler* bc, ValType type,
-                              Scalar::Type viewType, AtomicOp op)
-      : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicRMW32Regs");
-  }
 #endif
 
-  template <typename T>
-  void atomicRMW32(const MemoryAccessDesc& access, T srcAddr, AtomicOp op) {
-    AtomicRMW32(bc, access, srcAddr, op, rv, getRd(), temps);
-  }
-};
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic load and store.
 
-class PopAtomicRMW64Regs : public PopBase<RegI64> {
-  using Base = PopBase<RegI64>;
-#if defined(JS_CODEGEN_X64)
-  AtomicOp op;
-#endif
-  RegI64 rv, temp;
+namespace atomic_load64 {
 
- public:
-#if defined(JS_CODEGEN_X64)
-  explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp op)
-      : Base(bc), op(op) {
-    if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
-      // We use xaddq, so input and output must be the same register.
-      rv = bc->popI64();
-      setRd(rv);
-    } else {
-      // We use a cmpxchgq loop, so the output must be rax.
-      bc->needI64(bc->specific_.rax);
-      rv = bc->popI64();
-      temp = bc->needI64();
-      setRd(bc->specific_.rax);
-    }
-  }
-  ~PopAtomicRMW64Regs() {
-    bc->maybeFree(temp);
-    if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
-      bc->freeI64(rv);
-    }
-  }
-#elif defined(JS_CODEGEN_X86)
-  // We'll use cmpxchg8b, so rv must be in ecx:ebx, and rd must be
-  // edx:eax.  But we can't reserve ebx here because we need it later, so
-  // use a separate temp and set up ebx when we perform the operation.
-  explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
-    bc->needI32(bc->specific_.ecx);
-    bc->needI64(bc->specific_.edx_eax);
+#ifdef JS_CODEGEN_ARM
 
-    temp = RegI64(Register64(bc->specific_.ecx, bc->needI32()));
-    bc->popI64ToSpecific(temp);
-
-    setRd(bc->specific_.edx_eax);
-  }
-  ~PopAtomicRMW64Regs() { bc->freeI64(temp); }
-  RegI32 valueHigh() const { return RegI32(temp.high); }
-  RegI32 valueLow() const { return RegI32(temp.low); }
-#elif defined(JS_CODEGEN_ARM)
-  explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
-    // We use a ldrex/strexd loop so the temp and the output must be
-    // odd/even pairs.
-    rv = bc->popI64();
-    temp = bc->needI64Pair();
-    setRd(bc->needI64Pair());
-  }
-  ~PopAtomicRMW64Regs() {
-    bc->freeI64(rv);
-    bc->freeI64(temp);
-  }
-#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
-    rv = bc->popI64();
-    temp = bc->needI64();
-    setRd(bc->needI64());
-  }
-  ~PopAtomicRMW64Regs() {
-    bc->freeI64(rv);
-    bc->freeI64(temp);
-  }
-#else
-  explicit PopAtomicRMW64Regs(BaseCompiler* bc, AtomicOp) : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicRMW64Regs");
-  }
-#endif
-
-#ifdef JS_CODEGEN_X86
-  template <typename T, typename V>
-  void atomicRMW64(const MemoryAccessDesc& access, T srcAddr, AtomicOp op,
-                   const V& value, RegI32 ebx) {
-    MOZ_ASSERT(ebx == js::jit::ebx);
-    AtomicRMW64(bc->masm, access, srcAddr, op, value, bc->specific_.ecx_ebx,
-                getRd());
-  }
-#else
-  template <typename T>
-  void atomicRMW64(const MemoryAccessDesc& access, T srcAddr, AtomicOp op) {
-    AtomicRMW64(bc->masm, access, srcAddr, op, rv, temp, getRd());
-  }
-#endif
-};
-
-class PopAtomicXchg32Regs : public PopBase<RegI32> {
-  using Base = PopBase<RegI32>;
-  RegI32 rv;
-  AtomicXchg32Temps temps;
-
- public:
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type,
-                               Scalar::Type viewType)
-      : Base(bc) {
-    // The xchg instruction reuses rv as rd.
-    rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
-    setRd(rv);
-  }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-  explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type,
-                               Scalar::Type viewType)
-      : Base(bc) {
-    rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
-    setRd(bc->needI32());
-  }
-  ~PopAtomicXchg32Regs() { bc->freeI32(rv); }
-#elif defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type,
-                               Scalar::Type viewType)
-      : Base(bc) {
-    rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
-    if (Scalar::byteSize(viewType) < 4) {
-      temps.allocate(bc);
-    }
-    setRd(bc->needI32());
-  }
-  ~PopAtomicXchg32Regs() {
-    temps.maybeFree(bc);
-    bc->freeI32(rv);
-  }
-#else
-  explicit PopAtomicXchg32Regs(BaseCompiler* bc, ValType type,
-                               Scalar::Type viewType)
-      : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: PopAtomicXchg32Regs");
-  }
-#endif
-
-  template <typename T>
-  void atomicXchg32(const MemoryAccessDesc& access, T srcAddr) {
-    AtomicXchg32(bc, access, srcAddr, rv, getRd(), temps);
-  }
-};
-
-class PopAtomicXchg64Regs : public PopBase<RegI64> {
-  using Base = PopBase<RegI64>;
-  RegI64 rv;
-
- public:
-#if defined(JS_CODEGEN_X64)
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    rv = bc->popI64();
-    setRd(rv);
-  }
-#elif defined(JS_CODEGEN_ARM64)
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    rv = bc->popI64();
-    setRd(bc->needI64());
-  }
-  ~PopAtomicXchg64Regs() { bc->freeI64(rv); }
-#elif defined(JS_CODEGEN_X86)
-  // We'll use cmpxchg8b, so rv must be in ecx:ebx, and rd must be
-  // edx:eax.  But we can't reserve ebx here because we need it later, so
-  // use a separate temp and set up ebx when we perform the operation.
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    bc->needI32(bc->specific_.ecx);
-    bc->needI64(bc->specific_.edx_eax);
-
-    rv = RegI64(Register64(bc->specific_.ecx, bc->needI32()));
-    bc->popI64ToSpecific(rv);
-
-    setRd(bc->specific_.edx_eax);
-  }
-  ~PopAtomicXchg64Regs() { bc->freeI64(rv); }
-#elif defined(JS_CODEGEN_ARM)
-  // Both rv and rd must be odd/even pairs.
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    rv = bc->popI64ToSpecific(bc->needI64Pair());
-    setRd(bc->needI64Pair());
-  }
-  ~PopAtomicXchg64Regs() { bc->freeI64(rv); }
-#elif defined(JS_CODEGEN_MIPS64)
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    rv = bc->popI64ToSpecific(bc->needI64());
-    setRd(bc->needI64());
-  }
-  ~PopAtomicXchg64Regs() { bc->freeI64(rv); }
-#else
-  explicit PopAtomicXchg64Regs(BaseCompiler* bc) : Base(bc) {
-    MOZ_CRASH("BaseCompiler porting interface: xchg64");
-  }
-#endif
-
-#ifdef JS_CODEGEN_X86
-  template <typename T>
-  void atomicXchg64(const MemoryAccessDesc& access, T srcAddr,
-                    RegI32 ebx) const {
-    MOZ_ASSERT(ebx == js::jit::ebx);
-    bc->masm.move32(rv.low, ebx);
-    bc->masm.wasmAtomicExchange64(access, srcAddr, bc->specific_.ecx_ebx,
-                                  getRd());
-  }
-#else
-  template <typename T>
-  void atomicXchg64(const MemoryAccessDesc& access, T srcAddr) const {
-    bc->masm.wasmAtomicExchange64(access, srcAddr, rv, getRd());
-  }
-#endif
-};
-
-bool BaseCompiler::atomicCmpXchg(MemoryAccessDesc* access, ValType type) {
-  Scalar::Type viewType = access->type();
-  if (Scalar::byteSize(viewType) <= 4) {
-    PopAtomicCmpXchg32Regs regs(this, type, viewType);
-
-    AccessCheck check;
-    RegI32 rp = popMemory32Access(access, &check);
-    RegI32 tls = maybeLoadTlsForAccess(check);
-
-    auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-    regs.atomicCmpXchg32(*access, memaddr);
-
-    maybeFree(tls);
-    freeI32(rp);
-
-    if (type == ValType::I64) {
-      pushU32AsI64(regs.takeRd());
-    } else {
-      pushI32(regs.takeRd());
-    }
-
-    return true;
-  }
-
-  MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
-
-  PopAtomicCmpXchg64Regs regs(this);
-
-  AccessCheck check;
-  RegI32 rp = popMemory32Access(access, &check);
-
-#ifdef RABALDR_HAS_HEAPREG
-  RegI32 tls = maybeLoadTlsForAccess(check);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicCmpXchg64(*access, memaddr);
-  maybeFree(tls);
-#else
-  ScratchAtomicNoHeapReg scratch(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicCmpXchg64(*access, memaddr, scratch);
-#endif
-
-  freeI32(rp);
-
-  pushI64(regs.takeRd());
-  return true;
+static void Allocate(BaseCompiler* bc, RegI64* rd, RegI64*) {
+  *rd = bc->needI64Pair();
 }
+
+static void Deallocate(BaseCompiler* bc, RegI64) {}
+
+#elif defined JS_CODEGEN_X86
+
+static void Allocate(BaseCompiler* bc, RegI64* rd, RegI64* temp) {
+  // The result is in edx:eax, and we need ecx:ebx as a temp.  But ebx will also
+  // be used as a scratch, so don't manage that here.
+  bc->needI32(bc->specific_.ecx);
+  *temp = bc->specific_.ecx_ebx;
+  bc->needI64(bc->specific_.edx_eax);
+  *rd = bc->specific_.edx_eax;
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 temp) {
+  // See comment above.
+  MOZ_ASSERT(temp.high == js::jit::ecx);
+  bc->freeI32(bc->specific_.ecx);
+}
+
+#endif
+
+}  // namespace atomic_load64
 
 bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
   Scalar::Type viewType = access->type();
@@ -1402,10 +726,9 @@ bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
-#if defined(JS_64BIT)
-  MOZ_CRASH("Should not happen");
-#else
-  PopAtomicLoad64Regs regs(this);
+#if !defined(JS_64BIT)
+  RegI64 rd, temp;
+  atomic_load64::Allocate(this, &rd, &temp);
 
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
@@ -1413,78 +736,21 @@ bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
 #  ifdef RABALDR_HAS_HEAPREG
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicLoad64(*access, memaddr);
+  masm.wasmAtomicLoad64(*access, memaddr, temp, rd);
   maybeFree(tls);
 #  else
   ScratchAtomicNoHeapReg scratch(*this);
   RegI32 tls = maybeLoadTlsForAccess(check, scratch);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicLoad64(*access, memaddr, scratch);
+  masm.wasmAtomicLoad64(*access, memaddr, temp, rd);
+  MOZ_ASSERT(tls == scratch);
 #  endif
 
   freeI32(rp);
-
-  pushI64(regs.takeRd());
-  return true;
+  atomic_load64::Deallocate(this, temp);
+  pushI64(rd);
 #endif  // JS_64BIT
-}
 
-bool BaseCompiler::atomicRMW(MemoryAccessDesc* access, ValType type,
-                             AtomicOp op) {
-  Scalar::Type viewType = access->type();
-
-  if (Scalar::byteSize(viewType) <= 4) {
-    PopAtomicRMW32Regs regs(this, type, viewType, op);
-
-    AccessCheck check;
-    RegI32 rp = popMemory32Access(access, &check);
-    RegI32 tls = maybeLoadTlsForAccess(check);
-
-    auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-    regs.atomicRMW32(*access, memaddr, op);
-
-    maybeFree(tls);
-    freeI32(rp);
-
-    if (type == ValType::I64) {
-      pushU32AsI64(regs.takeRd());
-    } else {
-      pushI32(regs.takeRd());
-    }
-    return true;
-  }
-
-  MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
-
-  PopAtomicRMW64Regs regs(this, op);
-
-  AccessCheck check;
-  RegI32 rp = popMemory32Access(access, &check);
-
-#if defined(RABALDR_HAS_HEAPREG)
-  RegI32 tls = maybeLoadTlsForAccess(check);
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicRMW64(*access, memaddr, op);
-  maybeFree(tls);
-#elif !defined(JS_64BIT)
-  ScratchAtomicNoHeapReg scratch(*this);
-  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
-
-  fr.pushGPR(regs.valueHigh());
-  fr.pushGPR(regs.valueLow());
-  Address value(StackPointer, 0);
-
-  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicRMW64(*access, memaddr, op, value, scratch);
-
-  fr.popBytes(8);
-#else
-  MOZ_CRASH("Unexpected combination");
-#endif
-
-  freeI32(rp);
-
-  pushI64(regs.takeRd());
   return true;
 }
 
@@ -1500,44 +766,576 @@ bool BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
 #ifdef JS_64BIT
   MOZ_CRASH("Should not happen");
 #else
-  emitAtomicXchg64(access, WantResult(false));
+  atomicXchg64(access, WantResult(false));
   return true;
 #endif
 }
 
-bool BaseCompiler::atomicXchg(MemoryAccessDesc* access, ValType type) {
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic RMW op= operations.
+
+void BaseCompiler::atomicRMW(MemoryAccessDesc* access, ValType type,
+                             AtomicOp op) {
   Scalar::Type viewType = access->type();
+  if (Scalar::byteSize(viewType) <= 4) {
+    atomicRMW32(access, type, op);
+  } else {
+    MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
+    atomicRMW64(access, type, op);
+  }
+}
+
+namespace atomic_rmw32 {
+
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+
+struct Temps {
+  RegI32 t0;
+};
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, AtomicOp op, RegI32* rd,
+                           RegI32* rv, Temps* temps) {
+  bc->needI32(bc->specific_.eax);
+  if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
+    // We use xadd, so source and destination are the same.  Using
+    // eax here is overconstraining, but for byte operations on x86
+    // we do need something with a byte register.
+    if (type == ValType::I64) {
+      *rv = bc->popI64ToSpecificI32(bc->specific_.eax);
+    } else {
+      *rv = bc->popI32ToSpecific(bc->specific_.eax);
+    }
+    *rd = *rv;
+  } else {
+    // We use a cmpxchg loop.  The output must be eax; the input
+    // must be in a separate register since it may be used several
+    // times.
+    if (type == ValType::I64) {
+      *rv = bc->popI64ToI32();
+    } else {
+      *rv = bc->popI32();
+    }
+    *rd = bc->specific_.eax;
+#  if defined(JS_CODEGEN_X86)
+    // Single-byte is a special case handled very locally with ScratchI8, see
+    // AtomicRMW32 below.
+    if (Scalar::byteSize(viewType) > 1) {
+      temps->t0 = bc->needI32();
+    }
+#  else
+    temps->t0 = bc->needI32();
+#  endif
+  }
+}
+
+template <typename T>
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access, T srcAddr,
+                    AtomicOp op, RegI32 rv, RegI32 rd, const Temps& temps) {
+  RegI32 temp = temps.t0;
+#  ifdef JS_CODEGEN_X86
+  ScratchI8 scratch(*bc);
+  if (access.type() == Scalar::Uint8) {
+    // The temp, if used, must be a byte register.
+    MOZ_ASSERT(temp.isInvalid());
+    if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
+      temp = scratch;
+    }
+  }
+#  endif
+  bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temp, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  if (rv != bc->specific_.eax) {
+    bc->freeI32(rv);
+  }
+  bc->maybeFree(temps.t0);
+}
+
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+
+struct Temps {
+  RegI32 t0;
+};
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, AtomicOp op, RegI32* rd,
+                           RegI32* rv, Temps* temps) {
+  *rv = type == ValType::I64 ? bc->popI64ToI32() : bc->popI32();
+  temps->t0 = bc->needI32();
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps.t0, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  bc->freeI32(rv);
+  bc->freeI32(temps.t0);
+}
+
+#elif defined(JS_CODEGEN_MIPS64)
+
+struct Temps {
+  RegI32 t0, t1, t2;
+};
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, AtomicOp op, RegI32* rd,
+                           RegI32* rv, Temps* temps) {
+  *rv = type == ValType::I64 ? bc->popI64ToI32() : bc->popI32();
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps.t0, temps.t1,
+                             temps.t2, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  bc->freeI32(rv);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, AtomicOp,
+                           RegI32*, RegI32*, Temps*) {}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, AtomicOp,
+                    RegI32, RegI32, const Temps&) {}
+
+static void Deallocate(BaseCompiler*, RegI32, const Temps&) {}
+
+#endif
+
+}  // namespace atomic_rmw32
+
+void BaseCompiler::atomicRMW32(MemoryAccessDesc* access, ValType type,
+                               AtomicOp op) {
+  Scalar::Type viewType = access->type();
+  RegI32 rd, rv;
+  atomic_rmw32::Temps temps;
+  atomic_rmw32::PopAndAllocate(this, type, viewType, op, &rd, &rv, &temps);
+
+  AccessCheck check;
+  RegI32 rp = popMemory32Access(access, &check);
+  RegI32 tls = maybeLoadTlsForAccess(check);
+
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_rmw32::Perform(this, *access, memaddr, op, rv, rd, temps);
+
+  maybeFree(tls);
+  atomic_rmw32::Deallocate(this, rv, temps);
+  freeI32(rp);
+
+  if (type == ValType::I64) {
+    pushU32AsI64(rd);
+  } else {
+    pushI32(rd);
+  }
+}
+
+namespace atomic_rmw64 {
+
+#if defined(JS_CODEGEN_X64)
+
+static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
+                           RegI64* rv, RegI64* temp) {
+  if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
+    // We use xaddq, so input and output must be the same register.
+    *rv = bc->popI64();
+    *rd = *rv;
+  } else {
+    // We use a cmpxchgq loop, so the output must be rax and we need a temp.
+    bc->needI64(bc->specific_.rax);
+    *rd = bc->specific_.rax;
+    *rv = bc->popI64();
+    *temp = bc->needI64();
+  }
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
+                    RegI64 rd) {
+  bc->masm.wasmAtomicFetchOp64(access, op, rv, srcAddr, temp, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
+  bc->maybeFree(temp);
+  if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
+    bc->freeI64(rv);
+  }
+}
+
+#elif defined(JS_CODEGEN_X86)
+
+// Here we'll use cmpxchg8b, so we need rd=edx:eax and value=ecx:ebx.  However,
+// ebx is in use also for the address, so we first pop the value to ecx:tmp,
+// whence it will be stored in memory before the operation, and ecx:ebx is then
+// free.  The temp variable goes unused here.
+
+static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
+                           RegI64* rv, RegI64*) {
+  bc->needI64(bc->specific_.edx_eax);
+  *rd = bc->specific_.edx_eax;
+
+  bc->needI32(bc->specific_.ecx);
+  RegI32 rvLow = bc->needI32();
+  *rv = RegI64(Register64(bc->specific_.ecx, rvLow));
+  bc->popI64ToSpecific(*rv);
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    Address srcAddr, AtomicOp op, RegI64 rv, RegI64, RegI64 rd,
+                    const ScratchAtomicNoHeapReg& scratch) {
+  MOZ_ASSERT(rv.high == bc->specific_.ecx);
+  MOZ_ASSERT(Register(scratch) == js::jit::ebx);
+
+  bc->fr.pushGPR(rv.high);
+  bc->fr.pushGPR(rv.low);
+  Address value(StackPointer, 0);
+
+  bc->masm.wasmAtomicFetchOp64(access, op, value, srcAddr,
+                               bc->specific_.ecx_ebx, rd);
+
+  bc->fr.popBytes(8);
+}
+
+static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64) {
+  bc->freeI64(rv);
+}
+
+#elif defined(JS_CODEGEN_ARM)
+
+static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
+                           RegI64* rv, RegI64* temp) {
+  // We use a ldrex/strexd loop so the temp and the output must be
+  // odd/even pairs.
+  *rv = bc->popI64();
+  *temp = bc->needI64Pair();
+  *rd = bc->needI64Pair();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
+                    RegI64 rd) {
+  bc->masm.wasmAtomicFetchOp64(access, op, rv, srcAddr, temp, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
+  bc->freeI64(rv);
+  bc->freeI64(temp);
+}
+
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+
+static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
+                           RegI64* rv, RegI64* temp) {
+  *rv = bc->popI64();
+  *temp = bc->needI64();
+  *rd = bc->needI64();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
+                    RegI64 rd) {
+  bc->masm.wasmAtomicFetchOp64(access, op, rv, srcAddr, temp, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
+  bc->freeI64(rv);
+  bc->freeI64(temp);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+static void PopAndAllocate(BaseCompiler*, AtomicOp, RegI64*, RegI64*, RegI64*) {
+}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex,
+                    AtomicOp op, RegI64, RegI64, RegI64) {}
+
+static void Deallocate(BaseCompiler*, AtomicOp, RegI64, RegI64) {}
+
+#endif
+
+}  // namespace atomic_rmw64
+
+void BaseCompiler::atomicRMW64(MemoryAccessDesc* access, ValType type,
+                               AtomicOp op) {
+  RegI64 rd, rv, temp;
+  atomic_rmw64::PopAndAllocate(this, op, &rd, &rv, &temp);
+
+  AccessCheck check;
+  RegI32 rp = popMemory32Access(access, &check);
+
+#if defined(RABALDR_HAS_HEAPREG)
+  RegI32 tls = maybeLoadTlsForAccess(check);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_rmw64::Perform(this, *access, memaddr, op, rv, temp, rd);
+  maybeFree(tls);
+#else
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_rmw64::Perform(this, *access, memaddr, op, rv, temp, rd, scratch);
+  MOZ_ASSERT(tls == scratch);
+#endif
+
+  freeI32(rp);
+  atomic_rmw64::Deallocate(this, op, rv, temp);
+
+  pushI64(rd);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic exchange (also used for atomic store in some cases).
+
+void BaseCompiler::atomicXchg(MemoryAccessDesc* access, ValType type) {
+  Scalar::Type viewType = access->type();
+  if (Scalar::byteSize(viewType) <= 4) {
+    atomicXchg32(access, type);
+  } else {
+    MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
+    atomicXchg64(access, WantResult(true));
+  }
+}
+
+namespace atomic_xchg32 {
+
+#if defined(JS_CODEGEN_X64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rd, RegI32* rv,
+                           Temps*) {
+  // The xchg instruction reuses rv as rd.
+  *rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
+  *rd = *rv;
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rv, RegI32 rd, const Temps&) {
+  bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32, const Temps&) {}
+
+#elif defined(JS_CODEGEN_X86)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rd, RegI32* rv,
+                           Temps*) {
+  // The xchg instruction reuses rv as rd.
+  *rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
+  *rd = *rv;
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    Address srcAddr, RegI32 rv, RegI32 rd, const Temps&) {
+  if (access.type() == Scalar::Uint8 && !bc->ra.isSingleByteI32(rd)) {
+    ScratchI8 scratch(*bc);
+    // The output register must have a byte persona.
+    bc->masm.wasmAtomicExchange(access, srcAddr, rv, scratch);
+    bc->masm.movl(scratch, rd);
+  } else {
+    bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
+  }
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32, const Temps&) {}
+
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rd, RegI32* rv,
+                           Temps*) {
+  *rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rv, RegI32 rd, const Temps&) {
+  bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps&) {
+  bc->freeI32(rv);
+}
+
+#elif defined(JS_CODEGEN_MIPS64)
+
+struct Temps {
+  RegI32 t0, t1, t2;
+};
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rd, RegI32* rv,
+                           Temps* temps) {
+  *rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rv, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps.t0, temps.t1, temps.t2,
+                              rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  bc->freeI32(rv);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
+                           RegI32*, Temps*) {}
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
+                    RegI32, const Temps&) {}
+static void Deallocate(BaseCompiler*, RegI32, const Temps&) {}
+
+#endif
+
+}  // namespace atomic_xchg32
+
+void BaseCompiler::atomicXchg32(MemoryAccessDesc* access, ValType type) {
+  Scalar::Type viewType = access->type();
+
+  RegI32 rd, rv;
+  atomic_xchg32::Temps temps;
+  atomic_xchg32::PopAndAllocate(this, type, viewType, &rd, &rv, &temps);
 
   AccessCheck check;
 
-  if (Scalar::byteSize(viewType) <= 4) {
-    PopAtomicXchg32Regs regs(this, type, viewType);
-    RegI32 rp = popMemory32Access(access, &check);
-    RegI32 tls = maybeLoadTlsForAccess(check);
+  RegI32 rp = popMemory32Access(access, &check);
+  RegI32 tls = maybeLoadTlsForAccess(check);
 
-    auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-    regs.atomicXchg32(*access, memaddr);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_xchg32::Perform(this, *access, memaddr, rv, rd, temps);
 
-    maybeFree(tls);
-    freeI32(rp);
+  maybeFree(tls);
+  freeI32(rp);
+  atomic_xchg32::Deallocate(this, rv, temps);
 
-    if (type == ValType::I64) {
-      pushU32AsI64(regs.takeRd());
-    } else {
-      pushI32(regs.takeRd());
-    }
-    return true;
+  if (type == ValType::I64) {
+    pushU32AsI64(rd);
+  } else {
+    pushI32(rd);
   }
-
-  MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
-
-  emitAtomicXchg64(access, WantResult(true));
-  return true;
 }
 
-void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
-                                    WantResult wantResult) {
-  PopAtomicXchg64Regs regs(this);
+namespace atomic_xchg64 {
+
+#if defined(JS_CODEGEN_X64)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
+  *rv = bc->popI64();
+  *rd = *rv;
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64) {
+  bc->maybeFree(rd);
+}
+
+#elif defined(JS_CODEGEN_X86)
+
+// We'll use cmpxchg8b, so rv must be in ecx:ebx, and rd must be edx:eax.  We
+// can't use ebx for rv here because we need ebx for a scratch also, so use a
+// separate temp and move the value to ebx just before the operation.
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
+  bc->needI32(bc->specific_.ecx);
+  bc->needI64(bc->specific_.edx_eax);
+  RegI32 tmp = bc->needI32();
+  *rv = RegI64(Register64(bc->specific_.ecx, tmp));
+  bc->popI64ToSpecific(*rv);
+  *rd = bc->specific_.edx_eax;
+}
+
+static RegI64 Setup(BaseCompiler* bc, RegI64 rv,
+                    const ScratchAtomicNoHeapReg& scratch) {
+  MOZ_ASSERT(rv.high == bc->specific_.ecx);
+  MOZ_ASSERT(Register(scratch) == js::jit::ebx);
+  bc->masm.move32(rv.low, scratch);
+  return bc->specific_.ecx_ebx;
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
+  bc->freeI64(rv);
+  bc->maybeFree(rd);
+}
+
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
+  *rv = bc->popI64();
+  *rd = bc->needI64();
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
+  bc->freeI64(rv);
+  bc->maybeFree(rd);
+}
+
+#elif defined(JS_CODEGEN_ARM)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
+  // Both rv and rd must be odd/even pairs.
+  *rv = bc->popI64ToSpecific(bc->needI64Pair());
+  *rd = bc->needI64Pair();
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
+  bc->freeI64(rv);
+  bc->maybeFree(rd);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+static void PopAndAllocate(BaseCompiler*, RegI64*, RegI64*) {}
+static void Deallocate(BaseCompiler*, RegI64, RegI64) {}
+
+#endif
+
+}  // namespace atomic_xchg64
+
+void BaseCompiler::atomicXchg64(MemoryAccessDesc* access,
+                                WantResult wantResult) {
+  RegI64 rd, rv;
+  atomic_xchg64::PopAndAllocate(this, &rd, &rv);
 
   AccessCheck check;
   RegI32 rp = popMemory32Access(access, &check);
@@ -1545,20 +1343,320 @@ void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
 #ifdef RABALDR_HAS_HEAPREG
   RegI32 tls = maybeLoadTlsForAccess(check);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicXchg64(*access, memaddr);
+  masm.wasmAtomicExchange64(*access, memaddr, rv, rd);
   maybeFree(tls);
 #else
   ScratchAtomicNoHeapReg scratch(*this);
   RegI32 tls = maybeLoadTlsForAccess(check, scratch);
   auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
-  regs.atomicXchg64(*access, memaddr, scratch);
+  RegI64 rvNew = atomic_xchg64::Setup(this, rv, scratch);
+  masm.wasmAtomicExchange64(*access, memaddr, rvNew, rd);
+  MOZ_ASSERT(tls == scratch);
 #endif
 
   freeI32(rp);
-
   if (wantResult) {
-    pushI64(regs.takeRd());
+    pushI64(rd);
+    rd = RegI64::Invalid();
   }
+  atomic_xchg64::Deallocate(this, rd, rv);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic compare-exchange.
+
+void BaseCompiler::atomicCmpXchg(MemoryAccessDesc* access, ValType type) {
+  Scalar::Type viewType = access->type();
+  if (Scalar::byteSize(viewType) <= 4) {
+    atomicCmpXchg32(access, type);
+  } else {
+    MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
+    atomicCmpXchg64(access, type);
+  }
+}
+
+namespace atomic_cmpxchg32 {
+
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rexpect, RegI32* rnew,
+                           RegI32* rd, Temps*) {
+  // For cmpxchg, the expected value and the result are both in eax.
+  bc->needI32(bc->specific_.eax);
+  if (type == ValType::I64) {
+    *rnew = bc->popI64ToI32();
+    *rexpect = bc->popI64ToSpecificI32(bc->specific_.eax);
+  } else {
+    *rnew = bc->popI32();
+    *rexpect = bc->popI32ToSpecific(bc->specific_.eax);
+  }
+  *rd = *rexpect;
+}
+
+template <typename T>
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access, T srcAddr,
+                    RegI32 rexpect, RegI32 rnew, RegI32 rd, const Temps&) {
+#  if defined(JS_CODEGEN_X86)
+  ScratchI8 scratch(*bc);
+  if (access.type() == Scalar::Uint8) {
+    MOZ_ASSERT(rd == bc->specific_.eax);
+    if (!bc->ra.isSingleByteI32(rnew)) {
+      // The replacement value must have a byte persona.
+      bc->masm.movl(rnew, scratch);
+      rnew = scratch;
+    }
+  }
+#  endif
+  bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32, RegI32 rnew, const Temps&) {
+  bc->freeI32(rnew);
+}
+
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rexpect, RegI32* rnew,
+                           RegI32* rd, Temps*) {
+  if (type == ValType::I64) {
+    *rnew = bc->popI64ToI32();
+    *rexpect = bc->popI64ToI32();
+  } else {
+    *rnew = bc->popI32();
+    *rexpect = bc->popI32();
+  }
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
+                    const Temps&) {
+  bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rexpect, RegI32 rnew,
+                       const Temps&) {
+  bc->freeI32(rnew);
+  bc->freeI32(rexpect);
+}
+
+#elif defined(JS_CODEGEN_MIPS64)
+
+struct Temps {
+  RegI32 t0, t1, t2;
+};
+
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rexpect, RegI32* rnew,
+                           RegI32* rd, Temps* temps) {
+  if (type == ValType::I64) {
+    *rnew = bc->popI64ToI32();
+    *rexpect = bc->popI64ToI32();
+  } else {
+    *rnew = bc->popI32();
+    *rexpect = bc->popI32();
+  }
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps.t0,
+                               temps.t1, temps.t2, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI32 rexpect, RegI32 rnew,
+                       const Temps& temps) {
+  bc->freeI32(rnew);
+  bc->freeI32(rexpect);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
+                           RegI32*, RegI32*, Temps*) {}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
+                    RegI32, RegI32, const Temps& temps) {}
+
+static void Deallocate(BaseCompiler*, RegI32, RegI32, const Temps&) {}
+
+#endif
+
+}  // namespace atomic_cmpxchg32
+
+void BaseCompiler::atomicCmpXchg32(MemoryAccessDesc* access, ValType type) {
+  Scalar::Type viewType = access->type();
+  RegI32 rexpect, rnew, rd;
+  atomic_cmpxchg32::Temps temps;
+  atomic_cmpxchg32::PopAndAllocate(this, type, viewType, &rexpect, &rnew, &rd,
+                                   &temps);
+
+  AccessCheck check;
+  RegI32 rp = popMemory32Access(access, &check);
+  RegI32 tls = maybeLoadTlsForAccess(check);
+
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_cmpxchg32::Perform(this, *access, memaddr, rexpect, rnew, rd, temps);
+
+  maybeFree(tls);
+  freeI32(rp);
+  atomic_cmpxchg32::Deallocate(this, rexpect, rnew, temps);
+
+  if (type == ValType::I64) {
+    pushU32AsI64(rd);
+  } else {
+    pushI32(rd);
+  }
+}
+
+namespace atomic_cmpxchg64 {
+
+#if defined(JS_CODEGEN_X64)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {
+  // For cmpxchg, the expected value and the result are both in rax.
+  bc->needI64(bc->specific_.rax);
+  *rnew = bc->popI64();
+  *rexpect = bc->popI64ToSpecific(bc->specific_.rax);
+  *rd = *rexpect;
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+  bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
+  bc->freeI64(rnew);
+}
+
+#elif defined(JS_CODEGEN_X86)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {
+  // For cmpxchg8b, the expected value and the result are both in edx:eax, and
+  // the replacement value is in ecx:ebx.  But we can't allocate ebx here
+  // because we need it later for a scratch, so instead we allocate a temp to
+  // hold the low word of 'new'.
+  bc->needI64(bc->specific_.edx_eax);
+  bc->needI32(bc->specific_.ecx);
+
+  RegI32 tmp = bc->needI32();
+  *rnew = bc->popI64ToSpecific(RegI64(Register64(bc->specific_.ecx, tmp)));
+  *rexpect = bc->popI64ToSpecific(bc->specific_.edx_eax);
+  *rd = *rexpect;
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    Address srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd,
+                    ScratchAtomicNoHeapReg& scratch) {
+  MOZ_ASSERT(Register(scratch) == js::jit::ebx);
+  MOZ_ASSERT(rnew.high == bc->specific_.ecx);
+  bc->masm.move32(rnew.low, ebx);
+  bc->masm.wasmCompareExchange64(access, srcAddr, rexpect,
+                                 bc->specific_.ecx_ebx, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
+  bc->freeI64(rnew);
+}
+
+#elif defined(JS_CODEGEN_ARM)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {
+  // The replacement value and the result must both be odd/even pairs.
+  *rnew = bc->popI64Pair();
+  *rexpect = bc->popI64();
+  *rd = bc->needI64Pair();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+  bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
+  bc->freeI64(rexpect);
+  bc->freeI64(rnew);
+}
+
+#elif defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS64)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {
+  *rnew = bc->popI64();
+  *rexpect = bc->popI64();
+  *rd = bc->needI64();
+}
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+  bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, rd);
+}
+
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
+  bc->freeI64(rexpect);
+  bc->freeI64(rnew);
+}
+
+#elif defined(JS_CODEGEN_NONE)
+
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {}
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+}
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {}
+
+#endif
+
+}  // namespace atomic_cmpxchg64
+
+void BaseCompiler::atomicCmpXchg64(MemoryAccessDesc* access, ValType type) {
+  RegI64 rexpect, rnew, rd;
+  atomic_cmpxchg64::PopAndAllocate(this, &rexpect, &rnew, &rd);
+
+  AccessCheck check;
+  RegI32 rp = popMemory32Access(access, &check);
+
+#ifdef RABALDR_HAS_HEAPREG
+  RegI32 tls = maybeLoadTlsForAccess(check);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_cmpxchg64::Perform(this, *access, memaddr, rexpect, rnew, rd);
+  maybeFree(tls);
+#else
+  ScratchAtomicNoHeapReg scratch(*this);
+  RegI32 tls = maybeLoadTlsForAccess(check, scratch);
+  auto memaddr = prepareAtomicMemoryAccess(access, &check, tls, rp);
+  atomic_cmpxchg64::Perform(this, *access, memaddr, rexpect, rnew, rd, scratch);
+  MOZ_ASSERT(tls == scratch);
+#endif
+
+  freeI32(rp);
+  atomic_cmpxchg64::Deallocate(this, rexpect, rnew);
+
+  pushI64(rd);
 }
 
 //////////////////////////////////////////////////////////////////////////////
