@@ -23,5 +23,11 @@ ScrollMetadata& APZTestAccess::GetScrollMetadataMut(
   return aLayer.GetScrollMetadataMut(aOwner, aIndex);
 }
 
+/*static*/
+void APZTestAccess::SetEventRegions(WebRenderLayerScrollData& aLayer,
+                                    const EventRegions& aRegions) {
+  aLayer.SetEventRegions(aRegions);
+}
+
 }  // namespace layers
 }  // namespace mozilla
