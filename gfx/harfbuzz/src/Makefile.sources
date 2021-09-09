@@ -19,6 +19,9 @@ HB_BASE_sources = \
 	hb-array.hh \
 	hb-atomic.hh \
 	hb-bimap.hh \
+	hb-bit-page.hh \
+	hb-bit-set.hh \
+	hb-bit-set-invertible.hh \
 	hb-blob.cc \
 	hb-blob.hh \
 	hb-buffer-serialize.cc \
@@ -47,6 +50,8 @@ HB_BASE_sources = \
 	hb-map.cc \
 	hb-map.hh \
 	hb-meta.hh \
+	hb-ms-feature-ranges.cc \
+	hb-ms-feature-ranges.hh \
 	hb-mutex.hh \
 	hb-null.hh \
 	hb-number.cc \
@@ -256,6 +261,8 @@ HB_SUBSET_sources = \
 	hb-number.hh \
 	hb-ot-cff1-table.cc \
 	hb-ot-cff2-table.cc \
+	hb-ot-color-colrv1-closure.hh \
+	hb-ot-post-table-v2subset.hh \
 	hb-static.cc \
 	hb-subset-cff-common.cc \
 	hb-subset-cff-common.hh \

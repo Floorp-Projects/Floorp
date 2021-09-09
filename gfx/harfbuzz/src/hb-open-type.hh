@@ -212,15 +212,6 @@ struct Offset : Type
 
   bool is_null () const { return has_null && 0 == *this; }
 
-  void *serialize (hb_serialize_context_t *c, const void *base)
-  {
-    void *t = c->start_embed<void> ();
-    c->check_assign (*this,
-                     (unsigned) ((char *) t - (char *) base),
-                     HB_SERIALIZE_ERROR_OFFSET_OVERFLOW);
-    return t;
-  }
-
   public:
   DEFINE_SIZE_STATIC (sizeof (Type));
 };
@@ -328,10 +319,6 @@ struct OffsetTo : Offset<OffsetType, has_null>
 	    hb_enable_if (hb_is_convertible (Base, void *))>
   friend Type& operator + (OffsetTo &offset, Base &&base) { return offset ((void *) base); }
 
-  Type& serialize (hb_serialize_context_t *c, const void *base)
-  {
-    return * (Type *) Offset<OffsetType>::serialize (c, base);
-  }
 
   template <typename ...Ts>
   bool serialize_subset (hb_subset_context_t *c, const OffsetTo& src,
@@ -351,6 +338,23 @@ struct OffsetTo : Offset<OffsetType, has_null>
       s->add_link (*this, s->pop_pack ());
     else
       s->pop_discard ();
+
+    return ret;
+  }
+
+
+  template <typename ...Ts>
+  bool serialize_serialize (hb_serialize_context_t *c, Ts&&... ds)
+  {
+    *this = 0;
+
+    Type* obj = c->push<Type> ();
+    bool ret = obj->serialize (c, hb_forward<Ts> (ds)...);
+
+    if (ret)
+      c->add_link (*this, c->pop_pack ());
+    else
+      c->pop_discard ();
 
     return ret;
   }
@@ -464,8 +468,10 @@ struct UnsizedArrayOf
   const Type &lsearch (unsigned int len, const T &x, const Type &not_found = Null (Type)) const
   { return *as_array (len).lsearch (x, &not_found); }
   template <typename T>
-  bool lfind (unsigned int len, const T &x, unsigned *pos = nullptr) const
-  { return as_array (len).lfind (x, pos); }
+  bool lfind (unsigned int len, const T &x, unsigned int *i = nullptr,
+	      hb_not_found_t not_found = HB_NOT_FOUND_DONT_STORE,
+	      unsigned int to_store = (unsigned int) -1) const
+  { return as_array (len).lfind (x, i, not_found, to_store); }
 
   void qsort (unsigned int len, unsigned int start = 0, unsigned int end = (unsigned int) -1)
   { as_array (len).qsort (start, end); }
@@ -473,7 +479,7 @@ struct UnsizedArrayOf
   bool serialize (hb_serialize_context_t *c, unsigned int items_len)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend (*this, items_len))) return_trace (false);
+    if (unlikely (!c->extend (this, items_len))) return_trace (false);
     return_trace (true);
   }
   template <typename Iterator,
@@ -573,7 +579,7 @@ struct SortedUnsizedArrayOf : UnsizedArrayOf<Type>
   { return *as_array (len).bsearch (x, &not_found); }
   template <typename T>
   bool bfind (unsigned int len, const T &x, unsigned int *i = nullptr,
-	      hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
+	      hb_not_found_t not_found = HB_NOT_FOUND_DONT_STORE,
 	      unsigned int to_store = (unsigned int) -1) const
   { return as_array (len).bfind (x, i, not_found, to_store); }
 };
@@ -635,8 +641,10 @@ struct ArrayOf
   const Type &lsearch (const T &x, const Type &not_found = Null (Type)) const
   { return *as_array ().lsearch (x, &not_found); }
   template <typename T>
-  bool lfind (const T &x, unsigned *pos = nullptr) const
-  { return as_array ().lfind (x, pos); }
+  bool lfind (const T &x, unsigned int *i = nullptr,
+	      hb_not_found_t not_found = HB_NOT_FOUND_DONT_STORE,
+	      unsigned int to_store = (unsigned int) -1) const
+  { return as_array ().lfind (x, i, not_found, to_store); }
 
   void qsort (unsigned int start = 0, unsigned int end = (unsigned int) -1)
   { as_array ().qsort (start, end); }
@@ -644,9 +652,9 @@ struct ArrayOf
   HB_NODISCARD bool serialize (hb_serialize_context_t *c, unsigned items_len)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     c->check_assign (len, items_len, HB_SERIALIZE_ERROR_ARRAY_OVERFLOW);
-    if (unlikely (!c->extend (*this))) return_trace (false);
+    if (unlikely (!c->extend (this))) return_trace (false);
     return_trace (true);
   }
   template <typename Iterator,
@@ -667,7 +675,7 @@ struct ArrayOf
   {
     TRACE_SERIALIZE (this);
     len++;
-    if (unlikely (!len || !c->extend (*this)))
+    if (unlikely (!len || !c->extend (this)))
     {
       len--;
       return_trace (nullptr);
@@ -794,9 +802,9 @@ struct HeadlessArrayOf
   bool serialize (hb_serialize_context_t *c, unsigned int items_len)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     c->check_assign (lenP1, items_len + 1, HB_SERIALIZE_ERROR_ARRAY_OVERFLOW);
-    if (unlikely (!c->extend (*this))) return_trace (false);
+    if (unlikely (!c->extend (this))) return_trace (false);
     return_trace (true);
   }
   template <typename Iterator,
@@ -937,7 +945,7 @@ struct SortedArrayOf : ArrayOf<Type, LenType>
   { return *as_array ().bsearch (x, &not_found); }
   template <typename T>
   bool bfind (const T &x, unsigned int *i = nullptr,
-	      hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
+	      hb_not_found_t not_found = HB_NOT_FOUND_DONT_STORE,
 	      unsigned int to_store = (unsigned int) -1) const
   { return as_array ().bfind (x, i, not_found, to_store); }
 };

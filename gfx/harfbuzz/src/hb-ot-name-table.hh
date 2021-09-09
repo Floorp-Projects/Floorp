@@ -214,7 +214,7 @@ struct name
     this->format = 0;
     this->count = it.len ();
 
-    NameRecord *name_records = (NameRecord *) calloc (it.len (), NameRecord::static_size);
+    NameRecord *name_records = (NameRecord *) hb_calloc (it.len (), NameRecord::static_size);
     if (unlikely (!name_records)) return_trace (false);
 
     hb_array_t<NameRecord> records (name_records, it.len ());
@@ -228,7 +228,7 @@ struct name
     records.qsort ();
 
     c->copy_all (records, src_string_pool);
-    free (records.arrayZ);
+    hb_free (records.arrayZ);
 
 
     if (unlikely (c->ran_out_of_room ())) return_trace (false);
@@ -249,7 +249,11 @@ struct name
     + nameRecordZ.as_array (count)
     | hb_filter (c->plan->name_ids, &NameRecord::nameID)
     | hb_filter (c->plan->name_languages, &NameRecord::languageID)
-    | hb_filter ([&] (const NameRecord& namerecord) { return c->plan->name_legacy || namerecord.isUnicode (); })
+    | hb_filter ([&] (const NameRecord& namerecord) {
+      return
+          (c->plan->flags & HB_SUBSET_FLAGS_NAME_LEGACY)
+          || namerecord.isUnicode ();
+    })
     ;
 
     name_prime->serialize (c->serializer, it, hb_addressof (this + stringOffset));

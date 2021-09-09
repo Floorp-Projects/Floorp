@@ -377,8 +377,8 @@ test_serialize ()
 
   assert (actual == expected);
 
-  actual.free ();
-  expected.free ();
+  actual.fini ();
+  expected.fini ();
   free (buffer_1);
   free (buffer_2);
 }
@@ -438,7 +438,7 @@ static void test_resolve_overflows_via_sort ()
   hb_bytes_t result = out.copy_bytes ();
   assert (result.length == (80000 + 3 + 3 * 2));
 
-  result.free ();
+  result.fini ();
   free (buffer);
   free (out_buffer);
 }
@@ -459,7 +459,7 @@ static void test_resolve_overflows_via_duplication ()
   hb_bytes_t result = out.copy_bytes ();
   assert (result.length == (10000 + 2 * 2 + 60000 + 2 + 3 * 2));
 
-  result.free ();
+  result.fini ();
   free (buffer);
   free (out_buffer);
 }

@@ -59,7 +59,7 @@ static struct hb_shaper_list_lazy_loader_t : hb_lazy_loader_t<const char *,
 {
   static const char ** create ()
   {
-    const char **shaper_list = (const char **) calloc (1 + HB_SHAPERS_COUNT, sizeof (const char *));
+    const char **shaper_list = (const char **) hb_calloc (1 + HB_SHAPERS_COUNT, sizeof (const char *));
     if (unlikely (!shaper_list))
       return nullptr;
 
@@ -76,7 +76,7 @@ static struct hb_shaper_list_lazy_loader_t : hb_lazy_loader_t<const char *,
     return shaper_list;
   }
   static void destroy (const char **l)
-  { free (l); }
+  { hb_free (l); }
   static const char ** get_null ()
   { return nil_shaper_list; }
 } static_shaper_list;

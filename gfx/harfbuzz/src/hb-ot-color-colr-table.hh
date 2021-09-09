@@ -37,8 +37,78 @@
  */
 #define HB_OT_TAG_COLR HB_TAG('C','O','L','R')
 
+#ifndef COLRV1_MAX_NESTING_LEVEL
+#define COLRV1_MAX_NESTING_LEVEL	100
+#endif
+
+#ifndef COLRV1_ENABLE_SUBSETTING
+#define COLRV1_ENABLE_SUBSETTING 0
+#endif
 
 namespace OT {
+
+struct COLR;
+struct hb_colrv1_closure_context_t :
+       hb_dispatch_context_t<hb_colrv1_closure_context_t>
+{
+  template <typename T>
+  return_t dispatch (const T &obj)
+  {
+    if (unlikely (nesting_level_left == 0))
+      return hb_empty_t ();
+
+    if (paint_visited (&obj))
+      return hb_empty_t ();
+
+    nesting_level_left--;
+    obj.closurev1 (this);
+    nesting_level_left++;
+    return hb_empty_t ();
+  }
+  static return_t default_return_value () { return hb_empty_t (); }
+
+  bool paint_visited (const void *paint)
+  {
+    hb_codepoint_t delta = (hb_codepoint_t) ((uintptr_t) paint - (uintptr_t) base);
+     if (visited_paint.has (delta))
+      return true;
+
+    visited_paint.add (delta);
+    return false;
+  }
+
+  const COLR* get_colr_table () const
+  { return reinterpret_cast<const COLR *> (base); }
+
+  void add_glyph (unsigned glyph_id)
+  { glyphs->add (glyph_id); }
+
+  void add_layer_indices (unsigned first_layer_index, unsigned num_of_layers)
+  { layer_indices->add_range (first_layer_index, first_layer_index + num_of_layers - 1); }
+
+  void add_palette_index (unsigned palette_index)
+  { palette_indices->add (palette_index); }
+
+  public:
+  const void *base;
+  hb_set_t visited_paint;
+  hb_set_t *glyphs;
+  hb_set_t *layer_indices;
+  hb_set_t *palette_indices;
+  unsigned nesting_level_left;
+
+  hb_colrv1_closure_context_t (const void *base_,
+                               hb_set_t *glyphs_,
+                               hb_set_t *layer_indices_,
+                               hb_set_t *palette_indices_,
+                               unsigned nesting_level_left_ = COLRV1_MAX_NESTING_LEVEL) :
+                          base (base_),
+                          glyphs (glyphs_),
+                          layer_indices (layer_indices_),
+                          palette_indices (palette_indices_),
+                          nesting_level_left (nesting_level_left_)
+  {}
+};
 
 struct LayerRecord
 {
@@ -125,6 +195,15 @@ struct NoVariable
 template <template<typename> class Var>
 struct ColorIndex
 {
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (*this);
+    if (unlikely (!out)) return_trace (false);
+    return_trace (c->serializer->check_assign (out->paletteIndex, c->plan->colr_palettes->get (paletteIndex),
+                                               HB_SERIALIZE_ERROR_INT_OVERFLOW));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -140,6 +219,13 @@ struct ColorIndex
 template <template<typename> class Var>
 struct ColorStop
 {
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    if (unlikely (!c->serializer->embed (stopOffset))) return_trace (false);
+    return_trace (color.subset (c));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -166,6 +252,23 @@ struct Extend : HBUINT8
 template <template<typename> class Var>
 struct ColorLine
 {
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->start_embed (this);
+    if (unlikely (!out)) return_trace (false);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+
+    if (!c->serializer->check_assign (out->extend, extend, HB_SERIALIZE_ERROR_INT_OVERFLOW)) return_trace (false);
+    if (!c->serializer->check_assign (out->stops.len, stops.len, HB_SERIALIZE_ERROR_ARRAY_OVERFLOW)) return_trace (false);
+
+    for (const auto& stop : stops.iter ())
+    {
+      if (!stop.subset (c)) return_trace (false);
+    }
+    return_trace (true);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -202,7 +305,7 @@ struct CompositeMode : HBUINT8
     COMPOSITE_DEST_ATOP      = 10,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_dstatop
     COMPOSITE_XOR            = 11,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_xor
     COMPOSITE_PLUS           = 12,  // https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus
-  
+
     // Blend modes
     // https://www.w3.org/TR/compositing-1/#blending
     COMPOSITE_SCREEN         = 13,  // https://www.w3.org/TR/compositing-1/#blendingscreen
@@ -216,7 +319,7 @@ struct CompositeMode : HBUINT8
     COMPOSITE_DIFFERENCE     = 21,  // https://www.w3.org/TR/compositing-1/#blendingdifference
     COMPOSITE_EXCLUSION      = 22,  // https://www.w3.org/TR/compositing-1/#blendingexclusion
     COMPOSITE_MULTIPLY       = 23,  // https://www.w3.org/TR/compositing-1/#blendingmultiply
-  
+
     // Modes that, uniquely, do not operate on components
     // https://www.w3.org/TR/compositing-1/#blendingnonseparable
     COMPOSITE_HSL_HUE        = 24,  // https://www.w3.org/TR/compositing-1/#blendinghue
@@ -249,6 +352,19 @@ struct Affine2x3
 
 struct PaintColrLayers
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+    return_trace (c->serializer->check_assign (out->firstLayerIndex, c->plan->colrv1_layers->get (firstLayerIndex),
+                                               HB_SERIALIZE_ERROR_INT_OVERFLOW));
+
+    return_trace (true);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -265,6 +381,16 @@ struct PaintColrLayers
 template <template<typename> class Var>
 struct PaintSolid
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const
+  { c->add_palette_index (color.paletteIndex); }
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    if (unlikely (!c->serializer->embed (format))) return_trace (false);
+    return_trace (color.subset (c));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -280,6 +406,21 @@ struct PaintSolid
 template <template<typename> class Var>
 struct PaintLinearGradient
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const
+  {
+    for (const auto &stop : (this+colorLine).stops.iter ())
+      c->add_palette_index (stop.color.paletteIndex);
+  }
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->colorLine.serialize_subset (c, colorLine, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -302,6 +443,21 @@ struct PaintLinearGradient
 template <template<typename> class Var>
 struct PaintRadialGradient
 {
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->colorLine.serialize_subset (c, colorLine, this));
+  }
+
+  void closurev1 (hb_colrv1_closure_context_t* c) const
+  {
+    for (const auto &stop : (this+colorLine).stops.iter ())
+      c->add_palette_index (stop.color.paletteIndex);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -324,6 +480,21 @@ struct PaintRadialGradient
 template <template<typename> class Var>
 struct PaintSweepGradient
 {
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->colorLine.serialize_subset (c, colorLine, this));
+  }
+
+  void closurev1 (hb_colrv1_closure_context_t* c) const
+  {
+    for (const auto &stop : (this+colorLine).stops.iter ())
+      c->add_palette_index (stop.color.paletteIndex);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -345,6 +516,21 @@ struct Paint;
 // Paint a non-COLR glyph, filled as indicated by paint.
 struct PaintGlyph
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    if (! c->serializer->check_assign (out->gid, c->plan->glyph_map->get (gid),
+                                       HB_SERIALIZE_ERROR_INT_OVERFLOW))
+      return_trace (false);
+
+    return_trace (out->paint.serialize_subset (c, paint, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -360,6 +546,18 @@ struct PaintGlyph
 
 struct PaintColrGlyph
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (c->serializer->check_assign (out->gid, c->plan->glyph_map->get (gid),
+                                               HB_SERIALIZE_ERROR_INT_OVERFLOW));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -375,6 +573,17 @@ struct PaintColrGlyph
 template <template<typename> class Var>
 struct PaintTransform
 {
+  HB_INTERNAL void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->src.serialize_subset (c, src, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -391,6 +600,17 @@ struct PaintTransform
 template <template<typename> class Var>
 struct PaintTranslate
 {
+  HB_INTERNAL void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->src.serialize_subset (c, src, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -408,6 +628,17 @@ struct PaintTranslate
 template <template<typename> class Var>
 struct PaintRotate
 {
+  HB_INTERNAL void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->src.serialize_subset (c, src, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -426,6 +657,17 @@ struct PaintRotate
 template <template<typename> class Var>
 struct PaintSkew
 {
+  HB_INTERNAL void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    return_trace (out->src.serialize_subset (c, src, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -444,6 +686,18 @@ struct PaintSkew
 
 struct PaintComposite
 {
+  void closurev1 (hb_colrv1_closure_context_t* c) const;
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    if (!out->src.serialize_subset (c, src, this)) return_trace (false);
+    return_trace (out->backdrop.serialize_subset (c, backdrop, this));
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -523,26 +777,82 @@ struct BaseGlyphV1Record
   int cmp (hb_codepoint_t g) const
   { return g < glyphId ? -1 : g > glyphId ? 1 : 0; }
 
-  bool sanitize (hb_sanitize_context_t *c) const
+  bool serialize (hb_serialize_context_t *s, const hb_map_t* glyph_map,
+                  const void* src_base, hb_subset_context_t *c) const
+  {
+    TRACE_SERIALIZE (this);
+    auto *out = s->embed (this);
+    if (unlikely (!out)) return_trace (false);
+    if (!s->check_assign (out->glyphId, glyph_map->get (glyphId),
+                          HB_SERIALIZE_ERROR_INT_OVERFLOW))
+      return_trace (false);
+
+    return_trace (out->paint.serialize_subset (c, paint, src_base));
+  }
+
+  bool sanitize (hb_sanitize_context_t *c, const void *base) const
   {
     TRACE_SANITIZE (this);
-    return_trace (likely (c->check_struct (this) && paint.sanitize (c, this)));
+    return_trace (likely (c->check_struct (this) && paint.sanitize (c, base)));
   }
 
   public:
   HBGlyphID		glyphId;    /* Glyph ID of reference glyph */
-  Offset32To<Paint>	paint;      /* Offset (from beginning of BaseGlyphV1Record) to Paint,
+  Offset32To<Paint>	paint;      /* Offset (from beginning of BaseGlyphV1Record array) to Paint,
                                      * Typically PaintColrLayers */
   public:
   DEFINE_SIZE_STATIC (6);
 };
 
-typedef SortedArray32Of<BaseGlyphV1Record> BaseGlyphV1List;
+struct BaseGlyphV1List : SortedArray32Of<BaseGlyphV1Record>
+{
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->start_embed (this);
+    if (unlikely (!c->serializer->extend_min (out)))  return_trace (false);
+    const hb_set_t* glyphset = c->plan->_glyphset;
+
+    for (const auto& _ : as_array ())
+    {
+      unsigned gid = _.glyphId;
+      if (!glyphset->has (gid)) continue;
+
+      if (_.serialize (c->serializer, c->plan->glyph_map, this, c)) out->len++;
+      else return_trace (false);
+    }
+
+    return_trace (out->len != 0);
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (SortedArray32Of<BaseGlyphV1Record>::sanitize (c, this));
+  }
+};
 
 struct LayerV1List : Array32OfOffset32To<Paint>
 {
   const Paint& get_paint (unsigned i) const
   { return this+(*this)[i]; }
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->start_embed (this);
+    if (unlikely (!c->serializer->extend_min (out)))  return_trace (false);
+
+    for (const auto& _ : + hb_enumerate (*this)
+                         | hb_filter (c->plan->colrv1_layers, hb_first))
+
+    {
+      auto *o = out->serialize_append (c->serializer);
+      if (unlikely (!o) || !o->serialize_subset (c, _.second, this))
+        return_trace (false);
+    }
+    return_trace (true);
+  }
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -592,6 +902,15 @@ struct COLR
 			 hb_set_t *related_ids /* OUT */) const
     { colr->closure_glyphs (glyph, related_ids); }
 
+    void closure_V0palette_indices (const hb_set_t *glyphs,
+				    hb_set_t *palettes /* OUT */) const
+    { colr->closure_V0palette_indices (glyphs, palettes); }
+
+    void closure_forV1 (hb_set_t *glyphset,
+                        hb_set_t *layer_indices,
+                        hb_set_t *palette_indices) const
+    { colr->closure_forV1 (glyphset, layer_indices, palette_indices); }
+
     private:
     hb_blob_ptr_t<COLR> colr;
   };
@@ -608,25 +927,70 @@ struct COLR
     related_ids->add_array (&glyph_layers[0].glyphId, glyph_layers.length, LayerRecord::min_size);
   }
 
+  void closure_V0palette_indices (const hb_set_t *glyphs,
+				  hb_set_t *palettes /* OUT */) const
+  {
+    if (!numBaseGlyphs || !numLayers) return;
+    hb_array_t<const BaseGlyphRecord> baseGlyphs = (this+baseGlyphsZ).as_array (numBaseGlyphs);
+    hb_array_t<const LayerRecord> all_layers = (this+layersZ).as_array (numLayers);
+
+    for (const BaseGlyphRecord record : baseGlyphs)
+    {
+      if (!glyphs->has (record.glyphId)) continue;
+      hb_array_t<const LayerRecord> glyph_layers = all_layers.sub_array (record.firstLayerIdx,
+                                                                   record.numLayers);
+      for (const LayerRecord layer : glyph_layers)
+        palettes->add (layer.colorIdx);
+    }
+  }
+
+  void closure_forV1 (hb_set_t *glyphset,
+                      hb_set_t *layer_indices,
+                      hb_set_t *palette_indices) const
+  {
+    if (version != 1) return;
+    hb_set_t visited_glyphs;
+
+    hb_colrv1_closure_context_t c (this, &visited_glyphs, layer_indices, palette_indices);
+    const BaseGlyphV1List &baseglyphV1_records = this+baseGlyphsV1List;
+
+    for (const BaseGlyphV1Record &baseglyphV1record: baseglyphV1_records.iter ())
+    {
+      unsigned gid = baseglyphV1record.glyphId;
+      if (!glyphset->has (gid)) continue;
+
+      const Paint &paint = &baseglyphV1_records+baseglyphV1record.paint;
+      paint.dispatch (&c);
+    }
+    hb_set_union (glyphset, &visited_glyphs);
+  }
+
+  const LayerV1List& get_layerV1List () const
+  { return (this+layersV1); }
+
+  const BaseGlyphV1List& get_baseglyphV1List () const
+  { return (this+baseGlyphsV1List); }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
                   (this+baseGlyphsZ).sanitize (c, numBaseGlyphs) &&
                   (this+layersZ).sanitize (c, numLayers) &&
-                  (version == 0 || (version == 1 &&
-                                    baseGlyphsV1List.sanitize (c, this) &&
-                                    layersV1.sanitize (c, this) &&
-                                    varStore.sanitize (c, this))));
+                  (version == 0 ||
+		   (COLRV1_ENABLE_SUBSETTING && version == 1 &&
+		    baseGlyphsV1List.sanitize (c, this) &&
+		    layersV1.sanitize (c, this) &&
+		    varStore.sanitize (c, this))));
   }
 
   template<typename BaseIterator, typename LayerIterator,
 	   hb_requires (hb_is_iterator (BaseIterator)),
 	   hb_requires (hb_is_iterator (LayerIterator))>
-  bool serialize (hb_serialize_context_t *c,
-		  unsigned version,
-		  BaseIterator base_it,
-		  LayerIterator layer_it)
+  bool serialize_V0 (hb_serialize_context_t *c,
+		     unsigned version,
+		     BaseIterator base_it,
+		     LayerIterator layer_it)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (base_it.len () != layer_it.len ()))
@@ -636,6 +1000,12 @@ struct COLR
     this->version = version;
     numLayers = 0;
     numBaseGlyphs = base_it.len ();
+    if (base_it.len () == 0)
+    {
+      baseGlyphsZ = 0;
+      layersZ = 0;
+      return_trace (true);
+    }
     baseGlyphsZ = COLR::min_size;
     layersZ = COLR::min_size + numBaseGlyphs * BaseGlyphRecord::min_size;
 
@@ -658,6 +1028,14 @@ struct COLR
     if ((unsigned int) gid == 0) // Ignore notdef.
       return nullptr;
     const BaseGlyphRecord* record = &(this+baseGlyphsZ).bsearch (numBaseGlyphs, (unsigned int) gid);
+    if ((record && (hb_codepoint_t) record->glyphId != gid))
+      record = nullptr;
+    return record;
+  }
+
+  const BaseGlyphV1Record* get_base_glyphV1_record (hb_codepoint_t gid) const
+  {
+    const BaseGlyphV1Record* record = &(this+baseGlyphsV1List).bsearch ((unsigned) gid);
     if ((record && (hb_codepoint_t) record->glyphId != gid))
       record = nullptr;
     return record;
@@ -710,6 +1088,7 @@ struct COLR
 				  if (unlikely (!c->plan->new_gid_for_old_gid (out_layers[i].glyphId, &new_gid)))
 				    return hb_pair_t<bool, hb_vector_t<LayerRecord>> (false, out_layers);
 				  out_layers[i].glyphId = new_gid;
+				  out_layers[i].colorIdx = c->plan->colr_palettes->get (layers[i].colorIdx);
 				}
 
 				return hb_pair_t<bool, hb_vector_t<LayerRecord>> (true, out_layers);
@@ -718,11 +1097,29 @@ struct COLR
     | hb_map_retains_sorting (hb_second)
     ;
 
-    if (unlikely (!base_it || !layer_it || base_it.len () != layer_it.len ()))
+    if (version == 0 && (!base_it || !layer_it))
       return_trace (false);
 
     COLR *colr_prime = c->serializer->start_embed<COLR> ();
-    return_trace (colr_prime->serialize (c->serializer, version, base_it, layer_it));
+    bool ret = colr_prime->serialize_V0 (c->serializer, version, base_it, layer_it);
+
+    if (version == 0) return_trace (ret);
+    auto snap = c->serializer->snapshot ();
+    if (!c->serializer->allocate_size<void> (3 * HBUINT32::static_size)) return_trace (false);
+    if (!colr_prime->baseGlyphsV1List.serialize_subset (c, baseGlyphsV1List, this))
+    {
+      if (c->serializer->in_error ()) return_trace (false);
+      //no more COLRv1 glyphs: downgrade to version 0
+      c->serializer->revert (snap);
+      colr_prime->version = 0;
+      return_trace (true);
+    }
+
+    if (!colr_prime->layersV1.serialize_subset (c, layersV1, this)) return_trace (false);
+
+    colr_prime->varStore = 0;
+    //TODO: subset varStore once it's implemented in fonttools
+    return_trace (true);
   }
 
   protected:

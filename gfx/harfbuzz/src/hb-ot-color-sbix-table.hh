@@ -145,7 +145,7 @@ struct SBIXStrike
     auto* out = c->serializer->start_embed<SBIXStrike> ();
     if (unlikely (!out)) return_trace (false);
     auto snap = c->serializer->snapshot ();
-    if (unlikely (!c->serializer->extend (*out, num_output_glyphs + 1))) return_trace (false);
+    if (unlikely (!c->serializer->extend (out, num_output_glyphs + 1))) return_trace (false);
     out->ppem = ppem;
     out->resolution = resolution;
     HBUINT32 head;

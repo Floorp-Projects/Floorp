@@ -1,3 +1,57 @@
+Overview of changes leading to 2.9.1
+Tuesday, September 7, 2021
+====================================
+- Final subset API is in place and if no issues are discovered, it will be the
+  stable subset API of HarfBuzz 3.0.0. Old API is kept to ease transition, but
+  will be removed in 3.0.0.
+- Various fuzzer-found bug fixes.
+- hb_buffer_append() now handles the pre- and post-context which previously
+  were left unchanged in the destination buffer.
+- hb-view / hb-shape now accept following new arguments:
+  o --unicodes: takes a list of hex numbers that represent Unicode
+    codepoints.
+- Undeprecated API:
+  hb_set_invert()
+
+
+Overview of changes leading to 2.9.0
+Wednesday, August 18, 2021
+History Repeats Itself (Afghanistan)
+====================================
+- Subsetter API is being stabilized, with the first stable API to happen in
+  3.0.0 release (https://github.com/harfbuzz/harfbuzz/issues/3078).
+- Support multiple variation axes with same tag, aka HOI.
+- The “coretext” testing shaper now passes font variations to CoreText.
+- hb-shape/hb-view does not break line at new lines unless text is read from
+  file.
+- hb-view and hb-subset has a --batch now, similar to hb-shape.
+- The --batch mode now uses ; as argument separator instead of : used previously.
+- The --batch in hb-shape does not expect 0th argument anymore. That is, the
+  lines read are interpreted as argv[1:], instead of argv[0:].
+- The --batch option has been undocumented. We are ready to document it; send
+  feedback if you find it useful.
+- hb-subset got arguments revamps. Added much-requested --gids-file, --glyphs,
+  --glyphs-file, --unicodes-file, supporting ranges in --unicodes.
+- Various bug fixes.
+
+
+Overview of changes leading to 2.8.2
+Tuesday, July 8, 2021
+====================================
+- Shaping LTR digits for RTL scripts now makes the native direction of the
+  digits LTR, applying shaping and positioning rules on the same glyph order as
+  Uniscribe. (Jonathan Kew, Khaled Hosny).
+- Subsetting COLR v1 and CPAL tables is now supported. (Garret Rieger, Qunxin Liu)
+- Various fixes and improvements to the subsetter. (Garret Rieger, Qunxin Liu, Behdad)
+- When applying morx table, mark glyph widths should not be zeroed. (Jonathan Kew)
+- GPOS is preferred over kerx, if GSUB was applied. (Behdad)
+- Regional_Indicator pairs are grouped together when clustering. (Behdad)
+- New API:
++hb_blob_create_or_fail()
++hb_blob_create_from_file_or_fail()
++hb_set_copy()
+
+
 Overview of changes leading to 2.8.1
 Tuesday, May 4, 2021
 ====================================
@@ -28,6 +82,7 @@ Sunday, December 27, 2020
 - Fix missing --enable-introspection configure option from previous release
   tarball.
 - Documentation updates.
+
 
 Overview of changes leading to 2.7.3
 Wednesday, December 23, 2020

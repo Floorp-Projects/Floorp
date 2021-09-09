@@ -131,7 +131,9 @@ hb_ot_layout_kern (const hb_ot_shape_plan_t *plan,
 
   AAT::hb_aat_apply_context_t c (plan, font, buffer, blob);
 
+  if (!buffer->message (font, "start table kern")) return;
   kern.apply (&c);
+  (void) buffer->message (font, "end table kern");
 }
 #endif
 
@@ -144,7 +146,7 @@ bool
 OT::GDEF::is_blocklisted (hb_blob_t *blob,
 			  hb_face_t *face) const
 {
-#ifdef HB_NO_OT_LAYOUT_BLACKLIST
+#ifdef HB_NO_OT_LAYOUT_BLOCKLIST
   return false;
 #endif
   /* The ugly business of blocklisting individual fonts' tables happen here!
@@ -383,7 +385,7 @@ bool
 OT::GSUB::is_blocklisted (hb_blob_t *blob HB_UNUSED,
 			  hb_face_t *face) const
 {
-#ifdef HB_NO_OT_LAYOUT_BLACKLIST
+#ifdef HB_NO_OT_LAYOUT_BLOCKLIST
   return false;
 #endif
   return false;
@@ -393,7 +395,7 @@ bool
 OT::GPOS::is_blocklisted (hb_blob_t *blob HB_UNUSED,
 			  hb_face_t *face HB_UNUSED) const
 {
-#ifdef HB_NO_OT_LAYOUT_BLACKLIST
+#ifdef HB_NO_OT_LAYOUT_BLOCKLIST
   return false;
 #endif
   return false;
@@ -991,10 +993,46 @@ struct hb_collect_features_context_t
 {
   hb_collect_features_context_t (hb_face_t *face,
 				 hb_tag_t   table_tag,
-				 hb_set_t  *feature_indexes_)
+				 hb_set_t  *feature_indices_,
+                                 const hb_tag_t *features)
+
     : g (get_gsubgpos_table (face, table_tag)),
-      feature_indexes (feature_indexes_),
-      script_count (0),langsys_count (0), feature_index_count (0) {}
+      feature_indices (feature_indices_),
+      has_feature_filter (false),
+      script_count (0),langsys_count (0), feature_index_count (0)
+  {
+    compute_feature_filter (features);
+  }
+
+  void compute_feature_filter (const hb_tag_t *features)
+  {
+    if (features == nullptr)
+    {
+      has_feature_filter = false;
+      return;
+    }
+
+    has_feature_filter = true;
+    for (; *features; features++)
+    {
+      hb_tag_t tag = *features;
+      unsigned index;
+      g.find_feature_index (tag, &index);
+      if (index == OT::Index::NOT_FOUND_INDEX) continue;
+
+      feature_indices_filter.add(index);
+      for (int i = (int) index - 1; i >= 0; i--)
+      {
+        if (g.get_feature_tag (i) != tag) break;
+        feature_indices_filter.add(i);
+      }
+      for (unsigned i = index + 1; i < g.get_feature_count (); i++)
+      {
+        if (g.get_feature_tag (i) != tag) break;
+        feature_indices_filter.add(i);
+      }
+    }
+  }
 
   bool visited (const OT::Script &s)
   {
@@ -1043,7 +1081,9 @@ struct hb_collect_features_context_t
 
   public:
   const OT::GSUBGPOS &g;
-  hb_set_t           *feature_indexes;
+  hb_set_t *feature_indices;
+  hb_set_t  feature_indices_filter;
+  bool has_feature_filter;
 
   private:
   hb_set_t visited_script;
@@ -1055,37 +1095,31 @@ struct hb_collect_features_context_t
 
 static void
 langsys_collect_features (hb_collect_features_context_t *c,
-			  const OT::LangSys  &l,
-			  const hb_tag_t     *features)
+			  const OT::LangSys  &l)
 {
   if (c->visited (l)) return;
 
-  if (!features)
+  if (!c->has_feature_filter)
   {
     /* All features. */
     if (l.has_required_feature () && !c->visited_feature_indices (1))
-      c->feature_indexes->add (l.get_required_feature_index ());
+      c->feature_indices->add (l.get_required_feature_index ());
 
+    // TODO(garretrieger): filter out indices >= feature count?
     if (!c->visited_feature_indices (l.featureIndex.len))
-      l.add_feature_indexes_to (c->feature_indexes);
+      l.add_feature_indexes_to (c->feature_indices);
   }
   else
   {
-    /* Ugh. Any faster way? */
-    for (; *features; features++)
+    if (c->feature_indices_filter.is_empty()) return;
+    unsigned int num_features = l.get_feature_count ();
+    for (unsigned int i = 0; i < num_features; i++)
     {
-      hb_tag_t feature_tag = *features;
-      unsigned int num_features = l.get_feature_count ();
-      for (unsigned int i = 0; i < num_features; i++)
-      {
-	unsigned int feature_index = l.get_feature_index (i);
+      unsigned int feature_index = l.get_feature_index (i);
+      if (!c->feature_indices_filter.has (feature_index)) continue;
 
-	if (feature_tag == c->g.get_feature_tag (feature_index))
-	{
-	  c->feature_indexes->add (feature_index);
-	  break;
-	}
-      }
+      c->feature_indices->add (feature_index);
+      c->feature_indices_filter.del (feature_index);
     }
   }
 }
@@ -1093,8 +1127,7 @@ langsys_collect_features (hb_collect_features_context_t *c,
 static void
 script_collect_features (hb_collect_features_context_t *c,
 			 const OT::Script   &s,
-			 const hb_tag_t *languages,
-			 const hb_tag_t *features)
+			 const hb_tag_t *languages)
 {
   if (c->visited (s)) return;
 
@@ -1103,14 +1136,13 @@ script_collect_features (hb_collect_features_context_t *c,
     /* All languages. */
     if (s.has_default_lang_sys ())
       langsys_collect_features (c,
-				s.get_default_lang_sys (),
-				features);
+				s.get_default_lang_sys ());
+
 
     unsigned int count = s.get_lang_sys_count ();
     for (unsigned int language_index = 0; language_index < count; language_index++)
       langsys_collect_features (c,
-				s.get_lang_sys (language_index),
-				features);
+				s.get_lang_sys (language_index));
   }
   else
   {
@@ -1119,8 +1151,8 @@ script_collect_features (hb_collect_features_context_t *c,
       unsigned int language_index;
       if (s.find_lang_sys_index (*languages, &language_index))
 	langsys_collect_features (c,
-				  s.get_lang_sys (language_index),
-				  features);
+				  s.get_lang_sys (language_index));
+
     }
   }
 }
@@ -1151,7 +1183,7 @@ hb_ot_layout_collect_features (hb_face_t      *face,
 			       const hb_tag_t *features,
 			       hb_set_t       *feature_indexes /* OUT */)
 {
-  hb_collect_features_context_t c (face, table_tag, feature_indexes);
+  hb_collect_features_context_t c (face, table_tag, feature_indexes, features);
   if (!scripts)
   {
     /* All scripts. */
@@ -1159,8 +1191,7 @@ hb_ot_layout_collect_features (hb_face_t      *face,
     for (unsigned int script_index = 0; script_index < count; script_index++)
       script_collect_features (&c,
 			       c.g.get_script (script_index),
-			       languages,
-			       features);
+			       languages);
   }
   else
   {
@@ -1170,8 +1201,7 @@ hb_ot_layout_collect_features (hb_face_t      *face,
       if (c.g.find_script_index (*scripts, &script_index))
 	script_collect_features (&c,
 				 c.g.get_script (script_index),
-				 languages,
-				 features);
+				 languages);
     }
   }
 }
@@ -1358,7 +1388,8 @@ hb_ot_layout_has_substitution (hb_face_t *face)
  * @lookup_index: The index of the lookup to query
  * @glyphs: The sequence of glyphs to query for substitution
  * @glyphs_length: The length of the glyph sequence
- * @zero_context: #hb_bool_t indicating whether substitutions should be context-free
+ * @zero_context: #hb_bool_t indicating whether pre-/post-context are disallowed
+ * in substitutions
  *
  * Tests whether a specified lookup in the specified face would
  * trigger a substitution on the given glyph sequence.
@@ -1855,27 +1886,20 @@ apply_string (OT::hb_ot_apply_context_t *c,
   if (likely (!lookup.is_reverse ()))
   {
     /* in/out forward substitution/positioning */
-    if (Proxy::table_index == 0u)
+    if (!Proxy::inplace)
       buffer->clear_output ();
-    buffer->idx = 0;
 
-    bool ret;
-    ret = apply_forward (c, accel);
-    if (ret)
-    {
-      if (!Proxy::inplace)
-	buffer->swap_buffers ();
-      else
-	assert (!buffer->has_separate_output ());
-    }
+    buffer->idx = 0;
+    apply_forward (c, accel);
+
+    if (!Proxy::inplace)
+      buffer->swap_buffers ();
   }
   else
   {
     /* in-place backward substitution/positioning */
-    if (Proxy::table_index == 0u)
-      buffer->remove_output ();
+    assert (!buffer->have_output);
     buffer->idx = buffer->len - 1;
-
     apply_backward (c, accel);
   }
 }
@@ -1891,7 +1915,8 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
   OT::hb_ot_apply_context_t c (table_index, font, buffer);
   c.set_recurse_func (Proxy::Lookup::apply_recurse_func);
 
-  for (unsigned int stage_index = 0; stage_index < stages[table_index].length; stage_index++) {
+  for (unsigned int stage_index = 0; stage_index < stages[table_index].length; stage_index++)
+  {
     const stage_map_t *stage = &stages[table_index][stage_index];
     for (; i < stage->last_lookup; i++)
     {
@@ -1901,11 +1926,8 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
       c.set_lookup_mask (lookups[table_index][i].mask);
       c.set_auto_zwj (lookups[table_index][i].auto_zwj);
       c.set_auto_zwnj (lookups[table_index][i].auto_zwnj);
-      if (lookups[table_index][i].random)
-      {
-	c.set_random (true);
-	buffer->unsafe_to_break_all ();
-      }
+      c.set_random (lookups[table_index][i].random);
+
       apply_string<Proxy> (&c,
 			   proxy.table.get_lookup (lookup_index),
 			   proxy.accels[lookup_index]);
@@ -1913,10 +1935,7 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
     }
 
     if (stage->pause_func)
-    {
-      buffer->clear_output ();
       stage->pause_func (plan, font, buffer);
-    }
   }
 }
 

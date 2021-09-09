@@ -415,7 +415,7 @@ struct RecordArrayOf : SortedArray16Of<Record<Type>>
   }
   bool find_index (hb_tag_t tag, unsigned int *index) const
   {
-    return this->bfind (tag, index, HB_BFIND_NOT_FOUND_STORE, Index::NOT_FOUND_INDEX);
+    return this->bfind (tag, index, HB_NOT_FOUND_STORE, Index::NOT_FOUND_INDEX);
   }
 };
 
@@ -1262,13 +1262,13 @@ struct Lookup
 		  unsigned int num_subtables)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     lookupType = lookup_type;
     lookupFlag = lookup_props & 0xFFFFu;
     if (unlikely (!subTable.serialize (c, num_subtables))) return_trace (false);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
-      if (unlikely (!c->extend (*this))) return_trace (false);
+      if (unlikely (!c->extend (this))) return_trace (false);
       HBUINT16 &markFilteringSet = StructAfter<HBUINT16> (subTable);
       markFilteringSet = lookup_props >> 16;
     }
@@ -1393,7 +1393,7 @@ struct CoverageFormat1
   unsigned int get_coverage (hb_codepoint_t glyph_id) const
   {
     unsigned int i;
-    glyphArray.bfind (glyph_id, &i, HB_BFIND_NOT_FOUND_STORE, NOT_COVERED);
+    glyphArray.bfind (glyph_id, &i, HB_NOT_FOUND_STORE, NOT_COVERED);
     return i;
   }
 
@@ -1478,7 +1478,7 @@ struct CoverageFormat2
   bool serialize (hb_serialize_context_t *c, Iterator glyphs)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
 
     if (unlikely (!glyphs))
     {
@@ -1657,7 +1657,7 @@ struct Coverage
   bool serialize (hb_serialize_context_t *c, Iterator glyphs)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
 
     unsigned count = 0;
     unsigned num_ranges = 0;
@@ -1890,7 +1890,7 @@ struct ClassDefFormat1
 		  Iterator it)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
 
     if (unlikely (!it))
     {
@@ -2069,7 +2069,7 @@ struct ClassDefFormat2
 		  Iterator it)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
 
     if (unlikely (!it))
     {
@@ -2311,7 +2311,7 @@ struct ClassDef
   bool serialize (hb_serialize_context_t *c, Iterator it_with_class_zero)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
 
     auto it = + it_with_class_zero | hb_filter (hb_second);
 
@@ -2516,19 +2516,19 @@ struct VarRegionList
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-		  axesZ.sanitize (c, (unsigned int) axisCount * (unsigned int) regionCount));
+    return_trace (c->check_struct (this) && axesZ.sanitize (c, axisCount * regionCount));
   }
 
   bool serialize (hb_serialize_context_t *c, const VarRegionList *src, const hb_bimap_t &region_map)
   {
     TRACE_SERIALIZE (this);
-    VarRegionList *out = c->allocate_min<VarRegionList> ();
-    if (unlikely (!out)) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     axisCount = src->axisCount;
     regionCount = region_map.get_population ();
-    if (unlikely (!c->allocate_size<VarRegionList> (get_size () - min_size))) return_trace (false);
-    unsigned int region_count = src->get_region_count ();
+    if (unlikely (hb_unsigned_mul_overflows (axisCount * regionCount,
+					     VarRegionAxis::static_size))) return_trace (false);
+    if (unlikely (!c->extend (this))) return_trace (false);
+    unsigned int region_count = src->regionCount;
     for (unsigned int r = 0; r < regionCount; r++)
     {
       unsigned int backward = region_map.backward (r);
@@ -2540,11 +2540,11 @@ struct VarRegionList
   }
 
   unsigned int get_size () const { return min_size + VarRegionAxis::static_size * axisCount * regionCount; }
-  unsigned int get_region_count () const { return regionCount; }
 
-  protected:
+  public:
   HBUINT16	axisCount;
   HBUINT16	regionCount;
+  protected:
   UnsizedArrayOf<VarRegionAxis>
 		axesZ;
   public:
@@ -2560,7 +2560,10 @@ struct VarData
   { return shortCount + regionIndices.len; }
 
   unsigned int get_size () const
-  { return itemCount * get_row_size (); }
+  { return min_size
+	 - regionIndices.min_size + regionIndices.get_size ()
+	 + itemCount * get_row_size ();
+  }
 
   float get_delta (unsigned int inner,
 		   const int *coords, unsigned int coord_count,
@@ -2594,10 +2597,10 @@ struct VarData
    return delta;
   }
 
-  void get_scalars (const int *coords, unsigned int coord_count,
-		    const VarRegionList &regions,
-		    float *scalars /*OUT */,
-		    unsigned int num_scalars) const
+  void get_region_scalars (const int *coords, unsigned int coord_count,
+			   const VarRegionList &regions,
+			   float *scalars /*OUT */,
+			   unsigned int num_scalars) const
   {
     unsigned count = hb_min (num_scalars, regionIndices.len);
     for (unsigned int i = 0; i < count; i++)
@@ -2623,7 +2626,7 @@ struct VarData
 		  const hb_bimap_t &region_map)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return_trace (false);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
     itemCount = inner_map.get_next_value ();
 
     /* Optimize short count */
@@ -2665,9 +2668,7 @@ struct VarData
     shortCount = new_short_count;
     regionIndices.len = new_ri_count;
 
-    unsigned int size = regionIndices.get_size () - HBUINT16::static_size/*regionIndices.len*/ + (get_row_size () * itemCount);
-    if (unlikely (!c->allocate_size<HBUINT8> (size)))
-      return_trace (false);
+    if (unlikely (!c->extend (this))) return_trace (false);
 
     for (r = 0; r < ri_count; r++)
       if (delta_sz[r]) regionIndices[ri_map[r]] = region_map[src->regionIndices[r]];
@@ -2682,16 +2683,16 @@ struct VarData
     return_trace (true);
   }
 
-  void collect_region_refs (hb_inc_bimap_t &region_map, const hb_inc_bimap_t &inner_map) const
+  void collect_region_refs (hb_set_t &region_indices, const hb_inc_bimap_t &inner_map) const
   {
     for (unsigned int r = 0; r < regionIndices.len; r++)
     {
       unsigned int region = regionIndices[r];
-      if (region_map.has (region)) continue;
+      if (region_indices.has (region)) continue;
       for (unsigned int i = 0; i < inner_map.get_next_value (); i++)
 	if (get_item_delta (inner_map.backward (i), r) != 0)
 	{
-	  region_map.add (region);
+	  region_indices.add (region);
 	  break;
 	}
     }
@@ -2777,32 +2778,48 @@ struct VariationStore
 		  const hb_array_t <hb_inc_bimap_t> &inner_maps)
   {
     TRACE_SERIALIZE (this);
+    if (unlikely (!c->extend_min (this))) return_trace (false);
+
     unsigned int set_count = 0;
     for (unsigned int i = 0; i < inner_maps.length; i++)
-      if (inner_maps[i].get_population () > 0) set_count++;
+      if (inner_maps[i].get_population ())
+	set_count++;
 
-    unsigned int size = min_size + HBUINT32::static_size * set_count;
-    if (unlikely (!c->allocate_size<HBUINT32> (size))) return_trace (false);
     format = 1;
 
-    hb_inc_bimap_t region_map;
-    for (unsigned int i = 0; i < inner_maps.length; i++)
-      (src+src->dataSets[i]).collect_region_refs (region_map, inner_maps[i]);
-    region_map.sort ();
+    const auto &src_regions = src+src->regions;
 
-    if (unlikely (!regions.serialize (c, this)
-		  .serialize (c, &(src+src->regions), region_map))) return_trace (false);
+    hb_set_t region_indices;
+    for (unsigned int i = 0; i < inner_maps.length; i++)
+      (src+src->dataSets[i]).collect_region_refs (region_indices, inner_maps[i]);
+
+    if (region_indices.in_error ())
+      return_trace (false);
+
+    region_indices.del_range ((src_regions).regionCount, hb_set_t::INVALID);
+
+    /* TODO use constructor when our data-structures support that. */
+    hb_inc_bimap_t region_map;
+    + hb_iter (region_indices)
+    | hb_apply ([&region_map] (unsigned _) { region_map.add(_); })
+    ;
+    if (region_map.in_error())
+      return_trace (false);
+
+    if (unlikely (!regions.serialize_serialize (c, &src_regions, region_map)))
+      return_trace (false);
+
+    dataSets.len = set_count;
+    if (unlikely (!c->extend (dataSets))) return_trace (false);
 
     /* TODO: The following code could be simplified when
-     * List16OfOffset16To::subset () can take a custom param to be passed to VarData::serialize ()
-     */
-    dataSets.len = set_count;
+     * List16OfOffset16To::subset () can take a custom param to be passed to VarData::serialize () */
     unsigned int set_index = 0;
     for (unsigned int i = 0; i < inner_maps.length; i++)
     {
-      if (inner_maps[i].get_population () == 0) continue;
-      if (unlikely (!dataSets[set_index++].serialize (c, this)
-		      .serialize (c, &(src+src->dataSets[i]), inner_maps[i], region_map)))
+      if (!inner_maps[i].get_population ()) continue;
+      if (unlikely (!dataSets[set_index++]
+		     .serialize_serialize (c, &(src+src->dataSets[i]), inner_maps[i], region_map)))
 	return_trace (false);
     }
 
@@ -2847,13 +2864,13 @@ struct VariationStore
         && varstore_prime->dataSets);
   }
 
-  unsigned int get_region_index_count (unsigned int ivs) const
-  { return (this+dataSets[ivs]).get_region_index_count (); }
+  unsigned int get_region_index_count (unsigned int major) const
+  { return (this+dataSets[major]).get_region_index_count (); }
 
-  void get_scalars (unsigned int ivs,
-		    const int *coords, unsigned int coord_count,
-		    float *scalars /*OUT*/,
-		    unsigned int num_scalars) const
+  void get_region_scalars (unsigned int major,
+			   const int *coords, unsigned int coord_count,
+			   float *scalars /*OUT*/,
+			   unsigned int num_scalars) const
   {
 #ifdef HB_NO_VAR
     for (unsigned i = 0; i < num_scalars; i++)
@@ -2861,8 +2878,9 @@ struct VariationStore
     return;
 #endif
 
-    (this+dataSets[ivs]).get_scalars (coords, coord_count, this+regions,
-				      &scalars[0], num_scalars);
+    (this+dataSets[major]).get_region_scalars (coords, coord_count,
+					       this+regions,
+					       &scalars[0], num_scalars);
   }
 
   unsigned int get_sub_table_count () const { return dataSets.len; }
@@ -2872,7 +2890,7 @@ struct VariationStore
   Offset32To<VarRegionList>		regions;
   Array16OfOffset32To<VarData>		dataSets;
   public:
-  DEFINE_SIZE_ARRAY (8, dataSets);
+  DEFINE_SIZE_ARRAY_SIZED (8, dataSets);
 };
 
 /*

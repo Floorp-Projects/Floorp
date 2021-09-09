@@ -122,7 +122,7 @@ struct hb_closure_context_t :
     hb_set_t *covered_glyph_set = done_lookups_glyph_set->get (lookup_index);
     if (unlikely (covered_glyph_set->in_error ()))
       return true;
-    if (parent_active_glyphs ()->is_subset (covered_glyph_set))
+    if (parent_active_glyphs ()->is_subset (*covered_glyph_set))
       return true;
 
     hb_set_union (covered_glyph_set, parent_active_glyphs ());
@@ -183,7 +183,7 @@ struct hb_closure_context_t :
 
   void flush ()
   {
-    hb_set_del_range (output, face->get_num_glyphs (), hb_set_get_max (output));	/* Remove invalid glyphs. */
+    hb_set_del_range (output, face->get_num_glyphs (), HB_SET_VALUE_INVALID);	/* Remove invalid glyphs. */
     hb_set_union (glyphs, output);
     hb_set_clear (output);
     active_glyphs_stack.pop ();
@@ -1898,8 +1898,7 @@ struct ContextFormat1
     | hb_sink (new_coverage)
     ;
 
-    out->coverage.serialize (c->serializer, out)
-		 .serialize (c->serializer, new_coverage.iter ());
+    out->coverage.serialize_serialize (c->serializer, new_coverage.iter ());
     return_trace (bool (new_coverage));
   }
 
@@ -2866,8 +2865,7 @@ struct ChainContextFormat1
     | hb_sink (new_coverage)
     ;
 
-    out->coverage.serialize (c->serializer, out)
-		 .serialize (c->serializer, new_coverage.iter ());
+    out->coverage.serialize_serialize (c->serializer, new_coverage.iter ());
     return_trace (bool (new_coverage));
   }
 
@@ -3721,8 +3719,9 @@ struct GSUBGPOS
     hb_set_t alternate_feature_indices;
     if (version.to_int () >= 0x00010001u)
       (this+featureVars).closure_features (lookup_indices, &alternate_feature_indices);
-    if (unlikely (alternate_feature_indices.in_error())) {
-      feature_indices->successful = false;
+    if (unlikely (alternate_feature_indices.in_error()))
+    {
+      feature_indices->err ();
       return;
     }
 #endif
@@ -3788,7 +3787,7 @@ struct GSUBGPOS
 
       this->lookup_count = table->get_lookup_count ();
 
-      this->accels = (hb_ot_layout_lookup_accelerator_t *) calloc (this->lookup_count, sizeof (hb_ot_layout_lookup_accelerator_t));
+      this->accels = (hb_ot_layout_lookup_accelerator_t *) hb_calloc (this->lookup_count, sizeof (hb_ot_layout_lookup_accelerator_t));
       if (unlikely (!this->accels))
       {
 	this->lookup_count = 0;
@@ -3804,7 +3803,7 @@ struct GSUBGPOS
     {
       for (unsigned int i = 0; i < this->lookup_count; i++)
 	this->accels[i].fini ();
-      free (this->accels);
+      hb_free (this->accels);
       this->table.destroy ();
     }
 
