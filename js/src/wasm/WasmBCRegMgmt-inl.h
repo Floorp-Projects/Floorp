@@ -69,14 +69,6 @@ void BaseCompiler::freeF64(RegF64 r) { ra.freeF64(r); }
 void BaseCompiler::freeV128(RegV128 r) { ra.freeV128(r); }
 #endif
 
-void BaseCompiler::free(RegI32 r) { freeI32(r); }
-void BaseCompiler::free(RegI64 r) { freeI64(r); }
-void BaseCompiler::free(RegF32 r) { freeF32(r); }
-void BaseCompiler::free(RegF64 r) { freeF64(r); }
-#ifdef ENABLE_WASM_SIMD
-void BaseCompiler::free(RegV128 r) { freeV128(r); }
-#endif
-
 void BaseCompiler::freeAny(AnyReg r) {
   switch (r.tag) {
     case AnyReg::I32:
@@ -102,6 +94,48 @@ void BaseCompiler::freeAny(AnyReg r) {
     default:
       MOZ_CRASH();
   }
+}
+
+template <>
+inline void BaseCompiler::free<RegI32>(RegI32 r) {
+  freeI32(r);
+}
+
+template <>
+inline void BaseCompiler::free<RegI64>(RegI64 r) {
+  freeI64(r);
+}
+
+template <>
+inline void BaseCompiler::free<RegRef>(RegRef r) {
+  freeRef(r);
+}
+
+template <>
+inline void BaseCompiler::free<RegPtr>(RegPtr r) {
+  freePtr(r);
+}
+
+template <>
+inline void BaseCompiler::free<RegF32>(RegF32 r) {
+  freeF32(r);
+}
+
+template <>
+inline void BaseCompiler::free<RegF64>(RegF64 r) {
+  freeF64(r);
+}
+
+#ifdef ENABLE_WASM_SIMD
+template <>
+inline void BaseCompiler::free<RegV128>(RegV128 r) {
+  freeV128(r);
+}
+#endif
+
+template <>
+inline void BaseCompiler::free<AnyReg>(AnyReg r) {
+  freeAny(r);
 }
 
 void BaseCompiler::freeI64Except(RegI64 r, RegI32 except) {

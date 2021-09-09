@@ -105,10 +105,47 @@ enum class UseABI { Wasm, Builtin, System };
 enum class InterModule { False = false, True = true };
 enum class RhsDestOp { True = true };
 
-// Misc config
+// Compiler configuration.
+//
+// The following internal configuration #defines are used.  The configuration is
+// partly below in this file, partly in WasmBCRegDefs.h.
+//
+// RABALDR_HAS_HEAPREG
+//   The platform has a dedicated HeapReg.
+//
+// RABALDR_CHUNKY_STACK
+//   The platform must allocate the CPU stack in chunks and not word-at-a-time
+//   due to SP alignment requirements (ARM64 for now).
+//
+// RABALDR_INT_DIV_I64_CALLOUT
+//   The platform calls out to the runtime to divide i64/u64.
+//
+// RABALDR_I64_TO_FLOAT_CALLOUT
+//   The platform calls out to the runtime for i64 -> fXX conversions.
+//
+// RABALDR_FLOAT_TO_I64_CALLOUT
+//   The platform calls out to the runtime for fXX -> i64 conversions.
+//
+// RABALDR_SCRATCH_<TypeName>
+//   The baseline compiler has its own scratch registers for the given type, it
+//   does not use the MacroAssembler's scratch.  This is really an anachronism -
+//   the baseline compiler should never use the MacroAssembler's scratches.
+//
+// RABALDR_SCRATCH_F32_ALIASES_F64
+//   On a platform where the baseline compiler has its own F32 and F64
+//   scratches, these are the same register.
+
+#ifdef JS_CODEGEN_X64
+#  define RABALDR_HAS_HEAPREG
+#endif
 
 #ifdef JS_CODEGEN_ARM64
 #  define RABALDR_CHUNKY_STACK
+#  define RABALDR_HAS_HEAPREG
+#endif
+
+#ifdef JS_CODEGEN_MIPS64
+#  define RABALDR_HAS_HEAPREG
 #endif
 
 #ifdef JS_CODEGEN_X86
@@ -116,9 +153,15 @@ enum class RhsDestOp { True = true };
 #endif
 
 #ifdef JS_CODEGEN_ARM
+#  define RABALDR_HAS_HEAPREG
 #  define RABALDR_INT_DIV_I64_CALLOUT
 #  define RABALDR_I64_TO_FLOAT_CALLOUT
 #  define RABALDR_FLOAT_TO_I64_CALLOUT
+#endif
+
+#ifdef JS_CODEGEN_NONE
+// Easier this way
+#  define RABALDR_HAS_HEAPREG
 #endif
 
 // Max number of pushes onto the value stack for any opcode or emitter that
