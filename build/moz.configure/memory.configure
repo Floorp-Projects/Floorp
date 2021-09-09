@@ -80,7 +80,7 @@ def phc_default(milestone, target, replace_malloc_default, replace_malloc):
     return (
         (target.os == "GNU" and target.kernel == "Linux" and target.bitness == 64)
         or (target.kernel == "WINNT" and target.bitness == 64)
-        or (target.os == "OSX")
+        or (target.os == "OSX" and target.cpu == "x86_64")
     )
 
 
