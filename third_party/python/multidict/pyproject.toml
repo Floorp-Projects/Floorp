@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools>=40", "wheel"]
+
+
+[tool.towncrier]
+package = "multidict"
+filename = "CHANGES.rst"
+directory = "CHANGES/"
+title_format = "{version} ({project_date})"
+template = "CHANGES/.TEMPLATE.rst"
+issue_format = "`#{issue} <https://github.com/aio-libs/multidict/issues/{issue}>`_"
