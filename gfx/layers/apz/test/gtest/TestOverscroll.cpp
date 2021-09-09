@@ -86,7 +86,7 @@ class APZCOverscrollTester : public APZCBasicTester {
     rootLayerScrollData.InitializeRoot(0);
     WebRenderScrollData scrollData;
     rootLayerScrollData.AppendScrollMetadata(scrollData, metadata);
-    scrollData.AddLayerData(rootLayerScrollData);
+    scrollData.AddLayerData(std::move(rootLayerScrollData));
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(guid.mLayersId, mcc);
     tm->UpdateHitTestingTree(WebRenderScrollDataWrapper(*updater, &scrollData),
