@@ -443,7 +443,7 @@ class BaseAboutNewTabService {
      * This is calculated in the same way the default URL is.
      */
 
-    NimbusFeatures.aboutwelcome.recordExposureEvent({ once: true });
+    NimbusFeatures.aboutwelcome.recordExposureEvent();
     if (NimbusFeatures.aboutwelcome.isEnabled({ defaultValue: true })) {
       return ABOUT_WELCOME_URL;
     }
