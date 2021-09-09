@@ -1039,10 +1039,21 @@ TEST(BaseProfiler, BlocksRingBuffer)
     } while (false)
 
 // Does the GETTER return a non-null TYPE? (Critical)
-// If yes, store the value into VARIABLE.
+// If yes, store the reference to Json::Value into VARIABLE.
 #  define GET_JSON(VARIABLE, GETTER, TYPE) \
     ASSERT_HAS_JSON(GETTER, TYPE);         \
-    const Json::Value& VARIABLE = (GETTER)
+    const Json::Value&(VARIABLE) = (GETTER)
+
+// Does the GETTER return a non-null TYPE? (Critical)
+// If yes, store the value as `const TYPE` into VARIABLE.
+#  define GET_JSON_VALUE(VARIABLE, GETTER, TYPE) \
+    ASSERT_HAS_JSON(GETTER, TYPE);               \
+    const auto(VARIABLE) = (GETTER).as##TYPE()
+
+// Non-const GET_JSON_VALUE.
+#  define GET_JSON_MUTABLE_VALUE(VARIABLE, GETTER, TYPE) \
+    ASSERT_HAS_JSON(GETTER, TYPE);                       \
+    auto(VARIABLE) = (GETTER).as##TYPE()
 
 // Checks that the GETTER's value is present, is of the expected TYPE, and has
 // the expected VALUE. (Non-critical)
@@ -1122,13 +1133,60 @@ static void JSONRootCheck(const Json::Value& aRoot,
     EXPECT_HAS_JSON(thread["processType"], String);
     EXPECT_HAS_JSON(thread["name"], String);
     EXPECT_HAS_JSON(thread["registerTime"], Double);
-    EXPECT_HAS_JSON(thread["samples"], Object);
+    GET_JSON(samples, thread["samples"], Object);
     EXPECT_HAS_JSON(thread["markers"], Object);
     EXPECT_HAS_JSON(thread["pid"], Int64);
     EXPECT_HAS_JSON(thread["tid"], Int64);
-    EXPECT_HAS_JSON(thread["stackTable"], Object);
-    EXPECT_HAS_JSON(thread["frameTable"], Object);
-    EXPECT_HAS_JSON(thread["stringTable"], Array);
+    GET_JSON(stackTable, thread["stackTable"], Object);
+    GET_JSON(frameTable, thread["frameTable"], Object);
+    GET_JSON(stringTable, thread["stringTable"], Array);
+
+    GET_JSON(stackTableSchema, stackTable["schema"], Object);
+    EXPECT_GE(stackTableSchema.size(), 2u);
+    GET_JSON_VALUE(stackTablePrefix, stackTableSchema["prefix"], UInt);
+    GET_JSON_VALUE(stackTableFrame, stackTableSchema["frame"], UInt);
+    GET_JSON(stackTableData, stackTable["data"], Array);
+
+    GET_JSON(frameTableSchema, frameTable["schema"], Object);
+    EXPECT_GE(frameTableSchema.size(), 1u);
+    GET_JSON_VALUE(frameTableLocation, frameTableSchema["location"], UInt);
+    GET_JSON(frameTableData, frameTable["data"], Array);
+
+    GET_JSON(samplesSchema, samples["schema"], Object);
+    GET_JSON_VALUE(sampleStackIndex, samplesSchema["stack"], UInt);
+    GET_JSON(samplesData, samples["data"], Array);
+    for (const Json::Value& sample : samplesData) {
+      ASSERT_TRUE(sample.isArray());
+      if (sample.isValidIndex(sampleStackIndex)) {
+        if (!sample[sampleStackIndex].isNull()) {
+          GET_JSON_MUTABLE_VALUE(stack, sample[sampleStackIndex], UInt);
+          EXPECT_TRUE(stackTableData.isValidIndex(stack));
+          for (;;) {
+            // `stack` (from the sample, or from the callee frame's "prefix" in
+            // the previous loop) points into the stackTable.
+            GET_JSON(stackTableEntry, stackTableData[stack], Array);
+            GET_JSON_VALUE(frame, stackTableEntry[stackTableFrame], UInt);
+
+            // The stackTable entry's "frame" points into the frameTable.
+            EXPECT_TRUE(frameTableData.isValidIndex(frame));
+            GET_JSON(frameTableEntry, frameTableData[frame], Array);
+            GET_JSON_VALUE(location, frameTableEntry[frameTableLocation], UInt);
+
+            // The frameTable entry's "location" points at a string.
+            EXPECT_TRUE(stringTable.isValidIndex(location));
+
+            // The stackTable entry's "prefix" is null for the root frame.
+            if (stackTableEntry[stackTablePrefix].isNull()) {
+              break;
+            }
+            // Otherwise it recursively points at the caller in the stackTable.
+            GET_JSON_VALUE(prefix, stackTableEntry[stackTablePrefix], UInt);
+            EXPECT_TRUE(stackTableData.isValidIndex(prefix));
+            stack = prefix;
+          }
+        }
+      }
+    }
   }
 
   if (aWithMainThread) {
