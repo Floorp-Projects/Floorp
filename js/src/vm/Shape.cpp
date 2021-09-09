@@ -22,7 +22,6 @@
 #include "vm/JSObject.h"
 #include "vm/ShapeZone.h"
 
-#include "vm/Caches-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

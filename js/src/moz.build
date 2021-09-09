@@ -385,7 +385,6 @@ UNIFIED_SOURCES += [
     "vm/BuiltinObjectKind.cpp",
     "vm/BytecodeLocation.cpp",
     "vm/BytecodeUtil.cpp",
-    "vm/Caches.cpp",
     "vm/CallAndConstruct.cpp",
     "vm/CallNonGenericMethod.cpp",
     "vm/CharacterEncoding.cpp",
