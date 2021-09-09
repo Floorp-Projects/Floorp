@@ -6682,12 +6682,6 @@
   value: false
   mirror: always
 
-# Whether we should layerize all animated images (if otherwise possible).
-- name: layout.animated-image-layers.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # One of several prefs affecting the maximum area to pre-render when animating
 # a large element on the compositor.
 # This pref enables transform (and transform like properties) animations on a
