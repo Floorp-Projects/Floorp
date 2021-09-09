@@ -13,6 +13,8 @@ const EXPORTED_SYMBOLS = ["FeatureManifest"];
 const FeatureManifest = {
   urlbar: {
     description: "The Address Bar",
+    exposureDescription:
+      "Exposure is sent once per browsing session after the first urlbar query is made.",
     variables: {
       merinoEnabled: {
         type: "boolean",
@@ -66,6 +68,8 @@ const FeatureManifest = {
   },
   aboutwelcome: {
     description: "The about:welcome page",
+    exposureDescription:
+      "Exposure is sent once per browsing session when the about:welcome URL is first accessed.",
     isEarlyStartup: true,
     variables: {
       enabled: {
@@ -93,6 +97,7 @@ const FeatureManifest = {
   },
   abouthomecache: {
     description: "The startup about:home cache.",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       enabled: {
@@ -104,6 +109,7 @@ const FeatureManifest = {
   },
   firefox100: {
     description: "Firefox User-Agent version",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       firefoxVersion: {
@@ -114,6 +120,8 @@ const FeatureManifest = {
   },
   newtab: {
     description: "The about:newtab page",
+    exposureDescription:
+      "Exposure is sent once per browsing session when the first newtab page loads (either about:newtab or about:home).",
     isEarlyStartup: true,
     variables: {
       customizationMenuEnabled: {
@@ -130,6 +138,7 @@ const FeatureManifest = {
   },
   pocketNewtab: {
     description: "The Pocket section in newtab",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       spocPositions: {
@@ -142,6 +151,7 @@ const FeatureManifest = {
   },
   "password-autocomplete": {
     description: "A special autocomplete UI for password fields.",
+    exposureDescription: false,
     variables: {
       directMigrateSingleProfile: {
         type: "boolean",
@@ -151,6 +161,7 @@ const FeatureManifest = {
   },
   shellService: {
     description: "Interface with OS, e.g., pinning and set default",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       disablePin: {
@@ -166,6 +177,7 @@ const FeatureManifest = {
   },
   upgradeDialog: {
     description: "The dialog shown for major upgrades",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       enabled: {
@@ -177,6 +189,8 @@ const FeatureManifest = {
   },
   privatebrowsing: {
     description: "about:privatebrowsing",
+    exposureDescription:
+      "Exposure is sent once per browsing session the first time the PB page loads",
     variables: {
       infoEnabled: {
         type: "boolean",
@@ -269,6 +283,7 @@ const FeatureManifest = {
   },
   readerMode: {
     description: "Firefox Reader Mode",
+    exposureDescription: false,
     isEarlyStartup: true,
     variables: {
       pocketCTAVersion: {

@@ -28,6 +28,8 @@ function setDefaultBranch(pref, value) {
 
 const TEST_FALLBACK_PREF = "testprefbranch.config";
 const FAKE_FEATURE_MANIFEST = {
+  description: "Test feature",
+  exposureDescription: "Used in tests",
   variables: {
     enabled: {
       type: "boolean",

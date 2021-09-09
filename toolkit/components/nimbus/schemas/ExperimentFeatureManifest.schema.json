@@ -9,6 +9,12 @@
         "description": {
           "type": "string"
         },
+        "exposureDescription": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "boolean"}
+          ]
+        },
         "isEarlyStartup": {
           "type": "boolean",
           "description": "If the feature values should be cached in prefs for fast early startup."
@@ -41,7 +47,7 @@
           }
         }
       },
-      "required": ["description"]
+      "required": ["description", "exposureDescription"]
     }
   }
 }
