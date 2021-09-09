@@ -5,6 +5,11 @@
 
 "use strict";
 
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 const errors = [
   Downloads.Error.BLOCK_VERDICT_MALWARE,
   Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
