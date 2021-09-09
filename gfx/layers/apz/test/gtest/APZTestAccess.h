@@ -25,6 +25,9 @@ class APZTestAccess {
  public:
   static void InitializeForTest(WebRenderLayerScrollData& aLayer,
                                 int32_t aDescendantCount);
+  static ScrollMetadata& GetScrollMetadataMut(WebRenderLayerScrollData& aLayer,
+                                              WebRenderScrollData& aOwner,
+                                              size_t aIndex);
 };
 
 }  // namespace layers
