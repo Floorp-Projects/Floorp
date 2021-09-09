@@ -49,7 +49,6 @@
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
-#include "vm/Caches-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/IsGivenTypeObject-inl.h"
