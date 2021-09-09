@@ -6263,16 +6263,6 @@
   value: false
   mirror: always
 
-- name: layers.acceleration.draw-fps.print-histogram
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.acceleration.draw-fps.write-to-file
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether to force acceleration on, ignoring blacklists.
 
 # bug 838603 -- on Android, accidentally blacklisting OpenGL layers
