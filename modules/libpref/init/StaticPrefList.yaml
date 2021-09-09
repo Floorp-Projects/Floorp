@@ -4969,11 +4969,6 @@
   value: 16
   mirror: once
 
-- name: gfx.logging.painted-pixel-count.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # The maximums here are quite conservative, we can tighten them if problems show up.
 - name: gfx.logging.texture-usage.enabled
   type: bool
