@@ -2220,6 +2220,40 @@ void nsWindow::WaylandPopupSetDirectPosition(GdkPoint* aPosition,
   }
 }
 
+bool nsWindow::WaylandPopupFitsParentWindow(GdkRectangle* aSize) {
+  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+  nsWindow* parentWindow =
+      get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow));
+
+  // Don't try to fiddle with popup position when our parent is also popup.
+  // Use layout setup in such case.
+  if (parentWindow->IsPopup()) {
+    return false;
+  }
+
+  // Use MozContainer to get visible area without decorations.
+  GdkWindow* parentGdkWindow =
+      gtk_widget_get_window(GTK_WIDGET(parentWindow->GetMozContainer()));
+
+  // x,y are offsets of mozcontainer, i.e. size of CSD decorations size.
+  int x, y;
+  gdk_window_get_position(parentGdkWindow, &x, &y);
+
+  // We use parent mozcontainer size plus left/top CSD decorations sizes as
+  // this coordinates are used by mBounds.
+  int parentWidth = gdk_window_get_width(parentGdkWindow) + x;
+  int parentHeight = gdk_window_get_width(parentGdkWindow) + y;
+  int popupWidth = aSize->width;
+  int popupHeight = aSize->height;
+
+  int scale = FractionalScaleFactor();
+  int popupX = mBounds.x / scale;
+  int popupY = mBounds.y / scale;
+
+  return popupX + popupWidth <= parentWidth &&
+         popupY + popupHeight <= parentHeight;
+}
+
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                                             GdkRectangle* aSize) {
   LOG_POPUP(("nsWindow::NativeMoveResizeWaylandPopup [%p] %d,%d -> %d x %d\n",
@@ -2239,16 +2273,25 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     return;
   }
 
+  LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
+  gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
+
+  if (mPopupPosition.x == aPosition->x && mPopupPosition.y == aPosition->y &&
+      WaylandPopupFitsParentWindow(aSize)) {
+    // Popup position has not been changed and its position/size fits
+    // parent window so no need to reposition the window.
+    LOG_POPUP(("  fits parent window size, just resize\n"));
+    return;
+  }
+
   // Mark popup as changed as we're updating position/size.
   mPopupChanged = true;
 
   // Save popup position for former re-calculations when popup hierarchy
   // is changed.
-  LOG_POPUP(("  saved popup position [%d, %d]\n", aPosition->x, aPosition->y));
+  LOG_POPUP(("  popup position changed from [%d, %d] to [%d, %d]\n",
+             mPopupPosition.x, mPopupPosition.y, aPosition->x, aPosition->y));
   mPopupPosition = *aPosition;
-
-  LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
-  gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
 
   UpdateWaylandPopupHierarchy();
 }
