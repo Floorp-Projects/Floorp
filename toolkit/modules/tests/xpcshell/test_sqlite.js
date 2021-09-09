@@ -11,6 +11,9 @@ const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -560,6 +563,51 @@ add_task(async function test_wrapped_connection_transaction() {
   // database.
   await wrapper.close();
   await c.asyncClose();
+});
+
+add_task(async function test_transaction_timeout() {
+  // Lower the transactions timeout for the test.
+  let defaultTimeout = Sqlite.TRANSACTIONS_TIMEOUT_MS;
+  Sqlite.TRANSACTIONS_TIMEOUT_MS = 500;
+  Services.telemetry.clearScalars();
+  let myResolve = () => {};
+  try {
+    let c = await getDummyDatabase("transaction_timeout");
+    Assert.ok(!c.transactionInProgress, "Should not be in a transaction");
+    let promise = c.executeTransaction(async function transaction(conn) {
+      // Make a change, we'll later check it is undone by ROLLBACK.
+      await conn.execute(
+        "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)"
+      );
+      Assert.ok(c.transactionInProgress, "Should be in a transaction");
+      // Return a never fulfilled promise.
+      await new Promise(resolve => {
+        // Keep this alive regardless GC, and clean it up in finally.
+        myResolve = resolve;
+      });
+    });
+
+    await Assert.rejects(
+      promise,
+      /Transaction timeout, most likely caused by unresolved pending work./,
+      "A transaction timeout should reject it"
+    );
+
+    let rows = await c.execute("SELECT * FROM dirs");
+    Assert.equal(rows.length, 0, "Changes should have been rolled back");
+    await c.close();
+
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "mozstorage.sqlitejsm_transaction_timeout",
+      "test_transaction_timeout@test_sqlite.js",
+      1
+    );
+  } finally {
+    Sqlite.TRANSACTIONS_TIMEOUT_MS = defaultTimeout;
+    myResolve();
+  }
 });
 
 add_task(async function test_shrink_memory() {

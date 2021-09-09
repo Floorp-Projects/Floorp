@@ -6,11 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Sqlite"];
 
-// The maximum time to wait before considering a transaction stuck and rejecting
-// it. (Note that the minimum amount of time we wait is 20% less than this, see
-// the `_getTimeoutPromise` method on `ConnectionData` for details).
-const TRANSACTIONS_QUEUE_TIMEOUT_MS = 300000; // 5 minutes
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -304,10 +299,10 @@ function ConnectionData(connection, identifier, options = {}) {
     })
   );
 
-  // We avoid creating a timer every transaction that exists solely as a safety
-  // check (e.g. one that never should fire) by reusing it if it's sufficiently
-  // close to when the previous promise was created (see bug 1442353 and
-  // `_getTimeoutPromise` for more info).
+  // We avoid creating a timer for every transaction, because in most cases they
+  // are not canceled and they are only used as a timeout.
+  // Instead the timer is reused when it's sufficiently close to the previous
+  // creation time (see `_getTimeoutPromise` for more info).
   this._timeoutPromise = null;
   // The last timestamp when we should consider using `this._timeoutPromise`.
   this._timeoutPromiseExpires = 0;
@@ -605,6 +600,14 @@ ConnectionData.prototype = Object.freeze({
   },
 
   executeTransaction(func, type) {
+    // Identify the caller for debugging purposes.
+    let caller = new Error().stack
+      .split("\n", 3)
+      .pop()
+      .match(/^([^@]+@).*\/([^\/:]+)[:0-9]*$/);
+    caller = caller[1] + caller[2];
+    this._log.debug(`Transaction (type ${type}) requested by: ${caller}`);
+
     if (type == OpenedConnection.prototype.TRANSACTION_DEFAULT) {
       type = this.defaultTransactionType;
     } else if (!OpenedConnection.TRANSACTION_TYPES.includes(type)) {
@@ -612,7 +615,11 @@ ConnectionData.prototype = Object.freeze({
     }
     this.ensureOpen();
 
-    this._log.debug("Beginning transaction");
+    // If a transaction yields on a never resolved promise, or is mistakenly
+    // nested, it could hang the transactions queue forever.  Thus we timeout
+    // the execution after a meaningful amount of time, to ensure in any case
+    // we'll proceed after a while.
+    let timeoutPromise = this._getTimeoutPromise();
 
     let promise = this._transactionQueue.then(() => {
       if (this._closeRequested) {
@@ -631,6 +638,7 @@ ConnectionData.prototype = Object.freeze({
           // We catch errors in statement execution to detect nested transactions.
           try {
             await this.execute("BEGIN " + type + " TRANSACTION");
+            this._log.debug(`Begin transaction`);
             this._initiatedTransaction = true;
           } catch (ex) {
             // Unfortunately, if we are wrapping an existing connection, a
@@ -654,7 +662,7 @@ ConnectionData.prototype = Object.freeze({
 
           let result;
           try {
-            result = await func();
+            result = await Promise.race([func(), timeoutPromise]);
           } catch (ex) {
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.
@@ -664,11 +672,31 @@ ConnectionData.prototype = Object.freeze({
                 ex
               );
             } else {
-              this._log.error("Error during transaction. Rolling back", ex);
+              // Otherwise the function didn't resolve before the timeout, or
+              // generated an unexpected error. Then we rollback.
+              if (ex.becauseTimedOut) {
+                let caller_module = caller.split(":", 1)[0];
+                Services.telemetry.keyedScalarAdd(
+                  "mozstorage.sqlitejsm_transaction_timeout",
+                  caller_module,
+                  1
+                );
+                this._log.error(
+                  `The transaction requested by ${caller} timed out. Rolling back`,
+                  ex
+                );
+              } else {
+                this._log.error(
+                  `Error during transaction requested by ${caller}. Rolling back`,
+                  ex
+                );
+              }
               // If we began a transaction, we must rollback it.
               if (this._initiatedTransaction) {
                 try {
                   await this.execute("ROLLBACK TRANSACTION");
+                  this._initiatedTransaction = false;
+                  this._log.debug(`Roll back transaction`);
                 } catch (inner) {
                   this._log.error("Could not roll back transaction", inner);
                 }
@@ -692,6 +720,7 @@ ConnectionData.prototype = Object.freeze({
           if (this._initiatedTransaction) {
             try {
               await this.execute("COMMIT TRANSACTION");
+              this._log.debug(`Commit transaction`);
             } catch (ex) {
               this._log.warn("Error committing transaction", ex);
               throw ex;
@@ -704,11 +733,6 @@ ConnectionData.prototype = Object.freeze({
         }
       })();
 
-      // If a transaction yields on a never resolved promise, or is mistakenly
-      // nested, it could hang the transactions queue forever.  Thus we timeout
-      // the execution after a meaningful amount of time, to ensure in any case
-      // we'll proceed after a while.
-      let timeoutPromise = this._getTimeoutPromise();
       return Promise.race([transactionPromise, timeoutPromise]);
     });
     // Atomically update the queue before anyone else has a chance to enqueue
@@ -947,10 +971,12 @@ ConnectionData.prototype = Object.freeze({
     );
   },
 
-  // Returns a promise that will resolve after a time comprised between 80% of
-  // `TRANSACTIONS_QUEUE_TIMEOUT_MS` and `TRANSACTIONS_QUEUE_TIMEOUT_MS`. Use
-  // this promise instead of creating several individual timers to reduce the
-  // overhead due to timers (see bug 1442353).
+  /**
+   * Returns a promise that will resolve after a time comprised between 80% of
+   * `TRANSACTIONS_TIMEOUT_MS` and `TRANSACTIONS_TIMEOUT_MS`. Use
+   * this method instead of creating several individual timers that may survive
+   * longer than necessary.
+   */
   _getTimeoutPromise() {
     if (this._timeoutPromise && Cu.now() <= this._timeoutPromiseExpires) {
       return this._timeoutPromise;
@@ -961,16 +987,16 @@ ConnectionData.prototype = Object.freeze({
         if (this._timeoutPromise == timeoutPromise) {
           this._timeoutPromise = null;
         }
-        reject(
-          new Error(
-            "Transaction timeout, most likely caused by unresolved pending work."
-          )
+        let e = new Error(
+          "Transaction timeout, most likely caused by unresolved pending work."
         );
-      }, TRANSACTIONS_QUEUE_TIMEOUT_MS);
+        e.becauseTimedOut = true;
+        reject(e);
+      }, Sqlite.TRANSACTIONS_TIMEOUT_MS);
     });
     this._timeoutPromise = timeoutPromise;
     this._timeoutPromiseExpires =
-      Cu.now() + TRANSACTIONS_QUEUE_TIMEOUT_MS * 0.2;
+      Cu.now() + Sqlite.TRANSACTIONS_TIMEOUT_MS * 0.2;
     return this._timeoutPromise;
   },
 });
@@ -1693,6 +1719,10 @@ OpenedConnection.prototype = Object.freeze({
 });
 
 var Sqlite = {
+  // The maximum time to wait before considering a transaction stuck and
+  // issuing a ROLLBACK, see `executeTransaction`. Could be modified by tests.
+  TRANSACTIONS_TIMEOUT_MS: 300000, // 5 minutes
+
   openConnection,
   cloneStorageConnection,
   wrapStorageConnection,
