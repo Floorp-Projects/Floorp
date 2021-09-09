@@ -538,6 +538,7 @@ void JITFrameInfo::AddInfoForRange(
 
 struct ProfileSample {
   uint32_t mStack = 0;
+  bool mStackIsEmpty = false;
   double mTime = 0.0;
   Maybe<double> mResponsiveness;
   RunningTimes mRunningTimes;
@@ -1010,14 +1011,18 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
           }
         }
 
-        if (numFrames == 0 && aRunningTimes.IsEmpty()) {
+        // Even if this stack is considered empty, it contains the root frame,
+        // which needs to be in the JSON output because following "same samples"
+        // may refer to it when reusing this sample.mStack.
+        sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
+        sample.mStackIsEmpty = (numFrames == 0);
+
+        if (sample.mStackIsEmpty && aRunningTimes.IsEmpty()) {
           // It is possible to have empty stacks if native stackwalking is
           // disabled. Skip samples with empty stacks, unless we have useful
           // running times.
           return;
         }
-
-        sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
 
         if (unresponsiveDuration.isSome()) {
           sample.mResponsiveness = unresponsiveDuration;
@@ -1107,6 +1112,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
         }
 
         // Keep the same `mStack` as previously output.
+        // Note that it may be empty, this is checked below before writing it.
         (void)sample.mStack;
 
         sample.mTime = e.Get().GetDouble();
@@ -1138,6 +1144,11 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
           }
 
           if (kind == ProfileBufferEntry::Kind::SameSample) {
+            if (sample.mStackIsEmpty && sample.mRunningTimes.IsEmpty()) {
+              // Skip samples with empty stacks, unless we have useful running
+              // times.
+              break;
+            }
             WriteSample(aWriter, sample);
             break;
           }
