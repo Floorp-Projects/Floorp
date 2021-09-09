@@ -9416,7 +9416,7 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
       } else {
         NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
       }
-      (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+      (*aResult)->SetCustomElementData(MakeUnique<CustomElementData>(typeAtom));
       if (synchronousCustomElements) {
         CustomElementRegistry::Upgrade(*aResult, definition, rv);
         if (rv.MaybeSetPendingException(cx)) {
@@ -9455,7 +9455,8 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
     } else {
       NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
     }
-    (*aResult)->SetCustomElementData(new CustomElementData(definition->mType));
+    (*aResult)->SetCustomElementData(
+        MakeUnique<CustomElementData>(definition->mType));
     nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
     return NS_OK;
   }
@@ -9478,7 +9479,7 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
   }
 
   if (isCustomElement) {
-    (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+    (*aResult)->SetCustomElementData(MakeUnique<CustomElementData>(typeAtom));
     nsContentUtils::RegisterCallbackUpgradeElement(*aResult, typeAtom);
   }
 
