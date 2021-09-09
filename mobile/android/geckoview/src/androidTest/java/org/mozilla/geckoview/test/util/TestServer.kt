@@ -5,6 +5,7 @@ import android.content.res.AssetManager
 import android.os.SystemClock
 import android.webkit.MimeTypeMap
 import com.koushikdutta.async.ByteBufferList
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody
 import com.koushikdutta.async.http.server.AsyncHttpServer
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse
@@ -37,7 +38,7 @@ class TestServer {
             obj.put("headers", headers)
 
             if (request.method == "POST") {
-                obj.put("data", request.body.get() as String)
+                obj.put("data", request.getBody())
             }
 
             response.send(obj)
