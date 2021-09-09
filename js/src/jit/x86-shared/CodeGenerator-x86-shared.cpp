@@ -3043,65 +3043,65 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   SimdConstant control = ins->control();
   switch (ins->op()) {
-    case LWasmShuffleSimd128::BLEND_8x16: {
+    case SimdShuffleOp::BLEND_8x16: {
       masm.blendInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
                         lhsDest, rhs, lhsDest, ToFloatRegister(ins->temp()));
       break;
     }
-    case LWasmShuffleSimd128::BLEND_16x8: {
+    case SimdShuffleOp::BLEND_16x8: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.blendInt16x8(reinterpret_cast<const uint16_t*>(control.asInt16x8()),
                         lhsDest, rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::CONCAT_RIGHT_SHIFT_8x16: {
+    case SimdShuffleOp::CONCAT_RIGHT_SHIFT_8x16: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       int8_t count = 16 - control.asInt8x16()[0];
       MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
       masm.concatAndRightShiftSimd128(rhs, lhsDest, count);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_HIGH_8x16: {
+    case SimdShuffleOp::INTERLEAVE_HIGH_8x16: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveHighInt8x16(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_HIGH_16x8: {
+    case SimdShuffleOp::INTERLEAVE_HIGH_16x8: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveHighInt16x8(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_HIGH_32x4: {
+    case SimdShuffleOp::INTERLEAVE_HIGH_32x4: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveHighInt32x4(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_HIGH_64x2: {
+    case SimdShuffleOp::INTERLEAVE_HIGH_64x2: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveHighInt64x2(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_LOW_8x16: {
+    case SimdShuffleOp::INTERLEAVE_LOW_8x16: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt8x16(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_LOW_16x8: {
+    case SimdShuffleOp::INTERLEAVE_LOW_16x8: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt16x8(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_LOW_32x4: {
+    case SimdShuffleOp::INTERLEAVE_LOW_32x4: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt32x4(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::INTERLEAVE_LOW_64x2: {
+    case SimdShuffleOp::INTERLEAVE_LOW_64x2: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.interleaveLowInt64x2(rhs, lhsDest);
       break;
     }
-    case LWasmShuffleSimd128::SHUFFLE_BLEND_8x16: {
+    case SimdShuffleOp::SHUFFLE_BLEND_8x16: {
       masm.shuffleInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
                           rhs, lhsDest);
       break;
@@ -3204,7 +3204,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
   SimdConstant control = ins->control();
   switch (ins->op()) {
     // For broadcast, would MOVDDUP be better than PSHUFD for the last step?
-    case LWasmPermuteSimd128::BROADCAST_8x16: {
+    case SimdPermuteOp::BROADCAST_8x16: {
       const SimdConstant::I8x16& mask = control.asInt8x16();
       int8_t source = mask[0];
       if (src != dest) {
@@ -3229,7 +3229,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       }
       break;
     }
-    case LWasmPermuteSimd128::BROADCAST_16x8: {
+    case SimdPermuteOp::BROADCAST_16x8: {
       const SimdConstant::I16x8& mask = control.asInt16x8();
       int16_t source = mask[0];
       uint16_t v = uint16_t(source & 3);
@@ -3245,11 +3245,11 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       }
       break;
     }
-    case LWasmPermuteSimd128::MOVE: {
+    case SimdPermuteOp::MOVE: {
       masm.moveSimd128(src, dest);
       break;
     }
-    case LWasmPermuteSimd128::PERMUTE_8x16: {
+    case SimdPermuteOp::PERMUTE_8x16: {
       const SimdConstant::I8x16& mask = control.asInt8x16();
 #  ifdef DEBUG
       DebugOnly<int> i;
@@ -3260,7 +3260,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       masm.permuteInt8x16(reinterpret_cast<const uint8_t*>(mask), src, dest);
       break;
     }
-    case LWasmPermuteSimd128::PERMUTE_16x8: {
+    case SimdPermuteOp::PERMUTE_16x8: {
 #  ifdef DEBUG
       const SimdConstant::I16x8& mask = control.asInt16x8();
       DebugOnly<int> i;
@@ -3297,7 +3297,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       }
       break;
     }
-    case LWasmPermuteSimd128::PERMUTE_32x4: {
+    case SimdPermuteOp::PERMUTE_32x4: {
       const SimdConstant::I32x4& mask = control.asInt32x4();
 #  ifdef DEBUG
       DebugOnly<int> i;
@@ -3308,7 +3308,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       masm.permuteInt32x4(reinterpret_cast<const uint32_t*>(mask), src, dest);
       break;
     }
-    case LWasmPermuteSimd128::ROTATE_RIGHT_8x16: {
+    case SimdPermuteOp::ROTATE_RIGHT_8x16: {
       if (src != dest) {
         masm.moveSimd128(src, dest);
       }
@@ -3317,13 +3317,13 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       masm.concatAndRightShiftSimd128(dest, dest, count);
       break;
     }
-    case LWasmPermuteSimd128::SHIFT_LEFT_8x16: {
+    case SimdPermuteOp::SHIFT_LEFT_8x16: {
       int8_t count = control.asInt8x16()[0];
       MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
       masm.leftShiftSimd128(Imm32(count), src, dest);
       break;
     }
-    case LWasmPermuteSimd128::SHIFT_RIGHT_8x16: {
+    case SimdPermuteOp::SHIFT_RIGHT_8x16: {
       int8_t count = control.asInt8x16()[0];
       MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
       masm.rightShiftSimd128(Imm32(count), src, dest);

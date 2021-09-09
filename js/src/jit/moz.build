@@ -78,6 +78,7 @@ UNIFIED_SOURCES += [
     "shared/CodeGenerator-shared.cpp",
     "shared/Disassembler-shared.cpp",
     "shared/Lowering-shared.cpp",
+    "ShuffleAnalysis.cpp",
     "Sink.cpp",
     "Snapshots.cpp",
     "TrialInlining.cpp",

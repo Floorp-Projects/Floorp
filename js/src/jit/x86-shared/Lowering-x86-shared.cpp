@@ -1227,13 +1227,10 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
   MOZ_ASSERT(ins->rhs()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
-  Shuffle s = AnalyzeShuffle(ins);
-#  ifdef DEBUG
-  ReportShuffleSpecialization(s);
-#  endif
+  SimdShuffle s = ins->shuffle();
   switch (s.opd) {
-    case Shuffle::Operand::LEFT:
-    case Shuffle::Operand::RIGHT: {
+    case SimdShuffle::Operand::LEFT:
+    case SimdShuffle::Operand::RIGHT: {
       LAllocation src;
       // All permute operators currently favor reusing the input register so
       // we're not currently exercising code paths below that do not reuse.
@@ -1241,21 +1238,21 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       // to be correct.
       bool useAtStartAndReuse = false;
       switch (*s.permuteOp) {
-        case LWasmPermuteSimd128::MOVE:
-        case LWasmPermuteSimd128::BROADCAST_8x16:
-        case LWasmPermuteSimd128::BROADCAST_16x8:
-        case LWasmPermuteSimd128::PERMUTE_8x16:
-        case LWasmPermuteSimd128::PERMUTE_16x8:
-        case LWasmPermuteSimd128::PERMUTE_32x4:
-        case LWasmPermuteSimd128::ROTATE_RIGHT_8x16:
-        case LWasmPermuteSimd128::SHIFT_LEFT_8x16:
-        case LWasmPermuteSimd128::SHIFT_RIGHT_8x16:
+        case SimdPermuteOp::MOVE:
+        case SimdPermuteOp::BROADCAST_8x16:
+        case SimdPermuteOp::BROADCAST_16x8:
+        case SimdPermuteOp::PERMUTE_8x16:
+        case SimdPermuteOp::PERMUTE_16x8:
+        case SimdPermuteOp::PERMUTE_32x4:
+        case SimdPermuteOp::ROTATE_RIGHT_8x16:
+        case SimdPermuteOp::SHIFT_LEFT_8x16:
+        case SimdPermuteOp::SHIFT_RIGHT_8x16:
           useAtStartAndReuse = true;
           break;
         default:
           MOZ_CRASH("Unexpected operator");
       }
-      if (s.opd == Shuffle::Operand::LEFT) {
+      if (s.opd == SimdShuffle::Operand::LEFT) {
         if (useAtStartAndReuse) {
           src = useRegisterAtStart(ins->lhs());
         } else {
@@ -1277,11 +1274,11 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       }
       break;
     }
-    case Shuffle::Operand::BOTH:
-    case Shuffle::Operand::BOTH_SWAPPED: {
+    case SimdShuffle::Operand::BOTH:
+    case SimdShuffle::Operand::BOTH_SWAPPED: {
       LDefinition temp = LDefinition::BogusTemp();
       switch (*s.shuffleOp) {
-        case LWasmShuffleSimd128::BLEND_8x16:
+        case SimdShuffleOp::BLEND_8x16:
           temp = tempFixed(xmm0);
           break;
         default:
@@ -1289,7 +1286,7 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       }
       LAllocation lhs;
       LAllocation rhs;
-      if (s.opd == Shuffle::Operand::BOTH) {
+      if (s.opd == SimdShuffle::Operand::BOTH) {
         lhs = useRegisterAtStart(ins->lhs());
         rhs = useRegister(ins->rhs());
       } else {

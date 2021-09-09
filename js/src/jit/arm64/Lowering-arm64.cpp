@@ -1120,29 +1120,26 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
   MOZ_ASSERT(ins->rhs()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
-  Shuffle s = AnalyzeShuffle(ins);
-#  ifdef DEBUG
-  ReportShuffleSpecialization(s);
-#  endif
+  SimdShuffle s = ins->shuffle();
   switch (s.opd) {
-    case Shuffle::Operand::LEFT:
-    case Shuffle::Operand::RIGHT: {
+    case SimdShuffle::Operand::LEFT:
+    case SimdShuffle::Operand::RIGHT: {
       LAllocation src;
       switch (*s.permuteOp) {
-        case LWasmPermuteSimd128::MOVE:
-        case LWasmPermuteSimd128::BROADCAST_8x16:
-        case LWasmPermuteSimd128::BROADCAST_16x8:
-        case LWasmPermuteSimd128::PERMUTE_8x16:
-        case LWasmPermuteSimd128::PERMUTE_16x8:
-        case LWasmPermuteSimd128::PERMUTE_32x4:
-        case LWasmPermuteSimd128::ROTATE_RIGHT_8x16:
-        case LWasmPermuteSimd128::SHIFT_LEFT_8x16:
-        case LWasmPermuteSimd128::SHIFT_RIGHT_8x16:
+        case SimdPermuteOp::MOVE:
+        case SimdPermuteOp::BROADCAST_8x16:
+        case SimdPermuteOp::BROADCAST_16x8:
+        case SimdPermuteOp::PERMUTE_8x16:
+        case SimdPermuteOp::PERMUTE_16x8:
+        case SimdPermuteOp::PERMUTE_32x4:
+        case SimdPermuteOp::ROTATE_RIGHT_8x16:
+        case SimdPermuteOp::SHIFT_LEFT_8x16:
+        case SimdPermuteOp::SHIFT_RIGHT_8x16:
           break;
         default:
           MOZ_CRASH("Unexpected operator");
       }
-      if (s.opd == Shuffle::Operand::LEFT) {
+      if (s.opd == SimdShuffle::Operand::LEFT) {
         src = useRegisterAtStart(ins->lhs());
       } else {
         src = useRegisterAtStart(ins->rhs());
@@ -1152,12 +1149,12 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       define(lir, ins);
       break;
     }
-    case Shuffle::Operand::BOTH:
-    case Shuffle::Operand::BOTH_SWAPPED: {
+    case SimdShuffle::Operand::BOTH:
+    case SimdShuffle::Operand::BOTH_SWAPPED: {
       LDefinition temp = LDefinition::BogusTemp();
       LAllocation lhs;
       LAllocation rhs;
-      if (s.opd == Shuffle::Operand::BOTH) {
+      if (s.opd == SimdShuffle::Operand::BOTH) {
         lhs = useRegisterAtStart(ins->lhs());
         rhs = useRegisterAtStart(ins->rhs());
       } else {

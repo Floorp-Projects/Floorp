@@ -4554,8 +4554,9 @@ MDefinition* MWasmTernarySimd128::foldsTo(TempAllocator& alloc) {
       v2()->op() == MDefinition::Opcode::WasmFloatConstant) {
     int8_t shuffle[16];
     if (specializeBitselectConstantMaskAsShuffle(shuffle)) {
-      return MWasmShuffleSimd128::New(alloc, v0(), v1(),
-                                      SimdConstant::CreateX16(shuffle));
+      SimdShuffle s =
+          AnalyzeSimdShuffle(SimdConstant::CreateX16(shuffle), v0(), v1());
+      return MWasmShuffleSimd128::New(alloc, v0(), v1(), s);
     }
   }
   return this;
@@ -4581,8 +4582,9 @@ MDefinition* MWasmBinarySimd128::foldsTo(TempAllocator& alloc) {
       return nullptr;
     }
     block()->insertBefore(this, zero);
-    return MWasmShuffleSimd128::New(alloc, lhs(), zero,
-                                    SimdConstant::CreateX16(shuffleMask));
+    SimdShuffle s =
+        AnalyzeSimdShuffle(SimdConstant::CreateX16(shuffleMask), lhs(), zero);
+    return MWasmShuffleSimd128::New(alloc, lhs(), zero, s);
   }
 
   // Specialize var OP const / const OP var when possible.
@@ -6081,7 +6083,8 @@ bool MWasmShiftSimd128::congruentTo(const MDefinition* ins) const {
 }
 
 bool MWasmShuffleSimd128::congruentTo(const MDefinition* ins) const {
-  return ins->toWasmShuffleSimd128()->control().bitwiseEqual(control_) &&
+  return ins->toWasmShuffleSimd128()->shuffle().control.bitwiseEqual(
+             shuffle_.control) &&
          congruentIfOperandsEqual(ins);
 }
 
