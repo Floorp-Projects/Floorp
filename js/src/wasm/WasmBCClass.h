@@ -24,7 +24,6 @@
 
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCFrame.h"
-#include "wasm/WasmBCMemory.h"
 #include "wasm/WasmBCRegDefs.h"
 #include "wasm/WasmBCStk.h"
 
@@ -1073,25 +1072,6 @@ struct BaseCompiler final {
   // This may destroy ptr and src.
   [[nodiscard]] bool store(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr, AnyReg src, RegI32 temp);
-
-  template <typename T>
-  void atomicRMW32(const MemoryAccessDesc& access, T srcAddr, AtomicOp op,
-                   RegI32 rv, RegI32 rd, const AtomicRMW32Temps& temps);
-
-  // On x86, V is Address.  On other platforms, it is Register64.
-  // T is BaseIndex or Address.
-  template <typename T, typename V>
-  void atomicRMW64(const MemoryAccessDesc& access, const T& srcAddr,
-                   AtomicOp op, V value, Register64 temp, Register64 rd);
-
-  template <typename T>
-  void atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr,
-                       RegI32 rexpect, RegI32 rnew, RegI32 rd,
-                       const AtomicCmpXchg32Temps& temps);
-
-  template <typename T>
-  void atomicXchg32(const MemoryAccessDesc& access, T srcAddr, RegI32 rv,
-                    RegI32 rd, const AtomicXchg32Temps& temps);
 
   bool atomicCmpXchg(MemoryAccessDesc* access, ValType type);
   bool atomicLoad(MemoryAccessDesc* access, ValType type);
