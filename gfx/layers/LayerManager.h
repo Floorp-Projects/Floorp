@@ -58,7 +58,6 @@ namespace layers {
 class AsyncPanZoomController;
 class ClientLayerManager;
 class Layer;
-class LayerMetricsWrapper;
 class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
@@ -271,20 +270,6 @@ class LayerManager : public WindowRenderer {
    * Can be called anytime
    */
   Layer* GetRoot() { return mRoot; }
-
-  /**
-   * Does a breadth-first search from the root layer to find the first
-   * scrollable layer, and returns its ViewID. Note that there may be
-   * other layers in the tree which share the same ViewID.
-   * Can be called any time.
-   */
-  ScrollableLayerGuid::ViewID GetRootScrollableLayerId();
-
-  /**
-   * Returns a LayerMetricsWrapper containing the Root
-   * Content Documents layer.
-   */
-  LayerMetricsWrapper GetRootContentLayer();
 
   /**
    * CONSTRUCTION PHASE ONLY
