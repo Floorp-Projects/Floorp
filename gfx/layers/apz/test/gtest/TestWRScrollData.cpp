@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TestWRScrollData.h"
+#include "APZTestAccess.h"
 #include "gtest/gtest.h"
 #include "FrameMetrics.h"
 #include "gfxPlatform.h"
@@ -57,7 +58,7 @@ TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
     LayerEntry entry = pendingLayers.top();
 
     WebRenderLayerScrollData layer;
-    layer.InitializeForTest(entry.mDescendantCount);
+    APZTestAccess::InitializeForTest(layer, entry.mDescendantCount);
     if (aVisibleRegions) {
       layer.SetVisibleRegion(LayerIntRegion::FromUnknownRegion(
           aVisibleRegions[entry.mLayerIndex]));

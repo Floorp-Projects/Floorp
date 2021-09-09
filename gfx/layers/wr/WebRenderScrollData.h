@@ -32,6 +32,7 @@ struct ActiveScrolledRoot;
 
 namespace layers {
 
+class APZTestAccess;
 class Layer;
 class WebRenderLayerManager;
 class WebRenderScrollData;
@@ -172,11 +173,14 @@ class WebRenderLayerScrollData final {
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
  private:
+  // For test use only
+  friend class APZTestAccess;
+
   // For use by GTests in building WebRenderLayerScrollData trees.
   // GTests don't have a display list so they can't use Initialize().
-  friend class TestWRScrollData;
   void InitializeForTest(int32_t aDescendantCount);
 
+ private:
   // The number of descendants this layer has (not including the layer itself).
   // This is needed to reconstruct the depth-first layer tree traversal
   // efficiently. Leaf layers should always have 0 descendants.
