@@ -733,7 +733,7 @@ static int check_clock(u32 clock_id) {
 
 // out is a pointer to a u64 timestamp in nanoseconds
 // https://github.com/WebAssembly/WASI/blob/main/phases/snapshot/docs.md#-timestamp-u64
-u32 Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 precision, u32 out) {
+u32 Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 precision, u32 out) {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
