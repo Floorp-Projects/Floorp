@@ -18,6 +18,7 @@
 #include "WebrtcVideoCodecFactory.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
+#include "transport/mediapacket.h"
 
 // libwebrtc includes
 #include "api/video/video_frame_buffer.h"
@@ -47,36 +48,6 @@ class WebrtcCallWrapper;
 using RtpExtList = std::vector<webrtc::RtpExtension>;
 using Ssrc = uint32_t;
 using Ssrcs = std::vector<uint32_t>;
-
-/**
- * Abstract Interface for transporting RTP packets - audio/vidoeo
- * The consumers of this interface are responsible for passing in
- * the RTPfied media packets
- */
-class TransportInterface {
- protected:
-  virtual ~TransportInterface() {}
-
- public:
-  /**
-   * RTP Transport Function to be implemented by concrete transport
-   * implementation
-   * @param data : RTP Packet (audio/video) to be transported
-   * @param len  : Length of the media packet
-   * @result     : NS_OK on success, NS_ERROR_FAILURE otherwise
-   */
-  virtual nsresult SendRtpPacket(const uint8_t* data, size_t len) = 0;
-
-  /**
-   * RTCP Transport Function to be implemented by concrete transport
-   * implementation
-   * @param data : RTCP Packet to be transported
-   * @param len  : Length of the RTCP packet
-   * @result     : NS_OK on success, NS_ERROR_FAILURE otherwise
-   */
-  virtual nsresult SendRtcpPacket(const uint8_t* data, size_t len) = 0;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TransportInterface)
-};
 
 /**
  * 1. Abstract renderer for video data
@@ -120,7 +91,8 @@ class VideoRenderer {
 /**
  * Generic Interface for representing Audio/Video Session
  * MediaSession conduit is identified by 2 main components
- * 1. Attached Transport Interface for inbound and outbound RTP transport
+ * 1. Attached Transport Interface (through events) for inbound and outbound RTP
+ *    transport
  * 2. Attached Renderer Interface for rendering media data off the network
  * This class hides specifics of Media-Engine implementation from the consumers
  * of this interface.
@@ -142,54 +114,27 @@ class MediaSessionConduit {
 
   virtual Type type() const = 0;
 
-  /**
-   * Function triggered on Incoming RTP packet from the remote
-   * endpoint by the transport implementation.
-   * @param data : RTP Packet (audio/video) to be processed
-   * @param len  : Length of the media packet
-   * Obtained packets are passed to the Media-Engine for further
-   * processing , say, decoding
-   */
-  virtual void ReceivedRTPPacket(const uint8_t* data, int len,
-                                 webrtc::RTPHeader& header) = 0;
+  // Whether transport is currently sending and receiving packets
+  virtual void SetTransportActive(bool aActive) = 0;
 
-  /**
-   * Function triggered on Incoming RTCP packet from the remote
-   * endpoint by the transport implementation.
-   * @param data : RTCP Packet (audio/video) to be processed
-   * @param len  : Length of the media packet
-   * Obtained packets are passed to the Media-Engine for further
-   * processing , say, decoding
-   */
-  virtual void ReceivedRTCPPacket(const uint8_t* data, int len) = 0;
+  // Sending packets
+  virtual MediaEventSourceExc<MediaPacket>& SenderRtpSendEvent() = 0;
+  virtual MediaEventSourceExc<MediaPacket>& SenderRtcpSendEvent() = 0;
+  virtual MediaEventSourceExc<MediaPacket>& ReceiverRtcpSendEvent() = 0;
+
+  // Receiving packets...
+  // from an rtp-receiving pipeline
+  virtual void ConnectReceiverRtpEvent(
+      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) = 0;
+  // from an rtp-receiving pipeline
+  virtual void ConnectReceiverRtcpEvent(
+      MediaEventSourceExc<MediaPacket>& aEvent) = 0;
+  // from an rtp-transmitting pipeline
+  virtual void ConnectSenderRtcpEvent(
+      MediaEventSourceExc<MediaPacket>& aEvent) = 0;
 
   virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
   virtual DOMHighResTimeStamp GetNow() const = 0;
-
-  /**
-   * Function to attach transmitter transport end-point of the Media conduit.
-   * @param aTransport: Reference to the concrete teansport implementation
-   * When nullptr, unsets the transmitter transport endpoint.
-   * Note: Multiple invocations of this call , replaces existing transport with
-   * with the new one.
-   * Note: This transport is used for RTP, and RTCP if no receiver transport is
-   * set. In the future, we should ensure that RTCP sender reports use this
-   * regardless of whether the receiver transport is set.
-   */
-  virtual MediaConduitErrorCode SetTransmitterTransport(
-      RefPtr<TransportInterface> aTransport) = 0;
-
-  /**
-   * Function to attach receiver transport end-point of the Media conduit.
-   * @param aTransport: Reference to the concrete teansport implementation
-   * When nullptr, unsets the receiver transport endpoint.
-   * Note: Multiple invocations of this call , replaces existing transport with
-   * with the new one.
-   * Note: This transport is used for RTCP.
-   * Note: In the future, we should avoid using this for RTCP sender reports.
-   */
-  virtual MediaConduitErrorCode SetReceiverTransport(
-      RefPtr<TransportInterface> aTransport) = 0;
 
   virtual Ssrcs GetLocalSSRCs() const = 0;
 
@@ -200,6 +145,11 @@ class MediaSessionConduit {
 
   virtual MediaEventSource<void>& RtcpByeEvent() = 0;
   virtual MediaEventSource<void>& RtcpTimeoutEvent() = 0;
+
+  virtual bool SendRtp(const uint8_t* aData, size_t aLength,
+                       const webrtc::PacketOptions& aOptions) = 0;
+  virtual bool SendSenderRtcp(const uint8_t* aData, size_t aLength) = 0;
+  virtual bool SendReceiverRtcp(const uint8_t* aData, size_t aLength) = 0;
 
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
                              PacketType type) = 0;
@@ -271,6 +221,38 @@ class MediaSessionConduit {
   // throughout a main thread task, even though we don't follow the spec to the
   // letter (dispatch a task to update the sources).
   mutable bool mSourcesUpdateNeeded = true;
+};
+
+class WebrtcSendTransport : public webrtc::Transport {
+  // WeakRef to the owning conduit
+  MediaSessionConduit* mConduit;
+
+ public:
+  explicit WebrtcSendTransport(MediaSessionConduit* aConduit)
+      : mConduit(aConduit) {}
+  bool SendRtp(const uint8_t* aPacket, size_t aLength,
+               const webrtc::PacketOptions& aOptions) override {
+    return mConduit->SendRtp(aPacket, aLength, aOptions);
+  }
+  bool SendRtcp(const uint8_t* aPacket, size_t aLength) override {
+    return mConduit->SendSenderRtcp(aPacket, aLength);
+  }
+};
+
+class WebrtcReceiveTransport : public webrtc::Transport {
+  // WeakRef to the owning conduit
+  MediaSessionConduit* mConduit;
+
+ public:
+  explicit WebrtcReceiveTransport(MediaSessionConduit* aConduit)
+      : mConduit(aConduit) {}
+  bool SendRtp(const uint8_t* aPacket, size_t aLength,
+               const webrtc::PacketOptions& aOptions) override {
+    MOZ_CRASH("Unexpected RTP packet");
+  }
+  bool SendRtcp(const uint8_t* aPacket, size_t aLength) override {
+    return mConduit->SendReceiverRtcp(aPacket, aLength);
+  }
 };
 
 // Abstract base classes for external encoder/decoder.
