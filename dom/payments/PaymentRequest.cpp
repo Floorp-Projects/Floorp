@@ -610,10 +610,17 @@ already_AddRefed<PaymentRequest> PaymentRequest::Constructor(
     return nullptr;
   }
 
-  // Get the top level principal
-  RefPtr<Document> topLevelDoc = doc->GetTopLevelContentDocumentIfSameProcess();
-  MOZ_ASSERT(topLevelDoc);
-  nsCOMPtr<nsIPrincipal> topLevelPrincipal = topLevelDoc->NodePrincipal();
+  // Get the top same process document
+  nsCOMPtr<Document> topSameProcessDoc = doc;
+  topSameProcessDoc = doc;
+  while (topSameProcessDoc) {
+    nsCOMPtr<Document> parent = topSameProcessDoc->GetInProcessParentDocument();
+    if (!parent || !parent->IsContentDocument()) {
+      break;
+    }
+    topSameProcessDoc = parent;
+  }
+  nsCOMPtr<nsIPrincipal> topLevelPrincipal = topSameProcessDoc->NodePrincipal();
 
   // Check payment methods and details
   IsValidMethodData(aGlobal.Context(), aMethodData, aRv);
