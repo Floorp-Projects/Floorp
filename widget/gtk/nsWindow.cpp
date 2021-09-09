@@ -2162,6 +2162,64 @@ static GdkGravity PopupGetHorizontallyFlippedAnchor(GdkGravity anchor) {
   return anchor;
 }
 
+// Position the popup directly by gtk_window_move() and try to keep it
+// on screen by just moving it in scope of it's parent window.
+//
+// It's used when we position noautihode popup and we don't use xdg_positioner.
+// See Bug 1718867
+void nsWindow::WaylandPopupSetDirectPosition(GdkPoint* aPosition,
+                                             GdkRectangle* aSize) {
+  LOG_POPUP(("nsWindow::WaylandPopupSetDirectPosition [%p] %d,%d -> %d x %d\n",
+             (void*)this, aPosition->x, aPosition->y, aSize->width,
+             aSize->height));
+
+  mPopupPosition = *aPosition;
+
+  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+  nsWindow* window = get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow));
+  GdkWindow* gdkWindow =
+      gtk_widget_get_window(GTK_WIDGET(window->GetMozContainer()));
+
+  int parentWidth = gdk_window_get_width(gdkWindow);
+  int popupWidth = aSize->width;
+
+  int x;
+  gdk_window_get_position(gdkWindow, &x, nullptr);
+
+  // If popup is bigger than main window just center it.
+  if (popupWidth > parentWidth) {
+    mPopupPosition.x = -(parentWidth - popupWidth) / 2 + x;
+  } else {
+    nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+    if (popupFrame->IsDirectionRTL()) {
+      // Stick with right window edge
+      if (mPopupPosition.x < x) {
+        mPopupPosition.x = x;
+      }
+    } else {
+      // Stick with left window edge
+      if (mPopupPosition.x + popupWidth > parentWidth + x) {
+        mPopupPosition.x = parentWidth + x - popupWidth;
+      }
+    }
+  }
+
+  LOG_POPUP(("  set position [%d, %d]\n", mPopupPosition.x, mPopupPosition.y));
+  gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
+
+  LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
+  gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
+
+  if (mPopupPosition.x != aPosition->x) {
+    mBounds.x = mPopupPosition.x * FractionalScaleFactor();
+    mBounds.y = mPopupPosition.y * FractionalScaleFactor();
+    LOG_POPUP(("  setting new bounds [%d, %d]\n", mBounds.x, mBounds.y));
+    NotifyWindowMoved(mBounds.x, mBounds.y);
+    nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+    popupFrame->MoveTo(CSSIntPoint(mPopupPosition.x, mPopupPosition.y), true);
+  }
+}
+
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                                             GdkRectangle* aSize) {
   LOG_POPUP(("nsWindow::NativeMoveResizeWaylandPopup [%p] %d,%d -> %d x %d\n",
@@ -2176,6 +2234,11 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     return;
   }
 
+  if (!WaylandPopupNeedsTrackInHierarchy()) {
+    WaylandPopupSetDirectPosition(aPosition, aSize);
+    return;
+  }
+
   // Mark popup as changed as we're updating position/size.
   mPopupChanged = true;
 
@@ -2183,17 +2246,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   // is changed.
   LOG_POPUP(("  saved popup position [%d, %d]\n", aPosition->x, aPosition->y));
   mPopupPosition = *aPosition;
-  if (aSize) {
-    LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
-    gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
-  }
 
-  if (!WaylandPopupNeedsTrackInHierarchy()) {
-    LOG_POPUP(("  not tracked, move popup to [%d, %d]\n", aPosition->x,
-               aPosition->y));
-    gtk_window_move(GTK_WINDOW(mShell), aPosition->x, aPosition->y);
-    return;
-  }
+  LOG_POPUP(("  set size [%d, %d]\n", aSize->width, aSize->height));
+  gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
 
   UpdateWaylandPopupHierarchy();
 }
