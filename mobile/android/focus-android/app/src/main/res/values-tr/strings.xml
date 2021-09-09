@@ -721,7 +721,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Güvendiğiniz bir siteye gelişmiş izlenme korumasını kapatmak mı istiyorsunuz?\n
+    <string name="tip_explain_allowlist3">Güvendiğiniz bir sitede gelişmiş izlenme korumasını kapatmak mı istiyorsunuz?\n
         Ayarlardan o siteyi izinli listenize ekleyebilirsiniz
     </string>
 

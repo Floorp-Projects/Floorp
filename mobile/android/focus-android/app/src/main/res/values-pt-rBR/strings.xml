@@ -19,13 +19,13 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
-    <string name="feedback_erase2">Histórico de navegação foi limpo</string>
+    <string name="feedback_erase2">O histórico de navegação foi limpo</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">O histórico de navegação da aba foi apagado.</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
-    <string name="search_hint">Procurar %1$s</string>
+    <string name="search_hint">Pesquisar %@</string>
 
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">Compartilhar…</string>
@@ -174,7 +174,7 @@
     <string name="preference_show_search_suggestions">Receber sugestões de pesquisa</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">O %1$s enviará para o mecanismo de pesquisa o que você escrever na barra de endereços</string>
+    <string name="preference_show_search_suggestions_summary">O %1$s envia o que você escreve na barra de endereços para seu mecanismo de pesquisa.</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Padrão</string>
@@ -295,7 +295,7 @@
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Sua impressão digital pode desbloquear o %1$s se uma URL já estiver aberta no aplicativo. O modo invisível será ativado.</string>
+    <string name="preference_security_biometric_summary">Sua impressão digital pode desbloquear o %1$s se uma URL já estiver aberta no aplicativo. O modo invisível é ativado.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -391,7 +391,7 @@
 
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
      history and go back to the home screen. -->
-    <string name="content_description_erase">Apagar o histórico de navegação</string>
+    <string name="content_description_erase">Apagar histórico de navegação</string>
 
     <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
      This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
@@ -510,7 +510,7 @@
 
     <string name="firstrun_close_button">Ok, entendi</string>
     <string name="firstrun_skip_button">Pular</string>
-    <string name="firstrun_next_button">Próximo</string>
+    <string name="firstrun_next_button">Avançar</string>
 
     <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
     <string name="content_blocking_disabled">-</string>
@@ -727,7 +727,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Sim, temos um novo visual! Leia mais sobre esta e outras novidades no %1$s.</string>
+    <string name="tip_fresh_look">Sim, temos um novo visual!\n Leia mais sobre esta e outras novidades no %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
@@ -783,7 +783,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tracking protection bottom sheet -->
 
     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
-    <string name="trackers_count_note">Rastreadores bloqueados desde %s</string>
+    <string name="trackers_count_note">Bloqueados desde %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Conteúdo</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->

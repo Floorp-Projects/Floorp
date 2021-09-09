@@ -212,6 +212,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Vaš seznam za samodokončanje:</string>
+
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Dodaj spletni naslov</string>
 
@@ -284,6 +287,8 @@
     <string name="preference_privacy_should_block_cookies_no_option2">Ne, hvala</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Zavračaj samo sledilne piškotke tretjih strani</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Zavračaj samo piškotke tretjih strani</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Da!</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Uporabljaj prstni odtis za odklepanje aplikacije</string>
@@ -496,7 +501,7 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Dodajte bližnjice na domač zaslon</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">Hitro se vrnite na svoje priljubljene strani v %1$su. Preprosto izberite \&quot;Dodaj na domač zaslon\&quot; v %1$sovem meniju.</string>
+    <string name="firstrun_shortcut_text">Hitro se vrnite na svoje priljubljene strani v %1$su. Preprosto izberite \&quot;Dodaj na domač zaslon\&quot; v meniju %1$s.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Naj zasebnost postane navada</string>
@@ -521,6 +526,10 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NE</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Bližnjica se bo odprla z onemogočeno izboljšano zaščito pred sledenjem</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -680,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Ali stran deluje nepravilno?\n Poskusite izklopiti zaščito pred sledenjem</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Ali na strani manjka vsebina ali se čudno obnaša?\n
+    Poskusite izklopiti izboljšano zaščito pred sledenjem</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Nastavite si hiter dostop do priljubljenih strani%1$s Meni > Dodaj na domači zaslon]]></string>
@@ -697,8 +711,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Si želite ogledati polno različico strani?\n
+        Preklopite na stran za namizja v meniju %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Izključi namige na začetnem zaslonu</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Želite obdržati zaščito pred sledenjem izključeno za spletno mesto, ki mu zaupate?\n
+        Dodajte ga na seznam dovoljenih v nastavitvah
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Da, imamo nov svež videz!\n Preberite več o tej in drugih posodobitvah brskalnika %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Ustvarite si bližnjice do strani, ki jih največkrat obiščete:\n
+    V meniju %1$s izberite Dodaj med bližnjice</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Odprt nov zavihek</string>
@@ -725,6 +759,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Odstrani vse spletne strani</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Zavračaj piškotke</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Ali želite zavračati piškotke?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Zavihek se je sesul</string>
     <!-- Headline for the tab crash report screen -->
@@ -742,6 +782,8 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Zavrnjeni sledilci od %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Vsebina</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
@@ -760,6 +802,9 @@
     <string name="secure_connection">Povezava je varna</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">Povezava ni varna</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Sledilci in skripte za zavračanje</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Nazaj</string>

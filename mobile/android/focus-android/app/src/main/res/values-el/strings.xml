@@ -18,12 +18,12 @@
     <string name="teaser">Αυτόματη ιδιωτική περιήγηση.\nΠεριήγηση. Διαγραφή. Επανάληψη.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">Το ιστορικό περιήγησης έχει απαλειφθεί.</string>
+    <string name="feedback_erase">Το ιστορικό περιήγησης έχει διαγραφτεί.</string>
 
     <string name="feedback_erase2">Το ιστορικό περιήγησης απαλείφθηκε</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
-    <string name="feedback_erase_custom_tab">Το ιστορικό της καρτέλας έχει απαλειφθεί.</string>
+    <string name="feedback_erase_custom_tab">Το ιστορικό της καρτέλας έχει διαγραφτεί.</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">Αναζήτηση για «%1$s»</string>
@@ -49,9 +49,9 @@
     <string name="menu_add_to_home_screen">Προσθήκη στην αρχική οθόνη</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
-    <string name="menu_add_to_shortcuts">Προσθήκη στις συντομεύσεις</string>
+    <string name="menu_add_to_shortcuts">Προσθήκη συντόμευσης</string>
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
-    <string name="menu_remove_from_shortcuts">Αφαίρεση από συντομεύσεις</string>
+    <string name="menu_remove_from_shortcuts">Αφαίρεση συντόμευσης</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Τι νέο υπάρχει</string>
@@ -117,7 +117,7 @@
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters.
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="shortcut_erase_and_open_long_label">Διαγραφή και άνοιγμα του %1$s</string>
+    <string name="shortcut_erase_and_open_long_label">Διαγραφή και άνοιγμα %1$s</string>
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
@@ -131,7 +131,7 @@
   <ul>
     <li>Αναζήτηση και περιήγηση</li>
     <li>Φραγή ιχνηλατών (ή αποδοχή, ενημερώνοντας τις ρυθμίσεις)</li>
-    <li>Διαγραφή των cookie και του ιστορικού αναζητήσεων και περιήγησης</li>
+    <li>Διαγραφή των cookies και του ιστορικού αναζητήσεων και περιήγησης</li>
   </ul>
 </p>
 <p>Το %1$s αναπτύσσεται από τη Mozilla. Αποστολή μας είναι ένα υγιές και ανοικτό διαδίκτυο.<br/>
@@ -141,7 +141,7 @@
     <string name="preference_privacy_and_security_header">Απόρρητο &amp; ασφάλεια</string>
 
     <!-- Preference summary for settings related to privacy and security -->
-    <string name="preference_privacy_and_security_summary">Επιλογές καταγραφής, cookie, δεδομένων</string>
+    <string name="preference_privacy_and_security_summary">Επιλογές καταγραφής, cookies, δεδομένων</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
@@ -230,7 +230,7 @@
     <string name="add_custom_autocomplete_label">Προσθήκη συνδέσμου για αυτόματη συμπλήρωση</string>
 
     <!-- Preference category for settings about cookies and site data -->
-    <string name="preference_category_cookies">Cookie και δεδομένα ιστοτόπων</string>
+    <string name="preference_category_cookies">Cookies και δεδομένα ιστοτόπων</string>
 
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">Επιλογές δεδομένων</string>
@@ -278,17 +278,17 @@
     <string name="preference_privacy_block_ads_summary">Ορισμένες διαφημίσεις καταγράφουν επισκέψεις σε ιστοτόπους, ακόμη κι αν δεν τις πατήσετε</string>
     <string name="preference_privacy_block_analytics">Φραγή ιχνηλατών ανάλυσης</string>
     <string name="preference_privacy_block_analytics_summary">Χρησιμοποιούνται για τη συλλογή, την ανάλυση και τη μέτρηση δραστηριοτήτων, όπως πατήματα και κυλίσεις</string>
-    <string name="preference_privacy_block_social">Φραγή κοινωνικών ιχνηλατών</string>
+    <string name="preference_privacy_block_social">Φραγή ιχνηλατών κοινωνικών δικτύων</string>
     <string name="preference_privacy_block_social_summary">Ενσωματώνονται σε ιστοτόπους για την καταγραφή των επισκέψεών σας και την εμφάνιση λειτουργιών, όπως κουμπιά κοινοποίησης</string>
     <string name="preference_privacy_block_content">Φραγή ιχνηλατών άλλου περιεχομένου</string>
     <string name="preference_privacy_block_content_summary2">Η ενεργοποίηση ενδέχεται να προκαλέσει την απρόσμενη συμπεριφορά ορισμένων σελίδων</string>
-    <string name="preference_privacy_category_cookies">Φραγή cookie</string>
+    <string name="preference_privacy_category_cookies">Φραγή cookies</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Όχι, ευχαριστώ</string>
-    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Φραγή μόνο cookie καταγραφής τρίτων</string>
-    <string name="preference_privacy_should_block_cookies_third_party_only_option">Φραγή μόνο cookie τρίτων</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Φραγή μόνο cookies καταγραφής τρίτων</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Φραγή μόνο cookies τρίτων</string>
 
     <string name="preference_privacy_should_block_cookies_yes_option2">Ναι, παρακαλώ</string>
 
@@ -639,7 +639,7 @@
     <string name="preference_category_advanced">Για προχωρημένους</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
-    <string name="preference_remote_debugging">Απομακρυσμένη αποσφαλμάτωση μέσω USB/Wi-Fi</string>
+    <string name="preference_remote_debugging">Απομακρυσμένος έλεγχος σφαλμάτων μέσω USB/Wi-Fi</string>
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
@@ -737,12 +737,12 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Πράγματι, διαθέτουμε μια νέα εμφάνιση! Διαβάστε περισσότερα νέα σχετικά με το %1$s.</string>
+    <string name="tip_fresh_look">Πράγματι, διαθέτουμε μια νέα εμφάνιση!\n Διαβάστε περισσότερα νέα σχετικά με το %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
     <string name="tip_about_shortcuts">Δημιουργία συντομεύσεων για συχνούς ιστοτόπους:\n
-    Επιλέξτε «Προσθήκη στις συντομεύσεις» από το μενού του %1$s</string>
+    Επιλέξτε «Προσθήκη συντόμευσης» από το μενού του %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Άνοιξε νέα καρτέλα</string>
@@ -772,10 +772,10 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_exceptions_remove_all_button_label">Αφαίρεση όλων των ιστοτόπων</string>
 
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
-    <string name="preference_block_cookies_title">Φραγή cookie</string>
+    <string name="preference_block_cookies_title">Φραγή cookies</string>
 
     <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
-    <string name="preference_category_block_cookies">Θέλετε να αποκλείσετε τα cookie;</string>
+    <string name="preference_category_block_cookies">Θέλετε να αποκλείσετε τα cookies;</string>
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Η καρτέλα κατέρρευσε</string>

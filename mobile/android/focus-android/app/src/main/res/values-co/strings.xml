@@ -124,14 +124,14 @@
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
-    <string name="about_content"><![CDATA[<p>%1$s vi aiuta à stà à e cumande.</p>¶
-<p>Impiegatelu cum’è un navigatore privatu :¶
- · <ul>¶
- · <li>Fate ricerche è navigate da l’appiecazione</li>¶
- · <li>Bluccate i perseguitatori (o mudificà e preferenze per auturizalli)</li>¶
- · <li>Squassà i canistrelli è ancu e crunulogie di navigazione è di ricerca</li>¶
- · </ul>¶
-</p>¶
+    <string name="about_content"><![CDATA[<p>%1$s vi aiuta à stà à e cumande.</p>
+<p>Impiegatelu cum’è un navigatore privatu :
+· <ul>
+· <li>Fate ricerche è navigate da l’appiecazione</li>
+· <li>Bluccate i perseguitatori (o mudificà e preferenze per auturizalli)</li>
+· <li>Squassà i canistrelli è ancu e crunulogie di navigazione è di ricerca</li>
+· </ul>
+</p>
 <p>%1$s hè sviluppatu da Mozilla. A nostra missione hè d’incuragisce un Internet apertu è in bella saluta.<br/>¶
 <a href="%2$s">Per sapene di più</a></p>]]></string>
 
@@ -732,7 +732,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Hè vera, avemu un aspettu tuttu novu ! Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
+    <string name="tip_fresh_look">Hè vera, avemu un aspettu tuttu novu !\n Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->

@@ -665,7 +665,7 @@
     <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title2">Vis søkeforslag?</string>
+    <string name="enable_search_suggestion_title2">Vise søkeforslag?</string>
 
     <!-- Description for the prompt to enable search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->

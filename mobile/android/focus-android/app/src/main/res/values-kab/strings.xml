@@ -151,8 +151,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Ɣef %1$s, tallelt</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Ammesten mgal adfaṛ</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Ammesten mgal aḍfaṛ yettwaseǧhed</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Agbur Web</string>
@@ -529,9 +529,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">UHU</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Anegzum ad d-yeldi s usensi n ummesten mgal aḍfaṛ</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Anegzum-a ad d-yeldi s ummesten yettuḥettmen mgal aḍfaṛ</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -563,7 +563,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s yella ddaw tewtilin n <a href="%2$s">Turagt tazayazt n Mozilla</a>akked turagin-nniḍen n uɣbalu yeldin.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Ur ak·am-yettmuddu ula d yiwen uzref neɣ  turagt ɣef tecṛaḍ n yisebtar n tkebbanit n Mozilla neɣ n wis kraḍ, rnu ɣer-s ula d ismawen neɣ iluguten n Mozilla, Firefox neɣ ismawen %1$s. ugar n talɣut ad tettwaf deg <a href="%2$s">dagi</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Tangalt taɣbalut-nniḍen i %1$s tella deg waṭas n <a href="%2$s">turagin</a> tiyaḍ yemgaraden d tilelliyin yerna n uɣbalu yeldin.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s isseqdac daɣen tibdarin n usewḥel i d-yettwamudden sɣur Disconnect, Inc. am leqdic illeli ddaw <a href="%2$s">Turagt tazayazt tamatut GNU v3</a>, yernza tella <a href="%3$s">dagi</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Isem n useqdac</string>
     <string name="gv_prompt_password_hint">Awal uffir</string>
     <string name="gv_prompt_clear">Sfeḍ</string>
@@ -648,6 +669,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Sen isumar n unadi?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Akken ad tawiḍ isumar n unadi, %1$s isra ad yazen ayen tettaruḍ deg ufeggag n tansa ɣer umsedday n unadi.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ala</string>
 
@@ -665,6 +690,11 @@
     <!-- Tip displayed on home view explaining how to disable tracking protection
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Tigawin ur nettwerǧu sɣur usmel?\n Ɛṛeḍ ad tsenseḍ ammesten n usfuɣel</string>
+
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Asmel-a ixuṣṣ-it ugbur neɣ ur iteddu ara akken ilaq?\n
+    Ɛreḍ sens Ammesten mgal aḍfar yettwasǧehden</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -693,9 +723,18 @@
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Tebɣiḍ ad teǧǧeḍ ammesten mgal aḍfar yensa i usmel iɣef tettekleḍ\n
+    <string name="tip_explain_allowlist3">Tebɣiḍ ad tsenseḍ Ammesten mgal aḍfar i usmel iɣef tettekleḍ\n
         Rnu-t ɣer Tebdart n Usireg deg Yiɣewwaren
-    </string>
+   </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Ayɣer ihɣur-neɣ udem amaynut n melmi kan!\n Ɣeṛ ugar ɣef waya akked yileqman-nniḍen n %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Rnu inegzumen ɣer yismal wuɣur trezzuḍ s waṭas:\n
+    Fren Rnu ɣer inegzumen seg wumuɣ %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Iccer amaynut yeldi</string>
@@ -775,4 +814,7 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kkes</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Tugniwin yettwaskelsen akked yettwabḍan &lt;b&gt;ur ttwakkasent ara&lt;/b&gt; mi ara ad tekkseḍ %1$s azray.</string>
+</resources>

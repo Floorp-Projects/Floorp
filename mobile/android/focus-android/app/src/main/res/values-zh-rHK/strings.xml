@@ -12,8 +12,14 @@
 
     <string name="action_save">儲存</string>
 
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">搜尋或者輸入地址</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">你嘅瀏覽歷史已被刪除。</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">報告網站問題</string>
 
     <string name="menu_settings">設定</string>
     <string name="menu_rights">你嘅權利</string>

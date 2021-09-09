@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
 
+    <string name="feedback_erase2">Se borró el historial de navegación</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Se ha borrado el historial de navegación de la pestaña.</string>
 
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Añadir a pantalla de inicio</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Añadir a accesos directos</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Eliminar de los accesos directos</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Novedades</string>
@@ -115,6 +122,19 @@
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Búsqueda privada</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s te da el control.</p>
+<p>Úsalo como navegador privado:
+  <ul>
+    <li>Busca y navega en la propia aplicación</li>
+    <li>Bloquea a los rastreadores (o cambia los ajustes para permitirlos)</li>
+    <li>Limpia para borrar cookies y los historiales de búsqueda y navegación</li>
+  </ul>
+</p>
+<p>%1$s es producido por Mozilla. Nuestra misión es promover un Internet saludable y abierto.<br/>
+<a href="%2$s">Descubre más</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacidad y seguridad</string>
@@ -192,6 +212,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Tu lista de autocompletado:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Añadir URL</string>
@@ -537,8 +560,24 @@
 
   <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s está disponible para ti bajo los términos de la <a href="%2$s">Licencia Pública de Mozilla</a> y otras licencias de código abierto.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
     <string name="your_rights_content3"><![CDATA[No se le ha concedido ningún derecho de marca o licencia sobre las marcas comerciales de la fundación Mozilla o de cualquier parte, incluyendo los logos o nombres de Mozilla, Firefox o %1$s. Puede encontrar información adicional <a href="%2$s">aquí</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[El código fuente adicional para %1$s está disponible bajo otras <a href="%2$s">licencias</a> libres y de código abierto.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s también utiliza listas de bloqueo provistas por Disconnect, Inc. como trabajos separados e independientes bajo la<a href="%2$s">GNU General Public License v3</a>, y se encuentra disponible <a href="%3$s">aquí</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Nombre de usuario</string>
@@ -625,6 +664,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">¿Mostrar sugerencias de búsqueda?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Para recibir sugerencias, %1$s necesita enviar lo que escribas en la barra de direcciones al buscador.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">No</string>
 
@@ -676,6 +719,15 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tip_explain_allowlist3">¿Quieres mantener desactivada la Protección mejorada contra el rastreo para un sitio en el que confía?\n
         Agréguelo a la lista de permitidos en Configuración
     </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">¡Por qué sí, tenemos apariencia nueva!\n Leer más sobre esta y otras actualizaciones a %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Crea accesos directos a los sitios que más visitas:\n
+    Selecciona Añadir a accesos directos desde el menú %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nueva pestaña abierta</string>
@@ -755,4 +807,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eliminar</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Las imágenes guardadas y compartidas &lt;b&gt;no serán&lt;/b&gt; eliminadas cuando borres el historial de %1$s</string>
+</resources>

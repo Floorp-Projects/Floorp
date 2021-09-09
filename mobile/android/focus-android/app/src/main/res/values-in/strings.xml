@@ -137,8 +137,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Tentang %1$s, bantuan</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Perlindungan Pelacakan</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Perlindungan Pelacakan Dipertingkat</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Konten Web</string>
@@ -488,10 +488,6 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Batal</string>
-
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Pintasan akan terbuka dengan Perlindungan Pelacakan dinonaktifkan</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
