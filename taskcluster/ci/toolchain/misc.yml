@@ -24,19 +24,6 @@ linux64-infer:
             - 'build/build-infer/infer-linux64.json'
         toolchain-artifact: public/build/infer.tar.zst
 
-linux64-llvm-dsymutil:
-    description: "llvm-dsymutil toolchain build"
-    treeherder:
-        symbol: TL(dsymutil)
-    run:
-        script: build-llvm-dsymutil.sh
-        toolchain-artifact: public/build/llvm-dsymutil.tar.zst
-    fetches:
-        fetch:
-            - clang-11
-        toolchain:
-            - linux64-gcc-7
-
 linux64-binutils-2.31.1:
     description: "Binutils toolchain build"
     treeherder:

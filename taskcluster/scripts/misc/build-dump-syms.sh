@@ -29,7 +29,7 @@ case "$(uname -s)" in
 Linux)
     case "$TARGET" in
     *-apple-darwin)
-        export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
+        export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
         export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
         export CC="$MOZ_FETCHES_DIR/clang/bin/clang"

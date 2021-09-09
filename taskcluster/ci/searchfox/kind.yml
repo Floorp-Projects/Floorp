@@ -91,7 +91,6 @@ jobs:
                 - linux64-clang-macosx-cross
                 - linux64-hfsplus
                 - linux64-libdmg
-                - linux64-llvm-dsymutil
                 - linux64-nasm
                 - linux64-node
                 - linux64-rust-macos
