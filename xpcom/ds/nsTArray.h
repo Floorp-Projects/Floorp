@@ -376,9 +376,6 @@ extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
 extern "C" void Gecko_ClearPODTArray(void* aArray, size_t aElementSize,
                                      size_t aElementAlign);
 
-MOZ_NORETURN MOZ_COLD void InvalidArrayIndex_CRASH(size_t aIndex,
-                                                   size_t aLength);
-
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the
@@ -1197,7 +1194,7 @@ class nsTArray_Impl
   // @return A reference to the i'th element of the array.
   [[nodiscard]] elem_type& ElementAt(index_type aIndex) {
     if (MOZ_UNLIKELY(aIndex >= Length())) {
-      InvalidArrayIndex_CRASH(aIndex, Length());
+      mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
     }
     return Elements()[aIndex];
   }
@@ -1208,7 +1205,7 @@ class nsTArray_Impl
   // @return A const reference to the i'th element of the array.
   [[nodiscard]] const elem_type& ElementAt(index_type aIndex) const {
     if (MOZ_UNLIKELY(aIndex >= Length())) {
-      InvalidArrayIndex_CRASH(aIndex, Length());
+      mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
     }
     return Elements()[aIndex];
   }
@@ -1871,7 +1868,7 @@ class nsTArray_Impl
     MOZ_ASSERT(!base_type::IsEmpty());
     const size_type oldLen = Length();
     if (MOZ_UNLIKELY(0 == oldLen)) {
-      InvalidArrayIndex_CRASH(1, 0);
+      mozilla::detail::InvalidArrayIndex_CRASH(1, 0);
     }
     elem_type elem = std::move(Elements()[oldLen - 1]);
     TruncateLengthUnsafe(oldLen - 1);
@@ -2248,7 +2245,7 @@ class nsTArray_Impl
     MOZ_ASSERT(aNewLen <= Length(), "caller should use SetLength instead");
 
     if (MOZ_UNLIKELY(aNewLen > Length())) {
-      InvalidArrayIndex_CRASH(aNewLen, Length());
+      mozilla::detail::InvalidArrayIndex_CRASH(aNewLen, Length());
     }
 
     TruncateLengthUnsafe(aNewLen);
@@ -2459,7 +2456,7 @@ auto nsTArray_Impl<E, Alloc>::ReplaceElementsAtInternal(index_type aStart,
                                                         size_type aArrayLen)
     -> elem_type* {
   if (MOZ_UNLIKELY(aStart > Length())) {
-    InvalidArrayIndex_CRASH(aStart, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aStart, Length());
   }
 
   // Adjust memory allocation up-front to catch errors.
@@ -2483,7 +2480,7 @@ void nsTArray_Impl<E, Alloc>::RemoveElementsAt(index_type aStart,
   rangeEnd += aCount;
 
   if (MOZ_UNLIKELY(!rangeEnd.isValid() || rangeEnd.value() > Length())) {
-    InvalidArrayIndex_CRASH(aStart, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aStart, Length());
   }
 
   RemoveElementsAtUnsafe(aStart, aCount);
@@ -2506,7 +2503,7 @@ void nsTArray_Impl<E, Alloc>::UnorderedRemoveElementsAt(index_type aStart,
   rangeEnd += aCount;
 
   if (MOZ_UNLIKELY(!rangeEnd.isValid() || rangeEnd.value() > Length())) {
-    InvalidArrayIndex_CRASH(aStart, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aStart, Length());
   }
 
   // Destroy the elements which are being removed, and then swap elements in to
@@ -2576,7 +2573,7 @@ template <typename ActualAlloc>
 auto nsTArray_Impl<E, Alloc>::InsertElementAtInternal(index_type aIndex)
     -> elem_type* {
   if (MOZ_UNLIKELY(aIndex > Length())) {
-    InvalidArrayIndex_CRASH(aIndex, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
   }
 
   // Length() + 1 is guaranteed to not overflow, so EnsureCapacity is OK.
@@ -2597,7 +2594,7 @@ auto nsTArray_Impl<E, Alloc>::InsertElementAtInternal(index_type aIndex,
                                                       Item&& aItem)
     -> elem_type* {
   if (MOZ_UNLIKELY(aIndex > Length())) {
-    InvalidArrayIndex_CRASH(aIndex, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
   }
 
   // Length() + 1 is guaranteed to not overflow, so EnsureCapacity is OK.

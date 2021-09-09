@@ -23,13 +23,6 @@ bool IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity,
   return ((CheckedUint32(aCapacity) * aElemSize) * 2).isValid();
 }
 
-MOZ_NORETURN MOZ_COLD void InvalidArrayIndex_CRASH(size_t aIndex,
-                                                   size_t aLength) {
-  MOZ_CRASH_UNSAFE_PRINTF(
-      "ElementAt(aIndex = %" PRIu64 ", aLength = %" PRIu64 ")",
-      static_cast<uint64_t>(aIndex), static_cast<uint64_t>(aLength));
-}
-
 void ::detail::SetCycleCollectionArrayFlag(uint32_t& aFlags) {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
 }
