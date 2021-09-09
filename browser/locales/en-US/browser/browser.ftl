@@ -685,6 +685,32 @@ toolbar-overflow-customize-button =
   .label = Customize toolbar…
   .accesskey = C
 
+toolbar-button-email-link =
+  .label = Email link
+  .tooltiptext = Email a link to this page
+
+# Variables:
+#  $shortcut (String): keyboard shortcut to save a copy of the page
+toolbar-button-save-page =
+  .label = Save page
+  .tooltiptext = Save this page ({ $shortcut })
+
+# Variables:
+#  $shortcut (String): keyboard shortcut to open a local file
+toolbar-button-open-file =
+  .label = Open file
+  .tooltiptext = Open a file ({ $shortcut })
+
+toolbar-button-synced-tabs =
+  .label = Synced tabs
+  .tooltiptext = Show tabs from other devices
+
+# Variables
+# $shortcut (string) - Keyboard shortcut to open a new private browsing window
+toolbar-button-new-private-window =
+  .label = New private window
+  .tooltiptext = Open a new private browsing window ({ $shortcut })
+
 ## EME notification panel
 
 eme-notifications-drm-content-playing = Some audio or video on this site uses DRM software, which may limit what { -brand-short-name } can let you do with it.
@@ -704,12 +730,6 @@ panel-save-update-password = Password
 #  $name (String): The name of the addon that will be removed.
 addon-removal-title = Remove { $name }?
 addon-removal-abuse-report-checkbox = Report this extension to { -vendor-short-name }
-
-## Remote / Synced tabs
-
-remote-tabs-manage-account =
-  .label = Manage Account
-remote-tabs-sync-now = Sync Now
 
 ##
 
