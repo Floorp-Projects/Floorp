@@ -1,0 +1,13 @@
+include LICENSE
+include CHANGES.rst
+include README.rst
+graft yarl
+graft docs
+graft tests
+include yarl/*.c
+global-exclude *.pyc
+global-exclude *.cache
+exclude yarl/*.html
+exclude yarl/*.so
+exclude yarl/*.pyd
+prune docs/_build
