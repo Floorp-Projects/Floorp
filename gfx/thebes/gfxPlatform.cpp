@@ -2322,7 +2322,6 @@ gfxImageFormat gfxPlatform::OptimalFormatForContent(gfxContentType aContent) {
  */
 static mozilla::Atomic<bool> sLayersSupportsHardwareVideoDecoding(false);
 static bool sLayersHardwareVideoDecodingFailed = false;
-static bool sBufferRotationCheckPref = true;
 
 static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 
@@ -2754,19 +2753,6 @@ bool gfxPlatform::AccelerateLayersByDefault() {
 #else
   return false;
 #endif
-}
-
-bool gfxPlatform::BufferRotationEnabled() {
-  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
-
-  return sBufferRotationCheckPref &&
-         StaticPrefs::layers_bufferrotation_enabled_AtStartup();
-}
-
-void gfxPlatform::DisableBufferRotation() {
-  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
-
-  sBufferRotationCheckPref = false;
 }
 
 /* static */
