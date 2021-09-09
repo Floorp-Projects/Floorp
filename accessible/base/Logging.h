@@ -52,7 +52,8 @@ enum EModules {
 
   // extras
   eStack = 1 << 12,
-  eVerbose = 1 << 13
+  eVerbose = 1 << 13,
+  eCache = 1 << 14,
 };
 
 /**
