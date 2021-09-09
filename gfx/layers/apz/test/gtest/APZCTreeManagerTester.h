@@ -250,13 +250,13 @@ class APZCTreeManagerTester : public APZCTesterBase {
   }
 
   void CreateSimpleScrollingLayer() {
-    const char* layerTreeSyntax = "t";
+    const char* treeShape = "x";
     nsIntRegion layerVisibleRegion[] = {
         nsIntRegion(IntRect(0, 0, 200, 200)),
     };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
-                           layers);
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+    CreateScrollData(treeShape, layerVisibleRegion);
+    SetScrollableFrameMetrics(scrollData[0],
+                              ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 500, 500));
   }
 };
