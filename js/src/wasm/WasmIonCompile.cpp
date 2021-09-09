@@ -806,10 +806,8 @@ class FunctionCompiler {
 
     MOZ_ASSERT(v1->type() == MIRType::Simd128);
     MOZ_ASSERT(v2->type() == MIRType::Simd128);
-    SimdShuffle s = AnalyzeSimdShuffle(
-        SimdConstant::CreateX16(reinterpret_cast<int8_t*>(control.bytes)), v1,
-        v2);
-    auto* ins = MWasmShuffleSimd128::New(alloc(), v1, v2, s);
+    auto* ins = BuildWasmShuffleSimd128(
+        alloc(), reinterpret_cast<int8_t*>(control.bytes), v1, v2);
     curBlock_->add(ins);
     return ins;
   }
