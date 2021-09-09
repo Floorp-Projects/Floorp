@@ -83,8 +83,8 @@ class imgCacheEntry {
 
   void UpdateLoadTime();
 
-  uint32_t GetExpiryTime() const { return mExpiryTime; }
-  void SetExpiryTime(uint32_t aExpiryTime) {
+  int32_t GetExpiryTime() const { return mExpiryTime; }
+  void SetExpiryTime(int32_t aExpiryTime) {
     mExpiryTime = aExpiryTime;
     Touch();
   }
@@ -130,7 +130,7 @@ class imgCacheEntry {
   uint32_t mDataSize;
   int32_t mTouchedTime;
   uint32_t mLoadTime;
-  uint32_t mExpiryTime;
+  int32_t mExpiryTime;
   nsExpirationState mExpirationState;
   bool mMustValidate : 1;
   bool mEvicted : 1;
