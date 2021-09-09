@@ -12,11 +12,11 @@
 ///
 /// handle.pin().flush();
 /// ```
-use alloc::sync::Arc;
 use core::fmt;
 
-use guard::Guard;
-use internal::{Global, Local};
+use crate::guard::Guard;
+use crate::internal::{Global, Local};
+use crate::primitive::sync::Arc;
 
 /// An epoch-based garbage collector.
 pub struct Collector {
@@ -26,12 +26,18 @@ pub struct Collector {
 unsafe impl Send for Collector {}
 unsafe impl Sync for Collector {}
 
+impl Default for Collector {
+    fn default() -> Self {
+        Self {
+            global: Arc::new(Global::new()),
+        }
+    }
+}
+
 impl Collector {
     /// Creates a new collector.
     pub fn new() -> Self {
-        Collector {
-            global: Arc::new(Global::new()),
-        }
+        Self::default()
     }
 
     /// Registers a new handle for the collector.
@@ -50,7 +56,7 @@ impl Clone for Collector {
 }
 
 impl fmt::Debug for Collector {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("Collector { .. }")
     }
 }
@@ -98,19 +104,19 @@ impl Drop for LocalHandle {
 }
 
 impl fmt::Debug for LocalHandle {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("LocalHandle { .. }")
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(crossbeam_loom)))]
 mod tests {
     use std::mem;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use crossbeam_utils::thread;
 
-    use {Collector, Owned};
+    use crate::{Collector, Owned};
 
     const NUM_THREADS: usize = 8;
 
@@ -145,9 +151,9 @@ mod tests {
                 let a = Owned::new(7).into_shared(guard);
                 guard.defer_destroy(a);
 
-                assert!(!(*(*guard.local).bag.get()).is_empty());
+                assert!(!(*guard.local).bag.with(|b| (*b).is_empty()));
 
-                while !(*(*guard.local).bag.get()).is_empty() {
+                while !(*guard.local).bag.with(|b| (*b).is_empty()) {
                     guard.flush();
                 }
             }
@@ -166,7 +172,7 @@ mod tests {
                 let a = Owned::new(7).into_shared(guard);
                 guard.defer_destroy(a);
             }
-            assert!(!(*(*guard.local).bag.get()).is_empty());
+            assert!(!(*guard.local).bag.with(|b| (*b).is_empty()));
         }
     }
 
@@ -193,6 +199,7 @@ mod tests {
         .unwrap();
     }
 
+    #[cfg(not(crossbeam_sanitize))] // TODO: assertions failed due to `cfg(crossbeam_sanitize)` reduce `internal::MAX_OBJECTS`
     #[test]
     fn incremental() {
         const COUNT: usize = 100_000;
@@ -377,7 +384,7 @@ mod tests {
             let ptr = v.as_mut_ptr() as usize;
             let len = v.len();
             guard.defer_unchecked(move || {
-                drop(Vec::from_raw_parts(ptr as *const u8 as *mut u8, len, len));
+                drop(Vec::from_raw_parts(ptr as *const i32 as *mut i32, len, len));
                 DESTROYS.fetch_add(len, Ordering::Relaxed);
             });
             guard.flush();
