@@ -162,7 +162,8 @@ class WebRenderScrollDataWrapperTester : public ::testing::Test {
     // This ensures ScrollMetadata::sNullMetadata is initialized.
     gfxPlatform::GetPlatform();
 
-    mManager = new APZCTreeManager(LayersId{0}, false);
+    mManager = new APZCTreeManager(LayersId{0},
+                                   APZCTreeManager::HitTestKind::Internal);
     mUpdater = new APZUpdater(mManager, false);
   }
 

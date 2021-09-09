@@ -173,12 +173,14 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
   }
 };
 
-class APZEventRegionsTesterLayersOnly : public APZEventRegionsTester {
+class APZEventRegionsTesterInternal : public APZEventRegionsTester {
  public:
-  APZEventRegionsTesterLayersOnly() { mLayersOnly = true; }
+  APZEventRegionsTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
-TEST_F(APZEventRegionsTesterLayersOnly, HitRegionImmediateResponse) {
+TEST_F(APZEventRegionsTesterInternal, HitRegionImmediateResponse) {
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -253,7 +255,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
-TEST_F(APZEventRegionsTesterLayersOnly, Obscuration) {
+TEST_F(APZEventRegionsTesterInternal, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
 

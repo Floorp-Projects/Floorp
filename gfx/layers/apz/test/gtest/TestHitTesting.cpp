@@ -120,13 +120,15 @@ class APZHitTestingTester : public APZCTreeManagerTester {
   }
 };
 
-class APZHitTestingTesterLayersOnly : public APZHitTestingTester {
+class APZHitTestingTesterInternal : public APZHitTestingTester {
  public:
-  APZHitTestingTesterLayersOnly() { mLayersOnly = true; }
+  APZHitTestingTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
 // A simple hit testing test that doesn't involve any transforms on layers.
-TEST_F(APZHitTestingTesterLayersOnly, HitTesting1) {
+TEST_F(APZHitTestingTesterInternal, HitTesting1) {
   CreateHitTesting1LayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
 
@@ -202,7 +204,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting1) {
 }
 
 // A more involved hit testing test that involves css and async transforms.
-TEST_F(APZHitTestingTesterLayersOnly, HitTesting2) {
+TEST_F(APZHitTestingTesterInternal, HitTesting2) {
   // Velocity bias can cause extra repaint requests.
   SCOPED_GFX_PREF_FLOAT("apz.velocity_bias", 0.0);
 
@@ -336,7 +338,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting2) {
             transformToGecko.TransformPoint(ParentLayerPoint(25, 25)));
 }
 
-TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
+TEST_F(APZHitTestingTesterInternal, HitTesting3) {
   const char* treeShape = "x(x)";
   // LayerID               0 1
   nsIntRegion layerVisibleRegions[] = {nsIntRegion(IntRect(0, 0, 200, 200)),
@@ -357,7 +359,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
   EXPECT_EQ(ApzcOf(layers[1]), hit.get());
 }
 
-TEST_F(APZHitTestingTesterLayersOnly, ComplexMultiLayerTree) {
+TEST_F(APZHitTestingTesterInternal, ComplexMultiLayerTree) {
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();

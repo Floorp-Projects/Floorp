@@ -10,12 +10,14 @@
 #include "InputUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 
-class APZCSnappingOnMomentumTesterLayersOnly : public APZCTreeManagerTester {
+class APZCSnappingOnMomentumTesterInternal : public APZCTreeManagerTester {
  public:
-  APZCSnappingOnMomentumTesterLayersOnly() { mLayersOnly = true; }
+  APZCSnappingOnMomentumTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
-TEST_F(APZCSnappingOnMomentumTesterLayersOnly, Snap_On_Momentum) {
+TEST_F(APZCSnappingOnMomentumTesterInternal, Snap_On_Momentum) {
   const char* treeShape = "x";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
