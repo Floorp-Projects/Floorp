@@ -6350,34 +6350,6 @@
 #endif
   mirror: always
 
-- name: layers.dump
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# If we're dumping layers, also dump the texture data
-- name: layers.dump-texture
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-#ifdef MOZ_DUMP_PAINTING
--   name: layers.dump-decision
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
-- name: layers.dump-client-layers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.dump-host-layers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.enable-tiles
   type: bool
 #if defined(XP_MACOSX) || defined (XP_OPENBSD)
