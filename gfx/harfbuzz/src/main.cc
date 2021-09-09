@@ -33,12 +33,13 @@
 #include "hb.h"
 #include "hb-ot.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cassert>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 #ifdef HB_NO_OPEN
-#define hb_blob_create_from_file(x)  hb_blob_get_empty ()
+#define hb_blob_create_from_file_or_fail(x)  hb_blob_get_empty ()
 #endif
 
 #if !defined(HB_NO_COLOR) && !defined(HB_NO_DRAW) && defined(HB_EXPERIMENTAL_API)
@@ -505,7 +506,8 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  hb_blob_t *blob = hb_blob_create_from_file (argv[1]);
+  hb_blob_t *blob = hb_blob_create_from_file_or_fail (argv[1]);
+  assert (blob);
   printf ("Opened font file %s: %d bytes long\n", argv[1], hb_blob_get_length (blob));
 #ifndef MAIN_CC_NO_PRIVATE_API
   print_layout_info_using_private_api (blob);

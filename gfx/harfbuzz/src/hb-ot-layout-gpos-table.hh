@@ -538,7 +538,7 @@ struct Anchor
     switch (u.format) {
     case 1: return_trace (bool (reinterpret_cast<Anchor *> (u.format1.copy (c->serializer))));
     case 2:
-      if (c->plan->drop_hints)
+      if (c->plan->flags & HB_SUBSET_FLAGS_NO_HINTING)
       {
         // AnchorFormat 2 just containins extra hinting information, so
         // if hints are being dropped convert to format 1.
@@ -805,7 +805,7 @@ struct SinglePosFormat1
 		  ValueFormat newFormat,
 		  const hb_map_t *layout_variation_idx_map)
   {
-    if (unlikely (!c->extend_min (*this))) return;
+    if (unlikely (!c->extend_min (this))) return;
     if (unlikely (!c->check_assign (valueFormat,
                                     newFormat,
                                     HB_SERIALIZE_ERROR_INT_OVERFLOW))) return;
@@ -823,8 +823,7 @@ struct SinglePosFormat1
     | hb_map_retains_sorting (hb_first)
     ;
 
-    // TODO(garretrieger): serialize_subset this.
-    coverage.serialize (c, this).serialize (c, glyphs);
+    coverage.serialize_serialize (c, glyphs);
   }
 
   bool subset (hb_subset_context_t *c) const
@@ -926,7 +925,7 @@ struct SinglePosFormat2
 		  ValueFormat newFormat,
 		  const hb_map_t *layout_variation_idx_map)
   {
-    auto out = c->extend_min (*this);
+    auto out = c->extend_min (this);
     if (unlikely (!out)) return;
     if (unlikely (!c->check_assign (valueFormat, newFormat, HB_SERIALIZE_ERROR_INT_OVERFLOW))) return;
     if (unlikely (!c->check_assign (valueCount, it.len (), HB_SERIALIZE_ERROR_ARRAY_OVERFLOW))) return;
@@ -942,7 +941,7 @@ struct SinglePosFormat2
     | hb_map_retains_sorting (hb_first)
     ;
 
-    coverage.serialize (c, this).serialize (c, glyphs);
+    coverage.serialize_serialize (c, glyphs);
   }
 
   bool subset (hb_subset_context_t *c) const
@@ -1374,7 +1373,7 @@ struct PairPosFormat1
     out->format = format;
     out->valueFormat[0] = valueFormat[0];
     out->valueFormat[1] = valueFormat[1];
-    if (c->plan->drop_hints)
+    if (c->plan->flags & HB_SUBSET_FLAGS_NO_HINTING)
     {
       hb_pair_t<unsigned, unsigned> newFormats = compute_effective_value_formats (glyphset);
       out->valueFormat[0] = newFormats.first;
@@ -1404,8 +1403,7 @@ struct PairPosFormat1
     | hb_sink (new_coverage)
     ;
 
-    out->coverage.serialize (c->serializer, out)
-		 .serialize (c->serializer, new_coverage.iter ());
+    out->coverage.serialize_serialize (c->serializer, new_coverage.iter ());
 
     return_trace (bool (new_coverage));
   }
@@ -1593,7 +1591,7 @@ struct PairPosFormat2
     unsigned len2 = valueFormat2.get_len ();
 
     hb_pair_t<unsigned, unsigned> newFormats = hb_pair (valueFormat1, valueFormat2);
-    if (c->plan->drop_hints)
+    if (c->plan->flags & HB_SUBSET_FLAGS_NO_HINTING)
       newFormats = compute_effective_value_formats (klass1_map, klass2_map);
 
     out->valueFormat1 = newFormats.first;
@@ -1618,7 +1616,7 @@ struct PairPosFormat2
     | hb_map_retains_sorting (glyph_map)
     ;
 
-    out->coverage.serialize (c->serializer, out).serialize (c->serializer, it);
+    out->coverage.serialize_serialize (c->serializer, it);
     return_trace (out->class1Count && out->class2Count && bool (it));
   }
 
@@ -1882,7 +1880,7 @@ struct CursivePosFormat1
     else
       pos[child].x_offset = x_offset;
 
-    /* If parent was attached to child, break them free.
+    /* If parent was attached to child, separate them.
      * https://github.com/harfbuzz/harfbuzz/issues/2469
      */
     if (unlikely (pos[parent].attach_chain() == -pos[child].attach_chain()))
@@ -1911,7 +1909,7 @@ struct CursivePosFormat1
     | hb_map_retains_sorting (hb_first)
     ;
 
-    coverage.serialize (c->serializer, this).serialize (c->serializer, glyphs);
+    coverage.serialize_serialize (c->serializer, glyphs);
   }
 
   bool subset (hb_subset_context_t *c) const
@@ -2118,8 +2116,7 @@ struct MarkBasePosFormat1
     | hb_sink (new_coverage)
     ;
 
-    if (!out->markCoverage.serialize (c->serializer, out)
-			  .serialize (c->serializer, new_coverage.iter ()))
+    if (!out->markCoverage.serialize_serialize (c->serializer, new_coverage.iter ()))
       return_trace (false);
 
     out->markArray.serialize_subset (c, markArray, this,
@@ -2139,8 +2136,7 @@ struct MarkBasePosFormat1
     | hb_sink (new_coverage)
     ;
 
-    if (!out->baseCoverage.serialize (c->serializer, out)
-			  .serialize (c->serializer, new_coverage.iter ()))
+    if (!out->baseCoverage.serialize_serialize (c->serializer, new_coverage.iter ()))
       return_trace (false);
 
     hb_sorted_vector_t<unsigned> base_indexes;
@@ -2377,8 +2373,7 @@ struct MarkLigPosFormat1
     | hb_map_retains_sorting (glyph_map)
     ;
 
-    if (!out->markCoverage.serialize (c->serializer, out)
-			  .serialize (c->serializer, new_mark_coverage))
+    if (!out->markCoverage.serialize_serialize (c->serializer, new_mark_coverage))
       return_trace (false);
 
     out->markArray.serialize_subset (c, markArray, this,
@@ -2391,8 +2386,7 @@ struct MarkLigPosFormat1
     | hb_map_retains_sorting (glyph_map)
     ;
 
-    if (!out->ligatureCoverage.serialize (c->serializer, out)
-			      .serialize (c->serializer, new_ligature_coverage))
+    if (!out->ligatureCoverage.serialize_serialize (c->serializer, new_ligature_coverage))
       return_trace (false);
 
     out->ligatureArray.serialize_subset (c, ligatureArray, this,
@@ -2581,8 +2575,7 @@ struct MarkMarkPosFormat1
     | hb_sink (new_coverage)
     ;
 
-    if (!out->mark1Coverage.serialize (c->serializer, out)
-			   .serialize (c->serializer, new_coverage.iter ()))
+    if (!out->mark1Coverage.serialize_serialize (c->serializer, new_coverage.iter ()))
       return_trace (false);
 
     out->mark1Array.serialize_subset (c, mark1Array, this,
@@ -2602,8 +2595,7 @@ struct MarkMarkPosFormat1
     | hb_sink (new_coverage)
     ;
 
-    if (!out->mark2Coverage.serialize (c->serializer, out)
-			   .serialize (c->serializer, new_coverage.iter ()))
+    if (!out->mark2Coverage.serialize_serialize (c->serializer, new_coverage.iter ()))
       return_trace (false);
 
     hb_sorted_vector_t<unsigned> mark2_indexes;

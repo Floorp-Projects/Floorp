@@ -82,7 +82,7 @@ struct hb_serialize_context_t
 
     struct link_t
     {
-      bool is_wide: 1;
+      unsigned width: 3;
       bool is_signed: 1;
       unsigned whence: 2;
       unsigned position: 28;
@@ -102,10 +102,11 @@ struct hb_serialize_context_t
     char *tail;
     object_t *current; // Just for sanity check
     unsigned num_links;
+    hb_serialize_error_t errors;
   };
 
   snapshot_t snapshot ()
-  { return snapshot_t { head, tail, current, current->links.length }; }
+  { return snapshot_t { head, tail, current, current->links.length, errors }; }
 
   hb_serialize_context_t (void *start_, unsigned int size) :
     start ((char *) start_),
@@ -136,6 +137,12 @@ struct hb_serialize_context_t
   HB_NODISCARD bool ran_out_of_room () const { return errors & HB_SERIALIZE_ERROR_OUT_OF_ROOM; }
   HB_NODISCARD bool offset_overflow () const { return errors & HB_SERIALIZE_ERROR_OFFSET_OVERFLOW; }
   HB_NODISCARD bool only_offset_overflow () const { return errors == HB_SERIALIZE_ERROR_OFFSET_OVERFLOW; }
+  HB_NODISCARD bool only_overflow () const
+  {
+    return errors == HB_SERIALIZE_ERROR_OFFSET_OVERFLOW
+        || errors == HB_SERIALIZE_ERROR_INT_OVERFLOW
+        || errors == HB_SERIALIZE_ERROR_ARRAY_OVERFLOW;
+  }
 
   void reset (void *start_, unsigned int size)
   {
@@ -254,7 +261,7 @@ struct hb_serialize_context_t
     current = current->next;
     revert (obj->head, obj->tail);
     obj->fini ();
-    object_pool.free (obj);
+    object_pool.release (obj);
   }
 
   /* Set share to false when an object is unlikely sharable with others
@@ -317,9 +324,11 @@ struct hb_serialize_context_t
 
   void revert (snapshot_t snap)
   {
-    if (unlikely (in_error ())) return;
+    // Overflows that happened after the snapshot will be erased by the revert.
+    if (unlikely (in_error () && !only_overflow ())) return;
     assert (snap.current == current);
     current->links.shrink (snap.num_links);
+    errors = snap.errors;
     revert (snap.head, snap.tail);
   }
 
@@ -354,7 +363,6 @@ struct hb_serialize_context_t
 		 whence_t whence = Head,
 		 unsigned bias = 0)
   {
-    static_assert (sizeof (T) == 2 || sizeof (T) == 4, "");
     if (unlikely (in_error ())) return;
 
     if (!objidx)
@@ -364,8 +372,10 @@ struct hb_serialize_context_t
     assert (current->head <= (const char *) &ofs);
 
     auto& link = *current->links.push ();
+    if (current->links.in_error ())
+      err (HB_SERIALIZE_ERROR_OTHER);
 
-    link.is_wide = sizeof (T) == 4;
+    link.width = sizeof (T);
     link.is_signed = hb_is_signed (hb_unwrap_type (T));
     link.whence = (unsigned) whence;
     link.position = (const char *) &ofs - current->head;
@@ -405,15 +415,19 @@ struct hb_serialize_context_t
 	offset -= link.bias;
 	if (link.is_signed)
 	{
-	  if (link.is_wide)
+	  assert (link.width == 2 || link.width == 4);
+	  if (link.width == 4)
 	    assign_offset<int32_t> (parent, link, offset);
 	  else
 	    assign_offset<int16_t> (parent, link, offset);
 	}
 	else
 	{
-	  if (link.is_wide)
+	  assert (link.width == 2 || link.width == 3 || link.width == 4);
+	  if (link.width == 4)
 	    assign_offset<uint32_t> (parent, link, offset);
+	  else if (link.width == 3)
+	    assign_offset<uint32_t, 3> (parent, link, offset);
 	  else
 	    assign_offset<uint16_t> (parent, link, offset);
 	}
@@ -446,16 +460,16 @@ struct hb_serialize_context_t
   }
 
   template <typename Type>
-  Type *allocate_size (unsigned int size)
+  Type *allocate_size (size_t size)
   {
     if (unlikely (in_error ())) return nullptr;
 
-    if (this->tail - this->head < ptrdiff_t (size))
+    if (unlikely (size > INT_MAX || this->tail - this->head < ptrdiff_t (size)))
     {
       err (HB_SERIALIZE_ERROR_OUT_OF_ROOM);
       return nullptr;
     }
-    memset (this->head, 0, size);
+    hb_memset (this->head, 0, size);
     char *ret = this->head;
     this->head += size;
     return reinterpret_cast<Type *> (ret);
@@ -510,18 +524,19 @@ struct hb_serialize_context_t
   hb_serialize_context_t& operator << (const Type &obj) & { embed (obj); return *this; }
 
   template <typename Type>
-  Type *extend_size (Type *obj, unsigned int size)
+  Type *extend_size (Type *obj, size_t size)
   {
     if (unlikely (in_error ())) return nullptr;
 
     assert (this->start <= (char *) obj);
     assert ((char *) obj <= this->head);
-    assert ((char *) obj + size >= this->head);
-    if (unlikely (!this->allocate_size<Type> (((char *) obj) + size - this->head))) return nullptr;
+    assert ((size_t) (this->head - (char *) obj) <= size);
+    if (unlikely (((char *) obj + size < (char *) obj) ||
+		  !this->allocate_size<Type> (((char *) obj) + size - this->head))) return nullptr;
     return reinterpret_cast<Type *> (obj);
   }
   template <typename Type>
-  Type *extend_size (Type &obj, unsigned int size)
+  Type *extend_size (Type &obj, size_t size)
   { return extend_size (hb_addressof (obj), size); }
 
   template <typename Type>
@@ -544,7 +559,11 @@ struct hb_serialize_context_t
     unsigned int len = (this->head - this->start)
 		     + (this->end  - this->tail);
 
-    char *p = (char *) malloc (len);
+    // If len is zero don't hb_malloc as the memory won't get properly
+    // cleaned up later.
+    if (!len) return hb_bytes_t ();
+
+    char *p = (char *) hb_malloc (len);
     if (unlikely (!p)) return hb_bytes_t ();
 
     memcpy (p, this->start, this->head - this->start);
@@ -559,17 +578,17 @@ struct hb_serialize_context_t
     hb_bytes_t b = copy_bytes ();
     return hb_blob_create (b.arrayZ, b.length,
 			   HB_MEMORY_MODE_WRITABLE,
-			   (char *) b.arrayZ, free);
+			   (char *) b.arrayZ, hb_free);
   }
 
   const hb_vector_t<object_t *>& object_graph() const
   { return packed; }
 
   private:
-  template <typename T>
+  template <typename T, unsigned Size = sizeof (T)>
   void assign_offset (const object_t* parent, const object_t::link_t &link, unsigned offset)
   {
-    auto &off = * ((BEInt<T> *) (parent->head + link.position));
+    auto &off = * ((BEInt<T, Size> *) (parent->head + link.position));
     assert (0 == off);
     check_assign (off, offset, HB_SERIALIZE_ERROR_OFFSET_OVERFLOW);
   }

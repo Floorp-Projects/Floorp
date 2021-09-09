@@ -51,7 +51,7 @@ static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_entry_
     if (!env || !*env)
       return nullptr;
 
-    hb_shaper_entry_t *shapers = (hb_shaper_entry_t *) calloc (1, sizeof (all_shapers));
+    hb_shaper_entry_t *shapers = (hb_shaper_entry_t *) hb_calloc (1, sizeof (all_shapers));
     if (unlikely (!shapers))
       return nullptr;
 
@@ -89,7 +89,7 @@ static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_entry_
 
     return shapers;
   }
-  static void destroy (const hb_shaper_entry_t *p) { free ((void *) p); }
+  static void destroy (const hb_shaper_entry_t *p) { hb_free ((void *) p); }
   static const hb_shaper_entry_t *get_null ()      { return all_shapers; }
 } static_shapers;
 

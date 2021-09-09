@@ -85,7 +85,7 @@ struct hb_hashmap_t
   }
   void fini_shallow ()
   {
-    free (items);
+    hb_free (items);
     items = nullptr;
     population = occupancy = 0;
   }
@@ -109,7 +109,7 @@ struct hb_hashmap_t
 
     unsigned int power = hb_bit_storage (population * 2 + 8);
     unsigned int new_size = 1u << power;
-    item_t *new_items = (item_t *) malloc ((size_t) new_size * sizeof (item_t));
+    item_t *new_items = (item_t *) hb_malloc ((size_t) new_size * sizeof (item_t));
     if (unlikely (!new_items))
     {
       successful = false;
@@ -135,7 +135,7 @@ struct hb_hashmap_t
 			 old_items[i].hash,
 			 old_items[i].value);
 
-    free (old_items);
+    hb_free (old_items);
 
     return true;
   }
@@ -169,6 +169,8 @@ struct hb_hashmap_t
 
   void clear ()
   {
+    if (unlikely (!successful)) return;
+
     if (items)
       for (auto &_ : hb_iter (items, mask + 1))
 	_.clear ();
@@ -224,7 +226,7 @@ struct hb_hashmap_t
     if (!items[i].is_unused ())
     {
       occupancy--;
-      if (items[i].is_tombstone ())
+      if (!items[i].is_tombstone ())
 	population--;
     }
 

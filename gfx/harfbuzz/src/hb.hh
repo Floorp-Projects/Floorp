@@ -223,10 +223,15 @@ extern "C" void* hb_malloc_impl(size_t size);
 extern "C" void* hb_calloc_impl(size_t nmemb, size_t size);
 extern "C" void* hb_realloc_impl(void *ptr, size_t size);
 extern "C" void  hb_free_impl(void *ptr);
-#define malloc hb_malloc_impl
-#define calloc hb_calloc_impl
-#define realloc hb_realloc_impl
-#define free hb_free_impl
+#define hb_malloc hb_malloc_impl
+#define hb_calloc hb_calloc_impl
+#define hb_realloc hb_realloc_impl
+#define hb_free hb_free_impl
+#else
+#define hb_malloc malloc
+#define hb_calloc calloc
+#define hb_realloc realloc
+#define hb_free free
 #endif
 
 
@@ -378,7 +383,7 @@ extern "C" void  hb_free_impl(void *ptr);
 #      define HB_NO_SETLOCALE
 #      define HB_NO_ERRNO
 #    endif
-#  elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#  elif !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #    ifndef HB_NO_GETENV
 #      define HB_NO_GETENV
 #    endif

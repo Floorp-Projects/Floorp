@@ -39,8 +39,10 @@
 #include "hb-ot-maxp-table.hh"
 #include "hb-ot-color-sbix-table.hh"
 #include "hb-ot-color-colr-table.hh"
+#include "hb-ot-color-cpal-table.hh"
 #include "hb-ot-os2-table.hh"
 #include "hb-ot-post-table.hh"
+#include "hb-ot-post-table-v2subset.hh"
 #include "hb-ot-cff1-table.hh"
 #include "hb-ot-cff2-table.hh"
 #include "hb-ot-vorg-table.hh"
@@ -52,6 +54,26 @@
 #include "hb-ot-var-hvar-table.hh"
 #include "hb-repacker.hh"
 
+/**
+ * SECTION:hb-subset
+ * @title: hb-subset
+ * @short_description: Subsets font files.
+ * @include: hb-subset.h
+ *
+ * Subsetting reduces the codepoint coverage of font files and removes all data
+ * that is no longer needed. A subset input describes the desired subset. The input is
+ * provided along with a font to the subsetting operation. Output is a new font file
+ * containing only the data specified in the input.
+ *
+ * Currently most outline and bitmap tables are supported: glyf, CFF, CFF2, sbix,
+ * COLR, and CBDT/CBLC. This also includes fonts with variable outlines via OpenType
+ * variations. Notably EBDT/EBLC and SVG are not supported. Layout subsetting is supported
+ * only for OpenType Layout tables (GSUB, GPOS, GDEF). Notably subsetting of graphite or AAT tables
+ * is not yet supported.
+ *
+ * Fonts with graphite or AAT tables may still be subsetted but will likely need to use the
+ * retain glyph ids option and configure the subset to pass through the layout tables untouched.
+ */
 
 static unsigned
 _plan_estimate_subset_table_size (hb_subset_plan_t *plan, unsigned table_len)
@@ -106,6 +128,7 @@ _try_subset (const TableType *table,
              hb_subset_context_t* c /* OUT */)
 {
   c->serializer->start_serialize<TableType> ();
+  if (c->serializer->in_error ()) return false;
 
   bool needed = table->subset (c);
   if (!c->serializer->ran_out_of_room ())
@@ -223,7 +246,7 @@ _should_drop_table (hb_subset_plan_t *plan, hb_tag_t tag)
   case HB_TAG ('p','r','e','p'): /* hint table, fallthrough */
   case HB_TAG ('h','d','m','x'): /* hint table, fallthrough */
   case HB_TAG ('V','D','M','X'): /* hint table, fallthrough */
-    return plan->drop_hints;
+    return plan->flags & HB_SUBSET_FLAGS_NO_HINTING;
 
 #ifdef HB_NO_SUBSET_LAYOUT
     // Drop Layout Tables if requested.
@@ -243,8 +266,21 @@ _should_drop_table (hb_subset_plan_t *plan, hb_tag_t tag)
 }
 
 static bool
+_passthrough (hb_subset_plan_t *plan, hb_tag_t tag)
+{
+  hb_blob_t *source_table = hb_face_reference_table (plan->source, tag);
+  bool result = plan->add_table (tag, source_table);
+  hb_blob_destroy (source_table);
+  return result;
+}
+
+static bool
 _subset_table (hb_subset_plan_t *plan, hb_tag_t tag)
 {
+  if (plan->no_subset_tables->has (tag)) {
+    return _passthrough (plan, tag);
+  }
+
   DEBUG_MSG (SUBSET, nullptr, "subset %c%c%c%c", HB_UNTAG (tag));
   switch (tag)
   {
@@ -266,6 +302,7 @@ _subset_table (hb_subset_plan_t *plan, hb_tag_t tag)
   case HB_OT_TAG_OS2 : return _subset<const OT::OS2 > (plan);
   case HB_OT_TAG_post: return _subset<const OT::post> (plan);
   case HB_OT_TAG_COLR: return _subset<const OT::COLR> (plan);
+  case HB_OT_TAG_CPAL: return _subset<const OT::CPAL> (plan);
   case HB_OT_TAG_CBLC: return _subset<const OT::CBLC> (plan);
   case HB_OT_TAG_CBDT: return true; /* skip CBDT, handled by CBLC */
 
@@ -285,29 +322,41 @@ _subset_table (hb_subset_plan_t *plan, hb_tag_t tag)
 #endif
 
   default:
-    hb_blob_t *source_table = hb_face_reference_table (plan->source, tag);
-    bool result = plan->add_table (tag, source_table);
-    hb_blob_destroy (source_table);
-    return result;
+    if (plan->flags & HB_SUBSET_FLAGS_PASSTHROUGH_UNRECOGNIZED)
+      return _passthrough (plan, tag);
+
+    // Drop table
+    return true;
   }
 }
 
+hb_face_t *
+hb_subset (hb_face_t *source, hb_subset_input_t *input)
+{
+  hb_face_t* face = hb_subset_or_fail (source, input);
+  if (face) return face;
+  return hb_face_get_empty ();
+}
+
 /**
- * hb_subset:
+ * hb_subset_or_fail:
  * @source: font face data to be subset.
  * @input: input to use for the subsetting.
  *
- * Subsets a font according to provided input.
+ * Subsets a font according to provided input. Returns nullptr
+ * if the subset operation fails.
+ *
+ * Since: 2.9.0
  **/
 hb_face_t *
-hb_subset (hb_face_t *source, hb_subset_input_t *input)
+hb_subset_or_fail (hb_face_t *source, const hb_subset_input_t *input)
 {
   if (unlikely (!input || !source)) return hb_face_get_empty ();
 
   hb_subset_plan_t *plan = hb_subset_plan_create (source, input);
   if (unlikely (plan->in_error ())) {
     hb_subset_plan_destroy (plan);
-    return hb_face_get_empty ();
+    return nullptr;
   }
 
   hb_set_t tags_set;
@@ -328,7 +377,7 @@ hb_subset (hb_face_t *source, hb_subset_input_t *input)
   }
 end:
 
-  hb_face_t *result = success ? hb_face_reference (plan->dest) : hb_face_get_empty ();
+  hb_face_t *result = success ? hb_face_reference (plan->dest) : nullptr;
 
   hb_subset_plan_destroy (plan);
   return result;

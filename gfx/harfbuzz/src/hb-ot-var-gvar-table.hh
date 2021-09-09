@@ -419,7 +419,9 @@ struct gvar
     out->glyphCount = num_glyphs;
 
     unsigned int subset_data_size = 0;
-    for (hb_codepoint_t gid = 0; gid < num_glyphs; gid++)
+    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
+         gid < num_glyphs;
+         gid++)
     {
       hb_codepoint_t old_gid;
       if (!c->plan->old_gid_for_new_gid (gid, &old_gid)) continue;
@@ -449,7 +451,9 @@ struct gvar
     out->dataZ = subset_data - (char *) out;
 
     unsigned int glyph_offset = 0;
-    for (hb_codepoint_t gid = 0; gid < num_glyphs; gid++)
+    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
+         gid < num_glyphs;
+         gid++)
     {
       hb_codepoint_t old_gid;
       hb_bytes_t var_data_bytes = c->plan->old_gid_for_new_gid (gid, &old_gid)

@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.8.1],
+        [2.9.1],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -425,11 +425,11 @@ util/Makefile
 test/Makefile
 test/api/Makefile
 test/fuzzing/Makefile
-test/shaping/Makefile
-test/shaping/data/Makefile
-test/shaping/data/aots/Makefile
-test/shaping/data/in-house/Makefile
-test/shaping/data/text-rendering-tests/Makefile
+test/shape/Makefile
+test/shape/data/Makefile
+test/shape/data/aots/Makefile
+test/shape/data/in-house/Makefile
+test/shape/data/text-rendering-tests/Makefile
 test/subset/Makefile
 test/subset/data/Makefile
 test/subset/data/repack_tests/Makefile

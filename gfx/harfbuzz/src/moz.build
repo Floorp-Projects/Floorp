@@ -46,6 +46,7 @@ UNIFIED_SOURCES += [
     'hb-draw.cc',
     'hb-face.cc',
     'hb-font.cc',
+    'hb-ms-feature-ranges.cc',
     'hb-number.cc',
     'hb-ot-cff1-table.cc',
     'hb-ot-cff2-table.cc',

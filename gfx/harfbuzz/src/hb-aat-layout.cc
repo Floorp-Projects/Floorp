@@ -249,7 +249,9 @@ hb_aat_layout_substitute (const hb_ot_shape_plan_t *plan,
   if (morx.has_data ())
   {
     AAT::hb_aat_apply_context_t c (plan, font, buffer, morx_blob);
+    if (!buffer->message (font, "start table morx")) return;
     morx.apply (&c);
+    (void) buffer->message (font, "end table morx");
     return;
   }
 
@@ -258,7 +260,9 @@ hb_aat_layout_substitute (const hb_ot_shape_plan_t *plan,
   if (mort.has_data ())
   {
     AAT::hb_aat_apply_context_t c (plan, font, buffer, mort_blob);
+    if (!buffer->message (font, "start table mort")) return;
     mort.apply (&c);
+    (void) buffer->message (font, "end table mort");
     return;
   }
 }
@@ -314,8 +318,10 @@ hb_aat_layout_position (const hb_ot_shape_plan_t *plan,
   const AAT::kerx& kerx = *kerx_blob->as<AAT::kerx> ();
 
   AAT::hb_aat_apply_context_t c (plan, font, buffer, kerx_blob);
+  if (!buffer->message (font, "start table kerx")) return;
   c.set_ankr_table (font->face->table.ankr.get ());
   kerx.apply (&c);
+  (void) buffer->message (font, "end table kerx");
 }
 
 

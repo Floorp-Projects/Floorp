@@ -738,7 +738,7 @@ struct CBLC
 						 cbdt_prime->length,
 						 HB_MEMORY_MODE_WRITABLE,
 						 cbdt_prime->arrayZ,
-						 free);
+						 hb_free);
     cbdt_prime->init ();  // Leak arrayZ to the blob.
     bool ret = c->plan->add_table (HB_OT_TAG_CBDT, cbdt_prime_blob);
     hb_blob_destroy (cbdt_prime_blob);
