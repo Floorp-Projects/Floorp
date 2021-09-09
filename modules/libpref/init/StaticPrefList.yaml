@@ -6311,11 +6311,6 @@
   value: false
   mirror: always
 
-- name: layers.bufferrotation.enabled
-  type: bool
-  value: true
-  mirror: once
-
 - name: layers.child-process-shutdown
   type: RelaxedAtomicBool
   value: true
