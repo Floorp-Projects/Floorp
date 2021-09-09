@@ -250,14 +250,17 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
     return false;
   }
 
-  RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
+  RootedArrayObject partsArray(cx,
+                               NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }
+  partsArray->ensureDenseInitializedLength(0, parts.length());
 
   RootedObject singlePart(cx);
   RootedValue val(cx);
 
+  size_t index = 0;
   for (const mozilla::intl::ListFormat::Part& part : parts) {
     singlePart = NewPlainObject(cx);
     if (!singlePart) {
@@ -284,10 +287,9 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
       return false;
     }
 
-    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
-      return false;
-    }
+    partsArray->initDenseElement(index++, ObjectValue(*singlePart));
   }
+  MOZ_ASSERT(index == parts.length());
 
   result.setObject(*partsArray);
   return true;
