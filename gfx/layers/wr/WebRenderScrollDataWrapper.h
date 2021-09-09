@@ -16,30 +16,118 @@
 namespace mozilla {
 namespace layers {
 
-/*
- * This class is a wrapper to walk through a WebRenderScrollData object, with
- * an exposed API that is template-compatible to LayerMetricsWrapper. This
- * allows APZ to walk through both layer trees and WebRender scroll metadata
- * structures without a lot of code duplication. (Note that not all functions
- * from LayerMetricsWrapper are implemented here, only the ones we've needed in
- * APZ code so far.)
+/**
+ * A wrapper class around a target WebRenderLayerScrollData (henceforth,
+ * "layer") that allows user code to walk through the ScrollMetadata objects
+ * on the layer the same way it would walk through a layer tree.
+ * Consider the following layer tree:
  *
- * A WebRenderScrollData object is basically a flattened layer tree, with a
- * number of WebRenderLayerScrollData objects that have a 1:1 correspondence
- * to layers in a layer tree. Therefore the mLayer pointer in this class can
- * be considered equivalent to the mLayer pointer in the LayerMetricsWrapper.
- * There are some extra fields (mData, mLayerIndex, mContainingSubtreeLastIndex)
- * to move around between these "layers" given the flattened representation.
- * The mMetadataIndex field in this class corresponds to the mIndex field in
- * LayerMetricsWrapper, as both classes also need to manage walking through
- * "virtual" container layers implied by the list of ScrollMetadata objects.
+ *                    +---+
+ *                    | A |
+ *                    +---+
+ *                   /  |  \
+ *                  /   |   \
+ *                 /    |    \
+ *            +---+  +-----+  +---+
+ *            | B |  |  C  |  | D |
+ *            +---+  +-----+  +---+
+ *                   | SMn |
+ *                   |  .  |
+ *                   |  .  |
+ *                   |  .  |
+ *                   | SM1 |
+ *                   | SM0 |
+ *                   +-----+
+ *                   /     \
+ *                  /       \
+ *             +---+         +---+
+ *             | E |         | F |
+ *             +---+         +---+
+ *
+ * In this layer tree, there are six layers with A being the root and B,D,E,F
+ * being leaf nodes. Layer C is in the middle and has n+1 ScrollMetadata,
+ * labelled SM0...SMn. SM0 is the ScrollMetadata you get by calling
+ * c->GetScrollMetadata(0) and SMn is the ScrollMetadata you can obtain by
+ * calling c->GetScrollMetadata(c->GetScrollMetadataCount() - 1). This layer
+ * tree is conceptually equivalent to this one below:
+ *
+ *                    +---+
+ *                    | A |
+ *                    +---+
+ *                   /  |  \
+ *                  /   |   \
+ *                 /    |    \
+ *            +---+  +-----+  +---+
+ *            | B |  | Cn  |  | D |
+ *            +---+  +-----+  +---+
+ *                      |
+ *                      .
+ *                      .
+ *                      .
+ *                      |
+ *                   +-----+
+ *                   | C1  |
+ *                   +-----+
+ *                      |
+ *                   +-----+
+ *                   | C0  |
+ *                   +-----+
+ *                   /     \
+ *                  /       \
+ *             +---+         +---+
+ *             | E |         | F |
+ *             +---+         +---+
+ *
+ * In this layer tree, the layer C has been expanded into a stack of layers
+ * C1...Cn, where C1 has ScrollMetadata SM1 and Cn has ScrollMetdata Fn.
+ *
+ * The WebRenderScrollDataWrapper class allows client code to treat the first
+ * layer tree as though it were the second. That is, instead of client code
+ * having to iterate through the ScrollMetadata objects directly, it can use a
+ * WebRenderScrollDataWrapper to encapsulate that aspect of the layer tree and
+ * just walk the tree as if it were a stack of layers.
+ *
+ * The functions on this class do different things depending on which
+ * simulated layer is being wrapped. For example, if the
+ * WebRenderScrollDataWrapper is pretending to be C0, the GetPrevSibling()
+ * function will return null even though the underlying layer C does actually
+ * have a prev sibling. The WebRenderScrollDataWrapper pretending to be Cn will
+ * return B as the prev sibling.
+ *
+ * Implementation notes:
+ *
+ * The AtTopLayer() and AtBottomLayer() functions in this class refer to
+ * Cn and C0 in the second layer tree above; that is, they are predicates
+ * to test if the wrapper is simulating the topmost or bottommost layer, as
+ * those can have special behaviour.
+ *
+ * It is possible to wrap a nullptr in a WebRenderScrollDataWrapper, in which
+ * case the IsValid() function will return false. This is required to allow
+ * WebRenderScrollDataWrapper to be a MOZ_STACK_CLASS (desirable because it is
+ * used in loops and recursion).
+ *
+ * This class purposely does not expose the wrapped layer directly to avoid
+ * user code from accidentally calling functions directly on it. Instead
+ * any necessary functions should be wrapped in this class. It does expose
+ * the wrapped layer as a void* for printf purposes.
+ *
+ * The implementation may look like it special-cases mIndex == 0 and/or
+ * GetScrollMetadataCount() == 0. This is an artifact of the fact that both
+ * mIndex and GetScrollMetadataCount() are uint32_t and GetScrollMetadataCount()
+ * can return 0 but mIndex cannot store -1. This seems better than the
+ * alternative of making mIndex a int32_t that can store -1, but then having
+ * to cast to uint32_t all over the place.
+ *
+ * Note that WebRenderLayerScrollData objects are owned by WebRenderScrollData,
+ * which stores them in a flattened representation. The field mData,
+ * mLayerIndex, and mContainingSubtreeIndex are used to move around the "layers"
+ * given the flattened representation. The mMetadataIndex is used to move around
+ * the ScrollMetadata within a single layer.
  *
  * One important note here is that this class holds a pointer to the "owning"
  * WebRenderScrollData. The caller must ensure that this class does not outlive
  * the owning WebRenderScrollData, or this may result in use-after-free errors.
  * This class being declared a MOZ_STACK_CLASS should help with that.
- *
- * Refer to LayerMetricsWrapper.h for actual documentation on the exposed API.
  */
 class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
  public:
@@ -244,6 +332,10 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   bool TransformIsPerspective() const {
     MOZ_ASSERT(IsValid());
 
+    // mLayer->GetTransformIsPerspective() tells us whether
+    // mLayer->GetTransform() is a perspective transform. Since
+    // mLayer->GetTransform() is only used at the bottom layer, we only
+    // need to check GetTransformIsPerspective() at the bottom layer too.
     if (AtBottomLayer()) {
       return mLayer->GetTransformIsPerspective();
     }
@@ -412,6 +504,9 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return mLayer->GetAsyncZoomContainerId();
   }
 
+  // Expose an opaque pointer to the layer. Mostly used for printf
+  // purposes. This is not intended to be a general-purpose accessor
+  // for the underlying layer.
   const void* GetLayer() const {
     MOZ_ASSERT(IsValid());
     return mLayer;
