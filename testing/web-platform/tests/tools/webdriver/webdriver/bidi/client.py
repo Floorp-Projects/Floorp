@@ -64,8 +64,7 @@ class BidiSession:
                  websocket_url: str,
                  session_id: Optional[str] = None,
                  capabilities: Optional[Mapping[str, Any]] = None,
-                 requested_capabilities: Optional[Mapping[str, Any]] = None,
-                 loop: Optional[asyncio.AbstractEventLoop] = None):
+                 requested_capabilities: Optional[Mapping[str, Any]] = None):
         self.transport: Optional[Transport] = None
 
         # The full URL for a websocket looks like
@@ -103,15 +102,10 @@ class BidiSession:
         # For each module, have a property representing that module
         self.session = Session(self)
 
-        if loop is None:
-            loop = get_running_loop()
-        self.loop = loop
-
     @classmethod
     def from_http(cls,
                   session_id: str,
-                  capabilities: Mapping[str, Any],
-                  loop: Optional[asyncio.AbstractEventLoop] = None) -> "BidiSession":
+                  capabilities: Mapping[str, Any]) -> "BidiSession":
         """Create a BiDi session from an existing HTTP session
 
         :param session_id: String id of the session
@@ -121,18 +115,17 @@ class BidiSession:
             raise ValueError("No webSocketUrl found in capabilities")
         if not isinstance(websocket_url, str):
             raise ValueError("webSocketUrl is not a string")
-        return cls(websocket_url, session_id=session_id, capabilities=capabilities, loop=loop)
+        return cls(websocket_url, session_id=session_id, capabilities=capabilities)
 
     @classmethod
     def bidi_only(cls,
                   websocket_url: str,
-                  requested_capabilities: Optional[Mapping[str, Any]],
-                  loop: Optional[asyncio.AbstractEventLoop] = None) -> "BidiSession":
+                  requested_capabilities: Optional[Mapping[str, Any]]) -> "BidiSession":
         """Create a BiDi session where there is no existing HTTP session
 
         :param webdocket_url: URL to the WebSocket server listening for BiDi connections
         :param requested_capabilities: Capabilities request for establishing the session."""
-        return cls(websocket_url, requested_capabilities=requested_capabilities, loop=loop)
+        return cls(websocket_url, requested_capabilities=requested_capabilities)
 
     async def __aenter__(self) -> "BidiSession":
         await self.start()
@@ -141,9 +134,13 @@ class BidiSession:
     async def __aexit__(self, *args: Any) -> None:
         await self.end()
 
-    async def start(self) -> None:
+    async def start(self,
+                    loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
         """Connect to the WebDriver BiDi remote via WebSockets"""
-        self.transport = Transport(self.websocket_url, self.on_message, loop=self.loop)
+
+        if loop is None:
+            loop = get_running_loop()
+        self.transport = Transport(self.websocket_url, self.on_message, loop=loop)
 
         if self.session_id is None:
             self.session_id, self.capabilities = await self.session.new(self.requested_capabilities)
@@ -162,8 +159,8 @@ class BidiSession:
             "params": params
         }
         assert command_id not in self.pending_commands
-        self.pending_commands[command_id] = self.loop.create_future()
         assert self.transport is not None
+        self.pending_commands[command_id] = self.transport.loop.create_future()
         await self.transport.send(body)
 
         return self.pending_commands[command_id]
@@ -201,6 +198,7 @@ class BidiSession:
         """Close websocket connection."""
         assert self.transport is not None
         await self.transport.end()
+        self.transport = None
 
     def add_event_listener(self,
                            name: Optional[str],
