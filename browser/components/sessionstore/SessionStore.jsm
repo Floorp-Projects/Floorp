@@ -17,6 +17,7 @@ const TAB_STATE_FOR_BROWSER = new WeakMap();
 const WINDOW_RESTORE_IDS = new WeakMap();
 const WINDOW_RESTORE_ZINDICES = new WeakMap();
 const WINDOW_SHOWING_PROMISES = new Map();
+const WINDOW_FLUSHING_PROMISES = new Map();
 
 // A new window has just been restored. At this stage, tabs are generally
 // not restored.
@@ -1885,6 +1886,8 @@ var SessionStoreInternal = {
         // access any DOM elements from aWindow within this callback unless
         // you're holding on to them in the closure.
 
+        WINDOW_FLUSHING_PROMISES.delete(aWindow);
+
         for (let browser of browsers) {
           if (this._closedWindowTabs.has(browser.permanentKey)) {
             let tabData = this._closedWindowTabs.get(browser.permanentKey);
@@ -1909,6 +1912,11 @@ var SessionStoreInternal = {
         // save the state without this window to disk
         this.saveStateDelayed();
       });
+
+      // Here we might override a flush already in flight, but that's fine
+      // because `completionPromise` will always resolve after the old flush
+      // resolves.
+      WINDOW_FLUSHING_PROMISES.set(aWindow, completionPromise);
     } else {
       this.cleanUpWindow(aWindow, winData, browsers);
     }
@@ -2059,16 +2067,7 @@ var SessionStoreInternal = {
 
           const observeTopic = topic => {
             let deferred = PromiseUtils.defer();
-            const cleanup = () => {
-              try {
-                Services.obs.removeObserver(deferred.resolve, topic);
-              } catch (ex) {
-                Cu.reportError(
-                  "SessionStore: exception whilst flushing all windows: " + ex
-                );
-              }
-            };
-            Services.obs.addObserver(subject => {
+            const observer = subject => {
               // Skip abort on ipc:content-shutdown if not abnormal/crashed
               subject.QueryInterface(Ci.nsIPropertyBag2);
               if (
@@ -2076,7 +2075,17 @@ var SessionStoreInternal = {
               ) {
                 deferred.resolve();
               }
-            }, topic);
+            };
+            const cleanup = () => {
+              try {
+                Services.obs.removeObserver(observer, topic);
+              } catch (ex) {
+                Cu.reportError(
+                  "SessionStore: exception whilst flushing all windows: " + ex
+                );
+              }
+            };
+            Services.obs.addObserver(observer, topic);
             deferred.promise.then(cleanup, cleanup);
             return deferred;
           };
@@ -2087,6 +2096,9 @@ var SessionStoreInternal = {
           let waitTimeMaxMs = Math.max(0, AsyncShutdown.DELAY_CRASH_MS - 10000);
           let defers = [
             this.looseTimer(waitTimeMaxMs),
+
+            // FIXME: We should not be aborting *all* flushes when a single
+            // content process crashes here.
             observeTopic("oop-frameloader-crashed"),
             observeTopic("ipc:content-shutdown"),
           ];
@@ -2126,7 +2138,9 @@ var SessionStoreInternal = {
    * @return Promise
    */
   async flushAllWindowsAsync(progress = {}) {
-    let windowPromises = new Map();
+    let windowPromises = new Map(WINDOW_FLUSHING_PROMISES);
+    WINDOW_FLUSHING_PROMISES.clear();
+
     // We collect flush promises and close each window immediately so that
     // the user can't start changing any window state while we're waiting
     // for the flushes to finish.
@@ -2147,7 +2161,13 @@ var SessionStoreInternal = {
     // provide useful progress information to AsyncShutdown.
     for (let [win, promise] of windowPromises) {
       await promise;
-      this._collectWindowData(win);
+
+      // We may have already stopped tracking this window in onClose, which is
+      // fine as we would've collected window data there as well.
+      if (win.__SSi && this._windows[win.__SSi]) {
+        this._collectWindowData(win);
+      }
+
       progress.current++;
     }
 
