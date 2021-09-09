@@ -369,12 +369,11 @@ void APZCTreeManager::SetAllowedTouchBehavior(
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-template <class ScrollNode>
-void  // ScrollNode is a WebRenderScrollDataWrapper
-APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
-                                          bool aIsFirstPaint,
-                                          LayersId aOriginatingLayersId,
-                                          uint32_t aPaintSequenceNumber) {
+void APZCTreeManager::UpdateHitTestingTree(
+    const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
+    LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber) {
+  AssertOnUpdaterThread();
+
   RecursiveMutexAutoLock lock(mTreeLock);
 
   // For testing purposes, we log some data to the APZTestData associated with
@@ -702,15 +701,6 @@ void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
   mFocusState.Update(aRootLayerTreeId, aOriginatingLayersId, aFocusTarget);
 }
 
-void APZCTreeManager::UpdateHitTestingTree(
-    const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
-    LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber) {
-  AssertOnUpdaterThread();
-
-  UpdateHitTestingTreeImpl(aRoot, aIsFirstPaint, aOriginatingLayersId,
-                           aPaintSequenceNumber);
-}
-
 void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          wr::TransactionWrapper& aTxn,
                                          const SampleTime& aSampleTime) {
@@ -970,7 +960,6 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
 
 // Compute the clip region to be used for a layer with an APZC. This function
 // is only called for layers which actually have scrollable metrics and an APZC.
-template <class ScrollNode>
 Maybe<ParentLayerIntRegion> APZCTreeManager::ComputeClipRegion(
     const LayersId& aLayersId, const ScrollNode& aLayer) {
   Maybe<ParentLayerIntRegion> clipRegion;
@@ -995,7 +984,6 @@ Maybe<ParentLayerIntRegion> APZCTreeManager::ComputeClipRegion(
   return clipRegion;
 }
 
-template <class ScrollNode>
 void APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
                                     const AsyncPanZoomController* apzc) {
   const FrameMetrics& metrics = aLayer.Metrics();
@@ -1023,8 +1011,7 @@ void APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
   }
 }
 
-template <class ScrollNode>
-static EventRegions GetEventRegions(const ScrollNode& aLayer) {
+static EventRegions GetEventRegions(const WebRenderScrollDataWrapper& aLayer) {
   if (aLayer.Metrics().IsScrollInfoLayer()) {
     ParentLayerIntRect compositionBounds(
         RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
@@ -1125,8 +1112,8 @@ void APZCTreeManager::NotifyAutoscrollRejected(
   controller->NotifyAsyncAutoscrollRejected(aGuid.mScrollId);
 }
 
-template <class ScrollNode>
-void SetHitTestData(HitTestingTreeNode* aNode, const ScrollNode& aLayer,
+void SetHitTestData(HitTestingTreeNode* aNode,
+                    const WebRenderScrollDataWrapper& aLayer,
                     const Maybe<ParentLayerIntRegion>& aClipRegion,
                     const EventRegionsOverride& aOverrideFlags) {
   aNode->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
@@ -1136,7 +1123,6 @@ void SetHitTestData(HitTestingTreeNode* aNode, const ScrollNode& aLayer,
                         aLayer.GetAsyncZoomContainerId());
 }
 
-template <class ScrollNode>
 HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     const RecursiveMutexAutoLock& aProofOfTreeLock, const ScrollNode& aLayer,
     const FrameMetrics& aMetrics, LayersId aLayersId,
