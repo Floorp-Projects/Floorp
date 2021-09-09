@@ -33,6 +33,8 @@ namespace wasm {
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// Heap access subroutines.
+
 // Bounds check elimination.
 //
 // We perform BCE on two kinds of address expressions: on constant heap pointers
@@ -84,17 +86,6 @@ namespace wasm {
 // Finally, when the debugger allows locals to be mutated we must disable BCE
 // for references via a local, by returning immediately from bceCheckLocal if
 // compilerEnv_.debugEnabled() is true.
-//
-//
-// Alignment check elimination.
-//
-// Alignment checks for atomic operations can be omitted if the pointer is a
-// constant and the pointer + offset is aligned.  Alignment checking that can't
-// be omitted can still be simplified by checking only the pointer if the offset
-// is aligned.
-//
-// (In addition, alignment checking of the pointer can be omitted if the pointer
-// has been checked in dominating code, but we don't do that yet.)
 
 void BaseCompiler::bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
                                  uint32_t local) {
@@ -122,8 +113,15 @@ void BaseCompiler::bceLocalIsUpdated(uint32_t local) {
   bceSafe_ &= ~(BCESet(1) << local);
 }
 
-// TODO / OPTIMIZE (bug 1329576): There are opportunities to generate better
-// code by not moving a constant address with a zero offset into a register.
+// Alignment check elimination.
+//
+// Alignment checks for atomic operations can be omitted if the pointer is a
+// constant and the pointer + offset is aligned.  Alignment checking that can't
+// be omitted can still be simplified by checking only the pointer if the offset
+// is aligned.
+//
+// (In addition, alignment checking of the pointer can be omitted if the pointer
+// has been checked in dominating code, but we don't do that yet.)
 
 RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
                                        AccessCheck* check) {
@@ -163,10 +161,6 @@ RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
 
   return popI32();
 }
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// Common load and store code.
 
 #ifdef RABALDR_HAS_HEAPREG
 void BaseCompiler::pushHeapBase() {
@@ -219,8 +213,8 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     // memoryBase nor boundsCheckLimit from tls.
     MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
   }
-#ifdef JS_CODEGEN_ARM
-  // We have HeapReg on ARM and don't need to load the memoryBase from tls.
+#ifdef RABALDR_HAS_HEAPREG
+  // We have HeapReg and don't need to load the memoryBase from tls.
   MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
 #endif
 
@@ -243,9 +237,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
 
       // In principle there may be non-zero bits in the upper bits of the
       // register; clear them.
-#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
-      // The canonical value is zero-extended (see comment block "64-bit GPRs
-      // carrying 32-bit values" in MacroAssembler.h); we already have that.
+#  ifdef RABALDR_ZERO_EXTENDS
       masm.assertCanonicalInt32(ptr);
 #  else
       MOZ_CRASH("Platform code needed here");
@@ -259,7 +251,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
       // Restore the value to the canonical form for a 32-bit value in a
       // 64-bit register and/or the appropriate form for further use in the
       // indexing instruction.
-#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+#  ifdef RABALDR_ZERO_EXTENDS
       // The canonical value is zero-extended; we already have that.
 #  else
       MOZ_CRASH("Platform code needed here");
@@ -292,13 +284,35 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
 }
 
 [[nodiscard]] bool BaseCompiler::needTlsForAccess(const AccessCheck& check) {
-#if defined(JS_CODEGEN_X86)
-  // x86 requires Tls for memory base
+#ifndef RABALDR_HAS_HEAPREG
+  // Platform requires Tls for memory base.
   return true;
 #else
   return !moduleEnv_.hugeMemoryEnabled() && !check.omitBoundsCheck;
 #endif
 }
+
+RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
+  if (needTlsForAccess(check)) {
+    RegI32 tls = needI32();
+    fr.loadTlsPtr(tls);
+    return tls;
+  }
+  return RegI32::Invalid();
+}
+
+RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
+                                           RegI32 specific) {
+  if (needTlsForAccess(check)) {
+    fr.loadTlsPtr(specific);
+    return specific;
+  }
+  return RegI32::Invalid();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Load and store.
 
 // ptr and dest may be the same iff dest is I32.
 // This may destroy ptr even if ptr and dest are not the same.
@@ -460,24 +474,6 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
 #endif
 
   return true;
-}
-
-RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
-  RegI32 tls;
-  if (needTlsForAccess(check)) {
-    tls = needI32();
-    fr.loadTlsPtr(tls);
-  }
-  return tls;
-}
-
-RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
-                                           RegI32 specific) {
-  if (needTlsForAccess(check)) {
-    fr.loadTlsPtr(specific);
-    return specific;
-  }
-  return RegI32::Invalid();
 }
 
 bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
