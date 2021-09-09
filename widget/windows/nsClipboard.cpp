@@ -252,6 +252,44 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
   return NS_OK;
 }
 
+// static
+void nsClipboard::OleSetClipboardResultToString(HRESULT aHres,
+                                                nsACString& aResult) {
+  switch (aHres) {
+    case S_OK:
+      aResult = "S_OK";
+      break;
+    case CLIPBRD_E_CANT_OPEN:
+      aResult = "CLIPBRD_E_CANT_OPEN";
+      break;
+    case CLIPBRD_E_CANT_EMPTY:
+      aResult = "CLIPBRD_E_CANT_EMPTY";
+      break;
+    case CLIPBRD_E_CANT_CLOSE:
+      aResult = "CLIPBRD_E_CANT_CLOSE";
+      break;
+    case CLIPBRD_E_CANT_SET:
+      aResult = "CLIPBRD_E_CANT_SET";
+      break;
+    default:
+      // Explicit template instantiaton, because otherwise the call is
+      // ambiguous.
+      constexpr int kRadix = 16;
+      aResult = IntToCString<int32_t>(aHres, kRadix);
+      break;
+  }
+}
+
+// static
+void nsClipboard::LogOleSetClipboardResult(const HRESULT aHres) {
+  if (MOZ_LOG_TEST(gWin32ClipboardLog, LogLevel::Debug)) {
+    nsAutoCString hresString;
+    OleSetClipboardResultToString(aHres, hresString);
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug,
+            ("OleSetClipboard result: %s", hresString.get()));
+  }
+}
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
@@ -270,11 +308,11 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   IDataObject* dataObj;
   if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj,
                                           nullptr))) {  // this add refs dataObj
-    ::OleSetClipboard(dataObj);
+    LogOleSetClipboardResult(::OleSetClipboard(dataObj));
     dataObj->Release();
   } else {
     // Clear the native clipboard
-    ::OleSetClipboard(nullptr);
+    LogOleSetClipboardResult(::OleSetClipboard(nullptr));
   }
 
   mIgnoreEmptyNotification = false;
@@ -1056,7 +1094,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   // has the clipboard open.  So to avoid this race condition for OpenClipboard
   // we do not empty the clipboard when we're setting it.
   if (aWhichClipboard == kGlobalClipboard && !mEmptyingForSetData) {
-    OleSetClipboard(nullptr);
+    LogOleSetClipboardResult(::OleSetClipboard(nullptr));
   }
   return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 }
