@@ -238,8 +238,9 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   // The simple layer tree has a scrollable rect of 500x500 and a composition
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
+  WebRenderLayerScrollData* root = scrollData[0];
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
@@ -273,8 +274,9 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   // The simple layer tree has a scrollable rect of 500x500 and a composition
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
+  WebRenderLayerScrollData* root = scrollData[0];
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
