@@ -37,7 +37,7 @@ class NimbusFeatures {
                             PrefChangedFunc aUserCallback, void* aUserData);
 
   static nsresult RecordExposureEvent(const nsACString& aFeatureId,
-                                      const bool aOnce = false);
+                                      const bool aForce = false);
 };
 
 }  // namespace mozilla
