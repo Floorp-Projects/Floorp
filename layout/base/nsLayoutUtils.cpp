@@ -8766,12 +8766,20 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // The cumulative resolution is the resolution at which the scroll frame's
   // content is actually rendered. It includes the pres shell resolutions of
   // all the pres shells from here up to the root, as well as any css-driven
-  // resolution.
-  LayoutDeviceToLayerScale2D cumulativeResolution(
+  // resolution. We don't need to compute it as it's already stored in the
+  // container parameters... except if we're in WebRender in which case we
+  // don't have a aContainerParameters. In that case we're also not rasterizing
+  // in Gecko anyway, so the only resolution we care about here is the presShell
+  // resolution which we need to propagate to WebRender.
+  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(
+      LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
+
+  LayoutDeviceToScreenScale2D resolutionToScreen(
       presShell->GetCumulativeResolution() *
       nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame
                                                               : aForFrame));
-  metrics.SetCumulativeResolution(cumulativeResolution);
+  metrics.SetExtraResolution(metrics.GetCumulativeResolution() /
+                             resolutionToScreen);
 
   metrics.SetDevPixelsPerCSSPixel(presContext->CSSToDevPixelScale());
 
