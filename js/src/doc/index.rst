@@ -18,6 +18,7 @@ Specific documentation on a few topics is available at:
    :maxdepth: 1
 
    build
+   test
    Debugger/index
    SavedFrame/index
 
@@ -203,4 +204,4 @@ not support *BaldrMonkey*).
 .. _Bytecode: https://en.wikipedia.org/wiki/Bytecode
 .. _Abstract Syntax Tree: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 .. _Intermediate Representation: https://en.wikipedia.org/wiki/Intermediate_representation
-.. _MIR Optimizations: ./MIR-optimizations/index
+.. _MIR Optimizations: ./MIR-optimizations/index.html
