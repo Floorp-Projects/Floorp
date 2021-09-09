@@ -544,7 +544,17 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
     return;
   }
 
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest);
+  RefPtr<imgRequest> req = aCacheEntry->GetRequest();
+  MOZ_ASSERT(req);
+  RefPtr<nsIURI> uri;
+  req->GetURI(getter_AddRefs(uri));
+  // TODO(emilio): Seems we should be able to assert `uri` is not null, but we
+  // get here in such cases sometimes (like for some redirects, see
+  // docshell/test/chrome/test_bug89419.xhtml).
+  //
+  // We have the original URI in the cache key though, probably we should be
+  // using that instead of relying on Init() getting called.
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest, uri);
 
   // Expiration time defaults to 0. We set the expiration time on our entry if
   // it hasn't been set yet.
