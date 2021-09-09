@@ -268,6 +268,10 @@ int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct)
   return ret;
 }
 
+void os_print_last_error(const char* msg) {
+  perror(msg);
+}
+
 #undef VERBOSE_LOG
 
 #else

@@ -43,4 +43,7 @@ void os_clock_cleanup(void** clock_data_pointer);
 int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct);
 int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct);
 
+// print the error message
+void os_print_last_error(const char* msg);
+
 #endif
