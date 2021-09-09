@@ -26,7 +26,8 @@ class AsyncPanZoomController;
  * to do hit testing. The tree is roughly a copy of the layer tree, but will
  * contain multiple nodes in cases where the layer has multiple FrameMetrics.
  * In other words, the structure of this tree should be identical to the
- * LayerMetrics tree (see documentation in LayerMetricsWrapper.h).
+ * WebRenderScrollDataWrapper tree (see documentation in
+ * WebRenderScrollDataWrapper.h).
  *
  * Not all HitTestingTreeNode instances will have an APZC associated with them;
  * only HitTestingTreeNodes that correspond to layers with scrollable metrics

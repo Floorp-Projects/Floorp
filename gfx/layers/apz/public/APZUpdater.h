@@ -26,7 +26,6 @@ namespace layers {
 
 class APZCTreeManager;
 class FocusTarget;
-class Layer;
 class WebRenderScrollData;
 
 /**
@@ -61,9 +60,6 @@ class APZUpdater {
   void UpdateFocusState(LayersId aRootLayerTreeId,
                         LayersId aOriginatingLayersId,
                         const FocusTarget& aFocusTarget);
-  void UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
-                            LayersId aOriginatingLayersId,
-                            uint32_t aPaintSequenceNumber);
   /**
    * This should be called (in the WR-enabled case) when the compositor receives
    * a new WebRenderScrollData for a layers id. The |aScrollData| parameter is
