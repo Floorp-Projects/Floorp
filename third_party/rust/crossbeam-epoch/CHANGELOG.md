@@ -1,3 +1,34 @@
+# Version 0.9.5
+
+- Fix UB in `Pointable` impl of `[MaybeUninit<T>]` (#694)
+- Support targets that do not have atomic CAS on stable Rust (#698)
+- Fix breakage with nightly feature due to rust-lang/rust#84510 (#692)
+
+# Version 0.9.4
+
+- Fix UB in `<[MaybeUninit<T>] as Pointable>::init` when global allocator failed allocation (#690)
+- Bump `loom` dependency to version 0.5. (#686)
+
+# Version 0.9.3
+
+- Make `loom` dependency optional. (#666)
+
+# Version 0.9.2
+
+- Add `Atomic::compare_exchange` and `Atomic::compare_exchange_weak`. (#628)
+- Deprecate `Atomic::compare_and_set` and `Atomic::compare_and_set_weak`. Use `Atomic::compare_exchange` or `Atomic::compare_exchange_weak` instead. (#628)
+- Make `const_fn` dependency optional. (#611)
+- Add unstable support for `loom`. (#487)
+
+# Version 0.9.1
+
+- Bump `memoffset` dependency to version 0.6. (#592)
+
+# Version 0.9.0
+
+- Bump the minimum supported Rust version to 1.36.
+- Support dynamically sized types.
+
 # Version 0.8.2
 
 - Fix bug in release (yanking 0.8.1)

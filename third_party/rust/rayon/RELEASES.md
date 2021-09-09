@@ -1,3 +1,43 @@
+# Release rayon 1.5.1 / rayon-core 1.9.1 (2021-05-18)
+
+- The new `in_place_scope` and `in_place_scope_fifo` are variations of `scope`
+  and `scope_fifo`, running the initial non-`Send` callback directly on the
+  current thread, rather than moving execution to the thread pool.
+- With Rust 1.51 or later, arrays now implement `IntoParallelIterator`.
+- New implementations of `FromParallelIterator` make it possible to `collect`
+  complicated nestings of items.
+  - `FromParallelIterator<(A, B)> for (FromA, FromB)` works like `unzip`.
+  - `FromParallelIterator<Either<L, R>> for (A, B)` works like `partition_map`.
+- Type inference now works better with parallel `Range` and `RangeInclusive`.
+- The implementation of `FromParallelIterator` and `ParallelExtend` for
+  `Vec<T>` now uses `MaybeUninit<T>` internally to avoid creating any
+  references to uninitialized data.
+- `ParallelBridge` fixed a bug with threads missing available work.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @atouchet
+- @cuviper
+- @Hywan
+- @iRaiko
+- @Qwaz
+- @rocallahan
+
+# Release rayon 1.5.0 / rayon-core 1.9.0 (2020-10-21)
+
+- Update crossbeam dependencies.
+- The minimum supported `rustc` is now 1.36.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @mbrubeck
+- @mrksu
+
 # Release rayon 1.4.1 (2020-09-29)
 
 - The new `flat_map_iter` and `flatten_iter` methods can be used to flatten
@@ -593,7 +633,7 @@ Thanks to the following people for their contributions to this release:
 This release includes a lot of progress towards the goal of parity
 with the sequential iterator API, though there are still a few methods
 that are not yet complete. If you'd like to help with that effort,
-[check out the milestone](https://github.com/nikomatsakis/rayon/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Parity+with+the+%60Iterator%60+trait%22)
+[check out the milestone](https://github.com/rayon-rs/rayon/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Parity+with+the+%60Iterator%60+trait%22)
 to see the remaining issues.
 
 **Announcement:** @cuviper has been added as a collaborator to the
@@ -659,7 +699,7 @@ API. Thanks @cuviper! Keep it up.
   - We are considering removing weights or changing the weight mechanism
     before 1.0. Examples of scenarios where you still need weights even
     with this adaptive mechanism would be great. Join the discussion
-    at <https://github.com/nikomatsakis/rayon/issues/111>.
+    at <https://github.com/rayon-rs/rayon/issues/111>.
 - New (unstable) scoped threads API, see `rayon::scope` for details.
   - You will need to supply the [cargo feature] `unstable`.
 - The various demos and benchmarks have been consolidated into one
@@ -669,7 +709,7 @@ API. Thanks @cuviper! Keep it up.
 - Various internal cleanup in the implementation and typo fixes.
   Thanks @cuviper, @Eh2406, and @spacejam!
 
-[cargo feature]: http://doc.crates.io/manifest.html#the-features-section
+[cargo feature]: https://doc.rust-lang.org/cargo/reference/features.html#the-features-section
 
 
 # Release 0.4.2 (2016-09-15)

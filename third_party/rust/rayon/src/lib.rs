@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/rayon/1.4")]
+#![doc(html_root_url = "https://docs.rs/rayon/1.5")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
@@ -91,6 +91,7 @@ mod private;
 
 mod split_producer;
 
+pub mod array;
 pub mod collections;
 pub mod iter;
 pub mod option;
@@ -114,7 +115,7 @@ pub use rayon_core::ThreadPool;
 pub use rayon_core::ThreadPoolBuildError;
 pub use rayon_core::ThreadPoolBuilder;
 pub use rayon_core::{current_num_threads, current_thread_index};
+pub use rayon_core::{in_place_scope, scope, Scope};
+pub use rayon_core::{in_place_scope_fifo, scope_fifo, ScopeFifo};
 pub use rayon_core::{join, join_context};
-pub use rayon_core::{scope, Scope};
-pub use rayon_core::{scope_fifo, ScopeFifo};
 pub use rayon_core::{spawn, spawn_fifo};
