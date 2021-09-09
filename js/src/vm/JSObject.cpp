@@ -728,8 +728,8 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 /* * */
 
 static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
-                                                 Handle<TaggedProto> proto,
                                                  const JSClass* clasp,
+                                                 Handle<TaggedProto> proto,
                                                  gc::AllocKind kind,
                                                  NewObjectKind newKind) {
   MOZ_ASSERT(clasp->isNativeObject());
@@ -772,7 +772,7 @@ NativeObject* js::NewObjectWithGivenTaggedProto(JSContext* cx,
                                                 Handle<TaggedProto> proto,
                                                 gc::AllocKind allocKind,
                                                 NewObjectKind newKind) {
-  return NewObject(cx, proto, clasp, allocKind, newKind);
+  return NewObject(cx, clasp, proto, allocKind, newKind);
 }
 
 NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
@@ -797,7 +797,7 @@ NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  return NewObject(cx, taggedProto, clasp, allocKind, newKind);
+  return NewObject(cx, clasp, taggedProto, allocKind, newKind);
 }
 
 bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
