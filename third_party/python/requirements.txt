@@ -214,6 +214,9 @@ pyasn1==0.4.8 \
 pyrsistent==0.16.0 \
     --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3
     # via jsonschema
+pystache==0.5.4 \
+    --hash=sha256:f7bbc265fb957b4d6c7c042b336563179444ab313fb93a719759111eabd3b85a
+    # via -r requirements-mach-vendor-python.in
 pytest==3.6.2 \
     --hash=sha256:8ea01fc4fcc8e1b1e305252b4bc80a1528019ab99fd3b88666c9dc38d754406c \
     --hash=sha256:90898786b3d0b880b47645bae7b51aa9bbf1e9d1e4510c2cfd15dd65c70ea0cd
