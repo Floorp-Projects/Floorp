@@ -28,9 +28,8 @@
 #include "mozilla/dom/AnimationEffect.h"  // for AnimationEffect
 #include "mozilla/gfx/Point.h"            // for IntSize
 #include "mozilla/gfx/Types.h"            // for SurfaceFormat, gfx
-#include "mozilla/gfx/UserData.h"  // for UserData, UserDataKey (ptr only)
-#include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
-#include "mozilla/layers/LayersTypes.h"          // for CompositionPayload
+#include "mozilla/gfx/UserData.h"        // for UserData, UserDataKey (ptr only)
+#include "mozilla/layers/LayersTypes.h"  // for CompositionPayload
 #include "mozilla/layers/PersistentBufferProvider.h"  // for PersistentBufferProviderBasic, PersistentBufferProvider (ptr only)
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::NULL_SCROLL_ID, ScrollableLayerGu...
 #include "nsHashKeys.h"                          // for nsUint64HashKey
@@ -72,37 +71,6 @@ void LayerManager::Destroy() {
 /* static */ mozilla::LogModule* LayerManager::GetLog() {
   static LazyLogModule sLog("Layers");
   return sLog;
-}
-
-ScrollableLayerGuid::ViewID LayerManager::GetRootScrollableLayerId() {
-  if (!mRoot) {
-    return ScrollableLayerGuid::NULL_SCROLL_ID;
-  }
-
-  LayerMetricsWrapper layerMetricsRoot = LayerMetricsWrapper(mRoot);
-
-  LayerMetricsWrapper rootScrollableLayerMetrics =
-      BreadthFirstSearch<ForwardIterator>(
-          layerMetricsRoot, [](LayerMetricsWrapper aLayerMetrics) {
-            return aLayerMetrics.Metrics().IsScrollable();
-          });
-
-  return rootScrollableLayerMetrics.IsValid()
-             ? rootScrollableLayerMetrics.Metrics().GetScrollId()
-             : ScrollableLayerGuid::NULL_SCROLL_ID;
-}
-
-LayerMetricsWrapper LayerManager::GetRootContentLayer() {
-  if (!mRoot) {
-    return LayerMetricsWrapper();
-  }
-
-  LayerMetricsWrapper root(mRoot);
-
-  return BreadthFirstSearch<ForwardIterator>(
-      root, [](LayerMetricsWrapper aLayerMetrics) {
-        return aLayerMetrics.Metrics().IsRootContent();
-      });
 }
 
 already_AddRefed<DrawTarget> LayerManager::CreateOptimalDrawTarget(
