@@ -320,6 +320,7 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
 #define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
 #define NS_TIMER_CALLBACK_TOPIC "timer-callback"
 
+#ifndef RELEASE_OR_BETA
 #undef NS_DECL_NSITIMERCALLBACK
 #define NS_DECL_NSITIMERCALLBACK                                        \
   NS_IMETHOD Notify(nsITimer *timer) override;                          \
@@ -327,4 +328,5 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
     static_assert(std::is_convertible<decltype(this), nsINamed*>::value, \
                   "nsITimerCallback implementations must also implement nsINamed");     \
   }
+#endif
 %}
