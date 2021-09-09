@@ -206,13 +206,6 @@ class CompositableHost {
                                          TextureHost* aTextureOnWhite);
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
-  // Called every time this is composited
-  void BumpFlashCounter() {
-    mFlashCounter = mFlashCounter >= DIAGNOSTIC_FLASH_COUNTER_MAX
-                        ? DIAGNOSTIC_FLASH_COUNTER_MAX
-                        : mFlashCounter + 1;
-  }
-
   uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
 
   const AsyncCompositableRef& GetAsyncRef() const { return mAsyncRef; }
@@ -245,7 +238,6 @@ class CompositableHost {
   uint64_t mCompositorBridgeID;
   RefPtr<TextureSourceProvider> mTextureSourceProvider;
   Layer* mLayer;
-  uint32_t mFlashCounter;  // used when the pref "layers.flash-borders" is true.
   bool mAttached;
   bool mKeepAttached;
 };
