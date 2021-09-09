@@ -230,10 +230,11 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
  */
 function ConnectionData(connection, identifier, options = {}) {
   this._log = Log.repository.getLoggerWithMessagePrefix(
-    "Sqlite.Connection",
-    identifier + ": "
+    "Sqlite.jsm",
+    `Connection ${identifier}: `
   );
-  this._log.info("Opened");
+  this._log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
+  this._log.debug("Opened");
 
   this._dbConn = connection;
 
@@ -502,7 +503,7 @@ ConnectionData.prototype = Object.freeze({
     // We must always close the connection at the Sqlite.jsm-level, not
     // necessarily at the mozStorage-level.
     let markAsClosed = () => {
-      this._log.info("Closed");
+      this._log.debug("Closed");
       // Now that the connection is closed, no need to keep
       // a blocker for Barriers.connections.
       Barriers.connections.client.removeBlocker(this._deferredClose.promise);
@@ -622,7 +623,7 @@ ConnectionData.prototype = Object.freeze({
         // At this point we should never have an in progress transaction, since
         // they are enqueued.
         if (this._initiatedTransaction) {
-          console.error(
+          this._log.error(
             "Unexpected transaction in progress when trying to start a new one."
           );
         }
@@ -663,13 +664,13 @@ ConnectionData.prototype = Object.freeze({
                 ex
               );
             } else {
-              this._log.warn("Error during transaction. Rolling back", ex);
+              this._log.error("Error during transaction. Rolling back", ex);
               // If we began a transaction, we must rollback it.
               if (this._initiatedTransaction) {
                 try {
                   await this.execute("ROLLBACK TRANSACTION");
                 } catch (inner) {
-                  this._log.warn("Could not roll back transaction", inner);
+                  this._log.error("Could not roll back transaction", inner);
                 }
               }
             }
@@ -713,7 +714,7 @@ ConnectionData.prototype = Object.freeze({
     // Atomically update the queue before anyone else has a chance to enqueue
     // further transactions.
     this._transactionQueue = promise.catch(ex => {
-      console.error(ex);
+      this._log.error(ex);
     });
 
     // Make sure that we do not shutdown the connection during a transaction.
@@ -725,7 +726,7 @@ ConnectionData.prototype = Object.freeze({
   },
 
   shrinkMemory() {
-    this._log.info("Shrinking memory usage.");
+    this._log.debug("Shrinking memory usage.");
     let onShrunk = this._clearIdleShrinkTimer.bind(this);
     return this.execute("PRAGMA shrink_memory").then(onShrunk, onShrunk);
   },
@@ -742,7 +743,7 @@ ConnectionData.prototype = Object.freeze({
   },
 
   interrupt() {
-    this._log.info("Trying to interrupt.");
+    this._log.debug("Trying to interrupt.");
     this.ensureOpen();
     this._dbConn.interrupt();
   },
@@ -868,7 +869,7 @@ ConnectionData.prototype = Object.freeze({
       },
 
       handleError(error) {
-        self._log.info(
+        self._log.warn(
           "Error when executing SQL (" + error.result + "): " + error.message
         );
         errors.push(error);
@@ -1018,7 +1019,11 @@ ConnectionData.prototype = Object.freeze({
  * @return Promise<OpenedConnection>
  */
 function openConnection(options) {
-  let log = Log.repository.getLogger("Sqlite.ConnectionOpener");
+  let log = Log.repository.getLoggerWithMessagePrefix(
+    "Sqlite.jsm",
+    `ConnectionOpener: `
+  );
+  log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
 
   if (!options.path) {
     throw new Error("path not specified in connection options.");
@@ -1080,7 +1085,7 @@ function openConnection(options) {
 
   let identifier = getIdentifierByFileName(PathUtils.filename(path));
 
-  log.info("Opening database: " + path + " (" + identifier + ")");
+  log.debug("Opening database: " + path + " (" + identifier + ")");
 
   return new Promise((resolve, reject) => {
     let dbOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
@@ -1104,7 +1109,7 @@ function openConnection(options) {
       dbOptions,
       (status, connection) => {
         if (!connection) {
-          log.warn(`Could not open connection to ${path}: ${status}`);
+          log.error(`Could not open connection to ${path}: ${status}`);
           let error = new Components.Exception(
             `Could not open connection to ${path}: ${status}`,
             status
@@ -1112,7 +1117,7 @@ function openConnection(options) {
           reject(error);
           return;
         }
-        log.info("Connection opened");
+        log.debug("Connection opened");
         try {
           resolve(
             new OpenedConnection(
@@ -1122,7 +1127,7 @@ function openConnection(options) {
             )
           );
         } catch (ex) {
-          log.warn("Could not open database", ex);
+          log.error("Could not open database", ex);
           connection.asyncClose();
           reject(ex);
         }
@@ -1161,7 +1166,11 @@ function openConnection(options) {
  * @return Promise<OpenedConnection>
  */
 function cloneStorageConnection(options) {
-  let log = Log.repository.getLogger("Sqlite.ConnectionCloner");
+  let log = Log.repository.getLoggerWithMessagePrefix(
+    "Sqlite.jsm",
+    `ConnectionCloner: `
+  );
+  log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
 
   let source = options && options.connection;
   if (!source) {
@@ -1195,21 +1204,21 @@ function cloneStorageConnection(options) {
   let path = source.databaseFile.path;
   let identifier = getIdentifierByFileName(PathUtils.filename(path));
 
-  log.info("Cloning database: " + path + " (" + identifier + ")");
+  log.debug("Cloning database: " + path + " (" + identifier + ")");
 
   return new Promise((resolve, reject) => {
     source.asyncClone(!!options.readOnly, (status, connection) => {
       if (!connection) {
-        log.warn("Could not clone connection: " + status);
+        log.error("Could not clone connection: " + status);
         reject(new Error("Could not clone connection: " + status));
         return;
       }
-      log.info("Connection cloned");
+      log.debug("Connection cloned");
       try {
         let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
         resolve(new OpenedConnection(conn, identifier, openedOptions));
       } catch (ex) {
-        log.warn("Could not clone database", ex);
+        log.error("Could not clone database", ex);
         connection.asyncClose();
         reject(ex);
       }
@@ -1236,7 +1245,11 @@ function cloneStorageConnection(options) {
  * @return Promise<OpenedConnection>
  */
 function wrapStorageConnection(options) {
-  let log = Log.repository.getLogger("Sqlite.ConnectionWrapper");
+  let log = Log.repository.getLoggerWithMessagePrefix(
+    "Sqlite.jsm",
+    `ConnectionCloner: `
+  );
+  log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
 
   let connection = options && options.connection;
   if (!connection || !(connection instanceof Ci.mozIStorageAsyncConnection)) {
@@ -1252,7 +1265,7 @@ function wrapStorageConnection(options) {
 
   let identifier = getIdentifierByFileName(connection.databaseFile.leafName);
 
-  log.info("Wrapping database: " + identifier);
+  log.debug("Wrapping database: " + identifier);
   return new Promise(resolve => {
     try {
       let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
@@ -1262,7 +1275,7 @@ function wrapStorageConnection(options) {
       wrappedConnections.add(identifier);
       resolve(wrapper);
     } catch (ex) {
-      log.warn("Could not wrap database", ex);
+      log.error("Could not wrap database", ex);
       throw ex;
     }
   });
