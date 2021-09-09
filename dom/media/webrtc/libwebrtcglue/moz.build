@@ -12,6 +12,7 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/media/libyuv/libyuv/include",
     "/media/webrtc",
+    "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
     "/third_party/libwebrtc/third_party/abseil-cpp",
 ]

@@ -13,7 +13,6 @@
 
 #include "MediaConduitInterface.h"
 #include "common/MediaEngineWrapper.h"
-#include "RtpPacketQueue.h"
 
 /**
  * This file hosts several structures identifying different aspects of a RTP
@@ -28,24 +27,62 @@ struct DtmfEvent;
  *  - media-source and target to external transport
  */
 class WebrtcAudioConduit : public AudioSessionConduit,
-                           public webrtc::RtcpEventObserver,
-                           public webrtc::Transport {
+                           public webrtc::RtcpEventObserver {
  public:
-  /**
-   * APIs used by the registered external transport to this Conduit to
-   * feed in received RTP Frames to the Receiver for decoding.
-   */
-  void ReceivedRTPPacket(const uint8_t* data, int len,
-                         webrtc::RTPHeader& header) override;
+  void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
+  void OnRtcpReceived(MediaPacket&& aPacket);
 
   void OnRtcpBye() override;
   void OnRtcpTimeout() override;
 
-  /**
-   * APIs used by the registered external transport to this Conduit to
-   * feed in received RTCP Frames to the Receiver for decoding.
-   */
-  void ReceivedRTCPPacket(const uint8_t* data, int len) override;
+  void SetTransportActive(bool aActive) override {
+    mTransportActive = aActive;
+    if (!aActive) {
+      mReceiverRtpEventListener.DisconnectIfExists();
+      mReceiverRtcpEventListener.DisconnectIfExists();
+      mSenderRtcpEventListener.DisconnectIfExists();
+    }
+  }
+  MediaEventSourceExc<MediaPacket>& SenderRtpSendEvent() override {
+    return mSenderRtpSendEvent;
+  }
+  MediaEventSourceExc<MediaPacket>& SenderRtcpSendEvent() override {
+    return mSenderRtcpSendEvent;
+  }
+  MediaEventSourceExc<MediaPacket>& ReceiverRtcpSendEvent() override {
+    return mReceiverRtcpSendEvent;
+  }
+  void ConnectReceiverRtpEvent(
+      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) override {
+    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
+    // off-target.
+    mReceiverRtpEventListener = aEvent.Connect(
+        mCallThread, [this, self = RefPtr<WebrtcAudioConduit>(this)](
+                         MediaPacket aPacket, webrtc::RTPHeader aHeader) {
+          OnRtpReceived(std::move(aPacket), std::move(aHeader));
+        });
+  }
+  void ConnectReceiverRtcpEvent(
+      MediaEventSourceExc<MediaPacket>& aEvent) override {
+    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
+    // off-target.
+    mReceiverRtcpEventListener = aEvent.Connect(
+        mCallThread,
+        [this, self = RefPtr<WebrtcAudioConduit>(this)](MediaPacket aPacket) {
+          OnRtcpReceived(std::move(aPacket));
+        });
+  }
+  void ConnectSenderRtcpEvent(
+      MediaEventSourceExc<MediaPacket>& aEvent) override {
+    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
+    // off-target.
+    mSenderRtcpEventListener = aEvent.Connect(
+        mCallThread,
+        [this, self = RefPtr<WebrtcAudioConduit>(this)](MediaPacket aPacket) {
+          OnRtcpReceived(std::move(aPacket));
+        });
+  }
+
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   DOMHighResTimeStamp GetNow() const override;
 
@@ -53,17 +90,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   MediaConduitErrorCode StartTransmittingLocked();
   MediaConduitErrorCode StopReceivingLocked();
   MediaConduitErrorCode StartReceivingLocked();
-
-  /**
-   * Register External Transport to this Conduit. RTP and RTCP frames from the
-   * VoiceEngine shall be passed to the registered transport for transporting
-   * externally.
-   */
-  MediaConduitErrorCode SetTransmitterTransport(
-      RefPtr<TransportInterface> aTransport) override;
-
-  MediaConduitErrorCode SetReceiverTransport(
-      RefPtr<TransportInterface> aTransport) override;
 
   /**
    * Function to deliver externally captured audio sample for encoding and
@@ -95,16 +121,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   MediaConduitErrorCode GetAudioFrame(int32_t samplingFreqHz,
                                       webrtc::AudioFrame* frame) override;
 
-  /**
-   * Webrtc transport implementation to send and receive RTP packet.
-   */
-  bool SendRtp(const uint8_t* data, size_t len,
-               const webrtc::PacketOptions& options) override;
-
-  /**
-   * Webrtc transport implementation to send and receive RTCP packet.
-   */
-  bool SendRtcp(const uint8_t* data, size_t len) override;
+  bool SendRtp(const uint8_t* aData, size_t aLength,
+               const webrtc::PacketOptions& aOptions) override;
+  bool SendSenderRtcp(const uint8_t* aData, size_t aLength) override;
+  bool SendReceiverRtcp(const uint8_t* aData, size_t aLength) override;
 
   bool HasCodecPluginID(uint64_t aPluginID) const override { return false; }
 
@@ -184,17 +204,14 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   MediaConduitErrorCode CreateRecvStream();
   void DeleteRecvStream();
 
-  mozilla::ReentrantMonitor mTransportMonitor;
-
-  // Accessed on any thread under mTransportMonitor.
-  RefPtr<TransportInterface> mTransmitterTransport;
-
-  // Accessed on any thread under mTransportMonitor.
-  RefPtr<TransportInterface> mReceiverTransport;
-
   // Const so can be accessed on any thread. Most methods are called on the Call
   // thread.
   const RefPtr<WebrtcCallWrapper> mCall;
+
+  // Set up in the ctor and then not touched. Called through by the streams on
+  // any thread.
+  WebrtcSendTransport mSendTransport;
+  WebrtcReceiveTransport mRecvTransport;
 
   // Accessed only on the Call thread.
   webrtc::AudioReceiveStream::Config mRecvStreamConfig;
@@ -209,12 +226,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
   webrtc::AudioSendStream* mSendStream;
-
-  // accessed on creation, and when receiving packets
-  Atomic<uint32_t> mRecvSSRC;  // this can change during a stream!
-
-  // Accessed only on mStsThread.
-  RtpPacketQueue mRtpPacketQueue;
 
   // If true => mSendStream started and not stopped
   // Written only on the Call thread. Guarded by mLock, except for reads on the
@@ -271,12 +282,21 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed from mStsThread. Last successfully polled RTT
   Maybe<DOMHighResTimeStamp> mRttSec;
 
-  // Accessed only on mStsThread
+  // Call thread.
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
 
   // Thread safe
+  Atomic<bool> mTransportActive = Atomic<bool>(false);
   MediaEventProducer<void> mRtcpByeEvent;
   MediaEventProducer<void> mRtcpTimeoutEvent;
+  MediaEventProducerExc<MediaPacket> mSenderRtpSendEvent;
+  MediaEventProducerExc<MediaPacket> mSenderRtcpSendEvent;
+  MediaEventProducerExc<MediaPacket> mReceiverRtcpSendEvent;
+
+  // Assigned and revoked on mStsThread. Listeners for receiving packets.
+  MediaEventListener mSenderRtcpEventListener;    // Rtp-transmitting pipeline
+  MediaEventListener mReceiverRtcpEventListener;  // Rtp-receiving pipeline
+  MediaEventListener mReceiverRtpEventListener;   // Rtp-receiving pipeline
 };
 
 }  // namespace mozilla
