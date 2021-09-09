@@ -3183,7 +3183,7 @@ nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
     // The cloned node may be a custom element that may require
     // enqueing upgrade reaction.
     if (nsAtom* typeAtom = data->GetCustomElementType()) {
-      aDst->SetCustomElementData(new CustomElementData(typeAtom));
+      aDst->SetCustomElementData(MakeUnique<CustomElementData>(typeAtom));
       MOZ_ASSERT(dstNodeInfo->NameAtom()->Equals(dstNodeInfo->LocalName()));
       CustomElementDefinition* definition =
           nsContentUtils::LookupCustomElementDefinition(
@@ -4028,7 +4028,7 @@ void Element::ClearServoData(Document* aDoc) {
   }
 }
 
-void Element::SetCustomElementData(CustomElementData* aData) {
+void Element::SetCustomElementData(UniquePtr<CustomElementData> aData) {
   SetHasCustomElementData();
 
   if (aData->mState != CustomElementData::State::eCustom) {
@@ -4059,7 +4059,7 @@ void Element::SetCustomElementData(CustomElementData* aData) {
     }
   }
 #endif
-  slots->mCustomElementData = aData;
+  slots->mCustomElementData = std::move(aData);
 }
 
 CustomElementDefinition* Element::GetCustomElementDefinition() const {
