@@ -66,10 +66,10 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             self.group_packages += ["C Development Tools and Libraries"]
 
             self.packages += ["npm", "redhat-rpm-config"]
+            if self.version >= 33:
+                self.packages.append("perl-FindBin")
 
             self.mobile_android_packages += ["ncurses-compat-libs"]
-            if self.version >= 33:
-                self.mobile_android_packages.append("perl-FindBin")
 
         if self.distro in ("centos", "rocky") and self.version == 8:
             self.packages += ["python3-devel"]
