@@ -83,11 +83,13 @@ web-platform-tests:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-(asan|tsan)(-qr)?/opt: ['trunk']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    linux.*64-ccov-qr/opt: []
                     default: built-projects
     mozharness:
         chunked: true
