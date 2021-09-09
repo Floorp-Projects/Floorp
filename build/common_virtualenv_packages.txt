@@ -85,7 +85,6 @@ pth:third_party/python/mohawk
 pth:third_party/python/more_itertools
 pth:third_party/python/mozilla_version
 pth:third_party/python/pathspec
-pth:third_party/python/pep487/lib
 pth:third_party/python/pip_tools
 pth:third_party/python/pluggy
 pth:third_party/python/ply
