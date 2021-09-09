@@ -10,6 +10,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsHttpChannel.h"
+#include "nsIExternalProtocolHandler.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIIOService.h"
 #include "nsIInputStreamChannel.h"
@@ -44,6 +45,26 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
 NS_INTERFACE_MAP_END
 
+static nsresult WillUseExternalProtocolHandler(nsIIOService* aIOService,
+                                               const char* aScheme) {
+  nsCOMPtr<nsIProtocolHandler> handler;
+  nsresult rv =
+      aIOService->GetProtocolHandler(aScheme, getter_AddRefs(handler));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIExternalProtocolHandler> externalHandler =
+      do_QueryInterface(handler);
+  // We should not allow view-source to open any external app.
+  if (externalHandler) {
+    NS_WARNING(nsPrintfCString("blocking view-source:%s:", aScheme).get());
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsViewSourceChannel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
   mOriginalURI = uri;
 
@@ -62,6 +83,11 @@ nsresult nsViewSourceChannel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
   if (scheme.EqualsLiteral("javascript")) {
     NS_WARNING("blocking view-source:javascript:");
     return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = WillUseExternalProtocolHandler(pService, scheme.get());
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIURI> newChannelURI;
@@ -1120,6 +1146,22 @@ nsViewSourceChannel::AsyncOnChannelRedirect(
   nsCOMPtr<nsIURI> newChannelOrigURI;
   rv = newChannel->GetOriginalURI(getter_AddRefs(newChannelOrigURI));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString scheme;
+  rv = newChannelOrigURI->GetScheme(scheme);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIIOService> ioService(do_GetIOService(&rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = WillUseExternalProtocolHandler(ioService, scheme.get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIURI> newChannelUpdatedOrigURI;
   rv = BuildViewSourceURI(newChannelOrigURI,
