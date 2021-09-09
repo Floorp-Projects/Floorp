@@ -867,6 +867,7 @@ struct BaseCompiler final {
   inline Control& controlItem();
   inline Control& controlItem(uint32_t relativeDepth);
   inline Control& controlOutermost();
+  inline LabelKind controlKind(uint32_t relativeDepth);
 
   ////////////////////////////////////////////////////////////
   //

@@ -72,6 +72,46 @@ assertWasmThrowsExn(() =>
   ).exports.f()
 );
 
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (tag $exn (param))
+       (func (export "f")
+         block
+           try
+             throw $exn
+           delegate 0
+         end))`
+  ).exports.f()
+);
+
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (tag $exn (param))
+       (func (export "f")
+         loop
+           try
+             throw $exn
+           delegate 0
+         end))`
+  ).exports.f()
+);
+
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (tag $exn (param))
+       (func (export "f")
+         (i32.const 1)
+         if
+           try
+             throw $exn
+           delegate 0
+         end))`
+  ).exports.f()
+);
+
 // Test throwing simple empty exceptions to JS.
 assertWasmThrowsExn(() =>
   wasmEvalText(

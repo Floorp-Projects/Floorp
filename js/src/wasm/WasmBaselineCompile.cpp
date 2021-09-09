@@ -3744,7 +3744,6 @@ bool BaseCompiler::emitDelegate() {
   }
 
   Control& tryDelegate = controlItem();
-  Control& target = controlItem(relativeDepth);
 
   // End the try branch like a plain catch block without exception ref handling.
   if (deadCode_) {
@@ -3778,6 +3777,15 @@ bool BaseCompiler::emitDelegate() {
   tryNote.entryPoint = tryNote.end;
   tryNote.framePushed = masm.framePushed();
 
+  // If the target block is a non-try block, skip over it and find the next
+  // try block or the very last block (to re-throw out of the function).
+  Control& lastBlock = controlOutermost();
+  while (controlKind(relativeDepth) != LabelKind::Try &&
+         &controlItem(relativeDepth) != &lastBlock) {
+    relativeDepth++;
+  }
+  Control& target = controlItem(relativeDepth);
+
   popBlockResults(ResultType::Empty(), target.stackHeight,
                   ContinuationKind::Jump);
   masm.jump(&target.otherLabel);
@@ -3799,7 +3807,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Control& tryCatch = controlItem();
-  LabelKind tryKind = iter_.controlKind(0);
+  LabelKind tryKind = controlKind(0);
 
   if (deadCode_) {
     fr.resetStackHeight(tryCatch.stackHeight, type);

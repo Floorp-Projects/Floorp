@@ -443,6 +443,10 @@ Control& BaseCompiler::controlItem(uint32_t relativeDepth) {
 
 Control& BaseCompiler::controlOutermost() { return iter_.controlOutermost(); }
 
+LabelKind BaseCompiler::controlKind(uint32_t relativeDepth) {
+  return iter_.controlKind(relativeDepth);
+}
+
 }  // namespace wasm
 }  // namespace js
 
