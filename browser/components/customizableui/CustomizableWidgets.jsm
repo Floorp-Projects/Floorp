@@ -233,8 +233,8 @@ const CustomizableWidgets = [
   },
   {
     id: "save-page-button",
+    l10nId: "toolbar-button-save-page",
     shortcutId: "key_savePage",
-    tooltiptext: "save-page-button.tooltiptext3",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.saveBrowser(win.gBrowser.selectedBrowser);
@@ -253,8 +253,8 @@ const CustomizableWidgets = [
   },
   {
     id: "open-file-button",
+    l10nId: "toolbar-button-open-file",
     shortcutId: "openFileKb",
-    tooltiptext: "open-file-button.tooltiptext3",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenFileWindow();
@@ -438,7 +438,7 @@ const CustomizableWidgets = [
   },
   {
     id: "email-link-button",
-    tooltiptext: "email-link-button.tooltiptext3",
+    l10nId: "toolbar-button-email-link",
     onCommand(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
@@ -449,8 +449,7 @@ const CustomizableWidgets = [
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
   CustomizableWidgets.push({
     id: "sync-button",
-    label: "remotetabs-panelmenu.label",
-    tooltiptext: "remotetabs-panelmenu.tooltiptext2",
+    l10nId: "toolbar-button-synced-tabs",
     type: "view",
     viewId: "PanelUI-remotetabs",
     onViewShowing(aEvent) {
@@ -606,6 +605,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
 if (PrivateBrowsingUtils.enabled) {
   CustomizableWidgets.push({
     id: "privatebrowsing-button",
+    l10nId: "toolbar-button-new-private-window",
     shortcutId: "key_privatebrowsing",
     onCommand(e) {
       let win = e.target.ownerGlobal;
