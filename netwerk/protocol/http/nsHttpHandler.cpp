@@ -1007,9 +1007,9 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     gIOService->NotifySocketProcessPrefsChanged(pref);
   }
 
-#define PREF_CHANGED(p) ((pref == nullptr) || !PL_strcmp(pref, p))
+#define PREF_CHANGED(p) ((pref == nullptr) || !strcmp(pref, p))
 #define MULTI_PREF_CHANGED(p) \
-  ((pref == nullptr) || !PL_strncmp(pref, p, sizeof(p) - 1))
+  ((pref == nullptr) || !strncmp(pref, p, sizeof(p) - 1))
 
   // If a security pref changed, lets clear our connection pool reuse
   if (MULTI_PREF_CHANGED(SECURITY_PREFIX)) {
