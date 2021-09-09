@@ -16,7 +16,16 @@
 
         ul {
             font-family: "NotoNastaliqUrduWeb", sans-serif;
+            counter-reset: c 7;
             list-style: none;
+        }
+
+        ul.test li::before {
+            content: "\0602" counter(c, arabic-indic);
+            counter-increment: c;
+            background: green;
+            color: transparent;  /* hide the glyphs to avoid Windows antialiasing
+                                    artifacts; we only care about the width */
         }
 
         ul.ref li::before {
@@ -24,29 +33,20 @@
             background: blue;
             color: white;
         }
-
-        ul.ref.green li::before {
-            background: green;
-            color: transparent;
-        }
     </style>
 </head>
 
 <body>
-    <p>The width of the green bar should match the blue reference block:</p>
+    <p>The width of the green bar should <b>increase</b> half-way down:</p>
 
     <ul class="ref" lang="ur" dir="rtl">
         <li></li>
     </ul>
 
-    <ul class="ref green" lang="ur" dir="rtl">
+    <ul class="test" lang="ur" dir="rtl">
         <li></li>
         <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
+        <!-- list item numbers 10-11 *should* make the subtending mark wider -->
         <li></li>
         <li></li>
     </ul>
