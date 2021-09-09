@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmBCMemory.h"
-
 #include "wasm/WasmBCClass.h"
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCRegDefs.h"
@@ -40,6 +38,17 @@ using ScratchAtomicNoHeapReg = ScratchEBX;
 #    error "Unimplemented porting interface"
 #  endif
 #endif
+
+// A helper class to manage temp registers for atomic operations.
+
+template <size_t Count>
+struct Atomic32Temps : mozilla::Array<RegI32, Count> {
+  // Allocate all temp registers if 'allocate' is not specified.
+  void allocate(BaseCompiler* bc, size_t allocate = Count);
+
+  // Free those that were allocated.
+  void maybeFree(BaseCompiler* bc);
+};
 
 template <size_t Count>
 void Atomic32Temps<Count>::allocate(BaseCompiler* bc, size_t allocate) {
@@ -502,10 +511,20 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
   return true;
 }
 
+#if defined(JS_CODEGEN_MIPS64)
+using AtomicRMW32Temps = Atomic32Temps<3>;
+using AtomicCmpXchg32Temps = Atomic32Temps<3>;
+using AtomicXchg32Temps = Atomic32Temps<3>;
+#else
+using AtomicRMW32Temps = Atomic32Temps<1>;
+using AtomicCmpXchg32Temps = Atomic32Temps<0>;
+using AtomicXchg32Temps = Atomic32Temps<0>;
+#endif
+
 template <typename T>
-void BaseCompiler::atomicRMW32(const MemoryAccessDesc& access, T srcAddr,
-                               AtomicOp op, RegI32 rv, RegI32 rd,
-                               const AtomicRMW32Temps& temps) {
+static void AtomicRMW32(BaseCompiler* bc, const MemoryAccessDesc& access,
+                        T srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
+                        const AtomicRMW32Temps& temps) {
   switch (access.type()) {
     case Scalar::Uint8:
 #ifdef JS_CODEGEN_X86
@@ -513,11 +532,11 @@ void BaseCompiler::atomicRMW32(const MemoryAccessDesc& access, T srcAddr,
       RegI32 temp = temps[0];
       // The temp, if used, must be a byte register.
       MOZ_ASSERT(temp.isInvalid());
-      ScratchI8 scratch(*this);
+      ScratchI8 scratch(*bc);
       if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
         temp = scratch;
       }
-      masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temp, rd);
+      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temp, rd);
       break;
     }
 #endif
@@ -525,10 +544,10 @@ void BaseCompiler::atomicRMW32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Int32:
     case Scalar::Uint32:
 #if defined(JS_CODEGEN_MIPS64)
-      masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], temps[1],
-                             temps[2], rd);
+      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], temps[1],
+                                 temps[2], rd);
 #else
-      masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], rd);
+      bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], rd);
 #endif
       break;
     default: {
@@ -540,28 +559,28 @@ void BaseCompiler::atomicRMW32(const MemoryAccessDesc& access, T srcAddr,
 // On x86, V is Address.  On other platforms, it is Register64.
 // T is BaseIndex or Address.
 template <typename T, typename V>
-void BaseCompiler::atomicRMW64(const MemoryAccessDesc& access, const T& srcAddr,
-                               AtomicOp op, V value, Register64 temp,
-                               Register64 rd) {
+static void AtomicRMW64(MacroAssembler& masm, const MemoryAccessDesc& access,
+                        const T& srcAddr, AtomicOp op, V value, Register64 temp,
+                        Register64 rd) {
   masm.wasmAtomicFetchOp64(access, op, value, srcAddr, temp, rd);
 }
 
 template <typename T>
-void BaseCompiler::atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr,
-                                   RegI32 rexpect, RegI32 rnew, RegI32 rd,
-                                   const AtomicCmpXchg32Temps& temps) {
+static void AtomicCmpXchg32(BaseCompiler* bc, const MemoryAccessDesc& access,
+                            T srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
+                            const AtomicCmpXchg32Temps& temps) {
   switch (access.type()) {
     case Scalar::Uint8:
 #if defined(JS_CODEGEN_X86)
     {
-      ScratchI8 scratch(*this);
-      MOZ_ASSERT(rd == specific_.eax);
-      if (!ra.isSingleByteI32(rnew)) {
+      ScratchI8 scratch(*bc);
+      MOZ_ASSERT(rd == bc->specific_.eax);
+      if (!bc->ra.isSingleByteI32(rnew)) {
         // The replacement value must have a byte persona.
-        masm.movl(rnew, scratch);
+        bc->masm.movl(rnew, scratch);
         rnew = scratch;
       }
-      masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
+      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
       break;
     }
 #endif
@@ -569,10 +588,10 @@ void BaseCompiler::atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Int32:
     case Scalar::Uint32:
 #if defined(JS_CODEGEN_MIPS64)
-      masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps[0],
-                               temps[1], temps[2], rd);
+      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps[0],
+                                   temps[1], temps[2], rd);
 #else
-      masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
+      bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, rd);
 #endif
       break;
     default:
@@ -581,20 +600,20 @@ void BaseCompiler::atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr,
 }
 
 template <typename T>
-void BaseCompiler::atomicXchg32(const MemoryAccessDesc& access, T srcAddr,
-                                RegI32 rv, RegI32 rd,
-                                const AtomicXchg32Temps& temps) {
+static void AtomicXchg32(BaseCompiler* bc, const MemoryAccessDesc& access,
+                         T srcAddr, RegI32 rv, RegI32 rd,
+                         const AtomicXchg32Temps& temps) {
   switch (access.type()) {
     case Scalar::Uint8:
 #if defined(JS_CODEGEN_X86)
     {
-      if (!ra.isSingleByteI32(rd)) {
-        ScratchI8 scratch(*this);
+      if (!bc->ra.isSingleByteI32(rd)) {
+        ScratchI8 scratch(*bc);
         // The output register must have a byte persona.
-        masm.wasmAtomicExchange(access, srcAddr, rv, scratch);
-        masm.movl(scratch, rd);
+        bc->masm.wasmAtomicExchange(access, srcAddr, rv, scratch);
+        bc->masm.movl(scratch, rd);
       } else {
-        masm.wasmAtomicExchange(access, srcAddr, rv, rd);
+        bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
       }
       break;
     }
@@ -603,10 +622,10 @@ void BaseCompiler::atomicXchg32(const MemoryAccessDesc& access, T srcAddr,
     case Scalar::Int32:
     case Scalar::Uint32:
 #if defined(JS_CODEGEN_MIPS64)
-      masm.wasmAtomicExchange(access, srcAddr, rv, temps[0], temps[1], temps[2],
-                              rd);
+      bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps[0], temps[1],
+                                  temps[2], rd);
 #else
-      masm.wasmAtomicExchange(access, srcAddr, rv, rd);
+      bc->masm.wasmAtomicExchange(access, srcAddr, rv, rd);
 #endif
       break;
     default:
@@ -726,7 +745,7 @@ class PopAtomicCmpXchg32Regs : public PopBase<RegI32> {
 
   template <typename T>
   void atomicCmpXchg32(const MemoryAccessDesc& access, T srcAddr) {
-    bc->atomicCmpXchg32(access, srcAddr, rexpect, rnew, getRd(), temps);
+    AtomicCmpXchg32(bc, access, srcAddr, rexpect, rnew, getRd(), temps);
   }
 };
 
@@ -931,7 +950,7 @@ class PopAtomicRMW32Regs : public PopBase<RegI32> {
 
   template <typename T>
   void atomicRMW32(const MemoryAccessDesc& access, T srcAddr, AtomicOp op) {
-    bc->atomicRMW32(access, srcAddr, op, rv, getRd(), temps);
+    AtomicRMW32(bc, access, srcAddr, op, rv, getRd(), temps);
   }
 };
 
@@ -1013,12 +1032,13 @@ class PopAtomicRMW64Regs : public PopBase<RegI64> {
   void atomicRMW64(const MemoryAccessDesc& access, T srcAddr, AtomicOp op,
                    const V& value, RegI32 ebx) {
     MOZ_ASSERT(ebx == js::jit::ebx);
-    bc->atomicRMW64(access, srcAddr, op, value, bc->specific_.ecx_ebx, getRd());
+    AtomicRMW64(bc->masm, access, srcAddr, op, value, bc->specific_.ecx_ebx,
+                getRd());
   }
 #else
   template <typename T>
   void atomicRMW64(const MemoryAccessDesc& access, T srcAddr, AtomicOp op) {
-    bc->atomicRMW64(access, srcAddr, op, rv, temp, getRd());
+    AtomicRMW64(bc->masm, access, srcAddr, op, rv, temp, getRd());
   }
 #endif
 };
@@ -1069,7 +1089,7 @@ class PopAtomicXchg32Regs : public PopBase<RegI32> {
 
   template <typename T>
   void atomicXchg32(const MemoryAccessDesc& access, T srcAddr) {
-    bc->atomicXchg32(access, srcAddr, rv, getRd(), temps);
+    AtomicXchg32(bc, access, srcAddr, rv, getRd(), temps);
   }
 };
 
