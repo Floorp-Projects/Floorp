@@ -31,7 +31,6 @@ struct WrWindowId;
 namespace layers {
 
 class APZCTreeManager;
-class LayerMetricsWrapper;
 struct ScrollbarData;
 
 /**
@@ -69,38 +68,6 @@ class APZSampler {
   bool AdvanceAnimations(const SampleTime& aSampleTime);
 
   /**
-   * Compute the updated shadow transform for a scroll thumb layer that
-   * reflects async scrolling of the associated scroll frame.
-   *
-   * Refer to APZCTreeManager::ComputeTransformForScrollThumb for the
-   * description of parameters. The only difference is that this function takes
-   * |aContent| instead of |aApzc| and |aMetrics|; aContent is the
-   * LayerMetricsWrapper corresponding to the scroll frame that is scrolled by
-   * the scroll thumb, and so the APZC and metrics can be obtained from
-   * |aContent|.
-   */
-  LayerToParentLayerMatrix4x4 ComputeTransformForScrollThumb(
-      const LayerToParentLayerMatrix4x4& aCurrentTransform,
-      const LayerMetricsWrapper& aContent, const ScrollbarData& aThumbData,
-      bool aScrollbarIsDescendant,
-      AsyncTransformComponentMatrix* aOutClipTransform);
-
-  CSSRect GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer);
-  ParentLayerPoint GetCurrentAsyncScrollOffset(
-      const LayerMetricsWrapper& aLayer);
-  AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer,
-                                          AsyncTransformComponents aComponents);
-  AsyncTransformComponentMatrix GetOverscrollTransform(
-      const LayerMetricsWrapper& aLayer);
-  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
-      const LayerMetricsWrapper& aLayer, AsyncTransformComponents aComponents);
-  Maybe<CompositionPayload> NotifyScrollSampling(
-      const LayerMetricsWrapper& aLayer);
-
-  void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
-  bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
-
-  /**
    * Similar to above GetCurrentAsyncTransform, but get the current transform
    * with LayersId and ViewID.
    * NOTE: This function should NOT be called on the compositor thread.
@@ -116,10 +83,6 @@ class APZSampler {
   ParentLayerRect GetCompositionBounds(
       const LayersId& aLayersId,
       const ScrollableLayerGuid::ViewID& aScrollId) const;
-
-  ScrollableLayerGuid GetGuid(const LayerMetricsWrapper& aLayer);
-
-  GeckoViewMetrics GetGeckoViewMetrics(const LayerMetricsWrapper& aLayer) const;
 
   ScreenMargin GetGeckoFixedLayerMargins() const;
 
