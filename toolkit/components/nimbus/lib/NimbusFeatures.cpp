@@ -120,15 +120,13 @@ nsresult NimbusFeatures::GetExperimentSlug(const nsACString& aFeatureId,
 
 /**
  * Sends an exposure event for aFeatureId when enrolled in an experiment.
- * By default we only attempt to send once. For some usecases it might be useful
- * to send multiple times or retry to send (when for example we are enrolled
- * after the first call to this function) in which case set the optional
- * aForce to `true`.
+ * By default attempt to send once per function call. For some usecases it might
+ * be useful to send only once, in which case set the optional aOnce to `true`.
  */
 nsresult NimbusFeatures::RecordExposureEvent(const nsACString& aFeatureId,
-                                             const bool aForce) {
+                                             const bool aOnce) {
   nsAutoCString featureName(aFeatureId);
-  if (!sExposureFeatureSet.EnsureInserted(featureName) && !aForce) {
+  if (!sExposureFeatureSet.EnsureInserted(featureName) && aOnce) {
     // We already sent (or tried to send) an exposure ping for this featureId
     return NS_ERROR_ABORT;
   }

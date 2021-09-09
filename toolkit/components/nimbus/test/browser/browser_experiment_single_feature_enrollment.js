@@ -127,5 +127,5 @@ add_task(async function test_TODO() {
 
   await doExperimentCleanup();
   sandbox.restore();
-  NimbusFeatures.urlbar._sendExposureEventOnce = true;
+  NimbusFeatures.urlbar._didSendExposureEvent = false;
 });

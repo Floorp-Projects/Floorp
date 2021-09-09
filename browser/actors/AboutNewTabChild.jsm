@@ -83,7 +83,7 @@ class AboutNewTabChild extends JSWindowActorChild {
 
         // Note: newtab feature info is currently being loaded in PrefsFeed.jsm,
         // But we're recording exposure events here.
-        NimbusFeatures.newtab.recordExposureEvent();
+        NimbusFeatures.newtab.recordExposureEvent({ once: true });
       }
     }
   }
