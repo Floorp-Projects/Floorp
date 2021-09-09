@@ -16,12 +16,12 @@ class APZCSnappingOnMomentumTesterLayersOnly : public APZCTreeManagerTester {
 };
 
 TEST_F(APZCSnappingOnMomentumTesterLayersOnly, Snap_On_Momentum) {
-  const char* layerTreeSyntax = "c";
+  const char* treeShape = "x";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
   };
-  root =
-      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  CreateScrollData(treeShape, layerVisibleRegion);
+  WebRenderLayerScrollData* root = scrollData[0];
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 500));
 
@@ -32,12 +32,12 @@ TEST_F(APZCSnappingOnMomentumTesterLayersOnly, Snap_On_Momentum) {
   snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
   snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
 
-  ScrollMetadata metadata = root->GetScrollMetadata(0);
-  metadata.SetSnapInfo(ScrollSnapInfo(snap));
-  root->SetScrollMetadata(metadata);
+  ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics&) {
+    aSm.SetSnapInfo(ScrollSnapInfo(snap));
+  });
 
   UniquePtr<ScopedLayerTreeRegistration> registration =
-      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
