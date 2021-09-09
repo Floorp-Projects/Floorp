@@ -1396,53 +1396,6 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
 
   bool isRightToLeft = aShapedText->IsRightToLeft();
 
-  // If the buffer includes numerals, and does NOT include any strong-RTL
-  // characters that must have been explicitly overridden, then switch
-  // the shaping direction to RTL so that ligation of numerals will work
-  // correctly (bug https://bugzilla.mozilla.org/show_bug.cgi?id=1716029).
-  // This can be removed if/when an internal HB solution is implemented,
-  // see https://github.com/harfbuzz/harfbuzz/issues/501.
-  // Currently this is only enabled for Arabic script, as it is a somewhat
-  // ad-hoc heuristic; in theory other RTL scripts with LTR numerals could
-  // need similar treatment, but it seems unlikely their fonts will have
-  // complex OpenType substitutions involving digit sequences.
-  if (aScript == Script::ARABIC && !isRightToLeft) {
-    ClusterIterator iter(aText, aLength);
-    while (!iter.AtEnd()) {
-      uint32_t ch = *iter;
-      auto bidiCat = GetBidiCat(ch);
-      // If there was any strong-RTL character, the direction must have been
-      // explicitly overridden, so leave it unchanged.
-      if (bidiCat == eCharType_RightToLeftArabic ||
-          bidiCat == eCharType_RightToLeft) {
-        isRightToLeft = false;
-        break;
-      }
-      // If any mirror-able char is present, bail; overriding shaping direction
-      // would break its rendering.
-      if (GetMirroredChar(ch) != ch) {
-        isRightToLeft = false;
-        break;
-      }
-      // Check for numbers that may want to ligate, which will only work if the
-      // OpenType rules are run with "native" ordering.
-      if (bidiCat == eCharType_ArabicNumber) {
-        auto gc = GetGeneralCategory(ch);
-        if (gc == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
-          isRightToLeft = true;
-          // Keep scanning, in case we find strong-RTL chars and have to
-          // revert this.
-        } else if (gc == HB_UNICODE_GENERAL_CATEGORY_FORMAT) {
-          // Don't interfere with Arabic number format control (subtending or
-          // enclosing marks).
-          isRightToLeft = false;
-          break;
-        }
-      }
-      iter.Next();
-    }
-  }
-
   hb_buffer_set_direction(
       mBuffer, aVertical
                    ? HB_DIRECTION_TTB
