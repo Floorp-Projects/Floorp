@@ -5,7 +5,7 @@
 . "$topsrcdir/build/mozconfig.common"
 
 # cctools for ld, ar, and other related tools ; dsymutil for rust.
-mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binutils/bin:$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binutils/bin:$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
 # dsymutil needs a libstdc++ more recent than what's on the system.
 mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
@@ -14,7 +14,7 @@ CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.12.sdk
 
 export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
-export DSYMUTIL=$MOZ_FETCHES_DIR/llvm-dsymutil/bin/dsymutil
+export DSYMUTIL=$MOZ_FETCHES_DIR/clang/bin/dsymutil
 export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
 export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus

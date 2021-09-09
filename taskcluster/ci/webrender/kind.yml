@@ -113,7 +113,6 @@ jobs:
                 - linux64-rust-macos
                 - linux64-cctools-port
                 - linux64-clang-11-macosx-cross
-                - linux64-llvm-dsymutil
                 - macosx64-sdk-10.12
                 - wrench-deps
             macosx64-clang-11:
@@ -174,7 +173,6 @@ jobs:
                 - linux64-rust-macos
                 - linux64-cctools-port
                 - linux64-clang
-                - linux64-llvm-dsymutil
                 - macosx64-sdk-10.12
                 - wrench-deps
         run:
