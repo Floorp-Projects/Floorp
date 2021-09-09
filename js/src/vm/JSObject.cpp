@@ -727,9 +727,11 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 /* * */
 
-static MOZ_ALWAYS_INLINE NativeObject* NewObject(
-    JSContext* cx, Handle<TaggedProto> proto, const JSClass* clasp,
-    gc::AllocKind kind, NewObjectKind newKind, ObjectFlags objectFlags = {}) {
+static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
+                                                 Handle<TaggedProto> proto,
+                                                 const JSClass* clasp,
+                                                 gc::AllocKind kind,
+                                                 NewObjectKind newKind) {
   MOZ_ASSERT(clasp->isNativeObject());
 
   // Some classes have specialized allocation functions and shouldn't end up
@@ -750,7 +752,7 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(
 
   RootedShape shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
-                                       objectFlags));
+                                       ObjectFlags()));
   if (!shape) {
     return nullptr;
   }
@@ -765,10 +767,12 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(
   return obj;
 }
 
-NativeObject* js::NewObjectWithGivenTaggedProto(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
-    gc::AllocKind allocKind, NewObjectKind newKind, ObjectFlags objectFlags) {
-  return NewObject(cx, proto, clasp, allocKind, newKind, objectFlags);
+NativeObject* js::NewObjectWithGivenTaggedProto(JSContext* cx,
+                                                const JSClass* clasp,
+                                                Handle<TaggedProto> proto,
+                                                gc::AllocKind allocKind,
+                                                NewObjectKind newKind) {
+  return NewObject(cx, proto, clasp, allocKind, newKind);
 }
 
 NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
