@@ -296,7 +296,17 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   }
 
   Maybe<ParentLayerIntRect> GetClipRect() const {
-    // TODO
+    MOZ_ASSERT(IsValid());
+
+    // This function is only used by tests.
+    // This is a minimal implementation, which clips to the visible region,
+    // that's sufficient to satisfy the tests.
+    if (AtBottomLayer()) {
+      auto localTransform = GetTransformTyped() * AsyncTransformMatrix();
+      return Some(RoundedToInt(localTransform.TransformBounds(
+          LayerRect(mLayer->GetVisibleRegion().GetBounds()))));
+    }
+
     return Nothing();
   }
 
