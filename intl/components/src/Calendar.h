@@ -45,7 +45,7 @@ class Calendar final {
 
   /**
    * Get the BCP 47 keyword value string designating the calendar type. For
-   * instance "gregory", "chinese", "islamicc", etc.
+   * instance "gregory", "chinese", "islamic-civil", etc.
    */
   Result<const char*, ICUError> GetBcp47Type();
 
