@@ -68,12 +68,6 @@ class APZHitTestingTester : public APZCTreeManagerTester {
                               CSSRect(0, 0, 80, 80));
   }
 
-  void DisableApzOn(Layer* aLayer) {
-    ScrollMetadata m = aLayer->GetScrollMetadata(0);
-    m.SetForceDisableApz(true);
-    aLayer->SetScrollMetadata(m);
-  }
-
   void DisableApzOn(WebRenderLayerScrollData* aLayer) {
     ModifyFrameMetrics(aLayer, [](ScrollMetadata& aSm, FrameMetrics&) {
       aSm.SetForceDisableApz(true);

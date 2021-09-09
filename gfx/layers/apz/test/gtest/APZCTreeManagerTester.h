@@ -61,19 +61,10 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
     bool activeAnimations = false;
 
-    if (root) {
-      for (const RefPtr<Layer>& layer : layers) {
-        if (TestAsyncPanZoomController* apzc = ApzcOf(layer)) {
-          activeAnimations |=
-              apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
-        }
-      }
-    } else {
-      for (size_t i = 0; i < scrollData.GetLayerCount(); ++i) {
-        if (TestAsyncPanZoomController* apzc = ApzcOf(scrollData[i])) {
-          activeAnimations |=
-              apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
-        }
+    for (size_t i = 0; i < scrollData.GetLayerCount(); ++i) {
+      if (TestAsyncPanZoomController* apzc = ApzcOf(scrollData[i])) {
+        activeAnimations |=
+            apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
       }
     }
 
@@ -81,14 +72,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   }
 
   // A convenience function for letting a test modify the frame metrics
-  // stored on a particular layer. The layer doesn't let us modify it in-place,
-  // so we take care of the copying in this function.
-  template <typename Callback>
-  void ModifyFrameMetrics(Layer* aLayer, Callback aCallback) {
-    ScrollMetadata metadata = aLayer->GetScrollMetadata(0);
-    aCallback(metadata, metadata.GetMetrics());
-    aLayer->SetScrollMetadata(metadata);
-  }
+  // stored on a particular layer.
   template <typename Callback>
   void ModifyFrameMetrics(WebRenderLayerScrollData* aLayer,
                           Callback aCallback) {
@@ -100,14 +84,9 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
   // A convenience wrapper for manager->UpdateHitTestingTree().
   void UpdateHitTestingTree(uint32_t aPaintSequenceNumber = 0) {
-    if (root) {
-      manager->UpdateHitTestingTree(root, /* is first paint = */ false,
-                                    LayersId{0}, aPaintSequenceNumber);
-    } else {
-      manager->UpdateHitTestingTree(
-          WebRenderScrollDataWrapper{*updater, &scrollData},
-          /* is first paint = */ false, LayersId{0}, aPaintSequenceNumber);
-    }
+    manager->UpdateHitTestingTree(
+        WebRenderScrollDataWrapper{*updater, &scrollData},
+        /* is first paint = */ false, LayersId{0}, aPaintSequenceNumber);
   }
 
   void CreateScrollData(const char* aTreeShape,
@@ -116,10 +95,6 @@ class APZCTreeManagerTester : public APZCTesterBase {
     scrollData = TestWRScrollData::Create(aTreeShape, *updater, aVisibleRegions,
                                           aTransforms);
   }
-
-  nsTArray<RefPtr<Layer> > layers;
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root;
 
   RefPtr<TestAPZCTreeManager> manager;
   RefPtr<APZSampler> sampler;
@@ -150,25 +125,6 @@ class APZCTreeManagerTester : public APZCTesterBase {
     return metadata;
   }
 
-  static void SetEventRegionsBasedOnBottommostMetrics(Layer* aLayer) {
-    const FrameMetrics& metrics = aLayer->GetScrollMetadata(0).GetMetrics();
-    CSSRect scrollableRect = metrics.GetScrollableRect();
-    if (!scrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
-      // The purpose of this is to roughly mimic what layout would do in the
-      // case of a scrollable frame with the event regions and clip. This lets
-      // us exercise the hit-testing code in APZCTreeManager
-      EventRegions er = aLayer->GetEventRegions();
-      IntRect scrollRect =
-          RoundedToInt(scrollableRect * metrics.LayersPixelsPerCSSPixel())
-              .ToUnknownRect();
-      er.mHitRegion = nsIntRegion(IntRect(
-          RoundedToInt(
-              metrics.GetCompositionBounds().TopLeft().ToUnknownPoint()),
-          scrollRect.Size()));
-      aLayer->SetEventRegions(er);
-    }
-  }
-
   void SetEventRegionsBasedOnBottommostMetrics(
       WebRenderLayerScrollData* aLayer) {
     const FrameMetrics& metrics =
@@ -188,19 +144,6 @@ class APZCTreeManagerTester : public APZCTesterBase {
           scrollRect.Size()));
       APZTestAccess::SetEventRegions(*aLayer, er);
     }
-  }
-
-  static void SetScrollableFrameMetrics(
-      Layer* aLayer, ScrollableLayerGuid::ViewID aScrollId,
-      CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
-    ParentLayerIntRect compositionBounds =
-        RoundedToInt(aLayer->GetLocalTransformTyped().TransformBounds(
-            LayerRect(aLayer->GetVisibleRegion().GetBounds())));
-    ScrollMetadata metadata = BuildScrollMetadata(
-        aScrollId, aScrollableRect, ParentLayerRect(compositionBounds));
-    aLayer->SetScrollMetadata(metadata);
-    aLayer->SetClipRect(Some(compositionBounds));
-    SetEventRegionsBasedOnBottommostMetrics(aLayer);
   }
 
   void SetScrollMetadata(WebRenderLayerScrollData* aLayer,
@@ -255,29 +198,12 @@ class APZCTreeManagerTester : public APZCTesterBase {
     return false;
   }
 
-  void SetScrollHandoff(Layer* aChild, Layer* aParent) {
-    ScrollMetadata metadata = aChild->GetScrollMetadata(0);
-    metadata.SetScrollParentId(aParent->GetFrameMetrics(0).GetScrollId());
-    aChild->SetScrollMetadata(metadata);
-  }
-
   void SetScrollHandoff(WebRenderLayerScrollData* aChild,
                         WebRenderLayerScrollData* aParent) {
     ModifyFrameMetrics(aChild, [&](ScrollMetadata& aSm, FrameMetrics&) {
       aSm.SetScrollParentId(
           aParent->GetScrollMetadata(scrollData, 0).GetMetrics().GetScrollId());
     });
-  }
-
-  static TestAsyncPanZoomController* ApzcOf(Layer* aLayer) {
-    EXPECT_EQ(1u, aLayer->GetScrollMetadataCount());
-    return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(0);
-  }
-
-  static TestAsyncPanZoomController* ApzcOf(Layer* aLayer, uint32_t aIndex) {
-    EXPECT_LT(aIndex, aLayer->GetScrollMetadataCount());
-    return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(
-        aIndex);
   }
 
   TestAsyncPanZoomController* ApzcOf(WebRenderLayerScrollData* aLayer) {
