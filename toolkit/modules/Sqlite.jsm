@@ -264,7 +264,8 @@ function ConnectionData(connection, identifier, options = {}) {
       this._dbConn.defaultTransactionType
     );
   }
-  this._hasInProgressTransaction = false;
+  // Tracks whether this instance initiated a transaction.
+  this._initiatedTransaction = false;
   // Manages a chain of transactions promises, so that new transactions
   // always happen in queue to the previous ones.  It never rejects.
   this._transactionQueue = Promise.resolve();
@@ -296,7 +297,7 @@ function ConnectionData(connection, identifier, options = {}) {
       identifier: this._identifier,
       isCloseRequested: this._closeRequested,
       hasDbConn: !!this._dbConn,
-      hasInProgressTransaction: this._hasInProgressTransaction,
+      initiatedTransaction: this._initiatedTransaction,
       pendingStatements: this._pendingStatements.size,
       statementCounter: this._statementCounter,
     })
@@ -620,16 +621,16 @@ ConnectionData.prototype = Object.freeze({
       let transactionPromise = (async () => {
         // At this point we should never have an in progress transaction, since
         // they are enqueued.
-        if (this._hasInProgressTransaction) {
+        if (this._initiatedTransaction) {
           console.error(
             "Unexpected transaction in progress when trying to start a new one."
           );
         }
-        this._hasInProgressTransaction = true;
         try {
           // We catch errors in statement execution to detect nested transactions.
           try {
             await this.execute("BEGIN " + type + " TRANSACTION");
+            this._initiatedTransaction = true;
           } catch (ex) {
             // Unfortunately, if we are wrapping an existing connection, a
             // transaction could have been started by a client of the same
@@ -641,9 +642,6 @@ ConnectionData.prototype = Object.freeze({
                 "A new transaction could not be started cause the wrapped connection had one in progress",
                 ex
               );
-              // Unmark the in progress transaction, since it's managed by
-              // some other non-Sqlite.jsm client.  See the comment above.
-              this._hasInProgressTransaction = false;
             } else {
               this._log.warn(
                 "A transaction was already in progress, likely a nested transaction",
@@ -667,7 +665,7 @@ ConnectionData.prototype = Object.freeze({
             } else {
               this._log.warn("Error during transaction. Rolling back", ex);
               // If we began a transaction, we must rollback it.
-              if (this._hasInProgressTransaction) {
+              if (this._initiatedTransaction) {
                 try {
                   await this.execute("ROLLBACK TRANSACTION");
                 } catch (inner) {
@@ -690,7 +688,7 @@ ConnectionData.prototype = Object.freeze({
           }
 
           // If we began a transaction, we must commit it.
-          if (this._hasInProgressTransaction) {
+          if (this._initiatedTransaction) {
             try {
               await this.execute("COMMIT TRANSACTION");
             } catch (ex) {
@@ -701,7 +699,7 @@ ConnectionData.prototype = Object.freeze({
 
           return result;
         } finally {
-          this._hasInProgressTransaction = false;
+          this._initiatedTransaction = false;
         }
       })();
 
