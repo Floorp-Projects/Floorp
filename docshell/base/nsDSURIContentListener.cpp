@@ -256,8 +256,8 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
   *aDesiredContentType = nullptr;
 
   if (aContentType) {
-    uint32_t canHandle = nsWebNavigationInfo::IsTypeSupported(
-        nsDependentCString(aContentType), mDocShell);
+    uint32_t canHandle =
+        nsWebNavigationInfo::IsTypeSupported(nsDependentCString(aContentType));
     *aCanHandleContent = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
   }
 

@@ -3111,13 +3111,9 @@ class nsContentUtils {
    *
    * @param aMIMEType  The MIME type of the document being loaded.
    * @param aNoFakePlugin  If false then this method should consider JS plugins.
-   * @param aContent The nsIContent object which is performing the load. May be
-   *                 nullptr in which case the docshell's plugin permissions
-   *                 will not be checked.
    */
   static uint32_t HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
-                                                   bool aNoFakePlugin,
-                                                   nsIContent* aContent);
+                                                   bool aNoFakePlugin);
 
   static already_AddRefed<nsISerialEventTarget> GetEventTargetByLoadInfo(
       nsILoadInfo* aLoadInfo, mozilla::TaskCategory aCategory);
