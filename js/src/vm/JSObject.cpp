@@ -727,10 +727,9 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 /* * */
 
-static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
-                                      const JSClass* clasp, gc::AllocKind kind,
-                                      NewObjectKind newKind,
-                                      ObjectFlags objectFlags = {}) {
+static MOZ_ALWAYS_INLINE NativeObject* NewObject(
+    JSContext* cx, Handle<TaggedProto> proto, const JSClass* clasp,
+    gc::AllocKind kind, NewObjectKind newKind, ObjectFlags objectFlags = {}) {
   MOZ_ASSERT(clasp->isNativeObject());
 
   // Some classes have specialized allocation functions and shouldn't end up
@@ -743,8 +742,12 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   // store fixed data inline (TypedArrays and ArrayBuffers) so for simplicity
   // and performance reasons we don't support such objects here.
   MOZ_ASSERT(!ClassCanHaveFixedData(clasp));
-
   size_t nfixed = GetGCKindSlots(kind);
+
+  if (CanChangeToBackgroundAllocKind(kind, clasp)) {
+    kind = ForegroundToBackgroundAllocKind(kind);
+  }
+
   RootedShape shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
                                        objectFlags));
@@ -765,10 +768,6 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
 NativeObject* js::NewObjectWithGivenTaggedProto(
     JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     gc::AllocKind allocKind, NewObjectKind newKind, ObjectFlags objectFlags) {
-  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
-    allocKind = ForegroundToBackgroundAllocKind(allocKind);
-  }
-
   return NewObject(cx, proto, clasp, allocKind, newKind, objectFlags);
 }
 
@@ -779,10 +778,6 @@ NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   if (protoArg) {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg),
                                          allocKind, newKind);
-  }
-
-  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
-    allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
   // Find the appropriate proto for clasp. Built-in classes have a cached
