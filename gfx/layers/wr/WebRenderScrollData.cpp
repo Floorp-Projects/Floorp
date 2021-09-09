@@ -229,9 +229,8 @@ size_t WebRenderScrollData::AddMetadata(const ScrollMetadata& aMetadata) {
   return p->value();
 }
 
-size_t WebRenderScrollData::AddLayerData(
-    const WebRenderLayerScrollData& aData) {
-  mLayerScrollData.AppendElement(aData);
+size_t WebRenderScrollData::AddLayerData(WebRenderLayerScrollData&& aData) {
+  mLayerScrollData.AppendElement(std::move(aData));
   return mLayerScrollData.Length() - 1;
 }
 

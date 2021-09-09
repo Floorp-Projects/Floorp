@@ -1639,9 +1639,9 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   // Append the WebRenderLayerScrollData items into WebRenderScrollData
   // in reverse order, from topmost to bottommost. This is in keeping with
   // the semantics of WebRenderScrollData.
-  for (auto it = mLayerScrollData.crbegin(); it != mLayerScrollData.crend();
+  for (auto it = mLayerScrollData.rbegin(); it != mLayerScrollData.rend();
        it++) {
-    aScrollData.AddLayerData(*it);
+    aScrollData.AddLayerData(std::move(*it));
   }
   mLayerScrollData.clear();
   mClipManager.EndBuild();
