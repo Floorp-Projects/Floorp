@@ -172,6 +172,11 @@ class WebRenderLayerScrollData final {
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
  private:
+  // For use by GTests in building WebRenderLayerScrollData trees.
+  // GTests don't have a display list so they can't use Initialize().
+  friend class TestWRScrollData;
+  void InitializeForTest(int32_t aDescendantCount);
+
   // The number of descendants this layer has (not including the layer itself).
   // This is needed to reconstruct the depth-first layer tree traversal
   // efficiently. Leaf layers should always have 0 descendants.
@@ -215,11 +220,14 @@ class WebRenderLayerScrollData final {
 // is created for each transaction sent over PWebRenderBridge. It is populated
 // with information from the WebRender layer tree on the client side and the
 // information is used by APZ on the parent side.
-class WebRenderScrollData final {
+class WebRenderScrollData {
  public:
   WebRenderScrollData();
   explicit WebRenderScrollData(WebRenderLayerManager* aManager,
                                nsDisplayListBuilder* aBuilder);
+  WebRenderScrollData(WebRenderScrollData&& aOther) = default;
+  WebRenderScrollData& operator=(WebRenderScrollData&& aOther) = default;
+  virtual ~WebRenderScrollData() = default;
 
   WebRenderLayerManager* GetManager() const;
 
@@ -237,6 +245,7 @@ class WebRenderScrollData final {
   // Return a pointer to the scroll data at the given index. Use with caution,
   // as the pointer may be invalidated if this WebRenderScrollData is mutated.
   const WebRenderLayerScrollData* GetLayerData(size_t aIndex) const;
+  WebRenderLayerScrollData* GetLayerData(size_t aIndex);
 
   const ScrollMetadata& GetScrollMetadata(size_t aIndex) const;
   Maybe<size_t> HasMetadataFor(
