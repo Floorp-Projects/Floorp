@@ -520,7 +520,7 @@ class nsWindow final : public nsWindowBase {
     return mTransparencyMode;
   }
   void UpdateGlass();
-  bool WithinDraggableRegion(int32_t clientX, int32_t clientY);
+  bool IsSimulatedClientArea(int32_t clientX, int32_t clientY);
 
   bool DispatchTouchEventFromWMPointer(UINT msg, LPARAM aLParam,
                                        const WinPointerInfo& aPointerInfo,
@@ -595,7 +595,7 @@ class nsWindow final : public nsWindowBase {
   bool mIsRTL;
   bool mFullscreenMode;
   bool mMousePresent;
-  bool mMouseInDraggableArea;
+  bool mSimulatedClientArea;
   bool mDestroyCalled;
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
