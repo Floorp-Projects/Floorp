@@ -134,7 +134,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   }
 
   if (!addr) {
-    perror("mmap failed");
+    os_print_last_error("os_mmap failed.");
     abort();
   }
   int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);

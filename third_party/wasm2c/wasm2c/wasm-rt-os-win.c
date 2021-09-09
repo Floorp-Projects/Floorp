@@ -276,6 +276,22 @@ int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct)
   return 0;
 }
 
+void os_print_last_error(const char* msg) {
+  DWORD errorMessageID  = GetLastError();
+  if (errorMessageID != 0) {
+    LPSTR messageBuffer = 0;
+    //The api creates the buffer that holds the message
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+    (void) size;
+    //Copy the error message into a std::string.
+    printf("%s. %s\n", msg, messageBuffer);
+    LocalFree(messageBuffer);
+  } else {
+    printf("%s. No error code.\n", msg);
+  }
+}
+
 #undef VERBOSE_LOG
 #undef DONT_USE_VIRTUAL_ALLOC2
 
