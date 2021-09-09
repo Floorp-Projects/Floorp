@@ -128,8 +128,7 @@ static void AssertComplete(const StyleSheet& aSheet) {
 
 static void AssertIncompleteSheetMatches(const SheetLoadData& aData,
                                          const SheetLoadDataHashKey& aKey) {
-  MOZ_ASSERT(aKey.Principal()->Equals(aData.mTriggeringPrincipal) ||
-                 dom::IsChromeURI(aKey.URI()),
+  MOZ_ASSERT(aKey.Principal()->Equals(aData.mTriggeringPrincipal),
              "Principals should be the same");
   MOZ_ASSERT(!aData.mSheet->HasForcedUniqueInner(),
              "CSSOM shouldn't allow access to incomplete sheets");
@@ -144,6 +143,30 @@ SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
     css::Loader& aLoader, const SheetLoadDataHashKey& aKey, bool aSyncLoad) {
   nsIURI* uri = aKey.URI();
   LOG(("SharedStyleSheetCache::Lookup(%s)", uri->GetSpecOrDefault().get()));
+
+  // Try to find first in the XUL prototype cache.
+  if (dom::IsChromeURI(uri)) {
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    if (cache && cache->IsEnabled()) {
+      if (StyleSheet* sheet = cache->GetStyleSheet(uri)) {
+        LOG(("  From XUL cache: %p", sheet));
+        AssertComplete(*sheet);
+
+        // See below, we always clone on insertion so we can guarantee the
+        // stylesheet is not modified.
+        MOZ_ASSERT(!sheet->HasForcedUniqueInner());
+
+        // We need to check the parsing mode manually because the XUL cache only
+        // keys off the URI. But we should fix that!
+        if (sheet->ParsingMode() == aKey.ParsingMode()) {
+          aLoader.DidHitCompleteSheetCache(aKey, nullptr);
+          return {CloneSheet(*sheet), SheetState::Complete};
+        }
+
+        LOG(("    Not cloning due to mismatched parsing mode"));
+      }
+    }
+  }
 
   // Now complete sheets.
   if (auto lookup = mCompleteSheets.Lookup(aKey)) {
@@ -445,34 +468,50 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
   // both SizeOfIncludingThis and nsXULPrototypeCache::CollectMemoryReports.
   RefPtr<StyleSheet> sheet = CloneSheet(*aData.mSheet);
 
-  LOG(("  Putting style sheet in shared cache: %s",
-       aData.mURI->GetSpecOrDefault().get()));
-  SheetLoadDataHashKey key(aData);
-  MOZ_ASSERT(sheet->IsComplete(), "Should only be caching complete sheets");
+  if (dom::IsChromeURI(aData.mURI)) {
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    if (cache && cache->IsEnabled()) {
+      if (!cache->GetStyleSheet(aData.mURI)) {
+        LOG(("  Putting sheet in XUL prototype cache"));
+        NS_ASSERTION(sheet->IsComplete(),
+                     "Should only be caching complete sheets");
+
+        // NOTE: If we stop cloning sheets before insertion, we need to change
+        // nsXULPrototypeCache::CollectMemoryReports() to stop using
+        // SizeOfIncludingThis() because it will no longer own the sheets.
+        cache->PutStyleSheet(std::move(sheet));
+      }
+    }
+  } else {
+    LOG(("  Putting style sheet in shared cache: %s",
+         aData.mURI->GetSpecOrDefault().get()));
+    SheetLoadDataHashKey key(aData);
+    MOZ_ASSERT(sheet->IsComplete(), "Should only be caching complete sheets");
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  for (const auto& entry : mCompleteSheets) {
-    if (!key.KeyEquals(entry.GetKey())) {
-      MOZ_DIAGNOSTIC_ASSERT(entry.GetData().mSheet != sheet,
-                            "Same sheet, different keys?");
-    } else {
-      MOZ_ASSERT(
-          entry.GetData().Expired() || aData.mLoader->ShouldBypassCache(),
-          "Overriding existing complete entry?");
+    for (const auto& entry : mCompleteSheets) {
+      if (!key.KeyEquals(entry.GetKey())) {
+        MOZ_DIAGNOSTIC_ASSERT(entry.GetData().mSheet != sheet,
+                              "Same sheet, different keys?");
+      } else {
+        MOZ_ASSERT(
+            entry.GetData().Expired() || aData.mLoader->ShouldBypassCache(),
+            "Overriding existing complete entry?");
+      }
     }
-  }
 #endif
 
-  UniquePtr<StyleUseCounters> counters;
-  if (aData.mUseCounters) {
-    // TODO(emilio): Servo_UseCounters_Clone() or something?
-    counters = Servo_UseCounters_Create().Consume();
-    Servo_UseCounters_Merge(counters.get(), aData.mUseCounters.get());
-  }
+    UniquePtr<StyleUseCounters> counters;
+    if (aData.mUseCounters) {
+      // TODO(emilio): Servo_UseCounters_Clone() or something?
+      counters = Servo_UseCounters_Create().Consume();
+      Servo_UseCounters_Merge(counters.get(), aData.mUseCounters.get());
+    }
 
-  mCompleteSheets.InsertOrUpdate(
-      key, CompleteSheet{aData.mExpirationTime, std::move(counters),
-                         std::move(sheet)});
+    mCompleteSheets.InsertOrUpdate(
+        key, CompleteSheet{aData.mExpirationTime, std::move(counters),
+                           std::move(sheet)});
+  }
 }
 
 void SharedStyleSheetCache::StartDeferredLoadsForLoader(

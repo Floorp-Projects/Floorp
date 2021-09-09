@@ -10494,8 +10494,7 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
 
 /* static */
 nsContentUtils::SubresourceCacheValidationInfo
-nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
-                                                  nsIURI* aURI) {
+nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest) {
   SubresourceCacheValidationInfo info;
   if (nsCOMPtr<nsICacheInfoChannel> cache = do_QueryInterface(aRequest)) {
     uint32_t value = 0;
@@ -10512,18 +10511,6 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
     if (!info.mMustRevalidate) {
       Unused << httpChannel->IsNoCacheResponse(&info.mMustRevalidate);
     }
-  }
-
-  // data: URIs are safe to cache across documents under any circumstance, so we
-  // special-case them here even though the channel itself doesn't have any
-  // caching policy. Same for chrome:// uris.
-  //
-  // TODO(emilio): Figure out which other schemes that don't have caching
-  // policies are safe to cache. Blobs should be...
-  if (aURI && (aURI->SchemeIs("data") || dom::IsChromeURI(aURI))) {
-    MOZ_ASSERT(!info.mExpirationTime);
-    MOZ_ASSERT(!info.mMustRevalidate);
-    info.mExpirationTime = Some(0);  // 0 means "doesn't expire".
   }
 
   return info;
