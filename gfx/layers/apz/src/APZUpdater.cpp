@@ -161,15 +161,6 @@ void APZUpdater::UpdateFocusState(LayersId aRootLayerTreeId,
                          aOriginatingLayersId, aFocusTarget));
 }
 
-void APZUpdater::UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
-                                      LayersId aOriginatingLayersId,
-                                      uint32_t aPaintSequenceNumber) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnUpdaterThread();
-  mApz->UpdateHitTestingTree(aRoot, aIsFirstPaint, aOriginatingLayersId,
-                             aPaintSequenceNumber);
-}
-
 void APZUpdater::UpdateScrollDataAndTreeState(
     LayersId aRootLayerTreeId, LayersId aOriginatingLayersId,
     const wr::Epoch& aEpoch, WebRenderScrollData&& aScrollData) {
