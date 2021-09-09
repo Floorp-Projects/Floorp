@@ -7384,11 +7384,6 @@
   value: 64
   mirror: always
 
-- name: layout.paint_rects_separately
-  type: bool
-  value: true
-  mirror: once
-
 # On Android, don't synth mouse move events after scrolling, as they cause
 # unexpected user-visible behaviour. Can remove this after bug 1633450 is
 # satisfactorily resolved.
