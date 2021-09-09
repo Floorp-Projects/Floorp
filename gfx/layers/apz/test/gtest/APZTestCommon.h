@@ -120,12 +120,6 @@ class ScopedGfxSetting {
       [=](float aPrefValue) { Preferences::SetFloat(prefName, aPrefValue); }, \
       prefValue)
 
-#define SCOPED_GFX_VAR_MAYBE_TYPE(varType) \
-  Maybe<ScopedGfxSetting<const varType&, varType>>
-
-#define SCOPED_GFX_VAR_MAYBE_EMPLACE(varName, varBase, varValue) \
-  varName.emplace(&(gfxVars::varBase), &(gfxVars::Set##varBase), varValue)
-
 class MockContentController : public GeckoContentController {
  public:
   MOCK_METHOD1(NotifyLayerTransforms, void(nsTArray<MatrixMessage>&&));
@@ -229,8 +223,9 @@ class MockContentControllerDelayed : public MockContentController {
 
 class TestAPZCTreeManager : public APZCTreeManager {
  public:
-  explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc)
-      : APZCTreeManager(LayersId{0}, gfx::gfxVars::UseWebRender()), mcc(aMcc) {}
+  explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc,
+                               HitTestKind aHitTestKind)
+      : APZCTreeManager(LayersId{0}, aHitTestKind), mcc(aMcc) {}
 
   RefPtr<InputQueue> GetInputQueue() const { return mInputQueue; }
 

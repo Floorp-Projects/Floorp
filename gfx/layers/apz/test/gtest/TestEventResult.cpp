@@ -294,31 +294,33 @@ TEST_F(APZEventResultTester, ScrollableDirections) {
             SideBits::eLeft | SideBits::eTop);
 }
 
-class APZEventResultTesterLayersOnly : public APZEventResultTester {
+class APZEventResultTesterInternal : public APZEventResultTester {
  public:
-  APZEventResultTesterLayersOnly() { mLayersOnly = true; }
+  APZEventResultTesterInternal() {
+    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+  }
 };
 
-TEST_F(APZEventResultTesterLayersOnly, OverscrollDirectionsWithEventHandler) {
+TEST_F(APZEventResultTesterInternal, OverscrollDirectionsWithEventHandler) {
   CreateScrollableRootLayer();
 
   OverscrollDirectionsWithEventHandlerTest(PreventDefaultFlag::No);
 }
 
-TEST_F(APZEventResultTesterLayersOnly,
+TEST_F(APZEventResultTesterInternal,
        OverscrollDirectionsWithPreventDefaultEventHandler) {
   CreateScrollableRootLayer();
 
   OverscrollDirectionsWithEventHandlerTest(PreventDefaultFlag::Yes);
 }
 
-TEST_F(APZEventResultTesterLayersOnly, ScrollableDirectionsWithEventHandler) {
+TEST_F(APZEventResultTesterInternal, ScrollableDirectionsWithEventHandler) {
   CreateScrollableRootLayer();
 
   ScrollableDirectionsWithEventHandlerTest(PreventDefaultFlag::No);
 }
 
-TEST_F(APZEventResultTesterLayersOnly,
+TEST_F(APZEventResultTesterInternal,
        ScrollableDirectionsWithPreventDefaultEventHandler) {
   CreateScrollableRootLayer();
 
@@ -327,7 +329,7 @@ TEST_F(APZEventResultTesterLayersOnly,
 
 // Test that APZEventResult::GetHandledResult() is correctly
 // populated.
-TEST_F(APZEventResultTesterLayersOnly, HandledByRootApzcFlag) {
+TEST_F(APZEventResultTesterInternal, HandledByRootApzcFlag) {
   // Create simple layer tree containing a dispatch-to-content region
   // that covers part but not all of its area.
   const char* treeShape = "x";

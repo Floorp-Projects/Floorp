@@ -267,7 +267,8 @@ class MOZ_RAII AutoFocusSequenceNumberSetter {
   bool mMayChangeFocus;
 };
 
-APZCTreeManager::APZCTreeManager(LayersId aRootLayersId, bool aIsUsingWebRender)
+APZCTreeManager::APZCTreeManager(LayersId aRootLayersId,
+                                 HitTestKind aHitTestKind)
     : mTestSampleTime(Nothing(), "APZCTreeManager::mTestSampleTime"),
       mInputQueue(new InputQueue()),
       mRootLayersId(aRootLayersId),
@@ -282,7 +283,7 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId, bool aIsUsingWebRender)
       mApzcTreeLog("apzctree"),
       mTestDataLock("APZTestDataLock"),
       mDPI(160.0),
-      mIsUsingWebRender(aIsUsingWebRender) {
+      mHitTestKind(aHitTestKind) {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "layers::APZCTreeManager::APZCTreeManager",
@@ -2826,10 +2827,10 @@ already_AddRefed<HitTestingTreeNode> APZCTreeManager::GetTargetNode(
 APZCTreeManager::HitTestResult APZCTreeManager::GetTargetAPZC(
     const ScreenPoint& aPoint) {
   RecursiveMutexAutoLock lock(mTreeLock);
-  if (mIsUsingWebRender) {
-    return GetAPZCAtPointWR(aPoint, lock);
+  if (mHitTestKind == HitTestKind::Internal) {
+    return GetAPZCAtPoint(aPoint, lock);
   }
-  return GetAPZCAtPoint(aPoint, lock);
+  return GetAPZCAtPointWR(aPoint, lock);
 }
 
 APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
