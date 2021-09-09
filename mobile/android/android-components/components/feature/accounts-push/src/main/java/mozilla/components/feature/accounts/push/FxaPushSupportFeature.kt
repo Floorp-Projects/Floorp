@@ -163,6 +163,7 @@ internal class AccountObserver(
         // See https://github.com/mozilla-mobile/android-components/issues/8766
         GlobalScope.launch(Dispatchers.Main) {
             account.deviceConstellation().registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
+            account.deviceConstellation().refreshDevices()
         }
     }
 

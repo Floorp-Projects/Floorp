@@ -125,6 +125,7 @@ class FxaDeviceConstellation(
         owner: LifecycleOwner,
         autoPause: Boolean
     ) {
+        logger.debug("registering device observer")
         deviceObserverRegistry.register(observer, owner, autoPause)
     }
 
@@ -210,7 +211,9 @@ class FxaDeviceConstellation(
 
             // Find the current device.
             val currentDevice = allDevices.find { it.isCurrentDevice }?.also {
-                // Check if our current device's push subscription needs to be renewed.
+                // If our current device's push subscription needs to be renewed, then we
+                // possibly missed some push notifications, so check for that here.
+                // (This doesn't actually perform the renewal, FxaPushSupportFeature does that.)
                 if (it.subscription == null || it.subscriptionExpired) {
                     logger.info("Current device needs push endpoint registration, so checking for missed commands")
                     pollForCommands()
