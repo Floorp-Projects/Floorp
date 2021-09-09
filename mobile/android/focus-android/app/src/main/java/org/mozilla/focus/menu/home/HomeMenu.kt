@@ -5,60 +5,31 @@
 package org.mozilla.focus.menu.home
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.PopupWindow
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.menu.view.*
+import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuImageText
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.ViewUtils
 
 /**
  * The overflow menu shown on the start/home screen.
  */
 class HomeMenu(
-    val context: Context,
-    val listener: View.OnClickListener
-) : PopupWindow(), View.OnClickListener {
-    var dismissListener: (() -> Unit)? = null
-
-    init {
-        contentView = LayoutInflater.from(context).inflate(R.layout.menu, null)
-
-        with(contentView.list) {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            adapter = HomeMenuAdapter(context, this@HomeMenu)
+    private val context: Context,
+    private val onItemTapped: ((HomeMenuItem) -> Unit)
+) {
+    fun getMenuBuilder(): BrowserMenuBuilder {
+        val help = BrowserMenuImageText(
+            label = context.getString(R.string.menu_help),
+            imageResource = R.drawable.mozac_ic_help
+        ) {
+            onItemTapped.invoke(HomeMenuItem.Help)
         }
 
-        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        isFocusable = true
-
-        height = ViewGroup.LayoutParams.WRAP_CONTENT
-        width = ViewGroup.LayoutParams.WRAP_CONTENT
-
-        elevation = context.resources.getDimension(R.dimen.menu_elevation)
-    }
-
-    fun show(anchor: View) {
-        val xOffset = if (ViewUtils.isRTL(anchor)) -anchor.width else 0
-
-        super.showAsDropDown(anchor, xOffset, -(anchor.height + anchor.paddingBottom))
-    }
-
-    override fun onClick(view: View?) {
-        dismiss()
-
-        listener.onClick(view)
-    }
-
-    override fun dismiss() {
-        super.dismiss()
-
-        dismissListener?.invoke()
+        val settings = BrowserMenuImageText(
+            label = context.getString(R.string.menu_settings),
+            imageResource = R.drawable.mozac_ic_settings
+        ) {
+            onItemTapped.invoke(HomeMenuItem.Settings)
+        }
+        return BrowserMenuBuilder(items = listOf(help, settings))
     }
 }
