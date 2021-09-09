@@ -65,6 +65,8 @@ void Atomic32Temps<Count>::maybeFree(BaseCompiler* bc) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
 // Bounds check elimination.
 //
 // We perform BCE on two kinds of address expressions: on constant heap pointers
@@ -196,6 +198,10 @@ RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
   return popI32();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Common load and store code.
+
 #ifdef RABALDR_HAS_HEAPREG
 void BaseCompiler::pushHeapBase() {
   RegIntptr heapBase = need<RegIntptr>();
@@ -306,27 +312,6 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     masm.bind(&ok);
   }
 }
-
-#ifdef RABALDR_HAS_HEAPREG
-BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                                  AccessCheck* check,
-                                                  RegI32 tls, RegI32 ptr) {
-  MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
-  prepareMemoryAccess(access, check, tls, ptr);
-  return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
-}
-#else
-// Some consumers depend on the returned Address not incorporating tls, as tls
-// may be the scratch register.
-Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                                AccessCheck* check, RegI32 tls,
-                                                RegI32 ptr) {
-  MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
-  prepareMemoryAccess(access, check, tls, ptr);
-  masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
-  return Address(ptr, access->offset());
-}
-#endif
 
 void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
   if (access->offset()) {
@@ -510,6 +495,207 @@ void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
 
   return true;
 }
+
+RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
+  RegI32 tls;
+  if (needTlsForAccess(check)) {
+    tls = needI32();
+    fr.loadTlsPtr(tls);
+  }
+  return tls;
+}
+
+RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
+                                           RegI32 specific) {
+  if (needTlsForAccess(check)) {
+    fr.loadTlsPtr(specific);
+    return specific;
+  }
+  return RegI32::Invalid();
+}
+
+bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
+                              ValType type) {
+  RegI32 tls, temp;
+#if defined(JS_CODEGEN_MIPS64)
+  temp = needI32();
+#endif
+
+  switch (type.kind()) {
+    case ValType::I32: {
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!load(access, &check, tls, rp, AnyReg(rp), temp)) {
+        return false;
+      }
+      pushI32(rp);
+      break;
+    }
+    case ValType::I64: {
+      RegI64 rv;
+      RegI32 rp;
+#ifdef JS_CODEGEN_X86
+      rv = specific_.abiReturnRegI64;
+      needI64(rv);
+      rp = popMemory32Access(access, &check);
+#else
+      rp = popMemory32Access(access, &check);
+      rv = needI64();
+#endif
+      tls = maybeLoadTlsForAccess(check);
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      pushI64(rv);
+      freeI32(rp);
+      break;
+    }
+    case ValType::F32: {
+      RegI32 rp = popMemory32Access(access, &check);
+      RegF32 rv = needF32();
+      tls = maybeLoadTlsForAccess(check);
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      pushF32(rv);
+      freeI32(rp);
+      break;
+    }
+    case ValType::F64: {
+      RegI32 rp = popMemory32Access(access, &check);
+      RegF64 rv = needF64();
+      tls = maybeLoadTlsForAccess(check);
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      pushF64(rv);
+      freeI32(rp);
+      break;
+    }
+#ifdef ENABLE_WASM_SIMD
+    case ValType::V128: {
+      RegI32 rp = popMemory32Access(access, &check);
+      RegV128 rv = needV128();
+      tls = maybeLoadTlsForAccess(check);
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      pushV128(rv);
+      freeI32(rp);
+      break;
+    }
+#endif
+    default:
+      MOZ_CRASH("load type");
+      break;
+  }
+
+  maybeFree(tls);
+  maybeFree(temp);
+
+  return true;
+}
+
+bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
+                               ValType resultType) {
+  RegI32 tls, temp;
+#if defined(JS_CODEGEN_MIPS64)
+  temp = needI32();
+#endif
+
+  switch (resultType.kind()) {
+    case ValType::I32: {
+      RegI32 rv = popI32();
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      freeI32(rp);
+      freeI32(rv);
+      break;
+    }
+    case ValType::I64: {
+      RegI64 rv = popI64();
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      freeI32(rp);
+      freeI64(rv);
+      break;
+    }
+    case ValType::F32: {
+      RegF32 rv = popF32();
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      freeI32(rp);
+      freeF32(rv);
+      break;
+    }
+    case ValType::F64: {
+      RegF64 rv = popF64();
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      freeI32(rp);
+      freeF64(rv);
+      break;
+    }
+#ifdef ENABLE_WASM_SIMD
+    case ValType::V128: {
+      RegV128 rv = popV128();
+      RegI32 rp = popMemory32Access(access, &check);
+      tls = maybeLoadTlsForAccess(check);
+      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
+        return false;
+      }
+      freeI32(rp);
+      freeV128(rv);
+      break;
+    }
+#endif
+    default:
+      MOZ_CRASH("store type");
+      break;
+  }
+
+  maybeFree(tls);
+  maybeFree(temp);
+
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic operations.
+
+#ifdef RABALDR_HAS_HEAPREG
+BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
+                                                  AccessCheck* check,
+                                                  RegI32 tls, RegI32 ptr) {
+  MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
+  prepareMemoryAccess(access, check, tls, ptr);
+  return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
+}
+#else
+// Some consumers depend on the returned Address not incorporating tls, as tls
+// may be the scratch register.
+Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
+                                                AccessCheck* check, RegI32 tls,
+                                                RegI32 ptr) {
+  MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
+  prepareMemoryAccess(access, check, tls, ptr);
+  masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
+  return Address(ptr, access->offset());
+}
+#endif
 
 #if defined(JS_CODEGEN_MIPS64)
 using AtomicRMW32Temps = Atomic32Temps<3>;
@@ -1373,182 +1559,6 @@ void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
   if (wantResult) {
     pushI64(regs.takeRd());
   }
-}
-
-RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
-  RegI32 tls;
-  if (needTlsForAccess(check)) {
-    tls = needI32();
-    fr.loadTlsPtr(tls);
-  }
-  return tls;
-}
-
-RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
-                                           RegI32 specific) {
-  if (needTlsForAccess(check)) {
-    fr.loadTlsPtr(specific);
-    return specific;
-  }
-  return RegI32::Invalid();
-}
-
-bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
-                              ValType type) {
-  RegI32 tls, temp;
-#if defined(JS_CODEGEN_MIPS64)
-  temp = needI32();
-#endif
-
-  switch (type.kind()) {
-    case ValType::I32: {
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rp), temp)) {
-        return false;
-      }
-      pushI32(rp);
-      break;
-    }
-    case ValType::I64: {
-      RegI64 rv;
-      RegI32 rp;
-#ifdef JS_CODEGEN_X86
-      rv = specific_.abiReturnRegI64;
-      needI64(rv);
-      rp = popMemory32Access(access, &check);
-#else
-      rp = popMemory32Access(access, &check);
-      rv = needI64();
-#endif
-      tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      pushI64(rv);
-      freeI32(rp);
-      break;
-    }
-    case ValType::F32: {
-      RegI32 rp = popMemory32Access(access, &check);
-      RegF32 rv = needF32();
-      tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      pushF32(rv);
-      freeI32(rp);
-      break;
-    }
-    case ValType::F64: {
-      RegI32 rp = popMemory32Access(access, &check);
-      RegF64 rv = needF64();
-      tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      pushF64(rv);
-      freeI32(rp);
-      break;
-    }
-#ifdef ENABLE_WASM_SIMD
-    case ValType::V128: {
-      RegI32 rp = popMemory32Access(access, &check);
-      RegV128 rv = needV128();
-      tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      pushV128(rv);
-      freeI32(rp);
-      break;
-    }
-#endif
-    default:
-      MOZ_CRASH("load type");
-      break;
-  }
-
-  maybeFree(tls);
-  maybeFree(temp);
-
-  return true;
-}
-
-bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
-                               ValType resultType) {
-  RegI32 tls, temp;
-#if defined(JS_CODEGEN_MIPS64)
-  temp = needI32();
-#endif
-
-  switch (resultType.kind()) {
-    case ValType::I32: {
-      RegI32 rv = popI32();
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      freeI32(rp);
-      freeI32(rv);
-      break;
-    }
-    case ValType::I64: {
-      RegI64 rv = popI64();
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      freeI32(rp);
-      freeI64(rv);
-      break;
-    }
-    case ValType::F32: {
-      RegF32 rv = popF32();
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      freeI32(rp);
-      freeF32(rv);
-      break;
-    }
-    case ValType::F64: {
-      RegF64 rv = popF64();
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      freeI32(rp);
-      freeF64(rv);
-      break;
-    }
-#ifdef ENABLE_WASM_SIMD
-    case ValType::V128: {
-      RegV128 rv = popV128();
-      RegI32 rp = popMemory32Access(access, &check);
-      tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
-      freeI32(rp);
-      freeV128(rv);
-      break;
-    }
-#endif
-    default:
-      MOZ_CRASH("store type");
-      break;
-  }
-
-  maybeFree(tls);
-  maybeFree(temp);
-
-  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
