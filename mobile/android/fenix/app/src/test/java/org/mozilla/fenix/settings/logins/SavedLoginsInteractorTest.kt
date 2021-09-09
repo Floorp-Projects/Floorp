@@ -63,4 +63,10 @@ class SavedLoginsInteractorTest {
         interactor.loadAndMapLogins()
         verifyAll { savedLoginsStorageController.handleLoadAndMapLogins() }
     }
+
+    @Test
+    fun `Handle add login button click`() {
+        interactor.onAddLoginClick()
+        verifyAll { listController.handleAddLoginClicked() }
+    }
 }

@@ -23,11 +23,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
+import org.mozilla.fenix.settings.logins.fragment.AddLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.mapToSavedLogin
 
 /**
  * Controller for all saved logins interactions with the password storage component
  */
+@Suppress("TooManyFunctions", "LargeClass")
 open class SavedLoginsStorageController(
     private val passwordsStorage: SyncableLoginsStorage,
     private val lifecycleScope: CoroutineScope,
@@ -54,6 +56,50 @@ open class SavedLoginsStorageController(
                 deleteLoginJob?.cancel()
             }
         }
+    }
+
+    fun add(hostnameText: String, usernameText: String, passwordText: String) {
+        var saveLoginJob: Deferred<Unit>? = null
+        lifecycleScope.launch(ioDispatcher) {
+            saveLoginJob = async {
+                val loginToSave = Login(
+                    guid = null,
+                    origin = hostnameText,
+                    username = usernameText,
+                    password = passwordText,
+                    httpRealm = hostnameText
+                )
+                val newLoginId = add(loginToSave)
+                if (newLoginId.isNotEmpty()) {
+                    val newLogin = passwordsStorage.get(newLoginId)
+                    syncAndUpdateList(newLogin!!)
+                }
+            }
+            saveLoginJob?.await()
+            withContext(Dispatchers.Main) {
+                val directions =
+                    AddLoginFragmentDirections.actionAddLoginFragmentToSavedLoginsFragment()
+                navController.navigate(directions)
+            }
+        }
+        saveLoginJob?.invokeOnCompletion {
+            if (it is CancellationException) {
+                saveLoginJob?.cancel()
+            }
+        }
+    }
+
+    private suspend fun add(loginToSave: Login): String {
+        var newLoginId = ""
+        try {
+            newLoginId = passwordsStorage.add(loginToSave)
+        } catch (loginException: LoginsStorageException) {
+            Log.e(
+                "Add new login",
+                "Failed to add new login.", loginException
+            )
+        }
+        return newLoginId
     }
 
     fun save(loginId: String, usernameText: String, passwordText: String) {
@@ -128,6 +174,38 @@ open class SavedLoginsStorageController(
             deferredLogin = async {
                 val login = getLogin(loginId)
                 passwordsStorage.getPotentialDupesIgnoringUsername(login!!)
+            }
+            val fetchedDuplicatesList = deferredLogin?.await()
+            fetchedDuplicatesList?.let { list ->
+                withContext(Dispatchers.Main) {
+                    val savedLoginList = list.map { it.mapToSavedLogin() }
+                    loginsFragmentStore.dispatch(
+                        LoginsAction.ListOfDupes(
+                            savedLoginList
+                        )
+                    )
+                }
+            }
+        }
+        fetchLoginJob.invokeOnCompletion {
+            if (it is CancellationException) {
+                deferredLogin?.cancel()
+            }
+        }
+    }
+
+    fun findPotentialDuplicates(hostnameText: String, usernameText: String, passwordText: String) {
+        var deferredLogin: Deferred<List<Login>>? = null
+        val fetchLoginJob = lifecycleScope.launch(ioDispatcher) {
+            deferredLogin = async {
+                val login = Login(
+                    guid = null,
+                    origin = hostnameText,
+                    username = usernameText,
+                    password = passwordText,
+                    httpRealm = hostnameText
+                )
+                passwordsStorage.getPotentialDupesIgnoringUsername(login)
             }
             val fetchedDuplicatesList = deferredLogin?.await()
             fetchedDuplicatesList?.let { list ->

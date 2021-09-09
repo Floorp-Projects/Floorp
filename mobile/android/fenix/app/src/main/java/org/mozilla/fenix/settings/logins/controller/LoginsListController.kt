@@ -45,6 +45,12 @@ class LoginsListController(
         )
     }
 
+    fun handleAddLoginClicked() {
+        navController.navigate(
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment()
+        )
+    }
+
     fun handleLearnMoreClicked() {
         browserNavigator.invoke(
             SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SYNC_SETUP),

@@ -36,4 +36,8 @@ class SavedLoginsInteractor(
     fun loadAndMapLogins() {
         savedLoginsStorageController.handleLoadAndMapLogins()
     }
+
+    fun onAddLoginClick() {
+        loginsListController.handleAddLoginClicked()
+    }
 }

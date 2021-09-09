@@ -1492,6 +1492,8 @@
     <string name="preferences_android_autofill">Autofill in other apps</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Fill usernames and passwords in other apps on your device.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Add login</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync logins</string>
@@ -1555,6 +1557,8 @@
     <string name="saved_login_copy_username">Copy username</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Clear username</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Clear hostname</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copy site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1762,14 +1766,26 @@
     <string name="discard_changes">Discard changes</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edit</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Add new login</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password required</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Username required</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostname required</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Voice search</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Speak now</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">A login with that username already exists</string>
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Web address must contain \“https://\“ or \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Valid hostname required</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->

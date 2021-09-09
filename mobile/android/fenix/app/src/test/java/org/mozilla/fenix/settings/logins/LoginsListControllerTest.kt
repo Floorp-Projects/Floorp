@@ -39,7 +39,7 @@ class LoginsListControllerTest {
         )
 
     @Test
-    fun `GIVEN a sorting strategy, WHEN handleSort is called on the controller, THEN the correct action should be dispatched and the strategy saved in sharedPref`() {
+    fun `handle selecting the sorting strategy and save pref`() {
         controller.handleSort(sortingStrategy)
 
         verifyAll {
@@ -53,7 +53,7 @@ class LoginsListControllerTest {
     }
 
     @Test
-    fun `GIVEN a SavedLogin, WHEN handleItemClicked is called for it, THEN LoginsAction$LoginSelected should be emitted`() {
+    fun `handle login item clicked`() {
         val login: SavedLogin = mockk(relaxed = true)
 
         controller.handleItemClicked(login)
@@ -68,7 +68,7 @@ class LoginsListControllerTest {
     }
 
     @Test
-    fun `GIVEN the learn more option, WHEN handleLearnMoreClicked is called for it, then we should open the right support webpage`() {
+    fun `Open the correct support webpage when Learn More is clicked`() {
         controller.handleLearnMoreClicked()
 
         verifyAll {
@@ -76,6 +76,17 @@ class LoginsListControllerTest {
                 SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SYNC_SETUP),
                 true,
                 BrowserDirection.FromSavedLoginsFragment
+            )
+        }
+    }
+
+    @Test
+    fun `handle add login clicked`() {
+        controller.handleAddLoginClicked()
+
+        verifyAll {
+            navController.navigate(
+                SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment()
             )
         }
     }

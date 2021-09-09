@@ -345,6 +345,11 @@
             android:id="@+id/action_savedLoginsFragment_to_loginDetailFragment"
             app:destination="@id/loginDetailFragment" />
         <action
+            android:id="@+id/action_savedLoginsFragment_to_addLoginFragment"
+            app:destination="@id/addLoginFragment"
+            app:popUpTo="@id/addLoginFragment"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_savedLoginsFragment_to_browserFragment"
             app:destination="@id/browserFragment"
             app:popUpTo="@id/settingsFragment"
@@ -385,6 +390,18 @@
             android:id="@+id/action_editLoginFragment_to_loginDetailFragment"
             app:destination="@id/loginDetailFragment"
             app:popUpTo="@id/loginDetailFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addLoginFragment"
+        android:name="org.mozilla.fenix.settings.logins.fragment.AddLoginFragment"
+        android:label="@string/add_login"
+        tools:layout="@layout/fragment_add_login">
+        <action
+            android:id="@+id/action_addLoginFragment_to_savedLoginsFragment"
+            app:destination="@id/savedLoginsFragment"
+            app:popUpTo="@id/savedLoginsFragment"
             app:popUpToInclusive="true" />
     </fragment>
 
