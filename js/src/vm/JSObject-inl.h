@@ -342,8 +342,7 @@ inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
 NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                             Handle<TaggedProto> proto,
                                             gc::AllocKind allocKind,
-                                            NewObjectKind newKind,
-                                            ObjectFlags objectFlags = {});
+                                            NewObjectKind newKind);
 
 template <NewObjectKind NewKind>
 inline NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx,
