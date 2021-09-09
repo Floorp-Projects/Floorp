@@ -161,15 +161,16 @@ nsAppStartup::nsAppStartup()
       mInterrupted(false),
       mIsSafeModeNecessary(false),
       mStartupCrashTrackingEnded(false) {
-  char* mozAppSilentRestart = PR_GetEnv("MOZ_APP_SILENT_RESTART");
+  char* mozAppSilentStart = PR_GetEnv("MOZ_APP_SILENT_START");
 
   /* When calling PR_SetEnv() with an empty value the existing variable may
    * be unset or set to the empty string depending on the underlying platform
    * thus we have to check if the variable is present and not empty. */
-  mWasSilentlyRestarted =
-      mozAppSilentRestart && (strcmp(mozAppSilentRestart, "") != 0);
+  mWasSilentlyStarted =
+      mozAppSilentStart && (strcmp(mozAppSilentStart, "") != 0);
+
   // Make sure to clear this in case we restart again non-silently.
-  PR_SetEnv("MOZ_APP_SILENT_RESTART=");
+  PR_SetEnv("MOZ_APP_SILENT_START=");
 }
 
 nsresult nsAppStartup::Init() {
@@ -277,6 +278,10 @@ nsAppStartup::Run(void) {
   if (!mShuttingDown && mConsiderQuitStopper != 0) {
 #ifdef XP_MACOSX
     EnterLastWindowClosingSurvivalArea();
+#else
+    if (mWasSilentlyStarted) {
+      EnterLastWindowClosingSurvivalArea();
+    }
 #endif
 
     mRunning = true;
@@ -404,7 +409,7 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
     if ((aMode & eSilently) != 0) {
       // Mark the next startup as a silent restart.
       // See the eSilently definition for details.
-      PR_SetEnv("MOZ_APP_SILENT_RESTART=1");
+      PR_SetEnv("MOZ_APP_SILENT_START=1");
     }
 
     obsService = mozilla::services::GetObserverService();
@@ -414,6 +419,10 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
 #ifdef XP_MACOSX
       // now even the Mac wants to quit when the last window is closed
       ExitLastWindowClosingSurvivalArea();
+#else
+      if (mWasSilentlyStarted) {
+        ExitLastWindowClosingSurvivalArea();
+      }
 #endif
       if (obsService)
         obsService->NotifyObservers(nullptr, "quit-application-granted",
@@ -585,8 +594,8 @@ nsAppStartup::GetWasRestarted(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetWasSilentlyRestarted(bool* aResult) {
-  *aResult = mWasSilentlyRestarted;
+nsAppStartup::GetWasSilentlyStarted(bool* aResult) {
+  *aResult = mWasSilentlyStarted;
   return NS_OK;
 }
 
