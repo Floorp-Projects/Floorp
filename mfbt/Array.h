@@ -17,6 +17,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 namespace mozilla {
 
@@ -39,12 +40,16 @@ class Array {
   }
 
   T& operator[](size_t aIndex) {
-    MOZ_ASSERT(aIndex < Length);
+    if (MOZ_UNLIKELY(aIndex >= Length)) {
+      detail::InvalidArrayIndex_CRASH(aIndex, Length);
+    }
     return mArr[aIndex];
   }
 
   const T& operator[](size_t aIndex) const {
-    MOZ_ASSERT(aIndex < Length);
+    if (MOZ_UNLIKELY(aIndex >= Length)) {
+      detail::InvalidArrayIndex_CRASH(aIndex, Length);
+    }
     return mArr[aIndex];
   }
 

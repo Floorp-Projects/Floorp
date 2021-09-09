@@ -412,7 +412,7 @@ nsTArray_base<Alloc, RelocationStrategy>::InsertSlotsAt(index_type aIndex,
                                                         size_type aElemSize,
                                                         size_t aElemAlign) {
   if (MOZ_UNLIKELY(aIndex > Length())) {
-    InvalidArrayIndex_CRASH(aIndex, Length());
+    mozilla::detail::InvalidArrayIndex_CRASH(aIndex, Length());
   }
 
   if (!ActualAlloc::Successful(
