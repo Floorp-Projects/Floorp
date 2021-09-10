@@ -7,6 +7,7 @@
 #include "SandboxTestingChild.h"
 #include "SandboxTestingChildTests.h"
 #include "SandboxTestingThread.h"
+#include "mozilla/ipc/Endpoint.h"
 
 #ifdef XP_LINUX
 #  include "mozilla/Sandbox.h"
