@@ -221,10 +221,6 @@ class DefaultBrowserToolbarMenuController(
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
                 navController.nav(R.id.browserFragment, directions)
             }
-            is ToolbarMenu.Item.CustomizeHome -> browserAnimator.captureEngineViewAndDrawStatically {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToCustomFragment()
-                navController.nav(R.id.browserFragment, directions)
-            }
             is ToolbarMenu.Item.SyncAccount -> {
                 val directions = when (item.accountState) {
                     AccountState.AUTHENTICATED ->
@@ -388,7 +384,6 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP
             is ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             is ToolbarMenu.Item.Settings -> Event.BrowserMenuItemTapped.Item.SETTINGS
-            is ToolbarMenu.Item.CustomizeHome -> return
             is ToolbarMenu.Item.RequestDesktop ->
                 if (item.isChecked) {
                     Event.BrowserMenuItemTapped.Item.DESKTOP_VIEW_ON
