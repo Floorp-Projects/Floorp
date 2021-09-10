@@ -327,9 +327,18 @@ class HTMLEditUtils final {
    * IsVisiblePreformattedNewLine() and IsInvisiblePreformattedNewLine() return
    * true if the point is preformatted linefeed and it's visible or invisible.
    * If linefeed is immediately before a block boundary, it's invisible.
+   *
+   * @param aFollowingBlockElement  [out] If the node is followed by a block
+   *                                boundary, this is set to the element
+   *                                creating the block boundary.
    */
   template <typename EditorDOMPointType>
-  static bool IsVisiblePreformattedNewLine(const EditorDOMPointType& aPoint) {
+  static bool IsVisiblePreformattedNewLine(
+      const EditorDOMPointType& aPoint,
+      Element** aFollowingBlockElement = nullptr) {
+    if (aFollowingBlockElement) {
+      *aFollowingBlockElement = nullptr;
+    }
     if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
         !aPoint.IsCharPreformattedNewLine()) {
       return false;
@@ -353,16 +362,26 @@ class HTMLEditUtils final {
     }
     // If followed by a block boundary without visible content, it's invisible
     // linefeed.
-    return !HTMLEditUtils::GetElementOfImmediateBlockBoundary(
-        *aPoint.ContainerAsText(), WalkTreeDirection::Forward);
+    Element* followingBlockElement =
+        HTMLEditUtils::GetElementOfImmediateBlockBoundary(
+            *aPoint.ContainerAsText(), WalkTreeDirection::Forward);
+    if (aFollowingBlockElement) {
+      *aFollowingBlockElement = followingBlockElement;
+    }
+    return !followingBlockElement;
   }
   template <typename EditorDOMPointType>
-  static bool IsInvisiblePreformattedNewLine(const EditorDOMPointType& aPoint) {
+  static bool IsInvisiblePreformattedNewLine(
+      const EditorDOMPointType& aPoint,
+      Element** aFollowingBlockElement = nullptr) {
     if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
         !aPoint.IsCharPreformattedNewLine()) {
+      if (aFollowingBlockElement) {
+        *aFollowingBlockElement = nullptr;
+      }
       return false;
     }
-    return !IsVisiblePreformattedNewLine(aPoint);
+    return !IsVisiblePreformattedNewLine(aPoint, aFollowingBlockElement);
   }
 
   /**

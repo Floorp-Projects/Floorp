@@ -1270,13 +1270,11 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * GetCurrentHardLineEndPoint() returns end point of hard line including
-   * aPoint.  If the line ends with a `<br>` element, returns the `<br>`
-   * element unless it's the last node of a block.  If the line is last line
-   * of a block, returns next sibling of the block.  Additionally, if the
-   * line ends with a linefeed in pre-formated text node, returns point of
-   * the linefeed.
-   * NOTE: This result may be point of editing host.  I.e., the container
-   *       may be outside of editing host.
+   * aPoint.  If the line ends with a visible `<br>` element, returns the point
+   * after the `<br>` element.  If the line ends with a preformatted linefeed,
+   * returns the point after the linefeed unless it's an invisible linebreak
+   * immediately before a block boundary.  If the line ends with a block
+   * boundary, returns the block.
    */
   template <typename PT, typename RT>
   EditorDOMPoint GetCurrentHardLineEndPoint(
