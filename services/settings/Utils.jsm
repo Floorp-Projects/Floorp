@@ -144,6 +144,10 @@ var Utils = {
       const { method = "GET", headers = {} } = init;
 
       request.open(method, input, true);
+      // By default, XMLHttpRequest converts the response based on the
+      // Content-Type header, or UTF-8 otherwise. This may mangle binary
+      // responses. Avoid that by requesting the raw bytes.
+      request.responseType = "arraybuffer";
 
       for (const [name, value] of Object.entries(headers)) {
         request.setRequestHeader(name, value);
