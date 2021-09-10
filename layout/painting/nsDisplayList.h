@@ -2376,7 +2376,6 @@ class nsDisplayItem : public nsDisplayItemLink {
         mExtraPageForPageNum(aOther.mExtraPageForPageNum),
         mPerFrameIndex(aOther.mPerFrameIndex),
         mBuildingRect(aOther.mBuildingRect),
-        mReferenceFrame(aOther.mReferenceFrame),
         mToReferenceFrame(aOther.mToReferenceFrame),
         mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot),
         mActiveScrolledRoot(aOther.mActiveScrolledRoot),
@@ -2790,18 +2789,11 @@ class nsDisplayItem : public nsDisplayItemLink {
     NS_ASSERTION(mFrame, "No frame?");
     return mToReferenceFrame;
   }
-  /**
-   * @return the root of the display list's frame (sub)tree, whose origin
-   * establishes the coordinate system for the display list
-   */
-  const nsIFrame* ReferenceFrame() const { return mReferenceFrame; }
 
   /**
    * Returns the reference frame for display item children of this item.
    */
-  virtual const nsIFrame* ReferenceFrameForChildren() const {
-    return mReferenceFrame;
-  }
+  virtual const nsIFrame* ReferenceFrameForChildren() const { return nullptr; }
 
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() const {
     MOZ_ASSERT(mAnimatedGeometryRoot,
@@ -2946,7 +2938,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   void SetHasHitTestInfo() { mItemFlags += ItemFlag::HasHitTestInfo; }
 
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
-  const nsIFrame* mReferenceFrame;
   nsPoint mToReferenceFrame;
 
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRoot;
@@ -4975,11 +4966,6 @@ class nsDisplayWrapList : public nsPaintedDisplayItem {
   nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override;
 
   RetainedDisplayList* GetSameCoordinateSystemChildren() const override {
-    NS_ASSERTION(
-        mListPtr->IsEmpty() || !ReferenceFrame() ||
-            !mListPtr->GetBottom()->ReferenceFrame() ||
-            mListPtr->GetBottom()->ReferenceFrame() == ReferenceFrame(),
-        "Children must have same reference frame");
     return mListPtr;
   }
 
