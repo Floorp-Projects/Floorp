@@ -6,16 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["ExecutionContext"];
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UUIDGen",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TYPED_ARRAY_CLASSES = [
   "Uint8Array",
@@ -30,7 +21,8 @@ const TYPED_ARRAY_CLASSES = [
 ];
 
 function uuid() {
-  return UUIDGen.generateUUID()
+  return Services.uuid
+    .generateUUID()
     .toString()
     .slice(1, -1);
 }

@@ -26,13 +26,6 @@ const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_KEY_PREFIX = "sggt";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UUIDGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
-
 /**
  * Generates an UUID.
  *
@@ -40,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(
  *   An UUID string, without leading or trailing braces.
  */
 function uuid() {
-  let uuid = UUIDGenerator.generateUUID().toString();
+  let uuid = Services.uuid.generateUUID().toString();
   return uuid.slice(1, uuid.length - 1);
 }
 

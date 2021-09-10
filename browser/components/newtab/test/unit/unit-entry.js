@@ -314,6 +314,11 @@ const TEST_GLOBAL = {
       scalarSet: () => {},
       keyedScalarAdd: () => {},
     },
+    uuid: {
+      generateUUID() {
+        return "{foo-123-foo}";
+      },
+    },
     console: { logStringMessage: () => {} },
     prefs: {
       addObserver() {},
@@ -513,9 +518,6 @@ const TEST_GLOBAL = {
   PageThumbs: {
     addExpirationFilter() {},
     removeExpirationFilter() {},
-  },
-  gUUIDGenerator: {
-    generateUUID: () => "{foo-123-foo}",
   },
   Logger,
 };

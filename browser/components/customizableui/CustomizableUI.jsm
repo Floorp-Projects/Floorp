@@ -31,13 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   return Services.strings.createBundle(kUrl);
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gELS",
-  "@mozilla.org/eventlistenerservice;1",
-  "nsIEventListenerService"
-);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gBookmarksToolbar2h2020",
@@ -1188,8 +1181,8 @@ var CustomizableUIInternal = {
   },
 
   addPanelCloseListeners(aPanel) {
-    gELS.addSystemEventListener(aPanel, "click", this, false);
-    gELS.addSystemEventListener(aPanel, "keypress", this, false);
+    Services.els.addSystemEventListener(aPanel, "click", this, false);
+    Services.els.addSystemEventListener(aPanel, "keypress", this, false);
     let win = aPanel.ownerGlobal;
     if (!gPanelsForWindow.has(win)) {
       gPanelsForWindow.set(win, new Set());
@@ -1198,8 +1191,8 @@ var CustomizableUIInternal = {
   },
 
   removePanelCloseListeners(aPanel) {
-    gELS.removeSystemEventListener(aPanel, "click", this, false);
-    gELS.removeSystemEventListener(aPanel, "keypress", this, false);
+    Services.els.removeSystemEventListener(aPanel, "click", this, false);
+    Services.els.removeSystemEventListener(aPanel, "keypress", this, false);
     let win = aPanel.ownerGlobal;
     let panels = gPanelsForWindow.get(win);
     if (panels) {
@@ -5090,7 +5083,7 @@ OverflowableToolbar.prototype = {
       let mainViewId = multiview.getAttribute("mainViewId");
       let mainView = doc.getElementById(mainViewId);
       let contextMenu = doc.getElementById(mainView.getAttribute("context"));
-      gELS.addSystemEventListener(contextMenu, "command", this, true);
+      Services.els.addSystemEventListener(contextMenu, "command", this, true);
       let anchor = this._chevron.icon;
 
       let popupshown = false;
@@ -5170,7 +5163,12 @@ OverflowableToolbar.prototype = {
     let contextMenuId = this._panel.getAttribute("context");
     if (contextMenuId) {
       let contextMenu = doc.getElementById(contextMenuId);
-      gELS.removeSystemEventListener(contextMenu, "command", this, true);
+      Services.els.removeSystemEventListener(
+        contextMenu,
+        "command",
+        this,
+        true
+      );
     }
   },
 

@@ -42,13 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 let constants = {};
 ChromeUtils.import("resource://services-sync/constants.js", constants);
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "Telemetry",
-  "@mozilla.org/base/telemetry;1",
-  "nsITelemetry"
-);
-
 XPCOMUtils.defineLazyGetter(
   this,
   "WeaveService",
@@ -116,7 +109,7 @@ const reProfileDir = new RegExp(
 
 function tryGetMonotonicTimestamp() {
   try {
-    return Telemetry.msSinceProcessStart();
+    return Services.telemetry.msSinceProcessStart();
   } catch (e) {
     log.warn("Unable to get a monotonic timestamp!");
     return -1;
@@ -567,7 +560,7 @@ class SyncTelemetryImpl {
     this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval =
       Svc.Prefs.get("telemetry.submissionInterval") * 1000;
-    this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+    this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastSyncNodeType = null;
     this.currentSyncNodeType = null;
@@ -851,7 +844,7 @@ class SyncTelemetryImpl {
         "Early submission of sync telemetry due to changed IDs/NodeType"
       );
       this.finish("idchange"); // this actually submits.
-      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     }
 
     // Only update the last UIDs if we actually know them.
@@ -870,11 +863,11 @@ class SyncTelemetryImpl {
     // the sync and the events caused by it in different pings.
     if (
       this.current == null &&
-      Telemetry.msSinceProcessStart() - this.lastSubmissionTime >
+      Services.telemetry.msSinceProcessStart() - this.lastSubmissionTime >
         this.submissionInterval
     ) {
       this.finish("schedule");
-      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+      this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     }
   }
 
@@ -901,7 +894,7 @@ class SyncTelemetryImpl {
   }
 
   _addHistogram(hist) {
-    let histogram = Telemetry.getHistogramById(hist);
+    let histogram = Services.telemetry.getHistogramById(hist);
     let s = histogram.snapshot();
     this.histograms[hist] = s;
   }

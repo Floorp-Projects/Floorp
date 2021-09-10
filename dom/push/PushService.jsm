@@ -23,12 +23,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/push/Notifier;1",
   "nsIPushNotifier"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "eTLDService",
-  "@mozilla.org/network/effective-tld-service;1",
-  "nsIEffectiveTLDService"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "pushBroadcastService",
@@ -1285,7 +1279,7 @@ var PushService = {
           record =>
             info.domain == "*" ||
             (record.uri &&
-              eTLDService.hasRootDomain(record.uri.prePath, info.domain))
+              Services.eTLD.hasRootDomain(record.uri.prePath, info.domain))
         );
       })
       .catch(e => {
