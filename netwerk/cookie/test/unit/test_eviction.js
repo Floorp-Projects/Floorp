@@ -16,13 +16,6 @@ const { CookieXPCShellUtils } = ChromeUtils.import(
 CookieXPCShellUtils.init(this);
 CookieXPCShellUtils.createServer({ hosts: ["example.org"] });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "cm",
-  "@mozilla.org/cookiemanager;1",
-  "nsICookieManager"
-);
-
 add_task(async function test_basic_eviction() {
   do_get_profile();
 
@@ -121,14 +114,14 @@ add_task(async function test_basic_eviction() {
     BASE_URI
   );
 
-  cm.removeAll();
+  Services.cookies.removeAll();
 });
 
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed
 function verifyCookies(names, uri) {
-  Assert.equal(cm.countCookiesFromHost(uri.host), names.length);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri.host), names.length);
   let actual_cookies = [];
-  for (let cookie of cm.getCookiesFromHost(uri.host, {})) {
+  for (let cookie of Services.cookies.getCookiesFromHost(uri.host, {})) {
     actual_cookies.push(cookie);
   }
   if (names.length != actual_cookies.length) {

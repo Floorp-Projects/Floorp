@@ -48,13 +48,6 @@ const PING_TYPE_UNINSTALL = "uninstall";
 const REASON_GATHER_PAYLOAD = "gather-payload";
 const REASON_GATHER_SUBSESSION_PAYLOAD = "gather-subsession-payload";
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "Telemetry",
-  "@mozilla.org/base/telemetry;1",
-  "nsITelemetry"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "jwcrypto",
@@ -476,9 +469,9 @@ var Impl = {
     // cached.
     if (!this._clientID && aOptions.addClientId && !aOptions.overrideClientId) {
       this._log.trace("_submitPingLogic - Waiting on client id");
-      Telemetry.getHistogramById(
-        "TELEMETRY_PING_SUBMISSION_WAITING_CLIENTID"
-      ).add();
+      Services.telemetry
+        .getHistogramById("TELEMETRY_PING_SUBMISSION_WAITING_CLIENTID")
+        .add();
       // We can safely call |getClientID| here and during initialization: we would still
       // spawn and return one single loading task.
       this._clientID = await ClientID.getClientID();
@@ -607,7 +600,7 @@ var Impl = {
     const typeUuid = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
     if (!typeUuid.test(aType)) {
       this._log.error("submitExternalPing - invalid ping type: " + aType);
-      let histogram = Telemetry.getKeyedHistogramById(
+      let histogram = Services.telemetry.getKeyedHistogramById(
         "TELEMETRY_INVALID_PING_TYPE_SUBMITTED"
       );
       histogram.add(aType, 1);
@@ -622,7 +615,7 @@ var Impl = {
       this._log.error(
         "submitExternalPing - invalid payload type: " + typeof aPayload
       );
-      let histogram = Telemetry.getHistogramById(
+      let histogram = Services.telemetry.getHistogramById(
         "TELEMETRY_INVALID_PAYLOAD_SUBMITTED"
       );
       histogram.add(1);
@@ -1106,7 +1099,7 @@ var Impl = {
         await ClientID.removeClientID();
         let id = await ClientID.getClientID();
         this._clientID = id;
-        Telemetry.scalarSet("telemetry.data_upload_optin", true);
+        Services.telemetry.scalarSet("telemetry.data_upload_optin", true);
 
         await this.saveUninstallPing().catch(e =>
           this._log.warn("_onUploadPrefChange - saveUninstallPing failed", e)
@@ -1142,7 +1135,7 @@ var Impl = {
 
         // 5. Collect any additional identifiers we want to send in the
         // deletion request.
-        const scalars = Telemetry.getSnapshotForScalars(
+        const scalars = Services.telemetry.getSnapshotForScalars(
           "deletion-request",
           /* clear */ true
         );
@@ -1213,7 +1206,7 @@ var Impl = {
     this._log.trace("getCurrentPingData - subsession: " + aSubsession);
 
     // Telemetry is disabled, don't gather any data.
-    if (!Telemetry.canRecordBase) {
+    if (!Services.telemetry.canRecordBase) {
       return null;
     }
 
@@ -1284,7 +1277,7 @@ var Impl = {
       "sendNewProfilePing - shutting down: " + this._shuttingDown
     );
 
-    const scalars = Telemetry.getSnapshotForScalars(
+    const scalars = Services.telemetry.getSnapshotForScalars(
       "new-profile",
       /* clear */ true
     );
@@ -1375,13 +1368,13 @@ var Impl = {
         let newValue;
         switch (value) {
           case "nsITelemetry::SCALAR_TYPE_COUNT":
-            newValue = Telemetry.SCALAR_TYPE_COUNT;
+            newValue = Services.telemetry.SCALAR_TYPE_COUNT;
             break;
           case "nsITelemetry::SCALAR_TYPE_BOOLEAN":
-            newValue = Telemetry.SCALAR_TYPE_BOOLEAN;
+            newValue = Services.telemetry.SCALAR_TYPE_BOOLEAN;
             break;
           case "nsITelemetry::SCALAR_TYPE_STRING":
-            newValue = Telemetry.SCALAR_TYPE_STRING;
+            newValue = Services.telemetry.SCALAR_TYPE_STRING;
             break;
         }
         return newValue;
@@ -1412,7 +1405,10 @@ var Impl = {
           def.expired = true;
         }
       }
-      Telemetry.registerBuiltinScalars(category, scalarJSProbes[category]);
+      Services.telemetry.registerBuiltinScalars(
+        category,
+        scalarJSProbes[category]
+      );
     }
   },
 
@@ -1452,7 +1448,10 @@ var Impl = {
           def.expired = true;
         }
       }
-      Telemetry.registerBuiltinEvents(category, eventJSProbes[category]);
+      Services.telemetry.registerBuiltinEvents(
+        category,
+        eventJSProbes[category]
+      );
     }
   },
 };

@@ -38,9 +38,6 @@ ChromeUtils.defineModuleGetter(
   "PersistentCache",
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
-});
 
 const CACHE_KEY = "discovery_stream";
 const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -93,7 +90,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   getOrCreateImpressionId() {
     let impressionId = Services.prefs.getCharPref(PREF_IMPRESSION_ID, "");
     if (!impressionId) {
-      impressionId = String(gUUIDGenerator.generateUUID());
+      impressionId = String(Services.uuid.generateUUID());
       Services.prefs.setCharPref(PREF_IMPRESSION_ID, impressionId);
     }
     return impressionId;

@@ -10,13 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gPrompter",
-  "@mozilla.org/prompter;1",
-  "nsIPromptService"
-);
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const EXPORTED_SYMBOLS = ["GeckoViewPromptChild"];
@@ -30,7 +23,7 @@ class GeckoViewPromptChild extends GeckoViewActorChild {
       case "click": // fall-through
       case "contextmenu": // fall-through
       case "DOMPopupBlocked":
-        gPrompter.wrappedJSObject.handleEvent(event);
+        Services.prompt.wrappedJSObject.handleEvent(event);
     }
   }
 }

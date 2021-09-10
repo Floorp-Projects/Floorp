@@ -87,20 +87,11 @@
 
 var EXPORTED_SYMBOLS = ["FormHistory"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "uuidService",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
@@ -317,7 +308,7 @@ function makeQueryPredicates(aQueryData, delimiter = " AND ") {
 
 function generateGUID() {
   // string like: "{f60d9eac-9421-4abc-8491-8e8322b063d4}"
-  let uuid = uuidService.generateUUID().toString();
+  let uuid = Services.uuid.generateUUID().toString();
   let raw = ""; // A string with the low bytes set to random values
   let bytes = 0;
   for (let i = 1; bytes < 12; i += 2) {

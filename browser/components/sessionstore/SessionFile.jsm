@@ -34,13 +34,6 @@ const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "Telemetry",
-  "@mozilla.org/base/telemetry;1",
-  "nsITelemetry"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -298,12 +291,12 @@ var SessionFileInternal = {
           parsed,
           useOldExtension,
         };
-        Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(
-          false
-        );
-        Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS").add(
-          Date.now() - startMs
-        );
+        Services.telemetry
+          .getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE")
+          .add(false);
+        Services.telemetry
+          .getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS")
+          .add(Date.now() - startMs);
         break;
       } catch (ex) {
         if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
@@ -325,9 +318,9 @@ var SessionFileInternal = {
       } finally {
         if (exists) {
           noFilesFound = false;
-          Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(
-            corrupted
-          );
+          Services.telemetry
+            .getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE")
+            .add(corrupted);
         }
       }
     }
@@ -347,9 +340,9 @@ var SessionFileInternal = {
 
     // All files are corrupted if files found but none could deliver a result.
     let allCorrupt = !noFilesFound && !result;
-    Telemetry.getHistogramById("FX_SESSION_RESTORE_ALL_FILES_CORRUPT").add(
-      allCorrupt
-    );
+    Services.telemetry
+      .getHistogramById("FX_SESSION_RESTORE_ALL_FILES_CORRUPT")
+      .add(allCorrupt);
 
     if (!result) {
       // If everything fails, start with an empty session.
@@ -542,7 +535,7 @@ var SessionFileInternal = {
       } else {
         samples.push(value);
       }
-      let histogram = Telemetry.getHistogramById(id);
+      let histogram = Services.telemetry.getHistogramById(id);
       for (let sample of samples) {
         histogram.add(sample);
       }

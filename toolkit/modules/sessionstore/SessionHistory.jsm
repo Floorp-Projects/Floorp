@@ -7,20 +7,11 @@
 var EXPORTED_SYMBOLS = ["SessionHistory"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
-);
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "uuidGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
 );
 
 function debug(msg) {
@@ -482,7 +473,7 @@ var SessionHistoryInternal = {
         // is correctly stored as a string.
         this._docshellUUIDMap.set(
           entry.docshellID,
-          uuidGenerator.generateUUID().toString()
+          Services.uuid.generateUUID().toString()
         );
       }
       entry.docshellUUID = this._docshellUUIDMap.get(entry.docshellID);

@@ -24,18 +24,17 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1",
   "nsIUpdateTimerManager"
-);
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "Telemetry",
-  "@mozilla.org/base/telemetry;1",
-  "nsITelemetry"
 );
 
 var EXPORTED_SYMBOLS = ["TelemetryModules"];
@@ -80,7 +79,7 @@ var TelemetryModules = Object.freeze({
    */
   notify() {
     try {
-      Telemetry.getLoadedModules().then(
+      Services.telemetry.getLoadedModules().then(
         modules => {
           modules = modules.filter(module => !!module.name.length);
 
