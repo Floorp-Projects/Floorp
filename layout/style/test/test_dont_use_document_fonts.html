@@ -30,6 +30,11 @@ const kTests = [
     description: "Generics are preferred, but may still fall back to document fonts",
   },
   {
+    specified: "system-ui, sans-serif",
+    computed: "sans-serif, system-ui",
+    description: "system-ui is not prioritized",
+  },
+  {
     specified: "Courier, something-else",
     computed: `${kInitialFamily}, Courier, something-else`,
     description: "Generic is prepended to the font-family if none is found",
