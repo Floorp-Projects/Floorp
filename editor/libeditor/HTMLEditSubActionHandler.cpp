@@ -2025,11 +2025,11 @@ void HTMLEditor::GenerateWhiteSpaceSequence(
   // For now, this method does not assume that result will be append to
   // white-space sequence in the text node.
   MOZ_ASSERT(aPreviousCharPointData.AcrossTextNodeBoundary() ||
-             !aPreviousCharPointData.IsWhiteSpace());
+             !aPreviousCharPointData.IsCollapsibleWhiteSpace());
   // For now, this method does not assume that the result will be inserted
   // into white-space sequence nor start of white-space sequence.
   MOZ_ASSERT(aNextCharPointData.AcrossTextNodeBoundary() ||
-             !aNextCharPointData.IsWhiteSpace());
+             !aNextCharPointData.IsCollapsibleWhiteSpace());
 
   if (aLength == 1) {
     // Even if previous/next char is in different text node, we should put
@@ -2044,6 +2044,13 @@ void HTMLEditor::GenerateWhiteSpaceSequence(
     // If it's start or end of text, put an NBSP.
     if (aPreviousCharPointData.Type() == CharPointType::TextEnd ||
         aNextCharPointData.Type() == CharPointType::TextEnd) {
+      aResult.Assign(HTMLEditUtils::kNBSP);
+      return;
+    }
+    // If the character is next to a preformatted linefeed, we need to put
+    // an NBSP for avoiding collapsed into the linefeed.
+    if (aPreviousCharPointData.Type() == CharPointType::PreformattedLineBreak ||
+        aNextCharPointData.Type() == CharPointType::PreformattedLineBreak) {
       aResult.Assign(HTMLEditUtils::kNBSP);
       return;
     }
@@ -2073,11 +2080,12 @@ void HTMLEditor::GenerateWhiteSpaceSequence(
     return;
   }
 
-  // If next char point is end of text node or an ASCII white-space, we need to
-  // put an NBSP.
+  // If next char point is end of text node, an ASCII white-space or
+  // preformatted linefeed, we need to put an NBSP.
   *lastChar =
       aNextCharPointData.AcrossTextNodeBoundary() ||
-              aNextCharPointData.Type() == CharPointType::ASCIIWhiteSpace
+              aNextCharPointData.Type() == CharPointType::ASCIIWhiteSpace ||
+              aNextCharPointData.Type() == CharPointType::PreformattedLineBreak
           ? HTMLEditUtils::kNBSP
           : HTMLEditUtils::kSpace;
 }

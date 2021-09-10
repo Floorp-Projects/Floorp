@@ -324,6 +324,48 @@ class HTMLEditUtils final {
   }
 
   /**
+   * IsVisiblePreformattedNewLine() and IsInvisiblePreformattedNewLine() return
+   * true if the point is preformatted linefeed and it's visible or invisible.
+   * If linefeed is immediately before a block boundary, it's invisible.
+   */
+  template <typename EditorDOMPointType>
+  static bool IsVisiblePreformattedNewLine(const EditorDOMPointType& aPoint) {
+    if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
+        !aPoint.IsCharPreformattedNewLine()) {
+      return false;
+    }
+    // If there are some other characters in the text node, it's a visible
+    // linefeed.
+    if (!aPoint.IsAtLastContent()) {
+      if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
+        return true;
+      }
+      const nsTextFragment& textFragment =
+          aPoint.ContainerAsText()->TextFragment();
+      for (uint32_t offset = aPoint.Offset() + 1;
+           offset < textFragment.GetLength(); ++offset) {
+        char16_t ch = textFragment.CharAt(AssertedCast<int32_t>(offset));
+        if (nsCRT::IsAsciiSpace(ch) && ch != HTMLEditUtils::kNewLine) {
+          continue;  // ASCII white-space which is collapsed into the linefeed.
+        }
+        return true;  // There is a visible character after it.
+      }
+    }
+    // If followed by a block boundary without visible content, it's invisible
+    // linefeed.
+    return !HTMLEditUtils::GetElementOfImmediateBlockBoundary(
+        *aPoint.ContainerAsText(), WalkTreeDirection::Forward);
+  }
+  template <typename EditorDOMPointType>
+  static bool IsInvisiblePreformattedNewLine(const EditorDOMPointType& aPoint) {
+    if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
+        !aPoint.IsCharPreformattedNewLine()) {
+      return false;
+    }
+    return !IsVisiblePreformattedNewLine(aPoint);
+  }
+
+  /**
    * IsEmptyNode() returns false if aNode has some visible content nodes,
    * list elements or table elements.
    *
@@ -1569,6 +1611,56 @@ class HTMLEditUtils final {
     return previousVisibleCharOffset.isSome()
                ? previousVisibleCharOffset.value() + 1
                : 0;
+  }
+
+  /**
+   * GetPreviousPreformattedNewLineInTextNode() returns a point which points
+   * previous preformatted linefeed if there is and aPoint is in a text node.
+   * If the node's linefeed characters are not preformatted or aPoint is not
+   * in a text node, this returns unset DOM point.
+   */
+  template <typename EditorDOMPointType, typename ArgEditorDOMPointType>
+  static EditorDOMPointType GetPreviousPreformattedNewLineInTextNode(
+      const ArgEditorDOMPointType& aPoint) {
+    if (!aPoint.IsInTextNode() || aPoint.IsStartOfContainer() ||
+        !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText())) {
+      return EditorDOMPointType();
+    }
+    Text* textNode = aPoint.ContainerAsText();
+    const nsTextFragment& textFragment = textNode->TextFragment();
+    MOZ_ASSERT(aPoint.Offset() <= textFragment.GetLength());
+    for (uint32_t offset = aPoint.Offset(); offset; --offset) {
+      if (textFragment.CharAt(AssertedCast<int32_t>(offset - 1)) ==
+          HTMLEditUtils::kNewLine) {
+        return EditorDOMPointType(textNode, offset - 1);
+      }
+    }
+    return EditorDOMPointType();
+  }
+
+  /**
+   * GetInclusiveNextPreformattedNewLineInTextNode() returns a point which
+   * points inclusive next preformatted linefeed if there is and aPoint is in a
+   * text node. If the node's linefeed characters are not preformatted or aPoint
+   * is not in a text node, this returns unset DOM point.
+   */
+  template <typename EditorDOMPointType, typename ArgEditorDOMPointType>
+  static EditorDOMPointType GetInclusiveNextPreformattedNewLineInTextNode(
+      const ArgEditorDOMPointType& aPoint) {
+    if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
+        !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText())) {
+      return EditorDOMPointType();
+    }
+    Text* textNode = aPoint.ContainerAsText();
+    const nsTextFragment& textFragment = textNode->TextFragment();
+    for (uint32_t offset = aPoint.Offset(); offset < textFragment.GetLength();
+         ++offset) {
+      if (textFragment.CharAt(AssertedCast<int32_t>(offset)) ==
+          HTMLEditUtils::kNewLine) {
+        return EditorDOMPointType(textNode, offset);
+      }
+    }
+    return EditorDOMPointType();
   }
 
   /**
