@@ -245,15 +245,6 @@ class nsDisplayBoxShadowInnerGeometry : public nsDisplayItemGeometry {
   nsRect mPaddingRect;
 };
 
-class nsDisplayBoxShadowOuterGeometry : public nsDisplayItemGenericGeometry {
- public:
-  nsDisplayBoxShadowOuterGeometry(nsDisplayItem* aItem,
-                                  nsDisplayListBuilder* aBuilder,
-                                  float aOpacity);
-
-  float mOpacity;
-};
-
 class nsDisplaySolidColorGeometry : public nsDisplayItemBoundsGeometry {
  public:
   nsDisplaySolidColorGeometry(nsDisplayItem* aItem,
@@ -289,7 +280,6 @@ class nsDisplaySVGEffectGeometry : public nsDisplayItemGeometry {
   gfxRect mBBox;
   gfxPoint mUserSpaceOffset;
   nsPoint mFrameOffsetToReferenceFrame;
-  float mOpacity;
   bool mHandleOpacity;
 };
 
