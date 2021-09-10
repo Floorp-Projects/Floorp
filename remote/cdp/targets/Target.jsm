@@ -12,15 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CDPConnection: "chrome://remote/content/cdp/CDPConnection.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UUIDGen",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
 
 /**
  * Base class for all the targets.
@@ -43,7 +37,8 @@ class Target {
 
     // There can be more than one connection if multiple clients connect to the remote agent.
     this.connections = new Set();
-    this.id = UUIDGen.generateUUID()
+    this.id = Services.uuid
+      .generateUUID()
       .toString()
       .slice(1, -1);
   }

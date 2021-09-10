@@ -130,9 +130,6 @@ this.EXPORTED_SYMBOLS = [
   "AddressesBase",
 ];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { FormAutofill } = ChromeUtils.import(
@@ -163,13 +160,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "PhoneNumber",
   "resource://autofill/phonenumberutils/PhoneNumber.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gUUIDGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
 );
 
 const CryptoHash = Components.Constructor(
@@ -450,7 +440,7 @@ class AutofillRecords {
   _generateGUID() {
     let guid;
     while (!guid || this._findByGUID(guid)) {
-      guid = gUUIDGenerator
+      guid = Services.uuid
         .generateUUID()
         .toString()
         .replace(/[{}-]/g, "")

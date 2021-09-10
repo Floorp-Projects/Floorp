@@ -27,13 +27,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/LoginStore.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gUUIDGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
@@ -231,7 +224,7 @@ class LoginManagerStorage_json {
         this._store.data.logins.splice(foundIndex, 1);
       }
     } else {
-      loginClone.guid = gUUIDGenerator.generateUUID().toString();
+      loginClone.guid = Services.uuid.generateUUID().toString();
     }
 
     // Set timestamps

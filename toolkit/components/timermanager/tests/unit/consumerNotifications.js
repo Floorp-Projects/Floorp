@@ -12,6 +12,11 @@ const Cm = Components.manager;
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 const CATEGORY_UPDATE_TIMER = "update-timer";
 
@@ -137,20 +142,6 @@ const TESTS = [
 var gUTM;
 var gNextFunc;
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gPref",
-  "@mozilla.org/preferences-service;1",
-  "nsIPrefBranch"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gCatMan",
-  "@mozilla.org/categorymanager;1",
-  "nsICategoryManager"
-);
-
 XPCOMUtils.defineLazyGetter(this, "gCompReg", function() {
   return Cm.QueryInterface(Ci.nsIComponentRegistrar);
 });
@@ -224,7 +215,11 @@ const gTest3Factory = {
 
 const gTest4TimerCallback = {
   notify: function T4CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[4].desc, true);
+    Services.catMan.deleteCategoryEntry(
+      CATEGORY_UPDATE_TIMER,
+      TESTS[4].desc,
+      true
+    );
     TESTS[4].notified = true;
     finished_test0thru7();
   },
@@ -242,7 +237,11 @@ const gTest4Factory = {
 
 const gTest5TimerCallback = {
   notify: function T5CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[5].desc, true);
+    Services.catMan.deleteCategoryEntry(
+      CATEGORY_UPDATE_TIMER,
+      TESTS[5].desc,
+      true
+    );
     TESTS[5].notified = true;
     finished_test0thru7();
   },
@@ -260,7 +259,11 @@ const gTest5Factory = {
 
 const gTest6TimerCallback = {
   notify: function T6CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[6].desc, true);
+    Services.catMan.deleteCategoryEntry(
+      CATEGORY_UPDATE_TIMER,
+      TESTS[6].desc,
+      true
+    );
     TESTS[6].notified = true;
     finished_test0thru7();
   },
@@ -278,7 +281,11 @@ const gTest6Factory = {
 
 const gTest7TimerCallback = {
   notify: function T7CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[7].desc, true);
+    Services.catMan.deleteCategoryEntry(
+      CATEGORY_UPDATE_TIMER,
+      TESTS[7].desc,
+      true
+    );
     TESTS[7].notified = true;
     finished_test0thru7();
   },
@@ -347,18 +354,21 @@ function run_test() {
   do_test_pending();
 
   // Set the timer to fire every second
-  gPref.setIntPref(
+  Services.prefs.setIntPref(
     PREF_APP_UPDATE_TIMERMINIMUMDELAY,
     MAIN_TIMER_INTERVAL / 1000
   );
-  gPref.setIntPref(PREF_APP_UPDATE_TIMERFIRSTINTERVAL, MAIN_TIMER_INTERVAL);
-  gPref.setBoolPref(PREF_APP_UPDATE_LOG_ALL, true);
+  Services.prefs.setIntPref(
+    PREF_APP_UPDATE_TIMERFIRSTINTERVAL,
+    MAIN_TIMER_INTERVAL
+  );
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG_ALL, true);
 
   // Remove existing update timers to prevent them from being notified
-  for (let { data: entry } of gCatMan.enumerateCategory(
+  for (let { data: entry } of Services.catMan.enumerateCategory(
     CATEGORY_UPDATE_TIMER
   )) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
+    Services.catMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
   }
 
   gUTM = Cc["@mozilla.org/updates/timer-manager;1"]
@@ -383,7 +393,7 @@ function run_test0thru7() {
     TESTS[0].contractID,
     gTest0Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[0].desc,
     [
@@ -404,7 +414,7 @@ function run_test0thru7() {
     TESTS[1].contractID,
     gTest1Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[1].desc,
     [
@@ -420,7 +430,7 @@ function run_test0thru7() {
 
   // has a last update time of now - 43200 which is half of its interval
   let lastUpdateTime = Math.round(Date.now() / 1000) - 43200;
-  gPref.setIntPref(
+  Services.prefs.setIntPref(
     PREF_BRANCH_LAST_UPDATE_TIME + TESTS[2].timerID,
     lastUpdateTime
   );
@@ -430,7 +440,7 @@ function run_test0thru7() {
     TESTS[2].contractID,
     gTest2Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[2].desc,
     [
@@ -451,7 +461,7 @@ function run_test0thru7() {
     TESTS[3].contractID,
     gTest3Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[3].desc,
     [
@@ -466,14 +476,14 @@ function run_test0thru7() {
   );
 
   // already has a last update time
-  gPref.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[4].timerID, 1);
+  Services.prefs.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[4].timerID, 1);
   gCompReg.registerFactory(
     TESTS[4].classID,
     TESTS[4].desc,
     TESTS[4].contractID,
     gTest4Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[4].desc,
     [
@@ -488,14 +498,14 @@ function run_test0thru7() {
   );
 
   // has an interval preference that overrides the default
-  gPref.setIntPref(TESTS[5].prefInterval, CONSUMER_TIMER_INTERVAL);
+  Services.prefs.setIntPref(TESTS[5].prefInterval, CONSUMER_TIMER_INTERVAL);
   gCompReg.registerFactory(
     TESTS[5].classID,
     TESTS[5].desc,
     TESTS[5].contractID,
     gTest5Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[5].desc,
     [
@@ -511,7 +521,7 @@ function run_test0thru7() {
 
   // has a next update time 24 hours from now
   let nextUpdateTime = Math.round(Date.now() / 1000) + 86400;
-  gPref.setIntPref(
+  Services.prefs.setIntPref(
     PREF_BRANCH_LAST_UPDATE_TIME + TESTS[6].timerID,
     nextUpdateTime
   );
@@ -521,7 +531,7 @@ function run_test0thru7() {
     TESTS[6].contractID,
     gTest6Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[6].desc,
     [
@@ -536,14 +546,14 @@ function run_test0thru7() {
   );
 
   // has a maximum interval set by the value of MAIN_TIMER_INTERVAL
-  gPref.setIntPref(TESTS[7].prefInterval, 86400);
+  Services.prefs.setIntPref(TESTS[7].prefInterval, 86400);
   gCompReg.registerFactory(
     TESTS[7].classID,
     TESTS[7].desc,
     TESTS[7].contractID,
     gTest7Factory
   );
-  gCatMan.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     CATEGORY_UPDATE_TIMER,
     TESTS[7].desc,
     [
@@ -610,28 +620,48 @@ function check_test0thru7() {
   );
 
   Assert.ok(
-    gPref.prefHasUserValue(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[4].timerID),
+    Services.prefs.prefHasUserValue(
+      PREF_BRANCH_LAST_UPDATE_TIME + TESTS[4].timerID
+    ),
     "first of two category registered timers last update time has " +
       "a user value"
   );
   Assert.ok(
-    gPref.prefHasUserValue(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[5].timerID),
+    Services.prefs.prefHasUserValue(
+      PREF_BRANCH_LAST_UPDATE_TIME + TESTS[5].timerID
+    ),
     "second of two category registered timers last update time has " +
       "a user value"
   );
 
   // Remove the category timers that should have failed
-  gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[0].desc, true);
-  gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[1].desc, true);
-  gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[2].desc, true);
-  gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[3].desc, true);
-  for (let { data: entry } of gCatMan.enumerateCategory(
+  Services.catMan.deleteCategoryEntry(
+    CATEGORY_UPDATE_TIMER,
+    TESTS[0].desc,
+    true
+  );
+  Services.catMan.deleteCategoryEntry(
+    CATEGORY_UPDATE_TIMER,
+    TESTS[1].desc,
+    true
+  );
+  Services.catMan.deleteCategoryEntry(
+    CATEGORY_UPDATE_TIMER,
+    TESTS[2].desc,
+    true
+  );
+  Services.catMan.deleteCategoryEntry(
+    CATEGORY_UPDATE_TIMER,
+    TESTS[3].desc,
+    true
+  );
+  for (let { data: entry } of Services.catMan.enumerateCategory(
     CATEGORY_UPDATE_TIMER
   )) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
+    Services.catMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, entry, false);
   }
 
-  let entries = gCatMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
+  let entries = Services.catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
   Assert.ok(
     !entries.hasMoreElements(),
     "no " +
@@ -644,7 +674,7 @@ function check_test0thru7() {
 }
 
 function run_test8thru10() {
-  gPref.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[8].timerID, 1);
+  Services.prefs.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[8].timerID, 1);
   gCompReg.registerFactory(
     TESTS[8].classID,
     TESTS[8].desc,
@@ -656,7 +686,7 @@ function run_test8thru10() {
     gTest8TimerCallback,
     TESTS[8].defaultInterval
   );
-  gPref.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[9].timerID, 1);
+  Services.prefs.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[9].timerID, 1);
   gCompReg.registerFactory(
     TESTS[9].classID,
     TESTS[9].desc,
@@ -702,7 +732,9 @@ function check_test8thru10(aTestTimerCallback) {
       "time should have occured"
   );
 
-  let time = gPref.getIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[8].timerID);
+  let time = Services.prefs.getIntPref(
+    PREF_BRANCH_LAST_UPDATE_TIME + TESTS[8].timerID
+  );
   Assert.notEqual(
     time,
     1,
@@ -710,7 +742,9 @@ function check_test8thru10(aTestTimerCallback) {
       "should have been updated"
   );
 
-  time = gPref.getIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[9].timerID);
+  time = Services.prefs.getIntPref(
+    PREF_BRANCH_LAST_UPDATE_TIME + TESTS[9].timerID
+  );
   Assert.notEqual(
     time,
     1,
