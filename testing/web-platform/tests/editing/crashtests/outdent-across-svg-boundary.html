@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="test-wait">
 <head>
 <script>
 function init()
@@ -11,13 +11,14 @@ function init()
   targetDocument.designMode = 'on';
 
   targetWindow.getSelection().removeAllRanges();
-  
-  var r = targetDocument.createRange(); 
+
+  var r = targetDocument.createRange();
   r.setStart(targetDocument.getElementById("start"), 0);
-  r.setEnd  (targetDocument.getElementById("endparent").firstChild, 0);
+  r.setEnd(targetDocument.getElementById("endparent").firstChild, 0);
   targetWindow.getSelection().addRange(r);
-  
+
   targetDocument.execCommand('outdent', false, null);
+  document.documentElement.removeAttribute("class");
 }
 </script>
 
@@ -25,7 +26,7 @@ function init()
 
 <body onload="setTimeout(init, 300);">
 
-<iframe src="data:text/html," style="width: 95%; height: 500px;"></iframe>
+<iframe srcdoc="" style="width: 95%; height: 500px;"></iframe>
 
 <div id="rootish">
   <div id="start"></div>
