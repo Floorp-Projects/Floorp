@@ -5970,6 +5970,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
 
   // relative to mFrame
   nsRect mEffectsBounds;
+  nsRect mVisibleRect;
 };
 
 /* A display item that applies a transformation to all of its descendant

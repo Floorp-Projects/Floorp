@@ -287,8 +287,9 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
       LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
   wr::LayoutRect deviceBoxRect = wr::ToLayoutRect(deviceBox);
 
-  LayoutDeviceRect clipRect =
-      LayoutDeviceRect::FromAppUnits(GetPaintRect(), appUnitsPerDevPixel);
+  bool dummy;
+  LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
+      GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel);
   wr::LayoutRect deviceClipRect = wr::ToLayoutRect(clipRect);
 
   bool hasBorderRadius;
@@ -511,10 +512,11 @@ bool nsDisplayButtonForeground::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   Maybe<nsCSSBorderRenderer> br;
   bool borderIsEmpty = false;
+  bool dummy;
   nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  br = mBFR->CreateInnerFocusBorderRenderer(aDisplayListBuilder,
-                                            mFrame->PresContext(), nullptr,
-                                            GetPaintRect(), r, &borderIsEmpty);
+  br = mBFR->CreateInnerFocusBorderRenderer(
+      aDisplayListBuilder, mFrame->PresContext(), nullptr,
+      GetBounds(aDisplayListBuilder, &dummy), r, &borderIsEmpty);
 
   if (!br) {
     return borderIsEmpty;
