@@ -20,10 +20,14 @@
       "run_at": "document_start"
     }
   ],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "permissions": [
     "mozillaAddons",
     "geckoViewAddons",
     "nativeMessaging",
-    "nativeMessagingFromContent"
+    "nativeMessagingFromContent",
+    "<all_urls>"
   ]
 }

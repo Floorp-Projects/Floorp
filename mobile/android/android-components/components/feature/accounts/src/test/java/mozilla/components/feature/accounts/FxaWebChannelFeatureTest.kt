@@ -18,6 +18,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -78,6 +79,73 @@ class FxaWebChannelFeatureTest {
             any(),
             any()
         )
+    }
+
+    @Test
+    fun `start registers the background message handler`() {
+        val engine: Engine = mock()
+        val store: BrowserStore = mock()
+        val accountManager: FxaAccountManager = mock()
+        val serverConfig: ServerConfig = mock()
+        val controller: WebExtensionController = mock()
+        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+
+        webchannelFeature.extensionController = controller
+
+        webchannelFeature.start()
+
+        verify(controller).registerBackgroundMessageHandler(any(), any())
+    }
+
+    @Test
+    fun `backgroundMessageHandler sends overrideFxAServer`() {
+        val engine: Engine = mock()
+        val store: BrowserStore = mock()
+        val accountManager: FxaAccountManager = mock()
+        val serverConfig: ServerConfig = mock()
+        val controller: WebExtensionController = mock()
+        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+
+        whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
+        webchannelFeature.extensionController = controller
+
+        webchannelFeature.start()
+
+        val messageHandler = argumentCaptor<MessageHandler>()
+        verify(controller).registerBackgroundMessageHandler(messageHandler.capture(), any())
+
+        val port: Port = mock()
+        val message = argumentCaptor<JSONObject>()
+        messageHandler.value.onPortConnected(port)
+        verify(port).postMessage(message.capture())
+
+        val overrideUrlMessage = JSONObject().put("type", "overrideFxAServer").put("url", "https://foo.bar")
+        verify(port, times(1)).postMessage(message.capture())
+
+        assertEquals(overrideUrlMessage.toString(), message.value.toString())
+    }
+
+    @Test
+    fun `backgroundMessageHandler should not send overrideFxAServer for predefined Config`() {
+        val engine: Engine = mock()
+        val store: BrowserStore = mock()
+        val accountManager: FxaAccountManager = mock()
+        val serverConfig: ServerConfig = mock()
+        val controller: WebExtensionController = mock()
+        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, store, accountManager, serverConfig)
+
+        whenever(serverConfig.contentUrl).thenReturn(Server.RELEASE.contentUrl)
+        webchannelFeature.extensionController = controller
+
+        webchannelFeature.start()
+
+        val messageHandler = argumentCaptor<MessageHandler>()
+        verify(controller).registerBackgroundMessageHandler(messageHandler.capture(), any())
+
+        val port: Port = mock()
+        messageHandler.value.onPortConnected(port)
+
+        verify(port, never()).postMessage(any())
     }
 
     @Test
