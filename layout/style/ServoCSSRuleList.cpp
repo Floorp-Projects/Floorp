@@ -33,7 +33,9 @@ ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
                                    StyleSheet* aSheet,
                                    css::GroupRule* aParentRule)
     : mStyleSheet(aSheet), mParentRule(aParentRule), mRawRules(aRawRules) {
-  Servo_CssRules_ListTypes(mRawRules, &mRules);
+  if (mRawRules) {
+    Servo_CssRules_ListTypes(mRawRules, &mRules);
+  }
 }
 
 // QueryInterface implementation for ServoCSSRuleList
@@ -166,7 +168,7 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
              "Caller must ensure that "
              "the list is not unlinked from stylesheet");
 
-  if (IsReadOnly()) {
+  if (!mRawRules || IsReadOnly()) {
     return NS_OK;
   }
 
@@ -198,7 +200,7 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
 }
 
 nsresult ServoCSSRuleList::DeleteRule(uint32_t aIndex) {
-  if (IsReadOnly()) {
+  if (!mRawRules || IsReadOnly()) {
     return NS_OK;
   }
 
