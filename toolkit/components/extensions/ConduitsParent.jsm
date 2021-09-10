@@ -147,6 +147,7 @@ const Hub = {
     address.actor = actor;
     address.verified = this.verifyEnv(address);
     address.frameId = WebNavigationFrames.getFrameId(actor.browsingContext);
+    address.url = actor.browsingContext.currentURI.spec;
   },
 
   /**
