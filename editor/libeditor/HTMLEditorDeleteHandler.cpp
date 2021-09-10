@@ -1653,7 +1653,8 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
     AutoRangeArray& aRangesToDelete, const WSRunScanner& aWSRunScannerAtCaret,
     const WSScanResult& aScanFromCaretPointResult) const {
   if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
-      aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
+      aScanFromCaretPointResult.InNonCollapsibleCharacters() ||
+      aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
     nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
     if (NS_FAILED(rv)) {
       NS_WARNING("AutoRangeArray::Collapse() failed");
@@ -1767,7 +1768,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
 
   if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
     if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
-        aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
+        aScanFromCaretPointResult.InNonCollapsibleCharacters() ||
+        aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
       nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
       if (NS_FAILED(rv)) {
         NS_WARNING("AutoRangeArray::Collapse() failed");
@@ -1782,7 +1784,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     }
   }
 
-  if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces()) {
+  if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
+      aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
         aHTMLEditor, aDirectionAndAmount, aWSRunScannerAtCaret.ScanStartRef());
     NS_WARNING_ASSERTION(result.Succeeded(),

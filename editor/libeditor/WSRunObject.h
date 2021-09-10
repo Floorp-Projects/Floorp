@@ -1012,8 +1012,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
       return mNBSPData.LastPointRef();
     }
 
-    bool IsWhiteSpaceCollapsible() const { return mIsWhiteSpaceCollapsible; }
-
     template <typename PT, typename CT>
     EditorDOMPointInText GetInclusiveNextEditableCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint) const;
