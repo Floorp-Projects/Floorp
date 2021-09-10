@@ -124,7 +124,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       isSupportedPlatform,
       presets,
       supportedFeatures,
-      pageContext: "devtools",
+      pageContext,
     })
   );
 
