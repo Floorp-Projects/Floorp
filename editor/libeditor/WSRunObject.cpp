@@ -2603,8 +2603,7 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
   // characters in it.
   if (!aPointAtASCIIWhiteSpace.IsAtLastContent()) {
     Maybe<uint32_t> nextVisibleCharOffset =
-        HTMLEditUtils::GetNextCharOffsetExceptASCIIWhiteSpaces(
-            aPointAtASCIIWhiteSpace);
+        HTMLEditUtils::GetNextNonCollapsibleCharOffset(aPointAtASCIIWhiteSpace);
     if (nextVisibleCharOffset.isSome()) {
       // There is non-white-space character in it.
       return EditorDOMPointInText(aPointAtASCIIWhiteSpace.ContainerAsText(),
@@ -2640,8 +2639,7 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
 
     // Otherwise, scan the text node.
     Maybe<uint32_t> nextVisibleCharOffset =
-        HTMLEditUtils::GetNextCharOffsetExceptASCIIWhiteSpaces(
-            atStartOfNextTextNode);
+        HTMLEditUtils::GetNextNonCollapsibleCharOffset(atStartOfNextTextNode);
     if (nextVisibleCharOffset.isSome()) {
       return EditorDOMPointInText(atStartOfNextTextNode.ContainerAsText(),
                                   nextVisibleCharOffset.value());
@@ -2668,7 +2666,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
   // If there is some characters before it, scan it in the text node first.
   if (!aPointAtASCIIWhiteSpace.IsStartOfContainer()) {
     uint32_t firstASCIIWhiteSpaceOffset =
-        HTMLEditUtils::GetFirstASCIIWhiteSpaceOffsetCollapsedWith(
+        HTMLEditUtils::GetFirstWhiteSpaceOffsetCollapsedWith(
             aPointAtASCIIWhiteSpace);
     if (firstASCIIWhiteSpaceOffset) {
       // There is a non-white-space character in it.
@@ -2707,7 +2705,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
 
     // Otherwise, scan the text node.
     uint32_t firstASCIIWhiteSpaceOffset =
-        HTMLEditUtils::GetFirstASCIIWhiteSpaceOffsetCollapsedWith(
+        HTMLEditUtils::GetFirstWhiteSpaceOffsetCollapsedWith(
             atLastCharOfNextTextNode);
     if (firstASCIIWhiteSpaceOffset) {
       return EditorDOMPointInText(atLastCharOfNextTextNode.ContainerAsText(),
