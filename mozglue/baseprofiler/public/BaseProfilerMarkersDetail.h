@@ -405,16 +405,16 @@ struct ProfileBufferEntryWriter::Serializer<ProfilerStringView<CHAR>> {
     MOZ_RELEASE_ASSERT(
         aString.Length() < std::numeric_limits<Length>::max() / 2,
         "Double the string length doesn't fit in Length type");
-    const Length stringLength = static_cast<Length>(aString.Length());
+    const Span<const CHAR> span = aString;
     if (aString.IsLiteral()) {
       // Literal -> Length shifted left and LSB=0, then pointer.
-      aEW.WriteULEB128(stringLength << 1 | 0u);
-      aEW.WriteObject(WrapProfileBufferRawPointer(aString.Data()));
+      aEW.WriteULEB128(span.Length() << 1 | 0u);
+      aEW.WriteObject(WrapProfileBufferRawPointer(span.Elements()));
       return;
     }
     // Non-literal -> Length shifted left and LSB=1, then string size in bytes.
-    aEW.WriteULEB128(stringLength << 1 | 1u);
-    aEW.WriteBytes(aString.Data(), stringLength * sizeof(CHAR));
+    aEW.WriteULEB128(span.Length() << 1 | 1u);
+    aEW.WriteBytes(span.Elements(), span.LengthBytes());
   }
 };
 
