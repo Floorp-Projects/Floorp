@@ -674,6 +674,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWindow* GetCurrentTopmostWindow();
   nsCString GetWindowNodeName();
   nsCString GetPopupTypeName();
+  bool IsPopupDirectionRTL();
 
 #ifdef MOZ_LOGGING
   void LogPopupHierarchy();
