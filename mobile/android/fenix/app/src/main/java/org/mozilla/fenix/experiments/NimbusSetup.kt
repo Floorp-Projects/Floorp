@@ -13,7 +13,7 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.experiments.nimbus.internal.NimbusErrorException
+import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -24,7 +24,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
     val errorReporter: ((String, Throwable) -> Unit) = reporter@{ message, e ->
         Logger.error("Nimbus error: $message", e)
 
-        if (e is NimbusErrorException && !e.isReportableError()) {
+        if (e is NimbusException && !e.isReportableError()) {
             return@reporter
         }
 
@@ -106,10 +106,10 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
  *
  * This fix should be upstreamed as part of: https://github.com/mozilla/application-services/issues/4333
  */
-fun NimbusErrorException.isReportableError(): Boolean {
+fun NimbusException.isReportableError(): Boolean {
     return when (this) {
-        is NimbusErrorException.RequestError,
-        is NimbusErrorException.ResponseError -> false
+        is NimbusException.RequestException,
+        is NimbusException.ResponseException -> false
         else -> true
     }
 }

@@ -7,20 +7,20 @@ package org.mozilla.fenix.experiments
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.experiments.nimbus.internal.NimbusErrorException
+import org.mozilla.experiments.nimbus.internal.NimbusException
 
 class NimbusSetupKtTest {
     @Test
     fun `WHEN error is reportable THEN return true`() {
-        val error = NimbusErrorException.IOError("bad error")
+        val error = NimbusException.IOException("bad error")
 
         assertTrue(error.isReportableError())
     }
 
     @Test
     fun `WHEN error is non-reportable THEN return false`() {
-        val error1 = NimbusErrorException.ResponseError("oops")
-        val error2 = NimbusErrorException.RequestError("oops")
+        val error1 = NimbusException.ResponseException("oops")
+        val error2 = NimbusException.RequestException("oops")
 
         assertFalse(error1.isReportableError())
         assertFalse(error2.isReportableError())
