@@ -5666,6 +5666,14 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     return EditorDOMPoint();
   }
 
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "No editing host, HTMLEditor::GetCurrentHardLineStartPoint() returned "
+        "given point");
+    return EditorDOMPoint(aPoint);
+  }
+
   EditorDOMPoint point(aPoint);
   // Start scanning from the container node if aPoint is in a text node.
   // XXX Perhaps, IsInDataNode() must be expected.
@@ -5675,15 +5683,15 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
       // XXX Why don't we return start of the text node?
       return point;
     }
+    // If there is a preformatted linefeed in the text node, let's return
+    // the point after it.
+    EditorDOMPoint atLastPreformattedNewLine =
+        HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
+            point);
+    if (atLastPreformattedNewLine.IsSet()) {
+      return atLastPreformattedNewLine.NextPoint();
+    }
     point.Set(point.GetContainer());
-  }
-
-  Element* editingHost = GetActiveEditingHost();
-  if (!editingHost) {
-    NS_WARNING(
-        "No editing host, HTMLEditor::GetCurrentHardLineStartPoint() returned "
-        "given point");
-    return point;
   }
 
   // Look back through any further inline nodes that aren't across a <br>
@@ -5700,8 +5708,13 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
        !HTMLEditUtils::IsBlockElement(*previousEditableContent);
        previousEditableContent = HTMLEditUtils::GetPreviousContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
+    EditorDOMPoint atLastPreformattedNewLine =
+        HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
+            EditorRawDOMPoint::AtEndOf(*previousEditableContent));
+    if (atLastPreformattedNewLine.IsSet()) {
+      return atLastPreformattedNewLine.NextPoint();
+    }
     point.Set(previousEditableContent);
-    // XXX Why don't we check \n in pre-formated text node here?
   }
 
   // Finding the real start for this point unless current line starts after
@@ -5754,26 +5767,56 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     return EditorDOMPoint();
   }
 
-  EditorDOMPoint point(aPoint);
-  // Start scanning from the container node if aPoint is in a text node.
-  // XXX Perhaps, IsInDataNode() must be expected.
-  if (point.IsInTextNode()) {
-    if (!point.GetContainer()->GetParentNode()) {
-      // Okay, can't promote any further
-      // XXX Why don't we return end of the text node?
-      return point;
-    }
-    // want to be after the text node
-    point.SetAfter(point.GetContainer());
-    NS_WARNING_ASSERTION(point.IsSet(), "Failed to set to after the text node");
-  }
-
   Element* editingHost = GetActiveEditingHost();
   if (!editingHost) {
     NS_WARNING(
         "No editing host, HTMLEditor::GetCurrentHardLineEndPoint() returned "
         "given point");
-    return point;
+    return EditorDOMPoint(aPoint);
+  }
+
+  EditorDOMPoint point(aPoint);
+  // Start scanning from the container node if aPoint is in a text node.
+  // XXX Perhaps, IsInDataNode() must be expected.
+  if (point.IsInTextNode()) {
+    if (NS_WARN_IF(!point.GetContainer()->GetParentNode())) {
+      // Okay, can't promote any further
+      // XXX Why don't we return end of the text node?
+      return point;
+    }
+    EditorDOMPoint atNextPreformattedNewLine =
+        HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
+            EditorDOMPoint>(point);
+    if (atNextPreformattedNewLine.IsSet()) {
+      // If the linefeed is last character of the text node, it may be
+      // invisible if it's immediately before a block boundary.  In such
+      // case, we should retrun the block boundary.
+      Element* maybeNonEditableBlockElement = nullptr;
+      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
+              atNextPreformattedNewLine, &maybeNonEditableBlockElement) &&
+          maybeNonEditableBlockElement) {
+        // If the block is a parent of the editing host, let's return end
+        // of editing host.
+        if (maybeNonEditableBlockElement == editingHost ||
+            !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
+                editingHost)) {
+          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
+        }
+        // If it's invisible because of parent block boundary, return end
+        // of the block.  Otherwise, i.e., it's followed by a child block,
+        // returns the point of the child block.
+        if (atNextPreformattedNewLine.ContainerAsText()
+                ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
+          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
+        }
+        return EditorDOMPoint(maybeNonEditableBlockElement);
+      }
+      // Otherwise, return the point after the preformatted linefeed.
+      return atNextPreformattedNewLine.NextPoint();
+    }
+    // want to be after the text node
+    point.SetAfter(point.GetContainer());
+    NS_WARNING_ASSERTION(point.IsSet(), "Failed to set to after the text node");
   }
 
   // Look ahead through any further inline nodes that aren't across a <br> from
@@ -5801,27 +5844,42 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
        nextEditableContent->GetParent();
        nextEditableContent = HTMLEditUtils::GetNextContent(
            point, ignoreNonEditableNodeAndStopAtBlockBoundary, editingHost)) {
+    EditorDOMPoint atFirstPreformattedNewLine =
+        HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
+            EditorDOMPoint>(EditorRawDOMPoint(nextEditableContent, 0));
+    if (atFirstPreformattedNewLine.IsSet()) {
+      // If the linefeed is last character of the text node, it may be
+      // invisible if it's immediately before a block boundary.  In such
+      // case, we should retrun the block boundary.
+      Element* maybeNonEditableBlockElement = nullptr;
+      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
+              atFirstPreformattedNewLine, &maybeNonEditableBlockElement) &&
+          maybeNonEditableBlockElement) {
+        // If the block is a parent of the editing host, let's return end
+        // of editing host.
+        if (maybeNonEditableBlockElement == editingHost ||
+            !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
+                editingHost)) {
+          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
+        }
+        // If it's invisible because of parent block boundary, return end
+        // of the block.  Otherwise, i.e., it's followed by a child block,
+        // returns the point of the child block.
+        if (atFirstPreformattedNewLine.ContainerAsText()
+                ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
+          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
+        }
+        return EditorDOMPoint(maybeNonEditableBlockElement);
+      }
+      // Otherwise, return the point after the preformatted linefeed.
+      return atFirstPreformattedNewLine.NextPoint();
+    }
     point.SetAfter(nextEditableContent);
     if (NS_WARN_IF(!point.IsSet())) {
       break;
     }
     if (HTMLEditUtils::IsVisibleBRElement(*nextEditableContent)) {
       break;
-    }
-
-    // Check for newlines in pre-formatted text nodes.
-    if (nextEditableContent->IsText() &&
-        EditorUtils::IsWhiteSpacePreformatted(*nextEditableContent)) {
-      nsAutoString textContent;
-      nextEditableContent->GetAsText()->GetData(textContent);
-      int32_t newlinePos = textContent.FindChar(nsCRT::LF);
-      if (newlinePos >= 0) {
-        if (AssertedCast<uint32_t>(newlinePos) + 1 == textContent.Length()) {
-          // No need for special processing if the newline is at the end.
-          break;
-        }
-        return EditorDOMPoint(nextEditableContent, newlinePos + 1);
-      }
     }
   }
 
