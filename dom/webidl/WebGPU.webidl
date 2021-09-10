@@ -612,11 +612,10 @@ interface GPUCompilationInfo {
 };
 
 // ShaderModule
-//TODO: remove the `Uint32Array` variant, it's used for SPIR-V
-typedef (Uint32Array or USVString) GPUShaderCode;
 
 dictionary GPUShaderModuleDescriptor : GPUObjectDescriptorBase {
-    required GPUShaderCode code;
+    // UTF8String is not observably different from USVString
+    required UTF8String code;
     object sourceMap;
 };
 

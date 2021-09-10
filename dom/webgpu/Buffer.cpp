@@ -11,6 +11,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ipc/Shmem.h"
 #include "ipc/WebGPUChild.h"
+#include "js/ArrayBuffer.h"
 #include "js/RootingAPI.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
