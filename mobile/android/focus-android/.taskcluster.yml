@@ -116,10 +116,6 @@ tasks:
                         requires: all-completed   # Must be explicit because of Chain of Trust
                         priority: highest
                         retries: 5
-                        scopes:
-                          - assume:repo:github.com/mozilla-mobile/focus-android:release
-                        routes:
-                          - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
                         payload:
                           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
                           image: mozillamobile/focus-android:1.7
