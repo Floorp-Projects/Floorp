@@ -984,86 +984,135 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     // After this block, pointToInsert is modified by AutoTrackDOMPoint.
   }
 
-  // Next up, tweak head and tail of string as needed.  First the head: there
-  // are a variety of circumstances that would require us to convert a leading
-  // ws char into an nbsp:
-
-  if (nsCRT::IsAsciiSpace(theString[0])) {
-    // If inserting string will follow some invisible leading white-spaces, the
-    // string needs to start with an NBSP.
-    if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
-      theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
-    }
-    // If inserting around visible white-spaces, check whether the previous
-    // character of insertion point is an NBSP or an ASCII white-space.
-    else if (pointPositionWithVisibleWhiteSpacesAtStart ==
-                 PointPosition::MiddleOfFragment ||
-             pointPositionWithVisibleWhiteSpacesAtStart ==
-                 PointPosition::EndOfFragment) {
-      EditorDOMPointInText atPreviousChar =
-          textFragmentDataAtStart.GetPreviousEditableCharPoint(pointToInsert);
-      if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
-          atPreviousChar.IsCharASCIISpace()) {
+  // If white-space and/or linefeed characters are collapsible, and inserting
+  // string starts and/or ends with a collapsible characters, we need to
+  // replace them with NBSP for making sure the collapsible characters visible.
+  // FYI: There is no case only linefeeds are collapsible.  So, we need to
+  //      do the things only when white-spaces are collapsible.
+  // TODO: Add WPT for inserting multiple white-spaces.
+  MOZ_DIAGNOSTIC_ASSERT(!theString.IsEmpty());
+  if (NS_WARN_IF(!pointToInsert.IsInContentNode()) ||
+      !EditorUtils::IsWhiteSpacePreformatted(
+          *pointToInsert.ContainerAsContent())) {
+    const bool isNewLineCollapsible = !pointToInsert.IsInContentNode() ||
+                                      !EditorUtils::IsNewLinePreformatted(
+                                          *pointToInsert.ContainerAsContent());
+    auto isCollapsibleChar = [&isNewLineCollapsible](char16_t aChar) -> bool {
+      return nsCRT::IsAsciiSpace(aChar) &&
+             (isNewLineCollapsible || aChar != HTMLEditUtils::kNewLine);
+    };
+    if (isCollapsibleChar(theString[0])) {
+      // If inserting string will follow some invisible leading white-spaces,
+      // the string needs to start with an NBSP.
+      if (invisibleLeadingWhiteSpaceRangeAtStart.IsPositioned()) {
+        theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
+      }
+      // If inserting around visible white-spaces, check whether the previous
+      // character of insertion point is an NBSP or an ASCII white-space.
+      else if (pointPositionWithVisibleWhiteSpacesAtStart ==
+                   PointPosition::MiddleOfFragment ||
+               pointPositionWithVisibleWhiteSpacesAtStart ==
+                   PointPosition::EndOfFragment) {
+        EditorDOMPointInText atPreviousChar =
+            textFragmentDataAtStart.GetPreviousEditableCharPoint(pointToInsert);
+        if (atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
+            atPreviousChar.IsCharASCIISpace()) {
+          theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
+        }
+      }
+      // If the insertion point is (was) before the start of text and it's
+      // immediately after a hard line break, the first ASCII white-space should
+      // be replaced with an NBSP for making it visible.
+      else if (textFragmentDataAtStart.StartsFromHardLineBreak() &&
+               isInsertionPointEqualsOrIsBeforeStartOfText) {
         theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
       }
     }
-    // If the insertion point is (was) before the start of text and it's
-    // immediately after a hard line break, the first ASCII white-space should
-    // be replaced with an NBSP for making it visible.
-    else if (textFragmentDataAtStart.StartsFromHardLineBreak() &&
-             isInsertionPointEqualsOrIsBeforeStartOfText) {
-      theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
-    }
-  }
 
-  // Then the tail
-  uint32_t lastCharIndex = theString.Length() - 1;
-
-  if (nsCRT::IsAsciiSpace(theString[lastCharIndex])) {
-    // If inserting string will be followed by some invisible trailing
-    // white-spaces, the string needs to end with an NBSP.
-    if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
-      theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
-    }
-    // If inserting around visible white-spaces, check whether the inclusive
-    // next character of end of replaced range is an NBSP or an ASCII
-    // white-space.
-    if (pointPositionWithVisibleWhiteSpacesAtEnd ==
-            PointPosition::StartOfFragment ||
-        pointPositionWithVisibleWhiteSpacesAtEnd ==
-            PointPosition::MiddleOfFragment) {
-      EditorDOMPointInText atNextChar =
-          textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
-              pointToInsert);
-      if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
-          atNextChar.IsCharASCIISpace()) {
+    // Then the tail.  Note that it may be the first character.
+    const uint32_t lastCharIndex = theString.Length() - 1;
+    if (isCollapsibleChar(theString[lastCharIndex])) {
+      // If inserting string will be followed by some invisible trailing
+      // white-spaces, the string needs to end with an NBSP.
+      if (invisibleTrailingWhiteSpaceRangeAtEnd.IsPositioned()) {
+        theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
+      }
+      // If inserting around visible white-spaces, check whether the inclusive
+      // next character of end of replaced range is an NBSP or an ASCII
+      // white-space.
+      if (pointPositionWithVisibleWhiteSpacesAtEnd ==
+              PointPosition::StartOfFragment ||
+          pointPositionWithVisibleWhiteSpacesAtEnd ==
+              PointPosition::MiddleOfFragment) {
+        EditorDOMPointInText atNextChar =
+            textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
+                pointToInsert);
+        if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
+            atNextChar.IsCharASCIISpace()) {
+          theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
+        }
+      }
+      // If the end of replacing range is (was) after the end of text and it's
+      // immediately before block boundary, the last ASCII white-space should
+      // be replaced with an NBSP for making it visible.
+      else if (textFragmentDataAtEnd.EndsByBlockBoundary() &&
+               isInsertionPointEqualsOrAfterEndOfText) {
         theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
       }
     }
-    // If the end of replacing range is (was) after the end of text and it's
-    // immediately before block boundary, the last ASCII white-space should
-    // be replaced with an NBSP for making it visible.
-    else if (textFragmentDataAtEnd.EndsByBlockBoundary() &&
-             isInsertionPointEqualsOrAfterEndOfText) {
-      theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
-    }
-  }
 
-  // Next, scan string for adjacent ws and convert to nbsp/space combos
-  // MOOSE: don't need to convert tabs here since that is done by
-  // WillInsertText() before we are called.  Eventually, all that logic will be
-  // pushed down into here and made more efficient.
-  bool prevWS = false;
-  for (uint32_t i = 0; i <= lastCharIndex; i++) {
-    if (nsCRT::IsAsciiSpace(theString[i])) {
-      if (prevWS) {
-        // i - 1 can't be negative because prevWS starts out false
-        theString.SetCharAt(HTMLEditUtils::kNBSP, i - 1);
-      } else {
-        prevWS = true;
+    // Next, scan string for adjacent ws and convert to nbsp/space combos
+    // MOOSE: don't need to convert tabs here since that is done by
+    // WillInsertText() before we are called.  Eventually, all that logic will
+    // be pushed down into here and made more efficient.
+    enum class PreviousChar {
+      NonCollapsibleChar,
+      CollapsibleChar,
+      PreformattedNewLine,
+    };
+    PreviousChar previousChar = PreviousChar::NonCollapsibleChar;
+    for (uint32_t i = 0; i <= lastCharIndex; i++) {
+      if (isCollapsibleChar(theString[i])) {
+        // If current char is collapsible and 2nd or latter character of
+        // collapsible characters, we need to make the previous character an
+        // NBSP for avoiding current character to be collapsed to it.
+        if (previousChar == PreviousChar::CollapsibleChar) {
+          MOZ_ASSERT(i > 0);
+          theString.SetCharAt(HTMLEditUtils::kNBSP, i - 1);
+          // Keep previousChar as PreviousChar::CollapsibleChar.
+          continue;
+        }
+
+        // If current character is a collapsbile white-space and the previous
+        // character is a preformatted linefeed, we need to replace the current
+        // character with an NBSP for avoiding collapsed with the previous
+        // linefeed.
+        if (previousChar == PreviousChar::PreformattedNewLine) {
+          MOZ_ASSERT(i > 0);
+          theString.SetCharAt(HTMLEditUtils::kNBSP, i);
+          previousChar = PreviousChar::NonCollapsibleChar;
+          continue;
+        }
+
+        previousChar = PreviousChar::CollapsibleChar;
+        continue;
       }
-    } else {
-      prevWS = false;
+
+      if (theString[i] != HTMLEditUtils::kNewLine) {
+        previousChar = PreviousChar::NonCollapsibleChar;
+        continue;
+      }
+
+      // If current character is a preformatted linefeed and the previous
+      // character is collapbile white-space, the previous character will be
+      // collapsed into current linefeed.  Therefore, we need to replace the
+      // previous character with an NBSP.
+      MOZ_ASSERT(!isNewLineCollapsible);
+      if (previousChar == PreviousChar::CollapsibleChar) {
+        MOZ_ASSERT(i > 0);
+        theString.SetCharAt(HTMLEditUtils::kNBSP, i - 1);
+      }
+      previousChar = PreviousChar::PreformattedNewLine;
     }
   }
 
@@ -2166,10 +2215,6 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
     return ReplaceRangeData(invisibleTrailingWhiteSpaceRangeAtEnd, u""_ns);
   }
 
-  if (!IsWhiteSpaceCollapsible()) {
-    return ReplaceRangeData();
-  }
-
   // If end of the deleting range is followed by visible white-spaces which
   // is not preformatted, we might need to replace the following ASCII
   // white-spaces with an NBSP.
@@ -2197,13 +2242,11 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
       GetInclusiveNextEditableCharPoint(endToDelete);
   if (!nextCharOfStartOfEnd.IsSet() ||
       nextCharOfStartOfEnd.IsEndOfContainer() ||
-      !nextCharOfStartOfEnd.IsCharASCIISpace() ||
-      EditorUtils::IsWhiteSpacePreformatted(
-          *nextCharOfStartOfEnd.ContainerAsText())) {
+      !nextCharOfStartOfEnd.IsCharCollapsibleASCIISpace()) {
     return ReplaceRangeData();
   }
   if (nextCharOfStartOfEnd.IsStartOfContainer() ||
-      nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
+      nextCharOfStartOfEnd.IsPreviousCharCollapsibleASCIISpace()) {
     nextCharOfStartOfEnd = aTextFragmentDataAtStartToDelete
                                .GetFirstASCIIWhiteSpacePointCollapsedTo(
                                    nextCharOfStartOfEnd, nsIEditor::eNone);
@@ -2243,10 +2286,6 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtStartOfDeletionRange(
 
     // XXX Why don't we remove all leading white-spaces?
     return ReplaceRangeData(invisibleLeadingWhiteSpaceRangeAtStart, u""_ns);
-  }
-
-  if (!IsWhiteSpaceCollapsible()) {
-    return ReplaceRangeData();
   }
 
   // If start of the deleting range follows visible white-spaces which is not
