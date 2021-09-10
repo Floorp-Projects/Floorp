@@ -228,7 +228,7 @@ TEST(TextFormatterTestResults, Tests)
   EXPECT_EQ(
       nsTextFormatter::snprintf(buf, 10, u"%s", "more than 10 characters"), 9u);
   EXPECT_EQ(buf[9], '\0');
-  EXPECT_STREQ("more than", NS_ConvertUTF16toUTF8(buf).get());
+  EXPECT_STREQ("more than", NS_ConvertUTF16toUTF8(&buf[0]).get());
 
   nsString out;
   nsTextFormatter::ssprintf(out, u"%s", "more than 10 characters");
