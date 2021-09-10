@@ -106,10 +106,7 @@ class TimerHelper {
         mMonitor(__func__),
         mTarget(aTarget) {}
 
-  ~TimerHelper() {
-    MonitorAutoLock lock(mMonitor);
-    mTimer->Cancel();
-  }
+  ~TimerHelper() { Cancel(); }
 
   static void ClosureCallback(nsITimer*, void* aClosure) {
     reinterpret_cast<TimerHelper*>(aClosure)->Notify();
@@ -131,8 +128,8 @@ class TimerHelper {
   }
 
   nsresult SetTimer(uint32_t aDelay, uint8_t aType) {
+    Cancel();
     MonitorAutoLock lock(mMonitor);
-    mTimer->Cancel();
     mStart = TimeStamp::Now();
     return mTimer->InitWithNamedFuncCallback(
         ClosureCallback, this, aDelay, aType, "TimerHelper::ClosureCallback");
@@ -161,6 +158,15 @@ class TimerHelper {
     }
     mBlockTime = 0;
     return std::move(mLastDelay);
+  }
+
+  void Cancel() {
+    mTarget->Dispatch(NS_NewRunnableFunction("~TimerHelper timer cancel",
+                                             [this] {
+                                               MonitorAutoLock lock(mMonitor);
+                                               mTimer->Cancel();
+                                             }),
+                      NS_DISPATCH_SYNC);
   }
 
  private:
