@@ -974,10 +974,10 @@ fn test_cst_perspective_relative_scroll() {
     // since wrench doesn't understand external scroll ids. When wrench
     // supports this, we could also verify with a reftest.
 
-    use crate::spatial_tree::SpatialTree;
+    use crate::spatial_tree::{SceneSpatialTree, SpatialTree};
     use euclid::Angle;
 
-    let mut cst = SpatialTree::new();
+    let mut cst = SceneSpatialTree::new();
     let pipeline_id = PipelineId::dummy();
     let ext_scroll_id = ExternalScrollId(1, pipeline_id);
     let transform = LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::degrees(45.0));
@@ -1031,6 +1031,7 @@ fn test_cst_perspective_relative_scroll() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4)),
     );
 
+    let mut cst = SpatialTree::new(cst);
     cst.update_tree(&SceneProperties::new());
 
     let world_transform = cst.get_world_transform(ref_frame).into_transform().cast_unit();
