@@ -15,7 +15,6 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
-import org.mozilla.fenix.ext.settings
 
 class CustomTabsIntegration(
     store: BrowserStore,
@@ -32,29 +31,10 @@ class CustomTabsIntegration(
         // Remove toolbar shadow
         toolbar.elevation = 0f
 
-        val uncoloredEtpShield = getDrawable(activity, R.drawable.ic_tracking_protection_enabled)!!
-
-        toolbar.display.icons = toolbar.display.icons.copy(
-            // Custom private tab backgrounds have bad contrast against the colored shield
-            trackingProtectionTrackersBlocked = uncoloredEtpShield,
-            trackingProtectionNothingBlocked = uncoloredEtpShield,
-            trackingProtectionException = getDrawable(
-                activity,
-                R.drawable.ic_tracking_protection_disabled
-            )!!
-        )
-
         toolbar.display.displayIndicatorSeparator = false
-        if (activity.settings().shouldUseTrackingProtection) {
-            toolbar.display.indicators = listOf(
-                DisplayToolbar.Indicators.SECURITY,
-                DisplayToolbar.Indicators.TRACKING_PROTECTION
-            )
-        } else {
-            toolbar.display.indicators = listOf(
-                DisplayToolbar.Indicators.SECURITY
-            )
-        }
+        toolbar.display.indicators = listOf(
+            DisplayToolbar.Indicators.SECURITY
+        )
 
         // If in private mode, override toolbar background to use private color
         // See #5334
