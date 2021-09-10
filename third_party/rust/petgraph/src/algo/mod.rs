@@ -4,19 +4,28 @@
 //! so that they are generally applicable. For now, some of these still require
 //! the `Graph` type.
 
+pub mod astar;
+pub mod bellman_ford;
+pub mod dijkstra;
 pub mod dominators;
+pub mod feedback_arc_set;
+pub mod floyd_warshall;
+pub mod isomorphism;
+pub mod k_shortest_path;
+pub mod matching;
+pub mod simple_paths;
+pub mod tred;
 
-use std::cmp::min;
 use std::collections::{BinaryHeap, HashMap};
+use std::num::NonZeroUsize;
 
 use crate::prelude::*;
 
 use super::graph::IndexType;
 use super::unionfind::UnionFind;
 use super::visit::{
-    GraphBase, GraphRef, IntoEdgeReferences, IntoEdges, IntoNeighbors, IntoNeighborsDirected,
-    IntoNodeIdentifiers, NodeCompactIndexable, NodeCount, NodeIndexable, Reversed, VisitMap,
-    Visitable,
+    GraphBase, GraphRef, IntoEdgeReferences, IntoNeighbors, IntoNeighborsDirected,
+    IntoNodeIdentifiers, NodeCompactIndexable, NodeIndexable, Reversed, VisitMap, Visitable,
 };
 use super::EdgeType;
 use crate::data::Element;
@@ -24,10 +33,17 @@ use crate::scored::MinScored;
 use crate::visit::Walker;
 use crate::visit::{Data, IntoNodeReferences, NodeRef};
 
-pub use super::astar::astar;
-pub use super::dijkstra::dijkstra;
-pub use super::isomorphism::{is_isomorphic, is_isomorphic_matching};
-pub use super::simple_paths::all_simple_paths;
+pub use astar::astar;
+pub use bellman_ford::{bellman_ford, find_negative_cycle};
+pub use dijkstra::dijkstra;
+pub use feedback_arc_set::greedy_feedback_arc_set;
+pub use floyd_warshall::floyd_warshall;
+pub use isomorphism::{
+    is_isomorphic, is_isomorphic_matching, is_isomorphic_subgraph, is_isomorphic_subgraph_matching,
+};
+pub use k_shortest_path::k_shortest_path;
+pub use matching::{greedy_matching, maximum_matching, Matching};
+pub use simple_paths::all_simple_paths;
 
 /// \[Generic\] Return the number of connected components of the graph.
 ///
@@ -79,7 +95,7 @@ where
         vertex_sets.union(g.to_index(a), g.to_index(b));
     }
     let mut labels = vertex_sets.into_labeling();
-    labels.sort();
+    labels.sort_unstable();
     labels.dedup();
     labels.len()
 }
@@ -323,9 +339,160 @@ where
     sccs
 }
 
+#[derive(Copy, Clone, Debug)]
+struct NodeData {
+    rootindex: Option<NonZeroUsize>,
+}
+
+/// A reusable state for computing the *strongly connected components* using [Tarjan's algorithm][1].
+///
+/// [1]: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+#[derive(Debug)]
+pub struct TarjanScc<N> {
+    index: usize,
+    componentcount: usize,
+    nodes: Vec<NodeData>,
+    stack: Vec<N>,
+}
+
+impl<N> Default for TarjanScc<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<N> TarjanScc<N> {
+    /// Creates a new `TarjanScc`
+    pub fn new() -> Self {
+        TarjanScc {
+            index: 1,                        // Invariant: index < componentcount at all times.
+            componentcount: std::usize::MAX, // Will hold if componentcount is initialized to number of nodes - 1 or higher.
+            nodes: Vec::new(),
+            stack: Vec::new(),
+        }
+    }
+
+    /// \[Generic\] Compute the *strongly connected components* using Algorithm 3 in
+    /// [A Space-Efficient Algorithm for Finding Strongly Connected Components][1] by David J. Pierce,
+    /// which is a memory-efficient variation of [Tarjan's algorithm][2].
+    ///
+    ///
+    /// [1]: https://homepages.ecs.vuw.ac.nz/~djp/files/P05.pdf
+    /// [2]: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+    ///
+    /// Calls `f` for each strongly strongly connected component (scc).
+    /// The order of node ids within each scc is arbitrary, but the order of
+    /// the sccs is their postorder (reverse topological sort).
+    ///
+    /// For an undirected graph, the sccs are simply the connected components.
+    ///
+    /// This implementation is recursive and does one pass over the nodes.
+    pub fn run<G, F>(&mut self, g: G, mut f: F)
+    where
+        G: IntoNodeIdentifiers<NodeId = N> + IntoNeighbors<NodeId = N> + NodeIndexable<NodeId = N>,
+        F: FnMut(&[N]),
+        N: Copy + PartialEq,
+    {
+        self.nodes.clear();
+        self.nodes
+            .resize(g.node_bound(), NodeData { rootindex: None });
+
+        for n in g.node_identifiers() {
+            let visited = self.nodes[g.to_index(n)].rootindex.is_some();
+            if !visited {
+                self.visit(n, g, &mut f);
+            }
+        }
+
+        debug_assert!(self.stack.is_empty());
+    }
+
+    fn visit<G, F>(&mut self, v: G::NodeId, g: G, f: &mut F)
+    where
+        G: IntoNeighbors<NodeId = N> + NodeIndexable<NodeId = N>,
+        F: FnMut(&[N]),
+        N: Copy + PartialEq,
+    {
+        macro_rules! node {
+            ($node:expr) => {
+                self.nodes[g.to_index($node)]
+            };
+        }
+
+        let node_v = &mut node![v];
+        debug_assert!(node_v.rootindex.is_none());
+
+        let mut v_is_local_root = true;
+        let v_index = self.index;
+        node_v.rootindex = NonZeroUsize::new(v_index);
+        self.index += 1;
+
+        for w in g.neighbors(v) {
+            if node![w].rootindex.is_none() {
+                self.visit(w, g, f);
+            }
+            if node![w].rootindex < node![v].rootindex {
+                node![v].rootindex = node![w].rootindex;
+                v_is_local_root = false
+            }
+        }
+
+        if v_is_local_root {
+            // Pop the stack and generate an SCC.
+            let mut indexadjustment = 1;
+            let c = NonZeroUsize::new(self.componentcount);
+            let nodes = &mut self.nodes;
+            let start = self
+                .stack
+                .iter()
+                .rposition(|&w| {
+                    if nodes[g.to_index(v)].rootindex > nodes[g.to_index(w)].rootindex {
+                        true
+                    } else {
+                        nodes[g.to_index(w)].rootindex = c;
+                        indexadjustment += 1;
+                        false
+                    }
+                })
+                .map(|x| x + 1)
+                .unwrap_or_default();
+            nodes[g.to_index(v)].rootindex = c;
+            self.stack.push(v); // Pushing the component root to the back right before getting rid of it is somewhat ugly, but it lets it be included in f.
+            f(&self.stack[start..]);
+            self.stack.truncate(start);
+            self.index -= indexadjustment; // Backtrack index back to where it was before we ever encountered the component.
+            self.componentcount -= 1;
+        } else {
+            self.stack.push(v); // Stack is filled up when backtracking, unlike in Tarjans original algorithm.
+        }
+    }
+
+    /// Returns the index of the component in which v has been assigned. Allows for using self as a lookup table for an scc decomposition produced by self.run().
+    pub fn node_component_index<G>(&self, g: G, v: N) -> usize
+    where
+        G: IntoNeighbors<NodeId = N> + NodeIndexable<NodeId = N>,
+        N: Copy + PartialEq,
+    {
+        let rindex: usize = self.nodes[g.to_index(v)]
+            .rootindex
+            .map(NonZeroUsize::get)
+            .unwrap_or(0); // Compiles to no-op.
+        debug_assert!(
+            rindex != 0,
+            "Tried to get the component index of an unvisited node."
+        );
+        debug_assert!(
+            rindex > self.componentcount,
+            "Given node has been visited but not yet assigned to a component."
+        );
+        std::usize::MAX - rindex
+    }
+}
+
 /// \[Generic\] Compute the *strongly connected components* using [Tarjan's algorithm][1].
 ///
 /// [1]: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+/// [2]: https://homepages.ecs.vuw.ac.nz/~djp/files/P05.pdf
 ///
 /// Return a vector where each element is a strongly connected component (scc).
 /// The order of node ids within each scc is arbitrary, but the order of
@@ -333,106 +500,17 @@ where
 ///
 /// For an undirected graph, the sccs are simply the connected components.
 ///
-/// This implementation is recursive and does one pass over the nodes.
+/// This implementation is recursive and does one pass over the nodes. It is based on
+/// [A Space-Efficient Algorithm for Finding Strongly Connected Components][2] by David J. Pierce,
+/// to provide a memory-efficient implementation of [Tarjan's algorithm][1].
 pub fn tarjan_scc<G>(g: G) -> Vec<Vec<G::NodeId>>
 where
     G: IntoNodeIdentifiers + IntoNeighbors + NodeIndexable,
 {
-    #[derive(Copy, Clone, Debug)]
-    struct NodeData {
-        index: Option<usize>,
-        lowlink: usize,
-        on_stack: bool,
-    }
-
-    #[derive(Debug)]
-    struct Data<'a, G>
-    where
-        G: NodeIndexable,
-        G::NodeId: 'a,
-    {
-        index: usize,
-        nodes: Vec<NodeData>,
-        stack: Vec<G::NodeId>,
-        sccs: &'a mut Vec<Vec<G::NodeId>>,
-    }
-
-    fn scc_visit<G>(v: G::NodeId, g: G, data: &mut Data<G>)
-    where
-        G: IntoNeighbors + NodeIndexable,
-    {
-        macro_rules! node {
-            ($node:expr) => {
-                data.nodes[g.to_index($node)]
-            };
-        }
-
-        if node![v].index.is_some() {
-            // already visited
-            return;
-        }
-
-        let v_index = data.index;
-        node![v].index = Some(v_index);
-        node![v].lowlink = v_index;
-        node![v].on_stack = true;
-        data.stack.push(v);
-        data.index += 1;
-
-        for w in g.neighbors(v) {
-            match node![w].index {
-                None => {
-                    scc_visit(w, g, data);
-                    node![v].lowlink = min(node![v].lowlink, node![w].lowlink);
-                }
-                Some(w_index) => {
-                    if node![w].on_stack {
-                        // Successor w is in stack S and hence in the current SCC
-                        let v_lowlink = &mut node![v].lowlink;
-                        *v_lowlink = min(*v_lowlink, w_index);
-                    }
-                }
-            }
-        }
-
-        // If v is a root node, pop the stack and generate an SCC
-        if let Some(v_index) = node![v].index {
-            if node![v].lowlink == v_index {
-                let mut cur_scc = Vec::new();
-                loop {
-                    let w = data.stack.pop().unwrap();
-                    node![w].on_stack = false;
-                    cur_scc.push(w);
-                    if g.to_index(w) == g.to_index(v) {
-                        break;
-                    }
-                }
-                data.sccs.push(cur_scc);
-            }
-        }
-    }
-
     let mut sccs = Vec::new();
     {
-        let map = vec![
-            NodeData {
-                index: None,
-                lowlink: !0,
-                on_stack: false
-            };
-            g.node_bound()
-        ];
-
-        let mut data = Data {
-            index: 0,
-            nodes: map,
-            stack: Vec::new(),
-            sccs: &mut sccs,
-        };
-
-        for n in g.node_identifiers() {
-            scc_visit(n, g, &mut data);
-        }
+        let mut tarjan_scc = TarjanScc::new();
+        tarjan_scc.run(g, |scc| sccs.push(scc.to_vec()));
     }
     sccs
 }
@@ -598,6 +676,7 @@ where
 }
 
 /// An iterator producing a minimum spanning forest of a graph.
+#[derive(Debug, Clone)]
 pub struct MinSpanningTree<G>
 where
     G: Data + IntoNodeReferences,
@@ -605,6 +684,7 @@ where
     graph: G,
     node_ids: Option<G::NodeReferences>,
     subgraphs: UnionFind<usize>,
+    #[allow(clippy::type_complexity)]
     sort_edges: BinaryHeap<MinScored<G::EdgeWeight, (G::NodeId, G::NodeId)>>,
     node_map: HashMap<usize, usize>,
     node_count: usize,
@@ -673,123 +753,10 @@ impl<N> Cycle<N> {
         self.0
     }
 }
+
 /// An algorithm error: a cycle of negative weights was found in the graph.
 #[derive(Clone, Debug, PartialEq)]
-pub struct NegativeCycle(());
-
-/// \[Generic\] Compute shortest paths from node `source` to all other.
-///
-/// Using the [Bellman–Ford algorithm][bf]; negative edge costs are
-/// permitted, but the graph must not have a cycle of negative weights
-/// (in that case it will return an error).
-///
-/// On success, return one vec with path costs, and another one which points
-/// out the predecessor of a node along a shortest path. The vectors
-/// are indexed by the graph's node indices.
-///
-/// [bf]: https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm
-///
-/// # Example
-/// ```rust
-/// use petgraph::Graph;
-/// use petgraph::algo::bellman_ford;
-/// use petgraph::prelude::*;
-///
-/// let mut g = Graph::new();
-/// let a = g.add_node(()); // node with no weight
-/// let b = g.add_node(());
-/// let c = g.add_node(());
-/// let d = g.add_node(());
-/// let e = g.add_node(());
-/// let f = g.add_node(());
-/// g.extend_with_edges(&[
-///     (0, 1, 2.0),
-///     (0, 3, 4.0),
-///     (1, 2, 1.0),
-///     (1, 5, 7.0),
-///     (2, 4, 5.0),
-///     (4, 5, 1.0),
-///     (3, 4, 1.0),
-/// ]);
-///
-/// // Graph represented with the weight of each edge
-/// //
-/// //     2       1
-/// // a ----- b ----- c
-/// // | 4     | 7     |
-/// // d       f       | 5
-/// // | 1     | 1     |
-/// // \------ e ------/
-///
-/// let path = bellman_ford(&g, a);
-/// assert_eq!(path, Ok((vec![0.0 ,     2.0,    3.0,    4.0,     5.0,     6.0],
-///                      vec![None, Some(a),Some(b),Some(a), Some(d), Some(e)]
-///                    ))
-///           );
-/// // Node f (indice 5) can be reach from a with a path costing 6.
-/// // Predecessor of f is Some(e) which predecessor is Some(d) which predecessor is Some(a).
-/// // Thus the path from a to f is a <-> d <-> e <-> f
-///
-/// let graph_with_neg_cycle = Graph::<(), f32, Undirected>::from_edges(&[
-///         (0, 1, -2.0),
-///         (0, 3, -4.0),
-///         (1, 2, -1.0),
-///         (1, 5, -25.0),
-///         (2, 4, -5.0),
-///         (4, 5, -25.0),
-///         (3, 4, -1.0),
-/// ]);
-///
-/// assert!(bellman_ford(&graph_with_neg_cycle, NodeIndex::new(0)).is_err());
-/// ```
-pub fn bellman_ford<G>(
-    g: G,
-    source: G::NodeId,
-) -> Result<(Vec<G::EdgeWeight>, Vec<Option<G::NodeId>>), NegativeCycle>
-where
-    G: NodeCount + IntoNodeIdentifiers + IntoEdges + NodeIndexable,
-    G::EdgeWeight: FloatMeasure,
-{
-    let mut predecessor = vec![None; g.node_bound()];
-    let mut distance = vec![<_>::infinite(); g.node_bound()];
-
-    let ix = |i| g.to_index(i);
-
-    distance[ix(source)] = <_>::zero();
-    // scan up to |V| - 1 times.
-    for _ in 1..g.node_count() {
-        let mut did_update = false;
-        for i in g.node_identifiers() {
-            for edge in g.edges(i) {
-                let i = edge.source();
-                let j = edge.target();
-                let w = *edge.weight();
-                if distance[ix(i)] + w < distance[ix(j)] {
-                    distance[ix(j)] = distance[ix(i)] + w;
-                    predecessor[ix(j)] = Some(i);
-                    did_update = true;
-                }
-            }
-        }
-        if !did_update {
-            break;
-        }
-    }
-
-    // check for negative weight cycle
-    for i in g.node_identifiers() {
-        for edge in g.edges(i) {
-            let j = edge.target();
-            let w = *edge.weight();
-            if distance[ix(i)] + w < distance[ix(j)] {
-                //println!("neg cycle, detected from {} to {}, weight={}", i, j, w);
-                return Err(NegativeCycle(()));
-            }
-        }
-    }
-
-    Ok((distance, predecessor))
-}
+pub struct NegativeCycle(pub ());
 
 /// Return `true` if the graph is bipartite. A graph is bipartite if it's nodes can be divided into
 /// two disjoint and indepedent sets U and V such that every edge connects U to one in V. This
@@ -877,3 +844,59 @@ impl FloatMeasure for f64 {
         1. / 0.
     }
 }
+
+pub trait BoundedMeasure: Measure + std::ops::Sub<Self, Output = Self> {
+    fn min() -> Self;
+    fn max() -> Self;
+    fn overflowing_add(self, rhs: Self) -> (Self, bool);
+}
+
+macro_rules! impl_bounded_measure_integer(
+    ( $( $t:ident ),* ) => {
+        $(
+            impl BoundedMeasure for $t {
+                fn min() -> Self {
+                    std::$t::MIN
+                }
+
+                fn max() -> Self {
+                    std::$t::MAX
+                }
+
+                fn overflowing_add(self, rhs: Self) -> (Self, bool) {
+                    self.overflowing_add(rhs)
+                }
+            }
+        )*
+    };
+);
+
+impl_bounded_measure_integer!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
+
+macro_rules! impl_bounded_measure_float(
+    ( $( $t:ident ),* ) => {
+        $(
+            impl BoundedMeasure for $t {
+                fn min() -> Self {
+                    std::$t::MIN
+                }
+
+                fn max() -> Self {
+                    std::$t::MAX
+                }
+
+                fn overflowing_add(self, rhs: Self) -> (Self, bool) {
+                    // for an overflow: a + b > max: both values need to be positive and a > max - b must be satisfied
+                    let overflow = self > Self::default() && rhs > Self::default() && self > std::$t::MAX - rhs;
+
+                    // for an underflow: a + b < min: overflow can not happen and both values must be negative and a < min - b must be satisfied
+                    let underflow = !overflow && self < Self::default() && rhs < Self::default() && self < std::$t::MIN - rhs;
+
+                    (self + rhs, overflow || underflow)
+                }
+            }
+        )*
+    };
+);
+
+impl_bounded_measure_float!(f32, f64);

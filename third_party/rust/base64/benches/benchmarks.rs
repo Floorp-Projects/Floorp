@@ -123,6 +123,32 @@ fn do_encode_bench_stream(b: &mut Bencher, &size: &usize) {
     });
 }
 
+fn do_encode_bench_string_stream(b: &mut Bencher, &size: &usize) {
+    let mut v: Vec<u8> = Vec::with_capacity(size);
+    fill(&mut v);
+
+    b.iter(|| {
+        let mut stream_enc = write::EncoderStringWriter::new(TEST_CONFIG);
+        stream_enc.write_all(&v).unwrap();
+        stream_enc.flush().unwrap();
+        let _ = stream_enc.into_inner();
+    });
+}
+
+fn do_encode_bench_string_reuse_buf_stream(b: &mut Bencher, &size: &usize) {
+    let mut v: Vec<u8> = Vec::with_capacity(size);
+    fill(&mut v);
+
+    let mut buf = String::new();
+    b.iter(|| {
+        buf.clear();
+        let mut stream_enc = write::EncoderStringWriter::from(&mut buf, TEST_CONFIG);
+        stream_enc.write_all(&v).unwrap();
+        stream_enc.flush().unwrap();
+        let _ = stream_enc.into_inner();
+    });
+}
+
 fn fill(v: &mut Vec<u8>) {
     let cap = v.capacity();
     // weak randomness is plenty; we just want to not be completely friendly to the branch predictor
@@ -147,6 +173,11 @@ fn encode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {
         .with_function("encode_reuse_buf", do_encode_bench_reuse_buf)
         .with_function("encode_slice", do_encode_bench_slice)
         .with_function("encode_reuse_buf_stream", do_encode_bench_stream)
+        .with_function("encode_string_stream", do_encode_bench_string_stream)
+        .with_function(
+            "encode_string_reuse_buf_stream",
+            do_encode_bench_string_reuse_buf_stream,
+        )
 }
 
 fn decode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {

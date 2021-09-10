@@ -17,18 +17,18 @@ default = []
 [dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+rev = "37288a6"
 features = ["replay", "trace", "serial-pass"]
 
 [dependencies.wgt]
 package = "wgpu-types"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+rev = "37288a6"
 
 [dependencies.wgh]
 package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+rev = "37288a6"
 
 [dependencies]
 bincode = "1"

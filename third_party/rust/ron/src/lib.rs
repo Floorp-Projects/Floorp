@@ -57,7 +57,7 @@ Serializing / Deserializing is as simple as calling `to_string` / `from_str`.
 
 !*/
 
-#![doc(html_root_url = "https://docs.rs/ron/0.6.0")]
+#![doc(html_root_url = "https://docs.rs/ron/0.6.5")]
 
 pub mod de;
 pub mod ser;

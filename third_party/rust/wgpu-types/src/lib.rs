@@ -32,8 +32,6 @@ pub type DynamicOffset = u32;
 ///
 /// [`bytes_per_row`]: ImageDataLayout::bytes_per_row
 pub const COPY_BYTES_PER_ROW_ALIGNMENT: u32 = 256;
-/// Bound uniform/storage buffer offsets must be aligned to this number.
-pub const BIND_BUFFER_ALIGNMENT: BufferAddress = 256;
 /// An offset into the query resolve buffer has to be aligned to this.
 pub const QUERY_RESOLVE_BUFFER_ALIGNMENT: BufferAddress = 256;
 /// Buffer to buffer copy as well as buffer clear offsets and sizes must be aligned to this number.
@@ -93,8 +91,6 @@ impl Default for PowerPreference {
 bitflags::bitflags! {
     /// Represents the backends that wgpu will use.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct Backends: u32 {
         /// Supported on Windows, Linux/Android, and macOS/iOS via Vulkan Portability (with the Vulkan feature enabled)
         const VULKAN = 1 << Backend::Vulkan as u32;
@@ -122,6 +118,9 @@ bitflags::bitflags! {
         const SECONDARY = Self::GL.bits | Self::DX11.bits;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(Backends);
 
 impl From<Backend> for Backends {
     fn from(backend: Backend) -> Self {
@@ -164,8 +163,6 @@ bitflags::bitflags! {
     /// will panic.
     #[repr(transparent)]
     #[derive(Default)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct Features: u64 {
         /// By default, polygon depth is clipped to 0-1 range. Anything outside of that range
         /// is rejected, and respective fragments are not touched.
@@ -496,7 +493,7 @@ bitflags::bitflags! {
         ///
         /// This is a native-only feature.
         const VERTEX_WRITABLE_STORAGE = 1 << 35;
-        /// Enables clear to zero for buffers & images.
+        /// Enables clear to zero for buffers & textures.
         ///
         /// Supported platforms:
         /// - All
@@ -528,6 +525,9 @@ bitflags::bitflags! {
         const SHADER_PRIMITIVE_INDEX = 1 << 38;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(Features);
 
 impl Features {
     /// Mask of all features which are part of the upstream WebGPU standard.
@@ -627,6 +627,14 @@ pub struct Limits {
     /// - DX11 & OpenGL don't natively support push constants, and are emulated with uniforms,
     ///   so this number is less useful but likely 256.
     pub max_push_constant_size: u32,
+    /// Required `BufferBindingType::Uniform` alignment for `BufferBinding::offset`
+    /// when creating a `BindGroup`, or for `set_bind_group` `dynamicOffsets`.
+    /// Defaults to 256. Lower is "better".
+    pub min_uniform_buffer_offset_alignment: u32,
+    /// Required `BufferBindingType::Storage` alignment for `BufferBinding::offset`
+    /// when creating a `BindGroup`, or for `set_bind_group` `dynamicOffsets`.
+    /// Defaults to 256. Lower is "better".
+    pub min_storage_buffer_offset_alignment: u32,
 }
 
 impl Default for Limits {
@@ -650,6 +658,8 @@ impl Default for Limits {
             max_vertex_attributes: 16,
             max_vertex_buffer_array_stride: 2048,
             max_push_constant_size: 0,
+            min_uniform_buffer_offset_alignment: 256,
+            min_storage_buffer_offset_alignment: 256,
         }
     }
 }
@@ -676,6 +686,8 @@ impl Limits {
             max_vertex_attributes: 16,
             max_vertex_buffer_array_stride: 2048,
             max_push_constant_size: 0,
+            min_uniform_buffer_offset_alignment: 256,
+            min_storage_buffer_offset_alignment: 256,
         }
     }
 
@@ -689,6 +701,17 @@ impl Limits {
             max_texture_dimension_1d: other.max_texture_dimension_1d,
             max_texture_dimension_2d: other.max_texture_dimension_2d,
             max_texture_dimension_3d: other.max_texture_dimension_3d,
+            ..self
+        }
+    }
+
+    /// Modify the current limits to use the buffer alignment limits of the adapter.
+    ///
+    /// This is useful for when you'd like to dynamically use the "best" supported buffer alignments.
+    pub fn using_alignment(self, other: Self) -> Self {
+        Self {
+            min_uniform_buffer_offset_alignment: other.min_uniform_buffer_offset_alignment,
+            min_storage_buffer_offset_alignment: other.min_storage_buffer_offset_alignment,
             ..self
         }
     }
@@ -784,6 +807,9 @@ bitflags::bitflags! {
     }
 }
 
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(DownlevelFlags);
+
 impl DownlevelFlags {
     /// All flags that indicate if the backend is WebGPU compliant
     pub const fn compliant() -> Self {
@@ -877,7 +903,6 @@ bitflags::bitflags! {
     ///
     /// `ShaderStages::VERTEX | ShaderStages::FRAGMENT`
     #[repr(transparent)]
-    #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
     pub struct ShaderStages: u32 {
         /// Binding is not visible from any shader stage.
         const NONE = 0;
@@ -891,6 +916,9 @@ bitflags::bitflags! {
         const VERTEX_FRAGMENT = Self::VERTEX.bits | Self::FRAGMENT.bits;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(ShaderStages);
 
 /// Dimensions of a particular texture view.
 #[repr(C)]
@@ -1289,8 +1317,6 @@ impl Default for MultisampleState {
 bitflags::bitflags! {
     /// Feature flags for a texture format.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct TextureFormatFeatureFlags: u32 {
         /// When used as a STORAGE texture, then a texture with this format can be bound with
         /// [`StorageTextureAccess::ReadOnly`] or [`StorageTextureAccess::ReadWrite`].
@@ -1300,6 +1326,9 @@ bitflags::bitflags! {
         const STORAGE_ATOMICS = 1 << 1;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(TextureFormatFeatureFlags);
 
 /// Features supported by a given texture format
 ///
@@ -1938,8 +1967,6 @@ impl TextureFormat {
 bitflags::bitflags! {
     /// Color write mask. Disabled color channels will not be written to.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct ColorWrites: u32 {
         /// Enable red channel writes
         const RED = 1 << 0;
@@ -1955,6 +1982,9 @@ bitflags::bitflags! {
         const ALL = Self::RED.bits | Self::GREEN.bits | Self::BLUE.bits | Self::ALPHA.bits;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(ColorWrites);
 
 impl Default for ColorWrites {
     fn default() -> Self {
@@ -2327,8 +2357,6 @@ bitflags::bitflags! {
     /// The usages determine what kind of memory the buffer is allocated from and what
     /// actions the buffer can partake in.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct BufferUsages: u32 {
         /// Allow a buffer to be mapped for reading using [`Buffer::map_async`] + [`Buffer::get_mapped_range`].
         /// This does not include creating a buffer with [`BufferDescriptor::mapped_at_creation`] set.
@@ -2346,7 +2374,7 @@ bitflags::bitflags! {
         /// operation.
         const COPY_SRC = 1 << 2;
         /// Allow a buffer to be the destination buffer for a [`CommandEncoder::copy_buffer_to_buffer`], [`CommandEncoder::copy_texture_to_buffer`],
-        /// [`CommandEncoder::fill_buffer`] or [`Queue::write_buffer`] operation.
+        /// [`CommandEncoder::clear_buffer`] or [`Queue::write_buffer`] operation.
         const COPY_DST = 1 << 3;
         /// Allow a buffer to be the index buffer in a draw operation.
         const INDEX = 1 << 4;
@@ -2360,6 +2388,9 @@ bitflags::bitflags! {
         const INDIRECT = 1 << 8;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(BufferUsages);
 
 /// Describes a [`Buffer`].
 #[repr(C)]
@@ -2444,8 +2475,6 @@ bitflags::bitflags! {
     /// The usages determine what kind of memory the texture is allocated from and what
     /// actions the texture can partake in.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct TextureUsages: u32 {
         /// Allows a texture to be the source in a [`CommandEncoder::copy_texture_to_buffer`] or
         /// [`CommandEncoder::copy_texture_to_texture`] operation.
@@ -2461,6 +2490,9 @@ bitflags::bitflags! {
         const RENDER_ATTACHMENT = 1 << 4;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(TextureUsages);
 
 /// Configures a [`Surface`] for presentation.
 #[repr(C)]
@@ -2681,6 +2713,18 @@ impl Extent3d {
         let max_dim = self.width.max(self.height.max(self.depth_or_array_layers));
         32 - max_dim.leading_zeros()
     }
+
+    /// Calculates the extent at a given mip level.
+    pub fn mip_level_size(&self, level: u32, is_3d_texture: bool) -> Extent3d {
+        Extent3d {
+            width: u32::max(1, self.width >> level),
+            height: u32::max(1, self.height >> level),
+            depth_or_array_layers: match is_3d_texture {
+                false => self.depth_or_array_layers,
+                true => u32::max(1, self.depth_or_array_layers >> level),
+            },
+        }
+    }
 }
 
 /// Describes a [`Texture`].
@@ -2754,14 +2798,10 @@ impl<L> TextureDescriptor<L> {
             return None;
         }
 
-        Some(Extent3d {
-            width: u32::max(1, self.size.width >> level),
-            height: u32::max(1, self.size.height >> level),
-            depth_or_array_layers: match self.dimension {
-                TextureDimension::D1 | TextureDimension::D2 => self.size.depth_or_array_layers,
-                TextureDimension::D3 => u32::max(1, self.size.depth_or_array_layers >> level),
-            },
-        })
+        Some(
+            self.size
+                .mip_level_size(level, self.dimension == TextureDimension::D3),
+        )
     }
 
     /// Returns the number of array layers.
@@ -3338,8 +3378,6 @@ bitflags::bitflags! {
     /// the first 8 bytes being the primitive out value, the last 8
     /// bytes being the compute shader invocation count.
     #[repr(transparent)]
-    #[cfg_attr(feature = "trace", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct PipelineStatisticsTypes : u8 {
         /// Amount of times the vertex shader is ran. Accounts for
         /// the vertex cache when doing indexed rendering.
@@ -3360,6 +3398,9 @@ bitflags::bitflags! {
         const COMPUTE_SHADER_INVOCATIONS = 1 << 4;
     }
 }
+
+#[cfg(feature = "bitflags_serde_shim")]
+bitflags_serde_shim::impl_serde_for_bitflags!(PipelineStatisticsTypes);
 
 /// Argument buffer layout for draw_indirect commands.
 #[repr(C)]

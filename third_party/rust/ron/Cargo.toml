@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ron"
-version = "0.6.2"
+version = "0.6.5"
 authors = ["Christopher Durham <cad97@cad97.com>", "Dzmitry Malyshau <kvarkus@gmail.com>", "Thomas Schaller <torkleyy@gmail.com>"]
 exclude = ["bors.toml", ".travis.yml"]
 description = "Rusty Object Notation"
@@ -28,7 +28,7 @@ repository = "https://github.com/ron-rs/ron"
 [lib]
 name = "ron"
 [dependencies.base64]
-version = "0.12"
+version = "0.13"
 
 [dependencies.bitflags]
 version = "1.0.4"

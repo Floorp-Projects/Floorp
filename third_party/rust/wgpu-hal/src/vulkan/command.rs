@@ -16,7 +16,9 @@ impl super::Texture {
     {
         let aspects = self.aspects;
         let fi = self.format_info;
+        let copy_size = self.copy_size;
         regions.map(move |r| {
+            let extent = r.texture_base.max_copy_size(&copy_size).min(&r.size);
             let (image_subresource, image_offset) =
                 conv::map_subresource_layers(&r.texture_base, aspects);
             vk::BufferImageCopy {
@@ -30,7 +32,7 @@ impl super::Texture {
                     .map_or(0, |rpi| rpi.get() * fi.block_dimensions.1 as u32),
                 image_subresource,
                 image_offset,
-                image_extent: conv::map_copy_extent(&r.size),
+                image_extent: conv::map_copy_extent(&extent),
             }
         })
     }
@@ -182,14 +184,46 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         }
     }
 
-    unsafe fn fill_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange, value: u8) {
+    unsafe fn clear_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange) {
         self.device.raw.cmd_fill_buffer(
             self.active,
             buffer.raw,
             range.start,
             range.end - range.start,
-            (value as u32) * 0x01010101,
+            0,
         );
+    }
+
+    unsafe fn clear_texture(
+        &mut self,
+        texture: &super::Texture,
+        subresource_range: &wgt::ImageSubresourceRange,
+    ) {
+        self.device.raw.cmd_clear_color_image(
+            self.active,
+            texture.raw,
+            DST_IMAGE_LAYOUT,
+            &vk::ClearColorValue {
+                float32: [0.0, 0.0, 0.0, 0.0],
+            },
+            &[conv::map_subresource_range(
+                subresource_range,
+                texture.aspects,
+            )],
+        );
+
+        // The Vulkan api could easily support depth/stencil formats for clearing as well.
+        // But in other APIs this is more challenging which is why clear_texture excludes support for these formats.
+        // self.device.raw.cmd_clear_depth_stencil_image(
+        //     self.active,
+        //     texture.raw,
+        //     DST_IMAGE_LAYOUT,
+        //     &vk::ClearDepthStencilValue {
+        //         depth: 0.0,
+        //         stencil: 0,
+        //     },
+        //     &[range],
+        // );
     }
 
     unsafe fn copy_buffer_to_buffer<T>(
@@ -229,12 +263,16 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 conv::map_subresource_layers(&r.src_base, src.aspects);
             let (dst_subresource, dst_offset) =
                 conv::map_subresource_layers(&r.dst_base, dst.aspects);
+            let extent = r
+                .size
+                .min(&r.src_base.max_copy_size(&src.copy_size))
+                .min(&r.dst_base.max_copy_size(&dst.copy_size));
             vk::ImageCopy {
                 src_subresource,
                 src_offset,
                 dst_subresource,
                 dst_offset,
-                extent: conv::map_copy_extent(&r.size),
+                extent: conv::map_copy_extent(&extent),
             }
         });
 

@@ -1,4 +1,4 @@
-use crate::Config;
+use crate::{Config, PAD_BYTE};
 #[cfg(any(feature = "alloc", feature = "std", test))]
 use crate::{chunked_encoder, STANDARD};
 #[cfg(any(feature = "alloc", feature = "std", test))]
@@ -312,7 +312,7 @@ pub fn add_padding(input_len: usize, output: &mut [u8]) -> usize {
     let rem = input_len % 3;
     let mut bytes_written = 0;
     for _ in 0..((3 - rem) % 3) {
-        output[bytes_written] = b'=';
+        output[bytes_written] = PAD_BYTE;
         bytes_written += 1;
     }
 

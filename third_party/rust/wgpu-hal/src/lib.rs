@@ -314,6 +314,7 @@ pub trait Queue<A: Api>: Send + Sync {
         surface: &mut A::Surface,
         texture: A::SurfaceTexture,
     ) -> Result<(), SurfaceError>;
+    unsafe fn get_timestamp_period(&self) -> f32;
 }
 
 /// Encoder for commands in command buffers.
@@ -343,9 +344,14 @@ pub trait CommandEncoder<A: Api>: Send + Sync {
 
     // copy operations
 
-    /// This is valid to call with `value == 0`.
-    /// Otherwise `wgt::Features::CLEAR_COMMANDS` is required.
-    unsafe fn fill_buffer(&mut self, buffer: &A::Buffer, range: MemoryRange, value: u8);
+    unsafe fn clear_buffer(&mut self, buffer: &A::Buffer, range: MemoryRange);
+
+    // Does not support depth/stencil or multisampled textures
+    unsafe fn clear_texture(
+        &mut self,
+        texture: &A::Texture,
+        subresource_range: &wgt::ImageSubresourceRange,
+    );
 
     unsafe fn copy_buffer_to_buffer<T>(&mut self, src: &A::Buffer, dst: &A::Buffer, regions: T)
     where
@@ -354,6 +360,7 @@ pub trait CommandEncoder<A: Api>: Send + Sync {
     /// Copy from one texture to another.
     /// Works with a single array layer.
     /// Note: `dst` current usage has to be `TextureUses::COPY_DST`.
+    /// Note: the copy extent is in physical size (rounded to the block size)
     unsafe fn copy_texture_to_texture<T>(
         &mut self,
         src: &A::Texture,
@@ -366,12 +373,14 @@ pub trait CommandEncoder<A: Api>: Send + Sync {
     /// Copy from buffer to texture.
     /// Works with a single array layer.
     /// Note: `dst` current usage has to be `TextureUses::COPY_DST`.
+    /// Note: the copy extent is in physical size (rounded to the block size)
     unsafe fn copy_buffer_to_texture<T>(&mut self, src: &A::Buffer, dst: &A::Texture, regions: T)
     where
         T: Iterator<Item = BufferTextureCopy>;
 
     /// Copy from texture to buffer.
     /// Works with a single array layer.
+    /// Note: the copy extent is in physical size (rounded to the block size)
     unsafe fn copy_texture_to_buffer<T>(
         &mut self,
         src: &A::Texture,
@@ -609,6 +618,7 @@ bitflags::bitflags! {
             Self::INDEX.bits | Self::VERTEX.bits | Self::UNIFORM.bits |
             Self::STORAGE_READ.bits | Self::INDIRECT.bits;
         /// The combination of exclusive usages (write-only and read-write).
+        /// These usages may still show up with others, but can't automatically be combined.
         const EXCLUSIVE = Self::MAP_WRITE.bits | Self::COPY_DST.bits | Self::STORAGE_WRITE.bits;
         /// The combination of all usages that the are guaranteed to be be ordered by the hardware.
         /// If a usage is not ordered, then even if it doesn't change between draw calls, there
@@ -631,6 +641,7 @@ bitflags::bitflags! {
         /// The combination of usages that can be used together (read-only).
         const INCLUSIVE = Self::COPY_SRC.bits | Self::RESOURCE.bits | Self::DEPTH_STENCIL_READ.bits;
         /// The combination of exclusive usages (write-only and read-write).
+        /// These usages may still show up with others, but can't automatically be combined.
         const EXCLUSIVE = Self::COPY_DST.bits | Self::COLOR_TARGET.bits | Self::DEPTH_STENCIL_WRITE.bits | Self::STORAGE_READ.bits | Self::STORAGE_WRITE.bits;
         /// The combination of all usages that the are guaranteed to be be ordered by the hardware.
         /// If a usage is not ordered, then even if it doesn't change between draw calls, there
@@ -654,8 +665,6 @@ pub struct Alignments {
     /// The alignment of the row pitch of the texture data stored in a buffer that is
     /// used in a GPU copy operation.
     pub buffer_copy_pitch: wgt::BufferSize,
-    pub uniform_buffer_offset: wgt::BufferSize,
-    pub storage_buffer_offset: wgt::BufferSize,
 }
 
 #[derive(Clone, Debug)]

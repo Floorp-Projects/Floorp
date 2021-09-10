@@ -13,7 +13,7 @@
 //! dominates **C** and **C** dominates **B**.
 
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::{hash_map::Iter, HashMap, HashSet};
 use std::hash::Hash;
 
 use crate::visit::{DfsPostOrder, GraphBase, IntoNeighbors, Visitable, Walker};
@@ -79,9 +79,19 @@ where
             None
         }
     }
+
+    /// Iterate over all nodes immediately dominated by the given node (not
+    /// including the given node itself).
+    pub fn immediately_dominated_by(&self, node: N) -> DominatedByIter<N> {
+        DominatedByIter {
+            iter: self.dominators.iter(),
+            node,
+        }
+    }
 }
 
 /// Iterator for a node's dominators.
+#[derive(Debug, Clone)]
 pub struct DominatorsIter<'a, N>
 where
     N: 'a + Copy + Eq + Hash,
@@ -102,6 +112,36 @@ where
             self.node = self.dominators.immediate_dominator(next);
         }
         next
+    }
+}
+
+/// Iterator for nodes dominated by a given node.
+#[derive(Debug, Clone)]
+pub struct DominatedByIter<'a, N>
+where
+    N: 'a + Copy + Eq + Hash,
+{
+    iter: Iter<'a, N, N>,
+    node: N,
+}
+
+impl<'a, N> Iterator for DominatedByIter<'a, N>
+where
+    N: 'a + Copy + Eq + Hash,
+{
+    type Item = N;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(next) = self.iter.next() {
+            if next.1 == &self.node {
+                return Some(*next.0);
+            }
+        }
+        None
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
     }
 }
 
@@ -232,10 +272,12 @@ where
         .collect()
 }
 
+type PredecessorSets<NodeId> = HashMap<NodeId, HashSet<NodeId>>;
+
 fn simple_fast_post_order<G>(
     graph: G,
     root: G::NodeId,
-) -> (Vec<G::NodeId>, HashMap<G::NodeId, HashSet<G::NodeId>>)
+) -> (Vec<G::NodeId>, PredecessorSets<G::NodeId>)
 where
     G: IntoNeighbors + Visitable,
     <G as GraphBase>::NodeId: Eq + Hash,
@@ -280,5 +322,9 @@ mod tests {
             None::<()>,
             doms.strict_dominators(99).map(|_| unreachable!())
         );
+
+        let dom_by: Vec<_> = doms.immediately_dominated_by(1).collect();
+        assert_eq!(vec![2], dom_by);
+        assert_eq!(None, doms.immediately_dominated_by(99).next());
     }
 }

@@ -77,6 +77,8 @@ following:
 
 * Add a ``quickcheck`` property test for the new algorithm
 
+* Add a ``benchmark`` test for measuring performance of the new algorithm
+
 * Document what the algorithm does and in what situations it should be used
 
 * Document the big-O running time of the algorithm

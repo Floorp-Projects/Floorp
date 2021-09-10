@@ -292,7 +292,7 @@ fn decode_reject_invalid_bytes_with_correct_error() {
                     index
                 );
 
-                if length % 4 == 1 {
+                if length % 4 == 1 && !suffix.is_empty() {
                     assert_eq!(DecodeError::InvalidLength, decode(&input).unwrap_err());
                 } else {
                     assert_eq!(
@@ -303,6 +303,26 @@ fn decode_reject_invalid_bytes_with_correct_error() {
             }
         }
     }
+}
+
+#[test]
+fn decode_imap() {
+    assert_eq!(
+        decode_config(b"+,,+", crate::IMAP_MUTF7),
+        decode_config(b"+//+", crate::STANDARD_NO_PAD)
+    );
+}
+
+#[test]
+fn decode_invalid_trailing_bytes() {
+    // The case of trailing newlines is common enough to warrant a test for a good error
+    // message.
+    assert_eq!(
+        Err(DecodeError::InvalidByte(8, b'\n')),
+        decode(b"Zm9vCg==\n")
+    );
+    // extra padding, however, is still InvalidLength
+    assert_eq!(Err(DecodeError::InvalidLength), decode(b"Zm9vCg==="));
 }
 
 fn config_std_pad() -> Config {
