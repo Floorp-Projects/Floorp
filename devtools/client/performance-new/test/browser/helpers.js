@@ -380,7 +380,7 @@ async function waitForTabUrl({
           return true;
         }
         throw new Error(
-          `Found a different url on the fake frontend: ${gBrowser.currentURI.spec}`
+          `Found a different url on the fake frontend: ${gBrowser.currentURI.spec} (expecting ${expectedUrl})`
         );
       case errorTitle:
         throw new Error(
