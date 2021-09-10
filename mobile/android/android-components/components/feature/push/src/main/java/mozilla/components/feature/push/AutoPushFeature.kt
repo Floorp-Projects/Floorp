@@ -13,12 +13,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import mozilla.appservices.push.CommunicationError
-import mozilla.appservices.push.CommunicationServerError
-import mozilla.appservices.push.CryptoError
-import mozilla.appservices.push.GeneralError
-import mozilla.appservices.push.JSONDeserializeError
-import mozilla.appservices.push.RequestError
+import mozilla.appservices.push.PushException.CommunicationException
+import mozilla.appservices.push.PushException.CommunicationServerException
+import mozilla.appservices.push.PushException.CryptoException
+import mozilla.appservices.push.PushException.GeneralException
+import mozilla.appservices.push.PushException.JSONDeserializeException
+import mozilla.appservices.push.PushException.RequestException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
@@ -370,12 +370,12 @@ class AutoPushFeature(
 internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) = CoroutineExceptionHandler { _, e ->
     val isFatal = when (e) {
         is PushError.MalformedMessage,
-        is GeneralError,
-        is CryptoError,
-        is CommunicationError,
-        is JSONDeserializeError,
-        is RequestError,
-        is CommunicationServerError -> false
+        is GeneralException,
+        is CryptoException,
+        is CommunicationException,
+        is JSONDeserializeException,
+        is RequestException,
+        is CommunicationServerException -> false
         else -> true
     }
 

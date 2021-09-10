@@ -9,11 +9,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.appservices.push.CommunicationError
-import mozilla.appservices.push.CommunicationServerError
-import mozilla.appservices.push.CryptoError
-import mozilla.appservices.push.GeneralError
-import mozilla.appservices.push.MissingRegistrationTokenError
+import mozilla.appservices.push.PushException.CommunicationException
+import mozilla.appservices.push.PushException.CommunicationServerException
+import mozilla.appservices.push.PushException.CryptoException
+import mozilla.appservices.push.PushException.GeneralException
+import mozilla.appservices.push.PushException.MissingRegistrationTokenException
 import mozilla.components.concept.push.PushError
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -46,20 +46,20 @@ class AutoPushFeatureKtTest {
         scope.launch { throw PushError.MalformedMessage("test") }
         assertFalse(invoked)
 
-        scope.launch { throw GeneralError("test") }
+        scope.launch { throw GeneralException("test") }
         assertFalse(invoked)
 
-        scope.launch { throw CryptoError("test") }
+        scope.launch { throw CryptoException("test") }
         assertFalse(invoked)
 
-        scope.launch { throw CommunicationError("test") }
+        scope.launch { throw CommunicationException("test") }
         assertFalse(invoked)
 
-        scope.launch { throw CommunicationServerError("test") }
+        scope.launch { throw CommunicationServerException("test") }
         assertFalse(invoked)
 
         // An exception where we should invoke our callback.
-        scope.launch { throw MissingRegistrationTokenError() }
+        scope.launch { throw MissingRegistrationTokenException("") }
         assertTrue(invoked)
     }
 }

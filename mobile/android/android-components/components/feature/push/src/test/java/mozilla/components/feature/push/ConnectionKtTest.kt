@@ -57,7 +57,7 @@ class ConnectionKtTest {
             "scope"
         )
         val sub = response.toPushSubscriptionChanged()
-        assertEquals(response.channelID, sub.channelId)
+        assertEquals(response.channelId, sub.channelId)
         assertEquals(response.scope, sub.scope)
     }
 

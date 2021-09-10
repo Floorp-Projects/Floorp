@@ -11,8 +11,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.appservices.push.GeneralError
-import mozilla.appservices.push.MissingRegistrationTokenError
+import mozilla.appservices.push.PushException.GeneralException
+import mozilla.appservices.push.PushException.MissingRegistrationTokenException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
@@ -206,7 +206,7 @@ class AutoPushFeatureTest {
         assertFalse(errorInvoked)
 
         whenever(connection.isInitialized()).thenReturn(true)
-        whenever(connection.subscribe(anyString(), nullable())).thenAnswer { throw MissingRegistrationTokenError() }
+        whenever(connection.subscribe(anyString(), nullable())).thenAnswer { throw MissingRegistrationTokenException("") }
         whenever(subscription.scope).thenReturn("testScope")
 
         feature.subscribe(
@@ -282,7 +282,7 @@ class AutoPushFeatureTest {
         var invoked = false
         var errorInvoked = false
 
-        whenever(connection.unsubscribe(anyString())).thenAnswer { throw MissingRegistrationTokenError() }
+        whenever(connection.unsubscribe(anyString())).thenAnswer { throw MissingRegistrationTokenException("") }
 
         feature.unsubscribe(
             scope = "testScope",
@@ -479,7 +479,7 @@ class AutoPushFeatureTest {
             crashReporter = crashReporter
         )
 
-        whenever(connection.unsubscribe(any())).thenAnswer { throw GeneralError("test") }
+        whenever(connection.unsubscribe(any())).thenAnswer { throw GeneralException("test") }
 
         feature.unsubscribe("123") {}
 
@@ -498,7 +498,7 @@ class AutoPushFeatureTest {
             crashReporter = crashReporter
         )
 
-        whenever(connection.unsubscribe(any())).thenAnswer { throw MissingRegistrationTokenError() }
+        whenever(connection.unsubscribe(any())).thenAnswer { throw MissingRegistrationTokenException("") }
 
         feature.unsubscribe("123") {}
 

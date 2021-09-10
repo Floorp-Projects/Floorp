@@ -8,7 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.push.DispatchInfo
 import mozilla.appservices.push.KeyInfo
-import mozilla.appservices.push.PushAPI
+import mozilla.appservices.push.PushManager
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.support.test.any
@@ -50,7 +50,7 @@ class RustPushConnectionTest {
     @Test
     fun `new token calls update if API is already initialized`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         runBlocking {
@@ -73,9 +73,9 @@ class RustPushConnectionTest {
     @Test
     fun `subscribe calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         val response = SubscriptionResponse(
-            channelID = "1234",
+            channelId = "1234",
             subscriptionInfo = SubscriptionInfo(
                 endpoint = "https://foo",
                 keys = KeyInfo(
@@ -113,7 +113,7 @@ class RustPushConnectionTest {
     @Test
     fun `unsubscribe calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         runBlocking {
@@ -135,7 +135,7 @@ class RustPushConnectionTest {
     @Test
     fun `unsubscribeAll calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         runBlocking {
@@ -148,7 +148,7 @@ class RustPushConnectionTest {
     @Test
     fun `containsSubscription returns true if a subscription exists`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         `when`(api.dispatchInfoForChid(ArgumentMatchers.anyString()))
@@ -174,7 +174,7 @@ class RustPushConnectionTest {
     @Test
     fun `verifyConnection calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         runBlocking {
@@ -196,7 +196,7 @@ class RustPushConnectionTest {
     @Test
     fun `decrypt calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         val dispatchInfo: DispatchInfo = mock()
         connection.api = api
 
@@ -225,7 +225,7 @@ class RustPushConnectionTest {
     @Test
     fun `empty body decrypts nothing`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         val dispatchInfo: DispatchInfo = mock()
         connection.api = api
 
@@ -259,7 +259,7 @@ class RustPushConnectionTest {
     @Test
     fun `close calls Rust API`() {
         val connection = createConnection()
-        val api: PushAPI = mock()
+        val api: PushManager = mock()
         connection.api = api
 
         runBlocking {

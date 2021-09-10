@@ -9,36 +9,36 @@ package mozilla.components.feature.push.ext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.appservices.push.AlreadyRegisteredError
-import mozilla.appservices.push.CommunicationError
-import mozilla.appservices.push.CommunicationServerError
-import mozilla.appservices.push.CryptoError
-import mozilla.appservices.push.GeneralError
-import mozilla.appservices.push.InternalPanic
-import mozilla.appservices.push.MissingRegistrationTokenError
-import mozilla.appservices.push.RecordNotFoundError
-import mozilla.appservices.push.StorageError
-import mozilla.appservices.push.StorageSqlError
-import mozilla.appservices.push.TranscodingError
-import mozilla.appservices.push.UrlParseError
+import mozilla.appservices.push.InternalException
+import mozilla.appservices.push.PushException.AlreadyRegisteredException
+import mozilla.appservices.push.PushException.CommunicationException
+import mozilla.appservices.push.PushException.CommunicationServerException
+import mozilla.appservices.push.PushException.CryptoException
+import mozilla.appservices.push.PushException.GeneralException
+import mozilla.appservices.push.PushException.MissingRegistrationTokenException
+import mozilla.appservices.push.PushException.RecordNotFoundException
+import mozilla.appservices.push.PushException.StorageException
+import mozilla.appservices.push.PushException.StorageSqlException
+import mozilla.appservices.push.PushException.TranscodingException
+import mozilla.appservices.push.PushException.UrlParseException
 import mozilla.components.feature.push.exceptionHandler
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
 class CoroutineScopeKtTest {
 
-    @Test(expected = InternalPanic::class)
+    @Test(expected = InternalException::class)
     fun `launchAndTry throws on unrecoverable Rust exceptions`() = runBlockingTest {
         CoroutineScope(coroutineContext).launchAndTry(
-            errorBlock = { throw InternalPanic("unit test") },
-            block = { throw MissingRegistrationTokenError() }
+            errorBlock = { throw InternalException("unit test") },
+            block = { throw MissingRegistrationTokenException("") }
         )
     }
 
     @Test(expected = ArithmeticException::class)
     fun `launchAndTry throws original exception`() = runBlockingTest {
         CoroutineScope(coroutineContext).launchAndTry(
-            errorBlock = { throw InternalPanic("unit test") },
+            errorBlock = { throw InternalException("unit test") },
             block = { throw ArithmeticException() }
         )
     }
@@ -46,57 +46,57 @@ class CoroutineScopeKtTest {
     @Test
     fun `launchAndTry should NOT throw on recoverable Rust exceptions`() = runBlockingTest {
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw CryptoError("should not fail test") },
+            { throw CryptoException("should not fail test") },
             { assert(true) }
         ) + exceptionHandler {}
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw CommunicationServerError("should not fail test") },
+            { throw CommunicationServerException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw CommunicationError("should not fail test") },
+            { throw CommunicationException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw AlreadyRegisteredError() },
+            { throw AlreadyRegisteredException("") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw StorageError("should not fail test") },
+            { throw StorageException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw MissingRegistrationTokenError() },
+            { throw MissingRegistrationTokenException("") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw StorageSqlError("should not fail test") },
+            { throw StorageSqlException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw TranscodingError("should not fail test") },
+            { throw TranscodingException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw RecordNotFoundError("should not fail test") },
+            { throw RecordNotFoundException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw UrlParseError("should not fail test") },
+            { throw UrlParseException("should not fail test") },
             { assert(true) }
         )
 
         CoroutineScope(coroutineContext).launchAndTry(
-            { throw GeneralError("should not fail test") },
+            { throw GeneralException("should not fail test") },
             { assert(true) }
         )
     }
