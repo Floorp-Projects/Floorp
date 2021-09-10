@@ -126,6 +126,8 @@ async function gInit(
     ),
     document.querySelector("#root")
   );
+
+  window.addEventListener("unload", () => gDestroy(), { once: true });
 }
 
 async function gDestroy() {
@@ -147,6 +149,4 @@ if (window.location.hash !== "#remote") {
     },
     { once: true }
   );
-
-  window.addEventListener("unload", () => gDestroy(), { once: true });
 }
