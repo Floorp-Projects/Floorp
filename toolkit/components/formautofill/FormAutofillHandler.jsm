@@ -58,10 +58,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
-});
-
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
@@ -927,7 +923,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     this.handler = handler;
 
     // Identifier used to correlate events relating to the same form
-    this.flowId = gUUIDGenerator.generateUUID().toString();
+    this.flowId = Services.uuid.generateUUID().toString();
     log.debug("Creating new credit card section with flowId =", this.flowId);
 
     if (!this.isValidSection()) {

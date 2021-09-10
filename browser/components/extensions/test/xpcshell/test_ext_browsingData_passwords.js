@@ -2,13 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "loginManager",
-  "@mozilla.org/login-manager;1",
-  "nsILoginManager"
-);
-
 const REFERENCE_DATE = Date.now();
 const LOGIN_USERNAME = "username";
 const LOGIN_PASSWORD = "password";
@@ -17,7 +10,7 @@ const NEW_HOST = "http://mozilla.com";
 const FXA_HOST = "chrome://FirefoxAccounts";
 
 function checkLoginExists(host, shouldExist) {
-  let logins = loginManager.findLogins(host, "", null);
+  let logins = Services.logins.findLogins(host, "", null);
   equal(
     logins.length,
     shouldExist ? 1 : 0,
@@ -33,12 +26,12 @@ function addLogin(host, timestamp) {
   login.init(host, "", null, LOGIN_USERNAME, LOGIN_PASSWORD);
   login.QueryInterface(Ci.nsILoginMetaInfo);
   login.timePasswordChanged = timestamp;
-  loginManager.addLogin(login);
+  Services.logins.addLogin(login);
   checkLoginExists(host, true);
 }
 
 async function setupPasswords() {
-  loginManager.removeAllUserFacingLogins();
+  Services.logins.removeAllUserFacingLogins();
   addLogin(FXA_HOST, REFERENCE_DATE);
   addLogin(NEW_HOST, REFERENCE_DATE);
   addLogin(OLD_HOST, REFERENCE_DATE - 10000);

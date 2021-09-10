@@ -5,10 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["FileUtils"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "Services",
@@ -19,13 +15,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "Deprecated",
   "resource://gre/modules/Deprecated.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gDirService",
-  "@mozilla.org/file/directory_service;1",
-  "nsIProperties"
 );
 
 var FileUtils = {
@@ -71,7 +60,7 @@ var FileUtils = {
    * @return  nsIFile object for the location specified.
    */
   getDir: function FileUtils_getDir(key, pathArray, shouldCreate) {
-    var dir = gDirService.get(key, Ci.nsIFile);
+    var dir = Services.dirsvc.get(key, Ci.nsIFile);
     for (var i = 0; i < pathArray.length; ++i) {
       dir.append(pathArray[i]);
     }
