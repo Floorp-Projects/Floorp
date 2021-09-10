@@ -50,15 +50,7 @@ pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;
     let xulstore_path = xulstore_dir.as_path();
     let rkv = manager.get_or_create(xulstore_path, Rkv::new::<SafeMode>)?;
-
-    // We used to call Migrator::easy_migrate_lmdb_to_safe_mode()
-    // to migrate from an LMDB backing store to the safe mode store,
-    // but it appears to create/lock the LMDB files if they don't
-    // already exist, resulting in failures during profile deletion.
-    //
-    // So instead we now ignore an old LMDB backing store (after we
-    // included migration long enough to migrate almost everyone).
-
+    Migrator::easy_migrate_lmdb_to_safe_mode(xulstore_path, rkv.read()?)?;
     let store = rkv.read()?.open_single("db", StoreOptions::create())?;
     Ok(Database::new(rkv, store))
 }
