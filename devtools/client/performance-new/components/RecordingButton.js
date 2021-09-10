@@ -14,7 +14,6 @@
  * @property {boolean | null} isSupportedPlatform
  * @property {boolean} recordingUnexpectedlyStopped
  * @property {PageContext} pageContext
- * @property {import("../@types/perf").ProfilerViewMode | undefined} profilerViewMode
  */
 
 /**
@@ -72,12 +71,11 @@ class RecordingButton extends PureComponent {
   _onCaptureButtonClick = async () => {
     const {
       getProfileAndStopProfiler,
-      profilerViewMode,
       onProfileReceived,
       perfFront,
     } = this.props;
     const profile = await getProfileAndStopProfiler(perfFront);
-    onProfileReceived(profile, profilerViewMode);
+    onProfileReceived(profile);
   };
 
   _onStopButtonClick = () => {
@@ -266,7 +264,6 @@ function mapStateToProps(state) {
       state
     ),
     pageContext: selectors.getPageContext(state),
-    profilerViewMode: selectors.getProfilerViewMode(state),
   };
 }
 
