@@ -362,7 +362,5 @@ module.exports = (state = undefined, action) => {
     recordingSettings: recordingSettings(state?.recordingSettings, action),
     initializedValues: initializedValues(state?.initializedValues, action),
     promptEnvRestart: promptEnvRestart(state?.promptEnvRestart, action),
-
-    profilerViewMode: state?.profilerViewMode,
   };
 };
