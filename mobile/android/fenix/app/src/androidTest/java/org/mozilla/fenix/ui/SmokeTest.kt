@@ -274,9 +274,10 @@ class SmokeTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSyncSignIn {
-            verifySyncSignInMenuHeader()
+            verifyTurnOnSyncMenu()
         }
     }
 
