@@ -12705,7 +12705,6 @@ _moz_pixman_region32_fini
 _pixman_image_fini
 _cairo_gstate_restore
 ?Unmap@DataSourceSurface@gfx@mozilla@@UAEXXZ
-?DrawDiagnostics@Compositor@layers@mozilla@@QAEXW4DiagnosticFlags@23@ABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@ABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@63@ABV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@63@I@Z
 ?Unlock@BufferTextureHost@layers@mozilla@@UAEXXZ
 ?MaybeGrabScreenshot@ScreenshotGrabber@layers@mozilla@@QAEXAAVWindow@profiler_screenshots@23@ABU?$IntSizeTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
 ?EndFrame@Compositor@layers@mozilla@@UAEXXZ
@@ -15085,7 +15084,6 @@ _pixman_implementation_fill
 ?ToObjectInternal@IterableKeyAndValueResult@dom@mozilla@@QBE_NPAUJSContext@@V?$MutableHandle@VValue@JS@@@JS@@@Z
 ??0IterableKeyAndValueResult@dom@mozilla@@QAE@XZ
 ?ToObjectInternal@IterableKeyOrValueResult@dom@mozilla@@QBE_NPAUJSContext@@V?$MutableHandle@VValue@JS@@@JS@@@Z
-?DrawDiagnostics@Compositor@layers@mozilla@@QAEXW4DiagnosticFlags@23@ABU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@3@ABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@63@ABV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@63@I@Z
 _cairo_matrix_is_integer_translation
 _moz_cairo_region_copy
 _moz_pixman_region32_translate

@@ -113,27 +113,6 @@ enum class DiagnosticTypes : uint8_t {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticTypes)
 
-#define DIAGNOSTIC_FLASH_COUNTER_MAX 100
-
-/**
- * Information about the object that is being diagnosed.
- */
-enum class DiagnosticFlags : uint16_t {
-  NO_DIAGNOSTIC = 0,
-  IMAGE = 1 << 0,
-  CONTENT = 1 << 1,
-  CANVAS = 1 << 2,
-  COLOR = 1 << 3,
-  CONTAINER = 1 << 4,
-  TILE = 1 << 5,
-  BIGIMAGE = 1 << 6,
-  COMPONENT_ALPHA = 1 << 7,
-  REGION_RECT = 1 << 8,
-  NV12 = 1 << 9,
-  YCBCR = 1 << 10
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticFlags)
-
 /**
  * See gfx/layers/Effects.h
  */
