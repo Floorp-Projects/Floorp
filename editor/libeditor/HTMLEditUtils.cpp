@@ -22,11 +22,12 @@
 #include "nsAString.h"  // for nsAString::IsEmpty
 #include "nsAtom.h"     // for nsAtom
 #include "nsCaseTreatment.h"
-#include "nsCOMPtr.h"        // for nsCOMPtr, operator==, etc.
-#include "nsDebug.h"         // for NS_ASSERTION, etc.
-#include "nsElementTable.h"  // for nsHTMLElement
-#include "nsError.h"         // for NS_SUCCEEDED
-#include "nsGkAtoms.h"       // for nsGkAtoms, nsGkAtoms::a, etc.
+#include "nsCOMPtr.h"            // for nsCOMPtr, operator==, etc.
+#include "nsComputedDOMStyle.h"  // for nsComputedDOMStyle
+#include "nsDebug.h"             // for NS_ASSERTION, etc.
+#include "nsElementTable.h"      // for nsHTMLElement
+#include "nsError.h"             // for NS_SUCCEEDED
+#include "nsGkAtoms.h"           // for nsGkAtoms, nsGkAtoms::a, etc.
 #include "nsHTMLTags.h"
 #include "nsLiteralString.h"     // for NS_LITERAL_STRING
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
@@ -156,6 +157,16 @@ bool HTMLEditUtils::IsInlineStyle(nsINode* aNode) {
       nsGkAtoms::b, nsGkAtoms::i, nsGkAtoms::u, nsGkAtoms::tt, nsGkAtoms::s,
       nsGkAtoms::strike, nsGkAtoms::big, nsGkAtoms::small, nsGkAtoms::sub,
       nsGkAtoms::sup, nsGkAtoms::font);
+}
+
+bool HTMLEditUtils::IsDisplayOutsideInline(const Element& aElement) {
+  RefPtr<ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(&aElement);
+  if (!elementStyle) {
+    return false;
+  }
+  return elementStyle->StyleDisplay()->DisplayOutside() ==
+         StyleDisplayOutside::Inline;
 }
 
 bool HTMLEditUtils::IsRemovableInlineStyleElement(Element& aElement) {
