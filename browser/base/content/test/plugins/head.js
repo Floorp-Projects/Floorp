@@ -13,10 +13,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PromiseUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
-});
-
 // Various tests in this directory may define gTestBrowser, to use as the
 // default browser under test in some of the functions below.
 /* global gTestBrowser:true */

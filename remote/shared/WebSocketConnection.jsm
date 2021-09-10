@@ -10,20 +10,15 @@ var EXPORTED_SYMBOLS = ["WebSocketConnection"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UUIDGen",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
 
 class WebSocketConnection {
   /**
@@ -33,7 +28,7 @@ class WebSocketConnection {
    *     Reference to the httpd.js's connection needed for clean-up.
    */
   constructor(webSocket, httpdConnection) {
-    this.id = UUIDGen.generateUUID().toString();
+    this.id = Services.uuid.generateUUID().toString();
     this.httpdConnection = httpdConnection;
 
     this.transport = new WebSocketTransport(webSocket);

@@ -329,14 +329,14 @@ describe("TelemetryFeed", () => {
       assert.equal(instance.sessions.get("foo"), session);
     });
     it("should set the session_id", () => {
-      sandbox.spy(global.gUUIDGenerator, "generateUUID");
+      sandbox.spy(Services.uuid, "generateUUID");
 
       const session = instance.addSession("foo");
 
-      assert.calledOnce(global.gUUIDGenerator.generateUUID);
+      assert.calledOnce(Services.uuid.generateUUID);
       assert.equal(
         session.session_id,
-        global.gUUIDGenerator.generateUUID.firstCall.returnValue
+        Services.uuid.generateUUID.firstCall.returnValue
       );
     });
     it("should set the page if a url parameter is given", () => {
@@ -1786,7 +1786,7 @@ describe("TelemetryFeed", () => {
       FakePrefs.prototype.prefs[
         STRUCTURED_INGESTION_ENDPOINT_PREF
       ] = fakeEndpoint;
-      sandbox.stub(global.gUUIDGenerator, "generateUUID").returns(fakeUUID);
+      sandbox.stub(Services.uuid, "generateUUID").returns(fakeUUID);
       const feed = new TelemetryFeed();
       const url = feed._generateStructuredIngestionEndpoint(
         "testNameSpace",

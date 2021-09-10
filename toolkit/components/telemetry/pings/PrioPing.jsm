@@ -20,10 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
-});
-
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
@@ -43,7 +39,7 @@ var Policy = {
   sendPing: (type, payload, options) =>
     TelemetryController.submitExternalPing(type, payload, options),
   getEncodedOriginSnapshot: async aClear =>
-    Telemetry.getEncodedOriginSnapshot(aClear),
+    Services.telemetry.getEncodedOriginSnapshot(aClear),
 };
 
 var TelemetryPrioPing = {
@@ -60,7 +56,7 @@ var TelemetryPrioPing = {
   _timeoutId: null,
 
   startup() {
-    if (!this._testing && !Telemetry.canRecordPrereleaseData) {
+    if (!this._testing && !Services.telemetry.canRecordPrereleaseData) {
       this._log.trace("Extended collection disabled. Prio ping disabled.");
       return;
     }
