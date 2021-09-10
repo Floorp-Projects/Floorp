@@ -1458,7 +1458,7 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
 template <typename EditorDOMPointType>
 WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointType& aPoint, const Element* aEditingHost)
-    : mEditingHost(aEditingHost), mIsWhiteSpaceCollapsible(true) {
+    : mEditingHost(aEditingHost) {
   if (!aPoint.IsSetAndValid()) {
     NS_WARNING("aPoint was invalid");
     return;
@@ -1497,22 +1497,17 @@ WSRunScanner::TextFragmentData::TextFragmentData(
   mStart = BoundaryData::ScanCollapsibleWhiteSpaceStartFrom(
       mScanStartPoint, *editableBlockElementOrInlineEditingHost, mEditingHost,
       &mNBSPData);
+  MOZ_ASSERT_IF(mStart.IsNonCollapsibleCharacters(),
+                !mStart.PointRef().IsPreviousCharPreformattedNewLine());
+  MOZ_ASSERT_IF(mStart.IsPreformattedLineBreak(),
+                mStart.PointRef().IsPreviousCharPreformattedNewLine());
   mEnd = BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
       mScanStartPoint, *editableBlockElementOrInlineEditingHost, mEditingHost,
       &mNBSPData);
-  // If scan start point is start/end of preformatted text node, only
-  // mEnd/mStart crosses a preformatted character so that when one of
-  // them crosses a preformatted character, this fragment's range is
-  // preformatted.
-  // Additionally, if the scan start point is preformatted, and there is
-  // no text node around it, the range is also preformatted.
-  mIsWhiteSpaceCollapsible =
-      !mStart.AcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter() &&
-      !mEnd.AcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter() &&
-      !(EditorUtils::IsWhiteSpacePreformatted(
-            *mScanStartPoint.ContainerAsContent()) &&
-        !mStart.IsNonCollapsibleCharacters() &&
-        !mEnd.IsNonCollapsibleCharacters());
+  MOZ_ASSERT_IF(mEnd.IsNonCollapsibleCharacters(),
+                !mEnd.PointRef().IsCharPreformattedNewLine());
+  MOZ_ASSERT_IF(mEnd.IsPreformattedLineBreak(),
+                mEnd.PointRef().IsCharPreformattedNewLine());
 }
 
 // static
@@ -1566,11 +1561,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         break;
     }
 
-    return Some(
-        BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                     *aPoint.ContainerAsText(), wsTypeOfNonCollapsibleChar,
-                     !isWhiteSpaceCollapsible ? WhiteSpacePreformatted::Yes
-                                              : WhiteSpacePreformatted::No));
+    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                             *aPoint.ContainerAsText(),
+                             wsTypeOfNonCollapsibleChar));
   }
 
   return Nothing();
@@ -1613,13 +1606,12 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineContent),
-                        WSType::CurrentBlockBoundary,
-                        WhiteSpacePreformatted::No);
+                        WSType::CurrentBlockBoundary);
   }
 
   if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
     return BoundaryData(aPoint, *previousLeafContentOrBlock,
-                        WSType::OtherBlockBoundary, WhiteSpacePreformatted::No);
+                        WSType::OtherBlockBoundary);
   }
 
   if (!previousLeafContentOrBlock->IsText() ||
@@ -1629,8 +1621,7 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     return BoundaryData(aPoint, *previousLeafContentOrBlock,
                         previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
                             ? WSType::BRElement
-                            : WSType::SpecialContent,
-                        WhiteSpacePreformatted::No);
+                            : WSType::SpecialContent);
   }
 
   if (!previousLeafContentOrBlock->AsText()->TextLength()) {
@@ -1709,11 +1700,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         break;
     }
 
-    return Some(
-        BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                     *aPoint.ContainerAsText(), wsTypeOfNonCollapsibleChar,
-                     !isWhiteSpaceCollapsible ? WhiteSpacePreformatted::Yes
-                                              : WhiteSpacePreformatted::No));
+    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                             *aPoint.ContainerAsText(),
+                             wsTypeOfNonCollapsibleChar));
   }
 
   return Nothing();
@@ -1755,14 +1744,13 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
-                        WSType::CurrentBlockBoundary,
-                        WhiteSpacePreformatted::No);
+                        WSType::CurrentBlockBoundary);
   }
 
   if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
     // we encountered a new block.  therefore no more ws.
     return BoundaryData(aPoint, *nextLeafContentOrBlock,
-                        WSType::OtherBlockBoundary, WhiteSpacePreformatted::No);
+                        WSType::OtherBlockBoundary);
   }
 
   if (!nextLeafContentOrBlock->IsText() ||
@@ -1773,8 +1761,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     return BoundaryData(aPoint, *nextLeafContentOrBlock,
                         nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
                             ? WSType::BRElement
-                            : WSType::SpecialContent,
-                        WhiteSpacePreformatted::No);
+                            : WSType::SpecialContent);
   }
 
   if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
@@ -1808,8 +1795,7 @@ WSRunScanner::TextFragmentData::InvisibleLeadingWhiteSpaceRangeRef() const {
     return mLeadingWhiteSpaceRange.ref();
   }
 
-  // If it's preformatted or not start of line, the range is not invisible
-  // leading white-spaces.
+  // If it's start of line, there is no invisible leading white-spaces.
   if (!StartsFromHardLineBreak()) {
     mLeadingWhiteSpaceRange.emplace();
     return mLeadingWhiteSpaceRange.ref();
@@ -1837,10 +1823,10 @@ WSRunScanner::TextFragmentData::InvisibleTrailingWhiteSpaceRangeRef() const {
     return mTrailingWhiteSpaceRange.ref();
   }
 
-  // If it's preformatted or not immediately before block boundary, the range is
-  // not invisible trailing white-spaces.  Note that collapsible white-spaces
-  // before a `<br>` element is visible.
-  if (!EndsByBlockBoundary()) {
+  // If it's not immediately before a block boundary nor an invisible
+  // preformatted linefeed, there is no invisible trailing white-spaces.  Note
+  // that collapsible white-spaces before a `<br>` element is visible.
+  if (!EndsByBlockBoundary() && !EndsByInvisiblePreformattedLineBreak()) {
     mTrailingWhiteSpaceRange.emplace();
     return mTrailingWhiteSpaceRange.ref();
   }
@@ -1920,18 +1906,28 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     return mVisibleWhiteSpacesData.ref();
   }
 
-  if (IsWhiteSpaceNotCollapsibleOrSurrondedByVisibleContent()) {
-    VisibleWhiteSpacesData visibleWhiteSpaces;
-    if (mStart.PointRef().IsSet()) {
-      visibleWhiteSpaces.SetStartPoint(mStart.PointRef());
+  {
+    // If all things are obviously visible, we can return range for all of the
+    // things quickly.
+    const bool mayHaveInvisibleLeadingSpace =
+        !StartsFromNonCollapsibleCharacters() && !StartsFromSpecialContent();
+    const bool mayHaveInvisibleTrailingWhiteSpace =
+        !EndsByNonCollapsibleCharacters() && !EndsBySpecialContent() &&
+        !EndsByBRElement() && !EndsByInvisiblePreformattedLineBreak();
+
+    if (!mayHaveInvisibleLeadingSpace && !mayHaveInvisibleTrailingWhiteSpace) {
+      VisibleWhiteSpacesData visibleWhiteSpaces;
+      if (mStart.PointRef().IsSet()) {
+        visibleWhiteSpaces.SetStartPoint(mStart.PointRef());
+      }
+      visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
+      if (mEnd.PointRef().IsSet()) {
+        visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
+      }
+      visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
+      mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
+      return mVisibleWhiteSpacesData.ref();
     }
-    visibleWhiteSpaces.SetStartFrom(mStart.RawReason());
-    if (mEnd.PointRef().IsSet()) {
-      visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
-    }
-    visibleWhiteSpaces.SetEndBy(mEnd.RawReason());
-    mVisibleWhiteSpacesData.emplace(visibleWhiteSpaces);
-    return mVisibleWhiteSpacesData.ref();
   }
 
   // If all of the range is invisible leading or trailing white-spaces,
@@ -2926,7 +2922,9 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
             atEndOfVisibleWhiteSpaces);
     if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
         atPreviousCharOfEndOfVisibleWhiteSpaces.IsEndOfContainer() ||
-        !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP()) {
+        // If the NBSP is never replaced from an ASCII white-space, we cannod
+        // replace it with an ASCII white-space.
+        !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharCollapsibleNBSP()) {
       return NS_OK;
     }
 
@@ -2935,28 +2933,30 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     EditorDOMPointInText atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
         textFragmentData.GetPreviousEditableCharPoint(
             atPreviousCharOfEndOfVisibleWhiteSpaces);
-    bool isPreviousCharASCIIWhiteSpace =
+    bool isPreviousCharCollapsibleASCIIWhiteSpace =
         atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
         !atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
              .IsEndOfContainer() &&
         atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
-            .IsCharASCIISpace();
-    bool maybeNBSPFollowingVisibleContent =
+            .IsCharCollapsibleASCIISpace();
+    const bool maybeNBSPFollowsVisibleContent =
         (atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
-         !isPreviousCharASCIIWhiteSpace) ||
+         !isPreviousCharCollapsibleASCIIWhiteSpace) ||
         (!atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
          (visibleWhiteSpaces.StartsFromNonCollapsibleCharacters() ||
           visibleWhiteSpaces.StartsFromSpecialContent()));
-    bool followedByVisibleContentOrBRElement = false;
+    bool followedByVisibleContent =
+        visibleWhiteSpaces.EndsByNonCollapsibleCharacters() ||
+        visibleWhiteSpaces.EndsBySpecialContent();
+    bool followedByBRElement = visibleWhiteSpaces.EndsByBRElement();
+    bool followedByPreformattedLineBreak =
+        visibleWhiteSpaces.EndsByPreformattedLineBreak();
 
-    // If the NBSP follows a visible content or an ASCII white-space, i.e.,
-    // unless NBSP is first character and start of a block, we may need to
+    // If the NBSP follows a visible content or a collapsible ASCII white-space,
+    // i.e., unless NBSP is first character and start of a block, we may need to
     // insert <br> element and restore the NBSP to an ASCII white-space.
-    if (maybeNBSPFollowingVisibleContent || isPreviousCharASCIIWhiteSpace) {
-      followedByVisibleContentOrBRElement =
-          visibleWhiteSpaces.EndsByNonCollapsibleCharacters() ||
-          visibleWhiteSpaces.EndsBySpecialContent() ||
-          visibleWhiteSpaces.EndsByBRElement();
+    if (maybeNBSPFollowsVisibleContent ||
+        isPreviousCharCollapsibleASCIIWhiteSpace) {
       // First, try to insert <br> element if NBSP is at end of a block.
       // XXX We should stop this if there is a visible content.
       if (visibleWhiteSpaces.EndsByBlockBoundary() &&
@@ -3017,20 +3017,35 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(
                   atPreviousCharOfEndOfVisibleWhiteSpaces);
-          isPreviousCharASCIIWhiteSpace =
+          isPreviousCharCollapsibleASCIIWhiteSpace =
               atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
               !atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
                    .IsEndOfContainer() &&
               atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
-                  .IsCharASCIISpace();
-          followedByVisibleContentOrBRElement = true;
+                  .IsCharCollapsibleASCIISpace();
+          followedByBRElement = true;
+          followedByVisibleContent = followedByPreformattedLineBreak = false;
         }
+      }
+
+      // Once insert a <br>, the remaining work is only for normalizing
+      // white-space sequence in white-space collapsible text node.
+      // So, if the the text node's white-spaces are preformatted, we need
+      // to do nothing anymore.
+      if (EditorUtils::IsWhiteSpacePreformatted(
+              *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText())) {
+        return NS_OK;
       }
 
       // Next, replace the NBSP with an ASCII white-space if it's surrounded
       // by visible contents (or immediately before a <br> element).
-      if (maybeNBSPFollowingVisibleContent &&
-          followedByVisibleContentOrBRElement) {
+      // However, if it follows or is followed by a preformatted linefeed,
+      // we shouldn't do this because an ASCII white-space will be collapsed
+      // **into** the linefeed.
+      if (maybeNBSPFollowsVisibleContent &&
+          (followedByVisibleContent || followedByBRElement) &&
+          !visibleWhiteSpaces.StartsFromPreformattedLineBreak()) {
+        MOZ_ASSERT(!followedByPreformattedLineBreak);
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
             MOZ_KnownLive(
@@ -3042,14 +3057,15 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
       }
     }
     // If the text node is not preformatted, and the NBSP is followed by a <br>
-    // element and following (maybe multiple) ASCII spaces, remove the NBSP,
-    // but inserts a NBSP before the spaces.  This makes a line break
-    // opportunity to wrap the line.
+    // element and following (maybe multiple) collapsible ASCII white-spaces,
+    // remove the NBSP, but inserts a NBSP before the spaces.  This makes a line
+    // break opportunity to wrap the line.
     // XXX This is different behavior from Blink.  Blink generates pairs of
     //     an NBSP and an ASCII white-space, but put NBSP at the end of the
     //     sequence.  We should follow the behavior for web-compat.
-    if (maybeNBSPFollowingVisibleContent || !isPreviousCharASCIIWhiteSpace ||
-        !followedByVisibleContentOrBRElement ||
+    if (maybeNBSPFollowsVisibleContent ||
+        !isPreviousCharCollapsibleASCIIWhiteSpace ||
+        !(followedByVisibleContent || followedByBRElement) ||
         EditorUtils::IsWhiteSpacePreformatted(
             *atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
                  .GetContainerAsText())) {
@@ -3082,7 +3098,11 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
         MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAsText()),
         atFirstASCIIWhiteSpace.Offset(), replaceLengthInStartNode,
-        u"\x00A0 "_ns);
+        textFragmentData.StartsFromPreformattedLineBreak() &&
+                textFragmentData.EndsByPreformattedLineBreak()
+            ? u"\x00A0\x00A0"_ns
+            : (textFragmentData.EndsByPreformattedLineBreak() ? u" \x00A0"_ns
+                                                              : u"\x00A0 "_ns));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
       return rv;
@@ -3124,7 +3144,11 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
       textFragmentData.GetPreviousEditableCharPoint(atEndOfVisibleWhiteSpaces);
   if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
       atPreviousCharOfEndOfVisibleWhiteSpaces.IsEndOfContainer() ||
-      !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP()) {
+      !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharCollapsibleNBSP() ||
+      // If the next character of the NBSP is a preformatted linefeed, we
+      // shouldn't replace it with an ASCII white-space for avoiding collapsed
+      // into the linefeed.
+      visibleWhiteSpaces.EndsByPreformattedLineBreak()) {
     return NS_OK;
   }
 
@@ -3139,7 +3163,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
   if (atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharNBSP() &&
       atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
       atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
-          .IsCharASCIISpace()) {
+          .IsCharCollapsibleASCIISpace()) {
     startToDelete = textFragmentData.GetFirstASCIIWhiteSpacePointCollapsedTo(
         atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces,
         nsIEditor::eNone);
