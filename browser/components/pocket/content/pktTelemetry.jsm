@@ -20,9 +20,6 @@ ChromeUtils.defineModuleGetter(
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
-});
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
@@ -65,7 +62,7 @@ var pktTelemetry = {
     let impressionId = Services.prefs.getStringPref(PREF_IMPRESSION_ID, "");
 
     if (!impressionId) {
-      impressionId = String(gUUIDGenerator.generateUUID());
+      impressionId = String(Services.uuid.generateUUID());
       Services.prefs.setStringPref(PREF_IMPRESSION_ID, impressionId);
     }
     return impressionId;
@@ -96,7 +93,7 @@ var pktTelemetry = {
   },
 
   _generateUUID() {
-    return String(gUUIDGenerator.generateUUID());
+    return String(Services.uuid.generateUUID());
   },
 
   /**

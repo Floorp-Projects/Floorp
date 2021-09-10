@@ -19,6 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
@@ -26,13 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PollPromise: "chrome://remote/content/marionette/sync.js",
   pprint: "chrome://remote/content/shared/Format.jsm",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "uuidGen",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
 
 const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
@@ -1596,7 +1590,7 @@ class WebElement {
    *     UUID.
    */
   static generateUUID() {
-    let uuid = uuidGen.generateUUID().toString();
+    let uuid = Services.uuid.generateUUID().toString();
     return uuid.substring(1, uuid.length - 1);
   }
 }

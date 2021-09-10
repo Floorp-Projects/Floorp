@@ -21,10 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
-});
-
 ChromeUtils.defineModuleGetter(
   this,
   "setTimeout",
@@ -85,7 +81,7 @@ var TelemetryEventPing = {
   _processStartTimestamp: 0,
 
   get dataset() {
-    return Telemetry.canRecordPrereleaseData
+    return Services.telemetry.canRecordPrereleaseData
       ? Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
       : Ci.nsITelemetry.DATASET_ALL_CHANNELS;
   },
@@ -180,7 +176,7 @@ var TelemetryEventPing = {
       this._startTimer();
     }
 
-    let snapshot = Telemetry.snapshotEvents(
+    let snapshot = Services.telemetry.snapshotEvents(
       this.dataset,
       true /* clear */,
       DEFAULT_EVENT_LIMIT
@@ -220,7 +216,10 @@ var TelemetryEventPing = {
       // Any leftovers must be discarded, the count submitted in the ping.
       // This can happen on shutdown or if our max was reached before faster
       // than our maxFrequency.
-      let leftovers = Telemetry.snapshotEvents(this.dataset, true /* clear */);
+      let leftovers = Services.telemetry.snapshotEvents(
+        this.dataset,
+        true /* clear */
+      );
       let leftoverCount = Object.values(leftovers).reduce(
         (acc, val) => acc + val.length,
         0
@@ -235,7 +234,9 @@ var TelemetryEventPing = {
     };
 
     this._lastSendTime = Utils.monotonicNow();
-    Telemetry.getHistogramById("TELEMETRY_EVENT_PING_SENT").add(reason);
+    Services.telemetry
+      .getHistogramById("TELEMETRY_EVENT_PING_SENT")
+      .add(reason);
     Policy.sendPing(this.EVENT_PING_TYPE, payload, options);
   },
 

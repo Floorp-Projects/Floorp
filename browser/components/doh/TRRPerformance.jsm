@@ -51,13 +51,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIDNSService"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gUUIDGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator"
-);
-
 // The canonical domain whose subdomains we will be resolving.
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -94,7 +87,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 function getRandomSubdomain() {
-  let uuid = gUUIDGenerator
+  let uuid = Services.uuid
     .generateUUID()
     .toString()
     .slice(1, -1); // Discard surrounding braces

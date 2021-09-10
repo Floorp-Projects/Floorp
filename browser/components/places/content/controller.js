@@ -72,12 +72,6 @@ PlacesInsertionPoint.prototype = {
 
 function PlacesController(aView) {
   this._view = aView;
-  XPCOMUtils.defineLazyServiceGetter(
-    this,
-    "clipboard",
-    "@mozilla.org/widget/clipboard;1",
-    "nsIClipboard"
-  );
   XPCOMUtils.defineLazyGetter(this, "profileName", function() {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
@@ -178,7 +172,7 @@ PlacesController.prototype = {
         // Of course later paste() should ignore any invalid data.
         return (
           canInsert &&
-          this.clipboard.hasDataMatchingFlavors(
+          Services.clipboard.hasDataMatchingFlavors(
             [
               ...PlacesUIUtils.PLACES_FLAVORS,
               PlacesUtils.TYPE_X_MOZ_URL,
@@ -1056,7 +1050,7 @@ PlacesController.prototype = {
       );
       xferable.init(null);
       xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION);
-      this.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
+      Services.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
       xferable.getTransferData(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION, action);
       [action, actionOwner] = action.value
         .QueryInterface(Ci.nsISupportsString)
@@ -1079,7 +1073,7 @@ PlacesController.prototype = {
   _releaseClipboardOwnership: function PC__releaseClipboardOwnership() {
     if (this.cutNodes.length) {
       // This clears the logical clipboard, doesn't remove data.
-      this.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
+      Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
     }
   },
 
@@ -1092,7 +1086,11 @@ PlacesController.prototype = {
     const TYPE = "text/x-moz-place-empty";
     xferable.addDataFlavor(TYPE);
     xferable.setTransferData(TYPE, PlacesUtils.toISupportsString(""));
-    this.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+    Services.clipboard.setData(
+      xferable,
+      null,
+      Ci.nsIClipboard.kGlobalClipboard
+    );
   },
 
   _populateClipboard: function PC__populateClipboard(aNodes, aAction) {
@@ -1152,7 +1150,7 @@ PlacesController.prototype = {
     );
 
     if (hasData) {
-      this.clipboard.setData(
+      Services.clipboard.setData(
         xferable,
         aAction == "cut" ? this : null,
         Ci.nsIClipboard.kGlobalClipboard
@@ -1238,7 +1236,7 @@ PlacesController.prototype = {
       PlacesUtils.TYPE_UNICODE,
     ].forEach(type => xferable.addDataFlavor(type));
 
-    this.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
+    Services.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
 
     // Now get the clipboard contents, in the best available flavor.
     let data = {},
