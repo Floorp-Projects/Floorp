@@ -60,12 +60,10 @@ function test() {
     "insertLineBreak",
     "deleteContentBackward",
     "deleteContentBackward",
-  ], [
-    // Blink does nothing in this case, but WebKit inserts `<br>` element.
-    "insertLineBreak",
-    "insertLineBreak",
-    // XXX It's odd not to work with deleting the inserted `<br>` element.
-  ]]];
+  ],
+  // Blink does nothing in this case, but WebKit inserts `<br>` element.
+  [/* no input events for NOOP */]],
+  ];
   [
     ["insertorderedlist", "insertOrderedList"],
     ["insertunorderedlist", "insertUnorderedList"],

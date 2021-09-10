@@ -1308,6 +1308,136 @@ EditActionResult HTMLEditor::HandleInsertText(
   return EditActionHandled(rv);
 }
 
+nsresult HTMLEditor::InsertLineBreakAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
+
+  if (NS_WARN_IF(!mInitSucceeded)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (result.Failed() || result.Canceled()) {
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "HTMLEditor::CanHandleHTMLEditSubAction() failed");
+    return result.Rv();
+  }
+
+  // XXX This may be called by execCommand() with "insertLineBreak".
+  //     In such case, naming the transaction "TypingTxnName" is odd.
+  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName,
+                                             ScrollSelectionIntoView::Yes);
+
+  // calling it text insertion to trigger moz br treatment by rules
+  // XXX Why do we use EditSubAction::eInsertText here?  Looks like
+  //     EditSubAction::eInsertLineBreak or EditSubAction::eInsertNode
+  //     is better.
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  UndefineCaretBidiLevel();
+
+  // If the selection isn't collapsed, delete it.
+  if (!SelectionRef().IsCollapsed()) {
+    nsresult rv =
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+      return rv;
+    }
+  }
+
+  const nsRange* firstRange = SelectionRef().GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // For backward compatibility, we should not insert a linefeed if
+  // paragraph separator is set to "br" which is Gecko-specific mode.
+  if (GetDefaultParagraphSeparator() == ParagraphSeparator::br ||
+      !HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
+                                                    *editingHost)) {
+    // InsertBRElementWithTransaction() will set selection after the new <br>
+    // element.
+    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+        InsertBRElementWithTransaction(atStartOfSelection, nsIEditor::eNext);
+    if (resultOfInsertingBRElement.isErr()) {
+      NS_WARNING("HTMLEditor::InsertBRElementWithTransaction() failed");
+      return resultOfInsertingBRElement.unwrapErr();
+    }
+    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+    return NS_OK;
+  }
+
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::EnsureNoPaddingBRElementForEmptyEditor() "
+                       "failed, but ignored");
+
+  if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
+                         "failed, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      nsresult rv = PrepareInlineStylesForCaret();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "HTMLEditor::PrepareInlineStylesForCaret() failed, but ignored");
+    }
+  }
+
+  firstRange = SelectionRef().GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  atStartOfSelection = EditorDOMPoint(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+
+  // Do nothing if the node is read-only
+  if (!HTMLEditUtils::IsSimplyEditableNode(
+          *atStartOfSelection.GetContainer())) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  rv = HandleInsertLinefeed(atStartOfSelection, *editingHost);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::HandleInsertLinefeed() failed");
+  return rv;
+}
+
 EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   if (NS_WARN_IF(!mInitSucceeded)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
@@ -1458,11 +1588,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     insertLineBreak =
         separator == ParagraphSeparator::br ||
         !HTMLEditUtils::CanElementContainParagraph(*editingHost) ||
-        (HTMLEditUtils::IsDisplayOutsideInline(*editingHost) &&
-         EditorUtils::IsNewLinePreformatted(
-             atStartOfSelection.IsInContentNode()
-                 ? *atStartOfSelection.ContainerAsContent()
-                 : static_cast<nsIContent&>(*editingHost)));
+        HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
+                                                     *editingHost);
   }
   // If the nearest block parent is a single-line container declared in
   // the execCommand spec and not the editing host, we should separate the
@@ -1488,17 +1615,10 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // a <br> element or a linefeed instead.
   if (insertLineBreak) {
     // For backward compatibility, we should not insert a linefeed if
-    // paragraph separator is set to "br" which is Gecko-specific command.
+    // paragraph separator is set to "br" which is Gecko-specific mode.
     if (separator != ParagraphSeparator::br &&
-        // If and only if the nearest block is the editing host or its parent,
-        (!editableBlockElement || editableBlockElement == editingHost) &&
-        // and if the outside display value of the editing host is inline,
-        HTMLEditUtils::IsDisplayOutsideInline(*editingHost) &&
-        // and new line character is preformatted, we should insert a linefeed.
-        EditorUtils::IsNewLinePreformatted(
-            atStartOfSelection.IsInContentNode()
-                ? *atStartOfSelection.ContainerAsContent()
-                : static_cast<nsIContent&>(*editingHost))) {
+        HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
+                                                     *editingHost)) {
       nsresult rv = HandleInsertLinefeed(atStartOfSelection, *editingHost);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::HandleInsertLinefeed() failed");

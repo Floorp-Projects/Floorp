@@ -676,6 +676,31 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
   return true;
 }
 
+bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
+    EditorDOMPoint& aPointToInsert, const Element& aEditingHost) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
+  if (!aPointToInsert.IsInContentNode()) {
+    return false;
+  }
+
+  // closestEditableBlockElement can be nullptr if aEditingHost is an inline
+  // element.
+  Element* closestEditableBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *aPointToInsert.ContainerAsContent(),
+          HTMLEditUtils::ClosestEditableBlockElement);
+
+  // If and only if the nearest block is the editing host or its parent,
+  // and the outer display value of the editing host is inline, and new
+  // line character is preformatted, we should insert a linefeed.
+  return (!closestEditableBlockElement ||
+          closestEditableBlockElement == &aEditingHost) &&
+         HTMLEditUtils::IsDisplayOutsideInline(aEditingHost) &&
+         EditorUtils::IsNewLinePreformatted(
+             *aPointToInsert.ContainerAsContent());
+}
+
 // We use bitmasks to test containment of elements. Elements are marked to be
 // in certain groups by setting the mGroup member of the `ElementInfo` struct
 // to the corresponding GROUP_ values (OR'ed together). Similarly, elements are

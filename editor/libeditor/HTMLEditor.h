@@ -1677,6 +1677,13 @@ class HTMLEditor final : public EditorBase,
   InsertParagraphSeparatorAsSubAction();
 
   /**
+   * InsertLineBreakAsSubAction() inserts a new <br> element or a linefeed
+   * character at selection.  If there is non-collapsed selection ranges, the
+   * selected ranges is deleted first.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
+
+  /**
    * ChangeListElementType() replaces child list items of aListElement with
    * new list item element whose tag name is aNewListItemTag.
    * Note that if there are other list elements as children of aListElement,
@@ -3288,13 +3295,6 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
       nsIContent& aNode, const EditorDOMPoint& aPointToInsert,
       SplitAtEdges aSplitAtEdges);
-
-  /**
-   * InsertBRElementAtSelectionWithTransaction() inserts a new <br> element at
-   * selection.  If there is non-collapsed selection ranges, the selected
-   * ranges is deleted first.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertBRElementAtSelectionWithTransaction();
 
   /**
    * InsertTextWithQuotationsInternal() replaces selection with new content.
