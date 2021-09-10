@@ -603,16 +603,8 @@ RawId WebGPUChild::DeviceCreateShaderModule(
     RawId aSelfId, const dom::GPUShaderModuleDescriptor& aDesc) {
   ffi::WGPUShaderModuleDescriptor desc = {};
 
-  nsCString wgsl;
-  if (aDesc.mCode.IsUSVString()) {
-    LossyCopyUTF16toASCII(aDesc.mCode.GetAsUSVString(), wgsl);
-    desc.wgsl_chars = wgsl.get();
-  } else {
-    const auto& code = aDesc.mCode.GetAsUint32Array();
-    code.ComputeState();
-    desc.spirv_words = code.Data();
-    desc.spirv_words_length = code.Length();
-  }
+  desc.code = reinterpret_cast<const uint8_t*>(aDesc.mCode.get());
+  desc.code_length = aDesc.mCode.Length();
 
   ByteBuf bb;
   RawId id = ffi::wgpu_client_create_shader_module(mClient, aSelfId, &desc,
