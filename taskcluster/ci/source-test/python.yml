@@ -4,7 +4,10 @@
 ---
 job-defaults:
     platform: linux1804-64/opt
-    always-target: true
+    always-target:
+        by-platform:
+            macosx.*: false
+            default: true
     worker-type:
         by-platform:
             linux1804-64.*: t-linux-xlarge-source

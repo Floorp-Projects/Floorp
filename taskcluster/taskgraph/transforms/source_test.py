@@ -175,6 +175,7 @@ def handle_platform(config, jobs):
     try-related attributes.
     """
     fields = [
+        "always-target",
         "fetches.toolchain",
         "require-build",
         "worker-type",
