@@ -63,8 +63,7 @@ static ModuleRep sModuleMap[] = {{"docload", logging::eDocLoad},
                                  {"notifications", logging::eNotifications},
 
                                  {"stack", logging::eStack},
-                                 {"verbose", logging::eVerbose},
-                                 {"cache", logging::eCache}};
+                                 {"verbose", logging::eVerbose}};
 
 static void EnableLogging(const char* aModulesStr) {
   sModules = 0;
