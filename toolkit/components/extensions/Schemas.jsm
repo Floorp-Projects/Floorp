@@ -3667,7 +3667,9 @@ this.Schemas = {
       return;
     }
 
+    const startTime = Cu.now();
     let schemaCache = await this.loadCachedSchemas();
+    const fromCache = schemaCache.has(url);
 
     let blob =
       schemaCache.get(url) ||
@@ -3676,6 +3678,12 @@ this.Schemas = {
     if (!this.schemaJSON.has(url)) {
       this.addSchema(url, blob, content);
     }
+
+    ChromeUtils.addProfilerMarker(
+      "ExtensionSchemas",
+      { startTime },
+      `load ${url}, from cache: ${fromCache}`
+    );
   },
 
   /**
