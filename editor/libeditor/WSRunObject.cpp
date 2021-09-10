@@ -1160,24 +1160,12 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     return NS_OK;
   }
 
-  // Easy case, preformatted ws.
-  if (EditorUtils::IsWhiteSpacePreformatted(
-          *atPreviousCharOfStart.ContainerAsText())) {
-    if (!atPreviousCharOfStart.IsCharASCIISpaceOrNBSP()) {
-      return NS_OK;
-    }
-    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        atPreviousCharOfStart, atPreviousCharOfStart.NextPoint(),
-        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-    return rv;
-  }
-
-  // Caller's job to ensure that previous char is really ws.  If it is normal
-  // ws, we need to delete the whole run.
-  if (atPreviousCharOfStart.IsCharASCIISpace()) {
+  // If the char is a collapsible white-space or a non-collapsible new line
+  // but it can collapse adjacent white-spaces, we need to extend the range
+  // to delete all invisible white-spaces.
+  if (atPreviousCharOfStart.IsCharCollapsibleASCIISpace() ||
+      atPreviousCharOfStart
+          .IsCharPreformattedNewLineCollapsedWithWhiteSpaces()) {
     EditorDOMPoint startToDelete =
         textFragmentDataAtDeletion.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atPreviousCharOfStart, nsIEditor::ePrevious);
@@ -1194,7 +1182,6 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
       return rv;
     }
 
-    // finally, delete that ws
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         startToDelete, endToDelete,
         HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
@@ -1204,7 +1191,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     return rv;
   }
 
-  if (atPreviousCharOfStart.IsCharNBSP()) {
+  if (atPreviousCharOfStart.IsCharCollapsibleNBSP()) {
     EditorDOMPoint startToDelete(atPreviousCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
     nsresult rv =
@@ -1217,7 +1204,6 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
       return rv;
     }
 
-    // finally, delete that ws
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         startToDelete, endToDelete,
         HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
@@ -1227,7 +1213,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     return rv;
   }
 
-  return NS_OK;
+  nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+      atPreviousCharOfStart, atPreviousCharOfStart.NextPoint(),
+      HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+  return rv;
 }
 
 // static
@@ -1244,24 +1236,11 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     return NS_OK;
   }
 
-  // Easy case, preformatted ws.
-  if (EditorUtils::IsWhiteSpacePreformatted(
-          *atNextCharOfStart.ContainerAsText())) {
-    if (!atNextCharOfStart.IsCharASCIISpaceOrNBSP()) {
-      return NS_OK;
-    }
-    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
-        atNextCharOfStart, atNextCharOfStart.NextPoint(),
-        HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-    return rv;
-  }
-
-  // Caller's job to ensure that next char is really ws.  If it is normal ws,
-  // we need to delete the whole run.
-  if (atNextCharOfStart.IsCharASCIISpace()) {
+  // If the char is a collapsible white-space or a non-collapsible new line
+  // but it can collapse adjacent white-spaces, we need to extend the range
+  // to delete all invisible white-spaces.
+  if (atNextCharOfStart.IsCharCollapsibleASCIISpace() ||
+      atNextCharOfStart.IsCharPreformattedNewLineCollapsedWithWhiteSpaces()) {
     EditorDOMPoint startToDelete =
         textFragmentDataAtDeletion.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atNextCharOfStart, nsIEditor::eNext);
@@ -1278,7 +1257,6 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
       return rv;
     }
 
-    // Finally, delete that ws
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         startToDelete, endToDelete,
         HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
@@ -1288,7 +1266,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     return rv;
   }
 
-  if (atNextCharOfStart.IsCharNBSP()) {
+  if (atNextCharOfStart.IsCharCollapsibleNBSP()) {
     EditorDOMPoint startToDelete(atNextCharOfStart);
     EditorDOMPoint endToDelete(startToDelete.NextPoint());
     nsresult rv =
@@ -1301,7 +1279,6 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
       return rv;
     }
 
-    // Finally, delete that ws
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         startToDelete, endToDelete,
         HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
@@ -1311,7 +1288,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     return rv;
   }
 
-  return NS_OK;
+  nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+      atNextCharOfStart, atNextCharOfStart.NextPoint(),
+      HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+  return rv;
 }
 
 // static
@@ -3491,15 +3474,11 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
     }
   }
 
-  // If the text node is preformatted, just remove the previous character.
-  if (!textFragmentDataAtCaret.IsWhiteSpaceCollapsible()) {
-    return EditorDOMRangeInTexts(atPreviousChar, atNextChar);
-  }
-
-  // If previous char is an ASCII white-spaces, delete all adjcent ASCII
-  // whitespaces.
+  // If previous char is an collapsible white-spaces, delete all adjcent
+  // white-spaces which are collapsed together.
   EditorDOMRangeInTexts rangeToDelete;
-  if (atPreviousChar.IsCharASCIISpace()) {
+  if (atPreviousChar.IsCharCollapsibleASCIISpace() ||
+      atPreviousChar.IsCharPreformattedNewLineCollapsedWithWhiteSpaces()) {
     EditorDOMPointInText startToDelete =
         textFragmentDataAtCaret.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atPreviousChar, nsIEditor::ePrevious);
@@ -3517,7 +3496,7 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
     }
     rangeToDelete = EditorDOMRangeInTexts(startToDelete, endToDelete);
   }
-  // if previous char is not an ASCII white-space, remove it.
+  // if previous char is not a collapsible white-space, remove it.
   else {
     rangeToDelete = EditorDOMRangeInTexts(atPreviousChar, atNextChar);
   }
@@ -3586,15 +3565,11 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
     atNextChar = atNextChar.NextPoint();
   }
 
-  // If the text node is preformatted, just remove the previous character.
-  if (!textFragmentDataAtCaret.IsWhiteSpaceCollapsible()) {
-    return EditorDOMRangeInTexts(atCaret, atNextChar);
-  }
-
-  // If next char is an ASCII whitespaces, delete all adjcent ASCII
-  // whitespaces.
+  // If next char is a collapsible white-space, delete all adjcent white-spaces
+  // which are collapsed together.
   EditorDOMRangeInTexts rangeToDelete;
-  if (atCaret.IsCharASCIISpace()) {
+  if (atCaret.IsCharCollapsibleASCIISpace() ||
+      atCaret.IsCharPreformattedNewLineCollapsedWithWhiteSpaces()) {
     EditorDOMPointInText startToDelete =
         textFragmentDataAtCaret.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atCaret, nsIEditor::eNext);
@@ -3612,7 +3587,7 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
     }
     rangeToDelete = EditorDOMRangeInTexts(startToDelete, endToDelete);
   }
-  // if next char is not an ASCII white-space, remove it.
+  // if next char is not a collapsible white-space, remove it.
   else {
     rangeToDelete = EditorDOMRangeInTexts(atCaret, atNextChar);
   }
