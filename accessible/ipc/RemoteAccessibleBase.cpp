@@ -17,19 +17,6 @@
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
 
-#ifdef A11Y_LOG
-#  include "Logging.h"
-#  define VERIFY_CACHE(domain)                                     \
-    if (logging::IsEnabled(logging::eCache)) {                     \
-      Unused << mDoc->SendVerifyCache(mID, domain, mCachedFields); \
-    }
-#else
-#  define VERIFY_CACHE(domain) \
-    do {                       \
-    } while (0)
-
-#endif
-
 namespace mozilla {
 namespace a11y {
 
@@ -182,7 +169,6 @@ ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
   if (mCachedFields && mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
     auto nameFlag =
         mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
-    VERIFY_CACHE(CacheDomain::NameAndDescription);
     return nameFlag ? static_cast<ENameValueFlag>(*nameFlag) : eNameOK;
   }
 
@@ -193,14 +179,12 @@ template <class Derived>
 void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
   if (mCachedFields) {
     mCachedFields->GetAttribute(nsGkAtoms::description, aDescription);
-    VERIFY_CACHE(CacheDomain::NameAndDescription);
   }
 }
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::CurValue() const {
   if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
-    VERIFY_CACHE(CacheDomain::Value);
     return *value;
   }
 
@@ -210,7 +194,6 @@ double RemoteAccessibleBase<Derived>::CurValue() const {
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MinValue() const {
   if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
-    VERIFY_CACHE(CacheDomain::Value);
     return *min;
   }
 
@@ -220,7 +203,6 @@ double RemoteAccessibleBase<Derived>::MinValue() const {
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MaxValue() const {
   if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
-    VERIFY_CACHE(CacheDomain::Value);
     return *max;
   }
 
@@ -230,7 +212,6 @@ double RemoteAccessibleBase<Derived>::MaxValue() const {
 template <class Derived>
 double RemoteAccessibleBase<Derived>::Step() const {
   if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
-    VERIFY_CACHE(CacheDomain::Value);
     return *step;
   }
 
