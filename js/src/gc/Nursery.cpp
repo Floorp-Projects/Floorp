@@ -22,6 +22,7 @@
 #include "gc/GCLock.h"
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
+#include "gc/Tenuring.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "util/DifferentialTesting.h"
@@ -793,17 +794,6 @@ void js::Nursery::forwardBufferPointer(uintptr_t* pSlotsElems) {
   MOZ_ASSERT(!isInside(buffer));
   *pSlotsElems = reinterpret_cast<uintptr_t>(buffer);
 }
-
-js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
-    : GenericTracer(rt, JS::TracerKind::Tenuring,
-                    JS::WeakMapTraceAction::TraceKeysAndValues),
-      nursery_(*nursery),
-      tenuredSize(0),
-      tenuredCells(0),
-      objHead(nullptr),
-      objTail(&objHead),
-      stringHead(nullptr),
-      stringTail(&stringHead) {}
 
 inline double js::Nursery::calcPromotionRate(bool* validForTenuring) const {
   MOZ_ASSERT(validForTenuring);
