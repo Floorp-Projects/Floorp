@@ -822,3 +822,6 @@ SET TIMEOUT: mediacapture-insertable-streams/MediaStreamTrackProcessor-video.htt
 
 CSS-COLLIDING-REF-NAME: css/css-backgrounds/reference/background-image-001-ref.html
 CSS-COLLIDING-REF-NAME: css/css-break/background-image-001-ref.html
+
+# Ported crashtests from Mozilla
+SET TIMEOUT: editing/crashtests/outdent-across-svg-boundary.html
