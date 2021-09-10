@@ -21,7 +21,6 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "prenv.h"
-#include "plstr.h"
 #include "prlink.h"
 #include "nsCRT.h"
 #include <math.h>
@@ -376,10 +375,10 @@ template <>
 class nsDefaultComparator<BloatEntry*, BloatEntry*> {
  public:
   bool Equals(BloatEntry* const& aEntry1, BloatEntry* const& aEntry2) const {
-    return PL_strcmp(aEntry1->GetClassName(), aEntry2->GetClassName()) == 0;
+    return strcmp(aEntry1->GetClassName(), aEntry2->GetClassName()) == 0;
   }
   bool LessThan(BloatEntry* const& aEntry1, BloatEntry* const& aEntry2) const {
-    return PL_strcmp(aEntry1->GetClassName(), aEntry2->GetClassName()) < 0;
+    return strcmp(aEntry1->GetClassName(), aEntry2->GetClassName()) < 0;
   }
 };
 

@@ -658,7 +658,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mHideChrome = false;
   mFullscreenMode = false;
   mMousePresent = false;
-  mMouseInDraggableArea = false;
+  mSimulatedClientArea = false;
   mDestroyCalled = false;
   mIsEarlyBlankWindow = false;
   mIsShowingPreXULSkeletonUI = false;
@@ -5497,8 +5497,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOUSEMOVE: {
       LPARAM lParamScreen = lParamToScreen(lParam);
-      mMouseInDraggableArea = WithinDraggableRegion(GET_X_LPARAM(lParamScreen),
-                                                    GET_Y_LPARAM(lParamScreen));
+      mSimulatedClientArea = IsSimulatedClientArea(GET_X_LPARAM(lParamScreen),
+                                                   GET_Y_LPARAM(lParamScreen));
 
       if (!mMousePresent && !sIsInMouseCapture) {
         // First MOUSEMOVE over the client area. Ask for MOUSELEAVE
@@ -5533,7 +5533,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_NCMOUSEMOVE: {
       LPARAM lParamClient = lParamToClient(lParam);
-      if (WithinDraggableRegion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
+      if (IsSimulatedClientArea(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
         if (!sIsInMouseCapture) {
           TRACKMOUSEEVENT mTrack;
           mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -5549,10 +5549,10 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         // We've transitioned from a draggable area to somewhere else within
         // the non-client area - perhaps one of the edges of the window for
         // resizing.
-        mMouseInDraggableArea = false;
+        mSimulatedClientArea = false;
       }
 
-      if (mMousePresent && !sIsInMouseCapture && !mMouseInDraggableArea) {
+      if (mMousePresent && !sIsInMouseCapture && !mSimulatedClientArea) {
         SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
       }
     } break;
@@ -5574,7 +5574,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_NCMOUSELEAVE: {
-      mMouseInDraggableArea = false;
+      mSimulatedClientArea = false;
 
       if (EventIsInsideWindow(this)) {
         // If we're handling WM_NCMOUSELEAVE and the mouse is still over the
@@ -5599,7 +5599,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     }
     case WM_MOUSELEAVE: {
       if (!mMousePresent) break;
-      if (mMouseInDraggableArea) break;
+      if (mSimulatedClientArea) break;
       mMousePresent = false;
 
       // Check if the mouse is over the fullscreen transition window, if so
@@ -5922,13 +5922,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // that non-popup-based panels can react to it. This doesn't send an
       // actual mousedown event because that would break dragging or interfere
       // with other mousedown handling in the caption area.
-      if (WithinDraggableRegion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
+      if (ClientMarginHitTestPoint(GET_X_LPARAM(lParam),
+                                   GET_Y_LPARAM(lParam)) == HTCAPTION) {
         DispatchCustomEvent(u"draggableregionleftmousedown"_ns);
       }
 
       // WM_NCHITTEST handles HTMAXBUTTON so we need to handle clicks here.
       // WM_LBUTTONDOWNs will not be sent for this region.
-      if (wParam == HTMAXBUTTON) {
+      if (wParam == HTMAXBUTTON && mCustomNonClient) {
         DispatchMouseEvent(eMouseDown, wParam, lParamToClient(lParam), false,
                            MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
         DispatchPendingEvents();
@@ -6457,8 +6458,9 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
   return testResult;
 }
 
-bool nsWindow::WithinDraggableRegion(int32_t screenX, int32_t screenY) {
-  return ClientMarginHitTestPoint(screenX, screenY) == HTCAPTION;
+bool nsWindow::IsSimulatedClientArea(int32_t screenX, int32_t screenY) {
+  int32_t testResult = ClientMarginHitTestPoint(screenX, screenY);
+  return testResult == HTCAPTION || testResult == HTMAXBUTTON;
 }
 
 TimeStamp nsWindow::GetMessageTimeStamp(LONG aEventTime) const {

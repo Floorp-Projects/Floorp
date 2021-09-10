@@ -1666,6 +1666,7 @@ static Result<Ok, PreXULSkeletonUIError> ValidateCmdlineArguments(
 
 static Result<Ok, PreXULSkeletonUIError> ValidateEnvVars() {
   if (EnvHasValue("MOZ_SAFE_MODE_RESTART") ||
+      EnvHasValue("MOZ_APP_SILENT_START") ||
       EnvHasValue("MOZ_RESET_PROFILE_RESTART") || EnvHasValue("MOZ_HEADLESS") ||
       (EnvHasValue("XRE_PROFILE_PATH") &&
        !EnvHasValue("MOZ_SKELETON_UI_RESTARTING"))) {
@@ -1861,6 +1862,8 @@ static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
         static_cast<uint32_t>(PreXULSkeletonUIProgress::Completed));
   });
 
+  MOZ_TRY(GetSkeletonUILock());
+
   bool explicitProfile = false;
   MOZ_TRY(ValidateCmdlineArguments(argc, argv, &explicitProfile));
   MOZ_TRY(ValidateEnvVars());
@@ -1879,7 +1882,6 @@ static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
   sAnimatedRects = new Vector<ColorRect>();
 
   MOZ_TRY(LoadGdi32AndUser32Procedures());
-  MOZ_TRY(GetSkeletonUILock());
 
   if (!explicitProfile) {
     MOZ_TRY(CheckForStartWithLastProfile());

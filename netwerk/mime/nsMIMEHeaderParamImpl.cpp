@@ -1255,7 +1255,7 @@ nsresult DecodeRFC2047Str(const char* aHeader,
       // bug 227290. ignore an extraneous '=' at the end.
       // (# of characters in B-encoded part has to be a multiple of 4)
       int32_t n = r - (q + 2);
-      R -= (n % 4 == 1 && !PL_strncmp(r - 3, "===", 3)) ? 1 : 0;
+      R -= (n % 4 == 1 && !strncmp(r - 3, "===", 3)) ? 1 : 0;
     }
     // Bug 493544. Don't decode the encoded text until it ends
     if (R[-1] != '=' &&

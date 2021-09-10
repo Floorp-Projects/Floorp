@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
-import os
 import sys
 from operator import eq, lt
 
@@ -14,13 +13,13 @@ from .bundle import from_bundle
 from .util import Version, Wheel, discover_wheels
 
 
-def get_wheel(distribution, version, for_py_version, search_dirs, download, app_data, do_periodic_update):
+def get_wheel(distribution, version, for_py_version, search_dirs, download, app_data, do_periodic_update, env):
     """
     Get a wheel with the given distribution-version-for_py_version trio, by using the extra search dir + download
     """
     # not all wheels are compatible with all python versions, so we need to py version qualify it
     # 1. acquire from bundle
-    wheel = from_bundle(distribution, version, for_py_version, search_dirs, app_data, do_periodic_update)
+    wheel = from_bundle(distribution, version, for_py_version, search_dirs, app_data, do_periodic_update, env)
 
     # 2. download from the internet
     if version not in Version.non_version and download:
@@ -31,11 +30,12 @@ def get_wheel(distribution, version, for_py_version, search_dirs, download, app_
             search_dirs=search_dirs,
             app_data=app_data,
             to_folder=app_data.house,
+            env=env,
         )
     return wheel
 
 
-def download_wheel(distribution, version_spec, for_py_version, search_dirs, app_data, to_folder):
+def download_wheel(distribution, version_spec, for_py_version, search_dirs, app_data, to_folder, env):
     to_download = "{}{}".format(distribution, version_spec or "")
     logging.debug("download wheel %s %s to %s", to_download, for_py_version, to_folder)
     cmd = [
@@ -55,7 +55,7 @@ def download_wheel(distribution, version_spec, for_py_version, search_dirs, app_
         to_download,
     ]
     # pip has no interface in python - must be a new sub-process
-    env = pip_wheel_env_run(search_dirs, app_data)
+    env = pip_wheel_env_run(search_dirs, app_data, env)
     process = Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     out, err = process.communicate()
     if process.returncode != 0:
@@ -96,9 +96,9 @@ def find_compatible_in_house(distribution, version_spec, for_py_version, in_fold
     return None if start == end else wheels[start]
 
 
-def pip_wheel_env_run(search_dirs, app_data):
+def pip_wheel_env_run(search_dirs, app_data, env):
     for_py_version = "{}.{}".format(*sys.version_info[0:2])
-    env = os.environ.copy()
+    env = env.copy()
     env.update(
         {
             ensure_str(k): str(v)  # python 2 requires these to be string only (non-unicode)
@@ -113,6 +113,7 @@ def pip_wheel_env_run(search_dirs, app_data):
         download=False,
         app_data=app_data,
         do_periodic_update=False,
+        env=env,
     )
     if wheel is None:
         raise RuntimeError("could not find the embedded pip")

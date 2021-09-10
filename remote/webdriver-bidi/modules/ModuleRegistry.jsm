@@ -19,16 +19,15 @@ const modules = {
 // Modules are not exported here and the lazy getters are only here to avoid
 // errors in browser_all_files_referenced.js
 XPCOMUtils.defineLazyModuleGetters(modules.root, {
+  log: "chrome://remote/content/webdriver-bidi/modules/root/log.jsm",
   session: "chrome://remote/content/webdriver-bidi/modules/root/session.jsm",
 });
 
-// Upcoming modules in windowglobal-in-root or windowglobal will be set via:
-//
-// XPCOMUtils.defineLazyModuleGetters(modules["windowglobal-in-root"], {
-//   log:
-//     "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.jsm",
-// });
+XPCOMUtils.defineLazyModuleGetters(modules["windowglobal-in-root"], {
+  log:
+    "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.jsm",
+});
 
-// XPCOMUtils.defineLazyModuleGetters(modules.windowglobal, {
-//   log: "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.jsm",
-// });
+XPCOMUtils.defineLazyModuleGetters(modules.windowglobal, {
+  log: "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.jsm",
+});

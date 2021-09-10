@@ -25,6 +25,7 @@ class Discover(object):
         """
         self._has_run = False
         self._interpreter = None
+        self._env = options.env
 
     @abstractmethod
     def run(self):

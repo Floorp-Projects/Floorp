@@ -89,6 +89,7 @@ class FromAppData(BaseEmbed):
                         download=download,
                         app_data=self.app_data,
                         do_periodic_update=self.periodic_update,
+                        env=self.env,
                     )
                     if result is not None:
                         break

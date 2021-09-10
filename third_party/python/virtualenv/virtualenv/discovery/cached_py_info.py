@@ -23,9 +23,9 @@ _CACHE = OrderedDict()
 _CACHE[Path(sys.executable)] = PythonInfo()
 
 
-def from_exe(cls, app_data, exe, raise_on_error=True, ignore_cache=False):
-    """"""
-    result = _get_from_cache(cls, app_data, exe, ignore_cache=ignore_cache)
+def from_exe(cls, app_data, exe, env=None, raise_on_error=True, ignore_cache=False):
+    env = os.environ if env is None else env
+    result = _get_from_cache(cls, app_data, exe, env, ignore_cache=ignore_cache)
     if isinstance(result, Exception):
         if raise_on_error:
             raise result
@@ -35,14 +35,14 @@ def from_exe(cls, app_data, exe, raise_on_error=True, ignore_cache=False):
     return result
 
 
-def _get_from_cache(cls, app_data, exe, ignore_cache=True):
+def _get_from_cache(cls, app_data, exe, env, ignore_cache=True):
     # note here we cannot resolve symlinks, as the symlink may trigger different prefix information if there's a
-    # pyenv.cfg somewhere alongside on python3.4+
+    # pyenv.cfg somewhere alongside on python3.5+
     exe_path = Path(exe)
     if not ignore_cache and exe_path in _CACHE:  # check in the in-memory cache
         result = _CACHE[exe_path]
     else:  # otherwise go through the app data cache
-        py_info = _get_via_file_cache(cls, app_data, exe_path, exe)
+        py_info = _get_via_file_cache(cls, app_data, exe_path, exe, env)
         result = _CACHE[exe_path] = py_info
     # independent if it was from the file or in-memory cache fix the original executable location
     if isinstance(result, PythonInfo):
@@ -50,7 +50,7 @@ def _get_from_cache(cls, app_data, exe, ignore_cache=True):
     return result
 
 
-def _get_via_file_cache(cls, app_data, path, exe):
+def _get_via_file_cache(cls, app_data, path, exe, env):
     path_text = ensure_text(str(path))
     try:
         path_modified = path.stat().st_mtime
@@ -65,10 +65,14 @@ def _get_via_file_cache(cls, app_data, path, exe):
             of_path, of_st_mtime, of_content = data["path"], data["st_mtime"], data["content"]
             if of_path == path_text and of_st_mtime == path_modified:
                 py_info = cls._from_dict({k: v for k, v in of_content.items()})
+                sys_exe = py_info.system_executable
+                if sys_exe is not None and not os.path.exists(sys_exe):
+                    py_info_store.remove()
+                    py_info = None
             else:
                 py_info_store.remove()
         if py_info is None:  # if not loaded run and save
-            failure, py_info = _run_subprocess(cls, exe, app_data)
+            failure, py_info = _run_subprocess(cls, exe, app_data, env)
             if failure is None:
                 data = {"st_mtime": path_modified, "path": path_text, "content": py_info._to_dict()}
                 py_info_store.write(data)
@@ -77,12 +81,12 @@ def _get_via_file_cache(cls, app_data, path, exe):
     return py_info
 
 
-def _run_subprocess(cls, exe, app_data):
+def _run_subprocess(cls, exe, app_data, env):
     py_info_script = Path(os.path.abspath(__file__)).parent / "py_info.py"
     with app_data.ensure_extracted(py_info_script) as py_info_script:
         cmd = [exe, str(py_info_script)]
         # prevent sys.prefix from leaking into the child process - see https://bugs.python.org/issue22490
-        env = os.environ.copy()
+        env = env.copy()
         env.pop("__PYVENV_LAUNCHER__", None)
         logging.debug("get interpreter info via cmd: %s", LogCmd(cmd))
         try:

@@ -322,7 +322,7 @@ impl HitTestRegion {
 pub struct HitTester {
     #[ignore_malloc_size_of = "Arc"]
     scene: Arc<HitTestingScene>,
-    spatial_nodes: Vec<HitTestSpatialNode>,
+    spatial_nodes: FastHashMap<SpatialNodeIndex, HitTestSpatialNode>,
     pipeline_root_nodes: FastHashMap<PipelineId, SpatialNodeIndex>,
 }
 
@@ -330,7 +330,7 @@ impl HitTester {
     pub fn empty() -> Self {
         HitTester {
             scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
-            spatial_nodes: Vec::new(),
+            spatial_nodes: FastHashMap::default(),
             pipeline_root_nodes: FastHashMap::default(),
         }
     }
@@ -341,7 +341,7 @@ impl HitTester {
     ) -> HitTester {
         let mut hit_tester = HitTester {
             scene,
-            spatial_nodes: Vec::new(),
+            spatial_nodes: FastHashMap::default(),
             pipeline_root_nodes: FastHashMap::default(),
         };
         hit_tester.read_spatial_tree(spatial_tree);
@@ -364,7 +364,7 @@ impl HitTester {
             //  - if the coordinate system is non-invertible, no need to try any of these concrete transforms
             //  - if there are other places where inversion is needed, let's not repeat the step
 
-            self.spatial_nodes.push(HitTestSpatialNode {
+            self.spatial_nodes.insert(index, HitTestSpatialNode {
                 pipeline_id: node.pipeline_id,
                 world_content_transform: spatial_tree
                     .get_world_transform(index)
@@ -387,7 +387,7 @@ impl HitTester {
 
         // For each hit test primitive
         for item in self.scene.items.iter().rev() {
-            let scroll_node = &self.spatial_nodes[item.spatial_node_index.0 as usize];
+            let scroll_node = &self.spatial_nodes[&item.spatial_node_index];
             let pipeline_id = scroll_node.pipeline_id;
             match (test.pipeline_id, pipeline_id) {
                 (Some(id), node_id) if node_id != id => continue,
@@ -420,7 +420,7 @@ impl HitTester {
                 let clip_nodes = &self.scene.clip_nodes[item.clip_nodes_range.start.0 as usize .. item.clip_nodes_range.end.0 as usize];
                 for clip_node in clip_nodes {
                     let transform = self
-                        .spatial_nodes[clip_node.spatial_node_index.0 as usize]
+                        .spatial_nodes[&clip_node.spatial_node_index]
                         .world_content_transform;
                     let transformed_point = match transform
                         .inverse()
@@ -451,7 +451,7 @@ impl HitTester {
                 // result.
                 let root_spatial_node_index = self.pipeline_root_nodes[&pipeline_id];
                 if root_spatial_node_index != current_root_spatial_node_index {
-                    let root_node = &self.spatial_nodes[root_spatial_node_index.0 as usize];
+                    let root_node = &self.spatial_nodes[&root_spatial_node_index];
                     point_in_viewport = root_node
                         .world_viewport_transform
                         .inverse()

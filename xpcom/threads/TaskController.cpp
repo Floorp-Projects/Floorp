@@ -29,11 +29,6 @@
 #  include "objbase.h"
 #endif
 
-#ifdef XP_WIN
-typedef HRESULT(WINAPI* SetThreadDescriptionPtr)(HANDLE hThread,
-                                                 PCWSTR lpThreadDescription);
-#endif
-
 namespace mozilla {
 
 std::unique_ptr<TaskController> TaskController::sSingleton;
@@ -123,10 +118,6 @@ void ThreadFuncPoolThread(void* aIndex) {
   TaskController::Get()->RunPoolThread();
 }
 
-#ifdef XP_WIN
-static SetThreadDescriptionPtr sSetThreadDescriptionFunc = nullptr;
-#endif
-
 bool TaskController::InitializeInternal() {
   InputTaskManager::Init();
   VsyncTaskManager::Init();
@@ -136,12 +127,6 @@ bool TaskController::InitializeInternal() {
   mMTBlockingProcessingRunnable = NS_NewRunnableFunction(
       "TaskController::ExecutePendingMTTasks()",
       []() { TaskController::Get()->ProcessPendingMTTask(true); });
-
-#ifdef XP_WIN
-  sSetThreadDescriptionFunc =
-      reinterpret_cast<SetThreadDescriptionPtr>(::GetProcAddress(
-          ::GetModuleHandle(L"Kernel32.dll"), "SetThreadDescription"));
-#endif
 
   return true;
 }
@@ -228,20 +213,11 @@ void TaskController::RunPoolThread() {
   RefPtr<Task> lastTask;
 
 #ifdef XP_WIN
-  nsAutoString threadWName;
-  threadWName.AppendLiteral(u"TaskController Thread #");
-  threadWName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
-
-  if (sSetThreadDescriptionFunc) {
-    sSetThreadDescriptionFunc(
-        ::GetCurrentThread(),
-        reinterpret_cast<const WCHAR*>(threadWName.BeginReading()));
-  }
   ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 #endif
 
   nsAutoCString threadName;
-  threadName.AppendLiteral("TaskController Thread #");
+  threadName.AppendLiteral("TaskController #");
   threadName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
   AUTO_PROFILER_REGISTER_THREAD(threadName.BeginReading());
 
