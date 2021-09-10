@@ -15,6 +15,13 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 function sleep(ms) {
   return new Promise(resolve => {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
