@@ -301,8 +301,9 @@ panelview .toolbaritem-combined-buttons,
   position: absolute;
   background-image: url(chrome://browser/skin/success-animation.svg);
   background-repeat: no-repeat;
-  min-width: 266px;
-  max-width: 266px;
+  /* frames are 16px wide by 14px high */
+  min-width: 304px;
+  max-width: 304px;
   min-height: 14px;
   max-height: 14px;
   animation-name: confirmation-hint-checkmark-animation;
@@ -322,7 +323,7 @@ panelview .toolbaritem-combined-buttons,
 
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image:-moz-locale-dir(rtl) {
   animation-name: confirmation-hint-checkmark-animation-rtl;
-  transform: translateX(252px);
+  transform: translateX(288px);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -337,13 +338,13 @@ panelview .toolbaritem-combined-buttons,
     transform: translateX(0);
   }
   to {
-    transform: translateX(-252px);
+    transform: translateX(-288px);
   }
 }
 
 @keyframes confirmation-hint-checkmark-animation-rtl {
   from {
-    transform: translateX(252px);
+    transform: translateX(288px);
   }
   to {
     transform: translateX(0);
