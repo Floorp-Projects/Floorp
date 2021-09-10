@@ -149,7 +149,8 @@ mochitest-browser-chrome:
                 by-test-platform:
                     linux.*64(-asan)?-qr/(opt|debug): ['all']
                     linux.*64-tsan-qr/opt: ['trunk']
-                    linux.*64(-shippable|-ccov)-qr/opt: ['release']
+                    linux.*64-shippable-qr/opt: ['release']
+                    linux.*64-ccov-qr/opt: []
                     default: built-projects
             webrender-sw-fission:
                 by-test-platform:
