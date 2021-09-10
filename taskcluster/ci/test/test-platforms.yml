@@ -132,9 +132,7 @@ windows7-32-shippable-qr/opt:
 windows10-32-shippable-qr/opt:
     build-platform: win32-shippable/opt
     test-sets:
-        - awsy
         - browsertime
-        - desktop-screenshot-capture
         - raptor-chrome
         - raptor-firefox
         - web-platform-tests
@@ -144,9 +142,7 @@ windows10-32-shippable-qr/opt:
 windows10-32-qr/opt:
     build-platform: win32/opt
     test-sets:
-        - awsy
         - browsertime
-        - desktop-screenshot-capture
         - raptor-firefox
         - web-platform-tests
         - web-platform-tests-wdspec-headless
@@ -156,22 +152,28 @@ windows10-32-qr/debug:
     build-platform: win32/debug
     test-sets:
         - web-platform-tests
-        - windows-7-tests
 
 windows10-32-2004-shippable-qr/opt:
     build-platform: win32-shippable/opt
     test-sets:
+        - awsy
+        - desktop-screenshot-capture
         - windows32-2004-tests
+
 
 windows10-32-2004-qr/opt:
     build-platform: win32/opt
     test-sets:
+        - awsy
+        - desktop-screenshot-capture
         - windows32-2004-tests
 
 windows10-32-2004-qr/debug:
     build-platform: win32/debug
     test-sets:
+        - windows-7-tests
         - windows32-2004-tests
+        - windows10-32-2004-failure-tests
 
 # win64
 windows10-64-ccov-qr/opt:
