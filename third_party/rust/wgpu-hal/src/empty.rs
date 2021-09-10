@@ -103,6 +103,10 @@ impl crate::Queue<Api> for Context {
     ) -> Result<(), crate::SurfaceError> {
         Ok(())
     }
+
+    unsafe fn get_timestamp_period(&self) -> f32 {
+        1.0
+    }
 }
 
 impl crate::Device<Api> for Context {
@@ -245,7 +249,14 @@ impl crate::CommandEncoder<Api> for Encoder {
     {
     }
 
-    unsafe fn fill_buffer(&mut self, buffer: &Resource, range: crate::MemoryRange, value: u8) {}
+    unsafe fn clear_buffer(&mut self, buffer: &Resource, range: crate::MemoryRange) {}
+
+    unsafe fn clear_texture(
+        &mut self,
+        texture: &Resource,
+        subresource_range: &wgt::ImageSubresourceRange,
+    ) {
+    }
 
     unsafe fn copy_buffer_to_buffer<T>(&mut self, src: &Resource, dst: &Resource, regions: T) {}
 

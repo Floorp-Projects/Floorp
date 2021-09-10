@@ -3,7 +3,7 @@ use super::{
     make_local, Block, BlockContext, CachedExpressions, EntryPointContext, Error, Function,
     FunctionArgument, GlobalVariable, IdGenerator, Instruction, LocalType, LocalVariable,
     LogicalLayout, LookupFunctionType, LookupType, LoopContext, Options, PhysicalLayout,
-    ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
+    PipelineOptions, ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
 };
 use crate::{
     arena::{Arena, Handle},
@@ -12,15 +12,6 @@ use crate::{
 };
 use spirv::Word;
 use std::collections::hash_map::Entry;
-
-fn map_dim(dim: crate::ImageDimension) -> spirv::Dim {
-    match dim {
-        crate::ImageDimension::D1 => spirv::Dim::Dim1D,
-        crate::ImageDimension::D2 => spirv::Dim::Dim2D,
-        crate::ImageDimension::D3 => spirv::Dim::Dim3D,
-        crate::ImageDimension::Cube => spirv::Dim::DimCube,
-    }
-}
 
 impl Function {
     fn to_words(&self, sink: &mut impl Extend<Word>) {
@@ -66,8 +57,7 @@ impl Writer {
             debugs: vec![],
             annotations: vec![],
             flags: options.flags,
-            index_bounds_check_policy: options.index_bounds_check_policy,
-            image_bounds_check_policy: options.image_bounds_check_policy,
+            bounds_check_policies: options.bounds_check_policies,
             void_type,
             lookup_type: crate::FastHashMap::default(),
             lookup_function: crate::FastHashMap::default(),
@@ -103,8 +93,7 @@ impl Writer {
         let fresh = Writer {
             // Copied from the old Writer:
             flags: self.flags,
-            index_bounds_check_policy: self.index_bounds_check_policy,
-            image_bounds_check_policy: self.image_bounds_check_policy,
+            bounds_check_policies: self.bounds_check_policies,
             capabilities_available: take(&mut self.capabilities_available),
 
             // Initialized afresh:
@@ -175,12 +164,18 @@ impl Writer {
     }
 
     pub(super) fn get_type_id(&mut self, lookup_ty: LookupType) -> Word {
-        if let Entry::Occupied(e) = self.lookup_type.entry(lookup_ty) {
-            *e.get()
-        } else {
-            match lookup_ty {
-                LookupType::Handle(_handle) => unreachable!("Handles are populated at start"),
-                LookupType::Local(local_ty) => self.write_type_declaration_local(local_ty),
+        match self.lookup_type.entry(lookup_ty) {
+            Entry::Occupied(e) => *e.get(),
+            Entry::Vacant(e) => {
+                let local = match lookup_ty {
+                    LookupType::Handle(_handle) => unreachable!("Handles are populated at start"),
+                    LookupType::Local(local) => local,
+                };
+
+                let id = self.id_gen.next();
+                e.insert(id);
+                self.write_type_declaration_local(id, local);
+                id
             }
         }
     }
@@ -587,8 +582,51 @@ impl Writer {
         }
     }
 
-    fn write_type_declaration_local(&mut self, local_ty: LocalType) -> Word {
-        let id = self.id_gen.next();
+    fn request_image_capabilities(&mut self, inner: &crate::TypeInner) -> Result<(), Error> {
+        if let crate::TypeInner::Image {
+            dim,
+            arrayed,
+            class,
+        } = *inner
+        {
+            let sampled = match class {
+                crate::ImageClass::Sampled { .. } => true,
+                crate::ImageClass::Depth { .. } => true,
+                crate::ImageClass::Storage { format, .. } => {
+                    self.request_image_format_capabilities(format.into())?;
+                    false
+                }
+            };
+
+            match dim {
+                crate::ImageDimension::D1 => {
+                    if sampled {
+                        self.require_any("sampled 1D images", &[spirv::Capability::Sampled1D])?;
+                    } else {
+                        self.require_any("1D storage images", &[spirv::Capability::Image1D])?;
+                    }
+                }
+                crate::ImageDimension::Cube if arrayed => {
+                    if sampled {
+                        self.require_any(
+                            "sampled cube array images",
+                            &[spirv::Capability::SampledCubeArray],
+                        )?;
+                    } else {
+                        self.require_any(
+                            "cube array storage images",
+                            &[spirv::Capability::ImageCubeArray],
+                        )?;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
+    fn write_type_declaration_local(&mut self, id: Word, local_ty: LocalType) {
         let instruction = match local_ty {
             LocalType::Value {
                 vector_size: None,
@@ -641,16 +679,23 @@ impl Writer {
                 }));
                 Instruction::type_pointer(id, class, type_id)
             }
-            // all the samplers and image types go through `write_type_declaration_arena`
-            LocalType::Image { .. } | LocalType::Sampler => unreachable!(),
+            LocalType::Image(image) => {
+                let local_type = LocalType::Value {
+                    vector_size: None,
+                    kind: image.sampled_type,
+                    width: 4,
+                    pointer_class: None,
+                };
+                let type_id = self.get_type_id(LookupType::Local(local_type));
+                Instruction::type_image(id, type_id, image.dim, image.flags, image.image_format)
+            }
+            LocalType::Sampler => Instruction::type_sampler(id),
             LocalType::SampledImage { image_type_id } => {
                 Instruction::type_sampled_image(id, image_type_id)
             }
         };
 
-        self.lookup_type.insert(LookupType::Local(local_ty), id);
         instruction.to_words(&mut self.logical_layout.declarations);
-        id
     }
 
     fn write_type_declaration_arena(
@@ -662,22 +707,125 @@ impl Writer {
         let decorate_layout = true; //TODO?
 
         let id = if let Some(local) = make_local(&ty.inner) {
+            // This type can be represented as a `LocalType`, so check if we've
+            // already written an instruction for it. If not, do so now, with
+            // `write_type_declaration_local`.
             match self.lookup_type.entry(LookupType::Local(local)) {
-                // if it's already known as local, re-use it
-                Entry::Occupied(e) => {
-                    let id = *e.into_mut();
-                    self.lookup_type.insert(LookupType::Handle(handle), id);
-                    return Ok(id);
-                }
-                // also register the type as "local", to avoid duplication
+                // We already have an id for this `LocalType`.
+                Entry::Occupied(e) => *e.get(),
+
+                // It's a type we haven't seen before.
                 Entry::Vacant(e) => {
                     let id = self.id_gen.next();
-                    *e.insert(id)
+                    e.insert(id);
+                    self.write_type_declaration_local(id, local);
+
+                    // If it's an image type, request SPIR-V capabilities here, so
+                    // write_type_declaration_local can stay infallible.
+                    self.request_image_capabilities(&ty.inner)?;
+
+                    id
                 }
             }
         } else {
-            self.id_gen.next()
+            use spirv::Decoration;
+
+            let id = self.id_gen.next();
+            let instruction = match ty.inner {
+                crate::TypeInner::Array { base, size, stride } => {
+                    if decorate_layout {
+                        self.decorate(id, Decoration::ArrayStride, &[stride]);
+                    }
+
+                    let type_id = self.get_type_id(LookupType::Handle(base));
+                    match size {
+                        crate::ArraySize::Constant(const_handle) => {
+                            let length_id = self.constant_ids[const_handle.index()];
+                            Instruction::type_array(id, type_id, length_id)
+                        }
+                        crate::ArraySize::Dynamic => Instruction::type_runtime_array(id, type_id),
+                    }
+                }
+                crate::TypeInner::Struct {
+                    top_level,
+                    ref members,
+                    span: _,
+                } => {
+                    if top_level {
+                        self.decorate(id, Decoration::Block, &[]);
+                    }
+
+                    let mut member_ids = Vec::with_capacity(members.len());
+                    for (index, member) in members.iter().enumerate() {
+                        if decorate_layout {
+                            self.annotations.push(Instruction::member_decorate(
+                                id,
+                                index as u32,
+                                Decoration::Offset,
+                                &[member.offset],
+                            ));
+                        }
+
+                        if self.flags.contains(WriterFlags::DEBUG) {
+                            if let Some(ref name) = member.name {
+                                self.debugs
+                                    .push(Instruction::member_name(id, index as u32, name));
+                            }
+                        }
+
+                        // The matrix decorations also go on arrays of matrices,
+                        // so lets check this first.
+                        let member_array_subty_inner = match arena[member.ty].inner {
+                            crate::TypeInner::Array { base, .. } => &arena[base].inner,
+                            ref other => other,
+                        };
+                        if let crate::TypeInner::Matrix {
+                            columns,
+                            rows: _,
+                            width,
+                        } = *member_array_subty_inner
+                        {
+                            let byte_stride = match columns {
+                                crate::VectorSize::Bi => 2 * width,
+                                crate::VectorSize::Tri | crate::VectorSize::Quad => 4 * width,
+                            };
+                            self.annotations.push(Instruction::member_decorate(
+                                id,
+                                index as u32,
+                                Decoration::ColMajor,
+                                &[],
+                            ));
+                            self.annotations.push(Instruction::member_decorate(
+                                id,
+                                index as u32,
+                                Decoration::MatrixStride,
+                                &[byte_stride as u32],
+                            ));
+                        }
+
+                        let member_id = self.get_type_id(LookupType::Handle(member.ty));
+                        member_ids.push(member_id);
+                    }
+                    Instruction::type_struct(id, member_ids.as_slice())
+                }
+
+                // These all have TypeLocal representations, so they should have been
+                // handled by `write_type_declaration_local` above.
+                crate::TypeInner::Scalar { .. }
+                | crate::TypeInner::Atomic { .. }
+                | crate::TypeInner::Vector { .. }
+                | crate::TypeInner::Matrix { .. }
+                | crate::TypeInner::Pointer { .. }
+                | crate::TypeInner::ValuePointer { .. }
+                | crate::TypeInner::Image { .. }
+                | crate::TypeInner::Sampler { .. } => unreachable!(),
+            };
+
+            instruction.to_words(&mut self.logical_layout.declarations);
+            id
         };
+
+        // Add this handle as a new alias for that type.
         self.lookup_type.insert(LookupType::Handle(handle), id);
 
         if self.flags.contains(WriterFlags::DEBUG) {
@@ -686,178 +834,63 @@ impl Writer {
             }
         }
 
-        use spirv::Decoration;
-
-        let instruction = match ty.inner {
-            crate::TypeInner::Scalar { kind, width } | crate::TypeInner::Atomic { kind, width } => {
-                self.make_scalar(id, kind, width)
-            }
-            crate::TypeInner::Vector { size, kind, width } => {
-                let scalar_id = self.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: None,
-                    kind,
-                    width,
-                    pointer_class: None,
-                }));
-                Instruction::type_vector(id, scalar_id, size)
-            }
-            crate::TypeInner::Matrix {
-                columns,
-                rows,
-                width,
-            } => {
-                let vector_id = self.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: Some(rows),
-                    kind: crate::ScalarKind::Float,
-                    width,
-                    pointer_class: None,
-                }));
-                Instruction::type_matrix(id, vector_id, columns)
-            }
-            crate::TypeInner::Image {
-                dim,
-                arrayed,
-                class,
-            } => {
-                let (kind, sampled) = match class {
-                    crate::ImageClass::Sampled { kind, multi: _ } => (kind, true),
-                    crate::ImageClass::Depth { multi: _ } => (crate::ScalarKind::Float, true),
-                    crate::ImageClass::Storage { format, .. } => (format.into(), false),
-                };
-                let local_type = LocalType::Value {
-                    vector_size: None,
-                    kind,
-                    width: 4,
-                    pointer_class: None,
-                };
-                let dim = map_dim(dim);
-                match dim {
-                    spirv::Dim::Dim1D => {
-                        if sampled {
-                            self.require_any("sampled 1D images", &[spirv::Capability::Sampled1D])?;
-                        } else {
-                            self.require_any("1D storage images", &[spirv::Capability::Image1D])?;
-                        }
-                    }
-                    spirv::Dim::DimCube if arrayed => {
-                        if sampled {
-                            self.require_any(
-                                "sampled cube array images",
-                                &[spirv::Capability::SampledCubeArray],
-                            )?;
-                        } else {
-                            self.require_any(
-                                "cube array storage images",
-                                &[spirv::Capability::ImageCubeArray],
-                            )?;
-                        }
-                    }
-                    _ => {}
-                }
-                let type_id = self.get_type_id(LookupType::Local(local_type));
-                Instruction::type_image(id, type_id, dim, arrayed, class)
-            }
-            crate::TypeInner::Sampler { comparison: _ } => Instruction::type_sampler(id),
-            crate::TypeInner::Array { base, size, stride } => {
-                if decorate_layout {
-                    self.decorate(id, Decoration::ArrayStride, &[stride]);
-                }
-
-                let type_id = self.get_type_id(LookupType::Handle(base));
-                match size {
-                    crate::ArraySize::Constant(const_handle) => {
-                        let length_id = self.constant_ids[const_handle.index()];
-                        Instruction::type_array(id, type_id, length_id)
-                    }
-                    crate::ArraySize::Dynamic => Instruction::type_runtime_array(id, type_id),
-                }
-            }
-            crate::TypeInner::Struct {
-                top_level,
-                ref members,
-                span: _,
-            } => {
-                if top_level {
-                    self.decorate(id, Decoration::Block, &[]);
-                }
-
-                let mut member_ids = Vec::with_capacity(members.len());
-                for (index, member) in members.iter().enumerate() {
-                    if decorate_layout {
-                        self.annotations.push(Instruction::member_decorate(
-                            id,
-                            index as u32,
-                            Decoration::Offset,
-                            &[member.offset],
-                        ));
-                    }
-
-                    if self.flags.contains(WriterFlags::DEBUG) {
-                        if let Some(ref name) = member.name {
-                            self.debugs
-                                .push(Instruction::member_name(id, index as u32, name));
-                        }
-                    }
-
-                    // The matrix decorations also go on arrays of matrices,
-                    // so lets check this first.
-                    let member_array_subty_inner = match arena[member.ty].inner {
-                        crate::TypeInner::Array { base, .. } => &arena[base].inner,
-                        ref other => other,
-                    };
-                    if let crate::TypeInner::Matrix {
-                        columns,
-                        rows: _,
-                        width,
-                    } = *member_array_subty_inner
-                    {
-                        let byte_stride = match columns {
-                            crate::VectorSize::Bi => 2 * width,
-                            crate::VectorSize::Tri | crate::VectorSize::Quad => 4 * width,
-                        };
-                        self.annotations.push(Instruction::member_decorate(
-                            id,
-                            index as u32,
-                            Decoration::ColMajor,
-                            &[],
-                        ));
-                        self.annotations.push(Instruction::member_decorate(
-                            id,
-                            index as u32,
-                            Decoration::MatrixStride,
-                            &[byte_stride as u32],
-                        ));
-                    }
-
-                    let member_id = self.get_type_id(LookupType::Handle(member.ty));
-                    member_ids.push(member_id);
-                }
-                Instruction::type_struct(id, member_ids.as_slice())
-            }
-            crate::TypeInner::Pointer { base, class } => {
-                let type_id = self.get_type_id(LookupType::Handle(base));
-                let raw_class = map_storage_class(class);
-                Instruction::type_pointer(id, raw_class, type_id)
-            }
-            crate::TypeInner::ValuePointer {
-                size,
-                kind,
-                width,
-                class,
-            } => {
-                let raw_class = map_storage_class(class);
-                let type_id = self.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: size,
-                    kind,
-                    width,
-                    pointer_class: None,
-                }));
-                Instruction::type_pointer(id, raw_class, type_id)
-            }
-        };
-
-        instruction.to_words(&mut self.logical_layout.declarations);
         Ok(id)
+    }
+
+    fn request_image_format_capabilities(
+        &mut self,
+        format: spirv::ImageFormat,
+    ) -> Result<(), Error> {
+        use spirv::ImageFormat as If;
+        match format {
+            If::Rg32f
+            | If::Rg16f
+            | If::R11fG11fB10f
+            | If::R16f
+            | If::Rgba16
+            | If::Rgb10A2
+            | If::Rg16
+            | If::Rg8
+            | If::R16
+            | If::R8
+            | If::Rgba16Snorm
+            | If::Rg16Snorm
+            | If::Rg8Snorm
+            | If::R16Snorm
+            | If::R8Snorm
+            | If::Rg32i
+            | If::Rg16i
+            | If::Rg8i
+            | If::R16i
+            | If::R8i
+            | If::Rgb10a2ui
+            | If::Rg32ui
+            | If::Rg16ui
+            | If::Rg8ui
+            | If::R16ui
+            | If::R8ui => self.require_any(
+                "storage image format",
+                &[spirv::Capability::StorageImageExtendedFormats],
+            ),
+            If::R64ui | If::R64i => self.require_any(
+                "64-bit integer storage image format",
+                &[spirv::Capability::Int64ImageEXT],
+            ),
+            If::Unknown
+            | If::Rgba32f
+            | If::Rgba16f
+            | If::R32f
+            | If::Rgba8
+            | If::Rgba8Snorm
+            | If::Rgba32i
+            | If::Rgba16i
+            | If::Rgba8i
+            | If::R32i
+            | If::Rgba32ui
+            | If::Rgba16ui
+            | If::Rgba8ui
+            | If::R32ui => Ok(()),
+        }
     }
 
     pub(super) fn get_index_constant(&mut self, index: Word) -> Word {
@@ -1005,7 +1038,10 @@ impl Writer {
         Instruction::variable(pointer_type_id, id, class, None)
             .to_words(&mut self.logical_layout.declarations);
 
-        if self.flags.contains(WriterFlags::DEBUG) {
+        if self
+            .flags
+            .contains(WriterFlags::DEBUG | WriterFlags::LABEL_VARYINGS)
+        {
             if let Some(name) = debug_name {
                 self.debugs.push(Instruction::name(id, name));
             }
@@ -1180,6 +1216,7 @@ impl Writer {
         &mut self,
         ir_module: &crate::Module,
         mod_info: &ModuleInfo,
+        ep_index: Option<usize>,
     ) -> Result<(), Error> {
         let has_storage_buffers =
             ir_module
@@ -1245,22 +1282,46 @@ impl Writer {
         debug_assert_eq!(self.constant_ids.iter().position(|&id| id == 0), None);
 
         // now write all globals
-        for (_, var) in ir_module.global_variables.iter() {
-            let (instruction, id) = self.write_global_variable(ir_module, var)?;
-            instruction.to_words(&mut self.logical_layout.declarations);
-            self.global_variables.push(GlobalVariable::new(id));
+        for (handle, var) in ir_module.global_variables.iter() {
+            // If a single entry point was specified, only write `OpVariable` instructions
+            // for the globals it actually uses. Emit dummies for the others,
+            // to preserve the indices in `global_variables`.
+            let gvar = match ep_index {
+                Some(index) if mod_info.get_entry_point(index)[handle].is_empty() => {
+                    GlobalVariable::dummy()
+                }
+                _ => {
+                    let (instruction, id) = self.write_global_variable(ir_module, var)?;
+                    instruction.to_words(&mut self.logical_layout.declarations);
+                    GlobalVariable::new(id)
+                }
+            };
+            self.global_variables.push(gvar);
         }
 
         // all functions
         for (handle, ir_function) in ir_module.functions.iter() {
             let info = &mod_info[handle];
+            if let Some(index) = ep_index {
+                let ep_info = mod_info.get_entry_point(index);
+                // If this function uses globals that we omitted from the SPIR-V
+                // because the entry point and its callees didn't use them,
+                // then we must skip it.
+                if !ep_info.dominates_global_use(info) {
+                    log::info!("Skip function {:?}", ir_function.name);
+                    continue;
+                }
+            }
             let id = self.write_function(ir_function, info, ir_module, None)?;
             self.lookup_function.insert(handle, id);
         }
 
         // and entry points
-        for (ep_index, ir_ep) in ir_module.entry_points.iter().enumerate() {
-            let info = mod_info.get_entry_point(ep_index);
+        for (index, ir_ep) in ir_module.entry_points.iter().enumerate() {
+            if ep_index.is_some() && ep_index != Some(index) {
+                continue;
+            }
+            let info = mod_info.get_entry_point(index);
             let ep_instruction = self.write_entry_point(ir_ep, info, ir_module)?;
             ep_instruction.to_words(&mut self.logical_layout.entry_points);
         }
@@ -1299,11 +1360,25 @@ impl Writer {
         &mut self,
         ir_module: &crate::Module,
         info: &ModuleInfo,
+        pipeline_options: Option<&PipelineOptions>,
         words: &mut Vec<Word>,
     ) -> Result<(), Error> {
         self.reset();
 
-        self.write_logical_layout(ir_module, info)?;
+        // Try to find the entry point and corresponding index
+        let ep_index = match pipeline_options {
+            Some(po) => {
+                let index = ir_module
+                    .entry_points
+                    .iter()
+                    .position(|ep| po.shader_stage == ep.stage && po.entry_point == ep.name)
+                    .ok_or(Error::EntryPointNotFound)?;
+                Some(index)
+            }
+            None => None,
+        };
+
+        self.write_logical_layout(ir_module, info, ep_index)?;
         self.write_physical_layout();
 
         self.physical_layout.in_words(words);

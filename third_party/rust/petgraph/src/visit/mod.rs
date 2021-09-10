@@ -36,6 +36,29 @@
 //! [in]: trait.IntoNeighbors.html
 //! [vis]: trait.Visitable.html
 //!
+//! ### Graph Trait Implementations
+//!
+//! The following table lists the traits that are implemented for each graph type:
+//!
+//! |                       | Graph | StableGraph | GraphMap | MatrixGraph | Csr   | List  |
+//! | --------------------- | :---: | :---------: | :------: | :---------: | :---: | :---: |
+//! | GraphBase             | x     |  x          |    x     | x           | x     |  x    |
+//! | GraphProp             | x     |  x          |    x     | x           | x     |  x    |
+//! | NodeCount             | x     |  x          |    x     | x           | x     |  x    |
+//! | NodeIndexable         | x     |  x          |    x     | x           | x     |  x    |
+//! | NodeCompactIndexable  | x     |             |    x     |             | x     |  x    |
+//! | EdgeCount             | x     |  x          |    x     | x           | x     |  x    |
+//! | EdgeIndexable         | x     |  x          |    x     |             |       |       |
+//! | Data                  | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoNodeIdentifiers   | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoNodeReferences    | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoEdgeReferences    | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoNeighbors         | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoNeighborsDirected | x     |  x          |    x     | x           |       |       |
+//! | IntoEdges             | x     |  x          |    x     | x           | x     |  x    |
+//! | IntoEdgesDirected     | x     |  x          |    x     | x           |       |       |
+//! | Visitable             | x     |  x          |    x     | x           | x     |  x    |
+//! | GetAdjacencyMatrix    | x     |  x          |    x     | x           | x     |  x    |
 
 // filter, reversed have their `mod` lines at the end,
 // so that they can use the trait template macros
@@ -54,21 +77,10 @@ use fixedbitset::FixedBitSet;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 
-use super::{graph, EdgeType};
-use crate::graph::NodeIndex;
-#[cfg(feature = "graphmap")]
-use crate::prelude::GraphMap;
-#[cfg(feature = "stable_graph")]
-use crate::prelude::StableGraph;
-use crate::prelude::{Direction, Graph};
+use super::EdgeType;
+use crate::prelude::Direction;
 
-use crate::graph::Frozen;
 use crate::graph::IndexType;
-#[cfg(feature = "stable_graph")]
-use crate::stable_graph;
-
-#[cfg(feature = "graphmap")]
-use crate::graphmap::{self, NodeTrait};
 
 trait_template! {
 /// Base graph trait: defines the associated node identifier and
@@ -93,38 +105,6 @@ pub trait GraphRef: Copy + GraphBase {}
 
 impl<'a, G> GraphRef for &'a G where G: GraphBase {}
 
-impl<'a, G> GraphBase for Frozen<'a, G>
-where
-    G: GraphBase,
-{
-    type NodeId = G::NodeId;
-    type EdgeId = G::EdgeId;
-}
-
-#[cfg(feature = "stable_graph")]
-impl<'a, N, E: 'a, Ty, Ix> IntoNeighbors for &'a StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type Neighbors = stable_graph::Neighbors<'a, E, Ix>;
-    fn neighbors(self, n: Self::NodeId) -> Self::Neighbors {
-        (*self).neighbors(n)
-    }
-}
-
-#[cfg(feature = "graphmap")]
-impl<'a, N: 'a, E, Ty> IntoNeighbors for &'a GraphMap<N, E, Ty>
-where
-    N: Copy + Ord + Hash,
-    Ty: EdgeType,
-{
-    type Neighbors = graphmap::Neighbors<'a, N, Ty>;
-    fn neighbors(self, n: Self::NodeId) -> Self::Neighbors {
-        self.neighbors(n)
-    }
-}
-
 trait_template! {
 /// Access to the neighbors of each node
 ///
@@ -137,7 +117,7 @@ pub trait IntoNeighbors : GraphRef {
     type Neighbors: Iterator<Item=Self::NodeId>;
     @section self
     /// Return an iterator of the neighbors of node `a`.
-    fn neighbors(self: Self, a: Self::NodeId) -> Self::Neighbors;
+    fn neighbors(self, a: Self::NodeId) -> Self::Neighbors;
 }
 }
 
@@ -161,63 +141,13 @@ pub trait IntoNeighborsDirected : IntoNeighbors {
 }
 }
 
-impl<'a, N, E: 'a, Ty, Ix> IntoNeighbors for &'a Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type Neighbors = graph::Neighbors<'a, E, Ix>;
-    fn neighbors(self, n: graph::NodeIndex<Ix>) -> graph::Neighbors<'a, E, Ix> {
-        Graph::neighbors(self, n)
-    }
-}
-
-impl<'a, N, E: 'a, Ty, Ix> IntoNeighborsDirected for &'a Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type NeighborsDirected = graph::Neighbors<'a, E, Ix>;
-    fn neighbors_directed(
-        self,
-        n: graph::NodeIndex<Ix>,
-        d: Direction,
-    ) -> graph::Neighbors<'a, E, Ix> {
-        Graph::neighbors_directed(self, n, d)
-    }
-}
-
-#[cfg(feature = "stable_graph")]
-impl<'a, N, E: 'a, Ty, Ix> IntoNeighborsDirected for &'a StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type NeighborsDirected = stable_graph::Neighbors<'a, E, Ix>;
-    fn neighbors_directed(self, n: graph::NodeIndex<Ix>, d: Direction) -> Self::NeighborsDirected {
-        StableGraph::neighbors_directed(self, n, d)
-    }
-}
-
-#[cfg(feature = "graphmap")]
-impl<'a, N: 'a, E, Ty> IntoNeighborsDirected for &'a GraphMap<N, E, Ty>
-where
-    N: Copy + Ord + Hash,
-    Ty: EdgeType,
-{
-    type NeighborsDirected = graphmap::NeighborsDirected<'a, N, Ty>;
-    fn neighbors_directed(self, n: N, dir: Direction) -> Self::NeighborsDirected {
-        self.neighbors_directed(n, dir)
-    }
-}
-
 trait_template! {
 /// Access to the edges of each node.
 ///
 /// The edges are, depending on the graph’s edge type:
 ///
 /// - `Directed`: All edges from `a`.
-/// - `Undirected`: All edges connected to `a`.
+/// - `Undirected`: All edges connected to `a`, with `a` being the source of each edge.
 ///
 /// This is an extended version of the trait `IntoNeighbors`; the former
 /// only iterates over the target node identifiers, while this trait
@@ -271,51 +201,6 @@ pub trait IntoNodeIdentifiers : GraphRef {
 }
 
 IntoNodeIdentifiers! {delegate_impl []}
-
-impl<'a, N, E: 'a, Ty, Ix> IntoNodeIdentifiers for &'a Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type NodeIdentifiers = graph::NodeIndices<Ix>;
-    fn node_identifiers(self) -> graph::NodeIndices<Ix> {
-        Graph::node_indices(self)
-    }
-}
-
-impl<N, E, Ty, Ix> NodeCount for Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    fn node_count(&self) -> usize {
-        self.node_count()
-    }
-}
-
-#[cfg(feature = "stable_graph")]
-impl<'a, N, E: 'a, Ty, Ix> IntoNodeIdentifiers for &'a StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type NodeIdentifiers = stable_graph::NodeIndices<'a, N, Ix>;
-    fn node_identifiers(self) -> Self::NodeIdentifiers {
-        StableGraph::node_indices(self)
-    }
-}
-
-#[cfg(feature = "stable_graph")]
-impl<N, E, Ty, Ix> NodeCount for StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    fn node_count(&self) -> usize {
-        self.node_count()
-    }
-}
-
 IntoNeighborsDirected! {delegate_impl []}
 
 trait_template! {
@@ -433,16 +318,6 @@ pub trait IntoEdgeReferences : Data + GraphRef {
 
 IntoEdgeReferences! {delegate_impl [] }
 
-#[cfg(feature = "graphmap")]
-impl<N, E, Ty> Data for GraphMap<N, E, Ty>
-where
-    N: Copy + PartialEq,
-    Ty: EdgeType,
-{
-    type NodeWeight = N;
-    type EdgeWeight = E;
-}
-
 trait_template! {
     /// Edge kind property (directed or undirected edges)
 pub trait GraphProp : GraphBase {
@@ -459,46 +334,9 @@ pub trait GraphProp : GraphBase {
 
 GraphProp! {delegate_impl []}
 
-impl<N, E, Ty, Ix> GraphProp for Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type EdgeType = Ty;
-}
-
-#[cfg(feature = "stable_graph")]
-impl<N, E, Ty, Ix> GraphProp for StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type EdgeType = Ty;
-}
-
-#[cfg(feature = "graphmap")]
-impl<N, E, Ty> GraphProp for GraphMap<N, E, Ty>
-where
-    N: NodeTrait,
-    Ty: EdgeType,
-{
-    type EdgeType = Ty;
-}
-
-impl<'a, N: 'a, E: 'a, Ty, Ix> IntoEdgeReferences for &'a Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type EdgeRef = graph::EdgeReference<'a, E, Ix>;
-    type EdgeReferences = graph::EdgeReferences<'a, E, Ix>;
-    fn edge_references(self) -> Self::EdgeReferences {
-        (*self).edge_references()
-    }
-}
-
 trait_template! {
     /// The graph’s `NodeId`s map to indices
+    #[allow(clippy::needless_arbitrary_self_type)]
     pub trait NodeIndexable : GraphBase {
         @section self
         /// Return an upper bound of the node indices in the graph
@@ -506,7 +344,7 @@ trait_template! {
         fn node_bound(self: &Self) -> usize;
         /// Convert `a` to an integer index.
         fn to_index(self: &Self, a: Self::NodeId) -> usize;
-        /// Convert `i` to a node index
+        /// Convert `i` to a node index. `i` must be a valid value in the graph.
         fn from_index(self: &Self, i: usize) -> Self::NodeId;
     }
 }
@@ -514,7 +352,25 @@ trait_template! {
 NodeIndexable! {delegate_impl []}
 
 trait_template! {
+    /// The graph’s `NodeId`s map to indices
+    #[allow(clippy::needless_arbitrary_self_type)]
+    pub trait EdgeIndexable : GraphBase {
+        @section self
+        /// Return an upper bound of the edge indices in the graph
+        /// (suitable for the size of a bitmap).
+        fn edge_bound(self: &Self) -> usize;
+        /// Convert `a` to an integer index.
+        fn to_index(self: &Self, a: Self::EdgeId) -> usize;
+        /// Convert `i` to an edge index. `i` must be a valid value in the graph.
+        fn from_index(self: &Self, i: usize) -> Self::EdgeId;
+    }
+}
+
+EdgeIndexable! {delegate_impl []}
+
+trait_template! {
 /// A graph with a known node count.
+#[allow(clippy::needless_arbitrary_self_type)]
 pub trait NodeCount : GraphBase {
     @section self
     fn node_count(self: &Self) -> usize;
@@ -533,29 +389,6 @@ pub trait NodeCompactIndexable : NodeIndexable + NodeCount { }
 
 NodeCompactIndexable! {delegate_impl []}
 
-impl<N, E, Ty, Ix> NodeIndexable for Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    fn node_bound(&self) -> usize {
-        self.node_count()
-    }
-    fn to_index(&self, ix: NodeIndex<Ix>) -> usize {
-        ix.index()
-    }
-    fn from_index(&self, ix: usize) -> Self::NodeId {
-        NodeIndex::new(ix)
-    }
-}
-
-impl<N, E, Ty, Ix> NodeCompactIndexable for Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-}
-
 /// A mapping for storing the visited status for NodeId `N`.
 pub trait VisitMap<N> {
     /// Mark `a` as visited.
@@ -565,30 +398,6 @@ pub trait VisitMap<N> {
 
     /// Return whether `a` has been visited before.
     fn is_visited(&self, a: &N) -> bool;
-}
-
-impl<Ix> VisitMap<graph::NodeIndex<Ix>> for FixedBitSet
-where
-    Ix: IndexType,
-{
-    fn visit(&mut self, x: graph::NodeIndex<Ix>) -> bool {
-        !self.put(x.index())
-    }
-    fn is_visited(&self, x: &graph::NodeIndex<Ix>) -> bool {
-        self.contains(x.index())
-    }
-}
-
-impl<Ix> VisitMap<graph::EdgeIndex<Ix>> for FixedBitSet
-where
-    Ix: IndexType,
-{
-    fn visit(&mut self, x: graph::EdgeIndex<Ix>) -> bool {
-        !self.put(x.index())
-    }
-    fn is_visited(&self, x: &graph::EdgeIndex<Ix>) -> bool {
-        self.contains(x.index())
-    }
 }
 
 impl<Ix> VisitMap<Ix> for FixedBitSet
@@ -618,6 +427,7 @@ where
 
 trait_template! {
 /// A graph that can create a map that tracks the visited status of its nodes.
+#[allow(clippy::needless_arbitrary_self_type)]
 pub trait Visitable : GraphBase {
     @section type
     /// The associated map type
@@ -631,94 +441,12 @@ pub trait Visitable : GraphBase {
 }
 Visitable! {delegate_impl []}
 
-impl<N, E, Ty, Ix> GraphBase for Graph<N, E, Ty, Ix>
-where
-    Ix: IndexType,
-{
-    type NodeId = graph::NodeIndex<Ix>;
-    type EdgeId = graph::EdgeIndex<Ix>;
-}
-
-impl<N, E, Ty, Ix> Visitable for Graph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type Map = FixedBitSet;
-    fn visit_map(&self) -> FixedBitSet {
-        FixedBitSet::with_capacity(self.node_count())
-    }
-
-    fn reset_map(&self, map: &mut Self::Map) {
-        map.clear();
-        map.grow(self.node_count());
-    }
-}
-
-#[cfg(feature = "stable_graph")]
-impl<N, E, Ty, Ix> GraphBase for StableGraph<N, E, Ty, Ix>
-where
-    Ix: IndexType,
-{
-    type NodeId = graph::NodeIndex<Ix>;
-    type EdgeId = graph::EdgeIndex<Ix>;
-}
-
-#[cfg(feature = "stable_graph")]
-impl<N, E, Ty, Ix> Visitable for StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type Map = FixedBitSet;
-    fn visit_map(&self) -> FixedBitSet {
-        FixedBitSet::with_capacity(self.node_bound())
-    }
-    fn reset_map(&self, map: &mut Self::Map) {
-        map.clear();
-        map.grow(self.node_bound());
-    }
-}
-
-#[cfg(feature = "stable_graph")]
-impl<N, E, Ty, Ix> Data for StableGraph<N, E, Ty, Ix>
-where
-    Ty: EdgeType,
-    Ix: IndexType,
-{
-    type NodeWeight = N;
-    type EdgeWeight = E;
-}
-
-#[cfg(feature = "graphmap")]
-impl<N, E, Ty> GraphBase for GraphMap<N, E, Ty>
-where
-    N: Copy + PartialEq,
-{
-    type NodeId = N;
-    type EdgeId = (N, N);
-}
-
-#[cfg(feature = "graphmap")]
-impl<N, E, Ty> Visitable for GraphMap<N, E, Ty>
-where
-    N: Copy + Ord + Hash,
-    Ty: EdgeType,
-{
-    type Map = HashSet<N>;
-    fn visit_map(&self) -> HashSet<N> {
-        HashSet::with_capacity(self.node_count())
-    }
-    fn reset_map(&self, map: &mut Self::Map) {
-        map.clear();
-    }
-}
-
 trait_template! {
 /// Create or access the adjacency matrix of a graph.
 ///
 /// The implementor can either create an adjacency matrix, or it can return
 /// a placeholder if it has the needed representation internally.
+#[allow(clippy::needless_arbitrary_self_type)]
 pub trait GetAdjacencyMatrix : GraphBase {
     @section type
     /// The associated adjacency matrix type
@@ -735,21 +463,17 @@ pub trait GetAdjacencyMatrix : GraphBase {
 
 GetAdjacencyMatrix! {delegate_impl []}
 
-#[cfg(feature = "graphmap")]
-/// The `GraphMap` keeps an adjacency matrix internally.
-impl<N, E, Ty> GetAdjacencyMatrix for GraphMap<N, E, Ty>
-where
-    N: Copy + Ord + Hash,
-    Ty: EdgeType,
-{
-    type AdjMatrix = ();
-    #[inline]
-    fn adjacency_matrix(&self) {}
-    #[inline]
-    fn is_adjacent(&self, _: &(), a: N, b: N) -> bool {
-        self.contains_edge(a, b)
-    }
+trait_template! {
+/// A graph with a known edge count.
+#[allow(clippy::needless_arbitrary_self_type)]
+pub trait EdgeCount : GraphBase {
+    @section self
+    /// Return the number of edges in the graph.
+    fn edge_count(self: &Self) -> usize;
 }
+}
+
+EdgeCount! {delegate_impl []}
 
 mod filter;
 mod reversed;

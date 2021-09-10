@@ -1,15 +1,14 @@
-use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{BinaryHeap, HashMap};
 
 use std::hash::Hash;
 
-use super::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 use crate::algo::Measure;
 use crate::scored::MinScored;
+use crate::visit::{EdgeRef, IntoEdges, NodeCount, NodeIndexable, Visitable};
 
-/// \[Generic\] Dijkstra's shortest path algorithm.
+/// \[Generic\] k'th shortest path algorithm.
 ///
-/// Compute the length of the shortest path from `start` to every reachable
+/// Compute the length of the k'th shortest path from `start` to every reachable
 /// node.
 ///
 /// The graph should be `Visitable` and implement `IntoEdges`. The function
@@ -19,11 +18,13 @@ use crate::scored::MinScored;
 /// If `goal` is not `None`, then the algorithm terminates once the `goal` node's
 /// cost is calculated.
 ///
+/// Computes in **O(k * (|E| + |V|*log(|V|)))** time (average).
+///
 /// Returns a `HashMap` that maps `NodeId` to path cost.
 /// # Example
 /// ```rust
 /// use petgraph::Graph;
-/// use petgraph::algo::dijkstra;
+/// use petgraph::algo::k_shortest_path;
 /// use petgraph::prelude::*;
 /// use std::collections::HashMap;
 ///
@@ -56,67 +57,59 @@ use crate::scored::MinScored;
 /// // d <---- c       h <---- g
 ///
 /// let expected_res: HashMap<NodeIndex, usize> = [
-///      (a, 3),
-///      (b, 0),
-///      (c, 1),
-///      (d, 2),
-///      (e, 1),
-///      (f, 2),
-///      (g, 3),
-///      (h, 4)
+///      (a, 7),
+///      (b, 4),
+///      (c, 5),
+///      (d, 6),
+///      (e, 5),
+///      (f, 6),
+///      (g, 7),
+///      (h, 8)
 ///     ].iter().cloned().collect();
-/// let res = dijkstra(&graph,b,None, |_| 1);
+/// let res = k_shortest_path(&graph,b,None,2, |_| 1);
 /// assert_eq!(res, expected_res);
 /// // z is not inside res because there is not path from b to z.
 /// ```
-pub fn dijkstra<G, F, K>(
+pub fn k_shortest_path<G, F, K>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
+    k: usize,
     mut edge_cost: F,
 ) -> HashMap<G::NodeId, K>
 where
-    G: IntoEdges + Visitable,
+    G: IntoEdges + Visitable + NodeCount + NodeIndexable,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> K,
     K: Measure + Copy,
 {
-    let mut visited = graph.visit_map();
+    let mut counter: Vec<usize> = vec![0; graph.node_count()];
     let mut scores = HashMap::new();
-    //let mut predecessor = HashMap::new();
     let mut visit_next = BinaryHeap::new();
     let zero_score = K::default();
-    scores.insert(start, zero_score);
+
     visit_next.push(MinScored(zero_score, start));
+
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
-        if visited.is_visited(&node) {
+        counter[graph.to_index(node)] += 1;
+        let current_counter = counter[graph.to_index(node)];
+
+        if current_counter > k {
             continue;
         }
-        if goal.as_ref() == Some(&node) {
+
+        if current_counter == k {
+            scores.insert(node, node_score);
+        }
+
+        //Already reached goal k times
+        if goal.as_ref() == Some(&node) && current_counter == k {
             break;
         }
+
         for edge in graph.edges(node) {
-            let next = edge.target();
-            if visited.is_visited(&next) {
-                continue;
-            }
-            let next_score = node_score + edge_cost(edge);
-            match scores.entry(next) {
-                Occupied(ent) => {
-                    if next_score < *ent.get() {
-                        *ent.into_mut() = next_score;
-                        visit_next.push(MinScored(next_score, next));
-                        //predecessor.insert(next.clone(), node.clone());
-                    }
-                }
-                Vacant(ent) => {
-                    ent.insert(next_score);
-                    visit_next.push(MinScored(next_score, next));
-                    //predecessor.insert(next.clone(), node.clone());
-                }
-            }
+            visit_next.push(MinScored(node_score + edge_cost(edge), edge.target()));
         }
-        visited.visit(node);
     }
     scores
 }

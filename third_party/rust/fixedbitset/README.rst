@@ -10,14 +10,36 @@ __ https://docs.rs/fixedbitset/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://travis-ci.org/petgraph/fixedbitset.svg?branch=master
-.. _build_status: https://travis-ci.org/petgraph/fixedbitset
+.. |build_status| image:: https://github.com/petgraph/fixedbitset/workflows/Continuous%20integration/badge.svg?branch=master
+.. _build_status: https://github.com/petgraph/fixedbitset/actions
 
 .. |crates| image:: http://meritbadge.herokuapp.com/fixedbitset
 .. _crates: https://crates.io/crates/fixedbitset
 
 Recent Changes
 --------------
+- 0.4.0
+
+  + `#61`_: Require Rust 1.39.
+  + `#60`_: Add `const` `FixedBitSet::new` consructor by @jakobhellermann.
+  + `#59`_: Add optional `serde` support by @keshavsn.
+
+- 0.3.2
+
+  + `#18`_: Optimize `ones` using `trailing_zeroes` by @vks
+
+- 0.3.1
+
+  + Add bit assign operators for references by @flaghacker
+  + Improve assertion error messages by @lovasoa
+  + Add documentation examples for ``with_capacity_and_blocks``
+
+- 0.3.0
+
+  + Add ``with_capacity_and_blocks`` by @luizirber
+  + Add ``difference_with`` by @sunshowers
+  + Implement ``Binary`` and ``Display`` traits by @Dolphindalt
+  + Add ``toggle_range`` by @wirelyre
 
 - 0.2.0
 
@@ -89,4 +111,8 @@ http://opensource.org/licenses/MIT, at your
 option. This file may not be copied, modified, or distributed
 except according to those terms.
 
+.. _#18: https://github.com/petgraph/fixedbitset/pull/18
+.. _#59: https://github.com/petgraph/fixedbitset/pull/59
+.. _#60: https://github.com/petgraph/fixedbitset/pull/60
+.. _#61: https://github.com/petgraph/fixedbitset/pull/61
 

@@ -237,12 +237,24 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         }
     }
 
-    unsafe fn fill_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange, value: u8) {
-        self.cmd_buffer.commands.push(C::FillBuffer {
+    unsafe fn clear_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange) {
+        self.cmd_buffer.commands.push(C::ClearBuffer {
             dst: buffer.raw,
             dst_target: buffer.target,
             range,
-            value,
+        });
+    }
+
+    unsafe fn clear_texture(
+        &mut self,
+        texture: &super::Texture,
+        subresource_range: &wgt::ImageSubresourceRange,
+    ) {
+        let (dst, dst_target) = texture.inner.as_native();
+        self.cmd_buffer.commands.push(C::ClearTexture {
+            dst,
+            dst_target,
+            subresource_range: subresource_range.clone(),
         });
     }
 
@@ -278,7 +290,8 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
     {
         let (src_raw, src_target) = src.inner.as_native();
         let (dst_raw, dst_target) = dst.inner.as_native();
-        for copy in regions {
+        for mut copy in regions {
+            copy.clamp_size_to_virtual(&src.copy_size, &dst.copy_size);
             self.cmd_buffer.commands.push(C::CopyTextureToTexture {
                 src: src_raw,
                 src_target,
@@ -298,7 +311,8 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         T: Iterator<Item = crate::BufferTextureCopy>,
     {
         let (dst_raw, dst_target) = dst.inner.as_native();
-        for copy in regions {
+        for mut copy in regions {
+            copy.clamp_size_to_virtual(&dst.copy_size);
             self.cmd_buffer.commands.push(C::CopyBufferToTexture {
                 src: src.raw,
                 src_target: src.target,
@@ -320,7 +334,8 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         T: Iterator<Item = crate::BufferTextureCopy>,
     {
         let (src_raw, src_target) = src.inner.as_native();
-        for copy in regions {
+        for mut copy in regions {
+            copy.clamp_size_to_virtual(&src.copy_size);
             self.cmd_buffer.commands.push(C::CopyTextureToBuffer {
                 src: src_raw,
                 src_target,

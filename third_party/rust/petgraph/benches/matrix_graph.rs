@@ -198,9 +198,15 @@ fn full_neighbors_in(bench: &mut Bencher) {
 }
 
 #[bench]
-fn full_sccs(bench: &mut Bencher) {
+fn full_kosaraju_sccs(bench: &mut Bencher) {
     let a = parse_matrix::<Directed>(FULL);
     bench.iter(|| algo::kosaraju_scc(&a));
+}
+
+#[bench]
+fn full_tarjan_sccs(bench: &mut Bencher) {
+    let a = parse_matrix::<Directed>(FULL);
+    bench.iter(|| algo::tarjan_scc(&a));
 }
 
 #[bench]
@@ -229,7 +235,13 @@ fn bigger_neighbors_in(bench: &mut Bencher) {
 }
 
 #[bench]
-fn bigger_sccs(bench: &mut Bencher) {
+fn bigger_kosaraju_sccs(bench: &mut Bencher) {
     let a = parse_matrix::<Directed>(BIGGER);
     bench.iter(|| algo::kosaraju_scc(&a));
+}
+
+#[bench]
+fn bigger_tarjan_sccs(bench: &mut Bencher) {
+    let a = parse_matrix::<Directed>(BIGGER);
+    bench.iter(|| algo::tarjan_scc(&a));
 }

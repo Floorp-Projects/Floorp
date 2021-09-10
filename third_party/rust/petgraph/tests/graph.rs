@@ -574,6 +574,65 @@ fn test_astar_manhattan_heuristic() {
     }
 }
 
+#[test]
+fn test_astar_runtime_optimal() {
+    let mut g = Graph::new();
+    let a = g.add_node("A");
+    let b = g.add_node("B");
+    let c = g.add_node("C");
+    let d = g.add_node("D");
+    let e = g.add_node("E");
+    g.add_edge(a, b, 2);
+    g.add_edge(a, c, 3);
+    g.add_edge(b, d, 3);
+    g.add_edge(c, d, 1);
+    g.add_edge(d, e, 1);
+
+    let mut times_called = 0;
+
+    let _ = astar(
+        &g,
+        a,
+        |n| n == e,
+        |edge| {
+            times_called += 1;
+            *edge.weight()
+        },
+        |_| 0,
+    );
+
+    // A* is runtime optimal in the sense it won't expand more nodes than needed, for the given
+    // heuristic. Here, A* should expand, in order: A, B, C, D, E. This should should ask for the
+    // costs of edges (A, B), (A, C), (B, D), (C, D), (D, E). Node D will be added to `visit_next`
+    // twice, but should only be expanded once. If it is erroneously expanded twice, it will call
+    // for (D, E) again and `times_called` will be 6.
+    assert_eq!(times_called, 5);
+}
+
+#[test]
+fn test_astar_admissible_inconsistent() {
+    let mut g = Graph::new();
+    let a = g.add_node("A");
+    let b = g.add_node("B");
+    let c = g.add_node("C");
+    let d = g.add_node("D");
+    g.add_edge(a, b, 3);
+    g.add_edge(b, c, 3);
+    g.add_edge(c, d, 3);
+    g.add_edge(a, c, 8);
+    g.add_edge(a, d, 10);
+
+    let admissible_inconsistent = |n: NodeIndex| match g[n] {
+        "A" => 9,
+        "B" => 6,
+        "C" => 0,
+        &_ => 0,
+    };
+
+    let optimal = astar(&g, a, |n| n == d, |e| *e.weight(), admissible_inconsistent);
+    assert_eq!(optimal, Some((9, vec![a, b, c, d])));
+}
+
 #[cfg(feature = "generate")]
 #[test]
 fn test_generate_undirected() {
@@ -896,8 +955,12 @@ fn tarjan_scc() {
         (4, 1),
     ]);
 
+    let mut tarjan_scc = petgraph::algo::TarjanScc::new();
+
+    let mut result = Vec::new();
+    tarjan_scc.run(&gr, |scc| result.push(scc.iter().rev().cloned().collect()));
     assert_sccs_eq(
-        petgraph::algo::tarjan_scc(&gr),
+        result,
         vec![
             vec![n(0), n(3), n(6)],
             vec![n(2), n(5), n(8)],
@@ -913,8 +976,10 @@ fn tarjan_scc() {
     let ed = hr.find_edge(n(6), n(8)).unwrap();
     assert!(hr.remove_edge(ed).is_some());
 
+    let mut result = Vec::new();
+    tarjan_scc.run(&hr, |scc| result.push(scc.iter().rev().cloned().collect()));
     assert_sccs_eq(
-        petgraph::algo::tarjan_scc(&hr),
+        result,
         vec![
             vec![n(1), n(2), n(4), n(5), n(7), n(8)],
             vec![n(0), n(3), n(6)],
@@ -934,8 +999,10 @@ fn tarjan_scc() {
     gr.add_edge(n(2), n(0), ());
     gr.add_edge(n(1), n(0), ());
 
+    let mut result = Vec::new();
+    tarjan_scc.run(&gr, |scc| result.push(scc.iter().rev().cloned().collect()));
     assert_sccs_eq(
-        petgraph::algo::tarjan_scc(&gr),
+        result,
         vec![vec![n(0)], vec![n(1)], vec![n(2)], vec![n(3)]],
         true,
     );
@@ -945,8 +1012,10 @@ fn tarjan_scc() {
     gr.extend_with_edges(&[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)]);
     gr.add_node(());
     // no order for the disconnected one
+    let mut result = Vec::new();
+    tarjan_scc.run(&gr, |scc| result.push(scc.iter().rev().cloned().collect()));
     assert_sccs_eq(
-        petgraph::algo::tarjan_scc(&gr),
+        result,
         vec![vec![n(0)], vec![n(1)], vec![n(2)], vec![n(3)]],
         false,
     );
@@ -1313,6 +1382,54 @@ fn test_edge_iterators_directed() {
                 "reversed outgoing edges should have a fixed source"
             );
         }
+    }
+}
+
+#[test]
+fn test_edge_filtered_iterators_directed() {
+    use petgraph::{
+        graph::EdgeReference,
+        visit::{EdgeFiltered, IntoEdgesDirected},
+    };
+
+    let gr = make_edge_iterator_graph::<Directed>();
+    let filter = |edge: EdgeReference<f64>| -> bool { *edge.weight() > 8.0 };
+    let filtered = EdgeFiltered::from_fn(&gr, filter);
+
+    for i in gr.node_indices() {
+        itertools::assert_equal(
+            filtered.edges_directed(i, Outgoing),
+            gr.edges_directed(i, Outgoing).filter(|edge| filter(*edge)),
+        );
+        itertools::assert_equal(
+            filtered.edges_directed(i, Incoming),
+            gr.edges_directed(i, Incoming).filter(|edge| filter(*edge)),
+        );
+    }
+}
+
+#[test]
+fn test_node_filtered_iterators_directed() {
+    use petgraph::{
+        graph::NodeIndex,
+        visit::{IntoEdgesDirected, NodeFiltered},
+    };
+
+    let gr = make_edge_iterator_graph::<Directed>();
+    let filter = |node: NodeIndex<u32>| node.index() < 4;
+    let filtered = NodeFiltered::from_fn(&gr, filter);
+
+    for i in gr.node_indices() {
+        itertools::assert_equal(
+            filtered.edges_directed(i, Outgoing),
+            gr.edges_directed(i, Outgoing)
+                .filter(|edge| filter(edge.source()) && filter(edge.target())),
+        );
+        itertools::assert_equal(
+            filtered.edges_directed(i, Incoming),
+            gr.edges_directed(i, Incoming)
+                .filter(|edge| filter(edge.source()) && filter(edge.target())),
+        );
     }
 }
 
@@ -1761,7 +1878,7 @@ fn dot() {
     struct Record {
         a: i32,
         b: &'static str,
-    };
+    }
     let mut gr = Graph::new();
     let a = gr.add_node(Record { a: 1, b: r"abc\" });
     gr.add_edge(a, a, (1, 2));

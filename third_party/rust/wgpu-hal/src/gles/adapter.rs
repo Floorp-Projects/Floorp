@@ -257,7 +257,8 @@ impl super::Adapter {
 
         let mut features = wgt::Features::empty()
             | wgt::Features::TEXTURE_COMPRESSION_ETC2
-            | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+            | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
+            | wgt::Features::CLEAR_COMMANDS;
         features.set(
             wgt::Features::DEPTH_CLAMPING,
             extensions.contains("GL_EXT_depth_clamp"),
@@ -287,7 +288,7 @@ impl super::Adapter {
         let max_texture_3d_size = gl.get_parameter_i32(glow::MAX_3D_TEXTURE_SIZE) as u32;
 
         let min_uniform_buffer_offset_alignment =
-            gl.get_parameter_i32(glow::UNIFORM_BUFFER_OFFSET_ALIGNMENT);
+            gl.get_parameter_i32(glow::UNIFORM_BUFFER_OFFSET_ALIGNMENT) as u32;
         let min_storage_buffer_offset_alignment = if ver >= (3, 1) {
             gl.get_parameter_i32(glow::SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT) as u32
         } else {
@@ -334,6 +335,8 @@ impl super::Adapter {
                 !0
             },
             max_push_constant_size: 0,
+            min_uniform_buffer_offset_alignment,
+            min_storage_buffer_offset_alignment,
         };
 
         let mut workarounds = super::Workarounds::empty();
@@ -378,14 +381,6 @@ impl super::Adapter {
                 alignments: crate::Alignments {
                     buffer_copy_offset: wgt::BufferSize::new(4).unwrap(),
                     buffer_copy_pitch: wgt::BufferSize::new(4).unwrap(),
-                    uniform_buffer_offset: wgt::BufferSize::new(
-                        min_storage_buffer_offset_alignment as u64,
-                    )
-                    .unwrap(),
-                    storage_buffer_offset: wgt::BufferSize::new(
-                        min_uniform_buffer_offset_alignment as u64,
-                    )
-                    .unwrap(),
                 },
             },
         })

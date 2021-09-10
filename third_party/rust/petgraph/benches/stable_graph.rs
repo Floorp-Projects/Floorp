@@ -49,15 +49,27 @@ fn neighbors_in(bench: &mut Bencher) {
 }
 
 #[bench]
-fn sccs_stable_graph(bench: &mut Bencher) {
+fn sccs_kosaraju_stable_graph(bench: &mut Bencher) {
     let a = stable_digraph().bigger();
     bench.iter(|| petgraph::algo::kosaraju_scc(&a));
 }
 
 #[bench]
-fn sccs_graph(bench: &mut Bencher) {
+fn sccs_kosaraju_graph(bench: &mut Bencher) {
     let a = digraph().bigger();
     bench.iter(|| petgraph::algo::kosaraju_scc(&a));
+}
+
+#[bench]
+fn sccs_tarjan_stable_graph(bench: &mut Bencher) {
+    let a = stable_digraph().bigger();
+    bench.iter(|| petgraph::algo::tarjan_scc(&a));
+}
+
+#[bench]
+fn sccs_tarjan_graph(bench: &mut Bencher) {
+    let a = digraph().bigger();
+    bench.iter(|| petgraph::algo::tarjan_scc(&a));
 }
 
 #[bench]

@@ -436,7 +436,7 @@ fn writes_that_only_write_part_of_input_and_sometimes_interrupt_produce_correct_
                 }
             }
 
-            stream_encoder.finish().unwrap();
+            let _ = stream_encoder.finish().unwrap();
 
             assert_eq!(orig_len, bytes_consumed);
         }
@@ -500,7 +500,7 @@ fn do_encode_random_config_matches_normal_encode(max_input_len: usize) {
                 bytes_consumed += input_len;
             }
 
-            stream_encoder.finish().unwrap();
+            let _ = stream_encoder.finish().unwrap();
 
             assert_eq!(orig_len, bytes_consumed);
         }

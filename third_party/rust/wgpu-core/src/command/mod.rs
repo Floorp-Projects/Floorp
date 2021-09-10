@@ -144,7 +144,7 @@ impl<A: hal::Api> BakedCommands<A> {
                 assert!(range.end % 4 == 0, "Buffer {:?} has an uninitialized range with an end not aligned to 4 (end was {})", raw_buf, range.end);
 
                 unsafe {
-                    self.encoder.fill_buffer(raw_buf, range.clone(), 0);
+                    self.encoder.clear_buffer(raw_buf, range.clone());
                 }
             }
         }
@@ -160,7 +160,7 @@ pub struct CommandBuffer<A: hal::Api> {
     pub(crate) trackers: TrackerSet,
     buffer_memory_init_actions: Vec<BufferInitTrackerAction>,
     limits: wgt::Limits,
-    support_fill_buffer_texture: bool,
+    support_clear_buffer_texture: bool,
     #[cfg(feature = "trace")]
     pub(crate) commands: Option<Vec<crate::device::trace::Command>>,
 }
@@ -187,7 +187,7 @@ impl<A: HalApi> CommandBuffer<A> {
             trackers: TrackerSet::new(A::VARIANT),
             buffer_memory_init_actions: Default::default(),
             limits,
-            support_fill_buffer_texture: features.contains(wgt::Features::CLEAR_COMMANDS),
+            support_clear_buffer_texture: features.contains(wgt::Features::CLEAR_COMMANDS),
             #[cfg(feature = "trace")]
             commands: if enable_tracing {
                 Some(Vec::new())
@@ -348,16 +348,23 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let mut token = Token::root();
         let (mut cmd_buf_guard, _) = hub.command_buffers.write(&mut token);
 
-        let error = match CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id) {
-            Ok(cmd_buf) => {
-                cmd_buf.encoder.close();
-                cmd_buf.status = CommandEncoderStatus::Finished;
-                //Note: if we want to stop tracking the swapchain texture view,
-                // this is the place to do it.
-                log::trace!("Command buffer {:?} {:#?}", encoder_id, cmd_buf.trackers);
-                None
-            }
-            Err(e) => Some(e),
+        let error = match cmd_buf_guard.get_mut(encoder_id) {
+            Ok(cmd_buf) => match cmd_buf.status {
+                CommandEncoderStatus::Recording => {
+                    cmd_buf.encoder.close();
+                    cmd_buf.status = CommandEncoderStatus::Finished;
+                    //Note: if we want to stop tracking the swapchain texture view,
+                    // this is the place to do it.
+                    log::trace!("Command buffer {:?} {:#?}", encoder_id, cmd_buf.trackers);
+                    None
+                }
+                CommandEncoderStatus::Finished => Some(CommandEncoderError::NotRecording),
+                CommandEncoderStatus::Error => {
+                    cmd_buf.encoder.close();
+                    Some(CommandEncoderError::Invalid)
+                }
+            },
+            Err(_) => Some(CommandEncoderError::Invalid),
         };
 
         (encoder_id, error)

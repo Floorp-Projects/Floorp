@@ -1,9 +1,10 @@
 use crate::{Direction, Incoming};
 
 use crate::visit::{
-    Data, EdgeRef, GraphBase, GraphProp, GraphRef, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers,
-    IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeIndexable, Visitable,
+    Data, EdgeCount, EdgeIndexable, EdgeRef, GetAdjacencyMatrix, GraphBase, GraphProp, GraphRef,
+    IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected,
+    IntoNodeIdentifiers, IntoNodeReferences, NodeCompactIndexable, NodeCount, NodeIndexable,
+    Visitable,
 };
 
 /// An edge-reversing graph adaptor.
@@ -76,6 +77,7 @@ impl<G: Visitable> Visitable for Reversed<G> {
 }
 
 /// A reversed edges iterator.
+#[derive(Debug, Clone)]
 pub struct ReversedEdges<I> {
     iter: I,
 }
@@ -89,6 +91,9 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(ReversedEdgeReference)
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 /// A reversed edge reference
@@ -97,7 +102,9 @@ pub struct ReversedEdgeReference<R>(R);
 
 impl<R> ReversedEdgeReference<R> {
     /// Return the original, unreversed edge reference.
-    pub fn as_unreversed(&self) -> &R { &self.0 }
+    pub fn as_unreversed(&self) -> &R {
+        &self.0
+    }
 
     /// Consume `self` and return the original, unreversed edge reference.
     pub fn into_unreversed(self) -> R {
@@ -141,6 +148,7 @@ where
 }
 
 /// A reversed edge references iterator.
+#[derive(Debug, Clone)]
 pub struct ReversedEdgeReferences<I> {
     iter: I,
 }
@@ -153,6 +161,9 @@ where
     type Item = ReversedEdgeReference<I::Item>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(ReversedEdgeReference)
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 
@@ -168,3 +179,6 @@ IntoNodeIdentifiers! {delegate_impl [[G], G, Reversed<G>, access0]}
 IntoNodeReferences! {delegate_impl [[G], G, Reversed<G>, access0]}
 GraphProp! {delegate_impl [[G], G, Reversed<G>, access0]}
 NodeCount! {delegate_impl [[G], G, Reversed<G>, access0]}
+EdgeCount! {delegate_impl [[G], G, Reversed<G>, access0]}
+EdgeIndexable! {delegate_impl [[G], G, Reversed<G>, access0]}
+GetAdjacencyMatrix! {delegate_impl [[G], G, Reversed<G>, access0]}
