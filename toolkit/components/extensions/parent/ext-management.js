@@ -16,6 +16,12 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "promptService",
+  "@mozilla.org/embedcomp/prompt-service;1",
+  "nsIPromptService"
+);
 
 var { ExtensionError } = ExtensionUtils;
 
@@ -231,11 +237,12 @@ this.management = class extends ExtensionAPI {
             }
             let title = _("uninstall.confirmation.title", extension.name);
             let buttonFlags =
-              Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING +
-              Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING;
+              promptService.BUTTON_POS_0 *
+                promptService.BUTTON_TITLE_IS_STRING +
+              promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING;
             let button0Title = _("uninstall.confirmation.button-0.label");
             let button1Title = _("uninstall.confirmation.button-1.label");
-            let response = Services.prompt.confirmEx(
+            let response = promptService.confirmEx(
               null,
               title,
               message,

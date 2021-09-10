@@ -13,9 +13,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 
   UnsupportedError: "chrome://remote/content/cdp/Error.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
 class StreamRegistry {
@@ -71,7 +74,7 @@ class StreamRegistry {
     let handle;
 
     if (stream instanceof OS.File) {
-      handle = Services.uuid
+      handle = uuidGen
         .generateUUID()
         .toString()
         .slice(1, -1);

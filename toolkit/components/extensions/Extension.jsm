@@ -99,6 +99,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "amIAddonManagerStartup",
   ],
   spellCheck: ["@mozilla.org/spellchecker/engine;1", "mozISpellCheckingEngine"],
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -310,7 +311,7 @@ var UUIDMap = {
 
     let uuid = null;
     if (create) {
-      uuid = Services.uuid.generateUUID().number;
+      uuid = uuidGen.generateUUID().number;
       uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
 
       map[id] = uuid;

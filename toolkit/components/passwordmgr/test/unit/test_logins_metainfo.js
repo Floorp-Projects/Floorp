@@ -10,6 +10,13 @@
 
 // Globals
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 const gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
 
 /**
@@ -69,7 +76,7 @@ add_task(function test_initialize() {
   gLoginInfo1 = TestData.formLogin();
   gLoginInfo2 = TestData.formLogin({
     origin: "http://other.example.com",
-    guid: Services.uuid.generateUUID().toString(),
+    guid: gUUIDGenerator.generateUUID().toString(),
     timeCreated: baseTimeMs,
     timeLastUsed: baseTimeMs + 2,
     timePasswordChanged: baseTimeMs + 1,
@@ -142,7 +149,7 @@ add_task(function test_addLogin_metainfo_duplicate() {
  */
 add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
   let newLoginInfo = gLoginInfo1.clone().QueryInterface(Ci.nsILoginMetaInfo);
-  newLoginInfo.guid = Services.uuid.generateUUID().toString();
+  newLoginInfo.guid = gUUIDGenerator.generateUUID().toString();
   newLoginInfo.timeCreated = Date.now();
   newLoginInfo.timeLastUsed = Date.now();
   newLoginInfo.timePasswordChanged = Date.now();
@@ -159,7 +166,7 @@ add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
 add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
   // Use a new reference time that is two minutes from now.
   let newTimeMs = Date.now() + 120000;
-  let newUUIDValue = Services.uuid.generateUUID().toString();
+  let newUUIDValue = gUUIDGenerator.generateUUID().toString();
 
   // Check that properties are changed as requested.
   Services.logins.modifyLogin(

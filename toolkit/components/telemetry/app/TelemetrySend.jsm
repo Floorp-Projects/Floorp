@@ -23,6 +23,9 @@ var EXPORTED_SYMBOLS = [
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { PromiseUtils } = ChromeUtils.import(
@@ -50,6 +53,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/TelemetryReportingPolicy.jsm"
 );
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "Telemetry",
+  "@mozilla.org/base/telemetry;1",
+  "nsITelemetry"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryHealthPing",
@@ -844,9 +853,7 @@ var TelemetrySendImpl = {
       const ageInDays = Utils.millisecondsToDays(
         Math.abs(now.getTime() - pingInfo.lastModificationDate)
       );
-      Services.telemetry
-        .getHistogramById("TELEMETRY_PENDING_PINGS_AGE")
-        .add(ageInDays);
+      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_AGE").add(ageInDays);
     }
   },
 
@@ -913,13 +920,11 @@ var TelemetrySendImpl = {
       "TELEMETRY_SEND_FAILURE_TYPE",
     ];
 
-    histograms.forEach(h => Services.telemetry.getHistogramById(h).clear());
+    histograms.forEach(h => Telemetry.getHistogramById(h).clear());
 
     const keyedHistograms = ["TELEMETRY_SEND_FAILURE_TYPE_PER_PING"];
 
-    keyedHistograms.forEach(h =>
-      Services.telemetry.getKeyedHistogramById(h).clear()
-    );
+    keyedHistograms.forEach(h => Telemetry.getKeyedHistogramById(h).clear());
 
     return SendScheduler.reset();
   },
@@ -1203,8 +1208,8 @@ var TelemetrySendImpl = {
     );
 
     let sendId = success ? "TELEMETRY_SEND_SUCCESS" : "TELEMETRY_SEND_FAILURE";
-    let hsend = Services.telemetry.getHistogramById(sendId);
-    let hsuccess = Services.telemetry.getHistogramById("TELEMETRY_SUCCESS");
+    let hsend = Telemetry.getHistogramById(sendId);
+    let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
     hsend.add(Utils.monotonicNow() - startTime);
     hsuccess.add(success);
@@ -1281,12 +1286,10 @@ var TelemetrySendImpl = {
     if (this._tooLateToSend) {
       // Too late to send now. Reject so we pend the ping to send it next time.
       this._log.trace("_doPing - Too late to send ping " + ping.id);
-      Services.telemetry
-        .getHistogramById("TELEMETRY_SEND_FAILURE_TYPE")
-        .add("eTooLate");
-      Services.telemetry
-        .getKeyedHistogramById("TELEMETRY_SEND_FAILURE_TYPE_PER_PING")
-        .add(ping.type, "eTooLate");
+      Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add("eTooLate");
+      Telemetry.getKeyedHistogramById(
+        "TELEMETRY_SEND_FAILURE_TYPE_PER_PING"
+      ).add(ping.type, "eTooLate");
       return Promise.reject();
     }
 
@@ -1367,12 +1370,10 @@ var TelemetrySendImpl = {
         }
       }
 
-      Services.telemetry
-        .getHistogramById("TELEMETRY_SEND_FAILURE_TYPE")
-        .add(failure);
-      Services.telemetry
-        .getKeyedHistogramById("TELEMETRY_SEND_FAILURE_TYPE_PER_PING")
-        .add(ping.type, failure);
+      Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add(failure);
+      Telemetry.getKeyedHistogramById(
+        "TELEMETRY_SEND_FAILURE_TYPE_PER_PING"
+      ).add(ping.type, failure);
 
       this._log.error(
         "_doPing - error making request to " + url + ": " + failure
@@ -1401,9 +1402,9 @@ var TelemetrySendImpl = {
             status +
             " - ping request broken?"
         );
-        Services.telemetry
-          .getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS")
-          .add();
+        Telemetry.getHistogramById(
+          "TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS"
+        ).add();
         // TODO: we should handle this better, but for now we should avoid resubmitting
         // broken requests by pretending success.
         success = true;
@@ -1443,9 +1444,9 @@ var TelemetrySendImpl = {
       JSON.stringify(networkPayload)
     );
     utf8Payload += converter.Finish();
-    Services.telemetry
-      .getHistogramById("TELEMETRY_STRINGIFY")
-      .add(Utils.monotonicNow() - startTime);
+    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(
+      Utils.monotonicNow() - startTime
+    );
 
     let payloadStream = Cc[
       "@mozilla.org/io/string-input-stream;1"
@@ -1460,12 +1461,10 @@ var TelemetrySendImpl = {
         "_doPing - submitted ping exceeds the size limit, size: " +
           compressedPingSizeBytes
       );
-      Services.telemetry
-        .getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND")
-        .add();
-      Services.telemetry
-        .getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB")
-        .add(Math.floor(compressedPingSizeBytes / 1024 / 1024));
+      Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").add();
+      Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").add(
+        Math.floor(compressedPingSizeBytes / 1024 / 1024)
+      );
       // We don't need to call |request.abort()| as it was not sent yet.
       this._pendingPingRequests.delete(id);
 
@@ -1473,9 +1472,9 @@ var TelemetrySendImpl = {
       return TelemetryStorage.removePendingPing(id);
     }
 
-    Services.telemetry
-      .getHistogramById("TELEMETRY_COMPRESS")
-      .add(Utils.monotonicNow() - startTime);
+    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(
+      Utils.monotonicNow() - startTime
+    );
     request.sendInputStream(payloadStream);
 
     this.payloadStream = payloadStream;
@@ -1509,7 +1508,7 @@ var TelemetrySendImpl = {
   sendingEnabled(ping = null) {
     // We only send pings from official builds, but allow overriding this for tests.
     if (
-      !Services.telemetry.isOfficialTelemetry &&
+      !Telemetry.isOfficialTelemetry &&
       !this._testMode &&
       !this._overrideOfficialCheck
     ) {

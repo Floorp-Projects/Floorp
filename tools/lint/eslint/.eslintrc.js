@@ -13,7 +13,7 @@ module.exports = {
   },
   parser: "espree",
   parserOptions: {
-    ecmaVersion: 12,
+    ecmaVersion: 10,
   },
 
   rules: {

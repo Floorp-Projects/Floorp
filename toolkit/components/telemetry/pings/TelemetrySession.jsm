@@ -63,6 +63,10 @@ const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(
 
 var gWasDebuggerAttached = false;
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
+});
+
 function generateUUID() {
   let str = Services.uuid.generateUUID().toString();
   // strip {}
@@ -407,7 +411,7 @@ var Impl = {
     } catch (ex) {}
 
     // Only submit this if the extended set is enabled.
-    if (!Utils.isContentProcess && Services.telemetry.canRecordExtended) {
+    if (!Utils.isContentProcess && Telemetry.canRecordExtended) {
       try {
         ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
       } catch (ex) {}
@@ -444,12 +448,12 @@ var Impl = {
     gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
     ret.debuggerAttached = Number(gWasDebuggerAttached);
 
-    let shutdownDuration = Services.telemetry.lastShutdownDuration;
+    let shutdownDuration = Telemetry.lastShutdownDuration;
     if (shutdownDuration) {
       ret.shutdownDuration = shutdownDuration;
     }
 
-    let failedProfileLockCount = Services.telemetry.failedProfileLockCount;
+    let failedProfileLockCount = Telemetry.failedProfileLockCount;
     if (failedProfileLockCount) {
       ret.failedProfileLockCount = failedProfileLockCount;
     }
@@ -473,7 +477,7 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(clearSubsession) {
-    return Services.telemetry.getSnapshotForHistograms(
+    return Telemetry.getSnapshotForHistograms(
       "main",
       clearSubsession,
       !this._testing
@@ -481,7 +485,7 @@ var Impl = {
   },
 
   getKeyedHistograms(clearSubsession) {
-    return Services.telemetry.getSnapshotForKeyedHistograms(
+    return Telemetry.getSnapshotForKeyedHistograms(
       "main",
       clearSubsession,
       !this._testing
@@ -505,12 +509,12 @@ var Impl = {
     }
 
     let scalarsSnapshot = keyed
-      ? Services.telemetry.getSnapshotForKeyedScalars(
+      ? Telemetry.getSnapshotForKeyedScalars(
           "main",
           clearSubsession,
           !this._testing
         )
-      : Services.telemetry.getSnapshotForScalars(
+      : Telemetry.getSnapshotForScalars(
           "main",
           clearSubsession,
           !this._testing
@@ -615,7 +619,7 @@ var Impl = {
     };
 
     // Add extended set measurements common to chrome & content processes
-    if (Services.telemetry.canRecordExtended) {
+    if (Telemetry.canRecordExtended) {
       payloadObj.log = [];
     }
 
@@ -691,12 +695,10 @@ var Impl = {
     payloadObj.info = info;
 
     // Add extended set measurements for chrome process.
-    if (Services.telemetry.canRecordExtended) {
-      payloadObj.slowSQL = protect(() => Services.telemetry.slowSQL);
-      payloadObj.fileIOReports = protect(
-        () => Services.telemetry.fileIOReports
-      );
-      payloadObj.lateWrites = protect(() => Services.telemetry.lateWrites);
+    if (Telemetry.canRecordExtended) {
+      payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
+      payloadObj.fileIOReports = protect(() => Telemetry.fileIOReports);
+      payloadObj.lateWrites = protect(() => Telemetry.lateWrites);
 
       payloadObj.addonDetails = protect(() =>
         AddonManagerPrivate.getTelemetryDetails()
@@ -747,13 +749,13 @@ var Impl = {
       // been suspended since boot, we want the previous property to hold,
       // regardless of the delay during or between the two
       // `msSinceProcessStart*` calls.
-      Services.telemetry.scalarSet(
+      Telemetry.scalarSet(
         "browser.engagement.session_time_excluding_suspend",
-        Services.telemetry.msSinceProcessStartExcludingSuspend()
+        Telemetry.msSinceProcessStartExcludingSuspend()
       );
-      Services.telemetry.scalarSet(
+      Telemetry.scalarSet(
         "browser.engagement.session_time_including_suspend",
-        Services.telemetry.msSinceProcessStartIncludingSuspend()
+        Telemetry.msSinceProcessStartIncludingSuspend()
       );
 
       if (isMobile) {
@@ -773,9 +775,7 @@ var Impl = {
         clearSubsession
       );
     } catch (ex) {
-      Services.telemetry
-        .getHistogramById("TELEMETRY_ASSEMBLE_PAYLOAD_EXCEPTION")
-        .add(1);
+      Telemetry.getHistogramById("TELEMETRY_ASSEMBLE_PAYLOAD_EXCEPTION").add(1);
       throw ex;
     } finally {
       if (!Utils.isContentProcess && clearSubsession) {
@@ -847,7 +847,7 @@ var Impl = {
       return;
     }
 
-    if (!Services.telemetry.canRecordBase && !testing) {
+    if (!Telemetry.canRecordBase && !testing) {
       this._log.config(
         "earlyInit - Telemetry recording is disabled, skipping Chrome process setup."
       );
@@ -903,7 +903,7 @@ var Impl = {
         this.addObserver("idle-daily");
         await Services.telemetry.gatherMemory();
 
-        Services.telemetry.asyncFetchTelemetryData(function() {});
+        Telemetry.asyncFetchTelemetryData(function() {});
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.
@@ -1020,10 +1020,7 @@ var Impl = {
       }
     }
 
-    if (
-      AppConstants.platform == "android" &&
-      Services.telemetry.canRecordExtended
-    ) {
+    if (AppConstants.platform == "android" && Telemetry.canRecordExtended) {
       let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
 
       let options = {
@@ -1083,7 +1080,7 @@ var Impl = {
     // This function returns the current Telemetry payload to the caller.
     // We only gather startup info once.
     if (!Object.keys(this._slowSQLStartup).length) {
-      this._slowSQLStartup = Services.telemetry.slowSQL;
+      this._slowSQLStartup = Telemetry.slowSQL;
     }
     Services.telemetry.gatherMemory();
     return this.getSessionPayload(reason, clearSubsession);
@@ -1098,7 +1095,7 @@ var Impl = {
         this._startupIO.startupSessionRestoreWriteBytes,
       ] = counters;
     }
-    this._slowSQLStartup = Services.telemetry.slowSQL;
+    this._slowSQLStartup = Telemetry.slowSQL;
   },
 
   setAddOns: function setAddOns(aAddOns) {
@@ -1120,7 +1117,7 @@ var Impl = {
     // inactivity, because it is just the start of this active tick.
     if (needsUpdate) {
       this._sessionActiveTicks++;
-      Services.telemetry.scalarAdd("browser.engagement.active_ticks", 1);
+      Telemetry.scalarAdd("browser.engagement.active_ticks", 1);
     }
   },
 
@@ -1305,9 +1302,9 @@ var Impl = {
       !("sessionId" in data)
     ) {
       this._log.error("_loadSessionData - session data is invalid");
-      Services.telemetry
-        .getHistogramById("TELEMETRY_SESSIONDATA_FAILED_VALIDATION")
-        .add(1);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").add(
+        1
+      );
       return null;
     }
 

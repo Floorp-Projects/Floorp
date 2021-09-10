@@ -29,6 +29,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 // This must be kept in sync with FeatureManifest.js. UrlbarPrefs.get() will
 // throw an "unknown pref" error if a test enrolls in a mock experiment and hits
 // a code path that accesses a Nimbus feature variable not defined here.
@@ -958,7 +965,7 @@ class TestProvider extends UrlbarProvider {
    */
   constructor({
     results,
-    name = "TestProvider" + Services.uuid.generateUUID(),
+    name = "TestProvider" + uuidGenerator.generateUUID(),
     type = UrlbarUtils.PROVIDER_TYPE.PROFILE,
     priority = 0,
     addTimeout = 0,

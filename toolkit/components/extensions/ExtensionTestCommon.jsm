@@ -66,6 +66,13 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 const { flushJarCache } = ExtensionUtils;
 
 const { instanceOf } = ExtensionCommon;
@@ -285,7 +292,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
     }
 
     if (data.background) {
-      let bgScript = Services.uuid.generateUUID().number + ".js";
+      let bgScript = uuidGen.generateUUID().number + ".js";
 
       provide(manifest, ["background", "scripts"], [bgScript], true);
       files[bgScript] = data.background;
@@ -431,7 +438,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
     provide(
       data,
       ["manifest", "applications", "gecko", "id"],
-      Services.uuid.generateUUID().number
+      uuidGen.generateUUID().number
     );
   }
 
@@ -476,7 +483,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
       }
     }
     if (!id) {
-      id = Services.uuid.generateUUID().number;
+      id = uuidGen.generateUUID().number;
     }
 
     let signedState = AddonManager.SIGNEDSTATE_SIGNED;

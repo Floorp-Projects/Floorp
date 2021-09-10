@@ -5,9 +5,9 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { Prompter } = ChromeUtils.import("resource://gre/modules/Prompter.jsm");
-
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 const id = "uninstall_self_test@tests.mozilla.com";
 
@@ -35,15 +35,24 @@ const waitForUninstalled = () =>
     AddonManager.addAddonListener(listener);
   });
 
+let promptService = {
+  _response: null,
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
+  confirmEx: function(...args) {
+    this._confirmExArgs = args;
+    return this._response;
+  },
+};
+
 AddonTestUtils.init(this);
 
-let confirmExStub;
-
 add_task(async function setup() {
-  confirmExStub = sinon.stub(Prompter.prototype, "confirmEx");
-
+  let fakePromptService = MockRegistrar.register(
+    "@mozilla.org/embedcomp/prompt-service;1",
+    promptService
+  );
   registerCleanupFunction(() => {
-    sinon.restore();
+    MockRegistrar.unregister(fakePromptService);
   });
   await ExtensionTestUtils.startAddonManager();
 });
@@ -70,8 +79,7 @@ add_task(async function test_management_uninstall_no_prompt() {
 });
 
 add_task(async function test_management_uninstall_prompt_uninstall() {
-  confirmExStub.reset();
-  confirmExStub.returns(0);
+  promptService._response = 0;
 
   function background() {
     browser.test.onMessage.addListener(msg => {
@@ -92,20 +100,18 @@ add_task(async function test_management_uninstall_prompt_uninstall() {
   await waitForUninstalled();
 
   // Test localization strings
-  ok(confirmExStub.calledOnce, "Should have only been called once");
-  equal(confirmExStub.args[0][1], `Uninstall ${manifest.name}`);
+  equal(promptService._confirmExArgs[1], `Uninstall ${manifest.name}`);
   equal(
-    confirmExStub.args[0][2],
+    promptService._confirmExArgs[2],
     `The extension “${manifest.name}” is requesting to be uninstalled. What would you like to do?`
   );
-  equal(confirmExStub.args[0][4], "Uninstall");
-  equal(confirmExStub.args[0][5], "Keep Installed");
+  equal(promptService._confirmExArgs[4], "Uninstall");
+  equal(promptService._confirmExArgs[5], "Keep Installed");
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
 });
 
 add_task(async function test_management_uninstall_prompt_keep() {
-  confirmExStub.reset();
-  confirmExStub.returns(1);
+  promptService._response = 1;
 
   function background() {
     browser.test.onMessage.addListener(async msg => {
