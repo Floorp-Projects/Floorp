@@ -876,6 +876,20 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+#ifdef XP_LINUX
+  // These glibc libraries were merged into libc.so.6 as of glibc
+  // 2.34; they now exist only as stub libraries for compatibility and
+  // newly linked code won't depend on them, so we need to ensure
+  // they're loaded for plugins that may have been linked against a
+  // different version of glibc.  (See also bug 1725828.)
+  if (!mDisplayName.EqualsASCII("clearkey")) {
+    if (!mLibs.IsEmpty()) {
+      mLibs.AppendLiteral(", ");
+    }
+    mLibs.AppendLiteral("libdl.so.2, libpthread.so.0, librt.so.1");
+  }
+#endif
+
   nsCString codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs);
   nsTArray<nsCString> codecs;
   SplitAt(",", codecsString, codecs);
