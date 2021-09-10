@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Прыватны %s</string>
@@ -625,6 +625,22 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Закрываць праз месяц</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Выдаліць</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Актыўнае</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox можа ўсталёўваць і выконваць даследаванні час ад часу.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Даведацца больш</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Праграма будзе закрыта, каб прымяніць змены</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Добра</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Адмяніць</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Адкрытыя карткі</string>
@@ -653,6 +669,8 @@
     <string name="tab_tray_menu_item_share">Падзяліцца ўсімі карткамі</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Нядаўна закрытыя карткі</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Нядаўна закрытыя</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Налады ўліковага запісу</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -952,6 +970,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Выключана</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Уключаны</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Выключаны</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Калекцыі</string>
@@ -1117,7 +1140,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Выдаліць</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Адмена</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Адмена</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Уваход у поўнаэкранны рэжым</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1284,7 +1307,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Паведамленне аб прыватнасці</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Закрыць</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Закрыць</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Пачаць агляданне</string>
@@ -1388,6 +1411,7 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Майнеры крыптавалют</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Збіральнікі лічбавых адбіткаў</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Заблакаваны</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Дазволены</string>
@@ -1412,7 +1436,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Спыняе загрузку вонкавай рэкламы, відэа і іншага змесціва, якое змяшчае код асочвання. Можа адбіцца на некаторых функцыях вэб-сайта.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Фіялетавы колер шчыта азначае, што %s перапыніў асочвальнікаў на сайце. Націсніце, каб даведацца больш.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Фіялетавы колер шчыта азначае, што %s перапыніў асочвальнікаў на сайце. Націсніце, каб даведацца больш.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ахова ўключана на гэтым сайце</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1500,7 +1524,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ніколі не захоўваць</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Аўтазапаўненне</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Аўтазапаўненне</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Сінхранізацыя лагінаў</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1687,7 +1712,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Пошукавы радок</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Змяніць запыт на “%s”. Прыклад:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Змяніць запыт на “%s”. Прыклад:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Падрабязней</string>
 
@@ -1830,6 +1855,10 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Адмена</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Неактыўныя карткі</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Наладзьце аўтаматычна адкрываць спасылкі з сайтаў, пошты і паведамленняў у Firefox.</string>
