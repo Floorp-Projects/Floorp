@@ -1361,7 +1361,7 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     if (atPreviousChar.IsSet() && !atPreviousChar.IsContainerEmpty()) {
       MOZ_ASSERT(!atPreviousChar.IsEndOfContainer());
       return WSScanResult(atPreviousChar.NextPoint(),
-                          atPreviousChar.IsCharASCIISpaceOrNBSP()
+                          atPreviousChar.IsCharCollapsibleASCIISpaceOrNBSP()
                               ? WSType::CollapsibleWhiteSpaces
                               : WSType::NonCollapsibleCharacters);
     }
@@ -1403,11 +1403,11 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
     // When it's a non-empty text node, return it.
     if (atNextChar.IsSet() && !atNextChar.IsContainerEmpty()) {
-      return WSScanResult(
-          atNextChar,
-          !atNextChar.IsEndOfContainer() && atNextChar.IsCharASCIISpaceOrNBSP()
-              ? WSType::CollapsibleWhiteSpaces
-              : WSType::NonCollapsibleCharacters);
+      return WSScanResult(atNextChar,
+                          !atNextChar.IsEndOfContainer() &&
+                                  atNextChar.IsCharCollapsibleASCIISpaceOrNBSP()
+                              ? WSType::CollapsibleWhiteSpaces
+                              : WSType::NonCollapsibleCharacters);
     }
   }
 
@@ -1490,29 +1490,55 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText()));
 
+  const bool isWhiteSpaceCollapsible =
+      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText());
+  const bool isNewLineCollapsible =
+      !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText());
   const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
   for (uint32_t i = std::min(aPoint.Offset(), textFragment.GetLength()); i;
        i--) {
-    char16_t ch = textFragment.CharAt(i - 1);
-    if (nsCRT::IsAsciiSpace(ch)) {
-      continue;
+    WSType wsTypeOfNonCollapsibleChar;
+    switch (textFragment.CharAt(AssertedCast<int32_t>(i - 1))) {
+      case HTMLEditUtils::kSpace:
+      case HTMLEditUtils::kCarridgeReturn:
+      case HTMLEditUtils::kTab:
+        if (isWhiteSpaceCollapsible) {
+          continue;  // collapsible white-space or invisible white-space.
+        }
+        // preformatted white-space.
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
+      case HTMLEditUtils::kNewLine:
+        if (isNewLineCollapsible) {
+          continue;  // collapsible linefeed.
+        }
+        // preformatted linefeed.
+        wsTypeOfNonCollapsibleChar = WSType::PreformattedLineBreak;
+        break;
+      case HTMLEditUtils::kNBSP:
+        if (isWhiteSpaceCollapsible) {
+          if (aNBSPData) {
+            aNBSPData->NotifyNBSP(
+                EditorDOMPointInText(aPoint.ContainerAsText(), i - 1),
+                NoBreakingSpaceData::Scanning::Backward);
+          }
+          continue;
+        }
+        // NBSP is never converted from collapsible white-space/linefeed.
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
+      default:
+        MOZ_ASSERT(!nsCRT::IsAsciiSpace(textFragment.CharAt(i - 1)));
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
     }
 
-    if (ch == HTMLEditUtils::kNBSP) {
-      if (aNBSPData) {
-        aNBSPData->NotifyNBSP(
-            EditorDOMPointInText(aPoint.ContainerAsText(), i - 1),
-            NoBreakingSpaceData::Scanning::Backward);
-      }
-      continue;
-    }
-
-    return Some(BoundaryData(
-        EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
-        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No));
+    return Some(
+        BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                     *aPoint.ContainerAsText(), wsTypeOfNonCollapsibleChar,
+                     !isWhiteSpaceCollapsible ? WhiteSpacePreformatted::Yes
+                                              : WhiteSpacePreformatted::No));
   }
 
   return Nothing();
@@ -1528,15 +1554,6 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer()) {
-    // If the point is in a text node which is preformatted, we should return
-    // the point as a visible character point.
-    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
-      return BoundaryData(aPoint, *aPoint.ContainerAsText(),
-                          WSType::NonCollapsibleCharacters,
-                          WhiteSpacePreformatted::Yes);
-    }
-    // If the text node is not preformatted, we should look for its preceding
-    // characters.
     Maybe<BoundaryData> startInTextNode =
         BoundaryData::ScanCollapsibleWhiteSpaceStartInTextNode(aPoint,
                                                                aNBSPData);
@@ -1594,17 +1611,6 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
         aNBSPData);
   }
 
-  if (EditorUtils::IsWhiteSpacePreformatted(*previousLeafContentOrBlock)) {
-    // If the previous text node is preformatted and not empty, we should return
-    // its end as found a visible character.  Note that we stop scanning
-    // collapsible white-spaces due to reaching preformatted non-empty text
-    // node.  I.e., the following text node might be not preformatted.
-    return BoundaryData(EditorDOMPoint::AtEndOf(*previousLeafContentOrBlock),
-                        *previousLeafContentOrBlock,
-                        WSType::NonCollapsibleCharacters,
-                        WhiteSpacePreformatted::No);
-  }
-
   Maybe<BoundaryData> startInTextNode =
       BoundaryData::ScanCollapsibleWhiteSpaceStartInTextNode(
           EditorDOMPointInText::AtEndOf(*previousLeafContentOrBlock->AsText()),
@@ -1628,27 +1634,54 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText()));
 
+  const bool isWhiteSpaceCollapsible =
+      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText());
+  const bool isNewLineCollapsible =
+      !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText());
   const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
   for (uint32_t i = aPoint.Offset(); i < textFragment.GetLength(); i++) {
-    char16_t ch = textFragment.CharAt(i);
-    if (nsCRT::IsAsciiSpace(ch)) {
-      continue;
+    WSType wsTypeOfNonCollapsibleChar;
+    switch (textFragment.CharAt(AssertedCast<int32_t>(i))) {
+      case HTMLEditUtils::kSpace:
+      case HTMLEditUtils::kCarridgeReturn:
+      case HTMLEditUtils::kTab:
+        if (isWhiteSpaceCollapsible) {
+          continue;  // collapsible white-space or invisible white-space.
+        }
+        // preformatted white-space.
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
+      case HTMLEditUtils::kNewLine:
+        if (isNewLineCollapsible) {
+          continue;  // collapsible linefeed.
+        }
+        // preformatted linefeed.
+        wsTypeOfNonCollapsibleChar = WSType::PreformattedLineBreak;
+        break;
+      case HTMLEditUtils::kNBSP:
+        if (isWhiteSpaceCollapsible) {
+          if (aNBSPData) {
+            aNBSPData->NotifyNBSP(
+                EditorDOMPointInText(aPoint.ContainerAsText(), i),
+                NoBreakingSpaceData::Scanning::Forward);
+          }
+          continue;
+        }
+        // NBSP is never converted from collapsible white-space/linefeed.
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
+      default:
+        MOZ_ASSERT(!nsCRT::IsAsciiSpace(textFragment.CharAt(i)));
+        wsTypeOfNonCollapsibleChar = WSType::NonCollapsibleCharacters;
+        break;
     }
 
-    if (ch == HTMLEditUtils::kNBSP) {
-      if (aNBSPData) {
-        aNBSPData->NotifyNBSP(EditorDOMPointInText(aPoint.ContainerAsText(), i),
-                              NoBreakingSpaceData::Scanning::Forward);
-      }
-      continue;
-    }
-
-    return Some(BoundaryData(
-        EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
-        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No));
+    return Some(
+        BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
+                     *aPoint.ContainerAsText(), wsTypeOfNonCollapsibleChar,
+                     !isWhiteSpaceCollapsible ? WhiteSpacePreformatted::Yes
+                                              : WhiteSpacePreformatted::No));
   }
 
   return Nothing();
@@ -1664,15 +1697,6 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer()) {
-    // If the point is in a text node which is preformatted, we should return
-    // the point as a visible character point.
-    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
-      return BoundaryData(aPoint, *aPoint.ContainerAsText(),
-                          WSType::NonCollapsibleCharacters,
-                          WhiteSpacePreformatted::Yes);
-    }
-    // If the text node is not preformatted, we should look for inclusive
-    // next characters.
     Maybe<BoundaryData> endInTextNode =
         BoundaryData::ScanCollapsibleWhiteSpaceEndInTextNode(aPoint, aNBSPData);
     if (endInTextNode.isSome()) {
@@ -1729,16 +1753,6 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
         EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0),
         aEditableBlockParentOrTopmostEditableInlineElement, aEditingHost,
         aNBSPData);
-  }
-
-  if (EditorUtils::IsWhiteSpacePreformatted(*nextLeafContentOrBlock)) {
-    // If the next text node is preformatted and not empty, we should return
-    // its start as found a visible character.  Note that we stop scanning
-    // collapsible white-spaces due to reaching preformatted non-empty text
-    // node.  I.e., the following text node might be not preformatted.
-    return BoundaryData(
-        EditorDOMPoint(nextLeafContentOrBlock, 0), *nextLeafContentOrBlock,
-        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No);
   }
 
   Maybe<BoundaryData> endInTextNode =
@@ -2547,13 +2561,14 @@ WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
 template <typename EditorDOMPointType>
 EditorDOMPointType WSRunScanner::GetAfterLastVisiblePoint(
     Text& aTextNode, const Element* aAncestorLimiter) {
-  if (EditorUtils::IsWhiteSpacePreformatted(aTextNode)) {
+  EditorDOMPoint atLastCharOfTextNode(
+      &aTextNode, AssertedCast<uint32_t>(std::max<int64_t>(
+                      static_cast<int64_t>(aTextNode.Length()) - 1, 0)));
+  if (!atLastCharOfTextNode.IsContainerEmpty() &&
+      !atLastCharOfTextNode.IsCharCollapsibleASCIISpace()) {
     return EditorDOMPointType::AtEndOf(aTextNode);
   }
-  TextFragmentData textFragmentData(
-      EditorDOMPoint(&aTextNode,
-                     aTextNode.Length() ? aTextNode.Length() - 1 : 0),
-      aAncestorLimiter);
+  TextFragmentData textFragmentData(atLastCharOfTextNode, aAncestorLimiter);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
     return EditorDOMPointType();  // TODO: Make here return error with Err.
   }
@@ -2570,11 +2585,12 @@ EditorDOMPointType WSRunScanner::GetAfterLastVisiblePoint(
 template <typename EditorDOMPointType>
 EditorDOMPointType WSRunScanner::GetFirstVisiblePoint(
     Text& aTextNode, const Element* aAncestorLimiter) {
-  if (EditorUtils::IsWhiteSpacePreformatted(aTextNode)) {
-    return EditorDOMPointType(&aTextNode, 0);
+  EditorDOMPoint atStartOfTextNode(&aTextNode, 0);
+  if (!atStartOfTextNode.IsContainerEmpty() &&
+      atStartOfTextNode.IsCharCollapsibleASCIISpace()) {
+    return atStartOfTextNode;
   }
-  TextFragmentData textFragmentData(EditorDOMPoint(&aTextNode, 0),
-                                    aAncestorLimiter);
+  TextFragmentData textFragmentData(atStartOfTextNode, aAncestorLimiter);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
     return EditorDOMPointType();  // TODO: Make here return error with Err.
   }
@@ -2582,7 +2598,7 @@ EditorDOMPointType WSRunScanner::GetFirstVisiblePoint(
       textFragmentData.InvisibleLeadingWhiteSpaceRangeRef();
   if (!invisibleWhiteSpaceRange.IsPositioned() ||
       invisibleWhiteSpaceRange.Collapsed()) {
-    return EditorDOMPointType(&aTextNode, 0);
+    return atStartOfTextNode;
   }
   return EditorDOMPointType(invisibleWhiteSpaceRange.EndRef());
 }
