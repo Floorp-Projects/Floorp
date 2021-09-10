@@ -10,6 +10,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
+#include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"    // js::IsWindow, js::IsWindowProxy
@@ -2663,6 +2664,10 @@ void DebugEnvironments::takeFrameSnapshot(
    * invariants since DebugEnvironmentProxy::maybeSnapshot can already be
    * nullptr.
    */
+
+  // Because this can be called during exception unwinding, save the exception
+  // state and restore it when we're done.
+  JS::AutoSaveExceptionState ases(cx);
 
   JSScript* script = frame.script();
 
