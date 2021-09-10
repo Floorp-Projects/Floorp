@@ -276,7 +276,7 @@ const ProxyMessenger = {
     let context = ParentAPIManager.getContextById(sender.childId);
     if (context.extension.hasPermission("geckoViewAddons")) {
       return new GeckoViewConnection(
-        this.getSender(context, sender),
+        this.getSender(context.extension, sender),
         sender.actor.browsingContext.top.embedderElement,
         nativeApp,
         context.extension.hasPermission("nativeMessagingFromContent")
@@ -291,21 +291,21 @@ const ProxyMessenger = {
     return this.openNative(nativeApp, sender).sendMessage(holder);
   },
 
-  getSender(context, source) {
+  getSender(extension, source) {
     let sender = {
       contextId: source.id,
       id: source.extensionId,
       envType: source.envType,
       frameId: source.frameId,
-      url: context.uri.spec,
+      url: source.url,
     };
 
-    let { tabId } = apiManager.global.tabTracker.getBrowserData(
-      source.actor.browsingContext.top.embedderElement
-    );
-    if (tabId > 0) {
-      sender.tab = context.extension.tabManager.get(tabId, null)?.convert();
+    let browser = source.actor.browsingContext.top.embedderElement;
+    let data = browser && apiManager.global.tabTracker.getBrowserData(browser);
+    if (data?.tabId > 0) {
+      sender.tab = extension.tabManager.get(data.tabId, null)?.convert();
     }
+
     return sender;
   },
 
@@ -329,8 +329,7 @@ const ProxyMessenger = {
     }
     await extension.wakeupBackground?.();
 
-    let context = ParentAPIManager.getContextById(sender.childId);
-    arg.sender = this.getSender(context, sender);
+    arg.sender = this.getSender(extension, sender);
     arg.topBC = arg.tabId && this.getTopBrowsingContextId(arg.tabId);
     return arg.tabId ? "tab" : "messenger";
   },
