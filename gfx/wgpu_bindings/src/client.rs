@@ -38,9 +38,8 @@ fn make_byte_buf<T: serde::Serialize>(data: &T) -> ByteBuf {
 #[repr(C)]
 pub struct ShaderModuleDescriptor {
     label: RawString,
-    spirv_words: *const u32,
-    spirv_words_length: usize,
-    wgsl_chars: RawString,
+    code: *const u8,
+    code_length: usize,
 }
 
 #[repr(C)]
@@ -913,12 +912,13 @@ pub unsafe extern "C" fn wgpu_client_create_shader_module(
         .shader_modules
         .alloc(backend);
 
-    let code = cow_label(&desc.wgsl_chars).unwrap_or_default();
+    let code =
+        std::str::from_utf8_unchecked(std::slice::from_raw_parts(desc.code, desc.code_length));
     let desc = wgc::pipeline::ShaderModuleDescriptor {
         label: cow_label(&desc.label),
     };
 
-    let action = DeviceAction::CreateShaderModule(id, desc, code);
+    let action = DeviceAction::CreateShaderModule(id, desc, Cow::Borrowed(code));
     *bb = make_byte_buf(&action);
     id
 }
