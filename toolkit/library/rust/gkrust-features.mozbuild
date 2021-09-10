@@ -15,7 +15,6 @@ if CONFIG['MOZ_DEBUG']:
 if CONFIG['MOZ_TSAN']:
     gkrust_features += ['thread_sanitizer']
 
-gkrust_features += ['quantum_render', 'webgpu']
 if CONFIG['MOZ_WEBRENDER_DEBUGGER']:
     gkrust_features += ['webrender_debugger']
 
