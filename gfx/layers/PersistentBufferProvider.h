@@ -174,6 +174,11 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   RefPtr<KnowsCompositor> mKnowsCompositor;
+  // If the texture has its own synchronization then copying back from the
+  // previous texture can cause contention issues and even deadlocks. So we use
+  // a separate permanent back buffer and copy into the shared back buffer when
+  // the DrawTarget is returned, before making it the new front buffer.
+  RefPtr<TextureClient> mPermanentBackBuffer;
   // We may need two extra textures if webrender is enabled.
   static const size_t kMaxTexturesAllowed = 4;
   Vector<RefPtr<TextureClient>, kMaxTexturesAllowed + 2> mTextures;
