@@ -331,12 +331,13 @@ bool MaybeInstallFromDmgAndRelaunch() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   @autoreleasepool {
-    if (!IsAppRunningFromDmg()) {
+    bool isFromDmg = IsAppRunningFromDmg();
+
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG, isFromDmg);
+
+    if (!isFromDmg) {
       return false;
     }
-
-    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG,
-                         MacRunFromDmgUtils::IsAppRunningFromDmg());
 
     // The Applications directory may not be at /Applications, although in
     // practice we're unlikely to encounter since run-from-.dmg is really an
