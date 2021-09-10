@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html class="test-wait">
 <head>
 <script>
-
 function init1()
 {
   // Create an html:iframe in HTML mode (so designMode can be used 320092)
@@ -13,12 +12,11 @@ function init1()
   document.body.appendChild(targetIframe);
 }
 
-
 function init2()
 {
   targetWindow = targetIframe.contentWindow;
   targetDocument = targetWindow.document;
-  
+
   p = document.getElementById("p");
   pText = p.firstChild;
 
@@ -29,20 +27,18 @@ function init2()
   setTimeout(boom, 0);
 }
 
-
 function boom()
 {
-  var rng = targetDocument.createRange(); 
+  var rng = targetDocument.createRange();
   rng.setStart(pText, 3);
   rng.setEnd(pText, 3);
-  
-  targetWindow.getSelection().addRange(rng); 
+
+  targetWindow.getSelection().addRange(rng);
 
   targetDocument.execCommand("insertorderedlist", false, null);
-  
+
   document.documentElement.removeAttribute("class")
 }
-
 </script>
 </head>
 
