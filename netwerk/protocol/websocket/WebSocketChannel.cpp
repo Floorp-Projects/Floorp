@@ -3905,7 +3905,7 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
       rv = NS_ERROR_ILLEGAL_VALUE;
       val = mProtocol.BeginWriting();
       while ((token = nsCRT::strtok(val, ", \t", &val))) {
-        if (PL_strcmp(token, respProtocol.get()) == 0) {
+        if (strcmp(token, respProtocol.get()) == 0) {
           rv = NS_OK;
           break;
         }

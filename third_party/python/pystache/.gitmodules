@@ -1,3 +1,0 @@
-[submodule "ext/spec"]
-	path = ext/spec
-	url = http://github.com/mustache/spec.git

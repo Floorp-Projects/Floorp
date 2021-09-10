@@ -635,6 +635,7 @@ class JitABICall final : public JSAPITest, public DefineCheckArgs<Sig> {
     this->set_instance(this, &result);
 
     StackMacroAssembler masm(cx);
+    AutoCreatedBy acb(masm, __func__);
     PrepareJit(masm);
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());

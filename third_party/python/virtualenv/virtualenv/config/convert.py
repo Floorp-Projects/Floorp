@@ -43,7 +43,7 @@ class NoneType(TypeData):
 
 class ListType(TypeData):
     def _validate(self):
-        """"""
+        """ """
 
     def convert(self, value, flatten=True):
         values = self.split_values(value)

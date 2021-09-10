@@ -212,8 +212,9 @@ nsresult nsReadConfig::readConfigFile() {
     // .cfg to the filename by checking this post reading of the cfg file
     // this value can be set within the cfg file adding a level of security.
 
-    if (PL_strncmp(lockFileName.get(), lockVendor.get(), fileNameLen - 4) != 0)
+    if (strncmp(lockFileName.get(), lockVendor.get(), fileNameLen - 4) != 0) {
       return NS_ERROR_FAILURE;
+    }
   }
 
   // get the value of the autoconfig url

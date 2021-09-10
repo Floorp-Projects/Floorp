@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
+import os
 from functools import partial
 
 from ..app_data import make_app_data
@@ -15,22 +16,24 @@ from .plugin.discovery import get_discover
 from .plugin.seeders import SeederSelector
 
 
-def cli_run(args, options=None, setup_logging=True):
+def cli_run(args, options=None, setup_logging=True, env=None):
     """
     Create a virtual environment given some command line interface arguments.
 
     :param args: the command line arguments
     :param options: passing in a ``VirtualEnvOptions`` object allows return of the parsed options
     :param setup_logging: ``True`` if setup logging handlers, ``False`` to use handlers already registered
+    :param env: environment variables to use
     :return: the session object of the creation (its structure for now is experimental and might change on short notice)
     """
-    of_session = session_via_cli(args, options, setup_logging)
+    env = os.environ if env is None else env
+    of_session = session_via_cli(args, options, setup_logging, env)
     with of_session:
         of_session.run()
     return of_session
 
 
-def session_via_cli(args, options=None, setup_logging=True):
+def session_via_cli(args, options=None, setup_logging=True, env=None):
     """
     Create a virtualenv session (same as cli_run, but this does not perform the creation). Use this if you just want to
     query what the virtual environment would look like, but not actually create it.
@@ -38,17 +41,19 @@ def session_via_cli(args, options=None, setup_logging=True):
     :param args: the command line arguments
     :param options: passing in a ``VirtualEnvOptions`` object allows return of the parsed options
     :param setup_logging: ``True`` if setup logging handlers, ``False`` to use handlers already registered
+    :param env: environment variables to use
     :return: the session object of the creation (its structure for now is experimental and might change on short notice)
     """
-    parser, elements = build_parser(args, options, setup_logging)
+    env = os.environ if env is None else env
+    parser, elements = build_parser(args, options, setup_logging, env)
     options = parser.parse_args(args)
     creator, seeder, activators = tuple(e.create(options) for e in elements)  # create types
     of_session = Session(options.verbosity, options.app_data, parser._interpreter, creator, seeder, activators)  # noqa
     return of_session
 
 
-def build_parser(args=None, options=None, setup_logging=True):
-    parser = VirtualEnvConfigParser(options)
+def build_parser(args=None, options=None, setup_logging=True, env=None):
+    parser = VirtualEnvConfigParser(options, os.environ if env is None else env)
     add_version_flag(parser)
     parser.add_argument(
         "--with-traceback",
@@ -84,7 +89,7 @@ def build_parser_only(args=None):
 
 def handle_extra_commands(options):
     if options.upgrade_embed_wheels:
-        result = manual_upgrade(options.app_data)
+        result = manual_upgrade(options.app_data, options.env)
         raise SystemExit(result)
 
 
@@ -100,8 +105,8 @@ def load_app_data(args, parser, options):
     parser.add_argument(
         "--app-data",
         help="a data folder used as cache by the virtualenv",
-        type=partial(make_app_data, read_only=options.read_only_app_data),
-        default=make_app_data(None, read_only=options.read_only_app_data),
+        type=partial(make_app_data, read_only=options.read_only_app_data, env=options.env),
+        default=make_app_data(None, read_only=options.read_only_app_data, env=options.env),
     )
     parser.add_argument(
         "--reset-app-data",

@@ -6,7 +6,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import os
 
-from appdirs import user_data_dir
+from platformdirs import user_data_dir
 
 from .na import AppDataDisabled
 from .read_only import ReadOnlyAppData
@@ -14,21 +14,22 @@ from .via_disk_folder import AppDataDiskFolder
 from .via_tempdir import TempAppData
 
 
-def _default_app_data_dir():  # type: () -> str
+def _default_app_data_dir(env):
     key = str("VIRTUALENV_OVERRIDE_APP_DATA")
-    if key in os.environ:
-        return os.environ[key]
+    if key in env:
+        return env[key]
     else:
         return user_data_dir(appname="virtualenv", appauthor="pypa")
 
 
 def make_app_data(folder, **kwargs):
     read_only = kwargs.pop("read_only")
+    env = kwargs.pop("env")
     if kwargs:  # py3+ kwonly
         raise TypeError("unexpected keywords: {}")
 
     if folder is None:
-        folder = _default_app_data_dir()
+        folder = _default_app_data_dir(env)
     folder = os.path.abspath(folder)
 
     if read_only:

@@ -926,13 +926,12 @@ nsDefaultCommandLineHandler.prototype = {
     var urilist = [];
 
     if (
-      AppConstants.platform == "macosx" &&
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
-      Services.startup.wasSilentlyRestarted
+      Services.startup.wasSilentlyStarted
     ) {
-      // If we are starting up after a silent restart, don't open a window.
-      // We also need to make sure that the application doesn't immediately
-      // exit, so stay in a LastWindowClosingSurvivalArea until a window opens.
+      // If we are starting up in silent mode, don't open a window. We also need
+      // to make sure that the application doesn't immediately exit, so stay in
+      // a LastWindowClosingSurvivalArea until a window opens.
       Services.startup.enterLastWindowClosingSurvivalArea();
       Services.obs.addObserver(function windowOpenObserver() {
         Services.startup.exitLastWindowClosingSurvivalArea();

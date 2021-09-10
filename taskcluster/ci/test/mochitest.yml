@@ -69,15 +69,18 @@ mochitest-plain:
                     (linux.*64|macosx.*64|windows10-64-2004)-qr/opt: ['autoland']
                     (linux.*64|macosx.*64|windows10-64-2004)-shippable-qr/opt: ['autoland', 'mozilla-central']
                     linux.*64(-asan|-tsan)-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
             fission-xorigin:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    linux.*64-ccov-qr/opt: []
                     default: built-projects
     chunks:
         by-test-platform:
@@ -151,10 +154,12 @@ mochitest-browser-chrome:
             webrender-sw-fission:
                 by-test-platform:
                     linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
                     linux.*-qr/.*: []
+                    linux.*64-ccov-qr/opt: []
                     default: built-projects
     tier:
         by-variant:
@@ -302,10 +307,12 @@ mochitest-devtools-chrome:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
                     windows10-64-2004(-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*64-ccov-qr/opt: ["mozilla-central"]
                     default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
+                    linux.*64-ccov-qr/opt: []
                     default: built-projects
     tier:
         by-variant:

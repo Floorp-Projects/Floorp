@@ -91,7 +91,7 @@ class AppDataDiskFolder(AppData):
         return PyInfoStoreDisk(self.py_info_at, path)
 
     def py_info_clear(self):
-        """"""
+        """ """
         py_info_folder = self.py_info_at
         with py_info_folder:
             for filename in py_info_folder.path.iterdir():

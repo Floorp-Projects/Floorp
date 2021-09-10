@@ -16,7 +16,7 @@ from .common import PyPy
 
 @add_metaclass(abc.ABCMeta)
 class PyPy2(PyPy, Python2):
-    """"""
+    """ """
 
     @classmethod
     def exe_stem(cls):
@@ -41,7 +41,7 @@ class PyPy2(PyPy, Python2):
 
     @property
     def include(self):
-        return self.dest / self.interpreter.distutils_install["headers"]
+        return self.dest / self.interpreter.install_path("headers")
 
     @classmethod
     def modules(cls):
@@ -112,7 +112,7 @@ class Pypy2Windows(PyPy2, WindowsSupports):
 
     @classmethod
     def _shared_libs(cls):
-        return ["libpypy-c.dll"]
+        return ["libpypy-c.dll", "libffi-7.dll"]
 
     @classmethod
     def sources(cls, interpreter):

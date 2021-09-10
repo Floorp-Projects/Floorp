@@ -122,6 +122,7 @@ jobs:
           - mozilla-release
           - mozilla-esr78
           - mozilla-esr91
+          - elm
       when:
           by-project:
               # We want to run at both of the times the nightly runs.
@@ -142,6 +143,7 @@ jobs:
               mozilla-release: [{hour: 10, minute: 0}]
               mozilla-esr78: [{hour: 10, minute: 0}]
               mozilla-esr91: [{hour: 10, minute: 0}]
+              elm: [{hour: 10, minute: 0}]
 
     - name: coverity-tree-analysis
       job:

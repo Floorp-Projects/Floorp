@@ -193,6 +193,8 @@ bool BaselineInterpreterHandler::addDebugInstrumentationOffset(
 }
 
 MethodStatus BaselineCompiler::compile() {
+  AutoCreatedBy acb(masm, "BaselineCompiler::compile");
+
   JSScript* script = handler.script();
   JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
           script->filename(), script->lineno(), script->column(), script);
@@ -241,6 +243,7 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
+  AutoCreatedBy acb2(masm, "exception_tail");
   Linker linker(masm);
   if (masm.oom()) {
     ReportOutOfMemory(cx);
@@ -501,6 +504,9 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
 //    void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
+  AutoCreatedBy acb(masm,
+                    "BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot");
+
   if (!postBarrierSlot_.used()) {
     return true;
   }
@@ -592,6 +598,8 @@ static void CreateAllocSitesForICChain(JSScript* script, uint32_t entryIndex) {
 
 template <>
 bool BaselineCompilerCodeGen::emitNextIC() {
+  AutoCreatedBy acb(masm, "emitNextIC");
+
   // Emit a call to an IC stored in JitScript. Calls to this must match the
   // ICEntry order in JitScript: first the non-op IC entries for |this| and
   // formal arguments, then the for-op IC entries for JOF_IC ops.
@@ -6441,6 +6449,8 @@ bool BaselineInterpreterCodeGen::emit_ForceInterpreter() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitPrologue() {
+  AutoCreatedBy acb(masm, "BaselineCodeGen<Handler>::emitPrologue");
+
 #ifdef JS_USE_LINK_REGISTER
   // Push link register from generateEnterJIT()'s BLR.
   masm.pushReturnAddress();
@@ -6510,6 +6520,8 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitEpilogue() {
+  AutoCreatedBy acb(masm, "BaselineCodeGen<Handler>::emitEpilogue");
+
   masm.bind(&return_);
 
   if (!handler.shouldEmitDebugEpilogueAtReturnOp()) {
@@ -6534,6 +6546,8 @@ bool BaselineCodeGen<Handler>::emitEpilogue() {
 }
 
 MethodStatus BaselineCompiler::emitBody() {
+  AutoCreatedBy acb(masm, "BaselineCompiler::emitBody");
+
   JSScript* script = handler.script();
   MOZ_ASSERT(handler.pc() == script->code());
 
@@ -6594,9 +6608,10 @@ MethodStatus BaselineCompiler::emitBody() {
     }
 
 #define EMIT_OP(OP, ...)                                       \
-  case JSOp::OP:                                               \
+  case JSOp::OP: {                                             \
+    AutoCreatedBy acb(masm, "op=" #OP);                        \
     if (MOZ_UNLIKELY(!this->emit_##OP())) return Method_Error; \
-    break;
+  } break;
 
     switch (op) {
       FOR_EACH_OPCODE(EMIT_OP)
@@ -6639,6 +6654,8 @@ static constexpr Register InterpreterPCRegAtDispatch =
     HasInterpreterPCReg() ? InterpreterPCReg : R0.scratchReg();
 
 bool BaselineInterpreterGenerator::emitInterpreterLoop() {
+  AutoCreatedBy acb(masm, "BaselineInterpreterGenerator::emitInterpreterLoop");
+
   Register scratch1 = R0.scratchReg();
   Register scratch2 = R1.scratchReg();
 
@@ -6713,6 +6730,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   Label opLabels[JSOP_LIMIT];
 #define EMIT_OP(OP, ...)                          \
   {                                               \
+    AutoCreatedBy acb(masm, "op=" #OP);           \
     masm.bind(&opLabels[uint8_t(JSOp::OP)]);      \
     handler.setCurrentOp(JSOp::OP);               \
     if (!this->emit_##OP()) {                     \
@@ -6782,6 +6800,10 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 }
 
 void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
+  AutoCreatedBy acb(masm,
+                    "BaselineInterpreterGenerator::"
+                    "emitOutOfLineCodeCoverageInstrumentation");
+
   masm.bind(handler.codeCoverageAtPrologueLabel());
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -6818,6 +6840,8 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 }
 
 bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
+  AutoCreatedBy acb(masm, "BaselineInterpreterGenerator::generate");
+
   if (!emitPrologue()) {
     return false;
   }
@@ -6837,6 +6861,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
   emitOutOfLineCodeCoverageInstrumentation();
 
   {
+    AutoCreatedBy acb(masm, "everything_else");
     Linker linker(masm);
     if (masm.oom()) {
       ReportOutOfMemory(cx);
@@ -6902,6 +6927,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
                                               DebugTrapHandlerKind kind) {
   StackMacroAssembler masm;
+  AutoCreatedBy acb(masm, "JitRuntime::generateDebugTrapHandler");
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.takeUnchecked(BaselineFrameReg);

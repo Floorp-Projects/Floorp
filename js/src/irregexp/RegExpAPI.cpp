@@ -477,6 +477,12 @@ enum class AssembleResult {
     // which needs a jit context.
     jctx.emplace(cx, nullptr);
     stack_masm.emplace();
+#ifdef DEBUG
+    // It would be much preferable to use `class AutoCreatedBy` here, but we
+    // may be operating without an assembler at all if `useNativeCode` is
+    // `false`, so there's no place to put such a call.
+    stack_masm.ref().pushCreator("Assemble() in RegExpAPI.cpp");
+#endif
     uint32_t num_capture_registers = re->pairCount() * 2;
     masm = MakeUnique<SMRegExpMacroAssembler>(cx, stack_masm.ref(), zone, mode,
                                               num_capture_registers);
@@ -532,6 +538,14 @@ enum class AssembleResult {
   V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
   RegExpCompiler::CompilationResult result = compiler->Assemble(
       cx->isolate, masm_ptr, data->node, data->capture_count, wrappedPattern);
+
+  if (useNativeCode) {
+#ifdef DEBUG
+    // See comment referencing `pushCreator` above.
+    stack_masm.ref().popCreator();
+#endif
+  }
+
   if (!result.Succeeded()) {
     MOZ_ASSERT(result.error == RegExpError::kTooLarge);
     return AssembleResult::TooLarge;
