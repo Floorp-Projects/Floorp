@@ -408,6 +408,8 @@ void wasm::ClearExitFP(MacroAssembler& masm, Register scratch) {
 }
 
 static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
+  AutoCreatedBy acb(masm, "GenerateCallablePrologue");
+
   masm.setFramePushed(0);
 
   // ProfilingFrameIterator needs to know the offsets of several key
@@ -486,6 +488,8 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
 
 static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
                                      ExitReason reason, uint32_t* ret) {
+  AutoCreatedBy acb(masm, "GenerateCallableEpilogue");
+
   if (framePushed) {
     masm.freeStack(framePushed);
   }
@@ -562,6 +566,8 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
                                     const TypeIdDesc& funcTypeId,
                                     const Maybe<uint32_t>& tier1FuncIndex,
                                     FuncOffsets* offsets) {
+  AutoCreatedBy acb(masm, "wasm::GenerateFunctionPrologue");
+
   // These constants reflect statically-determined offsets between a function's
   // checked call entry and the checked tail's entry, see diagram below.  The
   // Entry is a call target, so must have CodeAlignment, but the TailEntry is

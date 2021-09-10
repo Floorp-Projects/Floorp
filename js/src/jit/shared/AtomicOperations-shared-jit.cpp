@@ -760,6 +760,7 @@ bool InitializeJittedAtomics() {
   TempAllocator alloc(&lifo);
   JitContext jcx(&alloc);
   StackMacroAssembler masm;
+  AutoCreatedBy acb(masm, "InitializeJittedAtomics");
 
   uint32_t fenceSeqCst = GenFenceSeqCst(masm);
 
