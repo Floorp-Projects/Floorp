@@ -23,7 +23,7 @@ random-if(d2d) fuzzy-if(skiaContent,0-1,0-14) == boxshadow-onecorner.html boxsha
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(0-2,0-440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
-== boxshadow-opacity.html boxshadow-opacity-ref.html
+fuzzy-if(useDrawSnapshot,1-1,1197-1197) == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
 fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
