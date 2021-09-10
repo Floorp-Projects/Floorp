@@ -42,7 +42,6 @@ extern crate profiler_helper;
 extern crate rsdparsa_capi;
 extern crate static_prefs;
 extern crate storage;
-#[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
 extern crate xpcom;
 #[cfg(feature = "new_xulstore")]
@@ -56,7 +55,6 @@ extern crate webext_storage_bridge;
 #[cfg(feature = "webrtc")]
 extern crate mdns_service;
 extern crate neqo_glue;
-#[cfg(feature = "webgpu")]
 extern crate wgpu_bindings;
 
 extern crate qcms;

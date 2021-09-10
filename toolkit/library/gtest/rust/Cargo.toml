@@ -6,7 +6,6 @@ license = "MPL-2.0"
 description = "Testing code for libgkrust"
 
 [features]
-quantum_render = ["gkrust-shared/quantum_render"]
 cubeb-remoting = ["gkrust-shared/cubeb-remoting"]
 cubeb_coreaudio_rust = ["gkrust-shared/cubeb_coreaudio_rust"]
 cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
@@ -27,7 +26,6 @@ bitsdownload = ["gkrust-shared/bitsdownload"]
 new_xulstore = ["gkrust-shared/new_xulstore"]
 libfuzzer = ["gkrust-shared/libfuzzer", "gecko-fuzz-targets"]
 webrtc = ["gkrust-shared/webrtc"]
-webgpu = ["gkrust-shared/webgpu"]
 glean_disable_upload = ["gkrust-shared/glean_disable_upload"]
 glean_with_gecko = ["gkrust-shared/glean_with_gecko"]
 with_dbus = ["gkrust-shared/with_dbus"]
