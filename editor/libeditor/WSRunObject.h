@@ -721,9 +721,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
+      nsIEditor::EDirection aDirectionToDelete) const {
+    MOZ_ASSERT(aDirectionToDelete == nsIEditor::eNone ||
+               aDirectionToDelete == nsIEditor::eNext ||
+               aDirectionToDelete == nsIEditor::ePrevious);
     return TextFragmentDataAtStartRef().GetEndOfCollapsibleASCIIWhiteSpaces(
-        aPointAtASCIIWhiteSpace);
+        aPointAtASCIIWhiteSpace, aDirectionToDelete);
   }
 
   /**
@@ -735,9 +739,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * aPointAtASCIIWhiteSpace.
    */
   EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
-      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const {
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
+      nsIEditor::EDirection aDirectionToDelete) const {
+    MOZ_ASSERT(aDirectionToDelete == nsIEditor::eNone ||
+               aDirectionToDelete == nsIEditor::eNext ||
+               aDirectionToDelete == nsIEditor::ePrevious);
     return TextFragmentDataAtStartRef().GetFirstASCIIWhiteSpacePointCollapsedTo(
-        aPointAtASCIIWhiteSpace);
+        aPointAtASCIIWhiteSpace, aDirectionToDelete);
   }
 
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
@@ -1014,9 +1022,11 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointBase<PT, CT>& aPoint) const;
 
     EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
-        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
+        nsIEditor::EDirection aDirectionToDelete) const;
     EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
-        const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+        const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
+        nsIEditor::EDirection aDirectionToDelete) const;
 
     /**
      * GetNonCollapsedRangeInTexts() returns non-empty range in texts which
