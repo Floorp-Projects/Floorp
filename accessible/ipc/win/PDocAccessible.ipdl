@@ -17,7 +17,6 @@ using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
-[RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
 
@@ -110,11 +109,6 @@ child:
    * elements through keyboard navigation.
    */
   async RestoreFocus();
-
-  /*
-   * Verify the cache. Used for testing purposes.
-   */
-  async VerifyCache(uint64_t aID, uint64_t aCacheDomain, AccAttributes aFields);
 
   async __delete__();
 };
