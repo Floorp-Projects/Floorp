@@ -122,8 +122,10 @@ function matchRequest(channel, filters) {
 
   if (filters.browserId) {
     const topFrame = NetworkHelper.getTopFrameForRequest(channel);
-    // topFrame is typically null for some chrome requests like favicons
-    if (topFrame && topFrame.browsingContext.browserId == filters.browserId) {
+    // `topFrame` is typically null for some chrome requests like favicons
+    // And its `browsingContext` attribute might be null if the request happened
+    // while the tab is being closed.
+    if (topFrame?.browsingContext?.browserId == filters.browserId) {
       return true;
     }
 
