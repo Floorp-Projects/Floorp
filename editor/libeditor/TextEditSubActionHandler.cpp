@@ -141,6 +141,30 @@ nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
   return rv;
 }
 
+nsresult TextEditor::InsertLineBreakAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!mInitSucceeded)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  EditActionResult result = InsertLineFeedCharacterAtSelection();
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "TextEditor::InsertLineFeedCharacterAtSelection() failed, but ignored");
+  return result.Rv();
+}
+
 EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSingleLineEditor());

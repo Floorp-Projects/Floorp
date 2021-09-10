@@ -269,6 +269,27 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   return rv;
 }
 
+NS_IMETHODIMP TextEditor::InsertLineBreak() {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  if (NS_WARN_IF(IsSingleLineEditor())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                             ScrollSelectionIntoView::Yes);
+  rv = InsertLineBreakAsSubAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditor::InsertLineBreakAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
 nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak,
                                           aPrincipal);

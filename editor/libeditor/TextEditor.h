@@ -105,6 +105,7 @@ class TextEditor final : public EditorBase,
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
   NS_IMETHOD GetTextLength(uint32_t* aCount) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
     const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
@@ -262,6 +263,11 @@ class TextEditor final : public EditorBase,
       bool aSuppressTransaction) final;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
+
+  /**
+   * InsertLineBreakAsSubAction() inserts a line break.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
 
   /**
    * Replace existed string with aString.  Caller must guarantee that there
