@@ -176,10 +176,6 @@ class MOZ_STACK_CLASS ProfilerStringView {
     return mStringView;
   }
 
-  [[nodiscard]] constexpr const CHAR* Data() const {
-    return mStringView.data();
-  }
-
   [[nodiscard]] constexpr size_t Length() const { return mStringView.length(); }
 
   [[nodiscard]] constexpr bool IsLiteral() const {
@@ -190,9 +186,10 @@ class MOZ_STACK_CLASS ProfilerStringView {
   }
   // No `IsOwned...()` because it's a secret, only used internally!
 
-  [[nodiscard]] operator Span<const CHAR>() const {
-    return Span<const CHAR>(Data(), Length());
+  [[nodiscard]] Span<const CHAR> AsSpan() const {
+    return Span<const CHAR>(mStringView.data(), mStringView.length());
   }
+  [[nodiscard]] operator Span<const CHAR>() const { return AsSpan(); }
 
  private:
   enum class Ownership { Literal, Reference, OwnedThroughStringView };

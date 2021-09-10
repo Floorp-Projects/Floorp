@@ -3619,73 +3619,66 @@ void TestProfilerStringView() {
   };
 
   // Literal empty string.
-  MOZ_RELEASE_ASSERT(BSV(empty).Data());
-  MOZ_RELEASE_ASSERT(BSV(empty).Data()[0] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(empty).Length() == 0);
+  MOZ_RELEASE_ASSERT(BSV(empty).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(BSV(empty).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(empty).IsReference());
 
   // Literal non-empty string.
-  MOZ_RELEASE_ASSERT(BSV(hi).Data());
-  MOZ_RELEASE_ASSERT(BSV(hi).Data()[0] == CHAR('h'));
-  MOZ_RELEASE_ASSERT(BSV(hi).Data()[1] == CHAR('i'));
-  MOZ_RELEASE_ASSERT(BSV(hi).Data()[2] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(hi).Length() == 2);
+  MOZ_RELEASE_ASSERT(BSV(hi).AsSpan().Elements());
+  MOZ_RELEASE_ASSERT(BSV(hi).AsSpan().Elements()[0] == CHAR('h'));
+  MOZ_RELEASE_ASSERT(BSV(hi).AsSpan().Elements()[1] == CHAR('i'));
   MOZ_RELEASE_ASSERT(BSV(hi).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(hi).IsReference());
 
   // std::string_view to a literal empty string.
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(empty)).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(empty)).Data()[0] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(empty)).Length() == 0);
+  MOZ_RELEASE_ASSERT(
+      BSV(std::basic_string_view<CHAR>(empty)).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string_view<CHAR>(empty)).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(empty)).IsReference());
 
   // std::string_view to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).Data()[0] ==
-                     CHAR('h'));
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).Data()[1] ==
-                     CHAR('i'));
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).Data()[2] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).Length() == 2);
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).AsSpan().Elements());
+  MOZ_RELEASE_ASSERT(
+      BSV(std::basic_string_view<CHAR>(hi)).AsSpan().Elements()[0] ==
+      CHAR('h'));
+  MOZ_RELEASE_ASSERT(
+      BSV(std::basic_string_view<CHAR>(hi)).AsSpan().Elements()[1] ==
+      CHAR('i'));
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string_view<CHAR>(hi)).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>(hi)).IsReference());
 
   // Default std::string_view points at nullptr, ProfilerStringView converts it
   // to the literal empty string.
-  MOZ_RELEASE_ASSERT(!std::basic_string_view<CHAR>().data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>()).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>()).Data()[0] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>()).Length() == 0);
+  MOZ_RELEASE_ASSERT(!std::basic_string_view<CHAR>().data());
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>()).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string_view<CHAR>()).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string_view<CHAR>()).IsReference());
 
   // std::string to a literal empty string.
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(empty)).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(empty)).Data()[0] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(empty)).Length() == 0);
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(empty)).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string<CHAR>(empty)).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(empty)).IsReference());
 
   // std::string to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).Data()[0] == CHAR('h'));
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).Data()[1] == CHAR('i'));
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).Data()[2] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).Length() == 2);
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).AsSpan().Elements());
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).AsSpan().Elements()[0] ==
+                     CHAR('h'));
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).AsSpan().Elements()[1] ==
+                     CHAR('i'));
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string<CHAR>(hi)).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>(hi)).IsReference());
 
   // Default std::string contains an empty null-terminated string.
-  MOZ_RELEASE_ASSERT(std::basic_string<CHAR>().data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>()).Data());
-  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>()).Data()[0] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>()).Length() == 0);
+  MOZ_RELEASE_ASSERT(std::basic_string<CHAR>().data());
+  MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>()).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(!BSV(std::basic_string<CHAR>()).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(std::basic_string<CHAR>()).IsReference());
 
@@ -3707,36 +3700,34 @@ void TestProfilerStringView() {
   };
 
   // FakeNsTString to nullptr.
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(nullptr, 0, true)).Data());
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(nullptr, 0, true)).Data()[0] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(nullptr, 0, true)).Length() == 0);
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(nullptr, 0, true)).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(nullptr, 0, true)).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(FakeNsTString(nullptr, 0, true)).IsReference());
 
   // FakeNsTString to a literal empty string.
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(empty, 0, true)).Data());
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(empty, 0, true)).Data()[0] ==
-                     CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(empty, 0, true)).Length() == 0);
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(empty, 0, true)).AsSpan().IsEmpty());
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(empty, 0, true)).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(FakeNsTString(empty, 0, true)).IsReference());
 
   // FakeNsTString to a literal non-empty string.
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).Data());
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).Data()[0] == CHAR('h'));
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).Data()[1] == CHAR('i'));
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).Data()[2] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).Length() == 2);
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).AsSpan().Elements());
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).AsSpan().Elements()[0] ==
+                     CHAR('h'));
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).AsSpan().Elements()[1] ==
+                     CHAR('i'));
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, true)).IsLiteral());
   MOZ_RELEASE_ASSERT(!BSV(FakeNsTString(hi, 2, true)).IsReference());
 
   // FakeNsTString to a non-literal non-empty string.
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).Data());
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).Data()[0] == CHAR('h'));
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).Data()[1] == CHAR('i'));
-  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).Data()[2] == CHAR('\0'));
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).Length() == 2);
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).AsSpan().Elements());
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).AsSpan().Elements()[0] ==
+                     CHAR('h'));
+  MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).AsSpan().Elements()[1] ==
+                     CHAR('i'));
   MOZ_RELEASE_ASSERT(!BSV(FakeNsTString(hi, 2, false)).IsLiteral());
   MOZ_RELEASE_ASSERT(BSV(FakeNsTString(hi, 2, false)).IsReference());
 
@@ -3754,21 +3745,19 @@ void TestProfilerStringView() {
     cb.ReadEach([&](ProfileBufferEntryReader& aER) {
       ++read;
       auto bsv = aER.ReadObject<ProfilerStringView<CHAR>>();
-      MOZ_RELEASE_ASSERT(bsv.Data());
-      MOZ_RELEASE_ASSERT(bsv.Data()[0] == CHAR('h'));
-      MOZ_RELEASE_ASSERT(bsv.Data()[1] == CHAR('i'));
-      MOZ_RELEASE_ASSERT(bsv.Data()[2] == CHAR('\0'));
       MOZ_RELEASE_ASSERT(bsv.Length() == 2);
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements());
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements()[0] == CHAR('h'));
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements()[1] == CHAR('i'));
       MOZ_RELEASE_ASSERT(bsv.IsLiteral());
       MOZ_RELEASE_ASSERT(!bsv.IsReference());
       outerBSV = std::move(bsv);
     });
     MOZ_RELEASE_ASSERT(read == 1);
-    MOZ_RELEASE_ASSERT(outerBSV.Data());
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[0] == CHAR('h'));
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[1] == CHAR('i'));
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[2] == CHAR('\0'));
     MOZ_RELEASE_ASSERT(outerBSV.Length() == 2);
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements());
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements()[0] == CHAR('h'));
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements()[1] == CHAR('i'));
     MOZ_RELEASE_ASSERT(outerBSV.IsLiteral());
     MOZ_RELEASE_ASSERT(!outerBSV.IsReference());
   }
@@ -3784,12 +3773,11 @@ void TestProfilerStringView() {
     cb.ReadEach([&](ProfileBufferEntryReader& aER) {
       ++read;
       auto bsv = aER.ReadObject<ProfilerStringView<CHAR>>();
-      MOZ_RELEASE_ASSERT(bsv.Data());
-      MOZ_RELEASE_ASSERT(bsv.Data() != hiString.data());
-      MOZ_RELEASE_ASSERT(bsv.Data()[0] == CHAR('h'));
-      MOZ_RELEASE_ASSERT(bsv.Data()[1] == CHAR('i'));
-      MOZ_RELEASE_ASSERT(bsv.Data()[2] == CHAR('\0'));
       MOZ_RELEASE_ASSERT(bsv.Length() == 2);
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements());
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements() != hiString.data());
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements()[0] == CHAR('h'));
+      MOZ_RELEASE_ASSERT(bsv.AsSpan().Elements()[1] == CHAR('i'));
       // Special ownership case, neither a literal nor a reference!
       MOZ_RELEASE_ASSERT(!bsv.IsLiteral());
       MOZ_RELEASE_ASSERT(!bsv.IsReference());
@@ -3799,12 +3787,11 @@ void TestProfilerStringView() {
       MOZ_RELEASE_ASSERT(bsv.Length() == 0);
     });
     MOZ_RELEASE_ASSERT(read == 1);
-    MOZ_RELEASE_ASSERT(outerBSV.Data());
-    MOZ_RELEASE_ASSERT(outerBSV.Data() != hiString.data());
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[0] == CHAR('h'));
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[1] == CHAR('i'));
-    MOZ_RELEASE_ASSERT(outerBSV.Data()[2] == CHAR('\0'));
     MOZ_RELEASE_ASSERT(outerBSV.Length() == 2);
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements());
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements() != hiString.data());
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements()[0] == CHAR('h'));
+    MOZ_RELEASE_ASSERT(outerBSV.AsSpan().Elements()[1] == CHAR('i'));
     MOZ_RELEASE_ASSERT(!outerBSV.IsLiteral());
     MOZ_RELEASE_ASSERT(!outerBSV.IsReference());
   }

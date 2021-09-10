@@ -1040,9 +1040,8 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
                 baseprofiler::SpliceableJSONWriter& aWriter,
                 const ProfilerString16View& aEventType,
                 const TimeStamp& aStartTime, const TimeStamp& aEventTimeStamp) {
-              aWriter.StringProperty(
-                  "eventType", NS_ConvertUTF16toUTF8(aEventType.Data(),
-                                                     aEventType.Length()));
+              aWriter.StringProperty("eventType",
+                                     NS_ConvertUTF16toUTF8(aEventType));
               // This is the event processing latency, which is the time from
               // when the event was created, to when it was started to be
               // processed. Note that the computation of this latency is

@@ -281,7 +281,7 @@ struct UserTimingMarker {
       const ProfilerString16View& aName, bool aIsMeasure,
       const Maybe<ProfilerString16View>& aStartMark,
       const Maybe<ProfilerString16View>& aEndMark) {
-    aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aName.Data()));
+    aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aName));
     if (aIsMeasure) {
       aWriter.StringProperty("entryType", "measure");
     } else {
@@ -289,14 +289,12 @@ struct UserTimingMarker {
     }
 
     if (aStartMark.isSome()) {
-      aWriter.StringProperty("startMark",
-                             NS_ConvertUTF16toUTF8(aStartMark->Data()));
+      aWriter.StringProperty("startMark", NS_ConvertUTF16toUTF8(*aStartMark));
     } else {
       aWriter.NullProperty("startMark");
     }
     if (aEndMark.isSome()) {
-      aWriter.StringProperty("endMark",
-                             NS_ConvertUTF16toUTF8(aEndMark->Data()));
+      aWriter.StringProperty("endMark", NS_ConvertUTF16toUTF8(*aEndMark));
     } else {
       aWriter.NullProperty("endMark");
     }
