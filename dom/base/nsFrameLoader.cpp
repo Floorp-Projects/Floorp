@@ -2583,14 +2583,14 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 
   MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
 
-  // Graphics initialization code relies on having frames up-to-date for the
+  // Graphics initialization code relies on having a frame for the
   // remote browser case, as we can be inside a popup, which is a different
   // widget.
   //
   // FIXME: Ideally this should be unconditional, but we skip if for <iframe
   // mozbrowser> because the old RDM ui depends on current behavior, and the
   // mozbrowser frame code is scheduled for deletion, see bug 1574886.
-  if (!OwnerIsMozBrowserFrame()) {
+  if (!OwnerIsMozBrowserFrame() && !mOwnerContent->GetPrimaryFrame()) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
