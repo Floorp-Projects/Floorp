@@ -21,6 +21,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 /**
  * Provides helpers to interact with Window objects.
  *
@@ -158,7 +165,7 @@ class WindowManager {
 
     const key = browserElement.permanentKey;
     if (!this._windowHandles.has(key)) {
-      const uuid = Services.uuid.generateUUID().toString();
+      const uuid = uuidGen.generateUUID().toString();
       this._windowHandles.set(key, uuid.substring(1, uuid.length - 1));
     }
     return this._windowHandles.get(key);
@@ -174,7 +181,7 @@ class WindowManager {
    */
   getIdForWindow(win) {
     if (!this._chromeWindowHandles.has(win)) {
-      const uuid = Services.uuid.generateUUID().toString();
+      const uuid = uuidGen.generateUUID().toString();
       this._chromeWindowHandles.set(win, uuid.substring(1, uuid.length - 1));
     }
     return this._chromeWindowHandles.get(win);

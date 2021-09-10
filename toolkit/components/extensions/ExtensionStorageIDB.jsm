@@ -21,6 +21,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "quotaManagerService",
+  "@mozilla.org/dom/quota-manager-service;1",
+  "nsIQuotaManagerService"
+);
+
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
 // storage used by the browser.storage.local API is not directly accessible from the extension code,
 // it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.jsm).
@@ -742,7 +749,7 @@ this.ExtensionStorageIDB = {
 
   persist(storagePrincipal) {
     return new Promise((resolve, reject) => {
-      const request = Services.qms.persist(storagePrincipal);
+      const request = quotaManagerService.persist(storagePrincipal);
       request.callback = () => {
         if (request.resultCode === Cr.NS_OK) {
           resolve();

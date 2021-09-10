@@ -12,6 +12,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "quotaManagerService",
+  "@mozilla.org/dom/quota-manager-service;1",
+  "nsIQuotaManagerService"
+);
+
 /**
  * A number of iterations after which to yield time back
  * to the system.
@@ -138,7 +145,7 @@ async function clearQuotaManager(options, dataType) {
 
   let promises = [];
   await new Promise((resolve, reject) => {
-    Services.qms.getUsage(request => {
+    quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
         reject({ message: `Clear ${dataType} failed` });
         return;
@@ -168,13 +175,13 @@ async function clearQuotaManager(options, dataType) {
             new Promise((resolve, reject) => {
               let clearRequest;
               if (dataType === "indexedDB") {
-                clearRequest = Services.qms.clearStoragesForPrincipal(
+                clearRequest = quotaManagerService.clearStoragesForPrincipal(
                   principal,
                   null,
                   "idb"
                 );
               } else {
-                clearRequest = Services.qms.clearStoragesForPrincipal(
+                clearRequest = quotaManagerService.clearStoragesForPrincipal(
                   principal,
                   "default",
                   "ls"

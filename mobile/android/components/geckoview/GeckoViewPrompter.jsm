@@ -16,9 +16,16 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 class GeckoViewPrompter {
   constructor(aParent) {
-    this.id = Services.uuid
+    this.id = gUUIDGenerator
       .generateUUID()
       .toString()
       .slice(1, -1); // Discard surrounding braces

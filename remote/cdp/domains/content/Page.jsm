@@ -6,10 +6,19 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const { ContentProcessDomain } = ChromeUtils.import(
   "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
 );
 
 const {
@@ -185,7 +194,7 @@ class Page extends ContentProcessDomain {
     if (worldName) {
       this.worldsToEvaluateOnLoad.add(worldName);
     }
-    const identifier = Services.uuid
+    const identifier = uuidGen
       .generateUUID()
       .toString()
       .slice(1, -1);

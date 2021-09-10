@@ -6,12 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["NormandyUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 var NormandyUtils = {
   generateUuid() {
     // Generate a random UUID, convert it to a string, and slice the braces off the ends.
-    return Services.uuid
+    return uuidGenerator
       .generateUUID()
       .toString()
       .slice(1, -1);

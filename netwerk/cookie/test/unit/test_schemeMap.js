@@ -5,6 +5,13 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  Services,
+  "cookiemgr",
+  "@mozilla.org/cookiemanager;1",
+  "nsICookieManager"
+);
+
 function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
@@ -169,7 +176,7 @@ add_task(async _ => {
   }
 
   info("Let's set a cookie without scheme");
-  Services.cookies.add(
+  Services.cookiemgr.add(
     "example.org",
     "/",
     "a",

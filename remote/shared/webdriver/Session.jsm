@@ -11,8 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   accessibility: "chrome://remote/content/marionette/accessibility.js",
   allowAllCerts: "chrome://remote/content/marionette/cert.js",
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
@@ -26,6 +24,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
@@ -160,7 +165,7 @@ class WebDriverSession {
     // to reconnect.
     this._connections = new Set();
 
-    this.id = Services.uuid
+    this.id = uuidGen
       .generateUUID()
       .toString()
       .slice(1, -1);

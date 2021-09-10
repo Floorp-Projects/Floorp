@@ -12,6 +12,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
+  "quotaManagerService",
+  "@mozilla.org/dom/quota-manager-service;1",
+  "nsIQuotaManagerService"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
   "serviceWorkerManager",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
@@ -81,7 +88,7 @@ class PrincipalsCollector {
   async _getAllPrincipalsInternal(progress = {}) {
     progress.step = "principals-quota-manager";
     let principals = await new Promise(resolve => {
-      Services.qms.listOrigins().callback = request => {
+      quotaManagerService.listOrigins().callback = request => {
         progress.step = "principals-quota-manager-listOrigins";
         if (request.resultCode != Cr.NS_OK) {
           // We are probably shutting down. We don't want to propagate the
