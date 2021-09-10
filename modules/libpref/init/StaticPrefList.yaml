@@ -6703,6 +6703,13 @@
   value: false
   mirror: always
 
+# Whether trigonometric constants and functions are enabled in calc().
+- name: layout.css.trig.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Should we look for counter ancestor scopes first?
 - name: layout.css.counter-ancestor-scope.enabled
   type: bool
