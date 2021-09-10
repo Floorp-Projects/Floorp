@@ -5131,8 +5131,11 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType,
       return;
     }
 
-    if (Element* frame = mDoc->GetEmbedderElement()) {
-      nsContentUtils::RequestFrameFocus(*frame, canFocus, aCallerType);
+    MOZ_ASSERT(mDoc, "Call chain should have ensured document creation.");
+    if (mDoc) {
+      if (Element* frame = mDoc->GetEmbedderElement()) {
+        nsContentUtils::RequestFrameFocus(*frame, canFocus, aCallerType);
+      }
     }
     return;
   }
