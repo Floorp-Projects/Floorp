@@ -215,13 +215,11 @@ struct RetainedDisplayListBuilder {
    * aKeepLinked=true internally for sub-lists that can't be changed to keep the
    * original list structure linked for fast re-use.
    */
-  bool PreProcessDisplayList(RetainedDisplayList* aList,
-                             AnimatedGeometryRoot* aAGR,
-                             PartialUpdateResult& aUpdated,
-                             nsIFrame* aOuterFrame = nullptr,
-                             uint32_t aCallerKey = 0,
-                             uint32_t aNestingDepth = 0,
-                             bool aKeepLinked = false);
+  bool PreProcessDisplayList(
+      RetainedDisplayList* aList, nsIFrame* aAGR, PartialUpdateResult& aUpdated,
+      nsIFrame* aAsyncAncestor, const ActiveScrolledRoot* aAsyncAncestorASR,
+      nsIFrame* aOuterFrame = nullptr, uint32_t aCallerKey = 0,
+      uint32_t aNestingDepth = 0, bool aKeepLinked = false);
 
   /**
    * Merges items from aNewList into non-invalidated items from aOldList and
@@ -241,15 +239,14 @@ struct RetainedDisplayListBuilder {
       nsDisplayItem* aOuterItem = nullptr);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
-                            nsRect* aOutDirty,
-                            AnimatedGeometryRoot** aOutModifiedAGR,
+                            nsRect* aOutDirty, nsIFrame** aOutModifiedAGR,
                             nsTArray<nsIFrame*>& aOutFramesWithProps);
 
   bool ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
                     nsIFrame* aStopAtFrame,
                     nsTArray<nsIFrame*>& aOutFramesWithProps,
                     const bool aStopAtStackingContext, nsRect* aOutDirty,
-                    AnimatedGeometryRoot** aOutModifiedAGR);
+                    nsIFrame** aOutModifiedAGR);
 
   friend class MergeState;
 
