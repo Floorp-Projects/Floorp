@@ -484,7 +484,7 @@ static void OnTypingInteractionEnded() {
   if (gTypingInteractionKeyPresses > 1) {
     gTypingInteraction.mInteractionCount += gTypingInteractionKeyPresses;
     gTypingInteraction.mInteractionTimeInMilliseconds += static_cast<uint32_t>(
-        (gTypingEndTime - gTypingStartTime).ToMilliseconds());
+        std::ceil((gTypingEndTime - gTypingStartTime).ToMilliseconds()));
   }
 
   gTypingInteractionKeyPresses = 0;

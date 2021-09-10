@@ -34,8 +34,11 @@ async function sendTextToInput(browser, text) {
     );
     input.focus();
   });
-  await EventUtils.sendString(text);
-  await TestUtils.waitForTick();
+
+  for (let char of text) {
+    await EventUtils.sendString(char);
+    await TestUtils.waitForTick();
+  }
 }
 
 add_task(async function test_load_and_navigate_away_no_keypresses() {
