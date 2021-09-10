@@ -61,25 +61,28 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
   mCanvasChild->RecordEvent(RecordedTextureLock(mTextureId, aMode));
   if (aMode & OpenMode::OPEN_WRITE) {
     mCanvasChild->OnTextureWriteLock();
-    mSnapshot = nullptr;
   }
   mLockedMode = aMode;
   return true;
 }
 
 void RecordedTextureData::Unlock() {
-  if ((mLockedMode & OpenMode::OPEN_WRITE) &&
-      mCanvasChild->ShouldCacheDataSurface()) {
-    mSnapshot = mDT->Snapshot();
-    mDT->DetachAllSnapshots();
-  }
-
   mCanvasChild->RecordEvent(RecordedTextureUnlock(mTextureId));
   mLockedMode = OpenMode::OPEN_NONE;
 }
 
 already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
+  mSnapshot = nullptr;
   return do_AddRef(mDT);
+}
+
+void RecordedTextureData::EndDraw() {
+  MOZ_ASSERT(mDT->hasOneRef());
+
+  if (mCanvasChild->ShouldCacheDataSurface()) {
+    mSnapshot = mDT->Snapshot();
+    mCanvasChild->RecordEvent(RecordedCacheDataSurface(mSnapshot.get()));
+  }
 }
 
 already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
@@ -101,9 +104,6 @@ bool RecordedTextureData::Serialize(SurfaceDescriptor& aDescriptor) {
 
 void RecordedTextureData::OnForwardedToHost() {
   mCanvasChild->OnTextureForwarded();
-  if (mSnapshot && mCanvasChild->ShouldCacheDataSurface()) {
-    mCanvasChild->RecordEvent(RecordedCacheDataSurface(mSnapshot.get()));
-  }
 }
 
 TextureFlags RecordedTextureData::GetTextureFlags() const {
