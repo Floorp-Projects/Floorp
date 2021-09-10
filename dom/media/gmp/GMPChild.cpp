@@ -232,8 +232,14 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
   }
 #elif defined(XP_LINUX)
   constexpr static const char* whitelist[] = {
+      // NSS libraries used by clearkey.
       "libfreeblpriv3.so",
       "libsoftokn3.so",
+      // glibc libraries merged into libc.so.6; see bug 1725828 and
+      // the corresponding code in GMPParent.cpp.
+      "libdl.so.2",
+      "libpthread.so.0",
+      "librt.so.1",
   };
 
   nsTArray<nsCString> libs;
@@ -256,7 +262,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
           }
           // End bug 1698718 logging.
 
-          MOZ_CRASH("Couldn't load lib needed by NSS");
+          MOZ_CRASH("Couldn't load lib needed by media plugin");
         }
       }
     }
