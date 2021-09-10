@@ -4,15 +4,13 @@
 
 var EXPORTED_SYMBOLS = ["Downloader"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "RemoteSettingsWorker",
-  "resource://services-settings/RemoteSettingsWorker.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
+  Utils: "resource://services-settings/Utils.jsm",
+});
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -387,8 +385,8 @@ class Downloader {
 
   async _baseAttachmentsURL() {
     if (!this._cdnURL) {
-      const server = Services.prefs.getCharPref("services.settings.server");
-      const serverInfo = await (await fetch(`${server}/`)).json();
+      const server = Utils.SERVER_URL;
+      const serverInfo = await (await Utils.fetch(`${server}/`)).json();
       // Server capabilities expose attachments configuration.
       const {
         capabilities: {
@@ -404,7 +402,7 @@ class Downloader {
   async _fetchAttachment(url) {
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
-    const resp = await fetch(url, { headers });
+    const resp = await Utils.fetch(url, { headers });
     if (!resp.ok) {
       throw new Downloader.DownloadError(url, resp);
     }
