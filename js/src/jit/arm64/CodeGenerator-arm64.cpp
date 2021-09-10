@@ -40,8 +40,6 @@ CodeGeneratorARM64::CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph,
     : CodeGeneratorShared(gen, graph, masm) {}
 
 bool CodeGeneratorARM64::generateOutOfLineCode() {
-  AutoCreatedBy acb(masm, "CodeGeneratorARM64::generateOutOfLineCode");
-
   if (!CodeGeneratorShared::generateOutOfLineCode()) {
     return false;
   }
