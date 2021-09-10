@@ -169,6 +169,8 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     ),
     document.querySelector("#root")
   );
+
+  window.addEventListener("unload", () => gDestroy(), { once: true });
 }
 
 function gDestroy() {
