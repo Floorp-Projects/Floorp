@@ -56,8 +56,7 @@ class CompositorRecordedFrame final : public RecordedFrame {
 
 Compositor::Compositor(widget::CompositorWidget* aWidget,
                        CompositorBridgeParent* aParent)
-    : mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC),
-      mParent(aParent),
+    : mParent(aParent),
       mPixelsPerFrame(0),
       mPixelsFilled(0),
       mScreenRotation(ROTATION_0),
@@ -89,109 +88,6 @@ void Compositor::Destroy() {
 void Compositor::EndFrame() {
   ReadUnlockTextures();
   mLastCompositionEndTime = TimeStamp::Now();
-}
-
-bool Compositor::ShouldDrawDiagnostics(DiagnosticFlags aFlags) {
-  if ((aFlags & DiagnosticFlags::TILE) &&
-      !(mDiagnosticTypes & DiagnosticTypes::TILE_BORDERS)) {
-    return false;
-  }
-  if ((aFlags & DiagnosticFlags::BIGIMAGE) &&
-      !(mDiagnosticTypes & DiagnosticTypes::BIGIMAGE_BORDERS)) {
-    return false;
-  }
-  if (mDiagnosticTypes == DiagnosticTypes::NO_DIAGNOSTIC) {
-    return false;
-  }
-  return true;
-}
-
-void Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
-                                 const nsIntRegion& aVisibleRegion,
-                                 const gfx::IntRect& aClipRect,
-                                 const gfx::Matrix4x4& aTransform,
-                                 uint32_t aFlashCounter) {
-  if (!ShouldDrawDiagnostics(aFlags)) {
-    return;
-  }
-
-  if (aVisibleRegion.GetNumRects() > 1) {
-    for (auto iter = aVisibleRegion.RectIter(); !iter.Done(); iter.Next()) {
-      DrawDiagnostics(aFlags | DiagnosticFlags::REGION_RECT,
-                      IntRectToRect(iter.Get()), aClipRect, aTransform,
-                      aFlashCounter);
-    }
-  }
-
-  DrawDiagnostics(aFlags, IntRectToRect(aVisibleRegion.GetBounds()), aClipRect,
-                  aTransform, aFlashCounter);
-}
-
-void Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
-                                 const gfx::Rect& aVisibleRect,
-                                 const gfx::IntRect& aClipRect,
-                                 const gfx::Matrix4x4& aTransform,
-                                 uint32_t aFlashCounter) {
-  if (!ShouldDrawDiagnostics(aFlags)) {
-    return;
-  }
-
-  DrawDiagnosticsInternal(aFlags, aVisibleRect, aClipRect, aTransform,
-                          aFlashCounter);
-}
-
-void Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
-                                         const gfx::Rect& aVisibleRect,
-                                         const gfx::IntRect& aClipRect,
-                                         const gfx::Matrix4x4& aTransform,
-                                         uint32_t aFlashCounter) {
-#ifdef ANDROID
-  int lWidth = 10;
-#else
-  int lWidth = 2;
-#endif
-
-  // Technically it is sRGB but it is just for debugging.
-  gfx::DeviceColor color;
-  if (aFlags & DiagnosticFlags::CONTENT) {
-    color = gfx::DeviceColor(0.0f, 1.0f, 0.0f, 1.0f);  // green
-    if (aFlags & DiagnosticFlags::COMPONENT_ALPHA) {
-      color = gfx::DeviceColor(0.0f, 1.0f, 1.0f, 1.0f);  // greenish blue
-    }
-  } else if (aFlags & DiagnosticFlags::IMAGE) {
-    if (aFlags & DiagnosticFlags::NV12) {
-      color = gfx::DeviceColor(1.0f, 1.0f, 0.0f, 1.0f);  // yellow
-    } else if (aFlags & DiagnosticFlags::YCBCR) {
-      color = gfx::DeviceColor(1.0f, 0.55f, 0.0f, 1.0f);  // orange
-    } else {
-      color = gfx::DeviceColor(1.0f, 0.0f, 0.0f, 1.0f);  // red
-    }
-  } else if (aFlags & DiagnosticFlags::COLOR) {
-    color = gfx::DeviceColor(0.0f, 0.0f, 1.0f, 1.0f);  // blue
-  } else if (aFlags & DiagnosticFlags::CONTAINER) {
-    color = gfx::DeviceColor(0.8f, 0.0f, 0.8f, 1.0f);  // purple
-  }
-
-  // make tile borders a bit more transparent to keep layer borders readable.
-  if (aFlags & DiagnosticFlags::TILE || aFlags & DiagnosticFlags::BIGIMAGE ||
-      aFlags & DiagnosticFlags::REGION_RECT) {
-    lWidth = 1;
-    color.r *= 0.7f;
-    color.g *= 0.7f;
-    color.b *= 0.7f;
-    color.a = color.a * 0.5f;
-  } else {
-    color.a = color.a * 0.7f;
-  }
-
-  if (mDiagnosticTypes & DiagnosticTypes::FLASH_BORDERS) {
-    float flash = (float)aFlashCounter / (float)DIAGNOSTIC_FLASH_COUNTER_MAX;
-    color.r *= flash;
-    color.g *= flash;
-    color.b *= flash;
-  }
-
-  SlowDrawRect(aVisibleRect, color, aClipRect, aTransform, lWidth);
 }
 
 static void UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,

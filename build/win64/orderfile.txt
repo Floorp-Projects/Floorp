@@ -12773,7 +12773,6 @@ moz_pixman_region32_fini
 pixman_image_fini
 cairo_gstate_restore
 ?Unmap@DataSourceSurface@gfx@mozilla@@UEAAXXZ
-?DrawDiagnostics@Compositor@layers@mozilla@@QEAAXW4DiagnosticFlags@23@AEBV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@AEBU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@63@AEBV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@63@I@Z
 ?Unlock@BufferTextureHost@layers@mozilla@@UEAAXXZ
 ?MaybeGrabScreenshot@ScreenshotGrabber@layers@mozilla@@QEAAXAEAVWindow@profiler_screenshots@23@AEBU?$IntSizeTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
 ?EndFrame@Compositor@layers@mozilla@@UEAAXXZ
@@ -15197,7 +15196,6 @@ moz_cairo_pattern_create_rgba
 cairo_pattern_create_solid
 pixman_implementation_fill
 ?SetLoadTriggeredFromExternal@LoadInfo@net@mozilla@@UEAA?AW4nsresult@@_N@Z
-?DrawDiagnostics@Compositor@layers@mozilla@@QEAAXW4DiagnosticFlags@23@AEBU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@3@AEBU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@63@AEBV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@63@I@Z
 ?SetOnload@nsGenericHTMLElement@@QEAAXPEAVEventHandlerNonNull@dom@mozilla@@@Z
 cairo_matrix_is_integer_translation
 moz_cairo_region_copy
