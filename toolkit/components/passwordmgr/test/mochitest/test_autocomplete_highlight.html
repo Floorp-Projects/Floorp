@@ -49,11 +49,11 @@ add_task(async function test_field_highlight_on_autocomplete() {
   await synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return document.defaultView.getComputedStyle(username).getPropertyValue("filter") !== "none";
+    return username.matches(":autofill")
   }, "Highlight was successfully applied to the username field on username autocomplete");
 
-  isnot(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
-        "Highlight was successfully applied to the password field on username autocomplete");
+  ok(password.matches(":autofill"),
+     "Highlight was successfully applied to the password field on username autocomplete");
 
   // Clear existing highlight on login fields. We check by pressing the tab key after backspace
   // (by shifting focus to the next element) because the tab key was known to cause a bug where the
@@ -61,12 +61,12 @@ add_task(async function test_field_highlight_on_autocomplete() {
   username.focus();
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  is(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+  ok(!username.matches(":autofill"),
      "Highlight was successfully removed on the username field");
 
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  is(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
+  ok(!password.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.
@@ -82,7 +82,7 @@ add_task(async function test_field_highlight_on_autocomplete() {
   synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return document.defaultView.getComputedStyle(password).getPropertyValue("filter") !== "none";
+    return password.matches(":autofill");
   }, "Highlight was successfully applied to the password field on password autocomplete");
 
   // Clear existing highlight on the password field. We check by pressing the tab key after backspace
@@ -91,7 +91,7 @@ add_task(async function test_field_highlight_on_autocomplete() {
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
 
-  is(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
+  ok(!password.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.

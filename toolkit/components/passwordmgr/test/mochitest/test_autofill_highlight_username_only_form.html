@@ -33,7 +33,7 @@ add_task(async function test_field_highlight_on_autofill() {
     let EventUtils = ContentTaskUtils.getEventUtils(this.content);
     let doc = this.content.document;
     let username = doc.getElementById("uname");
-    isnot(doc.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+    ok(username.matches(":autofill"),
           "Highlight was successfully applied to the username field on page load autofill");
 
     // Test that initiating a change on the input value will remove the highlight. We check by pressing
@@ -43,8 +43,7 @@ add_task(async function test_field_highlight_on_autofill() {
     await EventUtils.synthesizeKey("KEY_Backspace", {}, this.content);
     await EventUtils.synthesizeKey("KEY_Tab", {}, this.content);
 
-    let computedStyle = doc.defaultView.getComputedStyle(username);
-    is(computedStyle.getPropertyValue("filter"), "none", "Highlight was successfully removed on change in value of username input element");
+    ok(!username.matches(":autofill"), "Highlight was successfully removed on change in value of username input element");
   });
 });
 </script>
