@@ -269,6 +269,12 @@ class TextureData {
     return nullptr;
   }
 
+  /**
+   * When the TextureData is not being Unlocked, this can be used to inform a
+   * TextureData that drawing has finished until the next BorrowDrawTarget.
+   */
+  virtual void EndDraw() {}
+
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() {
     return nullptr;
   }
@@ -465,6 +471,12 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
    *
    */
   gfx::DrawTarget* BorrowDrawTarget();
+
+  /**
+   * When the TextureClient is not being Unlocked, this can be used to inform it
+   * that drawing has finished until the next BorrowDrawTarget.
+   */
+  void EndDraw();
 
   already_AddRefed<gfx::SourceSurface> BorrowSnapshot();
 
