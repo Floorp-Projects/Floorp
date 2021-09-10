@@ -714,8 +714,6 @@ static void BoxValueIntoAnyref(MacroAssembler& masm, ValueOperand src,
 static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
                                 const Maybe<ImmPtr>& funcPtr,
                                 Offsets* offsets) {
-  AutoCreatedBy acb(masm, "GenerateInterpEntry");
-
   AssertExpectedSP(masm);
   masm.haltingAlign(CodeAlignment);
 
@@ -986,8 +984,6 @@ static void GenerateBigIntInitialization(MacroAssembler& masm,
 static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
                              const FuncExport& fe, const Maybe<ImmPtr>& funcPtr,
                              Offsets* offsets) {
-  AutoCreatedBy acb(masm, "GenerateJitEntry");
-
   AssertExpectedSP(masm);
 
   RegisterOrSP sp = masm.getStackPointer();
@@ -1939,8 +1935,6 @@ static void FillArgumentArrayForExit(
 static bool GenerateImportFunction(jit::MacroAssembler& masm,
                                    const FuncImport& fi, TypeIdDesc funcTypeId,
                                    FuncOffsets* offsets) {
-  AutoCreatedBy acb(masm, "wasm::GenerateImportFunction");
-
   AssertExpectedSP(masm);
 
   GenerateFunctionPrologue(masm, funcTypeId, Nothing(), offsets);
@@ -3004,7 +2998,6 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
   LifoAlloc lifo(STUBS_LIFO_DEFAULT_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
   WasmMacroAssembler masm(alloc, env);
-  AutoCreatedBy acb(masm, "wasm::GenerateStubs");
 
   // Swap in already-allocated empty vectors to avoid malloc/free.
   if (!code->swap(masm)) {

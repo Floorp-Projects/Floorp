@@ -28,7 +28,6 @@ using mozilla::PositiveInfinity;
 
 BEGIN_TEST(testJitMacroAssembler_flexibleDivMod) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -85,7 +84,6 @@ END_TEST(testJitMacroAssembler_flexibleDivMod)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleRemainder) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -133,7 +131,6 @@ END_TEST(testJitMacroAssembler_flexibleRemainder)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleQuotient) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -188,7 +185,6 @@ bool shiftTest(JSContext* cx, const char* name,
                const uintptr_t* lhsInput, const uintptr_t* rhsInput,
                const uintptr_t* result) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -382,7 +378,6 @@ END_TEST(testJitMacroAssembler_flexibleLshift)
 
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -429,7 +424,6 @@ END_TEST(testJitMacroAssembler_truncateDoubleToInt64)
 
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -481,7 +475,6 @@ END_TEST(testJitMacroAssembler_truncateDoubleToUInt64)
 
 BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -534,7 +527,6 @@ END_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range)
 
 BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -590,7 +582,6 @@ END_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range)
 
 BEGIN_TEST(testJitMacroAssembler_lshift64) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -658,7 +649,6 @@ END_TEST(testJitMacroAssembler_lshift64)
 
 BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 
@@ -726,7 +716,6 @@ END_TEST(testJitMacroAssembler_rshift64Arithmetic)
 
 BEGIN_TEST(testJitMacroAssembler_rshift64) {
   StackMacroAssembler masm(cx);
-  AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
 

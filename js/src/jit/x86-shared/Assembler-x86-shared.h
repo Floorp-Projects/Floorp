@@ -455,16 +455,9 @@ class AssemblerX86Shared : public AssemblerShared {
   }
 
  public:
-  void haltingAlign(int alignment) {
-    MOZ_ASSERT(hasCreator());
-    masm.haltingAlign(alignment);
-  }
-  void nopAlign(int alignment) {
-    MOZ_ASSERT(hasCreator());
-    masm.nopAlign(alignment);
-  }
+  void haltingAlign(int alignment) { masm.haltingAlign(alignment); }
+  void nopAlign(int alignment) { masm.nopAlign(alignment); }
   void writeCodePointer(CodeLabel* label) {
-    MOZ_ASSERT(hasCreator());
     // Use -1 as dummy value. This will be patched after codegen.
     masm.jumpTablePointer(-1);
     label->patchAt()->bind(masm.size());
@@ -497,15 +490,12 @@ class AssemblerX86Shared : public AssemblerShared {
     cmovCCl(Condition::NonZero, src, dest);
   }
   void movl(Imm32 imm32, Register dest) {
-    MOZ_ASSERT(hasCreator());
     masm.movl_i32r(imm32.value, dest.encoding());
   }
   void movl(Register src, Register dest) {
-    MOZ_ASSERT(hasCreator());
     masm.movl_rr(src.encoding(), dest.encoding());
   }
   void movl(const Operand& src, Register dest) {
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::REG:
         masm.movl_rr(src.reg(), dest.encoding());
@@ -525,7 +515,6 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
   void movl(Register src, const Operand& dest) {
-    MOZ_ASSERT(hasCreator());
     switch (dest.kind()) {
       case Operand::REG:
         masm.movl_rr(src.encoding(), dest.reg());
@@ -657,7 +646,6 @@ class AssemblerX86Shared : public AssemblerShared {
                    src.scale, dest.encoding());
   }
   void vmovsd(const Operand& src, FloatRegister dest) {
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::MEM_REG_DISP:
         vmovsd(src.toAddress(), dest);
@@ -688,7 +676,6 @@ class AssemblerX86Shared : public AssemblerShared {
                    src.scale, dest.encoding());
   }
   void vmovss(const Operand& src, FloatRegister dest) {
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::MEM_REG_DISP:
         vmovss(src.toAddress(), dest);
@@ -725,7 +712,6 @@ class AssemblerX86Shared : public AssemblerShared {
   }
   void vmovdqu(const Operand& src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::MEM_REG_DISP:
         masm.vmovdqu_mr(src.disp(), src.base(), dest.encoding());
@@ -740,7 +726,6 @@ class AssemblerX86Shared : public AssemblerShared {
   }
   void vmovdqu(FloatRegister src, const Operand& dest) {
     MOZ_ASSERT(HasSSE2());
-    MOZ_ASSERT(hasCreator());
     switch (dest.kind()) {
       case Operand::MEM_REG_DISP:
         masm.vmovdqu_rm(src.encoding(), dest.disp(), dest.base());
@@ -1002,25 +987,12 @@ class AssemblerX86Shared : public AssemblerShared {
   }
 
  public:
-  void nop() {
-    MOZ_ASSERT(hasCreator());
-    masm.nop();
-  }
-  void nop(size_t n) {
-    MOZ_ASSERT(hasCreator());
-    masm.insert_nop(n);
-  }
-  void j(Condition cond, Label* label) {
-    MOZ_ASSERT(hasCreator());
-    jSrc(cond, label);
-  }
-  void jmp(Label* label) {
-    MOZ_ASSERT(hasCreator());
-    jmpSrc(label);
-  }
+  void nop() { masm.nop(); }
+  void nop(size_t n) { masm.insert_nop(n); }
+  void j(Condition cond, Label* label) { jSrc(cond, label); }
+  void jmp(Label* label) { jmpSrc(label); }
 
   void jmp(const Operand& op) {
-    MOZ_ASSERT(hasCreator());
     switch (op.kind()) {
       case Operand::MEM_REG_DISP:
         masm.jmp_m(op.disp(), op.base());
@@ -1088,12 +1060,8 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
 
-  void ret() {
-    MOZ_ASSERT(hasCreator());
-    masm.ret();
-  }
+  void ret() { masm.ret(); }
   void retn(Imm32 n) {
-    MOZ_ASSERT(hasCreator());
     // Remove the size of the return address which is included in the frame.
     masm.ret_i(n.value - sizeof(void*));
   }
@@ -1155,7 +1123,6 @@ class AssemblerX86Shared : public AssemblerShared {
 
   void breakpoint() { masm.int3(); }
   CodeOffset ud2() {
-    MOZ_ASSERT(hasCreator());
     CodeOffset off(masm.currentOffset());
     masm.ud2();
     return off;
@@ -2195,7 +2162,6 @@ class AssemblerX86Shared : public AssemblerShared {
   void push(const Imm32 imm) { masm.push_i(imm.value); }
 
   void push(const Operand& src) {
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::REG:
         masm.push_r(src.reg());
@@ -2210,16 +2176,12 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
-  void push(Register src) {
-    MOZ_ASSERT(hasCreator());
-    masm.push_r(src.encoding());
-  }
+  void push(Register src) { masm.push_r(src.encoding()); }
   void push(const Address& src) {
     masm.push_m(src.offset, src.base.encoding());
   }
 
   void pop(const Operand& src) {
-    MOZ_ASSERT(hasCreator());
     switch (src.kind()) {
       case Operand::REG:
         masm.pop_r(src.reg());
@@ -2231,10 +2193,7 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
-  void pop(Register src) {
-    MOZ_ASSERT(hasCreator());
-    masm.pop_r(src.encoding());
-  }
+  void pop(Register src) { masm.pop_r(src.encoding()); }
   void pop(const Address& src) { masm.pop_m(src.offset, src.base.encoding()); }
 
   void pushFlags() { masm.push_flags(); }
