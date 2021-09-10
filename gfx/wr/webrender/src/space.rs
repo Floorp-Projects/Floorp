@@ -10,7 +10,7 @@ use std::fmt;
 use euclid::{Transform3D, Box2D, Point2D, Vector2D};
 
 use api::units::*;
-use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
+use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, SpatialNodeContainer};
 use crate::util::project_rect;
 use crate::util::{MatrixHelpers, ScaleOffset, RectHelpers, PointHelpers};
 
@@ -189,11 +189,11 @@ impl SpaceSnapper {
         }
     }
 
-    pub fn new_with_target(
+    pub fn new_with_target<S: SpatialNodeContainer>(
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
         raster_pixel_scale: RasterPixelScale,
-        spatial_tree: &SpatialTree,
+        spatial_tree: &S,
     ) -> Self {
         let mut snapper = SpaceSnapper {
             ref_spatial_node_index,
@@ -206,10 +206,10 @@ impl SpaceSnapper {
         snapper
     }
 
-    pub fn set_target_spatial_node(
+    pub fn set_target_spatial_node<S: SpatialNodeContainer>(
         &mut self,
         target_node_index: SpatialNodeIndex,
-        spatial_tree: &SpatialTree,
+        spatial_tree: &S,
     ) {
         if target_node_index == self.current_target_spatial_node_index {
             return
