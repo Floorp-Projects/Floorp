@@ -2173,8 +2173,9 @@ class HTMLEditor final : public EditorBase,
     ASCIIWhiteSpace,   // One of ASCII white-spaces (collapsible white-space)
     NoBreakingSpace,   // NBSP
     VisibleChar,       // Non-white-space characters
-    PreformattedChar,  // Any character (including white-space) in preformatted
-                       // element
+    PreformattedChar,  // Any character except a linefeed in a preformatted
+                       // node.
+    PreformattedLineBreak,  // Preformatted linebreak
   };
 
   /**
@@ -2188,6 +2189,9 @@ class HTMLEditor final : public EditorBase,
     MOZ_ASSERT(aPoint.IsInTextNode());
     if (aPoint.IsStartOfContainer()) {
       return CharPointType::TextEnd;
+    }
+    if (aPoint.IsPreviousCharPreformattedNewLine()) {
+      return CharPointType::PreformattedLineBreak;
     }
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return CharPointType::PreformattedChar;
@@ -2203,6 +2207,9 @@ class HTMLEditor final : public EditorBase,
     MOZ_ASSERT(aPoint.IsInTextNode());
     if (aPoint.IsEndOfContainer()) {
       return CharPointType::TextEnd;
+    }
+    if (aPoint.IsCharPreformattedNewLine()) {
+      return CharPointType::PreformattedLineBreak;
     }
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return CharPointType::PreformattedChar;
@@ -2239,7 +2246,7 @@ class HTMLEditor final : public EditorBase,
     }
 
     bool AcrossTextNodeBoundary() const { return mIsInDifferentTextNode; }
-    bool IsWhiteSpace() const {
+    bool IsCollapsibleWhiteSpace() const {
       return mType == CharPointType::ASCIIWhiteSpace ||
              mType == CharPointType::NoBreakingSpace;
     }
