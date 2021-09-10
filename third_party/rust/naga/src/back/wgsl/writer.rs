@@ -277,7 +277,7 @@ impl<W: Write> Writer<W> {
         // Write the function body (statement list)
         for sta in func.body.iter() {
             // The indentation should always be 1 when writing the function body
-            self.write_stmt(module, sta, func_ctx, 1)?;
+            self.write_stmt(module, sta, func_ctx, back::Level(1))?;
         }
 
         writeln!(self.out, "}}")?;
@@ -292,71 +292,88 @@ impl<W: Write> Writer<W> {
     /// # Notes
     /// Adds an extra space if required
     fn write_attributes(&mut self, attributes: &[Attribute], extra_space: bool) -> BackendResult {
-        let mut attributes_str = String::new();
-        for (index, attribute) in attributes.iter().enumerate() {
-            let attribute_str = match *attribute {
-                Attribute::Block => String::from("block"),
-                Attribute::Location(id) => format!("location({})", id),
+        write!(self.out, "[[")?;
+
+        let mut need_last_comma = true;
+        if let Some(last_attrib) = attributes.last() {
+            // We duplicate the logic a little, but this will help to avoid extra heap allocation
+            match *last_attrib {
                 Attribute::BuiltIn(builtin_attrib) => {
-                    let builtin_str = builtin_str(builtin_attrib);
-                    if let Some(builtin) = builtin_str {
-                        format!("builtin({})", builtin)
+                    need_last_comma = builtin_str(builtin_attrib).is_some();
+                }
+                Attribute::Interpolate(interpolation, sampling) => {
+                    need_last_comma = (sampling.is_some()
+                        && sampling != Some(crate::Sampling::Center))
+                        || (interpolation.is_some()
+                            && interpolation != Some(crate::Interpolation::Perspective))
+                }
+                _ => {}
+            }
+        }
+
+        for (index, attribute) in attributes.iter().enumerate() {
+            match *attribute {
+                Attribute::Block => write!(self.out, "block")?,
+                Attribute::Location(id) => write!(self.out, "location({})", id)?,
+                Attribute::BuiltIn(builtin_attrib) => {
+                    if let Some(builtin) = builtin_str(builtin_attrib) {
+                        write!(self.out, "builtin({})", builtin)?;
                     } else {
                         log::warn!("Unsupported builtin attribute: {:?}", builtin_attrib);
-                        String::from("")
                     }
                 }
-                Attribute::Stage(shader_stage) => match shader_stage {
-                    ShaderStage::Vertex => String::from("stage(vertex)"),
-                    ShaderStage::Fragment => String::from("stage(fragment)"),
-                    ShaderStage::Compute => String::from("stage(compute)"),
-                },
-                Attribute::Stride(stride) => format!("stride({})", stride),
-                Attribute::WorkGroupSize(size) => {
-                    format!("workgroup_size({}, {}, {})", size[0], size[1], size[2])
+                Attribute::Stage(shader_stage) => {
+                    let stage_str = match shader_stage {
+                        ShaderStage::Vertex => "stage(vertex)",
+                        ShaderStage::Fragment => "stage(fragment)",
+                        ShaderStage::Compute => "stage(compute)",
+                    };
+                    write!(self.out, "{}", stage_str)?;
                 }
-                Attribute::Binding(id) => format!("binding({})", id),
-                Attribute::Group(id) => format!("group({})", id),
+                Attribute::Stride(stride) => write!(self.out, "stride({})", stride)?,
+                Attribute::WorkGroupSize(size) => {
+                    write!(
+                        self.out,
+                        "workgroup_size({}, {}, {})",
+                        size[0], size[1], size[2]
+                    )?;
+                }
+                Attribute::Binding(id) => write!(self.out, "binding({})", id)?,
+                Attribute::Group(id) => write!(self.out, "group({})", id)?,
                 Attribute::Interpolate(interpolation, sampling) => {
                     if sampling.is_some() && sampling != Some(crate::Sampling::Center) {
-                        format!(
+                        write!(
+                            self.out,
                             "interpolate({}, {})",
                             interpolation_str(
                                 interpolation.unwrap_or(crate::Interpolation::Perspective)
                             ),
                             sampling_str(sampling.unwrap_or(crate::Sampling::Center))
-                        )
+                        )?;
                     } else if interpolation.is_some()
                         && interpolation != Some(crate::Interpolation::Perspective)
                     {
-                        format!(
+                        write!(
+                            self.out,
                             "interpolate({})",
                             interpolation_str(
                                 interpolation.unwrap_or(crate::Interpolation::Perspective)
                             )
-                        )
-                    } else {
-                        String::from("")
+                        )?;
                     }
                 }
             };
-            if !attribute_str.is_empty() {
-                // Add a separator between args
-                let separator = if index < attributes.len() - 1 {
-                    ", "
-                } else {
-                    ""
-                };
-                attributes_str = format!("{}{}{}", attributes_str, attribute_str, separator);
+
+            // Only write a comma if isn't the last element
+            if index + 1 != attributes.len() && need_last_comma {
+                // The leading space is for readability only
+                write!(self.out, ", ")?;
             }
         }
-        if !attributes_str.is_empty() {
-            //TODO: looks ugly
-            if attributes_str.ends_with(", ") {
-                attributes_str = attributes_str[0..attributes_str.len() - 2].to_string();
-            }
-            let extra_space_str = if extra_space { " " } else { "" };
-            write!(self.out, "[[{}]]{}", attributes_str, extra_space_str)?;
+
+        write!(self.out, "]]")?;
+        if extra_space {
+            write!(self.out, " ")?;
         }
 
         Ok(())
@@ -445,12 +462,9 @@ impl<W: Write> Writer<W> {
         match *inner {
             TypeInner::Vector { size, kind, .. } => write!(
                 self.out,
-                "{}",
-                format!(
-                    "vec{}<{}>",
-                    back::vector_size_str(size),
-                    scalar_kind_str(kind),
-                )
+                "vec{}<{}>",
+                back::vector_size_str(size),
+                scalar_kind_str(kind),
             )?,
             TypeInner::Sampler { comparison: false } => {
                 write!(self.out, "sampler")?;
@@ -468,32 +482,36 @@ impl<W: Write> Writer<W> {
 
                 let dim_str = image_dimension_str(dim);
                 let arrayed_str = if arrayed { "_array" } else { "" };
-                let (class_str, multisampled_str, scalar_str) = match class {
+                let (class_str, multisampled_str, format_str, storage_str) = match class {
                     Ic::Sampled { kind, multi } => (
                         "",
                         if multi { "multisampled_" } else { "" },
-                        format!("<{}>", scalar_kind_str(kind)),
+                        scalar_kind_str(kind),
+                        "",
                     ),
-                    Ic::Depth { multi } => (
-                        "depth_",
-                        if multi { "multisampled_" } else { "" },
-                        String::from(""),
-                    ),
+                    Ic::Depth { multi } => {
+                        ("depth_", if multi { "multisampled_" } else { "" }, "", "")
+                    }
                     Ic::Storage { format, access } => (
                         "storage_",
                         "",
+                        storage_format_str(format),
                         if access.contains(crate::StorageAccess::STORE) {
-                            format!("<{},write>", storage_format_str(format))
+                            ",write"
                         } else {
-                            format!("<{}>", storage_format_str(format))
+                            ""
                         },
                     ),
                 };
-                let ty_str = format!(
-                    "texture_{}{}{}{}{}",
-                    class_str, multisampled_str, dim_str, arrayed_str, scalar_str
-                );
-                write!(self.out, "{}", ty_str)?;
+                write!(
+                    self.out,
+                    "texture_{}{}{}{}",
+                    class_str, multisampled_str, dim_str, arrayed_str
+                )?;
+
+                if !format_str.is_empty() {
+                    write!(self.out, "<{}{}>", format_str, storage_str)?;
+                }
             }
             TypeInner::Scalar { kind, .. } => {
                 write!(self.out, "{}", scalar_kind_str(kind))?;
@@ -563,10 +581,9 @@ impl<W: Write> Writer<W> {
         module: &Module,
         stmt: &crate::Statement,
         func_ctx: &back::FunctionCtx<'_>,
-        indent: usize,
+        level: back::Level,
     ) -> BackendResult {
         use crate::{Expression, Statement};
-        use back::INDENT;
 
         match *stmt {
             Statement::Emit(ref range) => {
@@ -612,7 +629,7 @@ impl<W: Write> Writer<W> {
                     };
 
                     if let Some(name) = expr_name {
-                        write!(self.out, "{}", INDENT.repeat(indent))?;
+                        write!(self.out, "{}", level)?;
                         self.start_named_expr(module, handle, func_ctx, &name)?;
                         self.write_expr(module, handle, func_ctx)?;
                         self.named_expressions.insert(handle, name);
@@ -626,31 +643,32 @@ impl<W: Write> Writer<W> {
                 ref accept,
                 ref reject,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 write!(self.out, "if (")?;
                 self.write_expr(module, condition, func_ctx)?;
                 writeln!(self.out, ") {{")?;
 
+                let l2 = level.next();
                 for sta in accept {
                     // Increase indentation to help with readability
-                    self.write_stmt(module, sta, func_ctx, indent + 1)?;
+                    self.write_stmt(module, sta, func_ctx, l2)?;
                 }
 
                 // If there are no statements in the reject block we skip writing it
                 // This is only for readability
                 if !reject.is_empty() {
-                    writeln!(self.out, "{}}} else {{", INDENT.repeat(indent))?;
+                    writeln!(self.out, "{}}} else {{", level)?;
 
                     for sta in reject {
                         // Increase indentation to help with readability
-                        self.write_stmt(module, sta, func_ctx, indent + 1)?;
+                        self.write_stmt(module, sta, func_ctx, l2)?;
                     }
                 }
 
-                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+                writeln!(self.out, "{}}}", level)?
             }
             Statement::Return { value } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 write!(self.out, "return")?;
                 if let Some(return_value) = value {
                     // The leading space is important
@@ -661,7 +679,7 @@ impl<W: Write> Writer<W> {
             }
             // TODO: copy-paste from glsl-out
             Statement::Kill => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 writeln!(self.out, "discard;")?
             }
             Statement::Store { pointer, value } => {
@@ -673,7 +691,7 @@ impl<W: Write> Writer<W> {
                         return Ok(());
                     }
                 }
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
 
                 let (is_ptr, is_atomic) = match *func_ctx.info[pointer].ty.inner_with(&module.types)
                 {
@@ -707,7 +725,7 @@ impl<W: Write> Writer<W> {
                 ref arguments,
                 result,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 if let Some(expr) = result {
                     let name = format!("{}{}", back::BAKE_PREFIX, expr.index());
                     self.start_named_expr(module, expr, func_ctx, &name)?;
@@ -731,7 +749,7 @@ impl<W: Write> Writer<W> {
                 value,
                 result,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 let res_name = format!("{}{}", back::BAKE_PREFIX, result.index());
                 self.start_named_expr(module, result, func_ctx, &res_name)?;
                 self.named_expressions.insert(result, res_name);
@@ -758,7 +776,7 @@ impl<W: Write> Writer<W> {
                 array_index,
                 value,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 write!(self.out, "textureStore(")?;
                 self.write_expr(module, image, func_ctx)?;
                 write!(self.out, ", ")?;
@@ -773,13 +791,13 @@ impl<W: Write> Writer<W> {
             }
             // TODO: copy-paste from glsl-out
             Statement::Block(ref block) => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 writeln!(self.out, "{{")?;
                 for sta in block.iter() {
                     // Increase the indentation to help with readability
-                    self.write_stmt(module, sta, func_ctx, indent + 1)?
+                    self.write_stmt(module, sta, func_ctx, level.next())?
                 }
-                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+                writeln!(self.out, "{}}}", level)?
             }
             Statement::Switch {
                 selector,
@@ -787,7 +805,7 @@ impl<W: Write> Writer<W> {
                 ref default,
             } => {
                 // Start the switch
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 write!(self.out, "switch(")?;
                 self.write_expr(module, selector, func_ctx)?;
                 writeln!(self.out, ") {{")?;
@@ -797,10 +815,12 @@ impl<W: Write> Writer<W> {
                 let all_fall_through = cases
                     .iter()
                     .all(|case| case.fall_through && case.body.is_empty());
+
+                let l2 = level.next();
                 if !cases.is_empty() {
                     for case in cases {
                         if write_case {
-                            write!(self.out, "{}case ", INDENT.repeat(indent + 1))?;
+                            write!(self.out, "{}case ", l2)?;
                         }
                         if !all_fall_through && case.fall_through && case.body.is_empty() {
                             write_case = false;
@@ -812,63 +832,64 @@ impl<W: Write> Writer<W> {
                         }
 
                         for sta in case.body.iter() {
-                            self.write_stmt(module, sta, func_ctx, indent + 2)?;
+                            self.write_stmt(module, sta, func_ctx, l2.next())?;
                         }
 
                         if case.fall_through {
-                            writeln!(self.out, "{}fallthrough;", INDENT.repeat(indent + 2))?;
+                            writeln!(self.out, "{}fallthrough;", l2.next())?;
                         }
 
-                        writeln!(self.out, "{}}}", INDENT.repeat(indent + 1))?;
+                        writeln!(self.out, "{}}}", l2)?;
                     }
                 }
 
                 if !default.is_empty() {
-                    writeln!(self.out, "{}default: {{", INDENT.repeat(indent + 1))?;
+                    writeln!(self.out, "{}default: {{", l2)?;
 
                     for sta in default {
-                        self.write_stmt(module, sta, func_ctx, indent + 2)?;
+                        self.write_stmt(module, sta, func_ctx, l2.next())?;
                     }
 
-                    writeln!(self.out, "{}}}", INDENT.repeat(indent + 1))?
+                    writeln!(self.out, "{}}}", l2)?
                 }
 
-                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+                writeln!(self.out, "{}}}", level)?
             }
             Statement::Loop {
                 ref body,
                 ref continuing,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
+                write!(self.out, "{}", level)?;
                 writeln!(self.out, "loop {{")?;
 
+                let l2 = level.next();
                 for sta in body.iter() {
-                    self.write_stmt(module, sta, func_ctx, indent + 1)?;
+                    self.write_stmt(module, sta, func_ctx, l2)?;
                 }
 
                 if !continuing.is_empty() {
-                    writeln!(self.out, "{}continuing {{", INDENT.repeat(indent + 1))?;
+                    writeln!(self.out, "{}continuing {{", l2)?;
                     for sta in continuing.iter() {
-                        self.write_stmt(module, sta, func_ctx, indent + 2)?;
+                        self.write_stmt(module, sta, func_ctx, l2.next())?;
                     }
-                    writeln!(self.out, "{}}}", INDENT.repeat(indent + 1))?;
+                    writeln!(self.out, "{}}}", l2)?;
                 }
 
-                writeln!(self.out, "{}}}", INDENT.repeat(indent))?
+                writeln!(self.out, "{}}}", level)?
             }
             Statement::Break => {
-                writeln!(self.out, "{}break;", INDENT.repeat(indent))?;
+                writeln!(self.out, "{}break;", level)?;
             }
             Statement::Continue => {
-                writeln!(self.out, "{}continue;", INDENT.repeat(indent))?;
+                writeln!(self.out, "{}continue;", level)?;
             }
             Statement::Barrier(barrier) => {
                 if barrier.contains(crate::Barrier::STORAGE) {
-                    writeln!(self.out, "{}storageBarrier();", INDENT.repeat(indent))?;
+                    writeln!(self.out, "{}storageBarrier();", level)?;
                 }
 
                 if barrier.contains(crate::Barrier::WORK_GROUP) {
-                    writeln!(self.out, "{}workgroupBarrier();", INDENT.repeat(indent))?;
+                    writeln!(self.out, "{}workgroupBarrier();", level)?;
                 }
             }
         }

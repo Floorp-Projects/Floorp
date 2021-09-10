@@ -4,7 +4,7 @@
 //! provides several [graph types](index.html#graph-types) (each differing in the
 //! tradeoffs taken in their internal representation),
 //! [algorithms](./algo/index.html#functions) on those graphs, and functionality to
-//! [output graphs](./doc/petgraph/dot/struct.Dot.html) in
+//! [output graphs](./dot/struct.Dot.html) in
 //! [`graphviz`](https://www.graphviz.org/) format. Both nodes and edges
 //! can have arbitrary associated data, and edges may be either directed or undirected.
 //!
@@ -74,8 +74,8 @@
 //! [`GraphMap`](./graphmap/struct.GraphMap.html) requires node weights that can serve as hash
 //! map keys, since that graph type does not create standalone node indices.
 //!
-//! `Ty` controls whether edges are [`Directed`](./petgraph/enum.Directed.html) or
-//! [`Undirected`](./petgraph/enum.Unirected.html).
+//! `Ty` controls whether edges are [`Directed`](./enum.Directed.html) or
+//! [`Undirected`](./enum.Undirected.html).
 //!
 //! `Ix` appears on graph types that use indices. It is exposed so you can control
 //! the size of node and edge indices, and therefore the memory footprint of your graphs.
@@ -133,17 +133,15 @@ pub mod visit;
 #[macro_use]
 pub mod data;
 
+pub mod adj;
 pub mod algo;
-mod astar;
 pub mod csr;
-mod dijkstra;
 pub mod dot;
 #[cfg(feature = "generate")]
 pub mod generate;
 mod graph_impl;
 #[cfg(feature = "graphmap")]
 pub mod graphmap;
-mod isomorphism;
 mod iter_format;
 mod iter_utils;
 #[cfg(feature = "matrix_graph")]
@@ -152,11 +150,11 @@ pub mod matrix_graph;
 mod quickcheck;
 #[cfg(feature = "serde-1")]
 mod serde_utils;
-mod simple_paths;
 mod traits_graph;
 pub mod unionfind;
 mod util;
 
+pub mod operator;
 pub mod prelude;
 
 /// `Graph<N, E, Ty, Ix>` is a graph datastructure using an adjacency list representation.

@@ -454,12 +454,12 @@ impl GlobalExt for Global {
                     error_buf.init(err);
                 }
             }
-            CommandEncoderAction::ClearImage {
+            CommandEncoderAction::ClearTexture {
                 dst,
                 ref subresource_range,
             } => {
                 if let Err(err) =
-                    self.command_encoder_clear_image::<A>(self_id, dst, subresource_range)
+                    self.command_encoder_clear_texture::<A>(self_id, dst, subresource_range)
                 {
                     error_buf.init(err);
                 }

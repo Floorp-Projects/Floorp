@@ -178,7 +178,8 @@ impl super::Adapter {
             | wgt::Features::POLYGON_MODE_POINT
             | wgt::Features::VERTEX_WRITABLE_STORAGE
             | wgt::Features::TIMESTAMP_QUERY
-            | wgt::Features::TEXTURE_COMPRESSION_BC;
+            | wgt::Features::TEXTURE_COMPRESSION_BC
+            | wgt::Features::CLEAR_COMMANDS;
         //TODO: in order to expose this, we need to run a compute shader
         // that extract the necessary statistics out of the D3D12 result.
         // Alternatively, we could allocate a buffer for the query set,
@@ -237,6 +238,9 @@ impl super::Adapter {
                     max_vertex_attributes: d3d12::D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT,
                     max_vertex_buffer_array_stride: d3d12::D3D12_SO_BUFFER_MAX_STRIDE_IN_BYTES,
                     max_push_constant_size: 0,
+                    min_uniform_buffer_offset_alignment:
+                        d3d12::D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT,
+                    min_storage_buffer_offset_alignment: 4, // TODO?
                 },
                 alignments: crate::Alignments {
                     buffer_copy_offset: wgt::BufferSize::new(
@@ -247,11 +251,6 @@ impl super::Adapter {
                         d3d12::D3D12_TEXTURE_DATA_PITCH_ALIGNMENT as u64,
                     )
                     .unwrap(),
-                    uniform_buffer_offset: wgt::BufferSize::new(
-                        d3d12::D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT as u64,
-                    )
-                    .unwrap(),
-                    storage_buffer_offset: wgt::BufferSize::new(4).unwrap(), //TODO?
                 },
                 downlevel: wgt::DownlevelCapabilities::default(),
             },

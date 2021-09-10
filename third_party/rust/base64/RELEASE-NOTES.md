@@ -1,6 +1,14 @@
+# 0.13.0
+
+- Config methods are const
+- Added `EncoderStringWriter` to allow encoding directly to a String
+- `EncoderWriter` now owns its delegate writer rather than keeping a reference to it (though refs still work)
+    - As a consequence, it is now possible to extract the delegate writer from an `EncoderWriter` via `finish()`, which returns `Result<W>` instead of `Result<()>`. If you were calling `finish()` explicitly, you will now need to use `let _ = foo.finish()` instead of just `foo.finish()` to avoid a warning about the unused value.
+- When decoding input that has both an invalid length and an invalid symbol as the last byte, `InvalidByte` will be emitted instead of `InvalidLength` to make the problem more obvious.
+
 # 0.12.2
 
-Add `BinHex` alphabet
+- Add `BinHex` alphabet
 
 # 0.12.1
 

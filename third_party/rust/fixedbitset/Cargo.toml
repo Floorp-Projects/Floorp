@@ -12,7 +12,7 @@
 
 [package]
 name = "fixedbitset"
-version = "0.2.0"
+version = "0.4.0"
 authors = ["bluss"]
 description = "FixedBitSet is a simple bitset collection"
 documentation = "https://docs.rs/fixedbitset/"
@@ -23,6 +23,12 @@ repository = "https://github.com/bluss/fixedbitset"
 [package.metadata.release]
 no-dev-version = true
 tag-name = "{{version}}"
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+[dev-dependencies.serde_json]
+version = "1.0"
 
 [features]
 default = ["std"]

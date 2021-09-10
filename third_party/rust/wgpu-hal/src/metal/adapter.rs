@@ -850,6 +850,9 @@ impl super::PrivateCapabilities {
             } else {
                 Self::version_at_least(major, minor, 11, 0)
             },
+            //Depth clipping is supported on all macOS GPU families and iOS family 4 and later
+            supports_depth_clamping: device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1)
+                || os_is_mac,
         }
     }
 
@@ -857,12 +860,14 @@ impl super::PrivateCapabilities {
         use wgt::Features as F;
 
         let mut features = F::empty()
-            | F::DEPTH_CLAMPING
             | F::TEXTURE_COMPRESSION_BC
             | F::MAPPABLE_PRIMARY_BUFFERS
             | F::VERTEX_WRITABLE_STORAGE
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-            | F::POLYGON_MODE_LINE;
+            | F::POLYGON_MODE_LINE
+            | F::CLEAR_COMMANDS;
+
+        features.set(F::DEPTH_CLAMPING, self.supports_depth_clamping);
 
         features.set(
             F::TEXTURE_BINDING_ARRAY
@@ -888,7 +893,6 @@ impl super::PrivateCapabilities {
     }
 
     pub fn capabilities(&self) -> crate::Capabilities {
-        let buffer_alignment = wgt::BufferSize::new(self.buffer_alignment).unwrap();
         let mut downlevel = wgt::DownlevelCapabilities::default();
         downlevel.flags.set(
             wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES,
@@ -926,12 +930,12 @@ impl super::PrivateCapabilities {
                 max_vertex_attributes: base.max_vertex_attributes,
                 max_vertex_buffer_array_stride: base.max_vertex_buffer_array_stride,
                 max_push_constant_size: 0x1000,
+                min_uniform_buffer_offset_alignment: self.buffer_alignment as u32,
+                min_storage_buffer_offset_alignment: self.buffer_alignment as u32,
             },
             alignments: crate::Alignments {
-                buffer_copy_offset: buffer_alignment,
+                buffer_copy_offset: wgt::BufferSize::new(self.buffer_alignment).unwrap(),
                 buffer_copy_pitch: wgt::BufferSize::new(4).unwrap(),
-                uniform_buffer_offset: buffer_alignment,
-                storage_buffer_offset: buffer_alignment,
             },
             downlevel,
         }

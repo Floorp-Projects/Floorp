@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2021-09-09
+- support serde renames that start with a digit
+
+## [0.6.3] - 2020-12-18
+- bump `base64` dependency to 0.13
+
 ## [0.6.2] - 2020-09-09
 - Added `decimal_floats` PrettyConfig option, which always includes decimals in floats (`1.0` vs `1`) ([#237](https://github.com/ron-rs/ron/pull/237))
 - Fixed EBNF grammar for raw strings ([#236](https://github.com/ron-rs/ron/pull/236), unsigned integers ([#248](https://github.com/ron-rs/ron/pull/248)), and nested comments ([#272](https://github.com/ron-rs/ron/pull/272))
@@ -11,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sped up parsing using table predicates ([#276](https://github.com/ron-rs/ron/pull/276))
 
 ## [0.6.1] - 2020-07-14
-
 ### Fixes
 - Fix array formatting regression ([#260](https://github.com/ron-rs/ron/pull/260))
 

@@ -7,9 +7,9 @@ use std::marker::PhantomData;
 use crate::data::DataMap;
 use crate::visit::{Data, NodeCompactIndexable, NodeCount};
 use crate::visit::{
-    GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNeighbors,
-    IntoNeighborsDirected, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable, NodeRef,
-    VisitMap, Visitable,
+    EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected,
+    IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable,
+    NodeRef, VisitMap, Visitable,
 };
 
 /// A graph filter for nodes.
@@ -106,6 +106,7 @@ where
 }
 
 /// A filtered neighbors iterator.
+#[derive(Debug, Clone)]
 pub struct NodeFilteredNeighbors<'a, I, F: 'a> {
     include_source: bool,
     iter: I,
@@ -126,6 +127,10 @@ where
         } else {
             self.iter.find(move |&target| f.include_node(target))
         }
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
     }
 }
 
@@ -176,6 +181,7 @@ where
 }
 
 /// A filtered node references iterator.
+#[derive(Debug, Clone)]
 pub struct NodeFilteredNodes<'a, I, F: 'a> {
     include_source: bool,
     iter: I,
@@ -197,6 +203,10 @@ where
             self.iter.find(move |&target| f.include_node(target.id()))
         }
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
+    }
 }
 
 impl<'a, G, F> IntoEdgeReferences for &'a NodeFiltered<G, F>
@@ -216,6 +226,7 @@ where
 }
 
 /// A filtered edges iterator.
+#[derive(Debug, Clone)]
 pub struct NodeFilteredEdgeReferences<'a, G, I, F: 'a> {
     graph: PhantomData<G>,
     iter: I,
@@ -233,6 +244,10 @@ where
         let f = self.f;
         self.iter
             .find(move |&edge| f.include_node(edge.source()) && f.include_node(edge.target()))
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
     }
 }
 
@@ -252,7 +267,24 @@ where
     }
 }
 
+impl<'a, G, F> IntoEdgesDirected for &'a NodeFiltered<G, F>
+where
+    G: IntoEdgesDirected,
+    F: FilterNode<G::NodeId>,
+{
+    type EdgesDirected = NodeFilteredEdges<'a, G, G::EdgesDirected, F>;
+    fn edges_directed(self, a: G::NodeId, dir: Direction) -> Self::EdgesDirected {
+        NodeFilteredEdges {
+            graph: PhantomData,
+            include_source: self.1.include_node(a),
+            iter: self.0.edges_directed(a, dir),
+            f: &self.1,
+        }
+    }
+}
+
 /// A filtered edges iterator.
+#[derive(Debug, Clone)]
 pub struct NodeFilteredEdges<'a, G, I, F: 'a> {
     graph: PhantomData<G>,
     include_source: bool,
@@ -274,6 +306,10 @@ where
             let f = self.f;
             self.iter.find(move |&edge| f.include_node(edge.target()))
         }
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
     }
 }
 
@@ -303,6 +339,7 @@ macro_rules! access0 {
 
 Data! {delegate_impl [[G, F], G, NodeFiltered<G, F>, access0]}
 NodeIndexable! {delegate_impl [[G, F], G, NodeFiltered<G, F>, access0]}
+EdgeIndexable! {delegate_impl [[G, F], G, NodeFiltered<G, F>, access0]}
 GraphProp! {delegate_impl [[G, F], G, NodeFiltered<G, F>, access0]}
 Visitable! {delegate_impl [[G, F], G, NodeFiltered<G, F>, access0]}
 
@@ -381,6 +418,7 @@ where
 }
 
 /// A filtered neighbors iterator.
+#[derive(Debug, Clone)]
 pub struct EdgeFilteredNeighbors<'a, G, F: 'a>
 where
     G: IntoEdges,
@@ -406,6 +444,10 @@ where
                 }
             })
             .next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
     }
 }
 
@@ -440,7 +482,24 @@ where
     }
 }
 
+impl<'a, G, F> IntoEdgesDirected for &'a EdgeFiltered<G, F>
+where
+    G: IntoEdgesDirected,
+    F: FilterEdge<G::EdgeRef>,
+{
+    type EdgesDirected = EdgeFilteredEdges<'a, G, G::EdgesDirected, F>;
+
+    fn edges_directed(self, n: G::NodeId, dir: Direction) -> Self::EdgesDirected {
+        EdgeFilteredEdges {
+            graph: PhantomData,
+            iter: self.0.edges_directed(n, dir),
+            f: &self.1,
+        }
+    }
+}
+
 /// A filtered edges iterator.
+#[derive(Debug, Clone)]
 pub struct EdgeFilteredEdges<'a, G, I, F: 'a> {
     graph: PhantomData<G>,
     iter: I,
@@ -458,9 +517,14 @@ where
         let f = self.f;
         self.iter.find(move |&edge| f.include_edge(edge))
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
+    }
 }
 
 /// A filtered neighbors-directed iterator.
+#[derive(Debug, Clone)]
 pub struct EdgeFilteredNeighborsDirected<'a, G, F: 'a>
 where
     G: IntoEdgesDirected,
@@ -493,6 +557,10 @@ where
             })
             .next()
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.iter.size_hint();
+        (0, upper)
+    }
 }
 
 Data! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}
@@ -502,4 +570,5 @@ IntoNodeReferences! {delegate_impl [['a, G, F], G, &'a EdgeFiltered<G, F>, acces
 NodeCompactIndexable! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}
 NodeCount! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}
 NodeIndexable! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}
+EdgeIndexable! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}
 Visitable! {delegate_impl [[G, F], G, EdgeFiltered<G, F>, access0]}

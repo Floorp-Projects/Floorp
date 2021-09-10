@@ -282,6 +282,16 @@ where
     ))
 }
 
+pub fn invalid_hole_err<E>(node_index: usize) -> E
+where
+    E: Error,
+{
+    E::custom(format_args!(
+        "invalid value: node hole `{}` is not allowed.",
+        node_index
+    ))
+}
+
 pub fn invalid_length_err<Ix, E>(node_or_edge: &str, len: usize) -> E
 where
     E: Error,

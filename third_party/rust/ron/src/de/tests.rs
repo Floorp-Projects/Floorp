@@ -203,6 +203,22 @@ fn untagged() {
 }
 
 #[test]
+fn rename() {
+    #[derive(Deserialize, Debug, PartialEq)]
+    enum Foo {
+        #[serde(rename = "2d")]
+        D2,
+        #[serde(rename = "triangle-list")]
+        TriangleList,
+    }
+    assert_eq!(from_str::<Foo>("r#2d").unwrap(), Foo::D2);
+    assert_eq!(
+        from_str::<Foo>("r#triangle-list").unwrap(),
+        Foo::TriangleList
+    );
+}
+
+#[test]
 fn forgot_apostrophes() {
     let de: Result<(i32, String)> = from_str("(4, \"Hello)");
 

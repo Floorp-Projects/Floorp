@@ -14,15 +14,16 @@ const INT_CHAR: u8 = 1 << 0; // [0-9A-Fa-f_]
 const FLOAT_CHAR: u8 = 1 << 1; // [0-9\.Ee+-]
 const IDENT_FIRST_CHAR: u8 = 1 << 2; // [A-Za-z_]
 const IDENT_OTHER_CHAR: u8 = 1 << 3; // [A-Za-z_0-9]
-const WHITESPACE_CHAR: u8 = 1 << 4; // [\n\t\r ]
+const IDENT_RAW_CHAR: u8 = 1 << 4; // [A-Za-z_0-9\.+-]
+const WHITESPACE_CHAR: u8 = 1 << 5; // [\n\t\r ]
 
 // We encode each char as belonging to some number of these categories.
-const DIGIT: u8 = INT_CHAR | FLOAT_CHAR | IDENT_OTHER_CHAR; // [0-9]
-const ABCDF: u8 = INT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR; // [ABCDFabcdf]
-const UNDER: u8 = INT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR; // [_]
-const E____: u8 = INT_CHAR | FLOAT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR; // [Ee]
-const G2Z__: u8 = IDENT_FIRST_CHAR | IDENT_OTHER_CHAR; // [G-Zg-z]
-const PUNCT: u8 = FLOAT_CHAR; // [\.+-]
+const DIGIT: u8 = INT_CHAR | FLOAT_CHAR | IDENT_OTHER_CHAR | IDENT_RAW_CHAR; // [0-9]
+const ABCDF: u8 = INT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR | IDENT_RAW_CHAR; // [ABCDFabcdf]
+const UNDER: u8 = INT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR | IDENT_RAW_CHAR; // [_]
+const E____: u8 = INT_CHAR | FLOAT_CHAR | IDENT_FIRST_CHAR | IDENT_OTHER_CHAR | IDENT_RAW_CHAR; // [Ee]
+const G2Z__: u8 = IDENT_FIRST_CHAR | IDENT_OTHER_CHAR | IDENT_RAW_CHAR; // [G-Zg-z]
+const PUNCT: u8 = FLOAT_CHAR | IDENT_RAW_CHAR; // [\.+-]
 const WS___: u8 = WHITESPACE_CHAR; // [\t\n\r ]
 const _____: u8 = 0; // everything else
 
@@ -67,12 +68,16 @@ const fn is_float_char(c: u8) -> bool {
     ENCODINGS[c as usize] & FLOAT_CHAR != 0
 }
 
-const fn is_ident_first_char(c: u8) -> bool {
+pub const fn is_ident_first_char(c: u8) -> bool {
     ENCODINGS[c as usize] & IDENT_FIRST_CHAR != 0
 }
 
-const fn is_ident_other_char(c: u8) -> bool {
+pub const fn is_ident_other_char(c: u8) -> bool {
     ENCODINGS[c as usize] & IDENT_OTHER_CHAR != 0
+}
+
+const fn is_ident_raw_char(c: u8) -> bool {
+    ENCODINGS[c as usize] & IDENT_RAW_CHAR != 0
 }
 
 const fn is_whitespace_char(c: u8) -> bool {
@@ -209,7 +214,7 @@ impl<'a> Bytes<'a> {
             }
 
             Ok(num_acc)
-        };
+        }
 
         let res = if sign > 0 {
             calc_num(&*self, s, base, T::checked_add_ext)
@@ -528,34 +533,41 @@ impl<'a> Bytes<'a> {
     }
 
     pub fn identifier(&mut self) -> Result<&'a [u8]> {
-        let bytes = self.identifier_len()?;
-        let ident = &self.bytes[..bytes];
-        let _ = self.advance(bytes);
+        let next = self.peek_or_eof()?;
+        if !is_ident_first_char(next) {
+            return self.err(ErrorCode::ExpectedIdentifier);
+        }
+
+        // If the next two bytes signify the start of a raw string literal,
+        // return an error.
+        let length = if next == b'r' {
+            match self
+                .bytes
+                .get(1)
+                .ok_or_else(|| self.error(ErrorCode::Eof))?
+            {
+                b'"' => return self.err(ErrorCode::ExpectedIdentifier),
+                b'#' => {
+                    let after_next = self.bytes.get(2).cloned().unwrap_or_default();
+                    //Note: it's important to check this before advancing forward, so that
+                    // the value-type deserializer can fall back to parsing it differently.
+                    if !is_ident_raw_char(after_next) {
+                        return self.err(ErrorCode::ExpectedIdentifier);
+                    }
+                    // skip "r#"
+                    let _ = self.advance(2);
+                    self.next_bytes_contained_in(is_ident_raw_char)
+                }
+                _ => self.next_bytes_contained_in(is_ident_other_char),
+            }
+        } else {
+            self.next_bytes_contained_in(is_ident_other_char)
+        };
+
+        let ident = &self.bytes[..length];
+        let _ = self.advance(length);
 
         Ok(ident)
-    }
-
-    pub fn identifier_len(&self) -> Result<usize> {
-        let next = self.peek_or_eof()?;
-        if is_ident_first_char(next) {
-            // If the next two bytes signify the start of a raw string literal,
-            // return an error.
-            if next == b'r' {
-                let second = self
-                    .bytes
-                    .get(1)
-                    .ok_or_else(|| self.error(ErrorCode::Eof))?;
-                if *second == b'"' || *second == b'#' {
-                    return self.err(ErrorCode::ExpectedIdentifier);
-                }
-            }
-
-            let bytes = self.next_bytes_contained_in(is_ident_other_char);
-
-            Ok(bytes)
-        } else {
-            self.err(ErrorCode::ExpectedIdentifier)
-        }
     }
 
     pub fn next_bytes_contained_in(&self, allowed: fn(u8) -> bool) -> usize {
