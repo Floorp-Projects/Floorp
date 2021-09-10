@@ -104,6 +104,10 @@ class NS_ConvertUTF16toUTF8 : public nsAutoCString {
     AppendUTF16toUTF8(aString, *this);
   }
 
+  explicit NS_ConvertUTF16toUTF8(mozilla::Span<const char16_t> aString) {
+    AppendUTF16toUTF8(aString, *this);
+  }
+
  private:
   // NOT TO BE IMPLEMENTED
   NS_ConvertUTF16toUTF8(char) = delete;
@@ -120,6 +124,10 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString {
   }
 
   explicit NS_ConvertUTF8toUTF16(const nsACString& aCString) {
+    AppendUTF8toUTF16(aCString, *this);
+  }
+
+  explicit NS_ConvertUTF8toUTF16(mozilla::Span<const char> aCString) {
     AppendUTF8toUTF16(aCString, *this);
   }
 
