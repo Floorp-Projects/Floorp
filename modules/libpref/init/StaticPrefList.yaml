@@ -4969,11 +4969,6 @@
   value: 16
   mirror: once
 
-- name: gfx.logging.painted-pixel-count.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # The maximums here are quite conservative, we can tighten them if problems show up.
 - name: gfx.logging.texture-usage.enabled
   type: bool
@@ -6268,16 +6263,6 @@
   value: false
   mirror: always
 
-- name: layers.acceleration.draw-fps.print-histogram
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layers.acceleration.draw-fps.write-to-file
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether to force acceleration on, ignoring blacklists.
 
 # bug 838603 -- on Android, accidentally blacklisting OpenGL layers
@@ -7384,11 +7369,6 @@
   value: 64
   mirror: always
 
-- name: layout.paint_rects_separately
-  type: bool
-  value: true
-  mirror: once
-
 # On Android, don't synth mouse move events after scrolling, as they cause
 # unexpected user-visible behaviour. Can remove this after bug 1633450 is
 # satisfactorily resolved.
@@ -7422,11 +7402,6 @@
 - name: layout.show_previous_page
   type: bool
   value: true
-  mirror: always
-
-- name: layout.smaller-painted-layers
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 # Pref to stop overlay scrollbars from fading out, for testing purposes.

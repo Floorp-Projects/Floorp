@@ -47,6 +47,7 @@ class Creator(object):
         self.no_vcs_ignore = options.no_vcs_ignore
         self.pyenv_cfg = PyEnvCfg.from_folder(self.dest)
         self.app_data = options.app_data
+        self.env = options.env
 
     def __repr__(self):
         return ensure_str(self.__unicode__())
@@ -204,7 +205,7 @@ class Creator(object):
         :return: debug information about the virtual environment (only valid after :meth:`create` has run)
         """
         if self._debug is None and self.exe is not None:
-            self._debug = get_env_debug_info(self.exe, self.debug_script(), self.app_data)
+            self._debug = get_env_debug_info(self.exe, self.debug_script(), self.app_data, self.env)
         return self._debug
 
     # noinspection PyMethodMayBeStatic
@@ -212,8 +213,8 @@ class Creator(object):
         return DEBUG_SCRIPT
 
 
-def get_env_debug_info(env_exe, debug_script, app_data):
-    env = os.environ.copy()
+def get_env_debug_info(env_exe, debug_script, app_data, env):
+    env = env.copy()
     env.pop(str("PYTHONPATH"), None)
 
     with app_data.ensure_extracted(debug_script) as debug_script:

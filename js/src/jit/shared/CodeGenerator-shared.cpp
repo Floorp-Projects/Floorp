@@ -163,6 +163,8 @@ bool CodeGeneratorShared::generateEpilogue() {
 }
 
 bool CodeGeneratorShared::generateOutOfLineCode() {
+  AutoCreatedBy acb(masm, "CodeGeneratorShared::generateOutOfLineCode");
+
   // OOL paths should not attempt to use |current| as it's the last block
   // instead of the block corresponding to the OOL path.
   current = nullptr;

@@ -756,6 +756,7 @@ let JSWINDOWACTORS = {
   let startTime = Cu.now();
   if (
     AppConstants.platform == "macosx" ||
+    Services.startup.wasSilentlyStarted ||
     !Services.prefs.getBoolPref("browser.startup.blankWindow", false)
   ) {
     return;

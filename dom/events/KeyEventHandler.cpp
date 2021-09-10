@@ -651,21 +651,21 @@ void KeyEventHandler::BuildModifiers(nsAString& aModifiers) {
     char* newStr;
     char* token = nsCRT::strtok(str, ", \t", &newStr);
     while (token != nullptr) {
-      if (PL_strcmp(token, "shift") == 0) {
+      if (strcmp(token, "shift") == 0) {
         mKeyMask |= cShift | cShiftMask;
-      } else if (PL_strcmp(token, "alt") == 0) {
+      } else if (strcmp(token, "alt") == 0) {
         mKeyMask |= cAlt | cAltMask;
-      } else if (PL_strcmp(token, "meta") == 0) {
+      } else if (strcmp(token, "meta") == 0) {
         mKeyMask |= cMeta | cMetaMask;
-      } else if (PL_strcmp(token, "os") == 0) {
+      } else if (strcmp(token, "os") == 0) {
         mKeyMask |= cOS | cOSMask;
-      } else if (PL_strcmp(token, "control") == 0) {
+      } else if (strcmp(token, "control") == 0) {
         mKeyMask |= cControl | cControlMask;
-      } else if (PL_strcmp(token, "accel") == 0) {
+      } else if (strcmp(token, "accel") == 0) {
         mKeyMask |= AccelKeyMask();
-      } else if (PL_strcmp(token, "access") == 0) {
+      } else if (strcmp(token, "access") == 0) {
         mKeyMask |= KeyToMask(kMenuAccessKey);
-      } else if (PL_strcmp(token, "any") == 0) {
+      } else if (strcmp(token, "any") == 0) {
         mKeyMask &= ~(mKeyMask << 5);
       }
 

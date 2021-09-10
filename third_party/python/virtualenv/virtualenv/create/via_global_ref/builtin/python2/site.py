@@ -9,6 +9,7 @@ import sys
 
 def main():
     """Patch what needed, and invoke the original site.py"""
+    here = __file__  # the distutils.install patterns will be injected relative to this site.py, save it here
     config = read_pyvenv()
     sys.real_prefix = sys.base_prefix = config["base-prefix"]
     sys.base_exec_prefix = config["base-exec-prefix"]
@@ -16,12 +17,13 @@ def main():
     global_site_package_enabled = config.get("include-system-site-packages", False) == "true"
     rewrite_standard_library_sys_path()
     disable_user_site_package()
-    load_host_site()
+    load_host_site(here)
     if global_site_package_enabled:
         add_global_site_package()
+    rewrite_getsitepackages(here)
 
 
-def load_host_site():
+def load_host_site(here):
     """trigger reload of site.py - now it will use the standard library instance that will take care of init"""
     # we have a duality here, we generate the platform and pure library path based on what distutils.install specifies
     # because this is what pip will be using; the host site.py though may contain it's own pattern for where the
@@ -36,23 +38,26 @@ def load_host_site():
     # to facilitate when the two match, or not we first reload the site.py, now triggering the import of host site.py,
     # as this will ensure that initialization code within host site.py runs
 
-    here = __file__  # the distutils.install patterns will be injected relative to this site.py, save it here
-
     # ___RELOAD_CODE___
 
     # and then if the distutils site packages are not on the sys.path we add them via add_site_dir; note we must add
     # them by invoking add_site_dir to trigger the processing of pth files
+
+    add_site_dir = sys.modules["site"].addsitedir
+    for path in get_site_packages_dirs(here):
+        add_site_dir(path)
+
+
+def get_site_packages_dirs(here):
+    import json
     import os
 
     site_packages = r"""
     ___EXPECTED_SITE_PACKAGES___
     """
-    import json
 
-    add_site_dir = sys.modules["site"].addsitedir
     for path in json.loads(site_packages):
-        full_path = os.path.abspath(os.path.join(here, path.encode("utf-8")))
-        add_site_dir(full_path)
+        yield os.path.abspath(os.path.join(here, path.encode("utf-8")))
 
 
 sep = "\\" if sys.platform == "win32" else "/"  # no os module here yet - poor mans version
@@ -158,7 +163,28 @@ def add_global_site_package():
         site.PREFIXES = [sys.base_prefix, sys.base_exec_prefix]
         site.main()
     finally:
-        site.PREFIXES = orig_prefixes
+        site.PREFIXES = orig_prefixes + site.PREFIXES
+
+
+# Debian and it's derivatives patch this function. We undo the damage
+def rewrite_getsitepackages(here):
+    site = sys.modules["site"]
+
+    site_package_dirs = get_site_packages_dirs(here)
+    orig_getsitepackages = site.getsitepackages
+
+    def getsitepackages():
+        sitepackages = orig_getsitepackages()
+        if sys.prefix not in site.PREFIXES or sys.exec_prefix not in site.PREFIXES:
+            # Someone messed with the prefixes, so we stop patching
+            return sitepackages
+        for path in site_package_dirs:
+            if path not in sitepackages:
+                sitepackages.insert(0, path)
+
+        return sitepackages
+
+    site.getsitepackages = getsitepackages
 
 
 main()
