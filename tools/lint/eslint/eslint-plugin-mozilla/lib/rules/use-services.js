@@ -21,9 +21,51 @@ module.exports = {
   create(context) {
     return {
       CallExpression(node) {
+        if (!node.callee || !node.callee.property) {
+          return;
+        }
+
         if (
-          !node.callee ||
-          !node.callee.property ||
+          node.callee.property.type == "Identifier" &&
+          node.callee.property.name == "defineLazyServiceGetter" &&
+          node.arguments.length == 4 &&
+          node.arguments[3].type == "Literal" &&
+          node.arguments[3].value in servicesInterfaceMap
+        ) {
+          let serviceName = servicesInterfaceMap[node.arguments[3].value];
+
+          context.report(
+            node,
+            `Use Services.${serviceName} rather than defineLazyServiceGetter.`
+          );
+          return;
+        }
+
+        if (
+          node.callee.property.type == "Identifier" &&
+          node.callee.property.name == "defineLazyServiceGetters" &&
+          node.arguments.length == 2 &&
+          node.arguments[1].type == "ObjectExpression"
+        ) {
+          for (let property of node.arguments[1].properties) {
+            if (
+              property.value.type == "ArrayExpression" &&
+              property.value.elements.length == 2 &&
+              property.value.elements[1].value in servicesInterfaceMap
+            ) {
+              let serviceName =
+                servicesInterfaceMap[property.value.elements[1].value];
+
+              context.report(
+                property.value,
+                `Use Services.${serviceName} rather than defineLazyServiceGetters.`
+              );
+            }
+          }
+          return;
+        }
+
+        if (
           node.callee.property.type != "Identifier" ||
           node.callee.property.name != "getService" ||
           node.arguments.length != 1 ||
