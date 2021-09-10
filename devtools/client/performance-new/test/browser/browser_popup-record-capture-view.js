@@ -12,34 +12,52 @@ add_task(async function test() {
     "Test that the profiler pop-up correctly opens the captured profile on the " +
       "correct frontend view by adding proper view query string"
   );
+
+  // This test assumes that the Web Developer preset is set by default, which is
+  // not the case on Nightly and custom builds.
+  BackgroundJSM.changePreset(
+    "aboutprofiling",
+    "web-developer",
+    Services.profiler.GetFeatures()
+  );
+
   await setProfilerFrontendUrl(FRONTEND_BASE_URL);
   await makeSureProfilerPopupIsEnabled();
 
   // First check for "firefox-platform" preset which will have no "view" query
   // string because this is where our traditional "full" view opens up.
   await openPopupAndAssertUrlForPreset({
-    preset: "firefox-platform",
+    preset: "Firefox Platform",
     expectedUrl: FRONTEND_BASE_URL,
   });
 
   // Now, let's check for "web-developer" preset. This will open up the frontend
   // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
   await openPopupAndAssertUrlForPreset({
-    preset: "web-developer",
+    preset: "Web Developer",
     expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
   });
 });
 
 async function openPopupAndAssertUrlForPreset({ preset, expectedUrl }) {
-  // First, switch to the preset we want to test.
-  BackgroundJSM.changePreset(
-    "aboutprofiling",
-    preset,
-    [] // We don't need any features for this test.
-  );
-
   // Let's capture a profile and assert newly created tab's url.
   await openPopupAndEnsureCloses(window, async () => {
+    {
+      // Select the preset in the popup
+      const presetsInPopup = document.getElementById(
+        "PanelUI-profiler-presets"
+      );
+      presetsInPopup.menupopup.openPopup();
+      presetsInPopup.menupopup.activateItem(
+        await getElementByLabel(presetsInPopup, preset)
+      );
+
+      await TestUtils.waitForCondition(
+        () => presetsInPopup.label === preset,
+        `After selecting the preset in the popup, waiting until the preset is changed to ${preset} in the popup.`
+      );
+    }
+
     {
       const button = await getElementByLabel(document, "Start Recording");
       info("Click the button to start recording.");
