@@ -649,6 +649,7 @@ module.exports = {
   handleWebChannelMessage,
   addPrefObserver,
   removePrefObserver,
+  getProfilerViewModeForCurrentPreset,
 };
 
 // Object.keys() confuses the linting which expects a static array expression.

@@ -4,15 +4,24 @@
 
 "use strict";
 
+const FRONTEND_BASE_URL =
+  "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html";
+
 add_task(async function test() {
   info(
     "Test that DevTools can capture profiles. This function also unit tests the " +
       "internal RecordingState of the client."
   );
 
-  await setProfilerFrontendUrl(
-    "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
+  // This test assumes that the Web Developer preset is set by default, which is
+  // not the case on Nightly and custom builds.
+  BackgroundJSM.changePreset(
+    "aboutprofiling",
+    "web-developer",
+    Services.profiler.GetFeatures()
   );
+
+  await setProfilerFrontendUrl(FRONTEND_BASE_URL);
 
   await withDevToolsPanel(async document => {
     const getRecordingState = setupGetRecordingState(document);
@@ -28,63 +37,92 @@ add_task(async function test() {
       "The component starts out in an unknown state or is already available to record."
     );
 
-    const startRecording = await getActiveButtonFromText(
+    // First check for "firefox-platform" preset which will have no "view" query
+    // string because this is where our traditional "full" view opens up.
+    await setPresetCaptureAndAssertUrl({
       document,
-      "Start recording"
-    );
+      preset: "firefox-platform",
+      expectedUrl: FRONTEND_BASE_URL,
+      getRecordingState,
+    });
 
-    is(
-      getRecordingState(),
-      "available-to-record",
-      "After talking to the actor, we're ready to record."
-    );
-
-    info("Click the button to start recording");
-    startRecording.click();
-
-    is(
-      getRecordingState(),
-      "request-to-start-recording",
-      "Clicking the start recording button sends in a request to start recording."
-    );
-
-    const captureRecording = await getActiveButtonFromText(
+    // Now, let's check for "web-developer" preset. This will open up the frontend
+    // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
+    await setPresetCaptureAndAssertUrl({
       document,
-      "Capture recording"
-    );
-
-    is(
-      getRecordingState(),
-      "recording",
-      "Once the Capture recording button is available, the actor has started " +
-        "its recording"
-    );
-
-    info("Click the button to capture the recording.");
-    captureRecording.click();
-
-    is(
-      getRecordingState(),
-      "request-to-get-profile-and-stop-profiler",
-      "We have requested to stop the profiler."
-    );
-
-    await getActiveButtonFromText(document, "Start recording");
-    is(
-      getRecordingState(),
-      "available-to-record",
-      "The profiler is available to record again."
-    );
-
-    info(
-      "If the DevTools successfully injects a profile into the page, then the " +
-        "fake frontend will rename the title of the page."
-    );
-
-    await checkTabLoadedProfile({
-      initialTitle: "Waiting on the profile",
-      successTitle: "Profile received",
-      errorTitle: "Error",
+      preset: "web-developer",
+      expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
+      getRecordingState,
     });
   });
 });
+
+async function setPresetCaptureAndAssertUrl({
+  document,
+  preset,
+  expectedUrl,
+  getRecordingState,
+}) {
+  const presetsInDevtools = await getNearestInputFromText(document, "Settings");
+  setReactFriendlyInputValue(presetsInDevtools, preset);
+
+  const startRecording = await getActiveButtonFromText(
+    document,
+    "Start recording"
+  );
+
+  is(
+    getRecordingState(),
+    "available-to-record",
+    "After talking to the actor, we're ready to record."
+  );
+
+  info("Click the button to start recording");
+  startRecording.click();
+
+  is(
+    getRecordingState(),
+    "request-to-start-recording",
+    "Clicking the start recording button sends in a request to start recording."
+  );
+
+  const captureRecording = await getActiveButtonFromText(
+    document,
+    "Capture recording"
+  );
+
+  is(
+    getRecordingState(),
+    "recording",
+    "Once the Capture recording button is available, the actor has started " +
+      "its recording"
+  );
+
+  info("Click the button to capture the recording.");
+  captureRecording.click();
+
+  is(
+    getRecordingState(),
+    "request-to-get-profile-and-stop-profiler",
+    "We have requested to stop the profiler."
+  );
+
+  await getActiveButtonFromText(document, "Start recording");
+  is(
+    getRecordingState(),
+    "available-to-record",
+    "The profiler is available to record again."
+  );
+
+  info(
+    "If the DevTools successfully injects a profile into the page, then the " +
+      "fake frontend will rename the title of the page."
+  );
+
+  await waitForTabUrl({
+    initialTitle: "Waiting on the profile",
+    successTitle: "Profile received",
+    errorTitle: "Error",
+    expectedUrl,
+  });
+}
