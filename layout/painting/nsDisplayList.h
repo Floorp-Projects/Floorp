@@ -2728,10 +2728,8 @@ class nsDisplayItem : public nsDisplayItemLink {
   virtual Maybe<nsRect> GetClipWithRespectToASR(
       nsDisplayListBuilder* aBuilder, const ActiveScrolledRoot* aASR) const;
 
-  const nsRect& GetPaintRect() const { return mBuildingRect; }
-
   virtual const nsRect& GetUntransformedPaintRect() const {
-    return GetPaintRect();
+    return GetBuildingRect();
   }
 
   nsRect GetPaintRect(nsDisplayListBuilder* aBuilder, gfxContext* aCtx);
@@ -6157,11 +6155,6 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   bool UntransformBuildingRect(nsDisplayListBuilder* aBuilder,
                                nsRect* aOutRect) const {
     return UntransformRect(aBuilder, GetBuildingRect(), aOutRect);
-  }
-
-  bool UntransformPaintRect(nsDisplayListBuilder* aBuilder,
-                            nsRect* aOutRect) const {
-    return UntransformRect(aBuilder, GetPaintRect(), aOutRect);
   }
 
   static gfx::Point3D GetDeltaToTransformOrigin(const nsIFrame* aFrame,
