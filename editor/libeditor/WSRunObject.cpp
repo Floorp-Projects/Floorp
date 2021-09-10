@@ -989,7 +989,6 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
   // replace them with NBSP for making sure the collapsible characters visible.
   // FYI: There is no case only linefeeds are collapsible.  So, we need to
   //      do the things only when white-spaces are collapsible.
-  // TODO: Add WPT for inserting multiple white-spaces.
   MOZ_DIAGNOSTIC_ASSERT(!theString.IsEmpty());
   if (NS_WARN_IF(!pointToInsert.IsInContentNode()) ||
       !EditorUtils::IsWhiteSpacePreformatted(
