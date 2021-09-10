@@ -9,7 +9,7 @@ use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipStoreStats};
-use crate::spatial_tree::SpatialTree;
+use crate::spatial_tree::{SpatialTree, SceneSpatialTree};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
 use crate::internal_types::{FastHashMap, PlaneSplitter};
@@ -301,7 +301,7 @@ impl BuiltScene {
             background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(&ClipStoreStats::empty()),
-            spatial_tree: SpatialTree::new(),
+            spatial_tree: SpatialTree::new(SceneSpatialTree::new()),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
             tile_cache_pictures: Vec::new(),

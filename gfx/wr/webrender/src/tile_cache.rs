@@ -12,7 +12,7 @@ use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
 use crate::scene_builder_thread::Interners;
-use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
+use crate::spatial_tree::{SpatialNodeIndex, SceneSpatialTree};
 use crate::util::VecHelper;
 
 /*
@@ -118,7 +118,7 @@ impl TileCacheBuilder {
         &mut self,
         prim_list: PrimitiveList,
         clip_chain_id: ClipChainId,
-        spatial_tree: &SpatialTree,
+        spatial_tree: &SceneSpatialTree,
         clip_store: &ClipStore,
         interners: &Interners,
         config: &FrameBuilderConfig,
@@ -272,7 +272,7 @@ impl TileCacheBuilder {
         prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         prim_flags: PrimitiveFlags,
-        spatial_tree: &SpatialTree,
+        spatial_tree: &SceneSpatialTree,
         clip_store: &ClipStore,
         interners: &Interners,
         config: &FrameBuilderConfig,
@@ -498,7 +498,7 @@ impl TileCacheBuilder {
     fn find_scroll_root(
         &mut self,
         spatial_node_index: SpatialNodeIndex,
-        spatial_tree: &SpatialTree,
+        spatial_tree: &SceneSpatialTree,
     ) -> SpatialNodeIndex {
         if self.prev_scroll_root_cache.0 == spatial_node_index {
             return self.prev_scroll_root_cache.1;
@@ -518,7 +518,7 @@ fn add_clips(
     prim_clips: &mut Vec<ClipInstance>,
     clip_store: &ClipStore,
     interners: &Interners,
-    spatial_tree: &SpatialTree,
+    spatial_tree: &SceneSpatialTree,
 ) {
     let mut current_clip_chain_id = clip_chain_id;
 
