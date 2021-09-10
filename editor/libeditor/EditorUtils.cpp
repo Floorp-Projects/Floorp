@@ -770,4 +770,60 @@ bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpaceOrNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharPreformattedNewLine() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsCharPreformattedNewLine() const {
+  return IsCharNewLine() &&
+         EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
+    bool, IsCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<
+    PT, CT>::IsCharPreformattedNewLineCollapsedWithWhiteSpaces() const {
+  return IsCharNewLine() &&
+         EditorUtils::IsOnlyNewLinePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsPreviousCharPreformattedNewLine()
+                                                 const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsPreviousCharPreformattedNewLine() const {
+  return IsPreviousCharNewLine() &&
+         EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
+    bool, IsPreviousCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<
+    PT, CT>::IsPreviousCharPreformattedNewLineCollapsedWithWhiteSpaces() const {
+  return IsPreviousCharNewLine() &&
+         EditorUtils::IsOnlyNewLinePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsNextCharPreformattedNewLine() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsNextCharPreformattedNewLine() const {
+  return IsNextCharNewLine() &&
+         EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
+    bool, IsNextCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<
+    PT, CT>::IsNextCharPreformattedNewLineCollapsedWithWhiteSpaces() const {
+  return IsNextCharNewLine() &&
+         EditorUtils::IsOnlyNewLinePreformatted(*ContainerAsText());
+}
+
 }  // namespace mozilla

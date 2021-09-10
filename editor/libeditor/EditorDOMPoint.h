@@ -372,6 +372,9 @@ class EditorDOMPointBase final {
     return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharNewLine() const { return Char() == '\n'; }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharPreformattedNewLine() const;
+  MOZ_NEVER_INLINE_DEBUG bool
+  IsCharPreformattedNewLineCollapsedWithWhiteSpaces() const;
   /**
    * IsCharCollapsibleASCIISpace(), IsCharCollapsibleNBSP() and
    * IsCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space is
@@ -416,6 +419,9 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharNewLine() const {
     return PreviousChar() == '\n';
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharPreformattedNewLine() const;
+  MOZ_NEVER_INLINE_DEBUG bool
+  IsPreviousCharPreformattedNewLineCollapsedWithWhiteSpaces() const;
   /**
    * IsPreviousCharCollapsibleASCIISpace(), IsPreviousCharCollapsibleNBSP() and
    * IsPreviousCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space
@@ -444,6 +450,9 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG bool IsNextCharNewLine() const {
     return NextChar() == '\n';
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsNextCharPreformattedNewLine() const;
+  MOZ_NEVER_INLINE_DEBUG bool
+  IsNextCharPreformattedNewLineCollapsedWithWhiteSpaces() const;
   /**
    * IsNextCharCollapsibleASCIISpace(), IsNextCharCollapsibleNBSP() and
    * IsNextCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space is
