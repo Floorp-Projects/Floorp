@@ -392,6 +392,13 @@ class HTMLEditUtils final {
   }
 
   /**
+   * ShouldInsertLinefeedCharacter() returns true if the caller should insert
+   * a linefeed character instead of <br> element.
+   */
+  static bool ShouldInsertLinefeedCharacter(EditorDOMPoint& aPointToInsert,
+                                            const Element& aEditingHost);
+
+  /**
    * IsEmptyNode() returns false if aNode has some visible content nodes,
    * list elements or table elements.
    *

@@ -6026,52 +6026,7 @@ nsresult EditorBase::InsertTextAsSubAction(
   return result.Rv();
 }
 
-NS_IMETHODIMP EditorBase::InsertLineBreak() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (NS_FAILED(rv)) {
-    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
-                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (NS_WARN_IF(IsSingleLineEditor())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this,
-                                             ScrollSelectionIntoView::Yes);
-  rv = InsertLineBreakAsSubAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertLineBreakAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
-nsresult EditorBase::InsertLineBreakAsSubAction() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(IsTextEditor());
-
-  if (NS_WARN_IF(!mInitSucceeded)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  IgnoredErrorResult ignoredError;
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext, ignoredError);
-  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
-  }
-  NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
-      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
-
-  EditActionResult result =
-      MOZ_KnownLive(AsTextEditor())->InsertLineFeedCharacterAtSelection();
-  NS_WARNING_ASSERTION(
-      result.Succeeded(),
-      "TextEditor::InsertLineFeedCharacterAtSelection() failed, but ignored");
-  return result.Rv();
-}
+NS_IMETHODIMP EditorBase::InsertLineBreak() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 /*****************************************************************************
  * mozilla::EditorBase::AutoEditActionDataSetter

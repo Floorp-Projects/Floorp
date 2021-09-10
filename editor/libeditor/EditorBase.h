@@ -2401,12 +2401,6 @@ class EditorBase : public nsIEditor,
       NotificationForEditorObservers aNotification);
 
   /**
-   * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
-   * TextEditor or <br> if it's HTMLEditor.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
-
-  /**
    * HowToHandleCollapsedRange indicates how collapsed range should be treated.
    */
   enum class HowToHandleCollapsedRange {
