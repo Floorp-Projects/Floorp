@@ -1140,6 +1140,7 @@ class Assembler : public AssemblerX86Shared {
   }
 
   void jmp(ImmPtr target, RelocationKind reloc = RelocationKind::HARDCODED) {
+    MOZ_ASSERT(hasCreator());
     JmpSrc src = masm.jmp();
     addPendingJump(src, target, reloc);
   }

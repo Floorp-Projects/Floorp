@@ -578,6 +578,14 @@ class AssemblerShared {
 #ifdef ENABLE_WASM_EXCEPTIONS
   wasm::WasmTryNoteVector tryNotes_;
 #endif
+#ifdef DEBUG
+  // To facilitate figuring out which part of SM created each instruction as
+  // shown by IONFLAGS=codegen, this maintains a stack of (notionally)
+  // code-creating routines, which is printed in the log output every time an
+  // entry is pushed or popped.  Do not push/pop entries directly; instead use
+  // `class AutoCreatedBy`.
+  mozilla::Vector<const char*> creators_;
+#endif
 
  protected:
   CodeLabelVector codeLabels_;
@@ -587,6 +595,17 @@ class AssemblerShared {
 
  public:
   AssemblerShared() : enoughMemory_(true), embedsNurseryPointers_(false) {}
+
+  ~AssemblerShared();
+
+#ifdef DEBUG
+  // Do not use these directly; instead use `class AutoCreatedBy`.
+  void pushCreator(const char*);
+  void popCreator();
+  // See comment on the implementation of `hasCreator` for guidance on what to
+  // do if you get failures of the assertion `MOZ_ASSERT(hasCreator())`,
+  bool hasCreator() const;
+#endif
 
   void propagateOOM(bool success) { enoughMemory_ &= success; }
 
@@ -642,6 +661,33 @@ class AssemblerShared {
   wasm::WasmTryNoteVector& tryNotes() { return tryNotes_; }
 #endif
 };
+
+// AutoCreatedBy pushes and later pops a who-created-these-insns? tag into the
+// JitSpew_Codegen output.  These could be created fairly frequently, so a
+// dummy inlineable-out version is provided for non-debug builds.  The tag
+// text can be completely arbitrary -- it serves only to help readers of the
+// output text to relate instructions back to the part(s) of SM that created
+// them.
+#ifdef DEBUG
+class MOZ_RAII AutoCreatedBy {
+ private:
+  AssemblerShared& ash_;
+
+ public:
+  AutoCreatedBy(AssemblerShared& ash, const char* who) : ash_(ash) {
+    ash_.pushCreator(who);
+  }
+  ~AutoCreatedBy() { ash_.popCreator(); }
+};
+#else
+class MOZ_RAII AutoCreatedBy {
+ public:
+  inline AutoCreatedBy(AssemblerShared& ash, const char* who) {}
+  // A user-defined constructor is necessary to stop some compilers from
+  // complaining about unused variables.
+  inline ~AutoCreatedBy() {}
+};
+#endif
 
 }  // namespace jit
 }  // namespace js
