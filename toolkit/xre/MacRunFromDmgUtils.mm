@@ -93,7 +93,32 @@ static bool AskUserIfWeShouldInstall() {
   // to map the Escape key to it manually:
   [dontInstallButton setKeyEquivalent:@"\e"];
 
-  NSInteger result = [alert runModal];
+  // We need to call run on NSApp to allow accessibility. We only run it
+  // for this specific alert which blocks the app's loop until the user
+  // responds, it then subsequently stops the app's loop.
+  //
+  // AskUserIfWeShouldInstall
+  //          |
+  //          | ---> [NSApp run]
+  //          |          |
+  //          |          | -----> task
+  //          |          |          | -----------> [alert runModal]
+  //          |          |          |                     | (User selects button)
+  //          |          |          | <---------------   done
+  //          |          |          |
+  //          |          |          | -----------> [NSApp stop:nil]
+  //          |          |          | <-----------
+  //          |          | <--------
+  //          | <-------
+  //        done
+  __block NSInteger result = -1;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    result = [alert runModal];
+    [NSApp stop:nil];
+  });
+
+  [NSApp run];
+  MOZ_ASSERT(result != -1);
 
   return result == NSAlertFirstButtonReturn;
 
