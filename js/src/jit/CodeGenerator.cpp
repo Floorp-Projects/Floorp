@@ -2554,6 +2554,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
              gc::GetGCKindSlots(templateObj.getAllocKind()));
 
   StackMacroAssembler masm(cx);
+  AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -2893,6 +2894,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   Register temp3 = regs.takeAny();
 
   StackMacroAssembler masm(cx);
+  AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -3057,6 +3059,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   Register result = ReturnReg;
 
   StackMacroAssembler masm(cx);
+  AutoCreatedBy acb(masm, "JitRealm::generateRegExpTesterStub");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -6513,6 +6516,8 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
 
 bool CodeGenerator::generateBody() {
   JitSpewCont(JitSpew_Codegen, "\n");
+  AutoCreatedBy acb(masm, "CodeGenerator::generateBody");
+
   JitSpew(JitSpew_Codegen, "==== BEGIN CodeGenerator::generateBody ====");
   IonScriptCounts* counts = maybeCreateScriptCounts();
 
@@ -10080,6 +10085,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting StringConcat stub");
 
   StackMacroAssembler masm(cx);
+  AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
 
   Register lhs = CallTempReg0;
   Register rhs = CallTempReg1;
@@ -10186,6 +10192,8 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 }
 
 void JitRuntime::generateFreeStub(MacroAssembler& masm) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateFreeStub");
+
   const Register regSlots = CallTempReg0;
 
   freeStubOffset_ = startTrampolineCode(masm);
@@ -10213,6 +10221,8 @@ void JitRuntime::generateFreeStub(MacroAssembler& masm) {
 }
 
 void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateLazyLinkStub");
+
   lazyLinkStubOffset_ = startTrampolineCode(masm);
 
 #ifdef JS_USE_LINK_REGISTER
@@ -10246,6 +10256,8 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
 }
 
 void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateInterpreterStub");
+
   interpreterStubOffset_ = startTrampolineCode(masm);
 
 #ifdef JS_USE_LINK_REGISTER
@@ -10280,6 +10292,7 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
 }
 
 void JitRuntime::generateDoubleToInt32ValueStub(MacroAssembler& masm) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateDoubleToInt32ValueStub");
   doubleToInt32ValueStubOffset_ = startTrampolineCode(masm);
 
   Label done;
@@ -11416,6 +11429,8 @@ bool CodeGenerator::generateWasm(wasm::TypeIdDesc funcTypeId,
                                  size_t trapExitLayoutNumWords,
                                  wasm::FuncOffsets* offsets,
                                  wasm::StackMaps* stackMaps) {
+  AutoCreatedBy acb(masm, "CodeGenerator::generateWasm");
+
   JitSpew(JitSpew_Codegen, "# Emitting wasm code");
   setUseWasmStackArgumentAbi();
 
@@ -11515,6 +11530,8 @@ bool CodeGenerator::generateWasm(wasm::TypeIdDesc funcTypeId,
 }
 
 bool CodeGenerator::generate() {
+  AutoCreatedBy acb(masm, "CodeGenerator::generate");
+
   JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u:%u",
           gen->outerInfo().script()->filename(),
           gen->outerInfo().script()->lineno(),
@@ -11623,6 +11640,8 @@ static bool AddInlinedCompilations(JSContext* cx, HandleScript script,
 }
 
 bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
+  AutoCreatedBy acb(masm, "CodeGenerator::link");
+
   // We cancel off-thread Ion compilations in a few places during GC, but if
   // this compilation was performed off-thread it will already have been
   // removed from the relevant lists by this point. Don't allow GC here.
