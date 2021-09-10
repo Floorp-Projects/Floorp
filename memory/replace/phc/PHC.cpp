@@ -224,11 +224,10 @@ void StackTrace::Fill() {
   // This code is cribbed from the Gecko Profiler, which also uses
   // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
   // pointer, and GetStackTop() for the stack end.
-  void** fp;
-  asm(
-      // Dereference %rbp to get previous %rbp
-      "movq (%%rbp), %0\n\t"
-      : "=r"(fp));
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wframe-address"
+  void** fp = reinterpret_cast<void**>(__builtin_frame_address(1));
+#  pragma GCC diagnostic pop
   void* stackEnd = pthread_get_stackaddr_np(pthread_self());
   FramePointerStackWalk(StackWalkCallback, kMaxFrames, this, fp, stackEnd);
 #else
