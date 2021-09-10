@@ -44,7 +44,6 @@
   locale/@AB_CD@/global/resetProfile.properties         (%chrome/global/resetProfile.properties)
   locale/@AB_CD@/global/dialog.properties               (%chrome/global/dialog.properties)
   locale/@AB_CD@/global/tree.dtd                        (%chrome/global/tree.dtd)
-  locale/@AB_CD@/global/textcontext.dtd                 (%chrome/global/textcontext.dtd)
   locale/@AB_CD@/global/videocontrols.dtd               (%chrome/global/videocontrols.dtd)
   locale/@AB_CD@/global/viewSource.properties           (%chrome/global/viewSource.properties)
   locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)

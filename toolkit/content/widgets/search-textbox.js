@@ -11,6 +11,8 @@
     constructor() {
       super();
 
+      MozXULElement.insertFTLIfNeeded("toolkit/global/textActions.ftl");
+
       this.inputField = document.createElement("input");
 
       const METHODS = [
@@ -59,21 +61,13 @@
       };
     }
 
-    static get markup() {
-      // TODO: Bug 1534799 - Convert string to Fluent and use manual DOM construction
-      return `
-      <image class="textbox-search-clear" label="&searchTextBox.clear.label;"/>
-      `;
-    }
-
-    static get entities() {
-      return ["chrome://global/locale/textcontext.dtd"];
-    }
-
     connectedCallback() {
       if (this.delayConnectedCallback() || this.connected) {
         return;
       }
+
+      document.l10n.connectRoot(this.shadowRoot);
+
       this.connected = true;
       this.textContent = "";
 
@@ -96,9 +90,13 @@
       searchBtn.className = "textbox-search-icon";
       searchBtn.addEventListener("click", e => this._iconClick(e));
 
-      let clearBtn = this.constructor.fragment;
-      clearBtn = this._searchClearIcon = clearBtn.querySelector(
-        ".textbox-search-clear"
+      const clearBtn = document.createElement("img");
+      clearBtn.className = "textbox-search-clear";
+      clearBtn.src = "resource://gre-resources/searchfield-cancel.svg";
+      clearBtn.setAttribute("role", "button");
+      document.l10n.setAttributes(
+        clearBtn,
+        "text-action-search-text-box-clear"
       );
       clearBtn.addEventListener("click", () => this._clearSearch());
 
@@ -114,6 +112,10 @@
       this.searchButton = this.searchButton;
 
       this.initializeAttributeInheritance();
+    }
+
+    disconnectedCallback() {
+      document.l10n.disconnectRoot(this.shadowRoot);
     }
 
     set timeout(val) {
