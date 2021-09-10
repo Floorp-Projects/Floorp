@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     "RootMarking.cpp",
     "Scheduling.cpp",
     "Statistics.cpp",
-    "Tenuring.cpp",
     "Tracer.cpp",
     "Verifier.cpp",
     "WeakMap.cpp",
