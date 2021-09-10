@@ -2431,7 +2431,6 @@ bool FallbackICCodeCompiler::emit_NewObject() {
 
 bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
   StackMacroAssembler masm;
-  AutoCreatedBy acb(masm, "JitRuntime::generateBaselineICFallbackCode");
 
   BaselineICFallbackCode& fallbackCode = baselineICFallbackCode_.ref();
   FallbackICCodeCompiler compiler(cx, fallbackCode, masm);
@@ -2440,7 +2439,6 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
 
 #define EMIT_CODE(kind)                                            \
   {                                                                \
-    AutoCreatedBy acb(masm, "kind=" #kind);                        \
     uint32_t offset = startTrampolineCode(masm);                   \
     InitMacroAssemblerForICStub(masm);                             \
     if (!compiler.emit_##kind()) {                                 \

@@ -93,8 +93,6 @@ JitRuntime::~JitRuntime() {
 }
 
 uint32_t JitRuntime::startTrampolineCode(MacroAssembler& masm) {
-  AutoCreatedBy acb(masm, "startTrampolineCode");
-
   masm.assumeUnreachable("Shouldn't get here");
   masm.flushBuffer();
   masm.haltingAlign(CodeAlignment);
