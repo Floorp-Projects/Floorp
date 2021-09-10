@@ -9,8 +9,17 @@ var EXPORTED_SYMBOLS = ["MockRegistrar"];
 const Cm = Components.manager;
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 var logger = Log.repository.getLogger("MockRegistrar");
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 var MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),
@@ -43,7 +52,7 @@ var MockRegistrar = Object.freeze({
 
     let originalFactory = Cm.getClassObject(originalCID, Ci.nsIFactory);
 
-    let cid = Services.uuid.generateUUID();
+    let cid = UUIDGen.generateUUID();
 
     let factory = {
       createInstance(outer, iid) {

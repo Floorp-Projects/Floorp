@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
   MainProcessTarget:
@@ -22,6 +21,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 let browserContextIds = 1;
 
@@ -135,8 +141,7 @@ class Target extends Domain {
     const tabSession = new TabSession(
       this.session.connection,
       target,
-      Services.uuid
-        .generateUUID()
+      UUIDGen.generateUUID()
         .toString()
         .slice(1, -1)
     );

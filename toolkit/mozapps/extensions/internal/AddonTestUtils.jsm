@@ -46,6 +46,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "@mozilla.org/addons/addon-manager-startup;1",
     "amIAddonManagerStartup",
   ],
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
 XPCOMUtils.defineLazyGetter(this, "AppInfo", () => {
@@ -612,7 +613,7 @@ var AddonTestUtils = {
     } catch (e) {
       // IDs for WebExtensions are extracted from the certificate when
       // not present in the manifest, so just generate a random one.
-      return Services.uuid.generateUUID().number;
+      return uuidGen.generateUUID().number;
     }
   },
 
@@ -809,7 +810,7 @@ var AddonTestUtils = {
       }
       for (let item of newData) {
         if (!item.id) {
-          item.id = Services.uuid.generateUUID().number.slice(1, -1);
+          item.id = uuidGen.generateUUID().number.slice(1, -1);
         }
         if (!item.last_modified) {
           item.last_modified = Date.now();
@@ -1146,7 +1147,7 @@ var AddonTestUtils = {
 
   allocTempXPIFile() {
     let file = this.tempDir.clone();
-    let uuid = Services.uuid.generateUUID().number.slice(1, -1);
+    let uuid = uuidGen.generateUUID().number.slice(1, -1);
     file.append(`${uuid}.xpi`);
 
     this.tempXPIs.push(file);

@@ -17,8 +17,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 const { debug, warn } = GeckoViewUtils.initLogging("Autofill");
 
@@ -61,8 +67,7 @@ class GeckoViewAutofill {
 
     info = {
       isInputElement,
-      uuid: Services.uuid
-        .generateUUID()
+      uuid: UUIDGen.generateUUID()
         .toString()
         .slice(1, -1), // discard the surrounding curly braces
       parentUuid: aParent,

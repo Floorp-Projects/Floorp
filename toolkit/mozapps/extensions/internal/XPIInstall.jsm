@@ -54,6 +54,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {})
     .ExtensionParent.IconDetails;
@@ -619,7 +626,7 @@ function defineSyncGUID(aAddon) {
   // Define .syncGUID as a lazy property which is also settable
   Object.defineProperty(aAddon, "syncGUID", {
     get: () => {
-      aAddon.syncGUID = Services.uuid.generateUUID().toString();
+      aAddon.syncGUID = uuidGen.generateUUID().toString();
       return aAddon.syncGUID;
     },
     set: val => {
@@ -3558,7 +3565,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
     newDir.append("blank");
 
     while (true) {
-      newDir.leafName = Services.uuid.generateUUID().toString();
+      newDir.leafName = uuidGen.generateUUID().toString();
       try {
         await OS.File.makeDir(newDir.path, { ignoreExisting: false });
         break;

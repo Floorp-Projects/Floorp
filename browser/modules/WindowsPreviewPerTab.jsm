@@ -718,10 +718,8 @@ var AeroPeek = {
       return;
     }
 
-    Services.prefs.addObserver(TOGGLE_PREF_NAME, this, true);
-    this.enabled = this._prefenabled = Services.prefs.getBoolPref(
-      TOGGLE_PREF_NAME
-    );
+    this.prefs.addObserver(TOGGLE_PREF_NAME, this, true);
+    this.enabled = this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);
     this.initialized = true;
   },
 
@@ -770,8 +768,8 @@ var AeroPeek = {
 
   enable() {
     if (!this._observersAdded) {
-      Services.prefs.addObserver(DISABLE_THRESHOLD_PREF_NAME, this, true);
-      Services.prefs.addObserver(CACHE_EXPIRATION_TIME_PREF_NAME, this, true);
+      this.prefs.addObserver(DISABLE_THRESHOLD_PREF_NAME, this, true);
+      this.prefs.addObserver(CACHE_EXPIRATION_TIME_PREF_NAME, this, true);
       this._placesListener = this.handlePlacesEvents.bind(this);
       PlacesUtils.observers.addListener(
         ["favicon-changed"],
@@ -780,11 +778,9 @@ var AeroPeek = {
       this._observersAdded = true;
     }
 
-    this.cacheLifespan = Services.prefs.getIntPref(
-      CACHE_EXPIRATION_TIME_PREF_NAME
-    );
+    this.cacheLifespan = this.prefs.getIntPref(CACHE_EXPIRATION_TIME_PREF_NAME);
 
-    this.maxpreviews = Services.prefs.getIntPref(DISABLE_THRESHOLD_PREF_NAME);
+    this.maxpreviews = this.prefs.getIntPref(DISABLE_THRESHOLD_PREF_NAME);
 
     // If the user toggled us on/off while the browser was already up
     // (rather than this code running on startup because the pref was
@@ -865,7 +861,7 @@ var AeroPeek = {
   // nsIObserver
   observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed" && aData == TOGGLE_PREF_NAME) {
-      this._prefenabled = Services.prefs.getBoolPref(TOGGLE_PREF_NAME);
+      this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);
     }
     if (!this._prefenabled) {
       return;
@@ -877,9 +873,7 @@ var AeroPeek = {
         }
 
         if (aData == DISABLE_THRESHOLD_PREF_NAME) {
-          this.maxpreviews = Services.prefs.getIntPref(
-            DISABLE_THRESHOLD_PREF_NAME
-          );
+          this.maxpreviews = this.prefs.getIntPref(DISABLE_THRESHOLD_PREF_NAME);
         }
         // Might need to enable/disable ourselves
         this.checkPreviewCount();
@@ -917,6 +911,13 @@ var AeroPeek = {
 
 XPCOMUtils.defineLazyGetter(AeroPeek, "cacheTimer", () =>
   Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  AeroPeek,
+  "prefs",
+  "@mozilla.org/preferences-service;1",
+  "nsIPrefBranch"
 );
 
 AeroPeek.initialize();

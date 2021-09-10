@@ -20,6 +20,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/contentsecuritymanager;1",
   "nsIContentSecurityManager"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gScriptSecurityManager",
+  "@mozilla.org/scriptsecuritymanager;1",
+  "nsIScriptSecurityManager"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "LoginHelper",
@@ -89,10 +95,7 @@ this.InsecurePasswordUtils = {
       let uri = Services.io.newURI(
         aForm.rootElement.action || aForm.rootElement.baseURI
       );
-      let principal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        {}
-      );
+      let principal = gScriptSecurityManager.createContentPrincipal(uri, {});
 
       if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;
