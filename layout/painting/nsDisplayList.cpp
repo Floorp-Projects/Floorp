@@ -2078,7 +2078,7 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     }
 
     nsRegion visible(item->GetClippedBounds(aBuilder));
-    visible.And(visible, item->GetBuildingRect());
+    visible.And(visible, item->GetPaintRect(aBuilder, aCtx));
     if (visible.IsEmpty()) {
       continue;
     }
