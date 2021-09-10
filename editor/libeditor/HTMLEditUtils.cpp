@@ -385,21 +385,8 @@ bool HTMLEditUtils::IsVisibleTextNode(const Text& aText) {
     return false;
   }
 
-  if (EditorUtils::IsWhiteSpacePreformatted(aText)) {
-    return true;
-  }
-
-  // TODO: There is no GetInclusiveNextCharOffsetExceptASCIIWhiteSpaces.
-  //       Equivalent method will be created by bug 1724650.  So, let's
-  //       handle first char check by this method self, and then, use
-  //       GetNextCharOffsetExceptASCIIWhiteSpaces.
-  const char16_t firstChar = aText.TextFragment().CharAt(0);
-  if (!nsCRT::IsAsciiSpace(firstChar)) {
-    return true;
-  }
-
   Maybe<uint32_t> visibleCharOffset =
-      HTMLEditUtils::GetNextCharOffsetExceptASCIIWhiteSpaces(
+      HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
           EditorDOMPointInText(&aText, 0));
   if (visibleCharOffset.isSome()) {
     return true;

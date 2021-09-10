@@ -76,6 +76,7 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 using StyleDifference = HTMLEditUtils::StyleDifference;
+using WalkTextOption = HTMLEditUtils::WalkTextOption;
 using WalkTreeDirection = HTMLEditUtils::WalkTreeDirection;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
@@ -2130,8 +2131,8 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   EditorDOMPointInText startToNormalize, endToNormalize;
   if (maybeNormalizePrecedingWhiteSpaces) {
     Maybe<uint32_t> previousCharOffsetOfWhiteSpaces =
-        HTMLEditUtils::GetPreviousCharOffsetExceptWhiteSpaces(
-            precedingCharPoint);
+        HTMLEditUtils::GetPreviousNonCollapsibleCharOffset(
+            precedingCharPoint, {WalkTextOption::TreatNBSPsCollapsible});
     startToNormalize.Set(precedingCharPoint.ContainerAsText(),
                          previousCharOffsetOfWhiteSpaces.isSome()
                              ? previousCharOffsetOfWhiteSpaces.value() + 1
@@ -2140,8 +2141,8 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   }
   if (maybeNormalizeFollowingWhiteSpaces) {
     Maybe<uint32_t> nextCharOffsetOfWhiteSpaces =
-        HTMLEditUtils::GetInclusiveNextCharOffsetExceptWhiteSpaces(
-            followingCharPoint);
+        HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
+            followingCharPoint, {WalkTextOption::TreatNBSPsCollapsible});
     if (nextCharOffsetOfWhiteSpaces.isSome()) {
       endToNormalize.Set(followingCharPoint.ContainerAsText(),
                          nextCharOffsetOfWhiteSpaces.value());
