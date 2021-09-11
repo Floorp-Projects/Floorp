@@ -18,6 +18,7 @@
 #include "WebGLVertexArray.h"
 
 #include "mozilla/Casting.h"
+#include "mozilla/ResultVariant.h"
 
 namespace mozilla {
 

@@ -59,7 +59,6 @@ EXPORTS.mozilla.dom += [
     "ImageBitmapSource.h",
     "ImageData.h",
     "ImageUtils.h",
-    "IpdlQueue.h",
     "OffscreenCanvas.h",
     "QueueParamTraits.h",
     "TextMetrics.h",
