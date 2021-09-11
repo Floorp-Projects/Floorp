@@ -53,7 +53,7 @@ add_task(async function() {
   await doVisibilityTest({
     initialDefaultBranchValue: undefined,
     initialUserBranchValue: undefined,
-    initialExpectedVisibility: false,
+    initialExpectedVisibility: true,
     newDefaultBranchValue: false,
     newUserBranchValue: false,
     newExpectedVisibility: false,
@@ -86,7 +86,7 @@ add_task(async function() {
   await doVisibilityTest({
     initialDefaultBranchValue: undefined,
     initialUserBranchValue: undefined,
-    initialExpectedVisibility: false,
+    initialExpectedVisibility: true,
     newDefaultBranchValue: true,
     newUserBranchValue: undefined,
     newExpectedVisibility: true,
@@ -97,7 +97,7 @@ add_task(async function() {
   await doVisibilityTest({
     initialDefaultBranchValue: undefined,
     initialUserBranchValue: undefined,
-    initialExpectedVisibility: false,
+    initialExpectedVisibility: true,
     newDefaultBranchValue: undefined,
     newUserBranchValue: true,
     newExpectedVisibility: true,
@@ -133,7 +133,7 @@ add_task(async function() {
     initialExpectedVisibility: false,
     newDefaultBranchValue: true,
     newUserBranchValue: undefined,
-    newExpectedVisibility: true,
+    newExpectedVisibility: false,
   });
 });
 
