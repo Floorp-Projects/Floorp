@@ -174,7 +174,7 @@ class HTMLEditUtils final {
   static bool IsAnyTableElementButNotTable(nsINode* aNode);
   static bool IsTableCell(const nsINode* aNode);
   static bool IsTableCellOrCaption(nsINode& aNode);
-  static bool IsAnyListElement(nsINode* aNode);
+  static bool IsAnyListElement(const nsINode* aNode);
   static bool IsPre(const nsINode* aNode);
   static bool IsImage(nsINode* aNode);
   static bool IsLink(nsINode* aNode);
@@ -1295,6 +1295,89 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetRangeSelectingAllContentInAllListItems() returns a range which selects
+   * from start of the first list item to end of the last list item of
+   * aListElement.  Note that the result may be in different list element if
+   * aListElement has child list element(s) directly.
+   */
+  template <typename EditorDOMRangeType>
+  static EditorDOMRangeType GetRangeSelectingAllContentInAllListItems(
+      const Element& aListElement) {
+    MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
+    Element* firstListItem =
+        HTMLEditUtils::GetFirstListItemElement(aListElement);
+    Element* lastListItem = HTMLEditUtils::GetLastListItemElement(aListElement);
+    MOZ_ASSERT_IF(firstListItem, lastListItem);
+    MOZ_ASSERT_IF(!firstListItem, !lastListItem);
+    if (!firstListItem || !lastListItem) {
+      return EditorDOMRangeType();
+    }
+    return EditorDOMRangeType(
+        typename EditorDOMRangeType::PointType(
+            firstListItem->GetFirstChild() &&
+                    firstListItem->GetFirstChild()->IsText()
+                ? firstListItem->GetFirstChild()
+                : static_cast<nsIContent*>(firstListItem),
+            0u),
+        EditorDOMRangeType::PointType::AtEndOf(
+            lastListItem->GetLastChild() &&
+                    lastListItem->GetLastChild()->IsText()
+                ? *lastListItem->GetFirstChild()
+                : static_cast<nsIContent&>(*lastListItem)));
+  }
+
+  /**
+   * GetFirstListItemElement() returns the first list item element in the
+   * pre-order tree traversal of the DOM.
+   */
+  static Element* GetFirstListItemElement(const Element& aListElement) {
+    MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
+    for (nsIContent* maybeFirstListItem = aListElement.GetFirstChild();
+         maybeFirstListItem;
+         maybeFirstListItem = maybeFirstListItem->GetNextNode()) {
+      if (HTMLEditUtils::IsListItem(maybeFirstListItem)) {
+        return maybeFirstListItem->AsElement();
+      }
+    }
+    return nullptr;
+  }
+
+  /**
+   * GetLastListItemElement() returns the last list item element in the
+   * post-order tree traversal of the DOM.  I.e., returns the last list
+   * element whose close tag appears at last.
+   */
+  static Element* GetLastListItemElement(const Element& aListElement) {
+    MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
+    for (nsIContent* maybeLastListItem = aListElement.GetLastChild();
+         maybeLastListItem;) {
+      if (HTMLEditUtils::IsListItem(maybeLastListItem)) {
+        return maybeLastListItem->AsElement();
+      }
+      if (maybeLastListItem->HasChildren()) {
+        maybeLastListItem = maybeLastListItem->GetLastChild();
+        continue;
+      }
+      if (maybeLastListItem->GetPreviousSibling()) {
+        maybeLastListItem = maybeLastListItem->GetPreviousSibling();
+        continue;
+      }
+      for (Element* parent = maybeLastListItem->GetParentElement(); parent;
+           parent = parent->GetParentElement()) {
+        maybeLastListItem = nullptr;
+        if (parent == &aListElement) {
+          return nullptr;
+        }
+        if (parent->GetPreviousSibling()) {
+          maybeLastListItem = parent->GetPreviousSibling();
+          break;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * GetMostDistantAncestorInlineElement() returns the most distant ancestor
    * inline element between aContent and the aEditingHost.  Even if aEditingHost
    * is an inline element, this method never returns aEditingHost as the result.
@@ -1370,30 +1453,35 @@ class HTMLEditUtils final {
    * the element node (and its descendants).
    */
   static Element* GetElementIfOnlyOneSelected(const AbstractRange& aRange) {
+    return GetElementIfOnlyOneSelected(EditorRawDOMRange(aRange));
+  }
+  template <typename EditorDOMPointType>
+  static Element* GetElementIfOnlyOneSelected(
+      const EditorDOMRangeBase<EditorDOMPointType>& aRange) {
     if (!aRange.IsPositioned() || aRange.Collapsed()) {
       return nullptr;
     }
-    const RangeBoundary& start = aRange.StartRef();
-    const RangeBoundary& end = aRange.EndRef();
+    const auto& start = aRange.StartRef();
+    const auto& end = aRange.EndRef();
     if (NS_WARN_IF(!start.IsSetAndValid()) ||
         NS_WARN_IF(!end.IsSetAndValid()) ||
-        start.Container() != end.Container()) {
+        start.GetContainer() != end.GetContainer()) {
       return nullptr;
     }
-    nsIContent* childAtStart = start.GetChildAtOffset();
+    nsIContent* childAtStart = start.GetChild();
     if (!childAtStart || !childAtStart->IsElement()) {
       return nullptr;
     }
     // If start child is not the last sibling and only if end child is its
     // next sibling, the start child is selected.
     if (childAtStart->GetNextSibling()) {
-      return childAtStart->GetNextSibling() == end.GetChildAtOffset()
+      return childAtStart->GetNextSibling() == end.GetChild()
                  ? childAtStart->AsElement()
                  : nullptr;
     }
     // If start child is the last sibling and only if no child at the end,
     // the start child is selected.
-    return !end.GetChildAtOffset() ? childAtStart->AsElement() : nullptr;
+    return !end.GetChild() ? childAtStart->AsElement() : nullptr;
   }
 
   static Element* GetTableCellElementIfOnlyOneSelected(
