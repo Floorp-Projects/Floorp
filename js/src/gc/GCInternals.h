@@ -15,6 +15,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include "gc/GC.h"
+#include "vm/GeckoProfiler.h"
 #include "vm/JSContext.h"
 
 namespace js {
