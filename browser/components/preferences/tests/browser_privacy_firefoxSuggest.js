@@ -614,6 +614,44 @@ add_task(async function clickLearnMore() {
   await SpecialPowers.popPrefEnv();
 });
 
+// The main checkbox description should be shown in the "online" scenario.
+add_task(async function mainCheckboxDescription_online() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.quicksuggest.scenario", "online"]],
+  });
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  Assert.ok(
+    BrowserTestUtils.is_visible(
+      doc.getElementById("firefoxSuggestSuggestionDescription")
+    ),
+    "The main checkbox description is visible"
+  );
+
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
+// The main checkbox description should be hidden in the "offline" scenario.
+add_task(async function mainCheckboxDescription_offline() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.quicksuggest.scenario", "offline"]],
+  });
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  Assert.ok(
+    BrowserTestUtils.is_hidden(
+      doc.getElementById("firefoxSuggestSuggestionDescription")
+    ),
+    "The main checkbox description is hidden"
+  );
+
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
 /**
  * Verifies the enabled and checked status of checkboxes.
  *
