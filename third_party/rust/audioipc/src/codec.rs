@@ -5,7 +5,7 @@
 
 //! `Encoder`s and `Decoder`s from items to/from `BytesMut` buffers.
 
-use bincode::{self, deserialize, serialized_size};
+use bincode::{self, Options};
 use bytes::{BufMut, ByteOrder, BytesMut, LittleEndian};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
@@ -104,10 +104,12 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
         let buf = buf.split_to(n).freeze();
 
         trace!("Attempting to decode");
-        let msg = deserialize::<Out>(buf.as_ref()).map_err(|e| match *e {
-            bincode::ErrorKind::Io(e) => e,
-            _ => io::Error::new(io::ErrorKind::Other, *e),
-        })?;
+        let msg = bincode::options()
+            .deserialize::<Out>(buf.as_ref())
+            .map_err(|e| match *e {
+                bincode::ErrorKind::Io(e) => e,
+                _ => io::Error::new(io::ErrorKind::Other, *e),
+            })?;
 
         trace!("... Decoded {:?}", msg);
         Ok(Some(msg))
@@ -157,7 +159,7 @@ where
 
     fn encode(&mut self, item: Self::In, buf: &mut BytesMut) -> io::Result<()> {
         trace!("Attempting to encode");
-        let encoded_len = serialized_size(&item).unwrap();
+        let encoded_len = bincode::options().serialized_size(&item).unwrap();
         if encoded_len > MAX_MESSAGE_LEN {
             trace!("oversized message {}", encoded_len);
             return Err(io::Error::new(
@@ -170,9 +172,8 @@ where
 
         buf.put_u32_le(encoded_len as u32);
 
-        #[allow(deprecated)]
-        if let Err(e) = bincode::config()
-            .limit(encoded_len)
+        if let Err(e) = bincode::options()
+            .with_limit(encoded_len)
             .serialize_into::<_, Self::In>(&mut buf.writer(), &item)
         {
             match *e {
