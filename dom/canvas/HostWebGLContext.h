@@ -17,7 +17,6 @@
 #include "WebGLFramebuffer.h"
 #include "WebGLTypes.h"
 #include "WebGLCommandQueue.h"
-#include "IpdlQueue.h"
 
 #include <unordered_map>
 #include <unordered_set>

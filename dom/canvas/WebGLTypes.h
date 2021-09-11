@@ -18,7 +18,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Point.h"
@@ -354,13 +353,6 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
     return *this;
   }
 };
-
-using WebGLTexUnpackVariant =
-    Variant<UniquePtr<webgl::TexUnpackBytes>,
-            UniquePtr<webgl::TexUnpackSurface>,
-            UniquePtr<webgl::TexUnpackImage>, WebGLTexPboOffset>;
-
-using MaybeWebGLTexUnpackVariant = Maybe<WebGLTexUnpackVariant>;
 
 struct WebGLContextOptions {
   bool alpha = true;
