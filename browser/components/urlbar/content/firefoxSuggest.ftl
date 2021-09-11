@@ -31,16 +31,18 @@ addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear 
 # The main Firefox Suggest checkbox that controls whether Firefox Suggest
 # results in the urlbar are enabled.
 addressbar-locbar-firefox-suggest-option =
-  .label = Personalized search suggestions
+  .label = Contextual suggestions
 
 # "Learn more" link text for the main Firefox Suggest checkbox.
 addressbar-locbar-firefox-suggest-learn-more = Learn more
 
-# Text for the informational description that appears under the main Firefox
-# Suggest checkbox.
+# The informational description under the main Firefox Suggest checkbox.
 addressbar-locbar-firefox-suggest-description = { -brand-short-name } will have access to your location, search queries, and visited sites.
 
 # The checkbox that controls whether sponsored Firefox Suggest results in the
 # urlbar are enabled.
 addressbar-locbar-firefox-suggest-sponsored-option =
-  .label = Show sponsored suggestions
+  .label = Include occasional sponsored suggestions
+
+# The informational description under the sponsored Firefox Suggest checkbox.
+addressbar-locbar-firefox-suggest-sponsored-description = Helps fund { -brand-short-name } development and optimization.
