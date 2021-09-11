@@ -96,3 +96,40 @@ add_task(async function test_popup_sendMessage_reply() {
 
   await extension.unload();
 });
+
+add_task(async function test_popup_close_then_sendMessage() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_action: {
+        default_popup: "popup.html",
+      },
+    },
+
+    files: {
+      "popup.html": `<meta charset="utf-8"><script src="popup.js" defer></script>ghost`,
+      "popup.js"() {
+        browser.tabs.query({ active: true }).then(() => {
+          // NOTE: the message will be sent _after_ the popup is closed below.
+          browser.runtime.sendMessage("sent-after-closed");
+        });
+        window.close();
+      },
+    },
+
+    async background() {
+      browser.runtime.onMessage.addListener(msg => {
+        browser.test.assertEq(msg, "sent-after-closed", "Message from popup.");
+        browser.test.sendMessage("done");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  clickBrowserAction(extension);
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+});
