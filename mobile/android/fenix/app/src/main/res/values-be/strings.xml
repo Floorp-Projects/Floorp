@@ -1860,6 +1860,11 @@
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">Неактыўныя карткі</string>
 
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 дзён</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 тыдзень</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Наладзьце аўтаматычна адкрываць спасылкі з сайтаў, пошты і паведамленняў у Firefox.</string>
 

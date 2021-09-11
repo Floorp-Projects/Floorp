@@ -236,7 +236,7 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Permitir sugestões de pesquisa em sessões privativas?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">O %s compartilha o que você digita na barra de endereços com seu mecanismo de pesquisa padrão.</string>
+    <string name="search_suggestions_onboarding_text">O %s irá compartilhar o que você digitar na barra de endereços com seu mecanismo de pesquisa padrão.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Saiba mais</string>
 

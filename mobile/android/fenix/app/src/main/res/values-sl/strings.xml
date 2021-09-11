@@ -58,6 +58,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Prikaži vse</string>
 
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Gumb za prikaz vseh shranjenih zaznamkov</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s izdeluje Mozilla.</string>
 
@@ -112,6 +115,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Glavne strani</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Skoči nazaj</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Prikaži vse</string>
 
@@ -476,6 +482,8 @@
     <string name="preferences_marketing_data">Podatki za trženje</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Deli podatke o možnostih, ki jih uporabljate v %1$su z Leanplumom, našim ponudnikom mobilnega oglaševanja.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Deli osnovne podatke o uporabi z Adjustom, našim ponudnikom mobilnega trženja</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Raziskave</string>
     <!-- Summary for studies preferences -->
@@ -1527,8 +1535,13 @@
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Samodejno izpolni v %1$su</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Izpolnjuj in shranjuj uporabniška imena in gesla na spletnih mestih, ko uporabljate %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Samodejno izpolni v drugih aplikacijah</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Izpolnjuj uporabniška imena in gesla v drugih aplikacijah na napravi.</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
@@ -1690,6 +1703,9 @@
     <string name="credit_cards_warning_dialog_later">Pozneje</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Odklenite svojo napravo</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Odklenite za uporabo shranjenih podatkov o kreditnih karticah</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj iskalnik</string>
@@ -1871,6 +1887,9 @@
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Kliknite za podrobnosti</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Pojdi gor</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zapri</string>
