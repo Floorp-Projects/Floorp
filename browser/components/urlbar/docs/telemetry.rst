@@ -531,6 +531,20 @@ contextservices.quicksuggest
     - Value: Not used
     - Extra: Not used
 
+  The following event is recorded when the user responds to the Firefox Suggest
+  opt-in onboarding dialog:
+
+    - Category: ``contextservices.quicksuggest``
+    - Method: ``opt_in_dialog``
+    - Objects: ``accept``, ``settings``, ``learn_more``, ``not_now`` --
+      ``accept`` is recorded when the user accepts the dialog and opts in,
+      ``settings`` is recorded when the user clicks in the "Customize" button
+      (the user remains opted out in this case), ``learn_more`` is recorded when
+      the user clicks "Learn more" (the user remains opted out), ``not_now`` is
+      recorded when the user clicks "Not now" (the user remains opted out)
+    - Value: Not used
+    - Extra: Not used
+
 Obsolete probes
 ---------------
 

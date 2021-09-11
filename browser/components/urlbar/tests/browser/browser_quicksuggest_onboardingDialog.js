@@ -18,8 +18,9 @@ const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
   "firefox-suggest";
 
-// When the accept button is clicked, no new pages should load, and the feature
-// should be enabled.
+const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
+
+// When the accept button is clicked, the user should be opted in.
 add_task(async function accept() {
   await doDialogTest(true, async () => {
     let tabCount = gBrowser.tabs.length;
@@ -37,11 +38,28 @@ add_task(async function accept() {
       "Nothing loaded in the current tab"
     );
     Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
+
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "enable_toggled",
+        object: "enabled",
+      },
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "sponsored_toggled",
+        object: "enabled",
+      },
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "accept",
+      },
+    ]);
   });
 });
 
-// When the Not Now link is clicked, no new pages should load, and the feature
-// should be enabled.
+// When the Not Now link is clicked, the user should remain opted out.
 add_task(async function notNow() {
   await doDialogTest(false, async () => {
     let tabCount = gBrowser.tabs.length;
@@ -59,10 +77,19 @@ add_task(async function notNow() {
       "Nothing loaded in the current tab"
     );
     Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
+
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "not_now",
+      },
+    ]);
   });
 });
 
-// When the Customize button is clicked, about:preferences#search should load.
+// When the Customize button is clicked, the user should remain opted out and
+// about:preferences#search should load.
 add_task(async function customize() {
   await doDialogTest(false, async () => {
     let dialogPromise = openDialog("extra1");
@@ -87,11 +114,19 @@ add_task(async function customize() {
       "about:preferences#search",
       "Current tab is about:preferences#search"
     );
+
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "settings",
+      },
+    ]);
   });
 });
 
-// When the Learn More button is clicked, the support URL should open in a new
-// tab.
+// When Learn More is clicked, the user should remain opted out and the support
+// URL should open in a new tab.
 add_task(async function learnMore() {
   await doDialogTest(false, async () => {
     let dialogPromise = openDialog("onboardingLearnMore");
@@ -119,6 +154,14 @@ add_task(async function learnMore() {
       "Current tab is the support page"
     );
     BrowserTestUtils.removeTab(tab);
+
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "learn_more",
+      },
+    ]);
   });
 });
 
@@ -135,17 +178,22 @@ async function doDialogTest(expectOptIn, callback) {
         ["browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 0],
       ],
     });
+
+    // Setting the prefs just now triggered telemetry events, so clear them
+    // before calling the callback.
+    Services.telemetry.clearEvents();
+
     await callback();
 
     Assert.equal(
       UrlbarPrefs.get("suggest.quicksuggest"),
       expectOptIn,
-      "Main pref has been enabled"
+      "Main pref enabled status"
     );
     Assert.equal(
       UrlbarPrefs.get("suggest.quicksuggest.sponsored"),
       expectOptIn,
-      "Sponsored pref has been enabled"
+      "Sponsored pref enabled status"
     );
 
     await SpecialPowers.popPrefEnv();
