@@ -65,24 +65,11 @@ add_task(async function init() {
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(Services.search.getEngineByName("Example"));
 
-  await UrlbarQuickSuggest.init();
-  let { _createTree } = UrlbarQuickSuggest;
-  UrlbarQuickSuggest._createTree = () => {};
-  await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
-      ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", false],
-      ["browser.urlbar.suggest.quicksuggest", true],
-      ["browser.urlbar.suggest.quicksuggest.sponsored", true],
-    ],
-  });
+  await UrlbarTestUtils.ensureQuickSuggestInit(TEST_DATA);
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
     Services.search.setDefault(oldDefaultEngine);
-    UrlbarQuickSuggest._createTree = _createTree;
   });
 });
 
