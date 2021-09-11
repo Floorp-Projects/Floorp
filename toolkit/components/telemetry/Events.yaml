@@ -2930,6 +2930,25 @@ contextservices.quicksuggest:
       - fx-search@mozilla.com
       - adw@mozilla.com
     expiry_version: never
+  opt_in_dialog:
+    objects: ["accept", "not_now", "settings", "learn_more"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded when the user responds to the Firefox Suggest opt-in
+      onboarding dialog. 'accept' is recorded when the user accepts the dialog
+      and opts in, 'settings' is recorded when the user clicks in the
+      "Customize" button (the user remains opted out in this case), 'learn_more'
+      is recorded when the user clicks "Learn more" (the user remains opted
+      out), 'not_now' is recorded when the user clicks "Not now" (the user
+      remains opted out)
+    bug_numbers: [1723860]
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    expiry_version: never
 
 close_tab_warning:
   shown:

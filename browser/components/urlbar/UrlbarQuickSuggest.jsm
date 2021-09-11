@@ -255,17 +255,29 @@ class Suggestions {
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
+    let telemetryEventObject;
     if (params.accept) {
       // Opting in enables both non-sponsored and sponsored results.
       UrlbarPrefs.set("suggest.quicksuggest", true);
       UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+      telemetryEventObject = "accept";
     } else if (params.openSettings) {
       win.openPreferences("search-quickSuggest");
+      telemetryEventObject = "settings";
     } else if (params.learnMore) {
       win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
         fromChrome: true,
       });
+      telemetryEventObject = "learn_more";
+    } else {
+      telemetryEventObject = "not_now";
     }
+
+    Services.telemetry.recordEvent(
+      "contextservices.quicksuggest",
+      "opt_in_dialog",
+      telemetryEventObject
+    );
   }
 
   /*
