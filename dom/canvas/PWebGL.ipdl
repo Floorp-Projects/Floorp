@@ -24,8 +24,6 @@ using mozilla::webgl::ShaderPrecisionFormat from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::OpaqueFramebufferOptions from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::ReadPixelsDesc from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::ReadPixelsResultIpc from "mozilla/dom/WebGLIpdl.h";
-using mozilla::dom::IpdlQueueBuffer from "mozilla/dom/IpdlQueue.h";
-using mozilla::dom::IpdlQueueBuffers from "mozilla/dom/IpdlQueue.h";
 
 namespace mozilla {
 namespace dom {
