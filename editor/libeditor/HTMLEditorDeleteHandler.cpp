@@ -5380,6 +5380,32 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
     return Err(NS_ERROR_FAILURE);
   }
 
+  // If only one list element is selected, and if the list element is empty,
+  // we should delete only the list element.  Or if the list element is not
+  // empty, we should make the list has only one empty list item element.
+  if (const Element* maybeListElement =
+          HTMLEditUtils::GetElementIfOnlyOneSelected(aRangeToDelete)) {
+    if (HTMLEditUtils::IsAnyListElement(maybeListElement) &&
+        !HTMLEditUtils::IsEmptyNode(*maybeListElement)) {
+      EditorRawDOMRange range =
+          HTMLEditUtils::GetRangeSelectingAllContentInAllListItems<
+              EditorRawDOMRange>(*maybeListElement);
+      if (range.IsPositioned()) {
+        if (EditorUtils::IsEditableContent(
+                *range.StartRef().ContainerAsContent(), EditorType::HTML) &&
+            EditorUtils::IsEditableContent(*range.EndRef().ContainerAsContent(),
+                                           EditorType::HTML)) {
+          return range;
+        }
+      }
+      // If the first and/or last list item is not editable, we need to do more
+      // complicated things probably, but we just delete the list element with
+      // invisible things around it for now since it must be rare case.
+    }
+    // Otherwise, if the list item is empty, we should delete it with invisible
+    // things around it.
+  }
+
   // Find previous visible things before start of selection
   EditorRawDOMRange rangeToDelete(aRangeToDelete);
   if (rangeToDelete.StartRef().GetContainer() != maybeNonEditableBlockElement &&
@@ -5469,6 +5495,38 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
                                rangeToDelete.EndRef().GetContainer())) {
       NS_WARNING("Computed end container was out of selection limiter");
       return Err(NS_ERROR_FAILURE);
+    }
+  }
+
+  // If now, we select only the closest common ancestor list element or selects
+  // all list items in it and it's not empty, we should make it have only one
+  // list item which is empty.
+  Element* selectedListElement =
+      HTMLEditUtils::GetElementIfOnlyOneSelected(rangeToDelete);
+  if (!selectedListElement ||
+      !HTMLEditUtils::IsAnyListElement(selectedListElement)) {
+    if (rangeToDelete.IsInContentNodes() && rangeToDelete.InSameContainer() &&
+        HTMLEditUtils::IsAnyListElement(
+            rangeToDelete.StartRef().ContainerAsContent()) &&
+        rangeToDelete.StartRef().IsStartOfContainer() &&
+        rangeToDelete.EndRef().IsEndOfContainer()) {
+      selectedListElement = rangeToDelete.StartRef().ContainerAsElement();
+    } else {
+      selectedListElement = nullptr;
+    }
+  }
+  if (selectedListElement &&
+      !HTMLEditUtils::IsEmptyNode(*selectedListElement)) {
+    EditorRawDOMRange range =
+        HTMLEditUtils::GetRangeSelectingAllContentInAllListItems<
+            EditorRawDOMRange>(*selectedListElement);
+    if (range.IsPositioned()) {
+      if (EditorUtils::IsEditableContent(*range.StartRef().ContainerAsContent(),
+                                         EditorType::HTML) &&
+          EditorUtils::IsEditableContent(*range.EndRef().ContainerAsContent(),
+                                         EditorType::HTML)) {
+        return range;
+      }
     }
   }
 

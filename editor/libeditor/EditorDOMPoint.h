@@ -1104,6 +1104,8 @@ typedef EditorDOMRangeBase<EditorRawDOMPointInText> EditorRawDOMRangeInTexts;
 template <typename EditorDOMPointType>
 class EditorDOMRangeBase final {
  public:
+  using PointType = EditorDOMPointType;
+
   EditorDOMRangeBase() = default;
   template <typename PT, typename CT>
   explicit EditorDOMRangeBase(const EditorDOMPointBase<PT, CT>& aStart)
