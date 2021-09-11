@@ -47,6 +47,9 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Indi makita ang Proxy Server</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Isyu sang malware site</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Delekado na isyu sa site</string>
 
     <!-- The document title and heading of an error page. -->
