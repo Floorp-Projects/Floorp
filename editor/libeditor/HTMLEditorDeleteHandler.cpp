@@ -331,19 +331,18 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                    AutoRangeArray& aRangesToDelete);
 
   /**
-   * ExtendRangeToIncludeInvisibleNodes() extends aRange if there are some
-   * invisible nodes around it.
+   * ExtendOrShrinkRangeToDelete() extends aRangeToDelete if there are
+   * an invisible <br> element and/or some parent empty elements.
    *
    * @param aFrameSelection     If the caller wants range in selection limiter,
    *                            set this to non-nullptr which knows the limiter.
-   * @param aRange              The range to be extended.  This must not be
-   *                            collapsed, must be positioned, and must not be
-   *                            in selection.
-   * @return                    true if succeeded to set the range.
+   * @param aRangeToDelete       The range to be extended for deletion.  This
+   *                            must not be collapsed, must be positioned.
    */
-  bool ExtendRangeToIncludeInvisibleNodes(
+  template <typename EditorDOMRangeType>
+  Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToDelete(
       const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
-      nsRange& aRange) const;
+      const EditorDOMRangeType& aRangeToDelete) const;
 
   /**
    * ShouldDeleteHRElement() checks whether aHRElement should be deleted
@@ -2895,12 +2894,27 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
     if (NS_WARN_IF(!frameSelection)) {
       return NS_ERROR_FAILURE;
     }
-    if (!ExtendRangeToIncludeInvisibleNodes(aHTMLEditor, frameSelection,
-                                            aRangesToDelete.FirstRangeRef())) {
+    Result<EditorRawDOMRange, nsresult> result = ExtendOrShrinkRangeToDelete(
+        aHTMLEditor, frameSelection,
+        EditorRawDOMRange(aRangesToDelete.FirstRangeRef()));
+    if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING(
-          "AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes() "
-          "failed");
+          "AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete() failed");
       return NS_ERROR_FAILURE;
+    }
+    EditorRawDOMRange newRange(result.unwrap());
+    if (MOZ_UNLIKELY(NS_FAILED(aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+            newRange.StartRef().ToRawRangeBoundary(),
+            newRange.EndRef().ToRawRangeBoundary())))) {
+      NS_WARNING("nsRange::SetStartAndEnd() failed");
+      return NS_ERROR_FAILURE;
+    }
+    if (MOZ_UNLIKELY(
+            NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()))) {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(aRangesToDelete.FirstRangeRef()->Collapsed())) {
+      return NS_OK;  // Hmm, there is nothing to delete...?
     }
   }
 
@@ -2983,12 +2997,27 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
     if (NS_WARN_IF(!frameSelection)) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
-    if (!ExtendRangeToIncludeInvisibleNodes(aHTMLEditor, frameSelection,
-                                            aRangesToDelete.FirstRangeRef())) {
+    Result<EditorRawDOMRange, nsresult> result = ExtendOrShrinkRangeToDelete(
+        aHTMLEditor, frameSelection,
+        EditorRawDOMRange(aRangesToDelete.FirstRangeRef()));
+    if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING(
-          "AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes() "
-          "failed");
+          "AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete() failed");
       return EditActionResult(NS_ERROR_FAILURE);
+    }
+    EditorRawDOMRange newRange(result.unwrap());
+    if (MOZ_UNLIKELY(NS_FAILED(aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+            newRange.StartRef().ToRawRangeBoundary(),
+            newRange.EndRef().ToRawRangeBoundary())))) {
+      NS_WARNING("nsRange::SetStartAndEnd() failed");
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    if (MOZ_UNLIKELY(
+            NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()))) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    if (NS_WARN_IF(aRangesToDelete.FirstRangeRef()->Collapsed())) {
+      return EditActionHandled();  // Hmm, there is nothing to delete...?
     }
   }
 
@@ -5318,19 +5347,21 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
   return EditActionHandled();
 }
 
-bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
+template <typename EditorDOMRangeType>
+Result<EditorRawDOMRange, nsresult>
+HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
     const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
-    nsRange& aRange) const {
+    const EditorDOMRangeType& aRangeToDelete) const {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
-  MOZ_ASSERT(!aRange.Collapsed());
-  MOZ_ASSERT(aRange.IsPositioned());
-  MOZ_ASSERT(!aRange.IsInSelection());
+  MOZ_ASSERT(!aRangeToDelete.Collapsed());
+  MOZ_ASSERT(aRangeToDelete.IsPositioned());
 
-  EditorRawDOMPoint atStart(aRange.StartRef());
-  EditorRawDOMPoint atEnd(aRange.EndRef());
-
-  if (NS_WARN_IF(!aRange.GetClosestCommonInclusiveAncestor()->IsContent())) {
-    return false;
+  const nsIContent* commonAncestor = nsIContent::FromNodeOrNull(
+      nsContentUtils::GetClosestCommonInclusiveAncestor(
+          aRangeToDelete.StartRef().GetContainer(),
+          aRangeToDelete.EndRef().GetContainer()));
+  if (MOZ_UNLIKELY(NS_WARN_IF(!commonAncestor))) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Look for the common ancestor's block element.  It's fine that we get
@@ -5338,30 +5369,31 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
   // because the following code checks editing host too.
   const Element* const maybeNonEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *aRange.GetClosestCommonInclusiveAncestor()->AsContent(),
-          HTMLEditUtils::ClosestBlockElement);
+          *commonAncestor, HTMLEditUtils::ClosestBlockElement);
   if (NS_WARN_IF(!maybeNonEditableBlockElement)) {
-    return false;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Set up for loops and cache our root element
   RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
   if (NS_WARN_IF(!editingHost)) {
-    return false;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Find previous visible things before start of selection
-  if (atStart.GetContainer() != maybeNonEditableBlockElement &&
-      atStart.GetContainer() != editingHost) {
+  EditorRawDOMRange rangeToDelete(aRangeToDelete);
+  if (rangeToDelete.StartRef().GetContainer() != maybeNonEditableBlockElement &&
+      rangeToDelete.StartRef().GetContainer() != editingHost) {
     for (;;) {
       WSScanResult backwardScanFromStartResult =
-          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(editingHost,
-                                                               atStart);
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+              editingHost, rangeToDelete.StartRef());
       if (!backwardScanFromStartResult.ReachedCurrentBlockBoundary()) {
         break;
       }
       MOZ_ASSERT(backwardScanFromStartResult.GetContent() ==
-                 WSRunScanner(editingHost, atStart).GetStartReasonContent());
+                 WSRunScanner(editingHost, rangeToDelete.StartRef())
+                     .GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
       if (HTMLEditUtils::IsAnyTableElement(
@@ -5371,12 +5403,12 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
           backwardScanFromStartResult.GetContent() == editingHost) {
         break;
       }
-      atStart = backwardScanFromStartResult.PointAtContent();
+      rangeToDelete.SetStart(backwardScanFromStartResult.PointAtContent());
     }
-    if (aFrameSelection &&
-        !aFrameSelection->IsValidSelectionPoint(atStart.GetContainer())) {
+    if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
+                               rangeToDelete.StartRef().GetContainer())) {
       NS_WARNING("Computed start container was out of selection limiter");
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
   }
 
@@ -5385,13 +5417,14 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
   // selected).
 
   // Find next visible things after end of selection
-  if (atEnd.GetContainer() != maybeNonEditableBlockElement &&
-      atEnd.GetContainer() != editingHost) {
-    EditorDOMPoint atFirstInvisibleBRElement;
+  EditorDOMPoint atFirstInvisibleBRElement;
+  if (rangeToDelete.EndRef().GetContainer() != maybeNonEditableBlockElement &&
+      rangeToDelete.EndRef().GetContainer() != editingHost) {
     for (;;) {
-      WSRunScanner wsScannerAtEnd(editingHost, atEnd);
+      WSRunScanner wsScannerAtEnd(editingHost, rangeToDelete.EndRef());
       WSScanResult forwardScanFromEndResult =
-          wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(atEnd);
+          wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(
+              rangeToDelete.EndRef());
       if (forwardScanFromEndResult.ReachedBRElement()) {
         // XXX In my understanding, this is odd.  The end reason may not be
         //     same as the reached <br> element because the equality is
@@ -5406,9 +5439,10 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {
-          atFirstInvisibleBRElement = atEnd;
+          atFirstInvisibleBRElement = rangeToDelete.EndRef();
         }
-        atEnd.SetAfter(wsScannerAtEnd.GetEndReasonContent());
+        rangeToDelete.SetEnd(
+            EditorRawDOMPoint::After(*wsScannerAtEnd.GetEndReasonContent()));
         continue;
       }
 
@@ -5424,60 +5458,43 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
             forwardScanFromEndResult.GetContent() == editingHost) {
           break;
         }
-        atEnd = forwardScanFromEndResult.PointAfterContent();
+        rangeToDelete.SetEnd(forwardScanFromEndResult.PointAfterContent());
         continue;
       }
 
       break;
     }
 
-    if (aFrameSelection &&
-        !aFrameSelection->IsValidSelectionPoint(atEnd.GetContainer())) {
+    if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
+                               rangeToDelete.EndRef().GetContainer())) {
       NS_WARNING("Computed end container was out of selection limiter");
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
+  }
 
-    if (atFirstInvisibleBRElement.IsInContentNode()) {
-      // Find block node containing invisible `<br>` element.
-      if (const RefPtr<const Element> editableBlockContainingBRElement =
-              HTMLEditUtils::GetInclusiveAncestorElement(
-                  *atFirstInvisibleBRElement.ContainerAsContent(),
-                  HTMLEditUtils::ClosestEditableBlockElement)) {
-        EditorRawDOMRange range(atStart, atEnd);
-        if (range.Contains(
-                EditorRawDOMPoint(editableBlockContainingBRElement))) {
-          nsresult rv = aRange.SetStartAndEnd(atStart.ToRawRangeBoundary(),
-                                              atEnd.ToRawRangeBoundary());
-          if (NS_FAILED(rv)) {
-            NS_WARNING("nsRange::SetStartAndEnd() failed to extend the range");
-            return false;
-          }
-          return aRange.IsPositioned() && aRange.StartRef().IsSet() &&
-                 aRange.EndRef().IsSet();
-        }
-        // Otherwise, the new range should end at the invisible `<br>`.
-        if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
-                                   atFirstInvisibleBRElement.GetContainer())) {
-          NS_WARNING(
-              "Computed end container (`<br>` element) was out of selection "
-              "limiter");
-          return false;
-        }
-        atEnd = atFirstInvisibleBRElement;
+  if (atFirstInvisibleBRElement.IsInContentNode()) {
+    // Find block node containing invisible `<br>` element.
+    if (const RefPtr<const Element> editableBlockContainingBRElement =
+            HTMLEditUtils::GetInclusiveAncestorElement(
+                *atFirstInvisibleBRElement.ContainerAsContent(),
+                HTMLEditUtils::ClosestEditableBlockElement)) {
+      if (rangeToDelete.Contains(
+              EditorRawDOMPoint(editableBlockContainingBRElement))) {
+        return rangeToDelete;
       }
+      // Otherwise, the new range should end at the invisible `<br>`.
+      if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
+                                 atFirstInvisibleBRElement.GetContainer())) {
+        NS_WARNING(
+            "Computed end container (`<br>` element) was out of selection "
+            "limiter");
+        return Err(NS_ERROR_FAILURE);
+      }
+      rangeToDelete.SetEnd(atFirstInvisibleBRElement);
     }
   }
 
-  // XXX This is unnecessary creation cost for us since we just want to return
-  //     the start point and the end point.
-  nsresult rv = aRange.SetStartAndEnd(atStart.ToRawRangeBoundary(),
-                                      atEnd.ToRawRangeBoundary());
-  if (NS_FAILED(rv)) {
-    NS_WARNING("nsRange::SetStartAndEnd() failed to extend the range");
-    return false;
-  }
-  return aRange.IsPositioned() && aRange.StartRef().IsSet() &&
-         aRange.EndRef().IsSet();
+  return rangeToDelete;
 }
 
 }  // namespace mozilla
