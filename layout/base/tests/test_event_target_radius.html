@@ -80,7 +80,7 @@ function startTest() {
   SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.enabled", true],
                                      ["ui.mouse.radius.inputSource.touchOnly", false],
                                      ["ui.mouse.radius.leftmm", 12],
-                                     ["ui.mouse.radius.topmm", 8],
+                                     ["ui.mouse.radius.topmm", 4],
                                      ["ui.mouse.radius.rightmm", 4],
                                      ["ui.mouse.radius.bottommm", 4],
                                      ["ui.mouse.radius.visitedweight", 50]]}, runTest);
@@ -159,8 +159,8 @@ function runTest() {
   // just outside the edges we set up in the prefs.
   testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality");
   testMouseClick("t", 100 + 11*mm, 10, "t", "basic functionality");
-  testMouseClick("t", 10, 80 + 9*mm, "body", "basic functionality");
-  testMouseClick("t", 10, 80 + 7*mm, "t", "basic functionality");
+  testMouseClick("t", 10, 80 + 5*mm, "body", "basic functionality");
+  testMouseClick("t", 10, 80 + 3*mm, "t", "basic functionality");
   testMouseClick("t", -5*mm, 10, "body", "basic functionality");
   testMouseClick("t", -3*mm, 10, "t", "basic functionality");
   testMouseClick("t", 10, -5*mm, "body", "basic functionality");
@@ -361,7 +361,7 @@ function test3() {
   SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 1],
                                      ["ui.touch.radius.enabled", true],
                                      ["ui.touch.radius.leftmm", 12],
-                                     ["ui.touch.radius.topmm", 8],
+                                     ["ui.touch.radius.topmm", 4],
                                      ["ui.touch.radius.rightmm", 4],
                                      ["ui.touch.radius.bottommm", 4],
                                      ["ui.touch.radius.visitedweight", 50]]}, testTouchable);
