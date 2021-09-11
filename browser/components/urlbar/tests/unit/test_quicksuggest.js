@@ -90,9 +90,7 @@ add_task(async function init() {
   // Set up the remote settings client with the test data. Need to set the
   // `suggest.quicksuggest` pref to make `init` finish.
   UrlbarPrefs.set("suggest.quicksuggest", true);
-  await UrlbarQuickSuggest.init();
-  await UrlbarQuickSuggest._processSuggestionsJSON(REMOTE_SETTINGS_DATA);
-  sinon.stub(UrlbarQuickSuggest, "onEnabledUpdate").get(() => {});
+  await UrlbarTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
 });
 
 // Tests with only non-sponsored suggestions enabled with a matching search

@@ -1944,13 +1944,15 @@ var gPrivacyPane = {
         .setAttribute("data-l10n-id", "addressbar-locbar-topsites-option");
     }
 
-    // Update the Firefox Suggest section on Nimbus changes.
-    this._updateFirefoxSuggestSection = this._updateFirefoxSuggestSection.bind(
-      this
-    );
-    NimbusFeatures.urlbar.onUpdate(this._updateFirefoxSuggestSection);
+    // Update the Firefox Suggest section on Nimbus changes. Note that
+    // `onUpdate` passes the Nimbus feature name as its first arg but that is
+    // not the arg that `_updateFirefoxSuggestSection` expects, so we do not
+    // want to pass it on.
+    this._firefoxSuggestNimbusUpdate = () =>
+      this._updateFirefoxSuggestSection();
+    NimbusFeatures.urlbar.onUpdate(this._firefoxSuggestNimbusUpdate);
     window.addEventListener("unload", () =>
-      NimbusFeatures.urlbar.off(this._updateFirefoxSuggestSection)
+      NimbusFeatures.urlbar.off(this._firefoxSuggestNimbusUpdate)
     );
 
     // Set up the sponsored checkbox. When the main checkbox is checked, the

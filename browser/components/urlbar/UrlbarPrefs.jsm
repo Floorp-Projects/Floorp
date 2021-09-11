@@ -19,6 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  Region: "resource://gre/modules/Region.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -523,6 +524,38 @@ class Preferences {
         })
       )
     );
+  }
+
+  /**
+   * Depending on certain conditions [1], possibly enables on the default prefs
+   * branch the Firefox Suggest "offline" scenario, which means Firefox Suggest
+   * (quick suggest) will be fully enabled by default without showing onboarding
+   * and without sending data to Mozilla [2]. Users can opt out in the prefs UI,
+   * which will set overriding prefs on the user branch. Note that values set
+   * programatically on the default branch like this do not persist across app
+   * restarts, so this needs to be called on every startup until these pref
+   * values are codified in firefox.js.
+   *
+   * [1] Currently the conditions are: the user's home region must be US and
+   * their locale must be en-*
+   *
+   * [2] In contrast, the "online" scenario sends data to Mozilla and requires
+   * user opt-in via onboarding before Firefox Suggest is fully enabled.
+   */
+  async maybeEnableOfflineQuickSuggest() {
+    // `Region.home` is null before init finishes, so await it.
+    await Region.init();
+    if (
+      Region.home == "US" &&
+      Services.locale.appLocaleAsBCP47.substring(0, 2) == "en"
+    ) {
+      let prefs = Services.prefs.getDefaultBranch("browser.urlbar.");
+      prefs.setBoolPref("quicksuggest.enabled", true);
+      prefs.setCharPref("quicksuggest.scenario", "offline");
+      prefs.setBoolPref("quicksuggest.shouldShowOnboardingDialog", false);
+      prefs.setBoolPref("suggest.quicksuggest", true);
+      prefs.setBoolPref("suggest.quicksuggest.sponsored", true);
+    }
   }
 
   /**
