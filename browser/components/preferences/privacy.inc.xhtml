@@ -641,11 +641,16 @@
              is="text-link"
              data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
     </hbox>
-    <description class="indent tip-caption"
+    <description id="firefoxSuggestSuggestionDescription"
+                 hidden="true"
+                 class="indent tip-caption"
                  data-l10n-id="addressbar-locbar-firefox-suggest-description"/>
-    <checkbox id="firefoxSuggestSponsoredSuggestion"
-              class="indent"
-              data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-option"/>
+    <vbox class="indent">
+      <checkbox id="firefoxSuggestSponsoredSuggestion"
+                data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-option"/>
+      <description class="indent tip-caption"
+                   data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-description"/>
+    </vbox>
   </vbox>
   <label id="openSearchEnginePreferences" is="text-link"
          data-l10n-id="addressbar-suggestions-settings"/>
