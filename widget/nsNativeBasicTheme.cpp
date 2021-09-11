@@ -317,15 +317,11 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   return scrollbarWidth == StyleScrollbarWidth::Thin;
 }
 
-static nscolor SystemNsColor(StyleSystemColor aColor) {
+static sRGBColor SystemColor(StyleSystemColor aColor) {
   // TODO(emilio): We could not hardcode light appearance here with a bit of
   // work, but doesn't matter for now.
-  return LookAndFeel::Color(aColor, LookAndFeel::ColorScheme::Light,
-                            LookAndFeel::UseStandins::No);
-}
-
-static sRGBColor SystemColor(StyleSystemColor aColor) {
-  return sRGBColor::FromABGR(SystemNsColor(aColor));
+  return sRGBColor::FromABGR(LookAndFeel::Color(
+      aColor, LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No));
 }
 
 template <typename Compute>
@@ -530,29 +526,19 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   return std::make_pair(backgroundColor, borderColor);
 }
 
-// NOTE: This should be kept in sync with forms.css, see the comment in the
-// input:autofill rule.
-constexpr nscolor kAutofillColor = NS_RGBA(255, 249, 145, 128);
-
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
     const EventStates& aState, UseSystemColors aUseSystemColors) {
-  nscolor backgroundColor = [&] {
+  const sRGBColor backgroundColor = [&] {
     if (bool(aUseSystemColors)) {
-      return SystemNsColor(StyleSystemColor::Field);
+      return SystemColor(StyleSystemColor::TextBackground);
     }
     if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
-      return NS_RGBA(0xff, 0xff, 0xff, 128);
+      return sColorWhiteAlpha50;
     }
-    return NS_RGB(0xff, 0xff, 0xff);
+    return sColorWhite;
   }();
-
-  if (aState.HasState(NS_EVENT_STATE_AUTOFILL) &&
-      StaticPrefs::layout_css_autofill_background()) {
-    backgroundColor = NS_ComposeColors(backgroundColor, kAutofillColor);
-  }
-
   const sRGBColor borderColor = ComputeBorderColor(aState, aUseSystemColors);
-  return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
+  return std::make_pair(backgroundColor, borderColor);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
