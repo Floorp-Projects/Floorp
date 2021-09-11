@@ -11,7 +11,7 @@ use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::nsCString;
 use owned_value::owned_to_variant;
 use rkv::backend::{BackendInfo, SafeMode, SafeModeDatabase, SafeModeEnvironment};
-use rkv::{Migrator, OwnedValue, StoreError, StoreOptions, Value};
+use rkv::{OwnedValue, StoreError, StoreOptions, Value};
 use std::{
     path::Path,
     str,
@@ -199,7 +199,15 @@ impl Task for GetOrCreateTask {
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1531887
                 let path = Path::new(str::from_utf8(&self.path)?);
                 let rkv = manager.get_or_create(path, Rkv::new::<SafeMode>)?;
-                Migrator::easy_migrate_lmdb_to_safe_mode(path, rkv.read()?)?;
+
+                // We used to call Migrator::easy_migrate_lmdb_to_safe_mode()
+                // to migrate from an LMDB backing store to the safe mode store,
+                // but it appears to create/lock the LMDB files if they don't
+                // already exist, resulting in failures during profile deletion.
+                //
+                // So instead we now ignore an old LMDB backing store (after we
+                // included migration long enough to migrate almost everyone).
+
                 {
                     let env = rkv.read()?;
                     let load_ratio = env.load_ratio()?.unwrap_or(0.0);
