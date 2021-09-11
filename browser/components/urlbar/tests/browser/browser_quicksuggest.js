@@ -57,41 +57,27 @@ async function assertNoQuickSuggestResults(win = window) {
 
 add_task(async function init() {
   await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
-  Services.prefs.clearUserPref(SEEN_DIALOG_PREF);
-  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.seenRestarts");
-
-  let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
-    valueOverrides: {
-      quickSuggestEnabled: true,
-      quickSuggestShouldShowOnboardingDialog: true,
-    },
-  });
-
-  await UrlbarQuickSuggest.init();
-  await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
-  let onEnabled = UrlbarQuickSuggest.onEnabledUpdate;
-  UrlbarQuickSuggest.onEnabledUpdate = () => {};
-
-  registerCleanupFunction(async function() {
-    await doExperimentCleanup();
-    UrlbarQuickSuggest.onEnabledUpdate = onEnabled;
-
-    // The onboarding test task causes prefs to be set, so clear them when done
-    // so we leave a blank slate for other tests.
-    UrlbarPrefs.clear("suggest.quicksuggest");
-    UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
-    UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
-    UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
-    UrlbarPrefs.clear("quicksuggest.seenRestarts");
-  });
+  await UrlbarTestUtils.ensureQuickSuggestInit(TEST_DATA);
 });
 
-// Tests the onboarding dialog. This task must run first because it fully
-// enables the feature (both sponsored and non-sponsored suggestions) by virtue
-// of showing the onboarding.
 add_task(async function test_onboarding() {
+  // Set up prefs so that onboarding will be shown.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
+      [
+        "browser.urlbar.quicksuggest.quicksuggest.showedOnboardingDialog",
+        false,
+      ],
+      ["browser.urlbar.quicksuggest.seenRestarts", 0],
+      ["browser.urlbar.suggest.quicksuggest", false],
+      ["browser.urlbar.suggest.quicksuggest.sponsored", false],
+    ],
+  });
+
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "fra",
@@ -119,6 +105,13 @@ add_task(async function test_onboarding() {
 
   info("Waiting for dialog and pref change");
   await Promise.all([dialogPromise, prefPromise]);
+
+  await SpecialPowers.popPrefEnv();
+
+  // Clear prefs that are set by virtue of showing and accepting the onboarding.
+  UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
+  UrlbarPrefs.clear("quicksuggest.seenRestarts");
 });
 
 // Tests a sponsored result and keyword highlighting.
