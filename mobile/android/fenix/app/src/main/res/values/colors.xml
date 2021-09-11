@@ -40,8 +40,6 @@
     <color name="sync_disconnected_icon_fill_light_theme">#C45A27</color>
     <color name="sync_disconnected_background_light_theme">#FFFDE2</color>
     <color name="swipe_delete_background_light_theme">@color/photonLightGrey30</color>
-    <color name="onboarding_card_button_light_theme">#F0F0F4</color>
-    <color name="onboarding_card_finish_button_light_theme">@color/accent_light_theme</color>
     <color name="onboarding_illustration_selected_light_theme">@color/accent_bright_light_theme</color>
     <color name="onboarding_illustration_deselected_light_theme">#9915141A</color>
     <color name="add_on_private_browsing_exterior_circle_background_light_theme">@color/accent_bright_light_theme</color>
@@ -107,14 +105,11 @@
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_divider_color_dark_theme">@color/photonDarkGrey10</color>
-    <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_dark_theme">#FFF36E</color>
     <color name="sync_disconnected_background_dark_theme">#5B5846</color>
     <color name="swipe_delete_background_dark_theme">#4A4A55</color>
     <color name="onboarding_card_background_start_gradient_dark_theme">@color/accent_bright_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_dark_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="onboarding_card_button_dark_theme">#4A4A55</color>
-    <color name="onboarding_card_finish_button_dark_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="onboarding_illustration_selected_dark_theme">@color/accent_dark_theme</color>
     <color name="onboarding_illustration_deselected_dark_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_dark_theme">@color/accent_dark_theme</color>
@@ -142,9 +137,6 @@
     <color name="tab_tray_item_thumbnail_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_selected_mask_dark_theme">@color/photonViolet50A32</color>
-
-    <!-- Tab History -->
-    <color name="tab_history_item_selected_background_dark_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">@color/photonLightGrey05</color>
@@ -179,9 +171,6 @@
     <color name="swipe_delete_background_private_theme">@color/accent_light_theme</color>
     <color name="onboarding_card_background_start_gradient_private_theme">#7542E5</color>
     <color name="onboarding_card_background_end_gradient_private_theme">#B833E1</color>
-    <color name="onboarding_card_button_private_theme">@color/accent_light_theme</color>
-    <color name="onboarding_card_finish_button_private_theme">#F0F0F4</color>
-    <color name="onboarding_finish_button_text_private_theme">@color/accent_light_theme</color>
     <color name="onboarding_illustration_selected_private_theme">@color/accent_private_theme</color>
     <color name="onboarding_illustration_deselected_private_theme">@color/onboarding_illustration_deselected_dark_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_private_theme">@color/accent_private_theme</color>
@@ -192,15 +181,10 @@
     <color name="mozac_widget_favicon_border_private_theme">@color/photonInk50</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_private_theme">@color/photonLightGrey05</color>
-    <color name="tab_tray_item_url_private_theme">@color/photonLightGrey60</color>
-    <color name="tab_tray_item_background_private_theme">@color/photonInk90</color>
     <color name="tab_tray_item_selected_background_private_theme">#422875</color>
     <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
     <color name="tab_tray_item_divider_private_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
-    <color name="tab_tray_heading_icon_private_theme">@color/photonViolet50</color>
-    <color name="tab_tray_heading_icon_inactive_private_theme">@color/photonViolet50A48</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_private_theme">@color/tab_tray_item_selected_background_dark_theme</color>
@@ -237,9 +221,6 @@
     <color name="swipe_delete_background_normal_theme">@color/swipe_delete_background_light_theme</color>
     <color name="onboarding_card_background_start_gradient_normal_theme">@color/onboarding_card_background_start_gradient_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_normal_theme">@color/onboarding_card_background_end_gradient_dark_theme</color>
-    <color name="onboarding_card_button_normal_theme">@color/onboarding_card_button_light_theme</color>
-    <color name="onboarding_card_finish_button_normal_theme">@color/onboarding_card_finish_button_light_theme</color>
-    <color name="onboarding_finish_button_text_normal_theme">@color/primary_text_dark_theme</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/onboarding_illustration_selected_light_theme</color>
     <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_light_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_light_theme</color>
@@ -304,45 +285,7 @@
     <color name="home_show_all_button_text">@color/photonDarkGrey05</color>
     <color name="home_recent_bookmarks_item_url">@color/photonDarkGrey05</color>
 
-    <!-- Library buttons -->
-    <color name="library_sessions_icon_background">#B9F0FD</color>
-    <color name="library_sessions_icon">#0E214A</color>
-
-    <color name="library_screenshots_icon_background">#A5FCD4</color>
-    <color name="library_screenshots_icon">#1B3F36</color>
-
-    <color name="library_downloads_icon_background">#D4C1FA</color>
-    <color name="library_downloads_icon">#2E2060</color>
-
-    <color name="library_app_links_icon_background">@color/photonLightGrey30</color>
-    <color name="library_app_links_icon">@color/photonInk80</color>
-
-    <color name="bookmarks_icon_background_filled">#C60084</color>
-    <color name="bookmarks_icon_filled">#FFB4DB</color>
-    <color name="bookmarks_icon_background_outline">#FFB4DB</color>
-    <color name="bookmarks_icon_outline">#50134B</color>
-
-    <color name="library_history_icon_background">#F5C0C6</color>
-    <color name="library_history_icon">#3E0909</color>
-
-    <color name="library_reading_list_icon_background">#FCE98F</color>
-    <color name="library_reading_list_icon">#8A201F</color>
-
-    <color name="tab_circle_icon_background">#FFDDBD</color>
-    <color name="tab_circle_icon_foreground">#7C1504</color>
-
-    <color name="collection_circle_icon_background">#D1FFEE</color>
-    <color name="collection_circle_icon_foreground">#084036</color>
-
     <!-- Quick action buttons-->
-    <color name="quick_action_share_icon">#174291</color>
-    <color name="quick_action_share_icon_background">#b9f0fd</color>
-
-    <color name="quick_action_read_icon">#8a201f</color>
-    <color name="quick_action_read_icon_background">#fce98f</color>
-
-    <color name="quick_action_reader_close_icon">#f9f9fb</color>
-    <color name="quick_action_reader_close_icon_background">#582bcb</color>
 
     <color name="quick_action_reader_appearance_icon">#482166</color>
     <color name="quick_action_reader_appearance_icon_background">#ecbcfb</color>
