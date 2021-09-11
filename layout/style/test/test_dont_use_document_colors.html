@@ -70,6 +70,8 @@ function pushPrefEnvAndWait(args, cb) {
 pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 1]]}, part1);
 
 var transparentBackgroundColor;
+var inputBackgroundColor, inputColor, inputBorderTopColor;
+var inputBorderRightColor, inputBorderLeftColor, inputBorderBottomColor;
 
 function part1()
 {
@@ -104,7 +106,7 @@ function part1()
     isnot(cs5.borderRightColor, cs2.borderRightColor,
           "border-inline-end-color applies");
     isnot(cs5.borderLeftColor, cs2.borderLeftColor,
-          "border-inline-start-color applies");
+          "border-inline-start-color applies");    
     isnot(cs6.borderRightColor, cs2.borderRightColor,
           "border-inline-start-color applies");
     isnot(cs6.borderLeftColor, cs2.borderLeftColor,
@@ -122,12 +124,13 @@ function part1()
           "border-bottom-color applies");
     isnot(cs8.borderImageSource, cs9.borderImageSource, "border-image-source applies");
     transparentBackgroundColor = cs2.backgroundColor;
+    inputBackgroundColor = cs4.backgroundColor;
+    inputColor = cs4.color;
+    inputBorderTopColor = cs4.borderTopColor;
+    inputBorderRightColor = cs4.borderRightColor;
+    inputBorderLeftColor = cs4.borderLeftColor;
+    inputBorderBottomColor = cs4.borderBottomColor;
     pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 2]]}, part2);
-}
-
-function systemColor(c) {
-    let {r, g, b, a} = SpecialPowers.wrap(window).InspectorUtils.colorToRGBA(c, document);
-    return a != 1 ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
 }
 
 function part2()
@@ -165,14 +168,14 @@ function part2()
        "border-left-color is blocked");
     is(cs3.borderBottomColor, cs4.borderBottomColor,
        "border-bottom-color is blocked");
-    is(cs4.backgroundColor, systemColor("ButtonFace"), "background-color not broken on inputs");
-    is(cs4.color, systemColor("ButtonText"), "color not broken on inputs");
-    is(cs4.borderTopColor, systemColor("ThreeDLightShadow"), "border-top-color not broken on inputs");
-    is(cs4.borderRightColor, systemColor("ThreeDLightShadow"),
+    is(cs4.backgroundColor, inputBackgroundColor, "background-color not broken on inputs");
+    is(cs4.color, inputColor, "color not broken on inputs");
+    is(cs4.borderTopColor, inputBorderTopColor, "border-top-color not broken on inputs");
+    is(cs4.borderRightColor, inputBorderRightColor,
        "border-right-color not broken on inputs");
-    is(cs4.borderLeftColor, systemColor("ThreeDLightShadow"),
+    is(cs4.borderLeftColor, inputBorderLeftColor,
        "border-left-color not broken on inputs");
-    is(cs4.borderBottomColor, systemColor("ThreeDLightShadow"),
+    is(cs4.borderBottomColor, inputBorderBottomColor,
        "border-bottom-color not broken on inputs");
     is(cs8.borderImageSource, cs9.borderImageSource, "border-image-source is blocked");
 
