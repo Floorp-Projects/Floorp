@@ -2005,6 +2005,10 @@ var gPrivacyPane = {
         element.dataset.l10nIdOriginal = element.dataset.l10nId;
         element.dataset.l10nId = l10nId;
       }
+      // The main checkbox description discusses data collection, which we
+      // perform only in the "online" scenario. Hide it otherwise.
+      document.getElementById("firefoxSuggestSuggestionDescription").hidden =
+        UrlbarPrefs.get("quickSuggestScenario") != "online";
       // Show the container.
       this._updateFirefoxSuggestSponsoredCheckbox();
       container.removeAttribute("hidden");
