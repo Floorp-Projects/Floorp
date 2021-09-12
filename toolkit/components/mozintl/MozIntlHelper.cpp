@@ -80,12 +80,3 @@ MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val,
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-MozIntlHelper::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx) {
-  static const JSFunctionSpec funcs[] = {
-      JS_SELF_HOSTED_FN("getLocaleInfo", "Intl_getLocaleInfo", 1, 0),
-      JS_FS_END};
-
-  return AddFunctions(cx, val, funcs);
-}

@@ -39,7 +39,6 @@ interface mozIMozIntl : nsISupports
 {
   jsval getCalendarInfo([optional] in jsval locales);
   jsval getDisplayNames([optional] in jsval locales, [optional] in jsval options);
-  jsval getLocaleInfo([optional] in jsval locales);
 
   /**
    * Returns a list of locale codes for a given type.

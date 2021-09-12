@@ -763,14 +763,6 @@ class MozIntl {
     return this._cache.getDisplayNames(locales, ...args);
   }
 
-  getLocaleInfo(locales, ...args) {
-    if (!this._cache.hasOwnProperty("getLocaleInfo")) {
-      mozIntlHelper.addGetLocaleInfo(this._cache);
-    }
-
-    return this._cache.getLocaleInfo(locales, ...args);
-  }
-
   getAvailableLocaleDisplayNames(type) {
     if (availableLocaleDisplayNames.hasOwnProperty(type)) {
       return Array.from(availableLocaleDisplayNames[type]);
