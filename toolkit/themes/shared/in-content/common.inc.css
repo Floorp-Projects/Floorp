@@ -103,6 +103,8 @@
   --card-shadow: var(--shadow-10);
   --card-outline-color: var(--grey-30);
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
+
+  accent-color: var(--in-content-accent-color);
 }
 
 @media (-moz-toolbar-prefers-color-scheme: dark) {
@@ -232,13 +234,6 @@
     --checkbox-checked-border-color-hover: SelectedItem;
     --checkbox-checked-hover-bgcolor: -moz-Field;
     --checkbox-checked-active-bgcolor: -moz-Field;
-  }
-}
-
-@media not (prefers-contrast) {
-  * {
-    /* accent-color is a property that gets ignored in HCM */
-    accent-color: var(--in-content-accent-color);
   }
 }
 
