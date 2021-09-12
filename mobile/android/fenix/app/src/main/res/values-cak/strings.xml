@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Ichinan %s</string>
@@ -57,8 +57,13 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_bookmarks">K\'a b\'a keyak</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Taq yaketal k\'a b\'a\' keyak</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Tik\'ut ronojel</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Kek\'ut ronojel ri yakon taq yaketal</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s b\'anon ruma Mozilla.</string>
@@ -113,8 +118,16 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Jeb\'ël taq ruxaq</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Titz\'et chik</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Tik\'ut ronojel</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Ik\'owinäq taq kanoxïk</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -193,6 +206,10 @@
 
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Tinuk\'</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Rutikirib\'al ruwäch</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -615,6 +632,11 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Jun ik\' tik\'o</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Titikirisäx pa ri rutikirib\'al ruwäch</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Chi rij kaji\' ramaj</string>
     <!-- Option for always starting on the home screen -->
     <string name="start_on_home_always">Junelïk</string>
     <!-- Option for never starting on the home screen -->
@@ -627,6 +649,20 @@
     <string name="close_tabs_after_one_week_summary">Titz\'apïx chi rij jun wuqq\'ij</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Titz\'apïx chi rij jun ik\'</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Tiyuj</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Tzijïl</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox k\'o b\'ey nitikïr yeruyäk chuqa\' yerub\'än taq tijob\'alil.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Tetamäx ch\'aqa\' chik</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ÜTZ</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Tiq\'at</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -655,6 +691,8 @@
     <string name="tab_tray_menu_item_share">Kekomonïx ronojel taq ruwi\'</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Taq ruwi\' nimakol ketz\'apïx</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">K\'a b\'a ketz\'apïx</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Kinuk\'ulem rub\'i\' taqoya\'l</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -954,6 +992,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Tichup</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Titzij</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Tichup</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Taq mol</string>
@@ -1058,6 +1101,10 @@
     <string name="notification_pbm_action_delete_and_open">Tiyuj chuqa\' Tijaq</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">B\'anon Ruma</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Markentin</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Xyuj ri mol</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1109,7 +1156,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Tiyuj</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Tiq\'at</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Tiq\'at</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Nok pa chijun ruwa</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1281,7 +1328,7 @@
     <string name="onboarding_privacy_notice_read_button">Tasik\'ij ri rutzijol qichinanem</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Titz\'apïx</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Titz\'apïx</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Titikirisäx okem pa k\'amaya\'l</string>
@@ -1387,6 +1434,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Ketal ruwi\' q\'ab\'aj</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Kib\'anikil</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Xq\'at</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Xya\' q\'ij</string>
@@ -1412,7 +1462,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ke\'aq\'ata\' ri taq eltzijol man e k\'o ta chupam, taq silowäch chuqa\' taq rupam kik\'wan taq rub\'itz\'ib\' ojqanem. Nitikïr yerutz\'ila\' jujun taq rusamaj ajk\'amaya\'l ruxaq.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Toq xtatz\'ët ri tuq\' pokob\', %s xeruq\'ät ojqanela\' pa jun ruxaq k\'amaya\'l. Tapitz\'a\' richin ch\'aqa\' chik retamab\'al.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Toq xtatz\'ët ri tuq\' pokob\', %s xeruq\'ät ojqanela\' pa jun ruxaq k\'amaya\'l. Tapitz\'a\' richin ch\'aqa\' chik retamab\'al.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">TZIJÏL ri chajinïk pa re ruxaq re\'</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1496,7 +1546,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Majub\'ey tiyak</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Nunojisaj pa ruyonil</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Nunojisaj pa ruyonil</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync tikirisanïk molojri\'ïl</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1676,7 +1727,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Rucholajil kanoxïk nokisäx</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Tik\'ex k\'ulb\'enïk rik\'in “%s”.
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Tik\'ex k\'ulb\'enïk rik\'in “%s”.
 Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Tetamäx Ch\'aqa\' Chik</string>
@@ -1815,6 +1866,11 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
 	<string name="top_sites_rename_dialog_ok">ÜTZ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Tiq\'at</string>
+
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 taq q\'ij</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 wuqq\'ij</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nub\'än kinuk\'ulem ximonel ajk\'amaya\'l taq ruxaq, taq taqoya\'l chuqa\' taq rutzijol richin yejaq pa ruyonil pa Firefox.</string>
