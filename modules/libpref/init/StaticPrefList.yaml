@@ -6742,6 +6742,12 @@
   mirror: always
   rust: true
 
+# Whether to use background-image to style autofill controls.
+- name: layout.css.autofill.background
+  type: bool
+  value: true
+  mirror: always
+
 # Whether the `:-moz-submit-invalid` pseudo-class is exposed to content.
 - name: layout.css.moz-submit-invalid.enabled
   type: RelaxedAtomicBool

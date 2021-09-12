@@ -93,13 +93,10 @@ function _getAdaptedProfile(profile) {
   return adaptedProfile;
 }
 
-// We could not get ManuallyManagedState of element now, so directly check if
-// filter and text color style are applied.
 async function checkFieldHighlighted(elem, expectedValue) {
   let isHighlightApplied;
   await SimpleTest.promiseWaitForCondition(function checkHighlight() {
-    const computedStyle = window.getComputedStyle(elem);
-    isHighlightApplied = computedStyle.getPropertyValue("filter") !== "none";
+    isHighlightApplied = elem.matches(":autofill");
     return isHighlightApplied === expectedValue;
   }, `Checking #${elem.id} highlight style`);
 
