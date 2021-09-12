@@ -484,8 +484,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
                                bool aApzAnimationInProgress);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
-      const nsPoint& aOffsetToReferenceFrame) const;
+      WebRenderLayerManager* aLayerManager,
+      const nsIFrame* aContainerReferenceFrame) const;
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
                     nsIScrollbarMediator::ScrollSnapMode aSnap =
@@ -1080,10 +1080,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       mozilla::layers::WebRenderLayerManager* aLayerManager,
-      const nsIFrame* aItemFrame,
-      const nsPoint& aOffsetToReferenceFrame) const final {
-    return mHelper.ComputeScrollMetadata(aLayerManager, aItemFrame,
-                                         aOffsetToReferenceFrame);
+      const nsIFrame* aContainerReferenceFrame) const final {
+    return mHelper.ComputeScrollMetadata(aLayerManager,
+                                         aContainerReferenceFrame);
   }
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
@@ -1558,10 +1557,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       mozilla::layers::WebRenderLayerManager* aLayerManager,
-      const nsIFrame* aItemFrame,
-      const nsPoint& aOffsetToReferenceFrame) const final {
-    return mHelper.ComputeScrollMetadata(aLayerManager, aItemFrame,
-                                         aOffsetToReferenceFrame);
+      const nsIFrame* aContainerReferenceFrame) const final {
+    return mHelper.ComputeScrollMetadata(aLayerManager,
+                                         aContainerReferenceFrame);
   }
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
