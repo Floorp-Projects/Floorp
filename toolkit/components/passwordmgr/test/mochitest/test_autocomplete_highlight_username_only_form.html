@@ -47,7 +47,7 @@ add_task(async function test_username_field_in_username_only_form_highlight_on_a
   await synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return document.defaultView.getComputedStyle(username).getPropertyValue("filter") !== "none";
+    return username.matches(":autofill");
   }, "Highlight was successfully applied to the username field on username autocomplete");
 
   // Clear existing highlight on login fields. We check by pressing the tab key after backspace
@@ -56,7 +56,7 @@ add_task(async function test_username_field_in_username_only_form_highlight_on_a
   username.focus();
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  is(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+  ok(!username.matches(":autofill"),
      "Highlight was successfully removed on the username field");
 
   // Clear login fields.
