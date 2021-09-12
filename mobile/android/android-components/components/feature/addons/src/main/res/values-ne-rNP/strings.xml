@@ -15,16 +15,45 @@
      then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
      %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
     <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate"> %1$d अन्य साइटहरूमा तपाईंको डाटा पहुँच गर्नुहोस्</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate"> 1 अन्य डोमेन मा तपाइँको डाटा पहुँच गर्नुहोस्</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate"> %1$d अन्य डोमेनहरुमा तपाइँको डाटा पहुँच गर्नुहोस्</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ब्राउजर ट्याबहरू पहुँच गर्नुहोस्</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">ग्राहक-साइड डाटाको असीमित रकम भण्डार गर्नुहोस्</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">नेभिगेसनको बखत ब्राउजर गतिविधि पहुँच गर्नुहोस्</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">पढ्नुहोस् र बुकमार्कहरू परिमार्जन गर्नुहोस्</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ब्राउजर सेटिङ्गहरु पढ्नुहोस् र परिमार्जन गर्नुहोस्</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">हालका ब्राउजिंग ईतिहास, कुकीहरू र सम्बन्धित डाटा खाली गर्नुहोस्</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">क्लिपबोर्डवाट डाटा लिनुहोस्</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">क्लिपबोर्डमा डाटा इनपुट गर्नुहोस्</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">फाईलहरू डाउनलोड गर्नुहोस् र ब्राउजरको डाउनलोड ईतिहास पढ्नुहोस् र परिमार्जन गर्नुहोस्</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">तपाईंको उपकरणमा डाउनलोड गरिएका फाइलहरू खोल्नुहोस्</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">सबै खोलिएका ट्याबहरूको पाठ पढ्नुहोस्</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">तपाईँको स्थानको पहुँच दिनुहोस्</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ब्राउजिंग इतिहास हेर्नुहोस्</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">संस्करण</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">लेखकहरू</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">पछिल्लो अद्यावधिक</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">गृहपृष्ठ</string>
     </resources>
