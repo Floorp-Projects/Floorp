@@ -11601,6 +11601,13 @@
   value: true
   mirror: always
 
+# Whether the non-native theme should always use system colors. Useful mostly
+# for testing forced colors mode.
+- name: widget.non-native-theme.always-use-system-colors
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
 - name: widget.non-native-theme.scrollbar.size
   type: uint32_t
