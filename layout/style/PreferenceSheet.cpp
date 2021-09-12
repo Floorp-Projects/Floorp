@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_devtools.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
@@ -81,6 +82,14 @@ static bool UseDocumentColors(bool aIsChrome, bool aUseAcccessibilityTheme) {
     default:
       return !aUseAcccessibilityTheme;
   }
+}
+
+bool PreferenceSheet::Prefs::NonNativeThemeShouldUseSystemColors() const {
+  // We only do that if we are overriding the document colors. Otherwise it
+  // causes issues when pages only override some of the system colors,
+  // specially in dark themes mode.
+  return StaticPrefs::widget_non_native_theme_always_use_system_colors() ||
+         !mUseDocumentColors;
 }
 
 void PreferenceSheet::Prefs::Load(bool aIsChrome) {

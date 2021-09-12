@@ -1,5 +1,5 @@
 # This pref enables high-contrast mode in the testcases here:
-defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF")
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF") pref(ui.use_standins_for_native_colors,true) pref(widget.non-native-theme.always-use-system-colors,true)
 
 # There are several platform-specific fuzzy-if notations below due to
 # anti-aliasing, extra ink overflow, and slightly inacurate reftest
@@ -14,7 +14,7 @@ fuzzy-if(cocoaWidget,255-255,4-4) == backplate-bg-image-003.html backplate-bg-im
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-004.html backplate-bg-image-004-ref.html
 fuzzy-if(cocoaWidget,255-255,80-80) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
 
-fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
+fuzzy-if(cocoaWidget,255-255,60-60) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
 
 fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
 fuzzy-if(cocoaWidget,255-255,20-20) fuzzy-if(!cocoaWidget&&!nativeThemePref,0-21,0-6) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
