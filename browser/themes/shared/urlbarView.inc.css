@@ -615,7 +615,7 @@
 
 /* Switch-to-tab action text is styled as a chiclet. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-  background-color: var(--urlbar-box-bgcolor);
+  background-color: var(--urlbar-box-focus-bgcolor);
   border-radius: var(--toolbarbutton-border-radius);
   padding: 6px 8px;
   margin-block: -6px;
