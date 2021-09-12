@@ -143,12 +143,11 @@ table {
   font: message-box;
   text-align: start;
   width: 100%;
-  border: 1px solid var(--in-content-border-color);
+  border: 1px solid var(--in-content-table-border-color);
   border-spacing: 0;
 }
 
 th, td {
-  border: 1px solid var(--in-content-border-color);
   padding: 4px;
   text-align: match-parent;
 }
@@ -160,6 +159,7 @@ thead th {
 th {
   background-color: var(--in-content-table-header-background);
   color: var(--in-content-table-header-color);
+  border: 1px solid var(--in-content-table-border-color);
 }
 
 th.column {
@@ -168,7 +168,7 @@ th.column {
 }
 
 td {
-  border-color: var(--in-content-table-border-dark-color);
+  border: 1px solid var(--in-content-border-color);
   unicode-bidi: plaintext; /* Make sure file paths will be LTR */
 }
 
@@ -179,7 +179,7 @@ td {
 
 .notice-box {
   background-color: var(--in-content-table-background);
-  border: 1px solid var(--in-content-border-color);
+  border: 1px solid var(--in-content-box-border-color);
   color: var(--in-content-text-color);
   padding: 16px;
 }

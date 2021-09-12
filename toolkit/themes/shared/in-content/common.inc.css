@@ -48,9 +48,9 @@
   --in-content-focus-outline-color: var(--in-content-primary-button-background);
 
   --in-content-table-background: #f8f8fa;
-  --in-content-table-border-dark-color: #d1d1d1;
-  --in-content-table-header-background: #0a84ff;
-  --in-content-table-header-color: #ffffff;
+  --in-content-table-border-color: var(--in-content-box-border-color);
+  --in-content-table-header-background: var(--in-content-primary-button-background);
+  --in-content-table-header-color: var(--in-content-primary-button-text-color);
   --in-content-sidebar-width: 240px;
 
   --dialog-warning-text-color: var(--red-60);
@@ -138,9 +138,6 @@
     --in-content-danger-button-background-active: #ffdfe7;
 
     --in-content-table-background: rgb(35, 34, 43);
-    --in-content-table-border-dark-color: rgba(249,249,250,0.2);
-    --in-content-table-header-background: rgb(5, 64, 150);
-    --in-content-table-header-color: var(--in-content-page-color);
 
     --in-content-accent-color: var(--in-content-primary-button-background);
     --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
@@ -218,7 +215,7 @@
     --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
     --in-content-danger-button-background-active: var(--in-content-primary-button-background-active);
 
-    --in-content-table-border-dark-color: ThreeDDarkShadow;
+    --in-content-table-border-color: ThreeDDarkShadow;
     --in-content-table-background: -moz-Dialog;
     --in-content-table-header-background: -moz-Dialog;
     --in-content-table-header-color: -moz-DialogText;
