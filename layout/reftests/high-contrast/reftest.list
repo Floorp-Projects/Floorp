@@ -49,8 +49,8 @@ pref(browser.display.document_color_use,2) == background-transparent-form-contro
 
 # prefers-contrast media query:
 
-# Forced colors doesn't affect prefers-contrast.
-!= prefers-contrast-001.html prefers-contrast-black-ref.html
+# Forced colors affects prefers-contrast.
+== prefers-contrast-001.html prefers-contrast-black-ref.html
 # high should match when an accessibility theme is used
 test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-001.html prefers-contrast-black-ref.html
 

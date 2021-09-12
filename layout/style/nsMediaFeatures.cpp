@@ -257,14 +257,18 @@ StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
   return aDocument->PrefersColorScheme();
 }
 
+// Neither Linux, Windows, nor Mac have a way to indicate that low contrast is
+// preferred so we use the presence of an accessibility theme or forced colors
+// as a signal.
 StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return StylePrefersContrast::NoPreference;
   }
-  // Neither Linux, Windows, nor Mac have a way to indicate that low contrast is
-  // preferred so we use the presence of an accessibility theme as a signal.
   if (!!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+    return StylePrefersContrast::More;
+  }
+  if (!PreferenceSheet::PrefsFor(*aDocument).mUseDocumentColors) {
     return StylePrefersContrast::More;
   }
   return StylePrefersContrast::NoPreference;
