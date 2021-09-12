@@ -58,24 +58,6 @@ interface IntlUtils {
                                     optional DisplayNameOptions options = {});
 
   /**
-   * Helper function to retrieve useful information about a locale.
-   *
-   * The function takes one argument - locales which is a list of locale
-   * strings.
-   *
-   * It returns an object with properties:
-   *
-   *   locale:
-   *     a negotiated locale string
-   *
-   *   direction:
-   *     text direction, "ltr" or "rtl"
-   *
-   */
-  [Throws]
-  LocaleInfo getLocaleInfo(sequence<DOMString> locales);
-
-  /**
    * Helper function to determine if the current application locale is RTL.
    *
    * The result of this function can be overriden by this pref:
