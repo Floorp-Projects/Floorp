@@ -2525,6 +2525,9 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override {
     MOZ_ASSERT(aBuilder);
+    DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
+                                                      IsSubpixelAADisabled());
+
     ImgDrawResult result = static_cast<nsTreeBodyFrame*>(mFrame)->PaintTreeBody(
         *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), aBuilder);
 

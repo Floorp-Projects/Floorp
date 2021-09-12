@@ -1691,7 +1691,7 @@ fuzzy-if(skiaContent,0-1,0-1) == 751012-1a.html 751012-1-ref.html
 fuzzy-if(skiaContent,0-1,0-1) == 751012-1b.html 751012-1-ref.html
 == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
-fuzzy-if(true,0-1,0-90) fuzzy-if(skiaContent,0-1,0-320) fuzzy-if(useDrawSnapshot,1-1,77595-77595) == 759036-1.html 759036-1-ref.html
+fuzzy-if(true,0-1,0-90) fuzzy-if(skiaContent,0-1,0-320) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,0-17,0-5886) fuzzy-if(skiaContent,0-9,0-5894) fuzzy-if(geckoview&&webrender&&device&&!swgl,3-3,5831-5855) == 759036-2.html 759036-2-ref.html
 == 776265-1a.html 776265-1-ref.html
 == 776265-1b.html 776265-1-ref.html
@@ -2033,7 +2033,7 @@ fuzzy(0-255,0-4054) == 1415987-1.html 1415987-1-ref.html # this is a large fuzz,
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
 fuzzy-if(!webrender,0-74,0-2234) == 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31412) fuzzy-if(webrender&&winWidget,1-1,31240-31412) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31412) fuzzy-if(webrender&&winWidget,1-1,31240-31412) fails-if(useDrawSnapshot) == 1425243-2.html 1425243-2-ref.html
 == 1430869.html 1430869-ref.html
 == 1432541.html 1432541-ref.html
 == 1446470.html 1035091-ref.html
@@ -2059,7 +2059,7 @@ fuzzy-if(winWidget&&!webrender,0-104,0-1423) == 1513423-1.html 1513423-1-ref.htm
 fuzzy-if(winWidget&&!webrender,0-89,0-1420) == 1513423-2.html 1513423-2-ref.html
 == 1513423-3.html 1513423-3-ref.html
 pref(layout.accessiblecaret.enabled,true) == 1517385.html 1517385-ref.html
-fuzzy-if(!webrender,1-5,66-547) fuzzy-if(geckoview&&!webrender,1-2,64-141) fuzzy-if(winWidget&&swgl,1-1,12-16) fuzzy-if(cocoaWidget&&swgl,1-1,32-32) fuzzy-if(useDrawSnapshot&&webrender,2-2,209-209) == 1529992-1.html 1529992-1-ref.html
+fuzzy-if(!webrender,1-5,66-547) fuzzy-if(geckoview&&!webrender,1-2,64-141) fuzzy-if(winWidget&&swgl,1-1,12-16) fuzzy-if(cocoaWidget&&swgl,1-1,32-32) fuzzy-if(useDrawSnapshot&&webrender,3-3,459-459) == 1529992-1.html 1529992-1-ref.html
 fuzzy-if(!webrender,0-6,0-34) fuzzy-if(Android,9-14,44-60) fails-if(!useDrawSnapshot&&webrender) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml
