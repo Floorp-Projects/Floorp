@@ -2583,7 +2583,6 @@
       document
         .getElementById("History:UndoCloseTab")
         .setAttribute("data-l10n-args", JSON.stringify({ tabCount: 1 }));
-      SessionStore.setLastClosedTabCount(window, 1);
 
       // if we're adding tabs, we're past interrupt mode, ditch the owner
       if (this.selectedTab.owner) {
@@ -3425,7 +3424,7 @@
         return;
       }
 
-      let initialTabCount = tabs.length;
+      SessionStore.resetLastClosedTabCount(window);
       this._clearMultiSelectionLocked = true;
 
       // Guarantee that _clearMultiSelectionLocked lock gets released.
@@ -3437,6 +3436,7 @@
         let aParams = { animate, prewarmed: true };
 
         for (let tab of tabs) {
+          tab._closedInGroup = true;
           if (tab.selected) {
             lastToClose = tab;
             let toBlurTo = this._findTabToBlurTo(lastToClose, tabs);
@@ -3516,6 +3516,10 @@
         // Now run again sequentially the beforeunload listeners that will result in a prompt.
         for (let tab of tabsWithBeforeUnloadPrompt) {
           this.removeTab(tab, aParams);
+          if (!tab.closing) {
+            // If we abort the closing of the tab.
+            tab._closedInGroup = false;
+          }
         }
 
         // Avoid changing the selected browser several times by removing it,
@@ -3529,17 +3533,14 @@
 
       this._clearMultiSelectionLocked = false;
       this.avoidSingleSelectedTab();
-      let closedTabsCount =
-        initialTabCount - tabs.filter(t => t.isConnected && !t.closing).length;
       // Don't use document.l10n.setAttributes because the FTL file is loaded
       // lazily and we won't be able to resolve the string.
-      document
-        .getElementById("History:UndoCloseTab")
-        .setAttribute(
-          "data-l10n-args",
-          JSON.stringify({ tabCount: closedTabsCount })
-        );
-      SessionStore.setLastClosedTabCount(window, closedTabsCount);
+      document.getElementById("History:UndoCloseTab").setAttribute(
+        "data-l10n-args",
+        JSON.stringify({
+          tabCount: SessionStore.getLastClosedTabCount(window),
+        })
+      );
     },
 
     removeCurrentTab(aParams) {
