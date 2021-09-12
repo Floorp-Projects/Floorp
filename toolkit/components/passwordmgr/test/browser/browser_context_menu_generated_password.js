@@ -140,9 +140,8 @@ add_task(async function fill_generated_password_empty_field() {
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
           is(input.value.length, 0, "Password field is empty");
-          is(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
         }
@@ -165,9 +164,8 @@ add_task(async function fill_generated_password_empty_field() {
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          isnot(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            input.matches(":autofill"),
             "Password field should be highlighted"
           );
           LTU.loginField.checkPasswordMasked(input, false, "after fill");
@@ -210,9 +208,8 @@ add_task(async function fill_generated_password_nonempty_field() {
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
-          is(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
         }
@@ -235,9 +232,8 @@ add_task(async function fill_generated_password_nonempty_field() {
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          isnot(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            input.matches(":autofill"),
             "Password field should be highlighted"
           );
           LTU.loginField.checkPasswordMasked(input, false, "after fill");
@@ -303,9 +299,8 @@ add_task(async function fill_generated_password_with_matching_logins() {
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          isnot(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            input.matches(":autofill"),
             "Password field should be highlighted"
           );
           LTU.loginField.checkPasswordMasked(input, false, "after fill");
@@ -396,9 +391,8 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
           is(input.value.length, 0, "Password field is empty");
-          is(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
         }
@@ -421,9 +415,8 @@ add_task(async function test_edited_generated_password_in_new_tab() {
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          isnot(
-            content.getComputedStyle(input).filter,
-            "none",
+          ok(
+            input.matches(":autofill"),
             "Password field should be highlighted"
           );
           LTU.loginField.checkPasswordMasked(input, false, "after fill");
