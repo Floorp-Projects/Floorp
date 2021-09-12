@@ -494,36 +494,6 @@ bool js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-  if (!locale) {
-    return false;
-  }
-
-  RootedObject info(cx, NewPlainObject(cx));
-  if (!info) {
-    return false;
-  }
-
-  if (!DefineDataProperty(cx, info, cx->names().locale, args[0])) {
-    return false;
-  }
-
-  bool rtl = uloc_isRightToLeft(IcuLocale(locale.get()));
-
-  RootedValue dir(cx, StringValue(rtl ? cx->names().rtl : cx->names().ltr));
-
-  if (!DefineDataProperty(cx, info, cx->names().direction, dir)) {
-    return false;
-  }
-
-  args.rval().setObject(*info);
-  return true;
-}
-
 static bool SameOrParentLocale(JSLinearString* locale,
                                JSLinearString* otherLocale) {
   // Return true if |locale| is the same locale as |otherLocale|.
