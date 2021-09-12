@@ -16,14 +16,12 @@ function run_test() {
 function test_methods_presence() {
   equal(Services.intl.getCalendarInfo instanceof Function, true);
   equal(Services.intl.getDisplayNames instanceof Function, true);
-  equal(Services.intl.getLocaleInfo instanceof Function, true);
   equal(Services.intl.getLocaleDisplayNames instanceof Function, true);
 }
 
 function test_methods_calling() {
   Services.intl.getCalendarInfo("pl");
   Services.intl.getDisplayNames("ar");
-  Services.intl.getLocaleInfo("de");
   new Services.intl.DateTimeFormat("fr");
   new Services.intl.ListFormat("fr");
   new Services.intl.Locale("fr");
