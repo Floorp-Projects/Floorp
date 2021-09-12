@@ -252,10 +252,17 @@ menulist > menupopup {
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
-  appearance: none !important;
-  border: 1px solid transparent;
-  padding-inline: 5px;
   max-width: none;
+}
+
+@media not (-moz-windows-non-native-menus) {
+  menulist > menupopup > menuitem,
+  menulist > menupopup > menucaption,
+  menulist > menupopup > menu {
+    appearance: none !important;
+    border: 1px solid transparent;
+    padding-inline: 5px;
+  }
 }
 
 menulist > menupopup > menuitem[_moz-menuactive="true"],
@@ -273,8 +280,7 @@ menulist > menupopup > menu > .menu-iconic-left {
 menulist > menupopup > menuitem > label,
 menulist > menupopup > menucaption > label,
 menulist > menupopup > menu > label {
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-block: 0;
 }
 
 menulist:-moz-focusring > menupopup > menuitem[_moz-menuactive="true"] {
@@ -385,10 +391,12 @@ menuseparator {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
-menulist > menupopup > menuseparator {
-  padding: 6px 0 5px;
-  border-top: 1px solid #000000;
-  border-bottom: none;
+@media not (-moz-windows-non-native-menus) {
+  menulist > menupopup > menuseparator {
+    padding: 6px 0 5px;
+    border-top: 1px solid #000000;
+    border-bottom: none;
+  }
 }
 
 /* On Windows 10, separators get entirely custom rendering. */
