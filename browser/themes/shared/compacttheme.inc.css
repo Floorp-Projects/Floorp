@@ -11,13 +11,8 @@
   --autocomplete-popup-background: #2A2A2E !important;
 }
 
-@media (-moz-proton) {
-#urlbar:not([focused="true"]) {
+#urlbar {
   --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
+  --urlbar-box-focus-bgcolor: var(--button-bgcolor);
   --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
 }
-#urlbar[focused="true"] {
-  --urlbar-box-bgcolor: var(--button-bgcolor);
-  --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
-}
-} /** END Proton **/

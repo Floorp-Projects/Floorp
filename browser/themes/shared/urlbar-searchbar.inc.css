@@ -280,6 +280,10 @@
   padding-inline: 8px 6px;
 }
 
+#urlbar[focused="true"] #urlbar-search-mode-indicator {
+  background-color: var(--urlbar-box-focus-bgcolor);
+}
+
 #urlbar[searchmode] > #urlbar-input-container > #urlbar-search-mode-indicator {
   display: inline-flex;
 }
@@ -579,6 +583,10 @@
   background-color: var(--urlbar-box-bgcolor);
   margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
   overflow: hidden;
+}
+
+#urlbar[focused="true"] #urlbar-zoom-button {
+  background-color: var(--urlbar-box-focus-bgcolor);
 }
 
 #urlbar-zoom-button:hover {

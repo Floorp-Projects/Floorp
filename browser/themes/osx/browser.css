@@ -191,10 +191,10 @@
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
+  :root:not(:-moz-lwtheme) #urlbar {
     --urlbar-box-bgcolor: white;
   }
-  :root[lwt-default-theme-in-dark-mode] #urlbar:not([focused="true"]) {
+  :root[lwt-default-theme-in-dark-mode] #urlbar {
     --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
   }
 }

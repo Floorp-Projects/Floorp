@@ -86,6 +86,13 @@
   background-color: var(--urlbar-box-bgcolor);
 }
 
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+#urlbar[focused="true"] #urlbar-label-box {
+  background-color: var(--urlbar-box-focus-bgcolor);
+}
+
 #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button:hover:not([open]),
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button:hover:not([open]),
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:hover:not([open]) {
