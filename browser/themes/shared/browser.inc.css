@@ -52,6 +52,7 @@
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bgcolor: var(--button-bgcolor);
+  --urlbar-box-focus-bgcolor: var(--button-bgcolor);
   --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
   --urlbar-box-active-bgcolor: var(--button-active-bgcolor);
   --urlbar-min-height: 32px;
@@ -118,12 +119,14 @@
    In practice these are bumped-up --button(-hover)-bgcolor rules */
 :root:-moz-lwtheme-brighttext:not([lwt-default-theme-in-dark-mode]) {
   --urlbar-box-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
+  --urlbar-box-focus-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
   --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
 }
 /* Linux dark OS */
 @media (prefers-color-scheme: dark) {
   :root:not(:-moz-lwtheme) {
     --urlbar-box-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
+    --urlbar-box-focus-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
     --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
   }
 }
