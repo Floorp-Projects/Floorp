@@ -219,24 +219,6 @@ Example:
     values["dates/gregorian/dayperiods/am"] = "AM";
 
 
-mozIntl.getLocaleInfo(locales, options)
----------------------------------------
-
-The API returns a simple object with information about the requested locale.
-
-At the moment the only bit handled by the API is directionality defined as `direction`
-key on the returned object.
-
-Example:
-
-.. code-block:: javascript
-
-    let {
-      locale,    // "pl"
-      direction: // "ltr"
-    } = Services.intl.getLocaleInfo(undefined);
-
-
 mozIntl.RelativeTimeFormat(locales, options)
 --------------------------------------------
 
