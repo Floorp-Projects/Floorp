@@ -206,22 +206,3 @@ function Intl_getDisplayNames(locales, options) {
     // 24. Return result.
     return result;
 }
-
-function Intl_getLocaleInfo(locales) {
-  const requestedLocales = CanonicalizeLocaleList(locales);
-
-  // In the future, we may want to expose uloc_getAvailable and use it here.
-  const DateTimeFormat = dateTimeFormatInternalProperties;
-  const localeData = DateTimeFormat.localeData;
-
-  const localeOpt = new_Record();
-  localeOpt.localeMatcher = "best fit";
-
-  const r = ResolveLocale("DateTimeFormat",
-                          requestedLocales,
-                          localeOpt,
-                          DateTimeFormat.relevantExtensionKeys,
-                          localeData);
-
-  return intl_GetLocaleInfo(r.locale);
-}
