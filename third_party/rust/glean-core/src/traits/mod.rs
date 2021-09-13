@@ -23,6 +23,7 @@ mod string;
 mod string_list;
 mod timespan;
 mod timing_distribution;
+mod url;
 mod uuid;
 
 pub use self::boolean::Boolean;
@@ -44,5 +45,6 @@ pub use self::string::String;
 pub use self::string_list::StringList;
 pub use self::timespan::Timespan;
 pub use self::timing_distribution::TimingDistribution;
+pub use self::url::Url;
 pub use self::uuid::Uuid;
 pub use crate::histogram::HistogramType;

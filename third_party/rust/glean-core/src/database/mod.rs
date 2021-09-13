@@ -643,7 +643,7 @@ impl Database {
             ping_lifetime_data
                 .write()
                 .expect("Can't access ping lifetime data as writable")
-                .clear();
+                .retain(|metric_id, _| !metric_id.starts_with(storage_name));
         }
 
         self.write_with_store(Lifetime::Ping, |mut writer, store| {
@@ -1318,6 +1318,71 @@ mod test {
                 .get(&reader, format!("{}#{}", test_storage, test_metric_id))
                 .unwrap_or(None)
                 .is_some());
+        }
+    }
+
+    #[test]
+    fn test_delayed_ping_lifetime_clear() {
+        // Init the database in a temporary directory.
+        let dir = tempdir().unwrap();
+        let db = Database::new(dir.path(), true).unwrap();
+        let test_storage = "test-storage";
+
+        assert!(db.ping_lifetime_data.is_some());
+
+        // Attempt to record a known value.
+        let test_value1 = "test-value1";
+        let test_metric_id1 = "telemetry_test.test_name1";
+        db.record_per_lifetime(
+            Lifetime::Ping,
+            test_storage,
+            test_metric_id1,
+            &Metric::String(test_value1.to_string()),
+        )
+        .unwrap();
+
+        {
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            // Verify that test_value1 is in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id1))
+                .is_some());
+        }
+
+        // Clear ping lifetime storage for a storage that isn't test_storage.
+        // Doesn't matter what it's called, just that it isn't test_storage.
+        db.clear_ping_lifetime_storage(&(test_storage.to_owned() + "x"))
+            .unwrap();
+
+        {
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            // Verify that test_value1 is still in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id1))
+                .is_some());
+        }
+
+        // Clear test_storage's ping lifetime storage.
+        db.clear_ping_lifetime_storage(test_storage).unwrap();
+
+        {
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            // Verify that test_value1 is no longer in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id1))
+                .is_none());
         }
     }
 
