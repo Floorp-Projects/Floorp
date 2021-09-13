@@ -14,9 +14,6 @@
 #include "nsINode.h"
 #include "mozilla/intl/WordBreaker.h"
 
-class nsIContent;
-class nsRange;
-
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
 #define NS_FIND_CID                                  \
@@ -25,8 +22,6 @@ class nsRange;
       0x87, 0xac, 0x90, 0xbe, 0x0a, 0x51, 0xd6, 0x09 \
     }                                                \
   }
-
-class nsFindContentIterator;
 
 class nsFind : public nsIFind {
  public:
