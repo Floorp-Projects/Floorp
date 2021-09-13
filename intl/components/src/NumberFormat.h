@@ -422,7 +422,7 @@ class NumberFormat final {
     return formatResult().andThen(
         [&buffer](std::u16string_view result) -> Result<Ok, ICUError> {
           if constexpr (std::is_same<C, char>::value) {
-            if (!FillUTF8Buffer(Span(result.data(), result.size()), buffer)) {
+            if (!FillBuffer(Span(result.data(), result.size()), buffer)) {
               return Err(ICUError::OutOfMemory);
             }
             return Ok();
