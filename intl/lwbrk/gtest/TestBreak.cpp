@@ -208,20 +208,31 @@ TEST(WordBreak, TestPrintWordWithBreak)
 
     if (i != numOfFragment - 1) {
       NS_ConvertASCIItoUTF16 nextFragText(wb[i + 1]);
+      if (nextFragText.IsEmpty()) {
+        // If nextFragText is empty, there's no new possible word break
+        // opportunity.
+        continue;
+      }
 
-      bool canBreak = true;
-      canBreak = wbk->BreakInBetween(fragText.get(), fragText.Length(),
-                                     nextFragText.get(), nextFragText.Length());
+      const auto origFragLen = static_cast<int32_t>(fragText.Length());
+      fragText.Append(nextFragText);
+
+      bool canBreak =
+          origFragLen ==
+          wbk->Next(fragText.get(), fragText.Length(), origFragLen - 1);
       if (canBreak) {
         result.Append('^');
       }
-      fragText.Assign(nextFragText);
     }
   }
   ASSERT_STREQ("This^   ^is^ ^a^ ^internationalization^ ^work^.",
                NS_ConvertUTF16toUTF8(result).get());
 }
 
+// This function searches a complete word starting from |offset| in wb[fragN].
+// If it reaches the end of wb[fragN], and there is no word break opportunity
+// between wb[fragN] and wb[fragN+1], it will continue the search in wb[fragN+1]
+// until a word break.
 void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
                                    const char* expected) {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
@@ -232,16 +243,24 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
   mozilla::intl::WordRange res =
       wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
-  bool canBreak;
   nsAutoString result(Substring(fragText, res.mBegin, res.mEnd - res.mBegin));
 
-  if ((uint32_t)fragText.Length() == res.mEnd) {
+  if ((uint32_t)fragText.Length() <= res.mEnd) {
     // if we hit the end of the fragment
     nsAutoString curFragText = fragText;
     for (uint32_t p = fragN + 1; p < numOfFragment; p++) {
       NS_ConvertASCIItoUTF16 nextFragText(wb[p]);
-      canBreak = wbk->BreakInBetween(curFragText.get(), curFragText.Length(),
-                                     nextFragText.get(), nextFragText.Length());
+      if (nextFragText.IsEmpty()) {
+        // If nextFragText is empty, there's no new possible word break
+        // opportunity between curFragText and nextFragText.
+        continue;
+      }
+
+      const auto origFragLen = static_cast<int32_t>(curFragText.Length());
+      curFragText.Append(nextFragText);
+      bool canBreak =
+          origFragLen ==
+          wbk->Next(curFragText.get(), curFragText.Length(), origFragLen - 1);
       if (canBreak) {
         break;
       }
@@ -253,29 +272,6 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       if ((uint32_t)nextFragText.Length() != r.mEnd) {
         break;
       }
-      nextFragText.Assign(curFragText);
-    }
-  }
-
-  if (0 == res.mBegin) {
-    // if we hit the beginning of the fragment
-    nsAutoString curFragText = fragText;
-    for (uint32_t p = fragN; p > 0; p--) {
-      NS_ConvertASCIItoUTF16 prevFragText(wb[p - 1]);
-      canBreak = wbk->BreakInBetween(prevFragText.get(), prevFragText.Length(),
-                                     curFragText.get(), curFragText.Length());
-      if (canBreak) {
-        break;
-      }
-      mozilla::intl::WordRange r = wbk->FindWord(
-          prevFragText.get(), prevFragText.Length(), prevFragText.Length());
-
-      result.Insert(Substring(prevFragText, r.mBegin, r.mEnd - r.mBegin), 0);
-
-      if (0 != r.mBegin) {
-        break;
-      }
-      prevFragText.Assign(curFragText);
     }
   }
 

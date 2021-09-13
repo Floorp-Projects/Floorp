@@ -504,25 +504,27 @@ char32_t nsFind::DecodeChar(const char16_t* t2b, int32_t* index) const {
 }
 
 bool nsFind::BreakInBetween(char32_t x, char32_t y) const {
-  char16_t x16[2], y16[2];
-  int32_t x16len, y16len;
+  char16_t text[4];
+  int32_t textLen;
   if (IS_IN_BMP(x)) {
-    x16[0] = (char16_t)x;
-    x16len = 1;
+    text[0] = (char16_t)x;
+    textLen = 1;
   } else {
-    x16[0] = H_SURROGATE(x);
-    x16[1] = L_SURROGATE(x);
-    x16len = 2;
+    text[0] = H_SURROGATE(x);
+    text[1] = L_SURROGATE(x);
+    textLen = 2;
   }
+
+  const int32_t x16Len = textLen;
   if (IS_IN_BMP(y)) {
-    y16[0] = (char16_t)y;
-    y16len = 1;
+    text[textLen] = (char16_t)y;
+    textLen += 1;
   } else {
-    y16[0] = H_SURROGATE(y);
-    y16[1] = L_SURROGATE(y);
-    y16len = 2;
+    text[textLen] = H_SURROGATE(y);
+    text[textLen + 1] = L_SURROGATE(y);
+    textLen += 2;
   }
-  return mWordBreaker->BreakInBetween(x16, x16len, y16, y16len);
+  return mWordBreaker->Next(text, textLen, x16Len - 1) == x16Len;
 }
 
 char32_t nsFind::PeekNextChar(State& aState, bool aAlreadyMatching) const {
