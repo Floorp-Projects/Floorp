@@ -47,13 +47,49 @@ BEGIN_TEST(testGCSuppressions) {
 END_TEST(testGCSuppressions)
 
 struct MyContainer {
+  int whichConstructor;
   HeapPtr<JSObject*> obj;
   HeapPtr<JSString*> str;
 
-  MyContainer() : obj(nullptr), str(nullptr) {}
+  MyContainer() : whichConstructor(1), obj(nullptr), str(nullptr) {}
+  explicit MyContainer(double) : MyContainer() { whichConstructor = 2; }
+  explicit MyContainer(JSContext* cx) : MyContainer() { whichConstructor = 3; }
+  MyContainer(JSContext* cx, JSContext* cx2, JSContext* cx3) : MyContainer() {
+    whichConstructor = 4;
+  }
+  MyContainer(const MyContainer& rhs)
+      : whichConstructor(100 + rhs.whichConstructor),
+        obj(rhs.obj),
+        str(rhs.str) {}
   void trace(JSTracer* trc) {
-    js::TraceNullableEdge(trc, &obj, "test container");
-    js::TraceNullableEdge(trc, &str, "test container");
+    js::TraceNullableEdge(trc, &obj, "test container obj");
+    js::TraceNullableEdge(trc, &str, "test container str");
+  }
+};
+
+struct MyNonCopyableContainer {
+  int whichConstructor;
+  HeapPtr<JSObject*> obj;
+  HeapPtr<JSString*> str;
+
+  MyNonCopyableContainer() : whichConstructor(1), obj(nullptr), str(nullptr) {}
+  explicit MyNonCopyableContainer(double) : MyNonCopyableContainer() {
+    whichConstructor = 2;
+  }
+  explicit MyNonCopyableContainer(JSContext* cx) : MyNonCopyableContainer() {
+    whichConstructor = 3;
+  }
+  explicit MyNonCopyableContainer(JSContext* cx, JSContext* cx2, JSContext* cx3)
+      : MyNonCopyableContainer() {
+    whichConstructor = 4;
+  }
+
+  MyNonCopyableContainer(const MyNonCopyableContainer&) = delete;
+  MyNonCopyableContainer& operator=(const MyNonCopyableContainer&) = delete;
+
+  void trace(JSTracer* trc) {
+    js::TraceNullableEdge(trc, &obj, "test container obj");
+    js::TraceNullableEdge(trc, &str, "test container str");
   }
 };
 
@@ -62,10 +98,50 @@ template <typename Wrapper>
 struct MutableWrappedPtrOperations<MyContainer, Wrapper> {
   HeapPtr<JSObject*>& obj() { return static_cast<Wrapper*>(this)->get().obj; }
   HeapPtr<JSString*>& str() { return static_cast<Wrapper*>(this)->get().str; }
+  int constructor() {
+    return static_cast<Wrapper*>(this)->get().whichConstructor;
+  }
+};
+
+template <typename Wrapper>
+struct MutableWrappedPtrOperations<MyNonCopyableContainer, Wrapper> {
+  HeapPtr<JSObject*>& obj() { return static_cast<Wrapper*>(this)->get().obj; }
+  HeapPtr<JSString*>& str() { return static_cast<Wrapper*>(this)->get().str; }
+  int constructor() {
+    return static_cast<Wrapper*>(this)->get().whichConstructor;
+  }
 };
 }  // namespace js
 
 BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
+  // Test Rooted constructors for a copyable type.
+  JS::Rooted<MyContainer> r1(cx);
+  JS::Rooted<MyContainer> r2(cx, 3.4);
+  JS::Rooted<MyContainer> r3(cx, MyContainer(cx));
+  JS::Rooted<MyContainer> r4(cx, cx);
+  JS::Rooted<MyContainer> r5(cx, cx, cx, cx);
+
+  JS::Rooted<Value> rv(cx);
+
+  CHECK(r1.constructor() == 101);  // copy of SafelyInitialized<T>
+  CHECK(r2.constructor() == 2);    // direct MyContainer(3.4)
+  CHECK(r3.constructor() == 103);  // copy of MyContainer(cx)
+  CHECK(r4.constructor() == 3);    // direct MyContainer(cx)
+  CHECK(r5.constructor() == 4);    // direct MyContainer(cx, cx, cx)
+
+  // Test Rooted constructor forwarding for a non-copyable type.
+  JS::Rooted<MyNonCopyableContainer> nc1(cx);
+  JS::Rooted<MyNonCopyableContainer> nc2(cx, 3.4);
+  // Compile error: cannot copy
+  // JS::Rooted<MyNonCopyableContainer> nc3(cx, MyNonCopyableContainer(cx));
+  JS::Rooted<MyNonCopyableContainer> nc4(cx, cx);
+  JS::Rooted<MyNonCopyableContainer> nc5(cx, cx, cx, cx);
+
+  CHECK(nc1.constructor() == 1);  // direct MyNonCopyableContainer()
+  CHECK(nc2.constructor() == 2);  // direct MyNonCopyableContainer(3.4)
+  CHECK(nc4.constructor() == 3);  // direct MyNonCopyableContainer(cx)
+  CHECK(nc5.constructor() == 4);  // direct MyNonCopyableContainer(cx, cx, cx)
+
   JS::Rooted<MyContainer> container(cx);
   container.obj() = JS_NewObject(cx, nullptr);
   container.str() = JS_NewStringCopyZ(cx, "Hello");
