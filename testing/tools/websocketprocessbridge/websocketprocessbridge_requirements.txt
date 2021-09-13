@@ -9,4 +9,4 @@ psutil>=5.6.3
 
 # Needed by iceserver
 ipaddr==2.1.11
-passlib==1.6.5
+passlib==1.7.4
