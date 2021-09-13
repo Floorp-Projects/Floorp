@@ -387,11 +387,6 @@ static JSString* GetLanguageDisplayName(
   return str;
 }
 
-template <typename CharT>
-static JSString* NewStringCopy(JSContext* cx, mozilla::Span<const CharT> span) {
-  return NewStringCopyN<CanGC>(cx, span.data(), span.size());
-}
-
 static JSString* GetScriptDisplayName(JSContext* cx,
                                       Handle<DisplayNamesObject*> displayNames,
                                       const char* locale,
@@ -449,7 +444,7 @@ static JSString* GetScriptDisplayName(JSContext* cx,
     // Return the case-canonicalized input when no localized name was found.
     if (str->empty() && fallback == DisplayNamesFallback::Code) {
       script.toTitleCase();
-      return NewStringCopy(cx, script.span());
+      return NewStringCopy<CanGC>(cx, script.span());
     }
 
     return str;
@@ -487,7 +482,7 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
     script.toTitleCase();
-    return NewStringCopy(cx, script.span());
+    return NewStringCopy<CanGC>(cx, script.span());
   }
 
   return str;
@@ -549,7 +544,7 @@ static JSString* GetRegionDisplayName(JSContext* cx,
   // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
     region.toUpperCase();
-    return NewStringCopy(cx, region.span());
+    return NewStringCopy<CanGC>(cx, region.span());
   }
 
   return str;

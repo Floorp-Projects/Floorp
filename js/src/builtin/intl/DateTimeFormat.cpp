@@ -311,9 +311,8 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
       intl::ReportInternalError(cx);
       return false;
     }
-    const char* calendar = keyword.unwrap().data();
 
-    JSString* jscalendar = NewStringCopyZ<CanGC>(cx, calendar);
+    JSString* jscalendar = NewStringCopy<CanGC>(cx, keyword.unwrap());
     if (!jscalendar) {
       return false;
     }
