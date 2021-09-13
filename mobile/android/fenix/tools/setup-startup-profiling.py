@@ -9,12 +9,10 @@ https://profiler.firefox.com/docs/#/./guide-remote-profiling?id=startup-profilin
 for more information.
 """
 
+import argparse
 import os
-import sys
 import tempfile
 from subprocess import run
-
-SCRIPT_NAME = os.path.basename(__file__)
 
 PATH_PREFIX = '/data/local/tmp'
 
@@ -26,10 +24,17 @@ GV_CONFIG = b'''env:
 '''
 
 
-def print_usage_and_exit():
-    print('USAGE: ./{} [activate|deactivate] [nightly|beta|release|debug]'.format(SCRIPT_NAME), file=sys.stderr)
-    print('example: ./{} activate nightly'.format(SCRIPT_NAME), file=sys.stderr)
-    sys.exit(1)
+def parse_args():
+    p = argparse.ArgumentParser(
+            description=("Easily enable start up profiling using the Firefox Profiler. Finish capturing the profile in "
+                         "about:debugging on desktop. See "
+                         "https://profiler.firefox.com/docs/#/./guide-remote-profiling?id=startup-profiling for "
+                         "details."))
+    p.add_argument('command', choices=['activate', 'deactivate'], help=("whether to activate or deactive start up "
+                   "profiling for the given release channel"))
+    p.add_argument('release_channel', choices=['nightly', 'beta', 'release', 'debug'], help=("the release channel to "
+                   "change the startup profiling state of the command on"))
+    return p.parse_args()
 
 
 def push(id, filename):
@@ -69,21 +74,15 @@ def convert_channel_to_id(channel):
 
 
 def main():
-    try:
-        cmd = sys.argv[1]
-        channel = sys.argv[2]
-        id = convert_channel_to_id(channel)
-    except (IndexError, KeyError) as e:
-        print_usage_and_exit()
+    args = parse_args()
 
+    id = convert_channel_to_id(args.release_channel)
     filename = id + '-geckoview-config.yaml'
 
-    if cmd == 'activate':
+    if args.command == 'activate':
         push(id, filename)
-    elif cmd == 'deactivate':
+    elif args.command == 'deactivate':
         remove(filename)
-    else:
-        print_usage_and_exit()
 
 
 if __name__ == '__main__':
