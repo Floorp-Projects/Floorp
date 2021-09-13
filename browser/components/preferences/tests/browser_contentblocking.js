@@ -644,9 +644,8 @@ add_task(async function testContentBlockingCustomCategory() {
     FP_PREF,
     STP_PREF,
     CM_PREF,
+    REFERRER_PREF,
   ];
-
-  let truePrefs = [REFERRER_PREF];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
@@ -674,15 +673,6 @@ add_task(async function testContentBlockingCustomCategory() {
     );
   }
 
-  // The custom option will force certain prefs. Checking these prefs to see if
-  // they have been set to the value once custom mode is clicked.
-  for (let pref of truePrefs) {
-    is(
-      Services.prefs.getBoolPref(pref),
-      true,
-      `the pref ${pref} has been set to true in custom`
-    );
-  }
   is(
     Services.prefs.getStringPref(CAT_PREF),
     "custom",
@@ -780,7 +770,7 @@ add_task(async function testContentBlockingCustomCategory() {
     `${CAT_PREF} has been set to custom`
   );
 
-  for (let pref of [...untouchedPrefs, ...truePrefs]) {
+  for (let pref of untouchedPrefs) {
     SpecialPowers.clearUserPref(pref);
   }
 
