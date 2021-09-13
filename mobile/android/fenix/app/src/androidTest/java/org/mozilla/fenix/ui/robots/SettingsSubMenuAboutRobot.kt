@@ -20,15 +20,20 @@ import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.isVisibleForUser
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
@@ -79,13 +84,23 @@ private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
 }
 
 private fun verifyListElements() {
+    assertAboutToolbar()
     assertWhatIsNewInFirefoxPreview()
     navigateBackToAboutPage(::assertSupport)
+    assertCrashes()
     navigateBackToAboutPage(::assertPrivacyNotice)
     navigateBackToAboutPage(::assertKnowYourRights)
     navigateBackToAboutPage(::assertLicensingInformation)
     navigateBackToAboutPage(::assertLibrariesUsed)
 }
+
+private fun assertAboutToolbar() =
+    onView(
+        allOf(
+            withId(R.id.navigationToolbar),
+            hasDescendant(withText("About $appName"))
+        )
+    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertVersionNumber() {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -158,6 +173,37 @@ private fun assertSupport() {
     )
 
     Espresso.pressBack()
+}
+
+private fun assertCrashes() {
+
+    browserScreen {
+    }.openThreeDotMenu {
+    }.openSettings {
+    }.openAboutFirefoxPreview {
+    }
+
+    if (!onView(withText("Crashes")).isVisibleForUser()) {
+        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
+    }
+
+    onView(withText("Crashes"))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .perform(click())
+
+    onView(withSubstring("No crash reports have been submitted"))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    for (i in 1..3) {
+        Espresso.pressBack()
+    }
+
+    mDevice.findObject(
+        UiSelector().resourceId("$packageName:id/homeLayout")
+    ).waitForExists(waitingTime)
+
+    onView(ViewMatchers.withResourceName("homeLayout"))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertPrivacyNotice() {
