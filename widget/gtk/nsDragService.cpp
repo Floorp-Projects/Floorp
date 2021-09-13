@@ -1236,6 +1236,13 @@ GtkTargetList* nsDragService::GetSourceList(void) {
         else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
           TargetArrayAddTarget(targetArray, gXdndDirectSaveType);
         }
+        // kNativeImageMime
+        else if (flavorStr.EqualsLiteral(kNativeImageMime)) {
+          TargetArrayAddTarget(targetArray, kPNGImageMime);
+          TargetArrayAddTarget(targetArray, kJPEGImageMime);
+          TargetArrayAddTarget(targetArray, kJPGImageMime);
+          TargetArrayAddTarget(targetArray, kGIFImageMime);
+        }
       }
     }
   }
@@ -1419,6 +1426,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     // if someone was asking for text/plain, lookup unicode instead so
     // we can convert it.
     bool needToDoConversionToPlainText = false;
+    bool needToDoConversionToImage = false;
     const char* actualFlavor;
     if (mimeFlavor.EqualsLiteral(kTextMime) ||
         mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
@@ -1518,6 +1526,14 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
 
       // Request a different type in GetTransferData.
       actualFlavor = kFilePromiseMime;
+      // if someone was asking for image we need to convert it
+      // from kNativeImageMime
+    } else if (mimeFlavor.EqualsLiteral(kPNGImageMime) ||
+               mimeFlavor.EqualsLiteral(kJPEGImageMime) ||
+               mimeFlavor.EqualsLiteral(kJPGImageMime) ||
+               mimeFlavor.EqualsLiteral(kGIFImageMime)) {
+      actualFlavor = kNativeImageMime;
+      needToDoConversionToImage = true;
     } else {
       actualFlavor = typeName;
     }
@@ -1534,31 +1550,49 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     }
 
     if (NS_SUCCEEDED(rv)) {
-      void* tmpData = nullptr;
-      uint32_t tmpDataLen = 0;
-      nsPrimitiveHelpers::CreateDataFromPrimitive(
-          nsDependentCString(actualFlavor), data, &tmpData, &tmpDataLen);
-      // if required, do the extra work to convert unicode to plain
-      // text and replace the output values with the plain text.
-      if (needToDoConversionToPlainText) {
-        char* plainTextData = nullptr;
-        char16_t* castedUnicode = reinterpret_cast<char16_t*>(tmpData);
-        uint32_t plainTextLen = 0;
-        UTF16ToNewUTF8(castedUnicode, tmpDataLen / 2, &plainTextData,
-                       &plainTextLen);
-        if (tmpData) {
-          // this was not allocated using glib
-          free(tmpData);
-          tmpData = plainTextData;
-          tmpDataLen = plainTextLen;
+      if (needToDoConversionToImage) {
+        LOGDRAGSERVICE(("  posting image\n"));
+        nsCOMPtr<imgIContainer> image = do_QueryInterface(data);
+        if (!image) {
+          LOGDRAGSERVICE(("  do_QueryInterface failed\n"));
+          return;
         }
-      }
-      if (tmpData) {
-        // this copies the data
-        gtk_selection_data_set(aSelectionData, target, 8, (guchar*)tmpData,
-                               tmpDataLen);
-        // this wasn't allocated with glib
-        free(tmpData);
+        GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
+        if (!pixbuf) {
+          LOGDRAGSERVICE(("  ImageToPixbuf failed\n"));
+          return;
+        }
+        gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
+        LOGDRAGSERVICE(("  image data set\n"));
+        g_object_unref(pixbuf);
+      } else {
+        void* tmpData = nullptr;
+        uint32_t tmpDataLen = 0;
+
+        nsPrimitiveHelpers::CreateDataFromPrimitive(
+            nsDependentCString(actualFlavor), data, &tmpData, &tmpDataLen);
+        // if required, do the extra work to convert unicode to plain
+        // text and replace the output values with the plain text.
+        if (needToDoConversionToPlainText) {
+          char* plainTextData = nullptr;
+          char16_t* castedUnicode = reinterpret_cast<char16_t*>(tmpData);
+          uint32_t plainTextLen = 0;
+          UTF16ToNewUTF8(castedUnicode, tmpDataLen / 2, &plainTextData,
+                         &plainTextLen);
+          if (tmpData) {
+            // this was not allocated using glib
+            free(tmpData);
+            tmpData = plainTextData;
+            tmpDataLen = plainTextLen;
+          }
+        }
+        if (tmpData) {
+          // this copies the data
+          gtk_selection_data_set(aSelectionData, target, 8, (guchar*)tmpData,
+                                 tmpDataLen);
+          // this wasn't allocated with glib
+          free(tmpData);
+        }
       }
     } else {
       if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
