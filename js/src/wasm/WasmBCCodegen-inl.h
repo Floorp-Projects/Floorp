@@ -51,6 +51,12 @@ void BaseCompiler::moveRef(RegRef src, RegRef dest) {
   }
 }
 
+void BaseCompiler::movePtr(RegPtr src, RegPtr dest) {
+  if (src != dest) {
+    masm.movePtr(src, dest);
+  }
+}
+
 void BaseCompiler::moveF64(RegF64 src, RegF64 dest) {
   if (src != dest) {
     masm.moveDouble(src, dest);
@@ -94,6 +100,11 @@ inline void BaseCompiler::move<RegF64>(RegF64 src, RegF64 dest) {
 template <>
 inline void BaseCompiler::move<RegRef>(RegRef src, RegRef dest) {
   moveRef(src, dest);
+}
+
+template <>
+inline void BaseCompiler::move<RegPtr>(RegPtr src, RegPtr dest) {
+  movePtr(src, dest);
 }
 
 #ifdef ENABLE_WASM_SIMD
