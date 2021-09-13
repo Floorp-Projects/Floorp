@@ -46,8 +46,6 @@ class DateTimeFormat final {
   DateTimeFormat(const DateTimeFormat&) = delete;
   DateTimeFormat& operator=(const DateTimeFormat&) = delete;
 
-  enum class StyleError { DateFormatFailure };
-
   /**
    * Create a DateTimeFormat from styles.
    *
@@ -59,26 +57,19 @@ class DateTimeFormat final {
    * time zone. This is a UTF-16 string that takes the form "GMT±hh:mm", or
    * an IANA time zone identifier, e.g. "America/Chicago".
    */
-  static Result<UniquePtr<DateTimeFormat>, DateTimeFormat::StyleError>
-  TryCreateFromStyle(Span<const char> aLocale, DateTimeStyle aDateStyle,
-                     DateTimeStyle aTimeStyle,
-                     Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
-
-  enum class SkeletonError {
-    OutOfMemory,
-    PatternGeneratorFailure,
-    GetBestPatternFailure,
-    DateFormatFailure
-  };
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromStyle(
+      Span<const char> aLocale, DateTimeStyle aDateStyle,
+      DateTimeStyle aTimeStyle,
+      Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
 
   /**
    * Create a DateTimeFormat from a UTF-8 skeleton. See the UTF-16 version for
    * the full documentation of this function. This overload requires additional
    * work compared to the UTF-16 version.
    */
-  static Result<UniquePtr<DateTimeFormat>, DateTimeFormat::SkeletonError>
-  TryCreateFromSkeleton(Span<const char> aLocale, Span<const char> aSkeleton,
-                        Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
+      Span<const char> aLocale, Span<const char> aSkeleton,
+      Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
 
   /**
    * Create a DateTimeFormat from a UTF-16 skeleton.
@@ -92,15 +83,11 @@ class DateTimeFormat final {
    * time zone. This is a string that takes the form "GMT±hh:mm", or
    * an IANA time zone identifier, e.g. "America/Chicago".
    */
-  static Result<UniquePtr<DateTimeFormat>, DateTimeFormat::SkeletonError>
-  TryCreateFromSkeleton(
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char16_t> aSkeleton,
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
 
-  enum class PatternError { DateFormatFailure };
-
-  static Result<UniquePtr<DateTimeFormat>, DateTimeFormat::PatternError>
-  TryCreateFromPattern(
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromPattern(
       Span<const char> aLocale, Span<const char16_t> aPattern,
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
 

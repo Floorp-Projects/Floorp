@@ -7,6 +7,7 @@
 namespace mozilla::intl {
 
 ICUError ToICUError(UErrorCode status) {
+  MOZ_ASSERT(!U_SUCCESS(status));
   if (status == U_MEMORY_ALLOCATION_ERROR) {
     return ICUError::OutOfMemory;
   }
