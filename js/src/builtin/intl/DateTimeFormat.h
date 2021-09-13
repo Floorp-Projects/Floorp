@@ -153,60 +153,6 @@ class DateTimeFormatObject : public NativeObject {
                                                  JS::Value* vp);
 
 /**
- * Return a pattern in the date-time format pattern language of Unicode
- * Technical Standard 35, Unicode Locale Data Markup Language, for the
- * best-fit date-time format pattern corresponding to skeleton for the
- * given locale.
- *
- * Usage: pattern = intl_patternForSkeleton(locale, skeleton, hourCycle)
- */
-[[nodiscard]] extern bool intl_patternForSkeleton(JSContext* cx, unsigned argc,
-                                                  JS::Value* vp);
-
-/**
- * Return a pattern in the date-time format pattern language of Unicode
- * Technical Standard 35, Unicode Locale Data Markup Language, for the
- * best-fit date-time style for the given locale.
- * The function takes six arguments:
- *
- *   locale
- *     BCP47 compliant locale string
- *   dateStyle
- *     A string with values: full or long or medium or short, or `undefined`
- *   timeStyle
- *     A string with values: full or long or medium or short, or `undefined`
- *   timeZone
- *     IANA time zone name
- *   hour12
- *     A boolean to request hour12 representation, or `undefined`
- *   hourCycle
- *     A string with values: h11, h12, h23, or h24, or `undefined`
- *
- * Date and time style categories map to CLDR time/date standard
- * format patterns.
- *
- * For the definition of a pattern string, see LDML 4.8:
- * http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
- *
- * If `undefined` is passed to `dateStyle` or `timeStyle`, the respective
- * portions of the pattern will not be included in the result.
- *
- * Usage: pattern = intl_patternForStyle(locale, dateStyle, timeStyle, timeZone,
- *                                       hour12, hourCycle)
- */
-[[nodiscard]] extern bool intl_patternForStyle(JSContext* cx, unsigned argc,
-                                               JS::Value* vp);
-
-/**
- * Return a skeleton for the pattern in the date-time format pattern language of
- * Unicode Technical Standard 35, Unicode Locale Data Markup Language.
- *
- * Usage: skeleton = intl_skeletonForPattern(pattern)
- */
-[[nodiscard]] extern bool intl_skeletonForPattern(JSContext* cx, unsigned argc,
-                                                  JS::Value* vp);
-
-/**
  * Returns a String value representing x (which must be a Number value)
  * according to the effective locale and the formatting options of the
  * given DateTimeFormat.
@@ -230,6 +176,15 @@ class DateTimeFormatObject : public NativeObject {
 [[nodiscard]] extern bool intl_FormatDateTimeRange(JSContext* cx, unsigned argc,
                                                    JS::Value* vp);
 
+/**
+ * Extracts the resolved components from a DateTimeFormat and applies them to
+ * the object for resolved components.
+ *
+ * Usage: intl_resolveDateTimeFormatComponents(dateTimeFormat, resolved)
+ */
+[[nodiscard]] extern bool intl_resolveDateTimeFormatComponents(JSContext* cx,
+                                                               unsigned argc,
+                                                               JS::Value* vp);
 }  // namespace js
 
 #endif /* builtin_intl_DateTimeFormat_h */
