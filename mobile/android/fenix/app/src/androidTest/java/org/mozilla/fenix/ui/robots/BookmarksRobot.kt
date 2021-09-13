@@ -197,12 +197,14 @@ class BookmarksRobot {
 
     fun longTapDesktopFolder(title: String) = onView(withText(title)).perform(longClick())
 
-    fun confirmFolderDeletion() {
+    fun confirmDeletion() {
         onView(withText(R.string.delete_browsing_data_prompt_allow))
             .inRoot(RootMatchers.isDialog())
             .check(matches(isDisplayed()))
             .click()
     }
+
+    fun clickDeleteInEditModeButton() = deleteInEditModeButton().click()
 
     class Transition {
         fun closeMenu(interact: HomeScreenRobot.() -> Unit): Transition {
@@ -289,6 +291,8 @@ private fun bookmarkFolderSelector() = onView(withId(R.id.bookmarkParentFolderSe
 private fun bookmarkURLEditBox() = onView(withId(R.id.bookmarkUrlEdit))
 
 private fun saveBookmarkButton() = onView(withId(R.id.save_bookmark_button))
+
+private fun deleteInEditModeButton() = onView(withId(R.id.delete_bookmark_button))
 
 private fun signInToSyncButton() = onView(withId(R.id.bookmark_folders_sign_in))
 

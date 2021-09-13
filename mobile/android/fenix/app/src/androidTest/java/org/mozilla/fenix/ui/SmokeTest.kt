@@ -1064,7 +1064,7 @@ class SmokeTest {
             verifyFolderTitle("My Folder")
         }.openThreeDotMenu("My Folder") {
         }.clickDelete {
-            confirmFolderDeletion()
+            confirmDeletion()
             verifyDeleteSnackBarText()
             navigateUp()
         }

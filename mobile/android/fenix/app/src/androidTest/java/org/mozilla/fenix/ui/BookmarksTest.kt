@@ -441,12 +441,12 @@ class BookmarksTest {
         }.openThreeDotMenu("1") {
         }.clickDelete {
             verifyDeleteFolderConfirmationMessage()
-            confirmFolderDeletion()
+            confirmDeletion()
             verifyDeleteSnackBarText()
         }.openThreeDotMenu("2") {
         }.clickDelete {
             verifyDeleteFolderConfirmationMessage()
-            confirmFolderDeletion()
+            confirmDeletion()
             verifyDeleteSnackBarText()
             verifyFolderTitle("3")
         }.closeMenu {
@@ -535,6 +535,26 @@ class BookmarksTest {
         }.openBookmarks {
         }.closeMenu {
             verifyHomeScreen()
+        }
+    }
+
+    @Test
+    fun deleteBookmarkInEditModeTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2)
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu(defaultWebPage.url) {
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }.clickEdit {
+            clickDeleteInEditModeButton()
+            confirmDeletion()
+            verifyDeleteSnackBarText()
         }
     }
 }
