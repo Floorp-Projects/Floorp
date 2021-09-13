@@ -1087,7 +1087,7 @@ class nsDocShell final : public nsDocLoader,
   bool ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
                                nsIURI* aLinkURI, nsIContent* aContent);
 
-  void RecordSingleChannelId();
+  void RecordSingleChannelId(bool aStartRequest, nsIRequest* aRequest);
 
   void SetChannelToDisconnectOnPageHide(uint64_t aChannelId) {
     MOZ_ASSERT(mChannelToDisconnectOnPageHide == 0);
@@ -1259,6 +1259,7 @@ class nsDocShell final : public nsDocLoader,
 
   // See WindowGlobalParent::mSingleChannelId.
   mozilla::Maybe<uint64_t> mSingleChannelId;
+  uint32_t mRequestForBlockingFromBFCacheCount = 0;
 
   uint64_t mChannelToDisconnectOnPageHide;
 

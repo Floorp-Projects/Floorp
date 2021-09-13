@@ -13369,36 +13369,61 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
   }
 }
 
-void nsDocShell::RecordSingleChannelId() {
-  if (mLoadGroup && mBrowsingContext->GetCurrentWindowContext()) {
+static bool IsFaviconLoad(nsIRequest* aRequest) {
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (!channel) {
+    return false;
+  }
+
+  nsCOMPtr<nsILoadInfo> li = channel->LoadInfo();
+  return li && li->InternalContentPolicyType() ==
+                   nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON;
+}
+
+void nsDocShell::RecordSingleChannelId(bool aStartRequest,
+                                       nsIRequest* aRequest) {
+  // Ignore favicon loads, they don't need to block caching.
+  if (IsFaviconLoad(aRequest)) {
+    return;
+  }
+
+  MOZ_ASSERT_IF(!aStartRequest, mRequestForBlockingFromBFCacheCount > 0);
+
+  mRequestForBlockingFromBFCacheCount += aStartRequest ? 1 : -1;
+
+  if (mBrowsingContext->GetCurrentWindowContext()) {
+    // We have three states: no request, one request with an id and
+    // eiher one request without an id or multiple requests. Nothing() is no
+    // request, Some(non-zero) is one request with an id and Some(0) is one
+    // request without an id or multiple requests.
     Maybe<uint64_t> singleChannelId;
-    nsCOMPtr<nsISimpleEnumerator> requests;
-    mLoadGroup->GetRequests(getter_AddRefs(requests));
-    for (const auto& request : SimpleEnumerator<nsIRequest>(requests)) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-
-      // Ignore favicon loads, they don't need to block caching.
-      nsCOMPtr<nsILoadInfo> li;
-      if (channel && (li = channel->LoadInfo()) &&
-          li->InternalContentPolicyType() ==
-              nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
-        continue;
-      }
-
-      // If we already found a channel ID or this is not an nsIIdentChannel then
-      // we have more than one request in the loadgroup.
+    if (mRequestForBlockingFromBFCacheCount > 1) {
+      singleChannelId = Some(0);
+    } else if (mRequestForBlockingFromBFCacheCount == 1) {
       nsCOMPtr<nsIIdentChannel> identChannel;
-      if (singleChannelId.isSome() ||
-          !(identChannel = do_QueryInterface(channel))) {
-        // We really have three states: no request, one request with an id and
-        // eiher one request without an id or multiple requests. Nothing() is no
-        // request, Some(non-zero) is one request and Some(0) is one request
-        // without an id or multiple requests.
-        singleChannelId = Some(0);
-        break;
+      if (aStartRequest) {
+        identChannel = do_QueryInterface(aRequest);
+      } else {
+        // aChannel is the channel that's being removed, but we need to check if
+        // the remaining channel in the loadgroup has an id.
+        nsCOMPtr<nsISimpleEnumerator> requests;
+        mLoadGroup->GetRequests(getter_AddRefs(requests));
+        for (const auto& request : SimpleEnumerator<nsIRequest>(requests)) {
+          if (!IsFaviconLoad(request) &&
+              !!(identChannel = do_QueryInterface(request))) {
+            break;
+          }
+        }
       }
 
-      singleChannelId = Some(identChannel->ChannelId());
+      if (identChannel) {
+        singleChannelId = Some(identChannel->ChannelId());
+      } else {
+        singleChannelId = Some(0);
+      }
+    } else {
+      MOZ_ASSERT(mRequestForBlockingFromBFCacheCount == 0);
+      singleChannelId = Nothing();
     }
 
     if (MOZ_UNLIKELY(MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Verbose))) {
@@ -13447,7 +13472,7 @@ nsDocShell::OnStartRequest(nsIRequest* aRequest) {
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Verbose,
             ("Adding request %s to loadgroup for %s", name.get(), uri.get()));
   }
-  RecordSingleChannelId();
+  RecordSingleChannelId(true, aRequest);
   return nsDocLoader::OnStartRequest(aRequest);
 }
 
@@ -13464,7 +13489,7 @@ nsDocShell::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
         gSHIPBFCacheLog, LogLevel::Verbose,
         ("Removing request %s from loadgroup for %s", name.get(), uri.get()));
   }
-  RecordSingleChannelId();
+  RecordSingleChannelId(false, aRequest);
   return nsDocLoader::OnStopRequest(aRequest, aStatusCode);
 }
 
