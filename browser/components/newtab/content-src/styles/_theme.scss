@@ -108,7 +108,7 @@ body {
   --newtab-primary-action-background: #{$blue-60};
   --newtab-primary-action-background-off: #{$newtab-primary-action-background-off};
   --customize-menu-primary-text-color: #{$newtab-card-primary-text-color};
-  --customize-menu-check-fill: #{$newtab-card-primary-text-color};
+  --customize-menu-check-fill: #{$white};
   --customize-menu-check-fill-contrast: #{$black};
   --customize-menu-background: var(--newtab-background-color-secondary);
   --customize-menu-secondary-action-background: #{$grey-10};
@@ -116,7 +116,7 @@ body {
   --customize-menu-secondary-action-background-active: #{$newtab-card-secondary-action-background-active};
   --customize-menu-seperator-line-color: #{$newtab-card-separator-line-color};
   --customize-menu-second-shadow: #{$newtab-card-secondshadow};
-  --customize-menu-primary-action-text: #{$white};
+  --customize-menu-slider-fill: #{$white};
   --customize-menu-line-color: #{$newtab-card-line-color};
   --newtab-search-first-shadow: #{$newtab-card-firstshadow};
   --newtab-search-text-color: #{$newtab-card-secondary-text-color};
@@ -202,7 +202,7 @@ body {
     --customize-menu-secondary-action-background-active: #{$newtab-card-darktheme-secondary-action-background-active};
     --customize-menu-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
     --customize-menu-second-shadow: #{$newtab-card-darktheme-secondshadow};
-    --customize-menu-primary-action-text: #{$newtab-card-darktheme-primary-text-color};
+    --customize-menu-slider-fill: #{$newtab-card-darktheme-primary-text-color};
     --customize-menu-line-color: #{$newtab-card-darktheme-line-color};
     --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
     --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
