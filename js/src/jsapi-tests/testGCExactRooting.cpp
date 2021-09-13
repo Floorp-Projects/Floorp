@@ -123,11 +123,11 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
 
   JS::Rooted<Value> rv(cx);
 
-  CHECK(r1.constructor() == 101);  // copy of SafelyInitialized<T>
-  CHECK(r2.constructor() == 2);    // direct MyContainer(3.4)
-  CHECK(r3.constructor() == 103);  // copy of MyContainer(cx)
-  CHECK(r4.constructor() == 3);    // direct MyContainer(cx)
-  CHECK(r5.constructor() == 4);    // direct MyContainer(cx, cx, cx)
+  CHECK_EQUAL(r1.constructor(), 101);  // copy of SafelyInitialized<T>
+  CHECK_EQUAL(r2.constructor(), 2);    // direct MyContainer(3.4)
+  CHECK_EQUAL(r3.constructor(), 103);  // copy of MyContainer(cx)
+  CHECK_EQUAL(r4.constructor(), 3);    // direct MyContainer(cx)
+  CHECK_EQUAL(r5.constructor(), 4);    // direct MyContainer(cx, cx, cx)
 
   // Test Rooted constructor forwarding for a non-copyable type.
   JS::Rooted<MyNonCopyableContainer> nc1(cx);
@@ -137,10 +137,11 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
   JS::Rooted<MyNonCopyableContainer> nc4(cx, cx);
   JS::Rooted<MyNonCopyableContainer> nc5(cx, cx, cx, cx);
 
-  CHECK(nc1.constructor() == 1);  // direct MyNonCopyableContainer()
-  CHECK(nc2.constructor() == 2);  // direct MyNonCopyableContainer(3.4)
-  CHECK(nc4.constructor() == 3);  // direct MyNonCopyableContainer(cx)
-  CHECK(nc5.constructor() == 4);  // direct MyNonCopyableContainer(cx, cx, cx)
+  CHECK_EQUAL(nc1.constructor(), 1);  // direct MyNonCopyableContainer()
+  CHECK_EQUAL(nc2.constructor(), 2);  // direct MyNonCopyableContainer(3.4)
+  CHECK_EQUAL(nc4.constructor(), 3);  // direct MyNonCopyableContainer(cx)
+  CHECK_EQUAL(nc5.constructor(),
+              4);  // direct MyNonCopyableContainer(cx, cx, cx)
 
   JS::Rooted<MyContainer> container(cx);
   container.obj() = JS_NewObject(cx, nullptr);
@@ -161,6 +162,30 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
 
     // Automatic move from stack to heap.
     JS::PersistentRooted<MyContainer> heap(cx, container);
+
+    // Copyable types in place.
+    JS::PersistentRooted<MyContainer> cp1(cx);
+    JS::PersistentRooted<MyContainer> cp2(cx, 7.8);
+    JS::PersistentRooted<MyContainer> cp3(cx, cx);
+    JS::PersistentRooted<MyContainer> cp4(cx, cx, cx, cx);
+
+    CHECK_EQUAL(cp1.constructor(), 101);  // copy of SafelyInitialized<T>
+    CHECK_EQUAL(cp2.constructor(), 2);    // direct MyContainer(double)
+    CHECK_EQUAL(cp3.constructor(), 3);    // direct MyContainer(cx)
+    CHECK_EQUAL(cp4.constructor(), 4);    // direct MyContainer(cx, cx, cx)
+
+    // Construct uncopyable type in place.
+    JS::PersistentRooted<MyNonCopyableContainer> ncp1(cx);
+    JS::PersistentRooted<MyNonCopyableContainer> ncp2(cx, 7.8);
+
+    // We're not just using a 1-arg constructor, right?
+    JS::PersistentRooted<MyNonCopyableContainer> ncp3(cx, cx);
+    JS::PersistentRooted<MyNonCopyableContainer> ncp4(cx, cx, cx, cx);
+
+    CHECK_EQUAL(ncp1.constructor(), 1);  // direct SafelyInitialized<T>
+    CHECK_EQUAL(ncp2.constructor(), 2);  // direct Ctor(double)
+    CHECK_EQUAL(ncp3.constructor(), 3);  // direct Ctor(cx)
+    CHECK_EQUAL(ncp4.constructor(), 4);  // direct Ctor(cx, cx, cx)
 
     // clear prior rooting.
     container.obj() = nullptr;
