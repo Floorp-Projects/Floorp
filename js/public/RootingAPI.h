@@ -1413,14 +1413,25 @@ class PersistentRooted
 
   PersistentRooted() : ptr(SafelyInitialized<T>()) {}
 
-  template <typename RootHolder>
-  explicit PersistentRooted(const RootHolder& cx) : ptr(SafelyInitialized<T>()) {
+  template <typename RootHolder, typename = std::enable_if_t<
+                                     std::is_copy_constructible_v<T>, RootHolder>>
+  explicit PersistentRooted(const RootHolder& cx)
+      : ptr(SafelyInitialized<T>()) {
     registerWithRootLists(cx);
   }
 
-  template <typename RootHolder, typename U>
+  template <
+      typename RootHolder, typename U,
+      typename = std::enable_if_t<std::is_constructible_v<T, U>, RootHolder>>
   PersistentRooted(const RootHolder& cx, U&& initial)
       : ptr(std::forward<U>(initial)) {
+    registerWithRootLists(cx);
+  }
+
+  template <typename RootHolder, typename... CtorArgs,
+            typename = std::enable_if_t<detail::IsTraceable_v<T>, RootHolder>>
+  PersistentRooted(const RootHolder& cx, CtorArgs... args)
+      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
     registerWithRootLists(cx);
   }
 
