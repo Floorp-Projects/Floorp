@@ -183,3 +183,85 @@ add_task(async function testPreferHttpsProxy() {
   equal(pi.port, 8080, "Expected proxy port to be 8080");
   equal(pi.type, "https", "Expected proxy type to be https");
 });
+
+add_task(async function testProxyHttpsToHttpIsBlocked() {
+  // Ensure that regressions of bug 1702417 will be detected by the next test
+  const turnUri = Services.io.newURI("http://turn.example.com/");
+  const proxyFlags =
+    Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
+    Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
+
+  const fakeContentPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
+
+  const chan = Services.io.newChannelFromURIWithProxyFlags(
+    turnUri,
+    null,
+    proxyFlags,
+    null,
+    fakeContentPrincipal,
+    fakeContentPrincipal,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_OTHER
+  );
+
+  const pi = await TestProxyType(chan, proxyFlags);
+  equal(pi.host, "localhost", "Expected proxy host to be localhost");
+  equal(pi.port, 8080, "Expected proxy port to be 8080");
+  equal(pi.type, "https", "Expected proxy type to be https");
+
+  const csm = Cc["@mozilla.org/contentsecuritymanager;1"].getService(
+    Ci.nsIContentSecurityManager
+  );
+
+  try {
+    csm.performSecurityCheck(chan, null);
+    Assert.ok(
+      false,
+      "performSecurityCheck should fail (due to mixed content blocking)"
+    );
+  } catch (e) {
+    Assert.equal(
+      e.result,
+      Cr.NS_ERROR_CONTENT_BLOCKED,
+      "performSecurityCheck should throw NS_ERROR_CONTENT_BLOCKED"
+    );
+  }
+});
+
+add_task(async function testProxyHttpsToTurnTcpWorks() {
+  // Test for bug 1702417
+  const turnUri = Services.io.newURI("http://turn.example.com/");
+  const proxyFlags =
+    Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
+    Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
+
+  const fakeContentPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
+
+  const chan = Services.io.newChannelFromURIWithProxyFlags(
+    turnUri,
+    null,
+    proxyFlags,
+    null,
+    fakeContentPrincipal,
+    fakeContentPrincipal,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    // This is what allows this to avoid mixed content blocking
+    Ci.nsIContentPolicy.TYPE_PROXIED_WEBRTC_MEDIA
+  );
+
+  const pi = await TestProxyType(chan, proxyFlags);
+  equal(pi.host, "localhost", "Expected proxy host to be localhost");
+  equal(pi.port, 8080, "Expected proxy port to be 8080");
+  equal(pi.type, "https", "Expected proxy type to be https");
+
+  const csm = Cc["@mozilla.org/contentsecuritymanager;1"].getService(
+    Ci.nsIContentSecurityManager
+  );
+
+  csm.performSecurityCheck(chan, null);
+  Assert.ok(true, "performSecurityCheck should succeed");
+});

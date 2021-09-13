@@ -818,6 +818,7 @@ MozContentPolicyType GetContentPolicyType(ExtContentPolicyType aType) {
       return MozContentPolicyType::Web_manifest;
     case ExtContentPolicy::TYPE_SPECULATIVE:
       return MozContentPolicyType::Speculative;
+    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
     case ExtContentPolicy::TYPE_INVALID:
     case ExtContentPolicy::TYPE_OTHER:
     case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
