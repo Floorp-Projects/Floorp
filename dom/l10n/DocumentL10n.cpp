@@ -292,6 +292,7 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
   // In XUL scenario contentSink is nullptr.
   if (mContentSink) {
     mContentSink->InitialTranslationCompleted();
+    mContentSink = nullptr;
   }
 
   // From now on, the state of Localization is unconditionally
