@@ -669,8 +669,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<js::UniquePtr<js::jit::PcScriptCache>> ionPcScriptCache;
 
  private:
-  /* Exception state -- the exception member is a GC root by definition. */
-  js::ContextData<bool> throwing; /* is there a pending exception? */
+  // Indicates if an exception is pending and the reason for it.
+  js::ContextData<JS::ExceptionStatus> status;
   js::ContextData<JS::PersistentRooted<JS::Value>>
       unwrappedException_; /* most-recently-thrown exception */
   js::ContextData<JS::PersistentRooted<js::SavedFrame*>>
@@ -690,10 +690,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return unwrappedExceptionStack_.ref().get();
   }
 
-  // True if the exception currently being thrown is by result of
-  // ReportOverRecursed. See Debugger::slowPathOnExceptionUnwind.
-  js::ContextData<bool> overRecursed_;
-
 #ifdef DEBUG
   // True if this context has ever called ReportOverRecursed.
   js::ContextData<bool> hadOverRecursed_;
@@ -704,11 +700,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
            js::oom::simulator.isThreadSimulatingAny();
   }
 #endif
-
- private:
-  // True if propagating a forced return from an interrupt handler during
-  // debug mode.
-  js::ContextData<bool> propagatingForcedReturn_;
 
  public:
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
@@ -803,7 +794,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   inline void minorGC(JS::GCReason reason);
 
  public:
-  bool isExceptionPending() const { return throwing; }
+  bool isExceptionPending() const {
+    return JS::IsCatchableExceptionStatus(status);
+  }
 
   [[nodiscard]] bool getPendingException(JS::MutableHandleValue rval);
 
@@ -817,16 +810,25 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void setPendingExceptionAndCaptureStack(JS::HandleValue v);
 
   void clearPendingException() {
-    throwing = false;
-    overRecursed_ = false;
+    status = JS::ExceptionStatus::None;
     unwrappedException().setUndefined();
     unwrappedExceptionStack() = nullptr;
   }
 
-  bool isThrowingOverRecursed() const { return throwing && overRecursed_; }
-  bool isPropagatingForcedReturn() const { return propagatingForcedReturn_; }
-  void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
-  void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
+  bool isThrowingOverRecursed() const {
+    return status == JS::ExceptionStatus::OverRecursed;
+  }
+  bool isPropagatingForcedReturn() const {
+    return status == JS::ExceptionStatus::ForcedReturn;
+  }
+  void setPropagatingForcedReturn() {
+    MOZ_ASSERT(status == JS::ExceptionStatus::None);
+    status = JS::ExceptionStatus::ForcedReturn;
+  }
+  void clearPropagatingForcedReturn() {
+    MOZ_ASSERT(status == JS::ExceptionStatus::ForcedReturn);
+    status = JS::ExceptionStatus::None;
+  }
 
   /*
    * See JS_SetTrustedPrincipals in jsapi.h.

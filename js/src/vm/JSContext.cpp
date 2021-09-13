@@ -330,9 +330,15 @@ JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
     if (maybecx->isHelperThreadContext()) {
       maybecx->addPendingOverRecursed();
     } else {
+      // If ReportError fails (due to OOM) the resulting error is OOM rather
+      // than OverRecursed.
       JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
                                 JSMSG_OVER_RECURSED);
-      maybecx->overRecursed_ = true;
+      if (!maybecx->isThrowingOutOfMemory()) {
+        MOZ_ASSERT(maybecx->unwrappedException().isObject());
+        MOZ_ASSERT(maybecx->status == JS::ExceptionStatus::Throwing);
+        maybecx->status = JS::ExceptionStatus::OverRecursed;
+      }
     }
 #ifdef DEBUG
     maybecx->hadOverRecursed_ = true;
@@ -975,14 +981,12 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       tempLifoAlloc_(this, (size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       debuggerMutations(this, 0),
       ionPcScriptCache(this, nullptr),
-      throwing(this, false),
+      status(this, JS::ExceptionStatus::None),
       unwrappedException_(this),
       unwrappedExceptionStack_(this),
-      overRecursed_(this, false),
 #ifdef DEBUG
       hadOverRecursed_(this, false),
 #endif
-      propagatingForcedReturn_(this, false),
       reportGranularity(this, JS_DEFAULT_JITREPORT_GRANULARITY),
       resolvingList(this, nullptr),
 #ifdef DEBUG
@@ -1118,8 +1122,7 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
 #endif  // defined(NIGHTLY_BUILD)
 
   // overRecursed_ is set after the fact by ReportOverRecursed.
-  this->overRecursed_ = false;
-  this->throwing = true;
+  this->status = JS::ExceptionStatus::Throwing;
   this->unwrappedException() = v;
   this->unwrappedExceptionStack() = stack;
 }
@@ -1138,20 +1141,20 @@ void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {
 }
 
 bool JSContext::getPendingException(MutableHandleValue rval) {
-  MOZ_ASSERT(throwing);
+  MOZ_ASSERT(isExceptionPending());
   rval.set(unwrappedException());
   if (zone()->isAtomsZone()) {
     return true;
   }
   RootedSavedFrame stack(this, unwrappedExceptionStack());
-  bool wasOverRecursed = overRecursed_;
+  JS::ExceptionStatus prevStatus = status;
   clearPendingException();
   if (!compartment()->wrap(this, rval)) {
     return false;
   }
   this->check(rval);
   setPendingException(rval, stack);
-  overRecursed_ = wasOverRecursed;
+  status = prevStatus;
   return true;
 }
 
@@ -1160,15 +1163,17 @@ SavedFrame* JSContext::getPendingExceptionStack() {
 }
 
 bool JSContext::isThrowingOutOfMemory() {
-  return throwing && IsOutOfMemoryException(this, unwrappedException());
+  return isExceptionPending() &&
+         IsOutOfMemoryException(this, unwrappedException());
 }
 
 bool JSContext::isClosingGenerator() {
-  return throwing && unwrappedException().isMagic(JS_GENERATOR_CLOSING);
+  return isExceptionPending() &&
+         unwrappedException().isMagic(JS_GENERATOR_CLOSING);
 }
 
 bool JSContext::isThrowingDebuggeeWouldRun() {
-  return throwing && unwrappedException().isObject() &&
+  return isExceptionPending() && unwrappedException().isObject() &&
          unwrappedException().toObject().is<ErrorObject>() &&
          unwrappedException().toObject().as<ErrorObject>().type() ==
              JSEXN_DEBUGGEEWOULDRUN;
