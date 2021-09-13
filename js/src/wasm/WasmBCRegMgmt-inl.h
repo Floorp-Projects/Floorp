@@ -160,11 +160,37 @@ void BaseCompiler::maybeFree(RegI64 r) {
   }
 }
 
+void BaseCompiler::maybeFree(RegF32 r) {
+  if (r.isValid()) {
+    freeF32(r);
+  }
+}
+
 void BaseCompiler::maybeFree(RegF64 r) {
   if (r.isValid()) {
     freeF64(r);
   }
 }
+
+void BaseCompiler::maybeFree(RegRef r) {
+  if (r.isValid()) {
+    freeRef(r);
+  }
+}
+
+void BaseCompiler::maybeFree(RegPtr r) {
+  if (r.isValid()) {
+    freePtr(r);
+  }
+}
+
+#ifdef ENABLE_WASM_SIMD128
+void BaseCompiler::maybeFree(RegV128 r) {
+  if (r.isValid()) {
+    freeV128(r);
+  }
+}
+#endif
 
 void BaseCompiler::needI32NoSync(RegI32 r) {
   MOZ_ASSERT(isAvailableI32(r));
@@ -279,6 +305,12 @@ inline RegV128 BaseCompiler::pop<RegV128>() {
   return popV128();
 }
 #endif
+
+// RegPtr values can't be pushed, hence can't be popped.
+template <>
+inline RegPtr BaseCompiler::need<RegPtr>() {
+  return needPtr();
+}
 
 void BaseCompiler::needResultRegisters(ResultType type, ResultRegKind which) {
   if (type.empty()) {

@@ -436,7 +436,13 @@ struct BaseCompiler final {
   // Free r if it is not invalid.
   inline void maybeFree(RegI32 r);
   inline void maybeFree(RegI64 r);
+  inline void maybeFree(RegF32 r);
   inline void maybeFree(RegF64 r);
+  inline void maybeFree(RegRef r);
+  inline void maybeFree(RegPtr r);
+#ifdef ENABLE_WASM_SIMD
+  inline void maybeFree(RegV128 r);
+#endif
 
   // On 64-bit systems, `except` must equal r and this is a no-op.  On 32-bit
   // systems, `except` must equal the high or low part of a pair and the other
@@ -934,6 +940,7 @@ struct BaseCompiler final {
   inline void moveI32(RegI32 src, RegI32 dest);
   inline void moveI64(RegI64 src, RegI64 dest);
   inline void moveRef(RegRef src, RegRef dest);
+  inline void movePtr(RegPtr src, RegPtr dest);
   inline void moveF64(RegF64 src, RegF64 dest);
   inline void moveF32(RegF32 src, RegF32 dest);
 #ifdef ENABLE_WASM_SIMD
@@ -1049,17 +1056,17 @@ struct BaseCompiler final {
                      uint32_t local);
   void bceLocalIsUpdated(uint32_t local);
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
-                           RegI32 tls, RegI32 ptr);
+                           RegPtr tls, RegI32 ptr);
 
 #if defined(RABALDR_HAS_HEAPREG)
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                      AccessCheck* check, RegI32 tls,
+                                      AccessCheck* check, RegPtr tls,
                                       RegI32 ptr);
 #else
   // Some consumers depend on the returned Address not incorporating tls, as tls
   // may be the scratch register.
   Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                    AccessCheck* check, RegI32 tls, RegI32 ptr);
+                                    AccessCheck* check, RegPtr tls, RegI32 ptr);
 #endif
   void computeEffectiveAddress(MemoryAccessDesc* access);
   [[nodiscard]] bool needTlsForAccess(const AccessCheck& check);
@@ -1067,12 +1074,12 @@ struct BaseCompiler final {
   // ptr and dest may be the same iff dest is I32.
   // This may destroy ptr even if ptr and dest are not the same.
   [[nodiscard]] bool load(MemoryAccessDesc* access, AccessCheck* check,
-                          RegI32 tls, RegI32 ptr, AnyReg dest, RegI32 temp);
+                          RegPtr tls, RegI32 ptr, AnyReg dest, RegI32 temp);
 
   // ptr and src must not be the same register.
   // This may destroy ptr and src.
   [[nodiscard]] bool store(MemoryAccessDesc* access, AccessCheck* check,
-                           RegI32 tls, RegI32 ptr, AnyReg src, RegI32 temp);
+                           RegPtr tls, RegI32 ptr, AnyReg src, RegI32 temp);
 
   bool atomicLoad(MemoryAccessDesc* access, ValType type);
   bool atomicStore(MemoryAccessDesc* access, ValType type);
@@ -1231,9 +1238,9 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTeeLocal();
   [[nodiscard]] bool emitGetGlobal();
   [[nodiscard]] bool emitSetGlobal();
-  [[nodiscard]] RegI32 maybeLoadTlsForAccess(const AccessCheck& check);
-  [[nodiscard]] RegI32 maybeLoadTlsForAccess(const AccessCheck& check,
-                                             RegI32 specific);
+  [[nodiscard]] RegPtr maybeLoadTlsForAccess(const AccessCheck& check);
+  [[nodiscard]] RegPtr maybeLoadTlsForAccess(const AccessCheck& check,
+                                             RegPtr specific);
   [[nodiscard]] bool emitLoad(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool loadCommon(MemoryAccessDesc* access, AccessCheck check,
                                 ValType type);
