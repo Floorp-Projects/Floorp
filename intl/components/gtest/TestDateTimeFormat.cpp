@@ -32,7 +32,7 @@ TEST(IntlDateTimeFormat, Style_enUS_utf8)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 8:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_utf16)
@@ -42,7 +42,7 @@ TEST(IntlDateTimeFormat, Style_enUS_utf16)
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), u"Sep 23, 2002, 8:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches(u"Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Style_ar_utf8)
@@ -51,7 +51,7 @@ TEST(IntlDateTimeFormat, Style_ar_utf8)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), "٨:٠٧:٣٠ م");
+  ASSERT_TRUE(buffer.verboseMatches("٨:٠٧:٣٠ م"));
 }
 
 TEST(IntlDateTimeFormat, Style_ar_utf16)
@@ -60,7 +60,7 @@ TEST(IntlDateTimeFormat, Style_ar_utf16)
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), u"٨:٠٧:٣٠ م");
+  ASSERT_TRUE(buffer.verboseMatches(u"٨:٠٧:٣٠ م"));
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
@@ -69,7 +69,7 @@ TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 8:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
@@ -81,7 +81,7 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), "9/23/2002, 8:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
@@ -93,7 +93,7 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_EQ(buffer.get_string_view(), "9/23/2002, 8:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 8:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
@@ -105,7 +105,7 @@ TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
-  ASSERT_EQ(buffer.get_string_view(), "Sep 23, 2002, 12:07:30 PM");
+  ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 12:07:30 PM"));
 }
 
 TEST(IntlDateTimePatternGenerator, GetBestPattern)
@@ -114,7 +114,7 @@ TEST(IntlDateTimePatternGenerator, GetBestPattern)
   TestBuffer<char16_t> buffer;
 
   gen->GetBestPattern(MakeStringSpan(u"yMd"), buffer).unwrap();
-  ASSERT_EQ(buffer.get_string_view(), u"M/d/y");
+  ASSERT_TRUE(buffer.verboseMatches(u"M/d/y"));
 }
 
 TEST(IntlDateTimePatternGenerator, GetSkeleton)
@@ -124,7 +124,7 @@ TEST(IntlDateTimePatternGenerator, GetSkeleton)
 
   DateTimePatternGenerator::GetSkeleton(MakeStringSpan(u"M/d/y"), buffer)
       .unwrap();
-  ASSERT_EQ(buffer.get_string_view(), u"yMd");
+  ASSERT_TRUE(buffer.verboseMatches(u"yMd"));
 }
 
 }  // namespace mozilla::intl
