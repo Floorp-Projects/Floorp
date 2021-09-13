@@ -9,24 +9,25 @@
 <video id="v1" style="position:absolute; left:0; top:0"></video>
 <canvas id="canvas"></canvas>
 <script type="application/javascript">
-/* READ ME first.
-The script is trying to make a reftest sample for reftest.
-HOW TO USE:
-1. Choose the first or last frame you want to generate. And set
-window.onload function to dumpFirstFrame/dumpLastFrame.
-2. Set the video.src in dumpFirstFrame/dumpLastFrame.
-3. Run the script on browser.
-4. Copy the base64 image url to your xxx-ref.html(short.mp4.firstframe-ref.html).
-You might hit security error if the video.src cross origin.
-Enable "media.seekToNextFrame.enabled" for the seekToNextFrame function
-or using nightly, the seekToNextFrame() ensure the ended event fired.
-*/
+// READ ME FIRST.
+// The script is trying to make a reftest sample for reftest.
 
+// STEP1. Uncomment the method below that you want to use. If you want to dump
+// Nth frame, modify the parameter to the number of frame you want to dump.
 //window.onload = function() { setTimeout(dumpFirstFrame, 0); };
 //window.onload = function() { setTimeout(dumpLastFrame, 0); };
 window.onload = function() { setTimeout(function(){dumpNthFrame(15);}, 0); };
 
+// STEP2. Set the source of video that you want to capture
+const videoSrc = '';
+
+// STEP3. Ensure the pref `media.seekToNextFrame.enabled` is on
+// STEP4. Run this script on browser
+// STEP5. Copy the base64 image url to your xxx-ref.html
+
 function drawVideoToInnerHTML(v) {
+  // This allows to dump content via canvas when the source is cross-origin.
+  v.crossorigin = "anonymous";
   var canvas = document.getElementById("canvas");
   canvas.width = v.videoWidth;
   canvas.height = v.videoHeight;
@@ -38,8 +39,9 @@ function drawVideoToInnerHTML(v) {
 
 function dumpFirstFrame() {
   var video = document.getElementById("v1");
-  video.src = "short.mp4";
+  video.src = videoSrc;
   video.preload = "metadata";
+
   video.addEventListener("loadeddata", function() {
     drawVideoToInnerHTML(video);
   });
@@ -47,11 +49,12 @@ function dumpFirstFrame() {
 
 function dumpNthFrame(n) {
   var video = document.getElementById("v1");
-  video.src = "street.mp4";
+  video.src = videoSrc;
   video.preload = "metadata";
+  const totalFrames = n;
 
   function checkNthFrame() {
-    console.log((15-n+1)+"th Frame time is " + video.currentTime);
+    console.log((totalFrames-n+1)+"th Frame time is " + video.currentTime);
     n--;
     if (n == 0) {
       drawVideoToInnerHTML(video);
@@ -65,9 +68,10 @@ function dumpNthFrame(n) {
 
 function dumpLastFrame() {
   var video = document.getElementById("v1");
-  video.src = "short.mp4";
+  video.src = videoSrc;
   video.preload = "metadata";
   video.seenEnded = false;
+
   // Seek to the end
   video.addEventListener("loadeddata", function() {
     video.currentTime = video.duration;
