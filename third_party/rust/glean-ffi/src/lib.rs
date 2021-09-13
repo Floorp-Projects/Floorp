@@ -42,7 +42,6 @@ mod string_list;
 mod timespan;
 mod timing_distribution;
 pub mod upload;
-mod url;
 mod uuid;
 
 #[cfg(all(not(target_os = "android"), not(target_os = "ios")))]
