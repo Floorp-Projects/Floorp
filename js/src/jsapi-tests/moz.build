@@ -107,6 +107,7 @@ UNIFIED_SOURCES += [
     "testSetPropertyIgnoringNamedGetter.cpp",
     "testSharedImmutableStringsCache.cpp",
     "testSliceBudget.cpp",
+    "testSlowScript.cpp",
     "testSourcePolicy.cpp",
     "testSparseBitmap.cpp",
     "testStencil.cpp",
