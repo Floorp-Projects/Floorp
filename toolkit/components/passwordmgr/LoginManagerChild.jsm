@@ -1917,23 +1917,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   _onFormSubmit(form, reason) {
     log("_onFormSubmit", form);
 
-    // If the form is in a username-only form, record the username field before
-    // it is removed.
-    let usernameField = this.getUsernameFieldFromUsernameOnlyForm(
-      form.rootElement
-    );
-    if (usernameField) {
-      log(
-        "_onFormSubmit: username-only form. Record the username field but not sending prompt"
-      );
-      let docState = this.stateForDocument(form.ownerDocument);
-      docState.mockUsernameOnlyField = {
-        name: usernameField.name,
-        value: usernameField.value,
-      };
-      return;
-    }
-
     this._maybeSendFormInteractionMessage(
       form,
       "PasswordManager:onFormSubmit",
@@ -2021,8 +2004,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         newPasswordField = passwordField;
       }
 
+      let docState = this.stateForDocument(doc);
+
       // Need at least 1 valid password field to do anything.
       if (newPasswordField == null) {
+        if (isSubmission && usernameField) {
+          log(
+            "_onFormSubmit: username-only form. Record the username field but not sending prompt"
+          );
+          docState.mockUsernameOnlyField = {
+            name: usernameField.name,
+            value: usernameField.value,
+          };
+        }
         return;
       }
 
@@ -2034,7 +2028,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         return;
       }
 
-      let docState = this.stateForDocument(doc);
       // When the username field is empty, check whether we have found it previously from
       // a username-only form, if yes, fill in its value.
       // XXX This is not ideal, we only use the previous saved username field when the current
