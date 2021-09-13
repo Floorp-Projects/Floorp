@@ -18,6 +18,7 @@ import sys
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
 PTH_FILENAME = "mach.pth"
+METADATA_FILENAME = "moz_virtualenv_metadata.json"
 
 
 UPGRADE_WINDOWS = """
@@ -32,6 +33,40 @@ If you still receive this error, your shell environment is likely detecting
 another Python version. Ensure a modern Python can be found in the paths
 defined by the $PATH environment variable and try again.
 """.lstrip()
+
+
+class MozVirtualenvMetadata:
+    """Moz-specific information that is encoded into a file at the root of a virtualenv"""
+
+    def __init__(self, hex_version, virtualenv_name, file_path):
+        self.hex_version = hex_version
+        self.virtualenv_name = virtualenv_name
+        self.file_path = file_path
+
+    def write(self):
+        raw = {"hex_version": self.hex_version, "virtualenv_name": self.virtualenv_name}
+        with open(self.file_path, "w") as file:
+            json.dump(raw, file)
+
+    def __eq__(self, other):
+        return (
+            type(self) == type(other)
+            and self.hex_version == other.hex_version
+            and self.virtualenv_name == other.virtualenv_name
+        )
+
+    @classmethod
+    def from_path(cls, path):
+        try:
+            with open(path, "r") as file:
+                raw = json.load(file)
+            return cls(
+                raw["hex_version"],
+                raw["virtualenv_name"],
+                path,
+            )
+        except (FileNotFoundError, KeyError):
+            return None
 
 
 class VirtualenvHelper(object):
@@ -101,6 +136,16 @@ class VirtualenvManager(VirtualenvHelper):
             topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
         )
 
+        hex_version = subprocess.check_output(
+            [self._base_python, "-c", "import sys; print(sys.hexversion)"]
+        )
+        hex_version = int(hex_version.rstrip())
+        self._metadata = MozVirtualenvMetadata(
+            hex_version,
+            virtualenv_name,
+            os.path.join(self.virtualenv_root, METADATA_FILENAME),
+        )
+
     @property
     def virtualenv_script_path(self):
         """Path to virtualenv's own populator script."""
@@ -118,30 +163,6 @@ class VirtualenvManager(VirtualenvHelper):
     @property
     def activate_path(self):
         return os.path.join(self.bin_path, "activate_this.py")
-
-    def get_exe_info(self):
-        """Returns the version of the python executable that was in use when
-        this virtualenv was created.
-        """
-        with open(self.exe_info_path, "r") as fh:
-            version = fh.read()
-        return int(version)
-
-    def write_exe_info(self):
-        """Records the the version of the python executable that was in use when
-        this virtualenv was created. We record this explicitly because
-        on OS X our python path may end up being a different or modified
-        executable.
-        """
-        ver = self.python_executable_hexversion()
-        with open(self.exe_info_path, "w") as fh:
-            fh.write("%s\n" % ver)
-
-    def python_executable_hexversion(self):
-        """Run a Python executable and return its sys.hexversion value."""
-        program = "import sys; print(sys.hexversion)"
-        out = subprocess.check_output([self._base_python, "-c", program]).rstrip()
-        return int(out)
 
     def up_to_date(self):
         """Returns whether the virtualenv is present and up to date.
@@ -169,13 +190,13 @@ class VirtualenvManager(VirtualenvHelper):
         if dep_mtime > activate_mtime:
             return False
 
-        # Verify that the Python we're checking here is either the virutalenv
-        # python, or we have the Python version that was used to create the
-        # virtualenv. If this fails, it is likely system Python has been
-        # upgraded, and our virtualenv would not be usable.
-        orig_version = self.get_exe_info()
-        hexversion = self.python_executable_hexversion()
-        if (self._base_python != self.python_path) and (hexversion != orig_version):
+        # Verify that the metadata of the virtualenv on-disk is the same as what
+        # we expect, e.g. made with the same version of Python, is for the same
+        # virtualenv name, etc.
+        # A common reason for this check to be False is if the system python is
+        # updated.
+        existing_metadata = MozVirtualenvMetadata.from_path(self._metadata.file_path)
+        if existing_metadata != self._metadata:
             return False
 
         if env_requirements.pth_requirements and self.populate_local_paths:
@@ -288,7 +309,7 @@ class VirtualenvManager(VirtualenvHelper):
                 % (self.virtualenv_root, result)
             )
 
-        self.write_exe_info()
+        self._metadata.write()
         self._disable_pip_outdated_warning()
 
         return self.virtualenv_root
