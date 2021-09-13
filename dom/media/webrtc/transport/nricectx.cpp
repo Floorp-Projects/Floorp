@@ -822,6 +822,9 @@ nsresult NrIceCtx::SetResolver(nr_resolver* resolver) {
 
 nsresult NrIceCtx::SetProxyConfig(NrSocketProxyConfig&& config) {
   proxy_config_.reset(new NrSocketProxyConfig(std::move(config)));
+  if (nat_) {
+    nat_->set_proxy_config(proxy_config_);
+  }
   return NS_OK;
 }
 
