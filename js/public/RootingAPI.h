@@ -884,11 +884,7 @@ struct RootedTraceable final : public VirtualTraceable {
 
   T ptr;
 
-  template <typename... CtorArgs>
-  explicit RootedTraceable(std::in_place_t, CtorArgs... args)
-      : ptr(std::forward<CtorArgs>(args)...) {}
-
-  template <typename U, typename = typename std::is_constructible<T, U>::type>
+  template <typename U>
   MOZ_IMPLICIT RootedTraceable(U&& initial) : ptr(std::forward<U>(initial)) {}
 
   operator T&() { return ptr; }
@@ -1083,17 +1079,21 @@ class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
 namespace detail {
 
 template <typename T>
-constexpr bool IsTraceable_v =
-    MapTypeToRootKind<T>::kind == JS::RootKind::Traceable;
-
-template <typename T>
 using RootedPtr =
-    std::conditional_t<IsTraceable_v<T>, js::RootedTraceable<T>, T>;
+    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
+                       js::RootedTraceable<T>, T>;
 
 template <typename T>
 using RootedPtrTraits =
-    std::conditional_t<IsTraceable_v<T>, js::RootedTraceableTraits<T>,
+    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
+                       js::RootedTraceableTraits<T>,
                        js::RootedGCThingTraits<T>>;
+
+// Dummy types to make it easier to understand template overload preference
+// ordering.
+struct FallbackOverload {};
+struct PreferredOverload : FallbackOverload {};
+using OverloadSelector = PreferredOverload;
 
 } /* namespace detail */
 
@@ -1123,45 +1123,41 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
     return rootLists(RootingContext::get(cx));
   }
 
+  // Define either one or two Rooted(cx) constructors: the fallback one, which
+  // constructs a Rooted holding a SafelyInitialized<T>, and a convenience one
+  // for types that can be constructed with a cx, which will give a Rooted
+  // holding a T(cx).
+
+  // Dummy type to distinguish these constructors from Rooted(cx, initial)
+  struct CtorDispatcher {};
+
+  // Normal case: construct an empty Rooted holding a safely initialized but
+  // empty T.
+  template <typename RootingContext>
+  Rooted(const RootingContext& cx, CtorDispatcher, detail::FallbackOverload)
+      : Rooted(cx, SafelyInitialized<T>()) {}
+
+  // If T can be constructed with a cx, then define another constructor for it
+  // that will be preferred.
+  template <
+      typename RootingContext,
+      typename = std::enable_if_t<std::is_constructible_v<T, RootingContext>>>
+  Rooted(const RootingContext& cx, CtorDispatcher, detail::PreferredOverload)
+      : Rooted(cx, T(cx)) {}
+
  public:
   using ElementType = T;
 
-  // Construct an empty Rooted holding a safely initialized but empty T.
-  // Requires T to have a copy constructor in order to copy the safely
-  // initialized value.
-  //
-  // Note that for SFINAE to reject this method, the 2nd template parameter must
-  // depend on RootingContext somehow even though we really only care about T.
-  template <typename RootingContext,
-            typename =
-                std::enable_if_t<std::is_copy_constructible_v<T>, RootingContext>>
-  explicit Rooted(const RootingContext& cx) : ptr(SafelyInitialized<T>()) {
-    registerWithRootLists(rootLists(cx));
-  }
+  // Construct an empty Rooted. Delegates to an internal constructor that
+  // chooses a specific meaning of "empty" depending on whether T can be
+  // constructed with a cx.
+  template <typename RootingContext>
+  explicit Rooted(const RootingContext& cx)
+      : Rooted(cx, CtorDispatcher(), detail::OverloadSelector()) {}
 
-  // Provide an initial value. Requires T to be constructible from the given
-  // argument.
-  template <typename RootingContext, typename S,
-            typename = typename std::is_constructible<T, S>::type>
+  template <typename RootingContext, typename S>
   Rooted(const RootingContext& cx, S&& initial)
       : ptr(std::forward<S>(initial)) {
-    MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
-    registerWithRootLists(rootLists(cx));
-  }
-
-  // (Traceables only) Construct the contained value from the given arguments.
-  // Constructs in-place, so T does not need to be copyable or movable.
-  //
-  // Note that a copyable Traceable passed only a RootingContext will
-  // choose the above SafelyInitialized<T> constructor, because otherwise
-  // identical functions with parameter packs are considered less specialized.
-  //
-  // The SFINAE type must again depend on an inferred template parameter.
-  template <
-      typename RootingContext, typename... CtorArgs,
-      typename = std::enable_if_t<detail::IsTraceable_v<T>, RootingContext>>
-  explicit Rooted(const RootingContext& cx, CtorArgs... args)
-      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
     MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     registerWithRootLists(rootLists(cx));
   }
@@ -1402,37 +1398,37 @@ class PersistentRooted
         reinterpret_cast<JS::PersistentRooted<detail::RootListEntry*>*>(this));
   }
 
-  // Used when JSContext type is incomplete and so it is not known to inherit
-  // from RootingContext.
-  void registerWithRootLists(JSContext* cx) {
-    registerWithRootLists(RootingContext::get(cx));
-  }
-
  public:
   using ElementType = T;
 
   PersistentRooted() : ptr(SafelyInitialized<T>()) {}
 
-  template <typename RootHolder, typename = std::enable_if_t<
-                                     std::is_copy_constructible_v<T>, RootHolder>>
-  explicit PersistentRooted(const RootHolder& cx)
-      : ptr(SafelyInitialized<T>()) {
+  explicit PersistentRooted(RootingContext* cx) : ptr(SafelyInitialized<T>()) {
     registerWithRootLists(cx);
   }
 
-  template <
-      typename RootHolder, typename U,
-      typename = std::enable_if_t<std::is_constructible_v<T, U>, RootHolder>>
-  PersistentRooted(const RootHolder& cx, U&& initial)
+  explicit PersistentRooted(JSContext* cx) : ptr(SafelyInitialized<T>()) {
+    registerWithRootLists(RootingContext::get(cx));
+  }
+
+  template <typename U>
+  PersistentRooted(RootingContext* cx, U&& initial)
       : ptr(std::forward<U>(initial)) {
     registerWithRootLists(cx);
   }
 
-  template <typename RootHolder, typename... CtorArgs,
-            typename = std::enable_if_t<detail::IsTraceable_v<T>, RootHolder>>
-  PersistentRooted(const RootHolder& cx, CtorArgs... args)
-      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
-    registerWithRootLists(cx);
+  template <typename U>
+  PersistentRooted(JSContext* cx, U&& initial) : ptr(std::forward<U>(initial)) {
+    registerWithRootLists(RootingContext::get(cx));
+  }
+
+  explicit PersistentRooted(JSRuntime* rt) : ptr(SafelyInitialized<T>()) {
+    registerWithRootLists(rt);
+  }
+
+  template <typename U>
+  PersistentRooted(JSRuntime* rt, U&& initial) : ptr(std::forward<U>(initial)) {
+    registerWithRootLists(rt);
   }
 
   PersistentRooted(const PersistentRooted& rhs)
