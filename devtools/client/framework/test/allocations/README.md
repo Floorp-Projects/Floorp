@@ -158,6 +158,53 @@ Similarly, we can focus only on the second part, which tells us that only one ob
 and this object has been originally created from line 11, this is `leakedObject`.
 This doesn't tell us why the object is being kept allocated, but at least we know which one is being kept in memory.
 
+## Debug leaks via dominators
+
+This last feature might be the most powerful and isn't bound to DEBUG_DEVTOOLS_ALLOCATIONS.
+This is always enabled.
+Also, it requires to know which particular object is being leaked and also require to hack
+the codebase in order to pass a reference of the suspicious object to the test helper.
+
+/!\ For now, this API only works from the parent process.
+
+You can instruct the test helper to track a given object by doing this:
+```
+ 1: // Let's say it is some code running from "my-module.js"
+ 2:
+ 3: // From a DevTools CommonJS module:
+ 4: const { track } = require("devtools/shared/test-helpers/tracked-objects.jsm");
+ 5: // From anything else, JSM, XPCOM module,...:
+ 6: const { track } = ChromeUtils.import("resource://devtools/shared/test-helpers/tracked-objects.jsm");
+ 7:
+ 8: const g = [];
+ 9: function someFunctionInDevToolsCalledBySomething() {
+10:   const myLeakedObject = {};
+11:   track(myLeakedObject);
+12:
+13:   // Simulate a leak by holding a reference to the object in a global `g` array
+14:   g.push({ seeMyCustomAttributeHere: myLeakedObject });
+15: }
+```
+
+Then, when running the test you will get such output:
+```
+ 0:41.26 GECKO(644653)  # Tracing: Object@my-module:10
+ 0:40.65 GECKO(644653) ### Path(s) from root:
+ 0:41.26 GECKO(644653) - other@no-stack:undefined.WeakMap entry value
+ 0:41.26 GECKO(644653)  \--> LexicalEnvironment@base-loader.js:160.**UNKNOWN SLOT 1**
+ 0:41.26 GECKO(644653)  \--> Object@base-loader.js:155.g
+ 0:41.26 GECKO(644653)  \--> Array@my-module.js:8.objectElements[0]
+ 0:41.26 GECKO(644653)  \--> Object@my-module.js:14.seeMyCustomAttributeHere
+ 0:41.26 GECKO(644653)  \--> Object@my-module.js:10
+```
+This output means that `myLeakedObject` was originally allocated from my-module.js at line 10.
+And is being held allocated because it is kept in an Object allocated from my-module.js at line 14.
+This is our custom object we stored in `g` global Array.
+This custom object it hold by the Array allocated at line 8 of my-module.js.
+And this array is held allocated from an Object, itself allocated by base-loader.js at line 155.
+This is the global of the my-module.js's module, created by DevTools loader.
+Then we see some more low level object up to another global object, which misses its allocation site.
+
 # How to easily get data from try run
 
 ```

@@ -433,6 +433,121 @@ exports.allocationTracker = function({
       }
     },
 
+    traceObjects(objects) {
+      // There is no API to get the heap snapshot at runtime,
+      // the only way is to save it to disk and then load it from disk
+      const filePath = ChromeUtils.saveHeapSnapshot({ debugger: dbg });
+      const snapshot = ChromeUtils.readHeapSnapshot(filePath);
+
+      function getObjectClass(id) {
+        if (!id) {
+          return "<null>";
+        }
+        try {
+          let stack = [...snapshot.describeNode({ by: "allocationStack" }, id)];
+          let line;
+          if (stack) {
+            stack = stack.find(([src]) => src != "noStack");
+            if (stack) {
+              line = stack[0].line;
+              stack = stack[0].source;
+              if (stack) {
+                const pstack = stack;
+                stack = stack.match(/\/([^\/]+)$/);
+                if (stack) {
+                  stack = stack[1];
+                } else {
+                  stack = pstack;
+                }
+              } else {
+                stack = "no-source";
+              }
+            } else {
+              stack = "no-stack";
+            }
+          } else {
+            stack = "no-desc";
+          }
+          return (
+            Object.entries(
+              snapshot.describeNode({ by: "objectClass" }, id)
+            )[0][0] + (stack ? "@" + stack + ":" + line : "")
+          );
+        } catch (e) {
+          return "<invalid:" + id + ":" + e + ">";
+        }
+      }
+      function printPath(src, dst) {
+        let paths;
+        try {
+          paths = snapshot.computeShortestPaths(src, [dst], 10);
+        } catch (e) {}
+        if (paths && paths.has(dst)) {
+          let pathLength = Infinity;
+          for (const path of paths.get(dst)) {
+            // Only print the smaller paths.
+            // The longer ones will only repeat the smaller ones, with some extra edges.
+            if (path.length > pathLength) {
+              continue;
+            }
+            pathLength = path.length;
+            dump(
+              "- " +
+                path
+                  .map(
+                    ({ predecessor, edge }) =>
+                      getObjectClass(predecessor) + "." + edge
+                  )
+                  .join("\n \\--> ") +
+                "\n \\--> " +
+                getObjectClass(dst) +
+                "\n"
+            );
+          }
+        } else {
+          dump("NO-PATH\n");
+        }
+      }
+
+      const tree = snapshot.computeDominatorTree();
+      for (const objectNodeId of objects) {
+        dump(" # Tracing: " + getObjectClass(objectNodeId) + "\n");
+
+        // Print the path from the global object down to leaked object.
+        // This print the allocation site of each object which has a reference
+        // to another object, ultimately leading to our leaked object.
+        dump("### Path(s) from root:\n");
+        printPath(tree.root, objectNodeId);
+
+        /**
+         * This happens to be redundant with printPath, but printed the other way around.
+         *
+        // Print the dominators.
+        // i.e. from the leaked object, print all parent objects whichs
+        // keeps a reference to the previous object, up to a global object.
+        dump("### Dominators:\n");
+        let node = objectNodeId,
+        dump(" " + getObjectClass(node) + "\n");
+        while ((node = tree.getImmediateDominator(node))) {
+          dump(" ^-- " + getObjectClass(node) + "\n");
+        }
+        */
+
+        /**
+         * In case you are not able to figure out what the object is.
+         * This will print all what it keeps allocated,
+         * kinds of list of attributes
+         *
+        dump("### Dominateds:\n");
+        node = objectNodeId,
+        dump(" " + getObjectClass(node) + "\n");
+        for (const n of tree.getImmediatelyDominated(objectNodeId)) {
+          dump(" --> " + getObjectClass(n) + "\n");
+        }
+        */
+      }
+    },
+
     stop() {
       dump("DEVTOOLS ALLOCATION: Stop logging allocations\n");
       dbg.onNewGlobalObject = undefined;
