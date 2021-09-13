@@ -393,7 +393,7 @@ add_task(async function nimbusExposure() {
   await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
 
   Services.telemetry.clearEvents();
-  NimbusFeatures.urlbar._sendExposureEventOnce = true;
+  NimbusFeatures.urlbar._didSendExposureEvent = false;
   UrlbarProviderQuickSuggest._recordedExposureEvent = false;
   let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
     valueOverrides: {
