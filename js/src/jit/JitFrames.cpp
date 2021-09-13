@@ -524,7 +524,7 @@ again:
     }
 
     // We may be propagating a forced return from a debugger hook function.
-    if (cx->isPropagatingForcedReturn()) {
+    if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
       cx->clearPropagatingForcedReturn();
       frameOk = true;
     }
@@ -1440,11 +1440,7 @@ RInstructionResults::~RInstructionResults() {
 bool RInstructionResults::init(JSContext* cx, uint32_t numResults) {
   if (numResults) {
     results_ = cx->make_unique<Values>();
-    if (!results_) {
-      return false;
-    }
-    if (!results_->growBy(numResults)) {
-      ReportOutOfMemory(cx);
+    if (!results_ || !results_->growBy(numResults)) {
       return false;
     }
 

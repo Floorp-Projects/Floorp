@@ -1220,7 +1220,7 @@ again:
     UnwindIteratorsForUncatchableException(cx, regs);
 
     // We may be propagating a forced return from a debugger hook function.
-    if (cx->isPropagatingForcedReturn()) {
+    if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
       cx->clearPropagatingForcedReturn();
       ok = true;
     }

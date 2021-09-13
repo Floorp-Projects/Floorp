@@ -490,7 +490,6 @@ enum class AssembleResult {
     masm = MakeUnique<RegExpBytecodeGenerator>(cx->isolate, zone);
   }
   if (!masm) {
-    ReportOutOfMemory(cx);
     return AssembleResult::OutOfMemory;
   }
 
@@ -565,7 +564,6 @@ enum class AssembleResult {
         static_cast<SMRegExpMacroAssembler*>(masm.get())->tables();
     for (uint32_t i = 0; i < tables.length(); i++) {
       if (!re->addTable(std::move(tables[i]))) {
-        ReportOutOfMemory(cx);
         return AssembleResult::OutOfMemory;
       }
     }
@@ -672,7 +670,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
       JS_ReportErrorASCII(cx, "regexp too big");
       return false;
     case AssembleResult::OutOfMemory:
-      MOZ_ASSERT(cx->isThrowingOutOfMemory());
+      ReportOutOfMemory(cx);
       return false;
     case AssembleResult::Success:
       break;

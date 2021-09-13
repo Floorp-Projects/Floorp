@@ -423,7 +423,6 @@ static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
 
   gQuitting = true;
   //    exit(0);
-  JS_SetPendingInterrupt(cx);
   return false;
 }
 

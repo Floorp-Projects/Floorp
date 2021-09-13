@@ -39,12 +39,6 @@ extern JS_PUBLIC_API void JS_SetPendingException(
     JSContext* cx, JS::HandleValue v,
     JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
 
-// Indicate that we are intentionally raising an interrupt/uncatchable
-// exception. Returning false/nullptr without calling this will still be treated
-// as an interrupt, but in the future the implicit behaviour may no longer be
-// allowed.
-extern JS_PUBLIC_API void JS_SetPendingInterrupt(JSContext* cx);
-
 extern JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx);
 
 /**
@@ -58,41 +52,6 @@ extern JS_PUBLIC_API JSErrorReport* JS_ErrorFromException(JSContext* cx,
                                                           JS::HandleObject obj);
 
 namespace JS {
-
-// When propagating an exception up the call stack, we store the underlying
-// reason on the JSContext as one of the following enum values.
-//
-// NOTE: It is not yet a hard requirement for uncatchable exceptions to set
-//       status to Interrupt so rely on the last return value. If Interrupt is
-//       not set then the status will remain as None.
-enum class ExceptionStatus {
-  // No expection status.
-  None,
-
-  // Used by debugger when forcing an early return from a frame. This uses
-  // exception machinery, but at the right time is turned back into a normal
-  // non-error completion.
-  ForcedReturn,
-
-  // An uncatchable exception that functions as an interrupt. This is used for
-  // watchdog mechanisms (like the slow-script notification) or the debugger
-  // API. It cannot be caught be JS catch blocks, but the debugger or event
-  // loops may still capture it.
-  Interrupt,
-
-  // Throwing a (catchable) exception. Certain well-known exceptions are
-  // explicitly tracked for convenience.
-  Throwing,
-  OutOfMemory,
-  OverRecursed,
-};
-
-// Returns true if the status is a catchable exception. Formerly this was
-// indicated by the `JSContext::throwing` flag.
-static MOZ_ALWAYS_INLINE bool IsCatchableExceptionStatus(
-    ExceptionStatus status) {
-  return status >= ExceptionStatus::Throwing;
-}
 
 // This class encapsulates a (pending) exception and the corresponding optional
 // SavedFrame stack object captured when the pending exception was set
@@ -141,7 +100,9 @@ class MOZ_STACK_CLASS ExceptionStack {
 class JS_PUBLIC_API AutoSaveExceptionState {
  private:
   JSContext* context;
-  ExceptionStatus status;
+  bool wasPropagatingForcedReturn;
+  bool wasOverRecursed;
+  bool wasThrowing;
   RootedValue exceptionValue;
   RootedObject exceptionStack;
 
