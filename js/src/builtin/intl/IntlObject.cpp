@@ -1000,9 +1000,8 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
         intl::ReportInternalError(cx);
         return nullptr;
       }
-      const char* calendar = keyword.unwrap().data();
 
-      auto* string = NewStringCopyZ<CanGC>(cx, calendar);
+      auto* string = NewStringCopy<CanGC>(cx, keyword.unwrap());
       if (!string) {
         return nullptr;
       }

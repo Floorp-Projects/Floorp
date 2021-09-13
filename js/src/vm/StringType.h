@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <type_traits>  // std::is_same
@@ -1604,6 +1605,14 @@ inline JSLinearString* NewStringCopyN(
     js::gc::InitialHeap heap = js::gc::DefaultHeap) {
   return NewStringCopyN<allowGC>(cx, reinterpret_cast<const Latin1Char*>(s), n,
                                  heap);
+}
+
+/* Copy a counted string and GC-allocate a descriptor for it. */
+template <js::AllowGC allowGC, typename CharT>
+inline JSLinearString* NewStringCopy(
+    JSContext* cx, mozilla::Span<const CharT> s,
+    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+  return NewStringCopyN<allowGC>(cx, s.data(), s.size(), heap);
 }
 
 /* Like NewStringCopyN, but doesn't try to deflate to Latin1. */

@@ -274,8 +274,7 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
             return false;
           }
 
-          JSString* partStr =
-              NewStringCopyN<CanGC>(cx, part.second.data(), part.second.size());
+          JSString* partStr = NewStringCopy<CanGC>(cx, part.second);
           if (!partStr) {
             return false;
           }
