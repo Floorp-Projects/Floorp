@@ -249,18 +249,23 @@ class NavigationToolbarRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun clickUrlbar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            urlBar().click()
+
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+            ).waitForExists(waitingTime)
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
     }
 }
 
 fun navigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
     NavigationToolbarRobot().interact()
     return NavigationToolbarRobot.Transition()
-}
-
-fun clickUrlbar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-    urlBar().click()
-    SearchRobot().interact()
-    return SearchRobot.Transition()
 }
 
 fun openEditURLView() {

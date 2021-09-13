@@ -187,6 +187,15 @@ class BookmarksTest {
         }.openThreeDotMenu(defaultWebPage.url) {
         }.clickCopy {
             verifyCopySnackBarText()
+            navigateUp()
+        }
+
+        navigationToolbar {
+        }.clickUrlbar {
+            clickClearButton()
+            longClickToolbar()
+            clickPasteText()
+            verifyPastedToolbarText(defaultWebPage.url.toString())
         }
     }
 
