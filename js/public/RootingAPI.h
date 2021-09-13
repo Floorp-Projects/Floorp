@@ -884,7 +884,11 @@ struct RootedTraceable final : public VirtualTraceable {
 
   T ptr;
 
-  template <typename U>
+  template <typename... CtorArgs>
+  explicit RootedTraceable(std::in_place_t, CtorArgs... args)
+      : ptr(std::forward<CtorArgs>(args)...) {}
+
+  template <typename U, typename = typename std::is_constructible<T, U>::type>
   MOZ_IMPLICIT RootedTraceable(U&& initial) : ptr(std::forward<U>(initial)) {}
 
   operator T&() { return ptr; }
@@ -1079,14 +1083,16 @@ class MOZ_RAII JS_PUBLIC_API CustomAutoRooter : private AutoGCRooter {
 namespace detail {
 
 template <typename T>
+constexpr bool IsTraceable_v =
+    MapTypeToRootKind<T>::kind == JS::RootKind::Traceable;
+
+template <typename T>
 using RootedPtr =
-    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-                       js::RootedTraceable<T>, T>;
+    std::conditional_t<IsTraceable_v<T>, js::RootedTraceable<T>, T>;
 
 template <typename T>
 using RootedPtrTraits =
-    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-                       js::RootedTraceableTraits<T>,
+    std::conditional_t<IsTraceable_v<T>, js::RootedTraceableTraits<T>,
                        js::RootedGCThingTraits<T>>;
 
 } /* namespace detail */
@@ -1121,16 +1127,41 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   using ElementType = T;
 
   // Construct an empty Rooted holding a safely initialized but empty T.
-  template <typename RootingContext>
-  explicit Rooted(const RootingContext& cx)
-      : ptr(SafelyInitialized<T>()) {
+  // Requires T to have a copy constructor in order to copy the safely
+  // initialized value.
+  //
+  // Note that for SFINAE to reject this method, the 2nd template parameter must
+  // depend on RootingContext somehow even though we really only care about T.
+  template <typename RootingContext,
+            typename =
+                std::enable_if_t<std::is_copy_constructible_v<T>, RootingContext>>
+  explicit Rooted(const RootingContext& cx) : ptr(SafelyInitialized<T>()) {
     registerWithRootLists(rootLists(cx));
   }
 
-  // Provide an initial value.
-  template <typename RootingContext, typename S>
+  // Provide an initial value. Requires T to be constructible from the given
+  // argument.
+  template <typename RootingContext, typename S,
+            typename = typename std::is_constructible<T, S>::type>
   Rooted(const RootingContext& cx, S&& initial)
       : ptr(std::forward<S>(initial)) {
+    MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
+    registerWithRootLists(rootLists(cx));
+  }
+
+  // (Traceables only) Construct the contained value from the given arguments.
+  // Constructs in-place, so T does not need to be copyable or movable.
+  //
+  // Note that a copyable Traceable passed only a RootingContext will
+  // choose the above SafelyInitialized<T> constructor, because otherwise
+  // identical functions with parameter packs are considered less specialized.
+  //
+  // The SFINAE type must again depend on an inferred template parameter.
+  template <
+      typename RootingContext, typename... CtorArgs,
+      typename = std::enable_if_t<detail::IsTraceable_v<T>, RootingContext>>
+  explicit Rooted(const RootingContext& cx, CtorArgs... args)
+      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
     MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     registerWithRootLists(rootLists(cx));
   }
