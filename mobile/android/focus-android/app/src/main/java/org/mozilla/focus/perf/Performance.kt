@@ -21,10 +21,10 @@ object Performance {
     fun processIntentIfPerformanceTest(intent: SafeIntent, context: Context) = isPerformanceTest(intent, context)
 
     /**
-     * This checks for USB connections and ADB debugging in case another application tries to
+     * This checks for the charging state and ADB debugging in case another application tries to
      * leverage this intent to trigger a code path for Firefox that shouldn't be used unless
      * it is for testing visual metrics. These checks aren't foolproof but most of our users won't
-     * have ADB on and USB connected at the same time when running Firefox.
+     * have ADB on and charging at the same time when running Firefox.
      */
     private fun isPerformanceTest(intent: SafeIntent, context: Context): Boolean {
         if (!intent.getBooleanExtra(EXTRA_IS_PERFORMANCE_TEST, false)) {
@@ -33,8 +33,12 @@ object Performance {
 
         val batteryStatus = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         batteryStatus?.let {
-            val isPhonePlugged = it.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ==
-                BatteryManager.BATTERY_PLUGGED_USB
+            // We only run perf tests when the device is connected to USB. However, AC may be reported
+            // instead if the device is connected through a USB hub so we check both states.
+            val extraPlugged = it.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+            val isPhonePlugged = extraPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
+                extraPlugged == BatteryManager.BATTERY_PLUGGED_AC
+
             val isAdbEnabled = AndroidSettings.Global.getInt(
                 context.contentResolver,
                 AndroidSettings.Global.ADB_ENABLED, 0
