@@ -130,8 +130,6 @@ class InternalJobQueue : public JS::JobQueue {
 
 class AutoLockScriptData;
 
-void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
-
 /* Thread Local Storage slot for storing the context for a thread. */
 extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 
@@ -413,7 +411,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   friend class JS::AutoSaveExceptionState;
   friend class js::jit::DebugModeOSRVolatileJitFrameIter;
-  friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
+  friend void js::ReportOverRecursed(JSContext*);
 
  public:
   inline JS::Result<> boolToResult(bool ok);
