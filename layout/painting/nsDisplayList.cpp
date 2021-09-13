@@ -3573,13 +3573,13 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
   }
 
   uint32_t paintFlags = aDisplayListBuilder->GetBackgroundPaintFlags();
-
+  bool dummy;
   CheckForBorderItem(this, paintFlags);
   nsCSSRendering::PaintBGParams params =
       nsCSSRendering::PaintBGParams::ForSingleLayer(
-          *StyleFrame()->PresContext(), GetPaintRect(), mBackgroundRect,
-          StyleFrame(), paintFlags, mLayer, CompositionOp::OP_OVER,
-          aBuilder.GetInheritedOpacity());
+          *StyleFrame()->PresContext(), GetBounds(aDisplayListBuilder, &dummy),
+          mBackgroundRect, StyleFrame(), paintFlags, mLayer,
+          CompositionOp::OP_OVER, aBuilder.GetInheritedOpacity());
   params.bgClipRect = &mBounds;
   ImgDrawResult result =
       nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
@@ -4234,10 +4234,11 @@ bool nsDisplayOutline::CreateWebRenderCommands(
         StyleAppearance::FocusOutline, rect);
   }
 
+  bool dummy;
   Maybe<nsCSSBorderRenderer> borderRenderer =
       nsCSSRendering::CreateBorderRendererForNonThemedOutline(
-          pc, /* aDrawTarget = */ nullptr, mFrame, GetPaintRect(), rect,
-          mFrame->Style());
+          pc, /* aDrawTarget = */ nullptr, mFrame,
+          GetBounds(aDisplayListBuilder, &dummy), rect, mFrame->Style());
 
   if (!borderRenderer) {
     // No border renderer means "there is no outline".
@@ -8248,16 +8249,16 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   // region of the target frame and its out-of-flow and inflow descendants.
   gfxContext* context = aCtx;
 
-  Rect bounds = NSRectToRect(GetPaintRect(),
+  Rect bounds = NSRectToRect(GetPaintRect(aBuilder, aCtx),
                              mFrame->PresContext()->AppUnitsPerDevPixel());
   bounds.RoundOut();
   context->Clip(bounds);
 
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
-                                                borderArea, aBuilder, nullptr,
-                                                false, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(
+      *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), borderArea, aBuilder,
+      nullptr, false, imgParams);
 
   ComputeMaskGeometry(params);
 
@@ -8609,6 +8610,8 @@ nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
     : nsDisplayEffectsBase(aBuilder, aFrame, aList),
       mEffectsBounds(aFrame->InkOverflowRectRelativeToSelf()) {
   MOZ_COUNT_CTOR(nsDisplayFilters);
+  mVisibleRect = aBuilder->GetVisibleRect() +
+                 aBuilder->GetCurrentFrameOffsetToReferenceFrame();
 }
 
 void nsDisplayFilters::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
@@ -8640,7 +8643,7 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
     const std::function<void(gfxContext* aContext)>& aPaintChildren) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, GetPaintRect(),
+  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, mVisibleRect,
                                                 borderArea, aBuilder, nullptr,
                                                 false, imgParams);
 
