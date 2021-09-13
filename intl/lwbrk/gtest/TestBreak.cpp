@@ -297,6 +297,16 @@ TEST(WordBreak, TestNextWordBreakWithComplexLanguage)
   ASSERT_TRUE(true);
 }
 
+TEST(WordBreak, TestFindWordWithEmptyString)
+{
+  RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
+  char16_t empty[] = {};
+  mozilla::intl::WordRange expect{0, 0};
+  mozilla::intl::WordRange result = wbk->FindWord(empty, 0, 0);
+  ASSERT_EQ(expect.mBegin, result.mBegin);
+  ASSERT_EQ(expect.mEnd, result.mEnd);
+}
+
 TEST(WordBreak, TestNextWordBreakWithEmptyString)
 {
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
