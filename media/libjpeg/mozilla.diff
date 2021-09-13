@@ -11,20 +11,12 @@ diff --git jmorecfg.h jmorecfg.h
  /*
   * Maximum number of components (color channels) allowed in JPEG image.
   * To meet the letter of Rec. ITU-T T.81 | ISO/IEC 10918-1, set this to 255.
-@@ -122,31 +123,17 @@ typedef char JOCTET;
+@@ -95,23 +96,17 @@ typedef unsigned char JOCTET;
   */
  
  /* UINT8 must hold at least the values 0..255. */
  
--#ifdef HAVE_UNSIGNED_CHAR
 -typedef unsigned char UINT8;
--#else /* not HAVE_UNSIGNED_CHAR */
--#ifdef __CHAR_UNSIGNED__
--typedef char UINT8;
--#else /* not __CHAR_UNSIGNED__ */
--typedef short UINT8;
--#endif /* __CHAR_UNSIGNED__ */
--#endif /* HAVE_UNSIGNED_CHAR */
 +typedef uint8_t UINT8;
  
  /* UINT16 must hold at least the values 0..65535. */
@@ -46,7 +38,7 @@ diff --git jmorecfg.h jmorecfg.h
  /* INT32 must hold at least signed 32-bit values.
   *
   * NOTE: The INT32 typedef dates back to libjpeg v5 (1994.)  Integers were
-@@ -171,17 +158,9 @@ typedef short INT16;
+@@ -136,17 +131,9 @@ typedef short INT16;
   * for internal use, which ensures that internal behavior will always be the
   * same regardless of any external headers that may be included.
   */
