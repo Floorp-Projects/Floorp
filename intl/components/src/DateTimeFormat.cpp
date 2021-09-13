@@ -36,6 +36,223 @@ static UDateFormatStyle ToUDateFormatStyle(DateTimeStyle aStyle) {
   return UDAT_NONE;
 }
 
+/**
+ * Parse a pattern according to the format specified in
+ * <https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns>.
+ */
+template <typename CharT>
+class PatternIterator {
+  CharT* iter_;
+  const CharT* const end_;
+
+ public:
+  explicit PatternIterator(mozilla::Span<CharT> pattern)
+      : iter_(pattern.data()), end_(pattern.data() + pattern.size()) {}
+
+  CharT* next() {
+    MOZ_ASSERT(iter_ != nullptr);
+
+    bool inQuote = false;
+    while (iter_ < end_) {
+      CharT* cur = iter_++;
+      if (*cur == '\'') {
+        inQuote = !inQuote;
+      } else if (!inQuote) {
+        return cur;
+      }
+    }
+
+    iter_ = nullptr;
+    return nullptr;
+  }
+};
+
+/**
+ * Return the hour cycle used in the input pattern or Nothing if none was found.
+ */
+template <typename CharT>
+static mozilla::Maybe<HourCycle> HourCycleFromPattern(
+    mozilla::Span<const CharT> pattern) {
+  PatternIterator<const CharT> iter(pattern);
+  while (const auto* ptr = iter.next()) {
+    switch (*ptr) {
+      case 'K':
+        return mozilla::Some(HourCycle::H11);
+      case 'h':
+        return mozilla::Some(HourCycle::H12);
+      case 'H':
+        return mozilla::Some(HourCycle::H23);
+      case 'k':
+        return mozilla::Some(HourCycle::H24);
+    }
+  }
+  return mozilla::Nothing();
+}
+
+static bool IsHour12(HourCycle hc) {
+  return hc == HourCycle::H11 || hc == HourCycle::H12;
+}
+
+static char16_t HourSymbol(HourCycle hc) {
+  switch (hc) {
+    case HourCycle::H11:
+      return 'K';
+    case HourCycle::H12:
+      return 'h';
+    case HourCycle::H23:
+      return 'H';
+    case HourCycle::H24:
+      return 'k';
+  }
+  MOZ_CRASH("unexpected hour cycle");
+}
+
+enum class PatternField { Hour, Minute, Second, Other };
+
+template <typename CharT>
+static PatternField ToPatternField(CharT ch) {
+  if (ch == 'K' || ch == 'h' || ch == 'H' || ch == 'k' || ch == 'j') {
+    return PatternField::Hour;
+  }
+  if (ch == 'm') {
+    return PatternField::Minute;
+  }
+  if (ch == 's') {
+    return PatternField::Second;
+  }
+  return PatternField::Other;
+}
+
+/**
+ * Replaces all hour pattern characters in |patternOrSkeleton| to use the
+ * matching hour representation for |hourCycle|.
+ */
+static void ReplaceHourSymbol(mozilla::Span<char16_t> patternOrSkeleton,
+                              HourCycle hc) {
+  char16_t replacement = HourSymbol(hc);
+  PatternIterator<char16_t> iter(patternOrSkeleton);
+  while (auto* ptr = iter.next()) {
+    auto field = ToPatternField(*ptr);
+    if (field == PatternField::Hour) {
+      *ptr = replacement;
+    }
+  }
+}
+
+/**
+ * Find a matching pattern using the requested hour-12 options.
+ *
+ * This function is needed to work around the following two issues.
+ * - https://unicode-org.atlassian.net/browse/ICU-21023
+ * - https://unicode-org.atlassian.net/browse/CLDR-13425
+ *
+ * We're currently using a relatively simple workaround, which doesn't give the
+ * most accurate results. For example:
+ *
+ * ```
+ * var dtf = new Intl.DateTimeFormat("en", {
+ *   timeZone: "UTC",
+ *   dateStyle: "long",
+ *   timeStyle: "long",
+ *   hourCycle: "h12",
+ * });
+ * print(dtf.format(new Date("2020-01-01T00:00Z")));
+ * ```
+ *
+ * Returns the pattern "MMMM d, y 'at' h:mm:ss a z", but when going through
+ * |DateTimePatternGenerator::GetSkeleton| and then
+ * |DateTimePatternGenerator::GetBestPattern| to find an equivalent pattern for
+ * "h23", we'll end up with the pattern "MMMM d, y, HH:mm:ss z", so the
+ * combinator element " 'at' " was lost in the process.
+ */
+template <size_t N>
+static bool FindPatternWithHourCycle(JSContext* cx, const char* locale,
+                                     FormatBuffer<char16_t, N>& pattern,
+                                     bool hour12) {
+  SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+  mozilla::intl::DateTimePatternGenerator* gen =
+      sharedIntlData.getDateTimePatternGenerator(cx, locale);
+  if (!gen) {
+    return false;
+  }
+
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
+  auto skelResult =
+      mozilla::intl::DateTimePatternGenerator::GetSkeleton(pattern, skeleton);
+  if (skelResult.isErr()) {
+    intl::ReportInternalError(cx, skelResult.unwrapErr());
+    return false;
+  }
+
+  // Input skeletons don't differentiate between "K" and "h" resp. "k" and "H".
+  ReplaceHourSymbol(skeleton, hour12 ? HourCycle::H12 : HourCycle::H23);
+
+  auto result = gen->GetBestPattern(skeleton, pattern);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return false;
+  }
+  return true;
+}
+
+static auto PatternMatchOptions(mozilla::Span<const char16_t> skeleton) {
+  // Values for hour, minute, and second are:
+  // - absent: 0
+  // - numeric: 1
+  // - 2-digit: 2
+  int32_t hour = 0;
+  int32_t minute = 0;
+  int32_t second = 0;
+
+  PatternIterator<const char16_t> iter(skeleton);
+  while (const auto* ptr = iter.next()) {
+    switch (ToPatternField(*ptr)) {
+      case PatternField::Hour:
+        MOZ_ASSERT(hour < 2);
+        hour += 1;
+        break;
+      case PatternField::Minute:
+        MOZ_ASSERT(minute < 2);
+        minute += 1;
+        break;
+      case PatternField::Second:
+        MOZ_ASSERT(second < 2);
+        second += 1;
+        break;
+      case PatternField::Other:
+        break;
+    }
+  }
+
+  // Adjust the field length when the user requested '2-digit' representation.
+  //
+  // We can't just always adjust the field length, because
+  // 1. The default value for hour, minute, and second fields is 'numeric'. If
+  //    the length is always adjusted, |date.toLocaleTime()| will start to
+  //    return strings like "1:5:9 AM" instead of "1:05:09 AM".
+  // 2. ICU doesn't support to adjust the field length to 'numeric' in certain
+  //    cases. For example when the locale is "de" (German):
+  //      a. hour='numeric' and minute='2-digit' will return "1:05".
+  //      b. whereas hour='numeric' and minute='numeric' will return "01:05".
+  //
+  // Therefore we only support adjusting the field length when the user
+  // explicitly requested the '2-digit' representation.
+
+  using PatternMatchOption =
+      mozilla::intl::DateTimePatternGenerator::PatternMatchOption;
+  mozilla::EnumSet<PatternMatchOption> options;
+  if (hour == 2) {
+    options += PatternMatchOption::HourField;
+  }
+  if (minute == 2) {
+    options += PatternMatchOption::MinuteField;
+  }
+  if (second == 2) {
+    options += PatternMatchOption::SecondField;
+  }
+  return options;
+}
+
 /* static */
 Result<UniquePtr<DateTimeFormat>, DateTimeFormat::StyleError>
 DateTimeFormat::TryCreateFromStyle(
