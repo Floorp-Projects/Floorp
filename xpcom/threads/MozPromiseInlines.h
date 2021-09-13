@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(MozPromiseInlines_h_)
-#  define MozPromiseInlines_h_
+#ifndef MozPromiseInlines_h_
+#define MozPromiseInlines_h_
 
-#  include <type_traits>
+#include <type_traits>
 
-#  include "mozilla/MozPromise.h"
-#  include "mozilla/dom/PrimitiveConversions.h"
-#  include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/dom/PrimitiveConversions.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 namespace mozilla {
 
@@ -26,7 +27,6 @@ MozPromise<ResolveValueT, RejectValueT, IsExclusive>::FromDomPromise(
                 "Reject type must be nsresult");
   RefPtr<Private> p = new Private(__func__);
   RefPtr<dom::DomPromiseListener> listener = new dom::DomPromiseListener(
-      aDOMPromise,
       [p](JSContext* aCx, JS::Handle<JS::Value> aValue) {
         ResolveValueT value;
         bool ok = dom::ValueToPrimitive<ResolveValueT,
@@ -39,6 +39,7 @@ MozPromise<ResolveValueT, RejectValueT, IsExclusive>::FromDomPromise(
         p->Resolve(value, __func__);
       },
       [p](nsresult aError) { p->Reject(aError, __func__); });
+  aDOMPromise->AppendNativeHandler(listener);
   return p;
 }
 
