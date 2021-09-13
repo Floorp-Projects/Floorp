@@ -243,7 +243,7 @@ class ResponsePanel extends Component {
     }
 
     // Decode response if it's coming from JSONView.
-    if (mimeType.includes(JSON_VIEW_MIME_TYPE) && encoding === "base64") {
+    if (mimeType?.includes(JSON_VIEW_MIME_TYPE) && encoding === "base64") {
       text = decodeUnicodeBase64(text);
     }
 
@@ -288,7 +288,7 @@ class ResponsePanel extends Component {
       component = SourcePreview;
       componentProps = {
         text,
-        mode: json ? "application/json" : mimeType.replace(/;.+/, ""),
+        mode: json ? "application/json" : mimeType?.replace(/;.+/, ""),
         targetSearchResult,
       };
     }
