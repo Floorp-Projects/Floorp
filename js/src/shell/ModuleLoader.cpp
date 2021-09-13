@@ -500,7 +500,7 @@ JSLinearString* ModuleLoader::normalizePath(JSContext* cx,
 #endif  // XP_WIN
 
   // Normalize the path by removing redundant path components.
-  Rooted<GCVector<JSLinearString*>> components(cx);
+  Rooted<GCVector<JSLinearString*>> components(cx, cx);
   size_t lastSep = 0;
   while (lastSep < path->length()) {
     int32_t i = IndexOf(path, PathSeparator, lastSep);
