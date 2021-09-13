@@ -265,6 +265,7 @@ MethodStatus BaselineCompiler::compile() {
           traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
+    ReportOutOfMemory(cx);
     return Method_Error;
   }
 

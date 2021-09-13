@@ -2617,7 +2617,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
                 ? JS_ExecuteScript(cx, script, args.rval())
                 : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
         if (catchTermination && !JS_IsExceptionPending(cx)) {
-          cx->clearInterrupt();
           JSAutoRealm ar1(cx, callerGlobal);
           JSString* str = JS_NewStringCopyZ(cx, "terminated");
           if (!str) {
@@ -3148,8 +3147,6 @@ static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
   js::StopDrainingJobQueue(cx);
   sc->exitCode = code;
   sc->quitting = true;
-
-  cx->setInterrupting();
   return false;
 }
 

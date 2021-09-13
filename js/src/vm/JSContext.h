@@ -130,6 +130,8 @@ class InternalJobQueue : public JS::JobQueue {
 
 class AutoLockScriptData;
 
+void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
+
 /* Thread Local Storage slot for storing the context for a thread. */
 extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 
@@ -411,8 +413,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   friend class JS::AutoSaveExceptionState;
   friend class js::jit::DebugModeOSRVolatileJitFrameIter;
-  friend void js::ReportOutOfMemory(JSContext*);
-  friend void js::ReportOverRecursed(JSContext*);
+  friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
 
  public:
   inline JS::Result<> boolToResult(bool ok);
@@ -670,8 +671,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<js::UniquePtr<js::jit::PcScriptCache>> ionPcScriptCache;
 
  private:
-  // Indicates if an exception is pending and the reason for it.
-  js::ContextData<JS::ExceptionStatus> status;
+  /* Exception state -- the exception member is a GC root by definition. */
+  js::ContextData<bool> throwing; /* is there a pending exception? */
   js::ContextData<JS::PersistentRooted<JS::Value>>
       unwrappedException_; /* most-recently-thrown exception */
   js::ContextData<JS::PersistentRooted<js::SavedFrame*>>
@@ -691,6 +692,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return unwrappedExceptionStack_.ref().get();
   }
 
+  // True if the exception currently being thrown is by result of
+  // ReportOverRecursed. See Debugger::slowPathOnExceptionUnwind.
+  js::ContextData<bool> overRecursed_;
+
 #ifdef DEBUG
   // True if this context has ever called ReportOverRecursed.
   js::ContextData<bool> hadOverRecursed_;
@@ -701,6 +706,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
            js::oom::simulator.isThreadSimulatingAny();
   }
 #endif
+
+ private:
+  // True if propagating a forced return from an interrupt handler during
+  // debug mode.
+  js::ContextData<bool> propagatingForcedReturn_;
 
  public:
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
@@ -795,26 +805,13 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   inline void minorGC(JS::GCReason reason);
 
  public:
-  bool isExceptionPending() const {
-    return JS::IsCatchableExceptionStatus(status);
-  }
-
-  void setInterrupting() {
-    MOZ_ASSERT(status == JS::ExceptionStatus::None);
-    status = JS::ExceptionStatus::Interrupt;
-  }
-  void clearInterrupt() {
-    // NOTE: Calling `setInterrupting` is still optional, but certainly there
-    //       should not be any catchable exception pending.
-    MOZ_ASSERT(status == JS::ExceptionStatus::None ||
-               status == JS::ExceptionStatus::Interrupt);
-    status = JS::ExceptionStatus::None;
-  }
+  bool isExceptionPending() const { return throwing; }
 
   [[nodiscard]] bool getPendingException(JS::MutableHandleValue rval);
 
   js::SavedFrame* getPendingExceptionStack();
 
+  bool isThrowingOutOfMemory();
   bool isThrowingDebuggeeWouldRun();
   bool isClosingGenerator();
 
@@ -822,28 +819,16 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void setPendingExceptionAndCaptureStack(JS::HandleValue v);
 
   void clearPendingException() {
-    status = JS::ExceptionStatus::None;
+    throwing = false;
+    overRecursed_ = false;
     unwrappedException().setUndefined();
     unwrappedExceptionStack() = nullptr;
   }
 
-  bool isThrowingOutOfMemory() const {
-    return status == JS::ExceptionStatus::OutOfMemory;
-  }
-  bool isThrowingOverRecursed() const {
-    return status == JS::ExceptionStatus::OverRecursed;
-  }
-  bool isPropagatingForcedReturn() const {
-    return status == JS::ExceptionStatus::ForcedReturn;
-  }
-  void setPropagatingForcedReturn() {
-    MOZ_ASSERT(status == JS::ExceptionStatus::None);
-    status = JS::ExceptionStatus::ForcedReturn;
-  }
-  void clearPropagatingForcedReturn() {
-    MOZ_ASSERT(status == JS::ExceptionStatus::ForcedReturn);
-    status = JS::ExceptionStatus::None;
-  }
+  bool isThrowingOverRecursed() const { return throwing && overRecursed_; }
+  bool isPropagatingForcedReturn() const { return propagatingForcedReturn_; }
+  void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
+  void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
 
   /*
    * See JS_SetTrustedPrincipals in jsapi.h.

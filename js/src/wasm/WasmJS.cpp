@@ -2904,6 +2904,7 @@ WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
 
   SharedTable table = Table::create(cx, td, obj);
   if (!table) {
+    ReportOutOfMemory(cx);
     return nullptr;
   }
 
@@ -4242,6 +4243,8 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   if (!ParseValTypeArguments(cx, parametersVal, params)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_ARG_TYPE);
     return false;
   }
 
@@ -4251,6 +4254,8 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   if (!ParseValTypeArguments(cx, resultsVal, results)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_ARG_TYPE);
     return false;
   }
 

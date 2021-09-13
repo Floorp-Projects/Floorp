@@ -1618,7 +1618,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   auto alloc =
       cx->make_unique<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
   if (!alloc) {
-    return AbortReason::Error;
+    return AbortReason::Alloc;
   }
 
   TempAllocator* temp = alloc->new_<TempAllocator>(alloc.get());
@@ -1629,11 +1629,11 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   JitContext jctx(cx, temp);
 
   if (!cx->realm()->ensureJitRealmExists(cx)) {
-    return AbortReason::Error;
+    return AbortReason::Alloc;
   }
 
   if (!cx->realm()->jitRealm()->ensureIonStubsExist(cx)) {
-    return AbortReason::Error;
+    return AbortReason::Alloc;
   }
 
   MIRGraph* graph = alloc->new_<MIRGraph>(temp);

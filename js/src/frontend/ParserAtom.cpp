@@ -105,6 +105,7 @@ JSAtom* ParserAtom::instantiate(JSContext* cx, ParserAtomIndex index,
     atom = AtomizeChars(cx, hash(), twoByteChars(), length());
   }
   if (!atom) {
+    js::ReportOutOfMemory(cx);
     return nullptr;
   }
   if (!atomCache.setAtomAt(cx, index, atom)) {
