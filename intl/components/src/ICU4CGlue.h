@@ -54,19 +54,34 @@ static inline bool ICUSuccessForStringSpan(UErrorCode status) {
 }
 
 /**
- * This class manages the access to an ICU pointer. It allows requesting either
- * a mutable or const pointer. This pointer should match the const or mutability
- * of the ICU APIs. This will then correctly propagate const-ness into the
- * mozilla::intl APIs.
+ * This class enforces that the unified mozilla::intl methods match the
+ * const-ness of the underlying ICU4C API calls. const ICU4C APIs take a const
+ * pointer, while mutable ones take a non-const pointer.
+ *
+ * For const ICU4C calls use:
+ *   ICUPointer::GetConst().
+ *
+ * For non-const ICU4C calls use:
+ *   ICUPointer::GetMut().
+ *
+ * This will propagate the `const` specifier from the ICU4C API call to the
+ * unified method, and it will be enforced by the compiler. This helps ensures
+ * a consistence and correct implementation.
  */
 template <typename T>
 class ICUPointer {
  public:
   explicit ICUPointer(T* aPointer) : mPointer(aPointer) {}
 
-  // Only allow moves, no copies.
+  // Only allow moves of ICUPointers, no copies.
   ICUPointer(ICUPointer&& other) noexcept = default;
   ICUPointer& operator=(ICUPointer&& other) noexcept = default;
+
+  // Implicitly take ownership of a raw pointer through copy assignment.
+  ICUPointer& operator=(T* aPointer) noexcept {
+    mPointer = aPointer;
+    return *this;
+  };
 
   const T* GetConst() const { return const_cast<const T*>(mPointer); }
   T* GetMut() { return mPointer; }

@@ -9,7 +9,7 @@ DateTimePatternGenerator::~DateTimePatternGenerator() {
   // The mGenerator will not exist when the DateTimePatternGenerator is being
   // moved.
   if (mGenerator) {
-    udatpg_close(mGenerator);
+    udatpg_close(mGenerator.GetMut());
   }
 }
 
@@ -26,7 +26,7 @@ DateTimePatternGenerator::TryCreate(const char* aLocale) {
 
 DateTimePatternGenerator::DateTimePatternGenerator(
     DateTimePatternGenerator&& other) noexcept
-    : mGenerator(other.mGenerator) {
+    : mGenerator(other.mGenerator.GetMut()) {
   other.mGenerator = nullptr;
 }
 
@@ -37,9 +37,9 @@ DateTimePatternGenerator& DateTimePatternGenerator::operator=(
   }
 
   if (mGenerator) {
-    udatpg_close(mGenerator);
+    udatpg_close(mGenerator.GetMut());
   }
-  mGenerator = other.mGenerator;
+  mGenerator = other.mGenerator.GetMut();
   other.mGenerator = nullptr;
 
   return *this;
