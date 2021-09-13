@@ -117,6 +117,7 @@ bool TestPlainTypedArray(JSContext* cx) {
   {
     RootedObject notArray(cx, Create(cx, SIZE_MAX));
     CHECK(!notArray);
+    JS_ClearPendingException(cx);
   }
 
   RootedObject array(cx, Create(cx, 7));
@@ -170,6 +171,7 @@ bool TestArrayFromBuffer(JSContext* cx) {
   {
     RootedObject notArray(cx, CreateWithBuffer(cx, buffer, UINT32_MAX, -1));
     CHECK(!notArray);
+    JS_ClearPendingException(cx);
   }
 
   RootedObject array(cx, CreateWithBuffer(cx, buffer, 0, -1));
