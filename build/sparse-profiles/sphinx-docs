@@ -1,6 +1,9 @@
 %include build/sparse-profiles/mach
 
 [include]
+# List of dependencies for the command
+path:build/docs_virtualenv_packages.txt
+
 # Code for generating docs.
 glob:docs/**
 glob:tools/moztreedocs/**

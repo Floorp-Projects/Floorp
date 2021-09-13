@@ -290,9 +290,9 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
         with LineIO(lambda l: log.info(l), "replace") as out:
             manager = VirtualenvManager(
                 topsrcdir,
-                os.path.join(topobjdir, "_virtualenvs", "common"),
-                out,
-                os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+                os.path.join(topobjdir, "_virtualenvs"),
+                "build",
+                log_handle=out,
             )
 
     # Update the path to include some necessary modules for find_program.

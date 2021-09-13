@@ -218,8 +218,8 @@ def setup(app):
     ve = VirtualenvManager(
         topsrcdir,
         os.path.join(app.outdir, "_venv"),
-        sys.stderr,
-        os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+        "common",
+        log_handle=sys.stderr,
     )
     ve.ensure()
     ve.activate()
