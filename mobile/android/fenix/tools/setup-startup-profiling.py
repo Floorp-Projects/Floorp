@@ -16,6 +16,10 @@ from subprocess import run
 
 PATH_PREFIX = '/data/local/tmp'
 
+PROD_FENIX = 'fenix'
+PROD_GVE = 'geckoview_example'
+PRODUCTS = [PROD_FENIX, PROD_GVE]
+
 GV_CONFIG = b'''env:
   MOZ_PROFILER_STARTUP: 1
   MOZ_PROFILER_STARTUP_INTERVAL: 5
@@ -34,6 +38,8 @@ def parse_args():
                    "profiling for the given release channel"))
     p.add_argument('release_channel', choices=['nightly', 'beta', 'release', 'debug'], help=("the release channel to "
                    "change the startup profiling state of the command on"))
+
+    p.add_argument('-p', '--product', choices=PRODUCTS, default=PROD_FENIX, help="which product to work on")
     return p.parse_args()
 
 
@@ -61,22 +67,23 @@ def remove(filename):
     run(['adb', 'shell', 'am', 'clear-debug-app'])
 
 
-def convert_channel_to_id(channel):
-    # Users might want to use custom app IDs in the future
-    # but we don't know that's a need yet: let's add it if it is.
-    mapping = {
-        'release': 'org.mozilla.firefox',
-        'beta': 'org.mozilla.firefox_beta',
-        'nightly': 'org.mozilla.fenix',
-        'debug': 'org.mozilla.fenix.debug'
-    }
-    return mapping[channel]
+def convert_channel_to_id(product, channel):
+    if product == PROD_FENIX:
+        mapping = {
+            'release': 'org.mozilla.firefox',
+            'beta': 'org.mozilla.firefox_beta',
+            'nightly': 'org.mozilla.fenix',
+            'debug': 'org.mozilla.fenix.debug'
+        }
+        return mapping[channel]
+    elif product == PROD_GVE:
+        return 'org.mozilla.geckoview_example'
 
 
 def main():
     args = parse_args()
 
-    id = convert_channel_to_id(args.release_channel)
+    id = convert_channel_to_id(args.product, args.release_channel)
     filename = id + '-geckoview-config.yaml'
 
     if args.command == 'activate':
