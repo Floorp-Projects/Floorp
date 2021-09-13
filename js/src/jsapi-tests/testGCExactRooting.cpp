@@ -47,49 +47,13 @@ BEGIN_TEST(testGCSuppressions) {
 END_TEST(testGCSuppressions)
 
 struct MyContainer {
-  int whichConstructor;
   HeapPtr<JSObject*> obj;
   HeapPtr<JSString*> str;
 
-  MyContainer() : whichConstructor(1), obj(nullptr), str(nullptr) {}
-  explicit MyContainer(double) : MyContainer() { whichConstructor = 2; }
-  explicit MyContainer(JSContext* cx) : MyContainer() { whichConstructor = 3; }
-  MyContainer(JSContext* cx, JSContext* cx2, JSContext* cx3) : MyContainer() {
-    whichConstructor = 4;
-  }
-  MyContainer(const MyContainer& rhs)
-      : whichConstructor(100 + rhs.whichConstructor),
-        obj(rhs.obj),
-        str(rhs.str) {}
+  MyContainer() : obj(nullptr), str(nullptr) {}
   void trace(JSTracer* trc) {
-    js::TraceNullableEdge(trc, &obj, "test container obj");
-    js::TraceNullableEdge(trc, &str, "test container str");
-  }
-};
-
-struct MyNonCopyableContainer {
-  int whichConstructor;
-  HeapPtr<JSObject*> obj;
-  HeapPtr<JSString*> str;
-
-  MyNonCopyableContainer() : whichConstructor(1), obj(nullptr), str(nullptr) {}
-  explicit MyNonCopyableContainer(double) : MyNonCopyableContainer() {
-    whichConstructor = 2;
-  }
-  explicit MyNonCopyableContainer(JSContext* cx) : MyNonCopyableContainer() {
-    whichConstructor = 3;
-  }
-  explicit MyNonCopyableContainer(JSContext* cx, JSContext* cx2, JSContext* cx3)
-      : MyNonCopyableContainer() {
-    whichConstructor = 4;
-  }
-
-  MyNonCopyableContainer(const MyNonCopyableContainer&) = delete;
-  MyNonCopyableContainer& operator=(const MyNonCopyableContainer&) = delete;
-
-  void trace(JSTracer* trc) {
-    js::TraceNullableEdge(trc, &obj, "test container obj");
-    js::TraceNullableEdge(trc, &str, "test container str");
+    js::TraceNullableEdge(trc, &obj, "test container");
+    js::TraceNullableEdge(trc, &str, "test container");
   }
 };
 
@@ -98,51 +62,10 @@ template <typename Wrapper>
 struct MutableWrappedPtrOperations<MyContainer, Wrapper> {
   HeapPtr<JSObject*>& obj() { return static_cast<Wrapper*>(this)->get().obj; }
   HeapPtr<JSString*>& str() { return static_cast<Wrapper*>(this)->get().str; }
-  int constructor() {
-    return static_cast<Wrapper*>(this)->get().whichConstructor;
-  }
-};
-
-template <typename Wrapper>
-struct MutableWrappedPtrOperations<MyNonCopyableContainer, Wrapper> {
-  HeapPtr<JSObject*>& obj() { return static_cast<Wrapper*>(this)->get().obj; }
-  HeapPtr<JSString*>& str() { return static_cast<Wrapper*>(this)->get().str; }
-  int constructor() {
-    return static_cast<Wrapper*>(this)->get().whichConstructor;
-  }
 };
 }  // namespace js
 
 BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
-  // Test Rooted constructors for a copyable type.
-  JS::Rooted<MyContainer> r1(cx);
-  JS::Rooted<MyContainer> r2(cx, 3.4);
-  JS::Rooted<MyContainer> r3(cx, MyContainer(cx));
-  JS::Rooted<MyContainer> r4(cx, cx);
-  JS::Rooted<MyContainer> r5(cx, cx, cx, cx);
-
-  JS::Rooted<Value> rv(cx);
-
-  CHECK_EQUAL(r1.constructor(), 101);  // copy of SafelyInitialized<T>
-  CHECK_EQUAL(r2.constructor(), 2);    // direct MyContainer(3.4)
-  CHECK_EQUAL(r3.constructor(), 103);  // copy of MyContainer(cx)
-  CHECK_EQUAL(r4.constructor(), 3);    // direct MyContainer(cx)
-  CHECK_EQUAL(r5.constructor(), 4);    // direct MyContainer(cx, cx, cx)
-
-  // Test Rooted constructor forwarding for a non-copyable type.
-  JS::Rooted<MyNonCopyableContainer> nc1(cx);
-  JS::Rooted<MyNonCopyableContainer> nc2(cx, 3.4);
-  // Compile error: cannot copy
-  // JS::Rooted<MyNonCopyableContainer> nc3(cx, MyNonCopyableContainer(cx));
-  JS::Rooted<MyNonCopyableContainer> nc4(cx, cx);
-  JS::Rooted<MyNonCopyableContainer> nc5(cx, cx, cx, cx);
-
-  CHECK_EQUAL(nc1.constructor(), 1);  // direct MyNonCopyableContainer()
-  CHECK_EQUAL(nc2.constructor(), 2);  // direct MyNonCopyableContainer(3.4)
-  CHECK_EQUAL(nc4.constructor(), 3);  // direct MyNonCopyableContainer(cx)
-  CHECK_EQUAL(nc5.constructor(),
-              4);  // direct MyNonCopyableContainer(cx, cx, cx)
-
   JS::Rooted<MyContainer> container(cx);
   container.obj() = JS_NewObject(cx, nullptr);
   container.str() = JS_NewStringCopyZ(cx, "Hello");
@@ -162,30 +85,6 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
 
     // Automatic move from stack to heap.
     JS::PersistentRooted<MyContainer> heap(cx, container);
-
-    // Copyable types in place.
-    JS::PersistentRooted<MyContainer> cp1(cx);
-    JS::PersistentRooted<MyContainer> cp2(cx, 7.8);
-    JS::PersistentRooted<MyContainer> cp3(cx, cx);
-    JS::PersistentRooted<MyContainer> cp4(cx, cx, cx, cx);
-
-    CHECK_EQUAL(cp1.constructor(), 101);  // copy of SafelyInitialized<T>
-    CHECK_EQUAL(cp2.constructor(), 2);    // direct MyContainer(double)
-    CHECK_EQUAL(cp3.constructor(), 3);    // direct MyContainer(cx)
-    CHECK_EQUAL(cp4.constructor(), 4);    // direct MyContainer(cx, cx, cx)
-
-    // Construct uncopyable type in place.
-    JS::PersistentRooted<MyNonCopyableContainer> ncp1(cx);
-    JS::PersistentRooted<MyNonCopyableContainer> ncp2(cx, 7.8);
-
-    // We're not just using a 1-arg constructor, right?
-    JS::PersistentRooted<MyNonCopyableContainer> ncp3(cx, cx);
-    JS::PersistentRooted<MyNonCopyableContainer> ncp4(cx, cx, cx, cx);
-
-    CHECK_EQUAL(ncp1.constructor(), 1);  // direct SafelyInitialized<T>
-    CHECK_EQUAL(ncp2.constructor(), 2);  // direct Ctor(double)
-    CHECK_EQUAL(ncp3.constructor(), 3);  // direct Ctor(cx)
-    CHECK_EQUAL(ncp4.constructor(), 4);  // direct Ctor(cx, cx, cx)
 
     // clear prior rooting.
     container.obj() = nullptr;
@@ -356,7 +255,7 @@ END_TEST(testGCHandleHashMap)
 using ShapeVec = GCVector<Shape*>;
 
 BEGIN_TEST(testGCRootedVector) {
-  JS::Rooted<ShapeVec> shapes(cx, cx);
+  JS::Rooted<ShapeVec> shapes(cx);
 
   for (size_t i = 0; i < 10; ++i) {
     RootedObject obj(cx, JS_NewObject(cx, nullptr));
