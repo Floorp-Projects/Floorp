@@ -11,7 +11,7 @@ use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::nsCString;
 use owned_value::owned_to_variant;
 use rkv::backend::{BackendInfo, SafeMode, SafeModeDatabase, SafeModeEnvironment};
-use rkv::{Migrator, OwnedValue, StoreError, StoreOptions, Value};
+use rkv::{OwnedValue, StoreError, StoreOptions, Value};
 use std::{
     path::Path,
     str,
@@ -199,7 +199,6 @@ impl Task for GetOrCreateTask {
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1531887
                 let path = Path::new(str::from_utf8(&self.path)?);
                 let rkv = manager.get_or_create(path, Rkv::new::<SafeMode>)?;
-                Migrator::easy_migrate_lmdb_to_safe_mode(path, rkv.read()?)?;
                 {
                     let env = rkv.read()?;
                     let load_ratio = env.load_ratio()?.unwrap_or(0.0);

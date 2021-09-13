@@ -602,12 +602,6 @@
     "minbytes": 0,
     "maxbytes": 702
   },
-  "{profile}\\xulstore\\data.mdb": {
-    "mincount": 0,
-    "maxcount": 4,
-    "minbytes": 0,
-    "maxbytes": 608
-  },
   "{profile}\\xulstore\\data.safe.bin": {
     "mincount": 0,
     "maxcount": 4,

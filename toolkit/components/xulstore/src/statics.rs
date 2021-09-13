@@ -11,7 +11,7 @@ use moz_task::is_main_thread;
 use nsstring::nsString;
 use once_cell::sync::Lazy;
 use rkv::backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment};
-use rkv::{Migrator, StoreOptions, Value};
+use rkv::{StoreOptions, Value};
 use std::{
     collections::BTreeMap,
     fs::{create_dir_all, remove_file, File},
@@ -50,7 +50,6 @@ pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;
     let xulstore_path = xulstore_dir.as_path();
     let rkv = manager.get_or_create(xulstore_path, Rkv::new::<SafeMode>)?;
-    Migrator::easy_migrate_lmdb_to_safe_mode(xulstore_path, rkv.read()?)?;
     let store = rkv.read()?.open_single("db", StoreOptions::create())?;
     Ok(Database::new(rkv, store))
 }
