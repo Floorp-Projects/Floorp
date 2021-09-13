@@ -55,6 +55,7 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
@@ -67,6 +68,7 @@ import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
+import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
@@ -851,11 +853,13 @@ class BrowserFragment :
     }
 
     private fun toggleTrackingProtection(enable: Boolean) {
-
+        val context = requireContext()
         with(requireComponents) {
             if (enable) {
+                ExceptionDomains.remove(context, listOf(tab.content.url.tryGetHostFromUrl()))
                 trackingProtectionUseCases.removeException(tab.id)
             } else {
+                ExceptionDomains.add(context, tab.content.url.tryGetHostFromUrl())
                 trackingProtectionUseCases.addException(tab.id)
             }
             sessionUseCases.reload(tab.id)
