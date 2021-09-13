@@ -1402,37 +1402,26 @@ class PersistentRooted
         reinterpret_cast<JS::PersistentRooted<detail::RootListEntry*>*>(this));
   }
 
+  // Used when JSContext type is incomplete and so it is not known to inherit
+  // from RootingContext.
+  void registerWithRootLists(JSContext* cx) {
+    registerWithRootLists(RootingContext::get(cx));
+  }
+
  public:
   using ElementType = T;
 
   PersistentRooted() : ptr(SafelyInitialized<T>()) {}
 
-  explicit PersistentRooted(RootingContext* cx) : ptr(SafelyInitialized<T>()) {
+  template <typename RootHolder>
+  explicit PersistentRooted(const RootHolder& cx) : ptr(SafelyInitialized<T>()) {
     registerWithRootLists(cx);
   }
 
-  explicit PersistentRooted(JSContext* cx) : ptr(SafelyInitialized<T>()) {
-    registerWithRootLists(RootingContext::get(cx));
-  }
-
-  template <typename U>
-  PersistentRooted(RootingContext* cx, U&& initial)
+  template <typename RootHolder, typename U>
+  PersistentRooted(const RootHolder& cx, U&& initial)
       : ptr(std::forward<U>(initial)) {
     registerWithRootLists(cx);
-  }
-
-  template <typename U>
-  PersistentRooted(JSContext* cx, U&& initial) : ptr(std::forward<U>(initial)) {
-    registerWithRootLists(RootingContext::get(cx));
-  }
-
-  explicit PersistentRooted(JSRuntime* rt) : ptr(SafelyInitialized<T>()) {
-    registerWithRootLists(rt);
-  }
-
-  template <typename U>
-  PersistentRooted(JSRuntime* rt, U&& initial) : ptr(std::forward<U>(initial)) {
-    registerWithRootLists(rt);
   }
 
   PersistentRooted(const PersistentRooted& rhs)
