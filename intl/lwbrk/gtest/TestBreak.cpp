@@ -172,11 +172,14 @@ TEST(LineBreak, WordBreaker)
 //                         012345678901234
 static const char wb0[] = "T";
 static const char wb1[] = "h";
-static const char wb2[] = "is   is a int";
-static const char wb3[] = "ernationali";
-static const char wb4[] = "zation work.";
+static const char wb2[] = "";
+static const char wb3[] = "is   is a int";
+static const char wb4[] = "";
+static const char wb5[] = "";
+static const char wb6[] = "ernationali";
+static const char wb7[] = "zation work.";
 
-static const char* wb[] = {wb0, wb1, wb2, wb3, wb4};
+static const char* wb[] = {wb0, wb1, wb2, wb3, wb4, wb5, wb6, wb7};
 
 TEST(WordBreak, TestPrintWordWithBreak)
 {
@@ -316,11 +319,14 @@ TEST(WordBreak, TestFindWordBreakFromPosition)
   TestFindWordBreakFromPosition(0, 0, "This");
   TestFindWordBreakFromPosition(1, 0, "his");
   TestFindWordBreakFromPosition(2, 0, "is");
-  TestFindWordBreakFromPosition(2, 1, "is");
-  TestFindWordBreakFromPosition(2, 9, " ");
-  TestFindWordBreakFromPosition(2, 10, "internationalization");
-  TestFindWordBreakFromPosition(3, 4, "ernationalization");
-  TestFindWordBreakFromPosition(3, 8, "ernationalization");
-  TestFindWordBreakFromPosition(4, 6, " ");
-  TestFindWordBreakFromPosition(4, 7, "work");
+  TestFindWordBreakFromPosition(3, 0, "is");
+  TestFindWordBreakFromPosition(3, 1, "is");
+  TestFindWordBreakFromPosition(3, 9, " ");
+  TestFindWordBreakFromPosition(3, 10, "internationalization");
+  TestFindWordBreakFromPosition(4, 0, "ernationalization");
+  TestFindWordBreakFromPosition(5, 0, "ernationalization");
+  TestFindWordBreakFromPosition(6, 4, "ernationalization");
+  TestFindWordBreakFromPosition(6, 8, "ernationalization");
+  TestFindWordBreakFromPosition(7, 6, " ");
+  TestFindWordBreakFromPosition(7, 7, "work");
 }
