@@ -954,7 +954,6 @@ Shape* SharedShape::new_(JSContext* cx, Handle<BaseShape*> base,
                          Handle<SharedPropMap*> map, uint32_t mapLength) {
   Shape* shape = Allocate<Shape>(cx);
   if (!shape) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
@@ -968,7 +967,6 @@ Shape* DictionaryShape::new_(JSContext* cx, Handle<BaseShape*> base,
                              uint32_t mapLength) {
   Shape* shape = Allocate<Shape>(cx);
   if (!shape) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 

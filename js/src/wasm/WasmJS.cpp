@@ -2904,7 +2904,6 @@ WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
 
   SharedTable table = Table::create(cx, td, obj);
   if (!table) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
