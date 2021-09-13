@@ -59,6 +59,7 @@ data class HistoryMetadataKey(
  * @property updatedAt The last time this record was updated.
  * @property totalViewTime Total time the user viewed the page associated with this record.
  * @property documentType The [DocumentType] of the page.
+ * @property previewImageUrl A preview image of the page (a.k.a. the hero image), if available.
  */
 data class HistoryMetadata(
     val key: HistoryMetadataKey,
@@ -66,7 +67,8 @@ data class HistoryMetadata(
     val createdAt: Long,
     val updatedAt: Long,
     val totalViewTime: Int,
-    val documentType: DocumentType
+    val documentType: DocumentType,
+    val previewImageUrl: String?
 )
 
 /**

@@ -166,7 +166,8 @@ internal fun mozilla.appservices.places.uniffi.HistoryMetadata.into(): HistoryMe
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
-        documentType = this.documentType.into()
+        documentType = this.documentType.into(),
+        previewImageUrl = this.previewImageUrl
     )
 }
 
@@ -190,7 +191,8 @@ internal fun HistoryMetadata.into(): mozilla.appservices.places.uniffi.HistoryMe
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         totalViewTime = this.totalViewTime,
-        documentType = this.documentType.into()
+        documentType = this.documentType.into(),
+        previewImageUrl = this.previewImageUrl
     )
 }
 
