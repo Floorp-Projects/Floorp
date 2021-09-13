@@ -2464,9 +2464,6 @@ static bool GCSlice(JSContext* cx, unsigned argc, Value* vp) {
   if (args.length() >= 1) {
     uint32_t work = 0;
     if (!ToUint32(cx, args[0], &work)) {
-      RootedObject callee(cx, &args.callee());
-      ReportUsageErrorASCII(cx, callee,
-                            "The work budget parameter |n| must be an integer");
       return false;
     }
     budget = SliceBudget(WorkBudget(work));
