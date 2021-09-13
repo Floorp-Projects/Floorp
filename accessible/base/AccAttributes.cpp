@@ -35,6 +35,13 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       [&aValueString](const RefPtr<nsAtom>& val) {
         val->ToString(aValueString);
       },
+      [&aValueString](const CopyableTArray<int32_t>& val) {
+        for (size_t i = 0; i < val.Length() - 1; i++) {
+          aValueString.AppendInt(val[i]);
+          aValueString.Append(u", ");
+        }
+        aValueString.AppendInt(val[val.Length() - 1]);
+      },
       [&aValueString](const CSSCoord& val) {
         aValueString.AppendFloat(val);
         aValueString.Append(u"px");
