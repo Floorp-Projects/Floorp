@@ -348,24 +348,26 @@ impl FontContext {
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
         if !self.faces.contains_key(font_key) {
+            let len = bytes.len();
             let file = FontFile::Data(bytes);
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             } else {
-                panic!("adding raw font failed");
+                panic!("adding raw font failed: {} bytes", len);
             }
         }
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
         if !self.faces.contains_key(font_key) {
-            let cstr = CString::new(native_font_handle.path.as_os_str().to_str().unwrap()).unwrap();
+            let str = native_font_handle.path.as_os_str().to_str().unwrap();
+            let cstr = CString::new(str).unwrap();
             let file = FontFile::Pathname(cstr);
             let index = native_font_handle.index;
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             } else {
-                panic!("adding native font failed");
+                panic!("adding native font failed: file={}", str);
             }
         }
     }
