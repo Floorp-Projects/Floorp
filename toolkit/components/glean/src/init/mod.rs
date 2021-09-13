@@ -94,7 +94,7 @@ pub unsafe extern "C" fn fog_init(
         data_path,
         application_id,
         max_events: None,
-        delay_ping_lifetime_io: false,
+        delay_ping_lifetime_io: true,
         channel: Some(channel),
         server_endpoint: Some(server),
         uploader: Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>),
