@@ -5,6 +5,11 @@
 import os
 
 
+THUNDERBIRD_PYPI_ERROR = """
+Thunderbird requirements definitions cannot include PyPI packages.
+""".strip()
+
+
 class PthSpecifier:
     def __init__(self, path):
         self.path = path
@@ -45,10 +50,9 @@ class MachEnvRequirements:
         will be read and processed as if its contents were concatenated
         into the manifest being read.
 
-    thunderbird -- This denotes the action as to only occur for Thunderbird
-        checkouts. The initial "thunderbird" field is stripped, then the
-        remaining line is processed like normal. e.g.
-        "thunderbird:pth:python/foo"
+    thunderbird-packages.txt -- Denotes a Thunderbird child manifest.
+        Thunderbird child manifests are only activated when working on Thunderbird,
+        and they can cannot have "pypi" or "pypi-optional" entries.
     """
 
     def __init__(self):
@@ -71,7 +75,7 @@ class MachEnvRequirements:
 def _parse_mach_env_requirements(
     requirements_output, root_requirements_path, topsrcdir, is_thunderbird
 ):
-    def _parse_requirements_line(line):
+    def _parse_requirements_line(line, is_thunderbird_packages_txt=False):
         line = line.strip()
         if not line or line.startswith("#"):
             return
@@ -79,12 +83,22 @@ def _parse_mach_env_requirements(
         action, params = line.rstrip().split(":", maxsplit=1)
         if action == "pth":
             requirements_output.pth_requirements.append(PthSpecifier(params))
+        elif action == "packages.txt":
+            nested_definition_path = os.path.join(topsrcdir, params)
+            assert os.path.isfile(nested_definition_path)
+            _parse_requirements_definition_file(nested_definition_path)
         elif action == "pypi":
+            if is_thunderbird_packages_txt:
+                raise Exception(THUNDERBIRD_PYPI_ERROR)
+
             package_name, version = _parse_package_specifier(params)
             requirements_output.pypi_requirements.append(
                 PypiSpecifier(package_name, version, params)
             )
         elif action == "pypi-optional":
+            if is_thunderbird_packages_txt:
+                raise Exception(THUNDERBIRD_PYPI_ERROR)
+
             if len(params.split(":", maxsplit=1)) != 2:
                 raise Exception(
                     "Expected pypi-optional package to have a repercussion "
@@ -96,13 +110,9 @@ def _parse_mach_env_requirements(
             requirements_output.pypi_optional_requirements.append(
                 PypiOptionalSpecifier(repercussion, package_name, version, package)
             )
-        elif action == "packages.txt":
-            nested_definition_path = os.path.join(topsrcdir, params)
-            assert os.path.isfile(nested_definition_path)
-            _parse_requirements_definition_file(nested_definition_path)
-        elif action == "thunderbird":
+        elif action == "thunderbird-packages.txt":
             if is_thunderbird:
-                _parse_requirements_line(params)
+                _parse_requirements_line(params, is_thunderbird_packages_txt=True)
         else:
             raise Exception("Unknown requirements definition action: %s" % action)
 
