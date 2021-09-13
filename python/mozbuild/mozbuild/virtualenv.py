@@ -66,26 +66,25 @@ class VirtualenvManager(VirtualenvHelper):
     def __init__(
         self,
         topsrcdir,
-        virtualenv_path,
-        log_handle,
-        manifest_path,
+        virtualenvs_dir,
+        virtualenv_name,
+        *,
         populate_local_paths=True,
+        log_handle=sys.stdout,
+        manifest_path=None,
     ):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
         want the virtualenv to be created, and a handle to write output to.
         """
+        virtualenv_path = os.path.join(virtualenvs_dir, virtualenv_name)
         super(VirtualenvManager, self).__init__(virtualenv_path)
 
         # __PYVENV_LAUNCHER__ confuses pip, telling it to use the system
         # python interpreter rather than the local virtual environment interpreter.
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
         os.environ.pop("__PYVENV_LAUNCHER__", None)
-
-        assert os.path.isabs(
-            manifest_path
-        ), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
 
         # Record the Python executable that was used to create the Virtualenv
@@ -94,8 +93,11 @@ class VirtualenvManager(VirtualenvHelper):
         self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
 
         self.log_handle = log_handle
-        self.manifest_path = manifest_path
         self.populate_local_paths = populate_local_paths
+        self._virtualenv_name = virtualenv_name
+        self._manifest_path = manifest_path or os.path.join(
+            topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
+        )
 
     @property
     def virtualenv_script_path(self):
@@ -305,7 +307,7 @@ class VirtualenvManager(VirtualenvHelper):
             os.listdir(thunderbird_dir)
         )
         return MachEnvRequirements.from_requirements_definition(
-            self.topsrcdir, is_thunderbird, self.manifest_path
+            self.topsrcdir, is_thunderbird, self._manifest_path
         )
 
     def populate(self):
@@ -417,8 +419,9 @@ class VirtualenvManager(VirtualenvHelper):
             thismodule,
             "populate",
             self.topsrcdir,
-            self.virtualenv_root,
-            self.manifest_path,
+            os.path.dirname(self.virtualenv_root),
+            self._virtualenv_name,
+            self._manifest_path,
         ]
         if self.populate_local_paths:
             args.append("--populate-local-paths")
@@ -595,7 +598,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("topsrcdir")
-    parser.add_argument("virtualenv_path")
+    parser.add_argument("virtualenvs_dir")
+    parser.add_argument("virtualenv_name")
     parser.add_argument("manifest_path")
     parser.add_argument("--populate-local-paths", action="store_true")
 
@@ -609,10 +613,10 @@ if __name__ == "__main__":
 
     manager = VirtualenvManager(
         opts.topsrcdir,
-        opts.virtualenv_path,
-        sys.stdout,
-        opts.manifest_path,
+        opts.virtualenvs_dir,
+        opts.virtualenv_name,
         populate_local_paths=opts.populate_local_paths,
+        manifest_path=opts.manifest_path,
     )
 
     if populate:
