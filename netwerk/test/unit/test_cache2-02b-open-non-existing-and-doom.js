@@ -56,6 +56,11 @@ add_task(async function test() {
     );
   });
 
+  Services.prefs.setBoolPref("network.cache.bug1708673", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("network.cache.bug1708673");
+  });
+
   let asyncDoomVisitor = new Promise(resolve => {
     let doomTasks = [];
     let visitor = {
