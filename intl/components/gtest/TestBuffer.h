@@ -6,6 +6,7 @@
 
 #include <string_view>
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla::intl {
@@ -68,6 +69,77 @@ class TestBuffer {
    * Clear the buffer, allowing it to be re-used.
    */
   void clear() { mBuffer.clear(); }
+
+  /**
+   * A utility function to convert UTF-16 strings to UTF-8 strings so that they
+   * can be logged to stderr.
+   */
+  static std::string toUtf8(mozilla::Span<const char16_t> input) {
+    size_t buff_len = input.Length() * 3;
+    std::string result(buff_len, ' ');
+    result.reserve(buff_len);
+    size_t result_len =
+        ConvertUtf16toUtf8(input, mozilla::Span(result.data(), buff_len));
+    result.resize(result_len);
+    return result;
+  }
+
+  /**
+   * String buffers, especially UTF-16, do not assert nicely, and are difficult
+   * to debug. This function is verbose in that it prints the buffer contents
+   * and expected contents to stderr when they do not match.
+   *
+   * Usage:
+   *   ASSERT_TRUE(buffer.assertStringView(u"9/23/2002, 8:07:30 PM"));
+   *
+   * Here is what gtests output:
+   *
+   *   Expected equality of these values:
+   *   buffer.get_string_view()
+   *     Which is: { '0' (48, 0x30), '9' (57, 0x39), '/' (47, 0x2F), ... }
+   *   "9/23/2002, 8:07:30 PM"
+   *     Which is: 0x11600afb9
+   *
+   * Here is what this method outputs:
+   *
+   *   The buffer did not match:
+   *     Buffer:
+   *      u"9/23/2002, 8:07:30 PM"
+   *     Expected:
+   *      u"09/23/2002, 08:07:30 PM"
+   */
+  bool verboseMatches(const CharType* aExpected) {
+    std::basic_string_view<CharType> actualSV(data(), length());
+    std::basic_string_view<CharType> expectedSV(aExpected);
+
+    if (actualSV.compare(expectedSV) == 0) {
+      return true;
+    }
+
+    static_assert(std::is_same_v<CharType, char> ||
+                  std::is_same_v<CharType, char16_t>);
+
+    std::string actual;
+    std::string expected;
+    const char* startQuote;
+
+    if constexpr (std::is_same_v<CharType, char>) {
+      actual = std::string(actualSV);
+      expected = std::string(expectedSV);
+      startQuote = "\"";
+    }
+    if constexpr (std::is_same_v<CharType, char16_t>) {
+      actual = toUtf8(actualSV);
+      expected = toUtf8(expectedSV);
+      startQuote = "u\"";
+    }
+
+    fprintf(stderr, "The buffer did not match:\n");
+    fprintf(stderr, "  Buffer:\n    %s%s\"\n", startQuote, actual.c_str());
+    fprintf(stderr, "  Expected:\n    %s%s\"\n", startQuote, expected.c_str());
+
+    return false;
+  }
 
   Vector<C, inlineCapacity> mBuffer{};
 };
