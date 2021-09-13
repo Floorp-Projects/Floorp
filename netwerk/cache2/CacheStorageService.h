@@ -90,10 +90,6 @@ class CacheStorageService final : public nsICacheStorageService,
   void Shutdown();
   void DropPrivateBrowsingEntries();
 
-  // Takes care of deleting any pending trashes for both cache1 and cache2
-  // as well as old cache directory.
-  static void CleaupCacheDirectories();
-
   static CacheStorageService* Self() { return sSelf; }
   static nsISupports* SelfISupports() {
     return static_cast<nsICacheStorageService*>(Self());

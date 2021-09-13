@@ -55,7 +55,6 @@ nsresult CacheObserver::Init() {
 
   obs->AddObserver(sSelf, "prefservice:after-app-defaults", true);
   obs->AddObserver(sSelf, "profile-do-change", true);
-  obs->AddObserver(sSelf, "browser-delayed-startup-finished", true);
   obs->AddObserver(sSelf, "profile-before-change", true);
   obs->AddObserver(sSelf, "xpcom-shutdown", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
@@ -205,11 +204,6 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
     AttachToPreferences();
     CacheFileIOManager::Init();
     CacheFileIOManager::OnProfile();
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
-    CacheStorageService::CleaupCacheDirectories();
     return NS_OK;
   }
 
