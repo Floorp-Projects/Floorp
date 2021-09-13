@@ -364,6 +364,7 @@ class SettingsPrivacyTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openPrivateBrowsingSubMenu {
+            cancelPrivateShortcutAddition()
             addPrivateShortcutToHomescreen()
             verifyPrivateBrowsingShortcutIcon()
         }.openPrivateBrowsingShortcut {

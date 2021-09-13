@@ -51,6 +51,18 @@ class SettingsSubMenuPrivateBrowsingRobot {
 
     fun clickOpenLinksInPrivateTabSwitch() = openLinksInPrivateTabSwitch().click()
 
+    fun cancelPrivateShortcutAddition() {
+        mDevice.wait(
+            Until.findObject(text("Add private browsing shortcut")),
+            waitingTime
+        )
+        addPrivateBrowsingShortcutButton().click()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mDevice.wait(Until.findObject(By.textContains("CANCEL")), waitingTime)
+            cancelShortcutAdditionButton().click()
+        }
+    }
+
     fun addPrivateShortcutToHomescreen() {
         mDevice.wait(
             Until.findObject(text("Add private browsing shortcut")),
@@ -104,6 +116,9 @@ private fun goBackButton() = onView(withContentDescription("Navigate up"))
 
 private fun addAutomaticallyButton() =
     mDevice.findObject(UiSelector().textStartsWith("add automatically"))
+
+private fun cancelShortcutAdditionButton() =
+    mDevice.findObject(UiSelector().textContains("CANCEL"))
 
 private fun privateBrowsingShortcutIcon() = mDevice.findObject(text("Private $appName"))
 
