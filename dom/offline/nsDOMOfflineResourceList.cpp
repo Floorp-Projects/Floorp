@@ -34,24 +34,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// Event names
-
-#define CHECKING_STR u"checking"
-#define ERROR_STR u"error"
-#define NOUPDATE_STR u"noupdate"
-#define DOWNLOADING_STR u"downloading"
-#define PROGRESS_STR u"progress"
-#define CACHED_STR u"cached"
-#define UPDATEREADY_STR u"updateready"
-#define OBSOLETE_STR u"obsolete"
-
-// To prevent abuse of the resource list for data storage, the number
-// of offline urls and their length are limited.
-
-static const char kMaxEntriesPref[] = "offline.max_site_resources";
-#define DEFAULT_MAX_ENTRIES 100
-#define MAX_URI_LENGTH 2048
-
 //
 // nsDOMOfflineResourceList
 //
