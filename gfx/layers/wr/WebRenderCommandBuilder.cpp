@@ -1694,7 +1694,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
-    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources) {
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+    bool aNewClipList) {
   if (mDoGrouping) {
     MOZ_RELEASE_ASSERT(
         aWrappingItem,
@@ -1715,7 +1716,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   }
 
   mDumpIndent++;
-  mClipManager.BeginList(aSc);
+  if (aNewClipList) {
+    mClipManager.BeginList(aSc);
+  }
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
 
@@ -1912,7 +1915,9 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
   }
 
   mDumpIndent--;
-  mClipManager.EndList(aSc);
+  if (aNewClipList) {
+    mClipManager.EndList(aSc);
+  }
 }
 
 void WebRenderCommandBuilder::PushOverrideForASR(
@@ -2484,6 +2489,8 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
   nsPoint maskOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
 
+  bool shouldHandleOpacity = aBuilder.GetInheritedOpacity() != 1.0f;
+
   nsRect dirtyRect;
   // If this mask item is being painted for the first time, some members of
   // WebRenderMaskData are still default initialized. This is intentional.
@@ -2491,7 +2498,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       !itemRect.IsEqualInterior(maskData->mItemRect) ||
       !(aMaskItem->Frame()->StyleSVGReset()->mMask == maskData->mMaskStyle) ||
       maskOffset != maskData->mMaskOffset || !sameScale ||
-      aMaskItem->ShouldHandleOpacity() != maskData->mShouldHandleOpacity) {
+      shouldHandleOpacity != maskData->mShouldHandleOpacity) {
     IntSize size = itemRect.Size().ToUnknownSize();
 
     if (!Factory::AllowedSurfaceSize(size)) {
@@ -2535,8 +2542,8 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
                            .PreScale(scale.width, scale.height));
 
     bool maskPainted = false;
-    bool maskIsComplete =
-        aMaskItem->PaintMask(aDisplayListBuilder, context, &maskPainted);
+    bool maskIsComplete = aMaskItem->PaintMask(
+        aDisplayListBuilder, context, shouldHandleOpacity, &maskPainted);
     if (!maskPainted) {
       return Nothing();
     }
@@ -2587,7 +2594,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       maskData->mMaskOffset = maskOffset;
       maskData->mScale = scale;
       maskData->mMaskStyle = aMaskItem->Frame()->StyleSVGReset()->mMask;
-      maskData->mShouldHandleOpacity = aMaskItem->ShouldHandleOpacity();
+      maskData->mShouldHandleOpacity = shouldHandleOpacity;
     }
   }
 
