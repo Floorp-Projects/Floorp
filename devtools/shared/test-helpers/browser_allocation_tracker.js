@@ -16,6 +16,9 @@ const loader = new DevToolsLoader({
 const { allocationTracker } = loader.require(
   "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
 );
+const TrackedObjects = loader.require(
+  "devtools/shared/test-helpers/tracked-objects.jsm"
+);
 
 add_task(async function() {
   // Use a sandbox to allocate test javascript object in order to avoid any
@@ -88,4 +91,23 @@ add_task(async function() {
   );
 
   tracker.stop();
+});
+
+add_task(async function() {
+  const leaked = {};
+  TrackedObjects.track(leaked);
+  let transient = {};
+  TrackedObjects.track(transient);
+
+  is(TrackedObjects.getAllNodeIds().length, 2, "The two objects are reported");
+
+  info("Free the transient object");
+  transient = null;
+  Cu.forceGC();
+
+  is(
+    TrackedObjects.getAllNodeIds().length,
+    1,
+    "We now only have the leaked object"
+  );
 });
