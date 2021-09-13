@@ -120,7 +120,7 @@ talos-damp:
                     default: []
             default:
                 by-test-platform:
-                    windows.*-32-shippable/.*: []
+                    windows.*-32-shippable.*/.*: []
                     (linux|windows|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     macosx1014.*: []
