@@ -39,6 +39,12 @@ extern JS_PUBLIC_API void JS_SetPendingException(
     JSContext* cx, JS::HandleValue v,
     JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
 
+// Indicate that we are intentionally raising an interrupt/uncatchable
+// exception. Returning false/nullptr without calling this will still be treated
+// as an interrupt, but in the future the implicit behaviour may no longer be
+// allowed.
+extern JS_PUBLIC_API void JS_SetPendingInterrupt(JSContext* cx);
+
 extern JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx);
 
 /**
@@ -56,7 +62,9 @@ namespace JS {
 // When propagating an exception up the call stack, we store the underlying
 // reason on the JSContext as one of the following enum values.
 //
-// TODO: Track uncatchable exceptions explicitly.
+// NOTE: It is not yet a hard requirement for uncatchable exceptions to set
+//       status to Interrupt so rely on the last return value. If Interrupt is
+//       not set then the status will remain as None.
 enum class ExceptionStatus {
   // No expection status.
   None,
@@ -65,6 +73,12 @@ enum class ExceptionStatus {
   // exception machinery, but at the right time is turned back into a normal
   // non-error completion.
   ForcedReturn,
+
+  // An uncatchable exception that functions as an interrupt. This is used for
+  // watchdog mechanisms (like the slow-script notification) or the debugger
+  // API. It cannot be caught be JS catch blocks, but the debugger or event
+  // loops may still capture it.
+  Interrupt,
 
   // Throwing a (catchable) exception. Certain well-known exceptions are
   // explicitly tracked for convenience.

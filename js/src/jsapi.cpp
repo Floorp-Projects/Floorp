@@ -3685,6 +3685,10 @@ JS_PUBLIC_API void JS_SetPendingException(JSContext* cx, HandleValue value,
   }
 }
 
+JS_PUBLIC_API void JS_SetPendingInterrupt(JSContext* cx) {
+  cx->setInterrupting();
+}
+
 JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx) {
   AssertHeapIsIdle();
   cx->clearPendingException();
