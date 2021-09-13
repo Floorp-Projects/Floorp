@@ -208,6 +208,11 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
+    CacheStorageService::CleaupCacheDirectories();
+    return NS_OK;
+  }
+
   if (!strcmp(aTopic, "profile-change-net-teardown") ||
       !strcmp(aTopic, "profile-before-change") ||
       !strcmp(aTopic, "xpcom-shutdown")) {
