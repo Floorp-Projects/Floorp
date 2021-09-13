@@ -1515,6 +1515,9 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   MOZ_ASSERT(*bailoutInfo == nullptr);
   MOZ_ASSERT(iter.isBailoutJS());
 
+  // Caller should have saved the exception while we perform the bailout.
+  MOZ_ASSERT(!cx->isExceptionPending());
+
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLogStopEvent(logger, TraceLogger_IonMonkey);
   TraceLogStartEvent(logger, TraceLogger_Baseline);
