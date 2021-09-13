@@ -68,7 +68,7 @@ def build_gradle_command(config, tasks):
         variant_name = variant_config["name"][0].upper() + variant_config["name"][1:]
         task["run"]["gradlew"] = [
             "clean",
-            "assemble{}".format(variant_name),
+            f"assemble{variant_name}",
         ]
         yield task
 

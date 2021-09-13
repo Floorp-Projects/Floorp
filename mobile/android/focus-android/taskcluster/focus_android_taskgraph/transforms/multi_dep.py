@@ -63,10 +63,10 @@ def build_upstream_artifacts(config, tasks):
         worker_definition = {}
 
         for dep in _get_all_deps(task).values():
-            paths = sorted([
+            paths = sorted(
                 apk_metadata["name"]
                 for apk_metadata in dep.attributes.get("apks", {}).values()
-            ])
+            )
             if paths:
                 worker_definition["upstream-artifacts"] = [{
                     "taskId": {"task-reference": f"<{dep.kind}>"},
