@@ -4348,9 +4348,6 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.annotate_channels.strict_list.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
       },
-      custom: {
-        "network.http.referer.disallowCrossSiteRelaxingDefault": true,
-      },
     };
     let type = "strict";
     let rulesArray = Services.prefs
@@ -4559,6 +4556,11 @@ var ContentBlockingCategoriesPrefs = {
    * Sets all user-exposed content blocking preferences to values that match the selected category.
    */
   setPrefsToCategory(category) {
+    // Leave prefs as they were if we are switching to "custom" category.
+    if (category == "custom") {
+      return;
+    }
+
     for (let pref in this.CATEGORY_PREFS[category]) {
       let value = this.CATEGORY_PREFS[category][pref];
       if (!Services.prefs.prefIsLocked(pref)) {
