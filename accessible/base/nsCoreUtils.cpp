@@ -356,13 +356,6 @@ bool nsCoreUtils::IsRootDocument(Document* aDocument) {
   return !parentTreeItem;
 }
 
-bool nsCoreUtils::IsContentDocument(Document* aDocument) {
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
-  NS_ASSERTION(docShellTreeItem, "No document shell tree item for document!");
-
-  return (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent);
-}
-
 bool nsCoreUtils::IsTopLevelContentDocInProcess(Document* aDocumentNode) {
   mozilla::dom::BrowsingContext* bc = aDocumentNode->GetBrowsingContext();
   return bc->IsContent() && (
