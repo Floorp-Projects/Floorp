@@ -9,6 +9,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "nsIInputStream.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
@@ -323,32 +324,40 @@ void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
 
 /* DateTime */
 
-static DateTimeStyle GetStyle(ffi::FluentDateTimeStyle aStyle) {
+static Maybe<DateTimeFormat::Style> GetStyle(ffi::FluentDateTimeStyle aStyle) {
   switch (aStyle) {
     case ffi::FluentDateTimeStyle::Full:
-      return DateTimeStyle::Full;
+      return Some(DateTimeFormat::Style::Full);
     case ffi::FluentDateTimeStyle::Long:
-      return DateTimeStyle::Long;
+      return Some(DateTimeFormat::Style::Long);
     case ffi::FluentDateTimeStyle::Medium:
-      return DateTimeStyle::Medium;
+      return Some(DateTimeFormat::Style::Medium);
     case ffi::FluentDateTimeStyle::Short:
-      return DateTimeStyle::Short;
+      return Some(DateTimeFormat::Style::Short);
     case ffi::FluentDateTimeStyle::None:
-      return DateTimeStyle::None;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported date time style.");
-      return DateTimeStyle::None;
+      return Nothing();
   }
+  MOZ_ASSERT_UNREACHABLE();
+  return Nothing();
 }
 
 ffi::RawDateTimeFormatter* FluentBuiltInDateTimeFormatterCreate(
     const nsCString* aLocale, const ffi::FluentDateTimeOptionsRaw* aOptions) {
+  auto genResult = DateTimePatternGenerator::TryCreate(aLocale->get());
+  if (genResult.isErr()) {
+    MOZ_ASSERT_UNREACHABLE("There was an error in DateTimeFormat");
+    return nullptr;
+  }
+  UniquePtr<DateTimePatternGenerator> dateTimePatternGenerator =
+      genResult.unwrap();
+
   if (aOptions->date_style == ffi::FluentDateTimeStyle::None &&
       aOptions->time_style == ffi::FluentDateTimeStyle::None &&
       !aOptions->skeleton.IsEmpty()) {
     auto result = DateTimeFormat::TryCreateFromSkeleton(
         Span(aLocale->get(), aLocale->Length()),
-        Span(aOptions->skeleton.get(), aOptions->skeleton.Length()));
+        Span(aOptions->skeleton.get(), aOptions->skeleton.Length()),
+        dateTimePatternGenerator.get(), Nothing());
     if (result.isErr()) {
       MOZ_ASSERT_UNREACHABLE("There was an error in DateTimeFormat");
       return nullptr;
@@ -358,9 +367,13 @@ ffi::RawDateTimeFormatter* FluentBuiltInDateTimeFormatterCreate(
         result.unwrap().release());
   }
 
+  DateTimeFormat::StyleBag style;
+  style.date = GetStyle(aOptions->date_style);
+  style.time = GetStyle(aOptions->time_style);
+
   auto result = DateTimeFormat::TryCreateFromStyle(
-      Span(aLocale->get(), aLocale->Length()), GetStyle(aOptions->date_style),
-      GetStyle(aOptions->time_style));
+      Span(aLocale->get(), aLocale->Length()), style,
+      dateTimePatternGenerator.get());
 
   if (result.isErr()) {
     MOZ_ASSERT_UNREACHABLE("There was an error in DateTimeFormat");
