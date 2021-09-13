@@ -127,7 +127,15 @@ function part1()
 
 function systemColor(c) {
     let {r, g, b, a} = SpecialPowers.wrap(window).InspectorUtils.colorToRGBA(c, document);
-    return a != 1 ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
+    if (a == 1)
+      return `rgb(${r}, ${g}, ${b})`;
+    // Match ColorComponentToFloat's max number of decimals (3), and remove trailing zeros.
+    let alphaString = a.toFixed(3);
+    if (alphaString.includes(".")) {
+      while (alphaString[alphaString.length - 1] == "0")
+        alphaString = alphaString.substring(0, alphaString.length - 1);
+    }
+    return `rgba(${r}, ${g}, ${b}, ${alphaString})`;
 }
 
 function part2()
