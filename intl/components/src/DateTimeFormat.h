@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifndef intl_components_DateTimeFormat_h_
 #define intl_components_DateTimeFormat_h_
+#include <functional>
 #include "unicode/udat.h"
 
 #include "mozilla/Assertions.h"
@@ -14,15 +15,18 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
+#include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla::intl {
 
-enum class DateTimeStyle { Full, Long, Medium, Short, None };
-
+class DateTimePatternGenerator;
 class Calendar;
 
 /**
+ * Intro to mozilla::intl::DateTimeFormat
+ * ======================================
+ *
  * This component is a Mozilla-focused API for the date formatting provided by
  * ICU. The methods internally call out to ICU4C. This is responsible for and
  * owns any resources opened through ICU, through RAII.
@@ -31,15 +35,17 @@ class Calendar;
  * of the DateTimeFormat operation. DateTimeFormat::TryFormat should be
  * relatively inexpensive after the initial construction.
  *
- * This class supports creating from Styles (a fixed set of options), and from
- * Skeletons (a list of fields and field widths to include).
+ * This class supports creating from Styles (a fixed set of options), from
+ * Skeletons (a list of fields and field widths to include), and from a
+ * components bag (a list of components and their lengths).
  *
- * This API will also serve to back the ECMA-402 Intl.DateTimeFormat API.
- * See Bug 1709473.
+ * This API serves to back the ECMA-402 Intl.DateTimeFormat API.
  * https://tc39.es/ecma402/#datetimeformat-objects
  *
- * Intl.DateTimeFormat and ICU skeletons and patterns
- * ==================================================
+ *
+ * ECMA-402 Intl.DateTimeFormat API and implementation details with ICU
+ * skeletons and patterns.
+ * ====================================================================
  *
  * Different locales have different ways to display dates using the same
  * basic components. For example, en-US might use "Sept. 24, 2012" while
@@ -48,7 +54,7 @@ class Calendar;
  * set of date-time components and their desired representation as specified
  * by the API client.
  *
- * ICU supports specification of date and time formats in three ways:
+ * ICU4C supports specification of date and time formats in three ways:
  *
  * 1) A style is just one of the identifiers FULL, LONG, MEDIUM, or SHORT.
  *    The date-time components included in each style and their representation
@@ -78,17 +84,15 @@ class Calendar;
  *    numbering system - these are determined by ICU using CLDR locale data or
  *    possibly API parameters.
  *
- * All actual formatting in ICU is done with patterns; styles and skeletons
+ * All actual formatting in ICU4C is done with patterns; styles and skeletons
  * have to be mapped to patterns before processing.
  *
- * The options of DateTimeFormat most closely correspond to ICU skeletons. This
- * implementation therefore, in the toBestICUPattern function, converts
- * DateTimeFormat options to ICU skeletons, and then lets ICU map skeletons to
- * actual ICU patterns. The pattern may not directly correspond to what the
- * skeleton requests, as the mapper (UDateTimePatternGenerator) is constrained
- * by the available locale data for the locale. The resulting ICU pattern is
- * kept as the DateTimeFormat's [[pattern]] internal property and passed to ICU
- * in the format method.
+ * The options of Intl.DateTimeFormat most closely correspond to ICU skeletons.
+ * This implementation therefore converts DateTimeFormat options to ICU
+ * skeletons, and then lets ICU map skeletons to actual ICU patterns. The
+ * pattern may not directly correspond to what the skeleton requests, as the
+ * mapper (UDateTimePatternGenerator) is constrained by the available locale
+ * data for the locale.
  *
  * An ICU pattern represents the information of the following DateTimeFormat
  * internal properties described in the specification, which therefore don't
@@ -99,21 +103,136 @@ class Calendar;
  * - [[hourCycle]]
  * - [[hourNo0]]
  * When needed for the resolvedOptions method, the resolveICUPattern function
- * maps the instance's ICU pattern back to the specified properties of the
- * object returned by resolvedOptions.
+ * queries the UDateFormat's internal pattern and then maps the it back to the
+ * specified properties of the object returned by resolvedOptions.
  *
  * ICU date-time skeletons and patterns aren't fully documented in the ICU
  * documentation (see http://bugs.icu-project.org/trac/ticket/9627). The best
  * documentation at this point is in UTR 35:
  * http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
+ *
+ * Future support for ICU4X
+ * ========================
+ * This implementation exposes a components bag, and internally handles the
+ * complexity of working with skeletons and patterns to generate the correct
+ * results. In the future, if and when we switch to ICU4X, the complexities of
+ * manipulating patterns will be able to be removed, as ICU4X will directly know
+ * how to apply the components bag.
  */
 class DateTimeFormat final {
  public:
+  /**
+   * The hour cycle for components.
+   */
+  enum class HourCycle {
+    H11,
+    H12,
+    H23,
+    H24,
+  };
+
+  /**
+   * The style for dates or times.
+   */
+  enum class Style {
+    Full,
+    Long,
+    Medium,
+    Short,
+  };
+
+  /**
+   * A bag of options to determine the length of the time and date styles. The
+   * hour cycle can be overridden.
+   */
+  struct StyleBag {
+    Maybe<Style> date = Nothing();
+    Maybe<Style> time = Nothing();
+    Maybe<HourCycle> hourCycle = Nothing();
+    Maybe<bool> hour12 = Nothing();
+  };
+
+  /**
+   * How to to display numeric components such as the year and the day.
+   */
+  enum class Numeric {
+    Numeric,
+    TwoDigit,
+  };
+
+  /**
+   * How to display the text components, such as the weekday or day period.
+   */
+  enum class Text {
+    Long,
+    Short,
+    Narrow,
+  };
+
+  /**
+   * How to display the month.
+   */
+  enum class Month {
+    Numeric,
+    TwoDigit,
+    Long,
+    Short,
+    Narrow,
+  };
+
+  /**
+   * How to display the time zone name.
+   */
+  enum class TimeZoneName {
+    Long,
+    Short,
+    ShortOffset,
+    LongOffset,
+    ShortGeneric,
+    LongGeneric,
+  };
+
+  /**
+   * Get static strings representing the enums. These match ECMA-402's resolved
+   * options.
+   * https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
+   */
+  static const char* ToString(DateTimeFormat::HourCycle aHourCycle);
+  static const char* ToString(DateTimeFormat::Style aStyle);
+  static const char* ToString(DateTimeFormat::Numeric aNumeric);
+  static const char* ToString(DateTimeFormat::Text aText);
+  static const char* ToString(DateTimeFormat::Month aMonth);
+  static const char* ToString(DateTimeFormat::TimeZoneName aTimeZoneName);
+
+  /**
+   * A components bag specifies the components used to display a DateTime. Each
+   * component can be styled individually, and ICU will attempt to create a best
+   * match for a given locale.
+   */
+  struct ComponentsBag {
+    Maybe<Text> era = Nothing();
+    Maybe<Numeric> year = Nothing();
+    Maybe<Month> month = Nothing();
+    Maybe<Numeric> day = Nothing();
+    Maybe<Text> weekday = Nothing();
+    Maybe<Numeric> hour = Nothing();
+    Maybe<Numeric> minute = Nothing();
+    Maybe<Numeric> second = Nothing();
+    Maybe<TimeZoneName> timeZoneName = Nothing();
+    Maybe<bool> hour12 = Nothing();
+    Maybe<HourCycle> hourCycle = Nothing();
+    Maybe<Text> dayPeriod = Nothing();
+    Maybe<uint8_t> fractionalSecondDigits = Nothing();
+  };
+
   // Do not allow copy as this class owns the ICU resource. Move is not
   // currently implemented, but a custom move operator could be created if
   // needed.
   DateTimeFormat(const DateTimeFormat&) = delete;
   DateTimeFormat& operator=(const DateTimeFormat&) = delete;
+
+  // mozilla::Vector can avoid heap allocations for small transient buffers.
+  using PatternVector = Vector<char16_t, 128>;
 
   /**
    * Create a DateTimeFormat from styles.
@@ -127,18 +246,9 @@ class DateTimeFormat final {
    * an IANA time zone identifier, e.g. "America/Chicago".
    */
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromStyle(
-      Span<const char> aLocale, DateTimeStyle aDateStyle,
-      DateTimeStyle aTimeStyle,
+      Span<const char> aLocale, const StyleBag& aStyleBag,
+      DateTimePatternGenerator* aDateTimePatternGenerator,
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
-
-  /**
-   * Create a DateTimeFormat from a UTF-8 skeleton. See the UTF-16 version for
-   * the full documentation of this function. This overload requires additional
-   * work compared to the UTF-16 version.
-   */
-  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
-      Span<const char> aLocale, Span<const char> aSkeleton,
-      Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
 
   /**
    * Create a DateTimeFormat from a UTF-16 skeleton.
@@ -154,8 +264,41 @@ class DateTimeFormat final {
    */
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char16_t> aSkeleton,
+      DateTimePatternGenerator* aDateTimePatternGenerator,
+      Maybe<DateTimeFormat::HourCycle> aHourCycle = Nothing{},
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
 
+  /**
+   * Create a DateTimeFormat from a UTF-8 skeleton.
+   *
+   * See the TryCreateFromSkeleton for const char16_t for documentation.
+   */
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
+      Span<const char> aLocale, Span<const char> aSkeleton,
+      DateTimePatternGenerator* aDateTimePatternGenerator,
+      Maybe<DateTimeFormat::HourCycle> aHourCycle = Nothing{},
+      Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
+
+  /**
+   * Create a DateTimeFormat from a ComponentsBag.
+   *
+   * See the ComponentsBag for additional documentation.
+   *
+   * Takes an optional time zone which will override the user's default
+   * time zone. This is a string that takes the form "GMT±hh:mm", or
+   * an IANA time zone identifier, e.g. "America/Chicago".
+   */
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromComponents(
+      Span<const char> aLocale, const ComponentsBag& bag,
+      DateTimePatternGenerator* aDateTimePatternGenerator,
+      Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
+
+  /**
+   * Create a DateTimeFormat from a raw pattern.
+   *
+   * Warning: This method should not be added to new code. In the near future we
+   * plan to remove it.
+   */
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromPattern(
       Span<const char> aLocale, Span<const char16_t> aPattern,
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
@@ -182,7 +325,7 @@ class DateTimeFormat final {
       // The output buffer is UTF-8, but ICU uses UTF-16 internally.
 
       // Write the formatted date into the u16Buffer.
-      mozilla::Vector<char16_t, StackU16VectorSize> u16Vec;
+      PatternVector u16Vec;
 
       auto result = FillVectorWithICUCall(
           u16Vec, [this, &aUnixEpoch](UChar* target, int32_t length,
@@ -212,6 +355,9 @@ class DateTimeFormat final {
 
   /**
    * Copies the pattern for the current DateTimeFormat to a buffer.
+   *
+   * Warning: This method should not be added to new code. In the near future we
+   * plan to remove it.
    */
   template <typename B>
   ICUResult GetPattern(B& aBuffer) const {
@@ -229,6 +375,18 @@ class DateTimeFormat final {
    */
   void SetStartTimeIfGregorian(double aTime);
 
+  /**
+   * Determines the resolved components for the current DateTimeFormat.
+   *
+   * When a DateTimeFormat is created, even from a components bag, the resolved
+   * formatter may tweak the resolved components depending on the configuration
+   * and the locale.
+   *
+   * For the implementation, with ICU4C, this takes a string pattern and maps it
+   * back to a ComponentsBag.
+   */
+  Result<ComponentsBag, ICUError> ResolveComponents();
+
   ~DateTimeFormat();
 
   /**
@@ -245,11 +403,15 @@ class DateTimeFormat final {
   Result<UniquePtr<Calendar>, InternalError> CloneCalendar(
       double aUnixEpoch) const;
 
+  /**
+   * Return the hour cycle used in the input pattern or Nothing if none was
+   * found.
+   */
+  static Maybe<DateTimeFormat::HourCycle> HourCycleFromPattern(
+      Span<const char16_t> aPattern);
+
  private:
   explicit DateTimeFormat(UDateFormat* aDateFormat);
-
-  // mozilla::Vector can avoid heap allocations for small transient buffers.
-  static constexpr size_t StackU16VectorSize = 128;
 
   UDateFormat* mDateFormat = nullptr;
 };

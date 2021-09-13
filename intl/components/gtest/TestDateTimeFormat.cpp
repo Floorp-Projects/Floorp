@@ -14,21 +14,24 @@ namespace mozilla::intl {
 // Firefox 1.0 release date.
 const double DATE = 1032800850000.0;
 
-static UniquePtr<DateTimeFormat> testStyle(const char* aLocale,
-                                           DateTimeStyle aDateStyle,
-                                           DateTimeStyle aTimeStyle) {
+static UniquePtr<DateTimeFormat> testStyle(
+    const char* aLocale, DateTimeFormat::StyleBag& aStyleBag) {
   // Always specify a time zone in the tests, otherwise it will use the system
   // time zone which can vary between test runs.
-  return DateTimeFormat::TryCreateFromStyle(MakeStringSpan(aLocale), aDateStyle,
-                                            aTimeStyle,
-                                            Some(MakeStringSpan(u"GMT+3")))
+  auto timeZone = Some(MakeStringSpan(u"GMT+3"));
+  auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
+  return DateTimeFormat::TryCreateFromStyle(MakeStringSpan(aLocale), aStyleBag,
+                                            gen.get(), timeZone)
       .unwrap();
 }
 
 TEST(IntlDateTimeFormat, Style_enUS_utf8)
 {
-  auto dtFormat =
-      testStyle("en-US", DateTimeStyle::Medium, DateTimeStyle::Medium);
+  DateTimeFormat::StyleBag style;
+  style.date = Some(DateTimeFormat::Style::Medium);
+  style.time = Some(DateTimeFormat::Style::Medium);
+
+  auto dtFormat = testStyle("en-US", style);
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
@@ -37,8 +40,11 @@ TEST(IntlDateTimeFormat, Style_enUS_utf8)
 
 TEST(IntlDateTimeFormat, Style_enUS_utf16)
 {
-  auto dtFormat =
-      testStyle("en-US", DateTimeStyle::Medium, DateTimeStyle::Medium);
+  DateTimeFormat::StyleBag style;
+  style.date = Some(DateTimeFormat::Style::Medium);
+  style.time = Some(DateTimeFormat::Style::Medium);
+
+  auto dtFormat = testStyle("en-US", style);
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
@@ -47,7 +53,10 @@ TEST(IntlDateTimeFormat, Style_enUS_utf16)
 
 TEST(IntlDateTimeFormat, Style_ar_utf8)
 {
-  auto dtFormat = testStyle("ar", DateTimeStyle::Medium, DateTimeStyle::None);
+  DateTimeFormat::StyleBag style;
+  style.time = Some(DateTimeFormat::Style::Medium);
+
+  auto dtFormat = testStyle("ar", style);
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
@@ -56,7 +65,10 @@ TEST(IntlDateTimeFormat, Style_ar_utf8)
 
 TEST(IntlDateTimeFormat, Style_ar_utf16)
 {
-  auto dtFormat = testStyle("ar", DateTimeStyle::Medium, DateTimeStyle::None);
+  DateTimeFormat::StyleBag style;
+  style.time = Some(DateTimeFormat::Style::Medium);
+
+  auto dtFormat = testStyle("ar", style);
   TestBuffer<char16_t> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
@@ -65,7 +77,9 @@ TEST(IntlDateTimeFormat, Style_ar_utf16)
 
 TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
 {
-  auto dtFormat = testStyle("en-US", DateTimeStyle::None, DateTimeStyle::None);
+  DateTimeFormat::StyleBag style;
+
+  auto dtFormat = testStyle("en-US", style);
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
@@ -74,35 +88,50 @@ TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
 {
+  UniquePtr<DateTimePatternGenerator> gen = nullptr;
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate("en").unwrap();
+
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
-          "en-US", MakeStringSpan("yMdhhmmss"), Some(MakeStringSpan("GMT+3")))
+          "en-US", MakeStringSpan("yMdhhmmss"), dateTimePatternGenerator.get(),
+          Nothing(), Some(MakeStringSpan("GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 8:07:30 PM"));
+  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 08:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
 {
+  UniquePtr<DateTimePatternGenerator> gen = nullptr;
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate("en").unwrap();
+
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
-          "en-US", MakeStringSpan(u"yMdhhmmss"), Some(MakeStringSpan(u"GMT+3")))
+          "en-US", MakeStringSpan(u"yMdhhmmss"), dateTimePatternGenerator.get(),
+          Nothing(), Some(MakeStringSpan(u"GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
 
-  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 8:07:30 PM"));
+  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 08:07:30 PM"));
 }
 
 TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
 {
-  auto dtFormat =
-      DateTimeFormat::TryCreateFromStyle(
-          MakeStringSpan("en-US"), DateTimeStyle::Medium, DateTimeStyle::Medium,
-          Some(MakeStringSpan(u"America/Chicago")))
-          .unwrap();
+  auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
+
+  DateTimeFormat::StyleBag style;
+  style.date = Some(DateTimeFormat::Style::Medium);
+  style.time = Some(DateTimeFormat::Style::Medium);
+
+  auto dtFormat = DateTimeFormat::TryCreateFromStyle(
+                      MakeStringSpan("en-US"), style, gen.get(),
+                      Some(MakeStringSpan(u"America/Chicago")))
+                      .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
   ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 12:07:30 PM"));
@@ -125,6 +154,294 @@ TEST(IntlDateTimePatternGenerator, GetSkeleton)
   DateTimePatternGenerator::GetSkeleton(MakeStringSpan(u"M/d/y"), buffer)
       .unwrap();
   ASSERT_TRUE(buffer.verboseMatches(u"yMd"));
+}
+
+// A utility function to help test the DateTimeFormat::ComponentsBag.
+[[nodiscard]] bool FormatComponents(TestBuffer<char16_t>& aBuffer,
+                                    DateTimeFormat::ComponentsBag& aComponents,
+                                    Span<const char> aLocale = "en-US") {
+  UniquePtr<DateTimePatternGenerator> gen = nullptr;
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate(aLocale.data()).unwrap();
+
+  auto dtFormat = DateTimeFormat::TryCreateFromComponents(
+      aLocale, aComponents, dateTimePatternGenerator.get(),
+      Some(MakeStringSpan(u"GMT+3")));
+  if (dtFormat.isErr()) {
+    fprintf(stderr, "Could not create a DateTimeFormat\n");
+    return false;
+  }
+
+  auto result = dtFormat.unwrap()->TryFormat(DATE, aBuffer);
+  if (result.isErr()) {
+    fprintf(stderr, "Could not format a DateTimeFormat\n");
+    return false;
+  }
+
+  return true;
+}
+
+TEST(IntlDateTimeFormat, Components)
+{
+  DateTimeFormat::ComponentsBag components{};
+
+  components.year = Some(DateTimeFormat::Numeric::Numeric);
+  components.month = Some(DateTimeFormat::Month::Numeric);
+  components.day = Some(DateTimeFormat::Numeric::Numeric);
+
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.second = Some(DateTimeFormat::Numeric::TwoDigit);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components));
+  ASSERT_TRUE(buffer.verboseMatches(u"9/23/2002, 8:07:30 PM"));
+}
+
+TEST(IntlDateTimeFormat, Components_es_ES)
+{
+  DateTimeFormat::ComponentsBag components{};
+
+  components.year = Some(DateTimeFormat::Numeric::Numeric);
+  components.month = Some(DateTimeFormat::Month::Numeric);
+  components.day = Some(DateTimeFormat::Numeric::Numeric);
+
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.second = Some(DateTimeFormat::Numeric::TwoDigit);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components, "es-ES"));
+  ASSERT_TRUE(buffer.verboseMatches(u"23/9/2002 20:07:30"));
+}
+
+TEST(IntlDateTimeFormat, ComponentsAll)
+{
+  // Use most all of the components.
+  DateTimeFormat::ComponentsBag components{};
+
+  components.era = Some(DateTimeFormat::Text::Short);
+
+  components.year = Some(DateTimeFormat::Numeric::Numeric);
+  components.month = Some(DateTimeFormat::Month::Numeric);
+  components.day = Some(DateTimeFormat::Numeric::Numeric);
+
+  components.weekday = Some(DateTimeFormat::Text::Short);
+
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.second = Some(DateTimeFormat::Numeric::TwoDigit);
+
+  components.timeZoneName = Some(DateTimeFormat::TimeZoneName::Short);
+  components.hourCycle = Some(DateTimeFormat::HourCycle::H24);
+  components.fractionalSecondDigits = Some(3);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components));
+  ASSERT_TRUE(buffer.verboseMatches(u"Mon, 9 23, 2002 AD, 20:07:30.000 GMT+3"));
+}
+
+TEST(IntlDateTimeFormat, ComponentsHour12Default)
+{
+  // Assert the behavior of the default "en-US" 12 hour time with day period.
+  DateTimeFormat::ComponentsBag components{};
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::Numeric);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components));
+  ASSERT_TRUE(buffer.verboseMatches(u"8:07 PM"));
+}
+
+TEST(IntlDateTimeFormat, ComponentsHour24)
+{
+  // Test the behavior of using 24 hour time to override the default of
+  // hour 12 with a day period.
+  DateTimeFormat::ComponentsBag components{};
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::Numeric);
+  components.hour12 = Some(false);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components));
+  ASSERT_TRUE(buffer.verboseMatches(u"20:07"));
+}
+
+TEST(IntlDateTimeFormat, ComponentsHour12DayPeriod)
+{
+  // Test the behavior of specifying a specific day period.
+  DateTimeFormat::ComponentsBag components{};
+
+  components.hour = Some(DateTimeFormat::Numeric::Numeric);
+  components.minute = Some(DateTimeFormat::Numeric::Numeric);
+  components.dayPeriod = Some(DateTimeFormat::Text::Long);
+
+  TestBuffer<char16_t> buffer;
+  ASSERT_TRUE(FormatComponents(buffer, components));
+  ASSERT_TRUE(buffer.verboseMatches(u"8:07 in the evening"));
+}
+
+const char* ToString(uint8_t b) { return "uint8_t"; }
+const char* ToString(bool b) { return b ? "true" : "false"; }
+
+template <typename T>
+const char* ToString(Maybe<T> option) {
+  if (option) {
+    if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, uint8_t>) {
+      return ToString(*option);
+    } else {
+      return DateTimeFormat::ToString(*option);
+    }
+  }
+  return "Nothing";
+}
+
+template <typename T>
+[[nodiscard]] bool VerboseEquals(T expected, T actual, const char* msg) {
+  if (expected != actual) {
+    fprintf(stderr, "%s\n  Actual: %s\nExpected: %s\n", msg, ToString(actual),
+            ToString(expected));
+    return false;
+  }
+  return true;
+}
+
+// A testing utility for getting nice errors when ComponentsBags don't match.
+[[nodiscard]] bool VerboseEquals(DateTimeFormat::ComponentsBag& expected,
+                                 DateTimeFormat::ComponentsBag& actual) {
+  // clang-format off
+  return
+      VerboseEquals(expected.era, actual.era, "Components do not match: bag.era") &&
+      VerboseEquals(expected.year, actual.year, "Components do not match: bag.year") &&
+      VerboseEquals(expected.month, actual.month, "Components do not match: bag.month") &&
+      VerboseEquals(expected.day, actual.day, "Components do not match: bag.day") &&
+      VerboseEquals(expected.weekday, actual.weekday, "Components do not match: bag.weekday") &&
+      VerboseEquals(expected.hour, actual.hour, "Components do not match: bag.hour") &&
+      VerboseEquals(expected.minute, actual.minute, "Components do not match: bag.minute") &&
+      VerboseEquals(expected.second, actual.second, "Components do not match: bag.second") &&
+      VerboseEquals(expected.timeZoneName, actual.timeZoneName, "Components do not match: bag.timeZoneName") &&
+      VerboseEquals(expected.hour12, actual.hour12, "Components do not match: bag.hour12") &&
+      VerboseEquals(expected.hourCycle, actual.hourCycle, "Components do not match: bag.hourCycle") &&
+      VerboseEquals(expected.dayPeriod, actual.dayPeriod, "Components do not match: bag.dayPeriod") &&
+      VerboseEquals(expected.fractionalSecondDigits, actual.fractionalSecondDigits, "Components do not match: bag.fractionalSecondDigits");
+  // clang-format on
+}
+
+// A utility function to help test the DateTimeFormat::ComponentsBag.
+[[nodiscard]] bool ResolveComponentsBag(
+    DateTimeFormat::ComponentsBag& aComponentsIn,
+    DateTimeFormat::ComponentsBag* aComponentsOut,
+    Span<const char> aLocale = "en-US") {
+  UniquePtr<DateTimePatternGenerator> gen = nullptr;
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate("en").unwrap();
+  auto dtFormat = DateTimeFormat::TryCreateFromComponents(
+      aLocale, aComponentsIn, dateTimePatternGenerator.get(),
+      Some(MakeStringSpan(u"GMT+3")));
+  if (dtFormat.isErr()) {
+    fprintf(stderr, "Could not create a DateTimeFormat\n");
+    return false;
+  }
+
+  auto result = dtFormat.unwrap()->ResolveComponents();
+  if (result.isErr()) {
+    fprintf(stderr, "Could not resolve the components\n");
+    return false;
+  }
+
+  *aComponentsOut = result.unwrap();
+  return true;
+}
+
+TEST(IntlDateTimeFormat, ResolvedComponentsDate)
+{
+  DateTimeFormat::ComponentsBag input{};
+  {
+    input.year = Some(DateTimeFormat::Numeric::Numeric);
+    input.month = Some(DateTimeFormat::Month::Numeric);
+    input.day = Some(DateTimeFormat::Numeric::Numeric);
+  }
+
+  DateTimeFormat::ComponentsBag expected = input;
+
+  DateTimeFormat::ComponentsBag resolved{};
+  ASSERT_TRUE(ResolveComponentsBag(input, &resolved));
+  ASSERT_TRUE(VerboseEquals(expected, resolved));
+}
+
+TEST(IntlDateTimeFormat, ResolvedComponentsAll)
+{
+  DateTimeFormat::ComponentsBag input{};
+  {
+    input.era = Some(DateTimeFormat::Text::Short);
+
+    input.year = Some(DateTimeFormat::Numeric::Numeric);
+    input.month = Some(DateTimeFormat::Month::Numeric);
+    input.day = Some(DateTimeFormat::Numeric::Numeric);
+
+    input.weekday = Some(DateTimeFormat::Text::Short);
+
+    input.hour = Some(DateTimeFormat::Numeric::Numeric);
+    input.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+    input.second = Some(DateTimeFormat::Numeric::TwoDigit);
+
+    input.timeZoneName = Some(DateTimeFormat::TimeZoneName::Short);
+    input.hourCycle = Some(DateTimeFormat::HourCycle::H24);
+    input.fractionalSecondDigits = Some(3);
+  }
+
+  DateTimeFormat::ComponentsBag expected = input;
+  {
+    expected.hour = Some(DateTimeFormat::Numeric::TwoDigit);
+    expected.hourCycle = Some(DateTimeFormat::HourCycle::H24);
+    expected.hour12 = Some(false);
+  }
+
+  DateTimeFormat::ComponentsBag resolved{};
+  ASSERT_TRUE(ResolveComponentsBag(input, &resolved));
+  ASSERT_TRUE(VerboseEquals(expected, resolved));
+}
+
+TEST(IntlDateTimeFormat, ResolvedComponentsHourDayPeriod)
+{
+  DateTimeFormat::ComponentsBag input{};
+  {
+    input.hour = Some(DateTimeFormat::Numeric::Numeric);
+    input.minute = Some(DateTimeFormat::Numeric::Numeric);
+  }
+
+  DateTimeFormat::ComponentsBag expected = input;
+  {
+    expected.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+    expected.hourCycle = Some(DateTimeFormat::HourCycle::H12);
+    expected.hour12 = Some(true);
+  }
+
+  DateTimeFormat::ComponentsBag resolved{};
+  ASSERT_TRUE(ResolveComponentsBag(input, &resolved));
+  ASSERT_TRUE(VerboseEquals(expected, resolved));
+}
+
+TEST(IntlDateTimeFormat, ResolvedComponentsHour12)
+{
+  DateTimeFormat::ComponentsBag input{};
+  {
+    input.hour = Some(DateTimeFormat::Numeric::Numeric);
+    input.minute = Some(DateTimeFormat::Numeric::Numeric);
+    input.hour12 = Some(false);
+  }
+
+  DateTimeFormat::ComponentsBag expected = input;
+  {
+    expected.hour = Some(DateTimeFormat::Numeric::TwoDigit);
+    expected.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+    expected.hourCycle = Some(DateTimeFormat::HourCycle::H23);
+    expected.hour12 = Some(false);
+  }
+
+  DateTimeFormat::ComponentsBag resolved{};
+  ASSERT_TRUE(ResolveComponentsBag(input, &resolved));
+  ASSERT_TRUE(VerboseEquals(expected, resolved));
 }
 
 }  // namespace mozilla::intl

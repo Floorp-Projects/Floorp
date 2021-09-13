@@ -79,11 +79,16 @@ TEST(IntlCalendar, SystemDependentTests)
 
 TEST(IntlCalendar, CloneFrom)
 {
-  auto dtFormat =
-      DateTimeFormat::TryCreateFromStyle(
-          MakeStringSpan("en-US"), DateTimeStyle::Medium, DateTimeStyle::Medium,
-          Some(MakeStringSpan(u"America/Chicago")))
-          .unwrap();
+  DateTimeFormat::StyleBag style;
+  style.date = Some(DateTimeFormat::Style::Medium);
+  style.time = Some(DateTimeFormat::Style::Medium);
+  auto dtFormat = DateTimeFormat::TryCreateFromStyle(
+                      MakeStringSpan("en-US"), style,
+                      // It's ok to pass nullptr here, as it will cause format
+                      // operations to fail, but this test is only checking
+                      // calendar cloning.
+                      nullptr, Some(MakeStringSpan(u"America/Chicago")))
+                      .unwrap();
 
   dtFormat->CloneCalendar(CALENDAR_DATE).unwrap();
 }

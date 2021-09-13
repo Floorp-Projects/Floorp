@@ -90,7 +90,8 @@ class ICUPointer {
 template <typename ICUStringFunction, typename Buffer>
 static ICUResult FillBufferWithICUCall(Buffer& buffer,
                                        const ICUStringFunction& strFn) {
-  static_assert(std::is_same<typename Buffer::CharType, char16_t>::value);
+  static_assert(std::is_same_v<typename Buffer::CharType, char16_t> ||
+                std::is_same_v<typename Buffer::CharType, char>);
 
   UErrorCode status = U_ZERO_ERROR;
   int32_t length = strFn(buffer.data(), buffer.capacity(), &status);
@@ -115,33 +116,39 @@ static ICUResult FillBufferWithICUCall(Buffer& buffer,
 }
 
 /**
+ * Adaptor for mozilla::Vector to implement the Buffer interface.
+ */
+template <typename T, size_t N>
+class VectorToBufferAdaptor {
+  mozilla::Vector<T, N>& vector;
+
+ public:
+  using CharType = T;
+
+  explicit VectorToBufferAdaptor(mozilla::Vector<T, N>& vector)
+      : vector(vector) {}
+
+  T* data() { return vector.begin(); }
+
+  size_t capacity() const { return vector.capacity(); }
+
+  bool reserve(size_t length) { return vector.reserve(length); }
+
+  void written(size_t length) {
+    mozilla::DebugOnly<bool> result = vector.resizeUninitialized(length);
+    MOZ_ASSERT(result);
+  }
+};
+
+/**
  * A variant of FillBufferWithICUCall that accepts a mozilla::Vector rather than
  * a Buffer.
  */
 template <typename ICUStringFunction, size_t InlineSize, typename CharType>
 static ICUResult FillVectorWithICUCall(Vector<CharType, InlineSize>& vector,
                                        const ICUStringFunction& strFn) {
-  UErrorCode status = U_ZERO_ERROR;
-  int32_t length = strFn(vector.begin(), vector.capacity(), &status);
-  if (status == U_BUFFER_OVERFLOW_ERROR) {
-    MOZ_ASSERT(length >= 0);
-
-    if (!vector.reserve(length)) {
-      return Err(ICUError::OutOfMemory);
-    }
-
-    status = U_ZERO_ERROR;
-    mozilla::DebugOnly<int32_t> length2 =
-        strFn(vector.begin(), length, &status);
-    MOZ_ASSERT(length == length2);
-  }
-  if (!ICUSuccessForStringSpan(status)) {
-    return Err(ToICUError(status));
-  }
-
-  mozilla::DebugOnly<bool> result = vector.resizeUninitialized(length);
-  MOZ_ASSERT(result);
-  return Ok{};
+  VectorToBufferAdaptor buffer(vector);
+  return FillBufferWithICUCall(buffer, strFn);
 }
 
 /**
