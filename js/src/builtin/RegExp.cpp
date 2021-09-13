@@ -1631,7 +1631,7 @@ static bool CollectNames(JSContext* cx, HandleLinearString replacement,
 static bool InitNamedCaptures(JSContext* cx, HandleLinearString replacement,
                               HandleObject groups, size_t firstDollarIndex,
                               MutableHandle<CapturesVector> namedCaptures) {
-  Rooted<GCVector<jsid>> names(cx);
+  Rooted<GCVector<jsid>> names(cx, cx);
   if (replacement->hasLatin1Chars()) {
     if (!CollectNames<Latin1Char>(cx, replacement, firstDollarIndex, &names)) {
       return false;
@@ -1766,7 +1766,7 @@ bool js::RegExpGetSubstitution(JSContext* cx, HandleArrayObject matchResult,
     captures.infallibleAppend(StringValue(captureLinear));
   }
 
-  Rooted<CapturesVector> namedCaptures(cx);
+  Rooted<CapturesVector> namedCaptures(cx, cx);
   if (groups.isObject()) {
     RootedObject groupsObj(cx, &groups.toObject());
     if (!InitNamedCaptures(cx, replacement, groupsObj, firstDollarIndex,
