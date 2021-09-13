@@ -306,6 +306,8 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
 
   RootedValue oomMessage(cx, StringValue(cx->names().outOfMemory));
   cx->setPendingException(oomMessage, nullptr);
+  MOZ_ASSERT(cx->status == JS::ExceptionStatus::Throwing);
+  cx->status = JS::ExceptionStatus::OutOfMemory;
 }
 
 mozilla::GenericErrorResult<OOM> js::ReportOutOfMemoryResult(JSContext* cx) {
@@ -1160,11 +1162,6 @@ bool JSContext::getPendingException(MutableHandleValue rval) {
 
 SavedFrame* JSContext::getPendingExceptionStack() {
   return unwrappedExceptionStack();
-}
-
-bool JSContext::isThrowingOutOfMemory() {
-  return isExceptionPending() &&
-         IsOutOfMemoryException(this, unwrappedException());
 }
 
 bool JSContext::isClosingGenerator() {
