@@ -14,7 +14,8 @@ namespace mozilla::dom {
 
 RTCStatsTimestampMaker::RTCStatsTimestampMaker(const GlobalObject* aGlobal) {
   nsCOMPtr<nsPIDOMWindowInner> window;
-  if (aGlobal && (window = do_QueryInterface(aGlobal->GetAsSupports()))) {
+  if (aGlobal && (window = do_QueryInterface(aGlobal->GetAsSupports())) &&
+      window->GetPerformance()) {
     mRandomTimelineSeed = window->GetPerformance()->GetRandomTimelineSeed();
     mStartMonotonic = window->GetPerformance()->CreationTimeStamp();
     // Ugh. Performance::TimeOrigin is not constant, which means we need to
