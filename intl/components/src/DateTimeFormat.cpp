@@ -10,6 +10,7 @@
 
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 
 namespace mozilla::intl {
 
@@ -18,18 +19,20 @@ DateTimeFormat::~DateTimeFormat() {
   udat_close(mDateFormat);
 }
 
-static UDateFormatStyle ToUDateFormatStyle(DateTimeStyle aStyle) {
-  switch (aStyle) {
-    case DateTimeStyle::Full:
+static UDateFormatStyle ToUDateFormatStyle(
+    Maybe<DateTimeFormat::Style> aLength) {
+  if (!aLength) {
+    return UDAT_NONE;
+  }
+  switch (*aLength) {
+    case DateTimeFormat::Style::Full:
       return UDAT_FULL;
-    case DateTimeStyle::Long:
+    case DateTimeFormat::Style::Long:
       return UDAT_LONG;
-    case DateTimeStyle::Medium:
+    case DateTimeFormat::Style::Medium:
       return UDAT_MEDIUM;
-    case DateTimeStyle::Short:
+    case DateTimeFormat::Style::Short:
       return UDAT_SHORT;
-    case DateTimeStyle::None:
-      return UDAT_NONE;
   }
   MOZ_ASSERT_UNREACHABLE();
   // Do not use the default: branch so that the enum is exhaustively checked.
@@ -42,19 +45,19 @@ static UDateFormatStyle ToUDateFormatStyle(DateTimeStyle aStyle) {
  */
 template <typename CharT>
 class PatternIterator {
-  CharT* iter_;
-  const CharT* const end_;
+  CharT* iter;
+  const CharT* const end;
 
  public:
-  explicit PatternIterator(mozilla::Span<CharT> pattern)
-      : iter_(pattern.data()), end_(pattern.data() + pattern.size()) {}
+  explicit PatternIterator(mozilla::Span<CharT> aPattern)
+      : iter(aPattern.data()), end(aPattern.data() + aPattern.size()) {}
 
   CharT* next() {
-    MOZ_ASSERT(iter_ != nullptr);
+    MOZ_ASSERT(iter != nullptr);
 
     bool inQuote = false;
-    while (iter_ < end_) {
-      CharT* cur = iter_++;
+    while (iter < end) {
+      CharT* cur = iter++;
       if (*cur == '\'') {
         inQuote = !inQuote;
       } else if (!inQuote) {
@@ -62,46 +65,43 @@ class PatternIterator {
       }
     }
 
-    iter_ = nullptr;
+    iter = nullptr;
     return nullptr;
   }
 };
 
-/**
- * Return the hour cycle used in the input pattern or Nothing if none was found.
- */
-template <typename CharT>
-static mozilla::Maybe<HourCycle> HourCycleFromPattern(
-    mozilla::Span<const CharT> pattern) {
-  PatternIterator<const CharT> iter(pattern);
+Maybe<DateTimeFormat::HourCycle> DateTimeFormat::HourCycleFromPattern(
+    Span<const char16_t> aPattern) {
+  PatternIterator<const char16_t> iter(aPattern);
   while (const auto* ptr = iter.next()) {
     switch (*ptr) {
       case 'K':
-        return mozilla::Some(HourCycle::H11);
+        return Some(DateTimeFormat::HourCycle::H11);
       case 'h':
-        return mozilla::Some(HourCycle::H12);
+        return Some(DateTimeFormat::HourCycle::H12);
       case 'H':
-        return mozilla::Some(HourCycle::H23);
+        return Some(DateTimeFormat::HourCycle::H23);
       case 'k':
-        return mozilla::Some(HourCycle::H24);
+        return Some(DateTimeFormat::HourCycle::H24);
     }
   }
-  return mozilla::Nothing();
+  return Nothing();
 }
 
-static bool IsHour12(HourCycle hc) {
-  return hc == HourCycle::H11 || hc == HourCycle::H12;
+static bool IsHour12(DateTimeFormat::HourCycle aHourCycle) {
+  return aHourCycle == DateTimeFormat::HourCycle::H11 ||
+         aHourCycle == DateTimeFormat::HourCycle::H12;
 }
 
-static char16_t HourSymbol(HourCycle hc) {
-  switch (hc) {
-    case HourCycle::H11:
+static char16_t HourSymbol(DateTimeFormat::HourCycle aHourCycle) {
+  switch (aHourCycle) {
+    case DateTimeFormat::HourCycle::H11:
       return 'K';
-    case HourCycle::H12:
+    case DateTimeFormat::HourCycle::H12:
       return 'h';
-    case HourCycle::H23:
+    case DateTimeFormat::HourCycle::H23:
       return 'H';
-    case HourCycle::H24:
+    case DateTimeFormat::HourCycle::H24:
       return 'k';
   }
   MOZ_CRASH("unexpected hour cycle");
@@ -110,14 +110,14 @@ static char16_t HourSymbol(HourCycle hc) {
 enum class PatternField { Hour, Minute, Second, Other };
 
 template <typename CharT>
-static PatternField ToPatternField(CharT ch) {
-  if (ch == 'K' || ch == 'h' || ch == 'H' || ch == 'k' || ch == 'j') {
+static PatternField ToPatternField(CharT aCh) {
+  if (aCh == 'K' || aCh == 'h' || aCh == 'H' || aCh == 'k' || aCh == 'j') {
     return PatternField::Hour;
   }
-  if (ch == 'm') {
+  if (aCh == 'm') {
     return PatternField::Minute;
   }
-  if (ch == 's') {
+  if (aCh == 's') {
     return PatternField::Second;
   }
   return PatternField::Other;
@@ -127,10 +127,10 @@ static PatternField ToPatternField(CharT ch) {
  * Replaces all hour pattern characters in |patternOrSkeleton| to use the
  * matching hour representation for |hourCycle|.
  */
-static void ReplaceHourSymbol(mozilla::Span<char16_t> patternOrSkeleton,
-                              HourCycle hc) {
-  char16_t replacement = HourSymbol(hc);
-  PatternIterator<char16_t> iter(patternOrSkeleton);
+static void ReplaceHourSymbol(mozilla::Span<char16_t> aPatternOrSkeleton,
+                              DateTimeFormat::HourCycle aHourCycle) {
+  char16_t replacement = HourSymbol(aHourCycle);
+  PatternIterator<char16_t> iter(aPatternOrSkeleton);
   while (auto* ptr = iter.next()) {
     auto field = ToPatternField(*ptr);
     if (field == PatternField::Hour) {
@@ -165,37 +165,23 @@ static void ReplaceHourSymbol(mozilla::Span<char16_t> patternOrSkeleton,
  * "h23", we'll end up with the pattern "MMMM d, y, HH:mm:ss z", so the
  * combinator element " 'at' " was lost in the process.
  */
-template <size_t N>
-static bool FindPatternWithHourCycle(JSContext* cx, const char* locale,
-                                     FormatBuffer<char16_t, N>& pattern,
-                                     bool hour12) {
-  SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  mozilla::intl::DateTimePatternGenerator* gen =
-      sharedIntlData.getDateTimePatternGenerator(cx, locale);
-  if (!gen) {
-    return false;
-  }
-
-  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
-  auto skelResult =
-      mozilla::intl::DateTimePatternGenerator::GetSkeleton(pattern, skeleton);
-  if (skelResult.isErr()) {
-    intl::ReportInternalError(cx, skelResult.unwrapErr());
-    return false;
-  }
+static ICUResult FindPatternWithHourCycle(
+    DateTimePatternGenerator& aDateTimePatternGenerator,
+    DateTimeFormat::PatternVector& aPattern, bool aHour12) {
+  DateTimeFormat::PatternVector skeleton{};
+  MOZ_TRY(
+      mozilla::intl::DateTimePatternGenerator::GetSkeleton(aPattern, skeleton));
 
   // Input skeletons don't differentiate between "K" and "h" resp. "k" and "H".
-  ReplaceHourSymbol(skeleton, hour12 ? HourCycle::H12 : HourCycle::H23);
+  ReplaceHourSymbol(skeleton, aHour12 ? DateTimeFormat::HourCycle::H12
+                                      : DateTimeFormat::HourCycle::H23);
 
-  auto result = gen->GetBestPattern(skeleton, pattern);
-  if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return false;
-  }
-  return true;
+  MOZ_TRY(aDateTimePatternGenerator.GetBestPattern(skeleton, aPattern));
+
+  return Ok();
 }
 
-static auto PatternMatchOptions(mozilla::Span<const char16_t> skeleton) {
+static auto PatternMatchOptions(mozilla::Span<const char16_t> aSkeleton) {
   // Values for hour, minute, and second are:
   // - absent: 0
   // - numeric: 1
@@ -204,7 +190,7 @@ static auto PatternMatchOptions(mozilla::Span<const char16_t> skeleton) {
   int32_t minute = 0;
   int32_t second = 0;
 
-  PatternIterator<const char16_t> iter(skeleton);
+  PatternIterator<const char16_t> iter(aSkeleton);
   while (const auto* ptr = iter.next()) {
     switch (ToPatternField(*ptr)) {
       case PatternField::Hour:
@@ -254,12 +240,12 @@ static auto PatternMatchOptions(mozilla::Span<const char16_t> skeleton) {
 }
 
 /* static */
-Result<UniquePtr<DateTimeFormat>, DateTimeFormat::StyleError>
-DateTimeFormat::TryCreateFromStyle(
-    Span<const char> aLocale, DateTimeStyle aDateStyle,
-    DateTimeStyle aTimeStyle, Maybe<Span<const char16_t>> aTimeZoneOverride) {
-  auto dateStyle = ToUDateFormatStyle(aDateStyle);
-  auto timeStyle = ToUDateFormatStyle(aTimeStyle);
+Result<UniquePtr<DateTimeFormat>, ICUError> DateTimeFormat::TryCreateFromStyle(
+    Span<const char> aLocale, const StyleBag& aStyleBag,
+    DateTimePatternGenerator* aDateTimePatternGenerator,
+    Maybe<Span<const char16_t>> aTimeZoneOverride) {
+  auto dateStyle = ToUDateFormatStyle(aStyleBag.date);
+  auto timeStyle = ToUDateFormatStyle(aStyleBag.time);
 
   if (dateStyle == UDAT_NONE && timeStyle == UDAT_NONE) {
     dateStyle = UDAT_DEFAULT;
@@ -276,14 +262,50 @@ DateTimeFormat::TryCreateFromStyle(
 
   UErrorCode status = U_ZERO_ERROR;
   UDateFormat* dateFormat =
-      udat_open(dateStyle, timeStyle, aLocale.data(), tzID, tzIDLength,
+      udat_open(timeStyle, dateStyle, aLocale.data(), tzID, tzIDLength,
                 /* pattern */ nullptr, /* pattern length */ -1, &status);
-
-  if (U_SUCCESS(status)) {
-    return UniquePtr<DateTimeFormat>(new DateTimeFormat(dateFormat));
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
   }
 
-  return Err(DateTimeFormat::StyleError::DateFormatFailure);
+  auto df = UniquePtr<DateTimeFormat>(new DateTimeFormat(dateFormat));
+
+  if (aStyleBag.time && (aStyleBag.hour12 || aStyleBag.hourCycle)) {
+    // Only adjust the style pattern for time if there is an override.
+    // Extract the pattern and adjust it for the preferred hour cycle.
+    DateTimeFormat::PatternVector pattern{};
+
+    VectorToBufferAdaptor buffer(pattern);
+    MOZ_TRY(df->GetPattern(buffer));
+
+    Maybe<DateTimeFormat::HourCycle> hcPattern = HourCycleFromPattern(pattern);
+    if (hcPattern) {
+      bool wantHour12 =
+          aStyleBag.hour12 ? *aStyleBag.hour12 : IsHour12(*aStyleBag.hourCycle);
+      if (wantHour12 == IsHour12(*hcPattern)) {
+        // Return the date-time format when its hour-cycle settings match the
+        // requested options.
+        if (aStyleBag.hour12 || *hcPattern == *aStyleBag.hourCycle) {
+          return df;
+        }
+      } else {
+        MOZ_ASSERT(aDateTimePatternGenerator);
+        MOZ_TRY(FindPatternWithHourCycle(*aDateTimePatternGenerator, pattern,
+                                         wantHour12));
+      }
+      // Replace the hourCycle, if present, in the pattern string. But only do
+      // this if no hour12 option is present, because the latter takes
+      // precedence over hourCycle.
+      if (!aStyleBag.hour12) {
+        ReplaceHourSymbol(pattern, *aStyleBag.hourCycle);
+      }
+
+      return DateTimeFormat::TryCreateFromPattern(aLocale, pattern,
+                                                  aTimeZoneOverride);
+    }
+  }
+
+  return df;
 }
 
 DateTimeFormat::DateTimeFormat(UDateFormat* aDateFormat) {
@@ -291,8 +313,214 @@ DateTimeFormat::DateTimeFormat(UDateFormat* aDateFormat) {
   mDateFormat = aDateFormat;
 }
 
+// A helper to ergonomically push a string onto a string vector.
+template <typename V, size_t N>
+static ICUResult PushString(V& aVec, const char16_t (&aString)[N]) {
+  if (!aVec.append(aString, N - 1)) {
+    return Err(ICUError::OutOfMemory);
+  }
+  return Ok();
+}
+
+// A helper to ergonomically push a char onto a string vector.
+template <typename V>
+static ICUResult PushChar(V& aVec, char16_t aCh) {
+  if (!aVec.append(aCh)) {
+    return Err(ICUError::OutOfMemory);
+  }
+  return Ok();
+}
+
+/**
+ * Returns an ICU skeleton string representing the specified options.
+ * http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+ */
+ICUResult ToICUSkeleton(const DateTimeFormat::ComponentsBag& aBag,
+                        DateTimeFormat::PatternVector& aSkeleton) {
+  // Create an ICU skeleton representing the specified aBag. See
+  if (aBag.weekday) {
+    switch (*aBag.weekday) {
+      case DateTimeFormat::Text::Narrow:
+        MOZ_TRY(PushString(aSkeleton, u"EEEEE"));
+        break;
+      case DateTimeFormat::Text::Short:
+        MOZ_TRY(PushString(aSkeleton, u"E"));
+        break;
+      case DateTimeFormat::Text::Long:
+        MOZ_TRY(PushString(aSkeleton, u"EEEE"));
+    }
+  }
+  if (aBag.era) {
+    switch (*aBag.era) {
+      case DateTimeFormat::Text::Narrow:
+        MOZ_TRY(PushString(aSkeleton, u"GGGGG"));
+        break;
+      case DateTimeFormat::Text::Short:
+        MOZ_TRY(PushString(aSkeleton, u"G"));
+        break;
+      case DateTimeFormat::Text::Long:
+        MOZ_TRY(PushString(aSkeleton, u"GGGG"));
+        break;
+    }
+  }
+  if (aBag.year) {
+    switch (*aBag.year) {
+      case DateTimeFormat::Numeric::TwoDigit:
+        MOZ_TRY(PushString(aSkeleton, u"yy"));
+        break;
+      case DateTimeFormat::Numeric::Numeric:
+        MOZ_TRY(PushString(aSkeleton, u"y"));
+        break;
+    }
+  }
+  if (aBag.month) {
+    switch (*aBag.month) {
+      case DateTimeFormat::Month::TwoDigit:
+        MOZ_TRY(PushString(aSkeleton, u"MM"));
+        break;
+      case DateTimeFormat::Month::Numeric:
+        MOZ_TRY(PushString(aSkeleton, u"M"));
+        break;
+      case DateTimeFormat::Month::Narrow:
+        MOZ_TRY(PushString(aSkeleton, u"MMMMM"));
+        break;
+      case DateTimeFormat::Month::Short:
+        MOZ_TRY(PushString(aSkeleton, u"MMM"));
+        break;
+      case DateTimeFormat::Month::Long:
+        MOZ_TRY(PushString(aSkeleton, u"MMMM"));
+        break;
+    }
+  }
+  if (aBag.day) {
+    switch (*aBag.day) {
+      case DateTimeFormat::Numeric::TwoDigit:
+        MOZ_TRY(PushString(aSkeleton, u"dd"));
+        break;
+      case DateTimeFormat::Numeric::Numeric:
+        MOZ_TRY(PushString(aSkeleton, u"d"));
+        break;
+    }
+  }
+
+  // If hour12 and hourCycle are both present, hour12 takes precedence.
+  char16_t hourSkeletonChar = 'j';
+  if (aBag.hour12) {
+    if (*aBag.hour12) {
+      hourSkeletonChar = 'h';
+    } else {
+      hourSkeletonChar = 'H';
+    }
+  } else if (aBag.hourCycle) {
+    switch (*aBag.hourCycle) {
+      case DateTimeFormat::HourCycle::H11:
+      case DateTimeFormat::HourCycle::H12:
+        hourSkeletonChar = 'h';
+        break;
+      case DateTimeFormat::HourCycle::H23:
+      case DateTimeFormat::HourCycle::H24:
+        hourSkeletonChar = 'H';
+        break;
+    }
+  }
+  if (aBag.hour) {
+    switch (*aBag.hour) {
+      case DateTimeFormat::Numeric::TwoDigit:
+        MOZ_TRY(PushChar(aSkeleton, hourSkeletonChar));
+        MOZ_TRY(PushChar(aSkeleton, hourSkeletonChar));
+        break;
+      case DateTimeFormat::Numeric::Numeric:
+        MOZ_TRY(PushChar(aSkeleton, hourSkeletonChar));
+        break;
+    }
+  }
+  // ICU requires that "B" is set after the "j" hour skeleton symbol.
+  // https://unicode-org.atlassian.net/browse/ICU-20731
+  if (aBag.dayPeriod) {
+    switch (*aBag.dayPeriod) {
+      case DateTimeFormat::Text::Narrow:
+        MOZ_TRY(PushString(aSkeleton, u"BBBBB"));
+        break;
+      case DateTimeFormat::Text::Short:
+        MOZ_TRY(PushString(aSkeleton, u"B"));
+        break;
+      case DateTimeFormat::Text::Long:
+        MOZ_TRY(PushString(aSkeleton, u"BBBB"));
+        break;
+    }
+  }
+  if (aBag.minute) {
+    switch (*aBag.minute) {
+      case DateTimeFormat::Numeric::TwoDigit:
+        MOZ_TRY(PushString(aSkeleton, u"mm"));
+        break;
+      case DateTimeFormat::Numeric::Numeric:
+        MOZ_TRY(PushString(aSkeleton, u"m"));
+        break;
+    }
+  }
+  if (aBag.second) {
+    switch (*aBag.second) {
+      case DateTimeFormat::Numeric::TwoDigit:
+        MOZ_TRY(PushString(aSkeleton, u"ss"));
+        break;
+      case DateTimeFormat::Numeric::Numeric:
+        MOZ_TRY(PushString(aSkeleton, u"s"));
+        break;
+    }
+  }
+  if (aBag.fractionalSecondDigits) {
+    switch (*aBag.fractionalSecondDigits) {
+      case 1:
+        MOZ_TRY(PushString(aSkeleton, u"S"));
+        break;
+      case 2:
+        MOZ_TRY(PushString(aSkeleton, u"SS"));
+        break;
+      default:
+        MOZ_TRY(PushString(aSkeleton, u"SSS"));
+        break;
+    }
+  }
+  if (aBag.timeZoneName) {
+    switch (*aBag.timeZoneName) {
+      case DateTimeFormat::TimeZoneName::Short:
+        MOZ_TRY(PushString(aSkeleton, u"z"));
+        break;
+      case DateTimeFormat::TimeZoneName::Long:
+        MOZ_TRY(PushString(aSkeleton, u"zzzz"));
+        break;
+      case DateTimeFormat::TimeZoneName::ShortOffset:
+        MOZ_TRY(PushString(aSkeleton, u"O"));
+        break;
+      case DateTimeFormat::TimeZoneName::LongOffset:
+        MOZ_TRY(PushString(aSkeleton, u"OOOO"));
+        break;
+      case DateTimeFormat::TimeZoneName::ShortGeneric:
+        MOZ_TRY(PushString(aSkeleton, u"v"));
+        break;
+      case DateTimeFormat::TimeZoneName::LongGeneric:
+        MOZ_TRY(PushString(aSkeleton, u"vvvv"));
+        break;
+    }
+  }
+  return Ok();
+}
+
 /* static */
-Result<UniquePtr<DateTimeFormat>, DateTimeFormat::PatternError>
+Result<UniquePtr<DateTimeFormat>, ICUError>
+DateTimeFormat::TryCreateFromComponents(
+    Span<const char> aLocale, const DateTimeFormat::ComponentsBag& aBag,
+    DateTimePatternGenerator* aDateTimePatternGenerator,
+    Maybe<Span<const char16_t>> aTimeZoneOverride) {
+  DateTimeFormat::PatternVector skeleton;
+  MOZ_TRY(ToICUSkeleton(aBag, skeleton));
+  return TryCreateFromSkeleton(aLocale, skeleton, aDateTimePatternGenerator,
+                               aBag.hourCycle, aTimeZoneOverride);
+}
+
+/* static */
+Result<UniquePtr<DateTimeFormat>, ICUError>
 DateTimeFormat::TryCreateFromPattern(
     Span<const char> aLocale, Span<const char16_t> aPattern,
     Maybe<Span<const char16_t>> aTimeZoneOverride) {
@@ -313,7 +541,7 @@ DateTimeFormat::TryCreateFromPattern(
       &status);
 
   if (U_FAILURE(status)) {
-    return Err(PatternError::DateFormatFailure);
+    return Err(ToICUError(status));
   }
 
   // The DateTimeFormat wrapper will control the life cycle of the ICU
@@ -322,74 +550,58 @@ DateTimeFormat::TryCreateFromPattern(
 }
 
 /* static */
-Result<UniquePtr<DateTimeFormat>, DateTimeFormat::SkeletonError>
+Result<UniquePtr<DateTimeFormat>, ICUError>
 DateTimeFormat::TryCreateFromSkeleton(
     Span<const char> aLocale, Span<const char16_t> aSkeleton,
+    DateTimePatternGenerator* aDateTimePatternGenerator,
+    Maybe<DateTimeFormat::HourCycle> aHourCycle,
     Maybe<Span<const char16_t>> aTimeZoneOverride) {
-  UErrorCode status = U_ZERO_ERROR;
-
-  // Create a time pattern generator. Its lifetime is scoped to this function.
-  UDateTimePatternGenerator* dtpg = udatpg_open(aLocale.data(), &status);
-  if (U_FAILURE(status)) {
-    return Err(SkeletonError::PatternGeneratorFailure);
+  if (!aDateTimePatternGenerator) {
+    return Err(ICUError::InternalError);
   }
-  ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
 
   // Compute the best pattern for the skeleton.
-  mozilla::Vector<char16_t, DateTimeFormat::StackU16VectorSize> bestPattern;
+  DateTimeFormat::PatternVector pattern;
+  auto options = PatternMatchOptions(aSkeleton);
+  MOZ_TRY(
+      aDateTimePatternGenerator->GetBestPattern(aSkeleton, pattern, options));
 
-  auto result = FillVectorWithICUCall(
-      bestPattern,
-      [&dtpg, &aSkeleton](UChar* target, int32_t length, UErrorCode* status) {
-        return udatpg_getBestPattern(dtpg, aSkeleton.data(),
-                                     static_cast<int32_t>(aSkeleton.size()),
-                                     target, length, status);
-      });
-
-  if (result.isErr()) {
-    return Err(SkeletonError::GetBestPatternFailure);
+  if (aHourCycle) {
+    ReplaceHourSymbol(pattern, *aHourCycle);
   }
 
-  return DateTimeFormat::TryCreateFromPattern(aLocale, bestPattern,
-                                              aTimeZoneOverride)
-      .mapErr([](DateTimeFormat::PatternError error) {
-        switch (error) {
-          case DateTimeFormat::PatternError::DateFormatFailure:
-            return SkeletonError::DateFormatFailure;
-        }
-        // Do not use the default branch, so that the switch is exhaustively
-        // checked.
-        MOZ_ASSERT_UNREACHABLE();
-        return SkeletonError::DateFormatFailure;
-      });
+  return DateTimeFormat::TryCreateFromPattern(aLocale, pattern,
+                                              aTimeZoneOverride);
 }
 
 /* static */
-Result<UniquePtr<DateTimeFormat>, DateTimeFormat::SkeletonError>
+Result<UniquePtr<DateTimeFormat>, ICUError>
 DateTimeFormat::TryCreateFromSkeleton(
     Span<const char> aLocale, Span<const char> aSkeleton,
+    DateTimePatternGenerator* aDateTimePatternGenerator,
+    Maybe<DateTimeFormat::HourCycle> aHourCycle,
     Maybe<Span<const char>> aTimeZoneOverride) {
   // Convert the skeleton to UTF-16.
-  mozilla::Vector<char16_t, DateTimeFormat::StackU16VectorSize>
-      skeletonUtf16Buffer;
+  DateTimeFormat::PatternVector skeletonUtf16Buffer;
 
   if (!FillUTF16Vector(aSkeleton, skeletonUtf16Buffer)) {
-    return Err(SkeletonError::OutOfMemory);
+    return Err(ICUError::OutOfMemory);
   }
 
   // Convert the timezone to UTF-16 if it exists.
-  mozilla::Vector<char16_t, DateTimeFormat::StackU16VectorSize> tzUtf16Vec;
+  DateTimeFormat::PatternVector tzUtf16Vec;
   Maybe<Span<const char16_t>> timeZone = Nothing{};
   if (aTimeZoneOverride) {
     if (!FillUTF16Vector(*aTimeZoneOverride, tzUtf16Vec)) {
-      return Err(SkeletonError::OutOfMemory);
+      return Err(ICUError::OutOfMemory);
     };
     timeZone =
         Some(Span<const char16_t>(tzUtf16Vec.begin(), tzUtf16Vec.length()));
   }
 
   return DateTimeFormat::TryCreateFromSkeleton(aLocale, skeletonUtf16Buffer,
-                                               timeZone);
+                                               aDateTimePatternGenerator,
+                                               aHourCycle, timeZone);
 }
 
 void DateTimeFormat::SetStartTimeIfGregorian(double aTime) {
@@ -416,4 +628,279 @@ Result<UniquePtr<Calendar>, InternalError> DateTimeFormat::CloneCalendar(
   return calendar;
 }
 
+Result<DateTimeFormat::ComponentsBag, ICUError>
+DateTimeFormat::ResolveComponents() {
+  // Maps an ICU pattern string to a corresponding set of date-time components
+  // and their values, and adds properties for these components to the result
+  // object, which will be returned by the resolvedOptions method. For the
+  // interpretation of ICU pattern characters, see
+  // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+
+  DateTimeFormat::PatternVector pattern{};
+  VectorToBufferAdaptor buffer(pattern);
+  MOZ_TRY(GetPattern(buffer));
+
+  DateTimeFormat::ComponentsBag bag{};
+
+  using Text = DateTimeFormat::Text;
+  using HourCycle = DateTimeFormat::HourCycle;
+  using Numeric = DateTimeFormat::Numeric;
+  using Month = DateTimeFormat::Month;
+
+  auto text = Text::Long;
+  auto numeric = Numeric::Numeric;
+  auto month = Month::Long;
+  uint8_t fractionalSecondDigits = 0;
+
+  for (size_t i = 0, len = pattern.length(); i < len;) {
+    char16_t c = pattern[i++];
+    if (c == u'\'') {
+      // Skip past string literals.
+      while (i < len && pattern[i] != u'\'') {
+        i++;
+      }
+      i++;
+      continue;
+    }
+
+    // Count how many times the character is repeated.
+    size_t count = 1;
+    while (i < len && pattern[i] == c) {
+      i++;
+      count++;
+    }
+
+    // Determine the enum case of the field.
+    switch (c) {
+      // "text" cases
+      case u'G':
+      case u'E':
+      case u'c':
+      case u'B':
+      case u'z':
+      case u'O':
+      case u'v':
+      case u'V':
+        if (count <= 3) {
+          text = Text::Short;
+        } else if (count == 4) {
+          text = Text::Long;
+        } else {
+          text = Text::Narrow;
+        }
+        break;
+      // "number" cases
+      case u'y':
+      case u'd':
+      case u'h':
+      case u'H':
+      case u'm':
+      case u's':
+      case u'k':
+      case u'K':
+        if (count == 2) {
+          numeric = Numeric::TwoDigit;
+        } else {
+          numeric = Numeric::Numeric;
+        }
+        break;
+      // "text & number" cases
+      case u'M':
+      case u'L':
+        if (count == 1) {
+          month = Month::Numeric;
+        } else if (count == 2) {
+          month = Month::TwoDigit;
+        } else if (count == 3) {
+          month = Month::Short;
+        } else if (count == 4) {
+          month = Month::Long;
+        } else {
+          month = Month::Narrow;
+        }
+        break;
+      case u'S':
+        fractionalSecondDigits = count;
+        break;
+      default: {
+        // skip other pattern characters and literal text
+      }
+    }
+
+    // Map ICU pattern characters back to the corresponding date-time
+    // components of DateTimeFormat. See
+    // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+    switch (c) {
+      case u'E':
+      case u'c':
+        bag.weekday = Some(text);
+        break;
+      case u'G':
+        bag.era = Some(text);
+        break;
+      case u'y':
+        bag.year = Some(numeric);
+        break;
+      case u'M':
+      case u'L':
+        bag.month = Some(month);
+        break;
+      case u'd':
+        bag.day = Some(numeric);
+        break;
+      case u'B':
+        bag.dayPeriod = Some(text);
+        break;
+      case u'K':
+        bag.hourCycle = Some(HourCycle::H11);
+        bag.hour = Some(numeric);
+        bag.hour12 = Some(true);
+        break;
+      case u'h':
+        bag.hourCycle = Some(HourCycle::H12);
+        bag.hour = Some(numeric);
+        bag.hour12 = Some(true);
+        break;
+      case u'H':
+        bag.hourCycle = Some(HourCycle::H23);
+        bag.hour = Some(numeric);
+        bag.hour12 = Some(false);
+        break;
+      case u'k':
+        bag.hourCycle = Some(HourCycle::H24);
+        bag.hour = Some(numeric);
+        bag.hour12 = Some(false);
+        break;
+      case u'm':
+        bag.minute = Some(numeric);
+        break;
+      case u's':
+        bag.second = Some(numeric);
+        break;
+      case u'S':
+        bag.fractionalSecondDigits = Some(fractionalSecondDigits);
+        break;
+      case u'z':
+        switch (text) {
+          case Text::Long:
+            bag.timeZoneName = Some(TimeZoneName::Long);
+            break;
+          case Text::Short:
+          case Text::Narrow:
+            bag.timeZoneName = Some(TimeZoneName::Short);
+            break;
+        }
+        break;
+      case u'O':
+        switch (text) {
+          case Text::Long:
+            bag.timeZoneName = Some(TimeZoneName::LongOffset);
+            break;
+          case Text::Short:
+          case Text::Narrow:
+            bag.timeZoneName = Some(TimeZoneName::ShortOffset);
+            break;
+        }
+        break;
+      case u'v':
+      case u'V':
+        switch (text) {
+          case Text::Long:
+            bag.timeZoneName = Some(TimeZoneName::LongGeneric);
+            break;
+          case Text::Short:
+          case Text::Narrow:
+            bag.timeZoneName = Some(TimeZoneName::ShortGeneric);
+            break;
+        }
+        break;
+    }
+  }
+  return bag;
+}
+
+const char* DateTimeFormat::ToString(
+    DateTimeFormat::TimeZoneName aTimeZoneName) {
+  switch (aTimeZoneName) {
+    case TimeZoneName::Long:
+      return "long";
+    case TimeZoneName::Short:
+      return "short";
+    case TimeZoneName::ShortOffset:
+      return "shortOffset";
+    case TimeZoneName::LongOffset:
+      return "longOffset";
+    case TimeZoneName::ShortGeneric:
+      return "shortGeneric";
+    case TimeZoneName::LongGeneric:
+      return "longGeneric";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::TimeZoneName");
+}
+
+const char* DateTimeFormat::ToString(DateTimeFormat::Month aMonth) {
+  switch (aMonth) {
+    case Month::Numeric:
+      return "numeric";
+    case Month::TwoDigit:
+      return "2-digit";
+    case Month::Long:
+      return "long";
+    case Month::Short:
+      return "short";
+    case Month::Narrow:
+      return "narrow";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::Month");
+}
+
+const char* DateTimeFormat::ToString(DateTimeFormat::Text aText) {
+  switch (aText) {
+    case Text::Long:
+      return "long";
+    case Text::Short:
+      return "short";
+    case Text::Narrow:
+      return "narrow";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::Text");
+}
+
+const char* DateTimeFormat::ToString(DateTimeFormat::Numeric aNumeric) {
+  switch (aNumeric) {
+    case Numeric::Numeric:
+      return "numeric";
+    case Numeric::TwoDigit:
+      return "2-digit";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::Numeric");
+}
+
+const char* DateTimeFormat::ToString(DateTimeFormat::Style aStyle) {
+  switch (aStyle) {
+    case Style::Full:
+      return "full";
+    case Style::Long:
+      return "long";
+    case Style::Medium:
+      return "medium";
+    case Style::Short:
+      return "short";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::Style");
+}
+
+const char* DateTimeFormat::ToString(DateTimeFormat::HourCycle aHourCycle) {
+  switch (aHourCycle) {
+    case HourCycle::H11:
+      return "h11";
+    case HourCycle::H12:
+      return "h12";
+    case HourCycle::H23:
+      return "h23";
+    case HourCycle::H24:
+      return "h24";
+  }
+  MOZ_CRASH("Unexpected DateTimeFormat::HourCycle");
+}
 }  // namespace mozilla::intl
