@@ -503,6 +503,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // properties as WebSockets w.r.t. mixed content. XHR's handling of redirects
   // amplifies these concerns.
   //
+  // TYPE_PROXIED_WEBRTC_MEDIA: Ordinarily, webrtc uses low-level sockets for
+  // peer-to-peer media, which bypasses this code entirely. However, when a
+  // web proxy is being used, the TCP and TLS webrtc connections are routed
+  // through the web proxy (using HTTP CONNECT), which causes these connections
+  // to be checked. We just skip mixed content blocking in that case.
 
   switch (contentType) {
     // The top-level document cannot be mixed content by definition
@@ -528,6 +533,13 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       *aDecision = ACCEPT;
       return NS_OK;
       break;
+
+    // It does not make sense to subject webrtc media connections to mixed
+    // content blocking, since those connections are peer-to-peer and will
+    // therefore almost never match the origin.
+    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
+      *aDecision = ACCEPT;
+      return NS_OK;
 
     // Static display content is considered moderate risk for mixed content so
     // these will be blocked according to the mixed display preference
@@ -563,7 +575,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     case ExtContentPolicy::TYPE_XSLT:
     case ExtContentPolicy::TYPE_OTHER:
     case ExtContentPolicy::TYPE_SPECULATIVE:
-    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
       break;
 
     case ExtContentPolicy::TYPE_INVALID:
