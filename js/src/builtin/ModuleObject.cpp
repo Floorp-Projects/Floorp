@@ -2495,7 +2495,7 @@ template <XDRMode mode>
 XDRResult js::XDRExportEntries(XDRState<mode>* xdr,
                                MutableHandleArrayObject vec) {
   JSContext* cx = xdr->cx();
-  Rooted<GCVector<ExportEntryObject*>> expVec(cx, cx);
+  Rooted<GCVector<ExportEntryObject*>> expVec(cx);
   RootedExportEntryObject expObj(cx);
   RootedAtom exportName(cx);
   RootedModuleRequestObject moduleRequest(cx);
