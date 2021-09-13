@@ -4171,7 +4171,9 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
 
     bool isSync = elem->HasAttr(nsGkAtoms::datal10nsync);
     mDocumentL10n = DocumentL10n::Create(this, isSync);
-    MOZ_ASSERT(mDocumentL10n);
+    if (NS_WARN_IF(!mDocumentL10n)) {
+      return;
+    }
   }
   mDocumentL10n->AddResourceId(NS_ConvertUTF16toUTF8(href));
 
