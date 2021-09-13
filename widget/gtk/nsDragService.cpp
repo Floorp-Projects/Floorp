@@ -1159,6 +1159,15 @@ void nsDragService::TargetResetData(void) {
   mTargetDragDataLen = 0;
 }
 
+static void TargetArrayAddTarget(nsTArray<GtkTargetEntry*>& aTargetArray,
+                                 const char* aTarget) {
+  GtkTargetEntry* target = (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
+  target->target = g_strdup(aTarget);
+  target->flags = 0;
+  aTargetArray.AppendElement(target);
+  LOGDRAGSERVICE(("adding target %s\n", aTarget));
+}
+
 GtkTargetList* nsDragService::GetSourceList(void) {
   if (!mSourceDataItems) return nullptr;
   nsTArray<GtkTargetEntry*> targetArray;
@@ -1177,12 +1186,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
 
     // the application/x-moz-internal-item-list format, which preserves
     // all information for drags within the same mozilla instance.
-    GtkTargetEntry* listTarget =
-        (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-    listTarget->target = g_strdup(gMimeListType);
-    listTarget->flags = 0;
-    LOGDRAGSERVICE(("automatically adding target %s\n", listTarget->target));
-    targetArray.AppendElement(listTarget);
+    TargetArrayAddTarget(targetArray, gMimeListType);
 
     // check what flavours are supported so we can decide what other
     // targets to advertise.
@@ -1196,12 +1200,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
         // If so, advertise
         // text/uri-list.
         if (flavors[i].EqualsLiteral(kURLMime)) {
-          listTarget = (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          listTarget->target = g_strdup(gTextUriListType);
-          listTarget->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", listTarget->target));
-          targetArray.AppendElement(listTarget);
+          TargetArrayAddTarget(targetArray, gTextUriListType);
         }
       }
     }  // if item is a transferable
@@ -1213,65 +1212,29 @@ GtkTargetList* nsDragService::GetSourceList(void) {
       for (uint32_t i = 0; i < flavors.Length(); ++i) {
         nsCString& flavorStr = flavors[i];
 
-        GtkTargetEntry* target =
-            (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-        target->target = g_strdup(flavorStr.get());
-        target->flags = 0;
-        LOGDRAGSERVICE(("adding target %s\n", target->target));
-        targetArray.AppendElement(target);
+        TargetArrayAddTarget(targetArray, flavorStr.get());
 
         // If there is a file, add the text/uri-list type.
         if (flavorStr.EqualsLiteral(kFileMime)) {
-          GtkTargetEntry* urilistTarget =
-              (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          urilistTarget->target = g_strdup(gTextUriListType);
-          urilistTarget->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", urilistTarget->target));
-          targetArray.AppendElement(urilistTarget);
+          TargetArrayAddTarget(targetArray, gTextUriListType);
         }
         // Check to see if this is text/unicode.
         // If it is, add text/plain
         // since we automatically support text/plain
         // if we support text/unicode.
         else if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-          GtkTargetEntry* plainUTF8Target =
-              (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          plainUTF8Target->target = g_strdup(gTextPlainUTF8Type);
-          plainUTF8Target->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", plainUTF8Target->target));
-          targetArray.AppendElement(plainUTF8Target);
-
-          GtkTargetEntry* plainTarget =
-              (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          plainTarget->target = g_strdup(kTextMime);
-          plainTarget->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", plainTarget->target));
-          targetArray.AppendElement(plainTarget);
+          TargetArrayAddTarget(targetArray, gTextPlainUTF8Type);
+          TargetArrayAddTarget(targetArray, kTextMime);
         }
         // Check to see if this is the x-moz-url type.
         // If it is, add _NETSCAPE_URL
         // this is a type used by everybody.
         else if (flavorStr.EqualsLiteral(kURLMime)) {
-          GtkTargetEntry* urlTarget =
-              (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          urlTarget->target = g_strdup(gMozUrlType);
-          urlTarget->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", urlTarget->target));
-          targetArray.AppendElement(urlTarget);
+          TargetArrayAddTarget(targetArray, gMozUrlType);
         }
         // XdndDirectSave
         else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
-          GtkTargetEntry* directsaveTarget =
-              (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
-          directsaveTarget->target = g_strdup(gXdndDirectSaveType);
-          directsaveTarget->flags = 0;
-          LOGDRAGSERVICE(
-              ("automatically adding target %s\n", directsaveTarget->target));
-          targetArray.AppendElement(directsaveTarget);
+          TargetArrayAddTarget(targetArray, gXdndDirectSaveType);
         }
       }
     }
