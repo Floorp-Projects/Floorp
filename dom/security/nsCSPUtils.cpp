@@ -331,6 +331,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
       return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
 
+    // CSP does not apply to webrtc connections
+    case nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
     // csp shold not block top level loads, e.g. in case
     // of a redirect.
     case nsIContentPolicy::TYPE_DOCUMENT:
