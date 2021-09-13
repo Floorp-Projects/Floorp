@@ -20,11 +20,13 @@ from mozbuild.util import memoize
 actions = []
 callbacks = {}
 
-Action = namedtuple("Action", ["order", "cb_name", "permission", "action_builder"])
+Action = namedtuple(
+    "Action", ["order", "cb_name", "permission", "action_builder", "scope_repo"]
+)
 
 
 def is_json(data):
-    """ Return ``True``, if ``data`` is a JSON serializable data structure. """
+    """Return ``True``, if ``data`` is a JSON serializable data structure."""
     try:
         json.dumps(data)
     except ValueError:
@@ -59,6 +61,7 @@ def register_callback_action(
     schema=None,
     permission="generic",
     cb_name=None,
+    scope_repo="head",
 ):
     """
     Register an action callback that can be triggered from supporting
@@ -99,7 +102,7 @@ def register_callback_action(
         other actions declared.
     context : list of dict
         List of tag-sets specifying which tasks the action is can take as input.
-        If no tag-sets is specified as input the action is related to the
+        If no tag-sets are specified as input the action is related to the
         entire task-group, and won't be triggered with a given task.
 
         Otherwise, if ``context = [{'k': 'b', 'p': 'l'}, {'k': 't'}]`` will only
@@ -124,6 +127,9 @@ def register_callback_action(
         The name under which this function should be registered, defaulting to
         `name`.  Unlike `name`, which can appear multiple times, cb_name must be
         unique among all registered callbacks.
+    scope_repo : str
+        The repository ("base" or "head") to use when verifying scopes for this
+        action.
 
     Returns
     -------
@@ -134,6 +140,7 @@ def register_callback_action(
 
     assert isinstance(title, str), "title must be a string"
     assert isinstance(description, str), "description must be a string"
+    assert scope_repo in ("base", "head"), "scope_repo must be 'base' or 'head'"
     title = title.strip()
     description = description.strip()
 
@@ -238,6 +245,9 @@ def register_callback_action(
                             "action": action,
                             "repository": repository,
                             "push": push,
+                            "scope_repository_url": parameters.get(
+                                f"{scope_repo}_repository"
+                            ),
                         },
                         # and pass everything else through from our own context
                         "user": {
@@ -256,7 +266,7 @@ def register_callback_action(
 
             return rv
 
-        actions.append(Action(order, cb_name, permission, action_builder))
+        actions.append(Action(order, cb_name, permission, action_builder, scope_repo))
 
         mem["registered"] = True
         callbacks[cb_name] = cb
