@@ -273,6 +273,7 @@ static const struct wl_registry_listener screen_registry_listener = {
 
 void ScreenGetterWayland::Init() {
   MOZ_ASSERT(GdkIsWaylandDisplay());
+  LOG_SCREEN(("ScreenGetterWayland created"));
   wl_display* display = WaylandDisplayGetWLDisplay();
   mRegistry = wl_display_get_registry(display);
   wl_registry_add_listener((wl_registry*)mRegistry, &screen_registry_listener,
@@ -490,7 +491,12 @@ gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
 
 ScreenHelperGTK::ScreenHelperGTK() {
 #ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+  // Use ScreenGetterWayland on Gnome/Mutter only. It uses additional wl_output
+  // to track screen size changes (which are wrongly reported by mutter)
+  // and causes issues on Sway (Bug 1730476).
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  if (GdkIsWaylandDisplay() && currentDesktop &&
+      strstr(currentDesktop, "GNOME")) {
     gScreenGetter = mozilla::MakeUnique<ScreenGetterWayland>();
   }
 #endif
