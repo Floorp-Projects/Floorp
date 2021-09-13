@@ -184,10 +184,11 @@ class VirtualenvManager(VirtualenvHelper):
             return False
 
         # Verify that the metadata of the virtualenv on-disk is the same as what
-        # we expect, e.g. made with the same version of Python, is for the same
-        # virtualenv name, etc.
-        # A common reason for this check to be False is if the system python is
-        # updated.
+        # we expect, e.g.
+        # * If the metadata file doesn't exist, then the virtualenv wasn't fully
+        #   built
+        # * If the "hex_version" doesn't match, then the system Python has changed/been
+        #   upgraded.
         existing_metadata = MozVirtualenvMetadata.from_path(self._metadata.file_path)
         if existing_metadata != self._metadata:
             return False
@@ -304,9 +305,7 @@ class VirtualenvManager(VirtualenvHelper):
                 % (self.virtualenv_root, result)
             )
 
-        self._metadata.write()
         self._disable_pip_outdated_warning()
-
         return self.virtualenv_root
 
     def _requirements(self):
@@ -424,6 +423,7 @@ class VirtualenvManager(VirtualenvHelper):
             raise Exception("Error populating virtualenv.")
 
         os.utime(self.activate_path, None)
+        self._metadata.write()
 
         return self.virtualenv_root
 
