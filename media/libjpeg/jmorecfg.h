@@ -44,24 +44,10 @@
 
 #if BITS_IN_JSAMPLE == 8
 /* JSAMPLE should be the smallest type that will hold the values 0..255.
- * You can use a signed char by having GETJSAMPLE mask it with 0xFF.
  */
-
-#ifdef HAVE_UNSIGNED_CHAR
 
 typedef unsigned char JSAMPLE;
 #define GETJSAMPLE(value)  ((int)(value))
-
-#else /* not HAVE_UNSIGNED_CHAR */
-
-typedef char JSAMPLE;
-#ifdef __CHAR_UNSIGNED__
-#define GETJSAMPLE(value)  ((int)(value))
-#else
-#define GETJSAMPLE(value)  ((int)(value) & 0xFF)
-#endif /* __CHAR_UNSIGNED__ */
-
-#endif /* HAVE_UNSIGNED_CHAR */
 
 #define MAXJSAMPLE      255
 #define CENTERJSAMPLE   128
@@ -98,21 +84,8 @@ typedef short JCOEF;
  * managers, this is also the data type passed to fread/fwrite.
  */
 
-#ifdef HAVE_UNSIGNED_CHAR
-
 typedef unsigned char JOCTET;
 #define GETJOCTET(value)  (value)
-
-#else /* not HAVE_UNSIGNED_CHAR */
-
-typedef char JOCTET;
-#ifdef __CHAR_UNSIGNED__
-#define GETJOCTET(value)  (value)
-#else
-#define GETJOCTET(value)  ((value) & 0xFF)
-#endif /* __CHAR_UNSIGNED__ */
-
-#endif /* HAVE_UNSIGNED_CHAR */
 
 
 /* These typedefs are used for various table entries and so forth.

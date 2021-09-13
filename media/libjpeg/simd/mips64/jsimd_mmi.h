@@ -1,11 +1,12 @@
 /*
  * Loongson MMI optimizations for libjpeg-turbo
  *
- * Copyright (C) 2016-2017, Loongson Technology Corporation Limited, BeiJing.
+ * Copyright (C) 2016-2018, Loongson Technology Corporation Limited, BeiJing.
  *                          All Rights Reserved.
  * Authors:  ZhuChen     <zhuchen@loongson.cn>
  *           CaiWanwei   <caiwanwei@loongson.cn>
  *           SunZhangzhi <sunzhangzhi-cq@loongson.cn>
+ *           QingfaLiu   <liuqingfa-hf@loongson.cn>
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -32,6 +33,13 @@
 
 
 /* Common code */
+#if defined(_ABI64) && _MIPS_SIM == _ABI64
+# define PTR_ADDU  "daddu "
+# define PTR_SLL   "dsll "
+#else
+# define PTR_ADDU  "addu "
+# define PTR_SLL   "sll "
+#endif
 
 #define SIZEOF_MMWORD  8
 #define BYTE_BIT  8
@@ -47,11 +55,13 @@
    ((uint64_t)(uint8_t)f << 16) | \
    ((uint64_t)(uint8_t)g << 8)  | \
    ((uint64_t)(uint8_t)h))
+#define _uint64_set1_pi8(a)  _uint64_set_pi8(a, a, a, a, a, a, a, a)
 #define _uint64_set_pi16(a, b, c, d) \
   (((uint64_t)(uint16_t)a << 48) | \
    ((uint64_t)(uint16_t)b << 32) | \
    ((uint64_t)(uint16_t)c << 16) | \
    ((uint64_t)(uint16_t)d))
+#define _uint64_set1_pi16(a)  _uint64_set_pi16(a, a, a, a)
 #define _uint64_set_pi32(a, b) \
   (((uint64_t)(uint32_t)a << 32) | \
    ((uint64_t)(uint32_t)b))

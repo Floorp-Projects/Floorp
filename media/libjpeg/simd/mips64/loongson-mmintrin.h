@@ -1217,10 +1217,20 @@ _mm_store_pi32(__m32 *dest, __m64 src)
 extern __inline void FUNCTION_ATTRIBS
 _mm_store_si64(__m64 *dest, __m64 src)
 {
-  asm("gssdlc1 %1, 7+%0\n\t"
-      "gssdrc1 %1, %0\n\t"
+  asm("sdc1 %1, %0 \n\t"
       : "=m" (*dest)
       : "f" (src)
+      : "memory"
+     );
+}
+
+extern __inline void FUNCTION_ATTRIBS
+_mm_storeu_si64(__m64 *dest, __m64 src)
+{
+  asm("gssdlc1 %1, 7(%0) \n\t"
+      "gssdrc1 %1, 0(%0) \n\t"
+      :
+      : "r" (dest), "f" (src)
       : "memory"
      );
 }
