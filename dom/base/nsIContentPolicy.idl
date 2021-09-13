@@ -419,6 +419,14 @@ interface nsIContentPolicy : nsISupports
      */
     TYPE_UA_FONT = 55,
 
+    /**
+     * Indicates the establishment of a TCP or TLS connection via an
+     * http/https proxy that will be used for webrtc media. When no web proxy
+     * is involved, webrtc uses lower level sockets that are not subject to
+     * any sort of content policy.
+     */
+    TYPE_PROXIED_WEBRTC_MEDIA = 56,
+
     /* When adding new content types, please update
      * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
      * DoContentSecurityChecks, all nsIContentPolicy implementations, the
@@ -576,6 +584,7 @@ enum class ExtContentPolicyType : uint8_t {
   TYPE_SAVEAS_DOWNLOAD = nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD,
   TYPE_SPECULATIVE = nsIContentPolicy::TYPE_SPECULATIVE,
   TYPE_UA_FONT = nsIContentPolicy::TYPE_UA_FONT,
+  TYPE_PROXIED_WEBRTC_MEDIA = nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA,
 };
 
 typedef ExtContentPolicyType ExtContentPolicy;

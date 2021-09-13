@@ -144,6 +144,7 @@ inline const char* NS_CP_ContentTypeName(nsContentPolicyType contentType) {
     CASE_RETURN(TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT);
     CASE_RETURN(TYPE_INTERNAL_FETCH_PRELOAD);
     CASE_RETURN(TYPE_UA_FONT);
+    CASE_RETURN(TYPE_PROXIED_WEBRTC_MEDIA);
     case nsIContentPolicy::TYPE_INVALID:
       break;
       // Do not add default: so that compilers can catch the missing case.

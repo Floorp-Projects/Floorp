@@ -619,6 +619,11 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
       break;
     }
 
+    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA: {
+      mimeTypeGuess.Truncate();
+      break;
+    }
+
     case ExtContentPolicy::TYPE_INVALID:
       MOZ_ASSERT(false,
                  "can not perform security check without a valid contentType");

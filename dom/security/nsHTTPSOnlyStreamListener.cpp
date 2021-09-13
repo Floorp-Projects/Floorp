@@ -224,6 +224,10 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
         typeKey = "xslt"_ns;
         break;
 
+      case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
+        typeKey = "proxied-webrtc"_ns;
+        break;
+
       case ExtContentPolicy::TYPE_INVALID:
       case ExtContentPolicy::TYPE_OTHER:
       case ExtContentPolicy::TYPE_MEDIA:  // already handled above
