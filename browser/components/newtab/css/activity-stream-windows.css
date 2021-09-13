@@ -96,7 +96,7 @@ body {
   --newtab-primary-action-background: #0060DF;
   --newtab-primary-action-background-off: #E9E9E9;
   --customize-menu-primary-text-color: #20123A;
-  --customize-menu-check-fill: #20123A;
+  --customize-menu-check-fill: #FFF;
   --customize-menu-check-fill-contrast: #000;
   --customize-menu-background: var(--newtab-background-color-secondary);
   --customize-menu-secondary-action-background: #F9F9FA;
@@ -104,7 +104,7 @@ body {
   --customize-menu-secondary-action-background-active: #E2E2E6;
   --customize-menu-seperator-line-color: #E1E0E6;
   --customize-menu-second-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
-  --customize-menu-primary-action-text: #FFF;
+  --customize-menu-slider-fill: #FFF;
   --customize-menu-line-color: #716F87;
   --newtab-search-first-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
   --newtab-search-text-color: #585165;
@@ -170,7 +170,7 @@ body[lwt-newtab-brighttext] {
   --customize-menu-secondary-action-background-active: #6F6F74;
   --customize-menu-seperator-line-color: #53515F;
   --customize-menu-second-shadow: 0 2px 14px rgba(28, 27, 34, 0.5);
-  --customize-menu-primary-action-text: #E0E0E6;
+  --customize-menu-slider-fill: #E0E0E6;
   --customize-menu-line-color: #B9B7CC;
   --newtab-search-first-shadow: 0 2px 6px rgba(28, 27, 34, 0.5);
   --newtab-search-text-color: #B1B1BD;
@@ -1906,7 +1906,7 @@ main.has-snippet {
   width: 8px;
   inset-inline-start: 3px;
   bottom: 3px;
-  background-color: var(--customize-menu-primary-action-text);
+  background-color: var(--customize-menu-slider-fill);
   transition: transform 250ms;
   border-radius: 50%;
   outline: 1px solid rgba(0, 0, 0, 0.15);
