@@ -475,6 +475,8 @@ static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
       "media.peerconnection.nat_simulator.block_tcp", false);
   bool block_udp = Preferences::GetBool(
       "media.peerconnection.nat_simulator.block_udp", false);
+  bool block_tls = Preferences::GetBool(
+      "media.peerconnection.nat_simulator.block_tls", false);
   int error_code_for_drop = Preferences::GetInt(
       "media.peerconnection.nat_simulator.error_code_for_drop", 0);
   nsAutoCString mapping_type;
@@ -490,13 +492,14 @@ static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
   (void)Preferences::GetCString(
       "media.peerconnection.nat_simulator.redirect_targets", redirect_targets);
 
-  if (block_udp || block_tcp || !mapping_type.IsEmpty() ||
+  if (block_udp || block_tcp || block_tls || !mapping_type.IsEmpty() ||
       !filtering_type.IsEmpty() || !redirect_address.IsEmpty()) {
     CSFLogDebug(LOGTAG, "NAT filtering type: %s", filtering_type.get());
     CSFLogDebug(LOGTAG, "NAT mapping type: %s", mapping_type.get());
     NrIceCtx::NatSimulatorConfig natConfig;
     natConfig.mBlockUdp = block_udp;
     natConfig.mBlockTcp = block_tcp;
+    natConfig.mBlockTls = block_tls;
     natConfig.mErrorCodeForDrop = error_code_for_drop;
     natConfig.mFilteringType = filtering_type;
     natConfig.mMappingType = mapping_type;

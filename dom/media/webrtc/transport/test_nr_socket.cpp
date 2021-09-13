@@ -135,7 +135,7 @@ static nr_socket_factory_vtbl test_nat_socket_factory_vtbl = {
 
 /* static */
 TestNat::NatBehavior TestNat::ToNatBehavior(const std::string& type) {
-  if (!type.compare("ENDPOINT_INDEPENDENT")) {
+  if (type.empty() || !type.compare("ENDPOINT_INDEPENDENT")) {
     return TestNat::ENDPOINT_INDEPENDENT;
   }
   if (!type.compare("ADDRESS_DEPENDENT")) {
@@ -562,6 +562,15 @@ int TestNrSocket::write(const void* msg, size_t len, size_t* written) {
     return R_INTERNAL;
   }
 
+  if (nat_->block_tls_ && tls_) {
+    // Should cause this socket to be abandoned
+    r_log(LOG_GENERIC, LOG_DEBUG,
+          "TestNrSocket %s dropping outgoing TLS "
+          "because it is configured to drop TLS",
+          my_addr().as_string);
+    return R_INTERNAL;
+  }
+
   if (port_mappings_.empty()) {
     // The no-nat case, just pass call through.
     r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s writing",
@@ -633,6 +642,11 @@ int TestNrSocket::read(void* buf, size_t maxlen, size_t* len) {
   }
 
   if (nat_->block_tcp_ && !tls_) {
+    // Should cause this socket to be abandoned
+    return R_INTERNAL;
+  }
+
+  if (nat_->block_tls_ && tls_) {
     // Should cause this socket to be abandoned
     return R_INTERNAL;
   }
