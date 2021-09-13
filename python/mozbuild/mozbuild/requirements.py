@@ -38,6 +38,9 @@ class MachEnvRequirements:
 
     pypi -- Fetch the package, plus dependencies, from PyPI.
 
+    pypi-optional -- Attempt to install the package and dependencies from PyPI.
+        Continue using the virtualenv, even if the package could not be installed.
+
     packages.txt -- Denotes that the specified path is a child manifest. It
         will be read and processed as if its contents were concatenated
         into the manifest being read.
