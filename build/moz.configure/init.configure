@@ -280,21 +280,6 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
     if topobjdir.endswith("/js/src"):
         topobjdir = topobjdir[:-7]
 
-    test_python = os.environ.get("MOZ_TEST_PYTHON")
-    if test_python:
-        manager = namespace(
-            up_to_date=lambda python: True,
-            python_path=test_python,
-        )
-    else:
-        with LineIO(lambda l: log.info(l), "replace") as out:
-            manager = VirtualenvManager(
-                topsrcdir,
-                os.path.join(topobjdir, "_virtualenvs"),
-                "build",
-                log_handle=out,
-            )
-
     # Update the path to include some necessary modules for find_program.
     sys.path.insert(0, os.path.join(topsrcdir, "testing", "mozbase", "mozfile"))
 
@@ -340,9 +325,25 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
 
     log.debug("python3: found executable: %r" % python)
 
-    if not manager.up_to_date(python):
+    test_python = os.environ.get("MOZ_TEST_PYTHON")
+    if test_python:
+        manager = namespace(
+            up_to_date=lambda: True,
+            python_path=test_python,
+        )
+    else:
+        with LineIO(lambda l: log.info(l), "replace") as out:
+            manager = VirtualenvManager(
+                topsrcdir,
+                os.path.join(topobjdir, "_virtualenvs"),
+                "build",
+                base_python=python,
+                log_handle=out,
+            )
+
+    if not manager.up_to_date():
         log.info("Creating Python 3 environment")
-        manager.build(python)
+        manager.build()
     else:
         log.debug("python3: venv is up to date")
 

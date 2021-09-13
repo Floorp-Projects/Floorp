@@ -2470,10 +2470,10 @@ class CreateMachEnvironment(MachCommandBase):
             populate_local_paths=False,
         )
 
-        if manager.up_to_date(sys.executable) and not force:
+        if manager.up_to_date() and not force:
             print("virtualenv at %s is already up to date." % virtualenv_path)
         else:
-            manager.build(sys.executable)
+            manager.build()
         print("Mach environment created.")
 
 

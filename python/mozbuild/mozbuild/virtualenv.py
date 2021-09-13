@@ -71,6 +71,7 @@ class VirtualenvManager(VirtualenvHelper):
         *,
         populate_local_paths=True,
         log_handle=sys.stdout,
+        base_python=sys.executable,
         manifest_path=None,
     ):
         """Create a new manager.
@@ -86,6 +87,7 @@ class VirtualenvManager(VirtualenvHelper):
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
         os.environ.pop("__PYVENV_LAUNCHER__", None)
         self.topsrcdir = topsrcdir
+        self._base_python = base_python
 
         # Record the Python executable that was used to create the Virtualenv
         # so we can check this against sys.executable when verifying the
@@ -125,23 +127,23 @@ class VirtualenvManager(VirtualenvHelper):
             version = fh.read()
         return int(version)
 
-    def write_exe_info(self, python):
+    def write_exe_info(self):
         """Records the the version of the python executable that was in use when
         this virtualenv was created. We record this explicitly because
         on OS X our python path may end up being a different or modified
         executable.
         """
-        ver = self.python_executable_hexversion(python)
+        ver = self.python_executable_hexversion()
         with open(self.exe_info_path, "w") as fh:
             fh.write("%s\n" % ver)
 
-    def python_executable_hexversion(self, python):
+    def python_executable_hexversion(self):
         """Run a Python executable and return its sys.hexversion value."""
         program = "import sys; print(sys.hexversion)"
-        out = subprocess.check_output([python, "-c", program]).rstrip()
+        out = subprocess.check_output([self._base_python, "-c", program]).rstrip()
         return int(out)
 
-    def up_to_date(self, python):
+    def up_to_date(self):
         """Returns whether the virtualenv is present and up to date.
 
         Args:
@@ -172,8 +174,8 @@ class VirtualenvManager(VirtualenvHelper):
         # virtualenv. If this fails, it is likely system Python has been
         # upgraded, and our virtualenv would not be usable.
         orig_version = self.get_exe_info()
-        hexversion = self.python_executable_hexversion(python)
-        if (python != self.python_path) and (hexversion != orig_version):
+        hexversion = self.python_executable_hexversion()
+        if (self._base_python != self.python_path) and (hexversion != orig_version):
             return False
 
         if env_requirements.pth_requirements and self.populate_local_paths:
@@ -229,7 +231,7 @@ class VirtualenvManager(VirtualenvHelper):
 
         return True
 
-    def ensure(self, python=sys.executable):
+    def ensure(self):
         """Ensure the virtualenv is present and up to date.
 
         If the virtualenv is up to date, this does nothing. Otherwise, it
@@ -238,9 +240,9 @@ class VirtualenvManager(VirtualenvHelper):
         This should be the main API used from this class as it is the
         highest-level.
         """
-        if self.up_to_date(python):
+        if self.up_to_date():
             return self.virtualenv_root
-        return self.build(python)
+        return self.build()
 
     def _log_process_output(self, *args, **kwargs):
         if hasattr(self.log_handle, "fileno"):
@@ -257,7 +259,7 @@ class VirtualenvManager(VirtualenvHelper):
 
         return proc.wait()
 
-    def create(self, python):
+    def create(self):
         """Create a new, empty virtualenv.
 
         Receives the path to virtualenv's virtualenv.py script (which will be
@@ -268,7 +270,7 @@ class VirtualenvManager(VirtualenvHelper):
             shutil.rmtree(self.virtualenv_root)
 
         args = [
-            python,
+            self._base_python,
             self.virtualenv_script_path,
             # Without this, virtualenv.py may attempt to contact the outside
             # world and search for or download a newer version of pip,
@@ -286,7 +288,7 @@ class VirtualenvManager(VirtualenvHelper):
                 % (self.virtualenv_root, result)
             )
 
-        self.write_exe_info(python)
+        self.write_exe_info()
         self._disable_pip_outdated_warning()
 
         return self.virtualenv_root
@@ -402,12 +404,12 @@ class VirtualenvManager(VirtualenvHelper):
 
             raise Exception("Error installing package: %s" % directory)
 
-    def build(self, python):
+    def build(self):
         """Build a virtualenv per tree conventions.
 
         This returns the path of the created virtualenv.
         """
-        self.create(python)
+        self.create()
 
         # We need to populate the virtualenv using the Python executable in
         # the virtualenv for paths to be proper.
