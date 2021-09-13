@@ -246,7 +246,7 @@ DocManager::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
     // Some XUL documents get start state and then stop state with failure
     // status when everything is ok. Fire document load complete event in this
     // case.
-    if (NS_SUCCEEDED(aStatus) || !nsCoreUtils::IsContentDocument(document)) {
+    if (NS_SUCCEEDED(aStatus) || !document->IsContentDocument()) {
       eventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
     }
 
