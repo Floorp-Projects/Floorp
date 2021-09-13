@@ -106,6 +106,7 @@ extern "C" {
 namespace mozilla {
 
 class TestNrSocket;
+class NrSocketProxyConfig;
 
 /**
  * A group of TestNrSockets that behave as if they were behind the same NAT.
@@ -178,6 +179,8 @@ class TestNat {
 
   static NatBehavior ToNatBehavior(const std::string& type);
 
+  void set_proxy_config(std::shared_ptr<NrSocketProxyConfig> aProxyConfig);
+
   bool enabled_;
   TestNat::NatBehavior filtering_type_;
   TestNat::NatBehavior mapping_type_;
@@ -198,6 +201,7 @@ class TestNat {
   std::map<nsCString, CopyableTArray<nsCString>> stun_redirect_map_;
 
   NatDelegate* nat_delegate_;
+  std::shared_ptr<NrSocketProxyConfig> proxy_config_;
 
  private:
   std::set<TestNrSocket*> sockets_;
