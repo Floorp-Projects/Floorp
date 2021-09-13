@@ -302,6 +302,13 @@ class VirtualenvManager(VirtualenvHelper):
             # requirements module.
             from requirements import MachEnvRequirements
 
+        if not os.path.exists(self._manifest_path):
+            raise Exception(
+                f'The current command is using the "{self._virtualenv_name}" '
+                "virtualenv. However, that virtualenv is missing its associated "
+                f'requirements definition file at "{self._manifest_path}".'
+            )
+
         thunderbird_dir = os.path.join(self.topsrcdir, "comm")
         is_thunderbird = os.path.exists(thunderbird_dir) and bool(
             os.listdir(thunderbird_dir)
