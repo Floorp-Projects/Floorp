@@ -33,7 +33,14 @@ using ICUResult = Result<Ok, ICUError>;
 ICUError ToICUError(UErrorCode status);
 
 /**
- * Convert a UErrorCode to ICUResult.
+ * Convert a UErrorCode to ICUError. This will correctly apply the OutOfMemory
+ * case.
+ */
+ICUError ToICUError(UErrorCode status);
+
+/**
+ * Convert a UErrorCode to ICUResult. This will correctly apply the OutOfMemory
+ * case.
  */
 ICUResult ToICUResult(UErrorCode status);
 
