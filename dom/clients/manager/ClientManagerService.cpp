@@ -167,18 +167,6 @@ void ClientManagerService::Shutdown() {
        CopyableAutoTArray<ClientManagerParent*, 16>(mManagerList)) {
     Unused << PClientManagerParent::Send__delete__(actor);
   }
-
-  // Destroying manager actors should've also destroyed all source actors, so
-  // the only sources left will be future sources, which need to be aborted.
-  for (auto& entry : mSourceTable) {
-    MOZ_RELEASE_ASSERT(entry.GetData().is<FutureClientSourceParent>());
-    CopyableErrorResult rv;
-    rv.ThrowInvalidStateError("Client creation aborted.");
-    entry.GetModifiableData()
-        ->as<FutureClientSourceParent>()
-        .RejectPromiseIfExists(rv);
-  }
-  mSourceTable.Clear();
 }
 
 ClientSourceParent* ClientManagerService::MaybeUnwrapAsExistingSource(
