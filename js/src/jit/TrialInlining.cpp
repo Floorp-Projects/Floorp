@@ -584,6 +584,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
 
   root_->addToTotalBytecodeSize(targetScript->length());
 
+  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
   JitSpew(JitSpew_WarpTrialInlining,
           "SUCCESS: Outer ICScript: %p Inner ICScript: %p pcOffset: %u",
           icScript_, result, pcOffset);
@@ -595,6 +596,15 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
                                    BytecodeLocation loc) {
   ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
+#ifdef JS_JITSPEW
+    if (fallback->numOptimizedStubs() > 1) {
+      JitSpew(JitSpew_WarpTrialInlining,
+              "Inlining candidate JSOp::%s:", CodeName(loc.getOp()));
+      JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+      JitSpew(JitSpew_WarpTrialInlining, "SKIP: Polymorphic (%u stubs)",
+              (unsigned)fallback->numOptimizedStubs());
+    }
+#endif
     return true;
   }
 
