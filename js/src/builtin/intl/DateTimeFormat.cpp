@@ -60,7 +60,6 @@ using js::intl::FormatBuffer;
 using js::intl::IcuLocale;
 using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
-using js::intl::StringsAreEqual;
 
 const JSClassOps DateTimeFormatObject::classOps_ = {
     nullptr,                         // addProperty
@@ -513,228 +512,10 @@ enum class HourCycle {
   H24
 };
 
-/**
- * Return the hour cycle for the given option string.
- */
-static HourCycle HourCycleFromOption(JSLinearString* str) {
-  if (StringEqualsLiteral(str, "h11")) {
-    return HourCycle::H11;
-  }
-  if (StringEqualsLiteral(str, "h12")) {
-    return HourCycle::H12;
-  }
-  if (StringEqualsLiteral(str, "h23")) {
-    return HourCycle::H23;
-  }
-  MOZ_ASSERT(StringEqualsLiteral(str, "h24"));
-  return HourCycle::H24;
-}
-
-bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString());
-  MOZ_ASSERT(args[2].isString() || args[2].isUndefined());
-
-  UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-  if (!locale) {
-    return false;
-  }
-
-  AutoStableStringChars skeleton(cx);
-  if (!skeleton.initTwoByte(cx, args[1].toString())) {
-    return false;
-  }
-
-  mozilla::Maybe<HourCycle> hourCycle;
-  if (args[2].isString()) {
-    JSLinearString* hourCycleStr = args[2].toString()->ensureLinear(cx);
-    if (!hourCycleStr) {
-      return false;
-    }
-
-    hourCycle.emplace(HourCycleFromOption(hourCycleStr));
-  }
-
-  mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
-
-  SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  mozilla::intl::DateTimePatternGenerator* gen =
-      sharedIntlData.getDateTimePatternGenerator(cx, locale.get());
-  if (!gen) {
-    return false;
-  }
-
-  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
-  auto options = PatternMatchOptions(skelChars);
-  auto result = gen->GetBestPattern(skelChars, pattern, options);
-  if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return false;
-  }
-
-  // If the hourCycle option was set, adjust the resolved pattern to use the
-  // requested hour cycle representation.
-  if (hourCycle) {
-    ReplaceHourSymbol(pattern, hourCycle.value());
-  }
-
-  JSString* str = pattern.toString();
-  if (!str) {
-    return false;
-  }
-  args.rval().setString(str);
-  return true;
-}
-
-bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 6);
-  MOZ_ASSERT(args[0].isString());
-  MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
-  MOZ_ASSERT(args[2].isString() || args[2].isUndefined());
-  MOZ_ASSERT(args[3].isString());
-  MOZ_ASSERT(args[4].isBoolean() || args[4].isUndefined());
-  MOZ_ASSERT(args[5].isString() || args[5].isUndefined());
-
-  UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-  if (!locale) {
-    return false;
-  }
-
-  auto toDateFormatStyle = [](JSLinearString* str) {
-    if (StringEqualsLiteral(str, "full")) {
-      return mozilla::intl::DateTimeStyle::Full;
-    }
-    if (StringEqualsLiteral(str, "long")) {
-      return mozilla::intl::DateTimeStyle::Long;
-    }
-    if (StringEqualsLiteral(str, "medium")) {
-      return mozilla::intl::DateTimeStyle::Medium;
-    }
-    MOZ_ASSERT(StringEqualsLiteral(str, "short"));
-    return mozilla::intl::DateTimeStyle::Short;
-  };
-
-  auto dateStyle = mozilla::intl::DateTimeStyle::None;
-  if (args[1].isString()) {
-    JSLinearString* dateStyleStr = args[1].toString()->ensureLinear(cx);
-    if (!dateStyleStr) {
-      return false;
-    }
-
-    dateStyle = toDateFormatStyle(dateStyleStr);
-  }
-
-  auto timeStyle = mozilla::intl::DateTimeStyle::None;
-  if (args[2].isString()) {
-    JSLinearString* timeStyleStr = args[2].toString()->ensureLinear(cx);
-    if (!timeStyleStr) {
-      return false;
-    }
-
-    timeStyle = toDateFormatStyle(timeStyleStr);
-  }
-
-  AutoStableStringChars timeZone(cx);
-  if (!timeZone.initTwoByte(cx, args[3].toString())) {
-    return false;
-  }
-
-  mozilla::Maybe<bool> hour12;
-  if (args[4].isBoolean()) {
-    hour12.emplace(args[4].toBoolean());
-  }
-
-  mozilla::Maybe<HourCycle> hourCycle;
-  if (args[5].isString()) {
-    JSLinearString* hourCycleStr = args[5].toString()->ensureLinear(cx);
-    if (!hourCycleStr) {
-      return false;
-    }
-
-    hourCycle.emplace(HourCycleFromOption(hourCycleStr));
-  }
-
-  mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
-
-  auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromStyle(
-      mozilla::MakeStringSpan(IcuLocale(locale.get())), timeStyle, dateStyle,
-      mozilla::Some(timeZoneChars));
-  if (dfResult.isErr()) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-
-  auto df = dfResult.unwrap();
-
-  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
-  auto patternResult = df->GetPattern(pattern);
-  if (patternResult.isErr()) {
-    intl::ReportInternalError(cx, patternResult.unwrapErr());
-    return false;
-  }
-
-  // If a specific hour cycle was requested and this hour cycle doesn't match
-  // the hour cycle used in the resolved pattern, find an equivalent pattern
-  // with the correct hour cycle.
-  if (timeStyle != mozilla::intl::DateTimeStyle::None &&
-      (hour12 || hourCycle)) {
-    if (auto hcPattern = HourCycleFromPattern<char16_t>(pattern)) {
-      bool wantHour12 = hour12 ? hour12.value() : IsHour12(hourCycle.value());
-      if (wantHour12 != IsHour12(hcPattern.value())) {
-        if (!FindPatternWithHourCycle(cx, locale.get(), pattern, wantHour12)) {
-          return false;
-        }
-      }
-    }
-  }
-
-  // If the hourCycle option was set, adjust the resolved pattern to use the
-  // requested hour cycle representation.
-  if (hourCycle) {
-    ReplaceHourSymbol(pattern, hourCycle.value());
-  }
-
-  JSString* str = pattern.toString();
-  if (!str) {
-    return false;
-  }
-  args.rval().setString(str);
-  return true;
-}
-
-bool js::intl_skeletonForPattern(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isString());
-
-  AutoStableStringChars pattern(cx);
-  if (!pattern.initTwoByte(cx, args[0].toString())) {
-    return false;
-  }
-
-  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
-  auto result = mozilla::intl::DateTimePatternGenerator::GetSkeleton(
-      pattern.twoByteRange(), skeleton);
-  if (result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return false;
-  }
-
-  JSString* str = skeleton.toString();
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
-  return true;
-}
-
 static UniqueChars DateTimeFormatLocale(
     JSContext* cx, HandleObject internals,
-    mozilla::Maybe<HourCycle> hourCycle = mozilla::Nothing()) {
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::HourCycle> hourCycle =
+        mozilla::Nothing()) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
@@ -791,16 +572,16 @@ static UniqueChars DateTimeFormatLocale(
   if (hourCycle) {
     JSAtom* hourCycleStr;
     switch (*hourCycle) {
-      case HourCycle::H11:
+      case mozilla::intl::DateTimeFormat::HourCycle::H11:
         hourCycleStr = cx->names().h11;
         break;
-      case HourCycle::H12:
+      case mozilla::intl::DateTimeFormat::HourCycle::H12:
         hourCycleStr = cx->names().h12;
         break;
-      case HourCycle::H23:
+      case mozilla::intl::DateTimeFormat::HourCycle::H23:
         hourCycleStr = cx->names().h23;
         break;
-      case HourCycle::H24:
+      case mozilla::intl::DateTimeFormat::HourCycle::H24:
         hourCycleStr = cx->names().h24;
         break;
     }
@@ -819,6 +600,208 @@ static UniqueChars DateTimeFormatLocale(
   }
 
   return tag.toStringZ(cx);
+}
+
+static bool AssignTextComponent(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::Text>* text) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "narrow")) {
+      *text = mozilla::Some(mozilla::intl::DateTimeFormat::Text::Narrow);
+    } else if (StringEqualsLiteral(string, "short")) {
+      *text = mozilla::Some(mozilla::intl::DateTimeFormat::Text::Short);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "long"));
+      *text = mozilla::Some(mozilla::intl::DateTimeFormat::Text::Long);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignNumericComponent(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::Numeric>* numeric) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "numeric")) {
+      *numeric = mozilla::Some(mozilla::intl::DateTimeFormat::Numeric::Numeric);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "2-digit"));
+      *numeric =
+          mozilla::Some(mozilla::intl::DateTimeFormat::Numeric::TwoDigit);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignMonthComponent(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::Month>* month) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "numeric")) {
+      *month = mozilla::Some(mozilla::intl::DateTimeFormat::Month::Numeric);
+    } else if (StringEqualsLiteral(string, "2-digit")) {
+      *month = mozilla::Some(mozilla::intl::DateTimeFormat::Month::TwoDigit);
+    } else if (StringEqualsLiteral(string, "long")) {
+      *month = mozilla::Some(mozilla::intl::DateTimeFormat::Month::Long);
+    } else if (StringEqualsLiteral(string, "short")) {
+      *month = mozilla::Some(mozilla::intl::DateTimeFormat::Month::Short);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "narrow"));
+      *month = mozilla::Some(mozilla::intl::DateTimeFormat::Month::Narrow);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignTimeZoneNameComponent(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::TimeZoneName>* tzName) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "long")) {
+      *tzName =
+          mozilla::Some(mozilla::intl::DateTimeFormat::TimeZoneName::Long);
+    } else if (StringEqualsLiteral(string, "short")) {
+      *tzName =
+          mozilla::Some(mozilla::intl::DateTimeFormat::TimeZoneName::Short);
+    } else if (StringEqualsLiteral(string, "shortOffset")) {
+      *tzName = mozilla::Some(
+          mozilla::intl::DateTimeFormat::TimeZoneName::ShortOffset);
+    } else if (StringEqualsLiteral(string, "longOffset")) {
+      *tzName = mozilla::Some(
+          mozilla::intl::DateTimeFormat::TimeZoneName::LongOffset);
+    } else if (StringEqualsLiteral(string, "shortGeneric")) {
+      *tzName = mozilla::Some(
+          mozilla::intl::DateTimeFormat::TimeZoneName::ShortGeneric);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "longGeneric"));
+      *tzName = mozilla::Some(
+          mozilla::intl::DateTimeFormat::TimeZoneName::LongGeneric);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignHourCycleComponent(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::HourCycle>* hourCycle) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "h11")) {
+      *hourCycle = mozilla::Some(mozilla::intl::DateTimeFormat::HourCycle::H11);
+    } else if (StringEqualsLiteral(string, "h12")) {
+      *hourCycle = mozilla::Some(mozilla::intl::DateTimeFormat::HourCycle::H12);
+    } else if (StringEqualsLiteral(string, "h23")) {
+      *hourCycle = mozilla::Some(mozilla::intl::DateTimeFormat::HourCycle::H23);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "h24"));
+      *hourCycle = mozilla::Some(mozilla::intl::DateTimeFormat::HourCycle::H24);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignHour12Component(JSContext* cx, HandleObject internals,
+                                  mozilla::Maybe<bool>* hour12) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, cx->names().hour12, &value)) {
+    return false;
+  }
+  if (value.isBoolean()) {
+    *hour12 = mozilla::Some(value.toBoolean());
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
+}
+
+static bool AssignDateTimeLength(
+    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    mozilla::Maybe<mozilla::intl::DateTimeFormat::Style>* style) {
+  RootedValue value(cx);
+  if (!GetProperty(cx, internals, internals, property, &value)) {
+    return false;
+  }
+
+  if (value.isString()) {
+    JSLinearString* string = value.toString()->ensureLinear(cx);
+    if (!string) {
+      return false;
+    }
+    if (StringEqualsLiteral(string, "full")) {
+      *style = mozilla::Some(mozilla::intl::DateTimeFormat::Style::Full);
+    } else if (StringEqualsLiteral(string, "long")) {
+      *style = mozilla::Some(mozilla::intl::DateTimeFormat::Style::Long);
+    } else if (StringEqualsLiteral(string, "medium")) {
+      *style = mozilla::Some(mozilla::intl::DateTimeFormat::Style::Medium);
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(string, "short"));
+      *style = mozilla::Some(mozilla::intl::DateTimeFormat::Style::Short);
+    }
+  } else {
+    MOZ_ASSERT(value.isUndefined());
+  }
+
+  return true;
 }
 
 /**
@@ -853,26 +836,278 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
   if (!GetProperty(cx, internals, internals, cx->names().pattern, &value)) {
     return nullptr;
   }
+  bool hasPattern = value.isString();
 
-  AutoStableStringChars pattern(cx);
-  if (!pattern.initTwoByte(cx, value.toString())) {
+  if (!GetProperty(cx, internals, internals, cx->names().timeStyle, &value)) {
     return nullptr;
   }
-
-  auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromPattern(
-      mozilla::MakeStringSpan(IcuLocale(locale.get())), pattern.twoByteRange(),
-      mozilla::Some(timeZoneChars));
-  if (dfResult.isErr()) {
-    intl::ReportInternalError(cx);
-    return nullptr;
+  bool hasStyle = value.isString();
+  if (!hasStyle) {
+    if (!GetProperty(cx, internals, internals, cx->names().dateStyle, &value)) {
+      return nullptr;
+    }
+    hasStyle = value.isString();
   }
-  auto df = dfResult.unwrap();
+
+  mozilla::UniquePtr<mozilla::intl::DateTimeFormat> df = nullptr;
+  if (hasPattern) {
+    // This is a DateTimeFormat defined by a pattern option. This is internal
+    // to Mozilla, and not part of the ECMA-402 API.
+    if (!GetProperty(cx, internals, internals, cx->names().pattern, &value)) {
+      return nullptr;
+    }
+
+    AutoStableStringChars pattern(cx);
+    if (!pattern.initTwoByte(cx, value.toString())) {
+      return nullptr;
+    }
+
+    auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromPattern(
+        mozilla::MakeStringSpan(IcuLocale(locale.get())),
+        pattern.twoByteRange(), mozilla::Some(timeZoneChars));
+    if (dfResult.isErr()) {
+      intl::ReportInternalError(cx, dfResult.unwrapErr());
+      return nullptr;
+    }
+
+    df = dfResult.unwrap();
+  } else if (hasStyle) {
+    // This is a DateTimeFormat defined by a time style or date style.
+    mozilla::intl::DateTimeFormat::StyleBag style;
+    if (!AssignDateTimeLength(cx, internals, cx->names().timeStyle,
+                              &style.time)) {
+      return nullptr;
+    }
+    if (!AssignDateTimeLength(cx, internals, cx->names().dateStyle,
+                              &style.date)) {
+      return nullptr;
+    }
+    if (!AssignHourCycleComponent(cx, internals, cx->names().hourCycle,
+                                  &style.hourCycle)) {
+      return nullptr;
+    }
+
+    if (!AssignHour12Component(cx, internals, &style.hour12)) {
+      return nullptr;
+    }
+
+    SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+
+    mozilla::intl::DateTimePatternGenerator* gen =
+        sharedIntlData.getDateTimePatternGenerator(cx, locale.get());
+    if (!gen) {
+      return nullptr;
+    }
+    auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromStyle(
+        mozilla::MakeStringSpan(IcuLocale(locale.get())), style, gen,
+        mozilla::Some(timeZoneChars));
+    if (dfResult.isErr()) {
+      intl::ReportInternalError(cx, dfResult.unwrapErr());
+      return nullptr;
+    }
+    df = dfResult.unwrap();
+  } else {
+    // This is a DateTimeFormat defined by a components bag.
+    mozilla::intl::DateTimeFormat::ComponentsBag bag;
+
+    if (!AssignTextComponent(cx, internals, cx->names().era, &bag.era)) {
+      return nullptr;
+    }
+    if (!AssignNumericComponent(cx, internals, cx->names().year, &bag.year)) {
+      return nullptr;
+    }
+    if (!AssignMonthComponent(cx, internals, cx->names().month, &bag.month)) {
+      return nullptr;
+    }
+    if (!AssignNumericComponent(cx, internals, cx->names().day, &bag.day)) {
+      return nullptr;
+    }
+    if (!AssignTextComponent(cx, internals, cx->names().weekday,
+                             &bag.weekday)) {
+      return nullptr;
+    }
+    if (!AssignNumericComponent(cx, internals, cx->names().hour, &bag.hour)) {
+      return nullptr;
+    }
+    if (!AssignNumericComponent(cx, internals, cx->names().minute,
+                                &bag.minute)) {
+      return nullptr;
+    }
+    if (!AssignNumericComponent(cx, internals, cx->names().second,
+                                &bag.second)) {
+      return nullptr;
+    }
+    if (!AssignTimeZoneNameComponent(cx, internals, cx->names().timeZoneName,
+                                     &bag.timeZoneName)) {
+      return nullptr;
+    }
+    if (!AssignHourCycleComponent(cx, internals, cx->names().hourCycle,
+                                  &bag.hourCycle)) {
+      return nullptr;
+    }
+    if (!AssignTextComponent(cx, internals, cx->names().dayPeriod,
+                             &bag.dayPeriod)) {
+      return nullptr;
+    }
+    if (!AssignHour12Component(cx, internals, &bag.hour12)) {
+      return nullptr;
+    }
+
+    if (!GetProperty(cx, internals, internals,
+                     cx->names().fractionalSecondDigits, &value)) {
+      return nullptr;
+    }
+    if (value.isInt32()) {
+      bag.fractionalSecondDigits = mozilla::Some(value.toInt32());
+    } else {
+      MOZ_ASSERT(value.isUndefined());
+    }
+
+    SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+    auto* dtpg = sharedIntlData.getDateTimePatternGenerator(cx, locale.get());
+    if (!dtpg) {
+      return nullptr;
+    }
+
+    auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromComponents(
+        mozilla::MakeStringSpan(IcuLocale(locale.get())), bag, dtpg,
+        mozilla::Some(timeZoneChars));
+    if (dfResult.isErr()) {
+      intl::ReportInternalError(cx, dfResult.unwrapErr());
+      return nullptr;
+    }
+    df = dfResult.unwrap();
+  }
 
   // ECMAScript requires the Gregorian calendar to be used from the beginning
   // of ECMAScript time.
   df->SetStartTimeIfGregorian(StartOfTime);
 
   return df.release();
+}
+
+template <typename T>
+static bool SetResolvedProperty(JSContext* cx, HandleObject resolved,
+                                HandlePropertyName name,
+                                mozilla::Maybe<T> intlProp) {
+  if (!intlProp) {
+    return true;
+  }
+  JSString* str = NewStringCopyZ<CanGC>(
+      cx, mozilla::intl::DateTimeFormat::ToString(*intlProp));
+  if (!str) {
+    return false;
+  }
+  RootedValue value(cx, StringValue(str));
+  return DefineDataProperty(cx, resolved, name, value);
+}
+
+bool js::intl_resolveDateTimeFormatComponents(JSContext* cx, unsigned argc,
+                                              Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[1].isObject());
+  MOZ_ASSERT(args[2].isBoolean());
+
+  Rooted<DateTimeFormatObject*> dateTimeFormat(cx);
+  dateTimeFormat = &args[0].toObject().as<DateTimeFormatObject>();
+
+  RootedObject resolved(cx, &args[1].toObject());
+
+  bool includeDateTimeFields = args[2].toBoolean();
+
+  // Obtain a cached mozilla::intl::DateTimeFormat object.
+  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
+  if (!df) {
+    df = NewDateTimeFormat(cx, dateTimeFormat);
+    if (!df) {
+      return false;
+    }
+    dateTimeFormat->setDateFormat(df);
+
+    intl::AddICUCellMemory(dateTimeFormat,
+                           DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+  }
+
+  auto result = df->ResolveComponents();
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return false;
+  }
+
+  mozilla::intl::DateTimeFormat::ComponentsBag components = result.unwrap();
+
+  // Map the resolved mozilla::intl::DateTimeFormat::ComponentsBag to the
+  // options object as returned by DateTimeFormat.prototype.resolvedOptions.
+  //
+  // Resolved options must match the ordering as defined in:
+  // https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
+
+  if (!SetResolvedProperty(cx, resolved, cx->names().hourCycle,
+                           components.hourCycle)) {
+    return false;
+  }
+
+  if (components.hour12) {
+    RootedValue value(cx, BooleanValue(*components.hour12));
+    if (!DefineDataProperty(cx, resolved, cx->names().hour12, value)) {
+      return false;
+    }
+  }
+
+  if (!includeDateTimeFields) {
+    args.rval().setUndefined();
+    // Do not include date time fields.
+    return true;
+  }
+
+  if (!SetResolvedProperty(cx, resolved, cx->names().weekday,
+                           components.weekday)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().era, components.era)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().year, components.year)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().month, components.month)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().day, components.day)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().dayPeriod,
+                           components.dayPeriod)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().hour, components.hour)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().minute,
+                           components.minute)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().second,
+                           components.second)) {
+    return false;
+  }
+  if (!SetResolvedProperty(cx, resolved, cx->names().timeZoneName,
+                           components.timeZoneName)) {
+    return false;
+  }
+
+  if (components.fractionalSecondDigits) {
+    RootedValue value(cx, Int32Value(*components.fractionalSecondDigits));
+    if (!DefineDataProperty(cx, resolved, cx->names().fractionalSecondDigits,
+                            value)) {
+      return false;
+    }
+  }
+
+  args.rval().setUndefined();
+  return true;
 }
 
 static bool intl_FormatDateTime(JSContext* cx,
@@ -1163,35 +1398,34 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
  * options of the given DateTimeFormat.
  */
 static UDateIntervalFormat* NewUDateIntervalFormat(
-    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat) {
+    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat,
+    mozilla::intl::DateTimeFormat& mozDtf) {
   RootedValue value(cx);
-
   RootedObject internals(cx, intl::GetInternalsObject(cx, dateTimeFormat));
   if (!internals) {
     return nullptr;
   }
 
-  if (!GetProperty(cx, internals, internals, cx->names().pattern, &value)) {
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
+  auto result = mozDtf.GetPattern(pattern);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return nullptr;
+  }
+
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
+  auto skelResult =
+      mozilla::intl::DateTimePatternGenerator::GetSkeleton(pattern, skeleton);
+  if (skelResult.isErr()) {
+    intl::ReportInternalError(cx, skelResult.unwrapErr());
     return nullptr;
   }
 
   // Determine the hour cycle used in the resolved pattern. This is needed to
   // workaround <https://unicode-org.atlassian.net/browse/ICU-21154> and
   // <https://unicode-org.atlassian.net/browse/ICU-21155>.
-  mozilla::Maybe<HourCycle> hcPattern;
-  {
-    JSLinearString* pattern = value.toString()->ensureLinear(cx);
-    if (!pattern) {
-      return nullptr;
-    }
-
-    JS::AutoCheckCannotGC nogc;
-    if (pattern->hasLatin1Chars()) {
-      hcPattern = HourCycleFromPattern<Latin1Char>(pattern->latin1Range(nogc));
-    } else {
-      hcPattern = HourCycleFromPattern<char16_t>(pattern->twoByteRange(nogc));
-    }
-  }
+  mozilla::Maybe<mozilla::intl::DateTimeFormat::HourCycle> hcPattern =
+      mozilla::intl::DateTimeFormat::HourCycleFromPattern(pattern);
 
   UniqueChars locale = DateTimeFormatLocale(cx, internals, hcPattern);
   if (!locale) {
@@ -1208,29 +1442,9 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
   }
   mozilla::Span<const char16_t> timeZoneChars = timeZone.twoByteRange();
 
-  if (!GetProperty(cx, internals, internals, cx->names().skeleton, &value)) {
-    return nullptr;
-  }
-
-  AutoStableStringChars skeleton(cx);
-  if (!skeleton.initTwoByte(cx, value.toString())) {
-    return nullptr;
-  }
-  mozilla::Span<const char16_t> skeletonChars = skeleton.twoByteRange();
-
-  Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> newSkeleton(cx);
-  if (hcPattern) {
-    if (!newSkeleton.append(skeletonChars.data(), skeletonChars.size())) {
-      return nullptr;
-    }
-
-    ReplaceHourSymbol(newSkeleton, *hcPattern);
-    skeletonChars = newSkeleton;
-  }
-
   UErrorCode status = U_ZERO_ERROR;
   UDateIntervalFormat* dif = udtitvfmt_open(
-      IcuLocale(locale.get()), skeletonChars.data(), skeletonChars.size(),
+      IcuLocale(locale.get()), skeleton.data(), skeleton.length(),
       timeZoneChars.data(), timeZoneChars.size(), &status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
@@ -1637,7 +1851,7 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
   // Obtain a cached UDateIntervalFormat object.
   UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
   if (!dif) {
-    dif = NewUDateIntervalFormat(cx, dateTimeFormat);
+    dif = NewUDateIntervalFormat(cx, dateTimeFormat, *df);
     if (!dif) {
       return false;
     }
