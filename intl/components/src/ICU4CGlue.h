@@ -171,25 +171,39 @@ static ICUResult FillVectorWithICUCall(Vector<CharType, InlineSize>& vector,
  * UTF-8 strings.
  */
 template <typename Buffer>
-[[nodiscard]] bool FillUTF8Buffer(Span<const char16_t> utf16Span,
-                                  Buffer& utf8TargetBuffer) {
-  static_assert(std::is_same<typename Buffer::CharType, char>::value ||
-                std::is_same<typename Buffer::CharType, unsigned char>::value);
+[[nodiscard]] bool FillBuffer(Span<const char16_t> utf16Span,
+                              Buffer& targetBuffer) {
+  static_assert(std::is_same_v<typename Buffer::CharType, char> ||
+                std::is_same_v<typename Buffer::CharType, unsigned char> ||
+                std::is_same_v<typename Buffer::CharType, char16_t>);
 
-  if (utf16Span.Length() & mozilla::tl::MulOverflowMask<3>::value) {
-    // Tripling the size of the buffer overflows the size_t.
-    return false;
+  if constexpr (std::is_same_v<typename Buffer::CharType, char> ||
+                std::is_same_v<typename Buffer::CharType, unsigned char>) {
+    if (utf16Span.Length() & mozilla::tl::MulOverflowMask<3>::value) {
+      // Tripling the size of the buffer overflows the size_t.
+      return false;
+    }
+
+    if (!targetBuffer.reserve(3 * utf16Span.Length())) {
+      return false;
+    }
+
+    size_t amount = ConvertUtf16toUtf8(
+        utf16Span, Span(reinterpret_cast<char*>(targetBuffer.data()),
+                        targetBuffer.capacity()));
+
+    targetBuffer.written(amount);
   }
-
-  if (!utf8TargetBuffer.reserve(3 * utf16Span.Length())) {
-    return false;
+  if constexpr (std::is_same_v<typename Buffer::CharType, char16_t>) {
+    size_t amount = utf16Span.Length();
+    if (!targetBuffer.reserve(amount)) {
+      return false;
+    }
+    for (size_t i = 0; i < amount; i++) {
+      targetBuffer.data()[i] = utf16Span[i];
+    }
+    targetBuffer.written(amount);
   }
-
-  size_t amount = ConvertUtf16toUtf8(
-      utf16Span, Span(reinterpret_cast<char*>(utf8TargetBuffer.data()),
-                      utf8TargetBuffer.capacity()));
-
-  utf8TargetBuffer.written(amount);
 
   return true;
 }

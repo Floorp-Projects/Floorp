@@ -98,7 +98,7 @@ class RelativeTimeFormat final {
                        target, length, status);
           }));
 
-      if (!FillUTF8Buffer(u16Vec, aBuffer)) {
+      if (!FillBuffer(u16Vec, aBuffer)) {
         return Err(ICUError::OutOfMemory);
       }
       return Ok{};
