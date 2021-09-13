@@ -2465,11 +2465,8 @@ class CreateMachEnvironment(MachCommandBase):
 
         manager = VirtualenvManager(
             command_context.topsrcdir,
-            virtualenv_path,
-            sys.stdout,
-            os.path.join(
-                command_context.topsrcdir, "build", "mach_virtualenv_packages.txt"
-            ),
+            os.path.dirname(virtualenv_path),
+            "mach",
             populate_local_paths=False,
         )
 
