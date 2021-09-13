@@ -14,8 +14,6 @@
 #include "CacheEntry.h"
 #include "CacheFileUtils.h"
 
-#include "nsDeleteDir.h"
-
 #include "nsICacheStorageVisitor.h"
 #include "nsIObserverService.h"
 #include "nsIFile.h"
