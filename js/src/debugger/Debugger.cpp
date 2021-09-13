@@ -300,7 +300,7 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
       return false;
 
     case ResumeMode::Terminate:
-      cx->clearPendingException();
+      cx->setInterrupting();
       return false;
 
     case ResumeMode::Return:
@@ -1018,7 +1018,7 @@ NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
       return NativeResumeMode::Abort;
 
     case ResumeMode::Terminate:
-      cx->clearPendingException();
+      cx->setInterrupting();
       return NativeResumeMode::Abort;
 
     case ResumeMode::Return:
@@ -1951,6 +1951,7 @@ Completion Completion::fromJSResult(JSContext* cx, bool ok, const Value& rv) {
   }
 
   if (!cx->isExceptionPending()) {
+    cx->clearInterrupt();
     return Completion(Terminate());
   }
 
