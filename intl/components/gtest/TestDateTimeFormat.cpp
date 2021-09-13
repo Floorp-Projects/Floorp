@@ -444,4 +444,40 @@ TEST(IntlDateTimeFormat, ResolvedComponentsHour12)
   ASSERT_TRUE(VerboseEquals(expected, resolved));
 }
 
+TEST(IntlDateTimeFormat, GetOriginalSkeleton)
+{
+  // Demonstrate that the original skeleton and the resolved skeleton can
+  // differ.
+  DateTimeFormat::ComponentsBag components{};
+  components.month = Some(DateTimeFormat::Month::Narrow);
+  components.day = Some(DateTimeFormat::Numeric::TwoDigit);
+
+  const char* locale = "zh-Hans-CN";
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate(locale).unwrap();
+
+  auto result = DateTimeFormat::TryCreateFromComponents(
+      MakeStringSpan(locale), components, dateTimePatternGenerator.get(),
+      Some(MakeStringSpan(u"GMT+3")));
+  ASSERT_TRUE(result.isOk());
+  auto dtFormat = result.unwrap();
+
+  TestBuffer<char16_t> originalSkeleton;
+  auto originalSkeletonResult = dtFormat->GetOriginalSkeleton(originalSkeleton);
+  ASSERT_TRUE(originalSkeletonResult.isOk());
+  ASSERT_TRUE(originalSkeleton.verboseMatches(u"MMMMMdd"));
+
+  TestBuffer<char16_t> pattern;
+  auto patternResult = dtFormat->GetPattern(pattern);
+  ASSERT_TRUE(patternResult.isOk());
+  ASSERT_TRUE(pattern.verboseMatches(u"M月dd日"));
+
+  TestBuffer<char16_t> resolvedSkeleton;
+  auto resolvedSkeletonResult = DateTimePatternGenerator::GetSkeleton(
+      Span(pattern.data(), pattern.length()), resolvedSkeleton);
+
+  ASSERT_TRUE(resolvedSkeletonResult.isOk());
+  ASSERT_TRUE(resolvedSkeleton.verboseMatches(u"Mdd"));
+}
+
 }  // namespace mozilla::intl

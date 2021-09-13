@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
+#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
@@ -20,7 +21,6 @@
 
 namespace mozilla::intl {
 
-class DateTimePatternGenerator;
 class Calendar;
 
 /**
@@ -233,6 +233,7 @@ class DateTimeFormat final {
 
   // mozilla::Vector can avoid heap allocations for small transient buffers.
   using PatternVector = Vector<char16_t, 128>;
+  using SkeletonVector = Vector<char16_t, 16>;
 
   /**
    * Create a DateTimeFormat from styles.
@@ -369,6 +370,40 @@ class DateTimeFormat final {
   }
 
   /**
+   * Copies the skeleton that was used to generate the current DateTimeFormat to
+   * the given buffer. If no skeleton was used, then a skeleton is generated
+   * from the resolved pattern. Note that going from skeleton -> resolved
+   * pattern -> skeleton is not a 1:1 mapping, as the resolved pattern can
+   * contain different symbols than the requested skeleton.
+   *
+   * Warning: This method should not be added to new code. In the near future we
+   * plan to remove it.
+   */
+  template <typename B>
+  ICUResult GetOriginalSkeleton(B& aBuffer,
+                                Maybe<HourCycle> aHourCycle = Nothing()) {
+    static_assert(std::is_same_v<typename B::CharType, char16_t>);
+    if (mOriginalSkeleton.length() == 0) {
+      // Generate a skeleton from the resolved pattern, there was no originally
+      // cached skeleton.
+      PatternVector pattern{};
+      VectorToBufferAdaptor buffer(pattern);
+      MOZ_TRY(GetPattern(buffer));
+
+      VectorToBufferAdaptor skeleton(mOriginalSkeleton);
+      MOZ_TRY(DateTimePatternGenerator::GetSkeleton(pattern, skeleton));
+    }
+
+    if (!FillBuffer(mOriginalSkeleton, aBuffer)) {
+      return Err(ICUError::OutOfMemory);
+    }
+    if (aHourCycle) {
+      DateTimeFormat::ReplaceHourSymbol(Span(aBuffer.data(), aBuffer.length()),
+                                        *aHourCycle);
+    }
+    return Ok();
+  }
+  /**
    * Set the start time of the Gregorian calendar. This is useful for
    * ensuring the consistent use of a proleptic Gregorian calendar for ECMA-402.
    * https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar
@@ -413,7 +448,49 @@ class DateTimeFormat final {
  private:
   explicit DateTimeFormat(UDateFormat* aDateFormat);
 
+  ICUResult CacheSkeleton(Span<const char16_t> aSkeleton);
+
+  /**
+   * Replaces all hour pattern characters in |patternOrSkeleton| to use the
+   * matching hour representation for |hourCycle|.
+   */
+  static void ReplaceHourSymbol(Span<char16_t> aPatternOrSkeleton,
+                                DateTimeFormat::HourCycle aHourCycle);
+
+  /**
+   * Find a matching pattern using the requested hour-12 options.
+   *
+   * This function is needed to work around the following two issues.
+   * - https://unicode-org.atlassian.net/browse/ICU-21023
+   * - https://unicode-org.atlassian.net/browse/CLDR-13425
+   *
+   * We're currently using a relatively simple workaround, which doesn't give
+   * the most accurate results. For example:
+   *
+   * ```
+   * var dtf = new Intl.DateTimeFormat("en", {
+   *   timeZone: "UTC",
+   *   dateStyle: "long",
+   *   timeStyle: "long",
+   *   hourCycle: "h12",
+   * });
+   * print(dtf.format(new Date("2020-01-01T00:00Z")));
+   * ```
+   *
+   * Returns the pattern "MMMM d, y 'at' h:mm:ss a z", but when going through
+   * |DateTimePatternGenerator::GetSkeleton| and then
+   * |DateTimePatternGenerator::GetBestPattern| to find an equivalent pattern
+   * for "h23", we'll end up with the pattern "MMMM d, y, HH:mm:ss z", so the
+   * combinator element " 'at' " was lost in the process.
+   */
+  static ICUResult FindPatternWithHourCycle(
+      DateTimePatternGenerator& aDateTimePatternGenerator,
+      DateTimeFormat::PatternVector& aPattern, bool aHour12,
+      DateTimeFormat::SkeletonVector& aSkeleton);
+
   UDateFormat* mDateFormat = nullptr;
+
+  SkeletonVector mOriginalSkeleton;
 };
 
 }  // namespace mozilla::intl
