@@ -227,7 +227,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     },
   ];
   const sandbox = sinon.createSandbox();
-  NimbusFeatures.aboutwelcome._sendExposureEventOnce = true;
+  NimbusFeatures.aboutwelcome._didSendExposureEvent = false;
   await setAboutWelcomePref(true);
   await ExperimentAPI.ready();
 
@@ -341,9 +341,10 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     ["div.onboardingContainer"]
   );
 
-  Assert.ok(
-    ExperimentAPI.recordExposureEvent.called,
-    "Called for exposure event"
+  Assert.equal(
+    ExperimentAPI.recordExposureEvent.callCount,
+    1,
+    "Called only once for exposure event"
   );
 
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
