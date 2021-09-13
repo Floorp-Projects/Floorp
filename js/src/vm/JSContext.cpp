@@ -837,6 +837,7 @@ void InternalJobQueue::runJobs(JSContext* cx) {
         if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval)) {
           // Nothing we can do about uncatchable exceptions.
           if (!cx->isExceptionPending()) {
+            cx->clearInterrupt();
             continue;
           }
           RootedValue exn(cx);

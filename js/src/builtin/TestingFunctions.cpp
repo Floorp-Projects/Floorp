@@ -3680,7 +3680,7 @@ static bool Terminate(JSContext* cx, unsigned arg, Value* vp) {
     fprintf(stderr, "terminate called\n");
   }
 
-  JS_ClearPendingException(cx);
+  cx->setInterrupting();
   return false;
 }
 
