@@ -279,6 +279,8 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
     return;
   }
 
+  LOG(("WebrtcTCPSocket::OpenWithoutHttpProxy %p\n", this));
+
   if (mClosed) {
     return;
   }
@@ -383,6 +385,7 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
 
 nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
+  LOG(("WebrtcTCPSocket::OpenWithHttpProxy %p\n", this));
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService;
   ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
