@@ -23,6 +23,13 @@ add_task(async function setup() {
 });
 
 add_task(async function test_autofill_username_only_form() {
+  await loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      notUsernameSelector: "input[name='shouldnotfill']",
+    }],
+  });
+
   let win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
   await loadFormIntoWindow(DEFAULT_ORIGIN, `
@@ -73,6 +80,14 @@ add_task(async function test_autofill_username_only_form() {
 
         <button type='submit'>Submit</button>
         <button type='reset'> Reset </button>
+    </form>
+
+    <!-- no password field, 1 username field that matches notUsernameSelector recipe -->
+    <form id='form7' action='https://autofill'> 7
+        <input type='text' name='shouldnotfill' autocomplete='username' value=''>
+
+        <button type='submit'>Submit</button>
+        <button type='reset'> Reset </button>
     </form>`, win);
 
   await checkLoginFormInFrameWithElementValues(win, 1, "user1");
@@ -81,6 +96,9 @@ add_task(async function test_autofill_username_only_form() {
   await checkUnmodifiedFormInFrame(win, 4);
   await checkUnmodifiedFormInFrame(win, 5);
   await checkUnmodifiedFormInFrame(win, 6);
+  await checkUnmodifiedFormInFrame(win, 7);
+
+  await resetRecipes();
 });
 </script>
 
