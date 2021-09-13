@@ -71,24 +71,100 @@ SOURCES += [
     'jctrans.c',
 ]
 
-SOURCES += [
-    'jpeg_nbits_table.c',
-]
+if CONFIG['LIBJPEG_TURBO_HAVE_VLD1_S16_X3']:
+    DEFINES['HAVE_VLD1_S16_X3'] = True
+
+if CONFIG['LIBJPEG_TURBO_HAVE_VLD1_U16_X2']:
+    DEFINES['HAVE_VLD1_U16_X2'] = True
+
+if CONFIG['LIBJPEG_TURBO_HAVE_VLD1Q_U8_X4']:
+    DEFINES['HAVE_VLD1Q_U8_X4'] = True
+
+if CONFIG['LIBJPEG_TURBO_NEON_INTRINSICS']:
+    DEFINES['NEON_INTRINSICS'] = True
 
 if CONFIG['LIBJPEG_TURBO_USE_NASM']:
     USE_NASM = True
 
-if CONFIG['LIBJPEG_TURBO_ASFLAGS']:
+if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
     if CONFIG['CPU_ARCH'] == 'arm':
-        SOURCES += [
-            'simd/arm/jsimd.c',
-            'simd/arm/jsimd_neon.S',
+        LOCAL_INCLUDES += [
+            '/media/libjpeg/simd/arm',
+            '/media/libjpeg/simd/arm/aarch32',
         ]
+        SOURCES += [
+            'simd/arm/aarch32/jsimd.c',
+        ]
+
+        simd_sources = [
+            'simd/arm/aarch32/jchuff-neon.c',
+            'simd/arm/jcgray-neon.c',
+            'simd/arm/jcphuff-neon.c',
+            'simd/arm/jcsample-neon.c',
+            'simd/arm/jdcolor-neon.c',
+            'simd/arm/jdmerge-neon.c',
+            'simd/arm/jdsample-neon.c',
+            'simd/arm/jfdctfst-neon.c',
+            'simd/arm/jfdctint-neon.c',
+            'simd/arm/jidctred-neon.c',
+            'simd/arm/jquanti-neon.c',
+        ]
+        SOURCES += simd_sources
+
+        if CONFIG['LIBJPEG_TURBO_NEON_INTRINSICS']:
+            simd_sources_intrinsics = [
+                'simd/arm/jccolor-neon.c',
+                'simd/arm/jidctfst-neon.c',
+                'simd/arm/jidctint-neon.c',
+            ]
+            SOURCES += simd_sources_intrinsics
+            simd_sources += simd_sources_intrinsics
+        else:
+            SOURCES += [
+                'simd/arm/aarch32/jsimd_neon.S',
+            ]
+
+        for srcfile in simd_sources:
+            SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
     elif CONFIG['CPU_ARCH'] == 'aarch64':
-        SOURCES += [
-            'simd/arm64/jsimd.c',
-            'simd/arm64/jsimd_neon.S',
+        LOCAL_INCLUDES += [
+            '/media/libjpeg/simd/arm',
+            '/media/libjpeg/simd/arm/aarch64',
         ]
+        SOURCES += [
+            'simd/arm/aarch64/jsimd.c',
+        ]
+
+        simd_sources = [
+                'simd/arm/jcgray-neon.c',
+                'simd/arm/jcphuff-neon.c',
+                'simd/arm/jcsample-neon.c',
+                'simd/arm/jdmerge-neon.c',
+                'simd/arm/jdsample-neon.c',
+                'simd/arm/jfdctfst-neon.c',
+                'simd/arm/jidctfst-neon.c',
+                'simd/arm/jidctred-neon.c',
+                'simd/arm/jquanti-neon.c',
+        ]
+        SOURCES += simd_sources
+
+        if CONFIG['LIBJPEG_TURBO_NEON_INTRINSICS']:
+            simd_sources_intrinsics = [
+                'simd/arm/aarch64/jchuff-neon.c',
+                'simd/arm/jccolor-neon.c',
+                'simd/arm/jdcolor-neon.c',
+                'simd/arm/jfdctint-neon.c',
+                'simd/arm/jidctint-neon.c',
+            ]
+            SOURCES += simd_sources_intrinsics
+            simd_sources += simd_sources_intrinsics
+        else:
+            SOURCES += [
+                'simd/arm/aarch64/jsimd_neon.S',
+            ]
+
+        for srcfile in simd_sources:
+            SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
     elif CONFIG['CPU_ARCH'] == 'mips32':
         SOURCES += [
             'simd/mips/jsimd.c',
@@ -98,6 +174,27 @@ if CONFIG['LIBJPEG_TURBO_ASFLAGS']:
             SOURCES['simd/mips/jsimd_dspr2.S'].flags += [
                 '-fno-integrated-as',
             ]
+    elif CONFIG['CPU_ARCH'] == 'mips64':
+        LOCAL_INCLUDES += ['/media/libjpeg/simd/mips64']
+        simd_sources = [
+            'simd/mips64/jccolor-mmi.c',
+            'simd/mips64/jcgray-mmi.c',
+            'simd/mips64/jcsample-mmi.c',
+            'simd/mips64/jdcolor-mmi.c',
+            'simd/mips64/jdmerge-mmi.c',
+            'simd/mips64/jdsample-mmi.c',
+            'simd/mips64/jfdctfst-mmi.c',
+            'simd/mips64/jfdctint-mmi.c',
+            'simd/mips64/jidctfst-mmi.c',
+            'simd/mips64/jidctint-mmi.c',
+            'simd/mips64/jquanti-mmi.c',
+        ]
+        SOURCES += simd_sources
+        SOURCES += [
+            'simd/mips64/jsimd.c'
+        ]
+        for srcfile in simd_sources:
+            SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
     elif CONFIG['CPU_ARCH'] == 'x86_64':
         SOURCES += [
             'simd/x86_64/jccolor-avx2.asm',
@@ -209,7 +306,7 @@ else: # No SIMD support?
         'jsimd_none.c',
     ]
 
-ASFLAGS += CONFIG['LIBJPEG_TURBO_ASFLAGS']
+ASFLAGS += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
 
 # Make sure the x86 & x86-64 ASM files can see the necessary includes.
 if CONFIG['CPU_ARCH'] == 'x86':
