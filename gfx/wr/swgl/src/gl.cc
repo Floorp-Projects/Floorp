@@ -289,10 +289,11 @@ struct Buffer {
   size_t size = 0;
   size_t capacity = 0;
 
+  // Returns true if re-allocation succeeded, false otherwise...
   bool allocate(size_t new_size) {
     // If the size remains unchanged, don't allocate anything.
     if (new_size == size) {
-      return false;
+      return true;
     }
     // If the new size is within the existing capacity of the buffer, just
     // reuse the existing buffer.
@@ -464,6 +465,7 @@ struct Texture {
     buf_stride = new_stride;
   }
 
+  // Returns true if re-allocation succeeded, false otherwise...
   bool allocate(bool force = false, int min_width = 0, int min_height = 0) {
     assert(!locked);  // Locked textures shouldn't be reallocated
     // If we get here, some GL API call that invalidates the texture was used.
@@ -503,10 +505,11 @@ struct Texture {
         }
         // Allocation failed, so ensure we don't leave stale buffer state.
         cleanup();
+        return false;
       }
     }
     // Nothing changed...
-    return false;
+    return true;
   }
 
   void cleanup() {
@@ -737,6 +740,8 @@ struct Context {
   ObjectStore<Renderbuffer> renderbuffers;
   ObjectStore<Shader> shaders;
   ObjectStore<Program> programs;
+
+  GLenum last_error = GL_NO_ERROR;
 
   IntRect viewport = {0, 0, 0, 0};
 
@@ -1100,7 +1105,18 @@ void Disable(GLenum cap) {
   }
 }
 
-GLenum GetError() { return GL_NO_ERROR; }
+// Report the last error generated and clear the error status.
+GLenum GetError() {
+  GLenum error = ctx->last_error;
+  ctx->last_error = GL_NO_ERROR;
+  return error;
+}
+
+// Sets the error status to out-of-memory to indicate that a buffer
+// or texture re-allocation failed.
+static void out_of_memory() {
+  ctx->last_error = GL_OUT_OF_MEMORY;
+}
 
 static const char* const extensions[] = {
     "GL_ARB_blend_func_extended",
@@ -1680,7 +1696,9 @@ static void set_tex_storage(Texture& t, GLenum external_format, GLsizei width,
     t.set_buffer(buf, stride);
   }
   t.disable_delayed_clear();
-  t.allocate(changed, min_width, min_height);
+  if (!t.allocate(changed, min_width, min_height)) {
+    out_of_memory();
+  }
   // If we have a buffer that needs format conversion, then do that now.
   if (buf && should_free) {
     convert_copy(external_format, internal_format, (uint8_t*)t.buf, t.stride(),
@@ -1966,7 +1984,10 @@ void VertexAttribDivisor(GLuint index, GLuint divisor) {
 void BufferData(GLenum target, GLsizeiptr size, void* data,
                 UNUSED GLenum usage) {
   Buffer& b = ctx->buffers[ctx->get_binding(target)];
-  if (b.allocate(size)) {
+  if (size != b.size) {
+    if (!b.allocate(size)) {
+      out_of_memory();
+    }
     ctx->validate_vertex_array = true;
   }
   if (data && b.buf && size <= b.size) {
