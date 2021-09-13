@@ -76,7 +76,7 @@ class TextDrawTarget : public DrawTarget {
     mHasUnsupportedFeatures = false;
     mHasShadows = false;
 
-    SetPermitSubpixelAA(!aItem->IsSubpixelAADisabled());
+    SetPermitSubpixelAA(true);
 
     // Compute clip/bounds
     auto appUnitsPerDevPixel =
