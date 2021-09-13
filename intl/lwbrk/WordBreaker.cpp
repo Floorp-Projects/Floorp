@@ -20,29 +20,6 @@ already_AddRefed<WordBreaker> WordBreaker::Create() {
   return RefPtr<WordBreaker>(new WordBreaker()).forget();
 }
 
-bool WordBreaker::BreakInBetween(const char16_t* aText1, uint32_t aTextLen1,
-                                 const char16_t* aText2, uint32_t aTextLen2) {
-  MOZ_ASSERT(nullptr != aText1, "null ptr");
-  MOZ_ASSERT(nullptr != aText2, "null ptr");
-
-  if (!aText1 || !aText2 || (0 == aTextLen1) || (0 == aTextLen2)) return false;
-
-  uint8_t c1 = GetClass(aText1[aTextLen1 - 1]);
-  uint8_t c2 = GetClass(aText2[0]);
-
-  if (c1 == c2 && kWbClassScriptioContinua == c1) {
-    nsAutoString text(aText1, aTextLen1);
-    text.Append(aText2, aTextLen2);
-    AutoTArray<uint8_t, 256> breakBefore;
-    breakBefore.SetLength(aTextLen1 + aTextLen2);
-    NS_GetComplexLineBreaks(text.get(), text.Length(), breakBefore.Elements());
-    bool ret = breakBefore[aTextLen1];
-    return ret;
-  }
-
-  return (c1 != c2);
-}
-
 #define IS_ASCII(c) (0 == (0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c) \
   ((('a' <= (c)) && ((c) <= 'z')) || (('A' <= (c)) && ((c) <= 'Z')))
