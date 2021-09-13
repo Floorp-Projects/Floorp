@@ -2518,11 +2518,6 @@ void gfxPlatform::InitWebRenderConfig() {
   bool prefEnabled = WebRenderPrefEnabled();
   bool envvarEnabled = WebRenderEnvvarEnabled();
 
-  // This would ideally be in the nsCSSProps code
-  // but nsCSSProps is initialized before gfxPlatform
-  // so it has to be done here.
-  gfxVars::AddReceiver(&nsCSSProps::GfxVarReceiver());
-
   // WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on
   //              qualified hardware
   // WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or
@@ -2537,9 +2532,6 @@ void gfxPlatform::InitWebRenderConfig() {
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
     if (gfxVars::UseWebRender()) {
-      // gfxVars doesn't notify receivers when initialized on content processes
-      // we need to explicitly recompute backdrop-filter's enabled state here.
-      nsCSSProps::RecomputeEnabledState("layout.css.backdrop-filter.enabled");
       reporter.SetSuccessful();
     }
     return;
