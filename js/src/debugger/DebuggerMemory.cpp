@@ -394,6 +394,7 @@ bool DebuggerMemory::CallData::takeCensus() {
 
   JS::ubi::RootedCount rootCount(cx, rootType->makeCount());
   if (!rootCount) {
+    ReportOutOfMemory(cx);
     return false;
   }
   JS::ubi::CensusHandler handler(census, rootCount,
@@ -406,6 +407,7 @@ bool DebuggerMemory::CallData::takeCensus() {
   for (WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty();
        r.popFront()) {
     if (!census.targetZones.put(r.front()->zone())) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }

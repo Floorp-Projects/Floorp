@@ -143,7 +143,6 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
 
   CompileArgs* target = cx->new_<CompileArgs>(std::move(scriptedCaller));
   if (!target) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
