@@ -1492,6 +1492,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                                 nullptr,  // parent (not known yet)
                                 principals, iter.mutedErrors(), framePtr,
                                 iter.pc(), &activation)) {
+      ReportOutOfMemory(cx);
       return false;
     }
 

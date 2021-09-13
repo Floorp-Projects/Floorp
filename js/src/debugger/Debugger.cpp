@@ -300,7 +300,7 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
       return false;
 
     case ResumeMode::Terminate:
-      cx->setInterrupting();
+      cx->clearPendingException();
       return false;
 
     case ResumeMode::Return:
@@ -1018,7 +1018,7 @@ NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
       return NativeResumeMode::Abort;
 
     case ResumeMode::Terminate:
-      cx->setInterrupting();
+      cx->clearPendingException();
       return NativeResumeMode::Abort;
 
     case ResumeMode::Return:
@@ -1114,22 +1114,15 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
   // The onPop handler and associated clean up logic should not run multiple
   // times on the same frame. If slowPathOnLeaveFrame has already been
   // called, the frame will not be present in the Debugger frame maps.
-  Rooted<Debugger::DebuggerFrameVector> frames(cx);
+  Rooted<Debugger::DebuggerFrameVector> frames(
+      cx, Debugger::DebuggerFrameVector(cx));
   if (!Debugger::getDebuggerFrames(frame, &frames)) {
-    // There is at least one match Debugger.Frame we failed to process, so drop
-    // the pending exception and raise an out-of-memory instead.
-    if (!frameOk) {
-      cx->clearPendingException();
-    }
-    ReportOutOfMemory(cx);
     return false;
   }
   if (frames.empty()) {
     return frameOk;
   }
 
-  // Convert current exception state into a Completion and clear exception off
-  // of the JSContext.
   completion = Completion::fromJSFramePop(cx, frame, pc, frameOk);
 
   ResumeMode resumeMode = ResumeMode::Continue;
@@ -1951,7 +1944,6 @@ Completion Completion::fromJSResult(JSContext* cx, bool ok, const Value& rv) {
   }
 
   if (!cx->isExceptionPending()) {
-    cx->clearInterrupt();
     return Completion(Terminate());
   }
 
@@ -2603,9 +2595,9 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
 
   // Build list of Debugger.Frame instances referring to this frame with
   // onStep handlers.
-  Rooted<Debugger::DebuggerFrameVector> frames(cx);
+  Rooted<Debugger::DebuggerFrameVector> frames(
+      cx, Debugger::DebuggerFrameVector(cx));
   if (!Debugger::getDebuggerFrames(iter.abstractFramePtr(), &frames)) {
-    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -3110,6 +3102,7 @@ bool Debugger::updateExecutionObservabilityOfFrames(
   {
     jit::JitContext jctx(cx, nullptr);
     if (!jit::RecompileOnStackBaselineScriptsForDebugMode(cx, obs, observing)) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -6437,13 +6430,12 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
   });
 
   // Forward live Debugger.Frame objects.
-  Rooted<DebuggerFrameVector> frames(cx);
+  Rooted<DebuggerFrameVector> frames(cx, DebuggerFrameVector(cx));
   if (!getDebuggerFrames(from, &frames)) {
     // An OOM here means that all Debuggers' frame maps still contain
     // entries for 'from' and no entries for 'to'. Since the 'from' frame
     // will be gone, they are removed by terminateDebuggerFramesOnExit
     // above.
-    ReportOutOfMemory(cx);
     return false;
   }
 
