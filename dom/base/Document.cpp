@@ -6933,8 +6933,11 @@ bool Document::RemoveFromBFCacheSync() {
   }
 
   if (mozilla::SessionHistoryInParent() && XRE_IsContentProcess()) {
-    if (BrowsingContext* bc = GetBrowsingContext()) {
-      if (bc->IsInBFCache()) {
+    // Note, Document::GetBrowsingContext() returns null when the document is in
+    // the bfcache.
+    if (nsPIDOMWindowInner* innerWindow = GetInnerWindow()) {
+      BrowsingContext* bc = innerWindow->GetBrowsingContext();
+      if (bc && bc->IsInBFCache()) {
         ContentChild* cc = ContentChild::GetSingleton();
         // IPC is asynchronous but the caller is supposed to check the return
         // value. The reason for 'Sync' in the method name is that the old

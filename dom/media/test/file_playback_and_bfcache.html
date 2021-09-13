@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+  function init() {
+    if (location.search == "") {
+      let bc1 = new BroadcastChannel("bc1");
+      bc1.onmessage = function(e) {
+        if (e.data == "loadNext") {
+          location.href = location.href + "?page2";
+        } else if (e.data == "forward") {
+          bc1.close();
+          history.forward();
+        }
+      };
+      window.onpageshow = function() {
+        bc1.postMessage("pageshow");
+      };
+    } else {
+      document.body.innerHTML = "<video controls src='owl.mp3' autoplay>";
+      let bc2 = new BroadcastChannel("bc2");
+      bc2.onmessage = function(e) {
+        if (e.data == "back") {
+          history.back();
+        } else if (e.data == "statistics") {
+          bc2.postMessage({ currentTime: document.body.firstChild.currentTime,
+                          duration: document.body.firstChild.duration });
+          bc2.close();
+          window.close();
+        }
+      }
+      window.onpageshow = function(e) {
+        bc2.postMessage({ event: "pageshow", persisted: e.persisted});
+        if (!e.persisted) {
+          // The initial statistics is sent once we know the duration and
+          // have loaded all the data.
+          let mediaElement = document.body.firstChild;
+          mediaElement.onpause = function() {
+            mediaElement.onpause = null;
+            mediaElement.currentTime = 0;
+            mediaElement.onplay = function() {
+              setTimeout(function() {
+                bc2.postMessage({ currentTime: mediaElement.currentTime,
+                                  duration: mediaElement.duration });
+                }, 500);
+            }
+            mediaElement.play();
+          }
+        }
+      };
+    }
+  }
+  </script>
+</head>
+<body onload="init()">
+</body>
+</html>
