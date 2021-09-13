@@ -39,6 +39,10 @@ const env = Cc["@mozilla.org/process/environment;1"].getService(
 );
 const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 
+const TrackedObjects = ChromeUtils.import(
+  "resource://devtools/shared/test-helpers/tracked-objects.jsm"
+);
+
 async function addTab(url) {
   const tab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = tab;
@@ -106,6 +110,14 @@ async function stopRecordingAllocations(
   const parentProcessData = await tracker.stopRecordingAllocations(
     DEBUG_ALLOCATIONS
   );
+
+  // Only do that from the parent process for now,
+  // as traceObjects doesn't work from the content process.
+  // It throws because the content process isn't allowed to read the snapshot files.
+  const objectNodeIds = TrackedObjects.getAllNodeIds();
+  if (objectNodeIds.length > 0) {
+    tracker.traceObjects(objectNodeIds);
+  }
 
   let contentProcessData = null;
   if (alsoRecordContentProcess) {

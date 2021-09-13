@@ -26,6 +26,7 @@ DIRS += [
     "sprintfjs",
     "specs",
     "storage",
+    "test-helpers",
     "transport",
     "webconsole",
     "worker",
