@@ -214,13 +214,6 @@ const startupPhases = {
       read: 1,
       close: 1,
     },
-    {
-      // bug 1546838
-      path: "ProfD:xulstore/data.mdb",
-      condition: WIN,
-      read: 1,
-      write: 1,
-    },
   ],
 
   "before opening first browser window": [
@@ -349,12 +342,6 @@ const startupPhases = {
       path: "GreD:EventArtifactDefinitions.json",
       condition: WIN && !AppConstants.MOZILLA_OFFICIAL,
       stat: 1,
-    },
-    {
-      // bug 1546838
-      path: "ProfD:xulstore/data.mdb",
-      condition: MAC,
-      write: 1,
     },
   ],
 
