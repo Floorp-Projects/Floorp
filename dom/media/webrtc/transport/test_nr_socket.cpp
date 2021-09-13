@@ -192,6 +192,11 @@ int TestNat::create_socket_factory(nr_socket_factory** factorypp) {
   return r;
 }
 
+void TestNat::set_proxy_config(
+    std::shared_ptr<NrSocketProxyConfig> aProxyConfig) {
+  proxy_config_ = std::move(aProxyConfig);
+}
+
 TestNrSocket::TestNrSocket(TestNat* nat)
     : nat_(nat), tls_(false), timer_handle_(nullptr) {
   nat_->insert_socket(this);
@@ -222,7 +227,8 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
   }
 
   RefPtr<NrSocketBase> external_socket;
-  r = NrSocketBase::CreateSocket(&nat_external_addr, &external_socket, nullptr);
+  r = NrSocketBase::CreateSocket(&nat_external_addr, &external_socket,
+                                 nat_->proxy_config_);
 
   if (r) {
     r_log(LOG_GENERIC, LOG_CRIT, "%s: Failure in NrSocket::create: %d",
