@@ -171,6 +171,16 @@ windows10-32-2004-qr/debug:
         - windows32-2004-tests
         - windows10-32-2004-failure-tests
 
+windows10-32-2004-mingwclang-qr/debug:
+    build-platform: win32-mingwclang/debug
+    test-sets:
+        - mingwclang-win32-tests-debug
+
+windows10-32-2004-mingwclang-qr/opt:
+    build-platform: win32-mingwclang/opt
+    test-sets:
+        - mingwclang-tests-opt
+
 # win64
 windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
@@ -203,26 +213,6 @@ windows10-64-shippable-qr/opt:
         - raptor-chrome
         - raptor-firefox
         - browsertime
-
-windows10-64-mingwclang-qr/debug:
-    build-platform: win64-mingwclang/debug
-    test-sets:
-        - mingwclang-tests-debug
-
-windows10-64-mingwclang-qr/opt:
-    build-platform: win64-mingwclang/opt
-    test-sets:
-        - mingwclang-tests-opt
-
-windows10-32-mingwclang-qr/debug:
-    build-platform: win32-mingwclang/debug
-    test-sets:
-        - mingwclang-win32-tests-debug
-
-windows10-32-mingwclang-qr/opt:
-    build-platform: win32-mingwclang/opt
-    test-sets:
-        - mingwclang-tests-opt
 
 # win10-64 2004
 windows10-64-2004-ccov-qr/opt:
@@ -270,6 +260,16 @@ windows10-64-2004-asan-qr/opt:
     build-platform: win64-asan/opt
     test-sets:
         - windows10-2004-tests
+
+windows10-64-2004-mingwclang-qr/debug:
+    build-platform: win64-mingwclang/debug
+    test-sets:
+        - mingwclang-tests-debug
+
+windows10-64-2004-mingwclang-qr/opt:
+    build-platform: win64-mingwclang/opt
+    test-sets:
+        - mingwclang-tests-opt
 
 ##
 # MacOS X platforms (matching /macosx.*/)
