@@ -178,7 +178,8 @@ static const char wb4[] = "zation work.";
 
 static const char* wb[] = {wb0, wb1, wb2, wb3, wb4};
 
-void TestPrintWordWithBreak() {
+TEST(WordBreak, TestPrintWordWithBreak)
+{
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
@@ -282,7 +283,8 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
 }
 
-void TestNextWordBreakWithComplexLanguage() {
+TEST(WordBreak, TestNextWordBreakWithComplexLanguage)
+{
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
   nsString fragText(u"\u0e40\u0e1b\u0e47\u0e19\u0e19\u0e31\u0e01");
 
@@ -295,16 +297,16 @@ void TestNextWordBreakWithComplexLanguage() {
   ASSERT_TRUE(true);
 }
 
-void TestNextWordBreakWithEmptyString() {
+TEST(WordBreak, TestNextWordBreakWithEmptyString)
+{
   RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
   char16_t empty[] = {};
   ASSERT_EQ(NS_WORDBREAKER_NEED_MORE_TEXT, wbk->Next(empty, 0, 0));
   ASSERT_EQ(NS_WORDBREAKER_NEED_MORE_TEXT, wbk->Next(empty, 0, 1));
 }
 
-TEST(LineBreak, WordBreakUsage)
+TEST(WordBreak, TestFindWordBreakFromPosition)
 {
-  TestPrintWordWithBreak();
   TestFindWordBreakFromPosition(0, 0, "This");
   TestFindWordBreakFromPosition(1, 0, "his");
   TestFindWordBreakFromPosition(2, 0, "is");
@@ -315,5 +317,4 @@ TEST(LineBreak, WordBreakUsage)
   TestFindWordBreakFromPosition(3, 8, "ernationalization");
   TestFindWordBreakFromPosition(4, 6, " ");
   TestFindWordBreakFromPosition(4, 7, "work");
-  TestNextWordBreakWithComplexLanguage();
 }
