@@ -36,17 +36,17 @@ struct OSInfo {
 };
 
 struct ProcessInfo {
-  bool isWow64;
-  bool isWowARM64;
-  int32_t cpuCount;
-  int32_t cpuCores;
+  bool isWow64 = false;
+  bool isWowARM64 = false;
+  int32_t cpuCount = 0;
+  int32_t cpuCores = 0;
   nsCString cpuVendor;
-  int32_t cpuFamily;
-  int32_t cpuModel;
-  int32_t cpuStepping;
-  int32_t l2cacheKB;
-  int32_t l3cacheKB;
-  int32_t cpuSpeed;
+  int32_t cpuFamily = 0;
+  int32_t cpuModel = 0;
+  int32_t cpuStepping = 0;
+  int32_t l2cacheKB = 0;
+  int32_t l3cacheKB = 0;
+  int32_t cpuSpeed = 0;
 };
 
 typedef mozilla::MozPromise<DiskInfo, nsresult, /* IsExclusive */ false>
