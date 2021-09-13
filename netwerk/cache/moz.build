@@ -7,13 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking: Cache")
 
-EXPORTS += [
-    "nsDeleteDir.h",
-]
-
 UNIFIED_SOURCES += [
     "nsCacheUtils.cpp",
-    "nsDeleteDir.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
