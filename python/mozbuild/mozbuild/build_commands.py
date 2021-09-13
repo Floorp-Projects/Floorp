@@ -24,6 +24,51 @@ OF THE TREE CAN RESULT IN BAD TREE STATE. USE AT YOUR OWN RISK.
 """.strip()
 
 
+def _set_priority(priority, verbose):
+    # Choose the Windows API structure to standardize on.
+    PRIO_CLASS_BY_KEY = {
+        "idle": "IDLE_PRIORITY_CLASS",
+        "less": "BELOW_NORMAL_PRIORITY_CLASS",
+        "normal": "NORMAL_PRIORITY_CLASS",
+        "more": "ABOVE_NORMAL_PRIORITY_CLASS",
+        "high": "HIGH_PRIORITY_CLASS",
+    }
+    try:
+        prio_class = PRIO_CLASS_BY_KEY[priority]
+    except KeyError:
+        raise KeyError(f"priority '{priority}' not in {list(PRIO_CLASS_BY_KEY)}")
+
+    if "nice" in dir(os):
+        # Translate the Windows priority classes into niceness values.
+        NICENESS_BY_PRIO_CLASS = {
+            "IDLE_PRIORITY_CLASS": 19,
+            "BELOW_NORMAL_PRIORITY_CLASS": 10,
+            "NORMAL_PRIORITY_CLASS": 0,
+            "ABOVE_NORMAL_PRIORITY_CLASS": -10,
+            "HIGH_PRIORITY_CLASS": -20,
+        }
+        niceness = NICENESS_BY_PRIO_CLASS[prio_class]
+
+        os.nice(niceness)
+        if verbose:
+            print(f"os.nice({niceness})")
+        return True
+
+    try:
+        import psutil
+
+        prio_class_val = getattr(psutil, prio_class)
+    except ModuleNotFoundError:
+        return False
+    except AttributeError:
+        return False
+
+    psutil.Process().nice(prio_class_val)
+    if verbose:
+        print(f"psutil.Process().nice(psutil.{prio_class})")
+    return True
+
+
 @CommandProvider
 class Build(MachCommandBase):
     """Interface to build the tree."""
@@ -69,6 +114,13 @@ class Build(MachCommandBase):
         action="store_true",
         help="Keep building after an error has occurred",
     )
+    @CommandArgument(
+        "--priority",
+        default="less",
+        metavar="priority",
+        type=str,
+        help="idle/less/normal/more/high. (Default less)",
+    )
     def build(
         self,
         command_context,
@@ -78,6 +130,7 @@ class Build(MachCommandBase):
         directory=None,
         verbose=False,
         keep_going=False,
+        priority="",
     ):
         """Build the source tree.
 
@@ -110,6 +163,11 @@ class Build(MachCommandBase):
         # Force verbosity on automation.
         verbose = verbose or bool(os.environ.get("MOZ_AUTOMATION", False))
         append_env = None
+
+        # By setting the current process's priority, by default our child processes
+        # will also inherit this same priority.
+        if not _set_priority(priority, verbose):
+            print("--priority not supported on this platform.")
 
         if doing_pgo:
             if what:
