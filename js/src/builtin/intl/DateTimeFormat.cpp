@@ -1413,14 +1413,6 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
     return nullptr;
   }
 
-  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
-  auto skelResult =
-      mozilla::intl::DateTimePatternGenerator::GetSkeleton(pattern, skeleton);
-  if (skelResult.isErr()) {
-    intl::ReportInternalError(cx, skelResult.unwrapErr());
-    return nullptr;
-  }
-
   // Determine the hour cycle used in the resolved pattern. This is needed to
   // workaround <https://unicode-org.atlassian.net/browse/ICU-21154> and
   // <https://unicode-org.atlassian.net/browse/ICU-21155>.
@@ -1441,6 +1433,13 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
     return nullptr;
   }
   mozilla::Span<const char16_t> timeZoneChars = timeZone.twoByteRange();
+
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
+  auto skelResult = mozDtf.GetOriginalSkeleton(skeleton, hcPattern);
+  if (skelResult.isErr()) {
+    intl::ReportInternalError(cx, skelResult.unwrapErr());
+    return nullptr;
+  }
 
   UErrorCode status = U_ZERO_ERROR;
   UDateIntervalFormat* dif = udtitvfmt_open(
