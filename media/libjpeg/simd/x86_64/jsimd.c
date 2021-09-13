@@ -1031,8 +1031,6 @@ jsimd_can_encode_mcu_AC_first_prepare(void)
     return 0;
   if (sizeof(JCOEF) != 2)
     return 0;
-  if (SIZEOF_SIZE_T != 8)
-    return 0;
   if (simd_support & JSIMD_SSE2)
     return 1;
 
@@ -1056,8 +1054,6 @@ jsimd_can_encode_mcu_AC_refine_prepare(void)
   if (DCTSIZE != 8)
     return 0;
   if (sizeof(JCOEF) != 2)
-    return 0;
-  if (SIZEOF_SIZE_T != 8)
     return 0;
   if (simd_support & JSIMD_SSE2)
     return 1;
