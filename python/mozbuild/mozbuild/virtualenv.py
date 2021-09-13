@@ -146,13 +146,6 @@ class VirtualenvManager(VirtualenvHelper):
             os.path.join(self.virtualenv_root, METADATA_FILENAME),
         )
 
-    @property
-    def virtualenv_script_path(self):
-        """Path to virtualenv's own populator script."""
-        return os.path.join(
-            self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
-        )
-
     def version_info(self):
         return eval(
             subprocess.check_output(
@@ -292,7 +285,9 @@ class VirtualenvManager(VirtualenvHelper):
 
         args = [
             self._base_python,
-            self.virtualenv_script_path,
+            os.path.join(
+                self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
+            ),
             # Without this, virtualenv.py may attempt to contact the outside
             # world and search for or download a newer version of pip,
             # setuptools, or wheel. This is bad for security, reproducibility,
@@ -391,39 +386,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         finally:
             os.environ.update(old_env_variables)
-
-    def call_setup(self, directory, arguments):
-        """Calls setup.py in a directory."""
-        setup = os.path.join(directory, "setup.py")
-
-        program = [self.python_path, setup]
-        program.extend(arguments)
-
-        # We probably could call the contents of this file inside the context
-        # of this interpreter using execfile() or similar. However, if global
-        # variables like sys.path are adjusted, this could cause all kinds of
-        # havoc. While this may work, invoking a new process is safer.
-
-        try:
-            env = os.environ.copy()
-            env.setdefault("ARCHFLAGS", get_archflags())
-            output = subprocess.check_output(
-                program,
-                cwd=directory,
-                env=env,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-            )
-            print(output)
-        except subprocess.CalledProcessError as e:
-            if "Python.h: No such file or directory" in e.output:
-                print(
-                    "WARNING: Python.h not found. Install Python development headers."
-                )
-            else:
-                print(e.output)
-
-            raise Exception("Error installing package: %s" % directory)
 
     def build(self):
         """Build a virtualenv per tree conventions.
