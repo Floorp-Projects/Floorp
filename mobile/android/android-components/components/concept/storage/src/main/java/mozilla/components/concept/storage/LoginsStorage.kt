@@ -8,130 +8,21 @@ import kotlinx.coroutines.Deferred
 import org.json.JSONObject
 
 /**
- * An interface describing a storage layer for logins/passwords.
- */
-interface LoginsStorage : AutoCloseable {
-    /**
-     * Deletes all login records. These deletions will be synced to the server on the next call to sync.
-     */
-    suspend fun wipe()
-
-    /**
-     * Clears out all local state, bringing us back to the state before the first write (or sync).
-     */
-    suspend fun wipeLocal()
-
-    /**
-     * Deletes the password with the given ID.
-     *
-     * @return True if the deletion did anything, false otherwise.
-     */
-    suspend fun delete(id: String): Boolean
-
-    /**
-     * Fetches a password from the underlying storage layer by its unique identifier.
-     *
-     * @param guid Unique identifier for the desired record.
-     * @return [Login] record, or `null` if the record does not exist.
-     */
-    suspend fun get(guid: String): Login?
-
-    /**
-     * Marks the login with the given [guid] as `in-use`.
-     *
-     * @param guid Unique identifier for the desired record.
-     */
-    suspend fun touch(guid: String)
-
-    /**
-     * Fetches the full list of logins from the underlying storage layer.
-     *
-     * @return A list of stored [Login] records.
-     */
-    suspend fun list(): List<Login>
-
-    /**
-     * Inserts the provided login into the database, returning it's id.
-     *
-     * This function ignores values in metadata fields (`timesUsed`,
-     * `timeCreated`, `timeLastUsed`, and `timePasswordChanged`).
-     *
-     * If login has an empty id field, then a GUID will be
-     * generated automatically. The format of generated guids
-     * are left up to the implementation of LoginsStorage (in
-     * practice the [DatabaseLoginsStorage] generates 12-character
-     * base64url (RFC 4648) encoded strings.
-     *
-     * This will return an error result if a GUID is provided but
-     * collides with an existing record, or if the provided record
-     * is invalid (missing password, origin, or doesn't have exactly
-     * one of formSubmitURL and httpRealm).
-     *
-     * @param login A [Login] record to add.
-     * @return A `guid` for the created record.
-     */
-    suspend fun add(login: Login): String
-
-    /**
-     * Updates the fields in the provided record.
-     *
-     * This will throw if `login.id` does not refer to
-     * a record that exists in the database, or if the provided record
-     * is invalid (missing password, origin, or doesn't have exactly
-     * one of formSubmitURL and httpRealm).
-     *
-     * Like `add`, this function will ignore values in metadata
-     * fields (`timesUsed`, `timeCreated`, `timeLastUsed`, and
-     * `timePasswordChanged`).
-     *
-     * @param login A [Login] record instance to update.
-     */
-    suspend fun update(login: Login)
-
-    /**
-     * Bulk-import of a list of [Login].
-     * Storage must be empty; implementations expected to throw otherwise.
-     *
-     * @param logins A list of [Login] records to be imported.
-     * @return JSON object with detailed information about imported logins.
-     */
-    suspend fun importLoginsAsync(logins: List<Login>): JSONObject
-
-    /**
-     * Checks if login already exists and is valid. Implementations expected to throw for invalid [login].
-     *
-     * @param login A [Login] record to validate.
-     */
-    suspend fun ensureValid(login: Login)
-
-    /**
-     * Fetch the list of logins for some origin from the underlying storage layer.
-     *
-     * @param origin A host name used to look up [Login] records.
-     * @return A list of [Login] objects, representing matching logins.
-     */
-    suspend fun getByBaseDomain(origin: String): List<Login>
-
-    /**
-     * Fetch the list of potential duplicate logins from the underlying storage layer, ignoring username.
-     *
-     * @param login The [Login] to compare against for finding dupes.
-     * @return A list of [Login] objects, representing matching potential dupe logins.
-     */
-    suspend fun getPotentialDupesIgnoringUsername(login: Login): List<Login>
-}
-
-/**
- * Represents a login that can be used by autofill APIs.
- *
- * Note that much of this information can be partial (e.g., a user might save a password with a
- * blank username).
+ * A login stored in the database
  */
 data class Login(
     /**
      * The unique identifier for this login entry.
      */
-    val guid: String? = null,
+    val guid: String,
+    /**
+     * The username for this login entry.
+     */
+    val username: String,
+    /**
+     * The password for this login entry.
+     */
+    val password: String,
     /**
      * The origin this login entry applies to.
      */
@@ -150,13 +41,13 @@ data class Login(
      */
     val httpRealm: String? = null,
     /**
-     * The username for this login entry.
+     * HTML field associated with the [username].
      */
-    val username: String,
+    val usernameField: String = "",
     /**
-     * The password for this login entry.
+     * HTML field associated with the [password].
      */
-    val password: String,
+    val passwordField: String = "",
     /**
      * Number of times this password has been used.
      */
@@ -173,21 +64,184 @@ data class Login(
      * Time of last password change in milliseconds from the unix epoch.
      */
     val timePasswordChanged: Long = 0L,
-    /**
-     * HTML field associated with the [username].
-     */
-    val usernameField: String? = null,
-    /**
-     * HTML field associated with the [password].
-     */
-    val passwordField: String? = null
+) {
+    fun toEntry() = LoginEntry(
+        origin = origin,
+        formActionOrigin = formActionOrigin,
+        httpRealm = httpRealm,
+        usernameField = usernameField,
+        passwordField = passwordField,
+        username = username,
+        password = password,
+    )
+}
+
+/**
+ * Login autofill entry
+ *
+ * This contains the data needed to handle autofill but not the data related to
+ * the DB record.  [LoginsStorage] methods that save data typically input
+ * [LoginEntry] instances.  This allows the storage backend handle
+ * dupe-checking issues like determining which login record should be updated
+ * for a given [LoginEntry].  [LoginEntry] also represents the login data
+ * that's editable in the API.
+ *
+ * All fields have the same meaning as in [Login].
+ */
+data class LoginEntry(
+    val origin: String,
+    val formActionOrigin: String? = null,
+    val httpRealm: String? = null,
+    val usernameField: String = "",
+    val passwordField: String = "",
+    val username: String,
+    val password: String,
 )
 
 /**
- * Provides a method for checking whether or not a given login can be stored.
+ * Login where the sensitive data is the encrypted.
+ *
+ * This have the same fields as [Login] except username and password is replaced with [secFields]
+ */
+data class EncryptedLogin(
+    val guid: String,
+    val origin: String,
+    val formActionOrigin: String? = null,
+    val httpRealm: String? = null,
+    val usernameField: String = "",
+    val passwordField: String = "",
+    val timesUsed: Long = 0L,
+    val timeCreated: Long = 0L,
+    val timeLastUsed: Long = 0L,
+    val timePasswordChanged: Long = 0L,
+    val secFields: String,
+)
+
+/**
+ * An interface describing a storage layer for logins/passwords.
+ */
+interface LoginsStorage : AutoCloseable {
+    /**
+     * Deletes all login records. These deletions will be synced to the server on the next call to sync.
+     */
+    suspend fun wipe()
+
+    /**
+     * Clears out all local state, bringing us back to the state before the first write (or sync).
+     */
+    suspend fun wipeLocal()
+
+    /**
+     * Deletes the login with the given GUID.
+     *
+     * @return True if the deletion did anything, false otherwise.
+     */
+    suspend fun delete(guid: String): Boolean
+
+    /**
+     * Fetches a password from the underlying storage layer by its GUID
+     *
+     * @param guid Unique identifier for the desired record.
+     * @return [Login] record, or `null` if the record does not exist.
+     */
+    suspend fun get(guid: String): Login?
+
+    /**
+     * Marks that a login has been used
+     *
+     * @param guid Unique identifier for the desired record.
+     */
+    suspend fun touch(guid: String)
+
+    /**
+     * Fetches the full list of logins from the underlying storage layer.
+     *
+     * @return A list of stored [Login] records.
+     */
+    suspend fun list(): List<Login>
+
+    /**
+     * Calculate how we should save a login
+     *
+     * For a [LoginEntry] to save find an existing [Login] to be update (if
+     * any).
+     *
+     * @param entry [LoginEntry] being saved
+     * @return [Login] that should be updated, or null if the login should be added
+     */
+    fun findLoginToUpdate(entry: LoginEntry): Login?
+
+    /**
+     * Inserts the provided login into the database
+
+     * This will return an error result if the provided record is invalid
+     * (missing password, origin, or doesn't have exactly one of formSubmitURL
+     * and httpRealm).
+     *
+     * @param login [LoginEntry] to add.
+     * @return [EncryptedLogin] that was added
+     */
+    suspend fun add(entry: LoginEntry): EncryptedLogin
+
+    /**
+     * Updates an existing login in the database
+     *
+     * This will throw if `guid` does not refer to a record that exists in the
+     * database, or if the provided record is invalid (missing password,
+     * origin, or doesn't have exactly one of formSubmitURL and httpRealm).
+     *
+     * @param guid Unique identifier for the record
+     * @param login [LoginEntry] to add.
+     * @return [EncryptedLogin] that was added
+     */
+    suspend fun update(guid: String, entry: LoginEntry): EncryptedLogin
+
+    /**
+     * Checks if a record exists for a [LoginEntry] and calls either add() or update()
+     *
+     * This will throw if the provided record is invalid (missing password,
+     * origin, or doesn't have exactly one of formSubmitURL and httpRealm).
+     *
+     * @param login [LoginEntry] to add or update.
+     * @return [EncryptedLogin] that was added
+     */
+    suspend fun addOrUpdate(entry: LoginEntry): EncryptedLogin
+
+    /**
+     * Bulk-import of a list of [Login].
+     * Storage must be empty; implementations expected to throw otherwise.
+     *
+     * This method exists to support the Fennic -> Fenix migration.  It needs
+     * to input [Login] instances in order to ensure the imported logins get
+     * the same GUID.
+     *
+     * @param logins A list of [Login] records to be imported.
+     * @return JSON object with detailed information about imported logins.
+     */
+    suspend fun importLoginsAsync(logins: List<Login>): JSONObject
+
+    /**
+     * Fetch the list of logins for some origin from the underlying storage layer.
+     *
+     * @param origin A host name used to look up logins
+     * @return A list of [Login] objects, representing matching logins.
+     */
+    suspend fun getByBaseDomain(origin: String): List<Login>
+
+    /**
+     * Decrypt an [EncryptedLogin]
+     *
+     * @param login [EncryptedLogin] to decrypt
+     * @return [Login] with decrypted data
+     */
+    fun decryptLogin(login: EncryptedLogin): Login
+}
+
+/**
+ * Validates a [LoginEntry] that will be saved and calculates if saving it
+ * would update an existing [Login] or create a new one.
  */
 interface LoginValidationDelegate {
-
     /**
      * The result of validating a given [Login] against currently stored [Login]s.  This will
      * include whether it can be created, updated, or neither, along with an explanation of any errors.
@@ -204,70 +258,16 @@ interface LoginValidationDelegate {
          * to update its information.
          */
         data class CanBeUpdated(val foundLogin: Login) : Result()
-
-        /**
-         * The [Login] cannot be saved.
-         */
-        sealed class Error : Result() {
-            /**
-             * Indicates that a duplicate [Login] was found in storage, we should not save it again.
-             */
-            object DuplicateLogin : Result()
-
-            /**
-             * The passed [Login] had an empty password field, and so cannot be saved.
-             */
-            object EmptyPassword : Error()
-
-            /**
-             * The passed [Login] had no origin set, Origins may not be empty.
-             */
-            object EmptyOrigin : Error()
-
-            /**
-             * The passed [Login] had both `httpRealm` and `formSubmitUrl` are set.
-             * Only one should be set.
-             */
-            object BothTargets : Error()
-
-            /**
-             * The passed [Login] had Both `httpRealm` and `formSubmitUrl` null.
-             * Only one should be set.
-             */
-            object NoTarget : Error()
-
-            /**
-             * The passed [Login] has an illegal field
-             */
-            object IllegalFieldValue : Error()
-
-            /**
-             * Something went wrong in GeckoView. We have no way to handle this type of error. See
-             * [exception] for details.
-             */
-            data class GeckoError(val exception: Exception) : Error()
-        }
     }
 
-    /**
-     *
-     * Calls underlying storage methods to fetch list of [Login]s that could be potential dupes of [newLogin]
-     *
-     * Note that this method is not thread safe.
-     *
-     * @returns a list of potential duplicate [Login]s
-     */
-    fun getPotentialDupesIgnoringUsernameAsync(newLogin: Login): Deferred<List<Login>>
 
     /**
      *
      * Checks whether a [login] should be saved or updated.
      *
-     * Note that this method is not thread safe.
-     *
      * @returns a [Result], detailing whether a [login] should be saved or updated.
      */
-    fun shouldUpdateOrCreateAsync(newLogin: Login, potentialDupes: List<Login>? = null): Deferred<Result>
+    fun shouldUpdateOrCreateAsync(entry: LoginEntry): Deferred<Result>
 }
 
 /**
@@ -281,15 +281,14 @@ interface LoginStorageDelegate {
     fun onLoginUsed(login: Login)
 
     /**
-     * Given a [domain], returns a [GeckoResult] of the matching [LoginEntry]s found in
-     * [loginStorage].
+     * Given a [domain], returns the matching [Login]s found in [loginStorage].
      *
      * This is called when the engine believes a field should be autofilled.
      */
     fun onLoginFetch(domain: String): Deferred<List<Login>>
 
     /**
-     * Called when a [login] should be saved or updated.
+     * Called when a [LogenEntry] should be added or updated.
      */
-    fun onLoginSave(login: Login)
+    fun onLoginSave(login: LoginEntry)
 }

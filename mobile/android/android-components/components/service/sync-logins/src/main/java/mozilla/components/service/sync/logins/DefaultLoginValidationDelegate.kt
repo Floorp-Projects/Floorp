@@ -9,6 +9,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.concept.storage.LoginsStorage
@@ -26,103 +27,10 @@ class DefaultLoginValidationDelegate(
      * Compares a [Login] to a passed in list of potential dupes [Login] or queries underlying
      * storage for potential dupes list of [Login] to determine if it should be updated or created.
      */
-    override fun shouldUpdateOrCreateAsync(
-        newLogin: Login,
-        potentialDupes: List<Login>?
-    ): Deferred<Result> {
+    override fun shouldUpdateOrCreateAsync(entry: LoginEntry): Deferred<Result> {
         return scope.async {
-            val potentialDupesList =
-                potentialDupes ?: storage.value.getPotentialDupesIgnoringUsername(newLogin)
-            val foundLogin = if (potentialDupesList.isEmpty()) {
-                // If list is empty, no records match -> create
-                null
-            } else {
-                // Matching guid, non-blank matching username -> update
-                potentialDupesList.find { it.guid == newLogin.guid && it.username == newLogin.username }
-                    // Matching guid, blank username -> update
-                    ?: potentialDupesList.find { it.guid == newLogin.guid && it.username.isEmpty() }
-                    // Matching username -> update
-                    ?: potentialDupesList.find { it.username == newLogin.username }
-                    // Non matching guid, blank username -> update
-                    ?: potentialDupesList.find { it.username.isEmpty() }
-                // else create
-            }
+            val foundLogin = storage.value.findLoginToUpdate(entry)
             if (foundLogin == null) Result.CanBeCreated else Result.CanBeUpdated(foundLogin)
-        }
-    }
-
-    override fun getPotentialDupesIgnoringUsernameAsync(newLogin: Login): Deferred<List<Login>> {
-        return scope.async {
-            storage.value.getPotentialDupesIgnoringUsername(newLogin)
-        }
-    }
-
-    /**
-     * Queries underlying storage for a new [Login] to determine if should be updated or created,
-     * and can be merged and saved, or any error states.
-     *
-     * @return a [Result] detailing whether we should create or update (and the merged login to update),
-     * else any error states
-     */
-    @Suppress("ComplexMethod")
-    fun ensureValidAsync(login: Login): Deferred<Result> {
-        return scope.async {
-            try {
-                var result = shouldUpdateOrCreateAsync(login).await()
-                val loginToCheck = when (result) {
-                    // If we are updating, let's validate the merged login
-                    is Result.CanBeUpdated -> result.foundLogin.mergeWithLogin(login)
-                    is Result.CanBeCreated -> login
-                    else -> login
-                }
-                storage.value.ensureValid(loginToCheck)
-                // Return the merged login to update to avoid doing this merge twice
-                if (result is Result.CanBeUpdated) {
-                    result = Result.CanBeUpdated(loginToCheck)
-                }
-                result
-            } catch (e: InvalidRecordException) {
-                // This feels a bit hacky but unforunately a current limitation of uniffi
-                // and how it sends errors across ffi
-                // Potentially update after: https://github.com/mozilla/uniffi-rs/issues/460
-                when (e.message) {
-                    "InvalidLogin::DuplicateLogin" -> Result.Error.DuplicateLogin
-                    "InvalidLogin::EmptyPassword" -> Result.Error.EmptyPassword
-                    "InvalidLogin::EmptyOrigin" -> Result.Error.EmptyOrigin
-                    "InvalidLogin::BothTargets" -> Result.Error.BothTargets
-                    "InvalidLogin::NoTarget" -> Result.Error.NoTarget
-                    "InvalidLogin::IllegalFieldValue" -> Result.Error.IllegalFieldValue
-                    else -> Result.Error.GeckoError(e)
-                }
-            }
-        }
-    }
-
-    companion object {
-        /**
-         * Will use values from [login] if they are 1) non-null and 2) non-empty.  Otherwise, will fall
-         * back to values from [this].
-         */
-        fun Login.mergeWithLogin(login: Login): Login {
-            infix fun String?.orUseExisting(other: String?) =
-                if (this?.isNotEmpty() == true) this else other
-
-            infix fun String?.orUseExisting(other: String) =
-                if (this?.isNotEmpty() == true) this else other
-
-            val origin = login.origin orUseExisting origin
-            val username = login.username orUseExisting username
-            val password = login.password orUseExisting password
-            val httpRealm = login.httpRealm orUseExisting httpRealm
-            val formActionOrigin = login.formActionOrigin orUseExisting formActionOrigin
-
-            return copy(
-                origin = origin,
-                username = username,
-                password = password,
-                httpRealm = httpRealm,
-                formActionOrigin = formActionOrigin
-            )
         }
     }
 }

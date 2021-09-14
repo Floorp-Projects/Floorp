@@ -10,8 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginStorageDelegate
-import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.concept.storage.LoginsStorage
 
 /**
@@ -34,15 +34,14 @@ import mozilla.components.concept.storage.LoginsStorage
  *   - GV calls [onLoginUsed] to let us know which [Login] was used
  * - User submits their credentials
  * - GV detects something that looks like a login submission
- *   - ([GeckoLoginStorageDelegate] is not involved with this step) A prompt is shown to the user,
- *   who decides whether or not to save the [Login]
- *     - If the user declines, break
- *   - GV calls [onLoginSave] with a [Login]
- *     - If this [Login] was autofilled, it is updated with new information but retains the same
- *     [Login.guid]
- *     - If this is a new [Login], its [Login.guid] will be an empty string
- *   - We [CREATE] or [UPDATE] the [Login] in [loginStorage]
- *     - If [CREATE], [loginStorage] generates a new guid for it
+ *   - ([GeckoLoginStorageDelegate] is not involved with this step)
+ *   `SaveLoginDialogFragment` is shown to the user, who decides whether or not
+ *   to save the [LoginEntry] and gives them a chance to manually adjust the
+ *   username/password fields.
+ *     - `SaveLoginDialogFragment` uses `DefaultLoginValidationDelegate` to determine
+ *     what the result of the operation will be: saving a new login,
+ *     updating an existing login, or filling in a blank username.
+ *   - If the user accepts: GV calls [onLoginSave] with the [LoginEntry]
  */
 class GeckoLoginStorageDelegate(
     private val loginStorage: Lazy<LoginsStorage>,
@@ -50,11 +49,8 @@ class GeckoLoginStorageDelegate(
 ) : LoginStorageDelegate {
 
     override fun onLoginUsed(login: Login) {
-        val guid = login.guid
-        // If the guid is null, we have no way of associating the login with any record in the DB
-        if (guid == null || guid.isEmpty()) return
         scope.launch {
-            loginStorage.value.touch(guid)
+            loginStorage.value.touch(login.guid)
         }
     }
 
@@ -65,22 +61,9 @@ class GeckoLoginStorageDelegate(
     }
 
     @Synchronized
-    override fun onLoginSave(login: Login) {
-        val validationDelegate = DefaultLoginValidationDelegate(storage = loginStorage)
+    override fun onLoginSave(login: LoginEntry) {
         scope.launch {
-            when (val result = validationDelegate.ensureValidAsync(login).await()) {
-                is LoginValidationDelegate.Result.CanBeUpdated -> {
-                    loginStorage.value.update(result.foundLogin)
-                }
-                LoginValidationDelegate.Result.CanBeCreated -> {
-                    // If an existing Login was autofilled, we want to clear its guid to
-                    // avoid updating its record
-                    loginStorage.value.add(login.copy(guid = null))
-                }
-                else -> {
-                    // There was an error, do not attempt to save/update
-                }
-            }
+            loginStorage.value.addOrUpdate(login)
         }
     }
 }
