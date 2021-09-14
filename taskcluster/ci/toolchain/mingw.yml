@@ -41,7 +41,7 @@ linux64-mingw32-nsis:
         toolchain-artifact: public/build/nsis.tar.zst
     fetches:
         fetch:
-            - nsis-3.01
+            - nsis-3.07
             - zlib-1.2.11
         toolchain:
             - linux64-mingw32-gcc

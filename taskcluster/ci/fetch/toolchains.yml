@@ -277,21 +277,21 @@ zlib-1.2.11:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
 
-nsis-3.01:
-    description: nsis 3.01 source code
+nsis-3.07:
+    description: nsis 3.07 source code
     fetch:
         type: static-url
-        url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-src.tar.bz2
-        sha256: 604c011593be484e65b2141c50a018f1b28ab28c994268e4ecd377773f3ffba1
-        size: 1649428
+        url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.07/nsis-3.07-src.tar.bz2
+        sha256: 4dfad3388589985b4cd91d20e18e1458aa31e7d139b5b8adf25c3a9c1015efba
+        size: 1784292
 
-nsis-3.01-win:
-    description: nsis 3.01 for windows
+nsis-3.07-win:
+    description: nsis 3.07 for windows
     fetch:
         type: static-url
-        url: https://hg.mozilla.org/mozilla-build/raw-file/3b8c537ca3c879551956ad47ca9f089583f647c5/nsis-3.01.zip
-        sha256: daa17556c8690a34fb13af25c87ced89c79a36a935bf6126253a9d9a5226367c
-        size: 2505205
+        url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.07/nsis-3.07.zip
+        sha256: 04dde28896ae9ab36ea3035ff3a294e78053f00048064f6d22a6f1c02bcb6ec0
+        size: 2335219
 
 upx-3.95-win:
     description: upx 3.95 for windows

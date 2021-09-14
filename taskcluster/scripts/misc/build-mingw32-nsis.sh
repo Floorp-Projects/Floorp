@@ -31,9 +31,9 @@ export PATH="$MOZ_FETCHES_DIR/mingw32-gcc/bin:$PATH"
 cd zlib-1.2.11
 make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 
-cd ../nsis-3.01-src
+cd ../nsis-3.07-src
 patch -p1 < $GECKO_PATH/build/win32/nsis-no-insert-timestamp.patch
-scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS Menu" PREFIX=$INSTALL_DIR/ VERSION=3.01 install
+scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS Menu" PREFIX=$INSTALL_DIR/ VERSION=3.07 install
 
 # --------------
 
