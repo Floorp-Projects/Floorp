@@ -21,7 +21,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use std::{
-    convert::TryInto,
+    convert::{TryFrom, TryInto},
     sync::atomic::{AtomicBool, Ordering},
     sync::Arc,
 };
@@ -136,7 +136,7 @@ pub struct XYZNumber {
 /// A color in the CIE xyY color space
 /* the names for the following two types are sort of ugly */
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct qcms_CIE_xyY {
     pub x: f64,
@@ -166,7 +166,7 @@ impl From<qcms_chromaticity> for qcms_CIE_xyY {
 
 /// a set of CIE_xyY values that can use to describe the primaries of a color space
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct qcms_CIE_xyYTRIPLE {
     pub red: qcms_CIE_xyY,
@@ -1066,26 +1066,39 @@ impl From<u8> for ColourPrimaries {
 fn colour_primaries() {
     for value in 0..=u8::MAX {
         match ColourPrimaries::from(value) {
-            ColourPrimaries::Reserved => {}
-            variant => assert_eq!(value, variant as u8),
+            invalid_variant @ (ColourPrimaries::Reserved | ColourPrimaries::Unspecified) => {
+                assert!(invalid_variant.white_point().is_err());
+                assert!(qcms_CIE_xyYTRIPLE::try_from(invalid_variant).is_err());
+            }
+            variant => {
+                assert_eq!(value, variant as u8);
+                let wp_result = variant.white_point();
+                assert!(wp_result.is_ok(), "{:?} failed: {:?}", variant, wp_result);
+                let result = qcms_CIE_xyYTRIPLE::try_from(variant);
+                assert!(result.is_ok(), "{:?} failed: {:?}", variant, result);
+            }
         }
     }
 }
 
-impl From<ColourPrimaries> for qcms_CIE_xyYTRIPLE {
-    fn from(value: ColourPrimaries) -> Self {
+impl TryFrom<ColourPrimaries> for qcms_CIE_xyYTRIPLE {
+    type Error = String;
+
+    fn try_from(value: ColourPrimaries) -> Result<Self, Self::Error> {
         let red;
         let green;
         let blue;
 
         match value {
-            ColourPrimaries::Reserved => panic!("CP={} is reserved", value as u8),
+            ColourPrimaries::Reserved => return Err(format!("CP={} is reserved", value as u8)),
             ColourPrimaries::Bt709 => {
                 green = qcms_chromaticity { x: 0.300, y: 0.600 };
                 blue = qcms_chromaticity { x: 0.150, y: 0.060 };
                 red = qcms_chromaticity { x: 0.640, y: 0.330 };
             }
-            ColourPrimaries::Unspecified => panic!("CP={} is unspecified", value as u8),
+            ColourPrimaries::Unspecified => {
+                return Err(format!("CP={} is unspecified", value as u8))
+            }
             ColourPrimaries::Bt470M => {
                 green = qcms_chromaticity { x: 0.21, y: 0.71 };
                 blue = qcms_chromaticity { x: 0.14, y: 0.08 };
@@ -1129,35 +1142,35 @@ impl From<ColourPrimaries> for qcms_CIE_xyYTRIPLE {
             }
         }
 
-        Self {
+        Ok(Self {
             red: red.into(),
             green: green.into(),
             blue: blue.into(),
-        }
+        })
     }
 }
 
 impl ColourPrimaries {
-    fn white_point(self) -> qcms_CIE_xyY {
+    fn white_point(self) -> Result<qcms_CIE_xyY, String> {
         match self {
-            Self::Reserved => panic!("CP={} is reserved", self as u8),
+            Self::Reserved => Err(format!("CP={} is reserved", self as u8)),
             Self::Bt709
             | Self::Bt470Bg
             | Self::Bt601
             | Self::Smpte240
             | Self::Bt2020
             | Self::Smpte432
-            | Self::Ebu3213 => qcms_chromaticity::D65,
-            Self::Unspecified => panic!("CP={} is unspecified", self as u8),
-            Self::Bt470M => qcms_chromaticity { x: 0.310, y: 0.316 },
-            Self::Generic_film => qcms_chromaticity { x: 0.310, y: 0.316 },
-            Self::Xyz => qcms_chromaticity {
+            | Self::Ebu3213 => Ok(qcms_chromaticity::D65),
+            Self::Unspecified => Err(format!("CP={} is unspecified", self as u8)),
+            Self::Bt470M => Ok(qcms_chromaticity { x: 0.310, y: 0.316 }),
+            Self::Generic_film => Ok(qcms_chromaticity { x: 0.310, y: 0.316 }),
+            Self::Xyz => Ok(qcms_chromaticity {
                 x: 1. / 3.,
                 y: 1. / 3.,
-            },
-            Self::Smpte431 => qcms_chromaticity { x: 0.314, y: 0.351 },
+            }),
+            Self::Smpte431 => Ok(qcms_chromaticity { x: 0.314, y: 0.351 }),
         }
-        .into()
+        .map(Into::into)
     }
 }
 
@@ -1219,8 +1232,25 @@ pub enum TransferCharacteristics {
 fn transfer_characteristics() {
     for value in 0..=u8::MAX {
         match TransferCharacteristics::from(value) {
-            TransferCharacteristics::Reserved => {}
-            variant => assert_eq!(value, variant as u8),
+            invalid_variant
+            @
+            (TransferCharacteristics::Reserved
+            | TransferCharacteristics::Unspecified) => {
+                assert!(curveType::try_from(invalid_variant).is_err());
+            }
+            unimplemented_variant
+            @
+            (TransferCharacteristics::Smpte240
+            | TransferCharacteristics::Iec61966
+            | TransferCharacteristics::Bt_1361
+            | TransferCharacteristics::Smpte428) => {
+                assert!(curveType::try_from(unimplemented_variant).is_err())
+            }
+            variant => {
+                assert_eq!(value, variant as u8);
+                let result = curveType::try_from(variant);
+                assert!(result.is_ok(), "{:?} failed: {:?}", variant, result);
+            }
         }
     }
 }
@@ -1250,14 +1280,16 @@ impl From<u8> for TransferCharacteristics {
     }
 }
 
-impl From<TransferCharacteristics> for curveType {
+impl TryFrom<TransferCharacteristics> for curveType {
+    type Error = String;
+
     /// See [ICC.1:2010](https://www.color.org/specification/ICC1v43_2010-12.pdf)
     /// See [Rec. ITU-R BT.2100-2](https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.2100-2-201807-I!!PDF-E.pdf)
-    fn from(value: TransferCharacteristics) -> Self {
+    fn try_from(value: TransferCharacteristics) -> Result<Self, Self::Error> {
         const NUM_TRC_TABLE_ENTRIES: i32 = 1024;
 
         match value {
-            TransferCharacteristics::Reserved => panic!("TC={} is reserved", value as u8),
+            TransferCharacteristics::Reserved => Err(format!("TC={} is reserved", value as u8)),
             TransferCharacteristics::Bt709
             | TransferCharacteristics::Bt601
             | TransferCharacteristics::Bt2020_10bit
@@ -1306,13 +1338,17 @@ impl From<TransferCharacteristics> for curveType {
                 const c: Float = 1. / linear_coef;
                 const d: Float = linear_coef * beta;
 
-                curveType::Parametric(vec![g, a, b, c, d])
+                Ok(curveType::Parametric(vec![g, a, b, c, d]))
             }
-            TransferCharacteristics::Unspecified => panic!("TC={} is unspecified", value as u8),
-            TransferCharacteristics::Bt470M => *curve_from_gamma(2.2),
-            TransferCharacteristics::Bt470Bg => *curve_from_gamma(2.8),
-            TransferCharacteristics::Smpte240 => unimplemented!(),
-            TransferCharacteristics::Linear => *curve_from_gamma(1.),
+            TransferCharacteristics::Unspecified => {
+                Err(format!("TC={} is unspecified", value as u8))
+            }
+            TransferCharacteristics::Bt470M => Ok(*curve_from_gamma(2.2)),
+            TransferCharacteristics::Bt470Bg => Ok(*curve_from_gamma(2.8)),
+            TransferCharacteristics::Smpte240 => {
+                Err(format!("TC={} ({:?}) is unimplemented", value as u8, value))
+            }
+            TransferCharacteristics::Linear => Ok(*curve_from_gamma(1.)),
             TransferCharacteristics::Log_100 => {
                 // See log_100_transfer_characteristics() for derivation
                 // The opto-electronic transfer characteristic function (OETF)
@@ -1325,7 +1361,7 @@ impl From<TransferCharacteristics> for curveType {
                 //
                 // Lc = 10^(2*V - 2)  for 1 >= V >= 0
                 let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |v| 10f64.powf(2. * v - 2.));
-                curveType::Curve(table)
+                Ok(curveType::Curve(table))
             }
             TransferCharacteristics::Log_100_sqrt10 => {
                 // The opto-electronic transfer characteristic function (OETF)
@@ -1338,13 +1374,19 @@ impl From<TransferCharacteristics> for curveType {
                 //
                 // Lc = 10^(2.5*V - 2.5)  for 1 >= V >= 0
                 let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |v| 10f64.powf(2.5 * v - 2.5));
-                curveType::Curve(table)
+                Ok(curveType::Curve(table))
             }
-            TransferCharacteristics::Iec61966 => unimplemented!(),
-            TransferCharacteristics::Bt_1361 => unimplemented!(),
+            TransferCharacteristics::Iec61966 => {
+                Err(format!("TC={} ({:?}) is unimplemented", value as u8, value))
+            }
+            TransferCharacteristics::Bt_1361 => {
+                Err(format!("TC={} ({:?}) is unimplemented", value as u8, value))
+            }
             TransferCharacteristics::Srgb => {
-                // Should we prefer this or curveType::Parametric?
-                curveType::Curve(build_sRGB_gamma_table(NUM_TRC_TABLE_ENTRIES))
+                // Should we prefer this or Ok(curveType::Parametric?)
+                Ok(curveType::Curve(build_sRGB_gamma_table(
+                    NUM_TRC_TABLE_ENTRIES,
+                )))
             }
 
             TransferCharacteristics::Smpte2084 => {
@@ -1364,9 +1406,11 @@ impl From<TransferCharacteristics> for curveType {
                 let table = build_trc_table(NUM_TRC_TABLE_ENTRIES, |x| {
                     ((x.powf(1. / m) - c1).max(0.) / (c2 - c3 * x.powf(1. / m))).powf(1. / n)
                 });
-                curveType::Curve(table)
+                Ok(curveType::Curve(table))
             }
-            TransferCharacteristics::Smpte428 => unimplemented!(),
+            TransferCharacteristics::Smpte428 => {
+                Err(format!("TC={} ({:?}) is unimplemented", value as u8, value))
+            }
             TransferCharacteristics::Hlg => {
                 // The opto-electronic transfer characteristic function (OETF)
                 // as defined in ITU-T H.273 table 3, row 18:
@@ -1388,12 +1432,10 @@ impl From<TransferCharacteristics> for curveType {
                         assert!((0. ..=1. / 12.).contains(&y1));
                         y1
                     } else {
-                        let y2 = (std::f64::consts::E.powf((x - c) / a) + b) / 12.;
-                        assert!(y2 > 1. / 12. && y2 <= 1.);
-                        y2
+                        (std::f64::consts::E.powf((x - c) / a) + b) / 12.
                     }
                 });
-                curveType::Curve(table)
+                Ok(curveType::Curve(table))
             }
         }
     }
@@ -1403,7 +1445,7 @@ impl From<TransferCharacteristics> for curveType {
 fn check_transfer_characteristics(cicp: TransferCharacteristics, icc_path: &str) {
     let mut cicp_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
     let mut icc_out = [0u8; crate::transform::PRECACHE_OUTPUT_SIZE];
-    let cicp_tc = curveType::from(cicp);
+    let cicp_tc = curveType::try_from(cicp).expect("valid cicp");
     let icc = Profile::new_from_path(icc_path).unwrap();
     let icc_tc = icc.redTRC.as_ref().unwrap();
 
@@ -1446,6 +1488,16 @@ fn bt2020_12bit_transfer_characteristics() {
     check_transfer_characteristics(TransferCharacteristics::Bt2020_12bit, "ITU-2020.icc");
 }
 
+#[test]
+fn new_sRGB() {
+    Profile::new_sRGB();
+}
+
+#[test]
+fn new_sRGB_parametric() {
+    Profile::new_sRGB_parametric();
+}
+
 impl Profile {
     //XXX: it would be nice if we had a way of ensuring
     // everything in a profile was initialized regardless of how it was created
@@ -1476,7 +1528,7 @@ impl Profile {
 
         let mut srgb = Profile::new_rgb_with_table(
             D65,
-            qcms_CIE_xyYTRIPLE::from(ColourPrimaries::Bt709),
+            qcms_CIE_xyYTRIPLE::try_from(ColourPrimaries::Bt709).unwrap(),
             &table,
         )
         .unwrap();
@@ -1490,7 +1542,7 @@ impl Profile {
     }
 
     pub(crate) fn new_sRGB_parametric() -> Box<Profile> {
-        let primaries = qcms_CIE_xyYTRIPLE::from(ColourPrimaries::Bt709);
+        let primaries = qcms_CIE_xyYTRIPLE::try_from(ColourPrimaries::Bt709).unwrap();
         let white_point = qcms_white_point_sRGB();
         let mut profile = profile_create();
         set_rgb_colorants(&mut profile, white_point, primaries);
@@ -1539,10 +1591,14 @@ impl Profile {
     pub fn new_cicp(cp: ColourPrimaries, tc: TransferCharacteristics) -> Option<Box<Profile>> {
         let mut profile = profile_create();
         //XXX: should store the whitepoint
-        if !set_rgb_colorants(&mut profile, cp.white_point(), qcms_CIE_xyYTRIPLE::from(cp)) {
+        if !set_rgb_colorants(
+            &mut profile,
+            cp.white_point().ok()?,
+            qcms_CIE_xyYTRIPLE::try_from(cp).ok()?,
+        ) {
             return None;
         }
-        let curve = curveType::from(tc);
+        let curve = curveType::try_from(tc).ok()?;
         profile.redTRC = Some(Box::new(curve.clone()));
         profile.blueTRC = Some(Box::new(curve.clone()));
         profile.greenTRC = Some(Box::new(curve));
