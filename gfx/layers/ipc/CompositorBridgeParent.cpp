@@ -1314,7 +1314,13 @@ bool CompositorBridgeParent::DeallocPWebRenderBridgeParent(
 }
 
 webgpu::PWebGPUParent* CompositorBridgeParent::AllocPWebGPUParent() {
+  // This should only ever get called in the GPU process.
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  // Shouldn't re-initialize
   MOZ_ASSERT(!mWebGPUBridge);
+  // We should only ever get this if WebGPU is enabled in this compositor.
+  MOZ_RELEASE_ASSERT(mOptions.UseWebGPU());
+
   mWebGPUBridge = new webgpu::WebGPUParent();
   mWebGPUBridge.get()->AddRef();  // IPDL reference
   return mWebGPUBridge;
