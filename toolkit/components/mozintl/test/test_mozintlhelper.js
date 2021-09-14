@@ -41,7 +41,6 @@ function test_cross_global(miHelper) {
 
 function test_methods_presence(miHelper) {
   equal(miHelper.addGetCalendarInfo instanceof Function, true);
-  equal(miHelper.addGetDisplayNames instanceof Function, true);
   equal(miHelper.addDateTimeFormatConstructor instanceof Function, true);
   equal(miHelper.addDisplayNamesConstructor instanceof Function, true);
 
@@ -49,9 +48,6 @@ function test_methods_presence(miHelper) {
 
   miHelper.addGetCalendarInfo(x);
   equal(x.getCalendarInfo instanceof Function, true);
-
-  miHelper.addGetDisplayNames(x);
-  equal(x.getDisplayNames instanceof Function, true);
 
   miHelper.addDateTimeFormatConstructor(x);
   equal(x.DateTimeFormat instanceof Function, true);
