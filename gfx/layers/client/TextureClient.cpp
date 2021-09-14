@@ -820,8 +820,15 @@ gfx::DrawTarget* TextureClient::BorrowDrawTarget() {
 }
 
 void TextureClient::EndDraw() {
-  MOZ_ASSERT(!mBorrowedDrawTarget ||
-             mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
+  MOZ_ASSERT(mOpenMode & OpenMode::OPEN_READ_WRITE);
+
+  // Because EndDraw is used when we are not unlocking this TextureClient at the
+  // end of a transaction, we need to Flush and DetachAllSnapshots to ensure any
+  // dependents are updated.
+  mBorrowedDrawTarget->Flush();
+  mBorrowedDrawTarget->DetachAllSnapshots();
+  MOZ_ASSERT(mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
+
   mBorrowedDrawTarget = nullptr;
   mData->EndDraw();
 }
