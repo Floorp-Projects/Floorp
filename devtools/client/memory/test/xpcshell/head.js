@@ -52,7 +52,6 @@ function initDebugger() {
 
 function StubbedMemoryFront() {
   this.state = "detached";
-  this.recordingAllocations = false;
   this.dbg = initDebugger();
 }
 
@@ -74,16 +73,12 @@ StubbedMemoryFront.prototype.saveHeapSnapshot = expectState(
 
 StubbedMemoryFront.prototype.startRecordingAllocations = expectState(
   "attached",
-  async function() {
-    this.recordingAllocations = true;
-  }
+  async function() {}
 );
 
 StubbedMemoryFront.prototype.stopRecordingAllocations = expectState(
   "attached",
-  async function() {
-    this.recordingAllocations = false;
-  }
+  async function() {}
 );
 
 function waitUntilSnapshotState(store, expected) {

@@ -32,7 +32,7 @@ MemoryPanel.prototype = {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
-    await this.initializer.initialize();
+    await this.initializer.initialize(this._commands);
 
     await this._commands.targetCommand.watchTargets(
       [this._commands.targetCommand.TYPES.FRAME],
