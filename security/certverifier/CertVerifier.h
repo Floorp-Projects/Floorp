@@ -157,7 +157,7 @@ class CertVerifier {
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
   mozilla::pkix::Result VerifyCert(
-      CERTCertificate* cert, SECCertificateUsage usage,
+      const nsTArray<uint8_t>& certBytes, SECCertificateUsage usage,
       mozilla::pkix::Time time, void* pinArg, const char* hostname,
       /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain, Flags flags = 0,
       /*optional in*/
@@ -175,8 +175,8 @@ class CertVerifier {
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
 
   mozilla::pkix::Result VerifySSLServerCert(
-      const UniqueCERTCertificate& peerCert, mozilla::pkix::Time time,
-      void* pinarg, const nsACString& hostname,
+      const nsTArray<uint8_t>& peerCert, mozilla::pkix::Time time, void* pinarg,
+      const nsACString& hostname,
       /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
       /*optional*/ Flags flags = 0,
       /*optional*/ const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates =

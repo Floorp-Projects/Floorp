@@ -857,7 +857,7 @@ static void AuthCertificateSetResults(
 // Note: Takes ownership of |peerCertChain| if SECSuccess is not returned.
 Result AuthCertificate(
     CertVerifier& certVerifier, void* aPinArg,
-    const UniqueCERTCertificate& cert,
+    const nsTArray<uint8_t>& certBytes,
     const nsTArray<nsTArray<uint8_t>>& peerCertChain,
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
@@ -868,8 +868,6 @@ Result AuthCertificate(
     /*out*/ EVStatus& evStatus,
     /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
     /*out*/ bool& aIsCertChainRootBuiltInRoot) {
-  MOZ_ASSERT(cert);
-
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
       CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -886,7 +884,7 @@ Result AuthCertificate(
   }
 
   Result rv = certVerifier.VerifySSLServerCert(
-      cert, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
+      certBytes, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
@@ -1093,11 +1091,12 @@ SSLServerCertVerificationJob::Run() {
   EVStatus evStatus;
   CertificateTransparencyInfo certificateTransparencyInfo;
   bool isCertChainRootBuiltInRoot = false;
-  nsTArray<nsTArray<uint8_t>> certBytesArray;
+  nsTArray<nsTArray<uint8_t>> builtChainBytesArray;
+  nsTArray<uint8_t> certBytes(mCert->derCert.data, mCert->derCert.len);
   Result rv = AuthCertificate(
-      *certVerifier, mPinArg, mCert, mPeerCertChain, mHostName,
+      *certVerifier, mPinArg, certBytes, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
-      mProviderFlags, mTime, mCertVerifierFlags, certBytesArray, evStatus,
+      mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
@@ -1108,7 +1107,7 @@ SSLServerCertVerificationJob::Run() {
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
 
     mResultTask->Dispatch(
-        nsc, std::move(certBytesArray), std::move(mPeerCertChain),
+        nsc, std::move(builtChainBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
         evStatus, true, 0, 0, isCertChainRootBuiltInRoot, mProviderFlags);
@@ -1127,7 +1126,7 @@ SSLServerCertVerificationJob::Run() {
 
   // NB: finalError may be 0 here, in which the connection will continue.
   mResultTask->Dispatch(
-      nsc, std::move(certBytesArray), std::move(mPeerCertChain),
+      nsc, std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, finalError, collectedErrors, false,
       mProviderFlags);
