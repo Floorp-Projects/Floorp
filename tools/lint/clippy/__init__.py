@@ -17,16 +17,18 @@ from mozprocess import ProcessHandler
 
 
 CLIPPY_WRONG_VERSION = """
-You are probably using an old version of clippy.
-Expected version is {version}.
+Clippy is not installed or an older version was detected. Please make sure
+clippy is installed and up to date. The minimum required version is {version}.
 
-To install it:
+To install:
+
     $ rustup component add clippy
 
-Or to update it:
+To update:
+
     $ rustup update
 
-And make sure that 'cargo' is in the PATH
+Also ensure 'cargo' is on your $PATH.
 """.strip()
 
 
@@ -174,12 +176,12 @@ def lint(paths, config, fix=None, **lintargs):
     min_version = StrictVersion(min_version_str)
     actual_version = get_clippy_version(log, cargo)
     log.debug(
-        "Found version: {}. Minimal expected version: {}".format(
+        "Found version: {}. Minimum expected version: {}".format(
             actual_version, min_version
         )
     )
 
-    if actual_version < min_version:
+    if not actual_version or actual_version < min_version:
         print(CLIPPY_WRONG_VERSION.format(version=min_version_str))
         return 1
 
