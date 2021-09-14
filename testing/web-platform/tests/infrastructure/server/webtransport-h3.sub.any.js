@@ -2,9 +2,7 @@
 // META: script=/common/get-host-info.sub.js
 
 const HOST = get_host_info().ORIGINAL_HOST;
-// TODO(bashi): Use port substitutions once the aioquic dependency is resolved
-// and the WebTransport over HTTP/3 server is enabled.
-const PORT = '11000';
+const PORT = '{{ports[webtransport-h3][0]}}';
 const BASE = `https://${HOST}:${PORT}`;
 
 promise_test(async t => {
