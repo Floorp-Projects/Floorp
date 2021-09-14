@@ -94,6 +94,10 @@ add_task(async function() {
       // Enable LocalStorage's testing API so we can explicitly create
       // snapshots when needed.
       ["dom.storage.testing", true],
+      // Force multiple web and webIsolated content processes so that the
+      // multi-e10s logic works correctly.
+      ["dom.ipc.processCount", 8],
+      ["dom.ipc.processCount.webIsolated", 4],
     ],
   });
 
