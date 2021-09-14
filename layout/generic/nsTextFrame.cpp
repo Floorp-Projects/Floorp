@@ -4493,8 +4493,11 @@ class nsContinuingTextFrame final : public nsTextFrame {
 
   nsIFrame* FirstInFlow() const final;
   nsTextFrame* FirstContinuation() const final {
-    MOZ_DIAGNOSTIC_ASSERT(mFirstContinuation || !mPrevContinuation,
-                          "mFirstContinuation unexpectedly null!");
+    // If we have a prev-continuation pointer, then our first-continuation
+    // must be the same as that frame's.
+    MOZ_ASSERT((!mPrevContinuation && !mFirstContinuation) ||
+               (mPrevContinuation &&
+                mPrevContinuation->FirstContinuation() == mFirstContinuation));
     return mFirstContinuation;
   };
 
