@@ -53,17 +53,17 @@ pub(crate) struct Serializer;
 
 impl Serializer {
     pub(crate) fn serialize_item(input_item: &Item, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-item
+        // https://httpwg.org/specs/rfc8941.html#ser-item
 
         Self::serialize_bare_item(&input_item.bare_item, output)?;
         Self::serialize_parameters(&input_item.params, output)?;
         Ok(())
     }
 
-    #[deny(clippy::ptr_arg)]
+    #[allow(clippy::ptr_arg)]
     pub(crate) fn serialize_list(input_list: &List, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-list
-        if input_list.len() == 0 {
+        // https://httpwg.org/specs/rfc8941.html#ser-list
+        if input_list.is_empty() {
             return Err("serialize_list: serializing empty field is not allowed");
         }
 
@@ -88,8 +88,8 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_dict(input_dict: &Dictionary, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-dictionary
-        if input_dict.len() == 0 {
+        // https://httpwg.org/specs/rfc8941.html#ser-dictionary
+        if input_dict.is_empty() {
             return Err("serialize_dictionary: serializing empty field is not allowed");
         }
 
@@ -124,7 +124,7 @@ impl Serializer {
     }
 
     fn serialize_inner_list(input_inner_list: &InnerList, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-innerlist
+        // https://httpwg.org/specs/rfc8941.html#ser-innerlist
 
         let items = &input_inner_list.items;
         let inner_list_parameters = &input_inner_list.params;
@@ -147,7 +147,7 @@ impl Serializer {
         input_bare_item: &BareItem,
         output: &mut String,
     ) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-bare-item
+        // https://httpwg.org/specs/rfc8941.html#ser-bare-item
 
         let ref_bare_item = input_bare_item.to_ref_bare_item();
         Self::serialize_ref_bare_item(&ref_bare_item, output)
@@ -172,7 +172,7 @@ impl Serializer {
         input_params: &Parameters,
         output: &mut String,
     ) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-params
+        // https://httpwg.org/specs/rfc8941.html#ser-params
 
         for (param_name, param_value) in input_params.iter() {
             Self::serialize_ref_parameter(param_name, &param_value.to_ref_bare_item(), output)?;
@@ -196,7 +196,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_key(input_key: &str, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-key
+        // https://httpwg.org/specs/rfc8941.html#ser-key
 
         let disallowed_chars =
             |c: char| !(c.is_ascii_lowercase() || c.is_ascii_digit() || "_-*.".contains(c));
@@ -215,7 +215,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_integer(value: i64, output: &mut String) -> SFVResult<()> {
-        //https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-integer
+        //https://httpwg.org/specs/rfc8941.html#ser-integer
 
         let (min_int, max_int) = (-999_999_999_999_999_i64, 999_999_999_999_999_i64);
         if !(min_int <= value && value <= max_int) {
@@ -226,7 +226,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_decimal(value: Decimal, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-decimal
+        // https://httpwg.org/specs/rfc8941.html#ser-decimal
 
         let integer_comp_length = 12;
         let fraction_length = 3;
@@ -252,7 +252,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_string(value: &str, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-integer
+        // https://httpwg.org/specs/rfc8941.html#ser-integer
 
         if !value.is_ascii() {
             return Err("serialize_string: non-ascii character");
@@ -276,7 +276,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_token(value: &str, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-token
+        // https://httpwg.org/specs/rfc8941.html#ser-token
 
         if !value.is_ascii() {
             return Err("serialize_string: non-ascii character");
@@ -301,7 +301,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_byte_sequence(value: &[u8], output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-binary
+        // https://httpwg.org/specs/rfc8941.html#ser-binary
 
         output.push(':');
         let encoded = BASE64.encode(value.as_ref());
@@ -311,7 +311,7 @@ impl Serializer {
     }
 
     pub(crate) fn serialize_bool(value: bool, output: &mut String) -> SFVResult<()> {
-        // https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html#ser-boolean
+        // https://httpwg.org/specs/rfc8941.html#ser-boolean
 
         let val = if value { "?1" } else { "?0" };
         output.push_str(val);

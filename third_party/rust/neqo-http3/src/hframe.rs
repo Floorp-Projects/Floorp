@@ -12,9 +12,10 @@ use neqo_common::{
 use neqo_crypto::random;
 use neqo_transport::Connection;
 use std::convert::TryFrom;
+use std::io::Write;
 use std::mem;
 
-use crate::{Error, Res};
+use crate::{Error, Priority, Res};
 
 pub(crate) type HFrameType = u64;
 
@@ -25,6 +26,8 @@ pub(crate) const H3_FRAME_TYPE_SETTINGS: HFrameType = 0x4;
 const H3_FRAME_TYPE_PUSH_PROMISE: HFrameType = 0x5;
 const H3_FRAME_TYPE_GOAWAY: HFrameType = 0x7;
 const H3_FRAME_TYPE_MAX_PUSH_ID: HFrameType = 0xd;
+const H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST: HFrameType = 0xf0700;
+const H3_FRAME_TYPE_PRIORITY_UPDATE_PUSH: HFrameType = 0xf0701;
 
 pub const H3_RESERVED_FRAME_TYPES: &[HFrameType] = &[0x2, 0x6, 0x8, 0x9];
 
@@ -55,6 +58,14 @@ pub enum HFrame {
         push_id: u64,
     },
     Grease,
+    PriorityUpdateRequest {
+        element_id: u64,
+        priority: Priority,
+    },
+    PriorityUpdatePush {
+        element_id: u64,
+        priority: Priority,
+    },
 }
 
 impl HFrame {
@@ -67,6 +78,8 @@ impl HFrame {
             Self::PushPromise { .. } => H3_FRAME_TYPE_PUSH_PROMISE,
             Self::Goaway { .. } => H3_FRAME_TYPE_GOAWAY,
             Self::MaxPushId { .. } => H3_FRAME_TYPE_MAX_PUSH_ID,
+            Self::PriorityUpdateRequest { .. } => H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST,
+            Self::PriorityUpdatePush { .. } => H3_FRAME_TYPE_PRIORITY_UPDATE_PUSH,
             Self::Grease => {
                 let r = random(7);
                 Decoder::from(&r).decode_uint(7).unwrap() * 0x1f + 0x21
@@ -115,6 +128,24 @@ impl HFrame {
                 // Encode some number of random bytes.
                 let r = random(8);
                 enc.encode_vvec(&r[1..usize::from(1 + (r[0] & 0x7))]);
+            }
+            Self::PriorityUpdateRequest {
+                element_id,
+                priority,
+            }
+            | Self::PriorityUpdatePush {
+                element_id,
+                priority,
+            } => {
+                let mut update_frame = Encoder::new();
+                update_frame.encode_varint(*element_id);
+
+                let mut priority_enc: Vec<u8> = Vec::new();
+                write!(priority_enc, "{}", priority).unwrap();
+
+                update_frame.encode(&priority_enc);
+                enc.encode_varint(update_frame.len() as u64);
+                enc.encode(&update_frame);
             }
         }
     }
@@ -262,7 +293,9 @@ impl HFrameReader {
                         | H3_FRAME_TYPE_GOAWAY
                         | H3_FRAME_TYPE_MAX_PUSH_ID
                         | H3_FRAME_TYPE_PUSH_PROMISE
-                        | H3_FRAME_TYPE_HEADERS => {
+                        | H3_FRAME_TYPE_HEADERS
+                        | H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST
+                        | H3_FRAME_TYPE_PRIORITY_UPDATE_PUSH => {
                             if len == 0 {
                                 return Ok(Some(self.get_frame()?));
                             }
@@ -344,6 +377,22 @@ impl HFrameReader {
             H3_FRAME_TYPE_MAX_PUSH_ID => HFrame::MaxPushId {
                 push_id: dec.decode_varint().ok_or(Error::HttpFrame)?,
             },
+            H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST | H3_FRAME_TYPE_PRIORITY_UPDATE_PUSH => {
+                let element_id = dec.decode_varint().ok_or(Error::HttpFrame)?;
+                let priority = dec.decode_remainder();
+                let priority = Priority::from_bytes(priority)?;
+                if self.hframe_type == H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST {
+                    HFrame::PriorityUpdateRequest {
+                        element_id,
+                        priority,
+                    }
+                } else {
+                    HFrame::PriorityUpdatePush {
+                        element_id,
+                        priority,
+                    }
+                }
+            }
             _ => panic!("We should not be calling this function with unknown frame type!"),
         };
         self.reset();
@@ -355,6 +404,7 @@ impl HFrameReader {
 mod tests {
     use super::{Decoder, Encoder, Error, HFrame, HFrameReader, HSettings};
     use crate::settings::{HSetting, HSettingType};
+    use crate::Priority;
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::{Connection, StreamType};
     use std::mem;
@@ -468,6 +518,51 @@ mod tests {
         let t1 = make_grease();
         let t2 = make_grease();
         assert_ne!(t1, t2);
+    }
+
+    #[test]
+    fn test_priority_update_request_default() {
+        let f = HFrame::PriorityUpdateRequest {
+            element_id: 6,
+            priority: Priority::default(),
+        };
+        enc_dec(&f, "800f07000106", 0);
+    }
+
+    #[test]
+    fn test_priority_update_request_incremental_default() {
+        let f = HFrame::PriorityUpdateRequest {
+            element_id: 7,
+            priority: Priority::new(6, false),
+        };
+        enc_dec(&f, "800f07000407753d36", 0); // "u=6"
+    }
+
+    #[test]
+    fn test_priority_update_request_urgency_default() {
+        let f = HFrame::PriorityUpdateRequest {
+            element_id: 8,
+            priority: Priority::new(3, true),
+        };
+        enc_dec(&f, "800f0700020869", 0); // "i"
+    }
+
+    #[test]
+    fn test_priority_update_request() {
+        let f = HFrame::PriorityUpdateRequest {
+            element_id: 9,
+            priority: Priority::new(5, true),
+        };
+        enc_dec(&f, "800f07000609753d352c69", 0); // "u=5,i"
+    }
+
+    #[test]
+    fn test_priority_update_push_default() {
+        let f = HFrame::PriorityUpdatePush {
+            element_id: 10,
+            priority: Priority::default(),
+        };
+        enc_dec(&f, "800f0701010a", 0);
     }
 
     struct HFrameReaderTest {

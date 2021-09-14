@@ -24,6 +24,7 @@ use crate::crypto::CryptoRecoveryToken;
 use crate::packet::PacketNumber;
 use crate::path::{Path, PathRef};
 use crate::qlog::{self, QlogMetric};
+use crate::quic_datagrams::DatagramTracking;
 use crate::rtt::RttEstimate;
 use crate::send_stream::SendStreamRecoveryToken;
 use crate::stats::{Stats, StatsCell};
@@ -89,6 +90,7 @@ pub enum RecoveryToken {
     NewConnectionId(ConnectionIdEntry<[u8; 16]>),
     RetireConnectionId(u64),
     AckFrequency(AckRate),
+    Datagram(DatagramTracking),
 }
 
 /// `SendProfile` tells a sender how to send packets.

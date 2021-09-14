@@ -762,16 +762,16 @@ impl CryptoStates {
     /// Select a `CryptoDxState` and `CryptoSpace` for the given `PacketNumberSpace`.
     /// This selects 0-RTT keys for `PacketNumberSpace::ApplicationData` if 1-RTT keys are
     /// not yet available.
-    pub fn select_tx(
+    pub fn select_tx_mut(
         &mut self,
         space: PacketNumberSpace,
     ) -> Option<(CryptoSpace, &mut CryptoDxState)> {
         match space {
             PacketNumberSpace::Initial => self
-                .tx(CryptoSpace::Initial)
+                .tx_mut(CryptoSpace::Initial)
                 .map(|dx| (CryptoSpace::Initial, dx)),
             PacketNumberSpace::Handshake => self
-                .tx(CryptoSpace::Handshake)
+                .tx_mut(CryptoSpace::Handshake)
                 .map(|dx| (CryptoSpace::Handshake, dx)),
             PacketNumberSpace::ApplicationData => {
                 if let Some(app) = self.app_write.as_mut() {
@@ -783,7 +783,7 @@ impl CryptoStates {
         }
     }
 
-    pub fn tx<'a>(&'a mut self, cspace: CryptoSpace) -> Option<&'a mut CryptoDxState> {
+    pub fn tx_mut<'a>(&'a mut self, cspace: CryptoSpace) -> Option<&'a mut CryptoDxState> {
         let tx = |k: Option<&'a mut CryptoState>| k.map(|dx| &mut dx.tx);
         match cspace {
             CryptoSpace::Initial => tx(self.initial.as_mut()),
@@ -793,6 +793,37 @@ impl CryptoStates {
                 .filter(|z| z.direction == CryptoDxDirection::Write),
             CryptoSpace::Handshake => tx(self.handshake.as_mut()),
             CryptoSpace::ApplicationData => self.app_write.as_mut().map(|app| &mut app.dx),
+        }
+    }
+
+    pub fn tx<'a>(&'a self, cspace: CryptoSpace) -> Option<&'a CryptoDxState> {
+        let tx = |k: Option<&'a CryptoState>| k.map(|dx| &dx.tx);
+        match cspace {
+            CryptoSpace::Initial => tx(self.initial.as_ref()),
+            CryptoSpace::ZeroRtt => self
+                .zero_rtt
+                .as_ref()
+                .filter(|z| z.direction == CryptoDxDirection::Write),
+            CryptoSpace::Handshake => tx(self.handshake.as_ref()),
+            CryptoSpace::ApplicationData => self.app_write.as_ref().map(|app| &app.dx),
+        }
+    }
+
+    pub fn select_tx(&self, space: PacketNumberSpace) -> Option<(CryptoSpace, &CryptoDxState)> {
+        match space {
+            PacketNumberSpace::Initial => self
+                .tx(CryptoSpace::Initial)
+                .map(|dx| (CryptoSpace::Initial, dx)),
+            PacketNumberSpace::Handshake => self
+                .tx(CryptoSpace::Handshake)
+                .map(|dx| (CryptoSpace::Handshake, dx)),
+            PacketNumberSpace::ApplicationData => {
+                if let Some(app) = self.app_write.as_ref() {
+                    Some((CryptoSpace::ApplicationData, &app.dx))
+                } else {
+                    self.zero_rtt.as_ref().map(|dx| (CryptoSpace::ZeroRtt, dx))
+                }
+            }
         }
     }
 

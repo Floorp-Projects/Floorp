@@ -5,12 +5,12 @@
 use neqo_common::event::Provider;
 use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role};
 use neqo_crypto::{init, PRErrorCode};
-use neqo_http3::Error as Http3Error;
+use neqo_http3::{Error as Http3Error, Priority};
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::{
-    stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters, Error as TransportError,
-    Output, QuicVersion, RandomConnectionIdGenerator,
+    stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters,
+    Error as TransportError, Output, QuicVersion, RandomConnectionIdGenerator,
 };
 use nserror::*;
 use nsstring::*;
@@ -298,6 +298,8 @@ pub extern "C" fn neqo_http3conn_fetch(
     path: &nsACString,
     headers: &nsACString,
     stream_id: &mut u64,
+    urgency: u8,
+    incremental: bool,
 ) -> nsresult {
     let mut hdrs = Vec::new();
     // this is only used for headers built by Firefox.
@@ -358,6 +360,10 @@ pub extern "C" fn neqo_http3conn_fetch(
             return NS_ERROR_INVALID_ARG;
         }
     };
+    if urgency >= 8 {
+        return NS_ERROR_INVALID_ARG;
+    }
+    let priority = Priority::new(urgency, incremental);
     match conn.conn.fetch(
         Instant::now(),
         method_tmp,
@@ -365,6 +371,7 @@ pub extern "C" fn neqo_http3conn_fetch(
         host_tmp,
         path_tmp,
         &hdrs,
+        priority,
     ) {
         Ok(id) => {
             *stream_id = id;
@@ -488,6 +495,7 @@ impl From<TransportError> for CloseError {
             TransportError::VersionNegotiation => CloseError::TransportInternalErrorOther(25),
             TransportError::WrongRole => CloseError::TransportInternalErrorOther(26),
             TransportError::QlogError => CloseError::TransportInternalErrorOther(27),
+            TransportError::NotAvailable => CloseError::TransportInternalErrorOther(28),
         }
     }
 }

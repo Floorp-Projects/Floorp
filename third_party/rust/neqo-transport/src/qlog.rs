@@ -421,6 +421,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
         ),
         Frame::HandshakeDone => QuicFrame::handshake_done(),
         Frame::AckFrequency { .. } => QuicFrame::unknown(frame.get_type()),
+        Frame::Datagram { .. } => QuicFrame::unknown(frame.get_type()),
     }
 }
 
