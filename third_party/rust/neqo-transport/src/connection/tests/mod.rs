@@ -31,6 +31,7 @@ use test_fixture::{self, addr, fixture_init, now};
 mod ackrate;
 mod cc;
 mod close;
+mod datagram;
 mod fuzzing;
 mod handshake;
 mod idle;

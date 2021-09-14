@@ -19,7 +19,7 @@ use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Http3ClientEvent {
     /// Response headers are received.
     HeaderReady {
@@ -58,7 +58,7 @@ pub enum Http3ClientEvent {
     /// A push has been canceled.
     PushCanceled { push_id: u64 },
     /// A push stream was been reset due to a HttpGeneralProtocol error.
-    /// Most common dase are malformed response headers.
+    /// Most common case are malformed response headers.
     PushReset { push_id: u64, error: AppError },
     /// New stream can be created
     RequestsCreatable,

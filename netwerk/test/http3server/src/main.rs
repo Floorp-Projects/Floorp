@@ -263,6 +263,7 @@ impl HttpServer for Http3TestServer {
                         self.current_connection_hash = h.finish();
                     }
                 }
+                Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
     }

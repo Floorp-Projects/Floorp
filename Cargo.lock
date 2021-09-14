@@ -2271,7 +2271,7 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "nsstring",
- "sfv",
+ "sfv 0.8.0",
  "thin-vec",
  "xpcom",
 ]
@@ -3216,8 +3216,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.32"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.32#dbb04a530a6cfff20fa7a4e43ba778c8a4cf3d54"
+version = "0.5.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.0#40d8c760d0dd252c3f8c019c1cadfd4c4dad1e95"
 dependencies = [
  "chrono",
  "env_logger",
@@ -3229,8 +3229,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.32"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.32#dbb04a530a6cfff20fa7a4e43ba778c8a4cf3d54"
+version = "0.5.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.0#40d8c760d0dd252c3f8c019c1cadfd4c4dad1e95"
 dependencies = [
  "bindgen",
  "log",
@@ -3242,8 +3242,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.32"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.32#dbb04a530a6cfff20fa7a4e43ba778c8a4cf3d54"
+version = "0.5.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.0#40d8c760d0dd252c3f8c019c1cadfd4c4dad1e95"
 dependencies = [
  "log",
  "neqo-common",
@@ -3251,13 +3251,14 @@ dependencies = [
  "neqo-qpack",
  "neqo-transport",
  "qlog",
+ "sfv 0.9.1",
  "smallvec",
 ]
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.32"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.32#dbb04a530a6cfff20fa7a4e43ba778c8a4cf3d54"
+version = "0.5.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.0#40d8c760d0dd252c3f8c019c1cadfd4c4dad1e95"
 dependencies = [
  "lazy_static",
  "log",
@@ -3270,8 +3271,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.32"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.32#dbb04a530a6cfff20fa7a4e43ba778c8a4cf3d54"
+version = "0.5.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.0#40d8c760d0dd252c3f8c019c1cadfd4c4dad1e95"
 dependencies = [
  "indexmap",
  "lazy_static",
@@ -4477,6 +4478,17 @@ name = "sfv"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13ed1dd5a626253083678d21b5c38dd94f8717b961d4b7469eb96b41173cc148"
+dependencies = [
+ "data-encoding",
+ "indexmap",
+ "rust_decimal",
+]
+
+[[package]]
+name = "sfv"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abf6b3512f87bb7d949bf0fb4a0ac5977a843dd6d3dc718701484e79de37018b"
 dependencies = [
  "data-encoding",
  "indexmap",

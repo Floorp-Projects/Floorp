@@ -11,6 +11,7 @@ use crate::stream_id::StreamType;
 use crate::tparams::{self, PreferredAddress, TransportParameter, TransportParametersHandler};
 use crate::tracking::DEFAULT_ACK_DELAY;
 use crate::{CongestionControlAlgorithm, QuicVersion, Res};
+use std::cmp::max;
 use std::convert::TryFrom;
 use std::time::Duration;
 
@@ -24,6 +25,7 @@ pub const ACK_RATIO_SCALE: u8 = 10;
 const DEFAULT_ACK_RATIO: u8 = 4 * ACK_RATIO_SCALE;
 /// The local value for the idle timeout period.
 const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(30);
+const MAX_QUEUED_DATAGRAMS_DEFAULT: usize = 10;
 
 /// What to do with preferred addresses.
 #[derive(Debug, Clone)]
@@ -65,6 +67,9 @@ pub struct ConnectionParameters {
     /// The duration of the idle timeout for the connection.
     idle_timeout: Duration,
     preferred_address: PreferredAddressConfig,
+    datagram_size: u64,
+    outgoing_datagram_queue: usize,
+    incoming_datagram_queue: usize,
 }
 
 impl Default for ConnectionParameters {
@@ -81,6 +86,9 @@ impl Default for ConnectionParameters {
             ack_ratio: DEFAULT_ACK_RATIO,
             idle_timeout: DEFAULT_IDLE_TIMEOUT,
             preferred_address: PreferredAddressConfig::Default,
+            datagram_size: 0,
+            outgoing_datagram_queue: MAX_QUEUED_DATAGRAMS_DEFAULT,
+            incoming_datagram_queue: MAX_QUEUED_DATAGRAMS_DEFAULT,
         }
     }
 }
@@ -209,6 +217,35 @@ impl ConnectionParameters {
         self.idle_timeout
     }
 
+    pub fn get_datagram_size(&self) -> u64 {
+        self.datagram_size
+    }
+
+    pub fn datagram_size(mut self, v: u64) -> Self {
+        self.datagram_size = v;
+        self
+    }
+
+    pub fn get_outgoing_datagram_queue(&self) -> usize {
+        self.outgoing_datagram_queue
+    }
+
+    pub fn outgoing_datagram_queue(mut self, v: usize) -> Self {
+        // The max queue length must be at least 1.
+        self.outgoing_datagram_queue = max(v, 1);
+        self
+    }
+
+    pub fn get_incoming_datagram_queue(&self) -> usize {
+        self.incoming_datagram_queue
+    }
+
+    pub fn incoming_datagram_queue(mut self, v: usize) -> Self {
+        // The max queue length must be at least 1.
+        self.incoming_datagram_queue = max(v, 1);
+        self
+    }
+
     pub fn create_transport_parameter(
         &self,
         role: Role,
@@ -268,6 +305,8 @@ impl ConnectionParameters {
                 );
             }
         }
+        tps.local
+            .set_integer(tparams::MAX_DATAGRAM_FRAME_SIZE, self.datagram_size);
         Ok(tps)
     }
 }

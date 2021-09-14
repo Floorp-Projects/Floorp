@@ -5,6 +5,7 @@
 #ifndef NeqoHttp3Conn_h__
 #define NeqoHttp3Conn_h__
 
+#include <cstdint>
 #include "mozilla/net/neqo_glue_ffi_generated.h"
 
 namespace mozilla {
@@ -56,9 +57,10 @@ class NeqoHttp3Conn final {
 
   nsresult Fetch(const nsACString& aMethod, const nsACString& aScheme,
                  const nsACString& aHost, const nsACString& aPath,
-                 const nsACString& aHeaders, uint64_t* aStreamId) {
+                 const nsACString& aHeaders, uint64_t* aStreamId,
+                 uint8_t aUrgency, bool aIncremental) {
     return neqo_http3conn_fetch(this, &aMethod, &aScheme, &aHost, &aPath,
-                                &aHeaders, aStreamId);
+                                &aHeaders, aStreamId, aUrgency, aIncremental);
   }
 
   nsresult SendRequestBody(uint64_t aStreamId, const uint8_t* aBuf,

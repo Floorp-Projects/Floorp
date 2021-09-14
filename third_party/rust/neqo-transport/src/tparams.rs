@@ -48,6 +48,7 @@ tpids! {
     RETRY_SOURCE_CONNECTION_ID = 0x10,
     GREASE_QUIC_BIT = 0x2ab2,
     MIN_ACK_DELAY = 0xff02_de1a,
+    MAX_DATAGRAM_FRAME_SIZE = 0x0020,
 }
 
 #[derive(Clone, Debug)]
@@ -218,7 +219,8 @@ impl TransportParameter {
             | INITIAL_MAX_STREAM_DATA_BIDI_LOCAL
             | INITIAL_MAX_STREAM_DATA_BIDI_REMOTE
             | INITIAL_MAX_STREAM_DATA_UNI
-            | MAX_ACK_DELAY => match d.decode_varint() {
+            | MAX_ACK_DELAY
+            | MAX_DATAGRAM_FRAME_SIZE => match d.decode_varint() {
                 Some(v) => Self::Integer(v),
                 None => return Err(Error::TransportParameterError),
             },
@@ -311,12 +313,13 @@ impl TransportParameters {
             | INITIAL_MAX_STREAM_DATA_BIDI_REMOTE
             | INITIAL_MAX_STREAM_DATA_UNI
             | INITIAL_MAX_STREAMS_BIDI
-            | INITIAL_MAX_STREAMS_UNI => 0,
+            | INITIAL_MAX_STREAMS_UNI
+            | MIN_ACK_DELAY
+            | MAX_DATAGRAM_FRAME_SIZE => 0,
             MAX_UDP_PAYLOAD_SIZE => 65527,
             ACK_DELAY_EXPONENT => 3,
             MAX_ACK_DELAY => 25,
             ACTIVE_CONNECTION_ID_LIMIT => 2,
-            MIN_ACK_DELAY => 0,
             _ => panic!("Transport parameter not known or not an Integer"),
         };
         match self.params.get(&tp) {
@@ -340,7 +343,8 @@ impl TransportParameters {
             | ACK_DELAY_EXPONENT
             | MAX_ACK_DELAY
             | ACTIVE_CONNECTION_ID_LIMIT
-            | MIN_ACK_DELAY => {
+            | MIN_ACK_DELAY
+            | MAX_DATAGRAM_FRAME_SIZE => {
                 self.set(tp, TransportParameter::Integer(value));
             }
             _ => panic!("Transport parameter not known"),
@@ -855,6 +859,7 @@ mod tests {
             INITIAL_MAX_STREAMS_UNI,
             MAX_UDP_PAYLOAD_SIZE,
             MIN_ACK_DELAY,
+            MAX_DATAGRAM_FRAME_SIZE,
         ];
         for i in INTEGER_KEYS {
             tps_a.set(*i, TransportParameter::Integer(12));

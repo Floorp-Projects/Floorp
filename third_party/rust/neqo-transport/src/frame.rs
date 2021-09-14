@@ -46,6 +46,10 @@ pub const FRAME_TYPE_CONNECTION_CLOSE_APPLICATION: FrameType = 0x1d;
 pub const FRAME_TYPE_HANDSHAKE_DONE: FrameType = 0x1e;
 // draft-ietf-quic-ack-delay
 pub const FRAME_TYPE_ACK_FREQUENCY: FrameType = 0xaf;
+// draft-ietf-quic-datagram
+pub const FRAME_TYPE_DATAGRAM: FrameType = 0x30;
+pub const FRAME_TYPE_DATAGRAM_WITH_LEN: FrameType = 0x31;
+const DATAGRAM_FRAME_BIT_LEN: u64 = 0x01;
 
 const STREAM_FRAME_BIT_FIN: u64 = 0x01;
 const STREAM_FRAME_BIT_LEN: u64 = 0x02;
@@ -185,6 +189,10 @@ pub enum Frame<'a> {
         /// Ignore reordering when deciding to immediately acknowledge.
         ignore_order: bool,
     },
+    Datagram {
+        data: &'a [u8],
+        fill: bool,
+    },
 }
 
 impl<'a> Frame<'a> {
@@ -234,6 +242,13 @@ impl<'a> Frame<'a> {
             }
             Self::HandshakeDone => FRAME_TYPE_HANDSHAKE_DONE,
             Self::AckFrequency { .. } => FRAME_TYPE_ACK_FREQUENCY,
+            Self::Datagram { fill, .. } => {
+                if *fill {
+                    FRAME_TYPE_DATAGRAM
+                } else {
+                    FRAME_TYPE_DATAGRAM_WITH_LEN
+                }
+            }
         }
     }
 
@@ -352,6 +367,7 @@ impl<'a> Frame<'a> {
                 fin,
             )),
             Self::Padding => None,
+            Self::Datagram { data, .. } => Some(format!("Datagram {{ len: {} }}", data.len())),
             _ => Some(format!("{:?}", self)),
         }
     }
@@ -560,6 +576,17 @@ impl<'a> Frame<'a> {
                     delay,
                     ignore_order,
                 })
+            }
+            FRAME_TYPE_DATAGRAM | FRAME_TYPE_DATAGRAM_WITH_LEN => {
+                let fill = (t & DATAGRAM_FRAME_BIT_LEN) == 0;
+                let data = if fill {
+                    qtrace!("DATAGRAM frame, extends to the end of the packet");
+                    dec.decode_remainder()
+                } else {
+                    qtrace!("DATAGRAM frame, with length");
+                    d(dec.decode_vvec())?
+                };
+                Ok(Self::Datagram { data, fill })
             }
             _ => Err(Error::UnknownFrameType),
         }
@@ -897,5 +924,23 @@ mod tests {
             Frame::decode(&mut enc.as_decoder()).unwrap_err(),
             Error::FrameEncodingError
         );
+    }
+
+    #[test]
+    fn datagram() {
+        // Without the length bit.
+        let f = Frame::Datagram {
+            data: &[1, 2, 3],
+            fill: true,
+        };
+
+        just_dec(&f, "4030010203");
+
+        // With the length bit.
+        let f = Frame::Datagram {
+            data: &[1, 2, 3],
+            fill: false,
+        };
+        just_dec(&f, "403103010203");
     }
 }
