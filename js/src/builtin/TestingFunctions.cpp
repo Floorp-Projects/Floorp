@@ -3096,17 +3096,6 @@ static size_t CountCompartments(JSContext* cx) {
 // either recovers and succeeds or raises an exception and fails.
 
 class MOZ_STACK_CLASS IterativeFailureTest {
-  struct Params {
-    explicit Params(JSContext* cx) : testFunction(cx) {}
-
-    RootedFunction testFunction;
-    unsigned threadStart = 0;
-    unsigned threadEnd = 0;
-    bool expectExceptionOnFailure = true;
-    bool keepFailing = false;
-    bool verbose = false;
-  };
-
  public:
   struct FailureSimulator {
     virtual void setup(JSContext* cx) {}
@@ -3130,9 +3119,16 @@ class MOZ_STACK_CLASS IterativeFailureTest {
   void teardown();
 
   JSContext* const cx;
-  Params params;
   FailureSimulator& simulator;
   size_t compartmentCount;
+
+  // Test parameters set by initParams.
+  RootedFunction testFunction;
+  unsigned threadStart = 0;
+  unsigned threadEnd = 0;
+  bool expectExceptionOnFailure = true;
+  bool keepFailing = false;
+  bool verbose = false;
 };
 
 bool RunIterativeFailureTest(
@@ -3144,7 +3140,7 @@ bool RunIterativeFailureTest(
 
 IterativeFailureTest::IterativeFailureTest(JSContext* cx,
                                            FailureSimulator& simulator)
-    : cx(cx), params(cx), simulator(simulator) {}
+    : cx(cx), simulator(simulator), testFunction(cx) {}
 
 bool IterativeFailureTest::test() {
   if (disableOOMFunctions) {
@@ -3157,8 +3153,7 @@ bool IterativeFailureTest::test() {
 
   auto onExit = mozilla::MakeScopeExit([this] { teardown(); });
 
-  for (unsigned thread = params.threadStart; thread <= params.threadEnd;
-       thread++) {
+  for (unsigned thread = threadStart; thread <= threadEnd; thread++) {
     if (!testThread(thread)) {
       return false;
     }
@@ -3187,8 +3182,8 @@ bool IterativeFailureTest::setup() {
 #  endif
 
   // Delazify the function here if necessary so we don't end up testing that.
-  if (params.testFunction->isInterpreted() &&
-      !JSFunction::getOrCreateScript(cx, params.testFunction)) {
+  if (testFunction->isInterpreted() &&
+      !JSFunction::getOrCreateScript(cx, testFunction)) {
     return false;
   }
 
@@ -3200,7 +3195,7 @@ bool IterativeFailureTest::setup() {
 }
 
 bool IterativeFailureTest::testThread(unsigned thread) {
-  if (params.verbose) {
+  if (verbose) {
     fprintf(stderr, "thread %u\n", thread);
   }
 
@@ -3216,7 +3211,7 @@ bool IterativeFailureTest::testThread(unsigned thread) {
     iteration++;
   } while (failureWasSimulated);
 
-  if (params.verbose) {
+  if (verbose) {
     fprintf(stderr, "  finished after %u iterations\n", iteration - 1);
     if (!exception.isUndefined()) {
       RootedString str(cx, JS::ToString(cx, exception));
@@ -3238,16 +3233,16 @@ bool IterativeFailureTest::testThread(unsigned thread) {
 bool IterativeFailureTest::testIteration(unsigned thread, unsigned iteration,
                                          bool& failureWasSimulated,
                                          MutableHandleValue exception) {
-  if (params.verbose) {
+  if (verbose) {
     fprintf(stderr, "  iteration %u\n", iteration);
   }
 
   MOZ_RELEASE_ASSERT(!cx->isExceptionPending());
 
-  simulator.startSimulating(cx, iteration, thread, params.keepFailing);
+  simulator.startSimulating(cx, iteration, thread, keepFailing);
 
   RootedValue result(cx);
-  bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
+  bool ok = JS_CallFunction(cx, cx->global(), testFunction,
                             HandleValueArray::empty(), &result);
 
   failureWasSimulated = simulator.stopSimulating();
@@ -3258,7 +3253,7 @@ bool IterativeFailureTest::testIteration(unsigned thread, unsigned iteration,
         "check?");
   }
 
-  if (!ok && !cx->isExceptionPending() && params.expectExceptionOnFailure) {
+  if (!ok && !cx->isExceptionPending() && expectExceptionOnFailure) {
     MOZ_CRASH(
         "Thunk execution failed but no exception was raised - missing call to "
         "js::ReportOutOfMemory()?");
@@ -3323,11 +3318,11 @@ bool IterativeFailureTest::initParams(const CallArgs& args) {
     JS_ReportErrorASCII(cx, "The first argument must be the function to test.");
     return false;
   }
-  params.testFunction = &args[0].toObject().as<JSFunction>();
+  testFunction = &args[0].toObject().as<JSFunction>();
 
   if (args.length() == 2) {
     if (args[1].isBoolean()) {
-      params.expectExceptionOnFailure = args[1].toBoolean();
+      expectExceptionOnFailure = args[1].toBoolean();
     } else if (args[1].isObject()) {
       RootedObject options(cx, &args[1].toObject());
       RootedValue value(cx);
@@ -3336,14 +3331,14 @@ bool IterativeFailureTest::initParams(const CallArgs& args) {
         return false;
       }
       if (!value.isUndefined()) {
-        params.expectExceptionOnFailure = ToBoolean(value);
+        expectExceptionOnFailure = ToBoolean(value);
       }
 
       if (!JS_GetProperty(cx, options, "keepFailing", &value)) {
         return false;
       }
       if (!value.isUndefined()) {
-        params.keepFailing = ToBoolean(value);
+        keepFailing = ToBoolean(value);
       }
     } else {
       JS_ReportErrorASCII(
@@ -3355,12 +3350,12 @@ bool IterativeFailureTest::initParams(const CallArgs& args) {
   // There are some places where we do fail without raising an exception, so
   // we can't expose this to the fuzzers by default.
   if (fuzzingSafe) {
-    params.expectExceptionOnFailure = false;
+    expectExceptionOnFailure = false;
   }
 
   // Test all threads by default except worker threads.
-  params.threadStart = oom::FirstThreadTypeToTest;
-  params.threadEnd = oom::LastThreadTypeToTest;
+  threadStart = oom::FirstThreadTypeToTest;
+  threadEnd = oom::LastThreadTypeToTest;
 
   // Test a single thread type if specified by the OOM_THREAD environment
   // variable.
@@ -3372,11 +3367,11 @@ bool IterativeFailureTest::initParams(const CallArgs& args) {
       return false;
     }
 
-    params.threadStart = threadOption;
-    params.threadEnd = threadOption;
+    threadStart = threadOption;
+    threadEnd = threadOption;
   }
 
-  params.verbose = EnvVarIsDefined("OOM_VERBOSE");
+  verbose = EnvVarIsDefined("OOM_VERBOSE");
 
   return true;
 }
