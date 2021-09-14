@@ -772,44 +772,6 @@ struct OverscrollBehaviorInfo {
 };
 
 /**
- * A clip that applies to a layer, that may be scrolled by some of the
- * scroll frames associated with the layer.
- */
-struct LayerClip {
-  friend struct IPC::ParamTraits<mozilla::layers::LayerClip>;
-
- public:
-  LayerClip() : mClipRect(), mMaskLayerIndex() {}
-
-  explicit LayerClip(const ParentLayerIntRect& aClipRect)
-      : mClipRect(aClipRect), mMaskLayerIndex() {}
-
-  bool operator==(const LayerClip& aOther) const {
-    return mClipRect == aOther.mClipRect &&
-           mMaskLayerIndex == aOther.mMaskLayerIndex;
-  }
-
-  void SetClipRect(const ParentLayerIntRect& aClipRect) {
-    mClipRect = aClipRect;
-  }
-  const ParentLayerIntRect& GetClipRect() const { return mClipRect; }
-
-  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
-    mMaskLayerIndex = aIndex;
-  }
-  const Maybe<size_t>& GetMaskLayerIndex() const { return mMaskLayerIndex; }
-
- private:
-  ParentLayerIntRect mClipRect;
-
-  // Optionally, specifies a mask layer that's part of the clip.
-  // This is an index into the MetricsMaskLayers array on the Layer.
-  Maybe<size_t> mMaskLayerIndex;
-};
-
-typedef Maybe<LayerClip> MaybeLayerClip;  // for passing over IPDL
-
-/**
  * Metadata about a scroll frame that's sent to the compositor during a layers
  * or WebRender transaction, and also stored by APZ between transactions.
  * This includes the scroll frame's FrameMetrics, as well as other metadata.
