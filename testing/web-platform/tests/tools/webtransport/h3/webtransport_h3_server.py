@@ -6,14 +6,15 @@ import traceback
 from urllib.parse import urlparse
 from typing import Any, Dict, List, Optional, Tuple
 
-from aioquic.asyncio import QuicConnectionProtocol, serve
-from aioquic.h3.connection import H3_ALPN, H3Connection
-from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived
-from aioquic.quic.configuration import QuicConfiguration
-from aioquic.quic.connection import stream_is_unidirectional
-from aioquic.quic.events import QuicEvent, ProtocolNegotiated
-from aioquic.tls import SessionTicket
-from aioquic.quic.packet import QuicErrorCode
+# TODO(bashi): Remove import check suppressions once aioquic dependency is resolved.
+from aioquic.asyncio import QuicConnectionProtocol, serve  # type: ignore
+from aioquic.h3.connection import H3_ALPN, H3Connection  # type: ignore
+from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived  # type: ignore
+from aioquic.quic.configuration import QuicConfiguration  # type: ignore
+from aioquic.quic.connection import stream_is_unidirectional  # type: ignore
+from aioquic.quic.events import QuicEvent, ProtocolNegotiated  # type: ignore
+from aioquic.tls import SessionTicket  # type: ignore
+from aioquic.quic.packet import QuicErrorCode  # type: ignore
 
 from tools.wptserve.wptserve import stash  # type: ignore
 
