@@ -407,7 +407,7 @@ void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
   bool obfuscate_host_addresses = Preferences::GetBool(
       "media.peerconnection.ice.obfuscate_host_addresses", false);
 
-  if (obfuscate_host_addresses) {
+  if (obfuscate_host_addresses && !mParent->RelayOnly()) {
     std::vector<std::string> tokens;
     TokenizeCandidate(aCandidate, tokens);
 
