@@ -152,6 +152,7 @@ class WebTransportSession:
         """
         self._http._quic.close(error_code=error_code,
                                reason_phrase=reason_phrase)
+        self._protocol.transmit()
 
     def create_unidirectional_stream(self) -> int:
         """
