@@ -174,71 +174,50 @@ add_task(async function test_plaintext() {
   ]);
 });
 
+const kLinkItems = [
+  "context-openlinkintab",
+  true,
+  ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+  // We need a blank entry here because the containers submenu is
+  // dynamically generated with no ids.
+  ...(hasContainers ? ["", null] : []),
+  "context-openlink",
+  true,
+  "context-openlinkprivate",
+  true,
+  "---",
+  null,
+  "context-bookmarklink",
+  true,
+  "context-savelink",
+  true,
+  ...(hasPocket ? ["context-savelinktopocket", true] : []),
+  "context-copylink",
+  true,
+  "---",
+  null,
+  "context-searchselect",
+  true,
+  "context-searchselect-private",
+  true,
+];
+
 add_task(async function test_link() {
-  await test_contextmenu("#test-link", [
-    "context-openlinkintab",
-    true,
-    ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-    // We need a blank entry here because the containers submenu is
-    // dynamically generated with no ids.
-    ...(hasContainers ? ["", null] : []),
-    "context-openlink",
-    true,
-    "context-openlinkprivate",
-    true,
-    "---",
-    null,
-    "context-bookmarklink",
-    true,
-    "context-savelink",
-    true,
-    ...(hasPocket ? ["context-savelinktopocket", true] : []),
-    "context-copylink",
-    true,
-    "---",
-    null,
-    "context-searchselect",
-    true,
-    "context-searchselect-private",
-    true,
-  ]);
+  await test_contextmenu("#test-link", kLinkItems);
 });
 
 add_task(async function test_link_in_shadow_dom() {
-  await test_contextmenu(
-    "#shadow-host",
-    [
-      "context-openlinkintab",
-      true,
-      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-      // We need a blank entry here because the containers submenu is
-      // dynamically generated with no ids.
-      ...(hasContainers ? ["", null] : []),
-      "context-openlink",
-      true,
-      "context-openlinkprivate",
-      true,
-      "---",
-      null,
-      "context-bookmarklink",
-      true,
-      "context-savelink",
-      true,
-      ...(hasPocket ? ["context-savelinktopocket", true] : []),
-      "context-copylink",
-      true,
-      "---",
-      null,
-      "context-searchselect",
-      true,
-      "context-searchselect-private",
-      true,
-    ],
-    {
-      offsetX: 6,
-      offsetY: 6,
-    }
-  );
+  await test_contextmenu("#shadow-host", kLinkItems, {
+    offsetX: 6,
+    offsetY: 6,
+  });
+});
+
+add_task(async function test_link_over_shadow_dom() {
+  await test_contextmenu("#shadow-host-in-link", kLinkItems, {
+    offsetX: 6,
+    offsetY: 6,
+  });
 });
 
 add_task(async function test_mailto() {
