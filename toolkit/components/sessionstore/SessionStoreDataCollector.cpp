@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SessionStoreDataCollector.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -122,15 +123,20 @@ void SessionStoreDataCollector::Collect() {
   if (mInputChanged) {
     maybeFormData.emplace();
     auto& formData = maybeFormData.ref();
-    SessionStoreUtils::CollectFormData(document, formData);
+    uint32_t size = SessionStoreUtils::CollectFormData(document, formData);
 
     Element* body = document->GetBody();
     if (document->HasFlag(NODE_IS_EDITABLE) && body) {
       IgnoredErrorResult result;
       body->GetInnerHTML(formData.innerHTML(), result);
+      size += formData.innerHTML().Length();
       if (!result.Failed()) {
         formData.hasData() = true;
       }
+    }
+
+    if (size > StaticPrefs::browser_sessionstore_dom_form_max_limit()) {
+      maybeFormData = Nothing();
     }
   }
 

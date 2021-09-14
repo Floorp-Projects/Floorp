@@ -74,8 +74,8 @@ class SessionStoreUtils {
   static void RestoreScrollPosition(nsGlobalWindowInner& aWindow,
                                     const nsCString& aScrollPosition);
 
-  static void CollectFormData(Document* aDocument,
-                              sessionstore::FormData& aFormData);
+  static uint32_t CollectFormData(Document* aDocument,
+                                  sessionstore::FormData& aFormData);
 
   /*
     @param aDocument: DOMDocument instance to obtain form data for.

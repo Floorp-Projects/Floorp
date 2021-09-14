@@ -484,20 +484,62 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   entry->mValue.SetAsObject() = &jsval.toObject();
 }
 
-static void AppendEntry(nsINode* aNode, const nsString& aId,
-                        const FormEntryValue& aValue,
-                        sessionstore::FormData& aFormData) {
+// This isn't size as in binary size, just a heuristic to not store too large
+// fields in session store. See StaticPrefs::browser_sessionstore_dom_form_limit
+static uint32_t SizeOfFormEntry(const FormEntryValue& aValue) {
+  uint32_t size = 0;
+  switch (aValue.type()) {
+    case FormEntryValue::TCheckbox:
+      size = aValue.get_Checkbox().value() ? 4 : 5;
+      break;
+    case FormEntryValue::TTextField:
+      size = aValue.get_TextField().value().Length();
+      break;
+    case FormEntryValue::TFileList: {
+      for (const auto& value : aValue.get_FileList().valueList()) {
+        size += value.Length();
+      }
+      break;
+    }
+    case FormEntryValue::TSingleSelect:
+      size = aValue.get_SingleSelect().value().Length();
+      break;
+    case FormEntryValue::TMultipleSelect: {
+      for (const auto& value : aValue.get_MultipleSelect().valueList()) {
+        size += value.Length();
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return size;
+}
+
+static uint32_t AppendEntry(nsINode* aNode, const nsString& aId,
+                            const FormEntryValue& aValue,
+                            sessionstore::FormData& aFormData) {
+  uint32_t size = SizeOfFormEntry(aValue);
+  if (size > StaticPrefs::browser_sessionstore_dom_form_limit()) {
+    return 0;
+  }
+
   if (aId.IsEmpty()) {
     FormEntry* entry = aFormData.xpath().AppendElement();
     entry->value() = aValue;
     aNode->GenerateXPath(entry->id());
+    size += entry->id().Length();
   } else {
     aFormData.id().AppendElement(FormEntry{aId, aValue});
+    size += aId.Length();
   }
+
+  return size;
 }
 
-static void CollectTextAreaElement(Document* aDocument,
-                                   sessionstore::FormData& aFormData) {
+static uint32_t CollectTextAreaElement(Document* aDocument,
+                                       sessionstore::FormData& aFormData) {
+  uint32_t size = 0;
   RefPtr<nsContentList> textlist =
       NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"textarea"_ns);
   uint32_t length = textlist->Length();
@@ -528,12 +570,15 @@ static void CollectTextAreaElement(Document* aDocument,
       continue;
     }
 
-    AppendEntry(textArea, id, TextField{value}, aFormData);
+    size += AppendEntry(textArea, id, TextField{value}, aFormData);
   }
+
+  return size;
 }
 
-static void CollectInputElement(Document* aDocument,
-                                sessionstore::FormData& aFormData) {
+static uint32_t CollectInputElement(Document* aDocument,
+                                    sessionstore::FormData& aFormData) {
+  uint32_t size = 0;
   RefPtr<nsContentList> inputlist =
       NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"input"_ns);
   uint32_t length = inputlist->Length();
@@ -575,7 +620,7 @@ static void CollectInputElement(Document* aDocument,
       if (checked == input->DefaultChecked()) {
         continue;
       }
-      AppendEntry(input, id, Checkbox{checked}, aFormData);
+      size += AppendEntry(input, id, Checkbox{checked}, aFormData);
     } else if (input->ControlType() == FormControlType::InputFile) {
       IgnoredErrorResult rv;
       sessionstore::FileList file;
@@ -583,7 +628,7 @@ static void CollectInputElement(Document* aDocument,
       if (rv.Failed() || file.valueList().IsEmpty()) {
         continue;
       }
-      AppendEntry(input, id, file, aFormData);
+      size += AppendEntry(input, id, file, aFormData);
     } else {
       TextField field;
       input->GetValue(field.value(), CallerType::System);
@@ -597,13 +642,16 @@ static void CollectInputElement(Document* aDocument,
                              eCaseMatters)) {
         continue;
       }
-      AppendEntry(input, id, field, aFormData);
+      size += AppendEntry(input, id, field, aFormData);
     }
   }
+
+  return size;
 }
 
-static void CollectSelectElement(Document* aDocument,
-                                 sessionstore::FormData& aFormData) {
+static uint32_t CollectSelectElement(Document* aDocument,
+                                     sessionstore::FormData& aFormData) {
+  uint32_t size = 0;
   RefPtr<nsContentList> selectlist =
       NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"select"_ns);
   uint32_t length = selectlist->Length();
@@ -647,10 +695,10 @@ static void CollectSelectElement(Document* aDocument,
 
       DOMString selectVal;
       select->GetValue(selectVal);
-      AppendEntry(select, id,
-                  SingleSelect{static_cast<uint32_t>(selectedIndex),
-                               selectVal.AsAString()},
-                  aFormData);
+      size += AppendEntry(select, id,
+                          SingleSelect{static_cast<uint32_t>(selectedIndex),
+                                       selectVal.AsAString()},
+                          aFormData);
     } else {
       HTMLOptionsCollection* options = select->GetOptions();
       if (!options) {
@@ -677,21 +725,26 @@ static void CollectSelectElement(Document* aDocument,
         continue;
       }
 
-      AppendEntry(select, id, MultipleSelect{selectslist}, aFormData);
+      size += AppendEntry(select, id, MultipleSelect{selectslist}, aFormData);
     }
   }
+
+  return size;
 }
 
 /* static */
-void SessionStoreUtils::CollectFormData(Document* aDocument,
-                                        sessionstore::FormData& aFormData) {
+uint32_t SessionStoreUtils::CollectFormData(Document* aDocument,
+                                            sessionstore::FormData& aFormData) {
   MOZ_DIAGNOSTIC_ASSERT(aDocument);
-  CollectTextAreaElement(aDocument, aFormData);
-  CollectInputElement(aDocument, aFormData);
-  CollectSelectElement(aDocument, aFormData);
+  uint32_t size = 0;
+  size += CollectTextAreaElement(aDocument, aFormData);
+  size += CollectInputElement(aDocument, aFormData);
+  size += CollectSelectElement(aDocument, aFormData);
 
   aFormData.hasData() =
       !aFormData.id().IsEmpty() || !aFormData.xpath().IsEmpty();
+
+  return size;
 }
 
 /* static */
