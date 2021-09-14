@@ -20,266 +20,113 @@ var testData = [
     options: undefined,
     expected: {
       locale: "en-US",
-      type: "language",
       style: "long",
-      calendar: "gregory",
-      values: [],
+      value: ""
     }
   },
   {
     locales: ["en-US"],
     options: {
-      type: "weekday",
-      style: "narrow",
-      calendar: "gregory",
-      keys: [3],
+      keys: [
+        "dates/gregorian/weekdays/wednesday"
+      ],
+      style: 'narrow'
     },
     expected: {
-      locale: "en-US",
-      type: "weekday",
-      style: "narrow",
-      calendar: "gregory",
-      values: ["W"]
-    }
-  },
-
-  {
-    locales: ["fr"],
-    options: {
-      type: "dateTimeField",
-      keys: ["year", "day"],
-    },
-    expected: {
-      locale: "fr",
-      type: "dateTimeField",
-      style: "long",
-      calendar: "gregory",
-      values: ["année", "jour"],
+      locale: 'en-US',
+      style: 'narrow',
+      values: {
+        "dates/gregorian/weekdays/wednesday": "W"
+      }
     }
   },
   {
     locales: ["fr"],
     options: {
-      type: "month",
-      keys: [10],
+      keys: [
+        'dates/fields/year',
+        'dates/fields/day',
+        'dates/gregorian/months/october',
+        'dates/gregorian/weekdays/saturday',
+        'dates/gregorian/dayperiods/pm'
+      ]
     },
     expected: {
       locale: "fr",
-      type: "month",
       style: "long",
-      calendar: "gregory",
-      values: ["octobre"],
-    }
-  },
-  {
-    locales: ["fr"],
-    options: {
-      type: "weekday",
-      keys: [6],
-    },
-    expected: {
-      locale: "fr",
-      type: "weekday",
-      style: "long",
-      calendar: "gregory",
-      values: ["samedi"],
-    }
-  },
-  {
-    locales: ["fr"],
-    options: {
-      type: "dayPeriod",
-      keys: ["pm"],
-    },
-    expected: {
-      locale: "fr",
-      type: "dayPeriod",
-      style: "long",
-      calendar: "gregory",
-      values: ["PM"],
-    }
-  },
-
-  {
-    locales: ["it"],
-    options: {
-      type: "weekday",
-      style: "short",
-      keys: [4],
-    },
-    expected: {
-      locale: "it",
-      type: "weekday",
-      style: "short",
-      calendar: "gregory",
-      values: ["gio"],
+      values: {
+        'dates/fields/year': 'année',
+        'dates/fields/day': 'jour',
+        'dates/gregorian/months/october': 'octobre',
+        'dates/gregorian/weekdays/saturday': 'samedi',
+        'dates/gregorian/dayperiods/pm': 'PM'
+      }
     }
   },
   {
     locales: ["it"],
     options: {
-      type: "month",
       style: "short",
-      keys: [8],
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
     },
     expected: {
       locale: "it",
-      type: "month",
       style: "short",
-      calendar: "gregory",
-      values: ["ago"],
-    }
-  },
-  {
-    locales: ["it"],
-    options: {
-      type: "dayPeriod",
-      style: "short",
-      keys: ["am"],
-    },
-    expected: {
-      locale: "it",
-      type: "dayPeriod",
-      style: "short",
-      calendar: "gregory",
-      values: ["AM"],
-    }
-  },
-  {
-    locales: ["it"],
-    options: {
-      type: "dateTimeField",
-      style: "short",
-      keys: ["month"],
-    },
-    expected: {
-      locale: "it",
-      type: "dateTimeField",
-      style: "short",
-      calendar: "gregory",
-      values: ["mese"],
-    }
-  },
-
-  {
-    locales: ["ar"],
-    options: {
-      type: "weekday",
-      style: "long",
-      keys: [4],
-    },
-    expected: {
-      locale: "ar",
-      type: "weekday",
-      style: "long",
-      calendar: "gregory",
-      values: ["الخميس"],
+      values: {
+        'dates/gregorian/weekdays/thursday': 'gio',
+        'dates/gregorian/months/august': 'ago',
+        'dates/gregorian/dayperiods/am': 'AM',
+        'dates/fields/month': 'mese'
+      }
     }
   },
   {
     locales: ["ar"],
     options: {
-      type: "month",
-      style: "long",
-      keys: [8],
+      style: 'long',
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
     },
     expected: {
       locale: "ar",
-      type: "month",
       style: "long",
-      calendar: "gregory",
-      values: ["أغسطس"],
-    }
-  },
-  {
-    locales: ["ar"],
-    options: {
-      type: "dayPeriod",
-      style: "long",
-      keys: ["am"],
-    },
-    expected: {
-      locale: "ar",
-      type: "dayPeriod",
-      style: "long",
-      calendar: "gregory",
-      values: ["ص"],
-    }
-  },
-  {
-    locales: ["ar"],
-    options: {
-      type: "dateTimeField",
-      style: "long",
-      keys: ["month"],
-    },
-    expected: {
-      locale: "ar",
-      type: "dateTimeField",
-      style: "long",
-      calendar: "gregory",
-      values: ["الشهر"],
-    }
-  },
-
-  {
-    locales: ["zh-TW"],
-    options: {
-      type: "weekday",
-      style: "abbreviated",
-      keys: [4],
-    },
-    expected: {
-      locale: "zh-TW",
-      type: "weekday",
-      style: "abbreviated",
-      calendar: "gregory",
-      values: ["週四"],
+      values: {
+        'dates/gregorian/weekdays/thursday': 'الخميس',
+        'dates/gregorian/months/august': 'أغسطس',
+        'dates/gregorian/dayperiods/am': 'ص',
+        'dates/fields/month': 'الشهر'
+      }
     }
   },
   {
     locales: ["zh-TW"],
     options: {
-      type: "month",
       style: "short",
-      keys: [8],
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
     },
     expected: {
       locale: "zh-TW",
-      type: "month",
       style: "short",
-      calendar: "gregory",
-      values: ["8月"],
-    }
-  },
-  {
-    locales: ["zh-TW"],
-    options: {
-      type: "dayPeriod",
-      style: "short",
-      keys: ["am"],
-    },
-    expected: {
-      locale: "zh-TW",
-      type: "dayPeriod",
-      style: "short",
-      calendar: "gregory",
-      values: ["上午"],
-    }
-  },
-  {
-    locales: ["zh-TW"],
-    options: {
-      type: "dateTimeField",
-      style: "short",
-      keys: ["month"],
-    },
-    expected: {
-      locale: "zh-TW",
-      type: "dateTimeField",
-      style: "short",
-      calendar: "gregory",
-      values: ["月"],
+      values: {
+        'dates/gregorian/weekdays/thursday': "週四",
+        'dates/gregorian/months/august': "8月",
+        'dates/gregorian/dayperiods/am': "上午",
+        'dates/fields/month': "月"
+      }
     }
   },
 
@@ -288,9 +135,10 @@ var testData = [
   {
     locales: ["en-US"],
     options: {
-      type: "weekday",
       style: "",
-      keys: [4]
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+      ]
     },
     expected: {
       exception: true
@@ -299,8 +147,9 @@ var testData = [
   {
     locales: ["foo-X"],
     options: {
-      type: "weekday",
-      keys: [4]
+      keys: [
+        "dates/gregorian/weekdays/thursday",
+      ]
     },
     expected: {
       exception: true
@@ -317,6 +166,17 @@ var testData = [
       exception: true
     }
   },
+  {
+    locales: ["en-US"],
+    options: {
+      keys: [
+        "no/such/key",
+      ]
+    },
+    expected: {
+      exception: true
+    }
+  }
 ]
 
 let intlUtils = window.intlUtils;
@@ -327,20 +187,23 @@ for (let { locales, options, expected } of testData) {
     let result = intlUtils.getDisplayNames(locales, options);
 
     is(result.locale, expected.locale, "locale is " + expected.locale);
-    is(result.type, expected.type, "type is " + expected.type);
     is(result.style, expected.style, "style is " + expected.style);
-    is(result.calendar, expected.calendar, "calendar is " + expected.calendar);
 
     let values = result.values;
     let expectedValues = expected.values;
 
-    is(values.length, expectedValues.length, "values' length is " + expectedValues.length);
+    let valuesKeys = Object.getOwnPropertyNames(values).sort();
+    let expectedValuesKeys = Object.getOwnPropertyNames(expectedValues).sort();
 
-    for (let i = 0; i < expectedValues.length; ++i) {
-      is(values[i], expectedValues[i], "value is " + expectedValues[i]);
+    isDeeply(valuesKeys, expectedValuesKeys, "Returned values' keys");
+
+    for (let key of expectedValuesKeys) {
+      is(values[key], expectedValues[key], "value is " + expectedValues[key]);
     }
   } catch (e) {
-    ok(expected.exception, "Exception expected : " + e);
+    if (expected.exception) {
+      ok(true, "Exception expected : " + e.name);
+    }
   }
 }
 

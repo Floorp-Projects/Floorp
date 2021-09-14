@@ -4,19 +4,15 @@
 
 [GenerateConversionToJS]
 dictionary DisplayNameOptions {
-  DOMString type;
   DOMString style;
-  DOMString calendar;
   sequence<DOMString> keys;
 };
 
 [GenerateInit]
 dictionary DisplayNameResult {
   DOMString locale;
-  DOMString type;
   DOMString style;
-  DOMString calendar;
-  sequence<DOMString> values;
+  record<DOMString, DOMString> values;
 };
 
 [GenerateInit]
@@ -36,37 +32,25 @@ interface IntlUtils {
    * keys.
    *
    * The function takes two arguments - locales which is a list of locale
-   * strings and options which is an object with four optional properties:
+   * strings and options which is an object with two optional properties:
    *
    *   keys:
-   *     an Array of string values to localize
-   *
-   *   type:
-   *     a String with a value "language", "region", "script", "currency",
-   *     "weekday", "month", "quarter", "dayPeriod", or "dateTimeField"
+   *     an Array of string values that are paths to individual terms
    *
    *   style:
-   *     a String with a value "long", "abbreviated", "short", or "narrow"
-   *
-   *   calendar:
-   *     a String to select a specific calendar type, e.g. "gregory"
+   *     a String with a value "long", "short" or "narrow"
    *
    * It returns an object with properties:
    *
    *   locale:
    *     a negotiated locale string
    *
-   *   type:
-   *     negotiated type
-   *
    *   style:
    *     negotiated style
    *
-   *   calendar:
-   *     negotiated calendar
-   *
    *   values:
-   *     a list of translated values for the requested keys
+   *     a key-value pair list of requested keys and corresponding translated
+   *     values
    *
    */
   [Throws]
