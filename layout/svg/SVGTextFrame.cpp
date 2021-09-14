@@ -283,31 +283,24 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
   gfxTextRun::Metrics metrics =
       aTextRun->MeasureText(gfxFont::LOOSE_INK_EXTENTS, nullptr);
 
-  auto convertIfVerticalRL = [&](gfxFloat dominantBaseline) {
-    return writingMode.IsVerticalRL()
-               ? metrics.mAscent + metrics.mDescent - dominantBaseline
-               : dominantBaseline;
-  };
-
   switch (aDominantBaseline) {
     case StyleDominantBaseline::Hanging:
-      return convertIfVerticalRL(metrics.mAscent * 0.2);
+      return metrics.mAscent * 0.2;
     case StyleDominantBaseline::TextBeforeEdge:
-      return convertIfVerticalRL(0);
-
-    case StyleDominantBaseline::Alphabetic:
-      return writingMode.IsVerticalRL()
-                 ? metrics.mAscent * 0.5
-                 : aFrame->GetLogicalBaseline(writingMode);
+      return writingMode.IsVerticalRL() ? metrics.mAscent + metrics.mDescent
+                                        : 0;
 
     case StyleDominantBaseline::Auto:
-      return convertIfVerticalRL(aFrame->GetLogicalBaseline(writingMode));
+    case StyleDominantBaseline::Alphabetic:
+      return writingMode.IsVerticalRL()
+                 ? metrics.mAscent + metrics.mDescent -
+                       aFrame->GetLogicalBaseline(writingMode)
+                 : aFrame->GetLogicalBaseline(writingMode);
 
     case StyleDominantBaseline::Middle:
-      return convertIfVerticalRL(aFrame->GetLogicalBaseline(writingMode) -
-                                 SVGContentUtils::GetFontXHeight(aFrame) / 2.0 *
-                                     AppUnitsPerCSSPixel() *
-                                     aFontSizeScaleFactor);
+      return aFrame->GetLogicalBaseline(writingMode) -
+             SVGContentUtils::GetFontXHeight(aFrame) / 2.0 *
+                 AppUnitsPerCSSPixel() * aFontSizeScaleFactor;
 
     case StyleDominantBaseline::TextAfterEdge:
     case StyleDominantBaseline::Ideographic:
@@ -317,11 +310,11 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
     case StyleDominantBaseline::Central:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
     case StyleDominantBaseline::Mathematical:
-      return convertIfVerticalRL(metrics.mAscent / 2.0);
+      return metrics.mAscent / 2.0;
   }
 
   MOZ_ASSERT_UNREACHABLE("unexpected dominant-baseline value");
-  return convertIfVerticalRL(aFrame->GetLogicalBaseline(writingMode));
+  return aFrame->GetLogicalBaseline(writingMode);
 }
 
 /**
