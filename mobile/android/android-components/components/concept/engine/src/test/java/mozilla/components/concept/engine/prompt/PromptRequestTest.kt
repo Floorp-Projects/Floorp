@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -215,15 +216,15 @@ class PromptRequestTest {
     @Test
     fun `SaveLoginPrompt`() {
         val onLoginDismiss: () -> Unit = {}
-        val onLoginConfirm: (Login) -> Unit = {}
-        val login = Login(null, "origin", username = "username", password = "password")
+        val onLoginConfirm: (LoginEntry) -> Unit = {}
+        val entry = LoginEntry("origin", username = "username", password = "password")
 
-        val loginSaveRequest = SaveLoginPrompt(0, listOf(login), onLoginDismiss, onLoginConfirm)
+        val loginSaveRequest = SaveLoginPrompt(0, listOf(entry), onLoginDismiss, onLoginConfirm)
 
-        assertEquals(loginSaveRequest.logins, listOf(login))
+        assertEquals(loginSaveRequest.logins, listOf(entry))
         assertEquals(loginSaveRequest.hint, 0)
 
-        loginSaveRequest.onConfirm(login)
+        loginSaveRequest.onConfirm(entry)
         loginSaveRequest.onDismiss()
     }
 
@@ -231,7 +232,7 @@ class PromptRequestTest {
     fun `SelectLoginPrompt`() {
         val onLoginDismiss: () -> Unit = {}
         val onLoginConfirm: (Login) -> Unit = {}
-        val login = Login(null, "origin", username = "username", password = "password")
+        val login = Login(guid = "test-guid", origin = "origin", username = "username", password = "password")
 
         val loginSelectRequest =
             SelectLoginPrompt(listOf(login), onLoginDismiss, onLoginConfirm)

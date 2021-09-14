@@ -8,7 +8,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.engine.gecko.ext.toLogin
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardsAddressesStorageDelegate
@@ -62,7 +61,7 @@ class GeckoAutocompleteStorageDelegate(
     }
 
     override fun onLoginSave(login: Autocomplete.LoginEntry) {
-        loginStorageDelegate.onLoginSave(login.toLogin())
+        loginStorageDelegate.onLoginSave(login.toLoginEntry())
     }
 
     override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {

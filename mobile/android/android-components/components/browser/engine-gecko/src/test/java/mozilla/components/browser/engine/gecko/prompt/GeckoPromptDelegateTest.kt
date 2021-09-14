@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -651,8 +652,8 @@ class GeckoPromptDelegateTest {
             }
         })
 
-        val login = createLogin()
-        val saveOption = Autocomplete.LoginSaveOption(login.toLoginEntry())
+        val entry = createLoginEntry()
+        val saveOption = Autocomplete.LoginSaveOption(entry.toLoginEntry())
 
         var geckoResult =
             promptDelegate.onLoginSave(mock(), geckoLoginSavePrompt(arrayOf(saveOption)))
@@ -671,13 +672,13 @@ class GeckoPromptDelegateTest {
             onLoginSaved = true
         }
 
-        loginSaveRequest.onConfirm(login)
+        loginSaveRequest.onConfirm(entry)
         assertTrue(onLoginSaved)
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
         onLoginSaved = false
 
-        loginSaveRequest.onConfirm(login)
+        loginSaveRequest.onConfirm(entry)
 
         assertFalse(onLoginSaved)
     }
@@ -768,6 +769,24 @@ class GeckoPromptDelegateTest {
         passwordField: String = "passwordField"
     ) = Login(
         guid = guid,
+        origin = origin,
+        password = password,
+        username = username,
+        httpRealm = httpRealm,
+        formActionOrigin = formActionOrigin,
+        usernameField = usernameField,
+        passwordField = passwordField
+    )
+
+    fun createLoginEntry(
+        password: String = "password",
+        username: String = "username",
+        origin: String = "https://www.origin.com",
+        httpRealm: String = "httpRealm",
+        formActionOrigin: String = "https://www.origin.com",
+        usernameField: String = "usernameField",
+        passwordField: String = "passwordField"
+    ) = LoginEntry(
         origin = origin,
         password = password,
         username = username,
