@@ -3122,9 +3122,17 @@ class MOZ_STACK_CLASS IterativeFailureTest {
   bool test();
 
  private:
+  bool setup();
+  bool testThread(unsigned thread);
+  bool testIteration(unsigned thread, unsigned iteration,
+                     bool& failureWasSimulated, MutableHandleValue exception);
+  void cleanup();
+  void teardown();
+
   JSContext* const cx;
   const Params& params;
   FailureSimulator& simulator;
+  size_t compartmentCount;
 };
 
 bool RunIterativeFailureTest(
@@ -3142,6 +3150,23 @@ bool IterativeFailureTest::test() {
     return true;
   }
 
+  if (!setup()) {
+    return false;
+  }
+
+  auto onExit = mozilla::MakeScopeExit([this] { teardown(); });
+
+  for (unsigned thread = params.threadStart; thread <= params.threadEnd;
+       thread++) {
+    if (!testThread(thread)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool IterativeFailureTest::setup() {
   if (!CheckCanSimulateOOM(cx)) {
     return false;
   }
@@ -3166,107 +3191,123 @@ bool IterativeFailureTest::test() {
     return false;
   }
 
-  size_t compartmentCount = CountCompartments(cx);
-
-  RootedValue exception(cx);
+  compartmentCount = CountCompartments(cx);
 
   simulator.setup(cx);
 
-  for (unsigned thread = params.threadStart; thread <= params.threadEnd;
-       thread++) {
-    if (params.verbose) {
-      fprintf(stderr, "thread %u\n", thread);
+  return true;
+}
+
+bool IterativeFailureTest::testThread(unsigned thread) {
+  if (params.verbose) {
+    fprintf(stderr, "thread %u\n", thread);
+  }
+
+  RootedValue exception(cx);
+
+  unsigned iteration = 1;
+  bool failureWasSimulated;
+  do {
+    if (!testIteration(thread, iteration, failureWasSimulated, &exception)) {
+      return false;
     }
 
-    unsigned iteration = 1;
-    bool failureWasSimulated;
-    do {
-      if (params.verbose) {
-        fprintf(stderr, "  iteration %u\n", iteration);
+    iteration++;
+  } while (failureWasSimulated);
+
+  if (params.verbose) {
+    fprintf(stderr, "  finished after %u iterations\n", iteration - 1);
+    if (!exception.isUndefined()) {
+      RootedString str(cx, JS::ToString(cx, exception));
+      if (!str) {
+        fprintf(stderr, "  error while trying to print exception, giving up\n");
+        return false;
       }
-
-      MOZ_ASSERT(!cx->isExceptionPending());
-
-      simulator.startSimulating(cx, iteration, thread, params.keepFailing);
-
-      RootedValue result(cx);
-      bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
-                                HandleValueArray::empty(), &result);
-
-      failureWasSimulated = simulator.stopSimulating();
-
-      if (ok) {
-        MOZ_ASSERT(!cx->isExceptionPending(),
-                   "Thunk execution succeeded but an exception was raised - "
-                   "missing error check?");
-      } else if (params.expectExceptionOnFailure) {
-        MOZ_ASSERT(cx->isExceptionPending(),
-                   "Thunk execution failed but no exception was raised - "
-                   "missing call to js::ReportOutOfMemory()?");
+      UniqueChars bytes(JS_EncodeStringToLatin1(cx, str));
+      if (!bytes) {
+        return false;
       }
-
-      // Note that it is possible that the function throws an exception
-      // unconnected to the simulated failure, in which case we ignore
-      // it. More correct would be to have the caller pass some kind of
-      // exception specification and to check the exception against it.
-
-      if (!failureWasSimulated && cx->isExceptionPending()) {
-        if (!cx->getPendingException(&exception)) {
-          return false;
-        }
-      }
-      cx->clearPendingException();
-      simulator.cleanup(cx);
-
-      gc::FinishGC(cx);
-
-      // Some tests create a new compartment or zone on every
-      // iteration. Our GC is triggered by GC allocations and not by
-      // number of compartments or zones, so these won't normally get
-      // cleaned up. The check here stops some tests running out of
-      // memory. ("Gentlemen, you can't fight in here! This is the
-      // War oom!")
-      if (CountCompartments(cx) > compartmentCount + 100) {
-        JS_GC(cx);
-        compartmentCount = CountCompartments(cx);
-      }
-
-#  ifdef JS_TRACE_LOGGING
-      // Reset the TraceLogger state if enabled.
-      TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-      if (logger && logger->enabled()) {
-        while (logger->enabled()) {
-          logger->disable();
-        }
-        logger->enable(cx);
-      }
-#  endif
-
-      iteration++;
-    } while (failureWasSimulated);
-
-    if (params.verbose) {
-      fprintf(stderr, "  finished after %u iterations\n", iteration - 1);
-      if (!exception.isUndefined()) {
-        RootedString str(cx, JS::ToString(cx, exception));
-        if (!str) {
-          fprintf(stderr,
-                  "  error while trying to print exception, giving up\n");
-          return false;
-        }
-        UniqueChars bytes(JS_EncodeStringToLatin1(cx, str));
-        if (!bytes) {
-          return false;
-        }
-        fprintf(stderr, "  threw %s\n", bytes.get());
-      }
+      fprintf(stderr, "  threw %s\n", bytes.get());
     }
   }
 
+  return true;
+}
+
+bool IterativeFailureTest::testIteration(unsigned thread, unsigned iteration,
+                                         bool& failureWasSimulated,
+                                         MutableHandleValue exception) {
+  if (params.verbose) {
+    fprintf(stderr, "  iteration %u\n", iteration);
+  }
+
+  MOZ_ASSERT(!cx->isExceptionPending());
+
+  simulator.startSimulating(cx, iteration, thread, params.keepFailing);
+
+  RootedValue result(cx);
+  bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
+                            HandleValueArray::empty(), &result);
+
+  failureWasSimulated = simulator.stopSimulating();
+
+  if (ok) {
+    MOZ_ASSERT(!cx->isExceptionPending(),
+               "Thunk execution succeeded but an exception was raised - "
+               "missing error check?");
+  } else if (params.expectExceptionOnFailure) {
+    MOZ_ASSERT(cx->isExceptionPending(),
+               "Thunk execution failed but no exception was raised - "
+               "missing call to js::ReportOutOfMemory()?");
+  }
+
+  // Note that it is possible that the function throws an exception unconnected
+  // to the simulated failure, in which case we ignore it. More correct would be
+  // to have the caller pass some kind of exception specification and to check
+  // the exception against it.
+  if (!failureWasSimulated && cx->isExceptionPending()) {
+    if (!cx->getPendingException(exception)) {
+      return false;
+    }
+  }
+  cx->clearPendingException();
+
+  cleanup();
+
+  return true;
+}
+
+void IterativeFailureTest::cleanup() {
+  simulator.cleanup(cx);
+
+  gc::FinishGC(cx);
+
+  // Some tests create a new compartment or zone on every iteration. Our GC is
+  // triggered by GC allocations and not by number of compartments or zones, so
+  // these won't normally get cleaned up. The check here stops some tests
+  // running out of memory. ("Gentlemen, you can't fight in here! This is the
+  // War oom!")
+  if (CountCompartments(cx) > compartmentCount + 100) {
+    JS_GC(cx);
+    compartmentCount = CountCompartments(cx);
+  }
+
+#  ifdef JS_TRACE_LOGGING
+  // Reset the TraceLogger state if enabled.
+  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+  if (logger && logger->enabled()) {
+    while (logger->enabled()) {
+      logger->disable();
+    }
+    logger->enable(cx);
+  }
+#  endif
+}
+
+void IterativeFailureTest::teardown() {
   simulator.teardown(cx);
 
   cx->runningOOMTest = false;
-  return true;
 }
 
 bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
