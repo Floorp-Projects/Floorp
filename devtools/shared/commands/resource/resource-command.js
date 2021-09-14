@@ -595,11 +595,10 @@ class ResourceCommand {
       }
 
       // Only consider top level document, and ignore remote iframes top document
-      if (
+      const isWillNavigate =
         resourceType == ResourceCommand.TYPES.DOCUMENT_EVENT &&
-        resource.name == "will-navigate" &&
-        resource.targetFront.isTopLevel
-      ) {
+        resource.name == "will-navigate";
+      if (isWillNavigate && resource.targetFront.isTopLevel) {
         includesDocumentEventWillNavigate = true;
         this._onWillNavigate(resource.targetFront);
       }
@@ -614,7 +613,12 @@ class ResourceCommand {
 
       this._queueResourceEvent("available", resourceType, resource);
 
-      this._cache.push(resource);
+      // Avoid storing will-navigate resource and consider it as a transcient resource.
+      // We do that to prevent leaking this resource (and its target) on navigation.
+      // We do clear _cache in _onWillNavigate, that we call a few lines before this.
+      if (!isWillNavigate) {
+        this._cache.push(resource);
+      }
     }
 
     // If we receive the DOCUMENT_EVENT for:
