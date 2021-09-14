@@ -161,7 +161,7 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
   auto keywords =
       mozilla::intl::Collator::GetBcp47KeywordValuesForLocale(locale.get());
   if (keywords.isErr()) {
-    ReportInternalError(cx);
+    ReportInternalError(cx, keywords.unwrapErr());
     return false;
   }
 

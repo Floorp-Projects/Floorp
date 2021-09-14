@@ -248,7 +248,7 @@ ICUResult Collator::SetOptions(const Options& aOptions,
 #undef FEATURE_TO_ICU
 
 /* static */
-Result<Collator::Bcp47ExtEnumeration, InternalError>
+Result<Collator::Bcp47ExtEnumeration, ICUError>
 Collator::GetBcp47KeywordValuesForLocale(const char* aLocale) {
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = ucol_getKeywordValuesForLocale(
@@ -258,7 +258,7 @@ Collator::GetBcp47KeywordValuesForLocale(const char* aLocale) {
     return Bcp47ExtEnumeration(enumeration);
   }
 
-  return Err(InternalError{});
+  return Err(ToICUError(status));
 }
 
 /* static */

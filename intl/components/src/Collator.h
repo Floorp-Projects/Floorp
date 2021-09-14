@@ -154,8 +154,8 @@ class Collator final {
    * The collation extensions can be found here:
    * http://cldr.unicode.org/core-spec/#Key_Type_Definitions
    */
-  static Result<Bcp47ExtEnumeration, InternalError>
-  GetBcp47KeywordValuesForLocale(const char* aLocale);
+  static Result<Bcp47ExtEnumeration, ICUError> GetBcp47KeywordValuesForLocale(
+      const char* aLocale);
 
  private:
   /**
