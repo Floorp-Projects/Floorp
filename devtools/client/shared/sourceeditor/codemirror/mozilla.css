@@ -303,3 +303,9 @@
 .CodeMirror-lines {
   text-align: left;
 }
+
+/* CodeMirror matchhighlight styling */
+.cm-matchhighlight {
+  outline: 1px solid var(--theme-contrast-border);
+  border-radius: 2px;
+}
