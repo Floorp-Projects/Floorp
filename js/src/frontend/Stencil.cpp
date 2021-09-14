@@ -3973,7 +3973,7 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
 
 JSScript* JS::InstantiateGlobalStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    RefPtr<JS::Stencil> stencil) {
+    JS::Stencil* stencil) {
   if (stencil->canLazilyParse != CanLazilyParse(options)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_STENCIL_OPTIONS_MISMATCH);
@@ -3991,7 +3991,7 @@ JSScript* JS::InstantiateGlobalStencil(
 
 JSObject* JS::InstantiateModuleStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
-    RefPtr<JS::Stencil> stencil) {
+    JS::Stencil* stencil) {
   JS::CompileOptions options(cx, optionsInput);
   options.setModule();
 
@@ -4012,7 +4012,7 @@ JSObject* JS::InstantiateModuleStencil(
 
 JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
-                                      RefPtr<JS::Stencil> stencil,
+                                      JS::Stencil* stencil,
                                       TranscodeBuffer& buffer) {
   XDRStencilEncoder encoder(cx, buffer);
   XDRResult res = encoder.codeStencil(*stencil);
@@ -4025,7 +4025,7 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
 JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       const JS::TranscodeRange& range,
-                                      RefPtr<JS::Stencil>& stencilOut) {
+                                      JS::Stencil** stencilOut) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (!input.get().initForGlobal(cx)) {
     return TranscodeResult::Throw;
@@ -4040,7 +4040,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  stencilOut = do_AddRef(stencil.release());
+  *stencilOut = do_AddRef(stencil.release()).take();
   return TranscodeResult::Ok;
 }
 
