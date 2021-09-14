@@ -662,7 +662,7 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
     // this issue by restricting the lifetime of |keywords| to a separate block.
     auto keywords = mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale("");
     if (keywords.isErr()) {
-      intl::ReportInternalError(cx);
+      intl::ReportInternalError(cx, keywords.unwrapErr());
       return nullptr;
     }
 

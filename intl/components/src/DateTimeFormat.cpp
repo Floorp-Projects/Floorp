@@ -643,19 +643,17 @@ void DateTimeFormat::SetStartTimeIfGregorian(double aTime) {
 }
 
 /* static */
-Result<UniquePtr<Calendar>, InternalError> DateTimeFormat::CloneCalendar(
+Result<UniquePtr<Calendar>, ICUError> DateTimeFormat::CloneCalendar(
     double aUnixEpoch) const {
   UErrorCode status = U_ZERO_ERROR;
   UCalendar* calendarRaw = ucal_clone(udat_getCalendar(mDateFormat), &status);
   if (U_FAILURE(status)) {
-    return Err(InternalError{});
+    return Err(ToICUError(status));
   }
   auto calendar = MakeUnique<Calendar>(calendarRaw);
 
-  auto setTimeResult = calendar->SetTimeInMs(aUnixEpoch);
-  if (setTimeResult.isErr()) {
-    return Err(InternalError{});
-  }
+  MOZ_TRY(calendar->SetTimeInMs(aUnixEpoch));
+
   return calendar;
 }
 

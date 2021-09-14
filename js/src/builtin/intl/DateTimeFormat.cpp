@@ -301,7 +301,7 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
   auto keywords =
       mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale(locale.get());
   if (keywords.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, keywords.unwrapErr());
     return false;
   }
 
@@ -1485,13 +1485,13 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
     // time zone set and was changed to use a proleptic Gregorian calendar.
     auto startCal = df->CloneCalendar(x.toDouble());
     if (startCal.isErr()) {
-      intl::ReportInternalError(cx);
+      intl::ReportInternalError(cx, startCal.unwrapErr());
       return nullptr;
     }
 
     auto endCal = df->CloneCalendar(y.toDouble());
     if (endCal.isErr()) {
-      intl::ReportInternalError(cx);
+      intl::ReportInternalError(cx, endCal.unwrapErr());
       return nullptr;
     }
 
