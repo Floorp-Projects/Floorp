@@ -1268,6 +1268,18 @@
   value: 2048
   mirror: always
 
+# Maximum number of characters of form field data per field we collect.
+- name: browser.sessionstore.dom_form_limit
+  type: uint32_t
+  value: 1024*1024*2
+  mirror: always
+
+# Maximum number of characters of form data we collect per origin.
+- name: browser.sessionstore.dom_form_max_limit
+  type: uint32_t
+  value: 1024*1024*50
+  mirror: always
+
 # Minimal interval between two save operations in milliseconds (while the user is active).
 - name: browser.sessionstore.interval
   type: RelaxedAtomicUint32
