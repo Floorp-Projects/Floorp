@@ -14,6 +14,15 @@ const {
 add_task(async function() {
   const front = new StubbedMemoryFront();
   await front.attach();
+  // Implement the minimal mock, doing nothing to make toggleRecordingAllocationStacks pass
+  const commands = {
+    targetConfigurationCommand: {
+      supports() {
+        return true;
+      },
+      updateConfiguration() {},
+    },
+  };
   const store = Store();
   const { getState, dispatch } = store;
 
@@ -24,21 +33,19 @@ add_task(async function() {
     "not in the process of toggling by default"
   );
 
-  dispatch(toggleRecordingAllocationStacks(front));
+  dispatch(toggleRecordingAllocationStacks(commands));
   await waitUntilState(store, () => getState().allocations.togglingInProgress);
   ok(true, "`togglingInProgress` set to true when toggling on");
   await waitUntilState(store, () => !getState().allocations.togglingInProgress);
 
   equal(getState().allocations.recording, true, "now we are recording");
-  ok(front.recordingAllocations, "front is recording too");
 
-  dispatch(toggleRecordingAllocationStacks(front));
+  dispatch(toggleRecordingAllocationStacks(commands));
   await waitUntilState(store, () => getState().allocations.togglingInProgress);
   ok(true, "`togglingInProgress` set to true when toggling off");
   await waitUntilState(store, () => !getState().allocations.togglingInProgress);
 
   equal(getState().allocations.recording, false, "now we are not recording");
-  ok(front.recordingAllocations, "front is not recording anymore");
 
   await front.detach();
 });

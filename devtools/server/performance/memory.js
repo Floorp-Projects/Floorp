@@ -87,18 +87,17 @@ Memory.prototype = {
    * recording allocations or take a census of the heap. In addition, the
    * MemoryBridge will start emitting GC events.
    */
-  attach: expectState(
-    "detached",
-    function() {
-      this.dbg.addDebuggees();
-      this.dbg.memory.onGarbageCollection = this._onGarbageCollection.bind(
-        this
-      );
-      this.state = "attached";
+  attach() {
+    // The actor may be attached by the Target via recordAllocation configuration
+    // or manually by the frontend.
+    if (this.state == "attached") {
       return this.state;
-    },
-    "attaching to the debugger"
-  ),
+    }
+    this.dbg.addDebuggees();
+    this.dbg.memory.onGarbageCollection = this._onGarbageCollection.bind(this);
+    this.state = "attached";
+    return this.state;
+  },
 
   /**
    * Detach from this MemoryBridge.

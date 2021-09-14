@@ -346,6 +346,14 @@ const browsingContextTargetPrototype = {
     return this.conn._getOrCreateActor(form.consoleActor);
   },
 
+  get _memoryActor() {
+    if (this.isDestroyed()) {
+      return null;
+    }
+    const form = this.form();
+    return this.conn._getOrCreateActor(form.memoryActor);
+  },
+
   _targetScopedActorPool: null,
 
   /**
@@ -1290,6 +1298,15 @@ const browsingContextTargetPrototype = {
     }
     if (typeof options.restoreFocus == "boolean") {
       this._restoreFocus = options.restoreFocus;
+    }
+    if (typeof options.recordAllocations == "object") {
+      const actor = this._memoryActor;
+      if (options.recordAllocations == null) {
+        actor.stopRecordingAllocations();
+      } else {
+        actor.attach();
+        actor.startRecordingAllocations(options.recordAllocations);
+      }
     }
 
     if (reload) {
