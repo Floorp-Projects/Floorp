@@ -470,6 +470,9 @@ const individualsModel = (exports.individuals = PropTypes.shape({
 }));
 
 exports.app = {
+  // {Commands} Used to communicate with the backend
+  commands: PropTypes.object,
+
   // {MemoryFront} Used to communicate with platform
   front: PropTypes.instanceOf(MemoryFront),
 

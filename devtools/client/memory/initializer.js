@@ -21,7 +21,7 @@ const { updateMemoryFront } = require("devtools/client/memory/actions/front");
 // Shared variables used by several methods of this module.
 let root, store, unsubscribe;
 
-const initialize = async function() {
+const initialize = async function(commands) {
   // Exposed by panel.js
   const { gToolbox, gHeapAnalysesClient } = window;
 
@@ -29,6 +29,7 @@ const initialize = async function() {
   store = Store();
   const app = createElement(App, {
     toolbox: gToolbox,
+    commands: commands,
     heapWorker: gHeapAnalysesClient,
   });
   const provider = createElement(Provider, { store }, app);
