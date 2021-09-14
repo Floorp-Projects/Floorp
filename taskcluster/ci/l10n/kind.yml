@@ -54,7 +54,7 @@ job-template:
             by-build-platform:
                 default: []
                 win.*:
-                    - nsis-3.01-win
+                    - nsis-3.07-win
                     - upx-3.95-win
     tooltool:
         by-build-platform:

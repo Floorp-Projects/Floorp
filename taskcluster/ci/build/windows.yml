@@ -61,7 +61,7 @@ win32/debug:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win32/opt:
@@ -115,7 +115,7 @@ win32/opt:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64/debug:
@@ -170,7 +170,7 @@ win64/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-hybrid/plain:
@@ -222,7 +222,7 @@ win64-hybrid/plain:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-fuzzing/debug:
@@ -277,7 +277,7 @@ win64-fuzzing/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -380,7 +380,7 @@ win64/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-plain/opt:
@@ -490,7 +490,7 @@ win32-shippable/opt:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-shippable/opt:
@@ -548,7 +548,7 @@ win64-shippable/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win32-add-on-devel/opt:
@@ -599,7 +599,7 @@ win32-add-on-devel/opt:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-add-on-devel/opt:
@@ -651,7 +651,7 @@ win64-add-on-devel/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-noopt/debug:
@@ -703,7 +703,7 @@ win64-noopt/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win32-noopt/debug:
@@ -754,7 +754,7 @@ win32-noopt/debug:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win32-rusttests/opt:
@@ -1032,7 +1032,7 @@ win64-asan/debug:
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1088,7 +1088,7 @@ win64-asan/opt:
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-asan-reporter-shippable/opt:
@@ -1153,7 +1153,7 @@ win64-asan-reporter-shippable/opt:
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-asan-fuzzing/opt:
@@ -1205,7 +1205,7 @@ win64-asan-fuzzing/opt:
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1275,7 +1275,7 @@ win32-devedition/opt:
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-devedition/opt:
@@ -1334,7 +1334,7 @@ win64-devedition/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-aarch64/debug:
@@ -1388,7 +1388,7 @@ win64-aarch64/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1450,7 +1450,7 @@ win64-aarch64/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1493,7 +1493,7 @@ win64-aarch64-eme/opt:
             - linux64-node
             - linux64-wine
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1592,7 +1592,7 @@ win64-aarch64-shippable/opt:
             - linux64-node
             - linux64-wine
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1656,7 +1656,7 @@ win64-aarch64-shippable-no-eme/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
     optimization:
         skip-unless-expanded: null
@@ -1756,7 +1756,7 @@ win64-aarch64-devedition/opt:
             - linux64-node
             - linux64-wine
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
 
 win64-aarch64-devedition-no-eme/opt:
@@ -1819,5 +1819,5 @@ win64-aarch64-devedition-no-eme/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
         fetch:
-            - nsis-3.01-win
+            - nsis-3.07-win
             - upx-3.95-win
