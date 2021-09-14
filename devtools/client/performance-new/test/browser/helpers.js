@@ -583,6 +583,29 @@ async function devToolsActiveConfigurationHasFeature(document, feature) {
 /* exported devToolsActiveConfigurationHasFeature */
 
 /**
+ * This adapts the expectation using the current build's available profiler
+ * features.
+ * @param {string} fixture It can be either already trimmed or untrimmed.
+ * @returns {string}
+ */
+function _adaptCustomPresetExpectationToCustomBuild(fixture) {
+  const supportedFeatures = Services.profiler.GetFeatures();
+  info("Supported features are: " + supportedFeatures.join(", "));
+
+  // Some platforms do not support stack walking, we can adjust the passed
+  // fixture so that tests are passing in these platforms too.
+  // Most notably MacOS outside of Nightly and DevEdition.
+  if (!supportedFeatures.includes("stackwalk")) {
+    info(
+      "Supported features do not include stackwalk, let's remove the Native Stacks from the expected output."
+    );
+    fixture = fixture.replace(/^.*Native Stacks.*\n/m, "");
+  }
+
+  return fixture;
+}
+
+/**
  * This checks if the content of the preset description equals the fixture in
  * string form.
  * @param {Element} devtoolsDocument
@@ -591,6 +614,8 @@ async function devToolsActiveConfigurationHasFeature(document, feature) {
 function checkDevtoolsCustomPresetContent(devtoolsDocument, fixture) {
   // This removes all indentations and any start or end new line and other space characters.
   fixture = fixture.replace(/^\s+/gm, "").trim();
+  // This removes unavailable features from the fixture content.
+  fixture = _adaptCustomPresetExpectationToCustomBuild(fixture);
   is(devtoolsDocument.querySelector(".perf-presets-custom").innerText, fixture);
 }
 /* exported checkDevtoolsCustomPresetContent */
