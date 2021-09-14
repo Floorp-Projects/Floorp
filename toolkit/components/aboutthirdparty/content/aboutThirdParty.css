@@ -2,16 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/in-content/common.css");
-
-body {
-  margin: 0 28px;
-}
-
-h1 {
-  margin-top: 48px;
-}
-
 .svg-common {
   -moz-context-properties: fill;
   fill: currentColor;
@@ -22,6 +12,7 @@ h1 {
   height: 32px;
   width: 32px;
   min-width: 0;
+  padding: 0;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -91,37 +82,17 @@ h1 {
 }
 
 .event-table {
-  border-spacing: 0;
-  border: 2px solid var(--in-content-button-background);
-  border-radius: 4px;
   width: max-content;
   margin-top: var(--card-padding);
 }
 
-.event-table > thead, tbody > tr {
+.event-table > thead,
+.event-table > tbody > tr {
   height: 28px;
   vertical-align: middle;
 }
 
-.event-table > thead > tr > th {
-  background-color: var(--in-content-button-background);
-  padding-inline: 10px;
-  font-weight: normal;
-}
-
-.event-table > thead > tr > th:not(:first-child) {
-  border-inline-start: 1px solid;
-  border-image-source: linear-gradient(transparent 0%,
-                                       transparent 15%,
-                                       var(--in-content-box-border-color) 15%,
-                                       var(--in-content-box-border-color) 85%,
-                                       transparent 85%,
-                                       transparent 100%);
-  border-image-slice: 1 1;
-}
-
+.event-table > thead > tr > th,
 .event-table > tbody > tr > td {
-  font-size: 12px;
   padding-inline: 10px;
-  border-top: 1px solid var(--in-content-button-background);
 }
