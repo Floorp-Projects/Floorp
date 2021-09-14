@@ -27,8 +27,7 @@ child:
   async OnStartRequest(nsHttpResponseHead  responseHead,
                        bool                useResponseHead,
                        nsHttpHeaderArray   requestHeaders,
-                       HttpChannelOnStartRequestArgs args,
-                       HttpChannelAltDataStream altData);
+                       HttpChannelOnStartRequestArgs args);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

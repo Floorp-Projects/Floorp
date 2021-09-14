@@ -298,8 +298,6 @@ class InternalResponse final {
     return !!mCacheInfoChannel;
   }
 
-  bool HasBeenCloned() const { return mCloned; }
-
   void InitChannelInfo(nsIChannel* aChannel) {
     mChannelInfo.InitFromChannel(aChannel);
   }
@@ -363,7 +361,6 @@ class InternalResponse final {
   nsCString mAlternativeDataType;
   nsCOMPtr<nsIInputStream> mAlternativeBody;
   nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
-  bool mCloned;
 
  public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;
