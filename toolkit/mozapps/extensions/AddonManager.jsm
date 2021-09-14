@@ -28,6 +28,8 @@ const MOZ_COMPATIBILITY_NIGHTLY = ![
   "esr",
 ].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
+const INTL_LOCALES_CHANGED = "intl:app-locales-changed";
+
 const PREF_AMO_ABUSEREPORT = "extensions.abuseReport.amWebAPI.enabled";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED = "extensions.update.enabled";
@@ -730,6 +732,9 @@ var AddonManagerInternal = {
       );
       Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this);
 
+      // Watch for language changes, refresh the addon cache when it changes.
+      Services.obs.addObserver(this, INTL_LOCALES_CHANGED);
+
       // Ensure all default providers have had a chance to register themselves
       for (let url of DEFAULT_PROVIDERS) {
         try {
@@ -1048,6 +1053,8 @@ var AddonManagerInternal = {
     Services.prefs.removeObserver(PREF_EM_UPDATE_ENABLED, this);
     Services.prefs.removeObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
 
+    Services.obs.removeObserver(this, INTL_LOCALES_CHANGED);
+
     let savedError = null;
     // Only shut down providers if they've been started.
     if (gStarted) {
@@ -1104,6 +1111,14 @@ var AddonManagerInternal = {
    * @see nsIObserver
    */
   observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case INTL_LOCALES_CHANGED: {
+        // Asynchronously fetch and update the addons cache.
+        AddonRepository.backgroundUpdateCheck();
+        return;
+      }
+    }
+
     switch (aData) {
       case PREF_EM_CHECK_COMPATIBILITY: {
         let oldValue = gCheckCompatibility;
