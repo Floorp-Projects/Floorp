@@ -49,17 +49,26 @@ add_task(async function test_first_download_panel() {
     "Should have recorded that the panel was opened on a download."
   );
 
-  // Next, make sure that if we start another download, we don't open the
-  // panel automatically.
-  let originalOnPopupShown = DownloadsPanel.onPopupShown;
-  DownloadsPanel.onPopupShown = function() {
-    originalOnPopupShown.apply(this, arguments);
-    ok(false, "Should not have opened the downloads panel.");
-  };
+  // If browser.download.improvements_to_download_panel is enabled, this will fail
+  // because we always open a downloads panel as long as there is no other simulatenous
+  // download. So, first ensure that this pref is already false.
+  if (
+    !SpecialPowers.getBoolPref(
+      "browser.download.improvements_to_download_panel"
+    )
+  ) {
+    // Next, make sure that if we start another download, we don't open the
+    // panel automatically.
+    let originalOnPopupShown = DownloadsPanel.onPopupShown;
+    DownloadsPanel.onPopupShown = function() {
+      originalOnPopupShown.apply(this, arguments);
+      ok(false, "Should not have opened the downloads panel.");
+    };
 
-  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+    DownloadsCommon.getData(window)._notifyDownloadEvent("start");
 
-  // Wait 2 seconds to ensure that the panel does not open.
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  DownloadsPanel.onPopupShown = originalOnPopupShown;
+    // Wait 2 seconds to ensure that the panel does not open.
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    DownloadsPanel.onPopupShown = originalOnPopupShown;
+  }
 });
