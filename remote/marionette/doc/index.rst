@@ -62,7 +62,7 @@ The mailing list for Marionette discussion is
 tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
 
 If you prefer real-time chat, ask your questions
-on `#interop:mozilla.org <https://chat.mozilla.org/#/room/#interop:mozilla.org>`__.
+on `#webdriver:mozilla.org <https://chat.mozilla.org/#/room/#webdriver:mozilla.org>`__.
 
 .. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
 .. _archive: https://lists.mozilla.org/pipermail/tools-marionette/
