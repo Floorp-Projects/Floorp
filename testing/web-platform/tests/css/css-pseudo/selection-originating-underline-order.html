@@ -1,33 +1,22 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>CSS Pseudo-Elements Test: interactions between ::selection and text-decoration</title>
+<!-- see “Selection regression tests” in README.md -->
+<title>CSS Pseudo-Elements Test: originating underlines remain under unselected parts when selecting text</title>
 <link rel="help" href="https://drafts.csswg.org/css-pseudo-4/#highlight-painting">
 <link rel="help" href="https://drafts.csswg.org/css-text-decor-4/#painting">
 <link rel="help" href="https://www.w3.org/TR/CSS22/zindex.html#painting-order">
-<link rel="match" href="selection-decoration-p1-ref.html">
-<meta name="assert" value="originating underlines and overlines are never painted over text, even when some of the text is selected">
+<link rel="match" href="selection-originating-underline-order-ref.html">
+<meta name="assert" value="This test verifies that selecting text does not cause originating underline decorations, which should always paint under text, to paint over unselected parts.">
 <script src="support/selections.js"></script>
 <link rel="stylesheet" href="support/highlights.css">
 <link rel="stylesheet" href="/fonts/ahem.css">
 <style>
-    /*
-        The idea behind this test is that the underline should be
-        completely obscured by both the selected and unselected text.
-
-        Note that the former is not yet actually tested here, because
-        originating decoration recoloring essentially makes it
-        impossible to tell whether the text or underline is on top
-        (this can be fixed by highlighting the unselected text with
-        some other highlight pseudo, so recoloring doesn’t apply).
-
-        Chromium fails in /c/2902289 and passes in /c/2903387.
-    */
     * {
         text-decoration-skip-ink: none;
         text-decoration-skip: none;
     }
     main {
-        font: 7em Ahem;
+        font: 80px/1 Ahem;
         margin: 0.5em;
         width: min-content;
         text-decoration: 0.25em red solid underline;
@@ -36,9 +25,10 @@
     }
     main::selection {
         background: transparent;
+        color: blue;
     }
 </style>
-<p>Test passes if there is no red below.
+<p>Test passes if there is no red below and two squares, entirely blue (left) and entirely black (right).
 <main class="highlight_reftest">XX</main>
 <script>
     const target = document.querySelector("main");
