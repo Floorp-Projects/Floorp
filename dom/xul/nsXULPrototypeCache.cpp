@@ -165,16 +165,6 @@ nsresult nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument) {
   return NS_OK;
 }
 
-mozilla::StyleSheet* nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI) {
-  return mStyleSheetTable.GetWeak(aURI);
-}
-
-nsresult nsXULPrototypeCache::PutStyleSheet(RefPtr<StyleSheet>&& aStyleSheet) {
-  nsIURI* uri = aStyleSheet->GetSheetURI();
-  mStyleSheetTable.InsertOrUpdate(uri, std::move(aStyleSheet));
-  return NS_OK;
-}
-
 JSScript* nsXULPrototypeCache::GetScript(nsIURI* aURI) {
   if (auto* entry = mScriptTable.GetEntry(aURI)) {
     return entry->mScript.get();
@@ -207,7 +197,6 @@ void nsXULPrototypeCache::FlushScripts() { mScriptTable.Clear(); }
 void nsXULPrototypeCache::Flush() {
   mPrototypeTable.Clear();
   mScriptTable.Clear();
-  mStyleSheetTable.Clear();
 }
 
 bool nsXULPrototypeCache::IsEnabled() { return !gDisableXULCache; }
@@ -506,14 +495,6 @@ void nsXULPrototypeCache::CollectMemoryReports(
 
   other += sInstance->mPrototypeTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content in mPrototypeTable?
-
-  other += sInstance->mStyleSheetTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (const auto& stylesheet : sInstance->mStyleSheetTable.Values()) {
-    // NOTE: If Loader::DoSheetComplete() is ever modified to stop clongin
-    // sheets before inserting into this cache, we will need to stop using
-    // SizeOfIncludingThis()
-    other += stylesheet->SizeOfIncludingThis(mallocSizeOf);
-  }
 
   other += sInstance->mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content inside mScriptTable?
