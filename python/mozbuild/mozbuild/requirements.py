@@ -112,11 +112,17 @@ def _parse_mach_env_requirements(
             )
         elif action == "thunderbird-packages.txt":
             if is_thunderbird:
-                _parse_requirements_line(params, is_thunderbird_packages_txt=True)
+                nested_definition_path = os.path.join(topsrcdir, params)
+                assert os.path.isfile(nested_definition_path)
+                _parse_requirements_definition_file(
+                    nested_definition_path, is_thunderbird_packages_txt=True
+                )
         else:
             raise Exception("Unknown requirements definition action: %s" % action)
 
-    def _parse_requirements_definition_file(requirements_path):
+    def _parse_requirements_definition_file(
+        requirements_path, is_thunderbird_packages_txt=False
+    ):
         """Parse requirements file into list of requirements"""
         requirements_output.requirements_paths.append(requirements_path)
 
@@ -124,7 +130,7 @@ def _parse_mach_env_requirements(
             lines = [line for line in requirements_file]
 
         for line in lines:
-            _parse_requirements_line(line)
+            _parse_requirements_line(line, is_thunderbird_packages_txt)
 
     _parse_requirements_definition_file(root_requirements_path)
 
