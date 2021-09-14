@@ -4286,6 +4286,8 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static constexpr char WasmFunctionName[] = "Function";
+
 static JSObject* CreateWasmFunctionConstructor(JSContext* cx, JSProtoKey key) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
@@ -4293,10 +4295,14 @@ static JSObject* CreateWasmFunctionConstructor(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  HandlePropertyName name = cx->names().WasmFunction;
+  RootedAtom className(cx,
+                       Atomize(cx, WasmFunctionName, strlen(WasmFunctionName)));
+  if (!className) {
+    return nullptr;
+  }
   return NewFunctionWithProto(cx, WasmFunctionConstruct, 1,
-                              FunctionFlags::NATIVE_CTOR, nullptr, name, proto,
-                              gc::AllocKind::FUNCTION, TenuredObject);
+                              FunctionFlags::NATIVE_CTOR, nullptr, className,
+                              proto, gc::AllocKind::FUNCTION, TenuredObject);
 }
 
 const JSFunctionSpec WasmFunctionMethods[] = {
