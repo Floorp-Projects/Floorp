@@ -63,7 +63,7 @@ Result<Ok, ICUError> Calendar::SetTimeInMs(double aUnixEpoch) {
 }
 
 /* static */
-Result<SpanEnumeration<char>, InternalError>
+Result<SpanEnumeration<char>, ICUError>
 Calendar::GetLegacyKeywordValuesForLocale(const char* aLocale) {
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = ucal_getKeywordValuesForLocale(
@@ -73,7 +73,7 @@ Calendar::GetLegacyKeywordValuesForLocale(const char* aLocale) {
     return SpanEnumeration<char>(enumeration);
   }
 
-  return Err(InternalError{});
+  return Err(ToICUError(status));
 }
 
 /* static */
@@ -88,7 +88,7 @@ SpanResult<char> Calendar::LegacyIdentifierToBcp47(const char* aIdentifier,
 }
 
 /* static */
-Result<Calendar::Bcp47IdentifierEnumeration, InternalError>
+Result<Calendar::Bcp47IdentifierEnumeration, ICUError>
 Calendar::GetBcp47KeywordValuesForLocale(const char* aLocale) {
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = ucal_getKeywordValuesForLocale(
@@ -98,7 +98,7 @@ Calendar::GetBcp47KeywordValuesForLocale(const char* aLocale) {
     return Bcp47IdentifierEnumeration(enumeration);
   }
 
-  return Err(InternalError{});
+  return Err(ToICUError(status));
 }
 
 Calendar::~Calendar() {
