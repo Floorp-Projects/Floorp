@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Sanity test that we can show allocation stack displays in the tree.
+// Sanity test that we can show allocation stack work when loading a new page
 
 "use strict";
 
@@ -18,10 +18,9 @@ const { changeView } = require("devtools/client/memory/actions/view");
 const TEST_URL =
   "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
+this.test = makeMemoryTest("about:blank", async function({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const { getState, dispatch } = panel.panelWin.gStore;
-  const front = getState().front;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));
@@ -36,9 +35,9 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   await dispatch(toggleRecordingAllocationStacks(panel._commands));
   ok(getState().allocations.recording);
 
-  // Let some allocations build up.
-  await waitForTime(500);
+  await navigateTo(TEST_URL);
 
+  const front = getState().front;
   await dispatch(takeSnapshotAndCensus(front, heapWorker));
 
   const names = [...doc.querySelectorAll(".frame-link-function-display-name")];

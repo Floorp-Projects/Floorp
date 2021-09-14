@@ -31,13 +31,8 @@ window.onload = function() {
 
     await memory.attach();
 
-    e = null;
-    try {
-      await memory.attach();
-    } catch (ee) {
-      e = ee;
-    }
-    ok(e, "Should have hit the wrongState error");
+    await memory.attach();
+    ok(true, "We can call attach many times, the duplicates will be ignored");
 
     await memory.detach();
     destroyServerAndFinish(target);
