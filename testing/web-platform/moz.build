@@ -113,9 +113,6 @@ with Files("tests/IndexedDB/**"):
 with Files("tests/WebCryptoAPI/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
-with Files("tests/WebIDL/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
 with Files("tests/xhr/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
