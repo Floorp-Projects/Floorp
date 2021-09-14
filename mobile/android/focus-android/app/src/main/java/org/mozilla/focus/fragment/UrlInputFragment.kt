@@ -250,6 +250,8 @@ class UrlInputFragment :
 
     @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        browserToolbar.private = true
+
         toolbarIntegration.set(
             InputToolbarIntegration(
                 browserToolbar,
