@@ -358,6 +358,9 @@ void SharedStyleSheetCache::LoadCompletedInternal(
     data->mSheetCompleteCalled = true;
 #endif
 
+    // We no longer need this around.
+    data->mRequestingNodeBeforeComplete = nullptr;
+
     if (!data->mSheetAlreadyComplete) {
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet
@@ -389,7 +392,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
           // insert them into the tree.
           return false;
         }
-        if (data->mOwningNode != data->mSheet->GetOwnerNode()) {
+        if (data->mOwningNodeBeforeLoadEvent != data->mSheet->GetOwnerNode()) {
           // The sheet was already removed from the tree and is no longer the
           // current sheet of the owning node, we can bail.
           return false;
@@ -398,7 +401,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
       }();
 
       if (needInsertIntoTree) {
-        data->mLoader->InsertSheetInTree(*data->mSheet, data->mOwningNode);
+        data->mLoader->InsertSheetInTree(*data->mSheet);
       }
       data->mSheet->SetComplete();
       data->ScheduleLoadEventIfNeeded();
