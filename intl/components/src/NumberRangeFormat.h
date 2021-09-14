@@ -8,7 +8,6 @@
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdint.h>
