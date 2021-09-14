@@ -340,16 +340,13 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequestSent() {
 void HttpChannelChild::ProcessOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
-    const HttpChannelOnStartRequestArgs& aArgs,
-    const HttpChannelAltDataStream& aAltData) {
+    const HttpChannelOnStartRequestArgs& aArgs) {
   LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
 #ifdef NIGHTLY_BUILD
   TimeStamp start = TimeStamp::Now();
 #endif
-
-  mAltDataInputStream = DeserializeIPCStream(aAltData.altDataInputStream());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
@@ -2430,9 +2427,9 @@ HttpChannelChild::GetPreferCacheLoadOverBypass(
 }
 
 NS_IMETHODIMP
-HttpChannelChild::PreferAlternativeDataType(
-    const nsACString& aType, const nsACString& aContentType,
-    PreferredAlternativeDataDeliveryType aDeliverAltData) {
+HttpChannelChild::PreferAlternativeDataType(const nsACString& aType,
+                                            const nsACString& aContentType,
+                                            bool aDeliverAltData) {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   mPreferredCachedAltDataTypes.AppendElement(PreferredAlternativeDataTypeParams(
@@ -2503,11 +2500,18 @@ HttpChannelChild::GetOriginalInputStream(nsIInputStreamReceiver* aReceiver) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetAlternativeDataInputStream(nsIInputStream** aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
+HttpChannelChild::GetAltDataInputStream(const nsACString& aType,
+                                        nsIInputStreamReceiver* aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIInputStream> is = mAltDataInputStream;
-  is.forget(aInputStream);
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mAltDataInputStreamReceiver = aReceiver;
+  Unused << SendOpenAltDataCacheInputStream(nsCString(aType));
 
   return NS_OK;
 }
@@ -2517,6 +2521,18 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOriginalCacheInputStreamAvailable(
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
   nsCOMPtr<nsIInputStreamReceiver> receiver;
   receiver.swap(mOriginalInputStreamReceiver);
+  if (receiver) {
+    receiver->OnInputStreamReady(stream);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult HttpChannelChild::RecvAltDataCacheInputStreamAvailable(
+    const Maybe<IPCStream>& aStream) {
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
+  nsCOMPtr<nsIInputStreamReceiver> receiver;
+  receiver.swap(mAltDataInputStreamReceiver);
   if (receiver) {
     receiver->OnInputStreamReady(stream);
   }

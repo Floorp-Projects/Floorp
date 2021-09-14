@@ -101,23 +101,6 @@ interface nsICacheInfoChannel : nsISupports
    */
   attribute boolean preferCacheLoadOverBypass;
 
-  cenum PreferredAlternativeDataDeliveryType : 8 {
-    /**
-     * Do not deliver alternative data stream.
-     */
-    NONE = 0,
-
-    /**
-     * Deliver alternative data stream upon additional request.
-     */
-    ASYNC = 1,
-
-    /**
-     * Deliver alternative data stream during IPC parent/child serialization.
-     */
-    SERIALIZE = 2,
-  };
-
   /**
    * Calling this method instructs the channel to serve the alternative data
    * if that was previously saved in the cache, otherwise it will serve the
@@ -136,7 +119,7 @@ interface nsICacheInfoChannel : nsISupports
    * Must be called before AsyncOpen.
    */
   void preferAlternativeDataType(in ACString type, in ACString contentType,
-                                 in nsICacheInfoChannel_PreferredAlternativeDataDeliveryType deliverAltData);
+                                 in boolean deliverAltData);
 
   /**
    * Get the preferred alternative data type set by preferAlternativeDataType().
@@ -157,10 +140,11 @@ interface nsICacheInfoChannel : nsISupports
 
   /**
    * If preferAlternativeDataType() has been called passing deliverAltData
-   * equal to false, this attribute will expose the alt-data inputStream if
-   * avaiable.
+   * equal to false, this method will expose the alt-data inputStream if
+   * aviable.
    */
-  readonly attribute nsIInputStream alternativeDataInputStream;
+  void getAltDataInputStream(in ACString type,
+                             in nsIInputStreamReceiver aReceiver);
 
   /**
    * Sometimes when the channel is delivering alt-data, we may want to somehow
@@ -190,13 +174,3 @@ interface nsICacheInfoChannel : nsISupports
    */
   nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
 };
-
-%{ C++
-namespace mozilla {
-namespace net {
-
-using PreferredAlternativeDataDeliveryTypeIPC = nsICacheInfoChannel::PreferredAlternativeDataDeliveryType;
-
-}
-} // namespace mozilla
-%}
