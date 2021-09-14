@@ -9,7 +9,7 @@ add_task(async function test() {
   }
 
   function checkCurrentState(sizemodeBeforeMinimized) {
-    let state = JSON.parse(ss.getWindowState(win));
+    let state = ss.getWindowState(win);
     let winState = state.windows[0];
     is(
       winState.sizemodeBeforeMinimized,

@@ -2934,12 +2934,12 @@ var SessionStoreInternal = {
 
   getWindowState: function ssi_getWindowState(aWindow) {
     if ("__SSi" in aWindow) {
-      return JSON.stringify(this._getWindowState(aWindow));
+      return Cu.cloneInto(this._getWindowState(aWindow), {});
     }
 
     if (DyingWindowCache.has(aWindow)) {
       let data = DyingWindowCache.get(aWindow);
-      return JSON.stringify({ windows: [data] });
+      return Cu.cloneInto({ windows: [data] }, {});
     }
 
     throw Components.Exception(
