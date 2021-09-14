@@ -262,7 +262,7 @@ class Suggestions {
       UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
       telemetryEventObject = "accept";
     } else if (params.openSettings) {
-      win.openPreferences("search-quickSuggest");
+      win.openPreferences("privacy-locationBar");
       telemetryEventObject = "settings";
     } else if (params.learnMore) {
       win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
