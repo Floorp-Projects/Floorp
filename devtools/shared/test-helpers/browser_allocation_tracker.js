@@ -110,4 +110,43 @@ add_task(async function() {
     1,
     "We now only have the leaked object"
   );
+  TrackedObjects.clear();
+});
+
+add_task(async function() {
+  info("Test start and stop recording without any debug mode");
+  const tracker = allocationTracker({ watchDevToolsGlobals: true });
+  await tracker.startRecordingAllocations();
+  await tracker.stopRecordingAllocations();
+  tracker.stop();
+});
+
+add_task(async function() {
+  info("Test start and stop recording with 'allocations' debug mode");
+  const tracker = allocationTracker({ watchDevToolsGlobals: true });
+  await tracker.startRecordingAllocations("allocations");
+  await tracker.stopRecordingAllocations("allocations");
+  tracker.stop();
+});
+
+add_task(async function() {
+  info("Test start and stop recording with 'leaks' debug mode");
+  const tracker = allocationTracker({ watchDevToolsGlobals: true });
+  await tracker.startRecordingAllocations("leaks");
+  await tracker.stopRecordingAllocations("leaks");
+  tracker.stop();
+});
+
+add_task(async function() {
+  info("Test start and stop recording with tracked objects");
+
+  const leaked = {};
+  TrackedObjects.track(leaked);
+
+  const tracker = allocationTracker({ watchAllGlobals: true });
+  await tracker.startRecordingAllocations();
+  await tracker.stopRecordingAllocations();
+  tracker.stop();
+
+  TrackedObjects.clear();
 });

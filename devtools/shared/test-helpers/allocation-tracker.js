@@ -89,7 +89,12 @@ exports.allocationTracker = function({
         dump("TRACKER NEW GLOBAL: - : " + g.class + "\n");
         return false;
       }
-      const ref = g.unsafeDereference();
+      let ref = g.unsafeDereference();
+      // If we are on a toolbox's iframe, typically each panel's iframe
+      // retrieve the toolbox iframe via window.top
+      if (g.class == "Window" && ref.top) {
+        ref = ref.top;
+      }
       const location = Cu.getRealmLocation(ref);
       let accept = !!location.match(/devtools/i);
 

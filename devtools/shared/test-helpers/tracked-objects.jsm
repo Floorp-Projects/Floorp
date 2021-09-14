@@ -12,7 +12,7 @@
 // Allocation tracker will then print detailed information
 // about why these objects are still allocated.
 
-var EXPORTED_SYMBOLS = ["track", "getAllNodeIds"];
+var EXPORTED_SYMBOLS = ["track", "getAllNodeIds", "clear"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -46,4 +46,11 @@ function getAllNodeIds() {
       // of a wrapper!
       .map(ChromeUtils.getObjectNodeId)
   );
+}
+
+/**
+ * Used by tests to clear all tracked objects
+ */
+function clear() {
+  objects.length = 0;
 }
