@@ -179,6 +179,10 @@ test_csstext(
   `@scroll-timeline timeline { scroll-offsets: auto, selector(#bar) start 1; }`);
 
 test_csstext(
+  'time-range descriptor',
+  `@scroll-timeline timeline { time-range: 10s; }`);
+
+test_csstext(
   'defaults',
   `@scroll-timeline timeline { source: auto; orientation: auto; scroll-offsets: none; }`);
 
@@ -269,5 +273,22 @@ test_offsets('auto, 100%');
 test_offsets('0%, selector(  #foo)  3  end  ', "0%, selector(#foo) end 3");
 test_offsets('selector(#foo) end 3, selector(#bar)');
 test_offsets('0%, auto, selector(#foo) start, auto, selector(#bar) 12.3');
+
+// CSSScrollTimelineRule.timeRange
+
+function test_scroll_time_range(specified, expected) {
+  test_descriptor('time-range', specified, expected);
+}
+
+test_scroll_time_range('auto');
+test_scroll_time_range(' auto ', 'auto');
+test_scroll_time_range('1s');
+test_scroll_time_range(' 1s ', '1s');
+test_scroll_time_range('1000ms');
+
+test_scroll_time_range('', 'auto');
+test_scroll_time_range('red', 'auto');
+test_scroll_time_range('#fff', 'auto');
+test_scroll_time_range('unset', 'auto');
 
 </script>
