@@ -9,11 +9,11 @@
 
 namespace detail {
 
-/* static */ void ProxyReleaseChooser<true>::ProxyReleaseISupports(
+/* static */ nsresult ProxyReleaseChooser<true>::ProxyReleaseISupports(
     const char* aName, nsIEventTarget* aTarget, nsISupports* aDoomed,
     bool aAlwaysProxy) {
-  ::detail::ProxyRelease<nsISupports>(aName, aTarget, dont_AddRef(aDoomed),
-                                      aAlwaysProxy);
+  return ::detail::ProxyRelease<nsISupports>(
+      aName, aTarget, dont_AddRef(aDoomed), aAlwaysProxy);
 }
 
 }  // namespace detail

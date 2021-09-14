@@ -56,21 +56,21 @@ class ProxyReleaseEvent : public mozilla::CancelableRunnable {
 };
 
 template <typename T>
-void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
-                  already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
+nsresult ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                      already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
   // Auto-managing release of the pointer.
   RefPtr<T> doomed = aDoomed;
   nsresult rv;
 
   if (!doomed || !aTarget) {
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (!aAlwaysProxy) {
     bool onCurrentThread = false;
     rv = aTarget->IsOnCurrentThread(&onCurrentThread);
     if (NS_SUCCEEDED(rv) && onCurrentThread) {
-      return;
+      return NS_OK;
     }
   }
 
@@ -82,14 +82,16 @@ void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
     // It is better to leak the aDoomed object than risk crashing as
     // a result of deleting it on the wrong thread.
   }
+  return rv;
 }
 
 template <bool nsISupportsBased>
 struct ProxyReleaseChooser {
   template <typename T>
-  static void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
-                           already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
-    ::detail::ProxyRelease(aName, aTarget, std::move(aDoomed), aAlwaysProxy);
+  static nsresult ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                               already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
+    return ::detail::ProxyRelease(aName, aTarget, std::move(aDoomed),
+                                  aAlwaysProxy);
   }
 };
 
@@ -98,20 +100,24 @@ struct ProxyReleaseChooser<true> {
   // We need an intermediate step for handling classes with ambiguous
   // inheritance to nsISupports.
   template <typename T>
-  static void ProxyRelease(const char* aName, nsIEventTarget* aTarget,
-                           already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
-    ProxyReleaseISupports(aName, aTarget, ToSupports(aDoomed.take()),
-                          aAlwaysProxy);
+  static nsresult ProxyRelease(const char* aName, nsIEventTarget* aTarget,
+                               already_AddRefed<T> aDoomed, bool aAlwaysProxy) {
+    return ProxyReleaseISupports(aName, aTarget, ToSupports(aDoomed.take()),
+                                 aAlwaysProxy);
   }
 
-  static void ProxyReleaseISupports(const char* aName, nsIEventTarget* aTarget,
-                                    nsISupports* aDoomed, bool aAlwaysProxy);
+  static nsresult ProxyReleaseISupports(const char* aName,
+                                        nsIEventTarget* aTarget,
+                                        nsISupports* aDoomed,
+                                        bool aAlwaysProxy);
 };
 
 }  // namespace detail
 
 /**
  * Ensures that the delete of a smart pointer occurs on the target thread.
+ * Note: The doomed object will be leaked if dispatch to the target thread
+ * fails, as releasing it on the current thread may be unsafe
  *
  * @param aName
  *        the labelling name of the runnable involved in the releasing.
@@ -124,12 +130,17 @@ struct ProxyReleaseChooser<true> {
  *        doomed object will be released directly. However, if this parameter is
  *        true, then an event will always be posted to the target thread for
  *        asynchronous release.
+ * @return result of the task which is dispatched to delete the smart pointer
+ *        on the target thread.
+ *        Note: The caller should not attempt to recover from an
+ *        error code returned by trying to perform the final ->Release()
+ *        manually.
  */
 template <class T>
-inline NS_HIDDEN_(void)
+inline NS_HIDDEN_(nsresult)
     NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
                     already_AddRefed<T> aDoomed, bool aAlwaysProxy = false) {
-  ::detail::ProxyReleaseChooser<
+  return ::detail::ProxyReleaseChooser<
       std::is_base_of<nsISupports, T>::value>::ProxyRelease(aName, aTarget,
                                                             std::move(aDoomed),
                                                             aAlwaysProxy);
