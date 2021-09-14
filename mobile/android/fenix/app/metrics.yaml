@@ -7010,7 +7010,7 @@ recent_tabs:
   in_progress_media_tab_opened:
     type: event
     description: |
-      User has opened a recent tab from homescreen.
+      User has opened a recent media tab from homescreen.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/20393
     data_reviews:
