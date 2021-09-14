@@ -23,7 +23,10 @@ add_task(async function setup() {
   ok(gTestTargetFile.exists(), "We created a test file.");
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.useDownloadDir", false]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.useDownloadDir", false],
+    ],
   });
   // Set up the file picker.
   let destDir = gTestTargetFile.parent;
@@ -31,6 +34,7 @@ add_task(async function setup() {
   MockFilePicker.displayDirectory = destDir;
   MockFilePicker.showCallback = function(fp) {
     MockFilePicker.setFiles([gTestTargetFile]);
+    return MockFilePicker.returnOK;
   };
   registerCleanupFunction(function() {
     MockFilePicker.cleanup();
@@ -57,18 +61,26 @@ add_task(async function test_overwrite_does_not_delete_first() {
   });
 
   let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+
   // Now try and download a thing to the file:
   await BrowserTestUtils.withNewTab(TEST_ROOT + "foo.txt", async function() {
-    let dialog = await dialogPromise;
-    info("Got dialog.");
-    let saveEl = dialog.document.getElementById("save");
-    dialog.document.getElementById("mode").selectedItem = saveEl;
-    // Allow accepting the dialog (to avoid the delay helper):
-    dialog.document
-      .getElementById("unknownContentType")
-      .getButton("accept").disabled = false;
-    // Then accept it:
-    dialog.document.querySelector("dialog").acceptDialog();
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      )
+    ) {
+      let dialog = await dialogPromise;
+      info("Got dialog.");
+      let saveEl = dialog.document.getElementById("save");
+      dialog.document.getElementById("mode").selectedItem = saveEl;
+      // Allow accepting the dialog (to avoid the delay helper):
+      dialog.document
+        .getElementById("unknownContentType")
+        .getButton("accept").disabled = false;
+      // Then accept it:
+      dialog.document.querySelector("dialog").acceptDialog();
+    }
+
     ok(await transferCompletePromise, "download should succeed");
     ok(
       gTestTargetFile.exists(),
@@ -87,32 +99,39 @@ add_task(async function test_overwrite_does_not_delete_first() {
 add_task(async function test_overwrite_works() {
   let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
+  // First ensure we catch the download finishing.
+  let downloadFinishedPromise = new Promise(resolve => {
+    publicDownloads.addView({
+      onDownloadChanged(download) {
+        info("Download changed!");
+        if (download.succeeded || download.error) {
+          info("Download succeeded or errored");
+          publicDownloads.removeView(this);
+          publicDownloads.removeFinished();
+          resolve(download);
+        }
+      },
+    });
+  });
   // Now try and download a thing to the file:
   await BrowserTestUtils.withNewTab(TEST_ROOT + "foo.txt", async function() {
-    let dialog = await dialogPromise;
-    info("Got dialog.");
-    // First ensure we catch the download finishing.
-    let downloadFinishedPromise = new Promise(resolve => {
-      publicDownloads.addView({
-        onDownloadChanged(download) {
-          info("Download changed!");
-          if (download.succeeded || download.error) {
-            info("Download succeeded or errored");
-            publicDownloads.removeView(this);
-            publicDownloads.removeFinished();
-            resolve(download);
-          }
-        },
-      });
-    });
-    let saveEl = dialog.document.getElementById("save");
-    dialog.document.getElementById("mode").selectedItem = saveEl;
-    // Allow accepting the dialog (to avoid the delay helper):
-    dialog.document
-      .getElementById("unknownContentType")
-      .getButton("accept").disabled = false;
-    // Then accept it:
-    dialog.document.querySelector("dialog").acceptDialog();
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      )
+    ) {
+      let dialog = await dialogPromise;
+      info("Got dialog.");
+      let saveEl = dialog.document.getElementById("save");
+      dialog.document.getElementById("mode").selectedItem = saveEl;
+      // Allow accepting the dialog (to avoid the delay helper):
+      dialog.document
+        .getElementById("unknownContentType")
+        .getButton("accept").disabled = false;
+      // Then accept it:
+      dialog.document.querySelector("dialog").acceptDialog();
+    }
+
     info("wait for download to finish");
     let download = await downloadFinishedPromise;
     ok(download.succeeded, "Download should succeed");
