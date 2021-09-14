@@ -10,6 +10,7 @@ add_task(async function() {
     set: [
       ["dom.ipc.processPrelaunch.enabled", false],
       ["dom.ipc.processCount", 10],
+      ["dom.ipc.processCount.webIsolated", 10],
       ["dom.ipc.keepProcessesAlive.web", 10],
     ],
   });
@@ -58,9 +59,8 @@ add_task(async function() {
 
   // Navigate to the same content page from the child side.
   //
-  // We already have a content process for TEST_URL, so we don't create a new
-  // one when Fission is enabled.
-  expectedChildCount += gFissionBrowser ? 0 : 1;
+  // We should create a new content process.
+  expectedChildCount += 1;
   await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
   await SpecialPowers.spawn(tabs[1].linkedBrowser, [TEST_URL], url => {
     content.location.href = url;
@@ -69,14 +69,12 @@ add_task(async function() {
   is(
     ppmm.childCount,
     expectedChildCount,
-    `Navigating away from the preloaded browser (child side, same-origin) should${
-      gFissionBrowser ? " not " : " "
-    }create a new content process.`
+    "Navigating away from the preloaded browser (child side, same-origin) should create a new content process."
   );
 
   // Navigate to a new content page from the child side.
   //
-  // We should create a new content process, with or without Fission.
+  // We should create a new content process.
   expectedChildCount += 1;
   await BrowserTestUtils.switchTab(gBrowser, tabs[2]);
   await ContentTask.spawn(tabs[2].linkedBrowser, TEST_URL_2, url => {

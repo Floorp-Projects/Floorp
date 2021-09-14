@@ -70,11 +70,8 @@ add_task(async function process_switch_in_sidebars_popups() {
 
   is(sidebar.pid, popup.pid, "Sidebar and popup pages from the same process");
 
-  // Before Fission, there's no guarantee that two (independent) pages
-  // from the same domain will end up in the same process.
-  if (Services.appinfo.fissionAutostart) {
-    is(cs1.pid, cs2.pid, "Both example.com CSs from the same process");
-  }
+  // There's no guarantee that two (independent) pages from the same domain will
+  // end up in the same process.
 
   await closeBrowserAction(extension);
   await extension.unload();

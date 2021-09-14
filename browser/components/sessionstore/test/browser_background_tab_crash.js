@@ -141,7 +141,12 @@ function checkTelemetry(expectedCount, desc) {
 add_task(async function setup() {
   // We'll simplify by making sure we only ever one content process for this
   // test.
-  await SpecialPowers.pushPrefEnv({ set: [["dom.ipc.processCount", 1]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.ipc.processCount", 1],
+      ["dom.ipc.processCount.webIsolated", 1],
+    ],
+  });
 
   // On debug builds, crashing tabs results in much thinking, which
   // slows down the test and results in intermittent test timeouts,
