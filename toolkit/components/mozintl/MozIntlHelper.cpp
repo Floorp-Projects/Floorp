@@ -80,3 +80,26 @@ MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+MozIntlHelper::AddDisplayNamesConstructor(JS::Handle<JS::Value> val,
+                                          JSContext* cx) {
+  if (!val.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // We might be adding this constructor to a Window
+  JS::Rooted<JSObject*> realIntlObj(
+      cx, js::CheckedUnwrapDynamic(&val.toObject(), cx));
+  if (!realIntlObj) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  JSAutoRealm ar(cx, realIntlObj);
+
+  if (!JS::AddMozDisplayNamesConstructor(cx, realIntlObj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
