@@ -85,43 +85,31 @@ void CacheIRHealth::spewShapeInformation(AutoStructuredSpewer& spew,
         spew->beginListProperty("shapes");
       }
 
-      if (!shape->propMap()->isDictionary()) {
-        JSString* firstPropertyKey = nullptr;
-        JSString* lastPropertyKey = nullptr;
-        uint32_t totalKeys = 0;
-        for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
-          jsid id = iter->key();
-          JSString* propertyKey = nullptr;
-
-          if (id.isString()) {
-            propertyKey = id.toString();
-          } else {
-            MOZ_ASSERT(id.isSymbol());
-            propertyKey = id.toSymbol()->description();
-          }
-
-          if (!totalKeys) {
-            firstPropertyKey = propertyKey;
-          } else {
-            lastPropertyKey = propertyKey;
-          }
-          totalKeys++;
-        }
-
+      const PropMap* propMap = shape->propMap();
+      if (propMap) {
         spew->beginObject();
         {
-          if (firstPropertyKey) {
-            GenericPrinter& printer =
-                spew->beginStringProperty("firstProperty");
-            firstPropertyKey->dumpCharsNoQuote(printer);
-            spew->endStringProperty();
+          if (!propMap->isDictionary()) {
+            uint32_t mapLength = shape->propMapLength();
+            if (mapLength) {
+              PropertyKey lastKey = shape->lastProperty().key();
+              if (lastKey.isInt()) {
+                spew->property("lastProperty", lastKey.toInt());
+              } else if (lastKey.isString()) {
+                GenericPrinter& printer =
+                    spew->beginStringProperty("lastProperty");
+                lastKey.toString()->dumpCharsNoQuote(printer);
+                spew->endStringProperty();
+              } else {
+                MOZ_ASSERT(lastKey.isSymbol());
+                GenericPrinter& printer =
+                    spew->beginStringProperty("lastProperty");
+                lastKey.toSymbol()->description()->dumpCharsNoQuote(printer);
+                spew->endStringProperty();
+              }
+            }
+            spew->property("totalKeys", propMap->approximateEntryCount());
           }
-          if (totalKeys > 1) {
-            GenericPrinter& printer = spew->beginStringProperty("lastProperty");
-            lastPropertyKey->dumpCharsNoQuote(printer);
-            spew->endStringProperty();
-          }
-          spew->property("totalKeys", totalKeys);
         }
         spew->endObject();
       }
