@@ -189,8 +189,7 @@ bool HttpBackgroundChannelChild::IsWaitingOnStartRequest() {
 IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
-    const HttpChannelOnStartRequestArgs& aArgs,
-    const HttpChannelAltDataStream& aAltData) {
+    const HttpChannelOnStartRequestArgs& aArgs) {
   LOG((
       "HttpBackgroundChannelChild::RecvOnStartRequest [this=%p, status=%" PRIx32
       "]\n",
@@ -205,7 +204,7 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
       aArgs.dataFromSocketProcess() ? ODA_FROM_SOCKET : ODA_FROM_PARENT;
 
   mChannelChild->ProcessOnStartRequest(aResponseHead, aUseResponseHead,
-                                       aRequestHeaders, aArgs, aAltData);
+                                       aRequestHeaders, aArgs);
   // Allow to queue other runnable since OnStartRequest Event already hits the
   // child's mEventQ.
   OnStartRequestReceived(aArgs.multiPartID());

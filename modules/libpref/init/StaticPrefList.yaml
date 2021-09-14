@@ -6026,11 +6026,6 @@
     value: true
     mirror: always
 
-- name: javascript.options.wasm_caching
-  type: bool
-  value: true
-  mirror: always
-
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
 - name: javascript.options.gc_delay
   type: uint32_t
