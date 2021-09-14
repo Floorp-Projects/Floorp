@@ -51,7 +51,7 @@ exports.isDataScheme = isDataScheme;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
-exports.StatTimer = exports.RenderingCancelledException = exports.PDFDateString = exports.PageViewport = exports.LinkTarget = exports.DOMSVGFactory = exports.DOMStandardFontDataFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = void 0;
+exports.StatTimer = exports.RenderingCancelledException = exports.PixelsPerInch = exports.PDFDateString = exports.PageViewport = exports.LinkTarget = exports.DOMSVGFactory = exports.DOMStandardFontDataFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -60,6 +60,11 @@ var _base_factory = __w_pdfjs_require__(5);
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 const SVG_NS = "http://www.w3.org/2000/svg";
+const PixelsPerInch = {
+  CSS: 96.0,
+  PDF: 72.0
+};
+exports.PixelsPerInch = PixelsPerInch;
 
 class DOMCanvasFactory extends _base_factory.BaseCanvasFactory {
   constructor({
@@ -1902,7 +1907,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.11.191',
+    apiVersion: '2.11.243',
     source: {
       data: source.data,
       url: source.url,
@@ -3979,9 +3984,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.11.191';
+const version = '2.11.243';
 exports.version = version;
-const build = 'da15dbf96';
+const build = '7fb653b19';
 exports.build = build;
 
 /***/ }),
@@ -4398,6 +4403,8 @@ exports.CanvasGraphics = void 0;
 var _util = __w_pdfjs_require__(2);
 
 var _pattern_helper = __w_pdfjs_require__(11);
+
+var _display_utils = __w_pdfjs_require__(1);
 
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
@@ -5141,6 +5148,22 @@ function composeSMask(ctx, smask, layerCtx) {
   ctx.drawImage(mask, 0, 0);
 }
 
+function getImageSmoothingEnabled(transform, interpolate) {
+  const scale = _util.Util.singularValueDecompose2dScale(transform);
+
+  scale[0] = Math.fround(scale[0]);
+  scale[1] = Math.fround(scale[1]);
+  const actualScale = Math.fround((globalThis.devicePixelRatio || 1) * _display_utils.PixelsPerInch.CSS / _display_utils.PixelsPerInch.PDF);
+
+  if (interpolate !== undefined) {
+    return interpolate;
+  } else if (scale[0] <= actualScale || scale[1] <= actualScale) {
+    return true;
+  }
+
+  return false;
+}
+
 const LINE_CAP_STYLES = ["butt", "round", "square"];
 const LINE_JOIN_STYLES = ["miter", "round", "bevel"];
 const NORMAL_CLIP = {};
@@ -5372,6 +5395,7 @@ class CanvasGraphics {
 
     const scaled = this._scaleImage(maskCanvas.canvas, fillCtx.mozCurrentTransformInverse);
 
+    fillCtx.imageSmoothingEnabled = getImageSmoothingEnabled(fillCtx.mozCurrentTransform, img.interpolate);
     fillCtx.drawImage(scaled.img, 0, 0, scaled.img.width, scaled.img.height, 0, 0, width, height);
     fillCtx.globalCompositeOperation = "source-in";
 
@@ -6442,12 +6466,7 @@ class CanvasGraphics {
     this.groupLevel--;
     const groupCtx = this.ctx;
     this.ctx = this.groupStack.pop();
-
-    if (this.ctx.imageSmoothingEnabled !== undefined) {
-      this.ctx.imageSmoothingEnabled = false;
-    } else {
-      this.ctx.mozImageSmoothingEnabled = false;
-    }
+    this.ctx.imageSmoothingEnabled = false;
 
     if (group.smask) {
       this.tempSMask = this.smaskStack.pop();
@@ -6648,6 +6667,7 @@ class CanvasGraphics {
 
     const scaled = this._scaleImage(imgToPaint, ctx.mozCurrentTransformInverse);
 
+    ctx.imageSmoothingEnabled = getImageSmoothingEnabled(ctx.mozCurrentTransform, imgData.interpolate);
     ctx.drawImage(scaled.img, 0, 0, scaled.paintWidth, scaled.paintHeight, 0, -height, width, height);
 
     if (this.imageLayer) {
@@ -7748,7 +7768,7 @@ class MessageHandler {
         this.streamSinks[streamId].desiredSize = data.desiredSize;
         const {
           onPull
-        } = this.streamSinks[data.streamId];
+        } = this.streamSinks[streamId];
         new Promise(function (resolve) {
           resolve(onPull && onPull());
         }).then(function () {
@@ -7820,7 +7840,7 @@ class MessageHandler {
 
         const {
           onCancel
-        } = this.streamSinks[data.streamId];
+        } = this.streamSinks[streamId];
         new Promise(function (resolve) {
           resolve(onCancel && onCancel(wrapReason(data.reason)));
         }).then(function () {
@@ -8020,6 +8040,10 @@ class OptionalContentConfig {
   }
 
   isVisible(group) {
+    if (this._groups.size === 0) {
+      return true;
+    }
+
     if (!group) {
       (0, _util.warn)("Optional content group not defined.");
       return true;
@@ -10522,7 +10546,7 @@ function getAscent(fontFamily, ctx) {
 
 function appendText(task, geom, styles, ctx) {
   const textDiv = document.createElement("span");
-  const textDivProperties = {
+  const textDivProperties = task._enhanceTextSelection ? {
     angle: 0,
     canvasWidth: 0,
     hasText: geom.str !== "",
@@ -10533,6 +10557,11 @@ function appendText(task, geom, styles, ctx) {
     paddingRight: 0,
     paddingTop: 0,
     scale: 1
+  } : {
+    angle: 0,
+    canvasWidth: 0,
+    hasText: geom.str !== "",
+    hasEOL: geom.hasEOL
   };
 
   task._textDivs.push(textDiv);
@@ -10961,6 +10990,10 @@ class TextLayerRenderTask {
     this._bounds = [];
 
     this._capability.promise.finally(() => {
+      if (!this._enhanceTextSelection) {
+        this._textDivProperties = null;
+      }
+
       if (this._layoutTextCtx) {
         this._layoutTextCtx.canvas.width = 0;
         this._layoutTextCtx.canvas.height = 0;
@@ -11039,8 +11072,13 @@ class TextLayerRenderTask {
       } = this._layoutTextCtx.measureText(textDiv.textContent);
 
       if (width > 0) {
-        textDivProperties.scale = textDivProperties.canvasWidth / width;
-        transform = `scaleX(${textDivProperties.scale})`;
+        const scale = textDivProperties.canvasWidth / width;
+
+        if (this._enhanceTextSelection) {
+          textDivProperties.scale = scale;
+        }
+
+        transform = `scaleX(${scale})`;
       }
     }
 
@@ -11278,6 +11316,8 @@ class XfaLayer {
         if (element.attributes.type === "radio" || element.attributes.type === "checkbox") {
           if (storedData.value === element.attributes.xfaOn) {
             html.setAttribute("checked", true);
+          } else if (storedData.value === element.attributes.xfaOff) {
+            html.removeAttribute("checked");
           }
 
           if (intent === "print") {
@@ -11533,6 +11573,12 @@ Object.defineProperty(exports, "PDFDateString", ({
     return _display_utils.PDFDateString;
   }
 }));
+Object.defineProperty(exports, "PixelsPerInch", ({
+  enumerable: true,
+  get: function () {
+    return _display_utils.PixelsPerInch;
+  }
+}));
 Object.defineProperty(exports, "RenderingCancelledException", ({
   enumerable: true,
   get: function () {
@@ -11720,8 +11766,8 @@ var _svg = __w_pdfjs_require__(21);
 
 var _xfa_layer = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.11.191';
-const pdfjsBuild = 'da15dbf96';
+const pdfjsVersion = '2.11.243';
+const pdfjsBuild = '7fb653b19';
 ;
 })();
 
