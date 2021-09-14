@@ -1,2 +1,0 @@
-Content-Security-Policy: frame-ancestors http://mochi.test:8888
-Cache-Control: no-cache
