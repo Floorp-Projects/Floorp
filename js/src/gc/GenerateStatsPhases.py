@@ -100,7 +100,6 @@ PhaseKindGraphRoots = [
                     addPhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
                     addPhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
                     addPhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
-                    addPhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
                 ],
             )
         ],
@@ -207,6 +206,7 @@ PhaseKindGraphRoots = [
             addPhaseKind("FINALIZE_END", "Finalize End Callback", 38),
             addPhaseKind("DESTROY", "Deallocate", 39),
             getPhaseKind("JOIN_PARALLEL_TASKS"),
+            addPhaseKind("FIND_DEAD_COMPARTMENTS", "Find Dead Compartments", 54),
         ],
     ),
     addPhaseKind(

@@ -282,6 +282,7 @@ class JS::Compartment {
     // the compartment, not the realm, because same-compartment realms can
     // have cross-realm pointers without wrappers.
     bool scheduledForDestruction = false;
+    bool hasMarkedCells = false;
     bool maybeAlive = true;
 
     // During GC, we may set this to |true| if we entered a realm in this
@@ -433,22 +434,22 @@ class JS::Compartment {
 
 namespace js {
 
-// We only set the maybeAlive flag for objects and scripts. It's assumed that,
-// if a compartment is alive, then it will have at least some live object or
-// script it in. Even if we get this wrong, the worst that will happen is that
-// scheduledForDestruction will be set on the compartment, which will cause
+// We only set the hasMarkedCells flag for objects and scripts. It's assumed
+// that, if a compartment is alive, then it will have at least some live object
+// or script it in. Even if we get this wrong, the worst that will happen is
+// that scheduledForDestruction will be set on the compartment, which will cause
 // some extra GC activity to try to free the compartment.
 template <typename T>
-inline void SetMaybeAliveFlag(T* thing) {}
+inline void SetCompartmentHasMarkedCells(T* thing) {}
 
 template <>
-inline void SetMaybeAliveFlag(JSObject* thing) {
-  thing->compartment()->gcState.maybeAlive = true;
+inline void SetCompartmentHasMarkedCells(JSObject* thing) {
+  thing->compartment()->gcState.hasMarkedCells = true;
 }
 
 template <>
-inline void SetMaybeAliveFlag(JSScript* thing) {
-  thing->compartment()->gcState.maybeAlive = true;
+inline void SetCompartmentHasMarkedCells(JSScript* thing) {
+  thing->compartment()->gcState.hasMarkedCells = true;
 }
 
 /*
