@@ -3095,29 +3095,49 @@ static size_t CountCompartments(JSContext* cx) {
 // For example, trigger OOM at every allocation point and test that the function
 // either recovers and succeeds or raises an exception and fails.
 
-struct MOZ_STACK_CLASS IterativeFailureTestParams {
-  explicit IterativeFailureTestParams(JSContext* cx) : testFunction(cx) {}
+class MOZ_STACK_CLASS IterativeFailureTest {
+ public:
+  struct MOZ_STACK_CLASS Params {
+    explicit Params(JSContext* cx) : testFunction(cx) {}
 
-  RootedFunction testFunction;
-  unsigned threadStart = 0;
-  unsigned threadEnd = 0;
-  bool expectExceptionOnFailure = true;
-  bool keepFailing = false;
-  bool verbose = false;
+    RootedFunction testFunction;
+    unsigned threadStart = 0;
+    unsigned threadEnd = 0;
+    bool expectExceptionOnFailure = true;
+    bool keepFailing = false;
+    bool verbose = false;
+  };
+
+  struct FailureSimulator {
+    virtual void setup(JSContext* cx) {}
+    virtual void teardown(JSContext* cx) {}
+    virtual void startSimulating(JSContext* cx, unsigned iteration,
+                                 unsigned thread, bool keepFailing) = 0;
+    virtual bool stopSimulating() = 0;
+    virtual void cleanup(JSContext* cx) {}
+  };
+
+  IterativeFailureTest(JSContext* cx, const Params& params,
+                       FailureSimulator& simulator);
+  bool test();
+
+ private:
+  JSContext* const cx;
+  const Params& params;
+  FailureSimulator& simulator;
 };
 
-struct IterativeFailureSimulator {
-  virtual void setup(JSContext* cx) {}
-  virtual void teardown(JSContext* cx) {}
-  virtual void startSimulating(JSContext* cx, unsigned iteration,
-                               unsigned thread, bool keepFailing) = 0;
-  virtual bool stopSimulating() = 0;
-  virtual void cleanup(JSContext* cx) {}
-};
+bool RunIterativeFailureTest(
+    JSContext* cx, const IterativeFailureTest::Params& params,
+    IterativeFailureTest::FailureSimulator& simulator) {
+  return IterativeFailureTest(cx, params, simulator).test();
+}
 
-bool RunIterativeFailureTest(JSContext* cx,
-                             const IterativeFailureTestParams& params,
-                             IterativeFailureSimulator& simulator) {
+IterativeFailureTest::IterativeFailureTest(JSContext* cx, const Params& params,
+                                           FailureSimulator& simulator)
+    : cx(cx), params(params), simulator(simulator) {}
+
+bool IterativeFailureTest::test() {
   if (disableOOMFunctions) {
     return true;
   }
@@ -3250,7 +3270,7 @@ bool RunIterativeFailureTest(JSContext* cx,
 }
 
 bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
-                                     IterativeFailureTestParams* params) {
+                                     IterativeFailureTest::Params* params) {
   MOZ_ASSERT(params);
 
   if (args.length() < 1 || args.length() > 2) {
@@ -3320,7 +3340,7 @@ bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
   return true;
 }
 
-struct OOMSimulator : public IterativeFailureSimulator {
+struct OOMSimulator : public IterativeFailureTest::FailureSimulator {
   void setup(JSContext* cx) override { cx->runtime()->hadOutOfMemory = false; }
 
   void startSimulating(JSContext* cx, unsigned i, unsigned thread,
@@ -3344,7 +3364,7 @@ struct OOMSimulator : public IterativeFailureSimulator {
 static bool OOMTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTestParams params(cx);
+  IterativeFailureTest::Params params(cx);
   if (!ParseIterativeFailureTestParams(cx, args, &params)) {
     return false;
   }
@@ -3358,7 +3378,7 @@ static bool OOMTest(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-struct StackOOMSimulator : public IterativeFailureSimulator {
+struct StackOOMSimulator : public IterativeFailureTest::FailureSimulator {
   void startSimulating(JSContext* cx, unsigned i, unsigned thread,
                        bool keepFailing) override {
     js::oom::simulator.simulateFailureAfter(
@@ -3375,7 +3395,7 @@ struct StackOOMSimulator : public IterativeFailureSimulator {
 static bool StackTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTestParams params(cx);
+  IterativeFailureTest::Params params(cx);
   if (!ParseIterativeFailureTestParams(cx, args, &params)) {
     return false;
   }
@@ -3389,7 +3409,8 @@ static bool StackTest(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-struct FailingIterruptSimulator : public IterativeFailureSimulator {
+struct FailingIterruptSimulator
+    : public IterativeFailureTest::FailureSimulator {
   JSInterruptCallback* prevEnd = nullptr;
 
   static bool failingInterruptCallback(JSContext* cx) { return false; }
@@ -3419,7 +3440,7 @@ struct FailingIterruptSimulator : public IterativeFailureSimulator {
 static bool InterruptTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTestParams params(cx);
+  IterativeFailureTest::Params params(cx);
   if (!ParseIterativeFailureTestParams(cx, args, &params)) {
     return false;
   }
