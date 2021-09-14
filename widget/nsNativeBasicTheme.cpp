@@ -317,11 +317,25 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   return scrollbarWidth == StyleScrollbarWidth::Thin;
 }
 
+// TODO: Like for the ColorScheme, this should probably look at the document,
+// like LookAndFeel does, but:
+//
+//  * We only draw with system colors when forcing colors, and we don't use
+//    standins for nnt by default.
+//  * We only expect non-native-themed buttons on content.
+//  * The colors we look up should always be CSS-accessible.
+//
+// So this should do the right thing for now with regards to the standins pref,
+// which is all we need for tests and should be good enough.
+static LookAndFeel::UseStandins ShouldUseStandins() {
+  return LookAndFeel::UseStandins(nsContentUtils::UseStandinsForNativeColors());
+}
+
 static nscolor SystemNsColor(StyleSystemColor aColor) {
   // TODO(emilio): We could not hardcode light appearance here with a bit of
   // work, but doesn't matter for now.
   return LookAndFeel::Color(aColor, LookAndFeel::ColorScheme::Light,
-                            LookAndFeel::UseStandins::No);
+                            ShouldUseStandins());
 }
 
 static sRGBColor SystemColor(StyleSystemColor aColor) {
@@ -332,7 +346,7 @@ template <typename Compute>
 static sRGBColor SystemColorOrElse(StyleSystemColor aColor, Compute aCompute) {
   if (auto color =
           LookAndFeel::GetColor(aColor, LookAndFeel::ColorScheme::Light,
-                                LookAndFeel::UseStandins::No)) {
+                                ShouldUseStandins())) {
     return sRGBColor::FromABGR(*color);
   }
   return aCompute();
