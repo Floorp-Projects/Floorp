@@ -200,6 +200,12 @@ async function testLoadAndRedirect(
 }
 
 add_task(async function test_enabled() {
+  // Force only one webIsolated content process to ensure same-origin loads
+  // always end in the same process.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount.webIsolated", 1]],
+  });
+
   // URIs should correctly switch processes & the POST
   // should succeed.
   info("ENABLED -- FILE -- raw URI load");
