@@ -3096,8 +3096,7 @@ static size_t CountCompartments(JSContext* cx) {
 // either recovers and succeeds or raises an exception and fails.
 
 class MOZ_STACK_CLASS IterativeFailureTest {
- public:
-  struct MOZ_STACK_CLASS Params {
+  struct Params {
     explicit Params(JSContext* cx) : testFunction(cx) {}
 
     RootedFunction testFunction;
@@ -3108,6 +3107,7 @@ class MOZ_STACK_CLASS IterativeFailureTest {
     bool verbose = false;
   };
 
+ public:
   struct FailureSimulator {
     virtual void setup(JSContext* cx) {}
     virtual void teardown(JSContext* cx) {}
@@ -3117,8 +3117,8 @@ class MOZ_STACK_CLASS IterativeFailureTest {
     virtual void cleanup(JSContext* cx) {}
   };
 
-  IterativeFailureTest(JSContext* cx, const Params& params,
-                       FailureSimulator& simulator);
+  IterativeFailureTest(JSContext* cx, FailureSimulator& simulator);
+  bool initParams(const CallArgs& args);
   bool test();
 
  private:
@@ -3130,20 +3130,21 @@ class MOZ_STACK_CLASS IterativeFailureTest {
   void teardown();
 
   JSContext* const cx;
-  const Params& params;
+  Params params;
   FailureSimulator& simulator;
   size_t compartmentCount;
 };
 
 bool RunIterativeFailureTest(
-    JSContext* cx, const IterativeFailureTest::Params& params,
+    JSContext* cx, const CallArgs& args,
     IterativeFailureTest::FailureSimulator& simulator) {
-  return IterativeFailureTest(cx, params, simulator).test();
+  IterativeFailureTest test(cx, simulator);
+  return test.initParams(args) && test.test();
 }
 
-IterativeFailureTest::IterativeFailureTest(JSContext* cx, const Params& params,
+IterativeFailureTest::IterativeFailureTest(JSContext* cx,
                                            FailureSimulator& simulator)
-    : cx(cx), params(params), simulator(simulator) {}
+    : cx(cx), params(cx), simulator(simulator) {}
 
 bool IterativeFailureTest::test() {
   if (disableOOMFunctions) {
@@ -3312,10 +3313,7 @@ void IterativeFailureTest::teardown() {
   cx->runningOOMTest = false;
 }
 
-bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
-                                     IterativeFailureTest::Params* params) {
-  MOZ_ASSERT(params);
-
+bool IterativeFailureTest::initParams(const CallArgs& args) {
   if (args.length() < 1 || args.length() > 2) {
     JS_ReportErrorASCII(cx, "function takes between 1 and 2 arguments.");
     return false;
@@ -3325,11 +3323,11 @@ bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
     JS_ReportErrorASCII(cx, "The first argument must be the function to test.");
     return false;
   }
-  params->testFunction = &args[0].toObject().as<JSFunction>();
+  params.testFunction = &args[0].toObject().as<JSFunction>();
 
   if (args.length() == 2) {
     if (args[1].isBoolean()) {
-      params->expectExceptionOnFailure = args[1].toBoolean();
+      params.expectExceptionOnFailure = args[1].toBoolean();
     } else if (args[1].isObject()) {
       RootedObject options(cx, &args[1].toObject());
       RootedValue value(cx);
@@ -3338,14 +3336,14 @@ bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
         return false;
       }
       if (!value.isUndefined()) {
-        params->expectExceptionOnFailure = ToBoolean(value);
+        params.expectExceptionOnFailure = ToBoolean(value);
       }
 
       if (!JS_GetProperty(cx, options, "keepFailing", &value)) {
         return false;
       }
       if (!value.isUndefined()) {
-        params->keepFailing = ToBoolean(value);
+        params.keepFailing = ToBoolean(value);
       }
     } else {
       JS_ReportErrorASCII(
@@ -3357,12 +3355,12 @@ bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
   // There are some places where we do fail without raising an exception, so
   // we can't expose this to the fuzzers by default.
   if (fuzzingSafe) {
-    params->expectExceptionOnFailure = false;
+    params.expectExceptionOnFailure = false;
   }
 
   // Test all threads by default except worker threads.
-  params->threadStart = oom::FirstThreadTypeToTest;
-  params->threadEnd = oom::LastThreadTypeToTest;
+  params.threadStart = oom::FirstThreadTypeToTest;
+  params.threadEnd = oom::LastThreadTypeToTest;
 
   // Test a single thread type if specified by the OOM_THREAD environment
   // variable.
@@ -3374,11 +3372,11 @@ bool ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
       return false;
     }
 
-    params->threadStart = threadOption;
-    params->threadEnd = threadOption;
+    params.threadStart = threadOption;
+    params.threadEnd = threadOption;
   }
 
-  params->verbose = EnvVarIsDefined("OOM_VERBOSE");
+  params.verbose = EnvVarIsDefined("OOM_VERBOSE");
 
   return true;
 }
@@ -3407,13 +3405,8 @@ struct OOMSimulator : public IterativeFailureTest::FailureSimulator {
 static bool OOMTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTest::Params params(cx);
-  if (!ParseIterativeFailureTestParams(cx, args, &params)) {
-    return false;
-  }
-
   OOMSimulator simulator;
-  if (!RunIterativeFailureTest(cx, params, simulator)) {
+  if (!RunIterativeFailureTest(cx, args, simulator)) {
     return false;
   }
 
@@ -3438,13 +3431,8 @@ struct StackOOMSimulator : public IterativeFailureTest::FailureSimulator {
 static bool StackTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTest::Params params(cx);
-  if (!ParseIterativeFailureTestParams(cx, args, &params)) {
-    return false;
-  }
-
   StackOOMSimulator simulator;
-  if (!RunIterativeFailureTest(cx, params, simulator)) {
+  if (!RunIterativeFailureTest(cx, args, simulator)) {
     return false;
   }
 
@@ -3483,13 +3471,8 @@ struct FailingIterruptSimulator
 static bool InterruptTest(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  IterativeFailureTest::Params params(cx);
-  if (!ParseIterativeFailureTestParams(cx, args, &params)) {
-    return false;
-  }
-
   FailingIterruptSimulator simulator;
-  if (!RunIterativeFailureTest(cx, params, simulator)) {
+  if (!RunIterativeFailureTest(cx, args, simulator)) {
     return false;
   }
 
