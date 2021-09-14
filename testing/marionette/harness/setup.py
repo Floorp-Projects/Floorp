@@ -45,7 +45,7 @@ setup(
     ],
     keywords="mozilla",
     author="Auto-tools",
-    author_email="tools-marionette@lists.mozilla.org",
+    author_email="dev-webdriver@mozilla.org",
     url="https://wiki.mozilla.org/Auto-tools/Projects/Marionette",
     license="Mozilla Public License 2.0 (MPL 2.0)",
     packages=find_packages(),
