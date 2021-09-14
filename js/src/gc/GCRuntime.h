@@ -726,7 +726,6 @@ class GCRuntime {
   [[nodiscard]] bool beginPreparePhase(JS::GCReason reason,
                                        AutoGCSession& session);
   bool prepareZonesForCollection(JS::GCReason reason, bool* isFullOut);
-  void bufferGrayRoots();
   void unmarkWeakMaps();
   void endPreparePhase(JS::GCReason reason);
   void beginMarkPhase(AutoGCSession& session);
@@ -748,27 +747,6 @@ class GCRuntime {
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
   void findDeadCompartments();
-
-  // Gray marking must be done after all black marking is complete. However,
-  // we do not have write barriers on XPConnect roots. Therefore, XPConnect
-  // roots must be accumulated in the first slice of incremental GC. We
-  // accumulate these roots in each zone's gcGrayRoots vector and then mark
-  // them later, after black marking is complete for each compartment. This
-  // accumulation can fail, but in that case we switch to non-incremental GC.
-  enum class GrayBufferState { Unused, Okay, Failed };
-
-  bool hasValidGrayRootsBuffer() const {
-    return grayBufferState == GrayBufferState::Okay;
-  }
-
-  // Clear each zone's gray buffers, but do not change the current state.
-  void resetBufferedGrayRoots();
-
-  // Reset the gray buffering state to Unused.
-  void clearBufferedGrayRoots() {
-    grayBufferState = GrayBufferState::Unused;
-    resetBufferedGrayRoots();
-  }
 
   friend class BackgroundMarkTask;
   IncrementalProgress markUntilBudgetExhausted(
@@ -986,8 +964,6 @@ class GCRuntime {
 
   /* During shutdown, the GC needs to clean up every possible object. */
   MainThreadData<bool> cleanUpEverything;
-
-  MainThreadOrGCTaskData<GrayBufferState> grayBufferState;
 
   /*
    * The gray bits can become invalid if UnmarkGray overflows the stack. A

@@ -946,6 +946,14 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
     return;
   }
 
+  // Don't mark gray in zones which we are still marking black, except for the
+  // atoms zone.
+  Zone* zone = thing->asTenured().zone();
+  if (gcmarker->markColor() == MarkColor::Gray &&
+      zone->isGCMarkingBlackOnly() && !zone->isAtomsZone()) {
+    return;
+  }
+
   CheckTracedThing(gcmarker, thing);
   AutoClearTracingSource acts(gcmarker);
   gcmarker->markAndTraverse(thing);
@@ -1175,7 +1183,7 @@ struct TraceKindCanBeGray {};
 #define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1) \
   template <>                                        \
   struct TraceKindCanBeGray<type> {                  \
-    static const bool value = canBeGray;             \
+    static constexpr bool value = canBeGray;         \
   };
 JS_FOR_EACH_TRACEKIND(EXPAND_TRACEKIND_DEF)
 #undef EXPAND_TRACEKIND_DEF
@@ -2715,9 +2723,6 @@ void GCMarker::checkZone(void* p) {
 size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
   size += auxStack.sizeOfExcludingThis(mallocSizeOf);
-  for (ZonesIter zone(runtime(), WithAtoms); !zone.done(); zone.next()) {
-    size += zone->gcGrayRoots().SizeOfExcludingThis(mallocSizeOf);
-  }
   return size;
 }
 

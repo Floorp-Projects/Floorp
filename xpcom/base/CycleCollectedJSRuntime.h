@@ -88,7 +88,7 @@ class IncrementalFinalizeRunnable;
 // SegmentedVector to speed up iteration.
 class JSHolderMap {
  public:
-  enum WhichHolders { AllHolders, HoldersInCollectingZones };
+  enum WhichHolders { AllHolders, HoldersInGrayMarkingZones };
 
   JSHolderMap();
 
