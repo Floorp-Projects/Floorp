@@ -102,7 +102,7 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: url(chrome://global/skin/icons/warning-fill-12.svg) no-repeat center;
-  fill: var(--panel-banner-item-warning-icon-bgcolor);
+  fill: var(--warning-icon-bgcolor);
 }
 
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
