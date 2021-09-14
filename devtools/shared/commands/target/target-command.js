@@ -211,10 +211,10 @@ class TargetCommand extends EventEmitter {
       await this.startListening({ isTargetSwitching: true });
     }
 
+    // These two events are used by tests using the production codepath (i.e. disabling flags.testing)
     // To be consumed by tests triggering frame navigations, spawning workers...
-    this.emitForTests("processed-available-target", targetFront);
+    this.emit("processed-available-target", targetFront);
 
-    // This event is used by tests using the production codepath (i.e. disabling flags.testing)
     if (isTargetSwitching) {
       this.emit("switched-target", targetFront);
     }
