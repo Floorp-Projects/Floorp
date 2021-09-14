@@ -9905,7 +9905,7 @@
 # this pref should be removed at some point in the future.
 - name: network.cache.bug1708673
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 #  This is used for a temporary workaround for a web-compat issue. If pref is
