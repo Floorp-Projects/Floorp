@@ -1262,7 +1262,8 @@ Function WriteInstallationTelemetryData
 
   ; Check for top-level profile directory
   ; Note: This is the same check used to set $ExistingProfile in stub.nsi
-  ${If} ${FileExists} "$LOCALAPPDATA\Mozilla\Firefox"
+  ${GetLocalAppDataFolder} $0
+  ${If} ${FileExists} "$0\Mozilla\Firefox"
     StrCpy $1 "true"
   ${Else}
     StrCpy $1 "false"
