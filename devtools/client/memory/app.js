@@ -87,6 +87,7 @@ class MemoryApp extends Component {
     return {
       allocations: appModel.allocations,
       censusDisplay: appModel.censusDisplay,
+      commands: appModel.commands,
       diffing: appModel.diffing,
       dispatch: PropTypes.func,
       filter: appModel.filter,
@@ -201,6 +202,7 @@ class MemoryApp extends Component {
 
   render() {
     const {
+      commands,
       dispatch,
       snapshots,
       front,
@@ -242,7 +244,7 @@ class MemoryApp extends Component {
         onTakeSnapshotClick: () =>
           dispatch(takeSnapshotAndCensus(front, heapWorker)),
         onToggleRecordAllocationStacks: () =>
-          dispatch(toggleRecordingAllocationStacks(front)),
+          dispatch(toggleRecordingAllocationStacks(commands)),
         allocations,
         filterString: filter,
         setFilterString: filterString =>
