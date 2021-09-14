@@ -541,15 +541,7 @@ bool Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
 }
 
 Maybe<ParentLayerIntRect> Layer::GetCombinedClipRect() const {
-  Maybe<ParentLayerIntRect> clip = GetClipRect();
-
-  clip = IntersectMaybeRects(clip, GetScrolledClipRect());
-
-  for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
-    clip = IntersectMaybeRects(clip, mScrollMetadata[i].GetClipRect());
-  }
-
-  return clip;
+  return IntersectMaybeRects(GetClipRect(), GetScrolledClipRect());
 }
 
 ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
