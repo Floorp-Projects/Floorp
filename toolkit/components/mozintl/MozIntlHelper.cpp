@@ -50,15 +50,6 @@ MozIntlHelper::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx) {
 }
 
 NS_IMETHODIMP
-MozIntlHelper::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx) {
-  static const JSFunctionSpec funcs[] = {
-      JS_SELF_HOSTED_FN("getDisplayNames", "Intl_getDisplayNames", 2, 0),
-      JS_FS_END};
-
-  return AddFunctions(cx, val, funcs);
-}
-
-NS_IMETHODIMP
 MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val,
                                             JSContext* cx) {
   if (!val.isObject()) {
