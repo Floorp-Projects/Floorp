@@ -35,7 +35,8 @@ class HistoryMetadataViewHolderTest {
         createdAt = System.currentTimeMillis(),
         updatedAt = System.currentTimeMillis(),
         totalViewTime = 10,
-        documentType = DocumentType.Regular
+        documentType = DocumentType.Regular,
+        previewImageUrl = null
     )
 
     @Before
@@ -74,7 +75,8 @@ class HistoryMetadataViewHolderTest {
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
-            documentType = DocumentType.Regular
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
         )
 
         HistoryMetadataViewHolder(binding.root, interactor, icons).bind(historyEntryWithoutTitle)

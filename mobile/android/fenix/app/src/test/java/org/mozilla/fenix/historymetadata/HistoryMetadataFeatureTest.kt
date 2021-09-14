@@ -52,7 +52,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 totalViewTime = 10,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
             val expectedHistoryGroup = HistoryMetadataGroup(
                 title = "mozilla",
@@ -81,7 +82,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = 1,
                 totalViewTime = 10,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
 
             val historyEntry2 = HistoryMetadata(
@@ -90,7 +92,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = 2,
                 totalViewTime = 20,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = "http://firefox.com/image1"
             )
 
             val historyEntry3 = HistoryMetadata(
@@ -99,7 +102,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = 3,
                 totalViewTime = 30,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
 
             val expectedHistoryGroup = HistoryMetadataGroup(
@@ -136,7 +140,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 totalViewTime = 10,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
 
             val historyEntry2 = HistoryMetadata(
@@ -145,7 +150,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 totalViewTime = 20,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
 
             val historyEntry3 = HistoryMetadata(
@@ -154,7 +160,8 @@ class HistoryMetadataFeatureTest {
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 totalViewTime = 30,
-                documentType = DocumentType.Regular
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
             )
 
             val expectedHistoryGroup1 = HistoryMetadataGroup(

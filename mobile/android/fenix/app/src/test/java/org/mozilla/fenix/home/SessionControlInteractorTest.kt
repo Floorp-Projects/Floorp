@@ -167,7 +167,8 @@ class SessionControlInteractorTest {
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
-            documentType = DocumentType.Regular
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
         )
 
         interactor.onHistoryMetadataItemClicked(historyEntry.key.url, historyEntry.key)
@@ -193,7 +194,8 @@ class SessionControlInteractorTest {
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
-            documentType = DocumentType.Regular
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
         )
         val historyGroup = HistoryMetadataGroup(
             title = "mozilla",
