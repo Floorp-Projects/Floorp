@@ -43,7 +43,7 @@ add_task(async function() {
   // userContextId.
   win.gBrowser.moveTabTo(win.gBrowser.tabs[0], win.gBrowser.tabs.length - 1);
 
-  let winState = JSON.parse(ss.getWindowState(win));
+  let winState = ss.getWindowState(win);
 
   for (let i = 0; i < 4; i++) {
     Assert.equal(
@@ -121,7 +121,7 @@ add_task(async function() {
   // win should have 1 default tab, and 1 container tab.
   Assert.equal(win.gBrowser.tabs.length, 2, "win should have 2 tabs");
 
-  let winState = JSON.parse(ss.getWindowState(win));
+  let winState = ss.getWindowState(win);
 
   for (let i = 0; i < 2; i++) {
     Assert.equal(
