@@ -8,11 +8,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -76,7 +73,6 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
-import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
@@ -795,29 +791,6 @@ class BrowserFragment :
         }
         TelemetryWrapper.desktopRequestCheckEvent(enabled)
         requireComponents.sessionUseCases.requestDesktopSite(enabled, tab.id)
-    }
-
-    fun showSecurityPopUp() {
-        if (crashReporterIsVisible()) {
-            return
-        }
-
-        // Don't show Security Popup if the page is loading
-        if (tab.content.loading) {
-            return
-        }
-        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), tab)
-        if (securityPopup != null) {
-            securityPopup.setOnDismissListener { popupTint!!.visibility = View.GONE }
-            securityPopup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            securityPopup.animationStyle = android.R.style.Animation_Dialog
-            securityPopup.isTouchable = true
-            securityPopup.isFocusable = true
-            securityPopup.elevation = resources.getDimension(R.dimen.menu_elevation)
-            val offsetY = requireContext().resources.getDimensionPixelOffset(R.dimen.doorhanger_offsetY)
-            securityPopup.showAtLocation(urlBar, Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, offsetY)
-            popupTint!!.visibility = View.VISIBLE
-        }
     }
 
     fun showTrackingProtectionPanel() {
