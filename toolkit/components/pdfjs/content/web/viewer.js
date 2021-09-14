@@ -677,11 +677,14 @@ const PDFViewerApplication = {
       l10n: this.l10n
     });
     pdfRenderingQueue.setThumbnailViewer(this.pdfThumbnailViewer);
-    this.pdfHistory = new _pdf_history.PDFHistory({
-      linkService: pdfLinkService,
-      eventBus
-    });
-    pdfLinkService.setHistory(this.pdfHistory);
+
+    if (!this.isViewerEmbedded && !_app_options.AppOptions.get("disableHistory")) {
+      this.pdfHistory = new _pdf_history.PDFHistory({
+        linkService: pdfLinkService,
+        eventBus
+      });
+      pdfLinkService.setHistory(this.pdfHistory);
+    }
 
     if (!this.supportsIntegratedFind) {
       this.findBar = new _pdf_find_bar.PDFFindBar(appConfig.findBar, eventBus, this.l10n);
@@ -1592,7 +1595,7 @@ const PDFViewerApplication = {
     viewOnLoad,
     initialDest = null
   }) {
-    if (this.isViewerEmbedded || _app_options.AppOptions.get("disableHistory")) {
+    if (!this.pdfHistory) {
       return;
     }
 
@@ -2340,7 +2343,7 @@ function webViewerHashchange(evt) {
 
   if (!PDFViewerApplication.isInitialViewSet) {
     PDFViewerApplication.initialBookmark = hash;
-  } else if (!PDFViewerApplication.pdfHistory.popStateInProgress) {
+  } else if (!PDFViewerApplication.pdfHistory?.popStateInProgress) {
     PDFViewerApplication.pdfLinkService.setHash(hash);
   }
 }
@@ -2902,7 +2905,7 @@ exports.PDFPrintServiceFactory = PDFPrintServiceFactory;
 
 /***/ }),
 /* 3 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
@@ -2932,7 +2935,10 @@ exports.scrollIntoView = scrollIntoView;
 exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 exports.watchScroll = watchScroll;
 exports.WaitOnType = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.EventBus = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE = exports.CSS_UNITS = exports.AutoPrintRegExp = exports.animationStarted = void 0;
-const CSS_UNITS = 96.0 / 72.0;
+
+var _pdfjsLib = __webpack_require__(4);
+
+const CSS_UNITS = _pdfjsLib.PixelsPerInch.CSS / _pdfjsLib.PixelsPerInch.PDF;
 exports.CSS_UNITS = CSS_UNITS;
 const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
@@ -6938,17 +6944,11 @@ class PDFLinkService {
   executeNamedAction(action) {
     switch (action) {
       case "GoBack":
-        if (this.pdfHistory) {
-          this.pdfHistory.back();
-        }
-
+        this.pdfHistory?.back();
         break;
 
       case "GoForward":
-        if (this.pdfHistory) {
-          this.pdfHistory.forward();
-        }
-
+        this.pdfHistory?.forward();
         break;
 
       case "NextPage":
@@ -8881,9 +8881,12 @@ class PDFThumbnailViewer {
     }
 
     this._pagesRotation = rotation;
+    const updateArgs = {
+      rotation
+    };
 
-    for (let i = 0, ii = this._thumbnails.length; i < ii; i++) {
-      this._thumbnails[i].update(rotation);
+    for (const thumbnail of this._thumbnails) {
+      thumbnail.update(updateArgs);
     }
   }
 
@@ -9201,8 +9204,10 @@ class PDFThumbnailView {
     }
   }
 
-  update(rotation) {
-    if (typeof rotation !== "undefined") {
+  update({
+    rotation = null
+  }) {
+    if (typeof rotation === "number") {
       this.rotation = rotation;
     }
 
@@ -9623,7 +9628,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.11.191';
+    const viewerVersion = '2.11.243';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9822,10 +9827,12 @@ class BaseViewer {
 
     this._pagesRotation = rotation;
     const pageNumber = this._currentPageNumber;
+    const updateArgs = {
+      rotation
+    };
 
-    for (let i = 0, ii = this._pages.length; i < ii; i++) {
-      const pageView = this._pages[i];
-      pageView.update(pageView.scale, rotation);
+    for (const pageView of this._pages) {
+      pageView.update(updateArgs);
     }
 
     if (this._currentScaleValue) {
@@ -10123,8 +10130,12 @@ class BaseViewer {
 
     this._doc.style.setProperty("--zoom-factor", newScale);
 
-    for (let i = 0, ii = this._pages.length; i < ii; i++) {
-      this._pages[i].update(newScale);
+    const updateArgs = {
+      scale: newScale
+    };
+
+    for (const pageView of this._pages) {
+      pageView.update(updateArgs);
     }
 
     this._currentScale = newScale;
@@ -10692,9 +10703,12 @@ class BaseViewer {
     }
 
     this._optionalContentConfigPromise = promise;
+    const updateArgs = {
+      optionalContentConfigPromise: promise
+    };
 
     for (const pageView of this._pages) {
-      pageView.update(pageView.scale, pageView.rotation, promise);
+      pageView.update(updateArgs);
     }
 
     this.update();
@@ -11449,10 +11463,14 @@ class PDFPageView {
     div.appendChild(this.loadingIconDiv);
   }
 
-  update(scale, rotation, optionalContentConfigPromise = null) {
+  update({
+    scale = 0,
+    rotation = null,
+    optionalContentConfigPromise = null
+  }) {
     this.scale = scale || this.scale;
 
-    if (typeof rotation !== "undefined") {
+    if (typeof rotation === "number") {
       this.rotation = rotation;
     }
 
@@ -14136,7 +14154,7 @@ var _app = __webpack_require__(2);
 
 function composePage(pdfDocument, pageNumber, size, printContainer, printResolution, optionalContentConfigPromise) {
   const canvas = document.createElement("canvas");
-  const PRINT_UNITS = printResolution / 72.0;
+  const PRINT_UNITS = printResolution / _pdfjsLib.PixelsPerInch.PDF;
   canvas.width = Math.floor(size.width * PRINT_UNITS);
   canvas.height = Math.floor(size.height * PRINT_UNITS);
   const canvasWrapper = document.createElement("div");
@@ -14334,8 +14352,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.11.191';
-const pdfjsBuild = 'da15dbf96';
+const pdfjsVersion = '2.11.243';
+const pdfjsBuild = '7fb653b19';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
