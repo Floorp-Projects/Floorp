@@ -262,7 +262,7 @@ jobs:
                 - linux64-winchecksec
                 - sysroot-x86_64-linux-gnu
             fetch:
-                - nsis-3.01-win
+                - nsis-3.07-win
                 - upx-3.95-win
 
     win64-shippable/opt:
@@ -307,5 +307,5 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
             fetch:
-                - nsis-3.01-win
+                - nsis-3.07-win
                 - upx-3.95-win
