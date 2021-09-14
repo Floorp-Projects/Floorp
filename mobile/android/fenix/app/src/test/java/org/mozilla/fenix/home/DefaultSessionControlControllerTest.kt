@@ -163,6 +163,20 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun handleCustomizeHomeTapped() {
+        createController().handleCustomizeHomeTapped()
+
+        verify {
+            navController.navigate(
+                match<NavDirections> {
+                    it.actionId == R.id.action_global_customizationFragment
+                },
+                null
+            )
+        }
+    }
+
+    @Test
     fun `handleCollectionOpenTabClicked onFailure`() {
         val tab = mockk<ComponentTab> {
             every { url } returns "https://mozilla.org"

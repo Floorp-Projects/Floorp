@@ -165,6 +165,13 @@ interface TipInteractor {
     fun onCloseTip(tip: Tip)
 }
 
+interface CustomizeHomeIteractor {
+    /**
+     * Opens the customize home settings page.
+     */
+    fun openCustomizeHomePage()
+}
+
 /**
  * Interface for top site related actions in the [SessionControlInteractor].
  */
@@ -237,7 +244,8 @@ class SessionControlInteractor(
     ExperimentCardInteractor,
     RecentTabInteractor,
     RecentBookmarksInteractor,
-    HistoryMetadataInteractor {
+    HistoryMetadataInteractor,
+    CustomizeHomeIteractor {
 
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
@@ -375,5 +383,9 @@ class SessionControlInteractor(
         historyMetadataController.handleToggleHistoryMetadataGroupExpanded(
             historyMetadataGroup
         )
+    }
+
+    override fun openCustomizeHomePage() {
+        controller.handleCustomizeHomeTapped()
     }
 }

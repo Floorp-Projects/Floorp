@@ -187,6 +187,11 @@ interface SessionControlController {
      * @see [TabSessionInteractor.onPrivateModeButtonClicked]
      */
     fun handlePrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
+
+    /**
+     * @see [CustomizeHomeIteractor.openCustomizeHomePage]
+     */
+    fun handleCustomizeHomeTapped()
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -449,6 +454,11 @@ class DefaultSessionControlController(
 
     override fun handleOpenSettingsClicked() {
         val directions = HomeFragmentDirections.actionGlobalPrivateBrowsingFragment()
+        navController.nav(R.id.homeFragment, directions)
+    }
+
+    override fun handleCustomizeHomeTapped() {
+        val directions = HomeFragmentDirections.actionGlobalCustomizationFragment()
         navController.nav(R.id.homeFragment, directions)
     }
 

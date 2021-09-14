@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,7 +29,8 @@ import org.mozilla.fenix.home.OnboardingState
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
 @Suppress("ComplexMethod", "LongParameterList")
-private fun normalModeAdapterItems(
+@VisibleForTesting
+internal fun normalModeAdapterItems(
     context: Context,
     topSites: List<TopSite>,
     collections: List<TabCollection>,
@@ -42,6 +44,7 @@ private fun normalModeAdapterItems(
     pocketArticles: List<PocketRecommendedStory>
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
+    var shouldShowCustomizeHome = false
 
     tip?.let { items.add(AdapterItem.TipItem(it)) }
 
@@ -54,15 +57,18 @@ private fun normalModeAdapterItems(
     }
 
     if (recentTabs.isNotEmpty()) {
+        shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentTabsHeader)
         items.add(AdapterItem.RecentTabItem)
     }
 
     if (recentBookmarks.isNotEmpty()) {
+        shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentBookmarks(recentBookmarks))
     }
 
     if (historyMetadata.isNotEmpty()) {
+        shouldShowCustomizeHome = true
         showHistoryMetadata(historyMetadata, items)
     }
 
@@ -75,7 +81,12 @@ private fun normalModeAdapterItems(
     }
 
     if (context.settings().pocketRecommendations && pocketArticles.isNotEmpty()) {
+        shouldShowCustomizeHome = true
         items.add(AdapterItem.PocketStoriesItem)
+    }
+
+    if (shouldShowCustomizeHome) {
+        items.add(AdapterItem.CustomizeHomeButton)
     }
 
     return items
