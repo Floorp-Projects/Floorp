@@ -780,7 +780,7 @@ class PlacesHistoryStorageTest {
             fail("Expected v0 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Database version 0 is not supported", e.message)
+            assertEquals("Can not import from database version 0", e.message)
         }
     }
 
@@ -793,7 +793,7 @@ class PlacesHistoryStorageTest {
             fail("Expected v23 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Database version 23 is not supported", e.message)
+            assertEquals("Can not import from database version 23", e.message)
         }
     }
 

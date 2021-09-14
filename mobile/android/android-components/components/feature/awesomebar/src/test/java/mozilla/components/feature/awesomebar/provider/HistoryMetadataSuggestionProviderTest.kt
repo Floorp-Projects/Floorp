@@ -29,7 +29,8 @@ class HistoryMetadataSuggestionProviderTest {
         createdAt = System.currentTimeMillis(),
         updatedAt = System.currentTimeMillis(),
         totalViewTime = 10,
-        documentType = DocumentType.Regular
+        documentType = DocumentType.Regular,
+        previewImageUrl = null
     )
 
     @Test
