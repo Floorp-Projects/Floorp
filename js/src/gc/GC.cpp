@@ -1144,7 +1144,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       perZoneGCEnabled(TuningDefaults::PerZoneGCEnabled),
       numActiveZoneIters(0),
       cleanUpEverything(false),
-      grayBufferState(GCRuntime::GrayBufferState::Unused),
       grayBitsValid(false),
       majorGCTriggerReason(JS::GCReason::NO_REASON),
       fullGCForAtomsRequested_(false),
@@ -3717,17 +3716,6 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
                                        gcstats::PhaseKind::UNMARK_WEAKMAPS,
                                        helperLock);
 
-    /*
-     * Buffer gray roots for incremental collections. This is linear in the
-     * number of roots which can be in the tens of thousands. Do this in
-     * parallel with the rest of this block.
-     */
-    Maybe<AutoRunParallelTask> bufferGrayRootsTask;
-    if (isIncremental) {
-      bufferGrayRootsTask.emplace(this, &GCRuntime::bufferGrayRoots,
-                                  gcstats::PhaseKind::BUFFER_GRAY_ROOTS,
-                                  helperLock);
-    }
     AutoUnlockHelperThreadState unlock(helperLock);
 
     // Discard JIT code. For incremental collections, the sweep phase will
@@ -3961,16 +3949,10 @@ void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
 
   gcstats::AutoPhase ap(stats(), phase);
-  if (hasValidGrayRootsBuffer()) {
-    for (ZoneIterT zone(this); !zone.done(); zone.next()) {
-      markBufferedGrayRoots(zone);
-    }
-  } else {
-    MOZ_ASSERT(!isIncremental);
-    traceEmbeddingGrayRoots(&marker);
-    Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
-        &marker, Compartment::GrayEdges);
-  }
+
+  traceEmbeddingGrayRoots(&marker);
+  Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+      &marker, Compartment::GrayEdges);
 }
 
 IncrementalProgress GCRuntime::markAllWeakReferences() {
@@ -4184,7 +4166,6 @@ void GCRuntime::getNextSweepGroup() {
       zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
       zone->arenas.mergeNewArenasInMarkPhase();
-      zone->gcGrayRoots().Clear();
       zone->clearGCSliceThresholds();
     }
 
@@ -5763,8 +5744,6 @@ void GCRuntime::finishCollection() {
   MOZ_ASSERT(marker.isDrained());
   marker.stop();
 
-  clearBufferedGrayRoots();
-
   maybeStopPretenuring();
 
   {
@@ -5971,7 +5950,6 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
     case State::Mark: {
       // Cancel any ongoing marking.
       marker.reset();
-      clearBufferedGrayRoots();
 
       for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         ResetGrayList(c);
@@ -6182,16 +6160,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       }
 
       endPreparePhase(reason);
-
       beginMarkPhase(session);
-
-      // If we needed delayed marking for gray roots, then collect until done.
-      if (isIncremental && !hasValidGrayRootsBuffer()) {
-        budget = SliceBudget::unlimited();
-        isIncremental = false;
-        stats().nonincremental(GCAbortReason::GrayRootBufferingFailed);
-      }
-
       incrementalState = State::Mark;
 
       if (useZeal && hasZealMode(ZealMode::YieldBeforeMarking) &&

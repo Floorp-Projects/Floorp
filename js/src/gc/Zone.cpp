@@ -162,7 +162,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       gcWeakMapList_(this),
       compartments_(),
       crossZoneStringWrappers_(this),
-      gcGrayRoots_(this),
       weakCaches_(this),
       gcEphemeronEdges_(this, SystemAllocPolicy(),
                         rt->randomHashCodeScrambler()),
