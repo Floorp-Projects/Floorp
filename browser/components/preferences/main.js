@@ -440,12 +440,18 @@ var gMainPane = {
       let quitKeyElement = window.browsingContext.topChromeWindow.document.getElementById(
         "key_quitApplication"
       );
-      let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
-      document.l10n.setAttributes(
-        document.getElementById("warnOnQuitKey"),
-        "confirm-on-quit-with-key",
-        { quitKey }
-      );
+      if (quitKeyElement) {
+        let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
+        document.l10n.setAttributes(
+          document.getElementById("warnOnQuitKey"),
+          "confirm-on-quit-with-key",
+          { quitKey }
+        );
+      } else {
+        // If the quit key element does not exist, then the quit key has
+        // been disabled, so just hide the checkbox.
+        document.getElementById("warnOnQuitKey").hidden = true;
+      }
     }
 
     setEventListener("ctrlTabRecentlyUsedOrder", "command", function() {
