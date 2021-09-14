@@ -2387,6 +2387,10 @@ MarkupView.prototype = {
       "picker-node-hovered",
       this._onToolboxPickerHover
     );
+    this.inspector.toolbox.nodePicker.off(
+      "picker-node-canceled",
+      this._onToolboxPickerCanceled
+    );
     this.inspector.highlighters.off(
       "highlighter-shown",
       this.onHighlighterShown
