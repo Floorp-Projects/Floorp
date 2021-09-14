@@ -185,12 +185,6 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
     return true;
   }
 
-  // xfo checks are ignored in case CSP frame-ancestors is present,
-  // if so, there is nothing to do here.
-  if (ShouldIgnoreFrameOptions(aChannel, aCsp)) {
-    return true;
-  }
-
   nsCOMPtr<nsIHttpChannel> httpChannel;
   nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
       aChannel, getter_AddRefs(httpChannel));
@@ -223,6 +217,12 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
 
   // if no header value, there's nothing to do.
   if (xfoHeaderValue.IsEmpty()) {
+    return true;
+  }
+
+  // xfo checks are ignored in case CSP frame-ancestors is present,
+  // if so, there is nothing to do here.
+  if (ShouldIgnoreFrameOptions(aChannel, aCsp)) {
     return true;
   }
 
