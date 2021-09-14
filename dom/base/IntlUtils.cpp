@@ -69,7 +69,7 @@ void IntlUtils::GetDisplayNames(const Sequence<nsString>& aLocales,
 
   // Now call the method.
   JS::Rooted<JS::Value> retVal(cx);
-  nsresult rv = mozIntl->GetDisplayNames(locales, options, &retVal);
+  nsresult rv = mozIntl->GetDisplayNamesDeprecated(locales, options, &retVal);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
     return;

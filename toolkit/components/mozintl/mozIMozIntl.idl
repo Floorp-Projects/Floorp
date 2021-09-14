@@ -38,7 +38,13 @@
 interface mozIMozIntl : nsISupports
 {
   jsval getCalendarInfo([optional] in jsval locales);
-  jsval getDisplayNames([optional] in jsval locales, [optional] in jsval options);
+
+  /**
+   * Helper for IntlUtils.webidl, will be removed once Intl.DisplayNames
+   * supports date-time types in non-privileged code.
+   */
+  jsval getDisplayNamesDeprecated([optional] in jsval locales, [optional] in jsval options);
+
 
   /**
    * Returns a list of locale codes for a given type.
@@ -79,6 +85,7 @@ interface mozIMozIntl : nsISupports
 
   readonly attribute jsval Collator;
   readonly attribute jsval DateTimeFormat;
+  readonly attribute jsval DisplayNames;
   readonly attribute jsval ListFormat;
   readonly attribute jsval Locale;
   readonly attribute jsval NumberFormat;
