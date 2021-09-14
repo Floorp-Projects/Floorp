@@ -55,7 +55,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
 
     override fun onResume() {
         super.onResume()
-        updateTitle("About")
+        updateTitle(R.string.menu_about)
     }
 
     override fun onCreateView(
