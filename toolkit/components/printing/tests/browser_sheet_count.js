@@ -117,6 +117,80 @@ add_task(async function testSheetCountPageRange() {
   });
 });
 
+// Test that enabling duplex printing updates the sheet count accordingly.
+add_task(async function testSheetCountDuplex() {
+  await PrintHelper.withTestPage(async helper => {
+    const mockPrinterName = "DuplexCapablePrinter";
+    const printer = helper.addMockPrinter(mockPrinterName);
+    printer.supportsDuplex = Promise.resolve(true);
+
+    await helper.startPrint();
+    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+
+    // Set scale and shinkToFit to make the document
+    // bigger so that it spans multiple pages.
+    await helper.waitForPreview(() =>
+      helper.dispatchSettingsChange({
+        shrinkToFit: false,
+        scaling: 4,
+        duplex: Ci.nsIPrintSettings.kDuplexNone,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != 1,
+      "Wait for sheet count to update"
+    );
+    let singleSidedSheets = helper.sheetCount;
+    ok(singleSidedSheets >= 2, "There are at least 2 pages");
+
+    // Turn on long-edge duplex printing and ensure the sheet count is halved.
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({
+        duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != singleSidedSheets,
+      "Wait for sheet count to update"
+    );
+    let duplexLongEdgeSheets = helper.sheetCount;
+    is(
+      duplexLongEdgeSheets,
+      Math.ceil(singleSidedSheets / 2),
+      "Long-edge duplex printing halved the sheet count"
+    );
+
+    // Turn off duplex printing
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({
+        duplex: Ci.nsIPrintSettings.kDuplexNone,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount == singleSidedSheets,
+      "Wait for sheet count to update"
+    );
+
+    // Turn on short-edge duplex printing and ensure the
+    // sheet count matches the long-edge duplex sheet count.
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({
+        duplex: Ci.nsIPrintSettings.kDuplexFlipOnShortEdge,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != singleSidedSheets,
+      "Wait for sheet count to update"
+    );
+    let duplexShortEdgeSheets = helper.sheetCount;
+    is(
+      duplexShortEdgeSheets,
+      duplexLongEdgeSheets,
+      "Short-edge duplex printing halved the sheet count"
+    );
+  });
+});
+
 add_task(async function testPagesPerSheetCount() {
   await PrintHelper.withTestPage(async helper => {
     let mockPrinterName = "A real printer!";
