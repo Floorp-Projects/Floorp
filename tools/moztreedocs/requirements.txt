@@ -334,16 +334,9 @@ snowballstemmer==2.0.0 \
     # via
     #   -r requirements.in
     #   sphinx
-sphinx==4.1.2 \
-    --hash=sha256:3092d929cd807926d846018f2ace47ba2f3b671b309c7a89cd3306e80c826b13 \
-    --hash=sha256:46d52c6cee13fec44744b8c01ed692c18a640f6910a725cbb938bc36e8d64544
-    # via
-    #   -r requirements.in
-    #   recommonmark
-    #   sphinx-copybutton
-    #   sphinx-js
-    #   sphinx-panels
-    #   sphinx-rtd-theme
+Sphinx==4.2.0 \
+    --hash=sha256:94078db9184491e15bce0a56d9186e0aec95f16ac20b12d00e06d4e36f1058a6 \
+    --hash=sha256:98a535c62a4fcfcc362528592f69b26f7caec587d32cd55688db580be0287ae0
 sphinx-copybutton==0.4.0 \
     --hash=sha256:4340d33c169dac6dd82dce2c83333412aa786a42dd01a81a8decac3b130dc8b0 \
     --hash=sha256:8daed13a87afd5013c3a9af3575cc4d5bec052075ccd3db243f895c07a689386
