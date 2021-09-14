@@ -111,8 +111,8 @@ add_task(async function customize() {
 
     Assert.equal(
       gBrowser.currentURI.spec,
-      "about:preferences#search",
-      "Current tab is about:preferences#search"
+      "about:preferences#privacy",
+      "Current tab is about:preferences#privacy"
     );
 
     TelemetryTestUtils.assertEvents([
