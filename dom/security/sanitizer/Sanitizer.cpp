@@ -99,7 +99,7 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
   RefPtr<DocumentFragment> fragment = nsContentUtils::CreateContextualFragment(
       context, innerHTML, true /* aPreventScriptExecution */, aRv);
   if (aRv.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.ThrowInvalidStateError("Could not parse input");
     return nullptr;
   }
   return fragment.forget();
@@ -113,11 +113,10 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  ErrorResult error;
   RefPtr<DocumentFragment> fragment =
-      Sanitizer::InputToNewFragment(aInput, error);
-  if (error.Failed()) {
-    return fragment.forget();
+      Sanitizer::InputToNewFragment(aInput, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
   }
 
   mTreeSanitizer.Sanitize(fragment);
