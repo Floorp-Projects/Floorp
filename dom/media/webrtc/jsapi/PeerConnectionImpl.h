@@ -437,6 +437,12 @@ class PeerConnectionImpl final
 
   void StampTimecard(const char* aEvent);
 
+  bool RelayOnly() const {
+    return mJsConfiguration.mIceTransportPolicy.WasPassed() &&
+           mJsConfiguration.mIceTransportPolicy.Value() ==
+               dom::RTCIceTransportPolicy::Relay;
+  }
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
