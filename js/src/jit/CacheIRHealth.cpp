@@ -85,43 +85,46 @@ void CacheIRHealth::spewShapeInformation(AutoStructuredSpewer& spew,
         spew->beginListProperty("shapes");
       }
 
-      JSString* firstPropertyKey = nullptr;
-      JSString* lastPropertyKey = nullptr;
-      uint32_t totalKeys = 0;
-      for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
-        jsid id = iter->key();
-        JSString* propertyKey = nullptr;
+      if (!shape->propMap()->isDictionary()) {
+        JSString* firstPropertyKey = nullptr;
+        JSString* lastPropertyKey = nullptr;
+        uint32_t totalKeys = 0;
+        for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
+          jsid id = iter->key();
+          JSString* propertyKey = nullptr;
 
-        if (id.isString()) {
-          propertyKey = id.toString();
-        } else {
-          MOZ_ASSERT(id.isSymbol());
-          propertyKey = id.toSymbol()->description();
+          if (id.isString()) {
+            propertyKey = id.toString();
+          } else {
+            MOZ_ASSERT(id.isSymbol());
+            propertyKey = id.toSymbol()->description();
+          }
+
+          if (!totalKeys) {
+            firstPropertyKey = propertyKey;
+          } else {
+            lastPropertyKey = propertyKey;
+          }
+          totalKeys++;
         }
 
-        if (!totalKeys) {
-          firstPropertyKey = propertyKey;
-        } else {
-          lastPropertyKey = propertyKey;
+        spew->beginObject();
+        {
+          if (firstPropertyKey) {
+            GenericPrinter& printer =
+                spew->beginStringProperty("firstProperty");
+            firstPropertyKey->dumpCharsNoQuote(printer);
+            spew->endStringProperty();
+          }
+          if (totalKeys > 1) {
+            GenericPrinter& printer = spew->beginStringProperty("lastProperty");
+            lastPropertyKey->dumpCharsNoQuote(printer);
+            spew->endStringProperty();
+          }
+          spew->property("totalKeys", totalKeys);
         }
-        totalKeys++;
+        spew->endObject();
       }
-
-      spew->beginObject();
-      {
-        if (firstPropertyKey) {
-          GenericPrinter& printer = spew->beginStringProperty("firstProperty");
-          firstPropertyKey->dumpCharsNoQuote(printer);
-          spew->endStringProperty();
-        }
-        if (totalKeys > 1) {
-          GenericPrinter& printer = spew->beginStringProperty("lastProperty");
-          lastPropertyKey->dumpCharsNoQuote(printer);
-          spew->endStringProperty();
-        }
-        spew->property("totalKeys", totalKeys);
-      }
-      spew->endObject();
     }
     offset += StubField::sizeInBytes(stubInfo->fieldType(fieldIndex));
     fieldIndex++;
