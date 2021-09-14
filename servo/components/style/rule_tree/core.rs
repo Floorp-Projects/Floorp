@@ -66,7 +66,7 @@ impl MallocSizeOf for RuleTree {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-struct ChildKey(ptr::NonNull<()>);
+struct ChildKey(CascadeLevel, ptr::NonNull<()>);
 unsafe impl Send for ChildKey {}
 unsafe impl Sync for ChildKey {}
 
@@ -346,6 +346,7 @@ impl RuleNode {
 
     fn key(&self) -> ChildKey {
         ChildKey(
+            self.level,
             self.source
                 .as_ref()
                 .expect("Called key() on the root node")
@@ -566,7 +567,7 @@ impl StrongRuleNode {
             source,
         );
 
-        let key = ChildKey(source.key());
+        let key = ChildKey(level, source.key());
         let children = self.p.children.upgradable_read();
         if let Some(child) = children.get(&key, |node| node.p.key()) {
             // Sound to call because we read-locked the parent's children.
