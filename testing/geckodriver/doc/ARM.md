@@ -1,7 +1,7 @@
 Self-serving an ARM build
 =========================
 
-Mozilla [announced the intent] to deprecate ARMv7 HF builds of
+Mozilla announced the intent to deprecate ARMv7 HF builds of
 geckodriver in September 2018.  This does not mean you can no longer
 use geckodriver on ARM systems, and this document explains how you
 can self-service a build for ARMv7 HF.
@@ -35,5 +35,4 @@ cross-compile ARMv7 from a Linux host system is as follows:
          % cd testing/geckodriver
          % cargo build --release --target armv7-unknown-linux-gnueabihf
 
-[announced the intent]: https://lists.mozilla.org/pipermail/tools-marionette/2018-September/000035.html
 [central]: https://hg.mozilla.org/mozilla-central/
