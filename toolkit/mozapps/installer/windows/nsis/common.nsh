@@ -1571,6 +1571,42 @@
 
 
 ################################################################################
+# Macros for retrieving special folders
+
+/**
+ * These macro get special folder paths directly, without depending on
+ * SetShellVarContext.
+ *
+ * Usage:
+ * ${GetProgramsFolder} $0
+ * ${GetLocalAppDataFolder} $0
+ * ${GetCommonAppDataFolder} $0
+ *
+ */
+!macro GetSpecialFolder _ID _RESULT
+  ; This system call gets the directory path. The arguments are:
+  ;   A null ptr for hwnd
+  ;   t.s puts the output string on the NSIS stack
+  ;   id indicates which dir to get
+  ;   false for fCreate (i.e. Do not create the folder if it doesn't exist)
+  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.s, i ${_ID}, i 0)"
+  Pop ${_RESULT}
+!macroend
+
+!define CSIDL_PROGRAMS          0x0002
+!define CSIDL_LOCAL_APPDATA     0x001c
+!define CSIDL_COMMON_APPDATA    0x0023
+
+; Current User's Start Menu Programs
+!define GetProgramsFolder       "!insertmacro GetSpecialFolder ${CSIDL_PROGRAMS}"
+
+; Current User's Local App Data (e.g. C:\Users\<user>\AppData\Local)
+!define GetLocalAppDataFolder   "!insertmacro GetSpecialFolder ${CSIDL_LOCAL_APPDATA}"
+
+; Common App Data (e.g. C:\ProgramData)
+!define GetCommonAppDataFolder  "!insertmacro GetSpecialFolder ${CSIDL_COMMON_APPDATA}"
+
+################################################################################
 # Macros for retrieving existing install paths
 
 /**
@@ -3338,6 +3374,7 @@
  * Removes the application's VirtualStore directory if present when the
  * installation directory is a sub-directory of the program files directory.
  *
+ * $R3 = Local App Data dir
  * $R4 = $PROGRAMFILES/$PROGRAMFILES64 for CleanVirtualStore_Internal
  * $R5 = various path values.
  * $R6 = length of the long path to $PROGRAMFILES32 or $PROGRAMFILES64
@@ -3365,6 +3402,7 @@
       Push $R6
       Push $R5
       Push $R4
+      Push $R3
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R9
       ${If} "$R9" != ""
@@ -3383,6 +3421,7 @@
 
       ClearErrors
 
+      Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
@@ -3401,7 +3440,8 @@
           ${If} "$R5" == "$R7"
             ; Remove the drive letter and colon from the $INSTDIR long path
             StrCpy $R5 "$R9" "" 2
-            StrCpy $R5 "$LOCALAPPDATA\VirtualStore$R5"
+            ${GetLocalAppDataFolder} $R3
+            StrCpy $R5 "$R3\VirtualStore$R5"
             ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
             ${If} "$R5" != ""
             ${AndIf} ${FileExists} "$R5"
@@ -3448,125 +3488,15 @@
 /**
  * If present removes the updates directory located in the profile's local
  * directory for this installation.
- * This macro is obsolete and should no longer be used. Please see
- * CleanUpdateDirectories.
- *
- * @param   _REL_PROFILE_PATH
- *          The relative path to the profile directory from $LOCALAPPDATA.
- *
- * $R4 = various path values.
- * $R5 = length of the long path to $PROGRAMFILES
- * $R6 = length of the long path to $INSTDIR
- * $R7 = long path to $PROGRAMFILES
- * $R8 = long path to $INSTDIR
- * $R9 = _REL_PROFILE_PATH
- */
-!macro CleanUpdatesDir
-
-  !ifndef ${_MOZFUNC_UN}CleanUpdatesDir
-    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
-    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
-    !undef _MOZFUNC_UN_TMP
-
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}CleanUpdatesDir "!insertmacro ${_MOZFUNC_UN}CleanUpdatesDirCall"
-
-    Function ${_MOZFUNC_UN}CleanUpdatesDir
-      Exch $R9
-      Push $R8
-      Push $R7
-      Push $R6
-      Push $R5
-      Push $R4
-
-      StrCmp $R9 "" end +1 ; The relative path to the app's profiles is required
-      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R8
-      StrCmp $R8 "" end +1
-      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES" $R7
-      StrCmp $R7 "" end +1
-
-      StrLen $R6 "$R8"
-      StrLen $R5 "$R7"
-      ; Only continue If the length of $INSTDIR is greater than the length of
-      ; $PROGRAMFILES
-      IntCmp $R6 $R5 end end +1
-
-      ; Copy from the start of $INSTDIR the length of $PROGRAMFILES
-      StrCpy $R4 "$R8" $R5
-      StrCmp "$R4" "$R7" +1 end ; Check if $INSTDIR is under $PROGRAMFILES
-
-      ; Copy the relative path to $INSTDIR from $PROGRAMFILES
-      StrCpy $R4 "$R8" "" $R5
-
-      ; Concatenate the path to $LOCALAPPDATA the relative profile path and the
-      ; relative path to $INSTDIR from $PROGRAMFILES
-      StrCpy $R4 "$LOCALAPPDATA\$R9$R4"
-      ${${_MOZFUNC_UN}GetLongPath} "$R4" $R4
-      StrCmp $R4 "" end +1
-
-      IfFileExists "$R4\updates" +1 end
-      RmDir /r "$R4"
-
-      end:
-      ClearErrors
-
-      Pop $R4
-      Pop $R5
-      Pop $R6
-      Pop $R7
-      Pop $R8
-      Exch $R9
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro CleanUpdatesDirCall _REL_PROFILE_PATH
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_REL_PROFILE_PATH}"
-  Call CleanUpdatesDir
-  !verbose pop
-!macroend
-
-!macro un.CleanUpdatesDirCall _REL_PROFILE_PATH
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_REL_PROFILE_PATH}"
-  Call un.CleanUpdatesDir
-  !verbose pop
-!macroend
-
-!macro un.CleanUpdatesDir
-  !ifndef un.CleanUpdatesDir
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN "un."
-
-    !insertmacro CleanUpdatesDir
-
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN
-    !verbose pop
-  !endif
-!macroend
-
-/**
- * If present removes the updates directory located in the profile's local
- * directory for this installation.
  *
  * @param   _OLD_REL_PATH
- *          The relative path to the profile directory from $LOCALAPPDATA.
+ *          The relative path to the profile directory from Local AppData.
  *          Calculated for the old update directory not based on a hash.
  * @param   _NEW_REL_PATH
- *          The relative path to the profile directory from $LOCALAPPDATA.
+ *          The relative path to the profile directory from Local AppData.
  *          Calculated for the new update directory based on a hash.
  *
+ * $R9 = Local AppData
  * $R8 = _NEW_REL_PATH
  * $R7 = _OLD_REL_PATH
  * $R1 = taskBar ID hash located in registry at SOFTWARE\_OLD_REL_PATH\TaskBarIDs
@@ -3602,6 +3532,7 @@
       Push $R2
       Push $R1
       Push $R0
+      Push $R9
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R6
       StrLen $R4 "$R6"
@@ -3612,6 +3543,7 @@
       ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES" $R5
 !endif
       StrLen $R3 "$R5"
+      ${GetLocalAppDataFolder} $R9
 
       ${If} $R7 != "" ; _OLD_REL_PATH was passed
       ${AndIf} $R6 != "" ; We have the install dir path
@@ -3627,9 +3559,9 @@
           ; Copy the relative path to $INSTDIR from $PROGRAMFILES
           StrCpy $R2 "$R6" "" $R3
 
-          ; Concatenate the path $LOCALAPPDATA to the relative profile path and
+          ; Concatenate the local AppData path ($R9) to the relative profile path and
           ; the relative path to $INSTDIR from $PROGRAMFILES
-          StrCpy $R2 "$LOCALAPPDATA\$R7$R2"
+          StrCpy $R2 "$R9\$R7$R2"
           ${${_MOZFUNC_UN}GetLongPath} "$R2" $R2
 
           ${If} $R2 != ""
@@ -3657,7 +3589,7 @@
         ; If the taskbar ID hash exists then delete the new update directory
         ; Backup its logs before deleting it.
         ${If} $R1 != ""
-          StrCpy $R0 "$LOCALAPPDATA\$R8\$R1"
+          StrCpy $R0 "$R9\$R8\$R1"
 
           ${If} ${FileExists} "$R0\updates\last-update.log"
             Rename "$R0\updates\last-update.log" "$TEMP\moz-update-older-last-update.log"
@@ -3675,15 +3607,7 @@
           ; Get the new updates directory so we can remove that too
           ; The new update directory is in the Program Data directory
           ; (currently C:\ProgramData).
-          ; This system call gets that directory path. The arguments are:
-          ;   A null ptr for hwnd
-          ;   $R0 for the output string
-          ;   CSIDL_COMMON_APPDATA == 0x0023 == 35 for the csidl indicating which dir to get
-          ;   false for fCreate (i.e. Do not create the folder if it doesn't exist)
-          ; We could use %APPDATA% for this instead, but that requires state: the shell
-          ; var context would need to be saved, set, and reset. It is easier just to use
-          ; the system call.
-          System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.R0, i 35, i 0)"
+          ${GetCommonAppDataFolder} $R0
           StrCpy $R0 "$R0\$R8\$R1"
 
           ${If} ${FileExists} "$R0\updates\last-update.log"
@@ -3732,6 +3656,7 @@
 
       ClearErrors
 
+      Pop $R9
       Pop $R0
       Pop $R1
       Pop $R2
@@ -3800,15 +3725,7 @@
 
   ; The update directory is in the Program Data directory
   ; (currently C:\ProgramData).
-  ; This system call gets that directory path. The arguments are:
-  ;   A null ptr for hwnd
-  ;   $R1 for the output string
-  ;   CSIDL_COMMON_APPDATA == 0x0023 == 35 for the csidl indicating which dir to get
-  ;   true for fCreate (i.e. Do create the folder if it doesn't exist)
-  ; We could use %APPDATA% for this instead, but that requires state: the shell
-  ; var context would need to be saved, set, and reset. It is easier just to use
-  ; the system call.
-  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.R1, i 35, i 1)"
+  ${GetCommonAppDataFolder} $R1
   StrCpy $R1 "$R1\${ROOT_DIR_NAME}"
 
   ClearErrors
@@ -3866,110 +3783,6 @@ end:
   ${EndIf}
 !macroend
 !define CreateUpdateDir "!insertmacro CreateUpdateDir"
-
-/**
- * Deletes all relative profiles specified in an application's profiles.ini and
- * performs various other cleanup.
- *
- * @param   _REL_PROFILE_PATH
- *          The relative path to the profile directory.
- *
- * $R6 = value of IsRelative read from profiles.ini
- * $R7 = value of Path to profile read from profiles.ini
- * $R8 = counter for reading profiles (e.g. Profile0, Profile1, etc.)
- * $R9 = _REL_PROFILE_PATH
- */
-!macro DeleteRelativeProfiles
-
-  !ifndef ${_MOZFUNC_UN}DeleteRelativeProfiles
-    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
-    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
-    !undef _MOZFUNC_UN_TMP
-
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}DeleteRelativeProfiles "!insertmacro ${_MOZFUNC_UN}DeleteRelativeProfilesCall"
-
-    Function ${_MOZFUNC_UN}DeleteRelativeProfiles
-      Exch $R9
-      Push $R8
-      Push $R7
-      Push $R6
-
-      SetShellVarContext current
-      StrCpy $R8 -1
-
-      loop:
-      IntOp $R8 $R8 + 1  ; Increment the counter.
-      ReadINIStr $R7 "$APPDATA\$R9\profiles.ini" "Profile$R8" "Path"
-      IfErrors end +1
-
-      ; Only remove relative profiles
-      ReadINIStr $R6 "$APPDATA\$R9\profiles.ini" "Profile$R8" "IsRelative"
-      StrCmp "$R6" "1" +1 loop
-
-      ; Relative paths in profiles.ini use / as a separator
-      ${${_MOZFUNC_UN}WordReplace} "$R7" "/" "\" "+" $R7
-
-      IfFileExists "$LOCALAPPDATA\$R9\$R7" +1 +2
-      RmDir /r "$LOCALAPPDATA\$R9\$R7"
-      IfFileExists "$APPDATA\$R9\$R7" +1 +2
-      RmDir /r "$APPDATA\$R9\$R7"
-      GoTo loop
-
-      end:
-      ; Remove profiles directory under LOCALAPPDATA (e.g. cache, etc.) since
-      ; they are at times abandoned.
-      RmDir /r "$LOCALAPPDATA\$R9\Profiles"
-      RmDir /r "$APPDATA\$R9\Crash Reports"
-      Delete "$APPDATA\$R9\profiles.ini"
-      Delete "$APPDATA\$R9\console.log"
-      Delete "$APPDATA\$R9\pluginreg.dat"
-      RmDir "$APPDATA\$R9\Profiles"
-      RmDir "$APPDATA\$R9"
-
-      Pop $R6
-      Pop $R7
-      Pop $R8
-      Exch $R9
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-!macro DeleteRelativeProfilesCall _REL_PROFILE_PATH
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_REL_PROFILE_PATH}"
-  Call DeleteRelativeProfiles
-  !verbose pop
-!macroend
-
-!macro un.DeleteRelativeProfilesCall _REL_PROFILE_PATH
-  !verbose push
-  !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_REL_PROFILE_PATH}"
-  Call un.DeleteRelativeProfiles
-  !verbose pop
-!macroend
-
-!macro un.DeleteRelativeProfiles
-  !ifndef un.DeleteRelativeProfiles
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN "un."
-
-    !insertmacro DeleteRelativeProfiles
-
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN
-    !verbose pop
-  !endif
-!macroend
 
 /**
  * Deletes shortcuts and Start Menu directories under Programs as specified by
@@ -6220,20 +6033,18 @@ end:
 !endif
 
       ; If the user doesn't have write access to the installation directory set
-      ; the installation directory to a subdirectory of the All Users application
-      ; directory and if the user can't write to that location set the installation
-      ; directory to a subdirectory of the users local application directory
-      ; (e.g. non-roaming).
+      ; the installation directory to a subdirectory of the user's local
+      ; application directory (e.g. non-roaming).
       ${CanWriteToInstallDir} $R9
-      StrCmp "$R9" "false" +1 finish_check_install_dir
+      ${If} "$R9" == "false"
+        ; NOTE: This SetShellVarContext isn't directly needed anymore, but to
+        ; leave the state consistent with earlier code I'm leaving it here.
+        SetShellVarContext all      ; Set SHCTX to All Users
+        ${GetLocalAppDataFolder} $R9
+        StrCpy $INSTDIR "$R9\${BrandFullName}\"
+        ${CanWriteToInstallDir} $R9
+      ${EndIf}
 
-      SetShellVarContext all      ; Set SHCTX to All Users
-      StrCpy $INSTDIR "$APPDATA\${BrandFullName}\"
-      ${CanWriteToInstallDir} $R9
-      StrCmp "$R9" "false" +2 +1
-      StrCpy $INSTDIR "$LOCALAPPDATA\${BrandFullName}\"
-
-      finish_check_install_dir:
       IfFileExists "$INSTDIR" +3 +1
       Pop $R9
       Return
@@ -8042,16 +7853,19 @@ end:
 
     Function CopyPostSigningData
       Push $0   ; Stack: old $0
+      Push $1   ; Stack: $1, old $0
 
       ${LineRead} "$EXEDIR\postSigningData" "1" $0
       ${If} ${Errors}
         ClearErrors
         StrCpy $0 "0"
       ${Else}
-        CreateDirectory "$LOCALAPPDATA\Mozilla\Firefox"
-        CopyFiles /SILENT "$EXEDIR\postSigningData" "$LOCALAPPDATA\Mozilla\Firefox"
+        ${GetLocalAppDataFolder} $1
+        CreateDirectory "$1\Mozilla\Firefox"
+        CopyFiles /SILENT "$EXEDIR\postSigningData" "$1\Mozilla\Firefox"
       ${Endif}
 
+      Pop $1    ; Stack: old $0
       Exch $0   ; Stack: postSigningData
     FunctionEnd
 

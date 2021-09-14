@@ -417,9 +417,8 @@ ${RemoveDefaultBrowserAgentShortcut}
   Push $2
   Push $3
 
-  ; 2 is CSIDL_PROGRAMS, it's simpler to use this to get the user's Start Menu Programs than
-  ; to use $SMPROGRAMS and rely on SetShellVarContext current.
-  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.r1, i 2, i 0)"
+  ; Get the current user's Start Menu Programs.
+  ${GetProgramsFolder} $1
 
   ; The shortcut would have been named MOZ_BASE_NAME regardless of branding.
   ; According to defines.nsi.in AppName should match application.ini, and application.ini.in sets

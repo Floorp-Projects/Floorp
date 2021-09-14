@@ -429,21 +429,13 @@ Function .onInit
 
   SetShellVarContext all ; Set SHCTX to All Users
   ; If the user doesn't have write access to the installation directory set
-  ; the installation directory to a subdirectory of the All Users application
-  ; directory and if the user can't write to that location set the installation
-  ; directory to a subdirectory of the users local application directory
-  ; (e.g. non-roaming).
+  ; the installation directory to a subdirectory of the user's local
+  ; application directory (e.g. non-roaming).
   Call CanWrite
   ${If} "$CanWriteToInstallDir" == "false"
-    StrCpy $INSTDIR "$APPDATA\${BrandFullName}\"
+    ${GetLocalAppDataFolder} $0
+    StrCpy $INSTDIR "$0\${BrandFullName}\"
     Call CanWrite
-    ${If} "$CanWriteToInstallDir" == "false"
-      ; This should never happen but just in case.
-      StrCpy $CanWriteToInstallDir "false"
-    ${Else}
-      StrCpy $INSTDIR "$LOCALAPPDATA\${BrandFullName}\"
-      Call CanWrite
-    ${EndIf}
   ${EndIf}
 
   Call CheckSpace
@@ -692,7 +684,8 @@ Function createInstall
     StrCpy $ExistingBuildID "0"
   ${EndIf}
 
-  ${If} ${FileExists} "$LOCALAPPDATA\Mozilla\Firefox"
+  ${GetLocalAppDataFolder} $0
+  ${If} ${FileExists} "$0\Mozilla\Firefox"
     StrCpy $ExistingProfile "1"
   ${Else}
     StrCpy $ExistingProfile "0"
