@@ -679,6 +679,11 @@ function continue_test_prefetch() {
 
 function test_visitor_doom() {
   // See bug 1708673
+  Services.prefs.setBoolPref("network.cache.bug1708673", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("network.cache.bug1708673");
+  });
+
   let p1 = new Promise(resolve => {
     let doomTasks = [];
     let visitor = {
