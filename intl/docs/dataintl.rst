@@ -175,48 +175,45 @@ Example:
     } = Services.intl.getCalendarInfo();
 
 
-mozIntl.getDisplayNames(locales, options)
+mozIntl.DisplayNames(locales, options)
 -----------------------------------------
 
-:js:`getDisplayNames` API is useful to retrieve various terms available in the
-internationalization API.
+:js:`DisplayNames` API is useful to retrieve various terms available in the
+internationalization API. :js:`mozIntl.DisplayNames` extends the standard
+`Intl.DisplayNames`_ to additionally provide localization for date-time types.
 
 The API takes a locale fallback chain list, and an options object which can contain
 two keys:
 
-* :js:`style` which can takes values :js:`short`, :js:`medium`, :js:`long`
-* :js:`keys` which is a list of keys in the following pattern:
-
-  * :js:`dates/fields/{year|month|week|day}`
-  * :js:`dates/gregorian/months/{january|...|december}`
-  * :js:`dates/gregorian/weekdays/{sunday|...|saturday}`
-  * :js:`dates/gregorian/dayperiods/{am|pm}`
-
-The return object provides values for the requested keys for the given locale and
-style.
+* :js:`style` which can take values :js:`narrow`, :js:`short`, :js:`abbreviated`, :js:`long`
+* :js:`type` which can take values :js:`language`, :js:`script`, :js:`region`,
+  :js:`currency`, :js:`weekday`, :js:`month`, :js:`quarter`, :js:`dayPeriod`,
+  :js:`dateTimeField`
 
 Example:
 
 .. code-block:: javascript
 
-    let {
-      locale,    // "pl"
-      style,     // "long"
-      values
-    } = Services.intl.getDisplayNames(undefined, {
-      style: "long",
-      keys: [
-        "dates/fields/year",
-        "dates/gregorian/months/january",
-        "dates/gregorian/weekdays/monday",
-        "dates/gregorian/dayperiods/am"
-      ]
+    let dateTimeFieldDisplayNames = new Services.intl.DisplayNames(undefined, {
+      type: "dateTimeField",
     });
+    dateTimeFieldDisplayNames.resolvedOptions().locale = "pl";
+    dateTimeFieldDisplayNames.of("year") = "rok";
 
-    values["dates/fields/year"] == "rok";
-    values["dates/gregorian/months/january"] = "styczeń";
-    values["dates/gregorian/weekdays/monday"] = "poniedziałek";
-    values["dates/gregorian/dayperiods/am"] = "AM";
+    let monthDisplayNames = new Services.intl.DisplayNames(undefined, {
+      type: "month", style: "long",
+    });
+    monthDisplayNames.of(1) = "styczeń";
+
+    let weekdaysDisplayNames = new Services.intl.DisplayNames(undefined, {
+      type: "weekday", style: "short",
+    });
+    weekdaysDisplayNames.of(1) = "pon";
+
+    let dayPeriodsDisplayNames = new Services.intl.DisplayNames(undefined, {
+      type: "dayPeriod", style: "narrow",
+    });
+    dayPeriodsDisplayNames.of("am") = "AM";
 
 
 mozIntl.RelativeTimeFormat(locales, options)
@@ -353,3 +350,4 @@ and file a bug in the component `Core::Internationalization`_ to request it.
 .. _CLDR: http://cldr.unicode.org/
 .. _ICU: http://site.icu-project.org/
 .. _Core::Internationalization: https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Internationalization
+.. _Intl.DisplayNames: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames
