@@ -342,10 +342,9 @@ class WasmInstanceObject : public NativeObject {
   wasm::Instance& instance() const;
   JSObject& exportsObj() const;
 
-  static bool getExportedFunction(JSContext* cx,
-                                  HandleWasmInstanceObject instanceObj,
-                                  uint32_t funcIndex,
-                                  MutableHandleFunction fun);
+  [[nodiscard]] static bool getExportedFunction(
+      JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex,
+      MutableHandleFunction fun);
 
   const wasm::CodeRange& getExportedFunctionCodeRange(JSFunction* fun,
                                                       wasm::Tier tier);
