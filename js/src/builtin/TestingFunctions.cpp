@@ -3241,7 +3241,7 @@ bool IterativeFailureTest::testIteration(unsigned thread, unsigned iteration,
     fprintf(stderr, "  iteration %u\n", iteration);
   }
 
-  MOZ_ASSERT(!cx->isExceptionPending());
+  MOZ_RELEASE_ASSERT(!cx->isExceptionPending());
 
   simulator.startSimulating(cx, iteration, thread, params.keepFailing);
 
@@ -3251,14 +3251,16 @@ bool IterativeFailureTest::testIteration(unsigned thread, unsigned iteration,
 
   failureWasSimulated = simulator.stopSimulating();
 
-  if (ok) {
-    MOZ_ASSERT(!cx->isExceptionPending(),
-               "Thunk execution succeeded but an exception was raised - "
-               "missing error check?");
-  } else if (params.expectExceptionOnFailure) {
-    MOZ_ASSERT(cx->isExceptionPending(),
-               "Thunk execution failed but no exception was raised - "
-               "missing call to js::ReportOutOfMemory()?");
+  if (ok && cx->isExceptionPending()) {
+    MOZ_CRASH(
+        "Thunk execution succeeded but an exception was raised - missing error "
+        "check?");
+  }
+
+  if (!ok && !cx->isExceptionPending() && params.expectExceptionOnFailure) {
+    MOZ_CRASH(
+        "Thunk execution failed but no exception was raised - missing call to "
+        "js::ReportOutOfMemory()?");
   }
 
   // Note that it is possible that the function throws an exception unconnected
