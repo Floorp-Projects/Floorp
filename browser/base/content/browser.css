@@ -1454,7 +1454,7 @@ printpreview-pagination:focus-within,
   .previewRendering {
     background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
   }
-  
+
   .printPreviewBrowser {
     transition: opacity 60ms;
   }
