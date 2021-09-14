@@ -59,10 +59,7 @@ Communication
 =============
 
 The mailing list for Marionette discussion is
-tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
+https://groups.google.com/a/mozilla.org/g/dev-webdriver.
 
 If you prefer real-time chat, ask your questions
 on `#webdriver:mozilla.org <https://chat.mozilla.org/#/room/#webdriver:mozilla.org>`__.
-
-.. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
-.. _archive: https://lists.mozilla.org/pipermail/tools-marionette/
