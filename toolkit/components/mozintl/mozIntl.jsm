@@ -755,7 +755,7 @@ class MozIntl {
     return this._cache.getCalendarInfo(locales, ...args);
   }
 
-  getDisplayNames(locales, ...args) {
+  getDisplayNamesDeprecated(locales, ...args) {
     if (!this._cache.hasOwnProperty("getDisplayNames")) {
       mozIntlHelper.addGetDisplayNames(this._cache);
     }
@@ -914,6 +914,14 @@ class MozIntl {
     }
 
     return this._cache.MozDateTimeFormat;
+  }
+
+  get DisplayNames() {
+    if (!this._cache.hasOwnProperty("DisplayNames")) {
+      mozIntlHelper.addDisplayNamesConstructor(this._cache);
+    }
+
+    return this._cache.DisplayNames;
   }
 }
 
