@@ -2096,8 +2096,18 @@ bool Element::ShouldBlur(nsIContent* aContent) {
   nsCOMPtr<nsPIDOMWindowOuter> focusedFrame;
   nsIContent* contentToBlur = nsFocusManager::GetFocusedDescendant(
       window, nsFocusManager::eOnlyCurrentWindow, getter_AddRefs(focusedFrame));
+
+  if (!contentToBlur) {
+    return false;
+  }
+
   if (contentToBlur == aContent) return true;
 
+  ShadowRoot* root = aContent->GetShadowRoot();
+  if (root && root->DelegatesFocus() &&
+      contentToBlur->IsShadowIncludingInclusiveDescendantOf(root)) {
+    return true;
+  }
   // if focus on this element would get redirected, then check the redirected
   // content as well when blurring.
   return (contentToBlur &&
