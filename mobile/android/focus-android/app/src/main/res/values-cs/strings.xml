@@ -718,7 +718,7 @@ Přepněte v nabídce aplikace %1$s na verzi pro počítač.</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Chcete na stránkách, kterým důvěřujete, vypnout ochranu proti sledování?
+    <string name="tip_explain_allowlist3">Chcete na stránkách, kterým důvěřujete, vypnout ochranu proti sledování?\n
 Přidejte je do seznamu výjimek v nastavení</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.

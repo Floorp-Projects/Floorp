@@ -1,149 +1,416 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Kunchatu</string>
-  <string name="action_ok">Va\'a</string>
-  <string name="action_save">Chika vaà</string>
-  <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
-  <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
-  <string name="feedback_erase">Sto\'i ña ntsinu.</string>
-  <string name="feedback_erase_custom_tab">Stoi ña ntsinu ña ntsika nu xikua.</string>
-  <string name="search_hint">Ndukù %1$s</string>
-  <string name="menu_share">Stucha…</string>
-  <string name="menu_report_site_issue">Ka tu\'un ña kue va\'a yee sitio\'yo</string>
-  <string name="menu_open_with_default_browser2">Kuna tsi %1$s</string>
-  <string name="menu_open_with_a_browser2">Kuna tsi…</string>
-  <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
-  <string name="menu_whats_new">Ña tsa\'a</string>
-  <string name="menu_settings">Nu samu</string>
-  <string name="menu_about">Tsaa ña</string>
-  <string name="menu_help">Chinchee</string>
-  <string name="menu_rights">Yee yu\'u</string>
-  <string name="menu_trackers_blocked_title">Ntasi nu kuu snuu kue ña\'a</string>
-  <string name="menu_trackers_blocked_subtitle">Ndavi tatu kue ku nduva sitio yo</string>
-  <string name="menu_content_blocking">Kasi kontenido</string>
-  <string name="menu_content_blocking_subtitle">Ndavi takua ku nduvaa sitio yoo</string>
-  <string name="menu_custom_tab_branding">Nikuvai tsi %1$s</string>
-  <string name="share_dialog_title">Kua’a nu\'u</string>
-  <string name="notification_erase_text">Stòo ña ntukuku sata</string>
-  <string name="notification_action_open">Kuna</string>
-  <string name="notification_action_erase_and_open">Stoo cha Kuna</string>
-  <string name="shortcut_erase_short_label">Stoo</string>
-  <string name="shortcut_erase_long_label">Stòo ña ndukuku sata</string>
-  <string name="shortcut_erase_and_open_short_label">Stoo ra kuna</string>
-  <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
-  <string name="text_selection_search_action">Nduku Sèè</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
-  <string name="preference_privacy_and_security_summary">Lista ña rastreo, cookies tsi tutu</string>
-  <string name="preference_search_summary">Chikai tana xina, cha ntacha\'a mií ña</string>
-  <string name="preference_mozilla_summary">Tu\'un tsa %1$s, ña chinhe\'e yo</string>
-  <string name="preference_category_tracking_protection">Protección de rastreo</string>
-  <string name="preference_category_web_content">Tutu web</string>
-  <string name="preference_category_switching_apps">Sama kue aplicacion</string>
-  <string name="preference_category_general">Ntií</string>
-  <string name="preference_general_summary">Navegador, xikua, tu\'un</string>
-  <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
-  <string name="preference_category_search">Nduku</string>
-  <string name="preference_show_search_suggestions">A Kuncheu nixi ndukuku</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ku chachuin nchi ña ku nchau nu barra de direcciones tsi ña ku ndukuku</string>
-  <string name="preference_search_engine_default">Tsa sa\'an yee</string>
-  <string name="preference_search_engine_label">Ña nduku</string>
-  <string name="preference_state_on">Kuna</string>
-  <string name="preference_state_off">Kasi</string>
-  <string name="preference_subitem_autocomplete">Chaa URL</string>
-  <string name="preference_switch_autocomplete_topsites">Sitio kua ncheu</string>
-  <string name="preference_switch_autocomplete_user_list">Sitio chikau</string>
-  <string name="preference_category_autocomplete_manage_sites">Kunche sitio</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Kunche sitio</string>
-  <string name="preference_autocomplete_action_add">+ Chaa URL</string>
-  <string name="preference_autocomplete_title_add">Chaa URL</string>
-  <string name="custom_autocomplete_quick_add">Chaa URL</string>
-  <string name="add_custom_autocomplete_label">Chika enlace takua na tsinu mitu’ìn</string>
-  <string name="preference_category_cookies">Cookies tsi tutu sitio</string>
-  <string name="preference_category_data_choices">Katsi tutù</string>
-  <string name="preference_autocomplete_title_remove">Stòo URLs nchau</string>
-  <string name="preference_autocomplete_learn_more">Skua\'a kuakaa</string>
-  <string name="preference_autocomplete_custom_summary">Chaa a sama URLs tana kuni meu.</string>
-  <string name="preference_autocomplete_add_title">Chaa URL</string>
-  <string name="preference_autocomplete_add_hint">Chistiin a chaa URL</string>
-  <string name="preference_autocomplete_add_example2">Tana: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Kua: sivi.com</string>
-  <string name="preference_autocomplete_add_confirmation">Ntutsaa URL nchau.</string>
-  <string name="preference_autocomplete_menu_remove">Xitaá</string>
-  <string name="preference_autocomplete_action_remove_content_description">Xitaá</string>
-  <string name="preference_autocomplete_add_error">Chaa va\'a URL.</string>
-  <string name="preference_language">Tu\'un</string>
-  <string name="preference_language_systemdefault">Nkoi ta xi’na</string>
-  <string name="preference_category_privacy">Sèè</string>
-  <string name="preference_privacy_block_ads">Kasi ña ndukuyo</string>
-  <string name="preference_privacy_block_ads_summary">Yee tu\'un nduku ña tsinu, vasu ma katavu ña</string>
-  <string name="preference_privacy_block_analytics">Kasi ña ndukuyo</string>
-  <string name="preference_privacy_block_analytics_summary">Kuachu\'un ña tava satutuku tsi chikuau ña sau tana katavu tsi samu</string>
-  <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
-  <string name="preference_privacy_block_social_summary">Ntachiiaña nu ke sitiotava ntanii ña ntsinu cha snai boton tana kua\'á</string>
-  <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
-  <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
-  <string name="preference_privacy_category_cookies">Kasi cookies</string>
-  <string name="preference_privacy_should_block_cookies_no_option">No</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Va\'a</string>
-  <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
-  <string name="preference_security_biometric_summary">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
-  <string name="preference_privacy_secure_mode">Sèè</string>
-  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku samu aplicaciòn cha casi ña ndatava.</string>
-  <string name="preference_category_security">Vaá</string>
-  <string name="preference_category_performance">Nixi sachu\'in</string>
-  <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
-  <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
-  <string name="preference_performance_block_javascript">Kasi JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Ku yàchika kitsa kue página, ti ku ma nuna va’i</string>
-  <string name="preference_default_browser2">Saa %1$s navegador xinaa</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Chachu\'un tu\'un nchachu\'un</string>
-  <string name="preference_mozilla_telemetry_summary">Skua\'a kuakaa</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla ndaki\'an ña vaa tava na koo vaa %1$s ntio.</string>
-  <string name="preference_privacy_notice">Nixi inka vaa tutu\'ku</string>
-  <string name="preference_about">Tsaa ña\'a%1$s</string>
-  <string name="preference_search_installed_search_engines">Ndu tsaa ña nda nduku</string>
-  <string name="preference_search_restore">Ndu tsaa ña nda ntuku</string>
-  <string name="preference_search_add2">+ Chika´a inka motor nduku</string>
-  <string name="preference_search_remove_title">Sto\'o ña ntuku</string>
-  <string name="preference_search_remove">Xitaá</string>
-  <string name="preference_homescreen_tips">Snaa tu\'un tava kitsau</string>
-  <string name="action_option_add_search_engine">Chikaa tsi ña ndukuku</string>
-  <string name="search_add_manually_name_hint">SIvi ña nduku</string>
-  <string name="search_add_manually_string">Nduku tu\'un kunu kuachu\'un</string>
-  <string name="search_add_manually_save">Chika vaà</string>
-  <string name="search_add_manually_example">Sa\'an chau\'ña: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Ntu tsa\'a tsi ña ndukuku.</string>
-  <string name="search_add_error_empty_name">Chaa sivi ña kunu nduku</string>
-  <string name="search_add_error_duplicate_name">Tsa inka\'a iin ña nduku tsi sivi yoo.</string>
-  <string name="search_add_error_empty_search">Chaa tu\'un kunu ndukuku</string>
-  <string name="search_add_error_format">Ckunche\'e a vaà nchau ña ku ndukuku</string>
-  <string name="content_description_clear_input">Stoo nu nikivu</string>
-  <string name="content_description_dismiss_input">Nkucha\'a su\'u</string>
-  <string name="content_description_erase">Stòo ña ntukuku sata</string>
-  <string name="content_description_tab_counter">Xikua nuna: %1$s</string>
-  <string name="content_description_lock">Kuu kivu</string>
-  <string name="accessibility_announcement_loading">Saa ki tsai</string>
-  <string name="accessibility_announcement_loading_finished">Kunchatu saa ku ki\'tsai</string>
-  <string name="content_description_menu">Kunchee nu ndasamu kue ñaa</string>
-  <string name="indicator_content_description_menu">Botón kuá’á</string>
-  <string name="content_description_forward">Nduku chinuu</string>
-  <string name="content_description_reload">Ntu tsaa pagina web</string>
-  <string name="content_description_back">Nduku sata</string>
-  <string name="content_description_stop">Ma ntu tsaa pagina web</string>
-  <string name="content_description_customtab_exit">Nchiko sata</string>
-  <string name="content_description_trackers_blocked">Kavi nisa rastreador ndasia</string>
-  <string name="content_description_blocking_switch">Kasi ña ndukuyo</string>
-  <string name="your_rights">Yee yu\'u</string>
-  <string name="external_app_prompt_title">Kuna nu ndukuku inka tsio</string>
-  <string name="external_app_prompt">Kuu siau %1$s cha kuu kunu nu ndukuku yoo%2$s.</string>
-  <string name="external_app_prompt_no_app_title">Nduku inka nu kuu kuncheu ña kunu</string>
-  <string name="external_app_prompt_no_app">Ni iin nu sachuun kúú kunaku tsi enlace yó’o. Kuu ketu %1$s tatu kunu ndukukuv%2$s inka nu kuu sachuun.</string>
-  <string name="external_multiple_apps_matched_exit">A keu nu nduku seu ñaa?</string>
-  <string name="download_snackbar_finished">%1$s ntsinu</string>
-  <string name="download_snackbar_open">Kuna</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Kunchatu</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Va\'a</string>
+
+    <string name="action_save">Chika vaà</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
+
+    <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Sto\'i ña ntsinu.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Stoi ña ntsinu ña ntsika nu xikua.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Ndukù %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Stucha…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Ka tu\'un ña kue va\'a yee sitio\'yo</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Kuna tsi %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Kuna tsi…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Ña tsa\'a</string>
+    <string name="menu_settings">Nu samu</string>
+    <string name="menu_about">Tsaa ña</string>
+    <string name="menu_help">Chinchee</string>
+    <string name="menu_rights">Yee yu\'u</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Ntasi nu kuu snuu kue ña\'a</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Ndavi tatu kue ku nduva sitio yo</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Kasi kontenido</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Ndavi takua ku nduvaa sitio yoo</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Nikuvai tsi %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Kua’a nu\'u</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Stòo ña ntukuku sata</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Kuna</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Stoo cha Kuna</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Stoo</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Stòo ña ndukuku sata</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Stoo ra kuna</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Nduku Sèè</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Lista ña rastreo, cookies tsi tutu</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Chikai tana xina, cha ntacha\'a mií ña</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Tu\'un tsa %1$s, ña chinhe\'e yo</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Tutu web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Sama kue aplicacion</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Ntií</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Navegador, xikua, tu\'un</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
+
+    <string name="preference_category_search">Nduku</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">A Kuncheu nixi ndukuku</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s ku chachuin nchi ña ku nchau nu barra de direcciones tsi ña ku ndukuku</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Tsa sa\'an yee</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Ña nduku</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Kuna</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Kasi</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Chaa URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Sitio kua ncheu</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Sitio chikau</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Kunche sitio</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Kunche sitio</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Chaa URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Chaa URL</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Chaa URL</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Chika enlace takua na tsinu mitu’ìn</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies tsi tutu sitio</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Katsi tutù</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Stòo URLs nchau</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Skua\'a kuakaa</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Chaa a sama URLs tana kuni meu.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Chaa URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Chistiin a chaa URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Tana: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Kua: sivi.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Ntutsaa URL nchau.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Xitaá</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Xitaá</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Chaa va\'a URL.</string>
+
+    <string name="preference_language">Tu\'un</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Nkoi ta xi’na</string>
+
+    <string name="preference_category_privacy">Sèè</string>
+    <string name="preference_privacy_block_ads">Kasi ña ndukuyo</string>
+    <string name="preference_privacy_block_ads_summary">Yee tu\'un nduku ña tsinu, vasu ma katavu ña</string>
+    <string name="preference_privacy_block_analytics">Kasi ña ndukuyo</string>
+    <string name="preference_privacy_block_analytics_summary">Kuachu\'un ña tava satutuku tsi chikuau ña sau tana katavu tsi samu</string>
+    <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
+    <string name="preference_privacy_block_social_summary">Ntachiiaña nu ke sitiotava ntanii ña ntsinu cha snai boton tana kua\'á</string>
+    <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
+    <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
+    <string name="preference_privacy_category_cookies">Kasi cookies</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Sèè</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku samu aplicaciòn cha casi ña ndatava.</string>
+
+    <string name="preference_category_security">Vaá</string>
+
+    <string name="preference_category_performance">Nixi sachu\'in</string>
+    <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
+
+    <string name="preference_performance_block_javascript">Kasi JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Ku yàchika kitsa kue página, ti ku ma nuna va’i</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Saa %1$s navegador xinaa</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Chachu\'un tu\'un nchachu\'un</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Skua\'a kuakaa</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla ndaki\'an ña vaa tava na koo vaa %1$s ntio.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Nixi inka vaa tutu\'ku</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Tsaa ña\'a%1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Ndu tsaa ña nda nduku</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Ndu tsaa ña nda ntuku</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Chika´a inka motor nduku</string>
+    <string name="preference_search_remove_title">Sto\'o ña ntuku</string>
+    <string name="preference_search_remove">Xitaá</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Snaa tu\'un tava kitsau</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Chikaa tsi ña ndukuku</string>
+
+    <string name="search_add_manually_name_hint">SIvi ña nduku</string>
+    <string name="search_add_manually_string">Nduku tu\'un kunu kuachu\'un</string>
+    <string name="search_add_manually_save">Chika vaà</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Sa\'an chau\'ña: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Ntu tsa\'a tsi ña ndukuku.</string>
+
+    <string name="search_add_error_empty_name">Chaa sivi ña kunu nduku</string>
+    <string name="search_add_error_duplicate_name">Tsa inka\'a iin ña nduku tsi sivi yoo.</string>
+
+    <string name="search_add_error_empty_search">Chaa tu\'un kunu ndukuku</string>
+
+    <string name="search_add_error_format">Ckunche\'e a vaà nchau ña ku ndukuku</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Stoo nu nikivu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Nkucha\'a su\'u</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Stòo ña ntukuku sata</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Xikua nuna: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Kuu kivu</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Saa ki tsai</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Kunchatu saa ku ki\'tsai</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Kunchee nu ndasamu kue ñaa</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Botón kuá’á</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Nduku chinuu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Ntu tsaa pagina web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Nduku sata</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Ma ntu tsaa pagina web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Nchiko sata</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Kavi nisa rastreador ndasia</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Kasi ña ndukuyo</string>
+
+    <string name="your_rights">Yee yu\'u</string>
+
+    <string name="external_app_prompt_title">Kuna nu ndukuku inka tsio</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Kuu siau %1$s cha kuu kunu nu ndukuku yoo%2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Nduku inka nu kuu kuncheu ña kunu</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Ni iin nu sachuun kúú kunaku tsi enlace yó’o. Kuu ketu %1$s tatu kunu ndukukuv%2$s inka nu kuu sachuun.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">A keu nu nduku seu ñaa?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s ntsinu</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Kuna</string>
 
 
 
@@ -173,82 +440,210 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
-  <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
-  <string name="firstrun_search_title">Nduku ña kunu, nixi kunu</string>
-  <string name="firstrun_search_text">¿Nudukuku si\'in ña\'a? katsi inka tsiña ndukuku inka nu sama ntii ñaa yo.</string>
-  <string name="firstrun_shortcut_title">Chikaa nixi kitsau nu pantalla xinaa</string>
-  <string name="firstrun_shortcut_text">Nchiko nu inka pagina %1$s katavi. Nu xikua %1$s \" Chikaa nu pantalla xinaa \".</string>
-  <string name="firstrun_privacy_title">Ka\'un ña see</string>
-  <string name="firstrun_privacy_text">Chikaa %1$s nu ndukuku xina cha kunchee nixi nduku seu ta tsunaku pagina web inka tsio.</string>
-  <string name="firstrun_close_button">Va\'a, tsa ntakii ña!</string>
-  <string name="firstrun_skip_button">Kanta</string>
-  <string name="firstrun_next_button">Nuu</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Chikaa</string>
-  <string name="dialog_addtohomescreen_action_cancel">Kunchatu</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Nu ku nkivu ku nuni cha ku nkuu kunchena yo</string>
-  <string name="notification_browsing_session_channel_name">Nikitsa seu</string>
-  <string name="notification_browsing_session_channel_description">Tu\'un kuu stoi nu nikitsau %1$s ta katavu. ke tsiniñu\'u kunakuña ni kuncheu ta sachuùn navegador.</string>
-  <string name="tabs_tray_action_erase">Stòo ña ntukuku sata</string>
-  <string name="download_firefox">Snuu Firefox</string>
-  <string name="your_rights_content1">%1$s software kuachu\'un ntiina ni kuu vaa saa Mozilla tsi nivi sachu\'un chi\'an.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Nduku ña kunu, nixi kunu</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">¿Nudukuku si\'in ña\'a? katsi inka tsiña ndukuku inka nu sama ntii ñaa yo.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Chikaa nixi kitsau nu pantalla xinaa</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Nchiko nu inka pagina %1$s katavi. Nu xikua %1$s \&quot; Chikaa nu pantalla xinaa \&quot;.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Ka\'un ña see</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Chikaa %1$s nu ndukuku xina cha kunchee nixi nduku seu ta tsunaku pagina web inka tsio.</string>
+
+    <string name="firstrun_close_button">Va\'a, tsa ntakii ña!</string>
+    <string name="firstrun_skip_button">Kanta</string>
+    <string name="firstrun_next_button">Nuu</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Chikaa</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Kunchatu</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Nikitsa seu</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Tu\'un kuu stoi nu nikitsau %1$s ta katavu. ke tsiniñu\'u kunakuña ni kuncheu ta sachuùn navegador.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Stòo ña ntukuku sata</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Snuu Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s software kuachu\'un ntiina ni kuu vaa saa Mozilla tsi nivi sachu\'un chi\'an.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Sivìi</string>
-  <string name="gv_prompt_password_hint">Tu\'un seè</string>
-  <string name="gv_prompt_clear">Stòo</string>
-  <string name="security_popup_secure_connection">Mani\'ku Chitai\'ña</string>
-  <string name="security_popup_insecure_connection">Ma kuu Chitai\'ña</string>
-  <string name="security_popup_security_verified">Verificado por: %1$s</string>
-  <string name="site_security_icon_content_description">Vaa sitio yoo</string>
-  <string name="preference_autocomplete_duplicate_url_error">Tsa inka URL</string>
-  <string name="find_in_page">Ndaduku yo\'o</string>
-  <string name="find_in_page_input">Nduku nu página</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d a %2$d</string>
-  <string name="accessibility_next_result">Nduku tu\'un nu\'u</string>
-  <string name="accessibility_previous_result">Nduku tu\'un sata</string>
-  <string name="accessibility_dismiss_find_in_page">Kasi nu ndukuku</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Sivìi</string>
+    <string name="gv_prompt_password_hint">Tu\'un seè</string>
+    <string name="gv_prompt_clear">Stòo</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Mani\'ku Chitai\'ña</string>
+    <string name="security_popup_insecure_connection">Ma kuu Chitai\'ña</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Verificado por: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Vaa sitio yoo</string>
+    <string name="preference_autocomplete_duplicate_url_error">Tsa inka URL</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Ndaduku yo\'o</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Nduku nu página</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d a %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Nduku tu\'un nu\'u</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Nduku tu\'un sata</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Kasi nu ndukuku</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>
-  <string name="custom_tab_copy_url_action">Ndatava URL</string>
-  <string name="preference_advanced_summary">Nu ndasamu</string>
-  <string name="preference_category_advanced">Nchichi</string>
-  <string name="preference_remote_debugging">Nta sa vaà tsi USBWi-Fi</string>
-  <string name="biometric_auth_title">Kuna %1$s</string>
-  <string name="biometric_auth_description">Katavi sensor ña huella digital tava kitasu.</string>
-  <string name="biometric_auth_new_session">Kitsaa tuku</string>
-  <string name="biometric_auth_image_description">Huellas digitales</string>
-  <string name="biometric_auth_not_recognized_error">Kue ndakuinia huella digital. Kitsa tuku.</string>
-  <string name="biometric_auth_moved_too_quickly">Vichi nchua ni kanta ndau. Kitsa tuku.</string>
-  <string name="enable_search_suggestion_title">¿A kunu kuncheu ña kuu ndadunkuku?</string>
-  <string name="enable_search_suggestion_subtitle">Tava kuncheu nchi ku ndukuku, %1$s tsiniñuú chachun ña ku nchau nu barra de direcciones tsi ña ni katsiku tava ndukuku. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Skua\'a kuakaa</string>
-  <string name="enable_search_suggestions_no">No</string>
-  <string name="enable_search_suggestions_yes">Va\'a</string>
-  <string name="no_suggestions_message">Yee kue motor de búsqueda kue ku snai ña ku kuncheu.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Chika seé</string>
-  <string name="tip_set_default_browser">Kuna iin enlace tsi %1$s\n Chikay %1$s tana navegador xina</string>
-  <string name="tip_autocomplete_url">Ntasa URLs ña sitio ña kuaka chichu\'un\n Katavi URL niku nu barra ña direcciones</string>
-  <string name="tip_open_in_new_tab">Kuna enlace nu xikua tsaá\n Katavi nchi enlace niku nu página</string>
-  <string name="tip_request_desktop">¿A kunu kuncheu sitio nu escritorio?%1$s Menú &gt; Kaka sitio de escritorio</string>
-  <string name="new_tab_opened_snackbar">Ndutsa xikua nuna</string>
-  <string name="open_new_tab_snackbar">Sama</string>
-  <string name="preference_category_safe_browsing">Kitsaà Ntukú</string>
-  <string name="preference_exceptions">Excepciones</string>
-  <string name="preference_exceptions_menu_remove">Xitaá</string>
-  <string name="preference_exceptions_remove_all_button_label">Atoo ntii pagina web</string>
-  <string name="tab_crash_report_title">Vaa Xikua</string>
-  <string name="tab_crash_report_description">Ña Ntukú sèè, kue nchikavai ña ntsinu tsi xikua ntsinu sata.</string>
-  <string name="tab_crash_report_close_tab_button_label">Kasi xikua</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Ndatava URL</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Nu ndasamu</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Nchichi</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Nta sa vaà tsi USBWi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Kuna %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Katavi sensor ña huella digital tava kitasu.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Kitsaa tuku</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Huellas digitales</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Kue ndakuinia huella digital. Kitsa tuku.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Vichi nchua ni kanta ndau. Kitsa tuku.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">No</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Va\'a</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Yee kue motor de búsqueda kue ku snai ña ku kuncheu.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Chika seé</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Kuna iin enlace tsi %1$s\n Chikay %1$s tana navegador xina</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Ntasa URLs ña sitio ña kuaka chichu\'un\n Katavi URL niku nu barra ña direcciones</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Kuna enlace nu xikua tsaá\n Katavi nchi enlace niku nu página</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Ndutsa xikua nuna</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Sama</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Kitsaà Ntukú</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Excepciones</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Xitaá</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Atoo ntii pagina web</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Vaa Xikua</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Ña Ntukú sèè, kue nchikavai ña ntsinu tsi xikua ntsinu sata.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Kasi xikua</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Tachu\'un tu\'un ña vai nu Mozilla</string>
-</resources>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Tachu\'un tu\'un ña vai nu Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analítica</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Satà</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Xitaá</string>
+
+    </resources>
