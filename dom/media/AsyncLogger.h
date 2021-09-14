@@ -195,7 +195,7 @@ class AsyncLogger {
     }
   }
 
-  bool Enabled() { return profiler_is_active(); }
+  bool Enabled() { return mRunning; }
 
  private:
   void Run() {
