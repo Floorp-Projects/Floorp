@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1663746",
+  title: "Basic tests for relay ice policy"
+});
+
+runNetworkTest(async () => {
+  await pushPrefs(
+      // Enable mDNS, since there are some checks we want to run with that
+      ['media.peerconnection.ice.obfuscate_host_addresses', true]);
+
+  const offerer = new RTCPeerConnection({iceServers: iceServersArray, iceTransportPolicy: 'relay'});
+  const answerer = new RTCPeerConnection({iceServers: iceServersArray});
+
+  offerer.onicecandidate = e => {
+    if (e.candidate) {
+      ok(!e.candidate.candidate.includes(' host '), 'IceTransportPolicy \"relay\" should prevent the advertisement of host candidates');
+      ok(!e.candidate.candidate.includes(' srflx '), 'IceTransportPolicy \"relay\" should prevent the advertisement of srflx candidates');
+    }
+    answerer.addIceCandidate(e.candidate);
+  };
+
+  answerer.onicecandidate = e => {
+    if (e.candidate && e.candidate.candidate.includes(' host ')) {
+      ok(e.candidate.candidate.includes('.local'), 'When obfuscate_host_addresses is true, we expect host candidates to use mDNS');
+    }
+    offerer.addIceCandidate(e.candidate);
+  };
+
+  const offererConnected = new Promise(r => {
+    offerer.oniceconnectionstatechange = () => {
+      if (offerer.iceConnectionState == 'connected') {
+        r();
+      }
+    };
+  });
+
+  const answererConnected = new Promise(r => {
+    answerer.oniceconnectionstatechange = () => {
+      if (answerer.iceConnectionState == 'connected') {
+        r();
+      }
+    };
+  });
+
+  const offer = await offerer.createOffer({offerToReceiveAudio: true});
+  await Promise.all([offerer.setLocalDescription(offer), answerer.setRemoteDescription(offer)]);
+  const answer = await answerer.createAnswer();
+  await Promise.all([answerer.setLocalDescription(answer), offerer.setRemoteDescription(answer)]);
+
+  info('Waiting for ICE to connect');
+  await Promise.all([offererConnected, answererConnected]);
+
+  const offererStats = await offerer.getStats();
+  const localCandidates = [...offererStats.values()].filter(stat => stat.type == 'local-candidate');
+  const remoteCandidates = [...offererStats.values()].filter(stat => stat.type == 'remote-candidate');
+  isnot(localCandidates, []);
+  isnot(remoteCandidates, []);
+
+  const localNonRelayCandidates =
+      localCandidates.filter(cand => cand.candidateType != 'relay');
+  is(localNonRelayCandidates.length, 0, `There should only be local relay candidates, because we are using the "relay" IceTransportPolicy, but we got ${JSON.stringify(localNonRelayCandidates)}`);
+
+  const remoteHostCandidates =
+      remoteCandidates.filter(cand => cand.candidateType == 'host');
+  is(remoteHostCandidates.length, 0, `There should be no remote host candidates in the stats, because mDNS resolution should have been disabled by the "relay" IceTransportPolicy, but we got ${JSON.stringify(remoteHostCandidates)}`);
+
+  offerer.close();
+  answerer.close();
+
+  await SpecialPowers.popPrefEnv();
+}, { useIceServer: true });
+</script>
+</pre>
+</body>
+</html>
