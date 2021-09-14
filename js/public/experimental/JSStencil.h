@@ -79,24 +79,22 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
 
 // Instantiate the Stencil into current Realm and return the JSScript.
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    RefPtr<Stencil> stencil);
+    JSContext* cx, const ReadOnlyCompileOptions& options, Stencil* stencil);
 
 // Instantiate a module Stencil and return the associated object. Inside the
 // engine this is a js::ModuleObject.
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    RefPtr<Stencil> stencil);
+    JSContext* cx, const ReadOnlyCompileOptions& options, Stencil* stencil);
 
 // Serialize the Stencil into the transcode buffer.
 extern JS_PUBLIC_API TranscodeResult
 EncodeStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-              RefPtr<Stencil> stencil, TranscodeBuffer& buffer);
+              Stencil* stencil, TranscodeBuffer& buffer);
 
 // Deserialize data and create a new Stencil.
 extern JS_PUBLIC_API TranscodeResult
 DecodeStencil(JSContext* cx, const ReadOnlyCompileOptions& options,
-              const TranscodeRange& range, RefPtr<Stencil>& stencilOut);
+              const TranscodeRange& range, Stencil** stencilOut);
 
 extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -108,7 +106,7 @@ extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData);
 
-extern JS_PUBLIC_API RefPtr<Stencil> FinishOffThreadCompileToStencil(
+extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadCompileToStencil(
     JSContext* cx, OffThreadToken* token);
 
 }  // namespace JS
