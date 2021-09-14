@@ -67,7 +67,7 @@ static Layer* FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset) {
     // or nothing.
     if (!visibleRegion.Contains(rectInBackground)) return nullptr;
 
-    if (l->GetEffectiveOpacity() != 1.0 || l->HasMaskLayers() ||
+    if (l->GetEffectiveOpacity() != 1.0 || l->GetMaskLayer() ||
         !(l->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
       return nullptr;
     }

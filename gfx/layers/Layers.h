@@ -394,25 +394,6 @@ class Layer {
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Set an optional scrolled clip on the layer.
-   * The scrolled clip, if present, consists of a clip rect and an optional
-   * mask. This scrolled clip is always scrolled by all scroll frames associated
-   * with this layer. (By contrast, the scroll clips stored in ScrollMetadata
-   * are only scrolled by scroll frames above that ScrollMetadata, and the
-   * layer's mClipRect is always fixed to the layer contents (which may or may
-   * not be scrolled by some of the scroll frames associated with the layer,
-   * depending on whether the layer is fixed).)
-   */
-  void SetScrolledClip(const Maybe<LayerClip>& aScrolledClip) {
-    if (mSimpleAttrs.SetScrolledClip(aScrolledClip)) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this,
-                                   ("Layer::Mutated(%p) ScrolledClip", this));
-      MutatedSimple();
-    }
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
    * Set a layer to mask this layer.
    *
    * The mask layer should be applied using its effective transform (after it
@@ -440,28 +421,6 @@ class Layer {
       mMaskLayer = aMaskLayer;
       Mutated();
     }
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Add mask layers associated with LayerClips.
-   */
-  void SetAncestorMaskLayers(const nsTArray<RefPtr<Layer>>& aLayers) {
-    if (aLayers != mAncestorMaskLayers) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(
-          this, ("Layer::Mutated(%p) AncestorMaskLayers", this));
-      mAncestorMaskLayers = aLayers.Clone();
-      Mutated();
-    }
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Add a mask layer associated with a LayerClip.
-   */
-  void AddAncestorMaskLayer(const RefPtr<Layer>& aLayer) {
-    mAncestorMaskLayers.AppendElement(aLayer);
-    Mutated();
   }
 
   /**
@@ -624,10 +583,6 @@ class Layer {
     return mSimpleAttrs.GetMixBlendMode();
   }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
-  const Maybe<LayerClip>& GetScrolledClip() const {
-    return mSimpleAttrs.GetScrolledClip();
-  }
-  Maybe<ParentLayerIntRect> GetScrolledClipRect() const;
   uint32_t GetContentFlags() { return mSimpleAttrs.GetContentFlags(); }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const ScrollMetadata& GetScrollMetadata(uint32_t aIndex) const;
@@ -700,29 +655,6 @@ class Layer {
   bool HasPendingTransform() const { return !!mPendingTransform; }
 
   void CheckCanary() const { mCanary.Check(); }
-
-  // Ancestor mask layers are associated with FrameMetrics, but for simplicity
-  // in maintaining the layer tree structure we attach them to the layer.
-  size_t GetAncestorMaskLayerCount() const {
-    return mAncestorMaskLayers.Length();
-  }
-  Layer* GetAncestorMaskLayerAt(size_t aIndex) const {
-    return mAncestorMaskLayers.ElementAt(aIndex);
-  }
-  const nsTArray<RefPtr<Layer>>& GetAllAncestorMaskLayers() const {
-    return mAncestorMaskLayers;
-  }
-
-  bool HasMaskLayers() const {
-    return GetMaskLayer() || mAncestorMaskLayers.Length() > 0;
-  }
-
-  /*
-   * Get the combined clip rect of the Layer clip and all clips on FrameMetrics.
-   * This is intended for use in Layout. The compositor needs to apply async
-   * transforms to find the combined clip.
-   */
-  Maybe<ParentLayerIntRect> GetCombinedClipRect() const;
 
   /**
    * Retrieve the root level visible region for |this| taking into account
