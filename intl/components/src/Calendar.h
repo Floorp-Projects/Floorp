@@ -11,7 +11,6 @@
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
