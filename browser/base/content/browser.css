@@ -1399,7 +1399,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 }
 
 .previewRendering {
-  background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
   background-repeat: no-repeat;
   background-size: 60px 60px;
   background-position: center center;
@@ -1416,7 +1415,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 .printPreviewBrowser {
   visibility: collapse;
   opacity: 1;
-  transition: opacity 60ms;
 }
 
 .previewStack[previewtype="source"] > .printPreviewBrowser[previewtype="source"],
@@ -1427,7 +1425,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 
 .previewStack[rendering=true] > .printPreviewBrowser {
   opacity: 0;
-  transition: opacity 1ms 250ms;
 }
 
 .print-pending-label {
@@ -1437,12 +1434,10 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 
 printpreview-pagination {
   opacity: 0;
-  transition: opacity 100ms 500ms;
 }
 printpreview-pagination:focus-within,
 .previewStack:hover printpreview-pagination {
   opacity: 1;
-  transition: opacity 100ms;
 }
 .previewStack[rendering=true] printpreview-pagination {
   opacity: 0;
@@ -1452,6 +1447,29 @@ printpreview-pagination:focus-within,
   .previewStack {
     background-color: #2A2A2E;
     color: rgb(249, 249, 250);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .previewRendering {
+    background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
+  }
+  
+  .printPreviewBrowser {
+    transition: opacity 60ms;
+  }
+
+  .previewStack[rendering=true] > .printPreviewBrowser {
+    transition: opacity 1ms 250ms;
+  }
+
+  printpreview-pagination {
+    transition: opacity 100ms 500ms;
+  }
+
+  printpreview-pagination:focus-within,
+  .previewStack:hover printpreview-pagination {
+    transition: opacity 100ms;
   }
 }
 
