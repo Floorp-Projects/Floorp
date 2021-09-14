@@ -12,7 +12,7 @@ add_task(async function test() {
 
   const { outerWidth, outerHeight, screenX, screenY } = win;
   function checkCurrentState(sizemode) {
-    let state = JSON.parse(ss.getWindowState(win));
+    let state = ss.getWindowState(win);
     let winState = state.windows[0];
     let msgSuffix = ` should match on ${sizemode} mode`;
     is(winState.width, outerWidth, "width" + msgSuffix);
