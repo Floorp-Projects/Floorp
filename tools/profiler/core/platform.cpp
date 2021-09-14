@@ -2801,6 +2801,8 @@ struct JavaMarkerWithDetails {
   }
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aText) {
+    // This (currently) needs to be called "name" to be searchable on the
+    // front-end.
     aWriter.StringProperty("name", aText);
   }
   static MarkerSchema MarkerTypeDisplay() {
@@ -2808,9 +2810,9 @@ struct JavaMarkerWithDetails {
     MS schema{MS::Location::TimelineOverview, MS::Location::MarkerChart,
               MS::Location::MarkerTable};
     schema.SetTooltipLabel("{marker.name}");
-    schema.SetChartLabel("{marker.data.details}");
-    schema.SetTableLabel("{marker.name} - {marker.data.details}");
-    schema.AddKeyLabelFormat("details", "Details", MS::Format::String);
+    schema.SetChartLabel("{marker.data.name}");
+    schema.SetTableLabel("{marker.name} - {marker.data.name}");
+    schema.AddKeyLabelFormat("name", "Details", MS::Format::String);
     return schema;
   }
 };
