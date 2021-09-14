@@ -2480,7 +2480,11 @@ pref("dom.ipc.processCount.privilegedabout", 1);
 pref("dom.ipc.processCount.privilegedmozilla", 1);
 
 // Maximum number of isolated content processes per-origin.
+#ifdef ANDROID
 pref("dom.ipc.processCount.webIsolated", 1);
+#else
+pref("dom.ipc.processCount.webIsolated", 4);
+#endif
 
 // Keep a single privileged about process alive for performance reasons.
 // e.g. we do not want to throw content processes out every time we navigate
