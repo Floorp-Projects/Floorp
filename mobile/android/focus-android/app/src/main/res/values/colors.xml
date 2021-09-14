@@ -1,43 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="colorPrimary">@color/photonInk60</color>
-    <color name="colorPrimaryDark">#6c3b6e</color>
-    <color name="colorSecondary">@color/photonInk10</color>
-    <color name="primaryText">@color/photonLightGrey05</color>
-    <color name="secondaryText">@color/photonLightGrey50</color>
+    <color name="colorPrimary">@color/photonViolet05</color>
+    <color name="colorSecondary">@color/photonLightGrey05</color>
+    <color name="primaryText">@color/photonInk50</color>
+    <color name="secondaryText">@color/photonDarkGrey05</color>
 
-    <color name="contrastColor">@android:color/black</color>
+    <color name="contrastColor">@color/photonBlack</color>
 
     <color name="error">@color/photonRed70</color>
     <color name="focusContrastPink">#e452B9</color>
 
-    <color name="dialogAccent">@color/focusContrastPink</color>
-
-    <color name="disabled">@color/photonLightGrey05</color>
-    <color name="disabledText">@color/photonLightGrey50</color>
-    <color name="background">#1D1133</color>
+    <color name="disabled">#66312A65</color>
+    <color name="background">@color/colorPrimary</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
-    <color name="urlBarHintText">#ffbbbcc5</color>
+    <color name="urlBarHintText">@color/photonDarkGrey05</color>
     <color name="statusBarBackground">@color/background</color>
 
     <color name="colorCursor">#ccffffff</color>
     <color name="colorOverlay">#cc000000</color>
 
-    <color name="toolbarUrlBackground">@color/background</color>
+    <color name="toolbarUrlBackground">@color/photonLightGrey05</color>
 
-    <color name="divider">@color/colorSecondary</color>
-    <color name="accentBright">#FF4AA2</color>
-    <color name="accent">#C60084</color>
+    <color name="divider">@color/photonLightGrey30</color>
+    <color name="accentBright">@color/photonPink70</color>
+    <color name="accent">@color/photonPink70</color>
     <color name="destructive">#FF6A75</color>
 
     <!-- Logo and Splash -->
-    <color name="headerGradientStart">#2B2154</color>
-    <color name="headerGradientMiddle">#281D4C</color>
-    <color name="headerGradientEnd">#2A2051</color>
+    <color name="headerGradientStart">#D4D5FA</color>
+    <color name="headerGradientMiddle">#D3D5FB</color>
+    <color name="headerGradientEnd">#D5D7FA</color>
 
     <!-- Progress Bar -->
     <color name="colorProgressGradientStart">#FFFF1AD9</color>
@@ -58,20 +53,20 @@
     <color name="menuBackground">@color/colorSecondary</color>
 
     <!-- Snackbar-->
-    <color name="snackbarBackground">#FF414146</color>
-    <color name="snackbarTextColor">#ffffffff</color>
-    <color name="snackbarActionText">@color/photonBlue50</color>
+    <color name="snackbarBackground">@color/photonLightGrey05</color>
+    <color name="snackbarTextColor">@color/photonBlack</color>
+    <color name="snackbarActionText">@color/photonBlue40</color>
 
     <!-- Search Suggestions -->
-    <color name="searchSuggestionsBackground">@color/photonInk80</color>
-    <color name="searchSuggestionPromptBackground">@color/photonInk80</color>
-    <color name="searchSuggestionPromptTitleColor">@color/photonLightGrey05</color>
-    <color name="searchSuggestionPromptSubtitleColor">@color/photonLightGrey05</color>
+    <color name="searchSuggestionsBackground">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptBackground">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptTitleColor">@color/photonInk80</color>
+    <color name="searchSuggestionPromptSubtitleColor">@color/photonInk80</color>
     <color name="searchSuggestionPromptBorderColor">@color/colorSecondary</color>
     <color name="searchSuggestionPromptButtonTextColor">@color/accentBright</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
-    <color name="searchHintBackgroundColor">@color/photonInk80</color>
+    <color name="searchHintBackgroundColor">@color/photonLightGrey05</color>
     <color name="urlBarInactiveBackgroundColor">#480f1126</color>
 
     <!-- Onboarding -->
@@ -79,13 +74,13 @@
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
     <!-- Home Tips -->
-    <color name="inactive_dot_background">#66FBFBFE</color>
-    <color name="active_dot_background">#FBFBFE</color>
-    <color name="tip_text_color">@color/disabledText</color>
-    <color name="tip_deeplink_color">#cf3e8c</color>
+    <color name="inactive_dot_background">@color/photonInk20A48</color>
+    <color name="active_dot_background">@color/photonLightGrey05</color>
+    <color name="tip_text_color">@color/disabled</color>
+    <color name="tip_deeplink_color">@color/accent</color>
 
     <!-- Session -->
-    <color name="colorSession">@color/photonInk80</color>
+    <color name="colorSession">@color/photonLightGrey05</color>
     <color name="colorActiveSession">#353852</color>
     <color name="colorAction">@color/photonBlue50</color>
 
@@ -100,16 +95,16 @@
     <color name="home_screen_dialog_bg">@color/colorSecondary</color>
     <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
     <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
-    <color name="home_screen_dialog_text">@color/photonGrey10</color>
+    <color name="home_screen_dialog_text">@color/photonDarkGrey10</color>
     <color name="home_screen_dialog_highlight">@color/focusContrastPink</color>
 
     <!-- Find in Page -->
-    <color name="find_in_page_background">#FFFFFF</color>
-    <color name="find_in_page_buttons_tint">#000000</color>
-    <color name="find_in_page_no_matches_color">#ff000000</color>
-    <color name="find_in_page_query_color">#ff000000</color>
-    <color name="find_in_page_query_hint_color">#ff000000</color>
-    <color name="find_in_page_results_color">#ff000000</color>
+    <color name="find_in_page_background">@color/photonBlack</color>
+    <color name="find_in_page_buttons_tint">@color/enabled_button_tint</color>
+    <color name="find_in_page_no_matches_color">#ffFFFFFF</color>
+    <color name="find_in_page_query_color">#ffFFFFFF</color>
+    <color name="find_in_page_query_hint_color">#ffFFFFFF</color>
+    <color name="find_in_page_results_color">#ffFFFFFF</color>
 
     <color name="firefoxInstallHint">@color/focusContrastPink</color>
 
@@ -126,13 +121,21 @@
     <color name="colorSettingsTint">@color/photonGrey10</color>
     <color name="colorAccentSettings">@color/accentBright</color>
 
-    <!-- Custom tab toolbar background
-     Temporary resources used by UI tests -->
-    <color name="toolbarUrlDarkBackground">#1D1133</color>
-    <color name="toolbarUrlLightBackground">#FBFBFE</color>
-
     <color name="preference_row_selected">#353852</color>
     <color name="preference_row_disabled">#B3313131</color>
 
     <color name="trackingProtectionSheetBackground">@color/background</color>
+
+    <color name="enabled_button_tint">@color/photonBlack</color>
+
+    <!--Onboarding fragment colors -->
+    <color name="onboarding_text">@color/photonDarkGrey05</color>
+    <color name="onboarding_title">@color/photonLightGrey05</color>
+
+    <!--Modals colors -->
+    <color name="modal_background">@color/photonLightGrey05</color>
+
+    <!-- Override AC colors -->
+    <color name="mozac_ui_icons_fill">@color/primaryText</color>
+
 </resources>

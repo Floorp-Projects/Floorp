@@ -6,7 +6,7 @@
     android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_gradient_dark"
+    android:background="@drawable/background_gradient"
     android:orientation="vertical"
     android:paddingTop="25dp">
 
@@ -17,7 +17,8 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:text="@string/firstrun_skip_button" />
+        android:text="@string/firstrun_skip_button"
+        android:textColor="@color/primaryText" />
 
     <LinearLayout
         android:layout_width="match_parent"

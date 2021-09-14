@@ -148,7 +148,7 @@ class BrowserToolbarIntegration(
 
         val urlBackground = ResourcesCompat.getDrawable(
             fragment.resources,
-            R.drawable.toolbar_url_dark_background,
+            R.drawable.toolbar_url_background,
             fragment.context?.theme
         )
         toolbar.display.setUrlBackground(urlBackground)

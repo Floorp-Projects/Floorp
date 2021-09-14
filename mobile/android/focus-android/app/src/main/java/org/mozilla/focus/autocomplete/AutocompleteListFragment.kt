@@ -302,7 +302,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
         }
 
         fun onSelected() {
-            itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.disabledText))
+            itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.disabled))
         }
 
         fun onCleared() {

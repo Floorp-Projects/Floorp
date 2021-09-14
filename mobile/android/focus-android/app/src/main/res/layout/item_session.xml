@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="56dp"
-    android:background="@drawable/background_gradient_dark"
+    android:background="@drawable/background_gradient"
     android:drawablePadding="16dp"
     android:ellipsize="end"
     android:gravity="start|center_vertical"

@@ -4,35 +4,31 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <color name="colorPrimary">@color/photonInk60</color>
-    <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorSecondary">@color/photonInk10</color>
     <color name="primaryText">@color/photonLightGrey05</color>
     <color name="secondaryText">@color/photonLightGrey50</color>
 
-    <color name="contrastColor">@android:color/white</color> *
+    <color name="contrastColor">@color/photonWhite</color>
 
-    <color name="error">@color/photonRed30</color> *
+    <color name="error">@color/photonRed30</color>
 
     <color name="focusContrastPink">#e452B9</color>
 
-    <color name="dialogAccent">@color/focusContrastPink</color>
-
-    <color name="disabled">@color/photonLightGrey05</color>
-    <color name="disabledText">@color/photonLightGrey50</color>
-    <color name="background">#1D1133</color>
+    <color name="disabled">#66FBFBFE</color>
+    <color name="background">@color/colorPrimary</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
-    <color name="urlBarHintText">#ffbbbcc5</color>
+    <color name="urlBarHintText">@color/photonLightGrey50</color>
     <color name="statusBarBackground">@color/background</color>
 
     <color name="colorCursor">#ccffffff</color>
     <color name="colorOverlay">#cc000000</color>
 
-    <color name="toolbarUrlBackground">@color/background</color>
+    <color name="toolbarUrlBackground">@color/photonInk05</color>
 
-    <color name="divider">@color/colorSecondary</color>
-    <color name="accentBright">#FF4AA2</color>
-    <color name="accent">#C60084</color>
+    <color name="divider">@color/photonInk10</color>
+    <color name="accentBright">@color/photonPink40</color>
+    <color name="accent">@color/photonPink70</color>
     <color name="destructive">#FF6A75</color>
 
     <!-- Logo and Splash -->
@@ -59,8 +55,8 @@
     <color name="menuBackground">@color/colorSecondary</color>
 
     <!-- Snackbar-->
-    <color name="snackbarBackground">#FF414146</color>
-    <color name="snackbarTextColor">#ffffffff</color>
+    <color name="snackbarBackground">@color/photonDarkGrey05</color>
+    <color name="snackbarTextColor">@color/photonWhite</color>
     <color name="snackbarActionText">@color/photonBlue50</color>
 
     <!-- Search Suggestions -->
@@ -81,9 +77,9 @@
 
     <!-- Home Tips -->
     <color name="inactive_dot_background">#66FBFBFE</color>
-    <color name="active_dot_background">#FBFBFE</color>
-    <color name="tip_text_color">@color/disabledText</color>
-    <color name="tip_deeplink_color">#cf3e8c</color>
+    <color name="active_dot_background">@color/photonLightGrey05</color>
+    <color name="tip_text_color">@color/disabled</color>
+    <color name="tip_deeplink_color">@color/accent</color>
 
     <!-- Session -->
     <color name="colorSession">@color/photonInk80</color>
@@ -105,8 +101,8 @@
     <color name="home_screen_dialog_highlight">@color/focusContrastPink</color>
 
     <!-- Find in Page -->
-    <color name="find_in_page_background">#FFFFFF</color>
-    <color name="find_in_page_buttons_tint">#000000</color>
+    <color name="find_in_page_background">@color/photonWhite</color>
+    <color name="find_in_page_buttons_tint">@color/enabled_button_tint</color>
     <color name="find_in_page_no_matches_color">#ff000000</color>
     <color name="find_in_page_query_color">#ff000000</color>
     <color name="find_in_page_query_hint_color">#ff000000</color>
@@ -131,4 +127,16 @@
     <color name="preference_row_disabled">#B3313131</color>
 
     <color name="trackingProtectionSheetBackground">@color/background</color>
+
+    <color name="enabled_button_tint">@color/photonWhite</color>
+
+    <!--Onboarding fragment colors -->
+    <color name="onboarding_text">@color/photonGrey50</color>
+    <color name="onboarding_title">@color/photonGrey90</color>
+
+    <!--Modals colors -->
+    <color name="modal_background">@color/photonInk80</color>
+
+    <!-- Override AC colors -->
+    <color name="mozac_ui_icons_fill">@color/primaryText</color>
 </resources>

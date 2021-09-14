@@ -38,8 +38,8 @@ class NavigationButtonsIntegration(
         store.state.findCustomTabOrSelectedTab(customTabId)?.ifCustomTab()?.let { sessionState ->
             sessionState.config.toolbarColor?.let { color ->
                 if (!ColorUtils.isDark(color)) {
-                    enabledColorRes = R.color.enabled_toolbar_button_color
-                    disabledColorRes = R.color.disabledText
+                    enabledColorRes = R.color.enabled_button_tint
+                    disabledColorRes = R.color.disabled
                 }
             }
         }

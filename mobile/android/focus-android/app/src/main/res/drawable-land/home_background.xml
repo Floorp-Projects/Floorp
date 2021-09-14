@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="640dp"
+    android:height="360dp"
+    android:viewportWidth="640"
+    android:viewportHeight="360">
+<<<<<<<< HEAD:app/src/main/res/drawable-land/home_background.xml
+  <path
+      android:pathData="M640,360V0H0V360H640Z"
+      android:fillType="evenOdd">
+    <aapt:attr name="android:fillColor">
+      <gradient 
+          android:startY="164.843"
+          android:startX="683.854"
+          android:endY="1028.42"
+          android:endX="469.022"
+          android:type="linear">
+        <item android:offset="0.015625" android:color="#FF1E1236"/>
+        <item android:offset="0.220059" android:color="#FF332866"/>
+        <item android:offset="0.416448" android:color="#FF4D3A83"/>
+        <item android:offset="0.623772" android:color="#FF3C286A"/>
+        <item android:offset="0.757442" android:color="#FF21163E"/>
+        <item android:offset="0.895833" android:color="#FF1D1133"/>
+      </gradient>
+    </aapt:attr>
+  </path>
+========
+    <group>
+        <clip-path android:pathData="M0,0h640v360h-640z" />
+        <path
+            android:fillType="evenOdd"
+            android:pathData="M658,412V0H0V412H658Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:endX="58.638"
+                    android:endY="504.061"
+                    android:startX="58.0827"
+                    android:startY="12.6014"
+                    android:type="linear">
+                    <item
+                        android:color="#FFD3D4FA"
+                        android:offset="0" />
+                    <item
+                        android:color="#FFD7D6F9"
+                        android:offset="0.189296" />
+                    <item
+                        android:color="#FFECEAFA"
+                        android:offset="0.330362" />
+                    <item
+                        android:color="#FFF0EFFA"
+                        android:offset="0.39489" />
+                    <item
+                        android:color="#FFD9D3F5"
+                        android:offset="0.676039" />
+                    <item
+                        android:color="#FFD6C9EB"
+                        android:offset="0.828066" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+>>>>>>>> 1a526b91... Update colors for light theme.:app/src/main/res/drawable-land/dark_background.xml
+</vector>

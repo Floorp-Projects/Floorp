@@ -286,7 +286,7 @@ class UrlInputFragment :
         if (isOverlay) {
             landingLayout?.visibility = View.GONE
         } else {
-            backgroundView?.setBackgroundResource(R.drawable.dark_background)
+            backgroundView?.setBackgroundResource(R.drawable.home_background)
 
             dismissView?.visibility = View.GONE
 
@@ -363,7 +363,7 @@ class UrlInputFragment :
             // Make sure we update the background for landscape / portrait orientations.
             backgroundView?.background = ContextCompat.getDrawable(
                 requireContext(),
-                R.drawable.dark_background
+                R.drawable.home_background
             )
         }
     }

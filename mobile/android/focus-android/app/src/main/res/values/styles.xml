@@ -59,6 +59,7 @@
          but we want different accents in the dialog. -->
     <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+        <item name="android:textColorPrimary">@color/home_screen_dialog_text</item>
         <item name="dialogPreferredPadding">24dp</item>
         <item name="android:windowBackground">@drawable/dialog_background</item>
         <item name="android:colorAccent">@color/accentBright</item>
@@ -220,7 +221,7 @@
 
     <style name="CaptionText" parent="Widget.MaterialComponents.TextView">
         <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/disabledText</item>
+        <item name="android:textColor">@color/disabled</item>
     </style>
 
     <style name="SwitchTitle" parent="Widget.MaterialComponents.TextView">
@@ -230,7 +231,7 @@
 
     <style name="SwitchDescription" parent="Widget.MaterialComponents.TextView">
         <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/disabledText</item>
+        <item name="android:textColor">@color/disabled</item>
     </style>
 
     <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
@@ -238,7 +239,7 @@
     </style>
 
     <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
-        <item name="android:background">@color/photonInk80</item>
+        <item name="android:background">@color/modal_background</item>
     </style>
 
     <style name="SwitchTheme" parent="Theme.AppCompat.Light">

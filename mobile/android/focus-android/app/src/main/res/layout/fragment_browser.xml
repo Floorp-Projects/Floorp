@@ -19,7 +19,7 @@
             android:id="@+id/status_bar_background"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@drawable/background_gradient_dark" />
+            android:background="@drawable/background_gradient" />
 
         <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
             app:viewsToHideWhenActivated="@array/viewsToHide"

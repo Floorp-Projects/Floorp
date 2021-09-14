@@ -14,7 +14,7 @@
         android:id="@+id/urlbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/display_toolbar_height"
-        android:background="@drawable/background_gradient_dark"
+        android:background="@color/background"
         android:elevation="4dp"
         app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
         android:clipChildren="false">
@@ -23,7 +23,6 @@
             android:id="@+id/browserToolbar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/display_toolbar_height" />
-
     </FrameLayout>
 
 </org.mozilla.focus.browser.DisplayToolbar>
