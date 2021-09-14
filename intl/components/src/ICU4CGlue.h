@@ -357,16 +357,6 @@ class Enumeration {
 };
 
 template <typename CharType>
-Result<const CharType*, InternalError> NullTerminatedMapper(
-    const CharType* string, int32_t length) {
-  // Return the raw value from this Iterator.
-  if (string == nullptr) {
-    return Err(InternalError{});
-  }
-  return string;
-}
-
-template <typename CharType>
 Result<Span<const CharType>, InternalError> SpanMapper(const CharType* string,
                                                        int32_t length) {
   // Return the raw value from this Iterator.
