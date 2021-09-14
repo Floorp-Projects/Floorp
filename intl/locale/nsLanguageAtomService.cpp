@@ -80,15 +80,18 @@ static constexpr struct {
     {"Thai", nsGkAtoms::th},
     {"Tibt", nsGkAtoms::x_tibt}};
 
+static UniquePtr<nsLanguageAtomService> gLangAtomService;
+
 // static
 nsLanguageAtomService* nsLanguageAtomService::GetService() {
-  static UniquePtr<nsLanguageAtomService> gLangAtomService;
   if (!gLangAtomService) {
     gLangAtomService = MakeUnique<nsLanguageAtomService>();
-    ClearOnShutdown(&gLangAtomService);
   }
   return gLangAtomService.get();
 }
+
+// static
+void nsLanguageAtomService::Shutdown() { gLangAtomService = nullptr; }
 
 nsStaticAtom* nsLanguageAtomService::LookupLanguage(
     const nsACString& aLanguage) {
