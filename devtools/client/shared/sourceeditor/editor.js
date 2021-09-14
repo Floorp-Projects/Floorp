@@ -137,6 +137,9 @@ function Editor(config) {
     tabSize: tabSize,
     contextMenu: null,
     matchBrackets: true,
+    highlightSelectionMatches: {
+      wordsOnly: true,
+    },
     extraKeys: {},
     indentWithTabs: useTabs,
     inputStyle: "accessibleTextArea",
