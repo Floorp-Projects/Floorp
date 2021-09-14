@@ -1275,9 +1275,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
     return;
   }
 
-  bool changingEnabledState =
-      aContext->mIMEState.mEnabled != mInputContext.mIMEState.mEnabled ||
-      aContext->mHTMLInputType != mInputContext.mHTMLInputType;
+  bool changingEnabledState = aContext->IsInputAttributeChanged(mInputContext);
 
   // Release current IME focus if IME is enabled.
   if (changingEnabledState && mInputContext.mIMEState.IsEditable()) {

@@ -410,6 +410,25 @@ struct InputContext final {
            !mHTMLInputType.EqualsLiteral("email");
   }
 
+  bool IsInputAttributeChanged(const InputContext& aOldContext) const {
+    return mIMEState.mEnabled != aOldContext.mIMEState.mEnabled ||
+#if defined(ANDROID) || defined(MOZ_WIDGET_GTK) || defined(XP_WIN)
+           // input type and inputmode are supported by Windows IME API, GTK
+           // IME API and Android IME API
+           mHTMLInputType != aOldContext.mHTMLInputType ||
+           mHTMLInputInputmode != aOldContext.mHTMLInputInputmode ||
+#endif
+#if defined(ANDROID) || defined(MOZ_WIDGET_GTK)
+           // autocapitalize is supported by Android IME API and GTK IME API
+           mAutocapitalize != aOldContext.mAutocapitalize ||
+#endif
+#if defined(ANDROID)
+           // enterkeyhint is only supported by Android IME API.
+           mActionHint != aOldContext.mActionHint ||
+#endif
+           false;
+  }
+
   IMEState mIMEState;
 
   /* The type of the input if the input is a html input field */
