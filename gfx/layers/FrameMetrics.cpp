@@ -316,12 +316,6 @@ std::ostream& operator<<(std::ostream& aStream,
   if (aMetadata.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     aStream << "] [scrollParent=" << aMetadata.GetScrollParentId();
   }
-  if (aMetadata.HasScrollClip()) {
-    aStream << "] [clip=" << aMetadata.ScrollClip().GetClipRect();
-  }
-  if (aMetadata.HasMaskLayer()) {
-    aStream << "] [mask=" << aMetadata.ScrollClip().GetMaskLayerIndex().value();
-  }
   aStream << "] [overscroll=" << aMetadata.GetOverscrollBehavior() << "] ["
           << aMetadata.GetScrollUpdates().Length() << " scrollupdates"
           << "] }";
