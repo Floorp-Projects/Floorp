@@ -253,6 +253,38 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
 }
 
 // static
+void nsClipboard::LogOleGetClipboardResult(const HRESULT aHres) {
+  if (MOZ_LOG_TEST(gWin32ClipboardLog, LogLevel::Debug)) {
+    nsAutoCString hresString;
+    OleGetClipboardResultToString(aHres, hresString);
+    MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug,
+            ("OleGetClipboard result: %s", hresString.get()));
+  }
+}
+
+// static
+void nsClipboard::OleGetClipboardResultToString(const HRESULT aHres,
+                                                nsACString& aResult) {
+  switch (aHres) {
+    case S_OK:
+      aResult = "S_OK";
+      break;
+    case CLIPBRD_E_CANT_OPEN:
+      aResult = "CLIPBRD_E_CANT_OPEN";
+      break;
+    case CLIPBRD_E_CANT_CLOSE:
+      aResult = "CLIPBRD_E_CANT_CLOSE";
+      break;
+    default:
+      // Explicit template instantiaton, because otherwise the call is
+      // ambiguous.
+      constexpr int kRadix = 16;
+      aResult = IntToCString<int32_t>(aHres, kRadix);
+      break;
+  }
+}
+
+// static
 void nsClipboard::OleSetClipboardResultToString(HRESULT aHres,
                                                 nsACString& aResult) {
   switch (aHres) {
@@ -1073,7 +1105,9 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
 
   // This makes sure we can use the OLE functionality for the clipboard
   IDataObject* dataObj;
-  if (S_OK == ::OleGetClipboard(&dataObj)) {
+  const HRESULT hres = ::OleGetClipboard(&dataObj);
+  LogOleGetClipboardResult(hres);
+  if (S_OK == hres) {
     // Use OLE IDataObject for clipboard operations
     MOZ_LOG(gWin32ClipboardLog, LogLevel::Verbose,
             ("%s: use OLE IDataObject.", __FUNCTION__));

@@ -66,6 +66,14 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
 
  protected:
   // See
+  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olegetclipboard>.
+  static void LogOleGetClipboardResult(HRESULT aHres);
+
+  // See
+  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olegetclipboard>.
+  static void OleGetClipboardResultToString(HRESULT aHres, nsACString& aResult);
+
+  // See
   // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olesetclipboard>.
   static void LogOleSetClipboardResult(HRESULT aHres);
 
