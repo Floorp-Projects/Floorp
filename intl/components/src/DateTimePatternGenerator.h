@@ -7,7 +7,6 @@
 #include "unicode/udatpg.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/intl/ICU4CGlue.h"
