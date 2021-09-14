@@ -19,6 +19,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ActionMode
+import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.annotation.CallSuper
@@ -579,6 +580,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
         return false
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        ProfilerMarkers.addForDispatchTouchEvent(components.core.engine.profiler, ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     final override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

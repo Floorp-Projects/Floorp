@@ -5,6 +5,7 @@
 package org.mozilla.fenix.perf
 
 import android.app.Activity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.view.doOnPreDraw
@@ -26,6 +27,20 @@ object ProfilerMarkers {
     fun homeActivityOnStart(rootContainer: View, profiler: Profiler?) {
         rootContainer.doOnPreDraw {
             profiler?.addMarker("onPreDraw", "expected first frame via HomeActivity.onStart")
+        }
+    }
+
+    fun addForDispatchTouchEvent(profiler: Profiler?, ev: MotionEvent?) {
+        // We only run this if the profiler is active to minimize any possible delay on touch events.
+        if (profiler?.isProfilerActive() == true) {
+            // We only do this subset because 1) other actions like MOVE may be spammy and 2) doing
+            // a generic ev?.action::class.simpleName may be too expensive for dispatchTouchEvent.
+            val detailText = when (ev?.action) {
+                MotionEvent.ACTION_DOWN -> "ACTION_DOWN"
+                MotionEvent.ACTION_UP -> "ACTION_UP"
+                else -> return
+            }
+            profiler.addMarker("dispatchTouchEvent", detailText)
         }
     }
 }
