@@ -13,31 +13,23 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
-DomPromiseListener::DomPromiseListener(dom::Promise* aDOMPromise) {
-  aDOMPromise->AppendNativeHandler(this);
-}
-
-DomPromiseListener::DomPromiseListener(dom::Promise* aDOMPromise,
-                                       CallbackTypeResolved&& aResolve,
+DomPromiseListener::DomPromiseListener(CallbackTypeResolved&& aResolve,
                                        CallbackTypeRejected&& aReject)
-    : mResolve(Some(std::move(aResolve))), mReject(Some(std::move(aReject))) {
-  aDOMPromise->AppendNativeHandler(this);
-}
+    : mResolve(std::move(aResolve)), mReject(std::move(aReject)) {}
 
 DomPromiseListener::~DomPromiseListener() {
   if (mReject) {
-    (*mReject)(NS_BINDING_ABORTED);
+    mReject(NS_BINDING_ABORTED);
   }
 }
 
 void DomPromiseListener::ResolvedCallback(JSContext* aCx,
                                           JS::Handle<JS::Value> aValue) {
   if (mResolve) {
-    (*mResolve)(aCx, aValue);
+    mResolve(aCx, aValue);
   }
   // Let's clear the lambdas in case we have a cycle to ourselves.
-  mResolve.reset();
-  mReject.reset();
+  Clear();
 }
 
 void DomPromiseListener::RejectedCallback(JSContext* aCx,
@@ -49,17 +41,15 @@ void DomPromiseListener::RejectedCallback(JSContext* aCx,
     } else {
       errorCode = nsresult(aValue.toInt32());
     }
-    (*mReject)(errorCode);
+    mReject(errorCode);
   }
   // Let's clear the lambdas in case we have a cycle to ourselves.
-  mResolve.reset();
-  mReject.reset();
+  Clear();
 }
 
-void DomPromiseListener::SetResolvers(CallbackTypeResolved&& aResolve,
-                                      CallbackTypeRejected&& aReject) {
-  mResolve = Some(std::move(aResolve));
-  mReject = Some(std::move(aReject));
+void DomPromiseListener::Clear() {
+  mResolve = nullptr;
+  mReject = nullptr;
 }
 
 }  // namespace dom
