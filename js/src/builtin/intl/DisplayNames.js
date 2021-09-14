@@ -133,7 +133,7 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     //
     //     localeMatcher: "lookup" / "best fit",
     //
-    //     style: "narrow" / "short" / "abbreviated" / "long",
+    //     style: "narrow" / "short" / "long",
     //
     //     type: "language" / "region" / "script" / "currency" / "weekday" /
     //           "month" / "quarter" / "dayPeriod" / "dateTimeField"
@@ -179,12 +179,7 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     }
 
     // Step 10.
-    var style;
-    if (mozExtensions) {
-      style = GetOption(options, "style", "string", ["narrow", "short", "abbreviated", "long"], "long");
-    } else {
-      style = GetOption(options, "style", "string", ["narrow", "short", "long"], "long");
-    }
+    var style = GetOption(options, "style", "string", ["narrow", "short", "long"], "long");
 
     // Step 11.
     lazyDisplayNamesData.style = style;

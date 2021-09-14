@@ -390,14 +390,20 @@ class AboutProtectionsParent extends JSWindowActorParent {
         break;
       case "FetchContentBlockingEvents":
         let dataToSend = {};
-        let displayNames = new Services.intl.DisplayNames(undefined, {
-          type: "weekday",
-          style: "abbreviated",
-          calendar: "gregory",
+        let weekdays = Services.intl.getDisplayNames(undefined, {
+          style: "short",
+          keys: [
+            "dates/gregorian/weekdays/sunday",
+            "dates/gregorian/weekdays/monday",
+            "dates/gregorian/weekdays/tuesday",
+            "dates/gregorian/weekdays/wednesday",
+            "dates/gregorian/weekdays/thursday",
+            "dates/gregorian/weekdays/friday",
+            "dates/gregorian/weekdays/saturday",
+            "dates/gregorian/weekdays/sunday",
+          ],
         });
-
-        // Weekdays starting Sunday (7) to Saturday (6).
-        let weekdays = [7, 1, 2, 3, 4, 5, 6].map(day => displayNames.of(day));
+        weekdays = Object.values(weekdays.values);
         dataToSend.weekdays = weekdays;
 
         if (PrivateBrowsingUtils.isWindowPrivate(win)) {

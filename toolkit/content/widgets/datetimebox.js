@@ -1415,14 +1415,18 @@ this.DateTimeBoxWidget = class {
       return {};
     }
 
+    let amString, pmString;
+    let keys = [
+      "dates/gregorian/dayperiods/am",
+      "dates/gregorian/dayperiods/pm",
+    ];
+
     let result = intlUtils.getDisplayNames(this.mLocales, {
-      type: "dayPeriod",
       style: "short",
-      calendar: "gregory",
-      keys: ["am", "pm"],
+      keys,
     });
 
-    let [amString, pmString] = result.values;
+    [amString, pmString] = keys.map(key => result.values[key]);
 
     return { amString, pmString };
   }

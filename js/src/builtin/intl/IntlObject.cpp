@@ -10,6 +10,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/Calendar.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Range.h"
 
 #include <algorithm>
 #include <array>
@@ -41,6 +43,8 @@
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
 #include "unicode/ucurr.h"
+#include "unicode/udat.h"
+#include "unicode/udatpg.h"
 #include "unicode/uenum.h"
 #include "unicode/uloc.h"
 #include "unicode/utypes.h"
@@ -57,6 +61,13 @@
 
 using namespace js;
 
+using mozilla::Range;
+using mozilla::RangedPtr;
+
+using JS::AutoStableStringChars;
+
+using js::intl::CallICU;
+using js::intl::DateTimeFormatOptions;
 using js::intl::IcuLocale;
 
 /******************** Intl ********************/
@@ -163,6 +174,324 @@ static void ReportBadKey(JSContext* cx, JSString* key) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
                               chars.get());
   }
+}
+
+template <typename ConstChar>
+static bool MatchPart(RangedPtr<ConstChar> iter, const RangedPtr<ConstChar> end,
+                      const char* part, size_t partlen) {
+  for (size_t i = 0; i < partlen; iter++, i++) {
+    if (iter == end || *iter != part[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+template <typename ConstChar, size_t N>
+inline bool MatchPart(RangedPtr<ConstChar>* iter,
+                      const RangedPtr<ConstChar> end, const char (&part)[N]) {
+  if (!MatchPart(*iter, end, part, N - 1)) {
+    return false;
+  }
+
+  *iter += N - 1;
+  return true;
+}
+
+enum class DisplayNameStyle {
+  Narrow,
+  Short,
+  Long,
+};
+
+template <typename ConstChar>
+static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
+                                          UDateTimePatternGenerator* dtpg,
+                                          DisplayNameStyle style,
+                                          const Range<ConstChar>& pattern,
+                                          HandleString patternString) {
+  RangedPtr<ConstChar> iter = pattern.begin();
+  const RangedPtr<ConstChar> end = pattern.end();
+
+  auto MatchSlash = [cx, patternString, &iter, end]() {
+    if (MOZ_LIKELY(iter != end && *iter == '/')) {
+      iter++;
+      return true;
+    }
+
+    ReportBadKey(cx, patternString);
+    return false;
+  };
+
+  if (!MatchPart(&iter, end, "dates")) {
+    ReportBadKey(cx, patternString);
+    return nullptr;
+  }
+
+  if (!MatchSlash()) {
+    return nullptr;
+  }
+
+  if (MatchPart(&iter, end, "fields")) {
+    if (!MatchSlash()) {
+      return nullptr;
+    }
+
+    UDateTimePatternField fieldType;
+
+    if (MatchPart(&iter, end, "year")) {
+      fieldType = UDATPG_YEAR_FIELD;
+    } else if (MatchPart(&iter, end, "month")) {
+      fieldType = UDATPG_MONTH_FIELD;
+    } else if (MatchPart(&iter, end, "week")) {
+      fieldType = UDATPG_WEEK_OF_YEAR_FIELD;
+    } else if (MatchPart(&iter, end, "day")) {
+      fieldType = UDATPG_DAY_FIELD;
+    } else {
+      ReportBadKey(cx, patternString);
+      return nullptr;
+    }
+
+    // This part must be the final part with no trailing data.
+    if (iter != end) {
+      ReportBadKey(cx, patternString);
+      return nullptr;
+    }
+
+    int32_t resultSize;
+    const UChar* value = udatpg_getAppendItemName(dtpg, fieldType, &resultSize);
+    MOZ_ASSERT(resultSize >= 0);
+
+    return NewStringCopyN<CanGC>(cx, value, size_t(resultSize));
+  }
+
+  if (MatchPart(&iter, end, "gregorian")) {
+    if (!MatchSlash()) {
+      return nullptr;
+    }
+
+    UDateFormatSymbolType symbolType;
+    int32_t index;
+
+    if (MatchPart(&iter, end, "months")) {
+      if (!MatchSlash()) {
+        return nullptr;
+      }
+
+      switch (style) {
+        case DisplayNameStyle::Narrow:
+          symbolType = UDAT_STANDALONE_NARROW_MONTHS;
+          break;
+
+        case DisplayNameStyle::Short:
+          symbolType = UDAT_STANDALONE_SHORT_MONTHS;
+          break;
+
+        case DisplayNameStyle::Long:
+          symbolType = UDAT_STANDALONE_MONTHS;
+          break;
+      }
+
+      if (MatchPart(&iter, end, "january")) {
+        index = UCAL_JANUARY;
+      } else if (MatchPart(&iter, end, "february")) {
+        index = UCAL_FEBRUARY;
+      } else if (MatchPart(&iter, end, "march")) {
+        index = UCAL_MARCH;
+      } else if (MatchPart(&iter, end, "april")) {
+        index = UCAL_APRIL;
+      } else if (MatchPart(&iter, end, "may")) {
+        index = UCAL_MAY;
+      } else if (MatchPart(&iter, end, "june")) {
+        index = UCAL_JUNE;
+      } else if (MatchPart(&iter, end, "july")) {
+        index = UCAL_JULY;
+      } else if (MatchPart(&iter, end, "august")) {
+        index = UCAL_AUGUST;
+      } else if (MatchPart(&iter, end, "september")) {
+        index = UCAL_SEPTEMBER;
+      } else if (MatchPart(&iter, end, "october")) {
+        index = UCAL_OCTOBER;
+      } else if (MatchPart(&iter, end, "november")) {
+        index = UCAL_NOVEMBER;
+      } else if (MatchPart(&iter, end, "december")) {
+        index = UCAL_DECEMBER;
+      } else {
+        ReportBadKey(cx, patternString);
+        return nullptr;
+      }
+    } else if (MatchPart(&iter, end, "weekdays")) {
+      if (!MatchSlash()) {
+        return nullptr;
+      }
+
+      switch (style) {
+        case DisplayNameStyle::Narrow:
+          symbolType = UDAT_STANDALONE_NARROW_WEEKDAYS;
+          break;
+
+        case DisplayNameStyle::Short:
+          symbolType = UDAT_STANDALONE_SHORT_WEEKDAYS;
+          break;
+
+        case DisplayNameStyle::Long:
+          symbolType = UDAT_STANDALONE_WEEKDAYS;
+          break;
+      }
+
+      if (MatchPart(&iter, end, "monday")) {
+        index = UCAL_MONDAY;
+      } else if (MatchPart(&iter, end, "tuesday")) {
+        index = UCAL_TUESDAY;
+      } else if (MatchPart(&iter, end, "wednesday")) {
+        index = UCAL_WEDNESDAY;
+      } else if (MatchPart(&iter, end, "thursday")) {
+        index = UCAL_THURSDAY;
+      } else if (MatchPart(&iter, end, "friday")) {
+        index = UCAL_FRIDAY;
+      } else if (MatchPart(&iter, end, "saturday")) {
+        index = UCAL_SATURDAY;
+      } else if (MatchPart(&iter, end, "sunday")) {
+        index = UCAL_SUNDAY;
+      } else {
+        ReportBadKey(cx, patternString);
+        return nullptr;
+      }
+    } else if (MatchPart(&iter, end, "dayperiods")) {
+      if (!MatchSlash()) {
+        return nullptr;
+      }
+
+      symbolType = UDAT_AM_PMS;
+
+      if (MatchPart(&iter, end, "am")) {
+        index = UCAL_AM;
+      } else if (MatchPart(&iter, end, "pm")) {
+        index = UCAL_PM;
+      } else {
+        ReportBadKey(cx, patternString);
+        return nullptr;
+      }
+    } else {
+      ReportBadKey(cx, patternString);
+      return nullptr;
+    }
+
+    // This part must be the final part with no trailing data.
+    if (iter != end) {
+      ReportBadKey(cx, patternString);
+      return nullptr;
+    }
+
+    return CallICU(cx, [fmt, symbolType, index](UChar* chars, int32_t size,
+                                                UErrorCode* status) {
+      return udat_getSymbols(fmt, symbolType, index, chars, size, status);
+    });
+  }
+
+  ReportBadKey(cx, patternString);
+  return nullptr;
+}
+
+bool js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+
+  // 1. Assert: locale is a string.
+  UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+  if (!locale) {
+    return false;
+  }
+
+  // 2. Assert: style is a string.
+  DisplayNameStyle dnStyle;
+  {
+    JSLinearString* style = args[1].toString()->ensureLinear(cx);
+    if (!style) {
+      return false;
+    }
+
+    if (StringEqualsLiteral(style, "narrow")) {
+      dnStyle = DisplayNameStyle::Narrow;
+    } else if (StringEqualsLiteral(style, "short")) {
+      dnStyle = DisplayNameStyle::Short;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(style, "long"));
+      dnStyle = DisplayNameStyle::Long;
+    }
+  }
+
+  // 3. Assert: keys is an Array.
+  RootedArrayObject keys(cx, &args[2].toObject().as<ArrayObject>());
+  if (!keys) {
+    return false;
+  }
+
+  // 4. Let result be ArrayCreate(0).
+  RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, keys->length()));
+  if (!result) {
+    return false;
+  }
+  result->ensureDenseInitializedLength(0, keys->length());
+
+  UErrorCode status = U_ZERO_ERROR;
+
+  UDateFormat* fmt =
+      udat_open(UDAT_DEFAULT, UDAT_DEFAULT, IcuLocale(locale.get()), nullptr, 0,
+                nullptr, 0, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+  ScopedICUObject<UDateFormat, udat_close> datToClose(fmt);
+
+  // UDateTimePatternGenerator will be needed for translations of date and
+  // time fields like "month", "week", "day" etc.
+  UDateTimePatternGenerator* dtpg =
+      udatpg_open(IcuLocale(locale.get()), &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+  ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
+
+  // 5. For each element of keys,
+  RootedString keyValStr(cx);
+  RootedValue v(cx);
+  for (uint32_t i = 0; i < keys->length(); i++) {
+    if (!GetElement(cx, keys, keys, i, &v)) {
+      return false;
+    }
+
+    keyValStr = v.toString();
+
+    AutoStableStringChars stablePatternChars(cx);
+    if (!stablePatternChars.init(cx, keyValStr)) {
+      return false;
+    }
+
+    // 5.a. Perform an implementation dependent algorithm to map a key to a
+    //      corresponding display name.
+    JSString* displayName =
+        stablePatternChars.isLatin1()
+            ? ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle,
+                                       stablePatternChars.latin1Range(),
+                                       keyValStr)
+            : ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle,
+                                       stablePatternChars.twoByteRange(),
+                                       keyValStr);
+    if (!displayName) {
+      return false;
+    }
+
+    // 5.b. Append the result string to result.
+    result->setDenseElement(i, StringValue(displayName));
+  }
+
+  // 6. Return result.
+  args.rval().setObject(*result);
+  return true;
 }
 
 static bool SameOrParentLocale(JSLinearString* locale,
