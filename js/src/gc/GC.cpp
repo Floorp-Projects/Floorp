@@ -3763,6 +3763,27 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
 #endif
 }
 
+// Set compartments' maybeAlive flags if anything is marked while this class is
+// live. This is used while marking roots.
+class AutoUpdateLiveCompartments {
+  GCRuntime* gc;
+
+ public:
+  explicit AutoUpdateLiveCompartments(GCRuntime* gc) : gc(gc) {
+    for (GCCompartmentsIter c(gc->rt); !c.done(); c.next()) {
+      c->gcState.hasMarkedCells = false;
+    }
+  }
+
+  ~AutoUpdateLiveCompartments() {
+    for (GCCompartmentsIter c(gc->rt); !c.done(); c.next()) {
+      if (c->gcState.hasMarkedCells) {
+        c->gcState.maybeAlive = true;
+      }
+    }
+  }
+};
+
 void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   /*
    * Mark phase.
@@ -3786,11 +3807,8 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   if (rt->isBeingDestroyed()) {
     checkNoRuntimeRoots(session);
   } else {
+    AutoUpdateLiveCompartments updateLive(this);
     traceRuntimeForMajorGC(&marker, session);
-  }
-
-  if (isIncremental) {
-    findDeadCompartments();
   }
 
   updateMemoryCountersOnGCStart();
@@ -3798,8 +3816,7 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
 }
 
 void GCRuntime::findDeadCompartments() {
-  gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::MARK_ROOTS);
-  gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_COMPARTMENTS);
+  gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::FIND_DEAD_COMPARTMENTS);
 
   /*
    * This code ensures that if a compartment is "dead", then it will be
@@ -3810,7 +3827,8 @@ void GCRuntime::findDeadCompartments() {
    *   (2) the compartment's zone is not being collected (set in
    *       beginMarkPhase() above)
    *   (3) an object in the compartment was marked during root marking, either
-   *       as a black root or a gray root (set in RootMarking.cpp), or
+   *       as a black root or a gray root. This is arranged by
+   *       SetCompartmentHasMarkedCells and AutoUpdateLiveCompartments.
    *   (4) the compartment has incoming cross-compartment edges from another
    *       compartment that has maybeAlive set (set by this method).
    *
@@ -3949,6 +3967,8 @@ void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
 
   gcstats::AutoPhase ap(stats(), phase);
+
+  AutoUpdateLiveCompartments updateLive(this);
 
   traceEmbeddingGrayRoots(&marker);
   Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
@@ -5720,6 +5740,10 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
     if (allCCVisibleZonesWereCollected()) {
       grayBitsValid = true;
     }
+  }
+
+  if (isIncremental) {
+    findDeadCompartments();
   }
 
 #ifdef JS_GC_ZEAL
