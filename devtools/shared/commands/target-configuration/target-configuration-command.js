@@ -73,6 +73,24 @@ class TargetConfigurationCommand {
   }
 
   /**
+   * Reports if the given configuration key is supported by the server.
+   * If the debugged context doesn't support the watcher actor,
+   * we won't be using the target configuration actor and report all keys
+   * as not supported.
+   *
+   * @param {Object} configurationKey
+   *                 Name of the configuration you would like to set.
+   * @return {Promise<Boolean>} True, if this configuration can be set via this API.
+   */
+  async supports(configurationKey) {
+    if (!this._hasTargetWatcherSupport()) {
+      return false;
+    }
+    const front = await this.getFront();
+    return !!front.traits.supportedOptions[configurationKey];
+  }
+
+  /**
    * Change orientation type and angle (that can be accessed through screen.orientation in
    * the content page) and simulates the "orientationchange" event when the device screen
    * was rotated.
