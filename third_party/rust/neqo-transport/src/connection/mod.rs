@@ -36,7 +36,7 @@ use crate::cid::{
 
 use crate::crypto::{Crypto, CryptoDxState, CryptoSpace};
 use crate::dump::*;
-use crate::events::{ConnectionEvent, ConnectionEvents};
+use crate::events::{ConnectionEvent, ConnectionEvents, OutgoingDatagramOutcome};
 use crate::frame::{
     CloseError, Frame, FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION,
     FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
@@ -45,7 +45,7 @@ use crate::packet::{
     DecryptedPacket, PacketBuilder, PacketNumber, PacketType, PublicPacket, QuicVersion,
 };
 use crate::path::{Path, PathRef, Paths};
-use crate::qlog;
+use crate::quic_datagrams::{DatagramTracking, QuicDatagrams};
 use crate::recovery::{LossRecovery, RecoveryToken, SendProfile};
 use crate::rtt::GRANULARITY;
 pub use crate::send_stream::{RetransmissionPriority, TransmissionPriority};
@@ -54,6 +54,7 @@ use crate::stream_id::StreamType;
 use crate::streams::Streams;
 use crate::tparams::{self, TransportParameter, TransportParameters, TransportParametersHandler};
 use crate::tracking::{AckTracker, PacketNumberSpace, SentPacket};
+use crate::{qlog, StreamId};
 use crate::{AppError, ConnectionError, Error, Res};
 
 mod idle;
@@ -246,6 +247,10 @@ pub struct Connection {
     /// In particular, this occurs when asynchronous certificate validation happens.
     saved_datagrams: SavedDatagrams,
 
+    /// This is responsible for the QuicDatagrams' handling:
+    /// https://datatracker.ietf.org/doc/html/draft-ietf-quic-datagram
+    quic_datagrams: QuicDatagrams,
+
     pub(crate) crypto: Crypto,
     pub(crate) acks: AckTracker,
     idle_timeout: IdleTimeout,
@@ -363,6 +368,12 @@ impl Connection {
 
         let stats = StatsCell::default();
         let events = ConnectionEvents::default();
+        let quic_datagrams = QuicDatagrams::new(
+            conn_params.get_datagram_size(),
+            conn_params.get_outgoing_datagram_queue(),
+            conn_params.get_incoming_datagram_queue(),
+            events.clone(),
+        );
 
         let c = Self {
             role,
@@ -390,6 +401,7 @@ impl Connection {
             release_resumption_token_timer: None,
             conn_params,
             hrtime: hrtime::Time::get(Self::LOOSE_TIMER_RESOLUTION),
+            quic_datagrams,
             #[cfg(test)]
             test_frame_writer: None,
         };
@@ -1736,7 +1748,7 @@ impl Connection {
         let grease_quic_bit = self.can_grease_quic_bit();
         let version = self.version();
         for space in PacketNumberSpace::iter() {
-            let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx(*space) {
+            let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx_mut(*space) {
                 crypto
             } else {
                 continue;
@@ -1799,6 +1811,9 @@ impl Connection {
                 stats.handshake_done += 1;
             }
         }
+
+        // Check if there is a Datagram to be written
+        self.quic_datagrams.write_frames(builder, tokens, stats);
 
         self.streams
             .write_frames(TransmissionPriority::Critical, builder, tokens, stats);
@@ -1915,6 +1930,7 @@ impl Connection {
     ) -> Res<(Vec<RecoveryToken>, bool, bool)> {
         let mut tokens = Vec::new();
         let primary = path.borrow().is_primary();
+        let mut ack_eliciting = false;
 
         if primary {
             let stats = &mut self.stats.borrow_mut().frame_tx;
@@ -1956,7 +1972,7 @@ impl Connection {
 
         // Maybe send a probe now, either to probe for losses or to keep the connection live.
         let force_probe = profile.should_probe(space);
-        let ack_eliciting = self.maybe_probe(path, force_probe, builder, ack_end, &mut tokens, now);
+        ack_eliciting |= self.maybe_probe(path, force_probe, builder, ack_end, &mut tokens, now);
         // If this is not the primary path, this should be ack-eliciting.
         debug_assert!(primary || ack_eliciting);
 
@@ -1995,7 +2011,7 @@ impl Connection {
         let mut encoder = Encoder::with_capacity(profile.limit());
         for space in PacketNumberSpace::iter() {
             // Ensure we have tx crypto state for this epoch, or skip it.
-            let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx(*space) {
+            let (cspace, tx) = if let Some(crypto) = self.crypto.states.select_tx_mut(*space) {
                 crypto
             } else {
                 continue;
@@ -2052,7 +2068,7 @@ impl Connection {
             );
 
             self.stats.borrow_mut().packets_tx += 1;
-            encoder = builder.build(self.crypto.states.tx(cspace).unwrap())?;
+            encoder = builder.build(self.crypto.states.tx_mut(cspace).unwrap())?;
             debug_assert!(encoder.len() <= mtu);
             self.crypto.states.auto_update()?;
 
@@ -2172,6 +2188,17 @@ impl Connection {
             self.idle_timeout
                 .set_peer_timeout(Duration::from_millis(peer_timeout));
         }
+
+        self.quic_datagrams.set_remote_datagram_size(
+            self.tps
+                .borrow()
+                .remote()
+                .get_integer(tparams::MAX_DATAGRAM_FRAME_SIZE),
+        );
+    }
+
+    pub fn is_stream_id_allowed(&self, stream_id: StreamId) -> bool {
+        self.streams.is_stream_id_allowed(stream_id)
     }
 
     /// Process the final set of transport parameters.
@@ -2491,6 +2518,10 @@ impl Connection {
                 self.acks
                     .ack_freq(seqno, tolerance - 1, delay, ignore_order);
             }
+            Frame::Datagram { data, .. } => {
+                self.stats.borrow_mut().frame_rx.datagram += 1;
+                self.quic_datagrams.handle_datagram(data)?;
+            }
             _ => unreachable!("All other frames are for streams"),
         };
 
@@ -2514,6 +2545,9 @@ impl Connection {
                     RecoveryToken::AckFrequency(rate) => self.paths.lost_ack_frequency(rate),
                     RecoveryToken::KeepAlive => self.idle_timeout.lost_keep_alive(),
                     RecoveryToken::Stream(stream_token) => self.streams.lost(stream_token),
+                    RecoveryToken::Datagram(dgram_tracker) => self
+                        .events
+                        .datagram_outcome(dgram_tracker, OutgoingDatagramOutcome::Lost),
                 }
             }
         }
@@ -2562,6 +2596,9 @@ impl Connection {
                     RecoveryToken::RetireConnectionId(seqno) => self.paths.acked_retire_cid(*seqno),
                     RecoveryToken::AckFrequency(rate) => self.paths.acked_ack_frequency(rate),
                     RecoveryToken::KeepAlive => self.idle_timeout.ack_keep_alive(),
+                    RecoveryToken::Datagram(dgram_tracker) => self
+                        .events
+                        .datagram_outcome(dgram_tracker, OutgoingDatagramOutcome::Acked),
                     // We only worry when these are lost
                     RecoveryToken::HandshakeDone => (),
                 }
@@ -2787,6 +2824,69 @@ impl Connection {
     /// side is closed.
     pub fn stream_keep_alive(&mut self, stream_id: u64, keep: bool) -> Res<()> {
         self.streams.keep_alive(stream_id.into(), keep)
+    }
+
+    pub fn remote_datagram_size(&self) -> u64 {
+        self.quic_datagrams.remote_datagram_size()
+    }
+
+    /// Returns the current max size of a datagram that can fit into a packet.
+    /// The value will change over time depending on the encoded size of the
+    /// packet number, ack frames, etc.
+    /// # Error
+    /// The function returns `NotAvailable` if datagrams are not enabled.
+    pub fn max_datagram_size(&self) -> Res<u64> {
+        let max_dgram_size = self.quic_datagrams.remote_datagram_size();
+        if max_dgram_size == 0 {
+            return Err(Error::NotAvailable);
+        }
+        let version = self.version();
+        let (cspace, tx) = if let Some(crypto) = self
+            .crypto
+            .states
+            .select_tx(PacketNumberSpace::ApplicationData)
+        {
+            crypto
+        } else {
+            return Err(Error::NotAvailable);
+        };
+        let path = self.paths.primary_fallible().ok_or(Error::NotAvailable)?;
+        let mtu = path.borrow().mtu();
+        let encoder = Encoder::with_capacity(mtu);
+
+        let (_, mut builder) = Self::build_packet_header(
+            &path.borrow(),
+            cspace,
+            encoder,
+            tx,
+            &self.address_validation,
+            version,
+            false,
+        );
+        let _ = Self::add_packet_number(
+            &mut builder,
+            tx,
+            self.loss_recovery
+                .largest_acknowledged_pn(PacketNumberSpace::ApplicationData),
+        );
+
+        let data_len_possible =
+            u64::try_from(mtu.saturating_sub(tx.expansion() + builder.len() + 1)).unwrap();
+        Ok(min(data_len_possible, max_dgram_size))
+    }
+
+    /// Queue a datagram for sending.
+    /// # Error
+    /// The function returns `TooMuchData` if the supply buffer is bigger than
+    /// the allowed remote datagram size. The funcion does not check if the
+    /// datagram can fit into a packet (i.e. MTU limit). This is checked during
+    /// creation of an actual packet and the datagram will be dropped if it does
+    /// not fit into the packet. The app is encourage to use `max_datagram_size`
+    /// to check the estimated max datagram size and to use smaller datagrams.
+    /// `max_datagram_size` is just a current estimate and will change over
+    /// time depending on the encoded size of the packet number, ack frames, etc.
+    pub fn send_datagram(&mut self, buf: &[u8], id: impl Into<DatagramTracking>) -> Res<()> {
+        self.quic_datagrams.add_datagram(buf, id.into())
     }
 }
 

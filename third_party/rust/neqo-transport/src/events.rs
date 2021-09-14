@@ -11,10 +11,19 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 use crate::connection::State;
+use crate::quic_datagrams::DatagramTracking;
 use crate::stream_id::{StreamId, StreamType};
 use crate::AppError;
 use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
+
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
+pub enum OutgoingDatagramOutcome {
+    DroppedTooBig,
+    DroppedQueueFull,
+    Lost,
+    Acked,
+}
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub enum ConnectionEvent {
@@ -62,6 +71,12 @@ pub enum ConnectionEvent {
     /// Any data written to streams needs to be written again.
     ZeroRttRejected,
     ResumptionToken(ResumptionToken),
+    Datagram(Vec<u8>),
+    OutgoingDatagramOutcome {
+        id: u64,
+        outcome: OutgoingDatagramOutcome,
+    },
+    IncomingDatagramDropped,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -150,6 +165,52 @@ impl ConnectionEvents {
     pub fn recv_stream_complete(&self, stream_id: StreamId) {
         // If stopped, no longer readable.
         self.remove(|evt| matches!(evt, ConnectionEvent::RecvStreamReadable { stream_id: x } if *x == stream_id.as_u64()));
+    }
+
+    // The number of datagrams in the events queue is limited to max_queued_datagrams.
+    // This function ensure this and deletes the oldest datagrams if needed.
+    fn check_datagram_queued(&self, max_queued_datagrams: usize) {
+        let mut q = self.events.borrow_mut();
+        let mut remove = None;
+        if q.iter()
+            .filter(|evt| matches!(evt, ConnectionEvent::Datagram(_)))
+            .count()
+            == max_queued_datagrams
+        {
+            if let Some(d) = q
+                .iter()
+                .rev()
+                .enumerate()
+                .filter(|(_, evt)| matches!(evt, ConnectionEvent::Datagram(_)))
+                .take(1)
+                .next()
+            {
+                remove = Some(d.0);
+            }
+        }
+        if let Some(r) = remove {
+            q.remove(r);
+            q.push_back(ConnectionEvent::IncomingDatagramDropped);
+        }
+    }
+
+    pub fn add_datagram(&self, max_queued_datagrams: usize, data: &[u8]) {
+        self.check_datagram_queued(max_queued_datagrams);
+        self.events
+            .borrow_mut()
+            .push_back(ConnectionEvent::Datagram(data.to_vec()));
+    }
+
+    pub fn datagram_outcome(
+        &self,
+        dgram_tracker: &DatagramTracking,
+        outcome: OutgoingDatagramOutcome,
+    ) {
+        if let DatagramTracking::Id(id) = dgram_tracker {
+            self.events
+                .borrow_mut()
+                .push_back(ConnectionEvent::OutgoingDatagramOutcome { id: *id, outcome });
+        }
     }
 
     fn insert(&self, event: ConnectionEvent) {

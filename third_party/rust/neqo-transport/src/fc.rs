@@ -448,9 +448,13 @@ impl RemoteStreamLimit {
         }
     }
 
-    pub fn is_new_stream(&mut self, stream_id: StreamId) -> Res<bool> {
+    pub fn is_allowed(&self, stream_id: StreamId) -> bool {
         let stream_idx = stream_id.as_u64() >> 2;
-        if !self.streams_fc.check_allowed(stream_idx) {
+        self.streams_fc.check_allowed(stream_idx)
+    }
+
+    pub fn is_new_stream(&self, stream_id: StreamId) -> Res<bool> {
+        if !self.is_allowed(stream_id) {
             return Err(Error::StreamLimitError);
         }
         Ok(stream_id >= self.next_stream)
@@ -459,7 +463,7 @@ impl RemoteStreamLimit {
     pub fn take_stream_id(&mut self) -> StreamId {
         let new_stream = self.next_stream;
         self.next_stream.next();
-        assert!(self.streams_fc.check_allowed(new_stream.as_u64() >> 2));
+        assert!(self.is_allowed(new_stream));
         new_stream
     }
 }

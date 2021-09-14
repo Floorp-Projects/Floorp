@@ -49,6 +49,7 @@ pub struct FrameStats {
     pub new_token: usize,
 
     pub ack_frequency: usize,
+    pub datagram: usize,
 }
 
 impl Debug for FrameStats {

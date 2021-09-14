@@ -1,6 +1,5 @@
 /*!
-`sfv` crate is an implementation of IETF draft [Structured Field Values for HTTP](https://httpwg.org/http-extensions/draft-ietf-httpbis-header-structure.html)
-for parsing and serializing structured HTTP field values.
+`sfv` crate is an implementation of *Structured Field Values for HTTP* as specified in [RFC 8941](https://httpwg.org/specs/rfc8941.html) for parsing and serializing HTTP field values.
 It also exposes a set of types that might be useful for defining new structured fields.
 
 # Data Structures
@@ -41,10 +40,62 @@ let dict_header_input = "a=?0, b, c; foo=bar, rating=1.5, fruits=(apple pear)";
 let dict = Parser::parse_dictionary(dict_header_input.as_bytes());
 assert!(dict.is_ok());
 println!("{:#?}", dict);
-
 ```
 
-### Value Creation and Serialization
+### Getting Parsed Value Members
+```
+use sfv::*;
+
+let dict_header = "u=2, n=(* foo 2)";
+    let dict = Parser::parse_dictionary(dict_header.as_bytes()).unwrap();
+
+    // Case 1 - handling value if it's an Item of Integer type
+    let u_val = match dict.get("u") {
+        Some(ListEntry::Item(item)) => item.bare_item.as_int(),
+        _ => None,
+    };
+
+    if let Some(u_val) = u_val {
+        println!("{}", u_val);
+    }
+
+    // Case 2 - matching on all possible types
+    match dict.get("u") {
+        Some(ListEntry::Item(item)) => match &item.bare_item {
+            BareItem::Token(val) => {
+                // do something if it's a Token
+                println!("{}", val);
+            }
+            BareItem::Integer(val) => {
+                // do something if it's an Integer
+                println!("{}", val);
+            }
+            BareItem::Boolean(val) => {
+                // do something if it's a Boolean
+                println!("{}", val);
+            }
+            BareItem::Decimal(val) => {
+                // do something if it's a Decimal
+                println!("{}", val);
+            }
+            BareItem::String(val) => {
+                // do something if it's a String
+                println!("{}", val);
+            }
+            BareItem::ByteSeq(val) => {
+                // do something if it's a ByteSeq
+                println!("{:?}", val);
+            }
+        },
+        Some(ListEntry::InnerList(inner_list)) => {
+            // do something if it's an InnerList
+            println!("{:?}", inner_list.items);
+        }
+        None => panic!("key not found"),
+    }
+```
+
+### Structured Field Value Construction and Serialization
 Creates `Item` with empty parameters:
 ```
 use sfv::{Item, BareItem, SerializeValue};

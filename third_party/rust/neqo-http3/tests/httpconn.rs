@@ -9,7 +9,7 @@
 use neqo_common::{event::Provider, Datagram};
 use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{
-    Header, Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State,
+    Header, Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State, Priority,
 };
 use std::mem;
 use test_fixture::*;
@@ -116,7 +116,15 @@ fn test_fetch() {
 
     eprintln!("-----client");
     let req = hconn_c
-        .fetch(now(), "GET", "https", "something.com", "/", &[])
+        .fetch(
+            now(),
+            "GET",
+            "https",
+            "something.com",
+            "/",
+            &[],
+            Priority::default(),
+        )
         .unwrap();
     assert_eq!(req, 0);
     hconn_c.stream_close_send(req).unwrap();

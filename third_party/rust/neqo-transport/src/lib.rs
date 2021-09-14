@@ -24,6 +24,7 @@ mod pace;
 mod packet;
 mod path;
 mod qlog;
+mod quic_datagrams;
 mod recovery;
 mod recv_stream;
 mod rtt;
@@ -117,6 +118,7 @@ pub enum Error {
     UnknownFrameType,
     VersionNegotiation,
     WrongRole,
+    NotAvailable,
 }
 
 impl Error {
