@@ -78,6 +78,7 @@ already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
 
 void RecordedTextureData::EndDraw() {
   MOZ_ASSERT(mDT->hasOneRef());
+  MOZ_ASSERT(mLockedMode & OpenMode::OPEN_READ_WRITE);
 
   if (mCanvasChild->ShouldCacheDataSurface()) {
     mSnapshot = mDT->Snapshot();
