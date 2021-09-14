@@ -130,7 +130,7 @@ class Build(MachCommandBase):
         directory=None,
         verbose=False,
         keep_going=False,
-        priority="",
+        priority="less",
     ):
         """Build the source tree.
 
