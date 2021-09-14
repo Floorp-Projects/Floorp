@@ -240,6 +240,15 @@ add_task(async function navigate_around() {
         min: 49,
         max: 55,
       };
+      // This was previously being read in the content process, but
+      // bug 1725573 moved it into the parent process.  We also block
+      // the main thread on requests to the X server, which is likely
+      // more problematic than the pref read.  These issues are covered
+      // by https://bugzilla.mozilla.org/show_bug.cgi?id=1729080
+      knownProblematicPrefs["gfx.color_management.display_profile"] = {
+        min: 49,
+        max: 50,
+      };
     } else if (AppConstants.platform == "win") {
       // The following 2 graphics prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1639497

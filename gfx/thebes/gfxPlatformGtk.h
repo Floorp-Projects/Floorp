@@ -76,6 +76,7 @@ class gfxPlatformGtk final : public gfxPlatform {
   void InitPlatformGPUProcessPrefs() override;
   void InitWebRenderConfig() override;
   bool CheckVariationFontSupport() override;
+  void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut) override;
 
   int8_t mMaxGenericSubstitutions;
 
