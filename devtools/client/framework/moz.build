@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
+    "test/allocations/browser_allocations_browser_console.ini",
     "test/allocations/browser_allocations_reload.ini",
     "test/allocations/browser_allocations_target.ini",
     "test/allocations/browser_allocations_toolbox.ini",
