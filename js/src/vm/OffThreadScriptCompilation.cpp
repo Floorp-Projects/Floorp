@@ -113,7 +113,7 @@ JS_PUBLIC_API JS::OffThreadToken* JS::CompileToStencilOffThread(
                                         callbackData);
 }
 
-JS_PUBLIC_API RefPtr<JS::Stencil> JS::FinishOffThreadCompileToStencil(
+JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishOffThreadCompileToStencil(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));

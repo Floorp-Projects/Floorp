@@ -9,6 +9,7 @@
 
 #include "jsapi.h"
 
+#include "frontend/CompilationStencil.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/experimental/JSStencil.h"
 #include "js/Modules.h"
@@ -237,7 +238,8 @@ BEGIN_TEST(testStencil_Transcode) {
     // Decode the stencil into new range
     JS::CompileOptions options(cx);
     RefPtr<JS::Stencil> stencil;
-    JS::TranscodeResult res = JS::DecodeStencil(cx, options, range, stencil);
+    JS::TranscodeResult res =
+        JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
     CHECK(res == JS::TranscodeResult::Ok);
 
     // Instantiate and Run
