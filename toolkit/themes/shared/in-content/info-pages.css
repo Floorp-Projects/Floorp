@@ -38,7 +38,6 @@ body.wide-container {
 
 /* Typography */
 .title {
-  background-image: url("chrome://global/skin/icons/info.svg");
   background-position: left 0;
   background-repeat: no-repeat;
   background-size: 1.6em;
@@ -47,10 +46,6 @@ body.wide-container {
   font-size: 2.2em;
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-.noIllustration {
-  background-image: none;
 }
 
 .container.restore-chosen {
@@ -69,7 +64,6 @@ body.wide-container {
 
 @media (max-width: 970px) {
   .title {
-    background-image: none !important;
     padding-inline-start: 0;
     margin-inline-start: 0;
   }
