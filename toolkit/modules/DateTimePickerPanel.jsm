@@ -293,7 +293,7 @@ var DateTimePickerPanel = class {
   }
 
   getDisplayNames(locale, keys, style) {
-    const displayNames = Services.intl.getDisplayNames(locale, { keys, style });
+    const displayNames = Services.intl.getDisplayNamesDeprecated(locale, { keys, style });
     return keys.map(key => displayNames.values[key]);
   }
 

@@ -390,7 +390,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
         break;
       case "FetchContentBlockingEvents":
         let dataToSend = {};
-        let weekdays = Services.intl.getDisplayNames(undefined, {
+        let weekdays = Services.intl.getDisplayNamesDeprecated(undefined, {
           style: "short",
           keys: [
             "dates/gregorian/weekdays/sunday",
