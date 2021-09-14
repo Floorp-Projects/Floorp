@@ -6,21 +6,25 @@ package org.mozilla.fenix.historymetadata.controller
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentDirections
 
@@ -33,6 +37,8 @@ class HistoryMetadataControllerTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private val navController = mockk<NavController>(relaxed = true)
+    private lateinit var storage: HistoryMetadataStorage
+    private val scope = TestCoroutineScope()
 
     private lateinit var controller: DefaultHistoryMetadataController
 
@@ -41,17 +47,20 @@ class HistoryMetadataControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
         }
+        storage = mockk(relaxed = true)
 
         controller = spyk(
             DefaultHistoryMetadataController(
-                navController = navController
+                navController = navController,
+                scope = scope,
+                storage = storage
             )
         )
     }
 
     @After
     fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
+        scope.cleanupTestCoroutines()
     }
 
     @Test
@@ -87,6 +96,43 @@ class HistoryMetadataControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_history_metadata_group }
+            )
+        }
+    }
+
+    @Test
+    fun handleItemRemoved() {
+        val historyMetadataKey = HistoryMetadataKey(
+            "http://www.mozilla.com",
+            "mozilla",
+            null
+        )
+
+        val historyGroup = HistoryMetadataGroup(
+            title = "mozilla",
+            historyMetadata = listOf(
+                HistoryMetadata(
+                    key = historyMetadataKey,
+                    title = "mozilla",
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    totalViewTime = 10,
+                    documentType = DocumentType.Regular,
+                    previewImageUrl = null
+                )
+            )
+        )
+
+        controller.handleRemoveGroup(historyGroup.title)
+
+        testDispatcher.advanceUntilIdle()
+
+        coVerify {
+            storage.deleteHistoryMetadata(historyGroup.title)
+        }
+        verify {
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalHome()
             )
         }
     }

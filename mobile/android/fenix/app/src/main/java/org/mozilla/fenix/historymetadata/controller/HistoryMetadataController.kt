@@ -7,7 +7,11 @@ package org.mozilla.fenix.historymetadata.controller
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import mozilla.components.concept.storage.HistoryMetadataStorage
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -27,13 +31,20 @@ interface HistoryMetadataController {
      * @see [HistoryMetadataInteractor.onHistoryMetadataGroupClicked]
      */
     fun handleHistoryMetadataGroupClicked(historyMetadataGroup: HistoryMetadataGroup)
+
+    /**
+     * @see [HistoryMetadataInteractor.onRemoveGroup]
+     */
+    fun handleRemoveGroup(searchTerm: String)
 }
 
 /**
  * The default implementation of [HistoryMetadataController].
  */
 class DefaultHistoryMetadataController(
-    private val navController: NavController
+    private val navController: NavController,
+    private val storage: HistoryMetadataStorage,
+    private val scope: CoroutineScope
 ) : HistoryMetadataController {
 
     override fun handleHistoryShowAllClicked() {
@@ -50,6 +61,15 @@ class DefaultHistoryMetadataController(
                 historyMetadataItems = historyMetadataGroup.historyMetadata
                     .map { it.toHistoryMetadata() }.toTypedArray()
             )
+        )
+    }
+
+    override fun handleRemoveGroup(searchTerm: String) {
+        scope.launch {
+            storage.deleteHistoryMetadata(searchTerm)
+        }
+        navController.navigate(
+            BrowserFragmentDirections.actionGlobalHome()
         )
     }
 

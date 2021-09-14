@@ -226,7 +226,8 @@ interface ExperimentCardInteractor {
 /**
  * Interactor for the Home screen. Provides implementations for the CollectionInteractor,
  * OnboardingInteractor, TopSiteInteractor, TipInteractor, TabSessionInteractor,
- * ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor and others.
+ * ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor
+ * and others.
  */
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
@@ -380,6 +381,10 @@ class SessionControlInteractor(
         historyMetadataController.handleHistoryMetadataGroupClicked(
             historyMetadataGroup
         )
+    }
+
+    override fun onRemoveGroup(searchTerm: String) {
+        historyMetadataController.handleRemoveGroup(searchTerm)
     }
 
     override fun openCustomizeHomePage() {

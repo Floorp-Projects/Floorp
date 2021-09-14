@@ -24,4 +24,11 @@ interface HistoryMetadataInteractor {
      * @param historyMetadataGroup The [HistoryMetadataGroup] to toggle its expanded state.
      */
     fun onHistoryMetadataGroupClicked(historyMetadataGroup: HistoryMetadataGroup)
+
+    /**
+     * Removes a history metadata group with the given search term from the homescreen.
+     *
+     * @param searchTerm The search term to be removed.
+     */
+    fun onRemoveGroup(searchTerm: String)
 }
