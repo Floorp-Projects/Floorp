@@ -139,6 +139,9 @@ OutOfLineCode* BaseCompiler::addOutOfLineCode(OutOfLineCode* ool) {
 
 bool BaseCompiler::generateOutOfLineCode() {
   for (auto* ool : outOfLine_) {
+    if (!ool->entry()->used()) {
+      continue;
+    }
     ool->bind(&fr, &masm);
     ool->generate(&masm);
   }
