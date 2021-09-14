@@ -17,7 +17,6 @@
 interface mozIMozIntlHelper : nsISupports
 {
   [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
-  [implicit_jscontext] void addGetDisplayNames(in jsval intlObject);
 
   /**
    * Adds a MozDateTimeFormat contructor to the given object.
