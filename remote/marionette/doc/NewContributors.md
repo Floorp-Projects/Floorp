@@ -17,29 +17,30 @@ Accounts, communication
 -----------------------
 
   1. Set up a [Bugzilla] account (and, if you like, a [Mozillians] profile).
-     Please include your Matrix nickname in both of these accounts so we can work
+     Please include your Element nickname in both of these accounts so we can work
      with you more easily. For example, Eve Smith would set the Bugzilla name
-     to "Eve Smith (:esmith)", where "esmith" is the Matrix nick.
+     to "Eve Smith (:esmith)", where "esmith" is the Element nick.
 
-  2. For a direct communication with us it will be beneficial to setup [Matrix].
+  2. For a direct communication with us it will be beneficial to setup [Element].
      Make sure to also register your nickname as described in the linked document.
 
-  3. Join our #interop channel, and introduce yourself to the team. :jgraham,
-     :maja_zf, and :whimboo are all familiar with Marionette.
+  3. Join our [#webdriver:mozilla.org] channel, and introduce yourself to the
+     team. :whimboo, :jdescottes, and :jgraham  are all familiar with Marionette.
      We're nice, I promise, but we might not answer right away due to different
      time zones, time off, etc. So please be patient.
 
-  4. When you want to ask a question on Matrix, just go ahead an ask it even if
+  4. When you want to ask a question on Element, just go ahead an ask it even if
      no one appears to be around/responding.
      Provide lots of detail so that we have a better chance of helping you.
      If you don't get an answer right away, check again in a few hours --
      someone may have answered you in the mean time.
 
-  5. If you're having trouble reaching us over Matrix, you are welcome to send an
+  5. If you're having trouble reaching us over Element, you are welcome to send an
      email to our [mailing list](index.html#communication) instead. It's a good
-     idea to include your Matrix nick in your email message.
+     idea to include your Element nick in your email message.
 
-[Matrix]: https://chat.mozilla.org
+[Element]: https://chat.mozilla.org
+[#webdriver:mozilla.org]: https://chat.mozilla.org/#/room/#webdriver:mozilla.org
 [Bugzilla]: https://bugzilla.mozilla.org/
 [Mozillians]: https://mozillians.org/
 [logbot]: https://mozilla.logbot.info/ateam/
