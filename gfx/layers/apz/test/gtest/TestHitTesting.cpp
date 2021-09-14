@@ -664,8 +664,6 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
   ScrollMetadata subframeMetadata = BuildScrollMetadata(
       ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 200, 200),
       ParentLayerRect(0, 0, 200, 100));
-  subframeMetadata.SetScrollClip(
-      Some(LayerClip(ParentLayerIntRect(0, 0, 200, 100))));
   SetScrollMetadata(layers[2], {subframeMetadata, rootMetadata});
   SetEventRegionsBasedOnBottommostMetrics(layers[2]);
 

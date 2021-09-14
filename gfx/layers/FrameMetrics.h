@@ -836,7 +836,6 @@ struct ScrollMetadata {
         mContentDescription(),
         mLineScrollAmount(0, 0),
         mPageScrollAmount(0, 0),
-        mScrollClip(),
         mHasScrollgrab(false),
         mIsLayersIdRoot(false),
         mIsAutoDirRootContentRTL(false),
@@ -854,7 +853,6 @@ struct ScrollMetadata {
            // don't compare mContentDescription
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mScrollClip == aOther.mScrollClip &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
            mIsAutoDirRootContentRTL == aOther.mIsAutoDirRootContentRTL &&
@@ -910,22 +908,6 @@ struct ScrollMetadata {
   void SetPageScrollAmount(const LayoutDeviceIntSize& size) {
     mPageScrollAmount = size;
   }
-
-  void SetScrollClip(const Maybe<LayerClip>& aScrollClip) {
-    mScrollClip = aScrollClip;
-  }
-  const Maybe<LayerClip>& GetScrollClip() const { return mScrollClip; }
-  bool HasScrollClip() const { return mScrollClip.isSome(); }
-  const LayerClip& ScrollClip() const { return mScrollClip.ref(); }
-  LayerClip& ScrollClip() { return mScrollClip.ref(); }
-
-  bool HasMaskLayer() const {
-    return HasScrollClip() && ScrollClip().GetMaskLayerIndex();
-  }
-  Maybe<ParentLayerIntRect> GetClipRect() const {
-    return mScrollClip.isSome() ? Some(mScrollClip->GetClipRect()) : Nothing();
-  }
-
   void SetHasScrollgrab(bool aHasScrollgrab) {
     mHasScrollgrab = aHasScrollgrab;
   }
@@ -1017,14 +999,6 @@ struct ScrollMetadata {
 
   // The value of GetPageScrollAmount(), for scroll frames.
   LayoutDeviceIntSize mPageScrollAmount;
-
-  // A clip to apply when compositing the layer bearing this ScrollMetadata,
-  // after applying any transform arising from scrolling this scroll frame.
-  // Note that, unlike most other fields of ScrollMetadata, this is allowed
-  // to differ between different layers scrolled by the same scroll frame.
-  // TODO: Group the fields of ScrollMetadata into sub-structures to separate
-  // fields with this property better.
-  Maybe<LayerClip> mScrollClip;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab : 1;
