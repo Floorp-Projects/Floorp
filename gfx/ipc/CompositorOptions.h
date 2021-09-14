@@ -29,21 +29,10 @@ namespace layers {
 class CompositorOptions {
  public:
   // This constructor needed for IPDL purposes, don't use it anywhere else.
-  CompositorOptions()
-      : mUseAPZ(false),
-        mUseSoftwareWebRender(false),
-        mAllowSoftwareWebRenderD3D11(false),
-        mAllowSoftwareWebRenderOGL(false),
-        mUseAdvancedLayers(false),
-        mInitiallyPaused(false) {}
+  CompositorOptions() = default;
 
   CompositorOptions(bool aUseAPZ, bool aUseSoftwareWebRender)
-      : mUseAPZ(aUseAPZ),
-        mUseSoftwareWebRender(aUseSoftwareWebRender),
-        mAllowSoftwareWebRenderD3D11(false),
-        mAllowSoftwareWebRenderOGL(false),
-        mUseAdvancedLayers(false),
-        mInitiallyPaused(false) {}
+      : mUseAPZ(aUseAPZ), mUseSoftwareWebRender(aUseSoftwareWebRender) {}
 
   bool UseAPZ() const { return mUseAPZ; }
   bool UseSoftwareWebRender() const { return mUseSoftwareWebRender; }
@@ -68,6 +57,9 @@ class CompositorOptions {
     mUseAdvancedLayers = aUseAdvancedLayers;
   }
 
+  bool UseWebGPU() const { return mUseWebGPU; }
+  void SetUseWebGPU(bool aUseWebGPU) { mUseWebGPU = aUseWebGPU; }
+
   void SetInitiallyPaused(bool aPauseAtStartup) {
     mInitiallyPaused = aPauseAtStartup;
   }
@@ -78,18 +70,20 @@ class CompositorOptions {
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
            mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
-           mUseAdvancedLayers == aOther.mUseAdvancedLayers;
+           mUseAdvancedLayers == aOther.mUseAdvancedLayers &&
+           mUseWebGPU == aOther.mUseWebGPU;
   }
 
   friend struct IPC::ParamTraits<CompositorOptions>;
 
  private:
-  bool mUseAPZ;
-  bool mUseSoftwareWebRender;
-  bool mAllowSoftwareWebRenderD3D11;
-  bool mAllowSoftwareWebRenderOGL;
-  bool mUseAdvancedLayers;
-  bool mInitiallyPaused;
+  bool mUseAPZ = false;
+  bool mUseSoftwareWebRender = false;
+  bool mAllowSoftwareWebRenderD3D11 = false;
+  bool mAllowSoftwareWebRenderOGL = false;
+  bool mUseAdvancedLayers = false;
+  bool mUseWebGPU = false;
+  bool mInitiallyPaused = false;
 
   // Make sure to add new fields to the ParamTraits implementation
   // in LayersMessageUtils.h
