@@ -33,6 +33,8 @@ function startTest(test, token)
       for (let byte of pixels) {
         if (byte != 0) {
           ok(false, "Should not draw EME video to canvas");
+          // We don't need a log for each pixel, break after 1st failure.
+          break;
         }
       }
     }
