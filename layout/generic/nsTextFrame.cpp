@@ -4493,8 +4493,24 @@ class nsContinuingTextFrame final : public nsTextFrame {
 
   nsIFrame* FirstInFlow() const final;
   nsTextFrame* FirstContinuation() const final {
-    MOZ_DIAGNOSTIC_ASSERT(mFirstContinuation || !mPrevContinuation,
-                          "mFirstContinuation unexpectedly null!");
+#if DEBUG
+    // If we have a prev-continuation pointer, then our first-continuation
+    // must be the same as that frame's.
+    if (mPrevContinuation) {
+      // If there's a prev-prev, then we can safely cast mPrevContinuation to
+      // an nsContinuingTextFrame and access its mFirstContinuation pointer
+      // directly, to avoid recursively calling FirstContinuation(), leading
+      // to exponentially-slow behavior in the assertion.
+      if (mPrevContinuation->GetPrevContinuation()) {
+        auto* prev = static_cast<nsContinuingTextFrame*>(mPrevContinuation);
+        MOZ_ASSERT(mFirstContinuation == prev->mFirstContinuation);
+      } else {
+        MOZ_ASSERT(mFirstContinuation == mPrevContinuation->FirstContinuation());
+      }
+    } else {
+      MOZ_ASSERT(!mFirstContinuation);
+    }
+#endif
     return mFirstContinuation;
   };
 
