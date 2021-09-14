@@ -21,7 +21,7 @@ function test_methods_presence() {
 
 function test_methods_calling() {
   Services.intl.getCalendarInfo("pl");
-  Services.intl.getDisplayNamesDeprecated("ar");
+  Services.intl.getDisplayNamesDeprecated("ar", { type: "language" });
   new Services.intl.DateTimeFormat("fr");
   new Services.intl.DisplayNames("fr", { type: "language" });
   new Services.intl.ListFormat("fr");
