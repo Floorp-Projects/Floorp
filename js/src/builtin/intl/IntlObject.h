@@ -42,47 +42,6 @@ extern const JSClass IntlClass;
                                                JS::Value* vp);
 
 /**
- * Returns an Array with CLDR-based fields display names.
- * The function takes three arguments:
- *
- *   locale
- *     BCP47 compliant locale string
- *   style
- *     A string with values: long or short or narrow
- *   keys
- *     An array or path-like strings that identify keys to be returned
- *     At the moment the following types of keys are supported:
- *
- *       'dates/fields/{year|month|week|day}'
- *       'dates/gregorian/months/{january|...|december}'
- *       'dates/gregorian/weekdays/{sunday|...|saturday}'
- *       'dates/gregorian/dayperiods/{am|pm}'
- *
- * Example:
- *
- * let info = intl_ComputeDisplayNames(
- *   'en-US',
- *   'long',
- *   [
- *     'dates/fields/year',
- *     'dates/gregorian/months/january',
- *     'dates/gregorian/weekdays/monday',
- *     'dates/gregorian/dayperiods/am',
- *   ]
- * );
- *
- * Returned value:
- *
- * [
- *   'year',
- *   'January',
- *   'Monday',
- *   'AM'
- * ]
- */
-[[nodiscard]] extern bool intl_ComputeDisplayNames(JSContext* cx, unsigned argc,
-                                                   JS::Value* vp);
-/**
  * Compares a BCP 47 language tag against the locales in availableLocales and
  * returns the best available match -- or |undefined| if no match was found.
  * Uses the fallback mechanism of RFC 4647, section 3.4.
