@@ -2,36 +2,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- LOCALIZATION NOTE : FILE This file contains the browser main menu items -->
-<!-- LOCALIZATION NOTE : FILE Do not translate commandkeys -->
-
-<!ENTITY navbarOverflow.label                "More tools…">
-
-<!-- Tab context menu -->
-
-<!ENTITY  listAllTabs.label      "List all tabs">
-
-<!ENTITY tabCmd.label "New Tab">
-
-<!ENTITY menubarCmd.label "Menu Bar">
-<!ENTITY menubarCmd.accesskey "M">
-<!-- LOCALIZATION NOTE: The accessibleLabel is a spoken label that should not
-include the word "toolbar" or such, because screen readers already know that
-this container is a toolbar. This avoids double-speaking. -->
-<!ENTITY navbar.accessibleLabel "Navigation">
-
-<!ENTITY printButton.label            "Print">
-<!ENTITY printButton.tooltip          "Print this page">
-
-<!ENTITY searchItem.title             "Search">
-
 <!-- Toolbar items -->
-<!ENTITY homeButton.label             "Home">
-<!ENTITY homeButton.defaultPage.tooltip "&brandShortName; Home Page">
 
 <!ENTITY historyButton.label            "History">
-
-<!ENTITY downloads.label              "Downloads">
 
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newPrivateWindow.label     "New Private Window">
@@ -42,15 +15,3 @@ this container is a toolbar. This avoids double-speaking. -->
      This string is displayed in the search box when the input field is empty. -->
 <!ENTITY searchInput.placeholder      "Search">
 <!ENTITY searchIcon.tooltip           "Search">
-
-<!-- Name for the tabs toolbar as spoken by screen readers.
-     The word "toolbar" is appended automatically and should not be contained below! -->
-<!ENTITY tabsToolbar.label "Browser tabs">
-
-<!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
-
-<!-- LOCALIZATION NOTE: (accessibilityIndicator.tooltip): This is used to
-     display a tooltip for accessibility indicator in toolbar/tabbar. It is also
-     used as a textual label for the indicator used by assistive technology
-     users. -->
-<!ENTITY accessibilityIndicator.tooltip "Accessibility Features Enabled">

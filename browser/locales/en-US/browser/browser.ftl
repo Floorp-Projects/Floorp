@@ -763,3 +763,54 @@ edit-popup-settings =
 picture-in-picture-hide-toggle =
     .label = Hide Picture-in-Picture Toggle
     .accesskey = H
+
+# Navigator Toolbox
+
+# This string is a spoken label that should not include
+# the word "toolbar" or such, because screen readers already know that
+# this container is a toolbar. This avoids double-speaking.
+navbar-accessible =
+    .aria-label = Navigation
+
+navbar-downloads =
+    .label = Downloads
+
+navbar-overflow =
+    .tooltiptext = More tools…
+
+# Variables:
+#   $shortcut (String): keyboard shortcut to print the page
+navbar-print =
+    .label = Print
+    .tooltiptext = Print this page… ({ $shortcut })
+
+navbar-print-tab-modal-disabled =
+    .label = Print
+    .tooltiptext = Print this page
+
+navbar-home =
+    .label = Home
+    .tooltiptext = { -brand-short-name } Home Page
+
+navbar-library =
+    .label = Library
+    .tooltiptext = View history, saved bookmarks, and more
+
+navbar-search =
+    .title = Search
+
+navbar-accessibility-indicator =
+    .tooltiptext = Accessibility Features Enabled
+
+# Name for the tabs toolbar as spoken by screen readers. The word
+# "toolbar" is appended automatically and should not be included in
+# in the string
+tabs-toolbar =
+    .aria-label = Browser tabs
+
+tabs-toolbar-new-tab =
+    .label = New Tab
+
+tabs-toolbar-list-all-tabs =
+    .label = List all tabs
+    .tooltiptext = List all tabs
