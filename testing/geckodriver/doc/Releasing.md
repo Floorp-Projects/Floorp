@@ -45,7 +45,8 @@ For each crate:
   1. Bump the version number in Cargo.toml
   2. Update the crate: `cargo update -p <crate name>`
   3. Commit the changes for the modified `Cargo.toml`, and `Cargo.lock`
-     (can be found in the repositories root folder)
+     (can be found in the repositories root folder). Use a commit message
+     like `Bug XYZ - [rust-<crate name>] Release version <version>.`
 
 
 Update the change log
