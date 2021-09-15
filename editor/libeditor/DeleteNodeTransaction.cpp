@@ -33,8 +33,17 @@ DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
     : mEditorBase(&aEditorBase),
       mContentToDelete(&aContentToDelete),
       mParentNode(aContentToDelete.GetParentNode()) {
-  MOZ_DIAGNOSTIC_ASSERT_IF(aEditorBase.IsHTMLEditor(),
-                           HTMLEditUtils::IsRemovableNode(aContentToDelete));
+  MOZ_DIAGNOSTIC_ASSERT_IF(
+      aEditorBase.IsHTMLEditor(),
+      HTMLEditUtils::IsRemovableNode(aContentToDelete) ||
+          // It's okay to delete text node if it's added by `HTMLEditor` since
+          // remaining it may be noisy for the users.
+          (aContentToDelete.IsText() &&
+           aContentToDelete.HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY)));
+  NS_ASSERTION(
+      !aEditorBase.IsHTMLEditor() ||
+          HTMLEditUtils::IsRemovableNode(aContentToDelete),
+      "Deleting non-editable text node, please write a test for this!!");
 }
 
 std::ostream& operator<<(std::ostream& aStream,
