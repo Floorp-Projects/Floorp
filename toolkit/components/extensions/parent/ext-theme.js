@@ -223,6 +223,7 @@ class Theme {
         case "popup_highlight":
         case "popup_highlight_text":
         case "ntp_background":
+        case "ntp_card_background":
         case "ntp_text":
         case "sidebar":
         case "sidebar_border":

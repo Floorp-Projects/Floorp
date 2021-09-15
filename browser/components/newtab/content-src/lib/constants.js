@@ -11,6 +11,12 @@ export const NEWTAB_DARK_THEME = {
     b: 46,
     a: 1,
   },
+  ntp_card_background: {
+    r: 66,
+    g: 65,
+    b: 77,
+    a: 1,
+  },
   ntp_text: {
     r: 249,
     g: 249,
