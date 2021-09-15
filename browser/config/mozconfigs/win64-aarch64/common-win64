@@ -11,15 +11,11 @@ if test `uname -s` = Linux; then
 if [ -d "${VSPATH}" -a ! -x "${VSPATH}/VC/bin/Hostx64/arm64/cl.exe" ]; then
     find "${VSPATH}" -type f -name \*.exe -exec chmod +x {} \;
 fi
-export MAKENSISU="${MOZ_FETCHES_DIR}/nsis-3.07/makensis.exe"
-if [ -d "${MAKENSISU%/*}" -a ! -x "${MAKENSISU}" ]; then
-    chmod +x "${MAKENSISU}"
-fi
 export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
-mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${MOZ_FETCHES_DIR}/nsis-3.07:${PATH}"
+mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/arm64:${PATH}"
 mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
 
 unset VC_PATH

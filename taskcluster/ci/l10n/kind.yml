@@ -50,11 +50,11 @@ job-template:
                 win.*:
                     - linux64-wine
                     - linux64-liblowercase
+                    - win64-nsis
         fetch:
             by-build-platform:
                 default: []
                 win.*:
-                    - nsis-3.07-win
                     - upx-3.95-win
     tooltool:
         by-build-platform:

@@ -261,8 +261,8 @@ jobs:
                 - linux64-liblowercase
                 - linux64-winchecksec
                 - sysroot-x86_64-linux-gnu
+                - win64-nsis
             fetch:
-                - nsis-3.07-win
                 - upx-3.95-win
 
     win64-shippable/opt:
@@ -306,6 +306,6 @@ jobs:
                 - linux64-winchecksec
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
+                - win64-nsis
             fetch:
-                - nsis-3.07-win
                 - upx-3.95-win
