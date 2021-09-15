@@ -178,6 +178,7 @@ function Inspector(toolbox, commands) {
   this.onSidebarShown = this.onSidebarShown.bind(this);
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
   this.onReflowInSelection = this.onReflowInSelection.bind(this);
+  this.listenForSearchEvents = this.listenForSearchEvents.bind(this);
 }
 
 Inspector.prototype = {
@@ -617,16 +618,16 @@ Inspector.prototype = {
       "inspector-searchlabel"
     );
 
-    this.searchBox.addEventListener(
-      "focus",
-      () => {
-        this.search.on("search-cleared", this._clearSearchResultsLabel);
-        this.search.on("search-result", this._updateSearchResultsLabel);
-      },
-      { once: true }
-    );
+    this.searchBox.addEventListener("focus", this.listenForSearchEvents, {
+      once: true,
+    });
 
     this.createSearchBoxShortcuts();
+  },
+
+  listenForSearchEvents() {
+    this.search.on("search-cleared", this._clearSearchResultsLabel);
+    this.search.on("search-result", this._updateSearchResultsLabel);
   },
 
   createSearchBoxShortcuts() {
@@ -1749,6 +1750,7 @@ Inspector.prototype = {
     this.panelWin.inspector = null;
     this.panelWin = null;
     this.resultsLength = null;
+    this.searchBox.removeEventListener("focus", this.listenForSearchEvents);
     this.searchBox = null;
     this.show3PaneTooltip = null;
     this.sidebar = null;
