@@ -24,6 +24,8 @@ export class CardGrid extends React.PureComponent {
             flightId={rec.flight_id}
             image_src={rec.image_src}
             raw_image_src={rec.raw_image_src}
+            word_count={rec.word_count}
+            time_to_read={rec.time_to_read}
             title={rec.title}
             excerpt={rec.excerpt}
             url={rec.url}
@@ -31,6 +33,7 @@ export class CardGrid extends React.PureComponent {
             shim={rec.shim}
             type={this.props.type}
             context={rec.context}
+            compact={this.props.compact}
             sponsor={rec.sponsor}
             sponsored_by_override={rec.sponsored_by_override}
             dispatch={this.props.dispatch}
@@ -40,6 +43,7 @@ export class CardGrid extends React.PureComponent {
             bookmarkGuid={rec.bookmarkGuid}
             engagement={rec.engagement}
             display_engagement_labels={this.props.display_engagement_labels}
+            include_descriptions={this.props.include_descriptions}
             cta={rec.cta}
             cta_variant={this.props.cta_variant}
             is_video={this.props.enable_video_playheads && rec.is_video}
@@ -54,9 +58,17 @@ export class CardGrid extends React.PureComponent {
       ? `ds-card-grid-${this.props.display_variant}`
       : ``;
 
+    const compactClass = this.props.compact
+      ? `ds-card-grid-compact-variant`
+      : ``;
+
+    const includeDescriptions = this.props.include_descriptions
+      ? `ds-card-grid-include-descriptions`
+      : ``;
+
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptions}`}
       >
         {cards}
       </div>

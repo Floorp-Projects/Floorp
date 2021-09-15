@@ -448,6 +448,24 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs"
       );
     });
+    it("should return enough stories to fill a compact layout", async () => {
+      feed.config.hardcoded_layout = true;
+
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            pocketConfig: { compactLayout: true },
+          },
+        },
+      });
+
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      const { layout } = feed.store.getState().DiscoveryStream;
+      assert.equal(layout[0].components[2].properties.items, 24);
+    });
   });
 
   describe("#updatePlacements", () => {
