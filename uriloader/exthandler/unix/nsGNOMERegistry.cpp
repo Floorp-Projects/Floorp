@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/StaticPrefs_browser.h"
 #include "nsGNOMERegistry.h"
 #include "nsString.h"
 #include "nsMIMEInfoUnix.h"
@@ -93,7 +94,10 @@ already_AddRefed<nsMIMEInfoBase> nsGNOMERegistry::GetFromType(
   giovfs->GetDescriptionForMimeType(aMIMEType, description);
 
   mimeInfo->SetDefaultDescription(name);
-  mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
+  mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
+      ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
+      : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
   mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(description));
 
   return mimeInfo.forget();
