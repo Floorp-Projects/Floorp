@@ -19,6 +19,11 @@ const {
 
 const browsingContextAttachedObserverByWatcher = new Map();
 
+const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
+  "devtools.every-frame-target.enabled",
+  false
+);
+
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
  *
@@ -307,10 +312,11 @@ function getWatchingBrowsingContexts(watcher) {
  *        Browser Element and any of its (nested) children iframes.
  */
 function getFilteredRemoteBrowsingContext(browserElement) {
-  return getAllRemoteBrowsingContexts(
-    browserElement?.browsingContext
-  ).filter(browsingContext =>
-    shouldNotifyWindowGlobal(browsingContext, browserElement?.browserId)
+  return getAllRemoteBrowsingContexts(browserElement?.browsingContext).filter(
+    browsingContext =>
+      shouldNotifyWindowGlobal(browsingContext, browserElement?.browserId, {
+        acceptNonRemoteFrame: isEveryFrameTargetEnabled,
+      })
   );
 }
 

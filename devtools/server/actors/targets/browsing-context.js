@@ -263,10 +263,13 @@ const browsingContextTargetPrototype = {
    *          implementation. But for server-side target switching this flag will be exposed
    *          to the client and should be available for all target actor classes. It will be
    *          used to detect target switching. (Bug 1644397)
+   *        - ignoreSubFrames Boolean
+   *          If true, the actor will only focus on the passed docShell and not on the whole
+   *          docShell tree. This should be enabled when we have targets for all documents.
    */
   initialize: function(
     connection,
-    { docShell, followWindowGlobalLifeCycle, isTopLevelTarget }
+    { docShell, followWindowGlobalLifeCycle, isTopLevelTarget, ignoreSubFrames }
   ) {
     Actor.prototype.initialize.call(this, connection);
 
@@ -279,6 +282,7 @@ const browsingContextTargetPrototype = {
 
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
+    this.ignoreSubFrames = ignoreSubFrames;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
@@ -381,6 +385,10 @@ const browsingContextTargetPrototype = {
    * @return {Array}
    */
   get docShells() {
+    if (this.ignoreSubFrames) {
+      return [this.docShell];
+    }
+
     return getChildDocShells(this.docShell);
   },
 
@@ -1408,6 +1416,10 @@ const browsingContextTargetPrototype = {
   _windowReady(window, { isFrameSwitching, isBFCache } = {}) {
     const isTopLevel = window == this.window;
 
+    if (this.ignoreSubFrames && !this.isTopLevel) {
+      return;
+    }
+
     // We just reset iframe list on WillNavigate, so we now list all existing
     // frames when we load a new document in the original window
     if (window == this._originalWindow && !isFrameSwitching) {
@@ -1438,6 +1450,10 @@ const browsingContextTargetPrototype = {
   ) {
     const isTopLevel = window == this.window;
 
+    if (this.ignoreSubFrames && !this.isTopLevel) {
+      return;
+    }
+
     // If this follows WindowGlobal lifecycle, this target will be destroyed, alongside its top level document.
     // Only notify about in-process iframes.
     // Note that OOP iframes won't emit window-ready and will also have their dedicated target.
@@ -1467,8 +1483,12 @@ const browsingContextTargetPrototype = {
     navigationStart,
   }) {
     let isTopLevel = window == this.window;
-    let reset = false;
 
+    if (this.ignoreSubFrames && !this.isTopLevel) {
+      return;
+    }
+
+    let reset = false;
     if (window == this._originalWindow && !isFrameSwitching) {
       // If the top level document changes and we are targeting an iframe, we
       // need to reset to the upcoming new top level document. But for this
@@ -1523,6 +1543,10 @@ const browsingContextTargetPrototype = {
    */
   _navigate(window, isFrameSwitching = false) {
     const isTopLevel = window == this.window;
+
+    if (this.ignoreSubFrames && !this.isTopLevel) {
+      return;
+    }
 
     // navigate event needs to be dispatched synchronously,
     // by calling the listeners in the order or registration.
@@ -1685,7 +1709,10 @@ DebuggerProgressListener.prototype = {
     handler.addEventListener("pagehide", this._onWindowHidden, true);
 
     // Dispatch the _windowReady event on the targetActor for pre-existing windows
-    for (const win of this._getWindowsInDocShell(docShell)) {
+    const windows = this._targetActor.ignoreSubFrames
+      ? [docShellWindow]
+      : this._getWindowsInDocShell(docShell);
+    for (const win of windows) {
       this._targetActor._windowReady(win);
       this._knownWindowIDs.set(getWindowID(win), win);
     }
@@ -1729,7 +1756,10 @@ DebuggerProgressListener.prototype = {
     handler.removeEventListener("pageshow", this._onWindowCreated, true);
     handler.removeEventListener("pagehide", this._onWindowHidden, true);
 
-    for (const win of this._getWindowsInDocShell(docShell)) {
+    const windows = this._targetActor.ignoreSubFrames
+      ? [docShellWindow]
+      : this._getWindowsInDocShell(docShell);
+    for (const win of windows) {
       this._knownWindowIDs.delete(getWindowID(win));
     }
 
