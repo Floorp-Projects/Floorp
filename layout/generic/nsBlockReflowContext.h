@@ -14,6 +14,7 @@
 class nsIFrame;
 class nsLineBox;
 class nsPresContext;
+class nsReflowStatus;
 namespace mozilla {
 class BlockReflowInput;
 }  // namespace mozilla
