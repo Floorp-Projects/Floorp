@@ -25,7 +25,7 @@ namespace mozilla {
 // Allow QMResult errors to use existing stack id and to increase the frame id
 // during error propagation.
 template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<QMResult> {
+class [[nodiscard]] GenericErrorResult<QMResult> {
   QMResult mErrorValue;
 
   template <typename V, typename E2>

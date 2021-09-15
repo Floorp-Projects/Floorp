@@ -21,7 +21,7 @@ struct ErrorPropagationTag;
 // Allow nsresult errors to automatically convert to nsresult values, so MOZ_TRY
 // can be used in XPCOM methods with Result<T, nserror> results.
 template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult> {
+class [[nodiscard]] GenericErrorResult<nsresult> {
   nsresult mErrorValue;
 
   template <typename V, typename E2>

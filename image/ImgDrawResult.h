@@ -55,17 +55,10 @@ namespace image {
  * NOT_SUPPORTED: The requested operation is not supported, but the image is
  *                otherwise valid.
  */
-enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t {
-  SUCCESS,
-  SUCCESS_NOT_COMPLETE,
-  INCOMPLETE,
-  WRONG_SIZE,
-  NOT_READY,
-  TEMPORARY_ERROR,
-  BAD_IMAGE,
-  BAD_ARGS,
-  NOT_SUPPORTED
-};
+enum class [[nodiscard]] ImgDrawResult : uint8_t{
+    SUCCESS,      SUCCESS_NOT_COMPLETE, INCOMPLETE, WRONG_SIZE,
+    NOT_READY,    TEMPORARY_ERROR,      BAD_IMAGE,  BAD_ARGS,
+    NOT_SUPPORTED};
 
 /**
  * You can combine ImgDrawResults with &. By analogy to bitwise-&, the result is
