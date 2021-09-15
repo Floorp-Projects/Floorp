@@ -48,19 +48,23 @@ cmake $LIBTAPI_SOURCE_DIR/src/llvm \
       -DLLVM_INCLUDE_TESTS=OFF \
       -DCMAKE_BUILD_TYPE=RELEASE \
       -DCMAKE_INSTALL_PREFIX=$CROSSTOOLS_BUILD_DIR \
+      -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot \
       -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" \
       -DTAPI_REPOSITORY_STRING=$TAPI_REPOSITORY \
       -DTAPI_FULL_VERSION=$TAPI_VERSION
 
-ninja clangBasic
-ninja libtapi install-libtapi install-tapi-headers
+ninja clangBasic -v
+ninja libtapi install-libtapi install-tapi-headers -v
 
 # Setup LDFLAGS late so run-at-build-time tools in the basic clang build don't
 # pick up the possibly-incompatible libstdc++ from clang.
 # Also set it up such that loading libtapi doesn't require a LD_LIBRARY_PATH.
 # (this requires two dollars and extra backslashing because it's used verbatim
 # via a Makefile)
-export LDFLAGS="-lpthread -Wl,-rpath-link,$CLANG_DIR/lib -Wl,-rpath,\\\$\$ORIGIN/../lib,-rpath,\\\$\$ORIGIN/../../clang/lib"
+export LDFLAGS="-lpthread -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/lib/x86_64-linux-gnu -Wl,-rpath-link,$MOZ_FETCHES_DIR/sysroot/usr/lib/x86_64-linux-gnu -Wl,-rpath,\\\$\$ORIGIN/../lib,-rpath,\\\$\$ORIGIN/../../clang/lib"
+
+export CC="$CC --sysroot=$MOZ_FETCHES_DIR/sysroot"
+export CXX="$CXX --sysroot=$MOZ_FETCHES_DIR/sysroot"
 
 # Configure crosstools-port
 cd $CROSSTOOLS_CCTOOLS_DIR
