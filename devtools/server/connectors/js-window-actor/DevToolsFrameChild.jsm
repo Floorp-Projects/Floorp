@@ -24,6 +24,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
 });
 
+const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
+  "devtools.every-frame-target.enabled",
+  false
+);
+
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
@@ -81,13 +86,13 @@ function shouldNotifyWindowGlobal(
     return false;
   }
 
-  // We may process an iframe that runs in the same process as its parent
-  // and we don't want to create targets for them yet. Instead the BrowsingContextTargetActor
+  // We may process an iframe that runs in the same process as its parent and we don't want
+  // to create targets for them if same origin targets are not enabled. Instead the BrowsingContextTargetActor
   // will inspect these children document via docShell tree (typically via `docShells` or `windows` getters).
   // This is quite common when Fission is off as any iframe will run in same process
   // as their parent document. But it can also happen with Fission enabled if iframes have
   // children iframes using the same origin.
-  if (!windowGlobal.isProcessRoot) {
+  if (!isEveryFrameTargetEnabled && !windowGlobal.isProcessRoot) {
     return false;
   }
 
@@ -392,6 +397,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // won't be created via the codepath. Except if we have a bfcache-in-parent navigation.
       followWindowGlobalLifeCycle: true,
       isTopLevelTarget,
+      ignoreSubFrames: isEveryFrameTargetEnabled,
     });
     targetActor.manage(targetActor);
     targetActor.createdFromJsWindowActor = true;

@@ -31,6 +31,11 @@ const PREFERENCES = [
     "Enable experimental server side target switching",
   ],
   [
+    "devtools.every-frame-target.enabled",
+    "When enabled, targets will be created for all iframes, no matter if " +
+      "they are remote or not, independently of Fission being enabled or not",
+  ],
+  [
     "devtools.testing.enableServerWatcherSupport",
     "Enable experimental server-side resources (see watcher actor to get the " +
       "list of impacted resources",
