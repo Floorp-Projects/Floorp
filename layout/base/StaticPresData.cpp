@@ -6,6 +6,7 @@
 
 #include "mozilla/StaticPresData.h"
 
+#include "gfxFontFeatures.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"

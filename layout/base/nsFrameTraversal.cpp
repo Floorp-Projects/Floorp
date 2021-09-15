@@ -11,6 +11,7 @@
 
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
+#include "nsPresContext.h"
 #include "nsContainerFrame.h"
 
 using namespace mozilla;
