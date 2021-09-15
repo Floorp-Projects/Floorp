@@ -24,6 +24,7 @@
 
 #include "jsapi.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
@@ -1374,22 +1375,23 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
 
 /* static */
 already_AddRefed<ServiceWorkerManager> ServiceWorkerManager::GetInstance() {
-  // Note: We don't simply check gInstance for null-ness here, since otherwise
-  // this can resurrect the ServiceWorkerManager pretty late during shutdown.
-  static bool firstTime = true;
-  if (firstTime) {
+  if (!gInstance) {
     RefPtr<ServiceWorkerRegistrar> swr;
 
-    // Don't create the ServiceWorkerManager until the ServiceWorkerRegistrar is
-    // initialized.
+    // XXX: Substitute this with an assertion. See comment in Init.
     if (XRE_IsParentProcess()) {
+      // Don't (re-)create the ServiceWorkerManager if we are already shutting
+      // down.
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+        return nullptr;
+      }
+      // Don't create the ServiceWorkerManager until the ServiceWorkerRegistrar
+      // is initialized.
       swr = ServiceWorkerRegistrar::Get();
       if (!swr) {
         return nullptr;
       }
     }
-
-    firstTime = false;
 
     MOZ_ASSERT(NS_IsMainThread());
 

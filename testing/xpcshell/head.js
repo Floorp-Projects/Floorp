@@ -695,10 +695,18 @@ function _execute_test() {
   if (_profileInitialized) {
     // Since we have a profile, we will notify profile shutdown topics at
     // the end of the current test, to ensure correct cleanup on shutdown.
-    _Services.obs.notifyObservers(null, "profile-change-net-teardown");
-    _Services.obs.notifyObservers(null, "profile-change-teardown");
-    _Services.obs.notifyObservers(null, "profile-before-change");
-    _Services.obs.notifyObservers(null, "profile-before-change-qm");
+    _Services.startup.advanceShutdownPhase(
+      _Services.startup.SHUTDOWN_PHASE_APPSHUTDOWNNETTEARDOWN
+    );
+    _Services.startup.advanceShutdownPhase(
+      _Services.startup.SHUTDOWN_PHASE_APPSHUTDOWNTEARDOWN
+    );
+    _Services.startup.advanceShutdownPhase(
+      _Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
+    );
+    _Services.startup.advanceShutdownPhase(
+      _Services.startup.SHUTDOWN_PHASE_APPSHUTDOWNQM
+    );
 
     _profileInitialized = false;
   }
