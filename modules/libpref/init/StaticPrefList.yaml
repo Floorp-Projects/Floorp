@@ -1101,11 +1101,7 @@
 
 - name: browser.display.use_system_colors
   type: bool
-#ifdef XP_WIN
-  value: true
-#else
   value: false
-#endif
   mirror: always
 
 - name: browser.dom.window.dump.enabled
