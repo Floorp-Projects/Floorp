@@ -46,7 +46,9 @@ add_task(async function() {
 
     // Pretend that we're about to shut down, to tell the cookie manager
     // to clean up its connection with its database.
-    Services.obs.notifyObservers(null, "profile-before-change");
+    Services.startup.advanceShutdownPhase(
+      Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
+    );
 
     // check for upgraded schema.
     Assert.equal(12, getDBVersion(destFile));

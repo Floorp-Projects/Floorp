@@ -61,7 +61,9 @@ function setup_osfile_crash_noerror() {
   );
   OS.File.getCurrentDirectory();
 
-  Services.obs.notifyObservers(null, "profile-before-change");
+  Services.startup.advanceShutdownPhase(
+    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
+  );
   dump("Waiting for crash\n");
 }
 
@@ -97,7 +99,9 @@ function setup_osfile_crash_exn() {
   );
   OS.File.read("I do not exist");
 
-  Services.obs.notifyObservers(null, "profile-before-change");
+  Services.startup.advanceShutdownPhase(
+    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
+  );
   dump("Waiting for crash\n");
 }
 

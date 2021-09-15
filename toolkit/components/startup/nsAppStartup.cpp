@@ -503,6 +503,53 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
   return rv;
 }
 
+// Ensure ShutdownPhase.h and nsIAppStartup.idl are in sync.
+static_assert(int(nsIAppStartup::SHUTDOWN_PHASE_NOTINSHUTDOWN) ==
+                      int(mozilla::ShutdownPhase::NotInShutdown) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED) ==
+                      int(mozilla::ShutdownPhase::AppShutdownConfirmed) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWNNETTEARDOWN) ==
+                      int(mozilla::ShutdownPhase::AppShutdownNetTeardown) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWNTEARDOWN) ==
+                      int(mozilla::ShutdownPhase::AppShutdownTeardown) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWN) ==
+                      int(mozilla::ShutdownPhase::AppShutdown) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWNQM) ==
+                      int(mozilla::ShutdownPhase::AppShutdownQM) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_APPSHUTDOWNRELEMETRY) ==
+                      int(mozilla::ShutdownPhase::AppShutdownTelemetry) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_XPCOMWILLSHUTDOWN) ==
+                      int(mozilla::ShutdownPhase::XPCOMWillShutdown) &&
+                  int(nsIAppStartup::SHUTDOWN_PHASE_XPCOMSHUTDOWN) ==
+                      int(mozilla::ShutdownPhase::XPCOMShutdown),
+              "IDLShutdownPhase values are as expected");
+
+// Helper for safe conversion to native shutdown phases.
+Result<ShutdownPhase, nsresult> IDLShutdownPhaseToNative(
+    nsAppStartup::IDLShutdownPhase aPhase) {
+  if (uint8_t(aPhase) <= nsIAppStartup::SHUTDOWN_PHASE_XPCOMSHUTDOWN) {
+    return ShutdownPhase(aPhase);
+  }
+  return Err(NS_ERROR_ILLEGAL_VALUE);
+}
+
+NS_IMETHODIMP
+nsAppStartup::AdvanceShutdownPhase(IDLShutdownPhase aPhase) {
+  ShutdownPhase nativePhase;
+  MOZ_TRY_VAR(nativePhase, IDLShutdownPhaseToNative(aPhase));
+  AppShutdown::AdvanceShutdownPhase(nativePhase);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::IsInOrBeyondShutdownPhase(IDLShutdownPhase aPhase,
+                                        bool* aIsInOrBeyond) {
+  ShutdownPhase nativePhase;
+  MOZ_TRY_VAR(nativePhase, IDLShutdownPhaseToNative(aPhase));
+  *aIsInOrBeyond = AppShutdown::IsInOrBeyond(nativePhase);
+  return NS_OK;
+}
+
 void nsAppStartup::CloseAllWindows() {
   nsCOMPtr<nsIWindowMediator> mediator(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));

@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "mozilla/AppShutdown.h"
 
 static uint32_t gFailCount = 0;
 
@@ -93,19 +94,16 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
   ~ScopedXPCOM() {
     // If we created a profile directory, we need to remove it.
     if (mProfD) {
-      nsCOMPtr<nsIObserverService> os =
-          do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      MOZ_RELEASE_ASSERT(os);
-      MOZ_ALWAYS_SUCCEEDS(
-          os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr));
-      MOZ_ALWAYS_SUCCEEDS(
-          os->NotifyObservers(nullptr, "profile-change-teardown", nullptr));
-      MOZ_ALWAYS_SUCCEEDS(
-          os->NotifyObservers(nullptr, "profile-before-change", nullptr));
-      MOZ_ALWAYS_SUCCEEDS(
-          os->NotifyObservers(nullptr, "profile-before-change-qm", nullptr));
-      MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(
-          nullptr, "profile-before-change-telemetry", nullptr));
+      mozilla::AppShutdown::AdvanceShutdownPhase(
+          mozilla::ShutdownPhase::AppShutdownNetTeardown);
+      mozilla::AppShutdown::AdvanceShutdownPhase(
+          mozilla::ShutdownPhase::AppShutdownTeardown);
+      mozilla::AppShutdown::AdvanceShutdownPhase(
+          mozilla::ShutdownPhase::AppShutdown);
+      mozilla::AppShutdown::AdvanceShutdownPhase(
+          mozilla::ShutdownPhase::AppShutdownQM);
+      mozilla::AppShutdown::AdvanceShutdownPhase(
+          mozilla::ShutdownPhase::AppShutdownTelemetry);
 
       if (NS_FAILED(mProfD->Remove(true))) {
         NS_WARNING("Problem removing profile directory");

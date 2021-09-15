@@ -54,6 +54,8 @@ interface nsIObserverService : nsISupports
      * notifyObservers
      *
      * Notifies all registered listeners of the given topic.
+     * Must not be used with shutdown topics (will assert
+     * on the parent process).
      *
      * @param aSubject : Notification specific interface pointer.
      * @param aTopic   : The notification topic or subject.

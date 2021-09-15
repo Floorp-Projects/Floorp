@@ -41,7 +41,9 @@ add_task(async function test_shutdown_immediately_after_startup() {
   );
 
   info("Immediate exit at startup, without quit-application-granted");
-  Services.obs.notifyObservers(null, "profile-before-change");
+  Services.startup.advanceShutdownPhase(
+    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
+  );
   let shutdownPromise = MockAsyncShutdown.profileBeforeChange.trigger();
   equal(shutdownCount, 1, "AddonManager.beforeShutdown has started");
 
