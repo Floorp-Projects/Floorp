@@ -49,7 +49,7 @@ class HashStream final : angle::NonCopyable
     std::ostringstream mStringStream;
 };
 
-HashStream &operator<<(HashStream &stream, const Shader *shader)
+HashStream &operator<<(HashStream &stream, Shader *shader)
 {
     if (shader)
     {
@@ -147,18 +147,10 @@ angle::Result MemoryProgramCache::getProgram(const Context *context,
     size_t programSize = 0;
     if (get(context, *hashOut, &binaryProgram, &programSize))
     {
-        uint32_t uncompressedSize =
-            zlib_internal::GetGzipUncompressedSize(binaryProgram.data(), programSize);
-
-        std::vector<uint8_t> uncompressedData(uncompressedSize);
-        uLong destLen = uncompressedSize;
-        int zResult   = zlib_internal::GzipUncompressHelper(uncompressedData.data(), &destLen,
-                                                          binaryProgram.data(),
-                                                          static_cast<uLong>(programSize));
-
-        if (zResult != Z_OK)
+        angle::MemoryBuffer uncompressedData;
+        if (!egl::DecompressBlobCacheData(binaryProgram.data(), programSize, &uncompressedData))
         {
-            ERR() << "Failure to decompressed binary data: " << zResult << "\n";
+            ERR() << "Error decompressing binary data.";
             return angle::Result::Incomplete;
         }
 
@@ -221,33 +213,11 @@ angle::Result MemoryProgramCache::putProgram(const egl::BlobCache::Key &programH
     angle::MemoryBuffer serializedProgram;
     ANGLE_TRY(program->serialize(context, &serializedProgram));
 
-    // Compress the program data
-    uLong uncompressedSize       = static_cast<uLong>(serializedProgram.size());
-    uLong expectedCompressedSize = zlib_internal::GzipExpectedCompressedSize(uncompressedSize);
-
     angle::MemoryBuffer compressedData;
-    if (!compressedData.resize(expectedCompressedSize))
+    if (!egl::CompressBlobCacheData(serializedProgram.size(), serializedProgram.data(),
+                                    &compressedData))
     {
-        ERR() << "Failed to allocate enough memory to hold compressed program. ("
-              << expectedCompressedSize << " bytes )";
-        return angle::Result::Incomplete;
-    }
-
-    int zResult = zlib_internal::GzipCompressHelper(compressedData.data(), &expectedCompressedSize,
-                                                    serializedProgram.data(), uncompressedSize,
-                                                    nullptr, nullptr);
-
-    if (zResult != Z_OK)
-    {
-        FATAL() << "Error compressing binary data: " << zResult;
-        return angle::Result::Incomplete;
-    }
-
-    // Resize the buffer to the actual compressed size
-    if (!compressedData.resize(expectedCompressedSize))
-    {
-        ERR() << "Failed to resize to actual compressed program size. (" << expectedCompressedSize
-              << " bytes )";
+        ERR() << "Error compressing binary data.";
         return angle::Result::Incomplete;
     }
 

@@ -1,19 +1,46 @@
-commit 31a43497be0980c7bb2b7e3c069fc431705c849e
-Author: Jamie Madill <jmadill@chromium.org>
-Date:   Thu May 20 12:22:46 2021 -0400
+commit 23851a53779dfd3239b4cceb7f93df9ea6efb9c3
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue Sep 14 18:11:05 2021 -0700
 
-    D3D11: Fix respecifying 3D textures.
+    If RoUninitialize iff SUCCEEDED(RoInitialize).
     
-    The missing check for the "Depth" dimension could lead to a bug
-    where we would not recreate a texture when the dimension changed.
+    S_FALSE is success, so `SUCCEEDED(result) || result == S_FALSE` == `SUCCEEDED(result)`.
+    RPC_E_CHANGED_MODE is an Error, so we should not call RoUninitialize in that case.
     
-    Bug: chromium:1210414
-    Change-Id: Id59097ad14ae77ff80d27081f61786dad17a77ea
-    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2911032
-    Reviewed-by: Geoff Lang <geofflang@chromium.org>
-    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1717151
+    
+    Change-Id: Ia42fe38967425522964a4f27034e38e9292ab249
 
-commit 3778168311ca10e8d57b3bce16bfcbc0f5b0dd01
+commit c79c27ff20b6a13441807d54ce2b8a487cc57d4a
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Mon Jul 19 16:46:50 2021 -0700
+
+    Define ANGLE_IS_64_BIT_CPU in common/platform.h.
+    
+    This is more reliable and reduces reliance on build flags.
+    Vendoring into Firefox, it's not trivial to replicate build flags,
+    but C++-native checks always work.
+    
+    Bug: angleproject:6186
+    Change-Id: Idafd4ef1954efbfa79eae86cddfaa8f2e3992296
+
+commit 33ffc12336370c17ba8da02c8e1f0eeb44951a7b
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Jul 29 10:40:38 2021 -0700
+
+    Always include mac-only sources.
+    
+    Fixes build issues on mac until we can take b8d6f8aa93 instead.
+    
+    Change-Id: I4dafc86cdb167d23e8dd419ded9d0edfb3f76f3a
+
+commit 631763e48d2906e680112c79dd161522f553e0cc
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jul 15 15:56:45 2021 -0700
+
+    Add missing header to build config.
+
+commit 5cf86083d48f3bae5a169d51e56b538afda56367
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Thu Feb 11 17:34:00 2021 -0800
 
@@ -24,7 +51,7 @@ Date:   Thu Feb 11 17:34:00 2021 -0800
     match enough to hit the CopySubResource path.
     Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1692355
 
-commit f96c68edb00194eebccd998cfd4ceb7207810092
+commit 400476a0b2e1ba6dfa8413375e20c15c2ec9188a
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Wed Feb 3 18:50:38 2021 -0800
 
@@ -32,13 +59,13 @@ Date:   Wed Feb 3 18:50:38 2021 -0800
     
     Build system logic is really hard to handle when vendoring into Gecko for Firefox.
 
-commit 2a40d0f143e00c46db28c664678529a36daf4e41
+commit 406e1ed92a6fc4180257e65ec88398342a7015e7
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Mon Feb 1 17:35:56 2021 -0800
 
     Build fixes needed by Gecko.
 
-commit 226aa28ce47cf20769f8f27f23255ca1eca83942
+commit d408f3f0f8d74427eef8a9200d29687629525502
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Mon Nov 9 17:09:12 2020 -0500
 
@@ -46,7 +73,7 @@ Date:   Mon Nov 9 17:09:12 2020 -0500
     
     This lets us run WebRender on devices that only support D3D 10.0
 
-commit c0645aac0a4b4ad6bc9691ce381e5043115737b5
+commit 53f3a3515e4bcf626042cfe0bf445cca4e728cf1
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Wed May 6 14:04:42 2020 -0400
 
@@ -60,7 +87,7 @@ Date:   Wed May 6 14:04:42 2020 -0400
     If we detect that this is going to happen we fall back to the manual
     draw call path. This lets us use ClearView most of the time still.
 
-commit 36ee8b401e9dccd34c0f9de21a0e44ec9912b098
+commit 988c40cee12de022c9e7aa63d3d2de86d1310e1f
 Author: Dzmitry Malyshau <dmalyshau@mozilla.com>
 Date:   Thu Dec 5 13:02:14 2019 -0500
 
@@ -70,7 +97,7 @@ Date:   Thu Dec 5 13:02:14 2019 -0500
     
     Original reports were related to WebRender vertex texture updates that are RGBA32F and RGBA32U formats. Limiting the workaround to these formats would allow the affected platforms to upload regular texture data faster without stalls.
 
-commit 0a46d4ba4d2a907b2d95f884fe5c76fca0ae75a4
+commit 3a1d51f5784f13373f60e4138c80dcbebdab5524
 Author: Miko Mynttinen <mikokm@gmail.com>
 Date:   Tue Sep 3 18:54:54 2019 +0200
 
@@ -78,31 +105,22 @@ Date:   Tue Sep 3 18:54:54 2019 +0200
 
 Cherries picked
 ================================================================================
-Merge base from: origin/chromium/4324
+Merge base from: origin/chromium/4515
 
-commit f9e59ad078552424ca165644f4da3b4e2687c3dc
-Author: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>
-Date:   Thu Nov 12 10:01:18 2020 +0000
+commit 018f85dea11fd5e41725750c6958695a6b8e8409
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Fri Sep 3 09:34:10 2021 -0400
 
-    Roll SPIRV-Tools from a61d07a72763 to 1cda495274bb (1 revision)
+    WebGL: Make unsuccessful links fail subsequent draw calls.
     
-    https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools.git/+log/a61d07a72763..1cda495274bb
+    This protects against incomplete state updates during a failed
+    link call that can interfere with draw calls.
     
-    If this roll has caused a breakage, revert this CL and stop the roller
-    using the controls here:
-    https://autoroll.skia.org/r/spirv-tools-angle-autoroll
-    Please CC timvp@google.com on the revert to ensure that a human
-    is aware of the problem.
-    
-    To report a problem with the AutoRoller itself, please file a bug:
-    https://bugs.chromium.org/p/skia/issues/entry?template=Autoroller+Bug
-    
-    Documentation for the AutoRoller is here:
-    https://skia.googlesource.com/buildbot/+doc/master/autoroll/README.md
-    
-    Bug: None
-    Tbr: timvp@google.com
-    Change-Id: I49edf81578b995ec51b3f4078c5d76aba3669439
-    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2533429
-    Reviewed-by: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>
-    Commit-Queue: angle-autoroll <angle-autoroll@skia-public.iam.gserviceaccount.com>
+    Bug: angleproject:6358
+    Bug: chromium:1241123
+    Change-Id: Ie892654c3a58c69d6e35ba3c41758ab6269d8193
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/3140496
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Yuly Novikov <ynovikov@chromium.org>
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/3152556
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>

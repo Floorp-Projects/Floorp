@@ -153,13 +153,13 @@ bool ValidateGenTransformFeedbacks(const Context *context,
 bool ValidateGenVertexArrays(const Context *context, GLsizei n, const VertexArrayID *arraysPacked);
 bool ValidateGetActiveUniformBlockName(const Context *context,
                                        ShaderProgramID programPacked,
-                                       GLuint uniformBlockIndex,
+                                       UniformBlockIndex uniformBlockIndexPacked,
                                        GLsizei bufSize,
                                        const GLsizei *length,
                                        const GLchar *uniformBlockName);
 bool ValidateGetActiveUniformBlockiv(const Context *context,
                                      ShaderProgramID programPacked,
-                                     GLuint uniformBlockIndex,
+                                     UniformBlockIndex uniformBlockIndexPacked,
                                      GLenum pname,
                                      const GLint *params);
 bool ValidateGetActiveUniformsiv(const Context *context,
@@ -379,7 +379,7 @@ bool ValidateUniform4uiv(const Context *context,
                          const GLuint *value);
 bool ValidateUniformBlockBinding(const Context *context,
                                  ShaderProgramID programPacked,
-                                 GLuint uniformBlockIndex,
+                                 UniformBlockIndex uniformBlockIndexPacked,
                                  GLuint uniformBlockBinding);
 bool ValidateUniformMatrix2x3fv(const Context *context,
                                 UniformLocation locationPacked,
