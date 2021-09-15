@@ -380,8 +380,7 @@ void ObjectRealm::traceWeakNativeIterators(JSTracer* trc) {
                                         "ObjectRealm::enumerators")) {
       ni->unlink();
     }
-    MOZ_ASSERT_IF(ni->objectBeingIterated(),
-                  &ObjectRealm::get(ni->objectBeingIterated()) == this);
+    MOZ_ASSERT(&ObjectRealm::get(ni->objectBeingIterated()) == this);
     ni = next;
   }
 }
