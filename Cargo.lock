@@ -5440,7 +5440,7 @@ source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f
 
 [[package]]
 name = "webdriver"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "base64 0.12.3",
  "bytes 0.5.6",
