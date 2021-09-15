@@ -9,6 +9,7 @@
 #include "nsQuoteList.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/intl/Quotes.h"

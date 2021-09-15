@@ -9,6 +9,7 @@
 #include "nsGenConList.h"
 #include "nsLayoutUtils.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
 
 void nsGenConNode::CheckFrameAssertions() {
   NS_ASSERTION(
