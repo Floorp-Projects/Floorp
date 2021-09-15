@@ -17,6 +17,9 @@
 #include "nsIObserverService.h"
 #include "nsIThreadManager.h"
 #include "nsThreadPool.h"
+#ifdef XP_WIN
+#  include "ThreadPoolCOMListener.h"
+#endif
 
 namespace mozilla {
 
@@ -216,6 +219,13 @@ static already_AddRefed<nsIThreadPool> CreateThreadPool(
 
   rv = pool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
   NS_ENSURE_SUCCESS(rv, nullptr);
+
+#ifdef XP_WIN
+  // Ensure MSCOM is initialized on the thread pools threads.
+  nsCOMPtr<nsIThreadPoolListener> listener = new MSCOMInitThreadPoolListener();
+  rv = pool->SetListener(listener);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+#endif
 
   return pool.forget();
 }
