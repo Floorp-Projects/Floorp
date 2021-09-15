@@ -56,6 +56,12 @@ add_task(async function test_save_image_webp_with_jpeg_extension() {
  * Test with the "save link as" context menu.
  */
 add_task(async function test_save_link_webp_with_jpeg_extension() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.useDownloadDir", false],
+    ],
+  });
   await BrowserTestUtils.withNewTab(
     `data:text/html,<a href="${TEST_ROOT}/not-really-a-jpeg.jpeg?convert=webp">Nice image</a>`,
     async browser => {
