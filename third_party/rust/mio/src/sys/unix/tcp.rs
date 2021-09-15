@@ -113,11 +113,11 @@ impl TcpStream {
     }
 
     pub fn set_linger(&self, dur: Option<Duration>) -> io::Result<()> {
-        self.inner.set_linger(dur)
+        TcpStreamExt::set_linger(&self.inner, dur)
     }
 
     pub fn linger(&self) -> io::Result<Option<Duration>> {
-        self.inner.linger()
+        TcpStreamExt::linger(&self.inner)
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
