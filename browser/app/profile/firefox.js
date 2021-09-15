@@ -2168,6 +2168,10 @@ pref("devtools.browsertoolbox.fission", false);
 // This preference will enable watching top-level targets from the server side.
 pref("devtools.target-switching.server.enabled", true);
 
+// Setting this preference to true will result in DevTools creating a target for each frame
+// (i.e. not only for top-level document and remote frames).
+pref("devtools.every-frame-target.enabled", false);
+
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
 pref("devtools.command-button-frames.enabled", true);
