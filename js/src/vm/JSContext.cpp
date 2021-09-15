@@ -308,11 +308,6 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->setPendingException(oomMessage, nullptr);
 }
 
-mozilla::GenericErrorResult<OOM> js::ReportOutOfMemoryResult(JSContext* cx) {
-  ReportOutOfMemory(cx);
-  return cx->alreadyReportedOOM();
-}
-
 void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
   /*
    * We cannot make stack depth deterministic across different
