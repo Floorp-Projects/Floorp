@@ -161,10 +161,6 @@ class ContextImpl : public GLImplFactory
     // Device loss
     virtual gl::GraphicsResetStatus getResetStatus() = 0;
 
-    // Vendor and description strings.
-    virtual std::string getVendorString() const        = 0;
-    virtual std::string getRendererDescription() const = 0;
-
     // EXT_debug_marker
     virtual angle::Result insertEventMarker(GLsizei length, const char *marker) = 0;
     virtual angle::Result pushGroupMarker(GLsizei length, const char *marker)   = 0;
@@ -182,6 +178,9 @@ class ContextImpl : public GLImplFactory
 
     // GL_ANGLE_texture_storage_external
     virtual void invalidateTexture(gl::TextureType target);
+
+    // EXT_shader_framebuffer_fetch_non_coherent
+    virtual void framebufferFetchBarrier() {}
 
     // State sync with dirty bits.
     virtual angle::Result syncState(const gl::Context *context,

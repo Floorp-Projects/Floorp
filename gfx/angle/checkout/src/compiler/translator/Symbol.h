@@ -138,7 +138,7 @@ class TStructure : public TSymbol, public TFieldListCollection
     // TODO(zmo): Find a way to get rid of the const_cast in function
     // setName().  At the moment keep this function private so only
     // friend class RegenerateStructNames may call it.
-    friend class RegenerateStructNames;
+    friend class RegenerateStructNamesTraverser;
     void setName(const ImmutableString &name);
 
     bool mAtGlobalScope;

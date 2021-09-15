@@ -2935,11 +2935,6 @@ void Context::clearNamedFramebufferuiv(FramebufferID framebuffer,
     UNIMPLEMENTED();
 }
 
-void Context::clipControl(GLenum origin, GLenum depth)
-{
-    UNIMPLEMENTED();
-}
-
 void Context::compressedTextureSubImage1D(TextureID texture,
                                           GLint level,
                                           GLint xoffset,
