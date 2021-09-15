@@ -10,9 +10,8 @@ import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.concept.storage.Login
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
-import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
 import mozilla.components.support.ktx.kotlin.toHexString
@@ -118,7 +117,7 @@ internal sealed class LoginsMigrationResult {
 @VisibleForTesting
 internal data class FennecLoginRecords(
     // Records that we were able to process.
-    val records: List<ServerPassword>,
+    val records: List<Login>,
     // Total number of records that we saw in the database.
     val totalRecordsDetected: Int
 )
@@ -157,7 +156,7 @@ internal object FennecLoginsMigration {
         }
 
         val migrationMetrics = try {
-            loginsStorage.importLoginsAsync(fennecRecords.records.map { it.toLogin() })
+            loginsStorage.importLoginsAsync(fennecRecords.records)
         } catch (e: Exception) {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
         }
@@ -216,7 +215,7 @@ internal object FennecLoginsMigration {
         key4DbPath: String
     ): FennecLoginRecords {
         val db = SQLiteDatabase.openDatabase(signonsDbPath, null, OPEN_READONLY)
-        val records: MutableList<ServerPassword> = mutableListOf()
+        val records: MutableList<Login> = mutableListOf()
 
         // db.version runs a 'pragma user_version;' query, so cache the result in case we need to throw.
         val dbVersion = db.version
@@ -278,14 +277,13 @@ internal object FennecLoginsMigration {
                     val timeLastUsed = it.getLong(it.getColumnIndexOrThrow("timeLastUsed"))
                     val timePasswordChanged = it.getLong(it.getColumnIndexOrThrow("timePasswordChanged"))
 
-                    val fullRecord = ServerPassword(
-                        // 'id' is renamed to 'guid' as this record goes over the FFI boundary.
-                        id = guid,
-                        hostname = hostname,
+                    val fullRecord = Login(
+                        guid = guid,
+                        origin = hostname,
                         username = encodedUsername,
                         password = encodedPassword,
                         httpRealm = httpRealm,
-                        formSubmitUrl = formSubmitUrl,
+                        formActionOrigin = formSubmitUrl,
                         timesUsed = timesUsed.toLong(),
                         timeCreated = timeCreated,
                         timeLastUsed = timeLastUsed,

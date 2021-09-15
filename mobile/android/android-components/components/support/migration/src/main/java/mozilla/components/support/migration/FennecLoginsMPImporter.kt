@@ -5,7 +5,7 @@
 package mozilla.components.support.migration
 
 import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.concept.storage.Login
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -58,10 +58,10 @@ class FennecLoginsMPImporter(
     /**
      * @param password An MP to use for decrypting the Fennec logins database.
      * @param crashReporter [CrashReporting] instance for recording encountered exceptions.
-     * @return A list of [ServerPassword] records representing logins stored in Fennec.
+     * @return A list of [Login] records representing logins stored in Fennec.
      */
     @Suppress("TooGenericExceptionCaught")
-    fun getLoginRecords(password: String, crashReporter: CrashReporting): List<ServerPassword> {
+    fun getLoginRecords(password: String, crashReporter: CrashReporting): List<Login> {
         return try {
             FennecLoginsMigration.getLogins(crashReporter, password, signonsDbPath, key4DbPath).records
         } catch (e: Exception) {

@@ -713,7 +713,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - no master password`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey()).also {
             it.wipeLocal()
         }
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
@@ -768,7 +768,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - with master password`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key")
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey())
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
             .setProfile(
@@ -796,7 +796,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - with mp and empty key4db`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey()).also {
             it.wipeLocal()
         }
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
@@ -824,7 +824,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - with mp and no nss in key4db`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key")
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey())
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
             .setProfile(
@@ -851,7 +851,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - missing profile`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey()).also {
             it.wipeLocal()
         }
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
@@ -875,7 +875,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - with master password, old signons version`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key")
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey())
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
             .setProfile(
@@ -901,7 +901,7 @@ class FennecMigratorTest {
     @Test
     fun `logins migrations - without master password, old signons version`() = runBlocking {
         val crashReporter: CrashReporting = mock()
-        val loginStorage = SyncableLoginsStorage(testContext, "test key")
+        val loginStorage = SyncableLoginsStorage(testContext, SyncableLoginsStorage.createKey())
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
             .setProfile(
