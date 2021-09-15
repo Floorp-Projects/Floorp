@@ -439,7 +439,7 @@ constexpr auto ToResult(Result<V, E>&& aValue)
  * V* const, E> is not possible.)
  */
 template <typename V, typename E>
-class MOZ_MUST_USE_TYPE Result final {
+class [[nodiscard]] Result final {
   // See class comment on Result<const V, E> and Result<V, const E>.
   static_assert(!std::is_const_v<V>);
   static_assert(!std::is_const_v<E>);
@@ -745,7 +745,7 @@ class MOZ_MUST_USE_TYPE Result final {
  * useful in error-handling macros; see MOZ_TRY for an example.
  */
 template <typename E>
-class MOZ_MUST_USE_TYPE GenericErrorResult {
+class [[nodiscard]] GenericErrorResult {
   E mErrorValue;
 
   template <typename V, typename E2>

@@ -58,7 +58,7 @@
 //
 // TODO(heycam): We should perhaps have a similar struct for Owned types with a
 // Consume() method to convert them into a UniquePtr.  The struct for Strong
-// types at least have MOZ_MUST_USE_TYPE on them.
+// types at least have [[nodiscard]] on them.
 //
 //
 // Using these types in Rust =========================
