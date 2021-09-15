@@ -1194,6 +1194,7 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &realmKeyObject, "global-realm-key");
   TraceNullableEdge(trc, &throwTypeError, "global-throw-type-error");
   TraceNullableEdge(trc, &eval, "global-eval");
+  TraceNullableEdge(trc, &emptyIterator, "global-empty-iterator");
 
   TraceNullableEdge(trc, &arrayShapeWithDefaultProto, "global-array-shape");
 
