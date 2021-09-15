@@ -4774,22 +4774,23 @@ AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  if (!val_.isObject()) {
-    return AttachDecision::NoAction;
-  }
 
-  RootedObject obj(cx_, &val_.toObject());
-
-  ObjOperandId objId = writer.guardToObject(valId);
-  TRY_ATTACH(tryAttachNativeIterator(objId, obj));
+  TRY_ATTACH(tryAttachNativeIterator(valId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
 }
 
 AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
-    ObjOperandId objId, HandleObject obj) {
+    ValOperandId valId) {
   MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
+
+  if (!val_.isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedObject obj(cx_, &val_.toObject());
+  ObjOperandId objId = writer.guardToObject(valId);
 
   PropertyIteratorObject* iterobj = LookupInIteratorCache(cx_, obj);
   if (!iterobj) {
@@ -4812,7 +4813,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
-  trackAttached("GetIterator");
+  trackAttached("NativeIterator");
   return AttachDecision::Attach;
 }
 
