@@ -28,7 +28,7 @@ static const uint32_t kNumFullIDBits = 31UL;
 // maximum permitted number of e10s content processes. If the e10s maximum
 // number of content processes changes, then kNumContentProcessIDBits must also
 // be updated if necessary to accommodate that new value!
-static const uint32_t kNumContentProcessIDBits = 7UL;
+static const uint32_t kNumContentProcessIDBits = 8UL;
 static const uint32_t kNumUniqueIDBits = (31UL - kNumContentProcessIDBits);
 
 static_assert(
