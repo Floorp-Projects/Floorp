@@ -4,9 +4,9 @@
     "build_type": "Release",
     "assertions": false,
     "build_clang_tidy": true,
-    "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
-    "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
-    "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
+    "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
         "clang-tidy-ci.patch"
     ],
