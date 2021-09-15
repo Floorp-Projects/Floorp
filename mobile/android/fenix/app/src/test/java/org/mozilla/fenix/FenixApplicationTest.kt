@@ -16,15 +16,12 @@ import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
@@ -49,14 +46,6 @@ class FenixApplicationTest {
         browsersCache = mockk(relaxed = true)
         mozillaProductDetector = mockk(relaxed = true)
         browserStore = BrowserStore()
-    }
-
-    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/18102")
-    @Test
-    fun `GIVEN onCreate is called THEN the duration is measured`() {
-        // application.onCreate is called before the test as part of test set up:
-        // https://robolectric.blogspot.com/2013/04/the-test-lifecycle-in-20.html
-        assertTrue(PerfStartup.applicationOnCreate.testHasValue())
     }
 
     @Test
