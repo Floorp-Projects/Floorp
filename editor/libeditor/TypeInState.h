@@ -75,7 +75,7 @@ class StyleCache final {
 };
 
 class MOZ_STACK_CLASS AutoStyleCacheArray final
-    : public AutoTArray<StyleCache, 19> {
+    : public AutoTArray<StyleCache, 21> {
  public:
   index_type IndexOf(const nsStaticAtom* aTag,
                      const nsStaticAtom* aAttribute) const {
