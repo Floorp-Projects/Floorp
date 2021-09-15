@@ -28,7 +28,6 @@ forbid-mscom-init:
         - browser/components/migration/nsIEHistoryEnumerator.cpp
         - browser/components/migration/tests/unit/insertIEHistory/InsertIEHistory.cpp
         - browser/components/shell/nsWindowsShellService.cpp
-        - dom/media/ThreadPoolCOMListener.cpp
         - gfx/thebes/gfxWindowsPlatform.cpp
         - image/DecodePool.cpp
         - intl/locale/windows/OSPreferences_win.cpp
