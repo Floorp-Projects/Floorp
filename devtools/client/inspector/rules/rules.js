@@ -851,7 +851,7 @@ CssRuleView.prototype = {
 
     // Remove bound listeners
     this.shortcuts.destroy();
-    this.styleDocument.removeEventListener("click", this);
+    this.styleDocument.removeEventListener("click", this, { capture: true });
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.addRuleButton.removeEventListener("click", this._onAddRule);
