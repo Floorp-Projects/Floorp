@@ -20,6 +20,8 @@ forbid-mscom-init:
     exclude:
         # These files are the only allowable locations
         - ipc/mscom/ApartmentRegion.h
+        - ipc/mscom/COMWrappers.cpp
+        - ipc/mscom/COMWrappers.h
         - ipc/mscom/ProcessRuntime.cpp
         - ipc/mscom/EnsureMTA.cpp
         # These files are existing locations that must eventually be fixed.
