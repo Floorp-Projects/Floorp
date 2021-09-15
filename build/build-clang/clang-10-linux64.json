@@ -6,9 +6,9 @@
     "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "build_type": "Release",
     "assertions": false,
-    "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
-    "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
-    "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "cc": "/usr/bin/gcc",
+    "cxx": "/usr/bin/g++",
+    "as": "/usr/bin/gcc",
     "patches": [
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux_clang_10.patch",
