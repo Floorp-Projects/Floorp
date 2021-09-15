@@ -167,6 +167,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
     var parentId: String? = null
     var url: String? = null
     var title: String? = null
+    var searchTerm: String = ""
     var contextId: String? = null
     var lastAccess: Long? = null
     var createdAt: Long? = null
@@ -194,6 +195,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
             Keys.SESSION_CONTEXT_ID_KEY -> contextId = nextStringOrNull()
             Keys.SESSION_PARENT_UUID_KEY -> parentId = nextStringOrNull()?.takeIf { it.isNotEmpty() }
             Keys.SESSION_TITLE -> title = nextStringOrNull() ?: ""
+            Keys.SESSION_SEARCH_TERM -> searchTerm = nextStringOrNull() ?: ""
             Keys.SESSION_READER_MODE_KEY -> readerStateActive = nextBooleanOrNull()
             Keys.SESSION_READER_MODE_ACTIVE_URL_KEY -> readerActiveUrl = nextStringOrNull()
             Keys.SESSION_HISTORY_METADATA_URL -> historyMetadataUrl = nextStringOrNull()
@@ -219,6 +221,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
         parentId = parentId,
         url = requireNotNull(url),
         title = requireNotNull(title),
+        searchTerm = requireNotNull(searchTerm),
         contextId = contextId,
         state = null, // This will be deserialized and added separately
         readerState = ReaderState(

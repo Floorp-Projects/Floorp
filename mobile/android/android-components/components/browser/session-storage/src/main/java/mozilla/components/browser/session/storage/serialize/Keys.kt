@@ -21,6 +21,7 @@ internal object Keys {
     const val SESSION_READER_MODE_KEY = "readerMode"
     const val SESSION_READER_MODE_ACTIVE_URL_KEY = "readerModeArticleUrl"
     const val SESSION_TITLE = "title"
+    const val SESSION_SEARCH_TERM = "searchTerm"
     const val SESSION_LAST_ACCESS = "lastAccess"
     const val SESSION_CREATED_AT = "createdAt"
     const val SESSION_LAST_MEDIA_URL = "lastMediaUrl"
