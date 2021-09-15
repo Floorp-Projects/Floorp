@@ -47,4 +47,3 @@ forbid-mscom-init:
         - widget/windows/nsWindow.h
         - widget/windows/tests/TestUriValidation.cpp
         - xpcom/io/nsLocalFileWin.cpp
-        - xpcom/threads/TaskController.cpp
