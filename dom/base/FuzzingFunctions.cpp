@@ -10,6 +10,7 @@
 #include "js/GCAPI.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextInputProcessor.h"
 #include "nsFocusManager.h"
@@ -32,6 +33,19 @@ void FuzzingFunctions::GarbageCollectCompacting(const GlobalObject&) {
   nsJSContext::GarbageCollectNow(JS::GCReason::COMPONENT_UTILS,
                                  nsJSContext::NonIncrementalGC,
                                  nsJSContext::ShrinkingGC);
+}
+
+/* static */
+void FuzzingFunctions::Crash(const GlobalObject& aGlobalObject,
+                             const nsAString& aKeyValue) {
+  char msgbuf[250];
+
+  SprintfLiteral(msgbuf, "%s", NS_ConvertUTF16toUTF8(aKeyValue).get());
+  if (aKeyValue.Length() >= sizeof(msgbuf)) {
+    // Update the end of a truncated message to '...'.
+    strcpy(&msgbuf[sizeof(msgbuf) - 4], "...");
+  }
+  MOZ_CRASH_UNSAFE_PRINTF("%s", msgbuf);
 }
 
 /* static */

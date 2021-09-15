@@ -220,7 +220,7 @@ MOZ_NoReturn(int aLine) {
  * builds, and it's hard to print to stderr safely when memory might have been
  * corrupted.
  */
-#ifndef DEBUG
+#if !(defined(DEBUG) || defined(FUZZING))
 #  define MOZ_CRASH(...)                                \
     do {                                                \
       MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
@@ -249,7 +249,7 @@ MOZ_NoReturn(int aLine) {
  */
 static MOZ_ALWAYS_INLINE_EVEN_DEBUG MOZ_COLD MOZ_NORETURN void MOZ_Crash(
     const char* aFilename, int aLine, const char* aReason) {
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
   MOZ_ReportCrash(aReason, aFilename, aLine);
 #endif
   MOZ_CRASH_ANNOTATE(aReason);
