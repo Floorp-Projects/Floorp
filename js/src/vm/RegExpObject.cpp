@@ -981,7 +981,6 @@ RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom source,
   new (shared) RegExpShared(source, flags);
 
   if (!p.add(cx, set_, Key(source, flags), shared)) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 

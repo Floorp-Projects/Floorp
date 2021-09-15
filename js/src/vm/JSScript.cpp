@@ -1423,7 +1423,6 @@ bool JSScript::initScriptCounts(JSContext* cx) {
   // Allocate the ScriptCounts.
   UniqueScriptCounts sc = cx->make_unique<ScriptCounts>(std::move(base));
   if (!sc) {
-    ReportOutOfMemory(cx);
     return false;
   }
 
