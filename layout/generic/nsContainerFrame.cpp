@@ -49,7 +49,6 @@ using namespace mozilla::layout;
 
 using mozilla::gfx::ColorPattern;
 using mozilla::gfx::DeviceColor;
-using mozilla::gfx::DrawTarget;
 using mozilla::gfx::Rect;
 using mozilla::gfx::sRGBColor;
 using mozilla::gfx::ToDeviceColor;

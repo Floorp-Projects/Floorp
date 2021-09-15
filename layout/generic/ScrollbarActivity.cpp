@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsAString.h"
 #include "nsQueryFrame.h"
-#include "nsRefreshDriver.h"
 #include "nsComponentManagerUtils.h"
 #include "nsStyledElement.h"
 #include "mozilla/dom/Element.h"
