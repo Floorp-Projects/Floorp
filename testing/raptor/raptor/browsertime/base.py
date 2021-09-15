@@ -235,6 +235,11 @@ class Browsertime(Perftest):
             ["--browsertime.post_startup_delay", str(self.post_startup_delay)]
         )
 
+        # a delay was added by default to browsertime from 5s -> 8s for iphones, not needed
+        browsertime_script.extend(
+            ["--pageCompleteWaitTime", str(test.get("page_complete_wait_time", "5000"))]
+        )
+
         self.results_handler.remove_result_dir_for_test(test)
 
         browsertime_options = [

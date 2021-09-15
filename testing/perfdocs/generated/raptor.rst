@@ -2705,6 +2705,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile interval**: 1
    * **lower is better**: true
    * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page complete wait time**: 8000
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
