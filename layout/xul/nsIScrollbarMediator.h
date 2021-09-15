@@ -7,7 +7,6 @@
 #ifndef nsIScrollbarMediator_h___
 #define nsIScrollbarMediator_h___
 
-#include "mozilla/ScrollTypes.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
 

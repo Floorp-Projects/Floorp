@@ -8,7 +8,6 @@
 
 #include "nsBackdropFrame.h"
 
-#include "mozilla/PresShell.h"
 #include "nsDisplayList.h"
 
 using namespace mozilla;
