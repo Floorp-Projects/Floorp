@@ -147,6 +147,12 @@ const FeatureManifest = {
           "browser.newtabpage.activity-stream.discoverystream.spoc-positions",
         description: "CSV string of spoc position indexes on newtab grid",
       },
+      compactLayout: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled",
+        description: "Enable compact cards on newtab grid",
+      },
     },
   },
   "password-autocomplete": {
