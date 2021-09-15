@@ -561,6 +561,9 @@ class BrowserFragment :
             return true
         } else if (sessionFeature.get()?.onBackPressed() == true) {
             return true
+        } else if (tab.source is SessionState.Source.Internal.TextSelection) {
+            erase()
+            return true
         } else {
             if (tab.source is SessionState.Source.External || tab.isCustomTab()) {
                 TelemetryWrapper.eraseBackToAppEvent()
@@ -605,6 +608,11 @@ class BrowserFragment :
         }
 
         requireComponents.tabsUseCases.removeTab(tab.id)
+        requireComponents.appStore.dispatch(
+            AppAction.NavigateUp(
+                requireComponents.store.state.selectedTabId
+            )
+        )
     }
 
     private fun shareCurrentUrl() {

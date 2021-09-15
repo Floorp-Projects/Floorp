@@ -51,7 +51,7 @@ private fun selectionChanged(state: AppState, action: AppAction.SelectionChanged
  * All tabs have been closed.
  */
 private fun noTabs(state: AppState): AppState {
-    if (state.screen is Screen.Home || state.screen is Screen.FirstRun) {
+    if (state.screen is Screen.Home || state.screen is Screen.FirstRun || state.screen is Screen.Browser) {
         return state
     }
 
@@ -159,6 +159,15 @@ private fun topSitesChanged(state: AppState, action: AppAction.TopSitesChange): 
 
 @Suppress("ComplexMethod")
 private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState {
+    if (state.screen is Screen.Browser) {
+        val screen = if (action.tabId != null) {
+            Screen.Browser(tabId = action.tabId, showTabs = false)
+        } else {
+            Screen.Home
+        }
+        return state.copy(screen = screen)
+    }
+
     if (state.screen !is Screen.Settings) {
         return state
     }
