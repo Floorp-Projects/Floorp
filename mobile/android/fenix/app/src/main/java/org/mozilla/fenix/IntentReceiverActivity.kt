@@ -30,9 +30,6 @@ class IntentReceiverActivity : Activity() {
 
     @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
-        // DO NOT MOVE ANYTHING ABOVE THIS addMarker CALL.
-        components.core.engine.profiler?.addMarker("Activity.onCreate", "IntentReceiverActivity")
-
         // StrictMode violation on certain devices such as Samsung
         components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             super.onCreate(savedInstanceState)
