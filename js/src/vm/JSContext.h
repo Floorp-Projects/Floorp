@@ -411,6 +411,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   friend class JS::AutoSaveExceptionState;
   friend class js::jit::DebugModeOSRVolatileJitFrameIter;
+  friend void js::ReportOutOfMemory(JSContext*);
   friend void js::ReportOverRecursed(JSContext*);
 
  public:
@@ -802,7 +803,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   js::SavedFrame* getPendingExceptionStack();
 
-  bool isThrowingOutOfMemory();
   bool isThrowingDebuggeeWouldRun();
   bool isClosingGenerator();
 
@@ -815,6 +815,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     unwrappedExceptionStack() = nullptr;
   }
 
+  bool isThrowingOutOfMemory() const {
+    return status == JS::ExceptionStatus::OutOfMemory;
+  }
   bool isThrowingOverRecursed() const {
     return status == JS::ExceptionStatus::OverRecursed;
   }
