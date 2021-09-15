@@ -143,4 +143,74 @@ $col4-header-font-size: 14;
   &.empty {
     grid-template-columns: auto;
   }
+
+  &.ds-card-grid-compact-variant {
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      grid-template-columns: repeat(1, 1fr);
+
+      @media (min-width: $break-point-medium) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: $break-point-large) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (min-width: $break-point-widest) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .ds-card {
+      &.placeholder {
+        min-height: 247px;
+      }
+
+      .meta {
+        padding: 12px 0 0;
+
+        .source,
+        .story-sponsored-label {
+          font-size: 13px;
+          color: var(--newtab-text-secondary-color);
+          -webkit-line-clamp: 2;
+        }
+
+        .title {
+          font-size: 14px;
+          -webkit-line-clamp: 3;
+          line-height: 20px;
+        }
+
+        .info-wrap {
+          flex-grow: 0;
+        }
+      }
+    }
+  }
+}
+
+.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card {
+  &:not(.placeholder) {
+    box-shadow: none;
+    background: none;
+
+    .ds-card-link:focus {
+      box-shadow: none;
+
+      .img-wrapper .img img {
+        @include ds-focus;
+      }
+    }
+
+    .img-wrapper .img img {
+      border-radius: 8px;
+      box-shadow: var(--newtab-card-first-shadow);
+    }
+  }
 }

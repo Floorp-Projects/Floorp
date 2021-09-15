@@ -1,5 +1,7 @@
 import {
   _DSCard as DSCard,
+  readTimeFromWordCount,
+  DSSource,
   DefaultMeta,
   PlaceholderDSCard,
   CTAButtonMeta,
@@ -7,6 +9,7 @@ import {
 import {
   DSContextFooter,
   StatusMessage,
+  SponsorLabel,
 } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import { actionCreators as ac } from "common/Actions.jsm";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
@@ -369,5 +372,68 @@ describe("<PlaceholderDSCard> component", () => {
     wrapper.setState({ isSeen: true });
     const linkMenu = wrapper.find(DSLinkMenu);
     assert.lengthOf(linkMenu, 0);
+  });
+});
+
+describe("<DSSource> component", () => {
+  it("should return a default source without compact", () => {
+    const wrapper = shallow(<DSSource source="Mozilla" />);
+
+    let sourceElement = wrapper.find(".source");
+    assert.equal(sourceElement.text(), "Mozilla");
+  });
+  it("should return a default source with compact without a sponsor or time to read", () => {
+    const wrapper = shallow(<DSSource compact={true} source="Mozilla" />);
+
+    let sourceElement = wrapper.find(".source");
+    assert.equal(sourceElement.text(), "Mozilla");
+  });
+  it("should return a SponsorLabel with compact and a sponsor", () => {
+    const wrapper = shallow(<DSSource compact={true} sponsor="Mozilla" />);
+    const sponsorLabel = wrapper.find(SponsorLabel);
+    assert.lengthOf(sponsorLabel, 1);
+  });
+  it("should return a time to read with compact and without a sponsor but with a time to read", () => {
+    const wrapper = shallow(
+      <DSSource compact={true} source="Mozilla" timeToRead="2000" />
+    );
+
+    let timeToRead = wrapper.find(".time-to-read");
+    assert.lengthOf(timeToRead, 1);
+
+    // Weirdly, we can test for the pressence of fluent, because time to read needs to be translated.
+    // This is also because we did a shallow render, that th contents of fluent would be empty anyway.
+    const fluentOrText = wrapper.find(FluentOrText);
+    assert.lengthOf(fluentOrText, 1);
+  });
+  it("should prioritize a SponsorLabel if for some reason it gets everything", () => {
+    const wrapper = shallow(
+      <DSSource
+        compact={true}
+        sponsor="Mozilla"
+        source="Mozilla"
+        timeToRead="2000"
+      />
+    );
+    const sponsorLabel = wrapper.find(SponsorLabel);
+    assert.lengthOf(sponsorLabel, 1);
+  });
+});
+
+describe("readTimeFromWordCount function", () => {
+  it("should return proper read time", () => {
+    const result = readTimeFromWordCount(2000);
+    assert.equal(result, 10);
+  });
+  it("should return false with falsey word count", () => {
+    assert.isFalse(readTimeFromWordCount());
+    assert.isFalse(readTimeFromWordCount(0));
+    assert.isFalse(readTimeFromWordCount(""));
+    assert.isFalse(readTimeFromWordCount(null));
+    assert.isFalse(readTimeFromWordCount(undefined));
+  });
+  it("should return NaN with invalid word count", () => {
+    assert.isNaN(readTimeFromWordCount("zero"));
+    assert.isNaN(readTimeFromWordCount({}));
   });
 });

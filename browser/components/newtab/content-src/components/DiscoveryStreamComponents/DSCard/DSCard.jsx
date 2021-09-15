@@ -8,9 +8,64 @@ import { DSLinkMenu } from "../DSLinkMenu/DSLinkMenu";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
-import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
+import {
+  DSContextFooter,
+  SponsorLabel,
+} from "../DSContextFooter/DSContextFooter.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { connect } from "react-redux";
+
+const READING_WPM = 220;
+
+/**
+ * READ TIME FROM WORD COUNT
+ * @param {int} wordCount number of words in an article
+ * @returns {int} number of words per minute in minutes
+ */
+export function readTimeFromWordCount(wordCount) {
+  if (!wordCount) return false;
+  return Math.ceil(parseInt(wordCount, 10) / READING_WPM);
+}
+
+export const DSSource = ({
+  source,
+  timeToRead,
+  compact,
+  context,
+  sponsor,
+  sponsored_by_override,
+}) => {
+  // If we are compact, try to display sponsored label or time to read here.
+  if (compact) {
+    // If we can display something for spocs, do so.
+    if (sponsored_by_override || sponsor || context) {
+      return (
+        <SponsorLabel
+          context={context}
+          sponsor={sponsor}
+          sponsored_by_override={sponsored_by_override}
+        />
+      );
+    }
+
+    // If we are not a spoc, and can display a time to read value.
+    if (timeToRead) {
+      return (
+        <p className="source clamp time-to-read">
+          <FluentOrText
+            message={{
+              id: `newtab-label-source-read-time`,
+              values: { source, timeToRead },
+            }}
+          />
+        </p>
+      );
+    }
+  }
+
+  // Otherwise display a default source.
+  return <p className="source clamp">{source}</p>;
+};
 
 // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 export const DefaultMeta = ({
@@ -18,6 +73,8 @@ export const DefaultMeta = ({
   source,
   title,
   excerpt,
+  timeToRead,
+  compact,
   context,
   context_type,
   cta,
@@ -28,8 +85,17 @@ export const DefaultMeta = ({
 }) => (
   <div className="meta">
     <div className="info-wrap">
-      <p className="source clamp">{source}</p>
-      <header className="title clamp">{title}</header>
+      <DSSource
+        source={source}
+        compact={compact}
+        timeToRead={timeToRead}
+        context={context}
+        sponsor={sponsor}
+        sponsored_by_override={sponsored_by_override}
+      />
+      <header title={title} className="title clamp">
+        {title}
+      </header>
       {excerpt && <p className="excerpt clamp">{excerpt}</p>}
       {cta_variant === "link" && cta && (
         <div role="link" className="cta-link icon icon-arrow" tabIndex="0">
@@ -37,14 +103,16 @@ export const DefaultMeta = ({
         </div>
       )}
     </div>
-    <DSContextFooter
-      context_type={context_type}
-      context={context}
-      sponsor={sponsor}
-      sponsored_by_override={sponsored_by_override}
-      display_engagement_labels={display_engagement_labels}
-      engagement={engagement}
-    />
+    {!compact && (
+      <DSContextFooter
+        context_type={context_type}
+        context={context}
+        sponsor={sponsor}
+        sponsored_by_override={sponsored_by_override}
+        display_engagement_labels={display_engagement_labels}
+        engagement={engagement}
+      />
+    )}
   </div>
 );
 
@@ -74,7 +142,9 @@ export const CTAButtonMeta = ({
 
         {!context && (sponsor ? sponsor : source)}
       </p>
-      <header className="title clamp">{title}</header>
+      <header title={title} className="title clamp">
+        {title}
+      </header>
       {excerpt && <p className="excerpt clamp">{excerpt}</p>}
     </div>
     {context && cta && <button className="button cta-button">{cta}</button>}
@@ -227,7 +297,12 @@ export class _DSCard extends React.PureComponent {
       );
     }
     const isButtonCTA = this.props.cta_variant === "button";
+    const includeDescriptions = this.props.include_descriptions;
     const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
+    const excerpt = includeDescriptions ? this.props.excerpt : "";
+
+    const timeToRead =
+      this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
 
     return (
       <div className={baseClass}>
@@ -255,9 +330,11 @@ export class _DSCard extends React.PureComponent {
               display_engagement_labels={this.props.display_engagement_labels}
               source={this.props.source}
               title={this.props.title}
-              excerpt={this.props.excerpt}
+              excerpt={excerpt}
+              timeToRead={timeToRead}
               context={this.props.context}
               context_type={this.props.context_type}
+              compact={this.props.compact}
               engagement={this.props.engagement}
               cta={this.props.cta}
               sponsor={this.props.sponsor}
@@ -268,10 +345,12 @@ export class _DSCard extends React.PureComponent {
               display_engagement_labels={this.props.display_engagement_labels}
               source={this.props.source}
               title={this.props.title}
-              excerpt={this.props.excerpt}
+              excerpt={excerpt}
+              timeToRead={timeToRead}
               context={this.props.context}
               engagement={this.props.engagement}
               context_type={this.props.context_type}
+              compact={this.props.compact}
               cta={this.props.cta}
               cta_variant={this.props.cta_variant}
               sponsor={this.props.sponsor}

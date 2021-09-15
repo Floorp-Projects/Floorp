@@ -463,12 +463,20 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         PREF_COLLECTIONS_ENABLED
       ];
 
+      const compactLayout = this.store.getState().Prefs.values?.pocketConfig
+        ?.compactLayout;
+      let items = isBasicLayout ? 3 : 21;
+      if (compactLayout) {
+        items = isBasicLayout ? 4 : 24;
+      }
+
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
       layoutResp = getHardcodedLayout({
-        isBasicLayout,
+        items,
         spocPositions: this.parseSpocPositions(spocPositions),
         sponsoredCollectionsEnabled,
+        compactLayout,
       });
     }
 
@@ -1839,12 +1847,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 // This is because modifying the original object would
 // persist across pref changes and system_tick updates.
 //
-// NOTE: There is some branching logic in the template based on `isBasicLayout`
-//
+// NOTE: There is some branching logic in the template.
+//   `items` How many items to include in the primary card grid.
+//   `spocPositions` Changes the position of spoc cards.
+//   `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
+//   `compactLayout` Changes cards to smaller more compact cards.
 getHardcodedLayout = ({
-  isBasicLayout,
+  items = 21,
   spocPositions = [2, 4, 11, 20],
   sponsoredCollectionsEnabled = false,
+  compactLayout = false,
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -1917,7 +1929,8 @@ getHardcodedLayout = ({
         {
           type: "CardGrid",
           properties: {
-            items: isBasicLayout ? 3 : 21,
+            items,
+            compact: compactLayout,
           },
           cta_variant: "link",
           header: {

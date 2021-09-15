@@ -37,4 +37,22 @@ describe("<CardGrid>", () => {
 
     assert.ok(wrapper.find(".ds-card-grid-hero").exists());
   });
+
+  it("should add compact classname to card grid", () => {
+    wrapper.setProps({
+      compact: true,
+      data: { recommendations: [{}, {}] },
+    });
+
+    assert.ok(wrapper.find(".ds-card-grid-compact-variant").exists());
+  });
+
+  it("should add description classname to card grid", () => {
+    wrapper.setProps({
+      include_descriptions: true,
+      data: { recommendations: [{}, {}] },
+    });
+
+    assert.ok(wrapper.find(".ds-card-grid-include-descriptions").exists());
+  });
 });
