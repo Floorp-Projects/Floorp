@@ -337,6 +337,16 @@ void ClientManagerService::ForgetFutureSource(
       return;
     }
 
+    // For non-e10s case, ClientChannelHelperParent will be freed before real
+    // ClientSourceParnet be created. In the end this methoed will be called to
+    // release the FutureClientSourceParent. That means a ClientHandle operation
+    // which waits for the FutureClientSourceParent will have no chance to
+    // connect to the ClientSourceParent. So the FutureClientSourceParent should
+    // be keep in this case.
+    // IsAssociated() makes sure there is a ClientHandle operation associated
+    // with it.
+    // More details please refer
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1730350#c2
     if (!XRE_IsE10sParentProcess() &&
         entry.Data().as<FutureClientSourceParent>().IsAssociated()) {
       return;
