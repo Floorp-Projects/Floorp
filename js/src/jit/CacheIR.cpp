@@ -4776,6 +4776,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   ValOperandId valId(writer.setInputOperandId(0));
 
   TRY_ATTACH(tryAttachNativeIterator(valId));
+  TRY_ATTACH(tryAttachNullOrUndefined(valId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
@@ -4814,6 +4815,32 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
   writer.returnFromIC();
 
   trackAttached("NativeIterator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetIteratorIRGenerator::tryAttachNullOrUndefined(
+    ValOperandId valId) {
+  MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
+
+  // For null/undefined we can simply return the empty iterator singleton. This
+  // works because this iterator is unlinked and immutable.
+
+  if (!val_.isNullOrUndefined()) {
+    return AttachDecision::NoAction;
+  }
+
+  PropertyIteratorObject* emptyIter = cx_->global()->maybeEmptyIterator();
+  if (!emptyIter) {
+    return AttachDecision::NoAction;
+  }
+
+  writer.guardIsNullOrUndefined(valId);
+
+  ObjOperandId iterId = writer.loadObject(emptyIter);
+  writer.loadObjectResult(iterId);
+  writer.returnFromIC();
+
+  trackAttached("NullOrUndefined");
   return AttachDecision::Attach;
 }
 

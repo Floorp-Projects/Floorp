@@ -1606,6 +1606,7 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
   HandleValue val_;
 
   AttachDecision tryAttachNativeIterator(ValOperandId valId);
+  AttachDecision tryAttachNullOrUndefined(ValOperandId valId);
 
  public:
   GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
