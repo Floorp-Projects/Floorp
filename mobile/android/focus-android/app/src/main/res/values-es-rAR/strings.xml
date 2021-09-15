@@ -57,7 +57,7 @@
     <string name="menu_settings">Configuración</string>
     <string name="menu_about">Acerca de</string>
     <string name="menu_help">Ayuda</string>
-    <string name="menu_rights">Sus derechos</string>
+    <string name="menu_rights">Tus derechos</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
          for the currently loaded website. The number of blocked trackers is shown below this label.
@@ -174,7 +174,7 @@
     <string name="preference_show_search_suggestions">Obtener sugerencias de búsqueda</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">%1$s enviará lo que ingrese en la barra de direcciones a su motor de búsqueda</string>
+    <string name="preference_show_search_suggestions_summary">%1$s enviará lo que ingreses en la barra de direcciones a tu motor de búsqueda</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Predeterminado</string>
@@ -277,7 +277,7 @@
     <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
     <string name="preference_privacy_block_analytics_summary">Se usan para recolectar, analizar y medir actividades como tocar y desplazar</string>
     <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
-    <string name="preference_privacy_block_social_summary">Incrustados en sitios para rastrear visitas y mostrar funcionalidades como los botones de compartir</string>
+    <string name="preference_privacy_block_social_summary">Incorporados en sitios para rastrear visitas y mostrar funcionalidades como los botones de compartir</string>
     <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
     <string name="preference_privacy_block_content_summary2">Habilitarlos puede causar que algunas páginas se comporten de forma inesperada</string>
     <string name="preference_privacy_category_cookies">Bloquear las cookies</string>
@@ -295,7 +295,7 @@
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Su huella digital puede liberar %1$s si ya hay una URL abierta. Se activará el modo invisible.</string>
+    <string name="preference_security_biometric_summary">Tu huella digital puede liberar %1$s si ya hay una URL abierta. Se activará el modo invisible.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -440,7 +440,7 @@
          content blocking for the current session -->
     <string name="content_description_blocking_switch">Bloquear rastreadores</string>
 
-    <string name="your_rights">Sus derechos</string>
+    <string name="your_rights">Tus derechos</string>
 
     <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
     <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
@@ -450,7 +450,7 @@
     <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
          the app store installed on the device (usually that's Google Play). -->
-    <string name="external_app_prompt_no_app">Ninguna de las apps de su dispositivo puede abrir este enlace. Puede dejar que %1$s busque en %2$s una app compatible.</string>
+    <string name="external_app_prompt_no_app">Ninguna de las apps de tu dispositivo puede abrir este enlace. Podés dejar que %1$s busque en %2$s una app compatible.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
 
@@ -489,24 +489,24 @@
 
 
   <!-- First run tour (Default browser): Title -->
-    <string name="firstrun_defaultbrowser_title">Potencie su privacidad</string>
+    <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Lleve la navegación privada al siguiente nivel. Bloquee publicidades y otro contenido que puede rastrearlo en todos los sitios y lentificar los tiempos de carga de las páginas.</string>
 
     <!-- First run tour (Search): Title -->
-    <string name="firstrun_search_title">Su búsqueda, a su manera</string>
+    <string name="firstrun_search_title">Tu búsqueda, a tu manera</string>
     <!-- First run tour (Search): Text -->
     <string name="firstrun_search_text">¿Busca algo diferente? Elija otro buscador predeterminado en la configuración.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Agregar accesos directos a la pantalla principal</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">Vuelva a sus sitios favoritos en %1$s rápidamente. Seleccione \&quot;Agregar a pantalla de inicio\&quot; en el menú de %1$s.</string>
+    <string name="firstrun_shortcut_text">Volvé a tus sitios favoritos en %1$s rápidamente. Seleccioná \&quot;Agregar a pantalla de inicio\&quot; en el menú de %1$s.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Haga un hábito de la privacidad</string>
     <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_privacy_text">Establezca %1$s como su navegador predeterminado y obtenga los beneficios de la navegación privada cuando abra páginas web desde otras aplicaciones.</string>
+    <string name="firstrun_privacy_text">Establecé %1$s como navegador predeterminado y obtené los beneficios de la navegación privada cuando abras páginas web desde otras aplicaciones.</string>
 
     <string name="firstrun_close_button">Genial, ¡lo tengo!</string>
     <string name="firstrun_skip_button">Saltar</string>
@@ -545,7 +545,7 @@
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
-    <string name="notification_browsing_session_channel_description">Las notificaciones le permiten borrar la sesión de %1$s con un toque. No necesita abrir la aplicación o ver lo que está corriendo en el navegador.</string>
+    <string name="notification_browsing_session_channel_description">Las notificaciones te permiten borrar la sesión de %1$s con un toque. No necesitás abrir la aplicación o ver lo que está corriendo en el navegador.</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">Borrar historial de navegación</string>
@@ -569,7 +569,7 @@
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
-    <string name="your_rights_content3"><![CDATA[No se te concedió ningún derecho de marca o licencia sobre las marcas registradas de la fundación Mozilla o de cualquier parte, incluyendo los logos o nombres de Mozilla, Firefox o %1$s. Podés encontrar Información adicional <a href="%2$s">aquí</a>.]]></string>
+    <string name="your_rights_content3"><![CDATA[No se te concedió ningún derecho de marca o licencia sobre las marcas registradas de la fundación Mozilla o de cualquier tercero, incluyendo los logos o nombres de Mozilla, Firefox o %1$s. Podés encontrar Información adicional <a href="%2$s">aquí</a>.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
