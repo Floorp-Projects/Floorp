@@ -9,6 +9,7 @@ Library("winlauncher")
 FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
+    "/ipc/mscom/COMWrappers.cpp",
     "/ipc/mscom/ProcessRuntime.cpp",
     "/toolkit/xre/WinTokenUtils.cpp",
     "/widget/windows/WindowsConsole.cpp",
