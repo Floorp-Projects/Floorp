@@ -1010,9 +1010,8 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
 
   AutoAssertReportedException assertException(cx);
 
-  Rooted<JSFunction*> fun(cx, input.function());
-
-  InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
+  InheritThis inheritThis =
+      input.functionFlags().isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
   CompilationState compilationState(cx, parserAllocScope, input);
@@ -1031,8 +1030,8 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
   }
 
   FunctionNode* pn = parser.standaloneLazyFunction(
-      fun, input.extent().toStringStart, input.strict(), input.generatorKind(),
-      input.asyncKind());
+      input, input.extent().toStringStart, input.strict(),
+      input.generatorKind(), input.asyncKind());
   if (!pn) {
     return false;
   }

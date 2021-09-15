@@ -128,11 +128,11 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       isInitialCompilation(isInitialCompilation),
       isStandalone(false) {}
 
-void FunctionBox::initFromLazyFunction(JSFunction* fun,
+void FunctionBox::initFromLazyFunction(const ScriptStencilExtra& extra,
                                        ScopeContext& scopeContext,
                                        FunctionFlags flags,
                                        FunctionSyntaxKind kind) {
-  initFromLazyFunctionShared(fun);
+  initFromScriptStencilExtra(extra);
   initStandaloneOrLazy(scopeContext, flags, kind);
 }
 
