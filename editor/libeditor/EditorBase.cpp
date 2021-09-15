@@ -3043,6 +3043,11 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
     if (begin.IsSet() && end.IsSet()) {
       TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
     }
+    if (isIMETransaction) {
+      // Let's mark the text node as "modified frequently" if it interact with
+      // IME since non-ASCII character may be inserted into it in most cases.
+      aPointToInsert.ContainerAsText()->MarkAsMaybeModifiedFrequently();
+    }
   }
 
   // let listeners know what happened
