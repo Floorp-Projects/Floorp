@@ -10,8 +10,9 @@ case "$(uname -s)" in
 Linux)
     export CC=clang
     export CXX=clang++
-    export RUSTFLAGS=-Clinker=clang++
-    export CXXFLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
+    export RUSTFLAGS="-Clinker=clang++ -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
+    export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 --sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
+    export CFLAGS="--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
 
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
     ;;
