@@ -22,9 +22,6 @@ linux64-gn:
         symbol: TL(gn)
     run:
         script: build-gn-linux.sh
-    fetches:
-        toolchain:
-            - linux64-gcc-7
 
 macosx64-gn:
     treeherder:

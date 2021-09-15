@@ -5,8 +5,8 @@ set -e -v
 
 WORKSPACE=$HOME/workspace
 COMPRESS_EXT=zst
-export CC=$MOZ_FETCHES_DIR/gcc/bin/gcc
-export CXX=$MOZ_FETCHES_DIR/gcc/bin/g++
+export CC=gcc
+export CXX=g++
 export LDFLAGS=-lrt
 
 # Gn build scripts use #!/usr/bin/env python, which will be python 2.6 on
