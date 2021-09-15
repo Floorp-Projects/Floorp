@@ -3109,7 +3109,6 @@ bool Debugger::updateExecutionObservabilityOfFrames(
   {
     jit::JitContext jctx(cx, nullptr);
     if (!jit::RecompileOnStackBaselineScriptsForDebugMode(cx, obs, observing)) {
-      ReportOutOfMemory(cx);
       return false;
     }
   }

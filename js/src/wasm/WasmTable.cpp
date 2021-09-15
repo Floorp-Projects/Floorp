@@ -74,6 +74,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
     case TableRepr::Ref: {
       TableAnyRefVector objects;
       if (!objects.resize(desc.initialLength)) {
+        ReportOutOfMemory(cx);
         return nullptr;
       }
       return SharedTable(
