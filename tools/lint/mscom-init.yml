@@ -20,14 +20,13 @@ forbid-mscom-init:
     exclude:
         # These files are the only allowable locations
         - ipc/mscom/ApartmentRegion.h
-        - ipc/mscom/COMWrappers.cpp
-        - ipc/mscom/COMWrappers.h
         - ipc/mscom/ProcessRuntime.cpp
         - ipc/mscom/EnsureMTA.cpp
         # These files are existing locations that must eventually be fixed.
         - browser/components/migration/nsIEHistoryEnumerator.cpp
         - browser/components/migration/tests/unit/insertIEHistory/InsertIEHistory.cpp
         - browser/components/shell/nsWindowsShellService.cpp
+        - dom/media/ThreadPoolCOMListener.cpp
         - gfx/thebes/gfxWindowsPlatform.cpp
         - image/DecodePool.cpp
         - intl/locale/windows/OSPreferences_win.cpp
@@ -46,3 +45,4 @@ forbid-mscom-init:
         - widget/windows/nsWindow.h
         - widget/windows/tests/TestUriValidation.cpp
         - xpcom/io/nsLocalFileWin.cpp
+        - xpcom/threads/TaskController.cpp

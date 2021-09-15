@@ -9,7 +9,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/mscom/COMWrappers.h"
+
+#include <objbase.h>
 
 namespace mozilla {
 namespace mscom {
@@ -24,14 +25,14 @@ class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
   constexpr ApartmentRegion() : mInitResult(CO_E_NOTINITIALIZED) {}
 
   explicit ApartmentRegion(COINIT aAptType)
-      : mInitResult(wrapped::CoInitializeEx(nullptr, aAptType)) {
+      : mInitResult(::CoInitializeEx(nullptr, aAptType)) {
     // If this fires then we're probably mixing apartments on the same thread
     MOZ_ASSERT(IsValid());
   }
 
   ~ApartmentRegion() {
     if (IsValid()) {
-      wrapped::CoUninitialize();
+      ::CoUninitialize();
     }
   }
 
@@ -43,7 +44,7 @@ class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
 
   bool Init(COINIT aAptType) {
     MOZ_ASSERT(mInitResult == CO_E_NOTINITIALIZED);
-    mInitResult = wrapped::CoInitializeEx(nullptr, aAptType);
+    mInitResult = ::CoInitializeEx(nullptr, aAptType);
     MOZ_ASSERT(IsValid());
     return IsValid();
   }

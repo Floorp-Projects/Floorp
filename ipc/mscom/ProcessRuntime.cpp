@@ -13,7 +13,6 @@
         // defined(MOZ_HAS_MOZGLUE))
 #include "mozilla/Assertions.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
-#include "mozilla/mscom/COMWrappers.h"
 #include "mozilla/mscom/ProcessRuntimeShared.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -288,9 +287,9 @@ void ProcessRuntime::InitInsideApartment() {
 
   if (prevInitState < ProcessInitState::PartialGlobalOptions) {
     RefPtr<IGlobalOptions> globalOpts;
-    mInitResult = wrapped::CoCreateInstance(
-        CLSID_GlobalOptions, nullptr, CLSCTX_INPROC_SERVER, IID_IGlobalOptions,
-        getter_AddRefs(globalOpts));
+    mInitResult =
+        ::CoCreateInstance(CLSID_GlobalOptions, nullptr, CLSCTX_INPROC_SERVER,
+                           IID_IGlobalOptions, getter_AddRefs(globalOpts));
     MOZ_ASSERT(SUCCEEDED(mInitResult));
     if (FAILED(mInitResult)) {
       return;
@@ -469,7 +468,7 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
-  return wrapped::CoInitializeSecurity(
+  return ::CoInitializeSecurity(
       &sd, -1, nullptr, nullptr, RPC_C_AUTHN_LEVEL_DEFAULT,
       RPC_C_IMP_LEVEL_IDENTIFY, nullptr, EOAC_NONE, nullptr);
 }
