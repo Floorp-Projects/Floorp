@@ -75,7 +75,6 @@ BoxModel.prototype = {
 
     this.untrackReflows();
 
-    this.elementRules = null;
     this._highlighters = null;
     this._tooltip = null;
     this.document = null;

@@ -3727,9 +3727,12 @@ Toolbox.prototype = {
         this._onToolbarArrowKeypress
       );
       this.ReactDOM.unmountComponentAtNode(this._componentMount);
-      this.component = null;
       this._componentMount = null;
       this._tabBar = null;
+    }
+    if (this._nodePicker) {
+      this._nodePicker.stop();
+      this._nodePicker = null;
     }
     this.destroyHarAutomation();
 
@@ -3805,12 +3808,6 @@ Toolbox.prototype = {
         settleAll(outstanding)
           .catch(console.error)
           .then(async () => {
-            // Destroy the node picker *after* destroying the panel,
-            // which may still try to access it. (And might spawn a new one)
-            if (this._nodePicker) {
-              this._nodePicker.destroy();
-              this._nodePicker = null;
-            }
             this.selection.destroy();
             this.selection = null;
 
@@ -3827,8 +3824,6 @@ Toolbox.prototype = {
 
             this._removeWindowListeners();
             this._removeChromeEventHandlerEvents();
-
-            this._store = null;
 
             // Notify toolbox-host-manager that the host can be destroyed.
             this.emit("toolbox-unload");
@@ -3853,9 +3848,6 @@ Toolbox.prototype = {
             this._host = null;
             this._win = null;
             this._toolPanels.clear();
-            this.descriptorFront = null;
-            this.resourceCommand = null;
-            this.commands = null;
 
             // Force GC to prevent long GC pauses when running tests and to free up
             // memory in general when the toolbox is closed.

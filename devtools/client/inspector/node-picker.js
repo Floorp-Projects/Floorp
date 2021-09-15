@@ -96,12 +96,9 @@ class NodePicker extends EventEmitter {
    * picking mode and remove all event listeners associated with node picking.
    *
    * @param {InspectorFront} inspectorFront
-   * @param {Boolean} isDestroyCodePath
-   *        Optional. If true, we assume that's when the toolbox closes
-   *        and we should avoid doing any RDP request.
    * @return {Promise}
    */
-  async _onInspectorFrontDestroyed(inspectorFront, { isDestroyCodepath }) {
+  async _onInspectorFrontDestroyed(inspectorFront) {
     this._currentInspectorFronts.delete(inspectorFront);
 
     const { walker } = inspectorFront;
@@ -113,12 +110,7 @@ class NodePicker extends EventEmitter {
     walker.off("picker-node-picked", this._onPicked);
     walker.off("picker-node-previewed", this._onPreviewed);
     walker.off("picker-node-canceled", this._onCanceled);
-    // Only do a RDP request if we stop the node picker from a user action.
-    // Avoid doing one when we close the toolbox, in this scenario
-    // the walker actor on the server side will automatically cancel the node picking.
-    if (!isDestroyCodepath) {
-      await walker.cancelPick();
-    }
+    await walker.cancelPick();
   }
 
   /**
@@ -167,12 +159,8 @@ class NodePicker extends EventEmitter {
   /**
    * Stop the element picker. Note that the picker is automatically stopped when
    * an element is picked.
-   *
-   * @param {Boolean} isDestroyCodePath
-   *        Optional. If true, we assume that's when the toolbox closes
-   *        and we should avoid doing any RDP request.
    */
-  async stop({ isDestroyCodepath } = {}) {
+  async stop() {
     if (!this.isPicking) {
       return;
     }
@@ -185,21 +173,12 @@ class NodePicker extends EventEmitter {
     );
 
     for (const inspectorFront of this._currentInspectorFronts) {
-      await this._onInspectorFrontDestroyed(inspectorFront, {
-        isDestroyCodepath,
-      });
+      await this._onInspectorFrontDestroyed(inspectorFront);
     }
 
     this._currentInspectorFronts.clear();
 
     this.emit("picker-stopped");
-  }
-
-  destroy() {
-    // Do not await for stop as the isDestroy argument will make this method synchronous
-    // and we want to avoid having an async destroy
-    this.stop({ isDestroyCodepath: true });
-    this.targetCommand = null;
   }
 
   /**
