@@ -623,9 +623,6 @@
  *   function.  This is intended to be used with operator->() of our smart
  *   pointer classes to ensure that the refcount of an object wrapped in a
  *   smart pointer is not manipulated directly.
- * MOZ_MUST_USE_TYPE: Applies to type declarations.  Makes it a compile time
- *   error to not use the return value of a function which has this type.  This
- *   is intended to be used with types which it is an error to not use.
  * MOZ_NEEDS_NO_VTABLE_TYPE: Applies to template class declarations.  Makes it
  *   a compile time error to instantiate this template with a type parameter
  *   which has a VTable.
@@ -649,7 +646,7 @@
  * MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS: Applies to template class
  *   declarations where an instance of the template should be considered, for
  *   static analysis purposes, to inherit any type annotations (such as
- *   MOZ_MUST_USE_TYPE and MOZ_STACK_CLASS) from its template arguments.
+ *   MOZ_STACK_CLASS) from its template arguments.
  * MOZ_INIT_OUTSIDE_CTOR: Applies to class member declarations. Occasionally
  *   there are class members that are not initialized in the constructor,
  *   but logic elsewhere in the class ensures they are initialized prior to use.
@@ -746,7 +743,6 @@
 #    define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_unsafe_ref")))
 #    define MOZ_NO_ADDREF_RELEASE_ON_RETURN \
       __attribute__((annotate("moz_no_addref_release_on_return")))
-#    define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
 #    define MOZ_NEEDS_NO_VTABLE_TYPE \
       __attribute__((annotate("moz_needs_no_vtable_type")))
 #    define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
@@ -809,7 +805,6 @@
 #    define MOZ_NON_OWNING_REF                              /* nothing */
 #    define MOZ_UNSAFE_REF(reason)                          /* nothing */
 #    define MOZ_NO_ADDREF_RELEASE_ON_RETURN                 /* nothing */
-#    define MOZ_MUST_USE_TYPE                               /* nothing */
 #    define MOZ_NEEDS_NO_VTABLE_TYPE                        /* nothing */
 #    define MOZ_NON_MEMMOVABLE                              /* nothing */
 #    define MOZ_NEEDS_MEMMOVABLE_TYPE                       /* nothing */

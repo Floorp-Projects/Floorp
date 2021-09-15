@@ -22,7 +22,6 @@ HOST_SOURCES += [
     "MozCheckAction.cpp",
     "MustOverrideChecker.cpp",
     "MustReturnFromCallerChecker.cpp",
-    "MustUseChecker.cpp",
     "NaNExprChecker.cpp",
     "NeedsNoVTableTypeChecker.cpp",
     "NoAddRefReleaseOnReturnChecker.cpp",
@@ -49,7 +48,7 @@ HOST_SOURCES += [
     "VariableUsageHelpers.cpp",
 ]
 
-# Ideally, we wouldn't have compile-time choices wrt checkes. bug 1617153.
+# Ideally, we wouldn't have compile-time choices wrt checks. bug 1617153.
 if CONFIG["OS_ARCH"] == "WINNT":
     HOST_DEFINES["TARGET_IS_WINDOWS"] = True
     HOST_SOURCES += [
