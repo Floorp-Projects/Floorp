@@ -100,11 +100,6 @@ class Simulator;
 namespace js {
 
 extern MOZ_COLD void ReportOutOfMemory(JSContext* cx);
-
-/* Different signature because the return type has [[nodiscard]]_TYPE. */
-extern MOZ_COLD mozilla::GenericErrorResult<OOM> ReportOutOfMemoryResult(
-    JSContext* cx);
-
 extern MOZ_COLD void ReportAllocationOverflow(JSContext* maybecx);
 
 class Activation;
