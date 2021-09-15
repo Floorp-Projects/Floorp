@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     "FinalizationRegistry.cpp",
     "GC.cpp",
     "GCParallelTask.cpp",
+    "Heap.cpp",
     "Marking.cpp",
     "Memory.cpp",
     "Nursery.cpp",
