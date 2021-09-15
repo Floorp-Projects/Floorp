@@ -139,7 +139,7 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
-  MOZ_ASSERT(isEntry());
+  MOZ_ASSERT(isEntry() || isIndirectStub());
   MOZ_ASSERT(begin_ <= end_);
 }
 
