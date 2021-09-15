@@ -92,9 +92,6 @@ class GridInspector {
     );
     this.onToggleShowInfiniteLines = this.onToggleShowInfiniteLines.bind(this);
     this.updateGridPanel = this.updateGridPanel.bind(this);
-    this.listenForGridHighlighterEvents = this.listenForGridHighlighterEvents.bind(
-      this
-    );
 
     this.init();
   }
@@ -118,14 +115,22 @@ class GridInspector {
 
     if (flags.testing) {
       // In tests, we start listening immediately to avoid having to simulate a mousemove.
-      this.listenForGridHighlighterEvents();
+      this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
+      this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
     } else {
       this.document.addEventListener(
         "mousemove",
-        this.listenForGridHighlighterEvents,
-        {
-          once: true,
-        }
+        () => {
+          this.highlighters.on(
+            "grid-highlighter-hidden",
+            this.onHighlighterHidden
+          );
+          this.highlighters.on(
+            "grid-highlighter-shown",
+            this.onHighlighterShown
+          );
+        },
+        { once: true }
       );
     }
 
@@ -133,11 +138,6 @@ class GridInspector {
     this.inspector.on("new-root", this.onNavigate);
 
     this.onSidebarSelect();
-  }
-
-  listenForGridHighlighterEvents() {
-    this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
-    this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
   }
 
   /**
@@ -165,10 +165,6 @@ class GridInspector {
       );
       this.highlighters.off("grid-highlighter-shown", this.onHighlighterShown);
     }
-    this.document.removeEventListener(
-      "mousemove",
-      this.listenForGridHighlighterEvents
-    );
 
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onNavigate);

@@ -107,7 +107,6 @@ Selection.prototype = {
 
   destroy: function() {
     this.setWalker();
-    this._nodeFront = null;
   },
 
   setWalker: function(walker = null) {

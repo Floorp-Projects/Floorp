@@ -528,8 +528,6 @@ class ResourceCommand {
    * See _onTargetAvailable for arguments, they are the same.
    */
   _onTargetDestroyed({ targetFront }) {
-    delete targetFront.resourceCommand;
-
     // Clear the map of legacy listeners for this target.
     this._existingLegacyListeners.set(targetFront, []);
     this._offTargetFrontListeners.delete(targetFront);
