@@ -442,6 +442,8 @@ class BrowserFragment :
 
                 GlobalScope.launch(Dispatchers.IO) { crashReporter.submitReport(crash) }
             }
+
+            requireComponents.sessionUseCases.crashRecovery.invoke()
             erase()
             hideCrashReporter()
         }
