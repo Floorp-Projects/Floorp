@@ -34,12 +34,8 @@ using namespace js::wasm;
 DebugFrame* DebugFrame::from(Frame* fp) {
   MOZ_ASSERT(
       GetNearestEffectiveTls(fp)->instance->code().metadata().debugEnabled);
-  size_t offset = DebugFrame::offsetOfFrame();
-  if (fp->callerIsTrampolineFP()) {
-    offset +=
-        FrameWithTls::sizeWithoutFrame() + IndirectStubAdditionalAlignment;
-  }
-  auto* df = reinterpret_cast<DebugFrame*>((uint8_t*)fp - offset);
+  auto* df =
+      reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
   MOZ_ASSERT(GetNearestEffectiveTls(fp)->instance == df->instance());
   return df;
 }
