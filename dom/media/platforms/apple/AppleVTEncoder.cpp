@@ -133,6 +133,23 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
         __func__);
   }
 
+  int64_t interval =
+      mConfig.mKeyframeInterval > std::numeric_limits<int64_t>::max()
+          ? std::numeric_limits<int64_t>::max()
+          : mConfig.mKeyframeInterval;
+  AutoCFRelease<CFNumberRef> cf(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &interval));
+  if (VTSessionSetProperty(mSession,
+                           kVTCompressionPropertyKey_MaxKeyFrameInterval,
+                           cf) != noErr) {
+    return InitPromise::CreateAndReject(
+        MediaResult(
+            NS_ERROR_DOM_MEDIA_FATAL_ERR,
+            nsPrintfCString("fail to configurate keyframe interval:%" PRId64,
+                            interval)),
+        __func__);
+  }
+
   if (mConfig.mCodecSpecific) {
     const H264Specific& specific = mConfig.mCodecSpecific.ref();
     if (!SetProfileLevel(mSession, specific.mProfileLevel)) {
@@ -140,20 +157,6 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       nsPrintfCString("fail to configurate profile level:%d",
                                       specific.mProfileLevel)),
-          __func__);
-    }
-
-    int64_t interval = specific.mKeyframeInterval;
-    AutoCFRelease<CFNumberRef> cf(
-        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &interval));
-    if (VTSessionSetProperty(mSession,
-                             kVTCompressionPropertyKey_MaxKeyFrameInterval,
-                             cf) != noErr) {
-      return InitPromise::CreateAndReject(
-          MediaResult(
-              NS_ERROR_DOM_MEDIA_FATAL_ERR,
-              nsPrintfCString("fail to configurate keyframe interval:%" PRId64,
-                              interval)),
           __func__);
     }
   }
