@@ -6,6 +6,8 @@
 
 /* rendering object for HTML <wbr> elements */
 
+#include "mozilla/PresShell.h"
+#include "nsHTMLParts.h"
 #include "nsIFrame.h"
 
 using namespace mozilla;
