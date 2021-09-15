@@ -625,16 +625,49 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             IsStyleCachePreservingSubAction(GetTopLevelEditSubAction());
         break;
     }
+
+    // If the selection is in empty inline HTML elements, we should delete
+    // them.
+    if (mPlaceholderBatch && SelectionRef().IsCollapsed() &&
+        SelectionRef().GetFocusNode()) {
+      RefPtr<Element> mostDistantEmptyInlineAncestor = nullptr;
+      for (Element* ancestor :
+           SelectionRef().GetFocusNode()->InclusiveAncestorsOfType<Element>()) {
+        if (!ancestor->IsHTMLElement() ||
+            !HTMLEditUtils::IsRemovableFromParentNode(*ancestor) ||
+            !HTMLEditUtils::IsEmptyInlineContent(*ancestor)) {
+          break;
+        }
+        mostDistantEmptyInlineAncestor = ancestor;
+      }
+      if (mostDistantEmptyInlineAncestor) {
+        nsresult rv =
+            DeleteNodeWithTransaction(*mostDistantEmptyInlineAncestor);
+        if (Destroyed()) {
+          NS_WARNING(
+              "HTMLEditor::DeleteNodeWithTransaction() caused destroying the "
+              "editor at deleting empty inline ancestors");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "HTMLEditor::DeleteNodeWithTransaction() failed at deleting "
+              "empty inline ancestors");
+          return rv;
+        }
+      }
+    }
+
+    // But the cached inline styles should be restored from type-in-state later.
     if (reapplyCachedStyle) {
       DebugOnly<nsresult> rvIgnored =
           mTypeInState->UpdateSelState(SelectionRef());
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "TypeInState::UpdateSelState() failed, but ignored");
-      rv = ReapplyCachedStyles();
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::ReapplyCachedStyles() failed");
-        return rv;
-      }
+      rvIgnored = ReapplyCachedStyles();
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "HTMLEditor::ReapplyCachedStyles() failed, but ignored");
       TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
     }
   }
@@ -8198,12 +8231,27 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
 
   bool useCSS = IsCSSEnabled();
 
-  for (nsStaticAtom* property :
-       {nsGkAtoms::b, nsGkAtoms::i, nsGkAtoms::u, nsGkAtoms::face,
-        nsGkAtoms::size, nsGkAtoms::color, nsGkAtoms::tt, nsGkAtoms::em,
-        nsGkAtoms::strong, nsGkAtoms::dfn, nsGkAtoms::code, nsGkAtoms::samp,
-        nsGkAtoms::var, nsGkAtoms::cite, nsGkAtoms::abbr, nsGkAtoms::acronym,
-        nsGkAtoms::backgroundColor, nsGkAtoms::sub, nsGkAtoms::sup}) {
+  for (nsStaticAtom* property : {nsGkAtoms::b,
+                                 nsGkAtoms::i,
+                                 nsGkAtoms::u,
+                                 nsGkAtoms::s,
+                                 nsGkAtoms::strike,
+                                 nsGkAtoms::face,
+                                 nsGkAtoms::size,
+                                 nsGkAtoms::color,
+                                 nsGkAtoms::tt,
+                                 nsGkAtoms::em,
+                                 nsGkAtoms::strong,
+                                 nsGkAtoms::dfn,
+                                 nsGkAtoms::code,
+                                 nsGkAtoms::samp,
+                                 nsGkAtoms::var,
+                                 nsGkAtoms::cite,
+                                 nsGkAtoms::abbr,
+                                 nsGkAtoms::acronym,
+                                 nsGkAtoms::backgroundColor,
+                                 nsGkAtoms::sub,
+                                 nsGkAtoms::sup}) {
     nsStaticAtom *tag, *attribute;
     if (property == nsGkAtoms::face || property == nsGkAtoms::size ||
         property == nsGkAtoms::color) {
