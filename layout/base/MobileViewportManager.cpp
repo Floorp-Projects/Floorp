@@ -17,8 +17,9 @@
 #include "nsViewportInfo.h"
 #include "UnitTransforms.h"
 
-static mozilla::LazyLogModule sApzMvmLog("apz.mobileviewport");
-#define MVM_LOG(...) MOZ_LOG(sApzMvmLog, LogLevel::Debug, (__VA_ARGS__))
+mozilla::LazyLogModule MobileViewportManager::gLog("apz.mobileviewport");
+#define MVM_LOG(...) \
+  MOZ_LOG(MobileViewportManager::gLog, LogLevel::Debug, (__VA_ARGS__))
 
 NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
