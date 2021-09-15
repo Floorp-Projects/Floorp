@@ -11,20 +11,13 @@ set -x -e -v
 #   DEBUG: | Error initalizing CEXEBuild: error setting
 #   ERROR: Failed to get nsis version.
 
-INSTALL_DIR=$MOZ_FETCHES_DIR/mingw32
+INSTALL_DIR=$MOZ_FETCHES_DIR/nsis
 
 mkdir -p $INSTALL_DIR
 
 cd $MOZ_FETCHES_DIR
 
-# As explained above, we have to build nsis to the directory it
-# will eventually be run from, which is the same place we just
-# installed our compiler. But at the end of the script we want
-# to package up what we just built. If we don't move the compiler,
-# we will package up the compiler we downloaded along with the
-# stuff we just built.
-mv mingw32 mingw32-gcc
-export PATH="$MOZ_FETCHES_DIR/mingw32-gcc/bin:$PATH"
+export PATH="$MOZ_FETCHES_DIR/mingw32/bin:$PATH"
 
 # --------------
 
@@ -39,7 +32,7 @@ scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS 
 
 cd $MOZ_FETCHES_DIR
 
-tar caf nsis.tar.zst mingw32
+tar caf nsis.tar.zst nsis
 
 mkdir -p $UPLOAD_DIR
 cp nsis.tar.* $UPLOAD_DIR
