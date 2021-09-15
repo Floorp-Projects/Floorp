@@ -54,6 +54,16 @@ enum class SubjectMessage
 
     // Indicates an external change to the default framebuffer.
     SurfaceChanged,
+
+    // Indicates a separable program's textures or images changed in the ProgramExecutable.
+    ProgramTextureOrImageBindingChanged,
+    // Indicates a separable program was successfully re-linked.
+    ProgramRelinked,
+    // Indicates a separable program's sampler uniforms were updated.
+    SamplerUniformsUpdated,
+
+    // Indicates a Storage of back-end in gl::Texture has been released.
+    StorageReleased,
 };
 
 // The observing class inherits from this interface class.

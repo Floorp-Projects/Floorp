@@ -16,8 +16,9 @@
 namespace angle
 {
 
-using VendorID = uint32_t;
-using DeviceID = uint32_t;
+using VendorID   = uint32_t;
+using DeviceID   = uint32_t;
+using RevisionID = uint32_t;
 
 struct VersionInfo
 {
@@ -34,8 +35,9 @@ struct GPUDeviceInfo
 
     GPUDeviceInfo(const GPUDeviceInfo &other);
 
-    VendorID vendorId = 0;
-    DeviceID deviceId = 0;
+    VendorID vendorId     = 0;
+    DeviceID deviceId     = 0;
+    RevisionID revisionId = 0;
 
     std::string driverVendor;
     std::string driverVersion;
@@ -67,12 +69,12 @@ struct SystemInfo
     bool isAMDSwitchable = false;
     // Only true on dual-GPU Mac laptops.
     bool isMacSwitchable = false;
-    // Only true on Apple Silicon Macs when running iOS binaries.
-    // See https://developer.apple.com/documentation/foundation/nsprocessinfo/3608556-iosapponmac
-    bool isiOSAppOnMac = false;
+    // Only true on Apple Silicon Macs when running in macCatalyst.
+    bool needsEAGLOnMac = false;
 
     // Only available on Android
     std::string machineManufacturer;
+    int androidSdkLevel = 0;
 
     // Only available on macOS and Android
     std::string machineModelName;
@@ -99,6 +101,7 @@ constexpr VendorID kVendorID_Intel    = 0x8086;
 constexpr VendorID kVendorID_NVIDIA   = 0x10DE;
 constexpr VendorID kVendorID_Qualcomm = 0x5143;
 constexpr VendorID kVendorID_VMWare   = 0x15ad;
+constexpr VendorID kVendorID_Apple    = 0x106B;
 
 // Known non-PCI (i.e. Khronos-registered) vendor IDs
 constexpr VendorID kVendorID_Vivante     = 0x10001;
@@ -124,6 +127,7 @@ bool IsSwiftshader(VendorID vendorId);
 bool IsVeriSilicon(VendorID vendorId);
 bool IsVMWare(VendorID vendorId);
 bool IsVivante(VendorID vendorId);
+bool IsApple(VendorID vendorId);
 
 // Use a heuristic to attempt to find the GPU used for 3D graphics. Sets activeGPUIndex,
 // isOptimus, and isAMDSwitchable.

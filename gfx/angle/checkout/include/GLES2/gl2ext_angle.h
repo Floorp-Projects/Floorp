@@ -570,6 +570,11 @@ GL_APICALL void GL_APIENTRY glImportSemaphoreZirconHandleANGLE(GLuint memory,
 #define GL_PURGED_CONTEXT_RESET_NV 0x92BB
 #endif /* GL_NV_robustness_video_memory */
 
+#ifndef GL_ANGLE_get_serialized_context_string
+#define GL_ANGLE_get_serialized_context_string
+#define GL_SERIALIZED_CONTEXT_STRING_ANGLE 0x96B0
+#endif /* GL_ANGLE_get_serialized_context_string */
+
 // clang-format on
 
 #endif  // INCLUDE_GLES2_GL2EXT_ANGLE_H_

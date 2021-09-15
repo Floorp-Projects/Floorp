@@ -180,6 +180,11 @@ class Display final : public LabeledObject,
     void destroyImage(Image *image);
     void destroyStream(Stream *stream);
     Error destroyContext(const Thread *thread, gl::Context *context);
+    Error destroyContextWithSurfaces(const Thread *thread,
+                                     gl::Context *context,
+                                     gl::Context *currentContext,
+                                     Surface *currentDrawSurface,
+                                     Surface *currentReadSurface);
     void destroySync(Sync *sync);
 
     bool isInitialized() const;
@@ -199,7 +204,7 @@ class Display final : public LabeledObject,
                                     EGLenum target,
                                     EGLClientBuffer clientBuffer,
                                     const egl::AttributeMap &attribs) const;
-    Error valdiatePixmap(Config *config,
+    Error valdiatePixmap(const Config *config,
                          EGLNativePixmapType pixmap,
                          const AttributeMap &attributes) const;
 
@@ -227,6 +232,11 @@ class Display final : public LabeledObject,
     const DisplayExtensions &getExtensions() const;
     const std::string &getExtensionString() const;
     const std::string &getVendorString() const;
+    const std::string &getVersionString() const;
+
+    std::string getBackendRendererDescription() const;
+    std::string getBackendVendorString() const;
+    std::string getBackendVersionString() const;
 
     EGLint programCacheGetAttrib(EGLenum attrib) const;
     Error programCacheQuery(EGLint index,
@@ -293,6 +303,7 @@ class Display final : public LabeledObject,
 
     void initDisplayExtensions();
     void initVendorString();
+    void initVersionString();
     void initializeFrontendFeatures();
 
     angle::ScratchBuffer requestScratchBufferImpl(std::vector<angle::ScratchBuffer> *bufferVector);
@@ -327,6 +338,7 @@ class Display final : public LabeledObject,
     std::string mDisplayExtensionString;
 
     std::string mVendorString;
+    std::string mVersionString;
 
     Device *mDevice;
     Surface *mSurface;
