@@ -3277,7 +3277,10 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
   switch (tab.repr()) {
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!tab.isAsmJS());
-      tab.fillFuncRef(index, length, FuncRef::fromJSFunction(fun), cx);
+      if (!tab.fillFuncRef(index, length, FuncRef::fromJSFunction(fun), cx)) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
       break;
     case TableRepr::Ref:
       tab.fillAnyRef(index, length, any);
