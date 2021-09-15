@@ -643,6 +643,7 @@ function TargetMixin(parentClass) {
           console.warn("Error while destroying front:", name, e);
         }
       }
+      this.fronts.clear();
 
       // Remove listeners set in attachConsole
       if (this.removeOnInspectObjectListener) {
