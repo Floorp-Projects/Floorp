@@ -4,6 +4,7 @@
 "use strict";
 
 const LOCATION_PREF = "browser.bookmarks.defaultLocation";
+const TOOLBAR_VISIBILITY_PREF = "browser.toolbars.bookmarks.visibility";
 let bookmarkPanel;
 let win;
 
@@ -99,6 +100,38 @@ add_task(async function test_new_on_toolbar() {
       await checkResponse({ showToolbar: true, expectedFolder, reason });
     }
   );
+});
+
+/**
+ * Test that if we create a bookmark on the toolbar, we do not
+ * show the toolbar if toolbar should never be shown:
+ */
+add_task(async function test_new_on_toolbar_never_show_toolbar() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[TOOLBAR_VISIBILITY_PREF, "never"]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser: win.gBrowser, url: "https://example.com/1" },
+    async browser => {
+      let toolbar = win.document.getElementById("PersonalToolbar");
+      Assert.equal(
+        toolbar.collapsed,
+        true,
+        "Bookmarks toolbar should start out collapsed."
+      );
+      let shownPromise = promisePopupShown(
+        win.document.getElementById("editBookmarkPanel")
+      );
+      win.document.getElementById("Browser:AddBookmarkAs").doCommand();
+      await shownPromise;
+      let expectedFolder = "BookmarksToolbarFolderTitle";
+      let reason = "when the visibility pref is 'never'";
+      await checkResponse({ showToolbar: false, expectedFolder, reason });
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
