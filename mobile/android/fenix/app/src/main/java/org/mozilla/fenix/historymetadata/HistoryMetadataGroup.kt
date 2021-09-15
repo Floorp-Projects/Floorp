@@ -18,3 +18,6 @@ data class HistoryMetadataGroup(
     val historyMetadata: List<HistoryMetadata>,
     val expanded: Boolean = false
 )
+
+// The last updated time of the group is based on the most recently updated item in the group
+fun HistoryMetadataGroup.lastUpdated(): Long = historyMetadata.maxOf { it.updatedAt }

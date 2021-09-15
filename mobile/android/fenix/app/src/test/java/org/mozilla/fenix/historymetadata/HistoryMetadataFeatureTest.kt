@@ -134,11 +134,12 @@ class HistoryMetadataFeatureTest {
     @Test
     fun `GIVEN history metadata WHEN different groups contain entries with same url THEN entries are not deduped`() =
         testDispatcher.runBlockingTest {
+            val now = System.currentTimeMillis()
             val historyEntry1 = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
                 title = "mozilla",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                createdAt = now,
+                updatedAt = now + 3,
                 totalViewTime = 10,
                 documentType = DocumentType.Regular,
                 previewImageUrl = null
@@ -147,8 +148,8 @@ class HistoryMetadataFeatureTest {
             val historyEntry2 = HistoryMetadata(
                 key = HistoryMetadataKey("http://firefox.com", "mozilla", null),
                 title = "firefox",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                createdAt = now,
+                updatedAt = now + 2,
                 totalViewTime = 20,
                 documentType = DocumentType.Regular,
                 previewImageUrl = null
@@ -157,8 +158,8 @@ class HistoryMetadataFeatureTest {
             val historyEntry3 = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "firefox", null),
                 title = "mozilla",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                createdAt = now,
+                updatedAt = now + 1,
                 totalViewTime = 30,
                 documentType = DocumentType.Regular,
                 previewImageUrl = null
@@ -187,12 +188,128 @@ class HistoryMetadataFeatureTest {
             }
         }
 
-    private fun startHistoryMetadataFeature() {
+    @Test
+    fun `GIVEN history metadata WHEN multiple groups exist THEN groups are sorted descending by last updated timestamp`() =
+        testDispatcher.runBlockingTest {
+            val now = System.currentTimeMillis()
+            val historyEntry1 = HistoryMetadata(
+                key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
+                title = "mozilla",
+                createdAt = now,
+                updatedAt = now + 1,
+                totalViewTime = 10,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val historyEntry2 = HistoryMetadata(
+                key = HistoryMetadataKey("http://firefox.com", "mozilla", null),
+                title = "firefox",
+                createdAt = now,
+                updatedAt = now + 2,
+                totalViewTime = 20,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val historyEntry3 = HistoryMetadata(
+                key = HistoryMetadataKey("http://www.mozilla.com", "firefox", null),
+                title = "mozilla",
+                createdAt = now,
+                updatedAt = now + 3,
+                totalViewTime = 30,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val expectedHistoryGroup1 = HistoryMetadataGroup(
+                title = "mozilla",
+                historyMetadata = listOf(historyEntry1, historyEntry2)
+            )
+
+            val expectedHistoryGroup2 = HistoryMetadataGroup(
+                title = "firefox",
+                historyMetadata = listOf(historyEntry3)
+            )
+
+            coEvery { historyMetadataStorage.getHistoryMetadataSince(any()) }.coAnswers {
+                listOf(
+                    historyEntry1, historyEntry2, historyEntry3
+                )
+            }
+
+            startHistoryMetadataFeature()
+
+            middleware.assertLastAction(HomeFragmentAction.HistoryMetadataChange::class) {
+                assertEquals(listOf(expectedHistoryGroup2, expectedHistoryGroup1), it.historyMetadata)
+            }
+        }
+
+    @Test
+    fun `GIVEN history metadata WHEN multiple groups exist THEN no more than the configured maximum number of results are added to the store`() =
+        testDispatcher.runBlockingTest {
+            val now = System.currentTimeMillis()
+            val historyEntry1 = HistoryMetadata(
+                key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
+                title = "mozilla",
+                createdAt = now,
+                updatedAt = now + 1,
+                totalViewTime = 10,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val historyEntry2 = HistoryMetadata(
+                key = HistoryMetadataKey("http://firefox.com", "firefox", null),
+                title = "firefox",
+                createdAt = now,
+                updatedAt = now + 2,
+                totalViewTime = 20,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val historyEntry3 = HistoryMetadata(
+                key = HistoryMetadataKey("http://getpocket.com", "pocket", null),
+                title = "pocket",
+                createdAt = now,
+                updatedAt = now + 3,
+                totalViewTime = 30,
+                documentType = DocumentType.Regular,
+                previewImageUrl = null
+            )
+
+            val expectedHistoryGroup1 = HistoryMetadataGroup(
+                title = "firefox",
+                historyMetadata = listOf(historyEntry2)
+            )
+
+            val expectedHistoryGroup2 = HistoryMetadataGroup(
+                title = "pocket",
+                historyMetadata = listOf(historyEntry3)
+            )
+
+            coEvery { historyMetadataStorage.getHistoryMetadataSince(any()) }.coAnswers {
+                listOf(
+                    historyEntry1, historyEntry2, historyEntry3
+                )
+            }
+
+            startHistoryMetadataFeature(maxResults = 2)
+
+            // Should not get more than maxResults number of groups back
+            middleware.assertLastAction(HomeFragmentAction.HistoryMetadataChange::class) {
+                assertEquals(listOf(expectedHistoryGroup2, expectedHistoryGroup1), it.historyMetadata)
+            }
+        }
+
+    private fun startHistoryMetadataFeature(maxResults: Int = 10) {
         val feature = HistoryMetadataFeature(
             homeStore,
             historyMetadataStorage,
             CoroutineScope(testDispatcher),
-            testDispatcher
+            testDispatcher,
+            maxResults
         )
 
         assertEquals(emptyList<HistoryMetadataGroup>(), homeStore.state.historyMetadata)
