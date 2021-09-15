@@ -205,11 +205,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         components.publicSuffixList.prefetch()
 
-        setContentView(R.layout.activity_home)
+        binding = ActivityHomeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Must be after we set the content view
         if (isVisuallyComplete) {
-            binding = ActivityHomeBinding.bind(window.decorView.findViewById(R.id.rootContainer))
             components.performance.visualCompletenessQueue
                 .attachViewToRunVisualCompletenessQueueLater(WeakReference(binding.rootContainer))
         }
