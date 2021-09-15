@@ -47,9 +47,9 @@ const WCHAR kEmulatedWindowClassName[] = L"MozillaContentWindowClass";
 const uint32_t kEmulatedWindowClassNameNChars =
     sizeof(kEmulatedWindowClassName) / sizeof(WCHAR);
 // Mask to get the content process portion of a Windows accessible unique id.
-// This is bits 24 through 30 (LSB 0) of the id. This must be kept in sync
+// This is bits 23 through 30 (LSB 0) of the id. This must be kept in sync
 // with kNumContentProcessIDBits in accessible/windows/msaa/MsaaIdGenerator.cpp.
-const uint32_t kIdContentProcessMask = 0x7F000000;
+const uint32_t kIdContentProcessMask = 0x7F800000;
 
 static mscom::Factory<AccessibleHandler> sHandlerFactory;
 
