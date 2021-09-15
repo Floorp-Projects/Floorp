@@ -80,7 +80,6 @@ static ShCompileOptions ChooseValidatorCompileOptions(
     options ^= SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS;
     options ^= SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL;
 
-    options ^= SH_DONT_REMOVE_INVARIANT_FOR_FRAGMENT_INPUT;
     options ^= SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3;
   }
 
