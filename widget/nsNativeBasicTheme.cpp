@@ -439,7 +439,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
         backgroundColor = borderColor;
       }
     } else if (isChecked || isIndeterminate) {
-      backgroundColor = borderColor = SystemColor(StyleSystemColor::Highlight);
+      backgroundColor = borderColor = SystemColor(StyleSystemColor::Selecteditem);
     }
     return {backgroundColor, borderColor};
   }
@@ -472,7 +472,7 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(
     const EventStates& aState, const AccentColor& aAccent,
     UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColor(StyleSystemColor::Highlighttext);
+    return SystemColor(StyleSystemColor::Selecteditemtext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
     return sColorWhiteAlpha80;
@@ -573,7 +573,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
     const EventStates& aState, const AccentColor& aAccent,
     UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::Highlight,
+    return SystemColorPair(StyleSystemColor::Selecteditem,
                            StyleSystemColor::Buttontext);
   }
 
@@ -615,8 +615,8 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
     const EventStates& aState, const AccentColor& aAccent,
     UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::Highlighttext,
-                           StyleSystemColor::Highlight);
+    return SystemColorPair(StyleSystemColor::Selecteditemtext,
+                           StyleSystemColor::Selecteditem);
   }
 
   bool isActive =
@@ -645,7 +645,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
     const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::Highlight,
+    return SystemColorPair(StyleSystemColor::Selecteditem,
                            StyleSystemColor::Buttontext);
   }
   return std::make_pair(aAccent.Get(), aAccent.GetDark());
@@ -683,7 +683,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
 std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
     const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return {SystemColor(StyleSystemColor::Highlight),
+    return {SystemColor(StyleSystemColor::Selecteditem),
             SystemColor(StyleSystemColor::Buttontext),
             SystemColor(StyleSystemColor::TextBackground)};
   }
@@ -868,13 +868,13 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     }
     if (aElementState.HasState(NS_EVENT_STATE_ACTIVE)) {
       if (bool(aUseSystemColors)) {
-        return StyleSystemColor::Highlight;
+        return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbActive;
     }
     if (aElementState.HasState(NS_EVENT_STATE_HOVER)) {
       if (bool(aUseSystemColors)) {
-        return StyleSystemColor::Highlight;
+        return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbHover;
     }
@@ -898,7 +898,7 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
   if (bool(aUseSystemColors)) {
     if (aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_ACTIVE |
                                             NS_EVENT_STATE_HOVER)) {
-      return SystemColorPair(StyleSystemColor::Highlight,
+      return SystemColorPair(StyleSystemColor::Selecteditem,
                              StyleSystemColor::Buttonface);
     }
     return SystemColorPair(StyleSystemColor::TextBackground,
