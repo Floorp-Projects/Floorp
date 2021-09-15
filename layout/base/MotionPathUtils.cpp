@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/RefPtr.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsStyleTransformMatrix.h"
 
 #include <math.h>

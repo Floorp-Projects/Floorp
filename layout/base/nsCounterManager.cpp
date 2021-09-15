@@ -15,6 +15,7 @@
 #include "mozilla/WritingModes.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
 #include "nsTArray.h"
 #include "mozilla/dom/Text.h"
 
