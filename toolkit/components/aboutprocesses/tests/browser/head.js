@@ -323,9 +323,17 @@ async function testMemory(element, total, delta, assumptions) {
 
 function extractProcessDetails(row) {
   let children = row.children;
+  let name = children[0];
   let memory = children[1];
   let cpu = children[2];
-  let fluentArgs = document.l10n.getAttributes(children[0]).args;
+  if (Services.prefs.getBoolPref("toolkit.aboutProcesses.showProfilerIcons")) {
+    name = name.firstChild;
+    Assert.ok(
+      name.nextSibling.classList.contains("profiler-icon"),
+      "The profiler icon should be shown"
+    );
+  }
+  let fluentArgs = document.l10n.getAttributes(name).args;
   let threadDetailsRow = row.nextSibling;
   while (threadDetailsRow) {
     if (threadDetailsRow.classList.contains("process")) {
