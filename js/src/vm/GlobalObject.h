@@ -55,6 +55,7 @@ class ArgumentsObject;
 class GlobalScope;
 class GlobalLexicalEnvironmentObject;
 class PlainObject;
+class PropertyIteratorObject;
 class RegExpStatics;
 
 // Fixed slot capacities for PlainObjects. The global has a cached Shape for
@@ -182,6 +183,9 @@ class GlobalObjectData {
 
   // The unique %eval% function (for indirect eval) for this global.
   HeapPtr<JSFunction*> eval;
+
+  // Empty iterator object used for for-in with null/undefined.
+  HeapPtr<PropertyIteratorObject*> emptyIterator;
 
   // Cached shape for new arrays with Array.prototype as prototype.
   HeapPtr<Shape*> arrayShapeWithDefaultProto;
@@ -1084,6 +1088,8 @@ class GlobalObject : public NativeObject {
   }
   static Shape* createFunctionShapeWithDefaultProto(JSContext* cx,
                                                     bool extended);
+
+  static PropertyIteratorObject* getOrCreateEmptyIterator(JSContext* cx);
 
   // Returns an object that represents the realm, used by embedder.
   static JSObject* getOrCreateRealmKeyObject(JSContext* cx,
