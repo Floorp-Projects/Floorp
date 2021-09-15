@@ -3828,6 +3828,8 @@ Toolbox.prototype = {
             this._removeWindowListeners();
             this._removeChromeEventHandlerEvents();
 
+            this._store = null;
+
             // Notify toolbox-host-manager that the host can be destroyed.
             this.emit("toolbox-unload");
 
