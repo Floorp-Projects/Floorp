@@ -6,5 +6,7 @@
     "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
-    "patches": []
+    "patches": [
+        "profile-g4a10504e1f70c.patch"
+    ]
 }

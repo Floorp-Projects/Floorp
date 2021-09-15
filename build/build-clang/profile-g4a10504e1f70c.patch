@@ -1,0 +1,43 @@
+commit 4a10504e1f70c70c049fc439c4fce37a12de5941
+Author: Vedant Kumar <vsk@apple.com>
+Date:   Mon Sep 18 18:13:47 2017 +0000
+
+    [cmake] Make it possible to build and test profile without sanitizers
+    
+    This should fix an issue which arises when running check-compiler-rt on
+    the coverage bot:
+    http://green.lab.llvm.org/green/job/clang-stage2-coverage-R_build/1590/
+    
+    The bot doesn't build the sanitizers, but the check-compiler-rt target
+    always expects the profile runtime to exist.
+    
+    llvm-svn: 313549
+
+diff --git a/compiler-rt/lib/CMakeLists.txt b/compiler-rt/lib/CMakeLists.txt
+index 025320f473f5..a92d0a3f082d 100644
+--- a/compiler-rt/lib/CMakeLists.txt
++++ b/compiler-rt/lib/CMakeLists.txt
+@@ -39,7 +39,9 @@ if(COMPILER_RT_BUILD_SANITIZERS)
+   foreach(sanitizer ${COMPILER_RT_SANITIZERS_TO_BUILD})
+     compiler_rt_build_runtime(${sanitizer})
+   endforeach()
++endif()
+ 
++if (COMPILER_RT_HAS_PROFILE)
+   compiler_rt_build_runtime(profile)
+ endif()
+ 
+diff --git a/compiler-rt/test/CMakeLists.txt b/compiler-rt/test/CMakeLists.txt
+index 6bc7cdbecf6a..e691eab7d4a7 100644
+--- a/compiler-rt/test/CMakeLists.txt
++++ b/compiler-rt/test/CMakeLists.txt
+@@ -71,7 +71,8 @@ if(COMPILER_RT_CAN_EXECUTE_TESTS)
+         compiler_rt_test_runtime(${sanitizer})
+       endif()
+     endforeach()
+-
++  endif()
++  if (COMPILER_RT_HAS_PROFILE)
+     compiler_rt_test_runtime(profile)
+   endif()
+   if(COMPILER_RT_BUILD_XRAY)
