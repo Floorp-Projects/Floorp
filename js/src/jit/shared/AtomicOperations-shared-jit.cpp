@@ -432,8 +432,9 @@ static uint32_t GenCmpxchg(MacroAssembler& masm, Scalar::Type size,
       static_assert(AtomicValReg64 == Register64(edx, eax));
       static_assert(AtomicVal2Reg64 == Register64(ecx, ebx));
 
-      // The return register edx:eax is a compiler/ABI assumption that is *not*
-      // the same as ReturnReg64, so it's correct not to use that here.
+      // The return register edx:eax is a compiler/ABI assumption that is not
+      // necessarily the same as ReturnReg64, so it's correct not to use
+      // ReturnReg64 here.
       masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(addr));
 #else
       masm.compareExchange64(sync, addr, AtomicValReg64, AtomicVal2Reg64,
