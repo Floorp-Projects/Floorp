@@ -193,7 +193,6 @@ const char* GetLayersBackendName(LayersBackend aBackend);
 enum class TextureType : int8_t {
   Unknown = 0,
   D3D11,
-  DIB,
   MacIOSurface,
   AndroidNativeWindow,
   AndroidHardwareBuffer,

@@ -20,7 +20,6 @@
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #  include "mozilla/layers/TextureD3D11.h"
-#  include "mozilla/layers/TextureDIB.h"
 #endif
 
 namespace mozilla {
@@ -116,10 +115,6 @@ static already_AddRefed<TextureClient> CreateTextureClientWithBackend(
        moz2DBackend == BackendType::DIRECT2D1_1)) {
     // Create D3D11TextureData.
     data = D3D11TextureData::Create(size, format, allocFlags);
-  } else if (!data && format == SurfaceFormat::B8G8R8X8 &&
-             moz2DBackend == BackendType::CAIRO) {
-    // Create DIBTextureData.
-    data = DIBTextureData::Create(size, format, nullptr);
   }
 #endif
 
