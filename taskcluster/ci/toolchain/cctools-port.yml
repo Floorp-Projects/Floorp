@@ -19,11 +19,11 @@ linux64-cctools-port-clang-11:
     run:
         script: build-cctools-port.sh
         toolchain-artifact: public/build/cctools.tar.zst
-        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-clang-11
             - linux64-binutils
+            - linux64-toolchain-sysroot
 
 linux64-cctools-port-clang-12:
     treeherder:
@@ -32,8 +32,8 @@ linux64-cctools-port-clang-12:
         script: build-cctools-port.sh
         toolchain-alias: linux64-cctools-port
         toolchain-artifact: public/build/cctools.tar.zst
-        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-clang-12
             - linux64-binutils
+            - linux64-toolchain-sysroot
