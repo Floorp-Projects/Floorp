@@ -649,7 +649,6 @@ StaticRefPtr<Element> PresShell::EventHandler::sLastKeyDownEventTargetElement;
 bool PresShell::sProcessInteractable = false;
 
 static bool gVerifyReflowEnabled;
-extern mozilla::LazyLogModule sApzMvmLog;
 
 bool PresShell::GetVerifyReflowEnable() {
 #ifdef DEBUG
@@ -10989,9 +10988,10 @@ void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
 
       mMVMContext = new GeckoMVMContext(mDocument, this);
       mMobileViewportManager = new MobileViewportManager(mMVMContext, *mvmType);
-      if (MOZ_UNLIKELY(MOZ_LOG_TEST(sApzMvmLog, LogLevel::Debug))) {
+      if (MOZ_UNLIKELY(
+              MOZ_LOG_TEST(MobileViewportManager::gLog, LogLevel::Debug))) {
         nsIURI* uri = mDocument->GetDocumentURI();
-        MOZ_LOG(sApzMvmLog, LogLevel::Debug,
+        MOZ_LOG(MobileViewportManager::gLog, LogLevel::Debug,
                 ("Created MVM %p (type %d) for URI %s",
                  mMobileViewportManager.get(), (int)*mvmType,
                  uri ? uri->GetSpecOrDefault().get() : "(null)"));

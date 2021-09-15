@@ -7,6 +7,7 @@
 #ifndef MobileViewportManager_h_
 #define MobileViewportManager_h_
 
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MVMContext.h"
 #include "mozilla/PresShellForwards.h"
@@ -134,6 +135,8 @@ class MobileViewportManager final : public nsIDOMEventListener,
   mozilla::CSSSize GetIntrinsicCompositionSize() const;
 
   mozilla::ParentLayerSize GetCompositionSizeWithoutDynamicToolbar() const;
+
+  static mozilla::LazyLogModule gLog;
 
  private:
   ~MobileViewportManager();
