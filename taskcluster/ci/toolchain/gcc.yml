@@ -70,8 +70,6 @@ linux64-gcc-11:
             - isl-0.16.1
             - mpc-1.0.3
             - mpfr-3.1.4
-        toolchain:
-            - linux64-gcc-9
 
 linux64-gcc-sixgill:
     description: "sixgill GCC plugin build"
