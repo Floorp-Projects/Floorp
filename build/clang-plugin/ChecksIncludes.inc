@@ -18,7 +18,6 @@
 #include "KungFuDeathGripChecker.h"
 #include "MustOverrideChecker.h"
 #include "MustReturnFromCallerChecker.h"
-#include "MustUseChecker.h"
 #include "NaNExprChecker.h"
 #include "NoPrincipalGetURI.h"
 #include "NeedsNoVTableTypeChecker.h"

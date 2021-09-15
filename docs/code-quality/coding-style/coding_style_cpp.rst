@@ -816,7 +816,7 @@ If most callers need to check the output value first, then adding
 ``[[nodiscard]]`` might be too verbose. In this case, change the return value
 to void might be a reasonable choice.
 
-There is also a static analysis attribute ``MOZ_MUST_USE_TYPE``, which can
+There is also a static analysis attribute ``[[nodiscard]]``, which can
 be added to class declarations, to ensure that those declarations are
 always used when they are returned.
 

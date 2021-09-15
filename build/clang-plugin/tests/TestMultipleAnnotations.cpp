@@ -1,7 +1,7 @@
-#define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
+#define MOZ_NON_TEMPORARY_CLASS __attribute__((annotate("moz_non_temporary_class")))
 #define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 
-class MOZ_MUST_USE_TYPE MOZ_STACK_CLASS TestClass {};
+class MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS TestClass {};
 
 TestClass foo; // expected-error {{variable of type 'TestClass' only valid on the stack}} expected-note {{value incorrectly allocated in a global variable}}
 
@@ -11,7 +11,9 @@ TestClass f()
   return bar;
 }
 
+void gobbleref(const TestClass&) { }
+
 void g()
 {
-  f(); // expected-error {{Unused value of must-use type 'TestClass'}}
+  gobbleref(f()); // expected-error {{variable of type 'TestClass' is not valid in a temporary}} expected-note {{value incorrectly allocated in a temporary}}
 }

@@ -17,7 +17,6 @@ CHECK(FopenUsageChecker, "fopen-usage")
 #endif
 CHECK(MustOverrideChecker, "must-override")
 CHECK(MustReturnFromCallerChecker, "must-return-from-caller")
-CHECK(MustUseChecker, "must-use")
 CHECK(NaNExprChecker, "nan-expr")
 CHECK(NoPrincipalGetURI, "no-principal-geturi")
 CHECK(NeedsNoVTableTypeChecker, "needs-no-vtable-type")
