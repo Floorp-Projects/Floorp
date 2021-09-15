@@ -27,9 +27,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class LoginSelectBarTest {
     val login =
-        Login(origin = "https://www.mozilla.org", username = "username", password = "password")
+        Login(guid = "A", origin = "https://www.mozilla.org", username = "username", password = "password")
     val login2 =
-        Login(origin = "https://www.mozilla.org", username = "username2", password = "password")
+        Login(guid = "B", origin = "https://www.mozilla.org", username = "username2", password = "password")
 
     @Test
     fun `showPicker updates visibility`() {

@@ -11,7 +11,7 @@ import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.textfield.TextInputEditText
 import junit.framework.TestCase
-import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.appCompatContext
@@ -36,13 +36,13 @@ class SaveLoginDialogFragmentTest : TestCase() {
         val hint = 42
         val loginUsername = "username"
         val loginPassword = "password"
-        val login: Login = mock() // valid image to be used as favicon
-        `when`(login.username).thenReturn(loginUsername)
-        `when`(login.password).thenReturn(loginPassword)
+        val entry: LoginEntry = mock() // valid image to be used as favicon
+        `when`(entry.username).thenReturn(loginUsername)
+        `when`(entry.password).thenReturn(loginPassword)
         val icon: Bitmap = mock()
         val fragment = spy(
             SaveLoginDialogFragment.newInstance(
-                sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
+                sessionId, requestUID, shouldDismissOnLoad, hint, entry, icon
             )
         )
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -77,13 +77,13 @@ class SaveLoginDialogFragmentTest : TestCase() {
         val hint = 42
         val loginUsername = "username"
         val loginPassword = "password"
-        val login: Login = mock()
-        `when`(login.username).thenReturn(loginUsername)
-        `when`(login.password).thenReturn(loginPassword)
+        val entry: LoginEntry = mock()
+        `when`(entry.username).thenReturn(loginUsername)
+        `when`(entry.password).thenReturn(loginPassword)
         val icon: Bitmap? = null // null favicon
         val fragment = spy(
             SaveLoginDialogFragment.newInstance(
-                sessionId, requestUID, shouldDismissOnLoad, hint, login, icon
+                sessionId, requestUID, shouldDismissOnLoad, hint, entry, icon
             )
         )
         val defaultIconResource = R.drawable.mozac_ic_globe

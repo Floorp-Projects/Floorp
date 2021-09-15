@@ -44,6 +44,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -895,9 +896,9 @@ class PromptFeatureTest {
         var confirmedLogin: Login? = null
 
         val login =
-            Login(origin = "https://www.mozilla.org", username = "username", password = "password")
+            Login(guid = "A", origin = "https://www.mozilla.org", username = "username", password = "password")
         val login2 =
-            Login(origin = "https://www.mozilla.org", username = "username2", password = "password")
+            Login(guid = "B", origin = "https://www.mozilla.org", username = "username2", password = "password")
 
         val loginPickerRequest = PromptRequest.SelectLoginPrompt(
             listOf(login, login2),
@@ -1372,7 +1373,7 @@ class PromptFeatureTest {
         val onLoginDismiss: () -> Unit = {}
         val onLoginConfirm: (Login) -> Unit = {}
 
-        val login = Login(null, "origin", username = "username", password = "password")
+        val login = Login(guid = "A", origin = "origin", username = "username", password = "password")
         val selectLoginRequest =
             PromptRequest.SelectLoginPrompt(listOf(login), onLoginDismiss, onLoginConfirm)
 
@@ -1700,10 +1701,10 @@ class PromptFeatureTest {
         ) { }
         val loginUsername = "username"
         val loginPassword = "password"
-        val login: Login = mock()
-        `when`(login.username).thenReturn(loginUsername)
-        `when`(login.password).thenReturn(loginPassword)
-        val loginsPrompt = PromptRequest.SaveLoginPrompt(2, listOf(login), { }, { })
+        val entry: LoginEntry = mock()
+        `when`(entry.username).thenReturn(loginUsername)
+        `when`(entry.password).thenReturn(loginPassword)
+        val loginsPrompt = PromptRequest.SaveLoginPrompt(2, listOf(entry), { }, { })
         val websiteIcon: Bitmap = mock()
         val contentState: ContentState = mock()
         val session: TabSessionState = mock()
@@ -1751,7 +1752,7 @@ class PromptFeatureTest {
                 shareRequest.uid,
                 false,
                 0,
-                Login(
+                LoginEntry(
                     origin = "https://www.mozilla.org",
                     username = "username",
                     password = "password"

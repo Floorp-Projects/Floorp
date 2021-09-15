@@ -42,6 +42,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
@@ -507,7 +508,7 @@ class PromptFeature private constructor(
 
                 is Share -> it.onSuccess()
 
-                is SaveLoginPrompt -> it.onConfirm(value as Login)
+                is SaveLoginPrompt -> it.onConfirm(value as LoginEntry)
 
                 is Confirm -> {
                     val (isCheckBoxChecked, buttonType) =
@@ -595,7 +596,7 @@ class PromptFeature private constructor(
                     shouldDismissOnLoad = false,
                     hint = promptRequest.hint,
                     // For v1, we only handle a single login and drop all others on the floor
-                    login = promptRequest.logins[0],
+                    entry = promptRequest.logins[0],
                     icon = session.content.icon
                 )
             }

@@ -24,9 +24,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class LoginPickerTest {
     val login =
-        Login(origin = "https://www.mozilla.org", username = "username", password = "password")
+        Login(guid = "A", origin = "https://www.mozilla.org", username = "username", password = "password")
     val login2 =
-        Login(origin = "https://www.mozilla.org", username = "username2", password = "password")
+        Login(guid = "B", origin = "https://www.mozilla.org", username = "username2", password = "password")
 
     var onDismissWasCalled = false
     var confirmedLogin: Login? = null

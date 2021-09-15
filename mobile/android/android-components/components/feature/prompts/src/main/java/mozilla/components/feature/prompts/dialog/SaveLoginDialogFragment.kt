@@ -37,6 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
@@ -51,7 +52,6 @@ import com.google.android.material.R as MaterialR
 private const val KEY_LOGIN_HINT = "KEY_LOGIN_HINT"
 private const val KEY_LOGIN_USERNAME = "KEY_LOGIN_USERNAME"
 private const val KEY_LOGIN_PASSWORD = "KEY_LOGIN_PASSWORD"
-private const val KEY_LOGIN_GUID = "KEY_LOGIN_GUID"
 private const val KEY_LOGIN_ORIGIN = "KEY_LOGIN_ORIGIN"
 private const val KEY_LOGIN_FORM_ACTION_ORIGIN = "KEY_LOGIN_FORM_ACTION_ORIGIN"
 private const val KEY_LOGIN_HTTP_REALM = "KEY_LOGIN_HTTP_REALM"
@@ -73,7 +73,6 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         }
     }
 
-    private val guid by lazy { safeArguments.getString(KEY_LOGIN_GUID) }
     private val origin by lazy { safeArguments.getString(KEY_LOGIN_ORIGIN)!! }
     private val formActionOrigin by lazy { safeArguments.getString(KEY_LOGIN_FORM_ACTION_ORIGIN) }
     private val httpRealm by lazy { safeArguments.getString(KEY_LOGIN_HTTP_REALM) }
@@ -171,8 +170,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     private fun onPositiveClickAction() {
         feature?.onConfirm(
             sessionId, promptRequestUID,
-            Login(
-                guid = guid,
+            LoginEntry(
                 origin = origin,
                 formActionOrigin = formActionOrigin,
                 httpRealm = httpRealm,
@@ -291,8 +289,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun update() = view?.toScope()?.launch(IO) {
-        val login = Login(
-            guid = guid,
+        val entry = LoginEntry(
             origin = origin,
             formActionOrigin = formActionOrigin,
             httpRealm = httpRealm,
@@ -310,21 +307,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         validateStateUpdate = launch validate@{
             val validationDelegate =
                 feature?.loginValidationDelegate ?: return@validate
-            // We only want to fetch this list once. Since we are ignoring username the results will
-            // not change when user changes username or password fields
-            if (potentialDupesList == null) {
-                this@SaveLoginDialogFragment.potentialDupesList = CopyOnWriteArrayList(
-                    validationDelegate.getPotentialDupesIgnoringUsernameAsync(
-                        login
-                    ).await()
-                )
-            }
-            // Passing a copy of this potential dupes list, not a reference, so we know for certain
-            // that what shouldUpdateOrCreateAsync is using can't change.
-            validateDeferred = validationDelegate.shouldUpdateOrCreateAsync(
-                login,
-                potentialDupesList?.toList()
-            )
+            validateDeferred = validationDelegate.shouldUpdateOrCreateAsync(entry)
             val result = validateDeferred?.await()
             withContext(Main) {
                 when (result) {
@@ -407,7 +390,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
             promptRequestUID: String,
             shouldDismissOnLoad: Boolean,
             hint: Int,
-            login: Login,
+            entry: LoginEntry,
             icon: Bitmap? = null
         ): SaveLoginDialogFragment {
 
@@ -419,12 +402,11 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                 putString(KEY_PROMPT_UID, promptRequestUID)
                 putBoolean(KEY_SHOULD_DISMISS_ON_LOAD, shouldDismissOnLoad)
                 putInt(KEY_LOGIN_HINT, hint)
-                putString(KEY_LOGIN_USERNAME, login.username)
-                putString(KEY_LOGIN_PASSWORD, login.password)
-                putString(KEY_LOGIN_GUID, login.guid)
-                putString(KEY_LOGIN_ORIGIN, login.origin)
-                putString(KEY_LOGIN_FORM_ACTION_ORIGIN, login.formActionOrigin)
-                putString(KEY_LOGIN_HTTP_REALM, login.httpRealm)
+                putString(KEY_LOGIN_USERNAME, entry.username)
+                putString(KEY_LOGIN_PASSWORD, entry.password)
+                putString(KEY_LOGIN_ORIGIN, entry.origin)
+                putString(KEY_LOGIN_FORM_ACTION_ORIGIN, entry.formActionOrigin)
+                putString(KEY_LOGIN_HTTP_REALM, entry.httpRealm)
                 putParcelable(KEY_LOGIN_ICON, icon)
             }
 

@@ -20,9 +20,9 @@ import org.junit.runner.RunWith
 class BasicLoginAdapterTest {
 
     val login =
-        Login(origin = "https://www.mozilla.org", username = "username", password = "password")
+        Login(guid = "A", origin = "https://www.mozilla.org", username = "username", password = "password")
     val login2 =
-        Login(origin = "https://www.mozilla.org", username = "username2", password = "password")
+        Login(guid = "B", origin = "https://www.mozilla.org", username = "username2", password = "password")
 
     @Test
     fun `getItemCount should return the number of logins`() {
