@@ -2963,6 +2963,7 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     CollectedScripts result(&queue);
     IterateScripts(cx, realm, &result, &CollectedScripts::consider);
     if (!result.ok) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -2988,6 +2989,7 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     }
 
     if (!coverage::CollectScriptCoverage(script, false)) {
+      ReportOutOfMemory(cx);
       return false;
     }
 
@@ -3049,7 +3051,6 @@ JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
 
   for (RealmsIter realm(cx->runtime()); !realm.done(); realm.next()) {
     if (!GenerateLcovInfo(cx, realm, out)) {
-      JS_ReportOutOfMemory(cx);
       return nullptr;
     }
   }
@@ -3066,7 +3067,6 @@ JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
   }
 
   if (!GenerateLcovInfo(cx, cx->realm(), out)) {
-    JS_ReportOutOfMemory(cx);
     return nullptr;
   }
 

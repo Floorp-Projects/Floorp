@@ -1606,7 +1606,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   // recovered ahead of the bailout.
   SnapshotIterator snapIter(iter, activation->bailoutData()->machineState());
   if (!snapIter.initInstructionResults(recoverBailout)) {
-    ReportOutOfMemory(cx);
     return false;
   }
 

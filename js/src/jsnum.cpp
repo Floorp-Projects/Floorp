@@ -944,7 +944,6 @@ static bool num_toString(JSContext* cx, unsigned argc, Value* vp) {
   }
   JSString* str = NumberToStringWithBase<CanGC>(cx, d, base);
   if (!str) {
-    JS_ReportOutOfMemory(cx);
     return false;
   }
   args.rval().setString(str);
@@ -962,7 +961,6 @@ static bool num_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedString str(cx, NumberToStringWithBase<CanGC>(cx, d, 10));
   if (!str) {
-    JS_ReportOutOfMemory(cx);
     return false;
   }
 
@@ -1293,7 +1291,6 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
   if (!args.hasDefined(0)) {
     JSString* str = NumberToStringWithBase<CanGC>(cx, d, 10);
     if (!str) {
-      JS_ReportOutOfMemory(cx);
       return false;
     }
     args.rval().setString(str);
