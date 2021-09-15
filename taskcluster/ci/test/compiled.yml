@@ -102,7 +102,6 @@ jittest:
     tier:
         by-test-platform:
             android-hw.*: 2
-            macosx1100.*: 2
             default: default
 
 jittest-all:
