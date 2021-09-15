@@ -2207,7 +2207,7 @@ static inline bool CanProduceNegativeZero(MDefinition* def) {
 }
 
 static inline bool NeedNegativeZeroCheck(MDefinition* def) {
-  if (def->isGuardRangeBailouts()) {
+  if (def->isGuard() || def->isGuardRangeBailouts()) {
     return true;
   }
 
