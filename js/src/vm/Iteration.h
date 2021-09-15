@@ -270,7 +270,21 @@ struct NativeIterator {
     setFlags(Flags::Initialized);
   }
 
+  bool isUnlinked() const { return !prev_ && !next_; }
+
  public:
+  // Whether this is the shared empty iterator object used for iterating over
+  // null/undefined.
+  bool isEmptyIteratorSingleton() const {
+    // Note: equivalent code is inlined in MacroAssembler::iteratorClose.
+    bool res = objectBeingIterated() == nullptr;
+    MOZ_ASSERT_IF(res, flags() == Flags::Initialized);
+    MOZ_ASSERT_IF(res, initialPropertyCount() == 0);
+    MOZ_ASSERT_IF(res, shapeCount() == 0);
+    MOZ_ASSERT_IF(res, isUnlinked());
+    return res;
+  }
+
   bool isActive() const {
     MOZ_ASSERT(isInitialized());
 
@@ -279,12 +293,14 @@ struct NativeIterator {
 
   void markActive() {
     MOZ_ASSERT(isInitialized());
+    MOZ_ASSERT(!isEmptyIteratorSingleton());
 
     flagsAndCount_ |= Flags::Active;
   }
 
   void markInactive() {
     MOZ_ASSERT(isInitialized());
+    MOZ_ASSERT(!isEmptyIteratorSingleton());
 
     flagsAndCount_ &= ~Flags::Active;
   }
@@ -302,6 +318,7 @@ struct NativeIterator {
 
   void markHasUnvisitedPropertyDeletion() {
     MOZ_ASSERT(isInitialized());
+    MOZ_ASSERT(!isEmptyIteratorSingleton());
 
     flagsAndCount_ |= Flags::HasUnvisitedPropertyDeletion;
   }
@@ -312,8 +329,12 @@ struct NativeIterator {
     // initialized.
     MOZ_ASSERT(isInitialized());
 
-    /* A NativeIterator cannot appear in the enumerator list twice. */
-    MOZ_ASSERT(!next_ && !prev_);
+    // The shared iterator used for for-in with null/undefined is immutable and
+    // shouldn't be linked.
+    MOZ_ASSERT(!isEmptyIteratorSingleton());
+
+    // A NativeIterator cannot appear in the enumerator list twice.
+    MOZ_ASSERT(isUnlinked());
 
     this->next_ = other;
     this->prev_ = other->prev_;
@@ -322,6 +343,7 @@ struct NativeIterator {
   }
   void unlink() {
     MOZ_ASSERT(isInitialized());
+    MOZ_ASSERT(!isEmptyIteratorSingleton());
 
     next_->prev_ = prev_;
     prev_->next_ = next_;

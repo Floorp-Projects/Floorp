@@ -641,7 +641,9 @@ static PropertyIteratorObject* CreatePropertyIterator(
 
   ObjectRealm& realm = objBeingIterated ? ObjectRealm::get(objBeingIterated)
                                         : ObjectRealm::get(propIter);
-  RegisterEnumerator(realm, ni);
+  if (!ni->isEmptyIteratorSingleton()) {
+    RegisterEnumerator(realm, ni);
+  }
 
   return propIter;
 }
@@ -1289,19 +1291,26 @@ JSObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {
 }
 
 void js::CloseIterator(JSObject* obj) {
-  if (obj->is<PropertyIteratorObject>()) {
-    /* Remove enumerators from the active list, which is a stack. */
-    NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-
-    ni->unlink();
-
-    MOZ_ASSERT(ni->isActive());
-    ni->markInactive();
-
-    // Reset the enumerator; it may still be in the cached iterators for
-    // this thread and can be reused.
-    ni->resetPropertyCursorForReuse();
+  if (!obj->is<PropertyIteratorObject>()) {
+    return;
   }
+
+  // Remove iterator from the active list, which is a stack. The shared iterator
+  // used for for-in with null/undefined is immutable and unlinked.
+
+  NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
+  if (ni->isEmptyIteratorSingleton()) {
+    return;
+  }
+
+  ni->unlink();
+
+  MOZ_ASSERT(ni->isActive());
+  ni->markInactive();
+
+  // Reset the enumerator; it may still be in the cached iterators for
+  // this thread and can be reused.
+  ni->resetPropertyCursorForReuse();
 }
 
 bool js::IteratorCloseForException(JSContext* cx, HandleObject obj) {
