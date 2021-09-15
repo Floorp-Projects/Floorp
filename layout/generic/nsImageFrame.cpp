@@ -37,6 +37,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
+#include "nsIFrameInlines.h"
 #include "nsIImageLoadingContent.h"
 #include "nsImageLoadingContent.h"
 #include "nsImageRenderer.h"
