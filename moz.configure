@@ -400,7 +400,7 @@ def bootstrap_search_path(path, paths=original_path, **kwargs):
 
 # The execution model of the configure sandbox doesn't allow for
 # check_prog to use bootstrap_search_path directly because check_prog
-# comes first, so we use a trick to allow it. No use of check_prog
+# comes first, so we use a trick to allow it. Uses of check_prog
 # happening before here won't allow bootstrap.
 @template
 def check_prog(*args, **kwargs):
@@ -898,6 +898,7 @@ def makensis_progs(target):
         "makensis-3.0b3",
         "makensis-3.0b1",
         "makensis",
+        "makensis.exe",
     ]
 
     # Look for nsis installed by msys environment. But only the 32-bit version.
@@ -910,7 +911,7 @@ def makensis_progs(target):
     return tuple(candidates)
 
 
-nsis = check_prog("MAKENSISU", makensis_progs, allow_missing=True)
+nsis = check_prog("MAKENSISU", makensis_progs, bootstrap="nsis/bin", allow_missing=True)
 
 # Make sure the version of makensis is up to date.
 

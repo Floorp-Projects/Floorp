@@ -292,6 +292,9 @@ nsis-3.07-win:
         url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.07/nsis-3.07.zip
         sha256: 04dde28896ae9ab36ea3035ff3a294e78053f00048064f6d22a6f1c02bcb6ec0
         size: 2335219
+        artifact-name: nsis.tar.zst
+        strip-components: 1
+        add-prefix: nsis/
 
 upx-3.95-win:
     description: upx 3.95 for windows
