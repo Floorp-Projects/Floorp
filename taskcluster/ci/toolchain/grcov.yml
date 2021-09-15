@@ -24,17 +24,6 @@ linux64-grcov:
             - linux64-binutils
             - sysroot-x86_64-linux-gnu
 
-macosx64-grcov:
-    treeherder:
-        symbol: TM(grcov)
-    run-on-projects:
-        - trunk
-    fetches:
-        toolchain:
-            - linux64-rust-1.47
-            - linux64-clang
-            - linux64-binutils
-
 win64-grcov:
     treeherder:
         symbol: TW64(grcov)
