@@ -107,3 +107,6 @@ path = "third_party/rust/autocfg"
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio"
+
+[patch.crates-io.prost-derive]
+path = "third_party/rust/prost-derive"

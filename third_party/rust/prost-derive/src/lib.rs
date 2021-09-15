@@ -104,11 +104,8 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
 
     let merge = fields.iter().map(|&(ref field_ident, ref field)| {
         let merge = field.merge(quote!(value));
-        let tags = field
-            .tags()
-            .into_iter()
-            .map(|tag| quote!(#tag))
-            .intersperse(quote!(|));
+        let tags = field.tags().into_iter().map(|tag| quote!(#tag));
+        let tags = Itertools::intersperse(tags, quote!(|));
         quote! {
             #(#tags)* => {
                 let mut value = &mut self.#field_ident;
