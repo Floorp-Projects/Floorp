@@ -70,12 +70,10 @@ class MediaDataEncoder {
   struct H264Specific final {
     enum class ProfileLevel { BaselineAutoLevel, MainAutoLevel };
 
-    const size_t mKeyframeInterval;
     const ProfileLevel mProfileLevel;
 
-    H264Specific(const size_t aKeyframeInterval,
-                 const ProfileLevel aProfileLevel)
-        : mKeyframeInterval(aKeyframeInterval), mProfileLevel(aProfileLevel) {}
+    explicit H264Specific(const ProfileLevel aProfileLevel)
+        : mProfileLevel(aProfileLevel) {}
   };
 
   struct OpusSpecific final {
@@ -180,13 +178,17 @@ class MediaDataEncoder {
     const gfx::IntSize mSize;
     const PixelFormat mSourcePixelFormat;
     const uint8_t mFramerate;
+    const size_t mKeyframeInterval;
+
     VideoConfig(const CodecType aCodecType, const Usage aUsage,
                 const gfx::IntSize& aSize, const PixelFormat aSourcePixelFormat,
-                const uint8_t aFramerate, const Rate aBitrate)
+                const uint8_t aFramerate, const size_t aKeyframeInterval,
+                const Rate aBitrate)
         : BaseConfig<T>(aCodecType, aUsage, aBitrate),
           mSize(aSize),
           mSourcePixelFormat(aSourcePixelFormat),
-          mFramerate(aFramerate) {}
+          mFramerate(aFramerate),
+          mKeyframeInterval(aKeyframeInterval) {}
   };
 
   template <typename T>
@@ -223,13 +225,14 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
                       const MediaDataEncoder::Usage aUsage,
                       const RefPtr<TaskQueue> aTaskQueue,
                       const MediaDataEncoder::PixelFormat aPixelFormat,
-                      const uint8_t aFramerate,
+                      const uint8_t aFramerate, const size_t aKeyframeInterval,
                       const MediaDataEncoder::Rate aBitrate)
       : mConfig(aConfig),
         mUsage(aUsage),
         mTaskQueue(aTaskQueue),
         mPixelFormat(aPixelFormat),
         mFramerate(aFramerate),
+        mKeyframeInterval(aKeyframeInterval),
         mBitrate(aBitrate) {
     MOZ_ASSERT(mTaskQueue);
   }
@@ -239,7 +242,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
                       const MediaDataEncoder::Usage aUsage,
                       const RefPtr<TaskQueue> aTaskQueue,
                       const MediaDataEncoder::PixelFormat aPixelFormat,
-                      const uint8_t aFramerate,
+                      const uint8_t aFramerate, const size_t aKeyframeInterval,
                       const MediaDataEncoder::Rate aBitrate,
                       const Ts&&... aCodecSpecific)
       : mConfig(aConfig),
@@ -247,6 +250,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
         mTaskQueue(aTaskQueue),
         mPixelFormat(aPixelFormat),
         mFramerate(aFramerate),
+        mKeyframeInterval(aKeyframeInterval),
         mBitrate(aBitrate) {
     MOZ_ASSERT(mTaskQueue);
     Set(std::forward<const Ts>(aCodecSpecific)...);
@@ -258,7 +262,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
 
     auto config = MediaDataEncoder::H264Config(
         MediaDataEncoder::CodecType::H264, mUsage, info->mImage, mPixelFormat,
-        mFramerate, mBitrate);
+        mFramerate, mKeyframeInterval, mBitrate);
     if (mCodecSpecific) {
       config.SetCodecSpecific(mCodecSpecific.ref().mH264);
     }
@@ -271,6 +275,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
   const RefPtr<TaskQueue> mTaskQueue;
   const MediaDataEncoder::PixelFormat mPixelFormat;
   const uint8_t mFramerate;
+  const size_t mKeyframeInterval;
   const MediaDataEncoder::Rate mBitrate;
   Maybe<CodecSpecific> mCodecSpecific;
 
