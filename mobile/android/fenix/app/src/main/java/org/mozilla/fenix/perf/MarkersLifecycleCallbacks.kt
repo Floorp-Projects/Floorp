@@ -7,6 +7,7 @@ package org.mozilla.fenix.perf
 import android.app.Activity
 import android.os.Bundle
 import mozilla.components.concept.engine.Engine
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.android.DefaultActivityLifecycleCallbacks
 
 /**
@@ -24,7 +25,12 @@ class MarkersLifecycleCallbacks(
     }
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
-        if (shouldSkip()) { return }
+        if (shouldSkip() ||
+            // This method is manually instrumented with duration.
+            activity is IntentReceiverActivity
+        ) {
+            return
+        }
         engine.profiler?.addMarker(MARKER_NAME, "${activity::class.simpleName}.onCreate (via callbacks)")
     }
 
@@ -54,6 +60,6 @@ class MarkersLifecycleCallbacks(
     }
 
     companion object {
-        private const val MARKER_NAME = "Activity Lifecycle"
+        const val MARKER_NAME = "Activity Lifecycle"
     }
 }
