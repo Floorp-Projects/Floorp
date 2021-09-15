@@ -22,8 +22,6 @@ class TaskQueue;
 
 class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
  public:
-  static bool CanCreate(const webrtc::VideoCodecType aCodecType);
-
   WebrtcMediaDataEncoder();
 
   uint64_t PluginID() const override { return 0; }
@@ -51,9 +49,6 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   already_AddRefed<MediaDataEncoder> CreateEncoder(
       const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
-  webrtc::RTPFragmentationHeader GetFragHeader(
-      const webrtc::VideoCodecType aCodecType,
-      const RefPtr<MediaRawData>& aFrame);
 
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;
@@ -64,7 +59,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   MediaResult mError = NS_OK;
 
   VideoInfo mInfo;
-  webrtc::CodecSpecificInfo mCodecSpecific;
+  webrtc::H264PacketizationMode mMode;
   webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate;
   uint32_t mMinBitrateBps;
