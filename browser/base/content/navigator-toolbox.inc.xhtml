@@ -14,8 +14,8 @@
              customizable="true"
              mode="icons"
 #ifdef MENUBAR_CAN_AUTOHIDE
-             data-l10n-id="toolbar-context-menu-menu-bar-cmd"
-             data-l10n-attrs="toolbarname"
+             toolbarname="&menubarCmd.label;"
+             accesskey="&menubarCmd.accesskey;"
              autohide="true"
 #endif
              context="toolbar-context-menu">
@@ -34,7 +34,7 @@
              customizable="true"
              customizationtarget="TabsToolbar-customization-target"
              mode="icons"
-             data-l10n-id="tabs-toolbar"
+             aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              flex="1">
 
@@ -64,7 +64,7 @@
 
           <toolbarbutton id="new-tab-button"
                          class="toolbarbutton-1 chromeclass-toolbar-additional"
-                         data-l10n-id="tabs-toolbar-new-tab"
+                         label="&tabCmd.label;"
                          command="cmd_newNavigatorTab"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="dynamic-shortcut-tooltip"
@@ -78,7 +78,8 @@
                          class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button"
                          badged="true"
                          oncommand="gTabsPanel.showAllTabsPanel(event);"
-                         data-l10n-id="tabs-toolbar-list-all-tabs"
+                         label="&listAllTabs.label;"
+                         tooltiptext="&listAllTabs.label;"
                          removable="false"/>
         </hbox>
       </hbox>
@@ -86,7 +87,7 @@
       <hbox class="titlebar-spacer" type="post-tabs"/>
 
 #ifndef XP_MACOSX
-      <button class="accessibility-indicator" data-l10n-id="navbar-accessibility-indicator"
+      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
               aria-live="polite"/>
       <hbox class="private-browsing-indicator"/>
 #endif
@@ -97,7 +98,7 @@
       <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
            buttonbox from reversing order in RTL by forcing an LTR direction. -->
       <hbox id="titlebar-secondary-buttonbox" dir="ltr">
-        <button class="accessibility-indicator" data-l10n-id="navbar-accessibility-indicator" aria-live="polite"/>
+        <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;" aria-live="polite"/>
         <hbox class="private-browsing-indicator"/>
         <hbox id="titlebar-fullscreen-button"/>
       </hbox>
@@ -108,7 +109,7 @@
 
   <toolbar id="nav-bar"
            class="browser-toolbar"
-           data-l10n-id="navbar-accessible"
+           aria-label="&navbar.accessibleLabel;"
            fullscreentoolbar="true" mode="icons" customizable="true"
            customizationtarget="nav-bar-customization-target"
            overflowable="true"
@@ -390,7 +391,7 @@
                      ondrop="DownloadsIndicatorView.onDrop(event);"
                      ondragover="DownloadsIndicatorView.onDragOver(event);"
                      ondragenter="DownloadsIndicatorView.onDragOver(event);"
-                     data-l10n-id="navbar-downloads"
+                     label="&downloads.label;"
                      removable="true"
                      overflows="false"
                      cui-areatype="toolbar"
@@ -430,7 +431,7 @@
     <toolbarbutton id="nav-bar-overflow-button"
                    class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
                    skipintoolbarset="true"
-                   data-l10n-id="navbar-overflow">
+                   tooltiptext="&navbarOverflow.label;">
       <box class="toolbarbutton-animatable-box">
         <image class="toolbarbutton-animatable-image"/>
       </box>
@@ -549,6 +550,18 @@
                    oncommand="MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_BOOKMARKS_TOOLBAR]);"
                    data-l10n-id="browser-import-button2"/>
 
+    <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+#ifdef XP_MACOSX
+                   command="cmd_print"
+#else
+                   command="cmd_printPreview"
+                   print-button-title="&printButton.tooltip;"
+#endif
+                   keepbroadcastattributeswhencustomizing="true"
+                   tooltip="dynamic-shortcut-tooltip"
+                   label="&printButton.label;"/>
+
+
     <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                    data-l10n-id="appmenuitem-new-window"
                    command="cmd_newNavigator"
@@ -660,7 +673,7 @@
 
     <toolbaritem id="search-container"
                  class="chromeclass-toolbar-additional"
-                 data-l10n-id="navbar-search"
+                 title="&searchItem.title;"
                  align="center"
                  flex="175"
                  persist="width">
@@ -671,13 +684,14 @@
 
     <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                    removable="true"
-                   data-l10n-id="navbar-home"
+                   label="&homeButton.label;"
                    ondragover="homeButtonObserver.onDragOver(event)"
                    ondragenter="homeButtonObserver.onDragOver(event)"
                    ondrop="homeButtonObserver.onDrop(event)"
                    key="goHome"
                    onclick="BrowserHome(event);"
-                   cui-areatype="toolbar"/>
+                   cui-areatype="toolbar"
+                   tooltiptext="&homeButton.defaultPage.tooltip;"/>
 
     <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                    removable="true"
@@ -685,7 +699,8 @@
                    onkeypress="PanelUI.showSubView('appMenu-libraryView', this, event);"
                    closemenu="none"
                    cui-areatype="toolbar"
-                   data-l10n-id="navbar-library"/>
+                   tooltiptext="&libraryButton.tooltip;"
+                   label="&places.library.title;"/>
   </html:template>
 </toolbox>
 </box>
