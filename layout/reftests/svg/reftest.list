@@ -490,6 +490,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-3) random-if(/^Windows\x20NT\x2
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-07.svg text-layout-07-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-08.svg text-layout-08-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-09.svg pass.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-layout-10.svg pass.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-01.svg text-scale-01-ref.svg # Bug 1392106
 fuzzy-if(skiaContent,0-2,0-1000) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-02.svg text-scale-02-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-scale-03.svg text-scale-03-ref.svg # Bug 1392106

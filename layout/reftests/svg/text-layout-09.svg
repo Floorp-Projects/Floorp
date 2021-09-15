@@ -20,9 +20,11 @@
   }
   ]]></style>
   <script>
-  function cover(element) {
+  function cover(id, offset) {
+    let element = document.getElementById(id);
+    element.dy.baseVal[0].value = offset;
     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    let bbox = element.getBBox(); 
+    let bbox = element.getBBox();
     rect.x.baseVal.value = bbox.x;
     rect.y.baseVal.value = bbox.y;
     rect.width.baseVal.value = bbox.width;
@@ -37,13 +39,9 @@
     let text = 'h';
     let textMetrics = ctx.measureText(text);
 
-    let hanging = document.getElementById("hanging");
-    hanging.dy.baseVal[0].value = textMetrics.actualBoundingBoxAscent * 1.1;
-    cover(hanging);
+    cover("hanging", textMetrics.actualBoundingBoxAscent * 1.1);
 
-    let mathematical = document.getElementById("mathematical");
-    mathematical.dy.baseVal[0].value = textMetrics.actualBoundingBoxAscent / 2 * 1.4;
-    cover(mathematical);
+    cover("mathematical", textMetrics.actualBoundingBoxAscent / 2 * 1.4);
 
     document.documentElement.removeAttribute('class');
   }
