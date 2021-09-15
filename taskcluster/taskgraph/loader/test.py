@@ -117,7 +117,7 @@ def get_test_platforms(
         test_platforms[test_platform].update(cfg)
 
         if build_platform in signed_builds_by_platform:
-            # Context: Signed builds are only used by Windows
+            # Context: Signed builds are only used by Windows and macOS 11.0
             if test_platform.startswith("macosx1100"):
                 if "shippable" in test_platform:
                     test_platforms[test_platform][

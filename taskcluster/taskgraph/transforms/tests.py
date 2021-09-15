@@ -1555,6 +1555,8 @@ def handle_tier(config, tasks):
                 "macosx1015-64-qr/opt",
                 "macosx1015-64-shippable-qr/opt",
                 "macosx1015-64-qr/debug",
+                "macosx1100-64-shippable-qr/opt",
+                "macosx1100-64-qr/debug",
                 "android-em-7.0-x86_64-shippable/opt",
                 "android-em-7.0-x86_64-shippable-lite/opt",
                 "android-em-7.0-x86_64/debug",
