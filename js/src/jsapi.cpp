@@ -3687,39 +3687,24 @@ JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx) {
 }
 
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext* cx)
-    : context(cx),
-      wasPropagatingForcedReturn(cx->propagatingForcedReturn_),
-      wasOverRecursed(cx->overRecursed_),
-      wasThrowing(cx->throwing),
-      exceptionValue(cx),
-      exceptionStack(cx) {
+    : context(cx), status(cx->status), exceptionValue(cx), exceptionStack(cx) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  if (wasPropagatingForcedReturn) {
-    cx->clearPropagatingForcedReturn();
-  }
-  if (wasOverRecursed) {
-    cx->overRecursed_ = false;
-  }
-  if (wasThrowing) {
+  if (IsCatchableExceptionStatus(status)) {
     exceptionValue = cx->unwrappedException();
     exceptionStack = cx->unwrappedExceptionStack();
-    cx->clearPendingException();
   }
+  cx->clearPendingException();
 }
 
 void JS::AutoSaveExceptionState::drop() {
-  wasPropagatingForcedReturn = false;
-  wasOverRecursed = false;
-  wasThrowing = false;
+  status = JS::ExceptionStatus::None;
   exceptionValue.setUndefined();
   exceptionStack = nullptr;
 }
 
 void JS::AutoSaveExceptionState::restore() {
-  context->propagatingForcedReturn_ = wasPropagatingForcedReturn;
-  context->overRecursed_ = wasOverRecursed;
-  context->throwing = wasThrowing;
+  context->status = status;
   context->unwrappedException() = exceptionValue;
   if (exceptionStack) {
     context->unwrappedExceptionStack() = &exceptionStack->as<SavedFrame>();
@@ -3728,13 +3713,14 @@ void JS::AutoSaveExceptionState::restore() {
 }
 
 JS::AutoSaveExceptionState::~AutoSaveExceptionState() {
+  // NOTE: An interrupt/uncatchable exception or a debugger-forced-return may be
+  //       clobbered here by the saved exception. If that is not desired, this
+  //       state should be dropped before the destructor fires.
   if (!context->isExceptionPending()) {
-    if (wasPropagatingForcedReturn) {
-      context->setPropagatingForcedReturn();
+    if (status != JS::ExceptionStatus::None) {
+      context->status = status;
     }
-    if (wasThrowing) {
-      context->overRecursed_ = wasOverRecursed;
-      context->throwing = true;
+    if (IsCatchableExceptionStatus(status)) {
       context->unwrappedException() = exceptionValue;
       if (exceptionStack) {
         context->unwrappedExceptionStack() = &exceptionStack->as<SavedFrame>();
