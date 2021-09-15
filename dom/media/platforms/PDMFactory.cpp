@@ -104,7 +104,12 @@ class PDMInitializer final {
   static void InitContentPDMs() {
 #ifdef XP_WIN
     if (!IsWin7AndPre2000Compatible()) {
-      WMFDecoderModule::Init();
+#  ifdef MOZ_WMF
+      if (!StaticPrefs::media_rdd_process_enabled() ||
+          !StaticPrefs::media_rdd_wmf_enabled()) {
+        WMFDecoderModule::Init();
+      }
+#  endif
     }
 #endif
 #ifdef MOZ_APPLEMEDIA
@@ -509,9 +514,14 @@ void PDMFactory::CreateContentPDMs() {
 
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
-    if (!CreateAndStartupPDM<WMFDecoderModule>()) {
-      mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+#  ifdef MOZ_WMF
+    if (!StaticPrefs::media_rdd_process_enabled() ||
+        !StaticPrefs::media_rdd_wmf_enabled()) {
+      if (!CreateAndStartupPDM<WMFDecoderModule>()) {
+        mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+      }
     }
+#  endif
   } else if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
     mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
   }
