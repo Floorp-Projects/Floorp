@@ -252,6 +252,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   nsINode* GetOwnerNode() const { return mOwningNode; }
 
+  nsINode* GetOwnerNodeOfOutermostSheet() const {
+    return OutermostSheet().GetOwnerNode();
+  }
+
   StyleSheet* GetParentSheet() const { return mParentSheet; }
 
   void AddReferencingRule(dom::CSSImportRule& aRule) {

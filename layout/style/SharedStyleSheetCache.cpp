@@ -335,9 +335,6 @@ void SharedStyleSheetCache::LoadCompletedInternal(
     data->mSheetCompleteCalled = true;
 #endif
 
-    // We no longer need this around.
-    data->mRequestingNodeBeforeComplete = nullptr;
-
     if (!data->mSheetAlreadyComplete) {
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet
