@@ -728,7 +728,7 @@ static void Deallocate(BaseCompiler* bc, RegI64 temp) {
   bc->freeI32(bc->specific_.ecx);
 }
 
-#elif defined(__wasi__)
+#elif defined(__wasi__) || (defined(JS_CODEGEN_NONE) && !defined(JS_64BIT))
 
 static void Allocate(BaseCompiler*, RegI64*, RegI64*) {}
 static void Deallocate(BaseCompiler*, RegI64) {}
