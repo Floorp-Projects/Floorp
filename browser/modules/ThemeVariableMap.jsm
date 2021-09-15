@@ -185,6 +185,7 @@ const ThemeVariableMap = [
 
 const ThemeContentPropertyList = [
   "ntp_background",
+  "ntp_card_background",
   "ntp_text",
   "sidebar",
   "sidebar_highlight",
