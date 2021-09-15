@@ -176,10 +176,7 @@ mochitest-browser-chrome:
                 by-test-platform:
                     linux.*64-qr/debug: 1
                     default: 2
-            default:
-                by-test-platform:
-                    macosx1100.*: 2
-                    default: default
+            default: default
     chunks:
         by-test-platform:
             linux.*-qr/debug: 16
@@ -525,7 +522,6 @@ mochitest-media:
                     android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     windows10-aarch64-qr.*: 2
                     android-hw.*: 1
-                    macosx1100.*: 2
                     default: default
 
 mochitest-media-failures:
@@ -638,10 +634,6 @@ mochitest-webgl1-core:
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
-    tier:
-        by-test-platform:
-            macosx1100.*: 2
-            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -678,10 +670,6 @@ mochitest-webgl1-ext:
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
-    tier:
-        by-test-platform:
-            macosx1100.*: 2
-            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -717,10 +705,6 @@ mochitest-webgl2-core:
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
             default: built-projects
-    tier:
-        by-test-platform:
-            macosx1100.*: 2
-            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -745,10 +729,6 @@ mochitest-webgl2-ext:
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     max-run-time: 2700
-    tier:
-        by-test-platform:
-            macosx1100.*: 2
-            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -773,10 +753,6 @@ mochitest-webgl2-deqp:
     e10s: true
     loopback-video: true
     max-run-time: 1800
-    tier:
-        by-test-platform:
-            macosx1100.*: 2
-            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
