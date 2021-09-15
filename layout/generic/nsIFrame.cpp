@@ -8937,6 +8937,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       return NS_ERROR_FAILURE;
     }
   }
+  return NS_OK;
 }
 
 nsIFrame::FrameSearchResult nsIFrame::PeekOffsetNoAmount(bool aForward,

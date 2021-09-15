@@ -11,7 +11,6 @@
 
 #include "nsAbsoluteContainingBlock.h"
 
-#include "nsAtomicContainerFrame.h"
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "mozilla/CSSAlignUtils.h"

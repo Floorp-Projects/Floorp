@@ -12,8 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 
-class nsCSSBorderRenderer;
-
 /**
  * nsColumnSetFrame implements CSS multi-column layout.
  * @note nsColumnSetFrame keeps true overflow containers in the normal flow

@@ -14,8 +14,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
 #include "nsCSSRendering.h"
-#include "nsDisplayList.h"
-#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
