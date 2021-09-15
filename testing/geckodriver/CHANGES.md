@@ -3,12 +3,83 @@ Change log
 
 All notable changes to this program are documented in this file.
 
-0.29.1  (2021-04-09), `970ef713fe58`)
+0.30.0  (2021-09-15)
+--------------------
+
+### Known problems
+
+- _macOS 10.15 (Catalina) and later:_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
+
+- _Android:_
+
+  For releases of Firefox 89.0 and earlier Marionette will only be enabled in
+  GeckoView based applications when the Firefox preference
+  `devtools.debugger.remote-enabled` is set to `true` via [`moz:firefoxOptions`].
+
+### Added
+
+- Support for WebDriver clients to opt in to WebDriver BiDi.
+
+  Introduced the new boolean capability [`webSocketUrl`] that can be used by
+  WebDriver clients to opt in to a bidirectional connection. A string capability
+  with the same name will be returned by [`NewSession`], which contains the
+  WebSocket URL of the newly created WebDriver session in the form of:
+  `ws://host:port/session/<session id>`.
+
+  When running on Android a port forward will be set on the host machine,
+  which is using the exact same port as on the device.
+
+  All the supported WebDriver BiDi commands depend on the version of
+  Firefox, and not geckodriver. The first commands will be shipped in
+  Firefox 94.
+
+- It's now possible to set additional preferences when a custom profile has been
+  specified. At the end of the session they will be removed.
+
+### Fixed
+
+- Improved Host header checks to reject requests not sent to a well-known
+  local hostname or IP, or the server-specified hostname.
+
+- Added validation that the `--host` argument resolves to a local IP address.
+
+- Limit the `--foreground` argument of Firefox to MacOS only.
+
+- Increased Marionette handshake timeout to not fail for slow connections.
+
+- `Marionette:Quit` is no longer sent twice during session deletion.
+
+- When deleting a session that was attached to an already running browser
+  instance, the browser is not getting closed anymore.
+
+- Android
+
+  - Starting Firefox on Android from a Windows based host will now succeed as
+    we are using the correct Unix path separator to construct on-device paths.
+
+  - Arguments as specified in [`moz:firefoxOptions`] are now used when starting
+    Firefox.
+
+  - Port forwards set for Marionette and the WebSocket server (WebDriver BiDi)
+    are now correctly removed when geckodriver exits.
+
+  - The test root folder is now removed when geckodriver exists.
+
+
+0.29.1  (2021-04-09, `970ef713fe58`)
 -------------------------------------
 
 ### Known problems
 
-- _macOS 10.15 (Catalina):_
+- _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
   notarized, geckodriver will not work on Catalina if you manually
@@ -21,7 +92,7 @@ All notable changes to this program are documented in this file.
 - _Android:_
 
   Marionette will only be enabled in GeckoView based applications when the
-  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  Firefox preference `devtools.debugger.remote-enabled` is set to `true` via
   [`moz:firefoxOptions`]. This will be fixed in the Firefox 90 release for
   Android.
 
@@ -58,7 +129,7 @@ All notable changes to this program are documented in this file.
 
 ### Known problems
 
-- _macOS 10.15 (Catalina):_
+- _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
   notarized, geckodriver will not work on Catalina if you manually
@@ -71,7 +142,7 @@ All notable changes to this program are documented in this file.
 - _Android:_
 
   Marionette will only be enabled in GeckoView based applications when the
-  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  Firefox preference `devtools.debugger.remote-enabled` is set to `true` via
   [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
   for Android releases.
 
@@ -84,7 +155,7 @@ All notable changes to this program are documented in this file.
 
 ### Added
 
-- Introduced the new boolean capability `moz:debuggerAddress` that can be used
+- Introduced the new boolean capability [`moz:debuggerAddress`] that can be used
   to opt-in to the experimental Chrome DevTools Protocol (CDP) implementation.
   A string capability with the same name will be returned by [`NewSession`],
   which contains the `host:port` combination of the HTTP server that can be
@@ -98,7 +169,7 @@ All notable changes to this program are documented in this file.
 
 ### Known problems
 
-- _macOS 10.15 (Catalina):_
+- _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
   notarized, geckodriver will not work on Catalina if you manually
@@ -111,7 +182,7 @@ All notable changes to this program are documented in this file.
 - _Android:_
 
   Marionette will only be enabled in GeckoView based applications when the
-  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  Firefox preference `devtools.debugger.remote-enabled` is set to `true` via
   [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
   for Android releases.
 
@@ -160,7 +231,7 @@ All notable changes to this program are documented in this file.
 
 ### Known problems
 
-- _macOS 10.15 (Catalina):_
+- _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
   notarized, geckodriver will not work on Catalina if you manually
@@ -173,7 +244,7 @@ All notable changes to this program are documented in this file.
 - _Android:_
 
   Marionette will only be enabled in GeckoView based applications when the
-  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  Firefox preference `devtools.debugger.remote-enabled` is set to `true` via
   [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
   for Android releases.
 
@@ -221,7 +292,7 @@ has changed to Firefox ≥60.
 
 ### Known problems
 
-- _macOS 10.15 (Catalina):_
+- _macOS 10.15 (Catalina) and later:_
 
   Due to the recent requirement from Apple that all programs must
   be notarized, geckodriver will not work on Catalina if you manually
@@ -240,7 +311,7 @@ has changed to Firefox ≥60.
 - _Android:_
 
   Marionette will only be enabled in GeckoView based applications when the
-  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  Firefox preference `devtools.debugger.remote-enabled` is set to `true` via
   [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
   for Android releases.
 
@@ -1490,6 +1561,7 @@ and greater.
 [README]: https://github.com/mozilla/geckodriver/blob/master/README.md
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 [WebDriver conformance]: https://wpt.fyi/results/webdriver/tests?label=experimental
+[`webSocketUrl`]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/webSocketUrl
 [`moz:firefoxOptions`]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions
 [`moz:debuggerAddress`]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html#moz-debuggeraddress
 [Microsoft Visual Studio redistributable runtime]: https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
