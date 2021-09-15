@@ -25,16 +25,20 @@
   <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
   <div xmlns="http://www.w3.org/1999/xhtml">
     <div id="infoContainer">
-      <div id="notNowLinkContainer"><a id="onboardingNotNow">Not now</a></div>
+      <div id="notNowLinkContainer"><a id="onboardingNotNow" tabindex="4">Not now</a></div>
       <xul:image id="infoIcon"/>
       <h2 id="infoTitle">Say hello to smarter suggestions</h2>
-      <xul:description id="infoBody">Firefox Suggest uses your city location and search keywords to make contextual suggestions from Firefox and partners, while keeping your privacy in mind. <a id="onboardingLearnMore">Learn more</a></xul:description>
+      <xul:description id="infoBody" tabindex="-1">Firefox Suggest uses your city location and search keywords to make contextual suggestions from Firefox and partners, while keeping your privacy in mind. <a id="onboardingLearnMore" tabindex="3">Learn more</a></xul:description>
       <div id="illustration"/>
       <div id="infoButtons">
-        <xul:button dlgtype="accept"
-                    label="Allow suggestions"/>
-        <xul:button dlgtype="extra1"
-                    label="Customize in settings"/>
+        <xul:button id="onboardingAcceptButton"
+                    dlgtype="accept"
+                    label="Allow suggestions"
+                    tabindex="1"/>
+        <xul:button id="onboardingSettingsButton"
+                    dlgtype="extra1"
+                    label="Customize in settings"
+                    tabindex="2"/>
       </div>
     </div>
   </div>
