@@ -9259,6 +9259,14 @@
   value: false
   mirror: always
 
+# This pref will still treat localhost URLs as secure even when hijacked
+# during testing. This is necessary for automated testing to check that we
+# actually treat localhost as a secure origin.
+- name: network.proxy.testing_localhost_is_secure_when_hijacked
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Allow CookieJarSettings to be unblocked for channels without a document.
 # This is for testing only.
 - name: network.cookieJarSettings.unblocked_for_testing

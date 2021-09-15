@@ -1644,7 +1644,9 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
 
   // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
   // connection from ws:// to wss:// and mark it as secure.
-  if (!mIsServerSide && !mSecure && originDoc) {
+  if (!mIsServerSide && !mSecure && originDoc &&
+      !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(
+          originDoc->GetDocumentURI())) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1669,7 +1671,9 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   // to wss: before performing content policy checks because CSP needs to
   // send reports in case the scheme is about to be upgraded.
   if (!mIsServerSide && !mSecure && originDoc &&
-      originDoc->GetUpgradeInsecureRequests(false)) {
+      originDoc->GetUpgradeInsecureRequests(false) &&
+      !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(
+          originDoc->GetDocumentURI())) {
     // let's use the old specification before the upgrade for logging
     AutoTArray<nsString, 2> params;
     CopyUTF8toUTF16(mURI, *params.AppendElement());
