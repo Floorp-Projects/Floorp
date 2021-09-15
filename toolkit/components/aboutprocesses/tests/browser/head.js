@@ -323,17 +323,9 @@ async function testMemory(element, total, delta, assumptions) {
 
 function extractProcessDetails(row) {
   let children = row.children;
-  let name = children[0];
   let memory = children[1];
   let cpu = children[2];
-  if (Services.prefs.getBoolPref("toolkit.aboutProcesses.showProfilerIcons")) {
-    name = name.firstChild;
-    Assert.ok(
-      name.nextSibling.classList.contains("profiler-icon"),
-      "The profiler icon should be shown"
-    );
-  }
-  let fluentArgs = document.l10n.getAttributes(name).args;
+  let fluentArgs = document.l10n.getAttributes(children[0]).args;
   let threadDetailsRow = row.nextSibling;
   while (threadDetailsRow) {
     if (threadDetailsRow.classList.contains("process")) {
@@ -642,21 +634,16 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         number,
         "The number of active threads should not exceed the total number of threads"
       );
-      let activeThreads = row.process.threads.filter(t => t.slopeCpu);
       Assert.equal(
         active,
-        activeThreads.length,
+        row.process.threads.filter(t => t.slopeCpu).length,
         "The displayed number of active threads should be correct"
       );
 
-      let activeSet = new Set();
-      for (let t of activeThreads) {
-        activeSet.add(t.name.replace(/ ?#[0-9]+$/, ""));
-      }
       info("Sanity checks: thread list");
       Assert.equal(
         list ? list.split(", ").length : 0,
-        activeSet.size,
+        active,
         "The thread summary list of active threads should have the expected length"
       );
 
