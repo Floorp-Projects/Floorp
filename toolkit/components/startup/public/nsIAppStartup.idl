@@ -152,6 +152,47 @@ interface nsIAppStartup : nsISupports
     bool quit(in uint32_t aMode, [optional] in int32_t aExitCode);
 
     /**
+    * These values must match the xpcom/base/ShutdownPhase.h values.
+    * We do not expose late XPCOM shutdown phases here, everything
+    * after SHUTDOWN_PHASE_XPCOMSHUTDOWN is expected to be irrelevant 
+    * for JS.
+    */
+    cenum IDLShutdownPhase : 8 {
+        SHUTDOWN_PHASE_NOTINSHUTDOWN = 0,
+        SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED,
+        SHUTDOWN_PHASE_APPSHUTDOWNNETTEARDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWNTEARDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWN,
+        SHUTDOWN_PHASE_APPSHUTDOWNQM,
+        SHUTDOWN_PHASE_APPSHUTDOWNRELEMETRY,
+        SHUTDOWN_PHASE_XPCOMWILLSHUTDOWN,
+        SHUTDOWN_PHASE_XPCOMSHUTDOWN
+    };
+
+    /**
+     * Wrapper for shutdown notifications that informs the terminator before
+     * we notify other observers. Calls MaybeFastShutdown.
+     * This function is supposed to be used only from some (xpcshell) tests
+     * explicitely dealing with shutdown.
+     * 
+     * @param aPhase
+     *        The shutdown phase we want to advance to. Please note, that
+     *        we cannot go back to earlier phases or abort shutdown once
+     *        it started.
+     */
+    void advanceShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
+
+    /**
+     * Check if we entered or passed a specific shutdown phase.
+     * 
+     * @param aPhase
+     *        The shutdown phase we want to check. 
+     *
+     * @return true if we are in or beyond the given phase.
+     */
+    bool isInOrBeyondShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
+
+    /**
      * True if the application is in the process of shutting down.
      */
     [infallible] readonly attribute boolean shuttingDown;

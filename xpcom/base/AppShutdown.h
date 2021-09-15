@@ -21,6 +21,7 @@ class AppShutdown {
  public:
   static bool IsShuttingDown();
   static ShutdownPhase GetCurrentShutdownPhase();
+  static bool IsInOrBeyond(ShutdownPhase aPhase);
 
   /**
    * Returns the current exit code that the process will be terminated with.
@@ -89,9 +90,23 @@ class AppShutdown {
   static void MaybeFastShutdown(ShutdownPhase aPhase);
 
   /**
-   * Map shutdown phases to observer keys
+   * Map shutdown phase to observer key
    */
   static const char* GetObserverKey(ShutdownPhase aPhase);
+
+  /**
+   * Map observer topic key to shutdown phase
+   */
+  static ShutdownPhase GetShutdownPhaseFromTopic(const char* aTopic);
+
+#ifdef DEBUG
+  /**
+   * Check, if we are allowed to send a shutdown notification.
+   * Shutdown specific topics are only allowed during calls to
+   * AdvanceShutdownPhase itself.
+   */
+  static bool IsNoOrLegalShutdownTopic(const char* aTopic);
+#endif
 };
 
 }  // namespace mozilla

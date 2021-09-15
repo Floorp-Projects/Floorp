@@ -17,6 +17,7 @@
 #include "nsThreadUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "xpcpublic.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -275,6 +276,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   if (NS_WARN_IF(!aTopic)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  MOZ_ASSERT(AppShutdown::IsNoOrLegalShutdownTopic(aTopic));
 
   mozilla::TimeStamp start = TimeStamp::Now();
 
