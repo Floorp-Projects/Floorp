@@ -319,6 +319,8 @@ ToolSidebar.prototype = {
 
     this._toolPanel.emit("sidebar-destroyed", this);
 
+    this.ReactDOM.unmountComponentAtNode(this._tabbox);
+
     this._tabs = null;
     this._tabbox = null;
     this._telemetry = null;
