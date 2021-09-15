@@ -24,6 +24,11 @@ interface FuzzingFunctions {
   static void garbageCollectCompacting();
 
   /**
+   * Trigger a forced crash.
+   */
+  static void crash(optional DOMString reason = "");
+
+  /**
    * Synchronously perform a cycle collection.
    */
   static void cycleCollect();
