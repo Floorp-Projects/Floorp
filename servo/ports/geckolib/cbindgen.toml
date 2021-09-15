@@ -473,8 +473,8 @@ renaming_overrides_prefixing = true
   inline bool IsRight() const;
 """
 
-# TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE
-# or [[nodiscard]] on the functions.
+# TODO(emilio): Add hooks to cbindgen to be able to generate [[nodiscard]]
+# on the functions.
 "Owned" = """
   UniquePtr<GeckoType> Consume() {
     UniquePtr<GeckoType> ret(ptr);

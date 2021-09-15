@@ -290,7 +290,7 @@ to OOM).
 The ``must_use`` property is useful if the result of a method call or an
 attribute get/set should always (or usually) be checked, which is frequently
 the case.  (e.g. a method that opens a file should almost certainly have its
-result checked.) This property will cause ``MOZ_MUST_USE`` to be added to the
+result checked.) This property will cause ``[[nodiscard]]`` to be added to the
 generated function declarations, which means certain compilers (e.g. clang and
 GCC) will reports errors if these results are not used.
 
