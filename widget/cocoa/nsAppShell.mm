@@ -470,6 +470,30 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
                                            data1:0
                                            data2:0]
              atStart:NO];
+    // Previously we used to send this second event regardless of
+    // self->mRunningEventLoop. However, that was removed in bug 1690687 for
+    // performance reasons. It is still needed for the mRunningEventLoop case
+    // otherwise we'll get in a cycle of sending postEvent followed by the
+    // DummyEvent inserted by nsBaseAppShell::OnProcessNextEvent. This second
+    // event will cause the second call to AcquireFirstMatchingEventInQueue in
+    // nsAppShell::ProcessNextNativeEvent to return true. Which makes
+    // nsBaseAppShell::OnProcessNextEvent call nsAppShell::ProcessNextNativeEvent
+    // again during which it will loop until it sleeps because ProcessGeckoEvents()
+    // won't be called for the DummyEvent.
+    //
+    // This is not a good approach and we should fix things up so that only
+    // one postEvent is needed.
+    [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                                        location:NSMakePoint(0, 0)
+                                   modifierFlags:0
+                                       timestamp:0
+                                    windowNumber:0
+                                         context:NULL
+                                         subtype:kEventSubtypeNone
+                                           data1:0
+                                           data2:0]
+             atStart:NO];
+
   }
 
   if (self->mSuspendNativeCount <= 0) {
