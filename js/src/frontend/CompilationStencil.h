@@ -333,7 +333,7 @@ struct CompilationInput {
 
   // When compiling a lazy function, this is needed to initialize the
   // FunctionBox as well as the CompilationState.
-  JSFunction* function() { return lazy_->function(); }
+  JSFunction* function() const { return lazy_->function(); }
 
   // When compiling an inner function, we want to know the unique identifier
   // which identify a function. This is computed from the source extend.
@@ -345,6 +345,11 @@ struct CompilationInput {
   }
 
   RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
+
+  FunctionFlags functionFlags() const { return function()->flags(); }
+
+  // When delazifying, return the kind of function which is defined.
+  FunctionSyntaxKind functionSyntaxKind() const;
 
   bool hasPrivateScriptData() const {
     // This is equivalent to: ngcthings != 0 || useMemberInitializers()
@@ -397,6 +402,13 @@ class CompilationSyntaxParseCache {
   // CompilationState.
   mozilla::Span<TaggedParserAtomIndex> closedOverBindings_;
 
+  // Atom of the function being compiled. This atom index is valid in the
+  // current CompilationState.
+  TaggedParserAtomIndex displayAtom_;
+
+  // Stencil-like data about the function which is being compiled.
+  ScriptStencilExtra funExtra_;
+
 #ifdef DEBUG
   // Whether any of these data should be considered or not.
   bool isInitialized = false;
@@ -416,6 +428,18 @@ class CompilationSyntaxParseCache {
   }
   const ScriptStencilExtra& scriptExtra(size_t functionIndex) const {
     return cachedScriptExtra_[scriptIndex(functionIndex)];
+  }
+
+  // Return the name of the function being delazified, if any.
+  TaggedParserAtomIndex displayAtom() const {
+    MOZ_ASSERT(isInitialized);
+    return displayAtom_;
+  }
+
+  // Return the extra information about the function being delazified, if any.
+  const ScriptStencilExtra& funExtra() const {
+    MOZ_ASSERT(isInitialized);
+    return funExtra_;
   }
 
   // Initialize the SynaxParse cache given a LifoAlloc. The JSContext is only
@@ -439,6 +463,10 @@ class CompilationSyntaxParseCache {
     return taggedScriptIndex.toFunction();
   }
 
+  [[nodiscard]] bool copyFunctionInfo(JSContext* cx,
+                                      ParserAtomsTable& parseAtoms,
+                                      CompilationAtomCache& atomCache,
+                                      BaseScript* lazy);
   [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,

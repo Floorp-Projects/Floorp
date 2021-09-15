@@ -641,6 +641,33 @@ bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
   return true;
 }
 
+FunctionSyntaxKind CompilationInput::functionSyntaxKind() const {
+  if (functionFlags().isClassConstructor()) {
+    if (functionFlags().hasBaseScript() && isDerivedClassConstructor()) {
+      return FunctionSyntaxKind::DerivedClassConstructor;
+    }
+    return FunctionSyntaxKind::ClassConstructor;
+  }
+  if (functionFlags().isMethod()) {
+    if (functionFlags().hasBaseScript() && isSyntheticFunction()) {
+      // return FunctionSyntaxKind::FieldInitializer;
+      MOZ_ASSERT_UNREACHABLE(
+          "Lazy parsing of class field initializers not supported (yet)");
+    }
+    return FunctionSyntaxKind::Method;
+  }
+  if (functionFlags().isGetter()) {
+    return FunctionSyntaxKind::Getter;
+  }
+  if (functionFlags().isSetter()) {
+    return FunctionSyntaxKind::Setter;
+  }
+  if (functionFlags().isArrow()) {
+    return FunctionSyntaxKind::Arrow;
+  }
+  return FunctionSyntaxKind::Statement;
+}
+
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");
@@ -651,6 +678,9 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
                                        ParserAtomsTable& parseAtoms,
                                        CompilationAtomCache& atomCache,
                                        BaseScript* lazy) {
+  if (!copyFunctionInfo(cx, parseAtoms, atomCache, lazy)) {
+    return false;
+  }
   if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, lazy)) {
     return false;
   }
@@ -660,6 +690,27 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
 #ifdef DEBUG
   isInitialized = true;
 #endif
+  return true;
+}
+
+bool CompilationSyntaxParseCache::copyFunctionInfo(
+    JSContext* cx, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, BaseScript* lazy) {
+  if (lazy->function()->displayAtom()) {
+    displayAtom_ =
+        parseAtoms.internJSAtom(cx, atomCache, lazy->function()->displayAtom());
+    if (!displayAtom_) {
+      return false;
+    }
+  }
+
+  funExtra_.immutableFlags = lazy->immutableFlags();
+  funExtra_.extent = lazy->extent();
+  if (funExtra_.useMemberInitializers()) {
+    funExtra_.setMemberInitializers(
+        lazy->function()->baseScript()->getMemberInitializers());
+  }
+
   return true;
 }
 
