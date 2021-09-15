@@ -548,7 +548,6 @@ class FloatRegisters {
 };
 
 static const uint32_t ShadowStackSpace = 0;
-static const uint32_t SizeOfReturnAddressAfterCall = 0u;
 
 // When our only strategy for far jumps is to encode the offset directly, and
 // not insert any jump islands during assembly for even further jumps, then the
