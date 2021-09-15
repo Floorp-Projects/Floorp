@@ -1,0 +1,34 @@
+The `_` environment variable is a variable that is set by bash and some other
+shells to point to the executable they use when executing a command. That is,
+when executing `foo` from the command line, the shell sets `_` to
+`/usr/bin/foo` (assuming that's where foo is).
+
+However, nothing else does the same, so when e.g. a python program uses
+`subprocess.Popen` to run another program, it doesn't set `_`. Worse, if that
+python program itself was invoked from a shell, `_` would be set to e.g.
+`/usr/bin/python3`.
+
+So when nsis is invoked from a program that is not a shell, but the process
+ancestry has a process that was a shell, `_` may be set to the first
+intermediary program rather than nsis, which defeats nsis's assumption that `_`
+would contain the nsis path. Ironically, nsis also has more reliable fallbacks
+(using e.g.  /proc/self/exe), but somehow prefers `_`.
+
+We remove the reliance of `_` entirely, for simplicity's sake.
+
+
+diff -ruN nsis-3.07-src.orig/Source/util.cpp nsis-3.07-src/Source/util.cpp
+--- nsis-3.07-src.orig/Source/util.cpp	2021-09-02 09:25:48.489016918 +0900
++++ nsis-3.07-src/Source/util.cpp	2021-09-02 09:26:21.158814484 +0900
+@@ -810,10 +810,7 @@
+   assert(rc == 0);
+   return tstring(CtoTString(temp_buf));
+ #else /* Linux/BSD/POSIX/etc */
+-  const TCHAR *envpath = _tgetenv(_T("_"));
+-  if (envpath)
+-    return get_full_path(envpath);
+-  else {
++  {
+     char *path = NULL, *pathtmp;
+     size_t len = 100;
+     int nchars;
