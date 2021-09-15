@@ -1839,6 +1839,12 @@ var CustomizableUIInternal = {
       if (aWidget.locationSpecific) {
         node.setAttribute("locationspecific", aWidget.locationSpecific);
       }
+      if (aWidget.keepBroadcastAttributesWhenCustomizing) {
+        node.setAttribute(
+          "keepbroadcastattributeswhencustomizing",
+          aWidget.keepBroadcastAttributesWhenCustomizing
+        );
+      }
 
       let shortcut;
       if (aWidget.shortcutId) {
@@ -2895,6 +2901,7 @@ var CustomizableUIInternal = {
       l10nId: null,
       showInPrivateBrowsing: true,
       _introducedInVersion: -1,
+      keepBroadcastAttributesWhenCustomizing: false,
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -2936,6 +2943,7 @@ var CustomizableUIInternal = {
       "tabSpecific",
       "locationSpecific",
       "localized",
+      "keepBroadcastAttributesWhenCustomizing",
     ];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
