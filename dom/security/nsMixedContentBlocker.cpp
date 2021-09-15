@@ -248,6 +248,9 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
 }
 
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
+  if (!aURL) {
+    return false;
+  }
   nsAutoCString asciiHost;
   nsresult rv = aURL->GetAsciiHost(asciiHost);
   NS_ENSURE_SUCCESS(rv, false);
