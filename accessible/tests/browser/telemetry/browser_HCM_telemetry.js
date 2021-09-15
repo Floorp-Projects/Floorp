@@ -96,10 +96,6 @@ add_task(async function testInit() {
   const dialogWin = await openColorsDialog();
   const menulistHCM = dialogWin.document.getElementById("useDocumentColors");
   if (AppConstants.platform == "win") {
-    ok(
-      Services.prefs.getBoolPref("browser.display.use_system_colors"),
-      "Use system colors is on by default on windows"
-    );
     is(
       menulistHCM.value,
       "0",
@@ -114,11 +110,6 @@ add_task(async function testInit() {
       false
     );
   } else {
-    ok(
-      !Services.prefs.getBoolPref("browser.display.use_system_colors"),
-      "Use system colors is off by default on non-windows platforms"
-    );
-
     is(
       menulistHCM.value,
       "1",
