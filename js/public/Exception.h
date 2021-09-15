@@ -69,6 +69,7 @@ enum class ExceptionStatus {
   // Throwing a (catchable) exception. Certain well-known exceptions are
   // explicitly tracked for convenience.
   Throwing,
+  OutOfMemory,
   OverRecursed,
 };
 
