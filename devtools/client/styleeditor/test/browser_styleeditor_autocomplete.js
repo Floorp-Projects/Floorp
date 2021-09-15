@@ -46,10 +46,14 @@ function getTestCases(cssProperties) {
       { total: getSuggestionNumberFor("ba"), current: 0, inserted: 1 },
     ],
     [
-      "VK_TAB",
+      "VK_DOWN",
       { total: getSuggestionNumberFor("ba"), current: 1, inserted: 1 },
     ],
-    ["VK_RETURN", { current: 1, inserted: 1, entered: 1 }],
+    [
+      "VK_TAB",
+      { total: getSuggestionNumberFor("ba"), current: 2, inserted: 1 },
+    ],
+    ["VK_RETURN", { current: 2, inserted: 1, entered: 1 }],
     ["b", { total: getSuggestionNumberFor("background", "b"), current: 0 }],
     ["l", { total: getSuggestionNumberFor("background", "bl"), current: 0 }],
     [
