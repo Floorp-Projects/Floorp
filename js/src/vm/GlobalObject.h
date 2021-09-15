@@ -1089,6 +1089,10 @@ class GlobalObject : public NativeObject {
   static Shape* createFunctionShapeWithDefaultProto(JSContext* cx,
                                                     bool extended);
 
+  PropertyIteratorObject* maybeEmptyIterator() const {
+    return data().emptyIterator;
+  }
+
   static PropertyIteratorObject* getOrCreateEmptyIterator(JSContext* cx);
 
   // Returns an object that represents the realm, used by embedder.
