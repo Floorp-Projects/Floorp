@@ -944,7 +944,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * |frame|. |global| is |frame|'s global object; if nullptr or omitted, we
    * compute it ourselves from |frame|.
    */
-  using DebuggerFrameVector = GCVector<DebuggerFrame*>;
+  using DebuggerFrameVector = GCVector<DebuggerFrame*, 0, SystemAllocPolicy>;
   [[nodiscard]] static bool getDebuggerFrames(
       AbstractFramePtr frame, MutableHandle<DebuggerFrameVector> frames);
 
