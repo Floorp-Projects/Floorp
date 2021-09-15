@@ -7,7 +7,7 @@
 #include "TextureHost.h"
 
 #include "CompositableHost.h"  // for CompositableHost
-#include "mozilla/gfx/2D.h"  // for DataSourceSurface, Factory
+#include "mozilla/gfx/2D.h"    // for DataSourceSurface, Factory
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Shmem.h"  // for Shmem
 #include "mozilla/layers/AsyncImagePipelineManager.h"
@@ -53,7 +53,6 @@
 
 #ifdef XP_WIN
 #  include "mozilla/layers/TextureD3D11.h"
-#  include "mozilla/layers/TextureDIB.h"
 #endif
 
 #if 0
@@ -190,8 +189,6 @@ already_AddRefed<TextureHost> TextureHost::Create(
 
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer:
-    case SurfaceDescriptor::TSurfaceDescriptorDIB:
-    case SurfaceDescriptor::TSurfaceDescriptorFileMapping:
     case SurfaceDescriptor::TSurfaceDescriptorGPUVideo:
       result = CreateBackendIndependentTextureHost(aDesc, aDeallocator,
                                                    aBackend, aFlags);
@@ -334,23 +331,6 @@ already_AddRefed<TextureHost> CreateBackendIndependentTextureHost(
           aFlags, aDesc.get_SurfaceDescriptorGPUVideo());
       break;
     }
-#ifdef XP_WIN
-    case SurfaceDescriptor::TSurfaceDescriptorDIB: {
-      if (!aDeallocator->IsSameProcess()) {
-        NS_ERROR(
-            "A client process is trying to peek at our address space using a "
-            "DIBTexture!");
-        return nullptr;
-      }
-
-      result = new DIBTextureHost(aFlags, aDesc);
-      break;
-    }
-    case SurfaceDescriptor::TSurfaceDescriptorFileMapping: {
-      result = new TextureHostFileMapping(aFlags, aDesc);
-      break;
-    }
-#endif
     default: {
       NS_WARNING("No backend independent TextureHost for this descriptor type");
     }
