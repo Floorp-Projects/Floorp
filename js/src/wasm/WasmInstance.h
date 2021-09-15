@@ -66,8 +66,6 @@ class Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
-  void* checkedCallEntry(const Tier tier, const uint32_t functionIndex) const;
-  void* checkedCallEntryForWasmImportedFunction(JSFunction* fun) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -99,8 +97,6 @@ class Instance {
   uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
-
-  Instance* getOriginalInstanceAndFunction(uint32_t funcIdx, JSFunction** fun);
 
   JS::Realm* realm() const { return realm_; }
   const Code& code() const { return *code_; }
@@ -176,16 +172,6 @@ class Instance {
   [[nodiscard]] bool initElems(uint32_t tableIndex, const ElemSegment& seg,
                                uint32_t dstOffset, uint32_t srcOffset,
                                uint32_t len);
-
-  void* getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData) const;
-  void* createIndirectStub(uint32_t funcIndex, TlsData* targetTlsData);
-  bool createManyIndirectStubs(const VectorOfIndirectStubTarget& targets,
-                               const Tier tier);
-  bool ensureIndirectStubs(const Uint32Vector& elemFuncIndices,
-                           uint32_t srcOffset, uint32_t len, const Tier tier,
-                           const bool tableIsImportedOrExported);
-  bool ensureIndirectStub(FuncRef* ref, const Tier tier,
-                          const bool tableIsImportedOrExported);
 
   // Debugger support:
 
