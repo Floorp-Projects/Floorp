@@ -58,13 +58,13 @@ class SheetLoadData final : public PreloaderBase,
                 IsAlternate aIsAlternate, MediaMatched aMediaMatched,
                 StylePreloadKind aPreloadKind, nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
+                nsIReferrerInfo* aReferrerInfo);
 
   // Data for loading a sheet linked from an @import rule
   SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                 SheetLoadData* aParentData, nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
+                nsIReferrerInfo* aReferrerInfo);
 
   // Data for loading a non-document sheet
   SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
@@ -72,7 +72,7 @@ class SheetLoadData final : public PreloaderBase,
                 const Encoding* aPreloadEncoding,
                 nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
+                nsIReferrerInfo* aReferrerInfo);
 
   nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
 
@@ -209,11 +209,7 @@ class SheetLoadData final : public PreloaderBase,
   // be null).
   nsCOMPtr<nsINode> mOwningNodeBeforeLoadEvent;
 
-  // The node that identifies who started loading us, before the load completes
-  // or errors.
-  //
-  // This is set for both top-level loads and @imports.
-  nsCOMPtr<nsINode> mRequestingNodeBeforeComplete;
+  nsINode* GetRequestingNode() const;
 
   // The observer that wishes to be notified of load completion
   nsCOMPtr<nsICSSLoaderObserver> mObserver;
