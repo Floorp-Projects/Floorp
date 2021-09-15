@@ -47,8 +47,10 @@ void DebugFrame::alignmentStaticAsserts() {
 
   static_assert(WasmStackAlignment >= Alignment,
                 "Aligned by ABI before pushing DebugFrame");
+#ifndef JS_CODEGEN_NONE
   static_assert((offsetof(DebugFrame, frame_) + sizeof(Frame)) % Alignment == 0,
                 "Aligned after pushing DebugFrame");
+#endif
 #ifdef JS_CODEGEN_ARM64
   // This constraint may or may not be necessary.  If you hit this because
   // you've changed the frame size then feel free to remove it, but be extra
