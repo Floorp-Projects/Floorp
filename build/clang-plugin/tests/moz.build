@@ -21,7 +21,6 @@ SOURCES += [
     "TestMultipleAnnotations.cpp",
     "TestMustOverride.cpp",
     "TestMustReturnFromCaller.cpp",
-    "TestMustUse.cpp",
     "TestNANTestingExpr.cpp",
     "TestNANTestingExprC.c",
     "TestNeedsNoVTableType.cpp",
