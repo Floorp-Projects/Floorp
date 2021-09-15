@@ -308,7 +308,7 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->setPendingException(oomMessage, nullptr);
 }
 
-void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
+JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
   /*
    * We cannot make stack depth deterministic across different
    * implementations (e.g. JIT vs. interpreter will differ in
@@ -322,20 +322,17 @@ void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
   }
 
   if (maybecx) {
-    if (!maybecx->isHelperThreadContext()) {
-      JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, errorNumber);
-      maybecx->overRecursed_ = true;
-    } else {
+    if (maybecx->isHelperThreadContext()) {
       maybecx->addPendingOverRecursed();
+    } else {
+      JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
+                                JSMSG_OVER_RECURSED);
+      maybecx->overRecursed_ = true;
     }
 #ifdef DEBUG
     maybecx->hadOverRecursed_ = true;
 #endif
   }
-}
-
-JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
-  ReportOverRecursed(maybecx, JSMSG_OVER_RECURSED);
 }
 
 void js::ReportAllocationOverflow(JSContext* cx) {
