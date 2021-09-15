@@ -188,11 +188,11 @@ impl TcpStream {
     }
 
     pub fn set_linger(&self, dur: Option<Duration>) -> io::Result<()> {
-        self.imp.inner.socket.set_linger(dur)
+        Net2TcpExt::set_linger(&self.imp.inner.socket, dur)
     }
 
     pub fn linger(&self) -> io::Result<Option<Duration>> {
-        self.imp.inner.socket.linger()
+        Net2TcpExt::linger(&self.imp.inner.socket)
     }
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
