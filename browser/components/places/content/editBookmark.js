@@ -933,8 +933,13 @@ var gEditItemOverlay = {
   },
 
   _autoshowBookmarksToolbar() {
+    let neverShowToolbar =
+      Services.prefs.getCharPref(
+        "browser.toolbars.bookmarks.visibility",
+        "newtab"
+      ) == "never";
     let toolbar = document.getElementById("PersonalToolbar");
-    if (!toolbar.collapsed) {
+    if (!toolbar.collapsed || neverShowToolbar) {
       return;
     }
 
