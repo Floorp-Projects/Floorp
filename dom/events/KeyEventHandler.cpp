@@ -526,7 +526,6 @@ int32_t KeyEventHandler::KeyToMask(int32_t key) {
     default:
       return cControl | cControlMask;
   }
-  return cControl | cControlMask;  // for warning avoidance
 }
 
 // static
