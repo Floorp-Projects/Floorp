@@ -46,7 +46,6 @@
 #  include "gfxWindowsPlatform.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/TextureD3D11.h"
-#  include "mozilla/layers/TextureDIB.h"
 #endif
 #ifdef MOZ_WAYLAND
 #  include <gtk/gtkx.h>
@@ -274,12 +273,6 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
   }
-
-  if (layersBackend != LayersBackend::LAYERS_WR &&
-      aFormat == SurfaceFormat::B8G8R8X8 &&
-      moz2DBackend == gfx::BackendType::CAIRO && NS_IsMainThread()) {
-    return TextureType::DIB;
-  }
 #endif
 
 #ifdef MOZ_WAYLAND
@@ -362,8 +355,6 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 #ifdef XP_WIN
     case TextureType::D3D11:
       return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
-    case TextureType::DIB:
-      return DIBTextureData::Create(aSize, aFormat, aAllocator);
 #endif
 
 #ifdef MOZ_WAYLAND
