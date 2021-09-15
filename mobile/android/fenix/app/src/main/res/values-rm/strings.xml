@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s privat</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -115,6 +115,11 @@
     <string name="recent_tabs_header">Turnar tar</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Mussar tut</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Retschertgas passadas</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -616,6 +621,24 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Serrar suenter in mais</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Allontanar</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Activs</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox po installar e lantschar studis da temp en temp.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Ulteriuras infurmaziuns</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">L\'applicaziun vegn serrada per applitgar las midadas</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Interrumper</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Serrar l\'applicaziun per applitgar las midadas…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Tabs averts</string>
@@ -643,6 +666,8 @@
     <string name="tab_tray_menu_item_share">Cundivider tut ils tabs</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tabs serrads dacurt</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Serrà dacurt</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Parameters dal conto</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -936,6 +961,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Deactivà</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Activà</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Deactivà</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collecziuns</string>
@@ -1100,7 +1130,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Stizzar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Interrumper</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Interrumper</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Midar al modus da maletg entir</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1268,7 +1298,7 @@
     <string name="onboarding_privacy_notice_read_button">Legia nossas directivas per la protecziun da datas</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Serrar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Serrar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Cumenzar a navigar</string>
@@ -1372,6 +1402,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptominiers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Improntaders dal det</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detagls</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Bloccads</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permess</string>
@@ -1399,7 +1432,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impedescha che reclamas, videos ed auter cuntegn extern cun code che fastizescha vegnia chargià. Quai po dentant avair per consequenza che tschertas parts da la website na funcziunan betg endretg.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Adina sch\'il scut è violet ha %s bloccà fastizaders sin ina pagina. Tutgar per ulteriuras infurmaziuns.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Adina sch\'il scut è violet ha %s bloccà fastizaders sin ina pagina. Tutgar per ulteriuras infurmaziuns.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Protecziuns èn ACTIVADAS per questa pagina</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1483,7 +1516,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Mai memorisar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Endataziun automatica</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Endataziun automatica</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Emplenir automaticamain en %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Emplenir automaticamain e memorisar nums d\'utilisader e pleds-clav en websites durant l\'utilisaziun da %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Emplenir automaticamain en autras applicaziuns</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Emplenir automaticamain nums d\'utilisader e pleds-clav en autras applicaziuns sin tes apparat.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronisar las infurmaziuns d\'annunzia</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1668,7 +1711,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">String da tschertga per utilisar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Ulteriuras infurmaziuns</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1806,6 +1849,16 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Interrumper</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Tabs inactivs</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Tabs stattan a disposiziun qua per %s. Suenter quest temp vegnan els serrads automaticamain.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dis</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 emna</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Definescha che colliaziuns da websites, e-mails e messadis vegnan averts automaticamain en Firefox.</string>
