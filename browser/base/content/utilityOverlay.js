@@ -995,7 +995,7 @@ function openAboutDialog() {
   window.openDialog("chrome://browser/content/aboutDialog.xhtml", "", features);
 }
 
-function openPreferences(paneID, extraArgs) {
+async function openPreferences(paneID, extraArgs) {
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
     return (aName || "").replace(/^pane./, function(toReplace) {
@@ -1061,6 +1061,14 @@ function openPreferences(paneID, extraArgs) {
       Services.obs.removeObserver(panesLoadedObs, "sync-pane-loaded");
     }, "sync-pane-loaded");
   } else if (paneID) {
+    if (browser.contentDocument.readyState != "complete") {
+      await new Promise(resolve => {
+        browser.addEventListener("load", resolve, {
+          capture: true,
+          once: true,
+        });
+      });
+    }
     browser.contentWindow.gotoPref(paneID);
   }
 }
