@@ -642,16 +642,21 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         number,
         "The number of active threads should not exceed the total number of threads"
       );
+      let activeThreads = row.process.threads.filter(t => t.slopeCpu);
       Assert.equal(
         active,
-        row.process.threads.filter(t => t.slopeCpu).length,
+        activeThreads.length,
         "The displayed number of active threads should be correct"
       );
 
+      let activeSet = new Set();
+      for (let t of activeThreads) {
+        activeSet.add(t.name.replace(/ ?#[0-9]+$/, ""));
+      }
       info("Sanity checks: thread list");
       Assert.equal(
         list ? list.split(", ").length : 0,
-        active,
+        activeSet.size,
         "The thread summary list of active threads should have the expected length"
       );
 
