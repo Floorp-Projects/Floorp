@@ -51,7 +51,7 @@ impl fmt::Debug for BoxType {
     }
 }
 
-#[derive(Default, PartialEq, Clone)]
+#[derive(Default, Eq, Hash, PartialEq, Clone)]
 pub struct FourCC {
     pub value: [u8; 4],
 }
