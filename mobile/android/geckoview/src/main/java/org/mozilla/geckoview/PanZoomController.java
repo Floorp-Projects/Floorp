@@ -480,7 +480,9 @@ public class PanZoomController {
         return event.getButtonState() == 0 &&
                (action == MotionEvent.ACTION_DOWN ||
                 (mLastDownTime == event.getDownTime() &&
-                 (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP)));
+                 (action == MotionEvent.ACTION_MOVE ||
+                  action == MotionEvent.ACTION_UP ||
+                  action == MotionEvent.ACTION_CANCEL)));
     }
 
     /**
