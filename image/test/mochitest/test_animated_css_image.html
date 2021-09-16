@@ -169,6 +169,25 @@ const kTests = [
       return doc.querySelector("div");
     },
   },
+
+  // bug 1730834: stopped window.
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div {
+          width: 100px;
+          height: 100px;
+        }
+      </style>
+      <body onload="window.stop(); document.querySelector('div').style.backgroundImage = 'url(animated1.gif)';">
+        <div></div>
+      </body>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
 ];
 
 onload = async function() {
