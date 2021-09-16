@@ -302,35 +302,45 @@ SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen)
     return SEC_OID_UNKNOWN;
 }
 
-static PRBool
-sec_pkcs5_is_algorithm_v2_aes_algorithm(SECOidTag algorithm)
-{
-    switch (algorithm) {
-        case SEC_OID_AES_128_CBC:
-        case SEC_OID_AES_192_CBC:
-        case SEC_OID_AES_256_CBC:
-            return PR_TRUE;
-        default:
-            return PR_FALSE;
-    }
-}
-
+/*
+ * Some oids encode the key size in the oid, while the actual PKCS
+ * PKCS #11 mechanism does not. In those cases we can't use
+ * the PKCS #11 automated key length code to select the key size.
+ */
 static int
-sec_pkcs5v2_aes_key_length(SECOidTag algorithm)
+sec_pkcs5v2_key_length_by_oid(SECOidTag algorithm)
 {
     switch (algorithm) {
-        /* The key length for the AES-CBC-Pad algorithms are
-         * determined from the undelying cipher algorithm.  */
         case SEC_OID_AES_128_CBC:
+        case SEC_OID_CAMELLIA_128_CBC:
             return AES_128_KEY_LENGTH;
         case SEC_OID_AES_192_CBC:
+        case SEC_OID_CAMELLIA_192_CBC:
             return AES_192_KEY_LENGTH;
         case SEC_OID_AES_256_CBC:
+        case SEC_OID_CAMELLIA_256_CBC:
             return AES_256_KEY_LENGTH;
         default:
             break;
     }
-    return 0;
+    return -1;
+}
+
+/* find the keylength from the algorithm id */
+static int
+sec_pkcs5v2_default_key_length(SECOidTag algorithm)
+{
+    CK_MECHANISM_TYPE cryptoMech;
+    int key_length = sec_pkcs5v2_key_length_by_oid(algorithm);
+    if (key_length != -1) {
+        return key_length;
+    }
+    cryptoMech = PK11_AlgtagToMechanism(algorithm);
+    if (cryptoMech == CKM_INVALID_MECHANISM) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return -1;
+    }
+    return PK11_GetMaxKeyLength(cryptoMech);
 }
 
 /*
@@ -366,34 +376,17 @@ sec_pkcs5v2_key_length(SECAlgorithmID *algid, SECAlgorithmID *cipherAlgId)
     if (cipherAlgId)
         cipherAlg = SECOID_GetAlgorithmTag(cipherAlgId);
 
-    if (sec_pkcs5_is_algorithm_v2_aes_algorithm(cipherAlg)) {
-        /* Previously, the PKCS#12 files created with the old NSS
-         * releases encoded the maximum key size of AES (that is 32)
-         * in the keyLength field of PBKDF2-params. That resulted in
-         * always performing AES-256 even if AES-128-CBC or
-         * AES-192-CBC is specified in the encryptionScheme field of
-         * PBES2-params. This is wrong, but for compatibility reasons,
-         * check the keyLength field and use the value if it is 32.
+    if (p5_param.keyLength.data != NULL) {
+        /* if the length is given, accept that length. This
+         * will allow us to decode old NSS encrypted data
+         * where we used the MAX keysize for the algorithm,
+         * but put an incorrect header for a different keysize.
          */
-        if (p5_param.keyLength.data != NULL) {
-            length = DER_GetInteger(&p5_param.keyLength);
-        }
-        /* If the keyLength field is present and contains a value
-         * other than 32, that means the file is created outside of
-         * NSS, which we don't care about. Note that the following
-         * also handles the case when the field is absent. */
-        if (length != 32) {
-            length = sec_pkcs5v2_aes_key_length(cipherAlg);
-        }
-    } else if (p5_param.keyLength.data != NULL) {
         length = DER_GetInteger(&p5_param.keyLength);
     } else {
-        CK_MECHANISM_TYPE cipherMech;
-        cipherMech = PK11_AlgtagToMechanism(cipherAlg);
-        if (cipherMech == CKM_INVALID_MECHANISM) {
-            goto loser;
-        }
-        length = PK11_GetMaxKeyLength(cipherMech);
+        /* if the keylength was not specified, figure it
+         * out from the oid */
+        length = sec_pkcs5v2_default_key_length(cipherAlg);
     }
 
 loser:
@@ -677,17 +670,10 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
             SECOidTag hashAlg = HASH_GetHashOidTagByHMACOidTag(cipherAlgorithm);
             if (hashAlg != SEC_OID_UNKNOWN) {
                 keyLength = HASH_ResultLenByOidTag(hashAlg);
-            } else if (sec_pkcs5_is_algorithm_v2_aes_algorithm(cipherAlgorithm)) {
-                keyLength = sec_pkcs5v2_aes_key_length(cipherAlgorithm);
             } else {
-                CK_MECHANISM_TYPE cryptoMech;
-                cryptoMech = PK11_AlgtagToMechanism(cipherAlgorithm);
-                if (cryptoMech == CKM_INVALID_MECHANISM) {
-                    goto loser;
-                }
-                keyLength = PK11_GetMaxKeyLength(cryptoMech);
+                keyLength = sec_pkcs5v2_default_key_length(cipherAlgorithm);
             }
-            if (keyLength == 0) {
+            if (keyLength <= 0) {
                 goto loser;
             }
         }
