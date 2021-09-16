@@ -20,7 +20,6 @@ const isFissionEnabled = SpecialPowers.useRemoteSubframes;
 const SAMPLE_SIZE = 10;
 
 add_task(async function test_proc_info() {
-  console.log("YORIC", "Test starts");
   // Open a few `about:home` tabs, they'll end up in `privilegedabout`.
   let tabsAboutHome = [];
   for (let i = 0; i < 5; ++i) {
@@ -59,14 +58,7 @@ add_task(async function test_proc_info() {
           );
         }
 
-        Assert.ok(
-          parentProc.residentUniqueSize > 0,
-          "Resident-unique-size was set"
-        );
-        Assert.ok(
-          parentProc.residentUniqueSize <= parentProc.residentSetSize,
-          `Resident-unique-size should be bounded by resident-set-size ${parentProc.residentUniqueSize} <= ${parentProc.residentSetSize}`
-        );
+        Assert.ok(parentProc.memory > 0, "Memory was set");
 
         // While it's very unlikely that the parent will disappear while we're running
         // tests, some children can easily vanish. So we go twice through the list of
@@ -120,14 +112,7 @@ add_task(async function test_proc_info() {
             continue;
           }
           hasPrivilegedAbout = true;
-          Assert.ok(
-            childProc.residentUniqueSize > 0,
-            "Resident-unique-size was set"
-          );
-          Assert.ok(
-            childProc.residentUniqueSize <= childProc.residentSetSize,
-            `Resident-unique-size should be bounded by resident-set-size ${childProc.residentUniqueSize} <= ${childProc.residentSetSize}`
-          );
+          Assert.ok(childProc.memory > 0, "Memory was set");
 
           for (var win of childProc.windows) {
             if (win.documentURI.spec != "about:home") {

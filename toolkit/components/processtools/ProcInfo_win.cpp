@@ -68,7 +68,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
             // Ignore process, it may have died.
             continue;
           }
-          PROCESS_MEMORY_COUNTERS memoryCounters;
+          PROCESS_MEMORY_COUNTERS_EX memoryCounters;
           if (!GetProcessMemoryInfo(handle.get(),
                                     (PPROCESS_MEMORY_COUNTERS)&memoryCounters,
                                     sizeof(memoryCounters))) {
@@ -91,14 +91,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.filename.Assign(filename);
           info.cpuKernel = ToNanoSeconds(kernelTime);
           info.cpuUser = ToNanoSeconds(userTime);
-          info.residentSetSize = memoryCounters.WorkingSetSize;
-
-          // Computing the resident unique size is somewhat tricky,
-          // so we use about:memory's implementation. This implementation
-          // uses the `HANDLE` so, in theory, should be no additional
-          // race condition. However, in case of error, the result is `0`.
-          info.residentUniqueSize =
-              nsMemoryReporterManager::ResidentUnique(handle.get());
+          info.memory = memoryCounters.PrivateUsage;
 
           if (!gathered.put(request.pid, std::move(info))) {
             holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
