@@ -343,7 +343,6 @@ class ArenaLists {
   bool foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
                           js::SliceBudget& sliceBudget,
                           SortedArenaList& sweepList);
-  static void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
 
   void setParallelAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
