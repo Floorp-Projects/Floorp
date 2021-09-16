@@ -1353,27 +1353,29 @@ bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
 }
 
 void BaselineCacheIRCompiler::emitAtomizeString(Register str, Register temp,
-                                                LiveGeneralRegisterSet save) {
-  allocator.discardStack(masm);
-
+                                                Label* failure) {
   Label isAtom;
   masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &isAtom);
   {
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                         liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    AutoStubFrame stubFrame(*this);
-    stubFrame.enter(masm, temp);
+    using Fn = JSAtom* (*)(JSContext * cx, JSString * str);
+    masm.setupUnalignedABICall(temp);
+    masm.loadJSContext(temp);
+    masm.passABIArg(temp);
+    masm.passABIArg(str);
+    masm.callWithABI<Fn, jit::AtomizeStringNoGC>();
+    masm.storeCallPointerResult(temp);
 
-    masm.Push(str);
+    LiveRegisterSet ignore;
+    ignore.add(temp);
+    masm.PopRegsInMaskIgnore(save, ignore);
 
-    using Fn = JSAtom* (*)(JSContext*, JSString*);
-    callVM<Fn, jit::AtomizeStringNoGC>(masm);
-
-    stubFrame.leave(masm);
-
-    masm.storeCallPointerResult(str);
-    masm.PopRegsInMask(save);
+    masm.branchPtr(Assembler::Equal, temp, ImmWord(0), failure);
+    masm.mov(temp, str);
   }
   masm.bind(&isAtom);
 }
@@ -1391,11 +1393,12 @@ bool BaselineCacheIRCompiler::emitSetHasStringResult(ObjOperandId setId,
   AutoScratchRegister scratch3(allocator, masm);
   AutoScratchRegister scratch4(allocator, masm);
 
-  LiveGeneralRegisterSet save;
-  save.add(set);
-  save.add(ICStubReg);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
 
-  emitAtomizeString(str, scratch1, save);
+  emitAtomizeString(str, scratch1, failure->label());
   masm.prepareHashString(str, scratch1, scratch2);
 
   masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
@@ -1418,11 +1421,12 @@ bool BaselineCacheIRCompiler::emitMapHasStringResult(ObjOperandId mapId,
   AutoScratchRegister scratch3(allocator, masm);
   AutoScratchRegister scratch4(allocator, masm);
 
-  LiveGeneralRegisterSet save;
-  save.add(map);
-  save.add(ICStubReg);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
 
-  emitAtomizeString(str, scratch1, save);
+  emitAtomizeString(str, scratch1, failure->label());
   masm.prepareHashString(str, scratch1, scratch2);
 
   masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
@@ -1445,11 +1449,12 @@ bool BaselineCacheIRCompiler::emitMapGetStringResult(ObjOperandId mapId,
   AutoScratchRegister scratch3(allocator, masm);
   AutoScratchRegister scratch4(allocator, masm);
 
-  LiveGeneralRegisterSet save;
-  save.add(map);
-  save.add(ICStubReg);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
 
-  emitAtomizeString(str, scratch1, save);
+  emitAtomizeString(str, scratch1, failure->label());
   masm.prepareHashString(str, scratch1, scratch2);
 
   masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
