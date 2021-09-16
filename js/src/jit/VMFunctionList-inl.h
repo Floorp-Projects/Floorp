@@ -53,7 +53,6 @@ namespace jit {
   _(AtomicsSub64, js::jit::AtomicsSub64)                                       \
   _(AtomicsXor64, js::jit::AtomicsXor64)                                       \
   _(AtomizeString, js::AtomizeString)                                          \
-  _(AtomizeStringNoGC, js::jit::AtomizeStringNoGC)                             \
   _(BaselineCompileFromBaselineInterpreter,                                    \
     js::jit::BaselineCompileFromBaselineInterpreter)                           \
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \
