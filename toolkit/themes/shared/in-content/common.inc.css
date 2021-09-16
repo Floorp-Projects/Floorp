@@ -1179,6 +1179,11 @@ xul|treechildren::-moz-tree-image(selected) {
   line-height: 1.25;
 }
 
+.message-bar-description.rtl-locale {
+  direction: rtl;
+  text-align: match-parent;
+}
+
 /* The message-bar-button styles have extra specificity to override
  * the defaults for buttons. */
 .message-bar-content > .message-bar-button {
