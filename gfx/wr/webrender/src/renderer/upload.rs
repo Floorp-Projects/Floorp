@@ -18,7 +18,8 @@
 
 use std::mem;
 use std::collections::VecDeque;
-use euclid::Transform3D;
+use std::sync::Arc;
+use euclid::{Transform3D, point2};
 use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
 use api::units::*;
@@ -85,10 +86,11 @@ pub fn upload_to_texture_cache(
         let texture = &renderer.texture_resolver.texture_cache_map[&texture_id].texture;
         for update in updates {
             let TextureCacheUpdate { rect, stride, offset, format_override, source } = update;
-
+            let mut arc_data = None; 
             let dummy_data;
             let data = match source {
                 TextureUpdateSource::Bytes { ref data } => {
+                    arc_data = Some(data.clone());
                     &data[offset as usize ..]
                 }
                 TextureUpdateSource::External { id, channel_index } => {
@@ -134,10 +136,26 @@ pub fn upload_to_texture_cache(
             let use_batch_upload = renderer.device.use_batched_texture_uploads() &&
                 texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
                 rect.width() <= BATCH_UPLOAD_TEXTURE_SIZE.width &&
-                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height &&
-                rect.area() <= BATCH_UPLOAD_TEXTURE_SIZE.area() / 2;
+                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height;
 
-            if use_batch_upload {
+            if use_batch_upload
+                && arc_data.is_some()
+                && matches!(renderer.device.upload_method(), &UploadMethod::Immediate)
+                && rect.area() > BATCH_UPLOAD_TEXTURE_SIZE.area() / 2 {
+                skip_staging_buffer(
+                    &mut renderer.device,
+                    &mut renderer.staging_texture_pool,
+                    rect,
+                    stride,
+                    arc_data.unwrap(),
+                    texture_id,
+                    texture,
+                    &mut batch_upload_buffers,
+                    &mut batch_upload_textures,
+                    &mut batch_upload_copies,
+                    &mut stats,
+                );
+            } else if use_batch_upload {
                 copy_into_staging_buffer(
                     &mut renderer.device,
                     &mut uploader,
@@ -203,6 +221,17 @@ pub fn upload_to_texture_cache(
                     bytes.len()
                 );
                 renderer.staging_texture_pool.return_temporary_buffer(bytes);
+            }
+            StagingBufferKind::Image { bytes, stride } => {
+                stats.bytes_uploaded += uploader.upload(
+                    &mut renderer.device,
+                    texture,
+                    batch_buffer.upload_rect,
+                    stride,
+                    None,
+                    bytes.as_ptr(),
+                    bytes.len()
+                );
             }
         }
     }
@@ -399,7 +428,8 @@ fn copy_into_staging_buffer<'a>(
             StagingBufferKind::CpuBuffer { bytes } => (
                 BATCH_UPLOAD_TEXTURE_SIZE.width as usize * bpp,
                 &mut bytes[..],
-            )
+            ),
+            StagingBufferKind::Image { .. } => unreachable!(),
         };
 
         // copy the data line-by-line in to the buffer so that we do not overwrite
@@ -416,6 +446,47 @@ fn copy_into_staging_buffer<'a>(
 
         stats.cpu_copy_time += precise_time_ns() - memcpy_start_time;
     }
+}
+
+/// Take this code path instead of copying into a staging CPU buffer when the image
+/// we would copy is large enough that it's unlikely anything else would fit in the
+/// buffer, therefore we might as well copy directly from the source image's pixels.
+fn skip_staging_buffer<'a>(
+    device: &mut Device,
+    staging_texture_pool: &mut UploadTexturePool,
+    update_rect: DeviceIntRect,
+    stride: Option<i32>,
+    data: Arc<Vec<u8>>,
+    dest_texture_id: CacheTextureId,
+    texture: &Texture,
+    batch_upload_buffers: &mut FastHashMap<ImageFormat, (GuillotineAllocator, Vec<BatchUploadBuffer<'a>>)>,
+    batch_upload_textures: &mut Vec<Texture>,
+    batch_upload_copies: &mut Vec<BatchUploadCopy>,
+    stats: &mut UploadStats
+) {
+    let (_, buffers) = batch_upload_buffers.entry(texture.get_format())
+        .or_insert_with(|| (GuillotineAllocator::new(None), Vec::new()));
+
+    let texture_alloc_time_start = precise_time_ns();
+    let staging_texture = staging_texture_pool.get_texture(device, texture.get_format());
+    stats.texture_alloc_time = precise_time_ns() - texture_alloc_time_start;
+
+    let texture_index = batch_upload_textures.len();
+    batch_upload_textures.push(staging_texture);
+
+    buffers.push(BatchUploadBuffer {
+        staging_buffer: StagingBufferKind::Image { bytes: data, stride },
+        texture_index,
+        upload_rect: DeviceIntRect::from_size(update_rect.size())
+    });
+
+    batch_upload_copies.push(BatchUploadCopy {
+        src_texture_index: texture_index,
+        src_offset: point2(0, 0),
+        dest_texture_id,
+        dest_offset: update_rect.min,
+        size: update_rect.size(),
+    });
 }
 
 
@@ -769,7 +840,8 @@ struct UploadStats {
 #[derive(Debug)]
 enum StagingBufferKind<'a> {
     Pbo(UploadStagingBuffer<'a>),
-    CpuBuffer { bytes: Vec<mem::MaybeUninit<u8>> }
+    CpuBuffer { bytes: Vec<mem::MaybeUninit<u8>> },
+    Image { bytes: Arc<Vec<u8>>, stride: Option<i32> },
 }
 #[derive(Debug)]
 struct BatchUploadBuffer<'a> {
