@@ -1051,7 +1051,7 @@ async function openPreferences(paneID, extraArgs) {
   }
 
   if (!newLoad && paneID) {
-    if (browser.contentDocument.readyState != "complete") {
+    if (browser.contentDocument?.readyState != "complete") {
       await new Promise(resolve => {
         browser.addEventListener("load", resolve, {
           capture: true,
