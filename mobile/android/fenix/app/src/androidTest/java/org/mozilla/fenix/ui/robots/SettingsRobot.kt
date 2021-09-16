@@ -272,6 +272,11 @@ class SettingsRobot {
     }
 }
 
+fun settingsScreen(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+    SettingsRobot().interact()
+    return SettingsRobot.Transition()
+}
+
 private fun assertSettingsView() {
     // verify that we are in the correct library view
     assertGeneralHeading()

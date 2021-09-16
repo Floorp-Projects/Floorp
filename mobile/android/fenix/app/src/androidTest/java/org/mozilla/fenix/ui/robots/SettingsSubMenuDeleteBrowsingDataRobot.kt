@@ -20,8 +20,10 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
@@ -32,42 +34,57 @@ import org.mozilla.fenix.helpers.click
 class SettingsSubMenuDeleteBrowsingDataRobot {
 
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
-
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
-
-    fun verifyClickDeleteBrowsingDataButton() = assertClickDeleteBrowsingDataButton()
-
     fun verifyMessageInDialogBox() = assertMessageInDialogBox()
-
     fun verifyDeleteButtonInDialogBox() = assertDeleteButtonInDialogBox()
-
     fun verifyCancelButtonInDialogBox() = assertCancelButtonInDialogBox()
+    fun verifyAllOptionsAndCheckBoxes() = assertAllOptionsAndCheckBoxes()
+    fun verifyAllCheckBoxesAreChecked() = assertAllCheckBoxesAreChecked()
+    fun verifyOpenTabsCheckBox(status: Boolean) = assertOpenTabsCheckBox(status)
+    fun verifyBrowsingHistoryDetails(status: Boolean) = assertBrowsingHistoryCheckBox(status)
+    fun verifyCookiesCheckBox(status: Boolean) = assertCookiesCheckBox(status)
+    fun verifyCachedFilesCheckBox(status: Boolean) = assertCachedFilesCheckBox(status)
+    fun verifySitePermissionsCheckBox(status: Boolean) = assertSitePermissionsCheckBox(status)
+    fun verifyDownloadsCheckBox(status: Boolean) = assertDownloadsCheckBox(status)
+    fun verifyOpenTabsDetails(tabNumber: String) = assertOpenTabsDescription(tabNumber)
+    fun verifyBrowsingHistoryDetails(addresses: String) = assertBrowsingHistoryDescription(addresses)
 
-    fun verifyAllTheCheckBoxesText() = assertAllTheCheckBoxesText()
-
-    fun verifyAllTheCheckBoxesChecked() = assertAllTheCheckBoxesChecked()
-
-    fun verifyContentsInDialogBox() {
+    fun verifyDialogElements() {
         verifyMessageInDialogBox()
         verifyDeleteButtonInDialogBox()
         verifyCancelButtonInDialogBox()
     }
+
+    fun switchOpenTabsCheckBox() = clickOpenTabsCheckBox()
+    fun switchBrowsingHistoryCheckBox() = clickBrowsingHistoryCheckBox()
+    fun switchCookiesCheckBox() = clickCookiesCheckBox()
+    fun switchCachedFilesCheckBox() = clickCachedFilesCheckBox()
+    fun switchSitePermissionsCheckBox() = clickSitePermissionsCheckBox()
+    fun switchDownloadsCheckBox() = clickDownloadsCheckBox()
+    fun clickDeleteBrowsingDataButton() = deleteBrowsingDataButton().click()
+    fun clickDialogCancelButton() = dialogCancelButton().click()
+    fun selectOnlyOpenTabsCheckBox() = checkOnlyOpenTabsCheckBox()
+    fun selectOnlyBrowsingHistoryCheckBox() = checkOnlyBrowsingHistoryCheckBox()
 
     fun clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox() {
         mDevice.wait(
             Until.findObject(By.text("Delete browsing data")),
             TestAssetHelper.waitingTime
         )
-        verifyClickDeleteBrowsingDataButton()
-        verifyContentsInDialogBox()
+        clickDeleteBrowsingDataButton()
+        verifyDialogElements()
         cancelButton().click()
+    }
+    fun confirmDeletionAndAssertSnackbar() {
+        dialogDeleteButton().click()
+        assertDeleteBrowsingDataSnackbar()
     }
 
     fun verifyDeleteBrowsingDataSubMenuItems() {
         verifyDeleteBrowsingDataButton()
         clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox()
-        verifyAllTheCheckBoxesText()
-        verifyAllTheCheckBoxesChecked()
+        verifyAllOptionsAndCheckBoxes()
+        verifyAllCheckBoxesAreChecked()
     }
 
     class Transition {
@@ -85,82 +102,174 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
 private fun goBackButton() =
     onView(allOf(withContentDescription("Navigate up")))
 
-private fun assertNavigationToolBarHeader() {
+private fun navigationToolBarHeader() =
     onView(
         allOf(
             withId(R.id.navigationToolbar),
             withChild(withText(R.string.preferences_delete_browsing_data))
         )
     )
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-}
 
-private fun assertDeleteBrowsingDataButton() {
-    onView(withId(R.id.delete_data))
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-}
+private fun deleteBrowsingDataButton() = onView(withId(R.id.delete_data))
 
-private fun assertClickDeleteBrowsingDataButton() {
-    onView(withId(R.id.delete_data))
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE)))).click()
-}
+private fun assertNavigationToolBarHeader() =
+    navigationToolBarHeader().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+
+private fun assertDeleteBrowsingDataButton() =
+    deleteBrowsingDataButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
 private fun cancelButton() =
     mDevice.findObject(UiSelector().textStartsWith("CANCEL"))
 
-private fun assertMessageInDialogBox() =
+private fun dialogDeleteButton() = onView(withText("Delete")).inRoot(isDialog())
+
+private fun dialogCancelButton() = onView(withText("Cancel")).inRoot(isDialog())
+
+private fun openTabsSubsection() = onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
+
+private fun openTabsDescription(tabNumber: String) = onView(withText("$tabNumber tabs"))
+
+private fun openTabsCheckBox() = onView(allOf(withId(R.id.checkbox), hasSibling(withText("Open tabs"))))
+
+private fun browsingHistorySubsection() =
+    onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
+
+private fun browsingHistoryDescription(addresses: String) = onView(withText("$addresses addresses"))
+
+private fun browsingHistoryCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history and site data"))))
+
+private fun cookiesSubsection() =
+    onView(withText(R.string.preferences_delete_browsing_data_cookies))
+
+private fun cookiesDescription() = onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
+
+private fun cookiesCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cookies"))))
+
+private fun cachedFilesSubsection() =
+    onView(withText(R.string.preferences_delete_browsing_data_cached_files))
+
+private fun cachedFilesDescription() =
+    onView(withText(R.string.preferences_delete_browsing_data_cached_files_subtitle))
+
+private fun cachedFilesCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cached images and files"))))
+
+private fun sitePermissionsSubsection() =
+    onView(withText(R.string.preferences_delete_browsing_data_site_permissions))
+
+private fun sitePermissionsCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Site permissions"))))
+
+private fun downloadsSubsection() =
+    onView(withText(R.string.preferences_delete_browsing_data_downloads))
+
+private fun downloadsCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Downloads"))))
+
+private fun dialogMessage() =
     onView(withText("$appName will delete the selected browsing data."))
         .inRoot(isDialog())
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertMessageInDialogBox() =
+    dialogMessage().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertDeleteButtonInDialogBox() =
-    onView(withText("Delete"))
-        .inRoot(isDialog())
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    dialogDeleteButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertCancelButtonInDialogBox() =
-    onView(withText("Cancel"))
-        .inRoot(isDialog())
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    dialogCancelButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertAllTheCheckBoxesText() {
-
-    onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText("0 tabs"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText("0 addresses"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_cookies))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_cached_files))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_cached_files_subtitle))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_delete_browsing_data_site_permissions))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertAllOptionsAndCheckBoxes() {
+    openTabsSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    openTabsDescription("0").check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    openTabsCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    browsingHistorySubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    browsingHistoryDescription("0").check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    browsingHistoryCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cookiesSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cookiesDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cookiesCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cachedFilesSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cachedFilesDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cachedFilesCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    sitePermissionsSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    sitePermissionsCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    downloadsSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    downloadsCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertAllTheCheckBoxesChecked() {
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Open tabs")))).assertIsChecked(true)
+private fun assertAllCheckBoxesAreChecked() {
+    openTabsCheckBox().assertIsChecked(true)
+    browsingHistoryCheckBox().assertIsChecked(true)
+    cookiesCheckBox().assertIsChecked(true)
+    cachedFilesCheckBox().assertIsChecked(true)
+    sitePermissionsCheckBox().assertIsChecked(true)
+    downloadsCheckBox().assertIsChecked(true)
+}
 
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history and site data")))).assertIsChecked(true)
+private fun assertOpenTabsDescription(tabNumber: String) =
+    openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cookies")))).assertIsChecked(true)
+private fun assertBrowsingHistoryDescription(addresses: String) =
+    browsingHistoryDescription(addresses).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cached images and files")))).assertIsChecked(true)
+private fun assertDeleteBrowsingDataSnackbar() {
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().text("Browsing data deleted")
+        ).waitUntilGone(waitingTime)
+    )
+}
 
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Site permissions")))).assertIsChecked(true)
+private fun clickOpenTabsCheckBox() = openTabsCheckBox().click()
+private fun assertOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)
+private fun clickBrowsingHistoryCheckBox() = browsingHistoryCheckBox().click()
+private fun assertBrowsingHistoryCheckBox(status: Boolean) = browsingHistoryCheckBox().assertIsChecked(status)
+private fun clickCookiesCheckBox() = cookiesCheckBox().click()
+private fun assertCookiesCheckBox(status: Boolean) = cookiesCheckBox().assertIsChecked(status)
+private fun clickCachedFilesCheckBox() = cachedFilesCheckBox().click()
+private fun assertCachedFilesCheckBox(status: Boolean) = cachedFilesCheckBox().assertIsChecked(status)
+private fun clickSitePermissionsCheckBox() = sitePermissionsCheckBox().click()
+private fun assertSitePermissionsCheckBox(status: Boolean) = sitePermissionsCheckBox().assertIsChecked(status)
+private fun clickDownloadsCheckBox() = downloadsCheckBox().click()
+private fun assertDownloadsCheckBox(status: Boolean) = downloadsCheckBox().assertIsChecked(status)
+
+fun checkOnlyOpenTabsCheckBox() {
+    clickBrowsingHistoryCheckBox()
+    assertBrowsingHistoryCheckBox(false)
+
+    clickCookiesCheckBox()
+    assertCookiesCheckBox(false)
+
+    clickCachedFilesCheckBox()
+    assertCachedFilesCheckBox(false)
+
+    clickSitePermissionsCheckBox()
+    assertSitePermissionsCheckBox(false)
+
+    clickDownloadsCheckBox()
+    assertDownloadsCheckBox(false)
+
+    assertOpenTabsCheckBox(true)
+}
+
+fun checkOnlyBrowsingHistoryCheckBox() {
+    clickOpenTabsCheckBox()
+    assertOpenTabsCheckBox(false)
+
+    clickCookiesCheckBox()
+    assertCookiesCheckBox(false)
+
+    clickCachedFilesCheckBox()
+    assertCachedFilesCheckBox(false)
+
+    clickSitePermissionsCheckBox()
+    assertSitePermissionsCheckBox(false)
+
+    clickDownloadsCheckBox()
+    assertDownloadsCheckBox(false)
+
+    assertBrowsingHistoryCheckBox(true)
 }
