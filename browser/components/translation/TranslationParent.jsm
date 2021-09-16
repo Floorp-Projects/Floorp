@@ -302,15 +302,10 @@ class TranslationParent extends JSWindowActorParent {
 
   showTranslationInfoBar() {
     let notificationBox = this.notificationBox;
-    let notif = notificationBox.appendNotification(
-      "",
-      "translation",
-      null,
-      notificationBox.PRIORITY_INFO_HIGH,
-      null,
-      null,
-      "translation-notification"
-    );
+    let notif = notificationBox.appendNotification("translation", {
+      priority: notificationBox.PRIORITY_INFO_HIGH,
+      notificationIs: "translation-notification",
+    });
     notif.init(this);
     return notif;
   }

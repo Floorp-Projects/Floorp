@@ -6,7 +6,7 @@
 async function addNotification(box, label, value, priorityName) {
   let added = BrowserTestUtils.waitForNotificationInNotificationBox(box, value);
   let priority = gNotificationBox[`PRIORITY_${priorityName}_MEDIUM`];
-  let notification = box.appendNotification(label, value, null, priority);
+  let notification = box.appendNotification(value, { label, priority });
   await added;
   return notification;
 }
