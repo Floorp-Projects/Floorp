@@ -317,13 +317,12 @@ var CaptivePortalWatcher = {
     };
 
     gNotificationBox.appendNotification(
+      message,
       this.PORTAL_NOTIFICATION_VALUE,
-      {
-        label: message,
-        priority: gNotificationBox.PRIORITY_INFO_MEDIUM,
-        eventCallback: closeHandler,
-      },
-      buttons
+      "",
+      gNotificationBox.PRIORITY_INFO_MEDIUM,
+      buttons,
+      closeHandler
     );
 
     Services.telemetry.recordEvent(

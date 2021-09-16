@@ -189,12 +189,10 @@ class PluginParent extends JSWindowActorParent {
       [report.pluginName]
     );
     notification = notificationBox.appendNotification(
+      messageString,
       "plugin-crashed",
-      {
-        label: messageString,
-        image: iconURL,
-        priority,
-      },
+      iconURL,
+      priority,
       buttons
     );
 
