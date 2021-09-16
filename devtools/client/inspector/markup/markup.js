@@ -2106,6 +2106,11 @@ MarkupView.prototype = {
     // Update the children to take care of changes in the markup view DOM
     await this._updateChildren(container, { expand, flash });
 
+    // The markup view may have been destroyed in the meantime
+    if (this._destroyed) {
+      return;
+    }
+
     if (updateLevel) {
       // Update container (and its subtree) DOM tree depth level for
       // accessibility where necessary.
@@ -2371,6 +2376,7 @@ MarkupView.prototype = {
 
     this.popup.destroy();
     this.popup = null;
+    this._selectedContainer = null;
 
     this._elt.removeEventListener("blur", this._onBlur, true);
     this._elt.removeEventListener("click", this._onMouseClick);
@@ -2426,6 +2432,8 @@ MarkupView.prototype = {
     this.controllerWindow = null;
     this.doc = null;
     this.highlighters = null;
+    this.walker = null;
+    this.resourceCommand = null;
     this.win = null;
 
     this._lastDropTarget = null;
