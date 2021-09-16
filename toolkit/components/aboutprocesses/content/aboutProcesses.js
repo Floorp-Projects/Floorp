@@ -771,25 +771,44 @@ var View = {
     // Column: Name
     let nameCell = row.firstChild;
     let threads = data.threads;
-    let activeThreads = data.threads.filter(t => t.slopeCpu);
+    let activeThreads = new Map();
+    let activeThreadCount = 0;
+    for (let t of data.threads) {
+      if (!t.slopeCpu) {
+        continue;
+      }
+      ++activeThreadCount;
+      let name = t.name.replace(/ ?#[0-9]+$/, "");
+      if (!activeThreads.has(name)) {
+        activeThreads.set(name, { name, slopeCpu: t.slopeCpu, count: 1 });
+      } else {
+        let thread = activeThreads.get(name);
+        thread.count++;
+        thread.slopeCpu += t.slopeCpu;
+      }
+    }
     let fluentName, fluentArgs;
-    if (activeThreads.length) {
+    if (activeThreadCount) {
       let percentFormatter = new Intl.NumberFormat(undefined, {
         style: "percent",
         minimumSignificantDigits: 1,
       });
-      activeThreads.sort((t1, t2) => (t2.slopeCpu || 0) - (t1.slopeCpu || 0));
+
+      let threadList = Array.from(activeThreads.values());
+      threadList.sort((t1, t2) => t2.slopeCpu - t1.slopeCpu);
+
       fluentName = "about-processes-active-threads";
       fluentArgs = {
         number: threads.length,
-        active: activeThreads.length,
+        active: activeThreadCount,
         list: new Intl.ListFormat(undefined, { style: "narrow" }).format(
-          activeThreads.map(t => {
-            let percent = Math.round((t.slopeCpu || 0) * 1000) / 1000;
+          threadList.map(t => {
+            let name = t.count > 1 ? `${t.count} × ${t.name}` : t.name;
+            let percent = Math.round(t.slopeCpu * 1000) / 1000;
             if (percent) {
-              return `${t.name} ${percentFormatter.format(percent)}`;
+              return `${name} ${percentFormatter.format(percent)}`;
             }
-            return t.name;
+            return name;
           })
         ),
       };
