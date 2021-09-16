@@ -15,6 +15,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const SPONSORED_SEARCH_STRING = "frab";
 const NONSPONSORED_SEARCH_STRING = "nonspon";
 
+const HTTP_SEARCH_STRING = "http prefix";
+const HTTPS_SEARCH_STRING = "https prefix";
+const PREFIX_SUGGESTIONS_STRIPPED_URL = "example.com/prefix-test";
+
 const REMOTE_SETTINGS_DATA = [
   {
     id: 1,
@@ -34,6 +38,24 @@ const REMOTE_SETTINGS_DATA = [
     impression_url: "http://impression.reporting.test.com/nonsponsored",
     advertiser: "TestAdvertiserNonSponsored",
     iab_category: "5 - Education",
+  },
+  {
+    id: 3,
+    url: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+    title: "http suggestion",
+    keywords: [HTTP_SEARCH_STRING],
+    click_url: "http://click.reporting.test.com/prefix",
+    impression_url: "http://impression.reporting.test.com/prefix",
+    advertiser: "TestAdvertiserPrefix",
+  },
+  {
+    id: 4,
+    url: "https://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+    title: "https suggestion",
+    keywords: [HTTPS_SEARCH_STRING],
+    click_url: "http://click.reporting.test.com/prefix",
+    impression_url: "http://impression.reporting.test.com/prefix",
+    advertiser: "TestAdvertiserPrefix",
   },
 ];
 
@@ -74,6 +96,46 @@ const EXPECTED_NONSPONSORED_RESULT = {
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     displayUrl: "http://test.com/?q=nonsponsored",
+  },
+};
+
+const EXPECTED_HTTP_RESULT = {
+  type: UrlbarUtils.RESULT_TYPE.URL,
+  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+  heuristic: false,
+  payload: {
+    qsSuggestion: HTTP_SEARCH_STRING,
+    title: "http suggestion",
+    url: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+    icon: null,
+    sponsoredImpressionUrl: "http://impression.reporting.test.com/prefix",
+    sponsoredClickUrl: "http://click.reporting.test.com/prefix",
+    sponsoredBlockId: 3,
+    sponsoredAdvertiser: "testadvertiserprefix",
+    isSponsored: true,
+    helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+    helpL10nId: "firefox-suggest-urlbar-learn-more",
+    displayUrl: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+  },
+};
+
+const EXPECTED_HTTPS_RESULT = {
+  type: UrlbarUtils.RESULT_TYPE.URL,
+  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+  heuristic: false,
+  payload: {
+    qsSuggestion: HTTPS_SEARCH_STRING,
+    title: "https suggestion",
+    url: "https://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+    icon: null,
+    sponsoredImpressionUrl: "http://impression.reporting.test.com/prefix",
+    sponsoredClickUrl: "http://click.reporting.test.com/prefix",
+    sponsoredBlockId: 4,
+    sponsoredAdvertiser: "testadvertiserprefix",
+    isSponsored: true,
+    helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+    helpL10nId: "firefox-suggest-urlbar-learn-more",
+    displayUrl: PREFIX_SUGGESTIONS_STRIPPED_URL,
   },
 };
 
@@ -481,3 +543,117 @@ add_task(async function generalBeforeSuggestions_others() {
   UrlbarPrefs.clear("showSearchSuggestionsFirst");
   await PlacesUtils.history.clear();
 });
+
+add_task(async function dedupeAgainstURL_samePrefix() {
+  await doDedupeAgainstURLTest({
+    searchString: HTTP_SEARCH_STRING,
+    expectedQuickSuggestResult: EXPECTED_HTTP_RESULT,
+    otherPrefix: "http://",
+    expectOther: false,
+  });
+});
+
+add_task(async function dedupeAgainstURL_higherPrefix() {
+  await doDedupeAgainstURLTest({
+    searchString: HTTPS_SEARCH_STRING,
+    expectedQuickSuggestResult: EXPECTED_HTTPS_RESULT,
+    otherPrefix: "http://",
+    expectOther: false,
+  });
+});
+
+add_task(async function dedupeAgainstURL_lowerPrefix() {
+  await doDedupeAgainstURLTest({
+    searchString: HTTP_SEARCH_STRING,
+    expectedQuickSuggestResult: EXPECTED_HTTP_RESULT,
+    otherPrefix: "https://",
+    expectOther: true,
+  });
+});
+
+/**
+ * Tests how the muxer dedupes URL results against quick suggest results.
+ * Depending on prefix rank, quick suggest results should be preferred over
+ * other URL results with the same stripped URL: Other results should be
+ * discarded when their prefix rank is lower than the prefix rank of the quick
+ * suggest. They should not be discarded when their prefix rank is higher, and
+ * in that case both results should be included.
+ *
+ * This function adds a visit to the URL formed by the given `otherPrefix` and
+ * `PREFIX_SUGGESTIONS_STRIPPED_URL`. The visit's title will be set to the given
+ * `searchString` so that both the visit and the quick suggest will match it.
+ *
+ * @param {string} searchString
+ *   The search string that should trigger one of the mock prefix-test quick
+ *   suggest results.
+ * @param {object} expectedQuickSuggestResult
+ *   The expected quick suggest result.
+ * @param {string} otherPrefix
+ *   The visit will be created with a URL with this prefix, e.g., "http://".
+ * @param {boolean} expectOther
+ *   Whether the visit result should appear in the final results.
+ */
+async function doDedupeAgainstURLTest({
+  searchString,
+  expectedQuickSuggestResult,
+  otherPrefix,
+  expectOther,
+}) {
+  // Disable search suggestions.
+  UrlbarPrefs.set("suggest.searches", false);
+
+  // Add a visit that will match our query below.
+  let otherURL = otherPrefix + PREFIX_SUGGESTIONS_STRIPPED_URL;
+  await PlacesTestUtils.addVisits({ uri: otherURL, title: searchString });
+
+  // First, do a search with quick suggest disabled to make sure the search
+  // string matches the visit.
+  info("Doing first query");
+  UrlbarPrefs.set("suggest.quicksuggest", false);
+  let context = createContext(searchString, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        heuristic: true,
+        query: searchString,
+        engineName: Services.search.defaultEngine.name,
+      }),
+      makeVisitResult(context, {
+        uri: otherURL,
+        title: searchString,
+      }),
+    ],
+  });
+
+  // Now do another search with quick suggest enabled.
+  UrlbarPrefs.set("suggest.quicksuggest", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+
+  context = createContext(searchString, { isPrivate: false });
+
+  let expectedResults = [
+    makeSearchResult(context, {
+      heuristic: true,
+      query: searchString,
+      engineName: Services.search.defaultEngine.name,
+    }),
+  ];
+  if (expectOther) {
+    expectedResults.push(
+      makeVisitResult(context, {
+        uri: otherURL,
+        title: searchString,
+      })
+    );
+  }
+  expectedResults.push(expectedQuickSuggestResult);
+
+  info("Doing second query");
+  await check_results({ context, matches: expectedResults });
+
+  UrlbarPrefs.clear("suggest.quicksuggest");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.clear("suggest.searches");
+  await PlacesUtils.history.clear();
+}
