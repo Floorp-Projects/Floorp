@@ -79,9 +79,10 @@ function hasNonZeroMarginDisplayPort(elementId, containingDoc = null) {
   }
   let elt = (containingDoc != null ? containingDoc : document).getElementById(elementId);
   info(elementId);
+  info("window size " + window.innerWidth + " " + window.innerHeight);
   info("dp " + dp.x + " " + dp.y + " " + dp.w + " " + dp.h);
   info("eltsize " + elt.clientWidth + " " + elt.clientHeight);
-  return dp.h >= heightMultiplier * elt.clientHeight;
+  return dp.h >= heightMultiplier * Math.min(elt.clientHeight, window.innerHeight);
 }
 
 function hasMinimalDisplayPort(elementId, containingDoc = null) {
