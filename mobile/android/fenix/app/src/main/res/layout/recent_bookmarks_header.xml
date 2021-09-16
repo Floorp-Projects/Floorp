@@ -20,7 +20,7 @@
         android:maxLines="1"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
-        android:text="@string/recently_saved_bookmarks"
+        android:text="@string/recently_bookmarked"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

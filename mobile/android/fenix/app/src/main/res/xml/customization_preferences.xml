@@ -57,7 +57,7 @@
 
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_recent_bookmarks"
-            android:title="@string/customize_toggle_recently_saved_bookmarks"
+            android:title="@string/customize_toggle_recently_bookmarked"
             app:isPreferenceVisible="false" />
 
         <androidx.preference.SwitchPreference
