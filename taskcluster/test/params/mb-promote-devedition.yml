@@ -1,0 +1,42 @@
+---
+base_repository: https://hg.mozilla.org/mozilla-central
+build_date: 1509164545
+build_number: 1
+app_version: 60.0b1
+version: 60.0b1
+next_version: null
+filters:
+    - target_tasks_method
+head_ref: 196059cada7070ab1e35db83a22b60389bd0c794
+head_repository: https://hg.mozilla.org/releases/mozilla-beta
+head_rev: 196059cada7070ab1e35db83a22b60389bd0c794
+hg_branch: default
+level: "3"
+message: " "
+# morph_templates: {}
+moz_build_date: "20171028042225"
+optimize_target_tasks: true
+owner: xquan@mozilla.com
+project: mozilla-beta
+pushdate: 1509164545
+pushlog_id: "8069"
+release_eta: "2018-01-31T00:30:00+00:00"
+release_history: {}
+release_enable_partners: false
+release_partners: []
+release_partner_build_number: 1
+release_partner_config: null
+release_enable_emefree: false
+# target_task_labels: []
+target_tasks_method: promote_desktop
+do_not_optimize: []
+try_mode: null
+try_task_config: {}
+existing_tasks: {}
+try_options:
+release_type: "beta"
+release_product: devedition
+required_signoffs: []
+signoff_urls: {}
+phabricator_diff:
+tasks_for: actions

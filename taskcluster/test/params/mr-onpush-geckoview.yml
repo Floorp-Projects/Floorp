@@ -1,0 +1,41 @@
+---
+app_version: 62.0.3
+base_repository: https://hg.mozilla.org/mozilla-unified
+build_date: 1539294145
+build_number: 1
+do_not_optimize: []
+existing_tasks: {}
+filters:
+    - target_tasks_method
+head_ref: d66bd740b59ffdcb800dc225cf29fc383d5e1a2b
+head_repository: https://hg.mozilla.org/releases/mozilla-release
+head_rev: d66bd740b59ffdcb800dc225cf29fc383d5e1a2b
+hg_branch: GECKOVIEW_62_RELBRANCH
+level: "3"
+message: " "
+moz_build_date: "20181011214225"
+next_version: null
+optimize_target_tasks: true
+owner: nchen@mozilla.com
+project: mozilla-release
+pushdate: 1539294145
+pushlog_id: "1814"
+release_enable_emefree: false
+release_enable_partners: false
+release_eta: ""
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: "release"
+target_tasks_method: mozilla_release_tasks
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 62.0.3
+required_signoffs: []
+signoff_urls: {}
+phabricator_diff:
+tasks_for: actions
+test_manifest_loader: default
