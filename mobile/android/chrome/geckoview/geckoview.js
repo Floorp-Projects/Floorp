@@ -770,6 +770,7 @@ function startup() {
     });
 
     InitLater(() => {
+      // TODO bug 1730026: this runs too often. It should run once.
       RemoteSecuritySettings.init();
     });
 

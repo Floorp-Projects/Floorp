@@ -44,9 +44,6 @@ const windowTracker = {
 };
 
 function androidStartup() {
-  // Bug 1526086 - we shouldn't need to do this, but otherwise we hang at
-  // shutdown trying to write the startup cache.
-  Services.obs.notifyObservers(null, "startupcache-invalidate");
   // Only browser chrome tests need help starting.
   let testRoot = Services.prefs.getStringPref("mochitest.testRoot", "");
   if (testRoot.endsWith("/chrome")) {
