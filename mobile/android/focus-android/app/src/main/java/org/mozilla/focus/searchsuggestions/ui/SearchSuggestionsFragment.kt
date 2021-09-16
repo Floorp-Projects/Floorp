@@ -20,6 +20,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.focus.R
 import org.mozilla.focus.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -130,7 +135,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         }
 
         val searchSuggestionsView = view.findViewById<ComposeView>(R.id.search_suggestions_view)
-        searchSuggestionsView.setContent { SearchOverlay(searchSuggestionsViewModel) }
+        searchSuggestionsView.setContent {
+            SearchOverlay(searchSuggestionsViewModel) { view.hideKeyboard() }
+        }
     }
 
     companion object {
@@ -141,7 +148,8 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 private fun SearchOverlay(
-    viewModel: SearchSuggestionsViewModel
+    viewModel: SearchSuggestionsViewModel,
+    onListScrolled: () -> Unit
 ) {
     val topSitesState =
         components.appStore.observeAsComposableState { state -> state.topSites }
@@ -171,7 +179,8 @@ private fun SearchOverlay(
                     onAutoComplete = { suggestion ->
                         val editSuggestion = suggestion.editSuggestion ?: return@SearchSuggestions
                         viewModel.setAutocompleteSuggestion(editSuggestion)
-                    }
+                    },
+                    onListScrolled = onListScrolled
                 )
             }
         }
@@ -182,7 +191,8 @@ private fun SearchOverlay(
 private fun SearchSuggestions(
     text: String,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
+    onListScrolled: () -> Unit
 ) {
     val context = LocalContext.current
     val components = components
@@ -203,13 +213,26 @@ private fun SearchSuggestions(
         )
     }
 
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                onListScrolled.invoke()
+                return Offset.Zero
+            }
+        }
+    }
+
     FocusTheme {
-        AwesomeBar(
-            text = text,
-            providers = listOf(provider),
-            onSuggestionClicked = onSuggestionClicked,
-            onAutoComplete = onAutoComplete
-        )
+        Column(
+            modifier = Modifier.nestedScroll(nestedScrollConnection)
+        ) {
+            AwesomeBar(
+                text = text,
+                providers = listOf(provider),
+                onSuggestionClicked = onSuggestionClicked,
+                onAutoComplete = onAutoComplete
+            )
+        }
     }
 }
 
