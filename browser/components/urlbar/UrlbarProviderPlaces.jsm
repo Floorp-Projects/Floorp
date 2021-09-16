@@ -1221,8 +1221,8 @@ Search.prototype = {
 
     if (
       this.hasBehavior("restrict") ||
-      !this.hasBehavior("history") ||
-      !this.hasBehavior("bookmark")
+      (!this.hasBehavior("openpage") &&
+        (!this.hasBehavior("history") || !this.hasBehavior("bookmark")))
     ) {
       if (this.hasBehavior("history")) {
         // Enforce ignoring the visit_count index, since the frecency one is much
