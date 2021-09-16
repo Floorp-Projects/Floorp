@@ -13,6 +13,7 @@
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
+#include "nsIThread.h"
 #include "Helpers.h"
 
 using mozilla::GetCurrentSerialEventTarget;
