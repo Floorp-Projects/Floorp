@@ -85,6 +85,9 @@ class TopSiteItemViewHolder(
             SupportUtils.PDD_URL -> {
                 binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pdd))
             }
+            SupportUtils.TC_URL -> {
+                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_tc))
+            }
             else -> {
                 itemView.context.components.core.icons.loadIntoView(binding.faviconImage, topSite.url)
             }

@@ -27,6 +27,8 @@
     <string name="default_top_site_jd">京东</string>
     <!-- Default title for pinned JD top site that links to PDD home page  -->
     <string name="default_top_site_pdd">拼多多</string>
+    <!-- Default title for pinned 58 top site that links to 58 home page  -->
+    <string name="default_top_site_tc">58同城</string>
 
     <!-- FxA server switch-->
     <!-- Switch Preference for domestic China/global fxa server -->

@@ -354,6 +354,13 @@ class Core(
                             SupportUtils.PDD_URL
                         )
                     )
+
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.default_top_site_tc),
+                            SupportUtils.TC_URL
+                        )
+                    )
                 } else {
                     defaultTopSites.add(
                         Pair(

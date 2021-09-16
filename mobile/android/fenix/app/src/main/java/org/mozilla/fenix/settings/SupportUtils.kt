@@ -34,6 +34,7 @@ object SupportUtils {
         "AEwdRGF0cMhIAVB5ZFAETBVAaXRwyFQdcKydLSUpaCEtYFAIXN2UrWCUyIgdVK1slXVZaCCtZFAMWDg%3D%3D"
     const val PDD_URL = "https://mobile.yangkeduo.com/duo_cms_mall.html?pid=13289095_194240604&" +
         "cpsSign=CM_210309_13289095_194240604_8bcfd56d5db3c43d983014d2658ec26e&duoduo_type=2"
+    const val TC_URL = "https://jumpluna.58.com/i/29HU"
     const val GOOGLE_US_URL = "https://www.google.com/webhp?client=firefox-b-1-m&channel=ts"
     const val GOOGLE_XX_URL = "https://www.google.com/webhp?client=firefox-b-m&channel=ts"
 
