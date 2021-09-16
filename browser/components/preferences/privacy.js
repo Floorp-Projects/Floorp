@@ -1925,16 +1925,21 @@ var gPrivacyPane = {
    * Initializes the address bar section.
    */
   _initAddressBar() {
-    // Update the Firefox Suggest section on Nimbus changes. Note that
-    // `onUpdate` passes the Nimbus feature name as its first arg but that is
-    // not the arg that `_updateFirefoxSuggestSection` expects, so we do not
-    // want to pass it on.
-    this._firefoxSuggestNimbusUpdate = () =>
-      this._updateFirefoxSuggestSection();
-    NimbusFeatures.urlbar.onUpdate(this._firefoxSuggestNimbusUpdate);
-    window.addEventListener("unload", () =>
-      NimbusFeatures.urlbar.off(this._firefoxSuggestNimbusUpdate)
-    );
+    // Update the Firefox Suggest section when Firefox Suggest's enabled status
+    // or scenario changes.
+    this._urlbarPrefObserver = {
+      onPrefChanged: pref => {
+        if (["quicksuggest.enabled", "quicksuggest.scenario"].includes(pref)) {
+          this._updateFirefoxSuggestSection();
+        }
+      },
+    };
+    UrlbarPrefs.addObserver(this._urlbarPrefObserver);
+    window.addEventListener("unload", () => {
+      // UrlbarPrefs holds a weak reference to our observer, which is why we
+      // don't remove it on unload.
+      this._urlbarPrefObserver = null;
+    });
 
     // Set up the sponsored checkbox. When the main checkbox is checked, the
     // sponsored checkbox should be enabled and its checked status should
@@ -1989,7 +1994,7 @@ var gPrivacyPane = {
       // The main checkbox description discusses data collection, which we
       // perform only in the "online" scenario. Hide it otherwise.
       document.getElementById("firefoxSuggestSuggestionDescription").hidden =
-        UrlbarPrefs.get("quickSuggestScenario") != "online";
+        UrlbarPrefs.get("quicksuggest.scenario") != "online";
       // Show the container.
       this._updateFirefoxSuggestSponsoredCheckbox();
       container.removeAttribute("hidden");

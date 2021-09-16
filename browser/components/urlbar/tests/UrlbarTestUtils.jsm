@@ -31,19 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-// This must be kept in sync with FeatureManifest.js. UrlbarPrefs.get() will
-// throw an "unknown pref" error if a test enrolls in a mock experiment and hits
-// a code path that accesses a Nimbus feature variable not defined here.
-const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
-  merinoEnabled: false,
-  quickSuggestEnabled: false,
-  quickSuggestNonSponsoredIndex: -1,
-  quickSuggestScenario: "history",
-  quickSuggestShouldShowOnboardingDialog: true,
-  quickSuggestShowOnboardingDialogAfterNRestarts: 0,
-  quickSuggestSponsoredIndex: -1,
-};
-
 var UrlbarTestUtils = {
   /**
    * This maps the categories used by the FX_URLBAR_SELECTED_RESULT_METHOD and
@@ -823,13 +810,7 @@ var UrlbarTestUtils = {
    * Enrolls in a mock Nimbus experiment.
    *
    * @param {object} [valueOverrides]
-   *   Individual feature variables to override. By default, feature variables
-   *   take their values from DEFAULT_EXPERIMENT_FEATURE_VARIABLES. Overridden
-   *   by `recipe`.
-   * @param {object} [recipe]
-   *   If given, this recipe is used as is.
-   * @param {string} [name]
-   *   The name of the experiment.
+   *   Values for feature variables.
    * @returns {function}
    *   The experiment cleanup function (async).
    */
@@ -838,10 +819,7 @@ var UrlbarTestUtils = {
     let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
       enabled: true,
       featureId: "urlbar",
-      value: Object.assign(
-        DEFAULT_EXPERIMENT_FEATURE_VARIABLES,
-        valueOverrides
-      ),
+      value: valueOverrides,
     });
     return doExperimentCleanup;
   },
