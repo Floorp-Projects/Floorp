@@ -21,7 +21,10 @@ import mozpack.path as mozpath
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command(
-        "ide", category="devenv", description="Generate a project and launch an IDE."
+        "ide",
+        category="devenv",
+        description="Generate a project and launch an IDE.",
+        virtualenv_name="build",
     )
     @CommandArgument("ide", choices=["eclipse", "visualstudio", "vscode"])
     @CommandArgument("args", nargs=argparse.REMAINDER)
