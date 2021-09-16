@@ -19,6 +19,10 @@ bool gUseAndroidOpenGLTlsSlot;
 
 namespace egl
 {
+namespace
+{
+Debug *sDebug = nullptr;
+}  // namespace
 
 Thread::Thread()
     : mLabel(nullptr),
@@ -42,18 +46,29 @@ void Thread::setSuccess()
     mError = EGL_SUCCESS;
 }
 
-void Thread::setError(const Error &error,
-                      const Debug *debug,
+void Thread::setError(EGLint error,
                       const char *command,
-                      const LabeledObject *object)
+                      const LabeledObject *object,
+                      const char *message)
 {
-    ASSERT(debug != nullptr);
+    mError = error;
+    if (error != EGL_SUCCESS && message)
+    {
+        EnsureDebugAllocated();
+        sDebug->insertMessage(error, command, ErrorCodeToMessageType(error), getLabel(),
+                              object ? object->getLabel() : nullptr, message);
+    }
+}
 
+void Thread::setError(const Error &error, const char *command, const LabeledObject *object)
+{
     mError = error.getCode();
     if (error.isError() && !error.getMessage().empty())
     {
-        debug->insertMessage(error.getCode(), command, ErrorCodeToMessageType(error.getCode()),
-                             getLabel(), object ? object->getLabel() : nullptr, error.getMessage());
+        EnsureDebugAllocated();
+        sDebug->insertMessage(error.getCode(), command, ErrorCodeToMessageType(error.getCode()),
+                              getLabel(), object ? object->getLabel() : nullptr,
+                              error.getMessage());
     }
 }
 
@@ -107,5 +122,25 @@ Display *Thread::getDisplay() const
         return mContext->getDisplay();
     }
     return nullptr;
+}
+
+void EnsureDebugAllocated()
+{
+    // All EGL calls use a global lock, this is thread safe
+    if (sDebug == nullptr)
+    {
+        sDebug = new Debug();
+    }
+}
+
+void DeallocateDebug()
+{
+    SafeDelete(sDebug);
+}
+
+Debug *GetDebug()
+{
+    EnsureDebugAllocated();
+    return sDebug;
 }
 }  // namespace egl

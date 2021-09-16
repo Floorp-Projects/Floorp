@@ -177,7 +177,8 @@ bool HasRepeatingQualifiers(const TTypeQualifierBuilder::QualifierSequence &qual
                 // repetitions.
                 TQualifier currentQualifier =
                     static_cast<const TStorageQualifierWrapper *>(qualifiers[i])->getQualifier();
-                if (currentQualifier == EvqVertexOut || currentQualifier == EvqFragmentOut)
+                if (currentQualifier == EvqVertexOut || currentQualifier == EvqFragmentOut ||
+                    currentQualifier == EvqFragmentInOut)
                 {
                     isOut = true;
                 }
@@ -372,10 +373,14 @@ bool JoinVariableStorageQualifier(TQualifier *joinedQualifier, TQualifier storag
                     break;
                 case EvqVertexOut:
                 case EvqGeometryOut:
+                case EvqTessControlOut:
+                case EvqTessEvaluationOut:
                     *joinedQualifier = EvqSmoothOut;
                     break;
                 case EvqFragmentIn:
                 case EvqGeometryIn:
+                case EvqTessControlIn:
+                case EvqTessEvaluationIn:
                     *joinedQualifier = EvqSmoothIn;
                     break;
                 default:
@@ -392,10 +397,14 @@ bool JoinVariableStorageQualifier(TQualifier *joinedQualifier, TQualifier storag
                     break;
                 case EvqVertexOut:
                 case EvqGeometryOut:
+                case EvqTessControlOut:
+                case EvqTessEvaluationOut:
                     *joinedQualifier = EvqFlatOut;
                     break;
                 case EvqFragmentIn:
                 case EvqGeometryIn:
+                case EvqTessControlIn:
+                case EvqTessEvaluationIn:
                     *joinedQualifier = EvqFlatIn;
                     break;
                 default:
@@ -412,10 +421,14 @@ bool JoinVariableStorageQualifier(TQualifier *joinedQualifier, TQualifier storag
                     break;
                 case EvqVertexOut:
                 case EvqGeometryOut:
+                case EvqTessControlOut:
+                case EvqTessEvaluationOut:
                     *joinedQualifier = EvqNoPerspectiveOut;
                     break;
                 case EvqFragmentIn:
                 case EvqGeometryIn:
+                case EvqTessControlIn:
+                case EvqTessEvaluationIn:
                     *joinedQualifier = EvqNoPerspectiveIn;
                     break;
                 default:
@@ -429,10 +442,14 @@ bool JoinVariableStorageQualifier(TQualifier *joinedQualifier, TQualifier storag
             {
                 case EvqVertexOut:
                 case EvqGeometryOut:
+                case EvqTessControlOut:
+                case EvqTessEvaluationOut:
                     *joinedQualifier = EvqCentroidOut;
                     break;
                 case EvqFragmentIn:
                 case EvqGeometryIn:
+                case EvqTessControlIn:
+                case EvqTessEvaluationIn:
                     *joinedQualifier = EvqCentroidIn;
                     break;
                 default:
@@ -446,11 +463,30 @@ bool JoinVariableStorageQualifier(TQualifier *joinedQualifier, TQualifier storag
             {
                 case EvqVertexOut:
                 case EvqGeometryOut:
+                case EvqTessControlOut:
+                case EvqTessEvaluationOut:
                     *joinedQualifier = EvqSampleOut;
                     break;
                 case EvqFragmentIn:
                 case EvqGeometryIn:
+                case EvqTessControlIn:
+                case EvqTessEvaluationIn:
                     *joinedQualifier = EvqSampleIn;
+                    break;
+                default:
+                    return false;
+            }
+            break;
+        }
+        case EvqPatch:
+        {
+            switch (storageQualifier)
+            {
+                case EvqTessControlOut:
+                    *joinedQualifier = EvqPatchOut;
+                    break;
+                case EvqTessEvaluationIn:
+                    *joinedQualifier = EvqPatchIn;
                     break;
                 default:
                     return false;
@@ -695,6 +731,10 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
     {
         joinedQualifier.blockStorage = rightQualifier.blockStorage;
     }
+    if (rightQualifier.noncoherent != false)
+    {
+        joinedQualifier.noncoherent = rightQualifier.noncoherent;
+    }
 
     for (size_t i = 0u; i < rightQualifier.localSize.size(); ++i)
     {
@@ -755,6 +795,48 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
                                "max_vertices");
         }
         joinedQualifier.maxVertices = rightQualifier.maxVertices;
+    }
+
+    if (rightQualifier.tesPrimitiveType != EtetUndefined)
+    {
+        if (joinedQualifier.tesPrimitiveType == EtetUndefined)
+        {
+            joinedQualifier.tesPrimitiveType = rightQualifier.tesPrimitiveType;
+        }
+    }
+
+    if (rightQualifier.tesVertexSpacingType != EtetUndefined)
+    {
+        if (joinedQualifier.tesVertexSpacingType == EtetUndefined)
+        {
+            joinedQualifier.tesVertexSpacingType = rightQualifier.tesVertexSpacingType;
+        }
+    }
+
+    if (rightQualifier.tesOrderingType != EtetUndefined)
+    {
+        if (joinedQualifier.tesOrderingType == EtetUndefined)
+        {
+            joinedQualifier.tesOrderingType = rightQualifier.tesOrderingType;
+        }
+    }
+
+    if (rightQualifier.tesPointType != EtetUndefined)
+    {
+        if (joinedQualifier.tesPointType == EtetUndefined)
+        {
+            joinedQualifier.tesPointType = rightQualifier.tesPointType;
+        }
+    }
+
+    if (rightQualifier.vertices != 0)
+    {
+        if (joinedQualifier.vertices != 0 && joinedQualifier.vertices != rightQualifier.vertices)
+        {
+            diagnostics->error(rightQualifierLocation,
+                               "Cannot have multiple different vertices specifiers", "vertices");
+        }
+        joinedQualifier.vertices = rightQualifier.vertices;
     }
 
     if (rightQualifier.index != -1)

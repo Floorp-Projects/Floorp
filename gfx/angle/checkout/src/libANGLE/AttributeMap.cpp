@@ -11,9 +11,11 @@
 namespace egl
 {
 
-AttributeMap::AttributeMap() {}
+AttributeMap::AttributeMap() = default;
 
 AttributeMap::AttributeMap(const AttributeMap &other) = default;
+
+AttributeMap &AttributeMap::operator=(const AttributeMap &other) = default;
 
 AttributeMap::~AttributeMap() = default;
 

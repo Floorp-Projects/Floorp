@@ -31,6 +31,11 @@ bool ValidateES3TexImageParametersBase(const Context *context,
                                        GLenum type,
                                        GLsizei imageSize,
                                        const void *pixels);
+
+bool ValidateProgramParameteriBase(const Context *context,
+                                   ShaderProgramID program,
+                                   GLenum pname,
+                                   GLint value);
 }  // namespace gl
 
 #endif  // LIBANGLE_VALIDATION_ES3_H_

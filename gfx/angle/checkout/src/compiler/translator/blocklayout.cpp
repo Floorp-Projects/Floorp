@@ -125,9 +125,10 @@ void TraverseArrayOfArraysVariable(const ShaderVariable &variable,
         }
         else
         {
-            if (gl::IsSamplerType(variable.type) || gl::IsImageType(variable.type))
+            if (gl::IsSamplerType(variable.type) || gl::IsImageType(variable.type) ||
+                variable.isFragmentInOut)
             {
-                visitor->visitSamplerOrImage(elementVar);
+                visitor->visitOpaqueObject(elementVar);
             }
             else
             {
@@ -455,7 +456,7 @@ std::string VariableNameVisitor::collapseMappedNameStack() const
     return CollapseNameStack(mMappedNameStack);
 }
 
-void VariableNameVisitor::visitSamplerOrImage(const sh::ShaderVariable &variable)
+void VariableNameVisitor::visitOpaqueObject(const sh::ShaderVariable &variable)
 {
     if (!variable.hasParentArrayIndex())
     {
@@ -472,7 +473,7 @@ void VariableNameVisitor::visitSamplerOrImage(const sh::ShaderVariable &variable
         mMappedNameStack.pop_back();
     }
 
-    visitNamedSamplerOrImage(variable, name, mappedName, mArraySizeStack);
+    visitNamedOpaqueObject(variable, name, mappedName, mArraySizeStack);
 }
 
 void VariableNameVisitor::visitVariable(const ShaderVariable &variable, bool isRowMajor)
@@ -610,9 +611,10 @@ void TraverseShaderVariable(const ShaderVariable &variable,
     {
         TraverseArrayOfArraysVariable(variable, 0u, isRowMajor, visitor);
     }
-    else if (gl::IsSamplerType(variable.type) || gl::IsImageType(variable.type))
+    else if (gl::IsSamplerType(variable.type) || gl::IsImageType(variable.type) ||
+             variable.isFragmentInOut)
     {
-        visitor->visitSamplerOrImage(variable);
+        visitor->visitOpaqueObject(variable);
     }
     else
     {

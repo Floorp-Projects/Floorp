@@ -167,7 +167,7 @@ class TIntermTraverser : angle::NonCopyable
     {
         NodeReplaceWithMultipleEntry(TIntermAggregateBase *parentIn,
                                      TIntermNode *originalIn,
-                                     TIntermSequence replacementsIn)
+                                     TIntermSequence &&replacementsIn)
             : parent(parentIn), original(originalIn), replacements(std::move(replacementsIn))
         {}
 
