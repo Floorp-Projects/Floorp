@@ -7,7 +7,6 @@
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "NumberFormatFields.h"
-#include "NumberFormatFieldsUtil.h"
 #include "NumberFormatterSkeleton.h"
 #include "ScopedICUObject.h"
 
