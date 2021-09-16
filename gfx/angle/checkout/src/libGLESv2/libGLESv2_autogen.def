@@ -612,6 +612,8 @@ EXPORTS
 
     ; GL_EXT_EGL_image_array
 
+    ; GL_EXT_YUV_target
+
     ; GL_EXT_blend_func_extended
     glBindFragDataLocationEXT
     glBindFragDataLocationIndexedEXT
@@ -621,8 +623,15 @@ EXPORTS
     ; GL_EXT_buffer_storage
     glBufferStorageEXT
 
+    ; GL_EXT_clip_control
+    glClipControlEXT
+
     ; GL_EXT_copy_image
     glCopyImageSubDataEXT
+
+    ; GL_EXT_debug_label
+    glGetObjectLabelEXT
+    glLabelObjectEXT
 
     ; GL_EXT_debug_marker
     glInsertEventMarkerEXT
@@ -704,6 +713,9 @@ EXPORTS
 
     ; GL_EXT_occlusion_query_boolean
 
+    ; GL_EXT_primitive_bounding_box
+    glPrimitiveBoundingBoxEXT
+
     ; GL_EXT_read_format_bgra
 
     ; GL_EXT_robustness
@@ -725,6 +737,70 @@ EXPORTS
 
     ; GL_EXT_semaphore_fd
     glImportSemaphoreFdEXT
+
+    ; GL_EXT_separate_shader_objects
+    glActiveShaderProgramEXT
+    glBindProgramPipelineEXT
+    glCreateShaderProgramvEXT
+    glDeleteProgramPipelinesEXT
+    glGenProgramPipelinesEXT
+    glGetProgramPipelineInfoLogEXT
+    glGetProgramPipelineivEXT
+    glIsProgramPipelineEXT
+    glProgramParameteriEXT
+    glProgramUniform1fEXT
+    glProgramUniform1fvEXT
+    glProgramUniform1iEXT
+    glProgramUniform1ivEXT
+    glProgramUniform1uiEXT
+    glProgramUniform1uivEXT
+    glProgramUniform2fEXT
+    glProgramUniform2fvEXT
+    glProgramUniform2iEXT
+    glProgramUniform2ivEXT
+    glProgramUniform2uiEXT
+    glProgramUniform2uivEXT
+    glProgramUniform3fEXT
+    glProgramUniform3fvEXT
+    glProgramUniform3iEXT
+    glProgramUniform3ivEXT
+    glProgramUniform3uiEXT
+    glProgramUniform3uivEXT
+    glProgramUniform4fEXT
+    glProgramUniform4fvEXT
+    glProgramUniform4iEXT
+    glProgramUniform4ivEXT
+    glProgramUniform4uiEXT
+    glProgramUniform4uivEXT
+    glProgramUniformMatrix2fvEXT
+    glProgramUniformMatrix2x3fvEXT
+    glProgramUniformMatrix2x4fvEXT
+    glProgramUniformMatrix3fvEXT
+    glProgramUniformMatrix3x2fvEXT
+    glProgramUniformMatrix3x4fvEXT
+    glProgramUniformMatrix4fvEXT
+    glProgramUniformMatrix4x2fvEXT
+    glProgramUniformMatrix4x3fvEXT
+    glUseProgramStagesEXT
+    glValidateProgramPipelineEXT
+
+    ; GL_EXT_shader_framebuffer_fetch_non_coherent
+    glFramebufferFetchBarrierEXT
+
+    ; GL_EXT_shader_io_blocks
+
+    ; GL_EXT_tessellation_shader
+    glPatchParameteriEXT
+
+    ; GL_EXT_texture_border_clamp
+    glGetSamplerParameterIivEXT
+    glGetSamplerParameterIuivEXT
+    glGetTexParameterIivEXT
+    glGetTexParameterIuivEXT
+    glSamplerParameterIivEXT
+    glSamplerParameterIuivEXT
+    glTexParameterIivEXT
+    glTexParameterIuivEXT
 
     ; GL_EXT_texture_buffer
     glTexBufferEXT
@@ -748,10 +824,15 @@ EXPORTS
 
     ; GL_EXT_texture_sRGB_R8
 
+    ; GL_EXT_texture_sRGB_RG8
+
     ; GL_EXT_texture_storage
     glTexStorage1DEXT
     glTexStorage2DEXT
     glTexStorage3DEXT
+
+    ; GL_KHR_blend_equation_advanced
+    glBlendBarrierKHR
 
     ; GL_KHR_debug
     glDebugMessageCallbackKHR
@@ -777,6 +858,9 @@ EXPORTS
     glIsFenceNV
     glSetFenceNV
     glTestFenceNV
+
+    ; GL_NV_framebuffer_blit
+    glBlitFramebufferNV
 
     ; GL_OES_EGL_image
     glEGLImageTargetRenderbufferStorageOES
@@ -855,6 +939,8 @@ EXPORTS
     ; GL_OES_sample_shading
     glMinSampleShadingOES
 
+    ; GL_OES_shader_io_blocks
+
     ; GL_OES_texture_3D
     glCompressedTexImage3DOES
     glCompressedTexSubImage3DOES
@@ -910,6 +996,7 @@ EXPORTS
 
     ; EGL_ANGLE_explicit_context
     glActiveShaderProgramContextANGLE
+    glActiveShaderProgramEXTContextANGLE
     glActiveTextureContextANGLE
     glAlphaFuncContextANGLE
     glAlphaFuncxContextANGLE
@@ -927,6 +1014,7 @@ EXPORTS
     glBindFramebufferOESContextANGLE
     glBindImageTextureContextANGLE
     glBindProgramPipelineContextANGLE
+    glBindProgramPipelineEXTContextANGLE
     glBindRenderbufferContextANGLE
     glBindRenderbufferOESContextANGLE
     glBindSamplerContextANGLE
@@ -937,6 +1025,7 @@ EXPORTS
     glBindVertexArrayOESContextANGLE
     glBindVertexBufferContextANGLE
     glBlendBarrierContextANGLE
+    glBlendBarrierKHRContextANGLE
     glBlendColorContextANGLE
     glBlendEquationContextANGLE
     glBlendEquationSeparateContextANGLE
@@ -956,6 +1045,7 @@ EXPORTS
     glBlendFunciOESContextANGLE
     glBlitFramebufferContextANGLE
     glBlitFramebufferANGLEContextANGLE
+    glBlitFramebufferNVContextANGLE
     glBufferDataContextANGLE
     glBufferStorageEXTContextANGLE
     glBufferStorageExternalEXTContextANGLE
@@ -975,6 +1065,7 @@ EXPORTS
     glClearStencilContextANGLE
     glClientActiveTextureContextANGLE
     glClientWaitSyncContextANGLE
+    glClipControlEXTContextANGLE
     glClipPlanefContextANGLE
     glClipPlanexContextANGLE
     glColor4fContextANGLE
@@ -1014,6 +1105,7 @@ EXPORTS
     glCreateProgramContextANGLE
     glCreateShaderContextANGLE
     glCreateShaderProgramvContextANGLE
+    glCreateShaderProgramvEXTContextANGLE
     glCullFaceContextANGLE
     glCurrentPaletteMatrixOESContextANGLE
     glDebugMessageCallbackContextANGLE
@@ -1029,6 +1121,7 @@ EXPORTS
     glDeleteMemoryObjectsEXTContextANGLE
     glDeleteProgramContextANGLE
     glDeleteProgramPipelinesContextANGLE
+    glDeleteProgramPipelinesEXTContextANGLE
     glDeleteQueriesContextANGLE
     glDeleteQueriesEXTContextANGLE
     glDeleteRenderbuffersContextANGLE
@@ -1109,6 +1202,7 @@ EXPORTS
     glFogfvContextANGLE
     glFogxContextANGLE
     glFogxvContextANGLE
+    glFramebufferFetchBarrierEXTContextANGLE
     glFramebufferParameteriContextANGLE
     glFramebufferRenderbufferContextANGLE
     glFramebufferRenderbufferOESContextANGLE
@@ -1128,6 +1222,7 @@ EXPORTS
     glGenFramebuffersContextANGLE
     glGenFramebuffersOESContextANGLE
     glGenProgramPipelinesContextANGLE
+    glGenProgramPipelinesEXTContextANGLE
     glGenQueriesContextANGLE
     glGenQueriesEXTContextANGLE
     glGenRenderbuffersContextANGLE
@@ -1197,6 +1292,7 @@ EXPORTS
     glGetMultisamplefvANGLEContextANGLE
     glGetMultisamplefvRobustANGLEContextANGLE
     glGetObjectLabelContextANGLE
+    glGetObjectLabelEXTContextANGLE
     glGetObjectLabelKHRContextANGLE
     glGetObjectPtrLabelContextANGLE
     glGetObjectPtrLabelKHRContextANGLE
@@ -1209,7 +1305,9 @@ EXPORTS
     glGetProgramInterfaceivContextANGLE
     glGetProgramInterfaceivRobustANGLEContextANGLE
     glGetProgramPipelineInfoLogContextANGLE
+    glGetProgramPipelineInfoLogEXTContextANGLE
     glGetProgramPipelineivContextANGLE
+    glGetProgramPipelineivEXTContextANGLE
     glGetProgramResourceIndexContextANGLE
     glGetProgramResourceLocationContextANGLE
     glGetProgramResourceLocationIndexEXTContextANGLE
@@ -1234,9 +1332,11 @@ EXPORTS
     glGetRenderbufferParameterivOESContextANGLE
     glGetRenderbufferParameterivRobustANGLEContextANGLE
     glGetSamplerParameterIivContextANGLE
+    glGetSamplerParameterIivEXTContextANGLE
     glGetSamplerParameterIivOESContextANGLE
     glGetSamplerParameterIivRobustANGLEContextANGLE
     glGetSamplerParameterIuivContextANGLE
+    glGetSamplerParameterIuivEXTContextANGLE
     glGetSamplerParameterIuivOESContextANGLE
     glGetSamplerParameterIuivRobustANGLEContextANGLE
     glGetSamplerParameterfvContextANGLE
@@ -1266,9 +1366,11 @@ EXPORTS
     glGetTexLevelParameterivANGLEContextANGLE
     glGetTexLevelParameterivRobustANGLEContextANGLE
     glGetTexParameterIivContextANGLE
+    glGetTexParameterIivEXTContextANGLE
     glGetTexParameterIivOESContextANGLE
     glGetTexParameterIivRobustANGLEContextANGLE
     glGetTexParameterIuivContextANGLE
+    glGetTexParameterIuivEXTContextANGLE
     glGetTexParameterIuivOESContextANGLE
     glGetTexParameterIuivRobustANGLEContextANGLE
     glGetTexParameterfvContextANGLE
@@ -1327,6 +1429,7 @@ EXPORTS
     glIsMemoryObjectEXTContextANGLE
     glIsProgramContextANGLE
     glIsProgramPipelineContextANGLE
+    glIsProgramPipelineEXTContextANGLE
     glIsQueryContextANGLE
     glIsQueryEXTContextANGLE
     glIsRenderbufferContextANGLE
@@ -1339,6 +1442,7 @@ EXPORTS
     glIsTransformFeedbackContextANGLE
     glIsVertexArrayContextANGLE
     glIsVertexArrayOESContextANGLE
+    glLabelObjectEXTContextANGLE
     glLightModelfContextANGLE
     glLightModelfvContextANGLE
     glLightModelxContextANGLE
@@ -1393,6 +1497,7 @@ EXPORTS
     glOrthofContextANGLE
     glOrthoxContextANGLE
     glPatchParameteriContextANGLE
+    glPatchParameteriEXTContextANGLE
     glPauseTransformFeedbackContextANGLE
     glPixelStoreiContextANGLE
     glPointParameterfContextANGLE
@@ -1409,42 +1514,77 @@ EXPORTS
     glPopGroupMarkerEXTContextANGLE
     glPopMatrixContextANGLE
     glPrimitiveBoundingBoxContextANGLE
+    glPrimitiveBoundingBoxEXTContextANGLE
     glProgramBinaryContextANGLE
     glProgramBinaryOESContextANGLE
     glProgramParameteriContextANGLE
+    glProgramParameteriEXTContextANGLE
     glProgramUniform1fContextANGLE
+    glProgramUniform1fEXTContextANGLE
     glProgramUniform1fvContextANGLE
+    glProgramUniform1fvEXTContextANGLE
     glProgramUniform1iContextANGLE
+    glProgramUniform1iEXTContextANGLE
     glProgramUniform1ivContextANGLE
+    glProgramUniform1ivEXTContextANGLE
     glProgramUniform1uiContextANGLE
+    glProgramUniform1uiEXTContextANGLE
     glProgramUniform1uivContextANGLE
+    glProgramUniform1uivEXTContextANGLE
     glProgramUniform2fContextANGLE
+    glProgramUniform2fEXTContextANGLE
     glProgramUniform2fvContextANGLE
+    glProgramUniform2fvEXTContextANGLE
     glProgramUniform2iContextANGLE
+    glProgramUniform2iEXTContextANGLE
     glProgramUniform2ivContextANGLE
+    glProgramUniform2ivEXTContextANGLE
     glProgramUniform2uiContextANGLE
+    glProgramUniform2uiEXTContextANGLE
     glProgramUniform2uivContextANGLE
+    glProgramUniform2uivEXTContextANGLE
     glProgramUniform3fContextANGLE
+    glProgramUniform3fEXTContextANGLE
     glProgramUniform3fvContextANGLE
+    glProgramUniform3fvEXTContextANGLE
     glProgramUniform3iContextANGLE
+    glProgramUniform3iEXTContextANGLE
     glProgramUniform3ivContextANGLE
+    glProgramUniform3ivEXTContextANGLE
     glProgramUniform3uiContextANGLE
+    glProgramUniform3uiEXTContextANGLE
     glProgramUniform3uivContextANGLE
+    glProgramUniform3uivEXTContextANGLE
     glProgramUniform4fContextANGLE
+    glProgramUniform4fEXTContextANGLE
     glProgramUniform4fvContextANGLE
+    glProgramUniform4fvEXTContextANGLE
     glProgramUniform4iContextANGLE
+    glProgramUniform4iEXTContextANGLE
     glProgramUniform4ivContextANGLE
+    glProgramUniform4ivEXTContextANGLE
     glProgramUniform4uiContextANGLE
+    glProgramUniform4uiEXTContextANGLE
     glProgramUniform4uivContextANGLE
+    glProgramUniform4uivEXTContextANGLE
     glProgramUniformMatrix2fvContextANGLE
+    glProgramUniformMatrix2fvEXTContextANGLE
     glProgramUniformMatrix2x3fvContextANGLE
+    glProgramUniformMatrix2x3fvEXTContextANGLE
     glProgramUniformMatrix2x4fvContextANGLE
+    glProgramUniformMatrix2x4fvEXTContextANGLE
     glProgramUniformMatrix3fvContextANGLE
+    glProgramUniformMatrix3fvEXTContextANGLE
     glProgramUniformMatrix3x2fvContextANGLE
+    glProgramUniformMatrix3x2fvEXTContextANGLE
     glProgramUniformMatrix3x4fvContextANGLE
+    glProgramUniformMatrix3x4fvEXTContextANGLE
     glProgramUniformMatrix4fvContextANGLE
+    glProgramUniformMatrix4fvEXTContextANGLE
     glProgramUniformMatrix4x2fvContextANGLE
+    glProgramUniformMatrix4x2fvEXTContextANGLE
     glProgramUniformMatrix4x3fvContextANGLE
+    glProgramUniformMatrix4x3fvEXTContextANGLE
     glProvokingVertexANGLEContextANGLE
     glPushDebugGroupContextANGLE
     glPushDebugGroupKHRContextANGLE
@@ -1473,9 +1613,11 @@ EXPORTS
     glSampleMaskiContextANGLE
     glSampleMaskiANGLEContextANGLE
     glSamplerParameterIivContextANGLE
+    glSamplerParameterIivEXTContextANGLE
     glSamplerParameterIivOESContextANGLE
     glSamplerParameterIivRobustANGLEContextANGLE
     glSamplerParameterIuivContextANGLE
+    glSamplerParameterIuivEXTContextANGLE
     glSamplerParameterIuivOESContextANGLE
     glSamplerParameterIuivRobustANGLEContextANGLE
     glSamplerParameterfContextANGLE
@@ -1526,9 +1668,11 @@ EXPORTS
     glTexImage3DOESContextANGLE
     glTexImage3DRobustANGLEContextANGLE
     glTexParameterIivContextANGLE
+    glTexParameterIivEXTContextANGLE
     glTexParameterIivOESContextANGLE
     glTexParameterIivRobustANGLEContextANGLE
     glTexParameterIuivContextANGLE
+    glTexParameterIuivEXTContextANGLE
     glTexParameterIuivOESContextANGLE
     glTexParameterIuivRobustANGLEContextANGLE
     glTexParameterfContextANGLE
@@ -1602,8 +1746,10 @@ EXPORTS
     glUnmapBufferOESContextANGLE
     glUseProgramContextANGLE
     glUseProgramStagesContextANGLE
+    glUseProgramStagesEXTContextANGLE
     glValidateProgramContextANGLE
     glValidateProgramPipelineContextANGLE
+    glValidateProgramPipelineEXTContextANGLE
     glVertexAttrib1fContextANGLE
     glVertexAttrib1fvContextANGLE
     glVertexAttrib2fContextANGLE

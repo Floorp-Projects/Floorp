@@ -36,11 +36,11 @@ bool ClampPointSize(TCompiler *compiler,
         new TIntermConstantUnion(maxPointSizeConstant, TType(EbtFloat, EbpHigh, EvqConst));
 
     // min(gl_PointSize, maxPointSize)
-    TIntermSequence *minArguments = new TIntermSequence();
-    minArguments->push_back(pointSizeNode->deepCopy());
-    minArguments->push_back(maxPointSizeNode);
+    TIntermSequence minArguments;
+    minArguments.push_back(pointSizeNode->deepCopy());
+    minArguments.push_back(maxPointSizeNode);
     TIntermTyped *clampedPointSize =
-        CreateBuiltInFunctionCallNode("min", minArguments, *symbolTable, 100);
+        CreateBuiltInFunctionCallNode("min", &minArguments, *symbolTable, 100);
 
     // gl_PointSize = min(gl_PointSize, maxPointSize)
     TIntermBinary *assignPointSize = new TIntermBinary(EOpAssign, pointSizeNode, clampedPointSize);

@@ -66,6 +66,7 @@ class BufferState final : angle::NonCopyable
     int mTransformFeedbackGenericBindingCount;
     GLboolean mImmutable;
     GLbitfield mStorageExtUsageFlags;
+    GLboolean mExternal;
 };
 
 class Buffer final : public RefCountObject<BufferID>,
@@ -81,6 +82,11 @@ class Buffer final : public RefCountObject<BufferID>,
     void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
+    angle::Result bufferStorageExternal(Context *context,
+                                        BufferBinding target,
+                                        GLsizeiptr size,
+                                        GLeglClientBufferEXT clientBuffer,
+                                        GLbitfield flags);
     angle::Result bufferStorage(Context *context,
                                 BufferBinding target,
                                 GLsizeiptr size,
@@ -91,12 +97,6 @@ class Buffer final : public RefCountObject<BufferID>,
                              const void *data,
                              GLsizeiptr size,
                              BufferUsage usage);
-    angle::Result bufferDataImpl(Context *context,
-                                 BufferBinding target,
-                                 const void *data,
-                                 GLsizeiptr size,
-                                 BufferUsage usage,
-                                 GLbitfield flags);
     angle::Result bufferSubData(const Context *context,
                                 BufferBinding target,
                                 const void *data,
@@ -166,6 +166,18 @@ class Buffer final : public RefCountObject<BufferID>,
     void onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message) override;
 
   private:
+    angle::Result bufferDataImpl(Context *context,
+                                 BufferBinding target,
+                                 const void *data,
+                                 GLsizeiptr size,
+                                 BufferUsage usage,
+                                 GLbitfield flags);
+    angle::Result bufferExternalDataImpl(Context *context,
+                                         BufferBinding target,
+                                         GLeglClientBufferEXT clientBuffer,
+                                         GLsizeiptr size,
+                                         GLbitfield flags);
+
     BufferState mState;
     rx::BufferImpl *mImpl;
     angle::ObserverBinding mImplObserver;

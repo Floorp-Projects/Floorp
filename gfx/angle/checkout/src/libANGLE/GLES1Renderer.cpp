@@ -455,6 +455,29 @@ int GLES1Renderer::VertexArrayIndex(ClientVertexArrayType type, const GLES1State
 }
 
 // static
+ClientVertexArrayType GLES1Renderer::VertexArrayType(int attribIndex)
+{
+    switch (attribIndex)
+    {
+        case kVertexAttribIndex:
+            return ClientVertexArrayType::Vertex;
+        case kNormalAttribIndex:
+            return ClientVertexArrayType::Normal;
+        case kColorAttribIndex:
+            return ClientVertexArrayType::Color;
+        case kPointSizeAttribIndex:
+            return ClientVertexArrayType::PointSize;
+        default:
+            if (attribIndex < kTextureCoordAttribIndexBase + kTexUnitCount)
+            {
+                return ClientVertexArrayType::TextureCoord;
+            }
+            UNREACHABLE();
+            return ClientVertexArrayType::InvalidEnum;
+    }
+}
+
+// static
 int GLES1Renderer::TexCoordArrayIndex(unsigned int unit)
 {
     return kTextureCoordAttribIndexBase + unit;
@@ -549,7 +572,7 @@ angle::Result GLES1Renderer::linkProgram(Context *context,
                                          State *glState,
                                          ShaderProgramID vertexShader,
                                          ShaderProgramID fragmentShader,
-                                         const std::unordered_map<GLint, std::string> &attribLocs,
+                                         const angle::HashMap<GLint, std::string> &attribLocs,
                                          ShaderProgramID *programOut)
 {
     ShaderProgramID program = mShaderPrograms->createProgram(context->getImplementation());
@@ -559,8 +582,8 @@ angle::Result GLES1Renderer::linkProgram(Context *context,
 
     *programOut = program;
 
-    programObject->attachShader(context, getShader(vertexShader));
-    programObject->attachShader(context, getShader(fragmentShader));
+    programObject->attachShader(getShader(vertexShader));
+    programObject->attachShader(getShader(fragmentShader));
 
     for (auto it : attribLocs)
     {
@@ -615,7 +638,7 @@ angle::Result GLES1Renderer::initializeRendererProgram(Context *context, State *
     ANGLE_TRY(compileShader(context, ShaderType::Fragment, fragmentStream.str().c_str(),
                             &fragmentShader));
 
-    std::unordered_map<GLint, std::string> attribLocs;
+    angle::HashMap<GLint, std::string> attribLocs;
 
     attribLocs[(GLint)kVertexAttribIndex]    = "pos";
     attribLocs[(GLint)kNormalAttribIndex]    = "normal";

@@ -19,11 +19,13 @@ enum VendorID : uint32_t
 {
     VENDOR_ID_UNKNOWN = 0x0,
     VENDOR_ID_AMD     = 0x1002,
+    VENDOR_ID_APPLE   = 0x106B,
     VENDOR_ID_ARM     = 0x13B5,
     // Broadcom devices won't use PCI, but this is their Vulkan vendor id.
     VENDOR_ID_BROADCOM = 0x14E4,
     VENDOR_ID_GOOGLE   = 0x1AE0,
     VENDOR_ID_INTEL    = 0x8086,
+    VENDOR_ID_MESA     = 0x10005,
     VENDOR_ID_NVIDIA   = 0x10DE,
     VENDOR_ID_POWERVR  = 0x1010,
     // This is Qualcomm PCI Vendor ID.
@@ -31,6 +33,7 @@ enum VendorID : uint32_t
     VENDOR_ID_QUALCOMM = 0x5143,
     VENDOR_ID_SAMSUNG  = 0x144D,
     VENDOR_ID_VMWARE   = 0x15AD,
+    VENDOR_ID_VIVANTE  = 0x9999,
 };
 
 enum AndroidDeviceID : uint32_t
@@ -45,6 +48,11 @@ enum AndroidDeviceID : uint32_t
 inline bool IsAMD(uint32_t vendorId)
 {
     return vendorId == VENDOR_ID_AMD;
+}
+
+inline bool IsApple(uint32_t vendorId)
+{
+    return vendorId == VENDOR_ID_APPLE;
 }
 
 inline bool IsARM(uint32_t vendorId)
@@ -90,6 +98,11 @@ inline bool IsVMWare(uint32_t vendorId)
 inline bool IsSamsung(uint32_t vendorId)
 {
     return vendorId == VENDOR_ID_SAMSUNG;
+}
+
+inline bool IsVivante(uint32_t vendorId)
+{
+    return vendorId == VENDOR_ID_VIVANTE;
 }
 
 inline bool IsNexus5X(uint32_t vendorId, uint32_t deviceId)
@@ -139,6 +152,7 @@ bool IsCherryView(uint32_t DeviceId);
 bool IsSkylake(uint32_t DeviceId);
 bool IsBroxton(uint32_t DeviceId);
 bool IsKabylake(uint32_t DeviceId);
+bool Is9thGenIntel(uint32_t DeviceId);
 
 // Platform helpers
 inline bool IsWindows()

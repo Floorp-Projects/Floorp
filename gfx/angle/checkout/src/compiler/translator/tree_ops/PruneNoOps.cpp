@@ -82,8 +82,8 @@ bool PruneNoOpsTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
                 // float a;
                 // This applies also to struct declarations.
                 TIntermSequence emptyReplacement;
-                mMultiReplacements.push_back(
-                    NodeReplaceWithMultipleEntry(node, declaratorSymbol, emptyReplacement));
+                mMultiReplacements.emplace_back(node, declaratorSymbol,
+                                                std::move(emptyReplacement));
             }
             else if (declaratorSymbol->getBasicType() != EbtStruct)
             {
@@ -134,8 +134,7 @@ bool PruneNoOpsTraverser::visitBlock(Visit visit, TIntermBlock *node)
         if (IsNoOp(statement))
         {
             TIntermSequence emptyReplacement;
-            mMultiReplacements.push_back(
-                NodeReplaceWithMultipleEntry(node, statement, emptyReplacement));
+            mMultiReplacements.emplace_back(node, statement, std::move(emptyReplacement));
         }
     }
 

@@ -12,6 +12,7 @@
 #include "common/platform.h"
 #include "common/system_utils.h"
 #include "libANGLE/ErrorStrings.h"
+#include "libANGLE/Thread.h"
 #include "libGLESv2/resource.h"
 
 #include <atomic>
@@ -20,11 +21,13 @@ namespace egl
 {
 namespace
 {
-Debug *g_Debug = nullptr;
-
 ANGLE_REQUIRE_CONSTANT_INIT std::atomic<angle::GlobalMutex *> g_Mutex(nullptr);
 static_assert(std::is_trivially_destructible<decltype(g_Mutex)>::value,
               "global mutex is not trivially destructible");
+
+ANGLE_REQUIRE_CONSTANT_INIT gl::Context *g_LastContext(nullptr);
+static_assert(std::is_trivially_destructible<decltype(g_LastContext)>::value,
+              "global last context is not trivially destructible");
 
 void SetContextToAndroidOpenGLTLSSlot(gl::Context *value)
 {
@@ -38,22 +41,17 @@ void SetContextToAndroidOpenGLTLSSlot(gl::Context *value)
 
 Thread *AllocateCurrentThread()
 {
-    gCurrentThread = new Thread();
+    {
+        // Global thread intentionally leaked
+        ANGLE_SCOPED_DISABLE_LSAN();
+        gCurrentThread = new Thread();
+    }
 
     // Initialize fast TLS slot
     SetContextToAndroidOpenGLTLSSlot(nullptr);
     gl::gCurrentValidContext = nullptr;
 
     return gCurrentThread;
-}
-
-void AllocateDebug()
-{
-    // All EGL calls use a global lock, this is thread safe
-    if (g_Debug == nullptr)
-    {
-        g_Debug = new Debug();
-    }
 }
 
 void AllocateMutex()
@@ -79,16 +77,20 @@ angle::GlobalMutex &GetGlobalMutex()
     return *g_Mutex;
 }
 
+gl::Context *GetGlobalLastContext()
+{
+    return g_LastContext;
+}
+
+void SetGlobalLastContext(gl::Context *context)
+{
+    g_LastContext = context;
+}
+
 Thread *GetCurrentThread()
 {
     Thread *current = gCurrentThread;
     return (current ? current : AllocateCurrentThread());
-}
-
-Debug *GetDebug()
-{
-    AllocateDebug();
-    return g_Debug;
 }
 
 void SetContextCurrent(Thread *thread, gl::Context *context)
@@ -97,7 +99,11 @@ void SetContextCurrent(Thread *thread, gl::Context *context)
     gCurrentThread->setCurrent(context);
     SetContextToAndroidOpenGLTLSSlot(context);
     gl::gCurrentValidContext = context;
+#if defined(ANGLE_FORCE_CONTEXT_CHECK_EVERY_CALL)
+    DirtyContextIfNeeded(context);
+#endif
 }
+
 }  // namespace egl
 
 namespace gl
@@ -116,21 +122,15 @@ void GenerateContextLostErrorOnCurrentGlobalContext()
 }
 }  // namespace gl
 
-#ifdef ANGLE_PLATFORM_WINDOWS
+#if defined(ANGLE_PLATFORM_WINDOWS) && !defined(ANGLE_STATIC)
 namespace egl
 {
 
 namespace
 {
-
 void DeallocateCurrentThread()
 {
     SafeDelete(gCurrentThread);
-}
-
-void DeallocateDebug()
-{
-    SafeDelete(g_Debug);
 }
 
 void DeallocateMutex()
@@ -145,8 +145,7 @@ void DeallocateMutex()
 
 bool InitializeProcess()
 {
-    ASSERT(g_Debug == nullptr);
-    AllocateDebug();
+    EnsureDebugAllocated();
     AllocateMutex();
     return AllocateCurrentThread() != nullptr;
 }
@@ -239,4 +238,4 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 
     return TRUE;
 }
-#endif  // ANGLE_PLATFORM_WINDOWS
+#endif  // defined(ANGLE_PLATFORM_WINDOWS) && !defined(ANGLE_STATIC)

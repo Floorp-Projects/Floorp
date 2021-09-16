@@ -201,7 +201,7 @@ class ShaderVariableVisitor
     virtual void enterArrayElement(const ShaderVariable &arrayVar, unsigned int arrayElement) {}
     virtual void exitArrayElement(const ShaderVariable &arrayVar, unsigned int arrayElement) {}
 
-    virtual void visitSamplerOrImage(const sh::ShaderVariable &variable) {}
+    virtual void visitOpaqueObject(const sh::ShaderVariable &variable) {}
 
     virtual void visitVariable(const ShaderVariable &variable, bool isRowMajor) = 0;
 
@@ -225,10 +225,10 @@ class VariableNameVisitor : public ShaderVariableVisitor
     void exitArrayElement(const ShaderVariable &arrayVar, unsigned int arrayElement) override;
 
   protected:
-    virtual void visitNamedSamplerOrImage(const sh::ShaderVariable &sampler,
-                                          const std::string &name,
-                                          const std::string &mappedName,
-                                          const std::vector<unsigned int> &arraySizes)
+    virtual void visitNamedOpaqueObject(const sh::ShaderVariable &variable,
+                                        const std::string &name,
+                                        const std::string &mappedName,
+                                        const std::vector<unsigned int> &arraySizes)
     {}
     virtual void visitNamedVariable(const ShaderVariable &variable,
                                     bool isRowMajor,
@@ -240,7 +240,7 @@ class VariableNameVisitor : public ShaderVariableVisitor
     std::string collapseMappedNameStack() const;
 
   private:
-    void visitSamplerOrImage(const sh::ShaderVariable &variable) final;
+    void visitOpaqueObject(const sh::ShaderVariable &variable) final;
     void visitVariable(const ShaderVariable &variable, bool isRowMajor) final;
 
     std::vector<std::string> mNameStack;

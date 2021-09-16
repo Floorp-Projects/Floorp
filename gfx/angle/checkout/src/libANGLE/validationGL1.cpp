@@ -1276,4 +1276,568 @@ bool ValidateVertex4sv(const Context *, const GLshort *v)
     return true;
 }
 
+bool ValidateAreTexturesResident(const Context *context,
+                                 GLsizei n,
+                                 const GLuint *textures,
+                                 const GLboolean *residences)
+{
+    return true;
+}
+
+bool ValidateArrayElement(const Context *context, GLint i)
+{
+    return true;
+}
+
+bool ValidateCopyTexImage1D(const Context *context,
+                            GLenum target,
+                            GLint level,
+                            GLenum internalformat,
+                            GLint x,
+                            GLint y,
+                            GLsizei width,
+                            GLint border)
+{
+    return true;
+}
+
+bool ValidateCopyTexSubImage1D(const Context *context,
+                               GLenum target,
+                               GLint level,
+                               GLint xoffset,
+                               GLint x,
+                               GLint y,
+                               GLsizei width)
+{
+    return true;
+}
+
+bool ValidateEdgeFlagPointer(const Context *context, GLsizei stride, const void *pointer)
+{
+    return true;
+}
+
+bool ValidateIndexPointer(const Context *context, GLenum type, GLsizei stride, const void *pointer)
+{
+    return true;
+}
+
+bool ValidateIndexub(const Context *context, GLubyte c)
+{
+    return true;
+}
+
+bool ValidateIndexubv(const Context *context, const GLubyte *c)
+{
+    return true;
+}
+
+bool ValidateInterleavedArrays(const Context *context,
+                               GLenum format,
+                               GLsizei stride,
+                               const void *pointer)
+{
+    return true;
+}
+
+bool ValidatePopClientAttrib(const Context *context)
+{
+    return true;
+}
+
+bool ValidatePrioritizeTextures(const Context *context,
+                                GLsizei n,
+                                const GLuint *textures,
+                                const GLfloat *priorities)
+{
+    return true;
+}
+
+bool ValidatePushClientAttrib(const Context *context, GLbitfield mask)
+{
+    return true;
+}
+
+bool ValidateTexSubImage1D(const Context *context,
+                           GLenum target,
+                           GLint level,
+                           GLint xoffset,
+                           GLsizei width,
+                           GLenum format,
+                           GLenum type,
+                           const void *pixels)
+{
+    return true;
+}
+
+bool ValidateCompressedTexImage1D(const Context *context,
+                                  GLenum target,
+                                  GLint level,
+                                  GLenum internalformat,
+                                  GLsizei width,
+                                  GLint border,
+                                  GLsizei imageSize,
+                                  const void *data)
+{
+    return true;
+}
+
+bool ValidateCompressedTexSubImage1D(const Context *context,
+                                     GLenum target,
+                                     GLint level,
+                                     GLint xoffset,
+                                     GLsizei width,
+                                     GLenum format,
+                                     GLsizei imageSize,
+                                     const void *data)
+{
+    return true;
+}
+
+bool ValidateGetCompressedTexImage(const Context *context,
+                                   GLenum target,
+                                   GLint level,
+                                   const void *img)
+{
+    return true;
+}
+
+bool ValidateLoadTransposeMatrixd(const Context *context, const GLdouble *m)
+{
+    return true;
+}
+
+bool ValidateLoadTransposeMatrixf(const Context *context, const GLfloat *m)
+{
+    return true;
+}
+
+bool ValidateMultTransposeMatrixd(const Context *context, const GLdouble *m)
+{
+    return true;
+}
+
+bool ValidateMultTransposeMatrixf(const Context *context, const GLfloat *m)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1d(const Context *context, GLenum target, GLdouble s)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1dv(const Context *context, GLenum target, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1f(const Context *context, GLenum target, GLfloat s)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1fv(const Context *context, GLenum target, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1i(const Context *context, GLenum target, GLint s)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1iv(const Context *context, GLenum target, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1s(const Context *context, GLenum target, GLshort s)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord1sv(const Context *context, GLenum target, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2d(const Context *context, GLenum target, GLdouble s, GLdouble t)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2dv(const Context *context, GLenum target, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2f(const Context *context, GLenum target, GLfloat s, GLfloat t)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2fv(const Context *context, GLenum target, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2i(const Context *context, GLenum target, GLint s, GLint t)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2iv(const Context *context, GLenum target, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2s(const Context *context, GLenum target, GLshort s, GLshort t)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord2sv(const Context *context, GLenum target, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3d(const Context *context,
+                             GLenum target,
+                             GLdouble s,
+                             GLdouble t,
+                             GLdouble r)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3dv(const Context *context, GLenum target, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3f(const Context *context, GLenum target, GLfloat s, GLfloat t, GLfloat r)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3fv(const Context *context, GLenum target, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3i(const Context *context, GLenum target, GLint s, GLint t, GLint r)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3iv(const Context *context, GLenum target, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3s(const Context *context, GLenum target, GLshort s, GLshort t, GLshort r)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord3sv(const Context *context, GLenum target, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4d(const Context *context,
+                             GLenum target,
+                             GLdouble s,
+                             GLdouble t,
+                             GLdouble r,
+                             GLdouble q)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4dv(const Context *context, GLenum target, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4fv(const Context *context, GLenum target, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4i(const Context *context,
+                             GLenum target,
+                             GLint s,
+                             GLint t,
+                             GLint r,
+                             GLint q)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4iv(const Context *context, GLenum target, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4s(const Context *context,
+                             GLenum target,
+                             GLshort s,
+                             GLshort t,
+                             GLshort r,
+                             GLshort q)
+{
+    return true;
+}
+
+bool ValidateMultiTexCoord4sv(const Context *context, GLenum target, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateFogCoordPointer(const Context *context,
+                             GLenum type,
+                             GLsizei stride,
+                             const void *pointer)
+{
+    return true;
+}
+
+bool ValidateFogCoordd(const Context *context, GLdouble coord)
+{
+    return true;
+}
+
+bool ValidateFogCoorddv(const Context *context, const GLdouble *coord)
+{
+    return true;
+}
+
+bool ValidateFogCoordf(const Context *context, GLfloat coord)
+{
+    return true;
+}
+
+bool ValidateFogCoordfv(const Context *context, const GLfloat *coord)
+{
+    return true;
+}
+
+bool ValidateMultiDrawArrays(const Context *context,
+                             PrimitiveMode modePacked,
+                             const GLint *first,
+                             const GLsizei *count,
+                             GLsizei drawcount)
+{
+    return true;
+}
+
+bool ValidateMultiDrawElements(const Context *context,
+                               PrimitiveMode modePacked,
+                               const GLsizei *count,
+                               DrawElementsType typePacked,
+                               const void *const *indices,
+                               GLsizei drawcount)
+{
+    return true;
+}
+
+bool ValidatePointParameteri(const Context *context, GLenum pname, GLint param)
+{
+    return true;
+}
+
+bool ValidatePointParameteriv(const Context *context, GLenum pname, const GLint *params)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3b(const Context *context, GLbyte red, GLbyte green, GLbyte blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3bv(const Context *context, const GLbyte *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3d(const Context *context, GLdouble red, GLdouble green, GLdouble blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3dv(const Context *context, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3f(const Context *context, GLfloat red, GLfloat green, GLfloat blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3fv(const Context *context, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3i(const Context *context, GLint red, GLint green, GLint blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3iv(const Context *context, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3s(const Context *context, GLshort red, GLshort green, GLshort blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3sv(const Context *context, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3ub(const Context *context, GLubyte red, GLubyte green, GLubyte blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3ubv(const Context *context, const GLubyte *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3ui(const Context *context, GLuint red, GLuint green, GLuint blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3uiv(const Context *context, const GLuint *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3us(const Context *context, GLushort red, GLushort green, GLushort blue)
+{
+    return true;
+}
+
+bool ValidateSecondaryColor3usv(const Context *context, const GLushort *v)
+{
+    return true;
+}
+
+bool ValidateSecondaryColorPointer(const Context *context,
+                                   GLint size,
+                                   GLenum type,
+                                   GLsizei stride,
+                                   const void *pointer)
+{
+    return true;
+}
+
+bool ValidateWindowPos2d(const Context *context, GLdouble x, GLdouble y)
+{
+    return true;
+}
+
+bool ValidateWindowPos2dv(const Context *context, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos2f(const Context *context, GLfloat x, GLfloat y)
+{
+    return true;
+}
+
+bool ValidateWindowPos2fv(const Context *context, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos2i(const Context *context, GLint x, GLint y)
+{
+    return true;
+}
+
+bool ValidateWindowPos2iv(const Context *context, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos2s(const Context *context, GLshort x, GLshort y)
+{
+    return true;
+}
+
+bool ValidateWindowPos2sv(const Context *context, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos3d(const Context *context, GLdouble x, GLdouble y, GLdouble z)
+{
+    return true;
+}
+
+bool ValidateWindowPos3dv(const Context *context, const GLdouble *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos3f(const Context *context, GLfloat x, GLfloat y, GLfloat z)
+{
+    return true;
+}
+
+bool ValidateWindowPos3fv(const Context *context, const GLfloat *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos3i(const Context *context, GLint x, GLint y, GLint z)
+{
+    return true;
+}
+
+bool ValidateWindowPos3iv(const Context *context, const GLint *v)
+{
+    return true;
+}
+
+bool ValidateWindowPos3s(const Context *context, GLshort x, GLshort y, GLshort z)
+{
+    return true;
+}
+
+bool ValidateWindowPos3sv(const Context *context, const GLshort *v)
+{
+    return true;
+}
+
+bool ValidateGetBufferSubData(const Context *context,
+                              GLenum target,
+                              GLintptr offset,
+                              GLsizeiptr size,
+                              const void *data)
+{
+    return true;
+}
+
+bool ValidateGetQueryObjectiv(const Context *context, QueryID id, GLenum pname, const GLint *params)
+{
+    return true;
+}
+
+bool ValidateMapBuffer(const Context *context, BufferBinding targetPacked, GLenum access)
+{
+    return true;
+}
 }  // namespace gl
