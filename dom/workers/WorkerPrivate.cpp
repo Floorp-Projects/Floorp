@@ -2915,6 +2915,8 @@ void WorkerPrivate::RunLoopNeverRan() {
     }
   }
 
+  NotifyWorkerRefs(Killing);
+
   ScheduleDeletion(WorkerPrivate::WorkerRan);
 }
 
