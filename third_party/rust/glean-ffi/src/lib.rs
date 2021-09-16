@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(broken_intra_doc_links)]
 
 use std::convert::TryFrom;
 use std::ffi::CStr;
@@ -42,7 +42,6 @@ mod string_list;
 mod timespan;
 mod timing_distribution;
 pub mod upload;
-mod url;
 mod uuid;
 
 #[cfg(all(not(target_os = "android"), not(target_os = "ios")))]
