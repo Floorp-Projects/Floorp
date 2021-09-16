@@ -3,16 +3,17 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies.
+# to registry (e.g., crates.io) dependencies
 #
-# If you are reading this file be aware that the original Cargo.toml
-# will likely look very different (and much more reasonable).
-# See Cargo.toml.orig for the original contents.
+# If you believe there's an error in this file please file an
+# issue against the rust-lang/cargo repository. If you're
+# editing this file be aware that the upstream Cargo.toml
+# will likely look very different (and much more reasonable)
 
 [package]
 edition = "2018"
 name = "glean"
-version = "41.1.0"
+version = "40.1.0"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/tests", "/Cargo.toml"]
 description = "Glean SDK Rust language bindings"
@@ -28,7 +29,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "41.1.0"
+version = "40.1.0"
 
 [dependencies.inherent]
 version = "0.1.4"
