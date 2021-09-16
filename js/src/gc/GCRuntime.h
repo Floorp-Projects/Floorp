@@ -621,6 +621,8 @@ class GCRuntime {
   bool unregisterWeakRefWrapper(JSObject* wrapper);
   void traceKeptObjects(JSTracer* trc);
 
+  JS::GCReason lastStartReason() const { return initialReason; }
+
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
