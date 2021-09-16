@@ -77,6 +77,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "arbitrary"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "237430fd6ed3740afe94eefcc278ae21e050285be882804e0d6e8695f0c94691"
+dependencies = [
+ "derive_arbitrary",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1156,6 +1165,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_arbitrary"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f1281ee141df08871db9fe261ab5312179eac32d1e314134ceaa8dd7c042f5a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "derive_common"
 version = "0.0.1"
 dependencies = [
@@ -2067,6 +2087,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "gluesmith"
+version = "0.1.0"
+dependencies = [
+ "arbitrary",
+ "libc",
+ "wasm-smith",
+]
+
+[[package]]
 name = "goblin"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2547,6 +2576,7 @@ dependencies = [
  "baldrdash",
  "encoding_c",
  "encoding_c_mem",
+ "gluesmith",
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "smoosh",
@@ -5408,6 +5438,27 @@ checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 name = "wasm-bindgen"
 version = "0.2.100"
 source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f355a99243"
+
+[[package]]
+name = "wasm-encoder"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2caacc74c68c74f0008c4055cdf509c43e623775eaf73323bb818dcf666ed9bd"
+dependencies = [
+ "leb128",
+]
+
+[[package]]
+name = "wasm-smith"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b05fb86fe9042112d9659e3f56736b8ad4122023e568e5c55184677c84f66c9"
+dependencies = [
+ "arbitrary",
+ "indexmap",
+ "leb128",
+ "wasm-encoder",
+]
 
 [[package]]
 name = "wasmparser"
