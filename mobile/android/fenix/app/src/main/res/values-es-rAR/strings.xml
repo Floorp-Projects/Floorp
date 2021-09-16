@@ -127,13 +127,13 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Abrir pestañas</string>
+    <string name="browser_tabs_button">Pestañas abiertas</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Retroceder</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">Avanzar</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">Refrescar</string>
+    <string name="browser_menu_refresh">Recargar</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Detener</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
@@ -223,7 +223,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Escanear</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Motor de búsqueda</string>
+    <string name="search_engine_button">Buscador</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Configuración del buscador</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -1135,7 +1135,7 @@
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Pestañas privadas eliminadas</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
-    <string name="snackbar_deleted_undo">UNDO</string>
+    <string name="snackbar_deleted_undo">DESHACER</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Sitio eliminado</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
@@ -1456,9 +1456,9 @@
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cada vez que ves el escudo morado, %s bloqueó los rastreadores en un sitio. Tocá para más información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">Las protecciones están habilitadas para este sitio</string>
+    <string name="etp_panel_on">Las protecciones están activadas para este sitio</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">Las protecciones están OFF para este sitio</string>
+    <string name="etp_panel_off">Las protecciones están desactivadas para este sitio</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">La protección contra rastreo aumentada está deshabilitada para estos sitios</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
@@ -1675,7 +1675,7 @@
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Borrar tarjeta</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
-    <string name="credit_cards_delete_card_button">Eliminar tarjeta</string>
+    <string name="credit_cards_delete_card_button">Borrar tarjeta</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Guardar</string>
     <!-- The text for the "Save" button for saving a credit card -->
@@ -1844,7 +1844,7 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Ver una lista de pestañas de tus otros dispositivos.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
-    <string name="synced_tabs_sign_in_button">Inicia sesión para sincronizar</string>
+    <string name="synced_tabs_sign_in_button">Iniciá sesión para sincronizar</string>
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">No hay pestañas abiertas</string>

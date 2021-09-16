@@ -644,7 +644,7 @@
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Αφαίρεση</string>
     <!-- Title of the active section on the studies list -->
-    <string name="studies_active">Ενεργό</string>
+    <string name="studies_active">Ενεργές</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
     <string name="studies_description">Το Firefox ενδέχεται να εγκαθιστά και να εκτελεί περιστασιακά μελέτες.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -985,10 +985,10 @@
     <string name="delete_browsing_data_quit_off">Ανενεργό</string>
 
     <!-- Summary of studies preference if it is set to on -->
-    <string name="studies_on">Ενεργό</string>
+    <string name="studies_on">Ενεργές</string>
 
     <!-- Summary of studies data on quit preference if it is set to off -->
-    <string name="studies_off">Ανενεργό</string>
+    <string name="studies_off">Ανενεργές</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -660,7 +660,7 @@
     <string name="studies_restart_dialog_cancel">취소</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중...</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1178,7 +1178,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">삭제</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">취소</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">취소</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">전체 화면 모드로 전환 중</string>
 
@@ -1350,7 +1350,7 @@
     <string name="onboarding_privacy_notice_read_button">개인정보처리방침 읽기</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">닫기</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">닫기</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">탐색 시작</string>
@@ -1480,7 +1480,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">추적 코드가 포함된 외부 광고, 동영상 및 기타 콘텐츠가 로드되지 않도록 합니다. 일부 웹 사이트의 기능에 영향을 줄 수 있습니다.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">방패가 자주색일 때마다 %s가 사이트에서 추적기를 차단합니다. 자세한 내용을 보시려면 누르세요.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">방패가 자주색일 때마다 %s가 사이트에서 추적기를 차단합니다. 자세한 내용을 보시려면 누르세요.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">이 사이트에서 보호 켜짐</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1564,7 +1564,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">저장 안 함</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">자동 채우기</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">자동 채우기</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">%1$s에서 자동 채우기</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -663,7 +663,7 @@
     <string name="studies_restart_dialog_cancel">取消</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">退出应用程序以应用更改...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">退出应用程序以应用更改...</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1177,7 +1177,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">删除</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">取消</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">取消</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">进入全屏模式</string>
 
@@ -1347,7 +1347,7 @@
     <string name="onboarding_privacy_notice_read_button">阅读我们的隐私声明</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">关闭</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">关闭</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">开始上网</string>
@@ -1477,11 +1477,11 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">停止加载包含跟踪代码的广告、视频和其他内容。可能会影响某些网站功能。</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">盾牌变成紫色时，代表 %s 拦截了该网站的跟踪器。点按以获取更多信息。</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">盾牌变成紫色时，代表 %s 拦截了该网站的跟踪器。点按以获取更多信息。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">对此网站已开启保护</string>
+    <string name="etp_panel_on">已开启此网站的跟踪保护</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">对此网站已关闭保护</string>
+    <string name="etp_panel_off">已关闭此网站的跟踪保护</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">对下列网站已关闭增强型跟踪保护</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
@@ -1559,7 +1559,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">总不保存</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">自动填写</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">自动填写</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">在 %1$s 中自动填充</string>
