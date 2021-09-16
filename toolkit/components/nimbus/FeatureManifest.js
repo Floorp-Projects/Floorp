@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * FEATURE MANIFEST
- * =================
- * Features must be added here to be accessible through the NimbusFeature API.
- */
-
 const EXPORTED_SYMBOLS = ["FeatureManifest"];
 
+/**
+ * Features must be added here to be accessible through the NimbusFeature API.
+ * !! Don't forget to validate changes with ./mach test toolkit/components/nimbus/test/unit/test_FeatureManifest.js
+ */
 const FeatureManifest = {
   urlbar: {
     description: "The Address Bar",
+    hasExposure: true,
     exposureDescription:
       "Exposure is sent once per browsing session after the first urlbar query is made.",
     variables: {
@@ -68,6 +67,7 @@ const FeatureManifest = {
   },
   aboutwelcome: {
     description: "The about:welcome page",
+    hasExposure: true,
     exposureDescription:
       "Exposure is sent once per browsing session when the about:welcome URL is first accessed.",
     isEarlyStartup: true,
@@ -97,7 +97,7 @@ const FeatureManifest = {
   },
   abouthomecache: {
     description: "The startup about:home cache.",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       enabled: {
@@ -109,7 +109,7 @@ const FeatureManifest = {
   },
   firefox100: {
     description: "Firefox User-Agent version",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       firefoxVersion: {
@@ -120,10 +120,15 @@ const FeatureManifest = {
   },
   newtab: {
     description: "The about:newtab page",
+    hasExposure: true,
     exposureDescription:
       "Exposure is sent once per browsing session when the first newtab page loads (either about:newtab or about:home).",
     isEarlyStartup: true,
     variables: {
+      newTheme: {
+        type: "boolean",
+        description: "Enable the new theme",
+      },
       customizationMenuEnabled: {
         type: "boolean",
         fallbackPref:
@@ -138,7 +143,7 @@ const FeatureManifest = {
   },
   pocketNewtab: {
     description: "The Pocket section in newtab",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       spocPositions: {
@@ -157,7 +162,7 @@ const FeatureManifest = {
   },
   "password-autocomplete": {
     description: "A special autocomplete UI for password fields.",
-    exposureDescription: false,
+    hasExposure: false,
     variables: {
       directMigrateSingleProfile: {
         type: "boolean",
@@ -167,7 +172,7 @@ const FeatureManifest = {
   },
   shellService: {
     description: "Interface with OS, e.g., pinning and set default",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       disablePin: {
@@ -183,7 +188,7 @@ const FeatureManifest = {
   },
   upgradeDialog: {
     description: "The dialog shown for major upgrades",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       enabled: {
@@ -195,6 +200,7 @@ const FeatureManifest = {
   },
   privatebrowsing: {
     description: "about:privatebrowsing",
+    hasExposure: true,
     exposureDescription:
       "Exposure is sent once per browsing session the first time the PB page loads",
     variables: {
@@ -277,7 +283,7 @@ const FeatureManifest = {
   },
   readerMode: {
     description: "Firefox Reader Mode",
-    exposureDescription: false,
+    hasExposure: false,
     isEarlyStartup: true,
     variables: {
       pocketCTAVersion: {
