@@ -584,6 +584,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   True if the result can be added and false if it should be discarded.
    */
   _canAddResult(result, state) {
+    // Never discard quick suggest results. We may want to change this logic at
+    // some point, but for all current use cases, they should always be shown.
+    if (result.providerName == "UrlbarProviderQuickSuggest") {
+      return true;
+    }
+
     // We expect UrlbarProviderPlaces sent us the highest-ranked www. and non-www
     // origins, if any. Now, compare them to each other and to the heuristic
     // result.
@@ -870,7 +876,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       let prefixRank = UrlbarUtils.getPrefixRank(prefix);
       let topPrefixData = state.strippedUrlToTopPrefixAndTitle.get(strippedUrl);
       let topPrefixRank = topPrefixData ? topPrefixData.rank : -1;
-      if (topPrefixRank < prefixRank) {
+      if (
+        topPrefixRank < prefixRank ||
+        // If a quick suggest result has the same stripped URL and prefix rank
+        // as another result, store the quick suggest as the top rank so we
+        // discard the other during deduping. That happens after the user picks
+        // the quick suggest: The URL is added to history and later both a
+        // history result and the quick suggest may match a query.
+        (topPrefixRank == prefixRank &&
+          result.providerName == "UrlbarProviderQuickSuggest")
+      ) {
         // strippedUrl => { prefix, title, rank, providerName }
         state.strippedUrlToTopPrefixAndTitle.set(strippedUrl, {
           prefix,
