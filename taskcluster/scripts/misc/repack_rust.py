@@ -398,6 +398,9 @@ def build_src(install_dir, host, targets, patches):
         extended = true
         tools = ["analysis", "cargo", "rustfmt", "clippy", "src"]
 
+        [rust]
+        ignore-git = false
+
         [install]
         prefix = "{prefix}"
         sysconfdir = "etc"
