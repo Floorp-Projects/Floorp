@@ -15,3 +15,8 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   }
   return do_AddRef(gInstance);
 }
+
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
+  // Android doesn't have a native theme.
+  return do_GetBasicNativeThemeDoNotUseDirectly();
+}
