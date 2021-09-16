@@ -812,7 +812,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
               return ComputeTransformForScrollThumb(
                   info.mThumbTransform * AsyncTransformMatrix(),
                   info.mTargetTransform.ToUnknownMatrix(), scrollTargetApzc,
-                  aMetrics, info.mThumbData, info.mTargetIsAncestor, nullptr);
+                  aMetrics, info.mThumbData, info.mTargetIsAncestor);
             });
     transforms.AppendElement(
         wr::ToWrTransformProperty(info.mThumbAnimationId, transform));
@@ -3683,7 +3683,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
                 aNode->GetTransform() * AsyncTransformMatrix(),
                 scrollTargetNode->GetTransform().ToUnknownMatrix(),
                 scrollTargetApzc, aMetrics, aNode->GetScrollbarData(),
-                scrollTargetNode->IsAncestorOf(aNode), nullptr);
+                scrollTargetNode->IsAncestorOf(aNode));
           });
     }
   } else if (IsFixedToRootContent(aNode)) {
@@ -3857,11 +3857,10 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
     const Matrix4x4& aScrollableContentTransform, AsyncPanZoomController* aApzc,
     const FrameMetrics& aMetrics, const ScrollbarData& aScrollbarData,
-    bool aScrollbarIsDescendant,
-    AsyncTransformComponentMatrix* aOutClipTransform) {
+    bool aScrollbarIsDescendant) {
   return apz::ComputeTransformForScrollThumb(
       aCurrentTransform, aScrollableContentTransform, aApzc, aMetrics,
-      aScrollbarData, aScrollbarIsDescendant, aOutClipTransform);
+      aScrollbarData, aScrollbarIsDescendant);
 }
 
 APZSampler* APZCTreeManager::GetSampler() const {

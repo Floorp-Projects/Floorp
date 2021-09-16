@@ -35,10 +35,6 @@ namespace apz {
  * @param aScrollbarData The scrollbar data for the the scroll thumb layer.
  * @param aScrollbarIsDescendant True iff. the scroll thumb layer is a
  *    descendant of the layer bearing the scroll frame's metrics.
- * @param aOutClipTransform If not null, and |aScrollbarIsDescendant| is true,
- *    this will be populated with a transform that should be applied to the
- *    clip rects of all layers between the scroll thumb layer and the ancestor
- *    layer for the scrollable content.
  * @return The new shadow transform for the scroll thumb layer, including
  *    any pre- or post-scales.
  */
@@ -46,8 +42,7 @@ LayerToParentLayerMatrix4x4 ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
     const gfx::Matrix4x4& aScrollableContentTransform,
     AsyncPanZoomController* aApzc, const FrameMetrics& aMetrics,
-    const ScrollbarData& aScrollbarData, bool aScrollbarIsDescendant,
-    AsyncTransformComponentMatrix* aOutClipTransform);
+    const ScrollbarData& aScrollbarData, bool aScrollbarIsDescendant);
 
 }  // namespace apz
 }  // namespace layers
