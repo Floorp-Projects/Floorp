@@ -379,12 +379,8 @@ class ArenaLists {
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
 
-  inline void queueForForegroundSweep(JSFreeOp* fop,
-                                      const FinalizePhase& phase);
-  inline void queueForBackgroundSweep(JSFreeOp* fop,
-                                      const FinalizePhase& phase);
-  inline void queueForForegroundSweep(AllocKind thingKind);
-  inline void queueForBackgroundSweep(AllocKind thingKind);
+  void queueForForegroundSweep(AllocKind thingKind);
+  void queueForBackgroundSweep(AllocKind thingKind);
 
   TenuredCell* refillFreeListAndAllocate(FreeLists& freeLists,
                                          AllocKind thingKind,

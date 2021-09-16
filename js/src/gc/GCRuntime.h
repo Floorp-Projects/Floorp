@@ -774,6 +774,11 @@ class GCRuntime {
   void markIncomingGrayCrossCompartmentPointers();
   IncrementalProgress beginSweepingSweepGroup(JSFreeOp* fop,
                                               SliceBudget& budget);
+  void queueForForegroundSweep(Zone* zone, JSFreeOp* fop,
+                               const FinalizePhase& phase);
+  void queueForBackgroundSweep(Zone* zone, JSFreeOp* fop,
+                               const FinalizePhase& phase);
+
   IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
   void updateAtomsBitmap();
   void sweepCCWrappers();
