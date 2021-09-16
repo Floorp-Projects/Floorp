@@ -6,7 +6,7 @@
 
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
-#include "mozilla/intl/NumberFormatFields.h"
+#include "mozilla/intl/NumberPart.h"
 
 #include "unicode/ureldatefmt.h"
 #include "unicode/utypes.h"
