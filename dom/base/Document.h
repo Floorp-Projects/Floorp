@@ -3650,8 +3650,6 @@ class Document : public nsINode,
   // Return true.
   bool ConsumeTransientUserGestureActivation();
 
-  // Note, GetBrowsingContext() returns null when the document is in
-  // the bfcache.
   BrowsingContext* GetBrowsingContext() const;
 
   // This document is a WebExtension page, it might be a background page, a
