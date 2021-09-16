@@ -13,7 +13,6 @@ EXPORTS.mozilla.intl = [
     "src/ListFormat.h",
     "src/LocaleCanonicalizer.h",
     "src/NumberFormat.h",
-    "src/NumberFormatFields.h",
     "src/NumberPart.h",
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",

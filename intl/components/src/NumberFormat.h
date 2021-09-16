@@ -15,7 +15,7 @@
 #include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 #include "mozilla/intl/ICUError.h"
-#include "mozilla/intl/NumberFormatFields.h"
+#include "mozilla/intl/NumberPart.h"
 
 #include "unicode/ustring.h"
 #include "unicode/unum.h"
@@ -241,16 +241,7 @@ class NumberFormat final {
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
   Result<std::u16string_view, ICUError> formatToParts(
-      double number, NumberPartVector& parts) const {
-    if (!formatInternal(number)) {
-      return Err(ICUError::InternalError);
-    }
-
-    bool isNegative = !IsNaN(number) && IsNegative(number);
-
-    return FormatResultToParts(mFormattedNumber, Some(number), isNegative,
-                               mFormatForUnit, parts);
-  }
+      double number, NumberPartVector& parts) const;
 
   /**
    * Formats a double to the provider buffer (either utf-8 or utf-16)
@@ -295,14 +286,7 @@ class NumberFormat final {
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
   Result<std::u16string_view, ICUError> formatToParts(
-      int64_t number, NumberPartVector& parts) const {
-    if (!formatInternal(number)) {
-      return Err(ICUError::InternalError);
-    }
-
-    return FormatResultToParts(mFormattedNumber, Nothing(), number < 0,
-                               mFormatForUnit, parts);
-  }
+      int64_t number, NumberPartVector& parts) const;
 
   /**
    * Formats an int64_t to the provider buffer (either utf-8 or utf-16).
@@ -348,23 +332,7 @@ class NumberFormat final {
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
   Result<std::u16string_view, ICUError> formatToParts(
-      std::string_view number, NumberPartVector& parts) const {
-    if (!formatInternal(number)) {
-      return Err(ICUError::InternalError);
-    }
-
-    // Non-finite numbers aren't currently supported here. If we ever need to
-    // support those, the |Maybe<double>| argument must be computed here.
-    MOZ_ASSERT(number != "Infinity");
-    MOZ_ASSERT(number != "+Infinity");
-    MOZ_ASSERT(number != "-Infinity");
-    MOZ_ASSERT(number != "NaN");
-
-    bool isNegative = !number.empty() && number[0] == '-';
-
-    return FormatResultToParts(mFormattedNumber, Nothing(), isNegative,
-                               mFormatForUnit, parts);
-  }
+      std::string_view number, NumberPartVector& parts) const;
 
   /**
    * Formats a string encoded decimal number to the provider buffer

@@ -4,6 +4,7 @@
 #include "mozilla/intl/RelativeTimeFormat.h"
 #include "mozilla/FloatingPoint.h"
 
+#include "NumberFormatFields.h"
 #include "ICU4CGlue.h"
 #include "ScopedICUObject.h"
 
