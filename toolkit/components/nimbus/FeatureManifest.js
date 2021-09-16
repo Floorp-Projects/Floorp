@@ -37,8 +37,8 @@ const FeatureManifest = {
           "Whether Remote Settings is enabled as a quick suggest source",
       },
       quickSuggestScenario: {
+        // IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.jsm.
         type: "string",
-        fallbackPref: "browser.urlbar.quicksuggest.scenario",
         description:
           "The Firefox Suggest scenario in which the user is enrolled",
         enum: ["history", "offline", "online"],
