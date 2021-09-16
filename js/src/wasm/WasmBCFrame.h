@@ -22,6 +22,7 @@
 #ifndef wasm_wasm_baseline_frame_h
 #define wasm_wasm_baseline_frame_h
 
+#include "wasm/WasmConstants.h"        // For MaxFrameSize
 #include "wasm/WasmBaselineCompile.h"  // For BaseLocalIter
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCRegDefs.h"
@@ -554,17 +555,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 
   // Very large frames are implausible, probably an attack.
 
-  bool checkStackHeight() {
-    // 512KiB should be enough, considering how Rabaldr uses the stack and
-    // what the standard limits are:
-    //
-    // - 1,000 parameters
-    // - 50,000 locals
-    // - 10,000 values on the eval stack (not an official limit)
-    //
-    // At sizeof(int64) bytes per slot this works out to about 480KiB.
-    return maxFramePushed_ <= 512 * 1024;
-  }
+  bool checkStackHeight() { return maxFramePushed_ <= MaxFrameSize; }
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -1266,7 +1257,7 @@ struct StackMapGenerator {
   // trapExitLayoutNumWords_, which together comprise a description of the
   // layout and are created by GenerateTrapExitMachineState().
   [[nodiscard]] bool generateStackmapEntriesForTrapExit(
-    const ArgTypeVector& args, ExitStubMapVector* extras);
+      const ArgTypeVector& args, ExitStubMapVector* extras);
 
   // Creates a stackmap associated with the instruction denoted by
   // |assemblerOffset|, incorporating pointers from the current operand
