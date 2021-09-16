@@ -790,6 +790,25 @@ uint8_t glean_timing_distribution_test_has_value(uint64_t metric_id, FfiStr stor
 char *glean_timing_distribution_test_get_value_as_json_string(uint64_t metric_id,
                                                               FfiStr storage_name);
 
+void glean_destroy_url_metric(uint64_t v);
+
+uint64_t glean_new_url_metric(FfiStr category,
+                              FfiStr name,
+                              RawStringArray send_in_pings,
+                              int32_t send_in_pings_len,
+                              Lifetime lifetime,
+                              uint8_t disabled);
+
+int32_t glean_url_test_get_num_recorded_errors(uint64_t metric_id,
+                                               int32_t error_type,
+                                               FfiStr storage_name);
+
+void glean_url_set(uint64_t metric_id, FfiStr value);
+
+uint8_t glean_url_test_has_value(uint64_t metric_id, FfiStr storage_name);
+
+char *glean_url_test_get_value(uint64_t metric_id, FfiStr storage_name);
+
 void glean_destroy_uuid_metric(uint64_t v);
 
 uint64_t glean_new_uuid_metric(FfiStr category,
