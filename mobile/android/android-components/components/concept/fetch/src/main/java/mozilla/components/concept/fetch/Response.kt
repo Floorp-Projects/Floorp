@@ -129,8 +129,6 @@ data class Response(
         val SUCCESS_STATUS_RANGE = 200..299
         val CLIENT_ERROR_STATUS_RANGE = 400..499
         const val SUCCESS = 200
-        const val CONTENT_TYPE_HEADER = "Content-Type"
-        const val CONTENT_LENGTH_HEADER = "Content-Length"
     }
 }
 

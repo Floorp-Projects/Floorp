@@ -5,8 +5,6 @@
 package mozilla.components.concept.fetch
 
 import android.util.Base64
-import mozilla.components.concept.fetch.Response.Companion.CONTENT_LENGTH_HEADER
-import mozilla.components.concept.fetch.Response.Companion.CONTENT_TYPE_HEADER
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.URLDecoder
@@ -75,9 +73,9 @@ abstract class Client {
             }
 
             val headers = MutableHeaders().apply {
-                set(CONTENT_LENGTH_HEADER, bytes.size.toString())
+                set(Headers.Names.CONTENT_LENGTH, bytes.size.toString())
                 if (contentType.isNotEmpty()) {
-                    set(CONTENT_TYPE_HEADER, contentType)
+                    set(Headers.Names.CONTENT_TYPE, contentType)
                 }
             }
 
