@@ -131,16 +131,12 @@ async function renderPromo({
     switch (promoSectionStyle) {
       case "below-search":
         container.remove();
-        infoContainerEl.insertAdjacentElement("beforebegin", container);
+        infoContainerEl?.insertAdjacentElement("beforebegin", container);
         break;
       case "top":
         container.remove();
         document.body.insertAdjacentElement("afterbegin", container);
     }
-  }
-
-  if (promoHeader) {
-    promoHeaderEl.innerText = promoHeader;
   }
 
   if (promoImageLarge) {
@@ -159,17 +155,41 @@ async function renderPromo({
     titleEl.remove();
   }
 
+  if (!promoHeader) {
+    promoHeaderEl.remove();
+  }
+
   await translateElements(container, [
     [titleEl, promoTitle],
     [linkEl, promoLinkText],
+    [promoHeaderEl, promoHeader],
   ]);
 }
+
+const DEFAULT_PRIVATE_BROWSING_CONTENT = {
+  promoEnabled: true,
+  infoEnabled: true,
+  infoIcon: "",
+  infoTitle: "",
+  infoBody: "fluent:about-private-browsing-info-description-private-window",
+  infoLinkText: "fluent:about-private-browsing-learn-more-link",
+  infoTitleEnabled: false,
+  promoLinkType: "button",
+  promoLinkText: "fluent:about-private-browsing-prominent-cta",
+  promoSectionStyle: "below-search",
+  promoHeader: "fluent:about-private-browsing-get-privacy",
+  promoTitle: "fluent:about-private-browsing-hide-activity-1",
+  promoTitleEnabled: true,
+  promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
+};
 
 async function setupFeatureConfig() {
   // Setup experiment data
   let config = {};
   try {
-    config = window.PrivateBrowsingFeatureConfig();
+    config = window.PrivateBrowsingFeatureConfig(
+      DEFAULT_PRIVATE_BROWSING_CONTENT
+    );
   } catch (e) {}
 
   await renderInfo(config);
