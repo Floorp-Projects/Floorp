@@ -1565,10 +1565,12 @@ BrowserGlue.prototype = {
     ];
 
     win.gNotificationBox.appendNotification(
-      message,
       "reset-profile-notification",
-      "chrome://global/skin/icons/help.svg",
-      win.gNotificationBox.PRIORITY_INFO_LOW,
+      {
+        label: message,
+        image: "chrome://global/skin/icons/question-64.png",
+        priority: win.gNotificationBox.PRIORITY_INFO_LOW,
+      },
       buttons
     );
   },
@@ -1597,10 +1599,11 @@ BrowserGlue.prototype = {
     ];
 
     win.gNotificationBox.appendNotification(
-      message,
       "unsigned-addons-disabled",
-      "",
-      win.gNotificationBox.PRIORITY_WARNING_MEDIUM,
+      {
+        label: message,
+        priority: win.gNotificationBox.PRIORITY_WARNING_MEDIUM,
+      },
       buttons
     );
   },
@@ -3255,7 +3258,6 @@ BrowserGlue.prototype = {
     var placesBundle = Services.strings.createBundle(
       "chrome://browser/locale/places/places.properties"
     );
-    var title = placesBundle.GetStringFromName("lockPrompt.title");
     var text = placesBundle.formatStringFromName("lockPrompt.text", [
       applicationName,
     ]);
@@ -3265,10 +3267,11 @@ BrowserGlue.prototype = {
 
     var notifyBox = win.gBrowser.getNotificationBox();
     var notification = notifyBox.appendNotification(
-      text,
-      title,
-      null,
-      notifyBox.PRIORITY_CRITICAL_MEDIUM,
+      "places-locked",
+      {
+        label: text,
+        priority: win.gNotificationBox.PRIORITY_CRITICAL_MEDIUM,
+      },
       buttons
     );
     notification.persistence = -1; // Until user closes it
@@ -4315,10 +4318,11 @@ BrowserGlue.prototype = {
 
     // XXXndeakin is this notification still relevant?
     win.gNotificationBox.appendNotification(
-      message,
       "flash-hang",
-      null,
-      win.gNotificationBox.PRIORITY_INFO_MEDIUM,
+      {
+        label: message,
+        priority: win.gNotificationBox.PRIORITY_INFO_MEDIUM,
+      },
       buttons
     );
   },

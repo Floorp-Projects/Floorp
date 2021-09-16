@@ -433,35 +433,37 @@ var TabCrashHandler = {
     );
 
     notification = notificationBox.appendNotification(
-      messageFragment,
       value,
-      TABCRASHED_ICON_URI,
-      notificationBox.PRIORITY_INFO_MEDIUM,
-      buttons,
-      eventName => {
-        if (eventName == "disconnected") {
-          removeTelemetryFn();
+      {
+        label: messageFragment,
+        image: TABCRASHED_ICON_URI,
+        priority: notificationBox.PRIORITY_INFO_MEDIUM,
+        eventCallback: eventName => {
+          if (eventName == "disconnected") {
+            removeTelemetryFn();
 
-          let existingItem = this.notificationsMap.get(childID);
-          if (existingItem) {
-            let idx = existingItem.indexOf(notification);
-            if (idx >= 0) {
-              existingItem.splice(idx, 1);
+            let existingItem = this.notificationsMap.get(childID);
+            if (existingItem) {
+              let idx = existingItem.indexOf(notification);
+              if (idx >= 0) {
+                existingItem.splice(idx, 1);
+              }
+
+              if (!existingItem.length) {
+                this.notificationsMap.delete(childID);
+              }
+            }
+          } else if (eventName == "dismissed") {
+            if (dumpID) {
+              CrashSubmit.ignore(dumpID);
+              this.childMap.delete(childID);
             }
 
-            if (!existingItem.length) {
-              this.notificationsMap.delete(childID);
-            }
+            closeAllNotifications();
           }
-        } else if (eventName == "dismissed") {
-          if (dumpID) {
-            CrashSubmit.ignore(dumpID);
-            this.childMap.delete(childID);
-          }
-
-          closeAllNotifications();
-        }
-      }
+        },
+      },
+      buttons
     );
 
     let existingItem = this.notificationsMap.get(childID);
@@ -1154,12 +1156,14 @@ var UnsubmittedCrashHandler = {
     );
 
     return chromeWin.gNotificationBox.appendNotification(
-      message,
       notificationID,
-      TABCRASHED_ICON_URI,
-      chromeWin.gNotificationBox.PRIORITY_INFO_HIGH,
-      buttons,
-      eventCallback
+      {
+        label: message,
+        image: TABCRASHED_ICON_URI,
+        priority: chromeWin.gNotificationBox.PRIORITY_INFO_HIGH,
+        eventCallback,
+      },
+      buttons
     );
   },
 
