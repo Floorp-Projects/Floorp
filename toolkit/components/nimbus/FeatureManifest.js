@@ -200,43 +200,35 @@ const FeatureManifest = {
     variables: {
       infoEnabled: {
         type: "boolean",
-        fallbackPref: "browser.privatebrowsing.infoEnabled",
         description: "Should we show the info section.",
       },
       infoIcon: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.infoIcon",
         description:
           "Icon shown in the left side of the info section. Default is the private browsing icon.",
       },
       infoTitle: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.infoTitle",
         description: "Is the title in the info section enabled.",
       },
       infoTitleEnabled: {
         type: "boolean",
-        fallbackPref: "browser.privatebrowsing.infoTitleEnabled",
         description: "Is the title in the info section enabled.",
       },
       infoBody: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.infoBody",
         description: "Text content in the info section.",
       },
       infoLinkText: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.infoLinkText",
         description: "Text for the link in the info section.",
       },
       infoLinkUrl: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.infoLinkUrl",
         description: "URL for the info section link.",
       },
       promoEnabled: {
         type: "boolean",
-        fallbackPref: "browser.privatebrowsing.promoEnabled",
         description: "Should we show the promo section.",
       },
       promoSectionStyle: {
@@ -247,17 +239,14 @@ const FeatureManifest = {
       },
       promoTitle: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.promoTitle",
         description: "The text content of the promo section.",
       },
       promoTitleEnabled: {
         type: "boolean",
-        fallbackPref: "browser.privatebrowsing.promoTitleEnabled",
         description: "Should we show text content in the promo section.",
       },
       promoLinkText: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.promoLinkText",
         description: "The text of the link in the promo box.",
       },
       promoHeader: {
@@ -266,7 +255,6 @@ const FeatureManifest = {
       },
       promoLinkUrl: {
         type: "string",
-        fallbackPref: "browser.privatebrowsing.promoLinkUrl",
         description: "URL for link in the promo box.",
       },
       promoLinkType: {

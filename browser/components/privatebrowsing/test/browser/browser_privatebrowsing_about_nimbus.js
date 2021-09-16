@@ -51,6 +51,7 @@ add_task(async function test_experiment_plain_text() {
     enabled: true,
     value: {
       infoTitle: "Hello world",
+      infoTitleEnabled: true,
       infoBody: "This is some text",
       infoLinkText: "This is a link",
       infoIcon: "chrome://branding/content/about-logo.png",
@@ -98,7 +99,7 @@ add_task(async function test_experiment_fluent() {
     enabled: true,
     value: {
       infoBody: "fluent:about-private-browsing-info-title",
-      promoLinkText: "fluent:about-private-browsing-need-more-privacy",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
     },
   });
 
@@ -269,6 +270,7 @@ add_task(async function test_experiment_bottom_promo() {
       promoLinkType: "button",
       promoSectionStyle: "bottom",
       promoHeader: "Need more privacy?",
+      infoTitleEnabled: true,
       promoTitleEnabled: false,
       promoImageLarge: "",
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
@@ -293,10 +295,6 @@ add_task(async function test_experiment_bottom_promo() {
     ok(
       content.document.querySelector(".promo.bottom"),
       "Should have .bottom for the promo section"
-    );
-    ok(
-      content.document.querySelector("#info-title"),
-      "Should render info title if infoTitleEnabled is true"
     );
     ok(
       !content.document.querySelector("#private-browsing-vpn-text"),
