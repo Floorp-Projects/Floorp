@@ -198,7 +198,7 @@ def handle_platform(config, jobs):
             )
 
         if "treeherder" in job:
-            job["treeherder"]["platform"] = platform
+            job["treeherder"].setdefault("platform", platform)
 
         if "require-build" in job:
             add_build_dependency(config, job)
