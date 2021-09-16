@@ -9,7 +9,7 @@
         app:iconSpaceReserved="false"
         android:key="@string/pref_key_general_screen"
         android:layout="@layout/focus_preference"
-        android:summary="@string/preference_general_summary"
+        android:summary="@string/preference_general_summary2"
         android:title="@string/preference_category_general" />
 
     <androidx.preference.Preference
