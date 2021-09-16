@@ -117,6 +117,35 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
+void* Instance::checkedCallEntry(const uint32_t functionIndex,
+                                 const Tier tier) const {
+  uint8_t* codeBaseTier = codeBase(tier);
+  const MetadataTier& metadataTier = metadata(tier);
+  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
+  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
+  return codeBaseTier +
+         codeRanges[funcToCodeRange[functionIndex]].funcCheckedCallEntry();
+}
+
+void* Instance::checkedCallEntryForWasmImportedFunction(JSFunction* fun,
+                                                        const Tier tier) const {
+  MOZ_ASSERT(IsWasmExportedFunction(fun));
+  return checkedCallEntry(ExportedFunctionToFuncIndex(fun), tier);
+}
+
+static bool IsImportedFunction(const uint32_t functionIndex,
+                               const MetadataTier& metadataTier) {
+  return functionIndex < metadataTier.funcImports.length();
+}
+
+static bool IsJSExportedFunction(JSFunction* fun) {
+  return !IsWasmExportedFunction(fun);
+}
+
+static bool IsNullFunction(const uint32_t functionIndex) {
+  return functionIndex == NullFuncIndex;
+}
+
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
                             MutableHandle<ArrayObject*> array) {
@@ -679,62 +708,195 @@ inline int32_t WasmMemoryFill32(T memBase, size_t memLen, uint32_t byteOffset,
   return 0;
 }
 
+void* Instance::createIndirectStub(uint32_t funcIndex, TlsData* targetTlsData) {
+  const Tier tier = code().bestTier();
+  const CodeTier& codeTier = code(tier);
+  auto stubs = codeTier.lazyStubs().lock();
+
+  void* stub_entry = stubs->lookupIndirectStub(funcIndex, targetTlsData);
+  if (stub_entry) {
+    return stub_entry;
+  }
+
+  VectorOfIndirectStubTarget targets;
+  const Tier calleeTier = targetTlsData->instance->code().bestTier();
+  void* checkedCallEntry =
+      targetTlsData->instance->checkedCallEntry(funcIndex, calleeTier);
+  if (!targets.append(
+          IndirectStubTarget{funcIndex, checkedCallEntry, targetTlsData}) ||
+      !stubs->createManyIndirectStubs(targets, codeTier)) {
+    return nullptr;
+  }
+
+  return stubs->lookupIndirectStub(funcIndex, targetTlsData);
+}
+
+bool Instance::createManyIndirectStubs(
+    const VectorOfIndirectStubTarget& targets, const Tier tier) {
+  if (targets.empty()) {
+    return true;
+  }
+
+  const CodeTier& codeTier = code(tier);
+  auto stubs = codeTier.lazyStubs().lock();
+  return stubs->createManyIndirectStubs(targets, codeTier);
+}
+
+void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
+                                const Tier tier) const {
+  MOZ_ASSERT(funcIndex != NullFuncIndex);
+
+  if (!code().hasTier(tier)) {
+    return nullptr;
+  }
+
+  auto stubs = code(tier).lazyStubs().lock();
+  return stubs->lookupIndirectStub(funcIndex, targetTlsData);
+}
+
+static void RemoveDuplicates(VectorOfIndirectStubTarget* vector) {
+  auto comparator = [](const IndirectStubTarget& lhs,
+                       const IndirectStubTarget& rhs) {
+    if (lhs.functionIdx == rhs.functionIdx) {
+      const auto lshTls = reinterpret_cast<uintptr_t>(lhs.tls);
+      const auto rshTls = reinterpret_cast<uintptr_t>(rhs.tls);
+      return lshTls < rshTls;
+    }
+    return lhs.functionIdx < rhs.functionIdx;
+  };
+  std::sort(vector->begin(), vector->end(), comparator);
+  auto* newEnd = std::unique(vector->begin(), vector->end());
+  vector->erase(newEnd, vector->end());
+}
+
+bool Instance::ensureIndirectStubs(const Uint32Vector& elemFuncIndices,
+                                   uint32_t srcOffset, uint32_t len,
+                                   const Tier tier,
+                                   const bool tableIsImportedOrExported) {
+  const MetadataTier& metadataTier = metadata(tier);
+  VectorOfIndirectStubTarget targets;
+
+  for (uint32_t i = 0; i < len; i++) {
+    const uint32_t funcIndex = elemFuncIndices[srcOffset + i];
+    if (IsNullFunction(funcIndex)) {
+      continue;
+    }
+
+    if (IsImportedFunction(funcIndex, metadataTier)) {
+      FuncImportTls& import =
+          funcImportTls(metadataTier.funcImports[funcIndex]);
+      JSFunction* fun = import.fun;
+      TlsData* calleeTls = import.tls->instance->tlsData();
+      if (IsJSExportedFunction(fun) ||
+          getIndirectStub(funcIndex, calleeTls, tier)) {
+        continue;
+      }
+      void* calleeEntry =
+          import.tls->instance->checkedCallEntryForWasmImportedFunction(fun,
+                                                                        tier);
+      if (!targets.append(
+              IndirectStubTarget{funcIndex, calleeEntry, calleeTls})) {
+        return false;
+      }
+      continue;
+    }
+
+    if (!tableIsImportedOrExported ||
+        getIndirectStub(funcIndex, tlsData(), tier)) {
+      continue;
+    }
+
+    if (!targets.append(IndirectStubTarget{
+            funcIndex, checkedCallEntry(funcIndex, tier), tlsData()})) {
+      return false;
+    }
+  }
+
+  RemoveDuplicates(&targets);
+  return createManyIndirectStubs(targets, tier);
+}
+
+bool Instance::ensureIndirectStub(FuncRef* ref, const Tier tier,
+                                  const bool tableIsImportedOrExported) {
+  if (ref->isNull()) {
+    return true;
+  }
+
+  uint32_t functionIndex = ExportedFunctionToFuncIndex(ref->asJSFunction());
+  Uint32Vector functionIndices;
+  if (!functionIndices.append(functionIndex)) {
+    return false;
+  }
+
+  return ensureIndirectStubs(functionIndices, 0, 1u, tier,
+                             tableIsImportedOrExported);
+}
+
 bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                          uint32_t dstOffset, uint32_t srcOffset, uint32_t len) {
   Table& table = *tables_[tableIndex];
   MOZ_ASSERT(dstOffset <= table.length());
   MOZ_ASSERT(len <= table.length() - dstOffset);
 
-  Tier tier = code().bestTier();
+  const Tier tier = code().bestTier();
   const MetadataTier& metadataTier = metadata(tier);
   const FuncImportVector& funcImports = metadataTier.funcImports;
-  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
-  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
   const Uint32Vector& elemFuncIndices = seg.elemFuncIndices;
   MOZ_ASSERT(srcOffset <= elemFuncIndices.length());
   MOZ_ASSERT(len <= elemFuncIndices.length() - srcOffset);
 
-  uint8_t* codeBaseTier = codeBase(tier);
+  if (table.isFunction()) {
+    if (!ensureIndirectStubs(elemFuncIndices, srcOffset, len, tier,
+                             table.isImportedOrExported())) {
+      return false;
+    }
+  }
+
   for (uint32_t i = 0; i < len; i++) {
     uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (funcIndex == NullFuncIndex) {
+    if (IsNullFunction(funcIndex)) {
       table.setNull(dstOffset + i);
-    } else if (!table.isFunction()) {
+      continue;
+    }
+
+    if (!table.isFunction()) {
       // Note, fnref must be rooted if we do anything more than just store it.
       void* fnref = Instance::refFunc(this, funcIndex);
       if (fnref == AnyRef::invalid().forCompiledCode()) {
         return false;  // OOM, which has already been reported.
       }
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
-    } else {
-      if (funcIndex < funcImports.length()) {
-        FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
-        JSFunction* fun = import.fun;
-        if (IsWasmExportedFunction(fun)) {
-          // This element is a wasm function imported from another
-          // instance. To preserve the === function identity required by
-          // the JS embedding spec, we must set the element to the
-          // imported function's underlying CodeRange.funcCheckedCallEntry and
-          // Instance so that future Table.get()s produce the same
-          // function object as was imported.
-          WasmInstanceObject* calleeInstanceObj =
-              ExportedFunctionToInstanceObject(fun);
-          Instance& calleeInstance = calleeInstanceObj->instance();
-          Tier calleeTier = calleeInstance.code().bestTier();
-          const CodeRange& calleeCodeRange =
-              calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
-          void* code = calleeInstance.codeBase(calleeTier) +
-                       calleeCodeRange.funcCheckedCallEntry();
-          table.setFuncRef(dstOffset + i, code, &calleeInstance);
-          continue;
-        }
-      }
-      void* code =
-          codeBaseTier +
-          codeRanges[funcToCodeRange[funcIndex]].funcCheckedCallEntry();
-      table.setFuncRef(dstOffset + i, code, this);
+      continue;
     }
+
+    void* code = nullptr;
+    if (IsImportedFunction(funcIndex, metadataTier)) {
+      FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
+      JSFunction* fun = import.fun;
+      if (IsJSExportedFunction(fun)) {
+        code = checkedCallEntry(funcIndex, tier);
+      } else {
+        code = getIndirectStub(funcIndex, import.tls, tier);
+        MOZ_ASSERT(code);
+      }
+    } else {
+      // The function is an internal wasm function that belongs to the current
+      // instance. If table is isImportedOrExported then some other module can
+      // import this table and call its functions so we have to use indirect
+      // stub, otherwise we can use checked call entry because we don't cross
+      // instance's borders.
+      if (table.isImportedOrExported()) {
+        code = getIndirectStub(funcIndex, tlsData(), tier);
+        MOZ_ASSERT(code);
+      } else {
+        code = checkedCallEntry(funcIndex, tier);
+      }
+    }
+
+    MOZ_ASSERT(code);
+    table.setFuncRef(dstOffset + i, code, this);
   }
+
   return true;
 }
 
@@ -810,7 +972,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
+      if (!table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value),
+                             cx)) {
+        ReportOutOfMemory(cx);
+        return -1;
+      }
       break;
   }
 
@@ -850,19 +1016,28 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   RootedAnyRef ref(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
+  if (table.isFunction()) {
+    RootedFuncRef functionForFill(TlsContext.get(),
+                                  FuncRef::fromAnyRefUnchecked(ref));
+    if (!instance->ensureIndirectStub(functionForFill.address(),
+                                      instance->code().bestTier(),
+                                      table.isImportedOrExported())) {
+      return -1;
+    }
+    uint32_t oldSize = table.grow(delta);
+    if (oldSize != uint32_t(-1) && initValue != nullptr) {
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
+      MOZ_RELEASE_ASSERT(
+          table.fillFuncRef(oldSize, delta, functionForFill, TlsContext.get()));
+    }
+    return oldSize;
+  }
+
+  MOZ_ASSERT(!table.isFunction());
   uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    switch (table.repr()) {
-      case TableRepr::Ref:
-        table.fillAnyRef(oldSize, delta, ref);
-        break;
-      case TableRepr::Func:
-        MOZ_RELEASE_ASSERT(!table.isAsmJS());
-        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
-                          TlsContext.get());
-        break;
-    }
+    table.fillAnyRef(oldSize, delta, ref);
   }
 
   return oldSize;
@@ -885,8 +1060,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
-                        TlsContext.get());
+      if (!table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
+                             TlsContext.get())) {
+        ReportOutOfMemory(TlsContext.get());
+        return -1;
+      }
       break;
   }
 
@@ -1547,7 +1725,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // We have to calculate |scanStart|, the lowest address that is described by
   // |map|, by consulting |map->frameOffsetFromTop|.
 
-  const size_t numMappedBytes = map->numMappedWords * sizeof(void*);
+  const size_t numMappedBytes =
+      (map->numMappedWords + frame->trampolineSlots()) * sizeof(void*);
   const uintptr_t scanStart = uintptr_t(frame) +
                               (map->frameOffsetFromTop * sizeof(void*)) -
                               numMappedBytes;
@@ -1575,6 +1754,9 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 #endif
 
   uintptr_t* stackWords = (uintptr_t*)scanStart;
+  const uint32_t trampolineBeginIdx =
+      map->numMappedWords - static_cast<uint32_t>(map->frameOffsetFromTop) +
+      frame->trampolineSlots();
 
   // If we have some exit stub words, this means the map also covers an area
   // created by a exit stub, and so the highest word of that should be a
@@ -1585,8 +1767,15 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
           TrapExitDummyValue);
 
   // And actually hand them off to the GC.
-  for (uint32_t i = 0; i < map->numMappedWords; i++) {
-    if (map->getBit(i) == 0) {
+  uint32_t stackIdx = 0;
+  for (uint32_t mapIdx = 0; mapIdx < map->numMappedWords;
+       ++mapIdx, ++stackIdx) {
+    if (frame->callerIsTrampolineFP() && mapIdx == trampolineBeginIdx) {
+      // Skip trampoline frame.
+      stackIdx += frame->trampolineSlots();
+    }
+
+    if (map->getBit(mapIdx) == 0) {
       continue;
     }
 
@@ -1596,10 +1785,11 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 
     // This assertion seems at least moderately effective in detecting
     // discrepancies or misalignments between the map and reality.
-    MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
+    MOZ_ASSERT(
+        js::gc::IsCellPointerValidOrNull((const void*)stackWords[stackIdx]));
 
-    if (stackWords[i]) {
-      TraceRoot(trc, (JSObject**)&stackWords[i],
+    if (stackWords[stackIdx]) {
+      TraceRoot(trc, (JSObject**)&stackWords[stackIdx],
                 "Instance::traceWasmFrame: normal word");
     }
   }
@@ -1632,6 +1822,26 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   }
 
   return scanStart + numMappedBytes - 1;
+}
+
+Instance* Instance::getOriginalInstanceAndFunction(uint32_t funcIdx,
+                                                   JSFunction** fun) {
+  Tier tier = code().bestTier();
+  const MetadataTier& metadataTier = metadata(tier);
+  const FuncImportVector& funcImports = metadataTier.funcImports;
+
+  if (IsImportedFunction(funcIdx, metadataTier)) {
+    FuncImportTls& import = funcImportTls(funcImports[funcIdx]);
+    *fun = import.fun;
+    if (IsJSExportedFunction(*fun)) {
+      return this;
+    }
+    WasmInstanceObject* calleeInstanceObj =
+        ExportedFunctionToInstanceObject(*fun);
+    return &calleeInstanceObj->instance();
+  }
+
+  return this;
 }
 
 WasmMemoryObject* Instance::memory() const { return memory_; }
@@ -1700,7 +1910,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   tier = instance.code().bestTier();
   const CodeTier& codeTier = instance.code(tier);
   if (tier == prevTier) {
-    if (!stubs->createOne(funcExportIndex, codeTier)) {
+    if (!stubs->createOneEntryStub(funcExportIndex, codeTier)) {
       return false;
     }
 
@@ -1714,9 +1924,9 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.
-  MOZ_ASSERT(!stubs2->hasStub(fe.funcIndex()));
+  MOZ_ASSERT(!stubs2->hasEntryStub(fe.funcIndex()));
 
-  if (!stubs2->createOne(funcExportIndex, codeTier)) {
+  if (!stubs2->createOneEntryStub(funcExportIndex, codeTier)) {
     return false;
   }
 
