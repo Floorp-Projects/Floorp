@@ -270,7 +270,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
       let searchQuery = "";
       let matchedKeywords = "";
-      let scenario = UrlbarPrefs.get("quickSuggestScenario");
+      let scenario = UrlbarPrefs.get("quicksuggest.scenario");
       // Only collect the search query and matched keywords for "online" scenario.
       // For other scenarios, those fields are set as empty strings.
       if (scenario === "online") {
@@ -318,18 +318,22 @@ class ProviderQuickSuggest extends UrlbarProvider {
   onPrefChanged(pref) {
     switch (pref) {
       case "suggest.quicksuggest":
-        Services.telemetry.recordEvent(
-          TELEMETRY_EVENT_CATEGORY,
-          "enable_toggled",
-          UrlbarPrefs.get(pref) ? "enabled" : "disabled"
-        );
+        if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
+          Services.telemetry.recordEvent(
+            TELEMETRY_EVENT_CATEGORY,
+            "enable_toggled",
+            UrlbarPrefs.get(pref) ? "enabled" : "disabled"
+          );
+        }
         break;
       case "suggest.quicksuggest.sponsored":
-        Services.telemetry.recordEvent(
-          TELEMETRY_EVENT_CATEGORY,
-          "sponsored_toggled",
-          UrlbarPrefs.get(pref) ? "enabled" : "disabled"
-        );
+        if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
+          Services.telemetry.recordEvent(
+            TELEMETRY_EVENT_CATEGORY,
+            "sponsored_toggled",
+            UrlbarPrefs.get(pref) ? "enabled" : "disabled"
+          );
+        }
         break;
     }
   }

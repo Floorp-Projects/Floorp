@@ -46,7 +46,7 @@ const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 const EXPERIMENT_PREF = "browser.urlbar.quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
 
-const DEFAULT_SCENARIO = UrlbarPrefs.get("quickSuggestScenario");
+const DEFAULT_SCENARIO = UrlbarPrefs.get("quicksuggest.scenario");
 
 // Spy for the custom impression/click sender
 let spy;
@@ -111,11 +111,12 @@ add_task(async function impression_online() {
       // Make sure Merino is disabled so we don't hit the network.
       merinoEnabled: false,
       quickSuggestScenario: "online",
-      quickSuggestEnabled: true,
       quickSuggestShouldShowOnboardingDialog: false,
     },
     callback: async () => {
       spy.resetHistory();
+      UrlbarPrefs.set("suggest.quicksuggest", true);
+      UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
       await BrowserTestUtils.withNewTab("about:blank", async () => {
         await UrlbarTestUtils.promiseAutocompleteResultPopup({
           window,
@@ -471,6 +472,57 @@ add_task(async function nimbusExposure() {
   await UrlbarTestUtils.promisePopupClose(window);
 
   await doExperimentCleanup();
+});
+
+// The contextservices.quicksuggest enable_toggled and sponsored_toggled events
+// should not be recorded when the scenario changes.
+add_task(async function updateScenarioNoEvents() {
+  // Make sure the prefs don't have user values that would mask the default
+  // values set below.
+  UrlbarPrefs.clear("quicksuggest.scenario");
+  UrlbarPrefs.clear("suggest.quicksuggest");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  Services.telemetry.clearEvents();
+
+  // check initial defaults
+  let defaults = Services.prefs.getDefaultBranch("browser.urlbar.");
+  Assert.equal(
+    defaults.getCharPref("quicksuggest.scenario"),
+    "offline",
+    "Default scenario is offline initially"
+  );
+  Assert.ok(
+    defaults.getBoolPref("suggest.quicksuggest"),
+    "suggest.quicksuggest is true initially"
+  );
+  Assert.ok(
+    defaults.getBoolPref("suggest.quicksuggest.sponsored"),
+    "suggest.quicksuggest.sponsored is true initially"
+  );
+
+  // set online
+  defaults.setCharPref("quicksuggest.scenario", "online");
+  Assert.ok(
+    !defaults.getBoolPref("suggest.quicksuggest"),
+    "suggest.quicksuggest is false after setting online scenario"
+  );
+  Assert.ok(
+    !defaults.getBoolPref("suggest.quicksuggest.sponsored"),
+    "suggest.quicksuggest.sponsored is false after setting online scenario"
+  );
+  TelemetryTestUtils.assertEvents([]);
+
+  // set back to offline
+  defaults.setCharPref("quicksuggest.scenario", "offline");
+  Assert.ok(
+    defaults.getBoolPref("suggest.quicksuggest"),
+    "suggest.quicksuggest is true after setting offline again"
+  );
+  Assert.ok(
+    defaults.getBoolPref("suggest.quicksuggest.sponsored"),
+    "suggest.quicksuggest.sponsored is true after setting offline again"
+  );
+  TelemetryTestUtils.assertEvents([]);
 });
 
 /**
