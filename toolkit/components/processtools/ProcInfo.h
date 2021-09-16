@@ -105,10 +105,8 @@ struct ProcInfo {
   nsCString origin;
   // Process filename (without the path name).
   nsString filename;
-  // RSS in bytes.
-  int64_t residentSetSize = 0;
-  // Unshared resident size in bytes.
-  int64_t residentUniqueSize = 0;
+  // Memory size in bytes.
+  uint64_t memory = 0;
   // User time in ns.
   uint64_t cpuUser = 0;
   // System time in ns.
@@ -212,8 +210,7 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
   // Copy system info.
   dest->mPid = source.pid;
   dest->mFilename.Assign(source.filename);
-  dest->mResidentSetSize = source.residentSetSize;
-  dest->mResidentUniqueSize = source.residentUniqueSize;
+  dest->mMemory = source.memory;
   dest->mCpuUser = source.cpuUser;
   dest->mCpuKernel = source.cpuKernel;
 
