@@ -12,6 +12,7 @@
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIFOG.h"
 #include "nsIUserIdleService.h"
@@ -21,7 +22,7 @@ namespace mozilla {
 
 static StaticRefPtr<FOG> gFOG;
 
-// We wait for 5s of idle before dumping IPC.
+// We wait for 5s of idle before dumping IPC and flushing ping data to disk.
 // This number hasn't been tuned, so if you have a reason to change it,
 // please by all means do.
 const uint32_t kIdleSecs = 5;
@@ -121,9 +122,13 @@ FOG::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  // On idle, opportunistically flush child process data to the parent.
+  // On idle, opportunistically flush child process data to the parent,
+  // then persist ping-lifetime data to the db.
   if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
     glean::FlushAndUseFOGData();
+#ifndef MOZ_GLEAN_ANDROID
+    Unused << glean::impl::fog_persist_ping_lifetime_data();
+#endif
   }
 
   return NS_OK;
