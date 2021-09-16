@@ -15,6 +15,7 @@ encoding_c_mem = "0.2.4"
 smoosh = { path = "../../frontend/smoosh", optional = true }
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 mozglue-static = { path = "../../../../mozglue/static/rust" }
+gluesmith = { path = "../../fuzz-tests/gluesmith", optional = true }
 
 [features]
 cranelift_x86 = ['baldrdash/cranelift_x86']
