@@ -36,7 +36,7 @@
 namespace mozilla {
 
 std::string CommentsToSpaces(const std::string& src);
-std::string CrushGlslToAscii(const std::string& u8);
+Maybe<char> CheckGLSLPreprocString(bool webgl2, const std::string& string);
 Maybe<webgl::ErrorInfo> CheckGLSLVariableName(const bool webgl2,
                                               const std::string& name);
 

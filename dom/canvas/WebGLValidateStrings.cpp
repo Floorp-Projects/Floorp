@@ -87,7 +87,7 @@ std::string CommentsToSpaces(const std::string& src) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static constexpr bool IsValidGLSLChar(const char c) {
+static bool IsValidGLSLChar(const char c) {
   if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
       ('0' <= c && c <= '9')) {
     return true;
@@ -125,7 +125,6 @@ static constexpr bool IsValidGLSLChar(const char c) {
     case ';':
     case ',':
     case '?':
-    case '#':
       return true;
 
     default:
@@ -135,17 +134,16 @@ static constexpr bool IsValidGLSLChar(const char c) {
 
 ////
 
-static constexpr char INVALID_GLSL_CHAR = '$';
+Maybe<char> CheckGLSLPreprocString(const bool webgl2,
+                                   const std::string& string) {
+  for (const auto c : string) {
+    if (IsValidGLSLChar(c)) continue;
+    if (c == '#') continue;
+    if (c == '\\' && webgl2) continue;
 
-std::string CrushGlslToAscii(const std::string& u8) {
-  static_assert(!IsValidGLSLChar(INVALID_GLSL_CHAR));
-  auto ascii = u8;
-  for (auto& c : ascii) {
-    if (!IsValidGLSLChar(c)) {
-      c = INVALID_GLSL_CHAR;
-    }
+    return Some(c);
   }
-  return ascii;
+  return {};
 }
 
 Maybe<webgl::ErrorInfo> CheckGLSLVariableName(const bool webgl2,
