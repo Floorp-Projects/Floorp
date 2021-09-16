@@ -1652,9 +1652,6 @@ void GCRuntime::backgroundFinalize(JSFreeOp* fop, Arena* listHead,
   // complete, we want to merge these lists back together.
   ArenaLists* lists = &zone->arenas;
 
-  // Flatten |finalizedSorted| into a regular ArenaList.
-  ArenaList finalized = finalizedSorted.toArenaList();
-
   // We must take the GC lock to be able to safely modify the ArenaList;
   // however, this does not by itself make the changes visible to all threads,
   // as not all threads take the GC lock to read the ArenaLists.
@@ -1662,22 +1659,29 @@ void GCRuntime::backgroundFinalize(JSFreeOp* fop, Arena* listHead,
   // background finalize state, which we explicitly set as the final step.
   {
     AutoLockGC lock(rt);
-    ArenaList& al = lists->arenaList(thingKind);
-
     MOZ_ASSERT(lists->concurrentUse(thingKind) ==
                ArenaLists::ConcurrentUse::BackgroundFinalize);
-
-    // Join |al| and |finalized| into a single list.
-    ArenaList allocatedDuringSweep = std::move(al);
-    al = std::move(finalized);
-    al.insertListWithCursorAtEnd(lists->newArenasInMarkPhase(thingKind));
-    al.insertListWithCursorAtEnd(allocatedDuringSweep);
-
-    lists->newArenasInMarkPhase(thingKind).clear();
+    lists->mergeFinalizedArenas(thingKind, finalizedSorted);
     lists->arenasToSweep(thingKind) = nullptr;
   }
 
   lists->concurrentUse(thingKind) = ArenaLists::ConcurrentUse::None;
+}
+
+// After finalizing arenas, merge the following to get the final state of an
+// arena list:
+//  - arenas allocated during marking
+//  - arenas allocated during sweeping
+//  - finalized arenas
+void ArenaLists::mergeFinalizedArenas(AllocKind thingKind, SortedArenaList& finalizedArenas) {
+  ArenaList& arenas = arenaList(thingKind);
+
+  ArenaList allocatedDuringSweep = std::move(arenas);
+  arenas = finalizedArenas.toArenaList();
+  arenas.insertListWithCursorAtEnd(newArenasInMarkPhase(thingKind));
+  arenas.insertListWithCursorAtEnd(allocatedDuringSweep);
+
+  newArenasInMarkPhase(thingKind).clear();
 }
 
 void ArenaLists::queueForegroundThingsForSweep() {
@@ -4366,14 +4370,7 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
   incrementalSweptArenas.ref().clear();
 
   sweepList.extractEmpty(&savedEmptyArenas.ref());
-
-  ArenaList& al = arenaList(thingKind);
-  ArenaList allocatedDuringSweep = std::move(al);
-  al = sweepList.toArenaList();
-  al.insertListWithCursorAtEnd(newArenasInMarkPhase(thingKind));
-  al.insertListWithCursorAtEnd(allocatedDuringSweep);
-
-  newArenasInMarkPhase(thingKind).clear();
+  mergeFinalizedArenas(thingKind, sweepList);
 
   return true;
 }

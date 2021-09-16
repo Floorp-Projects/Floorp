@@ -344,6 +344,8 @@ class ArenaLists {
                           js::SliceBudget& sliceBudget,
                           SortedArenaList& sweepList);
 
+  void mergeFinalizedArenas(AllocKind thingKind, SortedArenaList& finalizedArenas);
+
   void setParallelAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
 
