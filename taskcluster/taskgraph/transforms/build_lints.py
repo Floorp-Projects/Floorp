@@ -11,8 +11,6 @@ from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 
-SEEN_CONFIGS = {}
-
 
 @transforms.add
 def check_mozharness_perfherder_options(config, jobs):
@@ -27,6 +25,8 @@ def check_mozharness_perfherder_options(config, jobs):
     to the same bucket by looking for jobs not defining extra options when
     their platform or mozharness config are otherwise similar.
     """
+
+    SEEN_CONFIGS = {}
 
     for job in jobs:
         if job["run"]["using"] != "mozharness":
