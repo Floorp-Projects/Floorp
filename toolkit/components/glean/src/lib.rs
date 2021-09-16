@@ -116,3 +116,9 @@ pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
     glean::set_log_pings(value);
     NS_OK
 }
+
+/// Flushes ping-lifetime data to the db when delay_ping_lifetime_io is true.
+#[no_mangle]
+pub unsafe extern "C" fn fog_persist_ping_lifetime_data() {
+    glean::persist_ping_lifetime_data();
+}
