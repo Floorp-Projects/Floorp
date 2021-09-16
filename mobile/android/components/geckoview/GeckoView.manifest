@@ -1,4 +1,3 @@
 # GeckoViewStartup.js
 category app-startup GeckoViewStartup service,@mozilla.org/geckoview/startup;1
 category profile-after-change GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
-category browser-idle-startup-tasks-finished GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main

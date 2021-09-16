@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Check StartupCache</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+// The startup canary file is removed sometime after the startup, with a delay,
+// e.g. 30 seconds on desktop:
+// https://searchfox.org/mozilla-central/rev/aa46c2dcccbc6fd4265edca05d3d00cccdfc97b9/browser/components/BrowserGlue.jsm#2486-2490
+// e.g. up to 15 seconds (as an idle timeout) on Android:
+// https://searchfox.org/mozilla-central/rev/aa46c2dcccbc6fd4265edca05d3d00cccdfc97b9/mobile/android/chrome/geckoview/geckoview.js#510
+//
+// This test completes quickly if run sequentially after the many tests in this
+// directory. Otherwise the test may wait for up to MAX_DELAY_SEC seconds.
+const MAX_DELAY_SEC = 30;
+SimpleTest.requestFlakyTimeout("trackStartupCrashEnd() is called with a delay");
+
+// This test is not extension-specific, but placed in the extensions/ directory
+// because it complements the test_check_startupcache.html test, and because
+// the directory has many other tests, to minimize the amount of time wasted on
+// waiting.
+
+add_task(async function check_startup_canary() {
+  // The ".startup-incomplete" file is created at the startup, and supposedly
+  // cleared "soon" after startup (when the application knows that the startup
+  // succeeded without crash). Bug 1624724 and bug 1728461 show that this has
+  // not always been the case, so this regression test verifies that the file
+  // is actually non-existent when this test start, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1728461#c12
+
+  // This test is opened as a web page in the browser, so that should have been
+  // a point where the startup should have been considered done.
+
+  async function canaryExists() {
+    let chromeScript = loadChromeScript(async () => {
+      const {
+        Services,
+      } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      // This file is called FILE_STARTUP_INCOMPLETE in nsAppRunner.cpp and
+      // referenced via mozilla::startup::GetIncompleteStartupFile:
+      let file = Services.dirsvc.get("ProfLD", Ci.nsIFile);
+      file.append(".startup-incomplete");
+      this.sendAsyncMessage("canary_exists", file.exists());
+    });
+    let exists = await chromeScript.promiseOneMessage("canary_exists");
+    chromeScript.destroy();
+    return exists;
+  }
+
+  info("Checking if startup canary exists");
+  let i = 0;
+  while (await canaryExists()) {
+      if (i++ > MAX_DELAY_SEC) {
+      info("Canary still exists, giving up on waiting");
+      break;
+    }
+    info(`Startup canary exists, will retry ${i} / ${MAX_DELAY_SEC}.`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  is(
+    await canaryExists(),
+    false,
+    "Startup canary should have been removed after early startup"
+  );
+});
+
+</script>
+
+</body>
+</html>
