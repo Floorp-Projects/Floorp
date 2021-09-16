@@ -2525,27 +2525,9 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     return rv;
   }
 
-  rv = ProcessCrossOriginEmbedderPolicyHeader();
+  rv = ProcessCrossOriginSecurityHeaders();
   if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
-    HandleAsyncAbort();
-    return rv;
-  }
-
-  rv = ProcessCrossOriginResourcePolicyHeader();
-  if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_DOM_CORP_FAILED;
-    HandleAsyncAbort();
-    return rv;
-  }
-
-  // before we check for redirects, check if the load should be shifted into a
-  // new process.
-  rv = ComputeCrossOriginOpenerPolicyMismatch();
-
-  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
-    // this navigates the doc's browsing context to a network error.
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    mStatus = rv;
     HandleAsyncAbort();
     return rv;
   }
@@ -5057,27 +5039,9 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
   LOG(("nsHttpChannel::AsyncProcessRedirection [this=%p type=%u]\n", this,
        redirectType));
 
-  nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
+  nsresult rv = ProcessCrossOriginSecurityHeaders();
   if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
-    HandleAsyncAbort();
-    return rv;
-  }
-
-  rv = ProcessCrossOriginResourcePolicyHeader();
-  if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_DOM_CORP_FAILED;
-    HandleAsyncAbort();
-    return rv;
-  }
-
-  // before we check for redirects, check if the load should be shifted into a
-  // new process.
-  rv = ComputeCrossOriginOpenerPolicyMismatch();
-
-  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
-    // this navigates the doc's browsing context to a network error.
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    mStatus = rv;
     HandleAsyncAbort();
     return rv;
   }
@@ -6897,29 +6861,11 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     return NS_OK;
   }
 
-  rv = ProcessCrossOriginEmbedderPolicyHeader();
+  rv = ProcessCrossOriginSecurityHeaders();
   if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    mStatus = rv;
     HandleAsyncAbort();
-    return NS_OK;
-  }
-
-  rv = ProcessCrossOriginResourcePolicyHeader();
-  if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_DOM_CORP_FAILED;
-    HandleAsyncAbort();
-    return NS_OK;
-  }
-
-  // before we check for redirects, check if the load should be shifted into a
-  // new process.
-  rv = ComputeCrossOriginOpenerPolicyMismatch();
-
-  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
-    // this navigates the doc's browsing context to a network error.
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
-    HandleAsyncAbort();
-    return NS_OK;
+    return rv;
   }
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
