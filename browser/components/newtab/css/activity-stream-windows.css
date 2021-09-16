@@ -36,25 +36,37 @@ input {
 body {
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: #FFF;
+  --newtab-text-primary-color: #15141a;
+  --newtab-primary-action-background: #0061e0;
+  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #000);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
+  --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
+  --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
+  --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
+  --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 90%, #000);
+  --newtab-primary-element-active-color: color-mix(in srgb, var(--newtab-primary-action-background) 80%, #000);
+  --newtab-primary-element-text-color: #FFF;
+  --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #000);
+  --newtab-wordmark-color: #20123A;
+  --newtab-status-success: #058B00;
+  --newtab-status-error: #D70022;
+  --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
+  --newtab-overlay-color: color-mix(in srgb, var(--newtab-background-color) 85%, transparent);
+  --newtab-text-emphasis-background: #FFE900;
+  --newtab-text-emphasis-text-color: #0C0C0D;
   --newtab-border-primary-color: #B1B1B3;
   --newtab-border-secondary-color: #D7D7DB;
-  --newtab-element-active-color: rgba(215, 215, 219, 0.6);
-  --newtab-element-hover-color: #EDEDF0;
   --newtab-icon-primary-color: rgba(12, 12, 13, 0.8);
   --newtab-icon-secondary-color: rgba(12, 12, 13, 0.6);
   --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
-  --newtab-link-primary-color: #0060DF;
-  --newtab-link-primary-active-color: #003EAA;
+  --newtab-link-primary-color: var(--newtab-primary-action-background);
+  --newtab-link-primary-active-color: var(--newtab-primary-element-active-color);
   --newtab-link-secondary-color: #008EA4;
   --newtab-text-conditional-color: #4A4A4F;
-  --newtab-text-primary-color: #15141a;
-  --newtab-text-secondary-color: #737373;
-  --newtab-text-emphasis-background: #FFE900;
-  --newtab-text-empahsis-text-color: #0C0C0D;
   --newtab-textbox-background-color: var(--newtab-background-color-secondary);
   --newtab-textbox-border: rgba(12, 12, 13, 0.2);
-  --newtab-status-success: #058B00;
-  --newtab-status-error: #D70022;
   --newtab-textbox-focus-color: #0060DF;
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #0060DF, 0 0 0 4px rgba(0, 96, 223, 0.3);
   --newtab-background-button-hover-color: rgba(196, 196, 196, 0.5);
@@ -93,7 +105,6 @@ body {
   --newtab-focus-border: #0060DF;
   --newtab-focus-border-selected: rgba(0, 0, 0, 0.15);
   --newtab-seperator-line-color: #E1E0E6;
-  --newtab-primary-action-background: #0060DF;
   --newtab-primary-action-background-off: #E9E9E9;
   --customize-menu-primary-text-color: #20123A;
   --customize-menu-check-fill: #FFF;
@@ -114,6 +125,17 @@ body {
 body[lwt-newtab-brighttext] {
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: #42414d;
+  --newtab-text-primary-color: #fbfbfe;
+  --newtab-primary-action-background: #00ddff;
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #FFF);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #FFF);
+  --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
+  --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);
+  --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
+  --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #FFF);
+  --newtab-primary-element-text-color: #2b2a33;
+  --newtab-wordmark-color: #fbfbfe;
+  --newtab-status-success: #7C6;
   --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
   --newtab-border-secondary-color: rgba(249, 249, 250, 0.1);
   --newtab-button-primary-color: #0060DF;
@@ -127,10 +149,8 @@ body[lwt-newtab-brighttext] {
   --newtab-link-primary-active-color: #0060DF;
   --newtab-link-secondary-color: #50BCB6;
   --newtab-text-conditional-color: #F9F9FA;
-  --newtab-text-primary-color: #fbfbfe;
   --newtab-text-secondary-color: rgba(249, 249, 250, 0.8);
   --newtab-textbox-border: rgba(249, 249, 250, 0.2);
-  --newtab-status-success: #7C6;
   --newtab-textbox-focus-color: #45A1FF;
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #45A1FF, 0 0 0 4px rgba(69, 161, 255, 0.3);
   --newtab-background-button-hover-color: rgba(114, 114, 114, 0.5);
@@ -160,7 +180,7 @@ body[lwt-newtab-brighttext] {
   --newtab-focus-outline: rgba(80, 145, 241, 0.5);
   --newtab-focus-border: #B5D3FF;
   --newtab-focus-border-selected: #B5D3FF;
-  --newtab-primary-action-background: #4484E2;
+  --newtab-primary-action-background: #00ddff;
   --newtab-primary-action-background-off: #6A6A6F;
   --newtab-seperator-line-color: #53515F;
   --customize-menu-primary-text-color: #E0E0E6;
@@ -175,7 +195,6 @@ body[lwt-newtab-brighttext] {
   --newtab-search-first-shadow: 0 2px 6px rgba(28, 27, 34, 0.5);
   --newtab-search-text-color: #B1B1BD;
   --newtab-card-first-shadow: 0 2px 6px rgba(28, 27, 34, 0.5);
-  --newtab-wordmark-color: #fbfbfe;
 }
 
 .icon {
@@ -4337,7 +4356,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   position: relative;
   margin: auto;
   background: var(--newtab-modal-color);
-  box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   display: none;
   z-index: 1100;
@@ -4585,7 +4604,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   padding: 27px 0;
 }
 .SimpleSnippet p em {
-  color: var(--newtab-text-empahsis-text-color);
+  color: var(--newtab-text-emphasis-text-color);
   font-style: normal;
   background: var(--newtab-text-emphasis-background);
 }
