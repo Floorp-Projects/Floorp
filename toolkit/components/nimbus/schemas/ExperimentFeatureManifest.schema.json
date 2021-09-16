@@ -9,11 +9,13 @@
         "description": {
           "type": "string"
         },
+        "hasExposure": {
+          "type": "boolean",
+          "description": "If the feature sends an exposure event."
+        },
         "exposureDescription": {
-          "oneOf": [
-            {"type": "string"},
-            {"type": "boolean"}
-          ]
+          "type": "string",
+          "description": "A description of the implementation details of the exposure event, if one is sent."
         },
         "isEarlyStartup": {
           "type": "boolean",
@@ -28,7 +30,12 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": ["json", "boolean", "int", "string"]
+                  "enum": [
+                    "json",
+                    "boolean",
+                    "int",
+                    "string"
+                  ]
                 },
                 "fallbackPref": {
                   "type": "string"
@@ -41,13 +48,31 @@
                   "description": "Explain how this value is being used"
                 }
               },
-              "required": ["type", "description"],
+              "required": [
+                "type",
+                "description"
+              ],
               "additionalProperties": false
             }
           }
         }
       },
-      "required": ["description", "exposureDescription"]
+      "required": [
+        "description",
+        "hasExposure"
+      ],
+      "if": {
+        "properties": {
+          "hasExposure": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "exposureDescription"
+        ]
+      }
     }
   }
 }
