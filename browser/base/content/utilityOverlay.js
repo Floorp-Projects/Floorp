@@ -1061,7 +1061,7 @@ async function openPreferences(paneID, extraArgs) {
       Services.obs.removeObserver(panesLoadedObs, "sync-pane-loaded");
     }, "sync-pane-loaded");
   } else if (paneID) {
-    if (browser.contentDocument.readyState != "complete") {
+    if (browser.contentDocument?.readyState != "complete") {
       await new Promise(resolve => {
         browser.addEventListener("load", resolve, {
           capture: true,
