@@ -212,10 +212,14 @@ class GeckoViewStartup {
           "GeckoView:SetLocale",
         ]);
 
+        Services.obs.addObserver(this, "browser-idle-startup-tasks-finished");
+
         Services.obs.notifyObservers(null, "geckoview-startup-complete");
         break;
       }
       case "browser-idle-startup-tasks-finished": {
+        // TODO bug 1730026: when an alternative is introduced that runs once,
+        // replace this observer topic with that alternative.
         // This only needs to happen once during startup.
         Services.obs.removeObserver(this, aTopic);
         // Notify the start up crash tracker that the browser has successfully
