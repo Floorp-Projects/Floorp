@@ -490,6 +490,7 @@ rust-1.56.0-dev:
     description: Rust 1.56.0-dev source code
     fetch:
         type: git
+        include-dot-git: true
         repo: https://github.com/rust-lang/rust/
         revision: d9aa28767287670df6cf823b94629122e04442c0
 
