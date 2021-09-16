@@ -17,35 +17,11 @@ class TipsHorizontalCarousel @JvmOverloads constructor(
     val tipsAdapter: TipsAdapter = TipsAdapter()
     private val pagerSnapHelper = PagerSnapHelper()
     private val itemDecoration = DotPagerIndicatorDecoration()
-    private val horizontalLayoutManager = HorizontalLayoutManager(context)
 
     init {
-        layoutManager = horizontalLayoutManager
+        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         adapter = tipsAdapter
         pagerSnapHelper.attachToRecyclerView(this)
         addItemDecoration(itemDecoration)
-    }
-
-    fun showAsCarousel(state: Boolean) {
-        if (state) {
-            addItemDecoration(itemDecoration)
-            horizontalLayoutManager.setHorizontalScrollEnabled(state)
-        } else {
-            removeItemDecoration(itemDecoration)
-            horizontalLayoutManager.setHorizontalScrollEnabled(state)
-        }
-    }
-
-    class HorizontalLayoutManager(context: Context?) :
-        LinearLayoutManager(context, HORIZONTAL, false) {
-        private var isScrollEnabled = true
-
-        fun setHorizontalScrollEnabled(flag: Boolean) {
-            isScrollEnabled = flag
-        }
-
-        override fun canScrollHorizontally(): Boolean {
-            return isScrollEnabled && super.canScrollHorizontally()
-        }
     }
 }

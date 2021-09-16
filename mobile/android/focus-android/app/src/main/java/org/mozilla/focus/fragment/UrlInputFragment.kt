@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.fragment_urlinput2.*
+import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -196,7 +196,7 @@ class UrlInputFragment :
             customDomainsProvider.initialize(it.applicationContext)
         }
 
-        StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
+        StatusBarUtils.getStatusBarHeight(landingLayout) {
             adjustViewToStatusBarHeight(it)
         }
 
@@ -222,10 +222,6 @@ class UrlInputFragment :
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
         val inputHeight = resources.getDimension(R.dimen.urlinput_height)
-        if (keyboardLinearLayout.layoutParams is ViewGroup.MarginLayoutParams) {
-            val marginParams = keyboardLinearLayout.layoutParams as ViewGroup.MarginLayoutParams
-            marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
-        }
 
         urlInputLayout.layoutParams.height = (inputHeight + statusBarHeight).toInt()
 
@@ -240,7 +236,7 @@ class UrlInputFragment :
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_urlinput2, container, false)
+        val view = inflater.inflate(R.layout.fragment_urlinput, container, false)
 
         val topSites = view.findViewById<ComposeView>(R.id.topSites)
         topSites.setContent { HomeScreen() }
@@ -288,7 +284,7 @@ class UrlInputFragment :
         }
 
         if (isOverlay) {
-            keyboardLinearLayout?.visibility = View.GONE
+            landingLayout?.visibility = View.GONE
         } else {
             backgroundView?.setBackgroundResource(R.drawable.dark_background)
 
@@ -358,13 +354,6 @@ class UrlInputFragment :
         activity?.let {
             if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        // Reset the keyboard layout to avoid a jarring animation when the view is started again. (#1135)
-        keyboardLinearLayout?.reset()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
