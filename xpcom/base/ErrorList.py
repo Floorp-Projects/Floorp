@@ -741,6 +741,16 @@ with modules["DOM"]:
     # WebExtension content script may not load this URL.
     errors["NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI"] = FAILURE(1039)
 
+    # Used to indicate that a resource load was blocked because of the
+    # Cross-Origin-Embedder-Policy response header.
+    # https://html.spec.whatwg.org/multipage/origin.html#coep
+    errors["NS_ERROR_DOM_COEP_FAILED"] = FAILURE(1040)
+
+    # Used to indicate that a resource load was blocked because of the
+    # Cross-Origin-Opener-Policy response header.
+    # https://html.spec.whatwg.org/multipage/origin.html#cross-origin-opener-policies
+    errors["NS_ERROR_DOM_COOP_FAILED"] = FAILURE(1041)
+
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.

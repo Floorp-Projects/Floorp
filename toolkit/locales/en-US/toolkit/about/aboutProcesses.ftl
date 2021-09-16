@@ -16,6 +16,16 @@ about-processes-shutdown-process =
 about-processes-shutdown-tab =
     .title = Close tab
 
+# Profiler icons
+# Variables:
+#    $duration (Number) The time in seconds during which the profiler will be running.
+#                       The value will be an integer, typically less than 10.
+about-processes-profile-process =
+    .title = { $duration ->
+   [one] Profile all threads of this process for { $duration } second
+  *[other] Profile all threads of this process for { $duration } seconds
+}
+
 ## Column headers
 
 about-processes-column-name = Name
@@ -73,7 +83,7 @@ about-processes-with-coop-coep-process-private = { $origin } — Private ({ $pid
 #    $list (String) Comma separated list of active threads.
 #                   Can be an empty string if the process is idle.
 about-processes-active-threads = { $active ->
-  [one] { $active } active thread out of { $number }: { $list }
+   [one] { $active } active thread out of { $number }: { $list }
   *[other] { $active } active threads out of { $number }: { $list }
 }
 

@@ -609,6 +609,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ComputeCrossOriginOpenerPolicyMismatch();
 
+  nsresult ProcessCrossOriginSecurityHeaders();
+
   nsresult ValidateMIMEType();
 
   bool EnsureOpaqueResponseIsAllowed();

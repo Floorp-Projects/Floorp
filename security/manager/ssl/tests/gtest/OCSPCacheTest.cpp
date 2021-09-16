@@ -9,6 +9,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 #include "nss.h"
 #include "mozpkix/pkixtypes.h"
@@ -304,6 +305,14 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure) {
 TEST_F(psm_OCSPCacheTest, TestOriginAttributes) {
   CertID certID(fakeIssuer1, fakeKey000, fakeSerial0000);
 
+  // We test two attributes, firstPartyDomain and partitionKey, respectively
+  // because we don't have entries that have both attributes set because the two
+  // features that use these attributes are mutually exclusive.
+
+  // Set pref for OCSP cache network partitioning.
+  mozilla::Preferences::SetBool("privacy.partition.network_state.ocsp_cache",
+                                true);
+
   SCOPED_TRACE("");
   OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral("foo.com");
@@ -314,8 +323,35 @@ TEST_F(psm_OCSPCacheTest, TestOriginAttributes) {
   attrs.mFirstPartyDomain.AssignLiteral("bar.com");
   ASSERT_FALSE(cache.Get(certID, attrs, resultOut, timeOut));
 
-  // OCSP cache should not be isolated by containers.
+  // OCSP cache should not be isolated by containers for firstPartyDomain.
   attrs.mUserContextId = 1;
   attrs.mFirstPartyDomain.AssignLiteral("foo.com");
   ASSERT_TRUE(cache.Get(certID, attrs, resultOut, timeOut));
+
+  // Clear originAttributes.
+  attrs.mUserContextId = 0;
+  attrs.mFirstPartyDomain.Truncate();
+
+  // Add OCSP cache for the partitionKey.
+  attrs.mPartitionKey.AssignLiteral("(https,foo.com)");
+  PutAndGet(cache, certID, Success, now, attrs);
+
+  // Check cache entry for the partitionKey.
+  attrs.mPartitionKey.AssignLiteral("(https,foo.com)");
+  ASSERT_TRUE(cache.Get(certID, attrs, resultOut, timeOut));
+
+  // OCSP cache entry should not exist for the other partitionKey.
+  attrs.mPartitionKey.AssignLiteral("(https,bar.com)");
+  ASSERT_FALSE(cache.Get(certID, attrs, resultOut, timeOut));
+
+  // OCSP cache should not be isolated by containers for partitonKey.
+  attrs.mUserContextId = 1;
+  attrs.mPartitionKey.AssignLiteral("(https,foo.com)");
+  ASSERT_TRUE(cache.Get(certID, attrs, resultOut, timeOut));
+
+  // OCSP cache should not exist for the OAs which has both attributes set.
+  attrs.mUserContextId = 0;
+  attrs.mFirstPartyDomain.AssignLiteral("foo.com");
+  attrs.mPartitionKey.AssignLiteral("(https,foo.com)");
+  ASSERT_FALSE(cache.Get(certID, attrs, resultOut, timeOut));
 }

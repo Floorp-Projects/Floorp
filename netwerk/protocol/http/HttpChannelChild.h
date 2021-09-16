@@ -257,6 +257,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   // ensure Cacnel is processed before any other channel events.
   void CancelOnMainThread(nsresult aRv);
 
+  nsresult MaybeLogCOEPError(nsresult aStatus);
+
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.

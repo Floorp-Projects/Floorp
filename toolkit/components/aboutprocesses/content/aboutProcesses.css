@@ -86,6 +86,39 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 td:first-child {
   text-overflow: ellipsis;
 }
+
+.profiler-icon {
+  background: url("chrome://devtools/skin/images/tool-profiler.svg") no-repeat center;
+  display: inline-block;
+  height: 100%;
+  width: 16px;
+  padding: 5px 7px;
+  /* The -10px is -5 to undo the td padding and -5 to undo the padding here. */
+  margin: -10px 3px;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.9;
+  fill: currentColor;
+}
+.profiler-icon:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.profiler-icon:hover:active {
+  background-color: var(--in-content-button-background-active);
+  fill-opacity: 1;
+}
+
+.profiler-icon:not(.profiler-active) {
+  transform: scaleX(-1);
+}
+
+.profiler-active {
+  fill: var(--in-content-accent-color);
+}
+td:not(:hover) > .profiler-icon:not(.profiler-active) {
+  display: none;
+}
+
 .twisty {
   position: relative;
 }

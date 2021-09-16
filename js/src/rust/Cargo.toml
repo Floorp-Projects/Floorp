@@ -16,6 +16,7 @@ cranelift_none = ['jsrust_shared/cranelift_none']
 moz_memory = ['mozglue-static/moz_memory']
 simd-accel = ['jsrust_shared/simd-accel']
 smoosh = ['jsrust_shared/smoosh']
+gluesmith = ['jsrust_shared/gluesmith']
 
 [dependencies]
 jsrust_shared = { path = "./shared" }

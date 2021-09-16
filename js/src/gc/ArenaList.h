@@ -340,10 +340,10 @@ class ArenaLists {
 
   Arena* takeSweptEmptyArenas();
 
-  bool foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
-                          js::SliceBudget& sliceBudget,
-                          SortedArenaList& sweepList);
-  static void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
+  void setIncrementalSweptArenas(AllocKind kind, SortedArenaList& arenas);
+  void clearIncrementalSweptArenas();
+
+  void mergeFinalizedArenas(AllocKind thingKind, SortedArenaList& finalizedArenas);
 
   void setParallelAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
@@ -379,12 +379,8 @@ class ArenaLists {
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
 
-  inline void queueForForegroundSweep(JSFreeOp* fop,
-                                      const FinalizePhase& phase);
-  inline void queueForBackgroundSweep(JSFreeOp* fop,
-                                      const FinalizePhase& phase);
-  inline void queueForForegroundSweep(AllocKind thingKind);
-  inline void queueForBackgroundSweep(AllocKind thingKind);
+  void queueForForegroundSweep(AllocKind thingKind);
+  void queueForBackgroundSweep(AllocKind thingKind);
 
   TenuredCell* refillFreeListAndAllocate(FreeLists& freeLists,
                                          AllocKind thingKind,
