@@ -152,18 +152,27 @@ def dump_output(out, path=None, params_spec=None):
 def generate_taskgraph(options, parameters, logdir):
     from taskgraph.parameters import Parameters
 
+    def logfile(spec):
+        """Determine logfile given a parameters specification."""
+        if logdir is None:
+            return None
+        return os.path.join(
+            logdir,
+            "{}_{}.log".format(options["graph_attr"], Parameters.format_spec(spec)),
+        )
+
+    # Don't bother using futures if there's only one parameter. This can make
+    # tracebacks a little more readable and avoids additional process overhead.
+    if len(parameters) == 1:
+        spec = parameters[0]
+        out = format_taskgraph(options, spec, logfile(spec))
+        dump_output(out, options["output_file"])
+        return
+
     futures = {}
-    logfile = None
     with ProcessPoolExecutor() as executor:
         for spec in parameters:
-            if logdir:
-                logfile = os.path.join(
-                    logdir,
-                    "{}_{}.log".format(
-                        options["graph_attr"], Parameters.format_spec(spec)
-                    ),
-                )
-            f = executor.submit(format_taskgraph, options, spec, logfile)
+            f = executor.submit(format_taskgraph, options, spec, logfile(spec))
             futures[f] = spec
 
     for future in as_completed(futures):
@@ -313,7 +322,10 @@ def show_taskgraph(options):
         repo = get_repository(os.getcwd())
 
         if not repo.working_directory_clean():
-            print("abort: can't diff taskgraph with dirty working directory")
+            print(
+                "abort: can't diff taskgraph with dirty working directory",
+                file=sys.stderr,
+            )
             return 1
 
         # We want to return the working directory to the current state
