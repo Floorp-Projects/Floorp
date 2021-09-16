@@ -28,11 +28,9 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MacroForEach.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
@@ -104,7 +102,6 @@ static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
 nsTHashMap<KeyboardHashKey, const SpoofingKeyboardCode*>*
     nsRFPService::sSpoofingKeyboardCodes = nullptr;
-static mozilla::StaticMutex sLock;
 
 KeyboardHashKey::KeyboardHashKey(const KeyboardLangs aLang,
                                  const KeyboardRegions aRegion,
@@ -244,7 +241,7 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
                                       uint8_t* aSecretSeed /* = nullptr */) {
   nsresult rv;
   const int kSeedSize = 16;
-  static uint8_t* sSecretMidpointSeed = nullptr;
+  static Atomic<uint8_t*> sSecretMidpointSeed;
 
   if (MOZ_UNLIKELY(!aMidpointOut)) {
     return NS_ERROR_INVALID_ARG;
@@ -259,17 +256,6 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
    * reasonably performant and should be sufficient for our purposes.
    */
 
-  // If someone has pased in the testing-only parameter, replace our seed with
-  // it
-  if (aSecretSeed != nullptr) {
-    StaticMutexAutoLock lock(sLock);
-
-    delete[] sSecretMidpointSeed;
-
-    sSecretMidpointSeed = new uint8_t[kSeedSize];
-    memcpy(sSecretMidpointSeed, aSecretSeed, kSeedSize);
-  }
-
   // If we don't have a seed, we need to get one.
   if (MOZ_UNLIKELY(!sSecretMidpointSeed)) {
     nsCOMPtr<nsIRandomGenerator> randomGenerator =
@@ -278,19 +264,36 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
       return rv;
     }
 
-    if (MOZ_LIKELY(!sSecretMidpointSeed)) {
-      rv =
-          randomGenerator->GenerateRandomBytes(kSeedSize, &sSecretMidpointSeed);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    uint8_t* temp = nullptr;
+    rv = randomGenerator->GenerateRandomBytes(kSeedSize, &temp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (MOZ_UNLIKELY(!sSecretMidpointSeed.compareExchange(nullptr, temp))) {
+      // Some other thread initted this first, never mind!
+      delete[] temp;
     }
   }
 
+  // sSecretMidpointSeed is now set, and invariant. The contents of the buffer
+  // it points to is also invariant, _unless_ this function is called with a
+  // non-null |aSecretSeed|.
+  uint8_t* seed = sSecretMidpointSeed;
+  MOZ_RELEASE_ASSERT(seed);
+
+  // If someone has passed in the testing-only parameter, replace our seed with
+  // it. We do _not_ re-allocate the buffer, since that can lead to UAF below.
+  // The math could still be racy if the caller supplies a new secret seed while
+  // some other thread is calling this function, but since this is arcane
+  // test-only functionality that is used in only one test-case presently, we
+  // put the burden of using this particular footgun properly on the test code.
+  if (MOZ_UNLIKELY(aSecretSeed != nullptr)) {
+    memcpy(seed, aSecretSeed, kSeedSize);
+  }
+
   // Seed and create our random number generator.
-  non_crypto::XorShift128PlusRNG rng(
-      aContextMixin ^ *(uint64_t*)(sSecretMidpointSeed),
-      aClampedTimeUSec ^ *(uint64_t*)(sSecretMidpointSeed + 8));
+  non_crypto::XorShift128PlusRNG rng(aContextMixin ^ *(uint64_t*)(seed),
+                                     aClampedTimeUSec ^ *(uint64_t*)(seed + 8));
 
   // Retrieve the output midpoint value.
   if (MOZ_UNLIKELY(aResolutionUSec <= 0)) {  // ??? Bug 1718066
