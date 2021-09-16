@@ -478,6 +478,7 @@ ImageTestCase GreenWebPTestCase();
 ImageTestCase GreenAVIFTestCase();
 
 ImageTestCase NonzeroReservedAVIFTestCase();
+ImageTestCase MultipleColrAVIFTestCase();
 ImageTestCase Transparent10bit420AVIFTestCase();
 ImageTestCase Transparent10bit422AVIFTestCase();
 ImageTestCase Transparent10bit444AVIFTestCase();
