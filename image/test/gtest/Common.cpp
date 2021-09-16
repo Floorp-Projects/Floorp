@@ -448,6 +448,13 @@ ImageTestCase NonzeroReservedAVIFTestCase() {
   return testCase;
 }
 
+ImageTestCase MultipleColrAVIFTestCase() {
+  auto testCase = ImageTestCase("valid-avif-colr-nclx-and-prof.avif",
+                                "image/avif", IntSize(1, 1));
+  testCase.mColor = BGRAColor(0x00, 0x00, 0x00, 0xFF);
+  return testCase;
+}
+
 ImageTestCase Transparent10bit420AVIFTestCase() {
   auto testCase =
       ImageTestCase("transparent-green-50pct-10bit-yuv420.avif", "image/avif",

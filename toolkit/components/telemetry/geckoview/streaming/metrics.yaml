@@ -971,13 +971,16 @@ avif:
       - nclx
       - icc
       - absent
+      - both
     gecko_datapoint: AVIF_COLR
     description: >
       AVIF colour information type.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729071
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729071#c15
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
