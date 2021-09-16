@@ -391,13 +391,13 @@ void AVIFDecodedData::SetCicpValues(
     if (aAv1ColourPrimaries != CICP::ColourPrimaries::CP_UNSPECIFIED) {
       cp = aAv1ColourPrimaries;
       MOZ_LOG(sAVIFLog, LogLevel::Info,
-              ("No colour_primaries value specified in colr box, "
+              ("Unspecified colour_primaries value specified in colr box, "
                "using AV1 sequence header (%hhu)",
                cp));
     } else {
       cp = CICP::ColourPrimaries::CP_BT709;
       MOZ_LOG(sAVIFLog, LogLevel::Warning,
-              ("No colour_primaries value specified in colr box "
+              ("Unspecified colour_primaries value specified in colr box "
                "or AV1 sequence header, using fallback value (%hhu)",
                cp));
     }
@@ -413,13 +413,13 @@ void AVIFDecodedData::SetCicpValues(
         CICP::TransferCharacteristics::TC_UNSPECIFIED) {
       tc = aAv1TransferCharacteristics;
       MOZ_LOG(sAVIFLog, LogLevel::Info,
-              ("No transfer_characteristics value specified in "
+              ("Unspecified transfer_characteristics value specified in "
                "colr box, using AV1 sequence header (%hhu)",
                tc));
     } else {
       tc = CICP::TransferCharacteristics::TC_SRGB;
       MOZ_LOG(sAVIFLog, LogLevel::Warning,
-              ("No transfer_characteristics value specified in "
+              ("Unspecified transfer_characteristics value specified in "
                "colr box or AV1 sequence header, using fallback value (%hhu)",
                tc));
     }
@@ -434,13 +434,13 @@ void AVIFDecodedData::SetCicpValues(
     if (aAv1MatrixCoefficients != CICP::MatrixCoefficients::MC_UNSPECIFIED) {
       mc = aAv1MatrixCoefficients;
       MOZ_LOG(sAVIFLog, LogLevel::Info,
-              ("No matrix_coefficients value specified in "
+              ("Unspecified matrix_coefficients value specified in "
                "colr box, using AV1 sequence header (%hhu)",
                mc));
     } else {
       mc = CICP::MatrixCoefficients::MC_BT601;
       MOZ_LOG(sAVIFLog, LogLevel::Warning,
-              ("No matrix_coefficients value specified in "
+              ("Unspecified matrix_coefficients value specified in "
                "colr box or AV1 sequence header, using fallback value (%hhu)",
                mc));
     }
@@ -1229,6 +1229,28 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   }
   const Mp4parseAvifImage& parsedImg = *parsedImagePtr;
 
+  if (parsedImg.icc_colour_information.data) {
+    const auto& icc = parsedImg.icc_colour_information;
+    MOZ_LOG(
+        sAVIFLog, LogLevel::Debug,
+        ("[this=%p] colr type ICC: %zu bytes %p", this, icc.length, icc.data));
+  }
+
+  if (parsedImg.nclx_colour_information) {
+    const auto& nclx = *parsedImg.nclx_colour_information;
+    MOZ_LOG(
+        sAVIFLog, LogLevel::Debug,
+        ("[this=%p] colr type CICP: cp/tc/mc/full-range %u/%u/%u/%s", this,
+         nclx.colour_primaries, nclx.transfer_characteristics,
+         nclx.matrix_coefficients, nclx.full_range_flag ? "true" : "false"));
+  }
+
+  if (!parsedImg.icc_colour_information.data &&
+      !parsedImg.nclx_colour_information) {
+    MOZ_LOG(sAVIFLog, LogLevel::Debug,
+            ("[this=%p] colr box not present", this));
+  }
+
   if (parsedImg.alpha_image.coded_data.data) {
     PostHasTransparency();
   }
@@ -1279,23 +1301,6 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
           ("[this=%p] Decoder%s->Decode() %s", this,
            StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",
            IsDecodeSuccess(r) ? "succeeds" : "fails"));
-
-  if (parsedImg.icc_colour_information.data) {
-    auto& icc = parsedImg.icc_colour_information;
-    MOZ_LOG(
-        sAVIFLog, LogLevel::Debug,
-        ("[this=%p] colr type ICC: %zu bytes %p", this, icc.length, icc.data));
-  } else if (parsedImg.nclx_colour_information) {
-    auto& nclx = *parsedImg.nclx_colour_information;
-    MOZ_LOG(
-        sAVIFLog, LogLevel::Debug,
-        ("[this=%p] colr type CICP: cp/tc/mc/full-range %u/%u/%u/%s", this,
-         nclx.colour_primaries, nclx.transfer_characteristics,
-         nclx.matrix_coefficients, nclx.full_range_flag ? "true" : "false"));
-  } else {
-    MOZ_LOG(sAVIFLog, LogLevel::Debug,
-            ("[this=%p] colr box not present", this));
-  }
 
   if (!IsDecodeSuccess(r)) {
     return r;
@@ -1367,7 +1372,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   IntSize rgbSize = Size();
   MOZ_ASSERT(rgbSize == decodedData.mPicSize);
 
-  if (parsedImg.nclx_colour_information) {
+  if (parsedImg.nclx_colour_information &&
+      parsedImg.icc_colour_information.data) {
+    AccumulateCategorical(LABELS_AVIF_COLR::both);
+  } else if (parsedImg.nclx_colour_information) {
     AccumulateCategorical(LABELS_AVIF_COLR::nclx);
   } else if (parsedImg.icc_colour_information.data) {
     AccumulateCategorical(LABELS_AVIF_COLR::icc);
