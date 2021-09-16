@@ -3034,8 +3034,9 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
   // Subtract space occupied by our items' margins/borders/padding/gaps, so
   // we can just be dealing with the space available for our flex items' content
   // boxes.
+  const AuCoord64 totalItemMBPAndGaps = mTotalItemMBP + SumOfGaps();
   const AuCoord64 spaceAvailableForFlexItemsContentBoxes =
-      flexContainerMainSize - AuCoord64(mTotalItemMBP + SumOfGaps());
+      flexContainerMainSize - totalItemMBPAndGaps;
 
   Maybe<AuCoord64> origAvailableFreeSpace;
 
@@ -3072,11 +3073,14 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
     // MarginBorderPaddingSizeInMainAxis() or OuterMainSize() negative due to
     // integer overflow. If that happens, the accumulated
     // mTotalOuterHypotheticalMainSize or mTotalItemMBP could be negative due to
-    // that one item's negative (overflowed) size. In that case, we throw up our
-    // hands and don't require isUsingFlexGrow to agree with availableFreeSpace.
-    // Luckily, we won't get stuck in the algorithm below, and just distribute
-    // the wrong availableFreeSpace with the wrong grow/shrink factors.
-    MOZ_ASSERT(!(mTotalOuterHypotheticalMainSize >= 0 && mTotalItemMBP >= 0) ||
+    // that one item's negative (overflowed) size. Likewise, a huge main gap
+    // size between flex items can also make our accumulated SumOfGaps()
+    // negative. In these case, we throw up our hands and don't require
+    // isUsingFlexGrow to agree with availableFreeSpace. Luckily, we won't get
+    // stuck in the algorithm below, and just distribute the wrong
+    // availableFreeSpace with the wrong grow/shrink factors.
+    MOZ_ASSERT(!(mTotalOuterHypotheticalMainSize >= 0 && mTotalItemMBP >= 0 &&
+                 totalItemMBPAndGaps >= 0) ||
                    (isUsingFlexGrow && availableFreeSpace >= 0) ||
                    (!isUsingFlexGrow && availableFreeSpace <= 0),
                "availableFreeSpace's sign should match isUsingFlexGrow");
