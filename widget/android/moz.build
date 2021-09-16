@@ -137,7 +137,6 @@ UNIFIED_SOURCES += [
     "nsDeviceContextAndroid.cpp",
     "nsLookAndFeel.cpp",
     "nsNativeBasicThemeAndroid.cpp",
-    "nsNativeThemeAndroid.cpp",
     "nsPrintSettingsServiceAndroid.cpp",
     "nsUserIdleServiceAndroid.cpp",
     "nsWidgetFactory.cpp",
