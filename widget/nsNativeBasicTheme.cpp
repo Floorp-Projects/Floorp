@@ -327,15 +327,15 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
 //
 // So this should do the right thing for now with regards to the standins pref,
 // which is all we need for tests and should be good enough.
-static LookAndFeel::UseStandins ShouldUseStandins() {
-  return LookAndFeel::UseStandins(nsContentUtils::UseStandinsForNativeColors());
+static LookAndFeel::UseStandins ShouldUseStandins(LookAndFeel::ColorID aColor) {
+  return LookAndFeel::ShouldAlwaysUseStandinsForColorInContent(aColor);
 }
 
 static nscolor SystemNsColor(StyleSystemColor aColor) {
   // TODO(emilio): We could not hardcode light appearance here with a bit of
   // work, but doesn't matter for now.
   return LookAndFeel::Color(aColor, LookAndFeel::ColorScheme::Light,
-                            ShouldUseStandins());
+                            ShouldUseStandins(aColor));
 }
 
 static sRGBColor SystemColor(StyleSystemColor aColor) {
@@ -344,9 +344,8 @@ static sRGBColor SystemColor(StyleSystemColor aColor) {
 
 template <typename Compute>
 static sRGBColor SystemColorOrElse(StyleSystemColor aColor, Compute aCompute) {
-  if (auto color =
-          LookAndFeel::GetColor(aColor, LookAndFeel::ColorScheme::Light,
-                                ShouldUseStandins())) {
+  if (auto color = LookAndFeel::GetColor(
+          aColor, LookAndFeel::ColorScheme::Light, ShouldUseStandins(aColor))) {
     return sRGBColor::FromABGR(*color);
   }
   return aCompute();
@@ -439,7 +438,8 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
         backgroundColor = borderColor;
       }
     } else if (isChecked || isIndeterminate) {
-      backgroundColor = borderColor = SystemColor(StyleSystemColor::Selecteditem);
+      backgroundColor = borderColor =
+          SystemColor(StyleSystemColor::Selecteditem);
     }
     return {backgroundColor, borderColor};
   }
