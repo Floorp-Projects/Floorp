@@ -167,16 +167,20 @@ def generate_taskgraph(options, parameters, logdir):
             futures[f] = spec
 
     for future in as_completed(futures):
+        output_file = options["output_file"]
         spec = futures[future]
         e = future.exception()
         if e:
             out = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            if options["diff"]:
+                # Dump to console so we don't accidentally diff the tracebacks.
+                output_file = None
         else:
             out = future.result()
 
         dump_output(
             out,
-            path=options["output_file"],
+            path=output_file,
             params_spec=spec if len(parameters) > 1 else None,
         )
 
