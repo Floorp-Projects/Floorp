@@ -28,7 +28,7 @@ body {
   --newtab-background-color: #{$in-content-page-background};
   --newtab-background-color-secondary: #{$newtab-background-secondary};
   --newtab-text-primary-color: #{$in-content-page-color};
-  --newtab-primary-action-background: #{$proton-primary-blue};
+  --newtab-primary-action-background: #{$primary-blue};
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
 
   // --newtab-element-*-color is used when an element needs to be set off from
@@ -66,7 +66,7 @@ body {
     --newtab-background-color: #{$in-content-page-background-dark};
     --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
     --newtab-text-primary-color: #{$in-content-page-color-dark};
-    --newtab-primary-action-background: #{$proton-primary-blue-dark};
+    --newtab-primary-action-background: #{$primary-blue-dark};
 
     --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$white});
     --newtab-element-active-color:  color-mix(in srgb, var(--newtab-background-color) 90%, #{$white});
@@ -76,7 +76,7 @@ body {
     --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
 
     --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$white});
-    --newtab-primary-element-text-color: #{$proton-primary-text-color-dark};
+    --newtab-primary-element-text-color: #{$primary-text-color-dark};
     --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
     --newtab-status-success: #{$status-dark-green};
   }
