@@ -1137,12 +1137,6 @@ class AsyncPanZoomController {
   };
 
   /**
-   * Get the current layout viewport of the scrollable frame corresponding to
-   * this APZC.
-   */
-  CSSRect GetCurrentAsyncLayoutViewport(AsyncTransformConsumer aMode) const;
-
-  /**
    * Get the current scroll offset of the scrollable frame corresponding
    * to this APZC, including the effects of any asynchronous panning and
    * zooming, in ParentLayer pixels.
