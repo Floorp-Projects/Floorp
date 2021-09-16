@@ -4,18 +4,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--newtab-snippets-background-color);
+  background-color: var(--newtab-background-color-secondary);
   color: var(--newtab-text-primary-color);
   font-size: 14px;
   line-height: 20px;
-  border-top: 1px solid var(--newtab-snippets-hairline-color);
+  border-top: 1px solid transparent;
   box-shadow: $shadow-secondary;
   display: flex;
   align-items: center;
 
   a {
     cursor: pointer;
-    color: var(--newtab-link-primary-color);
+    color: var(--newtab-primary-action-background);
 
     &:hover {
       text-decoration: underline;

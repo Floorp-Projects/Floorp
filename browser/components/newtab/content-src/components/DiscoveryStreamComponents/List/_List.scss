@@ -80,7 +80,7 @@ $item-line-height: 20;
   }
 
   a {
-    color: var(--newtab-card-header-color);
+    color: var(--newtab-text-primary-color);
   }
 }
 
@@ -101,7 +101,7 @@ $item-line-height: 20;
     padding-inline-start: $counter-padded-size;
 
     &::before {
-      background-color: var(--newtab-link-secondary-color);
+      background-color: var(--newtab-primary-action-background);
       border-radius: $counter-size;
       color: $white;
       content: counter(list);
@@ -116,11 +116,11 @@ $item-line-height: 20;
     }
 
     &:hover::before {
-      background-color: var(--newtab-link-primary-color);
+      background-color: var(--newtab-primary-action-background);
     }
 
     &:active::before {
-      background-color: var(--newtab-link-primary-active-color);
+      background-color: var(--newtab-primary-element-active-color);
     }
   }
 }
@@ -237,13 +237,13 @@ $item-line-height: 20;
 
   &:hover {
     .ds-list-item-title {
-      color: var(--newtab-link-primary-color);
+      color: var(--newtab-primary-action-background);
     }
   }
 
   &:active {
     .ds-list-item-title {
-      color: var(--newtab-link-primary-active-color);
+      color: var(--newtab-primary-element-active-color);
     }
   }
 }

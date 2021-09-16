@@ -18,7 +18,7 @@ $letter-fallback-color: $white;
 
   &:not(.dnd-active) {
     .top-site-outer:is(.active, :focus, :hover) {
-      background: var(--newtab-topsites-outer-card-hover);
+      background: var(--newtab-element-hover-color);
     }
   }
 
@@ -122,7 +122,7 @@ $letter-fallback-color: $white;
     border: 0;
     border-radius: 4px;
     cursor: pointer;
-    fill: var(--newtab-icon-primary-color);
+    fill: var(--newtab-text-primary-color);
     -moz-context-properties: fill;
     height: 20px;
     width: 20px;
@@ -135,15 +135,15 @@ $letter-fallback-color: $white;
     &:is(:active, :focus) {
       outline: 0;
       opacity: 1;
-      background-color: var(--newtab-topsites-context-menu-hover);
+      background-color: var(--newtab-element-hover-color);
       fill: var(--newtab-primary-action-background);
     }
   }
 
   .tile { // sass-lint:disable-block property-sort-order
     border-radius: $top-sites-border-radius;
-    box-shadow: $newtab-card-firstshadow;
-    background-color: var(--newtab-topsites-background-color);
+    box-shadow: $shadow-card;
+    background-color: var(--newtab-background-color-secondary);
     justify-content: center;
     margin: 0 auto;
     height: $top-sites-size;
@@ -188,7 +188,7 @@ $letter-fallback-color: $white;
 
   // Some common styles for all icons (rich and default) in top sites
   .top-site-icon {
-    background-color: var(--newtab-topsites-background-color);
+    background-color: var(--newtab-background-color-secondary);
     background-position: center center;
     background-repeat: no-repeat;
     border-radius: $top-sites-icon-border-radius;
@@ -223,11 +223,11 @@ $letter-fallback-color: $white;
   .search-topsite {
     background-image: url('chrome://global/skin/icons/search-glass.svg');
     background-size: 16px;
-    background-color: var(--newtab-button-primary-color);
+    background-color: var(--newtab-primary-action-background);
     border-radius: $default-icon-wrapper-size;
     -moz-context-properties: fill;
-    fill: var(--newtab-button-primary-text-color);
-    box-shadow: var(--newtab-card-shadow);
+    fill: var(--newtab-primary-element-text-color);
+    box-shadow: $shadow-card;
     transition-duration: $hover-transition-duration;
     transition-property: background-size, bottom, inset-inline-end, height, width;
     height: 32px;
@@ -243,7 +243,7 @@ $letter-fallback-color: $white;
   }
 
   .title {
-    color: var(--newtab-background-primary-text-color);
+    color: var(--newtab-text-primary-color);
     padding-top: 8px;
     font: caption;
     text-align: center;
@@ -251,7 +251,7 @@ $letter-fallback-color: $white;
 
     .icon {
       margin-inline-end: 2px;
-      fill: var(--newtab-background-primary-text-color);
+      fill: var(--newtab-text-primary-color);
     }
 
     span {
@@ -428,7 +428,7 @@ $letter-fallback-color: $white;
         width: 960px;
         height: 16px;
         -moz-context-properties: fill;
-        fill: var(--newtab-link-primary-color);
+        fill: var(--newtab-primary-action-background);
         background-image: url('chrome://browser/skin/tabbrowser/loading.svg');
         animation: tab-throbber-animation 1.05s steps(60) infinite;
 
@@ -440,7 +440,7 @@ $letter-fallback-color: $white;
 
     input {
       &[type='text'] {
-        background-color: var(--newtab-textbox-background-color);
+        background-color: var(--newtab-background-color-secondary);
         border: $input-border;
         margin: 8px 0;
         padding: 0 8px;
@@ -564,7 +564,7 @@ $letter-fallback-color: $white;
     top: $checkbox-offset;
     width: 21px;
     -moz-context-properties: fill;
-    fill: var(--newtab-link-primary-color);
+    fill: var(--newtab-primary-action-background);
     z-index: 2;
 
     [dir='rtl'] & {
@@ -592,7 +592,7 @@ $letter-fallback-color: $white;
   // accessibility
   [type='checkbox']:checked:focus + label::before,
   [type='checkbox']:not(:checked):focus + label::before {
-    border: 1px dotted var(--newtab-link-primary-color);
+    border: 1px dotted var(--newtab-primary-action-background);
   }
 }
 

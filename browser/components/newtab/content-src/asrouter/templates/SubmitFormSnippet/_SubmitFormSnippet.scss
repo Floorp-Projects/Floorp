@@ -102,7 +102,7 @@
   input {
     &.mainInput {
       border-radius: 2px;
-      background-color: var(--newtab-textbox-background-color);
+      background-color: var(--newtab-background-color-secondary);
       border: $input-border;
       padding: 0 8px;
       height: 100%;
@@ -154,7 +154,7 @@
     }
 
     .section-title a {
-      color: var(--newtab-section-header-text-color);
+      color: var(--newtab-text-primary-color);
       font-weight: inherit;
       text-decoration: none;
     }

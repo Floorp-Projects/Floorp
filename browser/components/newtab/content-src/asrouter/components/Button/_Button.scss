@@ -23,16 +23,16 @@
   }
 
   &.primary {
-    border: 1px solid var(--newtab-button-primary-color);
-    background-color: var(--newtab-button-primary-color);
-    color: var(--newtab-button-primary-text-color);
+    border: 1px solid var(--newtab-primary-action-background);
+    background-color: var(--newtab-primary-action-background);
+    color: var(--newtab-primary-element-text-color);
 
     &:hover {
-      background-color: var(--newtab-button-primary-hover-color);
+      background-color: var(--newtab-primary-element-hover-color);
     }
 
     &:active {
-      background-color: var(--newtab-button-primary-active-color);
+      background-color: var(--newtab-primary-element-active-color);
     }
   }
 

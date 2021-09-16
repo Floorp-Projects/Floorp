@@ -113,14 +113,14 @@ $icon-width: 54px; // width of primary icon + margin
 
   .section-title {
     // color should match that of 'Recommended by Pocket' and 'Highlights' in newtab page
-    color: var(--newtab-section-header-text-color);
+    color: var(--newtab-text-primary-color);
     display: inline-block;
     font-size: 13px;
     font-weight: bold;
     margin: 0;
 
     a {
-      color: var(--newtab-section-header-text-color);
+      color: var(--newtab-text-primary-color);
       font-weight: inherit;
       text-decoration: none;
     }

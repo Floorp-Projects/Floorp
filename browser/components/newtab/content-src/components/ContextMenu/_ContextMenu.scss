@@ -1,7 +1,7 @@
 @use 'sass:math';
 
 .context-menu {
-  background: var(--newtab-contextmenu-background-color);
+  background: var(--newtab-background-color);
   border-radius: $context-menu-border-radius;
   box-shadow: $context-menu-shadow;
   display: block;

@@ -10,10 +10,10 @@ $excerpt-line-height: 20;
   position: relative;
 
   .playhead {
-    background: var(--newtab-button-primary-color) url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
+    background: var(--newtab-primary-action-background) url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
     border-radius: 20px;
     bottom: -16px;
-    color: color-mix(in srgb, var(--newtab-button-primary-text-color) 0%, transparent);
+    color: color-mix(in srgb, var(--newtab-primary-element-text-color) 0%, transparent);
     display: flex;
     flex-direction: column;
     height: 40px;
@@ -25,7 +25,7 @@ $excerpt-line-height: 20;
     transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
 
     &:hover {
-      color: var(--newtab-button-primary-text-color);
+      color: var(--newtab-primary-element-text-color);
       padding: 0 20px 0 40px;
     }
 
@@ -70,7 +70,7 @@ $excerpt-line-height: 20;
 
     &:hover {
       header {
-        color: var(--newtab-link-primary-color);
+        color: var(--newtab-primary-action-background);
       }
     }
 
@@ -80,13 +80,13 @@ $excerpt-line-height: 20;
       transition: none;
 
       header {
-        color: var(--newtab-link-primary-color);
+        color: var(--newtab-primary-action-background);
       }
     }
 
     &:active {
       header {
-        color: var(--newtab-link-primary-active-color);
+        color: var(--newtab-primary-element-active-color);
       }
     }
   }
@@ -145,8 +145,8 @@ $excerpt-line-height: 20;
     }
 
     .cta-link {
-      color: var(--newtab-link-primary-color);
-      fill: var(--newtab-link-primary-color);
+      color: var(--newtab-primary-action-background);
+      fill: var(--newtab-primary-action-background);
 
       font-size: 15px;
       font-weight: 600;
@@ -165,8 +165,8 @@ $excerpt-line-height: 20;
       }
 
       &:active {
-        color: var(--newtab-link-primary-active-color);
-        fill: var(--newtab-link-primary-active-color);
+        color: var(--newtab-primary-element-active-color);
+        fill: var(--newtab-primary-element-active-color);
         box-shadow: none;
       }
 
@@ -179,13 +179,13 @@ $excerpt-line-height: 20;
   header {
     line-height: $header-line-height * 1px;
     font-size: $header-font-size * 1px;
-    color: var(--newtab-card-header-color);
+    color: var(--newtab-text-primary-color);
   }
 
   p {
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
-    color: var(--newtab-card-header-color);
+    color: var(--newtab-text-primary-color);
     margin: 0;
   }
 }

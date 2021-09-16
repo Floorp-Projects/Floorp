@@ -4,7 +4,7 @@
   background-size: $icon-size;
   -moz-context-properties: fill;
   display: inline-block;
-  color: var(--newtab-icon-primary-color);
+  color: var(--newtab-text-primary-color);
   fill: currentColor;
   height: $icon-size;
   vertical-align: middle;
@@ -20,7 +20,7 @@
   }
 
   &.icon-button-style {
-    fill: var(--newtab-icon-secondary-color);
+    fill: var(--newtab-text-secondary-color);
     border: 0;
 
     &:focus,

@@ -29,7 +29,7 @@ $modal-scrollbar-z-index: 1100;
   max-width: 960px;
   position: relative;
   margin: auto;
-  background: var(--newtab-modal-color);
+  background: var(--newtab-background-color-secondary);
   box-shadow: $shadow-large;
   border-radius: 4px;
   display: none;
@@ -49,7 +49,7 @@ $modal-scrollbar-z-index: 1100;
   }
 
   h2 {
-    color: var(--newtab-section-header-text-color);
+    color: var(--newtab-text-primary-color);
     text-align: center;
     font-weight: 200;
     margin-top: 30px;

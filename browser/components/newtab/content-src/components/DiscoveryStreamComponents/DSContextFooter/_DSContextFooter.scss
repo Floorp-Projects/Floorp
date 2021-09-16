@@ -19,7 +19,7 @@
     height: 24px;
 
     .story-badge-icon {
-      fill: var(--newtab-icon-secondary-color);
+      fill: var(--newtab-text-secondary-color);
       height: 16px;
       margin-inline-end: 6px;
 
@@ -60,7 +60,7 @@
 
       100% {
         color: var(--newtab-text-secondary-color);
-        fill: var(--newtab-icon-secondary-color);
+        fill: var(--newtab-text-secondary-color);
       }
     }
   }

@@ -40,7 +40,7 @@ $ds-width: 936px;
 
 .ds-header,
 .ds-layout .section-title span {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: $section-title-font-size;
   font-weight: 600;
   line-height: 20px;
@@ -55,7 +55,7 @@ $ds-width: 936px;
 
   .section-top-bar {
     .learn-more-link a {
-      color: var(--newtab-link-primary-color);
+      color: var(--newtab-primary-action-background);
       font-weight: normal;
 
       &:is(:focus, :hover) {
