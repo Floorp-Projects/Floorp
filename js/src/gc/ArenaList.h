@@ -340,9 +340,8 @@ class ArenaLists {
 
   Arena* takeSweptEmptyArenas();
 
-  bool foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
-                          js::SliceBudget& sliceBudget,
-                          SortedArenaList& sweepList);
+  void setIncrementalSweptArenas(AllocKind kind, SortedArenaList& arenas);
+  void clearIncrementalSweptArenas();
 
   void mergeFinalizedArenas(AllocKind thingKind, SortedArenaList& finalizedArenas);
 
