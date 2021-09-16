@@ -47,6 +47,47 @@ Result<Ok, ICUError> NumberFormat::initialize(
   return Err(ICUError::InternalError);
 }
 
+Result<std::u16string_view, ICUError> NumberFormat::formatToParts(
+    double number, NumberPartVector& parts) const {
+  if (!formatInternal(number)) {
+    return Err(ICUError::InternalError);
+  }
+
+  bool isNegative = !IsNaN(number) && IsNegative(number);
+
+  return FormatResultToParts(mFormattedNumber, Some(number), isNegative,
+                             mFormatForUnit, parts);
+}
+
+Result<std::u16string_view, ICUError> NumberFormat::formatToParts(
+    int64_t number, NumberPartVector& parts) const {
+  if (!formatInternal(number)) {
+    return Err(ICUError::InternalError);
+  }
+
+  return FormatResultToParts(mFormattedNumber, Nothing(), number < 0,
+                             mFormatForUnit, parts);
+}
+
+Result<std::u16string_view, ICUError> NumberFormat::formatToParts(
+    std::string_view number, NumberPartVector& parts) const {
+  if (!formatInternal(number)) {
+    return Err(ICUError::InternalError);
+  }
+
+  // Non-finite numbers aren't currently supported here. If we ever need to
+  // support those, the |Maybe<double>| argument must be computed here.
+  MOZ_ASSERT(number != "Infinity");
+  MOZ_ASSERT(number != "+Infinity");
+  MOZ_ASSERT(number != "-Infinity");
+  MOZ_ASSERT(number != "NaN");
+
+  bool isNegative = !number.empty() && number[0] == '-';
+
+  return FormatResultToParts(mFormattedNumber, Nothing(), isNegative,
+                             mFormatForUnit, parts);
+}
+
 Result<int32_t, ICUError> NumberFormat::selectFormatted(
     double number, char16_t* keyword, int32_t keywordSize,
     UPluralRules* pluralRules) const {
