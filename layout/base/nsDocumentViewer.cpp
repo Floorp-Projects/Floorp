@@ -1797,9 +1797,6 @@ nsDocumentViewer::Stop(void) {
     mDocument->StopDocumentLoad();
   }
 
-  if (!mHidden && (mLoaded || mStopped) && mPresContext && !mSHEntry)
-    mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
-
   mStopped = true;
 
   if (!mLoaded && mPresShell) {
