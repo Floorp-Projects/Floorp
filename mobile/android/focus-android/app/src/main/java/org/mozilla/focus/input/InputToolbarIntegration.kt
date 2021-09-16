@@ -48,6 +48,11 @@ class InputToolbarIntegration(
                 fragment.onStartEditing()
             }
 
+            override fun onCancelEditing(): Boolean {
+                fragment.onCancelEditing()
+                return true
+            }
+
             override fun onTextChanged(text: String) {
                 fragment.onTextChange(text)
             }

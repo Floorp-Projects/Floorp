@@ -372,15 +372,7 @@ class UrlInputFragment :
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.dismissView -> if (isOverlay) {
-                animateAndDismiss()
-            } else {
-                // This is a bit hacky, but emulates what the legacy toolbar did before we replaced
-                // it with `browser-toolbar`. First we clear the text and then we invoke the "text
-                // changed" callback manually for this change.
-                browserToolbar.edit.updateUrl("", false)
-                onTextChange("")
-            }
+            R.id.dismissView -> handleDismiss()
 
             R.id.menuView -> showHomeMenu(view)
 
@@ -399,6 +391,18 @@ class UrlInputFragment :
             }
 
             else -> throw IllegalStateException("Unhandled view in onClick()")
+        }
+    }
+
+    private fun handleDismiss() {
+        if (isOverlay) {
+            animateAndDismiss()
+        } else {
+            // This is a bit hacky, but emulates what the legacy toolbar did before we replaced
+            // it with `browser-toolbar`. First we clear the text and then we invoke the "text
+            // changed" callback manually for this change.
+            browserToolbar.edit.updateUrl("", false)
+            onTextChange("")
         }
     }
 
@@ -681,6 +685,10 @@ class UrlInputFragment :
         if (tab != null) {
             searchViewContainer?.isVisible = true
         }
+    }
+
+    internal fun onCancelEditing() {
+        handleDismiss()
     }
 
     internal fun onTextChange(text: String) {
