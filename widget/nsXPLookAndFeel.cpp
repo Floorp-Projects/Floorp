@@ -1057,6 +1057,12 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
     case ColorID::TextSelectBackgroundAttention:
     case ColorID::TextHighlightBackground:
     case ColorID::TextHighlightForeground:
+    case ColorID::ThemedScrollbar:
+    case ColorID::ThemedScrollbarInactive:
+    case ColorID::ThemedScrollbarThumb:
+    case ColorID::ThemedScrollbarThumbActive:
+    case ColorID::ThemedScrollbarThumbInactive:
+    case ColorID::ThemedScrollbarThumbHover:
     case ColorID::IMERawInputBackground:
     case ColorID::IMERawInputForeground:
     case ColorID::IMERawInputUnderline:
@@ -1078,13 +1084,19 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
   return true;
 }
 
+LookAndFeel::UseStandins LookAndFeel::ShouldAlwaysUseStandinsForColorInContent(
+    ColorID aId) {
+  return UseStandins(nsContentUtils::UseStandinsForNativeColors() &&
+                     ColorIsCSSAccessible(aId));
+}
+
 LookAndFeel::UseStandins LookAndFeel::ShouldUseStandins(
     const dom::Document& aDoc, ColorID aId) {
   if (ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId)) {
     return UseStandins::Yes;
   }
-  if (nsContentUtils::UseStandinsForNativeColors() &&
-      !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId)) {
+  if (ShouldAlwaysUseStandinsForColorInContent(aId) == UseStandins::Yes &&
+      !nsContentUtils::IsChromeDoc(&aDoc)) {
     return UseStandins::Yes;
   }
   if (aDoc.IsStaticDocument() &&
