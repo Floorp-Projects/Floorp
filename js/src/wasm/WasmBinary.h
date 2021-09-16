@@ -450,6 +450,7 @@ class Decoder {
   // pos must be a value previously returned from currentPosition.
   void rollbackPosition(const uint8_t* pos) { cur_ = pos; }
   const uint8_t* currentPosition() const { return cur_; }
+  size_t beginOffset() const { return offsetInModule_; }
   size_t currentOffset() const { return offsetInModule_ + (cur_ - beg_); }
   const uint8_t* begin() const { return beg_; }
   const uint8_t* end() const { return end_; }
