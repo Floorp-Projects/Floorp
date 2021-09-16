@@ -54,7 +54,7 @@ async function showNotification(
     priority = nbox.PRIORITY_INFO_MEDIUM;
   }
 
-  nbox.appendNotification(value, { label: msg, priority });
+  nbox.appendNotification(msg, value, null, priority, []);
 }
 
 exports.showNotification = showNotification;

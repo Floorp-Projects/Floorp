@@ -79,37 +79,19 @@
      * Creates a <notification> element and shows it. The calling code can modify
      * the element synchronously to add features to the notification.
      *
-     * aType
-     *        String identifier that can uniquely identify the type of the notification.
-     * aNotification
-     *        Object that contains any of the following properties, where only the
-     *        priority must be specified:
-     *    priority
+     * @param aLabel
+     *        The main message text, or a DocumentFragment containing elements to
+     *        add as children of the notification's main <description> element.
+     * @param aValue
+     *        String identifier of the notification.
+     * @param aImage
+     *        URL of the icon image to display. If not specified, a default icon
+     *        based on the priority will be shown.
+     * @param aPriority
      *        One of the PRIORITY_ constants. These determine the appearance of
      *        the notification based on severity (using the "type" attribute), and
      *        only the notification with the highest priority is displayed.
-     *    label
-     *        The main message text, or a DocumentFragment containing elements to
-     *        add as children of the notification's main <description> element.
-     *    eventCallback
-     *        This may be called with the "removed", "dismissed" or "disconnected"
-     *        parameter:
-     *          removed - notification has been removed
-     *          dismissed - user dismissed notification
-     *          disconnected - notification removed in any way
-     *    notificationIs
-     *        Defines a Custom Element name to use as the "is" value on creation.
-     *        This allows subclassing the created element.
-     *    telemetry
-     *        Specifies the telemetry key to use that triggers when the notification
-     *        is shown, dismissed and an action taken. This telemetry is a keyed scalar with keys for:
-     *          'shown', 'dismissed' and 'action'. If a button specifies a separate key,
-     *        then 'action' is replaced by values specific to each button. The value telemetryFilter
-     *        can be used to filter out each type.
-     *    telemetryFilter
-     *        If assigned, then an array of the telemetry types to send telemetry for. If not set,
-     *        then all telemetry is sent.
-     * aButtons
+     * @param aButtons
      *        Array of objects defining action buttons:
      *        {
      *          label:
@@ -135,33 +117,43 @@
      *          popup:
      *            If specified, the button will open the popup element with this
      *            ID, anchored to the button. This is alternative to "callback".
-     *          telemetry:
-     *            Specifies the key to add for the telemetry to trigger when the
-     *            button is pressed. If not specified, then 'action' is used for
-     *            a press on any button. Specify this only if you want to distinguish
-     *            which button has been pressed in telemetry data.
      *          is:
      *            Defines a Custom Element name to use as the "is" value on
      *            button creation.
      *        }
+     * @param aEventCallback
+     *        This may be called with the "removed", "dismissed" or "disconnected"
+     *        parameter:
+     *          removed - notification has been removed
+     *          dismissed - user dismissed notification
+     *          disconnected - notification removed in any way
+     * @param aNotificationIs
+     *        Defines a Custom Element name to use as the "is" value on creation.
+     *        This allows subclassing the created element.
      *
      * @return The <notification> element that is shown.
      */
-    appendNotification(aType, aNotification, aButtons) {
+    appendNotification(
+      aLabel,
+      aValue,
+      aImage,
+      aPriority,
+      aButtons,
+      aEventCallback,
+      aNotificationIs
+    ) {
       if (
-        aNotification.priority < this.PRIORITY_SYSTEM ||
-        aNotification.priority > this.PRIORITY_CRITICAL_HIGH
+        aPriority < this.PRIORITY_SYSTEM ||
+        aPriority > this.PRIORITY_CRITICAL_HIGH
       ) {
-        throw new Error(
-          "Invalid notification priority " + aNotification.priority
-        );
+        throw new Error("Invalid notification priority " + aPriority);
       }
 
       MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
 
       // Create the Custom Element and connect it to the document immediately.
       var newitem;
-      if (!aNotification.notificationIs) {
+      if (!aNotificationIs) {
         if (!customElements.get("notification-message")) {
           // There's some weird timing stuff when this element is created at
           // script load time, we don't need it until now anyway so be lazy.
@@ -172,9 +164,7 @@
       } else {
         newitem = document.createXULElement(
           "notification",
-          aNotification.notificationIs
-            ? { is: aNotification.notificationIs }
-            : {}
+          aNotificationIs ? { is: aNotificationIs } : {}
         );
       }
 
@@ -189,38 +179,30 @@
       if (newitem.messageText) {
         // Can't use instanceof in case this was created from a different document:
         if (
-          aNotification.label &&
-          typeof aNotification.label == "object" &&
-          aNotification.label.nodeType &&
-          aNotification.label.nodeType ==
-            aNotification.label.DOCUMENT_FRAGMENT_NODE
+          aLabel &&
+          typeof aLabel == "object" &&
+          aLabel.nodeType &&
+          aLabel.nodeType == aLabel.DOCUMENT_FRAGMENT_NODE
         ) {
-          newitem.messageText.appendChild(aNotification.label);
+          newitem.messageText.appendChild(aLabel);
         } else {
-          newitem.messageText.textContent = aNotification.label;
+          newitem.messageText.textContent = aLabel;
         }
       }
-      newitem.setAttribute("value", aType);
+      newitem.setAttribute("value", aValue);
 
-      newitem.eventCallback = aNotification.eventCallback;
+      newitem.eventCallback = aEventCallback;
 
       if (aButtons) {
         newitem.setButtons(aButtons);
       }
 
-      if (aNotification.telemetry) {
-        newitem.telemetry = aNotification.telemetry;
-        if (aNotification.telemetryFilter) {
-          newitem.telemetryFilter = aNotification.telemetryFilter;
-        }
-      }
-
-      newitem.priority = aNotification.priority;
-      if (aNotification.priority == this.PRIORITY_SYSTEM) {
+      newitem.priority = aPriority;
+      if (aPriority == this.PRIORITY_SYSTEM) {
         newitem.setAttribute("type", "system");
-      } else if (aNotification.priority >= this.PRIORITY_CRITICAL_LOW) {
+      } else if (aPriority >= this.PRIORITY_CRITICAL_LOW) {
         newitem.setAttribute("type", "critical");
-      } else if (aNotification.priority <= this.PRIORITY_INFO_HIGH) {
+      } else if (aPriority <= this.PRIORITY_INFO_HIGH) {
         newitem.setAttribute("type", "info");
       } else {
         newitem.setAttribute("type", "warning");
@@ -238,13 +220,6 @@
       var event = document.createEvent("Events");
       event.initEvent("AlertActive", true, true);
       newitem.dispatchEvent(event);
-
-      // If the notification is not visible, don't call shown() on the
-      // new notification until it is visible. This will typically be
-      // a tabbrowser that does this when a tab is selected.
-      if (this.isShown) {
-        newitem.shown();
-      }
 
       return newitem;
     }
@@ -310,22 +285,6 @@
           this.removeNotification(notification, true);
         }
       }
-    }
-
-    shown() {
-      for (let notification of this.allNotifications) {
-        notification.shown();
-      }
-    }
-
-    get isShown() {
-      let stack = this.stack;
-      let parent = this.stack.parentNode;
-      if (parent.localName == "named-deck") {
-        return parent.selectedViewName == stack.getAttribute("name");
-      }
-
-      return true;
     }
 
     _showNotification(aNotification, aSlideIn, aSkipAnimation) {
@@ -419,8 +378,6 @@
       this.persistence = 0;
       this.priority = 0;
       this.timeout = 0;
-      this.telemetry = [];
-      this._shown = false;
     }
 
     connectedCallback() {
@@ -514,8 +471,6 @@
      * should call close() instead.
      */
     dismiss() {
-      this._doTelemetry("dismissed");
-
       if (this.eventCallback) {
         this.eventCallback("dismissed");
       }
@@ -529,32 +484,12 @@
       this.control.removeNotification(this);
     }
 
-    // This will be called when the host (such as a tabbrowser) determines that
-    // the notification is made visible to the user.
-    shown() {
-      if (!this._shown) {
-        this._shown = true;
-        this._doTelemetry("shown");
-      }
-    }
-
-    _doTelemetry(type) {
-      if (
-        this.telemetry &&
-        (!this.telemetryFilter || this.telemetryFilter.includes(type))
-      ) {
-        Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
-      }
-    }
-
     _doButtonCommand(event) {
       if (!("buttonInfo" in event.target)) {
         return;
       }
 
       var button = event.target.buttonInfo;
-      this._doTelemetry(button.telemetry || "action");
-
       if (button.popup) {
         document
           .getElementById(button.popup)
@@ -593,8 +528,6 @@
         this.persistence = 0;
         this.priority = 0;
         this.timeout = 0;
-        this.telemetry = [];
-        this._shown = false;
       }
 
       connectedCallback() {
@@ -630,15 +563,6 @@
         }
       }
 
-      _doTelemetry(type) {
-        if (
-          this.telemetry &&
-          (!this.telemetryFilter || this.telemetryFilter.includes(type))
-        ) {
-          Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
-        }
-      }
-
       get control() {
         return this.closest(".notificationbox-stack")._notificationBox;
       }
@@ -648,15 +572,6 @@
           return;
         }
         this.control.removeNotification(this);
-      }
-
-      // This will be called when the host (such as a tabbrowser) determines that
-      // the notification is made visible to the user.
-      shown() {
-        if (!this._shown) {
-          this._shown = true;
-          this._doTelemetry("shown");
-        }
       }
 
       setAlertRole() {
@@ -678,9 +593,6 @@
         if ("buttonInfo" in e.target) {
           let { buttonInfo } = e.target;
           let { callback, popup } = buttonInfo;
-
-          this._doTelemetry(buttonInfo.telemetry || "action");
-
           if (popup) {
             document
               .getElementById(popup)
@@ -760,8 +672,6 @@
       }
 
       dismiss() {
-        this._doTelemetry("dismissed");
-
         if (this.eventCallback) {
           this.eventCallback("dismissed");
         }

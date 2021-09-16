@@ -691,12 +691,10 @@ var AboutLogins = {
       }
 
       notification = notificationBox.appendNotification(
+        messageFragment,
         id,
-        {
-          label: messageFragment,
-          image: iconURL,
-          priority: notificationBox[priority],
-        },
+        iconURL,
+        notificationBox[priority],
         buttons
       );
     }

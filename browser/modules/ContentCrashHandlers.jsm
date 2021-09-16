@@ -425,38 +425,43 @@ var TabCrashHandler = {
       },
     ];
 
+    // Add telemetry indicating that the subframe crash UI is shown, but wait until the tab
+    // is switched to.
+    let removeTelemetryFn = this.telemetryIfTabSelected(
+      browser,
+      "dom.contentprocess.crash_subframe_ui_presented"
+    );
+
     notification = notificationBox.appendNotification(
+      messageFragment,
       value,
-      {
-        label: messageFragment,
-        image: TABCRASHED_ICON_URI,
-        priority: notificationBox.PRIORITY_INFO_MEDIUM,
-        telemetry: "notificationbar.crash_subframe_ui",
-        telemetryFilter: ["shown"],
-        eventCallback: eventName => {
-          if (eventName == "disconnected") {
-            let existingItem = this.notificationsMap.get(childID);
-            if (existingItem) {
-              let idx = existingItem.indexOf(notification);
-              if (idx >= 0) {
-                existingItem.splice(idx, 1);
-              }
+      TABCRASHED_ICON_URI,
+      notificationBox.PRIORITY_INFO_MEDIUM,
+      buttons,
+      eventName => {
+        if (eventName == "disconnected") {
+          removeTelemetryFn();
 
-              if (!existingItem.length) {
-                this.notificationsMap.delete(childID);
-              }
-            }
-          } else if (eventName == "dismissed") {
-            if (dumpID) {
-              CrashSubmit.ignore(dumpID);
-              this.childMap.delete(childID);
+          let existingItem = this.notificationsMap.get(childID);
+          if (existingItem) {
+            let idx = existingItem.indexOf(notification);
+            if (idx >= 0) {
+              existingItem.splice(idx, 1);
             }
 
-            closeAllNotifications();
+            if (!existingItem.length) {
+              this.notificationsMap.delete(childID);
+            }
           }
-        },
-      },
-      buttons
+        } else if (eventName == "dismissed") {
+          if (dumpID) {
+            CrashSubmit.ignore(dumpID);
+            this.childMap.delete(childID);
+          }
+
+          closeAllNotifications();
+        }
+      }
     );
 
     let existingItem = this.notificationsMap.get(childID);
@@ -465,6 +470,40 @@ var TabCrashHandler = {
     } else {
       this.notificationsMap.set(childID, [notification]);
     }
+  },
+
+  /**
+   * If the browser tab is selected, increase the telemetry probe. If the browser tab
+   * is not selected, wait until the browser tab is selected before increasing the
+   * telemetry probe. This means that a crash in a background tab won't trigger the
+   * probe until the tab is switched to.
+   *
+   * Returns a function to be called to cancel the telemetry when it no longer applies,
+   */
+  telemetryIfTabSelected(browser, telemetryKey) {
+    let gBrowser = browser.getTabBrowser();
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    let seenNotification = event => {
+      if (tab == event.target) {
+        tab.removeEventListener("TabSelect", seenNotification, true);
+
+        Services.telemetry.scalarAdd(telemetryKey, 1);
+      }
+    };
+
+    // Add telemetry indicating that the subframe crash UI is shown, but wait until the tab
+    // is switched to.
+    if (gBrowser.selectedTab == tab) {
+      Services.telemetry.scalarAdd(telemetryKey, 1);
+      return () => {};
+    }
+
+    tab.addEventListener("TabSelect", seenNotification, true);
+
+    return () => {
+      tab.removeEventListener("TabSelect", seenNotification, true);
+    };
   },
 
   /**
@@ -1115,14 +1154,12 @@ var UnsubmittedCrashHandler = {
     );
 
     return chromeWin.gNotificationBox.appendNotification(
+      message,
       notificationID,
-      {
-        label: message,
-        image: TABCRASHED_ICON_URI,
-        priority: chromeWin.gNotificationBox.PRIORITY_INFO_HIGH,
-        eventCallback,
-      },
-      buttons
+      TABCRASHED_ICON_URI,
+      chromeWin.gNotificationBox.PRIORITY_INFO_HIGH,
+      buttons,
+      eventCallback
     );
   },
 

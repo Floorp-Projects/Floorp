@@ -53,14 +53,12 @@ class InfoBarNotification {
         : notificationContainer.PRIORITY_INFO_MEDIUM);
 
     this.notification = notificationContainer.appendNotification(
+      this.formatMessageConfig(doc, content.text),
       this.message.id,
-      {
-        label: this.formatMessageConfig(doc, content.text),
-        image: content.icon || "chrome://branding/content/icon64.png",
-        priority,
-        eventCallback: this.infobarCallback,
-      },
-      content.buttons.map(b => this.formatButtonConfig(b))
+      content.icon || "chrome://branding/content/icon64.png",
+      priority,
+      content.buttons.map(b => this.formatButtonConfig(b)),
+      this.infobarCallback
     );
 
     this.addImpression();
