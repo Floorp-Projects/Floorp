@@ -241,6 +241,18 @@ Arena* ArenaLists::takeSweptEmptyArenas() {
   return arenas;
 }
 
+void ArenaLists::setIncrementalSweptArenas(AllocKind kind,
+                                           SortedArenaList& arenas) {
+  incrementalSweptArenaKind = kind;
+  incrementalSweptArenas.ref().clear();
+  incrementalSweptArenas = arenas.toArenaList();
+}
+
+void ArenaLists::clearIncrementalSweptArenas() {
+  incrementalSweptArenaKind = AllocKind::LIMIT;
+  incrementalSweptArenas.ref().clear();
+}
+
 void ArenaLists::checkGCStateNotInUse() {
   // Called before and after collection to check the state is as expected.
 #ifdef DEBUG
