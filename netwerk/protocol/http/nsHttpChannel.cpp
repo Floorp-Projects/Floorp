@@ -2076,7 +2076,7 @@ void nsHttpChannel::AsyncContinueProcessResponse() {
 
 nsresult nsHttpChannel::ContinueProcessResponse1() {
   MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (mSuspendCount) {
     LOG(("Waiting until resume to finish processing response [this=%p]\n",
@@ -2085,21 +2085,6 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
       self->AsyncContinueProcessResponse();
       return NS_OK;
     };
-    return NS_OK;
-  }
-
-  rv = ProcessCrossOriginResourcePolicyHeader();
-  if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_DOM_CORP_FAILED;
-    HandleAsyncAbort();
-    return NS_OK;
-  }
-
-  rv = ComputeCrossOriginOpenerPolicyMismatch();
-  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
-    // this navigates the doc's browsing context to a network error.
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
-    HandleAsyncAbort();
     return NS_OK;
   }
 
@@ -2163,13 +2148,6 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     }
     mAuthProvider = nullptr;
     LOG(("  continuation state has been reset"));
-  }
-
-  rv = ProcessCrossOriginEmbedderPolicyHeader();
-  if (NS_FAILED(rv)) {
-    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
-    HandleAsyncAbort();
-    return NS_OK;
   }
 
   // No process switch needed, continue as normal.
@@ -2544,6 +2522,31 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
     // have to report our status as failed.
     mStatus = rv;
     DoNotifyListener();
+    return rv;
+  }
+
+  rv = ProcessCrossOriginEmbedderPolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
+    return rv;
+  }
+
+  rv = ProcessCrossOriginResourcePolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_DOM_CORP_FAILED;
+    HandleAsyncAbort();
+    return rv;
+  }
+
+  // before we check for redirects, check if the load should be shifted into a
+  // new process.
+  rv = ComputeCrossOriginOpenerPolicyMismatch();
+
+  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
+    // this navigates the doc's browsing context to a network error.
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
     return rv;
   }
 
@@ -5054,6 +5057,31 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
   LOG(("nsHttpChannel::AsyncProcessRedirection [this=%p type=%u]\n", this,
        redirectType));
 
+  nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
+    return rv;
+  }
+
+  rv = ProcessCrossOriginResourcePolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_DOM_CORP_FAILED;
+    HandleAsyncAbort();
+    return rv;
+  }
+
+  // before we check for redirects, check if the load should be shifted into a
+  // new process.
+  rv = ComputeCrossOriginOpenerPolicyMismatch();
+
+  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
+    // this navigates the doc's browsing context to a network error.
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
+    return rv;
+  }
+
   nsAutoCString location;
 
   // if a location header was not given, then we can't perform the redirect,
@@ -5080,7 +5108,7 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
   LOG(("redirecting to: %s [redirection-limit=%u]\n", location.get(),
        uint32_t(mRedirectionLimit)));
 
-  nsresult rv = CreateNewURI(location.get(), getter_AddRefs(mRedirectURI));
+  rv = CreateNewURI(location.get(), getter_AddRefs(mRedirectURI));
 
   if (NS_FAILED(rv)) {
     LOG(("Invalid URI for redirect: Location: %s\n", location.get()));
