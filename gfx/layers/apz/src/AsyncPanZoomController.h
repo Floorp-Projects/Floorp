@@ -1700,14 +1700,6 @@ class AsyncPanZoomController {
    */
   void SetTestAsyncZoom(const LayerToParentLayerScale& aZoom);
 
-  void MarkAsyncTransformAppliedToContent() {
-    mAsyncTransformAppliedToContent = true;
-  }
-
-  bool GetAsyncTransformAppliedToContent() const {
-    return mAsyncTransformAppliedToContent;
-  }
-
   LayersId GetLayersId() const { return mLayersId; }
 
   bool IsAsyncZooming() const {
@@ -1729,9 +1721,6 @@ class AsyncPanZoomController {
   // Extra zoom to include in the aync zoom for testing
   LayerToParentLayerScale mTestAsyncZoom;
   uint8_t mTestAttributeAppliers;
-  // Flag to track whether or not the APZ transform is not used. This
-  // flag is recomputed for every composition frame.
-  bool mAsyncTransformAppliedToContent;
   // Flag to track whether or not this APZC has ever async key scrolled.
   bool mTestHasAsyncKeyScrolled;
 
