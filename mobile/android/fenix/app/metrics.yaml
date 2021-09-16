@@ -1264,6 +1264,116 @@ metrics:
       - mcomella@mozilla.com
     expires: "2022-02-01"
 
+customize_home:
+  most_visited_sites:
+    type: boolean
+    description: >
+      An indication of whether the most visited sites
+      are enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21239
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+  jump_back_in:
+    type: boolean
+    description: >
+      An indication of whether the Jump back
+      in section is enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21239
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+  recently_saved:
+    type: boolean
+    description: >
+      An indication of whether the recently
+      saved section is enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21239
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+  recently_visited:
+    type: boolean
+    description: >
+      An indication of whether the Recently
+      visited section is enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21239
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+  pocket:
+    type: boolean
+    description: >
+      An indication of whether Pocket is enabled to be displayed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21239
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+  preference_toggled:
+    type: event
+    description: >
+      A user toggles the preference for the home screen items.
+    extra_keys:
+      preference_key:
+        description: |
+          The preference key for the boolean (true/false) preference the user
+          toggled.
+
+          We currently track: most_visited_sites, jump_back_in,
+          recently_visited, recently_saved, and pocket.
+      enabled:
+        description: "Whether or not the preference is *now* enabled"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21095
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/1896
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
+
 preferences:
   search_suggestions_enabled:
     type: boolean
@@ -4906,6 +5016,19 @@ home_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+  customize_home_clicked:
+    type: event
+    description: A user clicked on Customize home from the home screen menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21344
+      - https://github.com/mozilla-mobile/fenix/pull/21344#issuecomment-923198787
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-20"
 
 android_keystore_experiment:
   experiment_failure:

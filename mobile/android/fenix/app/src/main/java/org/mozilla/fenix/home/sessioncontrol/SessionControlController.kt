@@ -460,6 +460,7 @@ class DefaultSessionControlController(
     override fun handleCustomizeHomeTapped() {
         val directions = HomeFragmentDirections.actionGlobalCustomizationFragment()
         navController.nav(R.id.homeFragment, directions)
+        metrics.track(Event.HomeScreenCustomizedHomeClicked)
     }
 
     override fun handleWhatsNewGetAnswersClicked() {

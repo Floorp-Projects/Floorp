@@ -165,6 +165,7 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handleCustomizeHomeTapped() {
         createController().handleCustomizeHomeTapped()
+        verify { metrics.track(Event.HomeScreenCustomizedHomeClicked) }
 
         verify {
             navController.navigate(

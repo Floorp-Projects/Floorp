@@ -22,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
+import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
@@ -280,6 +281,10 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PreferenceToggled -> EventWrapper(
             { Events.preferenceToggled.record(it) },
             { Events.preferenceToggledKeys.valueOf(it) }
+        )
+        is Event.CustomizeHomePreferenceToggled -> EventWrapper(
+            { CustomizeHome.preferenceToggled.record(it) },
+            { CustomizeHome.preferenceToggledKeys.valueOf(it) }
         )
         is Event.HistoryOpened -> EventWrapper<NoExtraKeys>(
             { History.opened.record(it) }
@@ -702,6 +707,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.HomeScreenDisplayed -> EventWrapper<NoExtraKeys>(
             { HomeScreen.homeScreenDisplayed.record(it) }
+        )
+        is Event.HomeScreenCustomizedHomeClicked -> EventWrapper<NoExtraKeys>(
+            { HomeScreen.customizeHomeClicked.record(it) }
         )
         is Event.TabViewSettingChanged -> EventWrapper(
             { Events.tabViewChanged.record(it) },

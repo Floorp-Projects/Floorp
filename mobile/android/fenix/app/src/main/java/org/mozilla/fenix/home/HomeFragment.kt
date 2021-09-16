@@ -846,6 +846,7 @@ class HomeFragment : Fragment() {
                         requireComponents.analytics.metrics.track(Event.HomeMenuSettingsItemClicked)
                     }
                     HomeMenu.Item.CustomizeHome -> {
+                        context.metrics.track(Event.HomeScreenCustomizedHomeClicked)
                         hideOnboardingIfNeeded()
                         nav(
                             R.id.homeFragment,

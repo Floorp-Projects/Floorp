@@ -202,6 +202,7 @@ sealed class Event {
     // Home menu interaction
     object HomeMenuSettingsItemClicked : Event()
     object HomeScreenDisplayed : Event()
+    object HomeScreenCustomizedHomeClicked : Event()
 
     // Browser Toolbar
     object BrowserToolbarHomeButtonClicked : Event()
@@ -323,6 +324,31 @@ sealed class Event {
             context.getString(R.string.pref_key_sync_history),
             context.getString(R.string.pref_key_show_voice_search),
             context.getString(R.string.pref_key_show_search_suggestions_in_private)
+        )
+
+        override val extras: Map<Events.preferenceToggledKeys, String>?
+            get() = mapOf(
+                Events.preferenceToggledKeys.preferenceKey to preferenceKey,
+                Events.preferenceToggledKeys.enabled to enabled.toString()
+            )
+
+        init {
+            // If the event is not in the allow list, we don't want to track it
+            require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
+        }
+    }
+
+    data class CustomizeHomePreferenceToggled(
+        val preferenceKey: String,
+        val enabled: Boolean,
+        val context: Context
+    ) : Event() {
+        private val booleanPreferenceTelemetryAllowList = listOf(
+            context.getString(R.string.pref_key_enable_top_frecent_sites),
+            context.getString(R.string.pref_key_recent_tabs),
+            context.getString(R.string.pref_key_recent_bookmarks),
+            context.getString(R.string.pref_key_pocket_homescreen_recommendations),
+            context.getString(R.string.pref_key_history_metadata_feature)
         )
 
         override val extras: Map<Events.preferenceToggledKeys, String>?

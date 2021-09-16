@@ -21,6 +21,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
@@ -117,6 +118,11 @@ class FenixApplicationTest {
         every { settings.touchExplorationIsEnabled } returns true
         every { settings.shouldUseLightTheme } returns true
         every { settings.signedInFxaAccount } returns true
+        every { settings.showRecentTabsFeature } returns true
+        every { settings.showRecentBookmarksFeature } returns true
+        every { settings.showTopFrecentSites } returns true
+        every { settings.historyMetadataUIFeature } returns true
+        every { settings.pocketRecommendations } returns true
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
@@ -152,7 +158,11 @@ class FenixApplicationTest {
         assertEquals("fixed_top", Preferences.toolbarPositionSetting.testGetValue())
         assertEquals("standard", Preferences.enhancedTrackingProtection.testGetValue())
         assertEquals(listOf("switch", "touch exploration"), Preferences.accessibilityServices.testGetValue())
-        assertEquals("light", Preferences.userTheme.testGetValue())
+        assertEquals(true, CustomizeHome.jumpBackIn.testGetValue())
+        assertEquals(true, CustomizeHome.recentlySaved.testGetValue())
+        assertEquals(true, CustomizeHome.mostVisitedSites.testGetValue())
+        assertEquals(true, CustomizeHome.recentlyVisited.testGetValue())
+        assertEquals(true, CustomizeHome.pocket.testGetValue())
 
         // Verify that search engine defaults are NOT set. This test does
         // not mock most of the objects telemetry is collected from.
