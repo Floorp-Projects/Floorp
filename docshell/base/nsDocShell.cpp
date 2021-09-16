@@ -3660,6 +3660,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         addHostPort = true;
         break;
       case NS_ERROR_BLOCKED_BY_POLICY:
+      case NS_ERROR_DOM_COOP_FAILED:
+      case NS_ERROR_DOM_COEP_FAILED:
         // Page blocked by policy
         error = "blockedByPolicy";
         break;
@@ -6148,7 +6150,9 @@ nsresult nsDocShell::FilterStatusForErrorPage(
        aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
        aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
        aStatus == NS_ERROR_MALFORMED_URI ||
-       aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
+       aStatus == NS_ERROR_BLOCKED_BY_POLICY ||
+       aStatus == NS_ERROR_DOM_COOP_FAILED ||
+       aStatus == NS_ERROR_DOM_COEP_FAILED) &&
       (aIsTopFrame || aUseErrorPages)) {
     return aStatus;
   }

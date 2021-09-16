@@ -214,7 +214,6 @@ namespace jit {
   _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \
   _(OnDebuggerStatement, js::jit::OnDebuggerStatement)                         \
   _(OptimizeSpreadCall, js::OptimizeSpreadCall)                                \
-  _(PopLexicalEnv, js::jit::PopLexicalEnv)                                     \
   _(ProcessCallSiteObjOperation, js::ProcessCallSiteObjOperation)              \
   _(ProxyGetProperty, js::ProxyGetProperty)                                    \
   _(ProxyGetPropertyByValue, js::ProxyGetPropertyByValue)                      \

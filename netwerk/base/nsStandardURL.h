@@ -184,7 +184,7 @@ class nsStandardURL : public nsIFileURL,
 
   bool ValidIPv6orHostname(const char* host, uint32_t length);
   static bool IsValidOfBase(unsigned char c, const uint32_t base);
-  nsresult NormalizeIDN(const nsACString& host, nsCString& result);
+  nsresult NormalizeIDN(const nsCString& host, nsCString& result);
   nsresult CheckIfHostIsAscii();
   void CoalescePath(netCoalesceFlags coalesceFlag, char* path);
 

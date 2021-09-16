@@ -4295,6 +4295,15 @@ pref("toolkit.aboutProcesses.showAllSubframes", false);
 #else
   pref("toolkit.aboutProcesses.showThreads", false);
 #endif
+// If `true`, about:processes will offer to profile processes.
+#ifdef NIGHTLY_BUILD
+  pref("toolkit.aboutProcesses.showProfilerIcons", true);
+#else
+  pref("toolkit.aboutProcesses.showProfilerIcons", false);
+#endif
+// Time in seconds between when the profiler is started and when the
+// profile is captured.
+pref("toolkit.aboutProcesses.profileDuration", 5);
 
 // When a crash happens, whether to include heap regions of the crash context
 // in the minidump. Enabled by default on nightly and aurora.
