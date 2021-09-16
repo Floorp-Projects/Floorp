@@ -60,68 +60,9 @@ body {
   --newtab-overlay-color: color-mix(in srgb, var(--newtab-background-color) 85%, transparent);
   --newtab-text-emphasis-background: #FFE900;
   --newtab-text-emphasis-text-color: #0C0C0D;
-  --newtab-border-primary-color: var(--newtab-border-color);
-  --newtab-border-secondary-color: var(--newtab-border-color);
-  --newtab-icon-primary-color: var(--newtab-text-primary-color);
-  --newtab-icon-secondary-color: var(--newtab-text-secondary-color);
-  --newtab-link-primary-color: var(--newtab-primary-action-background);
-  --newtab-link-primary-active-color: var(--newtab-primary-element-active-color);
-  --newtab-link-secondary-color: #008EA4;
-  --newtab-text-conditional-color: #4A4A4F;
-  --newtab-link-secondary-color: var(--newtab-primary-action-background);
-  --newtab-text-conditional-color: var(--newtab-text-secondary-color);
-  --newtab-textbox-background-color: var(--newtab-background-color-secondary);
-  --newtab-textbox-border: var(--newtab-border-color);
   --newtab-textbox-focus-color: var(--newtab-primary-action-background);
   --newtab-textbox-focus-boxshadow: 0 0 0 1px var(--newtab-primary-action-background), 0 0 0 4px rgba(var(--newtab-primary-action-background), 0.3);
-  --newtab-background-button-hover-color: var(--newtab-element-hover-color);
-  --newtab-background-button-active-color: var(--newtab-element-active-color);
-  --newtab-button-primary-color: var(--newtab-primary-action-background);
-  --newtab-button-primary-hover-color: var(--newtab-primary-element-hover-color);
-  --newtab-button-primary-active-color: var(--newtab-primary-element-active-color);
-  --newtab-button-primary-text-color: var(--newtab-primary-element-text-color);
   --newtab-button-secondary-color: inherit;
-  --newtab-feed-button-background: var(--newtab-element-secondary-color);
-  --newtab-feed-button-text: var(--newtab-text-primary-color);
-  --newtab-feed-button-text-faded: transparent;
-  --newtab-feed-button-spinner: var(--newtab-text-secondary-color);
-  --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
-  --newtab-contextmenu-background-color: var(--newtab-background-color);
-  --newtab-contextmenu-button-color: var(--newtab-text-primary-color);
-  --newtab-modal-color: var(--newtab-background-color-secondary);
-  --newtab-section-header-text-color: var(--newtab-background-primary-text-color);
-  --newtab-section-navigation-text-color: var(--newtab-text-primary-color);
-  --newtab-search-border-color: transparent;
-  --newtab-search-header-background-color: var(--newtab-overlay-color);
-  --newtab-topsites-background-color: var(--newtab-background-color-secondary);
-  --newtab-topsites-outer-card-hover: var(--newtab-element-hover-color);
-  --newtab-topsites-context-menu-hover: var(--newtab-element-hover-color);
-  --newtab-card-active-outline-color: var(--newtab-element-secondary-color);
-  --newtab-card-background-color: var(--newtab-background-color-secondary);
-  --newtab-card-placeholder-color: var(--newtab-element-secondary-color);
-  --newtab-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  --newtab-card-header-color: var(--newtab-text-primary-color);
-  --newtab-snippets-background-color: var(--newtab-background-color-secondary);
-  --newtab-snippets-hairline-color: transparent;
-  --newtab-background-primary-text-color: var(--newtab-text-primary-color);
-  --newtab-focus-outline: var(--newtab-primary-action-background-dimmed);
-  --newtab-focus-border: var(--newtab-primary-action-background);
-  --newtab-seperator-line-color: var(--newtab-border-color);
-  --newtab-primary-action-background-off: var(--newtab-element-secondary-color);
-  --customize-menu-primary-text-color: var(--newtab-text-primary-color);
-  --customize-menu-check-fill: var(--newtab-primary-element-text-color);
-  --customize-menu-check-fill-contrast: #000;
-  --customize-menu-background: var(--newtab-background-color-secondary);
-  --customize-menu-secondary-action-background: var(--newtab-element-secondary-color);
-  --customize-menu-secondary-action-background-hover: var(--newtab-element-secondary-hover-color);
-  --customize-menu-secondary-action-background-active: var(--newtab-element-secondary-active-color);
-  --customize-menu-seperator-line-color: var(--newtab-border-color);
-  --customize-menu-second-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
-  --customize-menu-primary-action-text: var(--newtab-primary-element-text-color);
-  --customize-menu-line-color: var(--newtab-border-color);
-  --newtab-search-first-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  --newtab-search-text-color: var(--newtab-text-primary-color);
-  --newtab-card-first-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 body[lwt-newtab-brighttext] {
   --newtab-background-color: #2B2A33;
@@ -145,7 +86,7 @@ body[lwt-newtab-brighttext] {
   background-size: 16px;
   -moz-context-properties: fill;
   display: inline-block;
-  color: var(--newtab-icon-primary-color);
+  color: var(--newtab-text-primary-color);
   fill: currentColor;
   height: 16px;
   vertical-align: middle;
@@ -158,7 +99,7 @@ body[lwt-newtab-brighttext] {
   margin-inline-end: 6px;
 }
 .icon.icon-button-style {
-  fill: var(--newtab-icon-secondary-color);
+  fill: var(--newtab-text-secondary-color);
   border: 0;
 }
 .icon.icon-button-style:focus, .icon.icon-button-style:hover {
@@ -341,7 +282,7 @@ a {
 }
 
 .inner-border {
-  border: 1px solid var(--newtab-border-secondary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 3px;
   height: 100%;
   left: 0;
@@ -370,7 +311,7 @@ a {
 }
 
 .actions {
-  border-top: 1px solid var(--newtab-border-secondary-color);
+  border-top: 1px solid var(--newtab-border-color);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -382,7 +323,7 @@ a {
 .button,
 .actions button {
   background-color: var(--newtab-button-secondary-color);
-  border: 1px solid var(--newtab-border-primary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 4px;
   color: inherit;
   cursor: pointer;
@@ -393,7 +334,7 @@ a {
 .button:hover:not(.dismiss), .button:focus:not(.dismiss),
 .actions button:hover:not(.dismiss),
 .actions button:focus:not(.dismiss) {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
 .button.dismiss,
@@ -406,9 +347,9 @@ a {
 .button.primary, .button.done,
 .actions button.primary,
 .actions button.done {
-  background-color: var(--newtab-button-primary-color);
-  border: solid 1px var(--newtab-button-primary-color);
-  color: var(--newtab-button-primary-text-color);
+  background-color: var(--newtab-primary-action-background);
+  border: solid 1px var(--newtab-primary-action-background);
+  color: var(--newtab-primary-element-text-color);
   margin-inline-start: auto;
 }
 
@@ -428,7 +369,7 @@ input[type=text], input[type=search] {
   padding: 0;
   cursor: pointer;
   text-align: unset;
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .a11y-link-button:hover, .a11y-link-button:focus {
   text-decoration: underline;
@@ -454,7 +395,7 @@ input[type=text], input[type=search] {
   padding-top: 134px;
 }
 .outer-wrapper a {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 
 main {
@@ -557,7 +498,7 @@ main.has-snippet {
   align-items: center;
   border-radius: 3px;
   box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
-  color: var(--newtab-text-conditional-color);
+  color: var(--newtab-text-secondary-color);
   display: flex;
   flex-direction: column;
   font-size: 12px;
@@ -569,7 +510,7 @@ main.has-snippet {
   box-shadow: none;
 }
 .as-error-fallback a {
-  color: var(--newtab-text-conditional-color);
+  color: var(--newtab-text-secondary-color);
   text-decoration: underline;
 }
 
@@ -579,7 +520,7 @@ main.has-snippet {
   padding: 0;
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
-  background: var(--newtab-topsites-outer-card-hover);
+  background: var(--newtab-element-hover-color);
 }
 @media (max-width: 610px) {
   .top-sites-list > :nth-child(2n+1) .context-menu {
@@ -684,7 +625,7 @@ main.has-snippet {
   border: 0;
   border-radius: 4px;
   cursor: pointer;
-  fill: var(--newtab-icon-primary-color);
+  fill: var(--newtab-text-primary-color);
   -moz-context-properties: fill;
   height: 20px;
   width: 20px;
@@ -697,13 +638,13 @@ main.has-snippet {
 .top-site-outer .context-menu-button:is(:active, :focus) {
   outline: 0;
   opacity: 1;
-  background-color: var(--newtab-topsites-context-menu-hover);
+  background-color: var(--newtab-element-hover-color);
   fill: var(--newtab-primary-action-background);
 }
 .top-site-outer .tile {
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
-  background-color: var(--newtab-topsites-background-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background-color: var(--newtab-background-color-secondary);
   justify-content: center;
   margin: 0 auto;
   height: 80px;
@@ -741,7 +682,7 @@ main.has-snippet {
   color: #FFF;
 }
 .top-site-outer .top-site-icon {
-  background-color: var(--newtab-topsites-background-color);
+  background-color: var(--newtab-background-color-secondary);
   background-position: center center;
   background-repeat: no-repeat;
   border-radius: 4px;
@@ -771,11 +712,11 @@ main.has-snippet {
 .top-site-outer .search-topsite {
   background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-size: 16px;
-  background-color: var(--newtab-button-primary-color);
+  background-color: var(--newtab-primary-action-background);
   border-radius: 32px;
   -moz-context-properties: fill;
-  fill: var(--newtab-button-primary-text-color);
-  box-shadow: var(--newtab-card-shadow);
+  fill: var(--newtab-primary-element-text-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition-duration: 150ms;
   transition-property: background-size, bottom, inset-inline-end, height, width;
   height: 32px;
@@ -787,7 +728,7 @@ main.has-snippet {
   box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
 }
 .top-site-outer .title {
-  color: var(--newtab-background-primary-text-color);
+  color: var(--newtab-text-primary-color);
   padding-top: 8px;
   font: caption;
   text-align: center;
@@ -795,7 +736,7 @@ main.has-snippet {
 }
 .top-site-outer .title .icon {
   margin-inline-end: 2px;
-  fill: var(--newtab-background-primary-text-color);
+  fill: var(--newtab-text-primary-color);
 }
 .top-site-outer .title span {
   display: block;
@@ -923,7 +864,7 @@ main.has-snippet {
   width: 960px;
   height: 16px;
   -moz-context-properties: fill;
-  fill: var(--newtab-link-primary-color);
+  fill: var(--newtab-primary-action-background);
   background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
   animation: tab-throbber-animation 1.05s steps(60) infinite;
 }
@@ -941,8 +882,8 @@ main.has-snippet {
   animation-name: tab-throbber-animation-rtl;
 }
 .topsite-form .form-wrapper input[type=text] {
-  background-color: var(--newtab-textbox-background-color);
-  border: 1px solid var(--newtab-textbox-border);
+  background-color: var(--newtab-background-color-secondary);
+  border: 1px solid var(--newtab-border-color);
   margin: 8px 0;
   padding: 0 8px;
   height: 32px;
@@ -950,7 +891,7 @@ main.has-snippet {
   font-size: 15px;
 }
 .topsite-form .form-wrapper input[type=text][disabled] {
-  border: 1px solid var(--newtab-textbox-border);
+  border: 1px solid var(--newtab-border-color);
   box-shadow: none;
   opacity: 0.4;
 }
@@ -1015,7 +956,7 @@ main.has-snippet {
 .topsite-form [type=checkbox]:not(:checked) + label::before,
 .topsite-form [type=checkbox]:checked + label::before {
   background: var(--newtab-background-color);
-  border: 1px solid var(--newtab-textbox-border);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 3px;
   content: "";
   height: 21px;
@@ -1040,7 +981,7 @@ main.has-snippet {
   top: -8px;
   width: 21px;
   -moz-context-properties: fill;
-  fill: var(--newtab-link-primary-color);
+  fill: var(--newtab-primary-action-background);
   z-index: 2;
 }
 [dir=rtl] .topsite-form [type=checkbox]:not(:checked) + label::after,
@@ -1049,7 +990,7 @@ main.has-snippet {
   right: -8px;
 }
 .topsite-form [type=checkbox]:checked + label .tile {
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 .topsite-form [type=checkbox]:not(:checked) + label::after {
   opacity: 0;
@@ -1059,7 +1000,7 @@ main.has-snippet {
 }
 .topsite-form [type=checkbox]:checked:focus + label::before,
 .topsite-form [type=checkbox]:not(:checked):focus + label::before {
-  border: 1px dotted var(--newtab-link-primary-color);
+  border: 1px dotted var(--newtab-primary-action-background);
 }
 
 @keyframes fade-up-tt {
@@ -1120,7 +1061,7 @@ main.has-snippet {
   }
 }
 .sections-list .section-empty-state {
-  border: 1px solid var(--newtab-border-secondary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 3px;
   display: flex;
   height: 266px;
@@ -1129,17 +1070,6 @@ main.has-snippet {
 .sections-list .section-empty-state .empty-state {
   margin: auto;
   max-width: 350px;
-}
-.sections-list .section-empty-state .empty-state .empty-state-icon {
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 50px 50px;
-  -moz-context-properties: fill;
-  display: block;
-  fill: var(--newtab-icon-secondary-color);
-  height: 50px;
-  margin: 0 auto;
-  width: 50px;
 }
 .sections-list .section-empty-state .empty-state .empty-state-message {
   color: var(--newtab-text-primary-color);
@@ -1154,7 +1084,7 @@ main.has-snippet {
 }
 
 .top-stories-bottom-container {
-  color: var(--newtab-section-navigation-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 12px;
   line-height: 1.6;
   margin-top: 12px;
@@ -1162,7 +1092,7 @@ main.has-snippet {
   justify-content: space-between;
 }
 .top-stories-bottom-container a {
-  color: var(--newtab-link-secondary-color);
+  color: var(--newtab-primary-action-background);
   font-weight: bold;
 }
 .top-stories-bottom-container a.more-recommendations {
@@ -1298,13 +1228,13 @@ main.has-snippet {
 }
 .search-wrapper .search-handoff-button,
 .search-wrapper input {
-  background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 16px center no-repeat;
+  background: var(--newtab-background-color-secondary) var(--newtab-search-icon) 16px center no-repeat;
   background-size: 24px;
   padding-inline-start: 52px;
   padding-inline-end: 10px;
   padding-block: 0;
   width: 100%;
-  box-shadow: var(--newtab-search-first-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border: 1px solid transparent;
   border-radius: 8px;
 }
@@ -1314,9 +1244,9 @@ main.has-snippet {
 }
 .search-wrapper .search-inner-wrapper:active input,
 .search-wrapper input:focus {
-  border: 1px solid var(--newtab-focus-border);
+  border: 1px solid var(--newtab-primary-action-background);
   outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 .search-wrapper .search-button {
   background: url("chrome://browser/skin/forward.svg") no-repeat center center;
@@ -1324,7 +1254,7 @@ main.has-snippet {
   border: 0;
   border-radius: 0 3px 3px 0;
   -moz-context-properties: fill;
-  fill: var(--newtab-icon-secondary-color);
+  fill: var(--newtab-text-secondary-color);
   height: 100%;
   inset-inline-end: 0;
   position: absolute;
@@ -1336,8 +1266,8 @@ main.has-snippet {
 }
 .search-wrapper .search-button:focus {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-  border: 1px solid var(--newtab-focus-border);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
+  border: 1px solid var(--newtab-primary-action-background);
   border-radius: 0 8px 8px 0;
 }
 .search-wrapper .search-button:active {
@@ -1347,8 +1277,8 @@ main.has-snippet {
   transform: scaleX(-1);
 }
 .search-wrapper.fake-focus:not(.search.disabled) .search-handoff-button {
-  border: 1px solid var(--newtab-focus-border);
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+  border: 1px solid var(--newtab-primary-action-background);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 .search-wrapper .search-handoff-button {
   padding-inline-end: 15px;
@@ -1385,9 +1315,9 @@ main.has-snippet {
   }
 }
 .search-handoff-button {
-  background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 16px center no-repeat;
+  background: var(--newtab-background-color-secondary) var(--newtab-search-icon) 16px center no-repeat;
   background-size: 24px;
-  border: solid 1px var(--newtab-search-border-color);
+  border: solid 1px transparent;
   border-radius: 3px;
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15);
   cursor: text;
@@ -1454,9 +1384,9 @@ main.has-snippet {
     padding-top: 254px;
   }
   body:not(.inline-onboarding) .fixed-search .search-wrapper {
-    border-bottom: solid 1px var(--newtab-seperator-line-color);
+    border-bottom: solid 1px var(--newtab-border-color);
     padding: 27px 0;
-    background-color: var(--newtab-search-header-background-color);
+    background-color: var(--newtab-overlay-color);
     min-height: 95px;
     left: 0;
     position: fixed;
@@ -1498,17 +1428,17 @@ main.has-snippet {
 }
 .contentSearchSuggestionTable .contentSearchHeader,
 .contentSearchSuggestionTable .contentSearchSettingsButton {
-  border-color: var(--newtab-border-secondary-color);
+  border-color: var(--newtab-border-color);
 }
 .contentSearchSuggestionTable .contentSearchSuggestionsList {
   border: 0;
 }
 .contentSearchSuggestionTable .contentSearchOneOffsTable {
-  border-top: solid 1px var(--newtab-border-secondary-color);
+  border-top: solid 1px var(--newtab-border-color);
 }
 .contentSearchSuggestionTable .contentSearchOneOffItem {
   background-image: none;
-  border-image: linear-gradient(transparent 18%, var(--newtab-border-secondary-color) 18%, var(--newtab-border-secondary-color) 82%, transparent 82%) 1;
+  border-image: linear-gradient(transparent 18%, var(--newtab-border-color) 18%, var(--newtab-border-color) 82%, transparent 82%) 1;
   border-inline-end: 1px solid;
   position: relative;
 }
@@ -1529,7 +1459,7 @@ main.has-snippet {
 }
 
 .context-menu {
-  background: var(--newtab-contextmenu-background-color);
+  background: var(--newtab-background-color);
   border-radius: 5px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
   display: block;
@@ -1550,7 +1480,7 @@ main.has-snippet {
   width: 100%;
 }
 .context-menu > ul > li.separator {
-  border-bottom: 1px solid var(--newtab-border-secondary-color);
+  border-bottom: 1px solid var(--newtab-border-color);
   margin: 5px 0;
 }
 .context-menu > ul > li > a,
@@ -1633,8 +1563,8 @@ main.has-snippet {
 }
 
 .modal {
-  background: var(--newtab-modal-color);
-  border: 1px solid var(--newtab-border-secondary-color);
+  background: var(--newtab-background-color-secondary);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 5px;
   font-size: 15px;
   z-index: 11002;
@@ -1662,10 +1592,10 @@ main.has-snippet {
   padding: 15px;
 }
 .personalize-button:hover {
-  background-color: var(--newtab-background-button-hover-color);
+  background-color: var(--newtab-element-hover-color);
 }
 .personalize-button:active {
-  background-color: var(--newtab-background-button-active-color);
+  background-color: var(--newtab-element-active-color);
 }
 .personalize-button:focus-visible {
   border: 0;
@@ -1677,8 +1607,8 @@ main.has-snippet {
 }
 
 .customize-menu {
-  color: var(--customize-menu-primary-text-color);
-  background-color: var(--customize-menu-background);
+  color: var(--newtab-text-primary-color);
+  background-color: var(--newtab-background-color-secondary);
   width: 432px;
   height: 100%;
   position: fixed;
@@ -1701,31 +1631,31 @@ main.has-snippet {
   transform: translateX(-435px);
 }
 .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active {
-  box-shadow: var(--customize-menu-second-shadow);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   visibility: visible;
   transform: translateX(0);
 }
 .customize-menu.customize-animate-exit-active {
-  box-shadow: var(--customize-menu-second-shadow);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
 }
 .customize-menu .close-button {
   margin-inline-start: auto;
   margin-bottom: 28px;
   white-space: nowrap;
   display: block;
-  background-color: var(--customize-menu-secondary-action-background);
+  background-color: var(--newtab-element-secondary-color);
   padding: 8px 10px;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 4px;
-  color: var(--customize-menu-primary-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 13px;
   font-weight: 600;
 }
 .customize-menu .close-button:hover {
-  background-color: var(--customize-menu-secondary-action-background-hover);
+  background-color: var(--newtab-element-secondary-hover-color);
 }
 .customize-menu .close-button:hover:active {
-  background-color: var(--customize-menu-secondary-action-background-active);
+  background-color: var(--newtab-element-secondary-active-color);
 }
 
 .grid-skip {
@@ -1774,27 +1704,27 @@ main.has-snippet {
   box-sizing: border-box;
   border-radius: 4px;
   appearance: none;
-  background-color: var(--newtab-primary-action-background-off);
+  background-color: var(--newtab-element-secondary-color);
 }
 .home-section .section .sponsored-checkbox:checked {
   -moz-context-properties: fill;
-  fill: var(--customize-menu-check-fill);
+  fill: var(--newtab-primary-element-text-color);
   background: url("chrome://global/skin/icons/check.svg") center no-repeat;
   background-color: var(--newtab-primary-action-background);
 }
 @media (forced-colors: active) {
   .home-section .section .sponsored-checkbox:checked {
-    fill: var(--customize-menu-check-fill-contrast);
+    fill: #000;
   }
 }
 .home-section .section .sponsored-checkbox:active + .checkmark {
   fill: var(--newtab-element-secondary-color);
 }
 .home-section .section .selector {
-  color: var(--customize-menu-primary-text-color);
+  color: var(--newtab-text-primary-color);
   width: 118px;
   display: block;
-  border: 1px solid var(--customize-menu-line-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 4px;
   appearance: none;
   padding-block: 7px;
@@ -1802,11 +1732,11 @@ main.has-snippet {
   margin-inline-start: 2px;
   margin-bottom: 2px;
   -moz-context-properties: fill;
-  fill: var(--customize-menu-primary-text-color);
+  fill: var(--newtab-text-primary-color);
   background: url("chrome://global/skin/icons/arrow-down-12.svg") right no-repeat;
   background-size: 8px;
   background-origin: content-box;
-  background-color: var(--customize-menu-background);
+  background-color: var(--newtab-background-color-secondary);
 }
 .home-section .section .selector:dir(rtl) {
   background-position-x: left;
@@ -1830,7 +1760,7 @@ main.has-snippet {
   transition: transform 250ms;
   border-radius: 13px;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  background-color: var(--newtab-primary-action-background-off);
+  background-color: var(--newtab-element-secondary-color);
 }
 .home-section .section .slider::before {
   position: absolute;
@@ -1839,17 +1769,17 @@ main.has-snippet {
   width: 8px;
   inset-inline-start: 3px;
   bottom: 3px;
-  background-color: var(--customize-menu-slider-fill);
+  background-color: var(--newtab-primary-element-text-color);
   transition: transform 250ms;
   border-radius: 50%;
   outline: 1px solid rgba(0, 0, 0, 0.15);
 }
 .home-section .section .switch input:focus-visible + .slider {
   outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 .home-section .section .switch input:not(:checked):focus-visible + .slider {
-  border: 1px solid var(--newtab-focus-border);
+  border: 1px solid var(--newtab-primary-action-background);
 }
 .home-section .section input:checked + .slider {
   background-color: var(--newtab-primary-action-background);
@@ -1896,7 +1826,7 @@ main.has-snippet {
   top: -35px;
 }
 .home-section .divider {
-  border-top: 1px var(--customize-menu-seperator-line-color) solid;
+  border-top: 1px var(--newtab-border-color) solid;
   margin: 0 -16px;
 }
 .home-section .external-link {
@@ -1905,7 +1835,7 @@ main.has-snippet {
   border: 1px solid transparent;
   border-radius: 4px;
   -moz-context-properties: fill;
-  fill: var(--customize-menu-primary-text-color);
+  fill: var(--newtab-text-primary-color);
   background: url("chrome://global/skin/icons/settings.svg") left no-repeat;
   background-size: 16px;
   padding-inline-start: 21px;
@@ -1928,13 +1858,13 @@ main.has-snippet {
 .selector:focus-visible,
 .external-link:focus-visible,
 .close-button:focus-visible {
-  border: 1px solid var(--newtab-focus-border);
+  border: 1px solid var(--newtab-primary-action-background);
   outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 
 .card-outer {
-  background: var(--newtab-card-background-color);
+  background: var(--newtab-background-color-secondary);
   border-radius: 8px;
   display: inline-block;
   height: 266px;
@@ -1944,14 +1874,14 @@ main.has-snippet {
 }
 .card-outer .context-menu-button {
   background-clip: padding-box;
-  background-color: var(--newtab-contextmenu-button-color);
+  background-color: var(--newtab-background-color-secondary);
   background-image: url("chrome://global/skin/icons/more.svg");
   background-position: 55%;
-  border: 1px solid var(--newtab-border-primary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 100%;
   box-shadow: 0 2px rgba(12, 12, 13, 0.1);
   cursor: pointer;
-  fill: var(--newtab-icon-primary-color);
+  fill: var(--newtab-text-primary-color);
   height: 27px;
   inset-inline-end: -13.5px;
   opacity: 0;
@@ -1985,7 +1915,7 @@ main.has-snippet {
 }
 .card-outer .card {
   border-radius: 8px;
-  box-shadow: var(--newtab-card-first-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   height: 100%;
 }
 .card-outer > a {
@@ -2002,11 +1932,11 @@ main.has-snippet {
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
 }
 .card-outer > a:is(.active, :focus) .card {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
 .card-outer > a:is(.active, :focus) .card-title {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .card-outer:is(:hover, :focus, .active):not(.placeholder) {
   outline: none;
@@ -2017,7 +1947,7 @@ main.has-snippet {
   transition-delay: 333ms;
 }
 .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-title {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .card-outer:is(:hover, :focus, .active):not(.placeholder) .alternate ~ .card-host-name {
   display: none;
@@ -2026,7 +1956,7 @@ main.has-snippet {
   display: block;
 }
 .card-outer .card-preview-image-outer {
-  background-color: var(--newtab-card-placeholder-color);
+  background-color: var(--newtab-element-secondary-color);
   border-radius: 8px 8px 0 0;
   height: 122px;
   overflow: hidden;
@@ -2176,7 +2106,7 @@ main.has-snippet {
   display: none;
 }
 .compact-cards .card-outer .card-context {
-  background-color: var(--newtab-card-background-color);
+  background-color: var(--newtab-background-color-secondary);
   border-radius: 16px;
   clip-path: inset(-1px -1px 4px);
   height: 32px;
@@ -2229,12 +2159,12 @@ main.has-snippet {
 .collapsible-section .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: var(--newtab-background-primary-text-color);
+  color: var(--newtab-text-primary-color);
 }
 .collapsible-section .section-title.grey-title {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   display: inline-block;
-  fill: var(--newtab-section-header-text-color);
+  fill: var(--newtab-text-primary-color);
   vertical-align: middle;
 }
 .collapsible-section .section-title .section-title-contents {
@@ -2266,7 +2196,7 @@ main.has-snippet {
   margin-inline-start: 12px;
 }
 .collapsible-section .learn-more-link a {
-  color: var(--newtab-link-secondary-color);
+  color: var(--newtab-primary-action-background);
 }
 .collapsible-section .section-body-fallback {
   height: 266px;
@@ -2344,7 +2274,7 @@ main.has-snippet {
   color: var(--lwt-sidebar-text-color);
 }
 .asrouter-admin .sidebar li a:hover {
-  background: var(--newtab-textbox-background-color);
+  background: var(--newtab-background-color-secondary);
 }
 .asrouter-admin h1 {
   font-weight: 200;
@@ -2392,7 +2322,7 @@ main.has-snippet {
 }
 .asrouter-admin table.minimal-table {
   border-collapse: collapse;
-  border: 1px solid var(--newtab-border-secondary-color);
+  border: 1px solid var(--newtab-border-color);
 }
 .asrouter-admin table.minimal-table td {
   padding: 8px;
@@ -2405,16 +2335,16 @@ main.has-snippet {
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
 }
 .asrouter-admin table.errorReporting tr {
-  border: 1px solid var(--newtab-textbox-background-color);
+  border: 1px solid var(--newtab-background-color-secondary);
 }
 .asrouter-admin table.errorReporting td {
   padding: 4px;
 }
 .asrouter-admin table.errorReporting td[rowspan] {
-  border: 1px solid var(--newtab-textbox-background-color);
+  border: 1px solid var(--newtab-background-color-secondary);
 }
 .asrouter-admin .sourceLabel {
-  background: var(--newtab-textbox-background-color);
+  background: var(--newtab-background-color-secondary);
   padding: 2px 5px;
   border-radius: 3px;
 }
@@ -2423,12 +2353,12 @@ main.has-snippet {
   color: var(--newtab-status-error);
 }
 .asrouter-admin .message-item:first-child td {
-  border-top: 1px solid var(--newtab-border-secondary-color);
+  border-top: 1px solid var(--newtab-border-color);
 }
 .asrouter-admin .message-item td {
   vertical-align: top;
   padding: 8px;
-  border-bottom: 1px solid var(--newtab-border-secondary-color);
+  border-bottom: 1px solid var(--newtab-border-color);
 }
 .asrouter-admin .message-item td.min {
   width: 1%;
@@ -2441,10 +2371,10 @@ main.has-snippet {
   width: 15%;
 }
 .asrouter-admin .message-item td:first-child {
-  border-inline-start: 1px solid var(--newtab-border-secondary-color);
+  border-inline-start: 1px solid var(--newtab-border-color);
 }
 .asrouter-admin .message-item td:last-child {
-  border-inline-end: 1px solid var(--newtab-border-secondary-color);
+  border-inline-end: 1px solid var(--newtab-border-color);
 }
 .asrouter-admin .message-item.blocked .message-id,
 .asrouter-admin .message-item.blocked .message-summary {
@@ -2461,7 +2391,7 @@ main.has-snippet {
   font-size: 12px;
 }
 .asrouter-admin pre {
-  background: var(--newtab-textbox-background-color);
+  background: var(--newtab-background-color-secondary);
   margin: 0;
   padding: 8px;
   font-size: 12px;
@@ -2514,7 +2444,7 @@ main.has-snippet {
 }
 .pocket-logged-in-cta .pocket-cta-button {
   white-space: nowrap;
-  background: var(--newtab-button-primary-color);
+  background: var(--newtab-primary-action-background);
   letter-spacing: -0.34px;
   color: #FFF;
   border-radius: 4px;
@@ -2550,7 +2480,7 @@ main.has-snippet {
   content: "";
   -moz-context-properties: fill;
   display: inline-block;
-  fill: var(--newtab-link-secondary-color);
+  fill: var(--newtab-primary-action-background);
   height: 16px;
   margin-inline-start: 5px;
   vertical-align: top;
@@ -2633,7 +2563,7 @@ main.has-snippet {
 
 .ds-header,
 .ds-layout .section-title span {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 17px;
   font-weight: 600;
   line-height: 20px;
@@ -2647,7 +2577,7 @@ main.has-snippet {
   margin: auto;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
   font-weight: normal;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
@@ -2714,10 +2644,10 @@ main.has-snippet {
 }
 .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
   border-radius: 8px;
-  box-shadow: var(--newtab-card-first-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 [lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
-  background: var(--newtab-card-background-color);
+  background: var(--newtab-background-color-secondary);
 }
 .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
   border-radius: 8px 8px 0 0;
@@ -2820,7 +2750,7 @@ main.has-snippet {
 .outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img,
 .outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
   border-radius: 8px;
-  box-shadow: var(--newtab-card-first-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .ds-dismiss.ds-dismiss-ds-collection .ds-dismiss-button {
@@ -2843,7 +2773,7 @@ main.has-snippet {
   margin-bottom: 12px;
 }
 .ds-collection-card-grid .ds-header .title {
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
   font-weight: 600;
   font-size: 17px;
   line-height: 24px;
@@ -2869,7 +2799,7 @@ main.has-snippet {
   font-size: 15px;
   -webkit-line-clamp: 3;
   line-height: 24px;
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
   margin: 0 0 10px;
 }
 .ds-hero .ds-card:not(.placeholder) {
@@ -2922,10 +2852,10 @@ main.has-snippet {
 }
 
 .ds-hero .wrapper:hover .meta header {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .ds-hero .wrapper:active .meta header {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 .ds-hero .wrapper .img-wrapper {
   width: 100%;
@@ -2950,7 +2880,7 @@ main.has-snippet {
   font-size: 22px;
   -webkit-line-clamp: 4;
   line-height: 28px;
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
   margin-bottom: 0;
 }
 .ds-hero .wrapper .meta .context,
@@ -2958,7 +2888,7 @@ main.has-snippet {
   margin: 0 0 4px;
 }
 .ds-hero .wrapper .meta .context {
-  color: var(--newtab-link-secondary-color);
+  color: var(--newtab-primary-action-background);
 }
 .ds-hero .wrapper .meta .source {
   font-size: 13px;
@@ -3049,10 +2979,10 @@ main.has-snippet {
   background: none;
 }
 [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-10 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-11 .ds-hero .cards .ds-card:hover .title, [lwt-newtab-brighttext] .ds-column-12 .ds-hero .cards .ds-card:hover .title {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-10 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-11 .ds-hero .cards .ds-card:active .title, [lwt-newtab-brighttext] .ds-column-12 .ds-hero .cards .ds-card:active .title {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 .ds-column-9 .ds-hero .cards .ds-card .title, .ds-column-10 .ds-hero .cards .ds-card .title, .ds-column-11 .ds-hero .cards .ds-card .title, .ds-column-12 .ds-hero .cards .ds-card .title {
   font-size: 14px;
@@ -3145,7 +3075,7 @@ main.has-snippet {
   display: none;
 }
 .ds-list a {
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
 }
 
 .ds-list-item-link:focus {
@@ -3162,7 +3092,7 @@ main.has-snippet {
   padding-inline-start: 41px;
 }
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link::before {
-  background-color: var(--newtab-link-secondary-color);
+  background-color: var(--newtab-primary-action-background);
   border-radius: 32px;
   color: #FFF;
   content: counter(list);
@@ -3176,10 +3106,10 @@ main.has-snippet {
   width: 32px;
 }
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:hover::before {
-  background-color: var(--newtab-link-primary-color);
+  background-color: var(--newtab-primary-action-background);
 }
 .ds-list-numbers .ds-list-item:not(.placeholder) > .ds-list-item-link:active::before {
-  background-color: var(--newtab-link-primary-active-color);
+  background-color: var(--newtab-primary-element-active-color);
 }
 
 .ds-list-borders {
@@ -3293,14 +3223,14 @@ main.has-snippet {
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
 }
 .ds-list-item:hover .ds-list-item-title {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .ds-list-item:active .ds-list-item-title {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 
 .ds-navigation {
-  color: var(--newtab-background-primary-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 11.5px;
   font-weight: 500;
   line-height: 22px;
@@ -3337,7 +3267,7 @@ main.has-snippet {
   text-decoration: underline;
 }
 .ds-navigation ul li a:active {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 .ds-navigation .ds-navigation-header {
   padding-inline-end: 6px;
@@ -3355,7 +3285,7 @@ main.has-snippet {
   margin-top: 24px;
 }
 .ds-section-title .title {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   line-height: 48px;
   font-size: 36px;
   font-weight: 300;
@@ -3373,7 +3303,7 @@ main.has-snippet {
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
 }
 .outer-wrapper .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(:hover) .top-site-inner {
-  box-shadow: 0 0 0 5px var(--newtab-topsites-background-color);
+  box-shadow: 0 0 0 5px var(--newtab-background-color-secondary);
   transition: box-shadow 150ms;
   border-radius: 4px;
   outline: none;
@@ -3451,14 +3381,14 @@ main.has-snippet {
 .ds-card .context-menu-button,
 .ds-signup .context-menu-button {
   background-clip: padding-box;
-  background-color: var(--newtab-contextmenu-button-color);
+  background-color: var(--newtab-background-color-secondary);
   background-image: url("chrome://global/skin/icons/more.svg");
   background-position: 55%;
-  border: 1px solid var(--newtab-border-primary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 100%;
   box-shadow: 0 2px rgba(12, 12, 13, 0.1);
   cursor: pointer;
-  fill: var(--newtab-icon-primary-color);
+  fill: var(--newtab-text-primary-color);
   height: 27px;
   inset-inline-end: -13.5px;
   opacity: 0;
@@ -3521,7 +3451,7 @@ main.has-snippet {
 .ds-list-item:is(:hover, :focus, .active).ds-card-grid-border,
 .ds-card:is(:hover, :focus, .active).ds-card-grid-border,
 .ds-signup:is(:hover, :focus, .active).ds-card-grid-border {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
 
@@ -3531,10 +3461,10 @@ main.has-snippet {
   position: relative;
 }
 .ds-card .playhead {
-  background: var(--newtab-button-primary-color) url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
+  background: var(--newtab-primary-action-background) url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
   border-radius: 20px;
   bottom: -16px;
-  color: color-mix(in srgb, var(--newtab-button-primary-text-color) 0%, transparent);
+  color: color-mix(in srgb, var(--newtab-primary-element-text-color) 0%, transparent);
   display: flex;
   flex-direction: column;
   height: 40px;
@@ -3546,7 +3476,7 @@ main.has-snippet {
   transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
 }
 .ds-card .playhead:hover {
-  color: var(--newtab-button-primary-text-color);
+  color: var(--newtab-primary-element-text-color);
   padding: 0 20px 0 40px;
 }
 .ds-card .playhead span {
@@ -3582,7 +3512,7 @@ main.has-snippet {
   flex-direction: column;
 }
 .ds-card .ds-card-link:hover header {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .ds-card .ds-card-link:focus {
   border: 0;
@@ -3591,10 +3521,10 @@ main.has-snippet {
   transition: none;
 }
 .ds-card .ds-card-link:focus header {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .ds-card .ds-card-link:active header {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 .ds-card.video-card .meta {
   margin-top: 4px;
@@ -3635,14 +3565,14 @@ main.has-snippet {
   font-size: 14px;
   font-weight: 600;
   padding: 5px 8px 7px;
-  border: 1px solid var(--newtab-border-primary-color);
+  border: 1px solid var(--newtab-border-color);
 }
 .ds-card .meta .cta-button:active {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
 }
 .ds-card .meta .cta-link {
-  color: var(--newtab-link-primary-color);
-  fill: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
+  fill: var(--newtab-primary-action-background);
   font-size: 15px;
   font-weight: 600;
   line-height: 24px;
@@ -3653,13 +3583,13 @@ main.has-snippet {
   padding-right: 9px;
 }
 .ds-card .meta .cta-link:focus {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   border-radius: 4px;
   outline: 0;
 }
 .ds-card .meta .cta-link:active {
-  color: var(--newtab-link-primary-active-color);
-  fill: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
+  fill: var(--newtab-primary-element-active-color);
   box-shadow: none;
 }
 .ds-card .meta .cta-link:hover {
@@ -3668,12 +3598,12 @@ main.has-snippet {
 .ds-card header {
   line-height: 24px;
   font-size: 17px;
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
 }
 .ds-card p {
   font-size: 14px;
   line-height: 20px;
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
   margin: 0;
 }
 
@@ -3697,7 +3627,7 @@ main.has-snippet {
   height: 24px;
 }
 .story-footer .status-message .story-badge-icon {
-  fill: var(--newtab-icon-secondary-color);
+  fill: var(--newtab-text-secondary-color);
   height: 16px;
   margin-inline-end: 6px;
 }
@@ -3733,7 +3663,7 @@ main.has-snippet {
   }
   100% {
     color: var(--newtab-text-secondary-color);
-    fill: var(--newtab-icon-secondary-color);
+    fill: var(--newtab-text-secondary-color);
   }
 }
 
@@ -3761,7 +3691,7 @@ main.has-snippet {
 }
 .ds-image img,
 .ds-image .broken-image {
-  background-color: var(--newtab-card-placeholder-color);
+  background-color: var(--newtab-element-secondary-color);
   position: absolute;
   top: 0;
   width: 100%;
@@ -3794,7 +3724,7 @@ main.has-snippet {
   background-color: transparent;
 }
 .ds-dismiss .ds-dismiss-button .icon {
-  fill: var(--newtab-icon-primary-color);
+  fill: var(--newtab-text-primary-color);
 }
 .ds-dismiss .ds-dismiss-button:hover {
   background: var(--newtab-element-hover-color);
@@ -3818,7 +3748,7 @@ main.has-snippet {
   height: 16px;
   margin: 0 6px 0 0;
   -moz-context-properties: fill;
-  fill: var(--newtab-icon-secondary-color);
+  fill: var(--newtab-text-secondary-color);
   background-position: center center;
   background-size: 16px;
   background-repeat: no-repeat;
@@ -3847,7 +3777,7 @@ main.has-snippet {
 }
 
 .section-empty-state {
-  border: 1px solid var(--newtab-border-secondary-color);
+  border: 1px solid var(--newtab-border-color);
   border-radius: 4px;
   display: flex;
   height: 160px;
@@ -3866,8 +3796,8 @@ main.has-snippet {
   padding: 6px 32px;
   border-radius: 2px;
   border: 0;
-  background: var(--newtab-feed-button-background);
-  color: var(--newtab-feed-button-text);
+  background: var(--newtab-button-secondary-color);
+  color: var(--newtab-text-primary-color);
   cursor: pointer;
   position: relative;
   transition: background 0.2s ease, color 0.2s ease;
@@ -3885,7 +3815,7 @@ main.has-snippet {
   outline: none;
 }
 .section-empty-state .try-again-button:not(.waiting):hover {
-  box-shadow: 0 0 0 5px var(--newtab-card-placeholder-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
   border-radius: 4px;
   outline: none;
@@ -3902,12 +3832,12 @@ main.has-snippet {
   margin: -10px 0 0 -10px;
   mask-image: url("chrome://activity-stream/content/data/content/assets/spinner.svg");
   mask-size: 20px;
-  background: var(--newtab-feed-button-spinner);
+  background: var(--newtab-text-secondary-color);
 }
 .section-empty-state .try-again-button.waiting {
   cursor: initial;
-  background: var(--newtab-feed-button-background-faded);
-  color: var(--newtab-feed-button-text-faded);
+  background: var(--newtab-element-secondary-color);
+  color: transparent;
   transition: background 0.2s ease;
 }
 .section-empty-state .try-again-button.waiting::after {
@@ -3971,7 +3901,7 @@ main.has-snippet {
   line-height: 24px;
 }
 .ds-text-promo h3 {
-  color: var(--newtab-card-header-color);
+  color: var(--newtab-text-primary-color);
   margin: 0;
   font-weight: 600;
   font-size: 15px;
@@ -3983,7 +3913,7 @@ main.has-snippet {
 }
 
 .ds-chevron-link {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
   display: inline-block;
   outline: 0;
 }
@@ -3991,17 +3921,17 @@ main.has-snippet {
   text-decoration: underline;
 }
 .ds-chevron-link:active {
-  color: var(--newtab-link-primary-active-color);
+  color: var(--newtab-primary-element-active-color);
 }
 .ds-chevron-link:active::after {
-  background-color: var(--newtab-link-primary-active-color);
+  background-color: var(--newtab-primary-element-active-color);
 }
 .ds-chevron-link:focus {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   border-radius: 2px;
 }
 .ds-chevron-link::after {
-  background-color: var(--newtab-link-primary-color);
+  background-color: var(--newtab-primary-action-background);
   content: " ";
   mask: url("chrome://global/skin/icons/arrow-right-12.svg") 0 -8px no-repeat;
   margin: 0 0 0 4px;
@@ -4028,7 +3958,7 @@ main.has-snippet {
   height: 40px;
   width: 40px;
   margin-inline-end: 8px;
-  fill: var(--newtab-icon-secondary-color);
+  fill: var(--newtab-text-secondary-color);
   background-size: 30px;
   flex-shrink: 0;
 }
@@ -4065,7 +3995,7 @@ main.has-snippet {
   margin: 0 0 8px;
   border: 0;
   padding: 0;
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
   width: max-content;
 }
 .ds-privacy-modal .modal-link:hover {
@@ -4074,7 +4004,7 @@ main.has-snippet {
 }
 .ds-privacy-modal .modal-link::before {
   -moz-context-properties: fill;
-  fill: var(--newtab-link-primary-color);
+  fill: var(--newtab-primary-action-background);
   content: "";
   display: inline-block;
   width: 16px;
@@ -4123,24 +4053,24 @@ main.has-snippet {
   visibility: hidden;
 }
 .ASRouterButton.primary {
-  border: 1px solid var(--newtab-button-primary-color);
-  background-color: var(--newtab-button-primary-color);
-  color: var(--newtab-button-primary-text-color);
+  border: 1px solid var(--newtab-primary-action-background);
+  background-color: var(--newtab-primary-action-background);
+  color: var(--newtab-primary-element-text-color);
 }
 .ASRouterButton.primary:hover {
-  background-color: var(--newtab-button-primary-hover-color);
+  background-color: var(--newtab-primary-element-hover-color);
 }
 .ASRouterButton.primary:active {
-  background-color: var(--newtab-button-primary-active-color);
+  background-color: var(--newtab-primary-element-active-color);
 }
 .ASRouterButton.slim {
-  border: 1px solid var(--newtab-border-primary-color);
+  border: 1px solid var(--newtab-border-color);
   margin-inline-start: 0;
   font-size: 12px;
   padding: 6px 12px;
 }
 .ASRouterButton.slim:hover, .ASRouterButton.slim:focus {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
 
@@ -4150,18 +4080,18 @@ main.has-snippet {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--newtab-snippets-background-color);
+  background-color: var(--newtab-background-color-secondary);
   color: var(--newtab-text-primary-color);
   font-size: 14px;
   line-height: 20px;
-  border-top: 1px solid var(--newtab-snippets-hairline-color);
+  border-top: 1px solid transparent;
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   display: flex;
   align-items: center;
 }
 .SnippetBaseContainer a {
   cursor: pointer;
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
 }
 .SnippetBaseContainer a:hover {
   text-decoration: underline;
@@ -4268,7 +4198,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   max-width: 960px;
   position: relative;
   margin: auto;
-  background: var(--newtab-modal-color);
+  background: var(--newtab-background-color-secondary);
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   display: none;
@@ -4287,7 +4217,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   display: block;
 }
 .modalOverlayInner h2 {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   text-align: center;
   font-weight: 200;
   margin-top: 30px;
@@ -4306,7 +4236,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   }
 }
 .modalOverlayInner .footer {
-  border-top: 1px solid var(--newtab-border-secondary-color);
+  border-top: 1px solid var(--newtab-border-color);
   border-radius: 4px;
   height: 70px;
   width: 100%;
@@ -4333,7 +4263,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   font-size: 15px;
 }
 .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   transition: box-shadow 150ms;
 }
 
@@ -4378,7 +4308,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   align-items: center;
   background-color: transparent;
   border-radius: 4px;
-  box-shadow: var(--newtab-card-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   flex-direction: column;
   padding: 16px;
   text-align: center;
@@ -4413,7 +4343,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   top: 50%;
 }
 .SimpleBelowSearchSnippet .blockButton:focus {
-  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
   border-radius: 2px;
 }
 .SimpleBelowSearchSnippet .title {
@@ -4595,14 +4525,14 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin-bottom: 10px;
 }
 .SimpleSnippet .section-title {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   display: inline-block;
   font-size: 13px;
   font-weight: bold;
   margin: 0;
 }
 .SimpleSnippet .section-title a {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   font-weight: inherit;
   text-decoration: none;
 }
@@ -4697,8 +4627,8 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 }
 .SubmitFormSnippet input.mainInput {
   border-radius: 2px;
-  background-color: var(--newtab-textbox-background-color);
-  border: 1px solid var(--newtab-textbox-border);
+  background-color: var(--newtab-background-color-secondary);
+  border: 1px solid var(--newtab-border-color);
   padding: 0 8px;
   height: 100%;
   font-size: 14px;
@@ -4736,7 +4666,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   font-size: 13px;
 }
 .SubmitFormSnippet.scene2Alt .section-title a {
-  color: var(--newtab-section-header-text-color);
+  color: var(--newtab-text-primary-color);
   font-weight: inherit;
   text-decoration: none;
 }
@@ -4770,9 +4700,9 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .EOYSnippetForm .donation-amount {
   color: var(--newtab-text-primary-color);
   margin-inline-end: 18px;
-  border: 1px solid var(--newtab-textbox-border);
+  border: 1px solid var(--newtab-border-color);
   padding: 5px 14px;
-  background: var(--newtab-textbox-background-color);
+  background: var(--newtab-background-color-secondary);
   cursor: pointer;
 }
 .EOYSnippetForm input[type=radio] {
@@ -4782,10 +4712,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .EOYSnippetForm input[type=radio]:checked + .donation-amount {
   background: var(--newtab-text-secondary-color);
   color: var(--newtab-background-color-secondary);
-  border: 1px solid var(--newtab-border-secondary-color);
+  border: 1px solid var(--newtab-border-color);
 }
 .EOYSnippetForm input[type=radio]:checked:focus + .donation-amount, .EOYSnippetForm input[type=radio]:not(:checked):focus + .donation-amount {
-  border: 1px dotted var(--newtab-link-primary-color);
+  border: 1px dotted var(--newtab-primary-action-background);
 }
 .EOYSnippetForm .monthly-checkbox-container {
   display: flex;

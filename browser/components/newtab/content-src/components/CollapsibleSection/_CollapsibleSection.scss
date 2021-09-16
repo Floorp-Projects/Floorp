@@ -8,12 +8,12 @@
   .section-title {
     font-size: $section-title-font-size;
     font-weight: 600;
-    color: var(--newtab-background-primary-text-color);
+    color: var(--newtab-text-primary-color);
 
     &.grey-title {
-      color: var(--newtab-section-header-text-color);
+      color: var(--newtab-text-primary-color);
       display: inline-block;
-      fill: var(--newtab-section-header-text-color);
+      fill: var(--newtab-text-primary-color);
       vertical-align: middle;
     }
 
@@ -52,7 +52,7 @@
     margin-inline-start: 12px;
 
     a {
-      color: var(--newtab-link-secondary-color);
+      color: var(--newtab-primary-action-background);
     }
   }
 

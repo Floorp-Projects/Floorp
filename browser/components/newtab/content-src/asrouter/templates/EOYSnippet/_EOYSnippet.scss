@@ -18,7 +18,7 @@
     margin-inline-end: 18px;
     border: $input-border;
     padding: 5px 14px;
-    background: var(--newtab-textbox-background-color);
+    background: var(--newtab-background-color-secondary);
     cursor: pointer;
   }
 
@@ -37,7 +37,7 @@
       // accessibility
       &:checked:focus + .donation-amount,
       &:not(:checked):focus + .donation-amount {
-        border: 1px dotted var(--newtab-link-primary-color);
+        border: 1px dotted var(--newtab-primary-action-background);
       }
     }
   }

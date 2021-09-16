@@ -19,8 +19,8 @@
     padding: 6px 32px;
     border-radius: 2px;
     border: 0;
-    background: var(--newtab-feed-button-background);
-    color: var(--newtab-feed-button-text);
+    background: var(--newtab-button-secondary-color);
+    color: var(--newtab-text-primary-color);
     cursor: pointer;
     position: relative;
     transition: background 0.2s ease, color 0.2s ease;
@@ -35,7 +35,7 @@
       }
 
       &:hover {
-        @include ds-fade-in(var(--newtab-card-placeholder-color));
+        @include ds-fade-in(var(--newtab-element-secondary-color));
       }
     }
 
@@ -51,13 +51,13 @@
       margin: -10px 0 0 -10px;
       mask-image: url('chrome://activity-stream/content/data/content/assets/spinner.svg');
       mask-size: 20px;
-      background: var(--newtab-feed-button-spinner);
+      background: var(--newtab-text-secondary-color);
     }
 
     &.waiting {
       cursor: initial;
-      background: var(--newtab-feed-button-background-faded);
-      color: var(--newtab-feed-button-text-faded);
+      background: var(--newtab-element-secondary-color);
+      color: transparent;
       transition: background 0.2s ease;
 
       &::after {

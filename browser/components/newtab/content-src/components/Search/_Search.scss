@@ -86,13 +86,13 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .search-handoff-button,
   input {
-    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center no-repeat;
+    background: var(--newtab-background-color-secondary) var(--newtab-search-icon) $search-icon-padding center no-repeat;
     background-size: $search-icon-size;
     padding-inline-start: $search-icon-width;
     padding-inline-end: 10px;
     padding-block: 0;
     width: 100%;
-    box-shadow: var(--newtab-search-first-shadow);
+    box-shadow: $shadow-card;
     border: 1px solid transparent;
     border-radius: 8px;
 
@@ -103,7 +103,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .search-inner-wrapper:active input,
   input:focus {
-    border: 1px solid var(--newtab-focus-border);
+    border: 1px solid var(--newtab-primary-action-background);
     outline: 0;
     box-shadow: $shadow-focus;
   }
@@ -114,7 +114,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     border: 0;
     border-radius: 0 $border-radius $border-radius 0;
     -moz-context-properties: fill;
-    fill: var(--newtab-icon-secondary-color);
+    fill: var(--newtab-text-secondary-color);
     height: 100%;
     inset-inline-end: 0;
     position: absolute;
@@ -129,7 +129,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     &:focus {
       outline: 0;
       box-shadow: $shadow-focus;
-      border: 1px solid var(--newtab-focus-border);
+      border: 1px solid var(--newtab-primary-action-background);
       border-radius: 0 $border-radius-new $border-radius-new 0;
     }
 
@@ -144,7 +144,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   &.fake-focus:not(.search.disabled) {
     .search-handoff-button {
-      border: 1px solid var(--newtab-focus-border);
+      border: 1px solid var(--newtab-primary-action-background);
       box-shadow: $shadow-focus;
     }
   }
@@ -195,9 +195,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 }
 
 .search-handoff-button {
-  background: var(--newtab-textbox-background-color) var(--newtab-search-icon) $search-icon-padding center no-repeat;
+  background: var(--newtab-background-color-secondary) var(--newtab-search-icon) $search-icon-padding center no-repeat;
   background-size: $search-icon-size;
-  border: solid 1px var(--newtab-search-border-color);
+  border: solid 1px transparent;
   border-radius: 3px;
   box-shadow: $shadow-secondary, 0 0 0 1px $black-15;
   cursor: text;
@@ -282,10 +282,10 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $search-icon-size: 24px;
       $search-icon-padding: 16px;
 
-      border-bottom: solid 1px var(--newtab-seperator-line-color);
+      border-bottom: solid 1px var(--newtab-border-color);
       padding: 27px 0;
       $search-header-bar-height: 95px;
-      background-color: var(--newtab-search-header-background-color);
+      background-color: var(--newtab-overlay-color);
       min-height: $search-header-bar-height;
       left: 0;
       position: fixed;
@@ -339,7 +339,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     .contentSearchHeader,
     .contentSearchSettingsButton {
-      border-color: var(--newtab-border-secondary-color);
+      border-color: var(--newtab-border-color);
     }
 
     .contentSearchSuggestionsList {
@@ -347,7 +347,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     .contentSearchOneOffsTable {
-      border-top: solid 1px var(--newtab-border-secondary-color);
+      border-top: solid 1px var(--newtab-border-color);
     }
 
     .contentSearchOneOffItem {
@@ -355,7 +355,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $border-offset: 18%;
 
       background-image: none;
-      border-image: linear-gradient(transparent $border-offset, var(--newtab-border-secondary-color) $border-offset, var(--newtab-border-secondary-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
+      border-image: linear-gradient(transparent $border-offset, var(--newtab-border-color) $border-offset, var(--newtab-border-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
       border-inline-end: 1px solid;
       position: relative;
 

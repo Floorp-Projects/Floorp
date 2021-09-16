@@ -44,7 +44,7 @@
     align-items: center;
     background-color: transparent;
     border-radius: 4px;
-    box-shadow: var(--newtab-card-shadow);
+    box-shadow: $shadow-card;
     flex-direction: column;
     padding: 16px;
     text-align: center;

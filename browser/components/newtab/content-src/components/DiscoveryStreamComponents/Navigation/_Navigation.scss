@@ -1,5 +1,5 @@
 .ds-navigation {
-  color: var(--newtab-background-primary-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 11.5px;
   font-weight: 500;
   line-height: 22px;
@@ -43,7 +43,7 @@
       }
 
       &:active {
-        color: var(--newtab-link-primary-active-color);
+        color: var(--newtab-primary-element-active-color);
       }
     }
   }

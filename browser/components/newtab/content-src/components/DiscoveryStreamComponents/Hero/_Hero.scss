@@ -15,7 +15,7 @@ $card-header-in-hero-line-height: 20;
 
   .excerpt {
     @include limit-visible-lines(3, 24, 15);
-    color: var(--newtab-card-header-color);
+    color: var(--newtab-text-primary-color);
     margin: 0 0 10px;
   }
 
@@ -72,11 +72,11 @@ $card-header-in-hero-line-height: 20;
     }
 
     &:hover .meta header {
-      color: var(--newtab-link-primary-color);
+      color: var(--newtab-primary-action-background);
     }
 
     &:active .meta header {
-      color: var(--newtab-link-primary-active-color);
+      color: var(--newtab-primary-element-active-color);
     }
 
     .img-wrapper {
@@ -104,7 +104,7 @@ $card-header-in-hero-line-height: 20;
 
       header {
         @include limit-visible-lines(4, 28, 22);
-        color: var(--newtab-card-header-color);
+        color: var(--newtab-text-primary-color);
         margin-bottom: 0;
       }
 
@@ -114,7 +114,7 @@ $card-header-in-hero-line-height: 20;
       }
 
       .context {
-        color: var(--newtab-link-secondary-color);
+        color: var(--newtab-primary-action-background);
       }
 
       .source {
@@ -226,14 +226,14 @@ $card-header-in-hero-line-height: 20;
             background: none;
 
             .title {
-              color: var(--newtab-link-primary-color);
+              color: var(--newtab-primary-action-background);
             }
           }
         }
 
         &:active .title {
           @include dark-theme-only {
-            color: var(--newtab-link-primary-active-color);
+            color: var(--newtab-primary-element-active-color);
           }
         }
 

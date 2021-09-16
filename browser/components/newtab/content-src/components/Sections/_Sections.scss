@@ -41,18 +41,6 @@
       margin: auto;
       max-width: 350px;
 
-      .empty-state-icon {
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: 50px 50px;
-        -moz-context-properties: fill;
-        display: block;
-        fill: var(--newtab-icon-secondary-color);
-        height: 50px;
-        margin: 0 auto;
-        width: 50px;
-      }
-
       .empty-state-message {
         color: var(--newtab-text-primary-color);
         font-size: 13px;
@@ -68,7 +56,7 @@
 }
 
 .top-stories-bottom-container {
-  color: var(--newtab-section-navigation-text-color);
+  color: var(--newtab-text-primary-color);
   font-size: 12px;
   line-height: 1.6;
   margin-top: $topic-margin-top;
@@ -76,7 +64,7 @@
   justify-content: space-between;
 
   a {
-    color: var(--newtab-link-secondary-color);
+    color: var(--newtab-primary-action-background);
     font-weight: bold;
 
     &.more-recommendations {

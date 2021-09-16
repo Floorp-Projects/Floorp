@@ -1,6 +1,6 @@
 // Shared styling of article images shown as background
 @mixin image-as-background {
-  background-color: var(--newtab-card-placeholder-color);
+  background-color: var(--newtab-element-secondary-color);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;

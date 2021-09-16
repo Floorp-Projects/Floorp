@@ -106,9 +106,9 @@ a {
   // Blue button
   &.primary,
   &.done {
-    background-color: var(--newtab-button-primary-color);
-    border: solid 1px var(--newtab-button-primary-color);
-    color: var(--newtab-button-primary-text-color);
+    background-color: var(--newtab-primary-action-background);
+    border: solid 1px var(--newtab-primary-action-background);
+    color: var(--newtab-primary-element-text-color);
     margin-inline-start: auto;
   }
 }

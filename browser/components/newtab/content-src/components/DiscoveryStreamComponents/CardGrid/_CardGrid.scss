@@ -80,10 +80,10 @@ $col4-header-font-size: 14;
   &.ds-card-grid-border {
     .ds-card:not(.placeholder) {
       @include dark-theme-only {
-        background: var(--newtab-card-background-color);
+        background: var(--newtab-background-color-secondary);
       }
       border-radius: $border-radius-new;
-      box-shadow: var(--newtab-card-first-shadow);
+      box-shadow: $shadow-card;
 
       .img-wrapper .img img {
         border-radius: $border-radius-new $border-radius-new 0 0;
@@ -210,7 +210,7 @@ $col4-header-font-size: 14;
 
     .img-wrapper .img img {
       border-radius: 8px;
-      box-shadow: var(--newtab-card-first-shadow);
+      box-shadow: $shadow-card;
     }
   }
 }

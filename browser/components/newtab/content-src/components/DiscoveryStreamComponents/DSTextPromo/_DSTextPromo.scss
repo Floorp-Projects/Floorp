@@ -44,7 +44,7 @@
   }
 
   h3 {
-    color: var(--newtab-card-header-color);
+    color: var(--newtab-text-primary-color);
     margin: 0;
     font-weight: 600;
     font-size: 15px;
@@ -58,7 +58,7 @@
 }
 
 .ds-chevron-link {
-  color: var(--newtab-link-primary-color);
+  color: var(--newtab-primary-action-background);
   display: inline-block;
   outline: 0;
 
@@ -67,10 +67,10 @@
   }
 
   &:active {
-    color: var(--newtab-link-primary-active-color);
+    color: var(--newtab-primary-element-active-color);
 
     &::after {
-      background-color: var(--newtab-link-primary-active-color);
+      background-color: var(--newtab-primary-element-active-color);
     }
   }
 
@@ -80,7 +80,7 @@
   }
 
   &::after {
-    background-color: var(--newtab-link-primary-color);
+    background-color: var(--newtab-primary-action-background);
     content: ' ';
     mask: url('chrome://global/skin/icons/arrow-right-12.svg') 0 -8px no-repeat;
     margin: 0 0 0 4px;
