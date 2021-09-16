@@ -4,6 +4,7 @@
 #ifndef intl_components_NumberFormatFieldsUtil_h_
 #define intl_components_NumberFormatFieldsUtil_h_
 
+#include "mozilla/intl/NumberPart.h"
 #include "mozilla/Maybe.h"
 
 #include "unicode/unum.h"

@@ -7,7 +7,7 @@
 #ifndef builtin_intl_RelativeTimeFormat_h
 #define builtin_intl_RelativeTimeFormat_h
 
-#include "mozilla/intl/NumberFormatFields.h"
+#include "mozilla/intl/NumberPart.h"
 
 #include <stdint.h>
 
