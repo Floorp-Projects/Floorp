@@ -29,7 +29,6 @@ UNIFIED_SOURCES += [
     "src/LocaleCanonicalizer.cpp",
     "src/NumberFormat.cpp",
     "src/NumberFormatFields.cpp",
-    "src/NumberFormatFieldsUtil.cpp",
     "src/NumberFormatterSkeleton.cpp",
     "src/NumberRangeFormat.cpp",
     "src/PluralRules.cpp",

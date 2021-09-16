@@ -9,6 +9,8 @@
 #include "mozilla/Result.h"
 #include "mozilla/Vector.h"
 
+#include "unicode/unum.h"
+
 struct UFormattedNumber;
 struct UFormattedValue;
 
@@ -78,6 +80,11 @@ Result<std::u16string_view, ICUError> FormatResultToParts(
 Result<std::u16string_view, ICUError> FormatResultToParts(
     const UFormattedValue* value, Maybe<double> number, bool isNegative,
     bool formatForUnit, NumberPartVector& parts);
+
+Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
+                                                Maybe<double> number,
+                                                bool isNegative,
+                                                bool formatForUnit);
 
 }  // namespace mozilla::intl
 
