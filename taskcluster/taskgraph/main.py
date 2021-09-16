@@ -127,6 +127,28 @@ def format_taskgraph(options, parameters, logfile=None):
     return format_method(tg)
 
 
+def dump_output(out, path=None, params_spec=None):
+    from taskgraph.parameters import Parameters
+
+    params_name = Parameters.format_spec(params_spec)
+    fh = None
+    if path:
+        # Substitute params name into file path if necessary
+        if params_spec and "{params}" not in path:
+            name, ext = os.path.splitext(path)
+            name += "_{params}"
+            path = name + ext
+
+        path = path.format(params=params_name)
+        fh = open(path, "w")
+    else:
+        print(
+            "Dumping result with parameters from {}:".format(params_name),
+            file=sys.stderr,
+        )
+    print(out + "\n", file=fh)
+
+
 def generate_taskgraph(options, parameters, logdir):
     from taskgraph.parameters import Parameters
 
@@ -152,24 +174,11 @@ def generate_taskgraph(options, parameters, logdir):
         else:
             out = future.result()
 
-        params_name = Parameters.format_spec(spec)
-        fh = None
-        path = options["output_file"]
-        if path:
-            # Substitute params name into file path if necessary
-            if len(parameters) > 1 and "{params}" not in path:
-                name, ext = os.path.splitext(path)
-                name += "_{params}"
-                path = name + ext
-
-            path = path.format(params=params_name)
-            fh = open(path, "w")
-        else:
-            print(
-                "Dumping result with parameters from {}:".format(params_name),
-                file=sys.stderr,
-            )
-        print(out + "\n", file=fh)
+        dump_output(
+            out,
+            path=options["output_file"],
+            params_spec=spec if len(parameters) > 1 else None,
+        )
 
 
 @command(
@@ -294,6 +303,8 @@ def show_taskgraph(options):
     repo = None
     cur_ref = None
     diffdir = None
+    output_file = options["output_file"]
+
     if options["diff"]:
         repo = get_repository(os.getcwd())
 
@@ -396,25 +407,30 @@ def show_taskgraph(options):
                 cur_path += f"_{params_name}"
 
             try:
-                diff_output = subprocess.run(
+                proc = subprocess.run(
                     diffcmd + [base_path, cur_path],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     universal_newlines=True,
                     check=True,
-                ).stdout
+                )
+                diff_output = proc.stdout
+                returncode = 0
             except subprocess.CalledProcessError as e:
                 # returncode 1 simply means diffs were found
                 if e.returncode != 1:
                     print(e.stderr, file=sys.stderr)
                     raise
                 diff_output = e.output
+                returncode = e.returncode
 
-            if len(parameters) > 1:
-                assert params_name is not None
-                print(f"Diff from {params_name}:")
-
-            print(diff_output)
+            dump_output(
+                diff_output,
+                # Don't bother saving file if no diffs were found. Log to
+                # console in this case instead.
+                path=None if returncode == 0 else output_file,
+                params_spec=spec if len(parameters) > 1 else None,
+            )
 
         if options["format"] != "json":
             print(
