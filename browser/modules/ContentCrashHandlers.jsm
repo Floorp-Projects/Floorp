@@ -432,6 +432,7 @@ var TabCrashHandler = {
         image: TABCRASHED_ICON_URI,
         priority: notificationBox.PRIORITY_INFO_MEDIUM,
         telemetry: "notificationbar.crash_subframe_ui",
+        telemetryFilter: ["shown"],
         eventCallback: eventName => {
           if (eventName == "disconnected") {
             let existingItem = this.notificationsMap.get(childID);
