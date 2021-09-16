@@ -1322,6 +1322,10 @@ BrowserGlue.prototype = {
       this._matchCBCategory
     );
     Services.prefs.removeObserver(
+      "privacy.partition.network_state.ocsp_cache",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
       ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY,
       this._updateCBCategory
     );
@@ -1764,6 +1768,10 @@ BrowserGlue.prototype = {
     );
     Services.prefs.addObserver(
       "network.http.referer.disallowCrossSiteRelaxingDefault",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "privacy.partition.network_state.ocsp_cache",
       this._matchCBCategory
     );
     Services.prefs.addObserver(
@@ -4370,6 +4378,7 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.cryptomining.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
+        "privacy.partition.network_state.ocsp_cache": null,
       },
       standard: {
         "network.cookie.cookieBehavior": null,
@@ -4381,6 +4390,7 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.cryptomining.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
+        "privacy.partition.network_state.ocsp_cache": null,
       },
     };
     let type = "strict";
@@ -4457,6 +4467,16 @@ var ContentBlockingCategoriesPrefs = {
         case "-rp":
           this.CATEGORY_PREFS[type][
             "network.http.referer.disallowCrossSiteRelaxingDefault"
+          ] = false;
+          break;
+        case "ocsp":
+          this.CATEGORY_PREFS[type][
+            "privacy.partition.network_state.ocsp_cache"
+          ] = true;
+          break;
+        case "-ocsp":
+          this.CATEGORY_PREFS[type][
+            "privacy.partition.network_state.ocsp_cache"
           ] = false;
           break;
         case "cookieBehavior0":
