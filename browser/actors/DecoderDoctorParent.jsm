@@ -254,10 +254,12 @@ class DecoderDoctorParent extends JSWindowActorParent {
       }
 
       box.appendNotification(
-        title,
         notificationId,
-        "", // This uses the info icon as specified below.
-        box.PRIORITY_INFO_LOW,
+        {
+          label: title,
+          image: "", // This uses the info icon as specified below.
+          priority: box.PRIORITY_INFO_LOW,
+        },
         buttons
       );
     } else if (formatsInPref) {
