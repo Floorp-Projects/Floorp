@@ -403,4 +403,94 @@ function add_tests() {
     clearOCSPCache();
     run_next_test();
   });
+
+  // This test makes sure that OCSP cache are isolated by partitionKey.
+
+  add_test(function() {
+    Services.prefs.setBoolPref(
+      "privacy.partition.network_state.ocsp_cache",
+      true
+    );
+    run_next_test();
+  });
+
+  // A good OCSP response will be cached.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [respondWithGoodOCSP],
+    "No stapled response (partitionKey = (https,foo.com)) -> a fetch " +
+      "should have been attempted",
+    { partitionKey: "(https,foo.com)" }
+  );
+
+  // The cache will prevent a fetch from happening.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [],
+    "Noted OCSP server failure (partitionKey = (https,foo.com)) -> a " +
+      "fetch should not have been attempted",
+    { partitionKey: "(https,foo.com)" }
+  );
+
+  // Using a different partitionKey should result in a fetch.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [respondWithGoodOCSP],
+    "Noted OCSP server failure (partitionKey = (https,bar.com)) -> a " +
+      "fetch should have been attempted",
+    { partitionKey: "(https,bar.com)" }
+  );
+
+  // ---------------------------------------------------------------------------
+
+  // Reset state
+  add_test(function() {
+    Services.prefs.clearUserPref("privacy.partition.network_state.ocsp_cache");
+    clearOCSPCache();
+    run_next_test();
+  });
+
+  // This test makes sure that OCSP cache are isolated by partitionKey in
+  // private mode.
+
+  // A good OCSP response will be cached.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [respondWithGoodOCSP],
+    "No stapled response (partitionKey = (https,foo.com)) -> a fetch " +
+      "should have been attempted",
+    { partitionKey: "(https,foo.com)", privateBrowsingId: 1 }
+  );
+
+  // The cache will prevent a fetch from happening.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [],
+    "Noted OCSP server failure (partitionKey = (https,foo.com)) -> a " +
+      "fetch should not have been attempted",
+    { partitionKey: "(https,foo.com)", privateBrowsingId: 1 }
+  );
+
+  // Using a different partitionKey should result in a fetch.
+  add_ocsp_test(
+    "ocsp-stapling-none.example.com",
+    PRErrorCodeSuccess,
+    [respondWithGoodOCSP],
+    "Noted OCSP server failure (partitionKey = (https,bar.com)) -> a " +
+      "fetch should have been attempted",
+    { partitionKey: "(https,bar.com)", privateBrowsingId: 1 }
+  );
+
+  // ---------------------------------------------------------------------------
+
+  // Reset state
+  add_test(function() {
+    clearOCSPCache();
+    run_next_test();
+  });
 }

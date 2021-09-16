@@ -10506,6 +10506,18 @@
   value: true
   mirror: always
 
+# Partition the OCSP cache by the partitionKey.
+- name: privacy.partition.network_state.ocsp_cache
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Partition the OCSP cache by the partitionKey for private browsing mode.
+- name: privacy.partition.network_state.ocsp_cache.pbmode
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: privacy.partition.bloburl_per_agent_cluster
   type: RelaxedAtomicBool
   value: false

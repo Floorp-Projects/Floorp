@@ -2212,7 +2212,7 @@ nsresult HttpBaseChannel::ProcessCrossOriginEmbedderPolicyHeader() {
       mLoadInfo->GetLoadingEmbedderPolicy() !=
           nsILoadInfo::EMBEDDER_POLICY_NULL &&
       resultPolicy != nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
-    return NS_ERROR_BLOCKED_BY_POLICY;
+    return NS_ERROR_DOM_COEP_FAILED;
   }
 
   return NS_OK;
@@ -2440,7 +2440,7 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
     LOG((
         "HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch network error "
         "for non empty sandboxing and non null COOP"));
-    return NS_ERROR_BLOCKED_BY_POLICY;
+    return NS_ERROR_DOM_COOP_FAILED;
   }
 
   // In xpcshell-tests we don't always have a current window global
@@ -2501,6 +2501,18 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   }
 
   return NS_OK;
+}
+
+nsresult HttpBaseChannel::ProcessCrossOriginSecurityHeaders() {
+  nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = ProcessCrossOriginResourcePolicyHeader();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return ComputeCrossOriginOpenerPolicyMismatch();
 }
 
 enum class Report { Error, Warning };

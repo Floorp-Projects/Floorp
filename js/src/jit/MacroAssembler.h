@@ -4652,6 +4652,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void debugAssertIsObject(const ValueOperand& val);
   void debugAssertObjHasFixedSlots(Register obj, Register scratch);
 
+  void debugAssertObjectHasClass(Register obj, Register scratch,
+                                 const JSClass* clasp);
+
   void branchArrayIsNotPacked(Register array, Register temp1, Register temp2,
                               Label* label);
 

@@ -4185,6 +4185,17 @@ void MacroAssembler::debugAssertObjHasFixedSlots(Register obj,
 #endif
 }
 
+void MacroAssembler::debugAssertObjectHasClass(Register obj, Register scratch,
+                                               const JSClass* clasp) {
+#ifdef DEBUG
+  Label done;
+  branchTestObjClassNoSpectreMitigations(Assembler::Equal, obj, clasp, scratch,
+                                         &done);
+  assumeUnreachable("Class check failed");
+  bind(&done);
+#endif
+}
+
 void MacroAssembler::branchArrayIsNotPacked(Register array, Register temp1,
                                             Register temp2, Label* label) {
   loadPtr(Address(array, NativeObject::offsetOfElements()), temp1);

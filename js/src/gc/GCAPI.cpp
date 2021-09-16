@@ -518,6 +518,29 @@ static bool GCSliceCountGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GCCompartmentCount(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  size_t count = 0;
+  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    count += zone->compartments().length();
+  }
+
+  args.rval().setNumber(double(count));
+  return true;
+}
+
+static bool GCLastStartReason(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  const char* reason = ExplainGCReason(cx->runtime()->gc.lastStartReason());
+  RootedString str(cx, JS_NewStringCopyZ(cx, reason));
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
 static bool ZoneGCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(double(cx->zone()->gcHeapSize.bytes()));
@@ -585,7 +608,9 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
                  {"gcNumber", GCNumberGetter},
                  {"majorGCCount", MajorGCCountGetter},
                  {"minorGCCount", MinorGCCountGetter},
-                 {"sliceCount", GCSliceCountGetter}};
+                 {"sliceCount", GCSliceCountGetter},
+                 {"compartmentCount", GCCompartmentCount},
+                 {"lastStartReason", GCLastStartReason}};
 
   for (auto pair : getters) {
     JSNative getter = pair.getter;

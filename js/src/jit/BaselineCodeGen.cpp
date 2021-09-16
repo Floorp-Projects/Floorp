@@ -4829,22 +4829,28 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_PopLexicalEnv() {
   frame.syncStack(0);
 
-  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  Register scratch1 = R0.scratchReg();
 
-  auto ifDebuggee = [this]() {
+  auto ifDebuggee = [this, scratch1]() {
+    masm.loadBaselineFramePtr(BaselineFrameReg, scratch1);
+
     prepareVMCall();
     pushBytecodePCArg();
-    pushArg(R0.scratchReg());
+    pushArg(scratch1);
 
     using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
     return callVM<Fn, jit::DebugLeaveThenPopLexicalEnv>();
   };
-  auto ifNotDebuggee = [this]() {
-    prepareVMCall();
-    pushArg(R0.scratchReg());
-
-    using Fn = bool (*)(JSContext*, BaselineFrame*);
-    return callVM<Fn, jit::PopLexicalEnv>();
+  auto ifNotDebuggee = [this, scratch1]() {
+    Register scratch2 = R1.scratchReg();
+    masm.loadPtr(frame.addressOfEnvironmentChain(), scratch1);
+    masm.debugAssertObjectHasClass(scratch1, scratch2,
+                                   &LexicalEnvironmentObject::class_);
+    Address enclosingAddr(scratch1,
+                          EnvironmentObject::offsetOfEnclosingEnvironment());
+    masm.unboxObject(enclosingAddr, scratch1);
+    masm.storePtr(scratch1, frame.addressOfEnvironmentChain());
+    return true;
   };
   return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
