@@ -24,7 +24,7 @@ function run_test() {
         .setSpec("http://%80.com")
         .finalize();
     },
-    /NS_ERROR_UNEXPECTED/,
+    /NS_ERROR_MALFORMED_URI/,
     "illegal UTF character"
   );
 
