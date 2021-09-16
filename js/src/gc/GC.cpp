@@ -1590,11 +1590,11 @@ bool GCRuntime::isCompactingGCEnabled() const {
          rt->mainContextFromOwnThread()->compactingDisabledCount == 0;
 }
 
-void ArenaLists::queueForForegroundSweep(JSFreeOp* fop,
-                                         const FinalizePhase& phase) {
-  gcstats::AutoPhase ap(fop->runtime()->gc.stats(), phase.statsPhase);
+void GCRuntime::queueForForegroundSweep(Zone* zone, JSFreeOp* fop,
+                                        const FinalizePhase& phase) {
+  gcstats::AutoPhase ap(stats(), phase.statsPhase);
   for (auto kind : phase.kinds) {
-    queueForForegroundSweep(kind);
+    zone->arenas.queueForForegroundSweep(kind);
   }
 }
 
@@ -1607,20 +1607,19 @@ void ArenaLists::queueForForegroundSweep(AllocKind thingKind) {
   arenaList(thingKind).clear();
 }
 
-void ArenaLists::queueForBackgroundSweep(JSFreeOp* fop,
-                                         const FinalizePhase& phase) {
-  gcstats::AutoPhase ap(fop->runtime()->gc.stats(), phase.statsPhase);
+void GCRuntime::queueForBackgroundSweep(Zone* zone, JSFreeOp* fop,
+                                        const FinalizePhase& phase) {
+  gcstats::AutoPhase ap(stats(), phase.statsPhase);
   for (auto kind : phase.kinds) {
-    queueForBackgroundSweep(kind);
+    zone->arenas.queueForBackgroundSweep(kind);
   }
 }
 
-inline void ArenaLists::queueForBackgroundSweep(AllocKind thingKind) {
+void ArenaLists::queueForBackgroundSweep(AllocKind thingKind) {
   MOZ_ASSERT(IsBackgroundFinalized(thingKind));
   MOZ_ASSERT(concurrentUse(thingKind) == ConcurrentUse::None);
 
-  ArenaList* al = &arenaList(thingKind);
-  arenasToSweep(thingKind) = al->head();
+  arenasToSweep(thingKind) = arenaList(thingKind).head();
   arenaList(thingKind).clear();
 
   if (arenasToSweep(thingKind)) {
@@ -4199,10 +4198,10 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   // or on the background thread.
 
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    zone->arenas.queueForForegroundSweep(fop, ForegroundObjectFinalizePhase);
-    zone->arenas.queueForForegroundSweep(fop, ForegroundNonObjectFinalizePhase);
+    queueForForegroundSweep(zone, fop, ForegroundObjectFinalizePhase);
+    queueForForegroundSweep(zone, fop, ForegroundNonObjectFinalizePhase);
     for (const auto& phase : BackgroundFinalizePhases) {
-      zone->arenas.queueForBackgroundSweep(fop, phase);
+      queueForBackgroundSweep(zone, fop, phase);
     }
 
     zone->arenas.queueForegroundThingsForSweep();
