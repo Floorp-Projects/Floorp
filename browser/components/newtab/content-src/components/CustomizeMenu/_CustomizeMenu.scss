@@ -162,7 +162,7 @@
     }
 
     .sponsored-checkbox:active + .checkmark {
-      fill: $newtab-card-tint;
+      fill: var(--newtab-element-secondary-color);
     }
 
     .selector {
@@ -226,7 +226,6 @@
     }
 
     .switch input:focus-visible + .slider {
-      border: 1px solid var(--newtab-focus-border-selected);
       outline: 0;
       box-shadow: $shadow-focus;
     }

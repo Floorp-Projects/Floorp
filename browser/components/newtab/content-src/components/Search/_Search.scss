@@ -95,9 +95,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     box-shadow: var(--newtab-search-first-shadow);
     border: 1px solid transparent;
     border-radius: 8px;
-    color: var(--newtab-search-text-color);
-    -moz-context-properties: fill;
-    fill: var(--newtab-icon-secondary-color);
 
     &:dir(rtl) {
       background-position-x: right $search-icon-padding;
@@ -154,7 +151,8 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .search-handoff-button {
     padding-inline-end: 15px;
-    fill: currentColor;
+    color: var(--newtab-text-primary-color);
+    fill: var(--newtab-text-secondary-color);
     -moz-context-properties: fill;
 
     .fake-caret {
@@ -335,15 +333,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 @at-root {
   // Adjust the style of the contentSearchUI-generated table
   .contentSearchSuggestionTable {
-    background-color: var(--newtab-search-dropdown-color);
     border: 0;
     box-shadow: $context-menu-shadow;
     transform: translateY($textbox-shadow-size);
-
-    .contentSearchHeader {
-      background-color: var(--newtab-search-dropdown-header-color);
-      color: var(--newtab-text-secondary-color);
-    }
 
     .contentSearchHeader,
     .contentSearchSettingsButton {
@@ -355,37 +347,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     .contentSearchOneOffsTable {
-      background-color: var(--newtab-search-dropdown-header-color);
       border-top: solid 1px var(--newtab-border-secondary-color);
-    }
-
-    .contentSearchSearchWithHeaderSearchText {
-      color: var(--newtab-text-primary-color);
-    }
-
-    .contentSearchSuggestionsContainer {
-      background-color: var(--newtab-search-dropdown-color);
-    }
-
-    .contentSearchSuggestionRow {
-      &.selected {
-        background: var(--newtab-element-hover-color);
-        color: var(--newtab-text-primary-color);
-
-        &:active {
-          background: var(--newtab-element-active-color);
-        }
-
-        .historyIcon {
-          fill: var(--newtab-icon-secondary-color);
-        }
-      }
-    }
-
-    .contentSearchOneOffsTable {
-      .contentSearchSuggestionsContainer {
-        background-color: var(--newtab-search-dropdown-header-color);
-      }
     }
 
     .contentSearchOneOffItem {
@@ -409,7 +371,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     .contentSearchSettingsButton {
       &:hover {
         background: var(--newtab-element-hover-color);
-        color: var(--newtab-text-primary-color);
       }
     }
   }
