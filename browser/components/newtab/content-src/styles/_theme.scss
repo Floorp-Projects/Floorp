@@ -8,17 +8,17 @@
 }
 
 // scss variables related to the theme.
-$border-primary: 1px solid var(--newtab-border-primary-color);
-$border-secondary: 1px solid var(--newtab-border-secondary-color);
+$border-primary: 1px solid var(--newtab-border-color);
+$border-secondary: 1px solid var(--newtab-border-color);
 $inner-box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
-$input-border: 1px solid var(--newtab-textbox-border);
+$input-border: 1px solid var(--newtab-border-color);
 $input-border-active: 1px solid var(--newtab-textbox-focus-color);
 $input-error-border: 1px solid var(--newtab-status-error);
 $input-error-boxshadow: textbox-shadow(var(--newtab-status-error));
-$shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
+$shadow-primary: 0 0 0 5px var(--newtab-element-secondary-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 $shadow-large: 0 2px 14px 0 $black-20;
-$shadow-focus: 0 0 0 2px var(--newtab-focus-outline);
+$shadow-focus: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 $shadow-card: 0 2px 6px rgba(0, 0, 0, 0.15);
 $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
@@ -56,91 +56,10 @@ body {
   --newtab-text-emphasis-background: #{$yellow-50};
   --newtab-text-emphasis-text-color: #{$grey-90};
 
-  // All colors below must refer to the main set of colors above.
-  --newtab-border-primary-color: var(--newtab-border-color);
-  --newtab-border-secondary-color: var(--newtab-border-color);
-  --newtab-icon-primary-color: var(--newtab-text-primary-color);
-  --newtab-icon-secondary-color: var(--newtab-text-secondary-color);
-
-  --newtab-link-primary-color: var(--newtab-primary-action-background);
-  --newtab-link-primary-active-color: var(--newtab-primary-element-active-color);
-  --newtab-link-secondary-color: #{$teal-70};
-  --newtab-text-conditional-color: #{$grey-60};
-  --newtab-link-secondary-color: var(--newtab-primary-action-background);
-  --newtab-text-conditional-color: var(--newtab-text-secondary-color);
-  --newtab-textbox-background-color: var(--newtab-background-color-secondary);
-  --newtab-textbox-border: var(--newtab-border-color);
-
   @include textbox-focus(var(--newtab-primary-action-background)); // sass-lint:disable-line mixins-before-declarations
 
-  // Background buttons
-  --newtab-background-button-hover-color: var(--newtab-element-hover-color);
-  --newtab-background-button-active-color: var(--newtab-element-active-color);
-
   // Buttons
-  --newtab-button-primary-color: var(--newtab-primary-action-background);
-  --newtab-button-primary-hover-color: var(--newtab-primary-element-hover-color);
-  --newtab-button-primary-active-color: var(--newtab-primary-element-active-color);
-  --newtab-button-primary-text-color: var(--newtab-primary-element-text-color);
   --newtab-button-secondary-color: inherit;
-  // Feed buttons
-  --newtab-feed-button-background: var(--newtab-element-secondary-color);
-  --newtab-feed-button-text: var(--newtab-text-primary-color);
-  --newtab-feed-button-text-faded: transparent;
-  --newtab-feed-button-spinner: var(--newtab-text-secondary-color);
-
-  // Context menu
-  --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
-  --newtab-contextmenu-background-color: var(--newtab-background-color);
-  --newtab-contextmenu-button-color: var(--newtab-text-primary-color);
-
-  // Modal + overlay
-  --newtab-modal-color: var(--newtab-background-color-secondary);
-
-  // Sections
-  --newtab-section-header-text-color: var(--newtab-background-primary-text-color);
-  --newtab-section-navigation-text-color: var(--newtab-text-primary-color);
-
-  // Search
-  --newtab-search-border-color: transparent;
-  --newtab-search-header-background-color: var(--newtab-overlay-color);
-
-  // Top Sites
-  --newtab-topsites-background-color: var(--newtab-background-color-secondary);
-  --newtab-topsites-outer-card-hover: var(--newtab-element-hover-color);
-  --newtab-topsites-context-menu-hover: var(--newtab-element-hover-color);
-
-  // Cards
-  --newtab-card-active-outline-color: var(--newtab-element-secondary-color);
-  --newtab-card-background-color: var(--newtab-background-color-secondary);
-  --newtab-card-placeholder-color: var(--newtab-element-secondary-color);
-  --newtab-card-shadow: #{$shadow-card};
-  --newtab-card-header-color: var(--newtab-text-primary-color);
-
-  // Snippets
-  --newtab-snippets-background-color: var(--newtab-background-color-secondary);
-  --newtab-snippets-hairline-color: transparent;
-
-  // New New Tab
-  --newtab-background-primary-text-color: var(--newtab-text-primary-color);
-  --newtab-focus-outline: var(--newtab-primary-action-background-dimmed);
-  --newtab-focus-border: var(--newtab-primary-action-background);
-  --newtab-seperator-line-color: var(--newtab-border-color);
-  --newtab-primary-action-background-off: var(--newtab-element-secondary-color);
-  --customize-menu-primary-text-color: var(--newtab-text-primary-color);
-  --customize-menu-check-fill: var(--newtab-primary-element-text-color);
-  --customize-menu-check-fill-contrast: #{$black};
-  --customize-menu-background: var(--newtab-background-color-secondary);
-  --customize-menu-secondary-action-background: var(--newtab-element-secondary-color);
-  --customize-menu-secondary-action-background-hover: var(--newtab-element-secondary-hover-color);
-  --customize-menu-secondary-action-background-active: var(--newtab-element-secondary-active-color);
-  --customize-menu-seperator-line-color: var(--newtab-border-color);
-  --customize-menu-second-shadow: #{$shadow-large};
-  --customize-menu-primary-action-text: var(--newtab-primary-element-text-color);
-  --customize-menu-line-color: var(--newtab-border-color);
-  --newtab-search-first-shadow: #{$shadow-card};
-  --newtab-search-text-color: var(--newtab-text-primary-color);
-  --newtab-card-first-shadow: #{$shadow-card};
 
   &[lwt-newtab-brighttext] {
     // General styles

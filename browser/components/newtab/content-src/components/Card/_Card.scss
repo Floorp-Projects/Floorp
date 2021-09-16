@@ -2,7 +2,7 @@
 
 .card-outer {
   @include context-menu-button;
-  background: var(--newtab-card-background-color);
+  background: var(--newtab-background-color-secondary);
   border-radius: $border-radius-new;
   display: inline-block;
   height: $card-height;
@@ -32,7 +32,7 @@
 
   .card {
     border-radius: $border-radius-new;
-    box-shadow: var(--newtab-card-first-shadow);
+    box-shadow: $shadow-card;
     height: 100%;
   }
 
@@ -56,7 +56,7 @@
       }
 
       .card-title {
-        color: var(--newtab-link-primary-color);
+        color: var(--newtab-primary-action-background);
       }
     }
   }
@@ -66,7 +66,7 @@
     outline: none;
 
     .card-title {
-      color: var(--newtab-link-primary-color);
+      color: var(--newtab-primary-action-background);
     }
 
     .alternate ~ .card-host-name {
@@ -79,7 +79,7 @@
   }
 
   .card-preview-image-outer {
-    background-color: var(--newtab-card-placeholder-color);
+    background-color: var(--newtab-element-secondary-color);
     border-radius: $border-radius-new $border-radius-new 0 0;
     height: $card-preview-image-height;
     overflow: hidden;
@@ -272,7 +272,7 @@
     .card-context {
       $icon-size: 16px;
       $container-size: 32px;
-      background-color: var(--newtab-card-background-color);
+      background-color: var(--newtab-background-color-secondary);
       border-radius: math.div($container-size, 2);
       clip-path: inset(-1px -1px $container-size - ($card-height-compact - $card-preview-image-height-compact - 2 * $card-detail-vertical-spacing));
       height: $container-size;

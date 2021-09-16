@@ -7,7 +7,7 @@
         }
 
         .top-site-inner > a:is(:hover) .top-site-inner {
-          @include ds-fade-in(var(--newtab-topsites-background-color));
+          @include ds-fade-in(var(--newtab-background-color-secondary));
         }
       }
 

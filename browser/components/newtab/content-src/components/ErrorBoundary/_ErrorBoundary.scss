@@ -2,7 +2,7 @@
   align-items: center;
   border-radius: $border-radius;
   box-shadow: inset $inner-box-shadow;
-  color: var(--newtab-text-conditional-color);
+  color: var(--newtab-text-secondary-color);
   display: flex;
   flex-direction: column;
   font-size: $error-fallback-font-size;
@@ -15,7 +15,7 @@
   }
 
   a {
-    color: var(--newtab-text-conditional-color);
+    color: var(--newtab-text-secondary-color);
     text-decoration: underline;
   }
 }

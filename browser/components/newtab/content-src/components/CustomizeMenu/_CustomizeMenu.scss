@@ -23,11 +23,11 @@
   padding: 15px;
 
   &:hover {
-    background-color: var(--newtab-background-button-hover-color);
+    background-color: var(--newtab-element-hover-color);
   }
 
   &:active {
-    background-color: var(--newtab-background-button-active-color);
+    background-color: var(--newtab-element-active-color);
   }
 
   &:focus-visible {
@@ -40,8 +40,8 @@
 }
 
 .customize-menu {
-  color: var(--customize-menu-primary-text-color);
-  background-color: var(--customize-menu-background);
+  color: var(--newtab-text-primary-color);
+  background-color: var(--newtab-background-color-secondary);
   width: 432px;
   height: 100%;
   position: fixed;
@@ -65,13 +65,13 @@
 
   &.customize-animate-enter-done,
   &.customize-animate-enter-active {
-    box-shadow: var(--customize-menu-second-shadow);
+    box-shadow: $shadow-large;
     visibility: visible;
     transform: translateX(0);
   }
 
   &.customize-animate-exit-active {
-    box-shadow: var(--customize-menu-second-shadow);
+    box-shadow: $shadow-large;
   }
 
   .close-button {
@@ -79,21 +79,21 @@
     margin-bottom: 28px;
     white-space: nowrap;
     display: block;
-    background-color: var(--customize-menu-secondary-action-background);
+    background-color: var(--newtab-element-secondary-color);
     padding: 8px 10px;
     border: $customize-menu-border-tint;
     border-radius: 4px;
-    color: var(--customize-menu-primary-text-color);
+    color: var(--newtab-text-primary-color);
     font-size: 13px;
     font-weight: 600;
   }
 
   .close-button:hover {
-    background-color: var(--customize-menu-secondary-action-background-hover);
+    background-color: var(--newtab-element-secondary-hover-color);
   }
 
   .close-button:hover:active {
-    background-color: var(--customize-menu-secondary-action-background-active);
+    background-color: var(--newtab-element-secondary-active-color);
   }
 }
 
@@ -148,16 +148,16 @@
       box-sizing: border-box;
       border-radius: 4px;
       appearance: none;
-      background-color: var(--newtab-primary-action-background-off);
+      background-color: var(--newtab-element-secondary-color);
     }
 
     .sponsored-checkbox:checked {
       -moz-context-properties: fill;
-      fill: var(--customize-menu-check-fill);
+      fill: var(--newtab-primary-element-text-color);
       background: url('chrome://global/skin/icons/check.svg') center no-repeat;
       background-color: var(--newtab-primary-action-background);
       @media (forced-colors: active) {
-        fill: var(--customize-menu-check-fill-contrast);
+        fill: $black;
       }
     }
 
@@ -166,10 +166,10 @@
     }
 
     .selector {
-      color: var(--customize-menu-primary-text-color);
+      color: var(--newtab-text-primary-color);
       width: 118px;
       display: block;
-      border: 1px solid var(--customize-menu-line-color);
+      border: 1px solid var(--newtab-border-color);
       border-radius: 4px;
       appearance: none;
       padding-block: 7px;
@@ -177,11 +177,11 @@
       margin-inline-start: 2px;
       margin-bottom: 2px;
       -moz-context-properties: fill;
-      fill: var(--customize-menu-primary-text-color);
+      fill: var(--newtab-text-primary-color);
       background: url('chrome://global/skin/icons/arrow-down-12.svg') right no-repeat;
       background-size: 8px;
       background-origin: content-box;
-      background-color: var(--customize-menu-background);
+      background-color: var(--newtab-background-color-secondary);
 
       &:dir(rtl) {
         background-position-x: left;
@@ -209,7 +209,7 @@
       transition: transform 250ms;
       border-radius: 13px;
       border: $customize-menu-border-tint;
-      background-color: var(--newtab-primary-action-background-off);
+      background-color: var(--newtab-element-secondary-color);
 
       &::before {
         position: absolute;
@@ -218,7 +218,7 @@
         width: 8px;
         inset-inline-start: 3px;
         bottom: 3px;
-        background-color: var(--customize-menu-slider-fill);
+        background-color: var(--newtab-primary-element-text-color);
         transition: transform 250ms;
         border-radius: 50%;
         outline: $customize-menu-border-tint;
@@ -231,7 +231,7 @@
     }
 
     .switch input:not(:checked):focus-visible + .slider {
-      border: 1px solid var(--newtab-focus-border);
+      border: 1px solid var(--newtab-primary-action-background);
     }
 
     input:checked + .slider {
@@ -289,7 +289,7 @@
   }
 
   .divider {
-    border-top: 1px var(--customize-menu-seperator-line-color) solid;
+    border-top: 1px var(--newtab-border-color) solid;
     margin: 0 -16px;
   }
 
@@ -299,7 +299,7 @@
     border: 1px solid transparent;
     border-radius: 4px;
     -moz-context-properties: fill;
-    fill: var(--customize-menu-primary-text-color);
+    fill: var(--newtab-text-primary-color);
     background: url('chrome://global/skin/icons/settings.svg') left no-repeat;
     background-size: 16px;
     padding-inline-start: 21px;
@@ -324,7 +324,7 @@
 .selector:focus-visible,
 .external-link:focus-visible,
 .close-button:focus-visible {
-  border: 1px solid var(--newtab-focus-border);
+  border: 1px solid var(--newtab-primary-action-background);
   outline: 0;
   box-shadow: $shadow-focus;
 }

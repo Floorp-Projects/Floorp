@@ -245,14 +245,14 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
 @mixin context-menu-button {
   .context-menu-button {
     background-clip: padding-box;
-    background-color: var(--newtab-contextmenu-button-color);
+    background-color: var(--newtab-background-color-secondary);
     background-image: url('chrome://global/skin/icons/more.svg');
     background-position: 55%;
     border: $border-primary;
     border-radius: 100%;
     box-shadow: $context-menu-button-boxshadow;
     cursor: pointer;
-    fill: var(--newtab-icon-primary-color);
+    fill: var(--newtab-text-primary-color);
     height: $context-menu-button-size;
     inset-inline-end: math.div(-$context-menu-button-size, 2);
     opacity: 0;
