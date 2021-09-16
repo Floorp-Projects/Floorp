@@ -2014,11 +2014,17 @@ bool ValidateGetProgramBinary(const Context *context,
     return ValidateGetProgramBinaryBase(context, program, bufSize, length, binaryFormat, binary);
 }
 
-bool ValidateProgramParameteriBase(const Context *context,
-                                   ShaderProgramID program,
-                                   GLenum pname,
-                                   GLint value)
+bool ValidateProgramParameteri(const Context *context,
+                               ShaderProgramID program,
+                               GLenum pname,
+                               GLint value)
 {
+    if (context->getClientMajorVersion() < 3)
+    {
+        context->validationError(GL_INVALID_OPERATION, kES3Required);
+        return false;
+    }
+
     if (GetValidProgram(context, program) == nullptr)
     {
         return false;
@@ -2056,20 +2062,6 @@ bool ValidateProgramParameteriBase(const Context *context,
     return true;
 }
 
-bool ValidateProgramParameteri(const Context *context,
-                               ShaderProgramID program,
-                               GLenum pname,
-                               GLint value)
-{
-    if (context->getClientMajorVersion() < 3)
-    {
-        context->validationError(GL_INVALID_OPERATION, kES3Required);
-        return false;
-    }
-
-    return ValidateProgramParameteriBase(context, program, pname, value);
-}
-
 bool ValidateBlitFramebuffer(const Context *context,
                              GLint srcX0,
                              GLint srcY0,
@@ -2082,7 +2074,7 @@ bool ValidateBlitFramebuffer(const Context *context,
                              GLbitfield mask,
                              GLenum filter)
 {
-    if (context->getClientMajorVersion() < 3 && !context->getExtensions().framebufferBlitNV)
+    if (context->getClientMajorVersion() < 3)
     {
         context->validationError(GL_INVALID_OPERATION, kES3Required);
         return false;
@@ -2703,18 +2695,17 @@ bool ValidateBeginTransformFeedback(const Context *context, PrimitiveMode primit
         }
     }
 
-    const ProgramExecutable *programExecutable = context->getState().getProgramExecutable();
-    if (programExecutable)
-    {
-        if (programExecutable->getLinkedTransformFeedbackVaryings().size() == 0)
-        {
-            context->validationError(GL_INVALID_OPERATION, kNoTransformFeedbackOutputVariables);
-            return false;
-        }
-    }
-    else
+    Program *program = context->getState().getLinkedProgram(context);
+
+    if (!program)
     {
         context->validationError(GL_INVALID_OPERATION, kProgramNotBound);
+        return false;
+    }
+
+    if (program->getTransformFeedbackVaryingCount() == 0)
+    {
+        context->validationError(GL_INVALID_OPERATION, kNoTransformFeedbackOutputVariables);
         return false;
     }
 
@@ -4142,7 +4133,7 @@ bool ValidateGetUniformBlockIndex(const Context *context,
 
 bool ValidateGetActiveUniformBlockiv(const Context *context,
                                      ShaderProgramID program,
-                                     UniformBlockIndex uniformBlockIndex,
+                                     GLuint uniformBlockIndex,
                                      GLenum pname,
                                      const GLint *params)
 {
@@ -4151,7 +4142,7 @@ bool ValidateGetActiveUniformBlockiv(const Context *context,
 
 bool ValidateGetActiveUniformBlockName(const Context *context,
                                        ShaderProgramID program,
-                                       UniformBlockIndex uniformBlockIndex,
+                                       GLuint uniformBlockIndex,
                                        GLsizei bufSize,
                                        const GLsizei *length,
                                        const GLchar *uniformBlockName)
@@ -4168,7 +4159,7 @@ bool ValidateGetActiveUniformBlockName(const Context *context,
         return false;
     }
 
-    if (uniformBlockIndex.value >= programObject->getActiveUniformBlockCount())
+    if (uniformBlockIndex >= programObject->getActiveUniformBlockCount())
     {
         context->validationError(GL_INVALID_VALUE, kIndexExceedsMaxActiveUniformBlock);
         return false;
@@ -4179,7 +4170,7 @@ bool ValidateGetActiveUniformBlockName(const Context *context,
 
 bool ValidateUniformBlockBinding(const Context *context,
                                  ShaderProgramID program,
-                                 UniformBlockIndex uniformBlockIndex,
+                                 GLuint uniformBlockIndex,
                                  GLuint uniformBlockBinding)
 {
     if (context->getClientMajorVersion() < 3)
@@ -4201,7 +4192,7 @@ bool ValidateUniformBlockBinding(const Context *context,
     }
 
     // if never linked, there won't be any uniform blocks
-    if (uniformBlockIndex.value >= programObject->getActiveUniformBlockCount())
+    if (uniformBlockIndex >= programObject->getActiveUniformBlockCount())
     {
         context->validationError(GL_INVALID_VALUE, kIndexExceedsMaxUniformBufferBindings);
         return false;

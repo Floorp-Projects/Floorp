@@ -167,40 +167,12 @@ void TDirectiveHandler::handleExtension(const angle::pp::SourceLocation &loc,
         // OVR_multiview is implicitly enabled when OVR_multiview2 is enabled
         if (name == "GL_OVR_multiview2")
         {
-            constexpr char kMultiviewExtName[] = "GL_OVR_multiview";
-            iter = mExtensionBehavior.find(GetExtensionByName(kMultiviewExtName));
-            if (iter != mExtensionBehavior.end())
+            const std::string multiview = "GL_OVR_multiview";
+            TExtensionBehavior::iterator iterMultiview =
+                mExtensionBehavior.find(GetExtensionByName(multiview.c_str()));
+            if (iterMultiview != mExtensionBehavior.end())
             {
-                iter->second = behaviorVal;
-            }
-        }
-        // EXT_shader_io_blocks is implicitly enabled when EXT_geometry_shader or
-        // EXT_tessellation_shader is enabled.
-        if (name == "GL_EXT_geometry_shader" || name == "GL_EXT_tessellation_shader")
-        {
-            constexpr char kIOBlocksExtName[] = "GL_EXT_shader_io_blocks";
-            iter = mExtensionBehavior.find(GetExtensionByName(kIOBlocksExtName));
-            if (iter != mExtensionBehavior.end())
-            {
-                iter->second = behaviorVal;
-            }
-        }
-        // GL_APPLE_clip_distance is implicitly enabled when GL_EXT_clip_cull_distance is enabled
-        else if (name == "GL_EXT_clip_cull_distance")
-        {
-            // This extension only can be enabled on greater than ESSL 300
-            if (mShaderVersion < 300)
-            {
-                mDiagnostics.error(loc, "extension can be enabled on greater than ESSL 300",
-                                   name.c_str());
-                return;
-            }
-
-            constexpr char kAPPLEClipDistanceEXTName[] = "GL_APPLE_clip_distance";
-            iter = mExtensionBehavior.find(GetExtensionByName(kAPPLEClipDistanceEXTName));
-            if (iter != mExtensionBehavior.end())
-            {
-                iter->second = behaviorVal;
+                iterMultiview->second = behaviorVal;
             }
         }
         return;
@@ -226,8 +198,7 @@ void TDirectiveHandler::handleVersion(const angle::pp::SourceLocation &loc,
                                       int version,
                                       ShShaderSpec spec)
 {
-    if (((version == 100 || version == 300 || version == 310 || version == 320) &&
-         !IsDesktopGLSpec(spec)) ||
+    if (((version == 100 || version == 300 || version == 310) && !IsDesktopGLSpec(spec)) ||
         IsDesktopGLSpec(spec))
     {
         mShaderVersion = version;

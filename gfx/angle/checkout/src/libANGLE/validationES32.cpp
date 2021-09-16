@@ -205,6 +205,12 @@ bool ValidateDrawElementsBaseVertex(const Context *context,
                                     const void *indices,
                                     GLint basevertex)
 {
+    if (!context->getExtensions().drawElementsBaseVertexAny())
+    {
+        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
+        return false;
+    }
+
     return ValidateDrawElementsCommon(context, mode, count, type, indices, 1);
 }
 
@@ -216,6 +222,12 @@ bool ValidateDrawElementsInstancedBaseVertex(const Context *context,
                                              GLsizei instancecount,
                                              GLint basevertex)
 {
+    if (!context->getExtensions().drawElementsBaseVertexAny())
+    {
+        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
+        return false;
+    }
+
     return ValidateDrawElementsInstancedBase(context, mode, count, type, indices, instancecount);
 }
 
@@ -228,6 +240,12 @@ bool ValidateDrawRangeElementsBaseVertex(const Context *context,
                                          const void *indices,
                                          GLint basevertex)
 {
+    if (!context->getExtensions().drawElementsBaseVertexAny())
+    {
+        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
+        return false;
+    }
+
     if (end < start)
     {
         context->validationError(GL_INVALID_VALUE, kInvalidElementRange);

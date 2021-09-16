@@ -28,8 +28,8 @@ class RemoveInvariantDeclarationTraverser : public TIntermTraverser
         if (node->isInvariant())
         {
             TIntermSequence emptyReplacement;
-            mMultiReplacements.emplace_back(getParentNode()->getAsBlock(), node,
-                                            std::move(emptyReplacement));
+            mMultiReplacements.push_back(NodeReplaceWithMultipleEntry(getParentNode()->getAsBlock(),
+                                                                      node, emptyReplacement));
         }
         return false;
     }

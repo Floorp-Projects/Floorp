@@ -113,7 +113,7 @@ void QueryVertexAttribIuiv(const VertexAttribute &attrib,
                            GLuint *params);
 
 void QueryActiveUniformBlockiv(const Program *program,
-                               UniformBlockIndex uniformBlockIndex,
+                               GLuint uniformBlockIndex,
                                GLenum pname,
                                GLint *params);
 
@@ -172,7 +172,7 @@ GLint QueryProgramResourceLocation(const Program *program,
                                    const GLchar *name);
 void QueryProgramResourceiv(const Program *program,
                             GLenum programInterface,
-                            UniformBlockIndex index,
+                            GLuint index,
                             GLsizei propCount,
                             const GLenum *props,
                             GLsizei bufSize,
@@ -275,7 +275,6 @@ void QueryConfigAttrib(const Config *config, EGLint attribute, EGLint *value);
 void QueryContextAttrib(const gl::Context *context, EGLint attribute, EGLint *value);
 
 egl::Error QuerySurfaceAttrib(const Display *display,
-                              const gl::Context *context,
                               const Surface *surface,
                               EGLint attribute,
                               EGLint *value);

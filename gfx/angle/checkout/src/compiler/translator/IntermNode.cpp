@@ -413,9 +413,6 @@ TIntermBlock::TIntermBlock(const TIntermBlock &node)
     {
         mStatements.push_back(node->deepCopy());
     }
-
-    ASSERT(!node.mIsTreeRoot);
-    mIsTreeRoot = false;
 }
 
 size_t TIntermBlock::getChildCount() const
@@ -431,12 +428,6 @@ TIntermNode *TIntermBlock::getChildNode(size_t index) const
 bool TIntermBlock::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
 {
     return replaceChildNodeInternal(original, replacement);
-}
-
-void TIntermBlock::replaceAllChildren(const TIntermSequence &newStatements)
-{
-    mStatements.clear();
-    mStatements.insert(mStatements.begin(), newStatements.begin(), newStatements.end());
 }
 
 size_t TIntermFunctionPrototype::getChildCount() const
@@ -468,14 +459,6 @@ TIntermNode *TIntermDeclaration::getChildNode(size_t index) const
 bool TIntermDeclaration::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
 {
     return replaceChildNodeInternal(original, replacement);
-}
-
-TIntermDeclaration::TIntermDeclaration(const TIntermDeclaration &node)
-{
-    for (TIntermNode *node : node.mDeclarators)
-    {
-        mDeclarators.push_back(node->deepCopy());
-    }
 }
 
 bool TIntermAggregateBase::replaceChildNodeInternal(TIntermNode *original, TIntermNode *replacement)
@@ -1057,9 +1040,9 @@ TIntermAggregate::TIntermAggregate(const TIntermAggregate &node)
 
 TIntermAggregate *TIntermAggregate::shallowCopy() const
 {
-    TIntermSequence copySeq;
-    copySeq.insert(copySeq.begin(), getSequence()->begin(), getSequence()->end());
-    TIntermAggregate *copyNode = new TIntermAggregate(mFunction, mType, mOp, &copySeq);
+    TIntermSequence *copySeq = new TIntermSequence();
+    copySeq->insert(copySeq->begin(), getSequence()->begin(), getSequence()->end());
+    TIntermAggregate *copyNode = new TIntermAggregate(mFunction, mType, mOp, copySeq);
     copyNode->setLine(mLine);
     return copyNode;
 }

@@ -15,7 +15,6 @@
 #include <limits>
 #include <map>
 
-#include "GLSLANG/ShaderLang.h"
 #include "common/angleutils.h"
 #include "common/utilities.h"
 #include "libANGLE/angletypes.h"
@@ -60,8 +59,6 @@ enum class SurfaceRotation
     InvalidEnum,
     EnumCount = InvalidEnum,
 };
-
-using SpecConstUsageBits = angle::PackedEnumBitSet<sh::vk::SpecConstUsage, uint32_t>;
 
 void RotateRectangle(const SurfaceRotation rotation,
                      const bool flipY,
@@ -207,15 +204,11 @@ class IncompleteTextureSet final : angle::NonCopyable
 
     angle::Result getIncompleteTexture(const gl::Context *context,
                                        gl::TextureType type,
-                                       gl::SamplerFormat format,
                                        MultisampleTextureInitializer *multisampleInitializer,
                                        gl::Texture **textureOut);
 
   private:
-    using TextureMapWithSamplerFormat = angle::PackedEnumMap<gl::SamplerFormat, gl::TextureMap>;
-
-    TextureMapWithSamplerFormat mIncompleteTextures;
-    gl::Buffer *mIncompleteTextureBufferAttachment;
+    gl::TextureMap mIncompleteTextures;
 };
 
 // Helpers to set a matrix uniform value based on GLSL or HLSL semantics.
@@ -420,9 +413,6 @@ class ResetBaseVertexBaseInstance : angle::NonCopyable
     bool mResetBaseInstance;
 };
 
-angle::FormatID ConvertToSRGB(angle::FormatID formatID);
-angle::FormatID ConvertToLinear(angle::FormatID formatID);
-bool IsOverridableLinearFormat(angle::FormatID formatID);
 }  // namespace rx
 
 // MultiDraw macro patterns
