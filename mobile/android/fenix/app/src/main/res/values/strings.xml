@@ -388,9 +388,9 @@
     <string name="customize_toggle_jump_back_in">Jump back in</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recently_saved_bookmarks">Recently saved</string>
-    <!-- Title for the customize home screen section with recently visited. -->
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Recently visited</string>
-    <!-- Title for the customize home screen section with pocket. -->
+    <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
@@ -1439,7 +1439,8 @@
     <string name="etp_redirect_trackers_title">Redirect Trackers</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Clears cookies set by redirects to known tracking websites.</string>
-    <!-- Description of the SmartBlock Enhanced Tracking Protection feature -->
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
     <string name="preference_etp_smartblock_description">Some trackers marked below have been partially unblocked on this page because you interacted with them *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Learn more</string>
@@ -1795,7 +1796,7 @@
     <string name="voice_search_explainer">Speak now</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">A login with that username already exists</string>
-    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. -->
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_1">Web address must contain \“https://\“ or \“http://\“</string>
