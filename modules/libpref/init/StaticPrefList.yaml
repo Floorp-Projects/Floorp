@@ -1194,7 +1194,7 @@
   type: RelaxedAtomicUint32
   value: 3000
   mirror: always
-  
+
 # Maximum delay between scroll input events that will be considered a scrolling interaction (milliseconds).
 - name: browser.places.interactions.scrolling_timeout_ms
   type: RelaxedAtomicUint32
@@ -1545,11 +1545,11 @@
 # 2 = bail if there are pending events
 - name: content.sink.pending_event_mode
   type: int32_t
-# ifdef XP_WIN
+#ifdef XP_WIN
   value: 1
-# else
+#else
   value: 0
-# endif
+#endif
   mirror: always
 
 # How often to probe for pending events. 1 = every token.
@@ -9738,11 +9738,11 @@
 # Allow network detection of IPv6 related changes (bug 1245059)
 - name: network.notify.IPv6
   type: RelaxedAtomicBool
-# ifdef XP_WIN
+#ifdef XP_WIN
   value: false
-# else
+#else
   value: true
-# endif
+#endif
   mirror: always
 
 # Whether to check the dnsSuffix on network changes
