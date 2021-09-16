@@ -61,6 +61,7 @@ sealed class SearchEngineSource {
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
  * @property pastedText The text pasted from the long press toolbar menu
+ * @property clipboardUrl The URL in the clipboard of the user - if there's any; otherwise `null`.
  */
 data class SearchFragmentState(
     val query: String,
@@ -79,7 +80,8 @@ data class SearchFragmentState(
     val showSyncedTabsSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
-    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
+    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?,
+    val clipboardUrl: String? = null
 ) : State
 
 fun createInitialSearchFragmentState(
@@ -129,6 +131,7 @@ sealed class SearchFragmentAction : Action {
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
     data class AllowSearchSuggestionsInPrivateModePrompt(val show: Boolean) : SearchFragmentAction()
     data class UpdateQuery(val query: String) : SearchFragmentAction()
+    data class UpdateClipboardUrl(val url: String?) : SearchFragmentAction()
 
     /**
      * Updates the local `SearchFragmentState` from the global `SearchState` in `BrowserStore`.
@@ -167,6 +170,11 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 } else {
                     state.searchEngineSource
                 }
+            )
+        }
+        is SearchFragmentAction.UpdateClipboardUrl -> {
+            state.copy(
+                clipboardUrl = action.url
             )
         }
     }

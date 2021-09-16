@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -197,6 +198,23 @@ class SearchFragmentStoreTest {
 
         store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false)).join()
         assertFalse(store.state.showSearchSuggestionsHint)
+    }
+
+    @Test
+    fun updatingClipboardUrl() {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+
+        assertNull(store.state.clipboardUrl)
+
+        store.dispatch(
+            SearchFragmentAction.UpdateClipboardUrl("https://www.mozilla.org")
+        ).joinBlocking()
+
+        assertEquals(
+            "https://www.mozilla.org",
+            store.state.clipboardUrl
+        )
     }
 
     @Test

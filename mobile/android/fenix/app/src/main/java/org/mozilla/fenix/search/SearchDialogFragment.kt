@@ -44,6 +44,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.coroutines.Dispatchers
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -349,7 +350,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             if (it.url != it.query) firstUpdate = false
             binding.awesomeBar.visibility = if (shouldShowAwesomebar(it)) View.VISIBLE else View.INVISIBLE
             updateSearchSuggestionsHintVisibility(it)
-            updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
+            updateClipboardSuggestion(it)
             updateToolbarContentDescription(it)
             updateSearchShortcutsIcon(it)
             toolbarView.update(it)
@@ -370,6 +371,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         } else {
             viewLifecycleOwner.lifecycleScope.launch {
                 binding.searchWrapper.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        view?.post {
+            // We delay querying the clipboard by posting this code to the main thread message queue,
+            // because ClipboardManager will return null if the does app not have input focus yet.
+            lifecycleScope.launch(Dispatchers.Cached) {
+                store.dispatch(
+                    SearchFragmentAction.UpdateClipboardUrl(
+                        requireContext().components.clipboardHandler.url
+                    )
+                )
             }
         }
     }
@@ -585,10 +602,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 
-    private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
+    private fun updateClipboardSuggestion(searchState: SearchFragmentState) {
         val shouldShowView = searchState.showClipboardSuggestions &&
             searchState.query.isEmpty() &&
-            !clipboardUrl.isNullOrEmpty() && !searchState.showSearchShortcuts
+            !searchState.clipboardUrl.isNullOrEmpty() && !searchState.showSearchShortcuts
 
         binding.fillLinkFromClipboard.isVisible = shouldShowView
         binding.fillLinkDivider.isVisible = shouldShowView
@@ -598,13 +615,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         binding.clipboardTitle.isVisible = shouldShowView
         binding.linkIcon.isVisible = shouldShowView
 
-        binding.clipboardUrl.text = clipboardUrl
+        binding.clipboardUrl.text = searchState.clipboardUrl
 
         binding.fillLinkFromClipboard.contentDescription =
             "${binding.clipboardTitle.text}, ${binding.clipboardUrl.text}."
 
-        if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
-            requireComponents.core.engine.speculativeConnect(clipboardUrl)
+        if (searchState.clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
+            requireComponents.core.engine.speculativeConnect(searchState.clipboardUrl)
         }
     }
 
