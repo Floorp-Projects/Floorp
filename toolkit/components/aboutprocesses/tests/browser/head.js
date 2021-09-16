@@ -323,9 +323,17 @@ async function testMemory(element, total, delta, assumptions) {
 
 function extractProcessDetails(row) {
   let children = row.children;
+  let name = children[0];
   let memory = children[1];
   let cpu = children[2];
-  let fluentArgs = document.l10n.getAttributes(children[0]).args;
+  if (Services.prefs.getBoolPref("toolkit.aboutProcesses.showProfilerIcons")) {
+    name = name.firstChild;
+    Assert.ok(
+      name.nextSibling.classList.contains("profiler-icon"),
+      "The profiler icon should be shown"
+    );
+  }
+  let fluentArgs = document.l10n.getAttributes(name).args;
   let threadDetailsRow = row.nextSibling;
   while (threadDetailsRow) {
     if (threadDetailsRow.classList.contains("process")) {
@@ -843,8 +851,18 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       userContextProcessRow,
       "There is a separate process for the tab with a different user context"
     );
+    let name = userContextProcessRow.firstChild;
+    if (
+      Services.prefs.getBoolPref("toolkit.aboutProcesses.showProfilerIcons")
+    ) {
+      name = name.firstChild;
+      Assert.ok(
+        name.nextSibling.classList.contains("profiler-icon"),
+        "The profiler icon should be shown"
+      );
+    }
     Assert.equal(
-      document.l10n.getAttributes(userContextProcessRow.firstChild).args.origin,
+      document.l10n.getAttributes(name).args.origin,
       "http://example.com — " +
         ContextualIdentityService.getUserContextLabel(1),
       "The user context ID should be replaced with the localized container name"
