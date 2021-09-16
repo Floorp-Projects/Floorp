@@ -4,11 +4,10 @@ include("../../moz.build.common")
 
 # DEFINES["ANGLE_EGL_LIBRARY_NAME"] = '"libEGL"'
 DEFINES["ANGLE_GLESV2_LIBRARY_NAME"] = '"libGLESv2"'
-# DEFINES["ANGLE_IS_64_BIT_CPU"] = True
 # DEFINES["ANGLE_IS_WIN"] = True
 DEFINES["ANGLE_USE_EGL_LOADER"] = True
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-3462-gfe5c2c3c-2"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 DEFINES["EGLAPI"] = ""
 DEFINES["EGL_EGLEXT_PROTOTYPES"] = True
@@ -57,15 +56,17 @@ LOCAL_INCLUDES += [
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
+#     "-fno-delete-null-pointer-checks",
+#     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
+#     "-msse3",
 #     "-no-canonical-prefixes",
 #     "-Wbad-function-cast",
 #     "-Wconditional-uninitialized",
-#     "-Wdeprecated-copy",
 #     "-Wexit-time-destructors",
 #     "-Wextra-semi",
 #     "-Wextra-semi-stmt",
@@ -96,7 +97,7 @@ LOCAL_INCLUDES += [
 #     "-Wparentheses",
 #     "-Wrange-loop-analysis",
 #     "-Wredundant-parens",
-#     "-Wreturn-std-move-in-c++11",
+#     "-Wreturn-std-move",
 #     "-Wshadow-field",
 #     "-Wshorten-64-to-32",
 #     "-Wstrict-prototypes",
@@ -176,7 +177,6 @@ LOCAL_INCLUDES += [
 #     "/we4800",
 #     "/we4838",
 #     "/WX",
-#     "/X",
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
@@ -185,7 +185,7 @@ LOCAL_INCLUDES += [
 
 SOURCES += [
     "../../checkout/src/libEGL/egl_loader_autogen.cpp",
-    "../../checkout/src/libEGL/libEGL.cpp",
+    "../../checkout/src/libEGL/libEGL_autogen.cpp",
 ]
 
 USE_LIBS += [
@@ -226,6 +226,7 @@ OS_LIBS += [
 # LDFLAGS += [
 #     "--color-diagnostics",
 #     "/call-graph-profile-sort:no",
+#     "/CETCOMPAT",
 #     "/DEBUG:GHASH",
 #     "/DYNAMICBASE",
 #     "/FIXED:NO",
@@ -243,10 +244,10 @@ OS_LIBS += [
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/SUBSYSTEM:CONSOLE,5.02",
-#     "/TIMESTAMP:1604206800",
+#     "/TIMESTAMP:1615093200",
 #     "/WX",
 # ]
 
-DEFFILE = "../../checkout/src/libEGL/libEGL.def"
+DEFFILE = "../../checkout/src/libEGL/libEGL_autogen.def"
 RCFILE = "../../checkout/src/libEGL/libEGL.rc"
 GeckoSharedLibrary("libEGL", linkage=None)
