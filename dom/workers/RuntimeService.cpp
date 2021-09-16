@@ -2206,7 +2206,8 @@ WorkerThreadPrimaryRunnable::Run() {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     // This needs to be initialized on the worker thread before being used on
-    // the main thread.
+    // the main thread and calling BackgroundChild::GetOrCreateForCurrentThread
+    // exposes it to the main thread.
     mWorkerPrivate->EnsurePerformanceStorage();
 
     if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
