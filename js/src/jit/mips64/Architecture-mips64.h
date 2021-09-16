@@ -21,6 +21,7 @@ namespace jit {
 
 // Shadow stack space is not required on MIPS64.
 static const uint32_t ShadowStackSpace = 0;
+static const uint32_t SizeOfReturnAddressAfterCall = 0;
 
 // MIPS64 have 64 bit floating-point coprocessor. There are 32 double
 // precision register which can also be used as single precision registers.
