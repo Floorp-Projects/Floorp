@@ -230,19 +230,37 @@ add_task(async function test_store_remove_exists() {
 
 /**
  * Tests that it is possible to save an nsIHandlerInfo instance with a
- * "preferredAction" that is alwaysAsk or has an unknown value, but the
- * action always becomes useHelperApp when reloading.
+ * "preferredAction" that is either a valid or an unknown value, and the
+ * action always takes on an appropriate value when reloading.
  */
 add_task(async function test_store_preferredAction() {
   await deleteHandlerStore();
 
   let handlerInfo = getKnownHandlerInfo("example/new");
+  // Valid action values should all remain unchanged across a refresh, except
+  // for alwaysAsk which may be overridden with useHelperApp depending on prefs.
+  // Invalid action values should always convert to useHelperApp.
+  const actions = [
+    {
+      preferred: Ci.nsIHandlerInfo.alwaysAsk,
+      expected: Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      )
+        ? Ci.nsIHandlerInfo.alwaysAsk
+        : Ci.nsIHandlerInfo.useHelperApp,
+    },
+    {
+      preferred: Ci.nsIHandlerInfo.handleInternally,
+      expected: Ci.nsIHandlerInfo.handleInternally,
+    },
+    { preferred: 999, expected: Ci.nsIHandlerInfo.useHelperApp },
+  ];
 
-  for (let preferredAction of [Ci.nsIHandlerInfo.alwaysAsk, 999]) {
-    handlerInfo.preferredAction = preferredAction;
+  for (let action of actions) {
+    handlerInfo.preferredAction = action.preferred;
     gHandlerService.store(handlerInfo);
     gHandlerService.fillHandlerInfo(handlerInfo, "");
-    Assert.equal(handlerInfo.preferredAction, Ci.nsIHandlerInfo.useHelperApp);
+    Assert.equal(handlerInfo.preferredAction, action.expected);
   }
 });
 
