@@ -34,10 +34,13 @@ function assertNotificationBoxShown(reason, browser) {
 
 function createNotification({ browser, label, value, priority }) {
   let notificationBox = gBrowser.getNotificationBox(browser);
-  let notification = notificationBox.appendNotification(value, {
+  let notification = notificationBox.appendNotification(
     label,
-    priority: notificationBox[priority],
-  });
+    value,
+    null,
+    notificationBox[priority],
+    []
+  );
   return notification;
 }
 

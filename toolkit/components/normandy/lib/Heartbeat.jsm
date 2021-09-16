@@ -173,19 +173,17 @@ var Heartbeat = class {
 
     this.notificationBox = this.chromeWindow.gNotificationBox;
     this.notice = this.notificationBox.appendNotification(
+      this.options.message,
       "heartbeat-" + this.options.flowId,
-      {
-        label: this.options.message,
-        image: "resource://normandy/skin/shared/heartbeat-icon.svg",
-        priority: this.notificationBox.PRIORITY_SYSTEM,
-        eventCallback: eventType => {
-          if (eventType !== "removed") {
-            return;
-          }
-          this.maybeNotifyHeartbeat("NotificationClosed");
-        },
-      },
-      this.buttons
+      "resource://normandy/skin/shared/heartbeat-icon.svg",
+      this.notificationBox.PRIORITY_SYSTEM,
+      this.buttons,
+      eventType => {
+        if (eventType !== "removed") {
+          return;
+        }
+        this.maybeNotifyHeartbeat("NotificationClosed");
+      }
     );
     this.notice.classList.add("heartbeat");
     this.notice.messageText.classList.add("heartbeat");

@@ -972,11 +972,10 @@ const gStoragePressureObserver = {
     messageFragment.appendChild(message);
 
     gNotificationBox.appendNotification(
+      messageFragment,
       NOTIFICATION_VALUE,
-      {
-        label: messageFragment,
-        priority: gNotificationBox.PRIORITY_WARNING_HIGH,
-      },
+      null,
+      gNotificationBox.PRIORITY_WARNING_HIGH,
       buttons
     );
 
@@ -1057,12 +1056,10 @@ var gPopupBlockerObserver = {
 
           const priority = notificationBox.PRIORITY_INFO_MEDIUM;
           notificationBox.appendNotification(
+            message,
             "popup-blocked",
-            {
-              label: message,
-              image: "chrome://browser/skin/notification-icons/popup.svg",
-              priority,
-            },
+            "chrome://browser/skin/notification-icons/popup.svg",
+            priority,
             buttons
           );
         }
@@ -1373,11 +1370,10 @@ var gKeywordURIFixup = {
           },
         ];
         let notification = notificationBox.appendNotification(
+          message,
           "keyword-uri-fixup",
-          {
-            label: message,
-            priority: notificationBox.PRIORITY_INFO_HIGH,
-          },
+          null,
+          notificationBox.PRIORITY_INFO_HIGH,
           buttons
         );
         notification.persistence = 1;
@@ -9078,12 +9074,10 @@ const SafeBrowsingNotificationBox = {
     }
 
     let notification = notificationBox.appendNotification(
+      title,
       value,
-      {
-        label: title,
-        image: "chrome://global/skin/icons/blocked.svg",
-        priority: notificationBox.PRIORITY_CRITICAL_HIGH,
-      },
+      "chrome://global/skin/icons/blocked.svg",
+      notificationBox.PRIORITY_CRITICAL_HIGH,
       buttons
     );
     // Persist the notification until the user removes so it

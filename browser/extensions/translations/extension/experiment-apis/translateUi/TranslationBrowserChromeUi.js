@@ -303,12 +303,13 @@ class TranslationBrowserChromeUi {
     const notificationBox = this.notificationBox;
     const chromeWin = this.browser.ownerGlobal;
     const notif = notificationBox.appendNotification(
+      "",
       "translation",
-      {
-        label: "",
-        priority: notificationBox.PRIORITY_INFO_HIGH,
-        is: `translation-notification-${chromeWin.now}`,
-      }
+      null,
+      notificationBox.PRIORITY_INFO_HIGH,
+      null,
+      null,
+      `translation-notification-${chromeWin.now}`,
     );
     notif.init(this.translationBrowserChromeUiNotificationManager);
     this.translationBrowserChromeUiNotificationManager.infobarDisplayed(

@@ -72,20 +72,19 @@ var gDataNotificationInfoBar = {
 
     this._log.info("Creating data reporting policy notification.");
     gNotificationBox.appendNotification(
+      message,
       this._DATA_REPORTING_NOTIFICATION,
-      {
-        label: message,
-        priority: gNotificationBox.PRIORITY_INFO_HIGH,
-        eventCallback: event => {
-          if (event == "removed") {
-            Services.obs.notifyObservers(
-              null,
-              "datareporting:notify-data-policy:close"
-            );
-          }
-        },
-      },
-      buttons
+      null,
+      gNotificationBox.PRIORITY_INFO_HIGH,
+      buttons,
+      event => {
+        if (event == "removed") {
+          Services.obs.notifyObservers(
+            null,
+            "datareporting:notify-data-policy:close"
+          );
+        }
+      }
     );
     // It is important to defer calling onUserNotifyComplete() until we're
     // actually sure the notification was displayed. If we ever called
