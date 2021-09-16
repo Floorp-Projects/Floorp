@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.service.sync.logins.InvalidRecordException
 import mozilla.components.service.sync.logins.LoginsStorageException
 import mozilla.components.service.sync.logins.NoSuchRecordException
@@ -25,6 +26,7 @@ import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.fragment.AddLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.mapToSavedLogin
+import org.mozilla.fenix.settings.logins.SavedLogin
 
 /**
  * Controller for all saved logins interactions with the password storage component
@@ -58,22 +60,20 @@ open class SavedLoginsStorageController(
         }
     }
 
-    fun add(hostnameText: String, usernameText: String, passwordText: String) {
+    // Create a [LoginEntry] for the add login dialog
+    private fun loginEntryForAdd(originText: String, usernameText: String, passwordText: String) = LoginEntry(
+        origin = originText,
+        username = usernameText,
+        password = passwordText,
+        // Implicitly fill in httpRealm with the origin
+        httpRealm = originText
+    )
+
+    fun add(originText: String, usernameText: String, passwordText: String) {
         var saveLoginJob: Deferred<Unit>? = null
         lifecycleScope.launch(ioDispatcher) {
             saveLoginJob = async {
-                val loginToSave = Login(
-                    guid = null,
-                    origin = hostnameText,
-                    username = usernameText,
-                    password = passwordText,
-                    httpRealm = hostnameText
-                )
-                val newLoginId = add(loginToSave)
-                if (newLoginId.isNotEmpty()) {
-                    val newLogin = passwordsStorage.get(newLoginId)
-                    syncAndUpdateList(newLogin!!)
-                }
+                add(loginEntryForAdd(originText, usernameText, passwordText))
             }
             saveLoginJob?.await()
             withContext(Dispatchers.Main) {
@@ -89,39 +89,38 @@ open class SavedLoginsStorageController(
         }
     }
 
-    private suspend fun add(loginToSave: Login): String {
-        var newLoginId = ""
+    private suspend fun add(loginEntryToSave: LoginEntry) {
         try {
-            newLoginId = passwordsStorage.add(loginToSave)
+            val encryptedLogin = passwordsStorage.add(loginEntryToSave)
+            syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsStorageException) {
             Log.e(
                 "Add new login",
                 "Failed to add new login.", loginException
             )
         }
-        return newLoginId
+    }
+
+    // Create a [LoginEntry] for the edit login dialog
+    private suspend fun loginEntryForSave(loginId: String, usernameText: String, passwordText: String): LoginEntry {
+        // must retrieve from storage to get the httpsRealm and formActionOrigin
+        val oldLogin = passwordsStorage.get(loginId)!!
+        return LoginEntry(
+            // Copied from the existing login
+            origin = oldLogin.origin,
+            httpRealm = oldLogin.httpRealm,
+            formActionOrigin = oldLogin.formActionOrigin,
+            // New values
+            username = usernameText,
+            password = passwordText,
+        )
     }
 
     fun save(loginId: String, usernameText: String, passwordText: String) {
         var saveLoginJob: Deferred<Unit>? = null
         lifecycleScope.launch(ioDispatcher) {
             saveLoginJob = async {
-                // must retrieve from storage to get the httpsRealm and formActionOrigin
-                val oldLogin = passwordsStorage.get(loginId)
-
-                // Update requires a Login type, which needs at least one of
-                // httpRealm or formActionOrigin
-                val loginToSave = Login(
-                    guid = loginId,
-                    origin = oldLogin?.origin!!,
-                    username = usernameText, // new value
-                    password = passwordText, // new value
-                    httpRealm = oldLogin.httpRealm,
-                    formActionOrigin = oldLogin.formActionOrigin
-                )
-
-                save(loginToSave)
-                syncAndUpdateList(loginToSave)
+                save(loginId, loginEntryForSave(loginId, usernameText, passwordText))
             }
             saveLoginJob?.await()
             withContext(Dispatchers.Main) {
@@ -139,9 +138,10 @@ open class SavedLoginsStorageController(
         }
     }
 
-    private suspend fun save(loginToSave: Login) {
+    private suspend fun save(guid: String, loginEntryToSave: LoginEntry) {
         try {
-            passwordsStorage.update(loginToSave)
+            val encryptedLogin = passwordsStorage.update(guid, loginEntryToSave)
+            syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsStorageException) {
             when (loginException) {
                 is NoSuchRecordException,
@@ -168,62 +168,40 @@ open class SavedLoginsStorageController(
         )
     }
 
-    fun findPotentialDuplicates(loginId: String) {
-        var deferredLogin: Deferred<List<Login>>? = null
-        val fetchLoginJob = lifecycleScope.launch(ioDispatcher) {
-            deferredLogin = async {
-                val login = getLogin(loginId)
-                passwordsStorage.getPotentialDupesIgnoringUsername(login!!)
-            }
-            val fetchedDuplicatesList = deferredLogin?.await()
-            fetchedDuplicatesList?.let { list ->
-                withContext(Dispatchers.Main) {
-                    val savedLoginList = list.map { it.mapToSavedLogin() }
-                    loginsFragmentStore.dispatch(
-                        LoginsAction.ListOfDupes(
-                            savedLoginList
-                        )
-                    )
-                }
-            }
-        }
-        fetchLoginJob.invokeOnCompletion {
-            if (it is CancellationException) {
-                deferredLogin?.cancel()
-            }
+    fun findDuplicateForAdd(originText: String, usernameText: String, passwordText: String) {
+        lifecycleScope.launch(ioDispatcher) {
+            findDuplicate(
+                loginEntryForAdd(originText, usernameText, passwordText)
+            )
         }
     }
 
-    fun findPotentialDuplicates(hostnameText: String, usernameText: String, passwordText: String) {
-        var deferredLogin: Deferred<List<Login>>? = null
-        val fetchLoginJob = lifecycleScope.launch(ioDispatcher) {
-            deferredLogin = async {
-                val login = Login(
-                    guid = null,
-                    origin = hostnameText,
-                    username = usernameText,
-                    password = passwordText,
-                    httpRealm = hostnameText
-                )
-                passwordsStorage.getPotentialDupesIgnoringUsername(login)
-            }
-            val fetchedDuplicatesList = deferredLogin?.await()
-            fetchedDuplicatesList?.let { list ->
-                withContext(Dispatchers.Main) {
-                    val savedLoginList = list.map { it.mapToSavedLogin() }
-                    loginsFragmentStore.dispatch(
-                        LoginsAction.ListOfDupes(
-                            savedLoginList
-                        )
-                    )
-                }
-            }
+    fun findDuplicateForSave(loginId: String, usernameText: String, passwordText: String) {
+        lifecycleScope.launch(ioDispatcher) {
+            findDuplicate(
+                loginEntryForSave(loginId, usernameText, passwordText),
+                loginId
+            )
         }
-        fetchLoginJob.invokeOnCompletion {
-            if (it is CancellationException) {
-                deferredLogin?.cancel()
-            }
+    }
+
+    suspend fun findDuplicate(entry: LoginEntry, currentGuid: String? = null) {
+        // Ensure that we have a valid, non-blank password.  The value doesn't
+        // matter for dupe-checking and we want to make sure that
+        // findLoginToUpdate() doesn't throw an error because the [LoginEntry]
+        // is invalid
+        val validEntry = if (entry.password.isNotEmpty()) entry else entry.copy(password="password")
+        var dupe = try {
+            passwordsStorage.findLoginToUpdate(validEntry)?.mapToSavedLogin()
+        } catch (e: LoginsStorageException) {
+            // If the entry was invalid, then consider it not a dupe
+            null
         }
+        if (dupe != null && dupe.guid == currentGuid) {
+            // If the found login matches the current login, don't consider it a dupe
+            dupe = null
+        }
+        loginsFragmentStore.dispatch(LoginsAction.DuplicateLogin(dupe))
     }
 
     fun fetchLoginDetails(loginId: String) {

@@ -31,7 +31,7 @@ data class SavedLogin(
 
 fun Login.mapToSavedLogin(): SavedLogin =
     SavedLogin(
-        guid = this.guid!!,
+        guid = this.guid,
         origin = this.origin,
         username = this.username,
         password = this.password,
@@ -55,7 +55,7 @@ sealed class LoginsAction : Action {
     data class UpdateLoginsList(val list: List<SavedLogin>) : LoginsAction()
     data class UpdateCurrentLogin(val item: SavedLogin) : LoginsAction()
     data class SortLogins(val sortingStrategy: SortingStrategy) : LoginsAction()
-    data class ListOfDupes(val dupeList: List<SavedLogin>) : LoginsAction()
+    data class DuplicateLogin(val dupe: SavedLogin?) : LoginsAction()
     data class LoginSelected(val item: SavedLogin) : LoginsAction()
 }
 
@@ -67,8 +67,7 @@ sealed class LoginsAction : Action {
  * @property sortingStrategy sorting strategy selected by the user (Currently we support
  * sorting alphabetically and by last used)
  * @property highlightedItem The current selected sorting strategy from the sort menu
- * @property duplicateLogins The current list of possible duplicates for a selected login origin,
- * httpRealm, and formActionOrigin
+ * @property duplicateLogin Duplicate login for the current add/save login form
  */
 data class LoginsListState(
     val isLoading: Boolean = false,
@@ -78,7 +77,7 @@ data class LoginsListState(
     val searchedForText: String?,
     val sortingStrategy: SortingStrategy,
     val highlightedItem: SavedLoginsSortingStrategyMenu.Item,
-    val duplicateLogins: List<SavedLogin>
+    val duplicateLogin: SavedLogin? = null,
 ) : State
 
 fun createInitialLoginsListState(settings: Settings) = LoginsListState(
@@ -88,7 +87,6 @@ fun createInitialLoginsListState(settings: Settings) = LoginsListState(
     searchedForText = null,
     sortingStrategy = settings.savedLoginsSortingStrategy,
     highlightedItem = settings.savedLoginsMenuHighlightedItem,
-    duplicateLogins = emptyList() // assume on load there are no dupes
 )
 
 /**
@@ -132,9 +130,9 @@ private fun savedLoginsStateReducer(
                 filteredItems = emptyList()
             )
         }
-        is LoginsAction.ListOfDupes -> {
+        is LoginsAction.DuplicateLogin -> {
             state.copy(
-                duplicateLogins = action.dupeList
+                duplicateLogin = action.dupe
             )
         }
     }

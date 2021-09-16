@@ -6,17 +6,18 @@ package org.mozilla.fenix.settings.logins
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginEntry
+import mozilla.components.service.sync.logins.InvalidRecordException
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -93,7 +94,7 @@ class SavedLoginsStorageControllerTest {
         )
         coEvery { passwordsStorage.list() } returns listOf(login)
 
-        controller.fetchLoginDetails(login.guid!!)
+        controller.fetchLoginDetails(login.guid)
 
         val expectedLogin = login.mapToSavedLogin()
 
@@ -117,17 +118,13 @@ class SavedLoginsStorageControllerTest {
             httpRealm = "httpRealm",
             formActionOrigin = ""
         )
-
-        coEvery { passwordsStorage.get(any()) } returns oldLogin
-        coEvery { passwordsStorage.update(any()) } just Runs
-
-        controller.save(oldLogin.guid!!, "newUsername", "newPassword")
-
-        val directions =
-            EditLoginFragmentDirections.actionEditLoginFragmentToLoginDetailFragment(
-                oldLogin.guid!!
-            )
-
+        val oldLoginEncrypted = EncryptedLogin(
+            guid = "id",
+            origin = "https://www.test.co.gov.org",
+            httpRealm = "httpRealm",
+            formActionOrigin = "",
+            secFields = "fake-encrypted-data",
+        )
         val newLogin = Login(
             guid = "id",
             origin = "https://www.test.co.gov.org",
@@ -137,11 +134,22 @@ class SavedLoginsStorageControllerTest {
             formActionOrigin = ""
         )
 
+        coEvery { passwordsStorage.get(any()) } returns oldLogin
+        coEvery { passwordsStorage.update(any(), any()) } returns oldLoginEncrypted
+        coEvery { passwordsStorage.decryptLogin(any()) } returns newLogin
+
+        controller.save(oldLogin.guid, "newUsername", "newPassword")
+
+        val directions =
+            EditLoginFragmentDirections.actionEditLoginFragmentToLoginDetailFragment(
+                oldLogin.guid
+            )
+
         val expectedNewList = listOf(newLogin.mapToSavedLogin())
 
         coVerify {
-            passwordsStorage.get(oldLogin.guid!!)
-            passwordsStorage.update(newLogin)
+            passwordsStorage.get(oldLogin.guid)
+            passwordsStorage.update(newLogin.guid, newLogin.toEntry())
             loginsFragmentStore.dispatch(
                 LoginsAction.UpdateLoginsList(
                     expectedNewList
@@ -152,14 +160,14 @@ class SavedLoginsStorageControllerTest {
     }
 
     @Test
-    fun `WHEN finding login dupes, THEN update duplicates in the store`() = scope.runBlockingTest {
+    fun `WHEN login dupe is found for save, THEN update duplicate in the store`() = scope.runBlockingTest {
         val login = Login(
             guid = "id",
             origin = "https://www.test.co.gov.org",
             username = "user123",
             password = "securePassword1",
             httpRealm = "httpRealm",
-            formActionOrigin = ""
+            formActionOrigin = null,
         )
 
         val login2 = Login(
@@ -168,28 +176,167 @@ class SavedLoginsStorageControllerTest {
             username = "user1234",
             password = "securePassword1",
             httpRealm = "httpRealm",
-            formActionOrigin = ""
+            formActionOrigin = null,
         )
 
         coEvery { passwordsStorage.get(any()) } returns login
-
-        val dupeList = listOf(login2)
-
         coEvery {
-            passwordsStorage.getPotentialDupesIgnoringUsername(any())
-        } returns dupeList
+            passwordsStorage.findLoginToUpdate(any())
+        } returns login2
 
-        controller.findPotentialDuplicates(login.guid!!)
-
-        val expectedDupeList = dupeList.map { it.mapToSavedLogin() }
+        // Simulate calling findDuplicateForSave after the user set the username field to the login2's username
+        controller.findDuplicateForSave(login.guid, login2.username, login.password)
 
         coVerify {
-            passwordsStorage.getPotentialDupesIgnoringUsername(login)
+            passwordsStorage.get(login.guid)
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = login.origin,
+                httpRealm = login.httpRealm,
+                formActionOrigin = login.formActionOrigin,
+                username = login2.username,
+                password = login.password
+            ))
             loginsFragmentStore.dispatch(
-                LoginsAction.ListOfDupes(
-                    dupeList = expectedDupeList
-                )
+                LoginsAction.DuplicateLogin(login2.mapToSavedLogin())
             )
+        }
+    }
+
+    @Test
+    fun `WHEN login dupe is not found for save, THEN update duplicate in the store`() = scope.runBlockingTest {
+        val login = Login(
+            guid = "id",
+            origin = "https://www.test.co.gov.org",
+            username = "user123",
+            password = "securePassword1",
+            httpRealm = "httpRealm",
+            formActionOrigin = null,
+        )
+
+        coEvery { passwordsStorage.get(any()) } returns login
+        coEvery {
+            passwordsStorage.findLoginToUpdate(any())
+        } returns null
+
+        // Simulate calling findDuplicateForSave after the user set the username field to a new value
+        controller.findDuplicateForSave(login.guid, "new-username", login.password)
+
+        coVerify {
+            passwordsStorage.get(login.guid)
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = login.origin,
+                httpRealm = login.httpRealm,
+                formActionOrigin = login.formActionOrigin,
+                username = "new-username",
+                password = login.password
+            ))
+            loginsFragmentStore.dispatch(
+                LoginsAction.DuplicateLogin(null)
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN login dupe is found for add, THEN update duplicate in the store`() = scope.runBlockingTest {
+        val login = Login(
+            guid = "id",
+            origin = "https://www.test.co.gov.org",
+            username = "user1234",
+            password = "securePassword1",
+            httpRealm = "httpRealm",
+            formActionOrigin = null,
+        )
+
+        coEvery {
+            passwordsStorage.findLoginToUpdate(any())
+        } returns login
+
+        // Simulate calling findDuplicateForAdd after the user set the origin/username fields to match login
+        controller.findDuplicateForAdd(login.origin, login.username, "new-password")
+
+        coVerify {
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = login.origin,
+                httpRealm = login.origin,
+                formActionOrigin = null,
+                username = login.username,
+                password = "new-password",
+            ))
+            loginsFragmentStore.dispatch(
+                LoginsAction.DuplicateLogin(login.mapToSavedLogin())
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN login dupe is not found for add, THEN update duplicate in the store`() = scope.runBlockingTest {
+        coEvery {
+            passwordsStorage.findLoginToUpdate(any())
+        } returns null
+
+        // Simulate calling findDuplicateForAdd after the user set the origin/username field to new values
+        val origin = "https://new-origin.example.com"
+        controller.findDuplicateForAdd(origin, "username", "password")
+
+        coVerify {
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = origin,
+                httpRealm = origin,
+                formActionOrigin = null,
+                username = "username",
+                password = "password",
+            ))
+            loginsFragmentStore.dispatch(
+                LoginsAction.DuplicateLogin(null)
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN findLoginToUpdate throws THEN update duplicate in the store`() = scope.runBlockingTest {
+        coEvery {
+            passwordsStorage.findLoginToUpdate(any())
+        } throws InvalidRecordException("InvalidOrigin")
+
+        // Simulate calling findDuplicateForAdd with an invalid origin
+        val origin = "https://"
+        controller.findDuplicateForAdd(origin, "username", "password")
+
+        coVerify {
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = origin,
+                httpRealm = origin,
+                formActionOrigin = null,
+                username = "username",
+                password = "password",
+            ))
+            loginsFragmentStore.dispatch(
+                LoginsAction.DuplicateLogin(null)
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN dupe checking THEN always use a non-blank password`() = scope.runBlockingTest {
+        // If the user hasn't entered a password yet, we should use a dummy
+        // password to send a valid login entry to findLoginToUpdate()
+
+        coEvery {
+            passwordsStorage.findLoginToUpdate(any())
+        } throws InvalidRecordException("InvalidOrigin")
+
+        // Simulate calling findDuplicateForAdd with an invalid origin
+        val origin = "https://example.com/"
+        controller.findDuplicateForAdd(origin, "username", "")
+
+        coVerify {
+            passwordsStorage.findLoginToUpdate(LoginEntry(
+                origin = origin,
+                httpRealm = origin,
+                formActionOrigin = null,
+                username = "username",
+                password = "password",
+            ))
         }
     }
 }

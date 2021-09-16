@@ -15,10 +15,10 @@ class EditLoginInteractorTest {
     private val interactor = EditLoginInteractor(loginsController)
 
     @Test
-    fun findPotentialDupesTest() {
+    fun findDuplicateTest() {
         val id = "anyId"
-        interactor.findPotentialDuplicates(id)
-        verify { loginsController.findPotentialDuplicates(id) }
+        interactor.findDuplicate(id, "username", "password")
+        verify { loginsController.findDuplicateForSave(id, "username", "password") }
     }
 
     @Test

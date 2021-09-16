@@ -33,7 +33,7 @@ class LoginsFragmentStoreTest {
         searchedForText = null,
         sortingStrategy = SortingStrategy.LastUsed,
         highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
-        duplicateLogins = listOf()
+        duplicateLogin = null,
     )
 
     @Test
@@ -50,7 +50,7 @@ class LoginsFragmentStoreTest {
                 searchedForText = null,
                 sortingStrategy = SortingStrategy.LastUsed,
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
-                duplicateLogins = emptyList()
+                duplicateLogin = null,
             ),
             createInitialLoginsListState(settings)
         )

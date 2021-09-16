@@ -31,7 +31,7 @@ class LoginDetailViewTest {
         searchedForText = null,
         sortingStrategy = SortingStrategy.LastUsed,
         highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
-        duplicateLogins = listOf()
+        duplicateLogin = null,
     )
 
     private lateinit var view: ViewGroup

@@ -48,11 +48,12 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
     private lateinit var loginsFragmentStore: LoginsFragmentStore
     private lateinit var interactor: AddLoginInteractor
 
-    private var listOfPossibleDupes: List<SavedLogin>? = null
+    private var duplicateLogin: SavedLogin? = null
 
     private var validPassword = true
     private var validUsername = true
     private var validHostname = false
+    private var usernameChanged = false
 
     private var _binding: FragmentAddLoginBinding? = null
     private val binding get() = _binding!!
@@ -82,9 +83,11 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
 
         setUpClickListeners()
         setUpTextListeners()
+        findDuplicate()
 
         consumeFrom(loginsFragmentStore) {
-            listOfPossibleDupes = loginsFragmentStore.state.duplicateLogins
+            duplicateLogin = loginsFragmentStore.state.duplicateLogin
+            updateUsernameField()
         }
     }
 
@@ -172,11 +175,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
                         binding.inputLayoutHostname.error = null
                         binding.inputLayoutHostname.errorIconDrawable = null
 
-                        interactor.findPotentialDuplicates(
-                            hostnameText = h.toString(),
-                            binding.usernameText.text.toString(),
-                            binding.passwordText.text.toString()
-                        )
+                        findDuplicate()
                     }
                 }
                 setSaveButtonState()
@@ -193,19 +192,10 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
 
         binding.usernameText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(u: Editable?) {
-                when {
-                    u.toString().isEmpty() -> {
-                        binding.clearUsernameTextButton.isVisible = false
-                        setUsernameError()
-                    }
-                    else -> {
-                        setDupeError()
-                        binding.inputLayoutUsername.error = null
-                        binding.inputLayoutUsername.errorIconDrawable = null
-                    }
-                }
-                binding.clearUsernameTextButton.isEnabled = u.toString().isNotEmpty()
+                usernameChanged = true
+                updateUsernameField()
                 setSaveButtonState()
+                findDuplicate()
             }
 
             override fun beforeTextChanged(u: CharSequence?, start: Int, count: Int, after: Int) {
@@ -244,47 +234,57 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
         })
     }
 
-    private fun isDupe(username: String): Boolean =
-        loginsFragmentStore.state.duplicateLogins.filter { it.username == username }.any()
+    private fun findDuplicate() {
+        interactor.findDuplicate(
+            binding.hostnameText.text.toString(),
+            binding.usernameText.text.toString(),
+            binding.passwordText.text.toString(),
+        )
+    }
 
-    private fun setDupeError() {
-        if (isDupe(binding.usernameText.text.toString())) {
-            binding.inputLayoutUsername.let {
+    private fun updateUsernameField() {
+        val currentValue = binding.usernameText.text.toString()
+        val layout = binding.inputLayoutUsername
+        val clearButton = binding.clearUsernameTextButton
+        when {
+            currentValue.isEmpty() && usernameChanged -> {
+                // Invalid username because it's empty (although this is not true when editing logins)
                 validUsername = false
-                it.error = context?.getString(R.string.saved_login_duplicate)
-                it.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
-                it.setErrorIconTintList(
+                layout.error = context?.getString(R.string.saved_login_username_required)
+                layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
+                layout.setErrorIconTintList(
                     ColorStateList.valueOf(
                         ContextCompat.getColor(requireContext(), R.color.design_error)
                     )
                 )
-                binding.clearUsernameTextButton.isVisible = false
             }
-        } else {
-            validUsername = true
-            binding.inputLayoutUsername.error = null
-            binding.inputLayoutUsername.errorIconDrawable = null
-            binding.clearUsernameTextButton.isVisible = true
+            duplicateLogin != null -> {
+                // Invalid username because it's a dupe of another login
+                validUsername = false
+                layout.error = context?.getString(R.string.saved_login_duplicate)
+                layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
+                layout.setErrorIconTintList(
+                    ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.design_error)
+                    )
+                )
+            }
+            else -> {
+                // Valid username
+                validUsername = true
+                layout.error = null
+                layout.errorIconDrawable = null
+            }
         }
+        clearButton.isVisible = validUsername
+        clearButton.isEnabled = validUsername
+        setSaveButtonState()
     }
 
     private fun setPasswordError() {
         binding.inputLayoutPassword.let { layout ->
             validPassword = false
             layout.error = context?.getString(R.string.saved_login_password_required)
-            layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
-            layout.setErrorIconTintList(
-                ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.design_error)
-                )
-            )
-        }
-    }
-
-    private fun setUsernameError() {
-        binding.inputLayoutUsername.let { layout ->
-            validUsername = false
-            layout.error = context?.getString(R.string.saved_login_username_required)
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(

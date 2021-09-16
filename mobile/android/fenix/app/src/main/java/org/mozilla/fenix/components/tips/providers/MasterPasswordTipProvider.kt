@@ -19,11 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mozilla.components.service.sync.logins.IdCollisionException
+import mozilla.components.concept.storage.Login
 import mozilla.components.service.sync.logins.InvalidRecordException
 import mozilla.components.service.sync.logins.LoginsStorageException
-import mozilla.components.service.sync.logins.ServerPassword
-import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.migration.FennecLoginsMPImporter
 import mozilla.components.support.migration.FennecProfile
 import org.mozilla.fenix.R
@@ -186,21 +184,16 @@ class MasterPasswordTipProvider(
         }
     }
 
-    private fun saveLogins(logins: List<ServerPassword>, dialog: AlertDialog) {
+    private fun saveLogins(logins: List<Login>, dialog: AlertDialog) {
         CoroutineScope(IO).launch {
-            logins.map { it.toLogin() }.forEach {
-                try {
-                    context.components.core.passwordsStorage.add(it)
-                } catch (e: InvalidRecordException) {
-                    // This record was invalid and we couldn't save this login
-                    context.components.analytics.crashReporter.submitCaughtException(e)
-                } catch (e: IdCollisionException) {
-                    // Nonempty ID was provided
-                    context.components.analytics.crashReporter.submitCaughtException(e)
-                } catch (e: LoginsStorageException) {
-                    // Some other error occurred
-                    context.components.analytics.crashReporter.submitCaughtException(e)
-                }
+            try {
+                context.components.core.passwordsStorage.importLoginsAsync(logins)
+            } catch (e: InvalidRecordException) {
+                // This record was invalid and we couldn't save this login
+                context.components.analytics.crashReporter.submitCaughtException(e)
+            } catch (e: LoginsStorageException) {
+                // Some other error occurred
+                context.components.analytics.crashReporter.submitCaughtException(e)
             }
             withContext(Dispatchers.Main) {
                 // Step 3: Dismiss this dialog and show the success dialog

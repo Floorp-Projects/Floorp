@@ -21,14 +21,14 @@ class AddLoginInteractorTest {
 
     @Test
     fun findPotentialDupesTest() {
-        interactor.findPotentialDuplicates(
+        interactor.findDuplicate(
             hostname,
             username,
             password
         )
 
         verify {
-            loginsController.findPotentialDuplicates(
+            loginsController.findDuplicateForAdd(
                 hostname,
                 username,
                 password

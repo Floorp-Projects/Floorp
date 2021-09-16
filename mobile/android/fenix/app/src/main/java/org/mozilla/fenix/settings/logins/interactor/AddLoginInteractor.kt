@@ -14,11 +14,11 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 class AddLoginInteractor(
     private val savedLoginsController: SavedLoginsStorageController
 ) {
-    fun findPotentialDuplicates(hostnameText: String, usernameText: String, passwordText: String) {
-        savedLoginsController.findPotentialDuplicates(hostnameText, usernameText, passwordText)
+    fun findDuplicate(originText: String, usernameText: String, passwordText: String) {
+        savedLoginsController.findDuplicateForAdd(originText, usernameText, passwordText)
     }
 
-    fun onAddLogin(hostnameText: String, usernameText: String, passwordText: String) {
-        savedLoginsController.add(hostnameText, usernameText, passwordText)
+    fun onAddLogin(originText: String, usernameText: String, passwordText: String) {
+        savedLoginsController.add(originText, usernameText, passwordText)
     }
 }
