@@ -358,6 +358,16 @@ gl::GraphicsResetStatus Context9::getResetStatus()
     return mRenderer->getResetStatus();
 }
 
+std::string Context9::getVendorString() const
+{
+    return mRenderer->getVendorString();
+}
+
+std::string Context9::getRendererDescription() const
+{
+    return mRenderer->getRendererDescription();
+}
+
 angle::Result Context9::insertEventMarker(GLsizei length, const char *marker)
 {
     mRenderer->getAnnotator()->setMarker(marker);
@@ -366,8 +376,7 @@ angle::Result Context9::insertEventMarker(GLsizei length, const char *marker)
 
 angle::Result Context9::pushGroupMarker(GLsizei length, const char *marker)
 {
-    mRenderer->getAnnotator()->beginEvent(nullptr, angle::EntryPoint::GLPushGroupMarkerEXT, marker,
-                                          marker);
+    mRenderer->getAnnotator()->beginEvent(nullptr, gl::EntryPoint::Begin, marker, marker);
     mMarkerStack.push(std::string(marker));
     return angle::Result::Continue;
 }
@@ -379,8 +388,7 @@ angle::Result Context9::popGroupMarker()
     {
         marker = mMarkerStack.top().c_str();
         mMarkerStack.pop();
-        mRenderer->getAnnotator()->endEvent(nullptr, marker,
-                                            angle::EntryPoint::GLPopGroupMarkerEXT);
+        mRenderer->getAnnotator()->endEvent(nullptr, marker, gl::EntryPoint::Begin);
     }
     return angle::Result::Continue;
 }
@@ -475,8 +483,7 @@ angle::Result Context9::getIncompleteTexture(const gl::Context *context,
                                              gl::TextureType type,
                                              gl::Texture **textureOut)
 {
-    return mIncompleteTextures.getIncompleteTexture(context, type, gl::SamplerFormat::Float,
-                                                    nullptr, textureOut);
+    return mIncompleteTextures.getIncompleteTexture(context, type, nullptr, textureOut);
 }
 
 void Context9::handleResult(HRESULT hr,

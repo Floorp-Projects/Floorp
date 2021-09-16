@@ -51,12 +51,9 @@ namespace gl {
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLLibraryExtensionNames[] = {
-    "EGL_ANDROID_get_native_client_buffer",
-    "EGL_ANGLE_device_creation",
-    "EGL_ANGLE_device_creation_d3d11",
-    "EGL_ANGLE_platform_angle",
-    "EGL_ANGLE_platform_angle_d3d",
-    "EGL_EXT_device_query"};
+    "EGL_ANDROID_get_native_client_buffer", "EGL_ANGLE_device_creation",
+    "EGL_ANGLE_device_creation_d3d11", "EGL_ANGLE_platform_angle",
+    "EGL_ANGLE_platform_angle_d3d"};
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLExtensionNames[] = {
@@ -74,6 +71,7 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_create_context",
     "EGL_KHR_stream",
     "EGL_KHR_stream_consumer_gltexture",
+    "EGL_EXT_device_query",
     "EGL_NV_stream_consumer_gltexture_yuv",
     "EGL_ANGLE_stream_producer_d3d_texture",
     "EGL_KHR_surfaceless_context",

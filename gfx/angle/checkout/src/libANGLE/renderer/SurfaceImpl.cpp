@@ -25,9 +25,7 @@ egl::Error SurfaceImpl::unMakeCurrent(const gl::Context *context)
     return egl::NoError();
 }
 
-egl::Error SurfaceImpl::swapWithDamage(const gl::Context *context,
-                                       const EGLint *rects,
-                                       EGLint n_rects)
+egl::Error SurfaceImpl::swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects)
 {
     UNREACHABLE();
     return egl::EglBadSurface() << "swapWithDamage implementation missing.";
@@ -113,11 +111,4 @@ egl::Error SurfaceImpl::getUserHeight(const egl::Display *display, EGLint *value
     *value = getHeight();
     return egl::NoError();
 }
-
-egl::Error SurfaceImpl::getBufferAge(const gl::Context *context, EGLint *age)
-{
-    UNREACHABLE();
-    return egl::EglBadMatch();
-}
-
 }  // namespace rx

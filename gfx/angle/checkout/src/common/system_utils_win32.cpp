@@ -65,7 +65,6 @@ class Win32Library : public Library
     {
         if (!mModule)
         {
-            fprintf(stderr, "Module was not loaded\n");
             return nullptr;
         }
 

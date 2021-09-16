@@ -65,8 +65,6 @@ class ProgramPipelineState final : angle::NonCopyable
 
     void updateExecutableTextures();
 
-    rx::SpecConstUsageBits getSpecConstUsageBits() const;
-
   private:
     void useProgramStage(const Context *context,
                          ShaderType shaderType,
@@ -91,8 +89,7 @@ class ProgramPipelineState final : angle::NonCopyable
 
 class ProgramPipeline final : public RefCountObject<ProgramPipelineID>,
                               public LabeledObject,
-                              public angle::ObserverInterface,
-                              public HasAttachedShaders
+                              public angle::ObserverInterface
 {
   public:
     ProgramPipeline(rx::GLImplFactory *factory, ProgramPipelineID handle);
@@ -128,16 +125,23 @@ class ProgramPipeline final : public RefCountObject<ProgramPipelineID>,
     Program *getShaderProgram(ShaderType shaderType) const { return mState.mPrograms[shaderType]; }
 
     void resetIsLinked() { mState.mIsLinked = false; }
+    ProgramMergedVaryings getMergedVaryings() const;
     angle::Result link(const gl::Context *context);
     bool linkVaryings(InfoLog &infoLog) const;
     void validate(const gl::Context *context);
+    bool validateSamplers(InfoLog *infoLog, const Caps &caps);
+
+    bool usesShaderProgram(ShaderProgramID program) const
+    {
+        return mState.usesShaderProgram(program);
+    }
+
     GLboolean isValid() const { return mState.isValid(); }
 
     // ObserverInterface implementation.
     void onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message) override;
 
-    // HasAttachedShaders implementation
-    Shader *getAttachedShader(ShaderType shaderType) const override;
+    void fillProgramStateMap(gl::ShaderMap<const gl::ProgramState *> *programStatesOut);
 
   private:
     void updateLinkedShaderStages();
@@ -145,10 +149,6 @@ class ProgramPipeline final : public RefCountObject<ProgramPipelineID>,
     void updateTransformFeedbackMembers();
     void updateShaderStorageBlocks();
     void updateImageBindings();
-    void updateExecutableGeometryProperties();
-    void updateExecutableTessellationProperties();
-    void updateFragmentInoutRange();
-    void updateLinkedVaryings();
     void updateHasBooleans();
     void updateExecutable();
 

@@ -33,8 +33,8 @@ class Device final : public LabeledObject, angle::NonCopyable
     EGLLabelKHR getLabel() const override;
 
     Error getAttribute(EGLint attribute, EGLAttrib *value);
-    Display *getOwningDisplay() const { return mOwningDisplay; }
-    EGLint getType() const;
+    Display *getOwningDisplay() { return mOwningDisplay; }
+    EGLint getType();
 
     const DeviceExtensions &getExtensions() const;
     const std::string &getExtensionString() const;

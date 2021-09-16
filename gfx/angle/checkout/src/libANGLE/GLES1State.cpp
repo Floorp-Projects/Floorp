@@ -388,10 +388,6 @@ bool GLES1State::isTexCoordArrayEnabled(unsigned int unit) const
 
 bool GLES1State::isTextureTargetEnabled(unsigned int unit, const TextureType type) const
 {
-    if (mTexUnitEnables.empty())
-    {
-        return false;
-    }
     return mTexUnitEnables[unit].test(type);
 }
 

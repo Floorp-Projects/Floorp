@@ -47,13 +47,7 @@ angle::Result Overlay::init(const Context *context)
 
     enableOverlayWidgetsFromEnvironment();
 
-    bool success = false;
-    ANGLE_TRY(mImplementation->init(context, &success));
-    if (!success)
-    {
-        mState.mEnabledWidgetCount = 0;
-    }
-    return angle::Result::Continue;
+    return mImplementation->init(context);
 }
 
 void Overlay::destroy(const gl::Context *context)
