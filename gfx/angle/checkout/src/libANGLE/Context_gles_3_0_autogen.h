@@ -60,12 +60,10 @@
     void genSamplers(GLsizei count, SamplerID *samplersPacked);                                    \
     void genTransformFeedbacks(GLsizei n, TransformFeedbackID *idsPacked);                         \
     void genVertexArrays(GLsizei n, VertexArrayID *arraysPacked);                                  \
-    void getActiveUniformBlockName(ShaderProgramID programPacked,                                  \
-                                   UniformBlockIndex uniformBlockIndexPacked, GLsizei bufSize,     \
-                                   GLsizei *length, GLchar *uniformBlockName);                     \
-    void getActiveUniformBlockiv(ShaderProgramID programPacked,                                    \
-                                 UniformBlockIndex uniformBlockIndexPacked, GLenum pname,          \
-                                 GLint *params);                                                   \
+    void getActiveUniformBlockName(ShaderProgramID programPacked, GLuint uniformBlockIndex,        \
+                                   GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName);    \
+    void getActiveUniformBlockiv(ShaderProgramID programPacked, GLuint uniformBlockIndex,          \
+                                 GLenum pname, GLint *params);                                     \
     void getActiveUniformsiv(ShaderProgramID programPacked, GLsizei uniformCount,                  \
                              const GLuint *uniformIndices, GLenum pname, GLint *params);           \
     void getBufferParameteri64v(BufferBinding targetPacked, GLenum pname, GLint64 *params);        \
@@ -136,8 +134,7 @@
     void uniform3uiv(UniformLocation locationPacked, GLsizei count, const GLuint *value);          \
     void uniform4ui(UniformLocation locationPacked, GLuint v0, GLuint v1, GLuint v2, GLuint v3);   \
     void uniform4uiv(UniformLocation locationPacked, GLsizei count, const GLuint *value);          \
-    void uniformBlockBinding(ShaderProgramID programPacked,                                        \
-                             UniformBlockIndex uniformBlockIndexPacked,                            \
+    void uniformBlockBinding(ShaderProgramID programPacked, GLuint uniformBlockIndex,              \
                              GLuint uniformBlockBinding);                                          \
     void uniformMatrix2x3fv(UniformLocation locationPacked, GLsizei count, GLboolean transpose,    \
                             const GLfloat *value);                                                 \

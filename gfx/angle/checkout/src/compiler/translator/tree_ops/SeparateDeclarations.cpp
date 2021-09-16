@@ -62,7 +62,8 @@ bool SeparateDeclarationsTraverser::visitDeclaration(Visit, TIntermDeclaration *
             replacementDeclarations.push_back(replacementDeclaration);
         }
 
-        mMultiReplacements.emplace_back(parentBlock, node, std::move(replacementDeclarations));
+        mMultiReplacements.push_back(
+            NodeReplaceWithMultipleEntry(parentBlock, node, replacementDeclarations));
     }
     return false;
 }

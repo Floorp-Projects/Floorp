@@ -13,7 +13,6 @@
 
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/InitializeDll.h"
-#include "compiler/translator/glslang_wrapper.h"
 #include "compiler/translator/length_limits.h"
 #ifdef ANGLE_ENABLE_HLSL
 #    include "compiler/translator/TranslatorHLSL.h"
@@ -27,8 +26,7 @@ namespace sh
 namespace
 {
 
-bool isInitialized        = false;
-bool isGlslangInitialized = false;
+bool isInitialized = false;
 
 //
 // This is the platform independent interface between an OGL driver
@@ -104,36 +102,6 @@ GLenum GetGeometryShaderPrimitiveTypeEnum(sh::TLayoutPrimitiveType primitiveType
     }
 }
 
-GLenum GetTessellationShaderTypeEnum(sh::TLayoutTessEvaluationType type)
-{
-    switch (type)
-    {
-        case EtetTriangles:
-            return GL_TRIANGLES;
-        case EtetQuads:
-            return GL_QUADS;
-        case EtetIsolines:
-            return GL_ISOLINES;
-        case EtetEqualSpacing:
-            return GL_EQUAL;
-        case EtetFractionalEvenSpacing:
-            return GL_FRACTIONAL_EVEN;
-        case EtetFractionalOddSpacing:
-            return GL_FRACTIONAL_ODD;
-        case EtetCw:
-            return GL_CW;
-        case EtetCcw:
-            return GL_CCW;
-        case EtetPointMode:
-            return GL_TESS_GEN_POINT_MODE;
-
-        case EtetUndefined:
-        default:
-            UNREACHABLE();
-            return GL_INVALID_VALUE;
-    }
-}
-
 }  // anonymous namespace
 
 //
@@ -192,7 +160,6 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->EXT_shader_texture_lod                      = 0;
     resources->WEBGL_debug_shader_precision                = 0;
     resources->EXT_shader_framebuffer_fetch                = 0;
-    resources->EXT_shader_framebuffer_fetch_non_coherent   = 0;
     resources->NV_shader_framebuffer_fetch                 = 0;
     resources->ARM_shader_framebuffer_fetch                = 0;
     resources->OVR_multiview                               = 0;
@@ -200,8 +167,6 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->EXT_YUV_target                              = 0;
     resources->EXT_geometry_shader                         = 0;
     resources->EXT_gpu_shader5                             = 0;
-    resources->OES_shader_io_blocks                        = 0;
-    resources->EXT_shader_io_blocks                        = 0;
     resources->EXT_shader_non_constant_global_initializers = 0;
     resources->NV_shader_noperspective_interpolation       = 0;
     resources->OES_texture_storage_multisample_2d_array    = 0;
@@ -217,15 +182,10 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->OES_shader_multisample_interpolation        = 0;
     resources->NV_draw_buffers                             = 0;
     resources->OES_shader_image_atomic                     = 0;
-    resources->EXT_tessellation_shader                     = 0;
     resources->OES_texture_buffer                          = 0;
     resources->EXT_texture_buffer                          = 0;
-    resources->OES_sample_variables                        = 0;
-    resources->EXT_clip_cull_distance                      = 0;
 
-    resources->MaxClipDistances                = 8;
-    resources->MaxCullDistances                = 8;
-    resources->MaxCombinedClipAndCullDistances = 8;
+    resources->MaxClipDistances = 0;
 
     // Disable highp precision in fragment shader by default.
     resources->FragmentPrecisionHigh = 0;
@@ -307,30 +267,7 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->MaxGeometryShaderInvocations     = 32;
     resources->MaxGeometryImageUniforms         = 0;
 
-    resources->MaxTessControlInputComponents       = 64;
-    resources->MaxTessControlOutputComponents      = 64;
-    resources->MaxTessControlTextureImageUnits     = 16;
-    resources->MaxTessControlUniformComponents     = 1024;
-    resources->MaxTessControlTotalOutputComponents = 2048;
-    resources->MaxTessControlImageUniforms         = 0;
-    resources->MaxTessControlAtomicCounters        = 0;
-    resources->MaxTessControlAtomicCounterBuffers  = 0;
-
-    resources->MaxTessPatchComponents = 120;
-    resources->MaxPatchVertices       = 32;
-    resources->MaxTessGenLevel        = 64;
-
-    resources->MaxTessEvaluationInputComponents      = 64;
-    resources->MaxTessEvaluationOutputComponents     = 64;
-    resources->MaxTessEvaluationTextureImageUnits    = 16;
-    resources->MaxTessEvaluationUniformComponents    = 1024;
-    resources->MaxTessEvaluationImageUniforms        = 0;
-    resources->MaxTessEvaluationAtomicCounters       = 0;
-    resources->MaxTessEvaluationAtomicCounterBuffers = 0;
-
     resources->SubPixelBits = 8;
-
-    resources->MaxSamples = 4;
 }
 
 //
@@ -442,18 +379,6 @@ const std::string &GetObjectCode(const ShHandle handle)
 
     TInfoSink &infoSink = compiler->getInfoSink();
     return infoSink.obj.str();
-}
-
-//
-// Return any object binary code.
-//
-const BinaryBlob &GetObjectBinaryBlob(const ShHandle handle)
-{
-    TCompiler *compiler = GetCompilerFromHandle(handle);
-    ASSERT(compiler);
-
-    TInfoSink &infoSink = compiler->getInfoSink();
-    return infoSink.obj.getBinary();
 }
 
 const std::map<std::string, std::string> *GetNameHashingMap(const ShHandle handle)
@@ -593,16 +518,6 @@ bool HasEarlyFragmentTestsOptimization(const ShHandle handle)
     return compiler->isEarlyFragmentTestsOptimized();
 }
 
-uint32_t GetShaderSpecConstUsageBits(const ShHandle handle)
-{
-    TCompiler *compiler = GetCompilerFromHandle(handle);
-    if (compiler == nullptr)
-    {
-        return 0;
-    }
-    return compiler->getSpecConstUsageBits().bits();
-}
-
 bool CheckVariablesWithinPackingLimits(int maxVectors, const std::vector<ShaderVariable> &variables)
 {
     return CheckVariablesInPackingLimits(maxVectors, variables);
@@ -677,18 +592,6 @@ const std::map<std::string, unsigned int> *GetUniformRegisterMap(const ShHandle 
 #endif  // ANGLE_ENABLE_HLSL
 }
 
-const std::set<std::string> *GetSlowCompilingUniformBlockSet(const ShHandle handle)
-{
-#ifdef ANGLE_ENABLE_HLSL
-    TranslatorHLSL *translator = GetTranslatorHLSLFromHandle(handle);
-    ASSERT(translator);
-
-    return translator->getSlowCompilingUniformBlockSet();
-#else
-    return nullptr;
-#endif  // ANGLE_ENABLE_HLSL
-}
-
 unsigned int GetReadonlyImage2DRegisterIndex(const ShHandle handle)
 {
 #ifdef ANGLE_ENABLE_HLSL
@@ -758,50 +661,6 @@ bool HasValidGeometryShaderMaxVertices(const ShHandle handle)
     return compiler->getGeometryShaderMaxVertices() >= 0;
 }
 
-bool HasValidTessGenMode(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return compiler->getTessEvaluationShaderInputPrimitiveType() != EtetUndefined;
-}
-
-bool HasValidTessGenSpacing(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return compiler->getTessEvaluationShaderInputVertexSpacingType() != EtetUndefined;
-}
-
-bool HasValidTessGenVertexOrder(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return compiler->getTessEvaluationShaderInputOrderingType() != EtetUndefined;
-}
-
-bool HasValidTessGenPointMode(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return compiler->getTessEvaluationShaderInputPointType() != EtetUndefined;
-}
-
 GLenum GetGeometryShaderInputPrimitiveType(const ShHandle handle)
 {
     ASSERT(handle);
@@ -848,62 +707,6 @@ int GetGeometryShaderMaxVertices(const ShHandle handle)
     return maxVertices;
 }
 
-int GetTessControlShaderVertices(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    int vertices = compiler->getTessControlShaderOutputVertices();
-    return vertices;
-}
-
-GLenum GetTessGenMode(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return GetTessellationShaderTypeEnum(compiler->getTessEvaluationShaderInputPrimitiveType());
-}
-
-GLenum GetTessGenSpacing(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return GetTessellationShaderTypeEnum(compiler->getTessEvaluationShaderInputVertexSpacingType());
-}
-
-GLenum GetTessGenVertexOrder(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return GetTessellationShaderTypeEnum(compiler->getTessEvaluationShaderInputOrderingType());
-}
-
-GLenum GetTessGenPointMode(const ShHandle handle)
-{
-    ASSERT(handle);
-
-    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
-    TCompiler *compiler = base->getAsCompiler();
-    ASSERT(compiler);
-
-    return GetTessellationShaderTypeEnum(compiler->getTessEvaluationShaderInputPointType());
-}
-
 unsigned int GetShaderSharedMemorySize(const ShHandle handle)
 {
     ASSERT(handle);
@@ -914,24 +717,6 @@ unsigned int GetShaderSharedMemorySize(const ShHandle handle)
 
     unsigned int sharedMemorySize = compiler->getSharedMemorySize();
     return sharedMemorySize;
-}
-
-void InitializeGlslang()
-{
-    if (!isGlslangInitialized)
-    {
-        GlslangInitialize();
-    }
-    isGlslangInitialized = true;
-}
-
-void FinalizeGlslang()
-{
-    if (isGlslangInitialized)
-    {
-        GlslangFinalize();
-    }
-    isGlslangInitialized = false;
 }
 
 // Can't prefix with just _ because then we might introduce a double underscore, which is not safe
@@ -957,17 +742,6 @@ const char kDriverUniformsVarName[]   = "ANGLEUniforms";
 const char kAtomicCountersBlockName[] = "ANGLEAtomicCounters";
 
 const char kLineRasterEmulationPosition[] = "ANGLEPosition";
-
-const char kXfbEmulationGetOffsetsFunctionName[] = "ANGLEGetXfbOffsets";
-const char kXfbEmulationCaptureFunctionName[]    = "ANGLECaptureXfb";
-const char kXfbEmulationBufferBlockName[]        = "ANGLEXfbBuffer";
-const char kXfbEmulationBufferName[]             = "ANGLEXfb";
-const char kXfbEmulationBufferFieldName[]        = "xfbOut";
-
-const char kXfbExtensionPositionOutName[] = "ANGLEXfbPosition";
-
-// EXT_shader_framebuffer_fetch / EXT_shader_framebuffer_fetch_non_coherent
-const char kInputAttachmentName[] = "ANGLEInputAttachment";
 
 }  // namespace vk
 

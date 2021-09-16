@@ -34,6 +34,7 @@ class TBuiltinsWorkaroundGLSL : public TIntermTraverser
     ShCompileOptions mCompileOptions;
 
     bool isBaseInstanceDeclared = false;
+    bool isBaseVertexDeclared   = false;
 };
 
 TBuiltinsWorkaroundGLSL::TBuiltinsWorkaroundGLSL(TSymbolTable *symbolTable,
@@ -80,7 +81,7 @@ bool TBuiltinsWorkaroundGLSL::visitDeclaration(Visit, TIntermDeclaration *node)
     for (TIntermNode *variableNode : sequence)
     {
         TIntermSymbol *variable = variableNode->getAsSymbolNode();
-        if (variable && variable->variable().symbolType() == SymbolType::BuiltIn)
+        if (variable && variable->variable().symbolType() == SymbolType::AngleInternal)
         {
             if (variable->getName() == "angle_BaseInstance")
             {

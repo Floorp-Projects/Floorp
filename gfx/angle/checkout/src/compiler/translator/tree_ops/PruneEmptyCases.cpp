@@ -104,8 +104,8 @@ bool PruneEmptyCasesTraverser::visitSwitch(Visit visit, TIntermSwitch *node)
         {
             TIntermSequence emptyReplacement;
             ASSERT(getParentNode()->getAsBlock());
-            mMultiReplacements.emplace_back(getParentNode()->getAsBlock(), node,
-                                            std::move(emptyReplacement));
+            mMultiReplacements.push_back(NodeReplaceWithMultipleEntry(getParentNode()->getAsBlock(),
+                                                                      node, emptyReplacement));
         }
         return false;
     }

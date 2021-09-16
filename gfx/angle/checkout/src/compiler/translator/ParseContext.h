@@ -64,7 +64,7 @@ class TParseContext : angle::NonCopyable
                          const char *token);
 
     TIntermBlock *getTreeRoot() const { return mTreeRoot; }
-    void setTreeRoot(TIntermBlock *treeRoot);
+    void setTreeRoot(TIntermBlock *treeRoot) { mTreeRoot = treeRoot; }
 
     bool getFragmentPrecisionHigh() const
     {
@@ -177,8 +177,7 @@ class TParseContext : angle::NonCopyable
     // Done only for empty declarations.
     void emptyDeclarationErrorCheck(const TType &type, const TSourceLoc &location);
 
-    void checkCanUseLayoutQualifier(const TSourceLoc &location);
-    bool checkLayoutQualifierSupported(const TSourceLoc &location,
+    void checkLayoutQualifierSupported(const TSourceLoc &location,
                                        const ImmutableString &layoutQualifierName,
                                        int versionRequired);
     bool checkWorkGroupSizeIsNotSpecified(const TSourceLoc &location,
@@ -191,7 +190,6 @@ class TParseContext : angle::NonCopyable
                                         const TPublicType &type,
                                         const TSourceLoc &qualifierLocation);
     void checkLocalVariableConstStorageQualifier(const TQualifierWrapperBase &qualifier);
-    void checkTCSOutVarIndexIsValid(TIntermBinary *binaryExpression, const TSourceLoc &location);
     const TPragma &pragma() const { return mDirectiveHandler.pragma(); }
     const TExtensionBehavior &extensionBehavior() const
     {
@@ -360,8 +358,8 @@ class TParseContext : angle::NonCopyable
                                           TFieldList *fieldList,
                                           const ImmutableString &instanceName,
                                           const TSourceLoc &instanceLine,
-                                          const TVector<unsigned int> *arraySizes,
-                                          const TSourceLoc &arraySizesLine);
+                                          TIntermTyped *arrayIndex,
+                                          const TSourceLoc &arrayIndexLine);
 
     void parseLocalSize(const ImmutableString &qualifierType,
                         const TSourceLoc &qualifierTypeLine,
@@ -382,10 +380,6 @@ class TParseContext : angle::NonCopyable
                           const TSourceLoc &intValueLine,
                           const std::string &intValueString,
                           int *numMaxVertices);
-    void parseVertices(int intValue,
-                       const TSourceLoc &intValueLine,
-                       const std::string &intValueString,
-                       int *numVertices);
     void parseIndexLayoutQualifier(int intValue,
                                    const TSourceLoc &intValueLine,
                                    const std::string &intValueString,
@@ -470,23 +464,6 @@ class TParseContext : angle::NonCopyable
     TLayoutPrimitiveType getGeometryShaderOutputPrimitiveType() const
     {
         return mGeometryShaderOutputPrimitiveType;
-    }
-    int getTessControlShaderOutputVertices() const { return mTessControlShaderOutputVertices; }
-    TLayoutTessEvaluationType getTessEvaluationShaderInputPrimitiveType() const
-    {
-        return mTessEvaluationShaderInputPrimitiveType;
-    }
-    TLayoutTessEvaluationType getTessEvaluationShaderInputVertexSpacingType() const
-    {
-        return mTessEvaluationShaderInputVertexSpacingType;
-    }
-    TLayoutTessEvaluationType getTessEvaluationShaderInputOrderingType() const
-    {
-        return mTessEvaluationShaderInputOrderingType;
-    }
-    TLayoutTessEvaluationType getTessEvaluationShaderInputPointType() const
-    {
-        return mTessEvaluationShaderInputPointType;
     }
 
     ShShaderOutput getOutputType() const { return mOutputType; }
@@ -577,18 +554,9 @@ class TParseContext : angle::NonCopyable
 
     void checkEarlyFragmentTestsIsNotSpecified(const TSourceLoc &location, bool earlyFragmentTests);
 
-    void checkNoncoherentIsSpecified(const TSourceLoc &location, bool noncoherent);
-
-    void checkNoncoherentIsNotSpecified(const TSourceLoc &location, bool noncoherent);
-
     bool checkUnsizedArrayConstructorArgumentDimensionality(const TIntermSequence &arguments,
                                                             TType type,
                                                             const TSourceLoc &line);
-
-    void checkCombinedClipCullDistanceIsValid(const TSourceLoc &line,
-                                              const ImmutableString &identifier,
-                                              const int arraySize);
-
     // Check texture offset is within range.
     void checkSingleTextureOffset(const TSourceLoc &line,
                                   const TConstantUnion *values,
@@ -600,11 +568,6 @@ class TParseContext : angle::NonCopyable
     void checkGeometryShaderInputAndSetArraySize(const TSourceLoc &location,
                                                  const ImmutableString &token,
                                                  TType *type);
-
-    // Similar, for tessellation shaders.
-    void checkTessellationShaderUnsizedArraysAndSetSize(const TSourceLoc &location,
-                                                        const ImmutableString &token,
-                                                        TType *type);
 
     // Will size any unsized array type so unsized arrays won't need to be taken into account
     // further along the line in parsing.
@@ -648,16 +611,13 @@ class TParseContext : angle::NonCopyable
     bool parseGeometryShaderOutputLayoutQualifier(const TTypeQualifier &typeQualifier);
     void setGeometryShaderInputArraySize(unsigned int inputArraySize, const TSourceLoc &line);
 
-    bool parseTessControlShaderOutputLayoutQualifier(const TTypeQualifier &typeQualifier);
-    bool parseTessEvaluationShaderInputLayoutQualifier(const TTypeQualifier &typeQualifier);
-
     // Set to true when the last/current declarator list was started with an empty declaration. The
     // non-empty declaration error check will need to be performed if the empty declaration is
     // followed by a declarator.
     bool mDeferredNonEmptyDeclarationErrorCheck;
 
-    sh::GLenum mShaderType;    // vertex/fragment/geometry/etc shader
-    ShShaderSpec mShaderSpec;  // The language specification compiler conforms to - GLES/WebGL/etc.
+    sh::GLenum mShaderType;    // vertex or fragment language (future: pack or unpack)
+    ShShaderSpec mShaderSpec;  // The language specification compiler conforms to - GLES2 or WebGL.
     ShCompileOptions mCompileOptions;  // Options passed to TCompiler
     int mShaderVersion;
     TIntermBlock *mTreeRoot;  // root of parse tree being created
@@ -714,14 +674,6 @@ class TParseContext : angle::NonCopyable
     int mGeometryShaderMaxVertices;
     int mMaxGeometryShaderInvocations;
     int mMaxGeometryShaderMaxVertices;
-    unsigned int mGeometryInputArraySize;
-
-    int mMaxPatchVertices;
-    int mTessControlShaderOutputVertices;
-    TLayoutTessEvaluationType mTessEvaluationShaderInputPrimitiveType;
-    TLayoutTessEvaluationType mTessEvaluationShaderInputVertexSpacingType;
-    TLayoutTessEvaluationType mTessEvaluationShaderInputOrderingType;
-    TLayoutTessEvaluationType mTessEvaluationShaderInputPointType;
 
     // Track when we add new scope for func body in ESSL 1.00 spec
     bool mFunctionBodyNewScope;

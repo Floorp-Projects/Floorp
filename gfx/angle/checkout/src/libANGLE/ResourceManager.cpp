@@ -33,7 +33,7 @@ template <typename ResourceType, typename IDType>
 IDType AllocateEmptyObject(HandleAllocator *handleAllocator,
                            ResourceMap<ResourceType, IDType> *objectMap)
 {
-    IDType handle = PackParam<IDType>(handleAllocator->allocate());
+    IDType handle = FromGL<IDType>(handleAllocator->allocate());
     objectMap->assign(handle, nullptr);
     return handle;
 }
@@ -379,11 +379,6 @@ void FramebufferManager::setDefaultFramebuffer(Framebuffer *framebuffer)
 {
     ASSERT(framebuffer == nullptr || framebuffer->isDefault());
     mObjectMap.assign(Framebuffer::kDefaultDrawFramebufferHandle, framebuffer);
-}
-
-Framebuffer *FramebufferManager::getDefaultFramebuffer() const
-{
-    return getFramebuffer(Framebuffer::kDefaultDrawFramebufferHandle);
 }
 
 void FramebufferManager::invalidateFramebufferCompletenessCache() const

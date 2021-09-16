@@ -10,7 +10,6 @@
 #include "GLES3/gl3.h"
 #include "common/mathutil.h"
 #include "common/platform.h"
-#include "common/string_utils.h"
 
 #include <set>
 
@@ -171,7 +170,6 @@ GLenum VariableComponentType(GLenum type)
         case GL_UNSIGNED_INT_IMAGE_BUFFER:
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
             return GL_INT;
         case GL_UNSIGNED_INT:
         case GL_UNSIGNED_INT_VEC2:
@@ -362,7 +360,6 @@ int VariableRowCount(GLenum type)
         case GL_INT_IMAGE_BUFFER:
         case GL_UNSIGNED_INT_IMAGE_BUFFER:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
             return 1;
         case GL_FLOAT_MAT2:
         case GL_FLOAT_MAT3x2:
@@ -443,7 +440,6 @@ int VariableColumnCount(GLenum type)
         case GL_UNSIGNED_INT_IMAGE_CUBE:
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
             return 1;
         case GL_BOOL_VEC2:
         case GL_FLOAT_VEC2:
@@ -511,7 +507,6 @@ bool IsSamplerType(GLenum type)
         case GL_SAMPLER_2D_ARRAY_SHADOW:
         case GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
             return true;
     }
 
@@ -530,18 +525,6 @@ bool IsSamplerCubeType(GLenum type)
     }
 
     return false;
-}
-
-bool IsSamplerYUVType(GLenum type)
-{
-    switch (type)
-    {
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
-            return true;
-
-        default:
-            return false;
-    }
 }
 
 bool IsImageType(GLenum type)
@@ -877,7 +860,6 @@ int VariableSortOrder(GLenum type)
         case GL_UNSIGNED_INT_IMAGE_CUBE:
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
-        case GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT:
             return 6;
 
         default:
@@ -919,11 +901,6 @@ std::string ParseResourceName(const std::string &name, std::vector<unsigned int>
     }
 
     return name.substr(0, baseNameLength);
-}
-
-bool IsBuiltInName(const char *name)
-{
-    return angle::BeginsWith(name, "gl_");
 }
 
 std::string StripLastArrayIndex(const std::string &name)
@@ -1129,69 +1106,6 @@ const char *GetDebugMessageSeverityString(GLenum severity)
             return "Unknown Severity";
     }
 }
-
-ShaderType GetShaderTypeFromBitfield(size_t singleShaderType)
-{
-    switch (singleShaderType)
-    {
-        case GL_VERTEX_SHADER_BIT:
-            return ShaderType::Vertex;
-        case GL_FRAGMENT_SHADER_BIT:
-            return ShaderType::Fragment;
-        case GL_COMPUTE_SHADER_BIT:
-            return ShaderType::Compute;
-        case GL_GEOMETRY_SHADER_BIT:
-            return ShaderType::Geometry;
-        case GL_TESS_CONTROL_SHADER_BIT:
-            return ShaderType::TessControl;
-        case GL_TESS_EVALUATION_SHADER_BIT:
-            return ShaderType::TessEvaluation;
-        default:
-            return ShaderType::InvalidEnum;
-    }
-}
-
-GLbitfield GetBitfieldFromShaderType(ShaderType shaderType)
-{
-    switch (shaderType)
-    {
-        case ShaderType::Vertex:
-            return GL_VERTEX_SHADER_BIT;
-        case ShaderType::Fragment:
-            return GL_FRAGMENT_SHADER_BIT;
-        case ShaderType::Compute:
-            return GL_COMPUTE_SHADER_BIT;
-        case ShaderType::Geometry:
-            return GL_GEOMETRY_SHADER_BIT;
-        case ShaderType::TessControl:
-            return GL_TESS_CONTROL_SHADER_BIT;
-        case ShaderType::TessEvaluation:
-            return GL_TESS_EVALUATION_SHADER_BIT;
-        default:
-            UNREACHABLE();
-            return GL_ZERO;
-    }
-}
-
-bool ShaderTypeSupportsTransformFeedback(ShaderType shaderType)
-{
-    switch (shaderType)
-    {
-        case ShaderType::Vertex:
-        case ShaderType::Geometry:
-        case ShaderType::TessEvaluation:
-            return true;
-        default:
-            return false;
-    }
-}
-
-ShaderType GetLastPreFragmentStage(ShaderBitSet shaderTypes)
-{
-    shaderTypes.reset(ShaderType::Fragment);
-    shaderTypes.reset(ShaderType::Compute);
-    return shaderTypes.any() ? shaderTypes.last() : ShaderType::InvalidEnum;
-}
 }  // namespace gl
 
 namespace egl
@@ -1255,7 +1169,6 @@ bool IsExternalImageTarget(EGLenum target)
         case EGL_NATIVE_BUFFER_ANDROID:
         case EGL_D3D11_TEXTURE_ANGLE:
         case EGL_LINUX_DMA_BUF_EXT:
-        case EGL_METAL_TEXTURE_ANGLE:
             return true;
 
         default:
