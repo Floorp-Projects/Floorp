@@ -97,9 +97,15 @@ FORMAT_METHODS = {
 }
 
 
+def get_taskgraph_generator(root, parameters):
+    """Helper function to make testing a little easier."""
+    from taskgraph.generator import TaskGraphGenerator
+
+    return TaskGraphGenerator(root_dir=root, parameters=parameters)
+
+
 def format_taskgraph(options, parameters, logfile=None):
     import taskgraph
-    from taskgraph.generator import TaskGraphGenerator
     from taskgraph.parameters import parameters_loader
 
     if logfile:
@@ -119,7 +125,7 @@ def format_taskgraph(options, parameters, logfile=None):
         strict=False,
     )
 
-    tgg = TaskGraphGenerator(root_dir=options.get("root"), parameters=parameters)
+    tgg = get_taskgraph_generator(options.get("root"), parameters)
 
     tg = getattr(tgg, options["graph_attr"])
     tg = get_filtered_taskgraph(tg, options["tasks_regex"])
@@ -704,10 +710,10 @@ def setup_logging():
     )
 
 
-def main():
+def main(args=sys.argv[1:]):
     setup_logging()
     parser = create_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     try:
         args.command(vars(args))
     except Exception:
