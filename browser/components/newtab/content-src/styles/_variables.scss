@@ -1,104 +1,43 @@
 @use 'sass:math';
 
-//* -------------------------------------------------------------------------- */
-// Proton colors
-
-$proton-dark-grey-30: rgb(66, 65, 77);
-$proton-primary-blue: rgb(0, 97, 224);
-$proton-primary-blue-dark: rgb(0, 221, 255);
-$proton-primary-text-color-dark: rgb(43, 42, 51);
+$primary-blue: rgb(0, 97, 224);
+$primary-blue-dark: rgb(0, 221, 255);
+$primary-text-color-dark: rgb(43, 42, 51);
 
 //* -------------------------------------------------------------------------- */
 // Photon colors from http://design.firefox.com/photon/visuals/color.html
 
 $blue-40: #45A1FF;
 $blue-50: #0A84FF;
-$blue-60: #0060DF;
-$blue-70: #003EAA;
-$blue-80: #002275;
-$grey-10: #F9F9FA;
-$grey-20: #EDEDF0;
 $grey-30: #D7D7DB;
-$grey-40: #B1B1B3;
-$grey-50: #737373;
 $grey-60: #4A4A4F;
-$grey-70: #38383D;
-$grey-80: #2A2A2E;
 $grey-90: #0C0C0D;
-$teal-10: #A7FFFE;
-$teal-70: #008EA4;
 $red-60: #D70022;
 $yellow-50: #FFE900;
 
-//* -------------------------------------------------------------------------- */
-// Photon opacity from http://design.firefox.com/photon/visuals/color.html#opacity
-
-$grey-10-00: rgba($grey-10, 0);
-$grey-10-10: rgba($grey-10, 0.1);
-$grey-10-20: rgba($grey-10, 0.2);
-$grey-10-30: rgba($grey-10, 0.3);
-$grey-10-40: rgba($grey-10, 0.4);
-$grey-10-50: rgba($grey-10, 0.5);
-$grey-10-60: rgba($grey-10, 0.6);
-$grey-10-80: rgba($grey-10, 0.8);
-$grey-10-95: rgba($grey-10, 0.95);
-$grey-20-60: rgba($grey-20, 0.6);
-$grey-20-80: rgba($grey-20, 0.8);
-$grey-30-60: rgba($grey-30, 0.6);
-$grey-60-70: rgba($grey-60, 0.7);
-$grey-70-60: rgba($grey-70, 0.6);
-$grey-80-95: rgba($grey-80, 0.95);
-$grey-90-00: rgba($grey-90, 0);
 $grey-90-10: rgba($grey-90, 0.1);
 $grey-90-20: rgba($grey-90, 0.2);
-$grey-90-30: rgba($grey-90, 0.3);
-$grey-90-40: rgba($grey-90, 0.4);
-$grey-90-50: rgba($grey-90, 0.5);
-$grey-90-60: rgba($grey-90, 0.6);
-$grey-90-70: rgba($grey-90, 0.7);
-$grey-90-80: rgba($grey-90, 0.8);
 
 $blue-40-40: rgba($blue-40, 0.4);
-$blue-50-50: rgba($blue-50, 0.5);
 $blue-50-30: rgba($blue-50, 0.3);
 
 $black: #000;
 $black-10: rgba($black, 0.1);
 $black-15: rgba($black, 0.15);
 $black-20: rgba($black, 0.2);
-$black-25: rgba($black, 0.25);
 $black-30: rgba($black, 0.3);
 
 //* -------------------------------------------------------------------------- */
 // Other colors
 
 $white: #FFF;
-$white-0: rgba($white, 0);
-$white-10: rgba($white, 0.1);
-$pocket-teal: #50BCB6;
-$shadow-10: rgba(12, 12, 13, 0.1);
 $status-green: #058B00;
 $status-dark-green: #7C6;
 $bookmark-icon-fill: #0A84FF;
 $download-icon-fill: #12BC00;
 $pocket-icon-fill: #D70022;
 $email-input-invalid: rgba($red-60, 0.3);
-$aw-extra-blue-1: #004EC2;
-$aw-extra-blue-2: #0080FF;
-$aw-extra-blue-3: #00C7FF;
-$about-welcome-gradient: linear-gradient(to bottom, $blue-70 40%, $aw-extra-blue-1 60%, $blue-60 80%, $aw-extra-blue-2 90%, $aw-extra-blue-3 100%);
 
-// New New Tab Experience colors.
-$newtab-background-button-default-color: rgba(223, 223, 223, 0.5);
-$newtab-background-button-darktheme-color: rgba(80, 80, 80, 0.5);
-$newtab-background-button-default-text-color: #484848;
-$newtab-background-button-darktheme-text-color: #CDCDD4;
-$newtab-background-button-default-hover-color: rgba(196, 196, 196, 0.5);
-$newtab-background-button-darktheme-hover-color: rgba(114, 114, 114, 0.5);
-$newtab-background-button-default-active-color: rgba(151, 151, 151, 0.5);
-$newtab-background-button-darktheme-active-color: rgba(173, 173, 173, 0.5);
-$newtab-background-primary-text-color: #151515;
-$newtab-background-darktheme-primary-text-color: #CDCDD4;
 $newtab-wordmark-default-color: #20123A;
 $newtab-wordmark-darktheme-color: rgb(251, 251, 254);
 
@@ -115,37 +54,7 @@ $in-content-page-background: #F9F9FB;
 $in-content-page-background-dark: #2B2A33;
 
 $newtab-background-secondary: #FFF;
-$newtab-background-secondary-dark: $proton-dark-grey-30;
-
-$newtab-card-primary-text-color: #20123A;
-$newtab-card-darktheme-primary-text-color: #E0E0E6;
-$newtab-card-line-color: #716F87;
-$newtab-card-darktheme-line-color: #B9B7CC;
-$newtab-card-separator-line-color: #E1E0E6;
-$newtab-card-darktheme-separator-line-color: #53515F;
-$newtab-card-tint: rgba(0, 0, 0, 0.15);
-
-$newtab-card-firstshadow: 0 2px 6px rgba(58, 57, 68, 0.2);
-$newtab-card-secondshadow: 0 2px 14px rgba(58, 57, 68, 0.2);
-$newtab-card-darktheme-firstshadow: 0 2px 6px rgba(28, 27, 34, 0.5);
-$newtab-card-darktheme-secondshadow: 0 2px 14px rgba(28, 27, 34, 0.5);
-
-$newtab-focus-outline-color: rgba(0, 96, 223, 0.25);
-$newtab-darktheme-focus-outline-color: rgba(80, 145, 241, 0.5);
-$newtab-darktheme-focus-border: #B5D3FF;
-$newtab-darktheme-focus-border-selected: #B5D3FF;
-
-$newtab-darktheme-primary-action-background: #4484E2;
-$newtab-primary-action-background-off: #E9E9E9;
-$newtab-darktheme-primary-action-background-off: #6A6A6F;
-$newtab-card-darktheme-secondary-action-background: #515156;
-$newtab-card-darktheme-secondary-action-background-hover: #606065;
-$newtab-card-secondary-action-background-active: #E2E2E6;
-$newtab-card-darktheme-secondary-action-background-active: #6F6F74;
-$newtab-card-darktheme-hover-color: rgba(180, 180, 180, 0.1);
-$newtab-card-hover-color: rgba(0, 0, 0, 0.05);
-$newtab-card-secondary-text-color: #585165;
-$newtab-card-darktheme-secondary-text-color: #B1B1BD;
+$newtab-background-secondary-dark: rgb(66, 65, 77);
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
@@ -224,7 +133,7 @@ $textbox-shadow-size: 4px;
 
 $customize-menu-slide-bezier: cubic-bezier(0.46, 0.03, 0.52, 0.96);
 $customize-menu-expand-bezier: cubic-bezier(0.82, 0.085, 0.395, 0.895);
-$customize-menu-border-tint: 1px solid $newtab-card-tint;
+$customize-menu-border-tint: 1px solid rgba(0, 0, 0, 0.15);
 
 @mixin fade-in {
   box-shadow: inset $inner-box-shadow, $shadow-primary;
