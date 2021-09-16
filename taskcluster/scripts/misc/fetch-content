@@ -528,7 +528,12 @@ def fetch_urls(downloads):
 
 
 def git_checkout_archive(
-    dest_path: pathlib.Path, repo: str, commit: str, prefix=None, ssh_key=None
+    dest_path: pathlib.Path,
+    repo: str,
+    commit: str,
+    prefix=None,
+    ssh_key=None,
+    include_dot_git=False,
 ):
     """Produce an archive of the files comprising a Git checkout."""
     dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -575,20 +580,50 @@ def git_checkout_archive(
 
         subprocess.run(["git", "checkout", commit], cwd=str(git_dir), check=True)
 
+        # When including the .git, we want --depth 1, but a direct clone would not
+        # necessarily be able to give us the right commit.
+        if include_dot_git:
+            initial_clone = git_dir.with_name(git_dir.name + ".orig")
+            git_dir.rename(initial_clone)
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "file://" + str(initial_clone),
+                    str(git_dir),
+                    "--depth",
+                    "1",
+                ],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "remote", "set-url", "origin", repo],
+                cwd=str(git_dir),
+                check=True,
+            )
+
+        # --depth 1 can induce more work on the server side, so only use it for
+        # submodule initialization when we want to keep the .git directory.
+        depth = ["--depth", "1"] if include_dot_git else []
         subprocess.run(
-            ["git", "submodule", "update", "--init"], cwd=str(git_dir), check=True
+            ["git", "submodule", "update", "--init"] + depth,
+            cwd=str(git_dir),
+            check=True,
         )
 
         if keypath:
             os.remove(keypath)
 
         print("creating archive %s of commit %s" % (dest_path, commit))
+        exclude_dot_git = [] if include_dot_git else ["--exclude=.git"]
         proc = subprocess.Popen(
             [
                 "tar",
                 "cf",
                 "-",
-                "--exclude=.git",
+            ]
+            + exclude_dot_git
+            + [
                 "-C",
                 str(temp_dir),
                 prefix,
@@ -613,6 +648,7 @@ def command_git_checkout_archive(args):
             args.commit,
             prefix=args.path_prefix,
             ssh_key=args.ssh_key_secret,
+            include_dot_git=args.include_dot_git,
         )
     except Exception:
         try:
@@ -744,6 +780,9 @@ def main():
     git_checkout.add_argument("dest", help="Destination path of archive")
     git_checkout.add_argument(
         "--ssh-key-secret", help="The scope path of the ssh key to used for checkout"
+    )
+    git_checkout.add_argument(
+        "--include-dot-git", action="store_true", help="Include the .git directory"
     )
 
     url = subparsers.add_parser("static-url", help="Download a static URL")

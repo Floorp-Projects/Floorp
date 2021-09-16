@@ -289,6 +289,7 @@ def create_fetch_url_task(config, name, fetch):
     schema={
         Required("repo"): str,
         Required(Any("revision", "branch")): str,
+        Optional("include-dot-git"): bool,
         Optional("artifact-name"): str,
         Optional("path-prefix"): str,
         # ssh-key is a taskcluster secret path (e.g. project/civet/github-deploy-key)
@@ -334,10 +335,15 @@ def create_git_fetch_task(config, name, fetch):
         args.append("--ssh-key-secret")
         args.append(ssh_key)
 
+    digest_data = [revision_or_branch, path_prefix, artifact_name]
+    if fetch.get("include-dot-git", False):
+        args.append("--include-dot-git")
+        digest_data.append(".git")
+
     return {
         "command": args,
         "artifact_name": artifact_name,
-        "digest_data": [revision_or_branch, path_prefix, artifact_name],
+        "digest_data": digest_data,
         "secret": ssh_key,
     }
 
