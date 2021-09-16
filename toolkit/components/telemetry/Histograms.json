@@ -1813,7 +1813,7 @@
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["nclx", "icc", "absent"],
+    "labels": ["nclx", "icc", "absent", "both"],
     "description": "AVIF colour information type",
     "bug_numbers": [1696045]
   },

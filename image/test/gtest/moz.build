@@ -139,6 +139,7 @@ TEST_HARNESS_FILES.gtest += [
     "transparent.jxl",
     "transparent.png",
     "transparent.webp",
+    "valid-avif-colr-nclx-and-prof.avif",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
