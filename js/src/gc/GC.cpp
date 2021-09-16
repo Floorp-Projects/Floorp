@@ -4350,13 +4350,10 @@ bool GCRuntime::foregroundFinalize(JSFreeOp* fop, Zone* zone,
   ArenaLists& lists = zone->arenas;
   lists.checkNoArenasToUpdateForKind(thingKind);
 
-  // Arenas are released for use for new allocations as soon as the finalizers
-  // for that allocation kind have run. This means that a cell's finalizer can
-  // safely use IsAboutToBeFinalized to check other cells of the same alloc
-  // kind, but not of different alloc kinds: the other arena may have already
-  // had new objects allocated in it, and since we allocate black,
-  // IsAboutToBeFinalized will return false even though the referent we intended
-  // to check is long gone.
+  // Non-empty arenas are reused for use for new allocations as soon as the
+  // finalizers for that allocation kind have run. Empty arenas are only
+  // released when everything in the zone has been swept (see
+  // GCRuntime::sweepBackgroundThings for more details).
   if (!FinalizeArenas(fop, &lists.arenasToSweep(thingKind), sweepList,
                       thingKind, sliceBudget)) {
     // Copy the current contents of sweepList so that ArenaIter can find them.
