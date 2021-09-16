@@ -725,6 +725,8 @@ static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
 
 extern bool ToValType(JSContext* cx, HandleValue v, ValType* out);
 
+extern UniqueChars ToString(RefType type);
+
 extern UniqueChars ToString(ValType type);
 
 extern UniqueChars ToString(const Maybe<ValType>& type);
