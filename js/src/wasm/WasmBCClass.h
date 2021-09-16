@@ -227,9 +227,6 @@ struct BaseCompiler final {
   //
   // Compilation state.
 
-  // Decoder for this function, used for misc error reporting.
-  Decoder& decoder_;
-
   // Opcode reader.
   BaseOpIter iter_;
 
