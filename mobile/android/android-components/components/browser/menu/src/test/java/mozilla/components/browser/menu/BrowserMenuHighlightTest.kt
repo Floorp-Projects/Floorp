@@ -42,6 +42,6 @@ class BrowserMenuHighlightTest {
             backgroundResource = 0,
             colorResource = R.color.photonRed50
         )
-        assertEquals(HighPriorityHighlightEffect(0xffff0039L.toInt()), highlight.asEffect(testContext))
+        assertEquals(HighPriorityHighlightEffect(testContext.getColor(R.color.photonRed50)), highlight.asEffect(testContext))
     }
 }
