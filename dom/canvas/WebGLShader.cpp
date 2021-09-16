@@ -80,12 +80,8 @@ WebGLShader::~WebGLShader() {
   mContext->gl->fDeleteShader(mGLName);
 }
 
-void WebGLShader::ShaderSource(const std::string& cleanSource) {
-  const auto badChar =
-      CheckGLSLPreprocString(mContext->IsWebGL2(), cleanSource);
-  MOZ_ASSERT(!badChar);
-  if (badChar) return;
-  mSource = cleanSource;
+void WebGLShader::ShaderSource(const std::string& u8) {
+  mSource = CrushGlslToAscii(u8);
 }
 
 void WebGLShader::CompileShader() {
