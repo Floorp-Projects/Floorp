@@ -1,0 +1,109 @@
+---
+base_repository: https://hg.mozilla.org/mozilla-central
+build_date: 1509164545
+build_number: 1
+app_version: "60.0"
+version: "60.0"
+next_version: null
+filters:
+    - target_tasks_method
+head_ref: 14d9cd421424a2f3e38b9c8489900c3bb769846
+head_repository: https://hg.mozilla.org/releases/mozilla-release
+head_rev: 14d9cd421424a2f3e38b9c8489900c3bb769846
+hg_branch: default
+level: "3"
+message: " "
+# morph_templates: {}
+moz_build_date: "20171028042225"
+optimize_target_tasks: true
+owner: xquan@mozilla.com
+project: mozilla-release
+pushdate: 1509164545
+pushlog_id: "8069"
+release_eta: "2018-01-31T00:30:00+00:00"
+release_history: {}
+release_enable_partners: true
+release_partners: null
+release_partner_build_number: 1
+release_partner_config:
+    {
+        "release-eme-free-repack":
+            {
+                "mozilla-EME-free":
+                    {
+                        "mozilla-EME-free":
+                            {
+                                "s3cfg": "/builds/release-s3cfg",
+                                "dist_version": "1.0",
+                                "bucket": "net-mozaws-prod-delivery-firefox",
+                                "platforms":
+                                    [
+                                        "macosx64-shippable",
+                                        "win32-shippable",
+                                        "win64-shippable",
+                                    ],
+                                "aus": "mozilla-EMEfree",
+                                "output_dir": "%(platform)s-EME-free/%(locale)s",
+                                "upload_to_candidates": "true",
+                                "locales": ["de", "en-US"],
+                                "dist_id": "mozilla-EMEfree",
+                            },
+                    },
+            },
+        "release-partner-repack":
+            {
+                "partner2":
+                    {
+                        "partner2":
+                            {
+                                "dist_version": "1.0",
+                                "bucket": "net-mozaws-prod-delivery-firefox",
+                                "platforms":
+                                    [
+                                        "macosx64-shippable",
+                                        "win32-shippable",
+                                        "win64-shippable",
+                                    ],
+                                "aus": "partner2",
+                                "output_dir": "%(platform)s-EME-free/%(locale)s",
+                                "locales": ["en-US"],
+                                "dist_id": "partner2",
+                            },
+                    },
+                "partner1":
+                    {
+                        "partner1":
+                            {
+                                "dist_version": "1.0",
+                                "bucket": "net-mozaws-prod-delivery-firefox",
+                                "platforms":
+                                    [
+                                        "linux-shippable",
+                                        "linux64-shippable",
+                                        "macosx64-shippable",
+                                        "win32-shippable",
+                                        "win64-shippable",
+                                    ],
+                                "aus": "partner1",
+                                "output_dir": "%(platform)s-EME-free/%(locale)s",
+                                "upload_to_candidates": "true",
+                                "locales": ["de", "en-US"],
+                                "dist_id": "partner1",
+                            },
+                    },
+            },
+    }
+release_enable_emefree: true
+# target_task_labels: []
+target_tasks_method: promote_desktop
+do_not_optimize: []
+try_mode: null
+try_task_config: {}
+existing_tasks: {}
+try_options:
+release_type: "release-rc"
+release_product: firefox
+required_signoffs: []
+signoff_urls: {}
+phabricator_diff:
+tasks_for: actions
