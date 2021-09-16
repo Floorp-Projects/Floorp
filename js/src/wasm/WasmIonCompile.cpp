@@ -5834,7 +5834,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
       ArgTypeVector args(funcType);
       if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, args,
                                 trapExitLayout, trapExitLayoutNumWords,
-                                &offsets, &code->stackMaps, &d)) {
+                                &offsets, &code->stackMaps)) {
         return false;
       }
 

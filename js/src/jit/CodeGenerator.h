@@ -33,9 +33,8 @@
 namespace js {
 
 namespace wasm {
-class Decoder;
 class StackMaps;
-}  // namespace wasm
+}
 
 namespace jit {
 
@@ -99,11 +98,13 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   ~CodeGenerator();
 
   [[nodiscard]] bool generate();
-  [[nodiscard]] bool generateWasm(
-      wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
-      const wasm::ArgTypeVector& argTys, const MachineState& trapExitLayout,
-      size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
-      wasm::StackMaps* stackMaps, wasm::Decoder* decoder);
+  [[nodiscard]] bool generateWasm(wasm::TypeIdDesc funcTypeId,
+                                  wasm::BytecodeOffset trapOffset,
+                                  const wasm::ArgTypeVector& argTys,
+                                  const MachineState& trapExitLayout,
+                                  size_t trapExitLayoutNumWords,
+                                  wasm::FuncOffsets* offsets,
+                                  wasm::StackMaps* stackMaps);
 
   [[nodiscard]] bool link(JSContext* cx, const WarpSnapshot* snapshot);
 

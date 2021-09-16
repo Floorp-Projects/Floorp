@@ -643,7 +643,7 @@ bool BaseCompiler::endFunction() {
   offsets_.end = masm.currentOffset();
 
   if (!fr.checkStackHeight()) {
-    return decoder_.fail(decoder_.beginOffset(), "stack frame is too large");
+    return false;
   }
 
   JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code for index %d",
@@ -9553,7 +9553,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
       alloc_(alloc->fallible()),
       masm(*masm),
       // Compilation state
-      decoder_(decoder),
       iter_(moduleEnv, decoder),
       fr(*masm),
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
