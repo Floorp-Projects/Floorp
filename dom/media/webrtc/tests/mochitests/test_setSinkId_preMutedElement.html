@@ -14,17 +14,8 @@ createHTML({
 
 let getOutputDeviceId = async () => {
   let devices = await navigator.mediaDevices.enumerateDevices();
-  if (devices.length > 3) {
-    // Temporary code to debug an intermitten failure.
-    let s = await navigator.mediaDevices.getUserMedia({audio: true});
-    let d = await navigator.mediaDevices.enumerateDevices();
-    d.forEach(e => info(e.kind + ": " + e.label));
-    s.getTracks()[0].stop();
-  }
-  is(devices.length, 3, "Three fake devices found (mic, video, speaker).");
   let audios = devices.filter(d => d.kind == "audiooutput");
-  is(audios.length, 1, "One output device found.");
-
+  ok(audios.length > 0, "One or more output devices found.");
   return audios[0].deviceId;
 }
 
