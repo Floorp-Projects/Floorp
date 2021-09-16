@@ -4,7 +4,6 @@
 
 
 import pytest
-import unittest
 from mozunit import main
 
 from taskgraph.generator import TaskGraphGenerator, Kind, load_tasks_for_kind
@@ -89,25 +88,22 @@ class FakeOptimization(OptimizationStrategy):
         return False
 
 
-class TestGenerator(unittest.TestCase):
-    @pytest.fixture(autouse=True)
-    def patch(self, monkeypatch):
-        self.patch = monkeypatch
-
-    def maketgg(self, target_tasks=None, kinds=[("_fake", [])], params=None):
+@pytest.fixture
+def maketgg(monkeypatch):
+    def inner(target_tasks=None, kinds=[("_fake", [])], params=None):
         params = params or {}
         FakeKind.loaded_kinds = []
-        self.target_tasks = target_tasks or []
+        target_tasks = target_tasks or []
 
         def target_tasks_method(full_task_graph, parameters, graph_config):
-            return self.target_tasks
+            return target_tasks
 
         fake_registry = {
             mode: FakeOptimization(mode) for mode in ("always", "never", "even", "odd")
         }
 
         target_tasks_mod._target_task_methods["test_method"] = target_tasks_method
-        self.patch.setattr(optimize_mod, "registry", fake_registry)
+        monkeypatch.setattr(optimize_mod, "registry", fake_registry)
 
         parameters = FakeParameters(
             {
@@ -123,122 +119,111 @@ class TestGenerator(unittest.TestCase):
         )
         parameters.update(params)
 
-        self.patch.setattr(generator, "load_graph_config", fake_load_graph_config)
+        monkeypatch.setattr(generator, "load_graph_config", fake_load_graph_config)
 
         return WithFakeKind("/root", parameters)
 
-    def test_kind_ordering(self):
-        "When task kinds depend on each other, they are loaded in postorder"
-        self.tgg = self.maketgg(
-            kinds=[
-                ("_fake3", {"kind-dependencies": ["_fake2", "_fake1"]}),
-                ("_fake2", {"kind-dependencies": ["_fake1"]}),
-                ("_fake1", {"kind-dependencies": []}),
-            ]
-        )
-        self.tgg._run_until("full_task_set")
-        self.assertEqual(FakeKind.loaded_kinds, ["_fake1", "_fake2", "_fake3"])
+    return inner
 
-    def test_full_task_set(self):
-        "The full_task_set property has all tasks"
-        self.tgg = self.maketgg()
-        self.assertEqual(
-            self.tgg.full_task_set.graph,
-            graph.Graph({"_fake-t-0", "_fake-t-1", "_fake-t-2"}, set()),
-        )
-        self.assertEqual(
-            sorted(self.tgg.full_task_set.tasks.keys()),
-            sorted(["_fake-t-0", "_fake-t-1", "_fake-t-2"]),
-        )
 
-    def test_full_task_graph(self):
-        "The full_task_graph property has all tasks, and links"
-        self.tgg = self.maketgg()
-        self.assertEqual(
-            self.tgg.full_task_graph.graph,
-            graph.Graph(
-                {"_fake-t-0", "_fake-t-1", "_fake-t-2"},
+def test_kind_ordering(maketgg):
+    "When task kinds depend on each other, they are loaded in postorder"
+    tgg = maketgg(
+        kinds=[
+            ("_fake3", {"kind-dependencies": ["_fake2", "_fake1"]}),
+            ("_fake2", {"kind-dependencies": ["_fake1"]}),
+            ("_fake1", {"kind-dependencies": []}),
+        ]
+    )
+    tgg._run_until("full_task_set")
+    assert FakeKind.loaded_kinds == ["_fake1", "_fake2", "_fake3"]
+
+
+def test_full_task_set(maketgg):
+    "The full_task_set property has all tasks"
+    tgg = maketgg()
+    assert tgg.full_task_set.graph == graph.Graph(
+        {"_fake-t-0", "_fake-t-1", "_fake-t-2"}, set()
+    )
+    assert sorted(tgg.full_task_set.tasks.keys()) == sorted(
+        ["_fake-t-0", "_fake-t-1", "_fake-t-2"]
+    )
+
+
+def test_full_task_graph(maketgg):
+    "The full_task_graph property has all tasks, and links"
+    tgg = maketgg()
+    assert tgg.full_task_graph.graph == graph.Graph(
+        {"_fake-t-0", "_fake-t-1", "_fake-t-2"},
+        {
+            ("_fake-t-1", "_fake-t-0", "prev"),
+            ("_fake-t-2", "_fake-t-1", "prev"),
+        },
+    )
+    assert sorted(tgg.full_task_graph.tasks.keys()) == sorted(
+        ["_fake-t-0", "_fake-t-1", "_fake-t-2"]
+    )
+
+
+def test_target_task_set(maketgg):
+    "The target_task_set property has the targeted tasks"
+    tgg = maketgg(["_fake-t-1"])
+    assert tgg.target_task_set.graph == graph.Graph({"_fake-t-1"}, set())
+    assert set(tgg.target_task_set.tasks.keys()) == {"_fake-t-1"}
+
+
+def test_target_task_graph(maketgg):
+    "The target_task_graph property has the targeted tasks and deps"
+    tgg = maketgg(["_fake-t-1"])
+    assert tgg.target_task_graph.graph == graph.Graph(
+        {"_fake-t-0", "_fake-t-1"}, {("_fake-t-1", "_fake-t-0", "prev")}
+    )
+    assert sorted(tgg.target_task_graph.tasks.keys()) == sorted(
+        ["_fake-t-0", "_fake-t-1"]
+    )
+
+
+def test_always_target_tasks(maketgg):
+    "The target_task_graph includes tasks with 'always_target'"
+    tgg_args = {
+        "target_tasks": ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"],
+        "kinds": [
+            ("_fake", {"job-defaults": {"optimization": {"odd": None}}}),
+            (
+                "_ignore",
                 {
-                    ("_fake-t-1", "_fake-t-0", "prev"),
-                    ("_fake-t-2", "_fake-t-1", "prev"),
+                    "job-defaults": {
+                        "attributes": {"always_target": True},
+                        "optimization": {"even": None},
+                    }
                 },
             ),
-        )
-        self.assertEqual(
-            sorted(self.tgg.full_task_graph.tasks.keys()),
-            sorted(["_fake-t-0", "_fake-t-1", "_fake-t-2"]),
-        )
+        ],
+        "params": {"optimize_target_tasks": False},
+    }
+    tgg = maketgg(**tgg_args)
+    assert sorted(tgg.target_task_set.tasks.keys()) == sorted(
+        ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"]
+    )
+    assert sorted(tgg.target_task_graph.tasks.keys()) == sorted(
+        ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1", "_ignore-t-2"]
+    )
+    assert sorted(t.label for t in tgg.optimized_task_graph.tasks.values()) == sorted(
+        ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"]
+    )
 
-    def test_target_task_set(self):
-        "The target_task_set property has the targeted tasks"
-        self.tgg = self.maketgg(["_fake-t-1"])
-        self.assertEqual(
-            self.tgg.target_task_set.graph, graph.Graph({"_fake-t-1"}, set())
-        )
-        self.assertEqual(set(self.tgg.target_task_set.tasks.keys()), {"_fake-t-1"})
 
-    def test_target_task_graph(self):
-        "The target_task_graph property has the targeted tasks and deps"
-        self.tgg = self.maketgg(["_fake-t-1"])
-        self.assertEqual(
-            self.tgg.target_task_graph.graph,
-            graph.Graph(
-                {"_fake-t-0", "_fake-t-1"}, {("_fake-t-1", "_fake-t-0", "prev")}
-            ),
-        )
-        self.assertEqual(
-            sorted(self.tgg.target_task_graph.tasks.keys()),
-            sorted(["_fake-t-0", "_fake-t-1"]),
-        )
-
-    def test_always_target_tasks(self):
-        "The target_task_graph includes tasks with 'always_target'"
-        tgg_args = {
-            "target_tasks": ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"],
-            "kinds": [
-                ("_fake", {"job-defaults": {"optimization": {"odd": None}}}),
-                (
-                    "_ignore",
-                    {
-                        "job-defaults": {
-                            "attributes": {"always_target": True},
-                            "optimization": {"even": None},
-                        }
-                    },
-                ),
-            ],
-            "params": {"optimize_target_tasks": False},
-        }
-        self.tgg = self.maketgg(**tgg_args)
-        self.assertEqual(
-            sorted(self.tgg.target_task_set.tasks.keys()),
-            sorted(["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"]),
-        )
-        self.assertEqual(
-            sorted(self.tgg.target_task_graph.tasks.keys()),
-            sorted(
-                ["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1", "_ignore-t-2"]
-            ),
-        )
-        self.assertEqual(
-            sorted(t.label for t in self.tgg.optimized_task_graph.tasks.values()),
-            sorted(["_fake-t-0", "_fake-t-1", "_ignore-t-0", "_ignore-t-1"]),
-        )
-
-    def test_optimized_task_graph(self):
-        "The optimized task graph contains task ids"
-        self.tgg = self.maketgg(["_fake-t-2"])
-        tid = self.tgg.label_to_taskid
-        self.assertEqual(
-            self.tgg.optimized_task_graph.graph,
-            graph.Graph(
-                {tid["_fake-t-0"], tid["_fake-t-1"], tid["_fake-t-2"]},
-                {
-                    (tid["_fake-t-1"], tid["_fake-t-0"], "prev"),
-                    (tid["_fake-t-2"], tid["_fake-t-1"], "prev"),
-                },
-            ),
-        )
+def test_optimized_task_graph(maketgg):
+    "The optimized task graph contains task ids"
+    tgg = maketgg(["_fake-t-2"])
+    tid = tgg.label_to_taskid
+    assert tgg.optimized_task_graph.graph == graph.Graph(
+        {tid["_fake-t-0"], tid["_fake-t-1"], tid["_fake-t-2"]},
+        {
+            (tid["_fake-t-1"], tid["_fake-t-0"], "prev"),
+            (tid["_fake-t-2"], tid["_fake-t-1"], "prev"),
+        },
+    )
 
 
 def test_load_tasks_for_kind(monkeypatch):
