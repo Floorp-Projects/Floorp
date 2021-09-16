@@ -844,8 +844,12 @@ Toolbox.prototype = {
       this._mountReactComponent();
       this._buildDockOptions();
       this._buildTabs();
+
+      // Forward configuration flags to the DevTools server.
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
+      this._applyNewPerfPanelEnabled();
+
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
 
@@ -2093,6 +2097,23 @@ Toolbox.prototype = {
     const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
     this.commands.targetConfigurationCommand.updateConfiguration({
       serviceWorkersTestingEnabled,
+    });
+  },
+
+  /**
+   * When the new performance panel is enabled, the profiler and recorder will
+   * not react to console.profile calls. The server should instead log a message
+   * to warn the user that the API has no effect.
+   *
+   * Forward the value of the new perf panel preference so that the server can
+   * decide to warn or not.
+   */
+  _applyNewPerfPanelEnabled: function() {
+    this.commands.targetConfigurationCommand.updateConfiguration({
+      isNewPerfPanelEnabled: Services.prefs.getBoolPref(
+        "devtools.performance.new-panel-enabled",
+        false
+      ),
     });
   },
 

@@ -25,6 +25,8 @@ const SUPPORTED_OPTIONS = {
   colorSchemeSimulation: true,
   // Set a custom user agent
   customUserAgent: true,
+  // Is the client using the new performance panel.
+  isNewPerfPanelEnabled: true,
   // Enable JavaScript
   javascriptEnabled: true,
   // Force a custom device pixel ratio (used in RDM). Set to null to restore origin ratio.

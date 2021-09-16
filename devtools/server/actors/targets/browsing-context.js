@@ -306,10 +306,21 @@ const browsingContextTargetPrototype = {
     // Used by the ParentProcessTargetActor to list all frames in the Browser Toolbox
     this.watchNewDocShells = false;
 
+    // Flag which should be updated by the toolbox startup.
+    this._isNewPerfPanelEnabled = false;
+
     this._workerDescriptorActorList = null;
     this._workerDescriptorActorPool = null;
     this._onWorkerDescriptorActorListChanged = this._onWorkerDescriptorActorListChanged.bind(
       this
+    );
+
+    this._onConsoleApiProfilerEvent = this._onConsoleApiProfilerEvent.bind(
+      this
+    );
+    Services.obs.addObserver(
+      this._onConsoleApiProfilerEvent,
+      "console-api-profiler"
     );
 
     TargetActorRegistry.registerTargetActor(this);
@@ -624,6 +635,11 @@ const browsingContextTargetPrototype = {
     this.docShell = null;
     this._extraActors = null;
 
+    Services.obs.removeObserver(
+      this._onConsoleApiProfilerEvent,
+      "console-api-profiler"
+    );
+
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
     Resources.unwatchAllTargetResources(this);
@@ -823,6 +839,27 @@ const browsingContextTargetPrototype = {
   _onWorkerDescriptorActorListChanged() {
     this._workerDescriptorActorList.onListChanged = null;
     this.emit("workerListChanged");
+  },
+
+  _onConsoleApiProfilerEvent(subject, topic, data) {
+    // TODO: We will receive console-api-profiler events for any browser running
+    // in the same process as this target. We should filter irrelevant events,
+    // but console-api-profiler currently doesn't emit any information to identify
+    // the origin of the event. See Bug 1731033.
+    if (this._isNewPerfPanelEnabled) {
+      // When the _isNewPerfPanelEnabled flag was set, this browsing target is
+      // used by a toolbox using the new performance panel, which is not
+      // compatible with console.profile().
+      const warningFlag = 1;
+      this.logInPage({
+        text:
+          "console.profile is not compatible with the new Performance recorder. " +
+          "The new Performance recorder can be disabled in the advanced section of the Settings panel. " +
+          "See https://bugzilla.mozilla.org/show_bug.cgi?id=1730896",
+        category: "console.profile unavailable",
+        flags: warningFlag,
+      });
+    }
   },
 
   observe(subject, topic, data) {
@@ -1291,6 +1328,10 @@ const browsingContextTargetPrototype = {
       } else {
         this.touchSimulator.stop();
       }
+    }
+
+    if (typeof options.isNewPerfPanelEnabled == "boolean") {
+      this._isNewPerfPanelEnabled = options.isNewPerfPanelEnabled;
     }
 
     if (!this.isTopLevelTarget) {
