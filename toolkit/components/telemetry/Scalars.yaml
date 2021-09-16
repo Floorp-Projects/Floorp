@@ -2277,21 +2277,6 @@ dom.contentprocess:
       - 'firefox'
     record_in_processes:
       - 'main'
-  crash_subframe_ui_presented:
-    bug_numbers:
-      - 1676943
-    description: >
-      The number of times the subframe crash UI is shown to the user. This
-      only triggers when a tab containing the subframe is switched to.
-    expires: "98"
-    kind: uint
-    notification_emails:
-      - nlayzell@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
   # Note that the unsubmitted notification is currently only enabled on Nightly builds
   unsubmitted_ui_presented:
     bug_numbers:
@@ -3883,6 +3868,59 @@ formautofill.creditCards:
       - 'firefox'
     record_in_processes:
       - 'content'
+
+# This section is for notification bars
+notificationbar:
+  crash_subframe_ui:
+    bug_numbers:
+      - 1676943
+    description: >
+      Notifications for when the subframe crash UI is shown to the user. This
+      only triggers when a tab containing the subframe is switched to.
+    expires: "98"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - nlayzell@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  # Used only for testing
+  testone:
+    bug_numbers:
+      - 1676943
+    description: >
+      Used to test notificationbar telemetry
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  # Used only for testing
+  testtwo:
+    bug_numbers:
+      - 1676943
+    description: >
+      Used to test notificationbar telemetry
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains scalars for Screenshots.
 screenshots:
