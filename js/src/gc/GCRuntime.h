@@ -810,6 +810,7 @@ class GCRuntime {
   void startBackgroundFree();
   void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
   void sweepBackgroundThings(ZoneList& zones);
+  void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
   void assertBackgroundSweepingFinished();
 
   // Compacting GC. Implemented in Compacting.cpp.
