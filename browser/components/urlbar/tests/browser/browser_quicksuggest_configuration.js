@@ -11,10 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
-const SHOWED_ONBOARDING_DIALOG_PREF =
-  "browser.urlbar.quicksuggest.showedOnboardingDialog";
-const SEEN_RESTART_PREF = "browser.urlbar.quicksuggest.seenRestarts";
-
 add_task(async function init() {
   await UrlbarTestUtils.ensureQuickSuggestInit();
 });
@@ -23,24 +19,17 @@ add_task(async function init() {
 // on the first restart. This tests that we can override it by configuring the
 // `showOnboardingDialogOnNthRestart`
 add_task(async function test_override_wait_after_n_restarts() {
-  // Set up prefs so that onboarding will be shown.
+  // Set up non-Nimbus prefs related to showing the onboarding.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
-      [
-        "browser.urlbar.quicksuggest.quicksuggest.showedOnboardingDialog",
-        false,
-      ],
+      ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
       ["browser.urlbar.quicksuggest.seenRestarts", 0],
-      ["browser.urlbar.suggest.quicksuggest", false],
-      ["browser.urlbar.suggest.quicksuggest.sponsored", false],
     ],
   });
 
   await UrlbarTestUtils.withExperiment({
     valueOverrides: {
-      quickSuggestEnabled: true,
-      quickSuggestShouldShowOnboardingDialog: true,
+      quickSuggestScenario: "online",
       // Wait for 1 browser restart
       quickSuggestShowOnboardingDialogAfterNRestarts: 1,
     },
@@ -51,7 +40,7 @@ add_task(async function test_override_wait_after_n_restarts() {
         { isSubDialog: true }
       ).then(() => info("Saw dialog"));
       let prefPromise = TestUtils.waitForPrefChange(
-        SHOWED_ONBOARDING_DIALOG_PREF,
+        "browser.urlbar.quicksuggest.showedOnboardingDialog",
         value => value === true
       ).then(() => info("Saw pref change"));
 
@@ -73,16 +62,16 @@ add_task(async function test_override_wait_after_n_restarts() {
 });
 
 add_task(async function test_skip_onboarding_dialog() {
+  // Set up non-Nimbus prefs related to showing the onboarding.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.suggest.quicksuggest", false],
-      [SHOWED_ONBOARDING_DIALOG_PREF, false],
-      [SEEN_RESTART_PREF, 0],
+      ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
+      ["browser.urlbar.quicksuggest.seenRestarts", 0],
     ],
   });
   await UrlbarTestUtils.withExperiment({
     valueOverrides: {
-      quickSuggestEnabled: true,
+      quickSuggestScenario: "online",
       quickSuggestShouldShowOnboardingDialog: false,
     },
     callback: async () => {
@@ -92,7 +81,9 @@ add_task(async function test_skip_onboarding_dialog() {
         await UrlbarQuickSuggest.maybeShowOnboardingDialog();
       }
       Assert.ok(
-        !Services.prefs.getBoolPref(SHOWED_ONBOARDING_DIALOG_PREF),
+        !Services.prefs.getBoolPref(
+          "browser.urlbar.quicksuggest.showedOnboardingDialog"
+        ),
         "The showed onboarding dialog pref should not be set"
       );
     },
@@ -151,11 +142,44 @@ add_task(async function test_scenario_online() {
       quickSuggestScenario: "online",
     },
     callback: () => {
-      Assert.equal(
-        UrlbarPrefs.get("quickSuggestScenario"),
-        "online",
-        "quickSuggestScenario online"
-      );
+      assertScenarioPrefs({
+        urlbarPrefs: {
+          // prefs
+          "quicksuggest.scenario": "online",
+          "quicksuggest.enabled": true,
+          "quicksuggest.shouldShowOnboardingDialog": true,
+          "suggest.quicksuggest": false,
+          "suggest.quicksuggest.sponsored": false,
+
+          // Nimbus variables
+          quickSuggestScenario: "online",
+          quickSuggestEnabled: true,
+          quickSuggestShouldShowOnboardingDialog: true,
+        },
+        defaults: [
+          {
+            name: "browser.urlbar.quicksuggest.scenario",
+            value: "online",
+            getter: "getCharPref",
+          },
+          {
+            name: "browser.urlbar.quicksuggest.enabled",
+            value: true,
+          },
+          {
+            name: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
+            value: true,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest",
+            value: false,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest.sponsored",
+            value: false,
+          },
+        ],
+      });
     },
   });
 });
@@ -166,11 +190,44 @@ add_task(async function test_scenario_offline() {
       quickSuggestScenario: "offline",
     },
     callback: () => {
-      Assert.equal(
-        UrlbarPrefs.get("quickSuggestScenario"),
-        "offline",
-        "quickSuggestScenario offline"
-      );
+      assertScenarioPrefs({
+        urlbarPrefs: {
+          // prefs
+          "quicksuggest.scenario": "offline",
+          "quicksuggest.enabled": true,
+          "quicksuggest.shouldShowOnboardingDialog": false,
+          "suggest.quicksuggest": true,
+          "suggest.quicksuggest.sponsored": true,
+
+          // Nimbus variables
+          quickSuggestScenario: "offline",
+          quickSuggestEnabled: true,
+          quickSuggestShouldShowOnboardingDialog: false,
+        },
+        defaults: [
+          {
+            name: "browser.urlbar.quicksuggest.scenario",
+            value: "offline",
+            getter: "getCharPref",
+          },
+          {
+            name: "browser.urlbar.quicksuggest.enabled",
+            value: true,
+          },
+          {
+            name: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
+            value: false,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest",
+            value: true,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest.sponsored",
+            value: true,
+          },
+        ],
+      });
     },
   });
 });
@@ -181,14 +238,62 @@ add_task(async function test_scenario_history() {
       quickSuggestScenario: "history",
     },
     callback: () => {
-      Assert.equal(
-        UrlbarPrefs.get("quickSuggestScenario"),
-        "history",
-        "quickSuggestScenario history"
-      );
+      assertScenarioPrefs({
+        urlbarPrefs: {
+          // prefs
+          "quicksuggest.scenario": "history",
+          "quicksuggest.enabled": false,
+          "quicksuggest.shouldShowOnboardingDialog": true,
+          "suggest.quicksuggest": false,
+          "suggest.quicksuggest.sponsored": false,
+
+          // Nimbus variables
+          quickSuggestScenario: "history",
+          quickSuggestEnabled: false,
+          quickSuggestShouldShowOnboardingDialog: true,
+        },
+        defaults: [
+          {
+            name: "browser.urlbar.quicksuggest.scenario",
+            value: "history",
+            getter: "getCharPref",
+          },
+          {
+            name: "browser.urlbar.quicksuggest.enabled",
+            value: false,
+          },
+          {
+            name: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
+            value: true,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest",
+            value: false,
+          },
+          {
+            name: "browser.urlbar.suggest.quicksuggest.sponsored",
+            value: false,
+          },
+        ],
+      });
     },
   });
 });
+
+function assertScenarioPrefs({ urlbarPrefs, defaults }) {
+  for (let [name, value] of Object.entries(urlbarPrefs)) {
+    Assert.equal(UrlbarPrefs.get(name), value, `UrlbarPrefs.get("${name}")`);
+  }
+
+  let prefs = Services.prefs.getDefaultBranch("");
+  for (let { name, getter, value } of defaults) {
+    Assert.equal(
+      prefs[getter || "getBoolPref"](name),
+      value,
+      `Default branch pref: ${name}`
+    );
+  }
+}
 
 function clearOnboardingPrefs() {
   UrlbarPrefs.clear("suggest.quicksuggest");
