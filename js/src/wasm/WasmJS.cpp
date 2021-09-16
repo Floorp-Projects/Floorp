@@ -1051,8 +1051,13 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
   return proto;
 }
 
-[[nodiscard]] bool ParseValTypeArguments(JSContext* cx, HandleValue src,
-                                         ValTypeVector& dest) {
+static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
+  return NewStringCopyUTF8Z<CanGC>(cx,
+                                   JS::ConstUTF8CharsZ(chars, strlen(chars)));
+}
+
+[[nodiscard]] static bool ParseValTypes(JSContext* cx, HandleValue src,
+                                        ValTypeVector& dest) {
   JS::ForOfIterator iterator(cx);
 
   if (!iterator.init(src, JS::ForOfIterator::ThrowOnNonIterable)) {
@@ -1075,6 +1080,21 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
     }
   }
   return true;
+}
+
+[[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
+                                               const ValTypeVector& valTypes) {
+  RootedArrayObject arrayObj(cx, NewDenseEmptyArray(cx));
+  for (ValType valType : valTypes) {
+    RootedString type(cx, UTF8CharsToString(cx, ToString(valType).get()));
+    if (!type) {
+      return nullptr;
+    }
+    if (!NewbornArrayPush(cx, arrayObj, StringValue(type))) {
+      return nullptr;
+    }
+  }
+  return arrayObj;
 }
 
 // ============================================================================
@@ -1281,11 +1301,6 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
   }
 
   return buf.finishString();
-}
-
-static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
-  return NewStringCopyUTF8Z<CanGC>(cx,
-                                   JS::ConstUTF8CharsZ(chars, strlen(chars)));
 }
 
 /* static */
@@ -2585,6 +2600,7 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
     uint32_t maxPages32 = mozilla::AssertedCast<uint32_t>(maxPages->value());
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
                                   Int32Value(maxPages32)))) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
@@ -2593,19 +2609,23 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
       mozilla::AssertedCast<uint32_t>(memoryObj->volatilePages().value());
   if (!props.append(IdValuePair(NameToId(cx->names().minimum),
                                 Int32Value(minimumPages)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
   if (!props.append(IdValuePair(NameToId(cx->names().shared),
                                 BooleanValue(memoryObj->isShared())))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  JSObject* memoryType = NewPlainObjectWithProperties(
-      cx, props.begin(), props.length(), GenericObject);
+  RootedObject memoryType(
+      cx, NewPlainObjectWithProperties(cx, props.begin(), props.length(),
+                                       GenericObject));
   if (!memoryType) {
     return false;
   }
+
   args.rval().setObject(*memoryType);
   return true;
 }
@@ -3083,26 +3103,31 @@ bool WasmTableObject::typeImpl(JSContext* cx, const CallArgs& args) {
       cx, UTF8CharsToString(cx, ToString(table.elemType()).get()));
   if (!elementType || !props.append(IdValuePair(NameToId(cx->names().element),
                                                 StringValue(elementType)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
   if (table.maximum().isSome()) {
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
                                   Int32Value(table.maximum().value())))) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
 
   if (!props.append(IdValuePair(NameToId(cx->names().minimum),
                                 Int32Value(table.length())))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  JSObject* tableType = NewPlainObjectWithProperties(
-      cx, props.begin(), props.length(), GenericObject);
+  RootedObject tableType(
+      cx, NewPlainObjectWithProperties(cx, props.begin(), props.length(),
+                                       GenericObject));
   if (!tableType) {
     return false;
   }
+
   args.rval().setObject(*tableType);
   return true;
 }
@@ -3535,23 +3560,25 @@ bool WasmGlobalObject::typeImpl(JSContext* cx, const CallArgs& args) {
 
   if (!props.append(IdValuePair(NameToId(cx->names().mutable_),
                                 BooleanValue(global->isMutable())))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  JSString* valueType = UTF8CharsToString(cx, ToString(global->type()).get());
-  if (!valueType) {
-    return false;
-  }
-  if (!props.append(
-          IdValuePair(NameToId(cx->names().value), StringValue(valueType)))) {
+  RootedString valueType(cx,
+                         UTF8CharsToString(cx, ToString(global->type()).get()));
+  if (!valueType || !props.append(IdValuePair(NameToId(cx->names().value),
+                                              StringValue(valueType)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  JSObject* globalType = NewPlainObjectWithProperties(
-      cx, props.begin(), props.length(), GenericObject);
+  RootedObject globalType(
+      cx, NewPlainObjectWithProperties(cx, props.begin(), props.length(),
+                                       GenericObject));
   if (!globalType) {
     return false;
   }
+
   args.rval().setObject(*globalType);
   return true;
 }
@@ -3637,7 +3664,7 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   ValTypeVector params;
-  if (!ParseValTypeArguments(cx, paramsVal, params)) {
+  if (!ParseValTypes(cx, paramsVal, params)) {
     return false;
   }
 
@@ -3704,31 +3731,20 @@ const JSPropertySpec WasmTagObject::properties[] = {
 /* static */
 bool WasmTagObject::typeImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmTagObject tag(cx, &args.thisv().toObject().as<WasmTagObject>());
+
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
-  RootedArrayObject params(cx, NewDenseEmptyArray(cx));
-  if (!params) {
+  RootedObject parametersObj(cx, ValTypesToArray(cx, tag->valueTypes()));
+  if (!parametersObj ||
+      !props.append(IdValuePair(NameToId(cx->names().parameters),
+                                ObjectValue(*parametersObj)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  const wasm::ValTypeVector& valTypes = tag->valueTypes();
-  for (const ValType valType : valTypes) {
-    JSString* typeString = UTF8CharsToString(cx, ToString(valType).get());
-    if (!typeString) {
-      return false;
-    }
-    if (!NewbornArrayPush(cx, params, StringValue(typeString))) {
-      return false;
-    }
-  }
-
-  if (!props.append(IdValuePair(NameToId(cx->names().parameters),
-                                ObjectValue(*params)))) {
-    return false;
-  }
-
-  JSObject* tagType = NewPlainObjectWithProperties(
-      cx, props.begin(), props.length(), GenericObject);
+  RootedObject tagType(
+      cx, NewPlainObjectWithProperties(cx, props.begin(), props.length(),
+                                       GenericObject));
   if (!tagType) {
     return false;
   }
@@ -4078,23 +4094,6 @@ static JSObject* CreateWasmFunctionPrototype(JSContext* cx, JSProtoKey key) {
   return v.toObject().as<JSFunction>().isWasm();
 }
 
-/* static */
-static bool ValTypesToArray(JSContext* cx, Handle<jsid> key,
-                            const ValTypeVector& value,
-                            MutableHandle<IdValueVector> dest) {
-  RootedArrayObject result(cx, NewDenseEmptyArray(cx));
-  for (ValType v : value) {
-    RootedString type(cx, UTF8CharsToString(cx, ToString(v).get()));
-    if (!type) {
-      return false;
-    }
-    if (!NewbornArrayPush(cx, result, StringValue(type))) {
-      return false;
-    }
-  }
-  return dest.append(IdValuePair(key, ObjectValue(*result)));
-}
-
 bool WasmFunctionTypeImpl(JSContext* cx, const CallArgs& args) {
   RootedFunction function(cx, &args.thisv().toObject().as<JSFunction>());
 
@@ -4107,27 +4106,31 @@ bool WasmFunctionTypeImpl(JSContext* cx, const CallArgs& args) {
                            .lookupFuncExport(funcIndex)
                            .funcType();
 
-  const ValTypeVector& parameters = ft.args();
-  RootedId parametersId(cx, NameToId(cx->names().parameters));
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
-  if (!ValTypesToArray(cx, parametersId, parameters, &props)) {
+
+  RootedObject parametersObj(cx, ValTypesToArray(cx, ft.args()));
+  if (!parametersObj ||
+      !props.append(IdValuePair(NameToId(cx->names().parameters),
+                                ObjectValue(*parametersObj)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  const ValTypeVector& results = ft.results();
-  RootedId resultsId(cx, NameToId(cx->names().results));
-  if (!ValTypesToArray(cx, resultsId, results, &props)) {
+  RootedObject resultsObj(cx, ValTypesToArray(cx, ft.results()));
+  if (!resultsObj || !props.append(IdValuePair(NameToId(cx->names().results),
+                                               ObjectValue(*resultsObj)))) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  RootedObject functionType(
+  RootedObject funcType(
       cx, NewPlainObjectWithProperties(cx, props.begin(), props.length(),
                                        GenericObject));
-  if (!functionType) {
+  if (!funcType) {
     return false;
   }
 
-  args.rval().setObject(*functionType);
+  args.rval().setObject(*funcType);
   return true;
 }
 
@@ -4232,7 +4235,7 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
   if (!GetProperty(cx, obj, obj, parametersId, &parametersVal)) {
     return false;
   }
-  if (!ParseValTypeArguments(cx, parametersVal, params)) {
+  if (!ParseValTypes(cx, parametersVal, params)) {
     return false;
   }
 
@@ -4241,7 +4244,7 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
   if (!GetProperty(cx, obj, obj, resultsId, &resultsVal)) {
     return false;
   }
-  if (!ParseValTypeArguments(cx, resultsVal, results)) {
+  if (!ParseValTypes(cx, resultsVal, results)) {
     return false;
   }
 
