@@ -78,6 +78,7 @@ class Build(MachCommandBase):
         category="build",
         description="Build the tree.",
         metrics_path=MOZBUILD_METRICS_PATH,
+        virtualenv_name="build",
     )
     @CommandArgument(
         "--jobs",
@@ -238,6 +239,7 @@ class Build(MachCommandBase):
         category="build",
         description="Configure the tree (run configure and config.status).",
         metrics_path=MOZBUILD_METRICS_PATH,
+        virtualenv_name="build",
     )
     @CommandArgument(
         "options", default=None, nargs=argparse.REMAINDER, help="Configure options"
@@ -265,6 +267,7 @@ class Build(MachCommandBase):
         "resource-usage",
         category="post-build",
         description="Show information about system resource usage for a build.",
+        virtualenv_name="build",
     )
     @CommandArgument(
         "--address",
@@ -320,6 +323,7 @@ class Build(MachCommandBase):
         "build-backend",
         category="build",
         description="Generate a backend used to build the tree.",
+        virtualenv_name="build",
     )
     @CommandArgument(
         "-d", "--diff", action="store_true", help="Show a diff of changes."
