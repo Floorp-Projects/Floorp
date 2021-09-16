@@ -126,7 +126,7 @@ let DefaultTabUnloaderMethods = {
         processInfo = { count: 0, topCount: 0, tabSet: new Set() };
         processMap.set(childProcInfo.pid, processInfo);
       }
-      processInfo.memory = childProcInfo.residentUniqueSize;
+      processInfo.memory = childProcInfo.memory;
     }
   },
 };
