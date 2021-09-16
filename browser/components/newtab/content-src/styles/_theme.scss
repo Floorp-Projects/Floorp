@@ -56,93 +56,91 @@ body {
   --newtab-text-emphasis-background: #{$yellow-50};
   --newtab-text-emphasis-text-color: #{$grey-90};
 
-  --newtab-border-primary-color: #{$grey-40};
-  --newtab-border-secondary-color: #{$grey-30};
-  --newtab-icon-primary-color: #{$grey-90-80};
-  --newtab-icon-secondary-color: #{$grey-90-60};
-  --newtab-inner-box-shadow-color: #{$black-10};
+  // All colors below must refer to the main set of colors above.
+  --newtab-border-primary-color: var(--newtab-border-color);
+  --newtab-border-secondary-color: var(--newtab-border-color);
+  --newtab-icon-primary-color: var(--newtab-text-primary-color);
+  --newtab-icon-secondary-color: var(--newtab-text-secondary-color);
 
   --newtab-link-primary-color: var(--newtab-primary-action-background);
   --newtab-link-primary-active-color: var(--newtab-primary-element-active-color);
   --newtab-link-secondary-color: #{$teal-70};
   --newtab-text-conditional-color: #{$grey-60};
+  --newtab-link-secondary-color: var(--newtab-primary-action-background);
+  --newtab-text-conditional-color: var(--newtab-text-secondary-color);
   --newtab-textbox-background-color: var(--newtab-background-color-secondary);
-  --newtab-textbox-border: #{$grey-90-20};
+  --newtab-textbox-border: var(--newtab-border-color);
 
-  @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
+  @include textbox-focus(var(--newtab-primary-action-background)); // sass-lint:disable-line mixins-before-declarations
 
   // Background buttons
-  --newtab-background-button-hover-color: #{$newtab-background-button-default-hover-color};
-  --newtab-background-button-active-color: #{$newtab-background-button-default-active-color};
+  --newtab-background-button-hover-color: var(--newtab-element-hover-color);
+  --newtab-background-button-active-color: var(--newtab-element-active-color);
 
   // Buttons
-  --newtab-button-primary-color: #{$blue-60};
-  --newtab-button-primary-hover-color: #{$blue-70};
-  --newtab-button-primary-active-color: #{$blue-80};
-  --newtab-button-primary-text-color: #{$white};
+  --newtab-button-primary-color: var(--newtab-primary-action-background);
+  --newtab-button-primary-hover-color: var(--newtab-primary-element-hover-color);
+  --newtab-button-primary-active-color: var(--newtab-primary-element-active-color);
+  --newtab-button-primary-text-color: var(--newtab-primary-element-text-color);
   --newtab-button-secondary-color: inherit;
   // Feed buttons
-  --newtab-feed-button-background: #{$grey-20};
-  --newtab-feed-button-text: #{$grey-90};
-  --newtab-feed-button-text-faded: #{$grey-90-00};
-  --newtab-feed-button-spinner: #{$grey-50};
+  --newtab-feed-button-background: var(--newtab-element-secondary-color);
+  --newtab-feed-button-text: var(--newtab-text-primary-color);
+  --newtab-feed-button-text-faded: transparent;
+  --newtab-feed-button-spinner: var(--newtab-text-secondary-color);
 
   // Context menu
-  --newtab-contextmenu-background-color: #{$grey-10};
   --newtab-contextmenu-button-color: var(--newtab-background-color-secondary);
+  --newtab-contextmenu-background-color: var(--newtab-background-color);
+  --newtab-contextmenu-button-color: var(--newtab-text-primary-color);
 
   // Modal + overlay
   --newtab-modal-color: var(--newtab-background-color-secondary);
-  --newtab-overlay-color: #{$grey-20-80};
 
   // Sections
   --newtab-section-header-text-color: var(--newtab-background-primary-text-color);
-  --newtab-section-navigation-text-color: #{$grey-50};
+  --newtab-section-navigation-text-color: var(--newtab-text-primary-color);
 
   // Search
   --newtab-search-border-color: transparent;
-  --newtab-search-dropdown-color: #{$white};
-  --newtab-search-dropdown-header-color: #{$grey-10};
-  --newtab-search-header-background-color: #{$grey-10-95};
+  --newtab-search-header-background-color: var(--newtab-overlay-color);
 
   // Top Sites
   --newtab-topsites-background-color: var(--newtab-background-color-secondary);
-  --newtab-topsites-outer-card-hover: #{$newtab-card-hover-color};
-  --newtab-topsites-context-menu-hover: #{$newtab-card-hover-color};
+  --newtab-topsites-outer-card-hover: var(--newtab-element-hover-color);
+  --newtab-topsites-context-menu-hover: var(--newtab-element-hover-color);
 
   // Cards
-  --newtab-card-active-outline-color: #{$grey-30};
+  --newtab-card-active-outline-color: var(--newtab-element-secondary-color);
   --newtab-card-background-color: var(--newtab-background-color-secondary);
-  --newtab-card-placeholder-color: #{$grey-30};
-  --newtab-card-shadow: 0 1px 4px 0 #{$grey-90-10};
-  --newtab-card-header-color: #{$grey-90};
+  --newtab-card-placeholder-color: var(--newtab-element-secondary-color);
+  --newtab-card-shadow: #{$shadow-card};
+  --newtab-card-header-color: var(--newtab-text-primary-color);
 
   // Snippets
   --newtab-snippets-background-color: var(--newtab-background-color-secondary);
   --newtab-snippets-hairline-color: transparent;
 
   // New New Tab
-  --newtab-background-primary-text-color: #{$newtab-background-primary-text-color};
-  --newtab-focus-outline: #{$newtab-focus-outline-color};
-  --newtab-focus-border: #{$blue-60};
-  --newtab-focus-border-selected: #{$newtab-card-tint};
-  --newtab-seperator-line-color: #{$newtab-card-separator-line-color};
-  --newtab-primary-action-background-off: #{$newtab-primary-action-background-off};
-  --customize-menu-primary-text-color: #{$newtab-card-primary-text-color};
-  --customize-menu-check-fill: #{$white};
+  --newtab-background-primary-text-color: var(--newtab-text-primary-color);
+  --newtab-focus-outline: var(--newtab-primary-action-background-dimmed);
+  --newtab-focus-border: var(--newtab-primary-action-background);
+  --newtab-seperator-line-color: var(--newtab-border-color);
+  --newtab-primary-action-background-off: var(--newtab-element-secondary-color);
+  --customize-menu-primary-text-color: var(--newtab-text-primary-color);
+  --customize-menu-check-fill: var(--newtab-primary-element-text-color);
   --customize-menu-check-fill-contrast: #{$black};
   --customize-menu-background: var(--newtab-background-color-secondary);
-  --customize-menu-secondary-action-background: #{$grey-10};
-  --customize-menu-secondary-action-background-hover: #{$grey-20};
-  --customize-menu-secondary-action-background-active: #{$newtab-card-secondary-action-background-active};
-  --customize-menu-seperator-line-color: #{$newtab-card-separator-line-color};
-  --customize-menu-second-shadow: #{$newtab-card-secondshadow};
-  --customize-menu-slider-fill: #{$white};
-  --customize-menu-line-color: #{$newtab-card-line-color};
-  --newtab-search-first-shadow: #{$newtab-card-firstshadow};
-  --newtab-search-text-color: #{$newtab-card-secondary-text-color};
-  --newtab-card-first-shadow: #{$newtab-card-firstshadow};
-  --newtab-wordmark-color: #{$newtab-wordmark-default-color};
+  --customize-menu-secondary-action-background: var(--newtab-element-secondary-color);
+  --customize-menu-secondary-action-background-hover: var(--newtab-element-secondary-hover-color);
+  --customize-menu-secondary-action-background-active: var(--newtab-element-secondary-active-color);
+  --customize-menu-seperator-line-color: var(--newtab-border-color);
+  --customize-menu-second-shadow: #{$shadow-large};
+  --customize-menu-primary-action-text: var(--newtab-primary-element-text-color);
+  --customize-menu-line-color: var(--newtab-border-color);
+  --newtab-search-first-shadow: #{$shadow-card};
+  --newtab-search-text-color: var(--newtab-text-primary-color);
+  --newtab-card-first-shadow: #{$shadow-card};
 
   &[lwt-newtab-brighttext] {
     // General styles
@@ -162,85 +160,5 @@ body {
     --newtab-primary-element-text-color: #{$proton-primary-text-color-dark};
     --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
     --newtab-status-success: #{$status-dark-green};
-
-    // General styles
-    --newtab-border-primary-color: #{$grey-10-80};
-    --newtab-border-secondary-color: #{$grey-10-10};
-    --newtab-button-primary-color: #{$blue-60};
-    --newtab-button-secondary-color: #{$grey-70};
-    --newtab-element-active-color: #{$grey-10-20};
-    --newtab-element-hover-color: #{$grey-10-10};
-    --newtab-icon-primary-color: #{$grey-10-80};
-    --newtab-icon-secondary-color: #{$grey-10-40};
-    --newtab-inner-box-shadow-color: #{$grey-10-20};
-    --newtab-link-primary-color: #{$blue-40};
-    --newtab-link-primary-active-color: #{$blue-60};
-    --newtab-link-secondary-color: #{$pocket-teal};
-    --newtab-text-conditional-color: #{$grey-10};
-    --newtab-text-secondary-color: #{$grey-10-80};
-    --newtab-textbox-border: #{$grey-10-20};
-    @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
-
-    // Background buttons.
-    --newtab-background-button-hover-color: #{$newtab-background-button-darktheme-hover-color};
-    --newtab-background-button-active-color: #{$newtab-background-button-darktheme-active-color};
-
-    // Feed buttons
-    --newtab-feed-button-background: #{$grey-70};
-    --newtab-feed-button-text: #{$grey-10};
-    --newtab-feed-button-background-faded: #{$grey-70-60};
-    --newtab-feed-button-text-faded: #{$grey-10-00};
-    --newtab-feed-button-spinner: #{$grey-30};
-
-    // Context menu
-    --newtab-contextmenu-background-color: #{$grey-60};
-    --newtab-contextmenu-button-color: #{$grey-80};
-
-    // Modal + overlay
-    --newtab-modal-color: #{$grey-80};
-    --newtab-overlay-color: #{$grey-90-80};
-
-    // Sections
-    --newtab-section-navigation-text-color: #{$grey-10-80};
-
-    // Search
-    --newtab-search-border-color: #{$grey-10-20};
-    --newtab-search-dropdown-color: #{$grey-70};
-    --newtab-search-dropdown-header-color: #{$grey-60};
-    --newtab-search-header-background-color: #{$grey-80-95};
-
-    // Top Sites
-    --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};
-    --newtab-topsites-context-menu-hover: #{$newtab-card-darktheme-hover-color};
-
-    // Cards
-    --newtab-card-active-outline-color: #{$grey-60};
-    --newtab-card-placeholder-color: #{$grey-60};
-    --newtab-card-shadow: 0 1px 8px 0 #{$grey-90-20};
-    --newtab-card-header-color: #{$grey-10};
-
-    // Snippets
-    --newtab-snippets-hairline-color: #{$white-10};
-
-    // New New Tab
-    --newtab-background-primary-text-color: #{$newtab-background-darktheme-primary-text-color};
-    --newtab-focus-outline: #{$newtab-darktheme-focus-outline-color};
-    --newtab-focus-border: #{$newtab-darktheme-focus-border};
-    --newtab-focus-border-selected: #{$newtab-darktheme-focus-border-selected};
-    --newtab-primary-action-background: #{$proton-primary-blue-dark};
-    --newtab-primary-action-background-off: #{$newtab-darktheme-primary-action-background-off};
-    --newtab-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
-    --customize-menu-primary-text-color: #{$newtab-card-darktheme-primary-text-color};
-    --customize-menu-check-fill: #{$newtab-card-darktheme-primary-text-color};
-    --customize-menu-secondary-action-background: #{$newtab-card-darktheme-secondary-action-background};
-    --customize-menu-secondary-action-background-hover: #{$newtab-card-darktheme-secondary-action-background-hover};
-    --customize-menu-secondary-action-background-active: #{$newtab-card-darktheme-secondary-action-background-active};
-    --customize-menu-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
-    --customize-menu-second-shadow: #{$newtab-card-darktheme-secondshadow};
-    --customize-menu-slider-fill: #{$newtab-card-darktheme-primary-text-color};
-    --customize-menu-line-color: #{$newtab-card-darktheme-line-color};
-    --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
-    --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
-    --newtab-card-first-shadow: #{$newtab-card-darktheme-firstshadow};
   }
 }
