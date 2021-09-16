@@ -239,7 +239,7 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
 @mixin ds-focus {
   border: 0;
   outline: 0;
-  box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border);
+  box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
 }
 
 @mixin context-menu-button {

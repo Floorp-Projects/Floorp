@@ -4,6 +4,7 @@
 
 .contentSearchSuggestionTable {
   background-color: hsla(0,0%,100%,.99);
+  color: black;
   border: 1px solid hsla(0, 0%, 0%, .2);
   border-top: none;
   box-shadow: 0 5px 10px hsla(0, 0%, 0%, .1);
