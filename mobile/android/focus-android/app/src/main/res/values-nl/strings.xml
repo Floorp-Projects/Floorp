@@ -732,7 +732,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Maak snelkoppelingen voor de websites die u het meest bezoekt:\n
+    <string name="tip_about_shortcuts">Maak snelkoppelingen voor websites die u het meest bezoekt:\n
     Selecteer in het %1$s-menu ‘Toevoegen aan snelkoppelingen’</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
