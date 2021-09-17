@@ -65,6 +65,19 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   static UINT GetCustomClipboardFormat();
 
  protected:
+  static HRESULT FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
+                               LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed);
+
+  // See methods listed at
+  // <https://docs.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject#methods>.
+  static void IDataObjectMethodResultToString(HRESULT aHres,
+                                              nsACString& aResult);
+
+  // See methods listed at
+  // <https://docs.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject#methods>.
+  static void LogIDataObjectMethodResult(HRESULT aHres,
+                                         const nsCString& aMethodName);
+
   // See
   // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olegetclipboard>.
   static void LogOleGetClipboardResult(HRESULT aHres);

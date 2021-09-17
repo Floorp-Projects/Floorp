@@ -253,6 +253,52 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
 }
 
 // static
+void nsClipboard::IDataObjectMethodResultToString(const HRESULT aHres,
+                                                  nsACString& aResult) {
+  switch (aHres) {
+    case E_INVALIDARG:
+      aResult = "E_INVALIDARG";
+      break;
+    case E_UNEXPECTED:
+      aResult = "E_UNEXPECTED";
+      break;
+    case E_OUTOFMEMORY:
+      aResult = "E_OUTOFMEMORY";
+      break;
+    case DV_E_LINDEX:
+      aResult = "DV_E_LINDEX";
+      break;
+    case DV_E_FORMATETC:
+      aResult = "DV_E_FORMATETC";
+      break;
+    case DV_E_TYMED:
+      aResult = "DV_E_TYMED";
+      break;
+    case DV_E_DVASPECT:
+      aResult = "DV_E_DVASPECT";
+      break;
+    case OLE_E_NOTRUNNING:
+      aResult = "OLE_E_NOTRUNNING";
+      break;
+    case STG_E_MEDIUMFULL:
+      aResult = "STG_E_MEDIUMFULL";
+      break;
+    case DV_E_CLIPFORMAT:
+      aResult = "DV_E_CLIPFORMAT";
+      break;
+    case S_OK:
+      aResult = "S_OK";
+      break;
+    default:
+      // Explicit template instantiaton, because otherwise the call is
+      // ambiguous.
+      constexpr int kRadix = 16;
+      aResult = IntToCString<int32_t>(aHres, kRadix);
+      break;
+  }
+}
+
+// static
 void nsClipboard::LogOleGetClipboardResult(const HRESULT aHres) {
   if (MOZ_LOG_TEST(gWin32ClipboardLog, LogLevel::Debug)) {
     nsAutoCString hresString;
@@ -427,48 +473,33 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget* aWidget,
   return result;
 }
 
-static void DisplayErrCode(HRESULT hres) {
-  if (hres == E_INVALIDARG) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_INVALIDARG\n"));
-  } else if (hres == E_UNEXPECTED) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_UNEXPECTED\n"));
-  } else if (hres == E_OUTOFMEMORY) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("E_OUTOFMEMORY\n"));
-  } else if (hres == DV_E_LINDEX) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_LINDEX\n"));
-  } else if (hres == DV_E_FORMATETC) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_FORMATETC\n"));
-  } else if (hres == DV_E_TYMED) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_TYMED\n"));
-  } else if (hres == DV_E_DVASPECT) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_DVASPECT\n"));
-  } else if (hres == OLE_E_NOTRUNNING) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("OLE_E_NOTRUNNING\n"));
-  } else if (hres == STG_E_MEDIUMFULL) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("STG_E_MEDIUMFULL\n"));
-  } else if (hres == DV_E_CLIPFORMAT) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("DV_E_CLIPFORMAT\n"));
-  } else if (hres == S_OK) {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info, ("S_OK\n"));
-  } else {
-    MOZ_LOG(gWin32ClipboardLog, LogLevel::Info,
-            ("****** DisplayErrCode 0x%X\n", hres));
+// static
+void nsClipboard::LogIDataObjectMethodResult(const HRESULT aHres,
+                                             const nsCString& aMethodName) {
+  if (MOZ_LOG_TEST(gWin32ClipboardLog, LogLevel::Debug)) {
+    nsAutoCString hresString;
+    nsClipboard::IDataObjectMethodResultToString(aHres, hresString);
+    MOZ_LOG(
+        gWin32ClipboardLog, LogLevel::Debug,
+        ("IDataObject::%s result: %s", aMethodName.get(), hresString.get()));
   }
 }
 
 //-------------------------------------------------------------------------
-static HRESULT FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
-                             LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed) {
+// static
+HRESULT nsClipboard::FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
+                                   LPFORMATETC pFE, LPSTGMEDIUM pSTM,
+                                   DWORD aTymed) {
   SET_FORMATETC(*pFE, aFormat, 0, DVASPECT_CONTENT, -1, aTymed);
 
   // Starting by querying for the data to see if we can get it as from global
   // memory
   HRESULT hres = S_FALSE;
   hres = aDataObject->QueryGetData(pFE);
-  DisplayErrCode(hres);
+  nsClipboard::LogIDataObjectMethodResult(hres, "QueryGetData"_ns);
   if (S_OK == hres) {
     hres = aDataObject->GetData(pFE, pSTM);
-    DisplayErrCode(hres);
+    nsClipboard::LogIDataObjectMethodResult(hres, "GetData"_ns);
   }
   return hres;
 }
