@@ -22,34 +22,38 @@ namespace js {
 class TypedObject;
 
 class RttValue : public NativeObject {
+ private:
+  static RttValue* create(JSContext* cx, wasm::TypeHandle handle);
+
  public:
   static const JSClass class_;
 
   enum Slot {
-    Handle = 0,       // Type handle index
-    TypeContext = 1,  // Manually refcounted reference to TypeContext
+    TypeContext = 0,  // Manually refcounted reference to TypeContext
+    TypeDef = 1,      // Raw pointer to TypeDef owned by TypeContext
     Parent = 2,       // Parent rtt for runtime casting
     Children = 3,     // Child rtts for rtt.sub caching
     // Maximum number of slots
     SlotCount = 4,
   };
 
-  static RttValue* createFromHandle(JSContext* cx, const wasm::SharedTypeContext& tycx,
-                                    wasm::TypeHandle handle);
+  static RttValue* rttCanon(JSContext* cx, wasm::TypeHandle handle);
   static RttValue* rttSub(JSContext* cx, js::Handle<RttValue*> parent,
                           js::Handle<RttValue*> subCanon);
 
-  bool isNewborn() { return getReservedSlot(Slot::Handle).isUndefined(); }
+  bool isNewborn() { return getReservedSlot(Slot::TypeContext).isUndefined(); }
 
-  const wasm::TypeDef& typeDef() const;
+  const wasm::TypeDef& typeDef() const {
+    return *(const wasm::TypeDef*)getReservedSlot(Slot::TypeDef).toPrivate();
+  }
 
   const wasm::TypeContext* typeContext() const {
     return (const wasm::TypeContext*)getReservedSlot(Slot::TypeContext)
         .toPrivate();
   }
 
-  wasm::TypeHandle handle() const {
-    return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
+  wasm::TypeHandle typeHandle() const {
+    return wasm::TypeHandle(typeContext(), typeDef());
   }
 
   wasm::TypeDefKind kind() const { return typeDef().kind(); }
