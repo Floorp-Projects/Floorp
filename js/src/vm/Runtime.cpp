@@ -41,7 +41,7 @@
 #if JS_HAS_INTL_API
 #  include "unicode/uloc.h"
 #endif
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 #include "vm/DateTime.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"

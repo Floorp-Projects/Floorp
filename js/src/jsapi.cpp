@@ -4190,7 +4190,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && \
     defined(XP_WIN)
 
-#  include "util/Windows.h"
+#  include "util/WindowsWrapper.h"
 
 /*
  * Initialization routine for the JS DLL.
