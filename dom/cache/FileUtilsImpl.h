@@ -63,14 +63,18 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
                 return Ok{};
               }
             } else {
-              QM_TRY(OkIf(StringEndsWith(leafName, ".final"_ns)), Ok{},
-                     ([&aQuotaInfo, &file](const auto&) {
-                       // Otherwise, it must be a .final file.  If its not,
-                       // then try to remove it and move on
-                       DebugOnly<nsresult> result = RemoveNsIFile(
-                           aQuotaInfo, *file, /* aTrackQuota */ false);
-                       MOZ_ASSERT(NS_SUCCEEDED(result));
-                     }));
+              // Otherwise, it must be a .final file.
+              QM_WARNONLY_TRY_UNWRAP(
+                  const auto maybeEndingOk,
+                  OkIf(StringEndsWith(leafName, ".final"_ns)));
+
+              // If its not, try to remove it and move on.
+              if (!maybeEndingOk) {
+                DebugOnly<nsresult> result =
+                    RemoveNsIFile(aQuotaInfo, *file, /* aTrackQuota */ false);
+                MOZ_ASSERT(NS_SUCCEEDED(result));
+                return Ok{};
+              }
             }
 
             QM_TRY_INSPECT(const bool& fileDeleted,
