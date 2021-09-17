@@ -8,6 +8,7 @@
 
 include IPCServiceWorkerDescriptor;
 include NeckoChannelParams;
+include IPCStream;
 
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -50,6 +51,11 @@ struct HttpChannelOnStartRequestArgs
   nsCString cookie;
   bool dataFromSocketProcess;
   bool hasHTTPSRR;
+};
+
+struct HttpChannelAltDataStream
+{
+  IPCStream? altDataInputStream;
 };
 
 } // namespace ipc

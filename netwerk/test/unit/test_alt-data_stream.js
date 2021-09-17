@@ -59,7 +59,11 @@ function run_test() {
   var chan = make_channel(URL);
 
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType, "", true);
+  cc.preferAlternativeDataType(
+    altContentType,
+    "",
+    Ci.nsICacheInfoChannel.ASYNC
+  );
 
   chan.asyncOpen(new ChannelListener(readServerContent, null));
   do_test_pending();
@@ -86,7 +90,11 @@ function readServerContent(request, buffer) {
 function openAltChannel() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType, "", true);
+  cc.preferAlternativeDataType(
+    altContentType,
+    "",
+    Ci.nsICacheInfoChannel.ASYNC
+  );
 
   chan.asyncOpen(altDataListener);
 }
@@ -122,7 +130,11 @@ var altDataListener = {
 function openAltChannelWithOriginalContent() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType, "", false);
+  cc.preferAlternativeDataType(
+    altContentType,
+    "",
+    Ci.nsICacheInfoChannel.SERIALIZE
+  );
 
   chan.asyncOpen(originalListener);
 }
@@ -144,10 +156,6 @@ var originalListener = {
 };
 
 function testAltDataStream(cc) {
-  cc.getAltDataInputStream(altContentType, {
-    onInputStreamReady(aInputStream) {
-      Assert.ok(!!aInputStream);
-      httpServer.stop(do_test_finished);
-    },
-  });
+  Assert.ok(!!cc.alternativeDataInputStream);
+  httpServer.stop(do_test_finished);
 }
