@@ -229,4 +229,37 @@ TEST(IntlCollator, GetBcp47KeywordValuesForLocale)
   ASSERT_FALSE(hasPhonebook);  // Not valid BCP 47.
 }
 
+TEST(IntlCollator, GetBcp47KeywordValues)
+{
+  auto extsResult = Collator::GetBcp47KeywordValues();
+  ASSERT_TRUE(extsResult.isOk());
+  auto extensions = extsResult.unwrap();
+
+  // Since this list is dependent on ICU, and may change between upgrades, only
+  // test a subset of the keywords.
+  auto standard = MakeStringSpan("standard");
+  auto search = MakeStringSpan("search");
+  auto phonebk = MakeStringSpan("phonebk");      // Valid BCP 47.
+  auto phonebook = MakeStringSpan("phonebook");  // Not valid BCP 47.
+  bool hasStandard = false;
+  bool hasSearch = false;
+  bool hasPhonebk = false;
+  bool hasPhonebook = false;
+
+  for (auto extensionResult : extensions) {
+    ASSERT_TRUE(extensionResult.isOk());
+    auto extension = extensionResult.unwrap();
+    hasStandard |= extension == standard;
+    hasSearch |= extension == search;
+    hasPhonebk |= extension == phonebk;
+    hasPhonebook |= extension == phonebook;
+  }
+
+  ASSERT_TRUE(hasStandard);
+  ASSERT_TRUE(hasSearch);
+  ASSERT_TRUE(hasPhonebk);
+
+  ASSERT_FALSE(hasPhonebook);  // Not valid BCP 47.
+}
+
 }  // namespace mozilla::intl

@@ -157,6 +157,17 @@ class Collator final {
   static Result<Bcp47ExtEnumeration, ICUError> GetBcp47KeywordValuesForLocale(
       const char* aLocale);
 
+  /**
+   * Returns an iterator over all possible collator locale extensions.
+   * These extensions can be used in BCP 47 locales. For instance this
+   * iterator could return "phonebk" and could be appled to the German locale
+   * "de" as "de-co-phonebk" for a phonebook-style collation.
+   *
+   * The collation extensions can be found here:
+   * http://cldr.unicode.org/core-spec/#Key_Type_Definitions
+   */
+  static Result<Bcp47ExtEnumeration, ICUError> GetBcp47KeywordValues();
+
  private:
   /**
    * Toggle features, or use the default setting.
