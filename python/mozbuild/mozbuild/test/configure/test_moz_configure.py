@@ -155,7 +155,7 @@ class TestMozConfigure(BaseConfigureTest):
             sandbox = self.get_sandbox(
                 {"/usr/bin/makensis": FakeNSIS(version)},
                 {},
-                [],
+                ["--target=x86_64-pc-mingw32", "--disable-bootstrap"],
                 {"PATH": "/usr/bin", "MAKENSISU": "/usr/bin/makensis"},
             )
             return sandbox._value_for(sandbox["nsis_version"])
