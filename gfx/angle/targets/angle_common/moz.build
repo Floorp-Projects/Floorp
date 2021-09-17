@@ -206,6 +206,7 @@ if CONFIG["OS_ARCH"] != "WINNT":
 
 if CONFIG["OS_ARCH"] == "Darwin":
     SOURCES += [
+        "../../checkout/src/common/system_utils_apple.cpp",
         "../../checkout/src/common/system_utils_mac.cpp",
     ]
 
