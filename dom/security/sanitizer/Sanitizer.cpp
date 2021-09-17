@@ -123,53 +123,19 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
   return fragment.forget();
 }
 
-RefPtr<DocumentFragment> Sanitizer::SanitizeFragment(
-    RefPtr<DocumentFragment> aFragment, ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (!window || !window->GetDoc()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+void Sanitizer::SanitizeToString(
+    const StringOrDocumentFragmentOrDocument& aInput, nsAString& outSanitized,
+    ErrorResult& aRv) {
+  outSanitized.Truncate();
+  ErrorResult error;
+  RefPtr<DocumentFragment> fragment =
+      Sanitizer::InputToNewFragment(aInput, error);
+  if (error.Failed()) {
+    return;
   }
-  // FIXME(freddyb)
-  // (how) can we assert that the supplied doc is indeed inert?
-  mTreeSanitizer.Sanitize(aFragment);
-  return aFragment.forget();
-}
 
-already_AddRefed<Element> Sanitizer::SanitizeFor(const nsAString& aElement,
-                                                 const nsAString& aInput,
-                                                 ErrorResult& aRv) {
-  aRv = nsContentUtils::CheckQName(aElement, false);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  RefPtr<Document> inertDoc = nsContentUtils::CreateInertHTMLDocument(nullptr);
-  if (!inertDoc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  RefPtr<DocumentFragment> fragment = new (inertDoc->NodeInfoManager())
-      DocumentFragment(inertDoc->NodeInfoManager());
-
-  RefPtr<nsAtom> elemName = NS_Atomize(aElement);
-  aRv = nsContentUtils::ParseFragmentHTML(aInput, fragment, elemName,
-                                          kNameSpaceID_XHTML, false, true);
-
-  if (aRv.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
   mTreeSanitizer.Sanitize(fragment);
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (!window || !window->GetDoc()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  RefPtr<mozilla::dom::Element> element =
-      window->GetDoc()->CreateHTMLElement(elemName);
-  element->AppendChild(*fragment, aRv);
-
-  return element.forget();
+  fragment->GetInnerHTML(outSanitized);
 }
 
 /* ------ Logging ------ */
