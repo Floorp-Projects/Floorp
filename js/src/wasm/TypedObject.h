@@ -19,13 +19,6 @@
 
 namespace js {
 
-/* The prototype for typed objects. */
-class TypedProto : public NativeObject {
- public:
-  static const JSClass class_;
-  static TypedProto* create(JSContext* cx);
-};
-
 class TypedObject;
 
 class RttValue : public NativeObject {
@@ -35,11 +28,10 @@ class RttValue : public NativeObject {
   enum Slot {
     Handle = 0,       // Type handle index
     TypeContext = 1,  // Manually refcounted reference to TypeContext
-    Proto = 2,        // Prototype for instances, if any
-    Parent = 3,       // Parent rtt for runtime casting
-    Children = 4,     // Child rtts for rtt.sub caching
+    Parent = 2,       // Parent rtt for runtime casting
+    Children = 3,     // Child rtts for rtt.sub caching
     // Maximum number of slots
-    SlotCount = 5,
+    SlotCount = 4,
   };
 
   static RttValue* createFromHandle(JSContext* cx, const wasm::SharedTypeContext& tycx,
@@ -61,10 +53,6 @@ class RttValue : public NativeObject {
   }
 
   wasm::TypeDefKind kind() const { return typeDef().kind(); }
-
-  TypedProto& typedProto() const {
-    return getReservedSlot(Slot::Proto).toObject().as<TypedProto>();
-  }
 
   RttValue* parent() const {
     return (RttValue*)getReservedSlot(Slot::Parent).toObjectOrNull();
@@ -155,10 +143,6 @@ class TypedObject : public JSObject {
   static TypedObject* create(JSContext* cx, js::gc::AllocKind kind,
                              js::gc::InitialHeap heap, js::HandleShape shape);
 
-  TypedProto& typedProto() const {
-    // Typed objects' prototypes can't be modified.
-    return staticPrototype()->as<TypedProto>();
-  }
   RttValue& rttValue() const {
     MOZ_ASSERT(rttValue_);
     return *rttValue_;
