@@ -222,6 +222,34 @@ function runTests(testArray, shouldBlockBFCache) {
           await waitForDone();
         }
 
+        // Do a similar test, but replace the bfcache test page with a new page,
+        // not a page coming from the session history.
+
+        // Load the same page with a different URL.
+        loaded = promisePageShowNotFromBFCache();
+        bc.postMessage({ message: "load", url: `file_blockBFCache.html?p2_${name}_${shouldBlockBFCache}` });
+        await loaded;
+
+        // Run the test script.
+        bc.postMessage({ message: "runScript", fun: test.toString() });
+        await promiseMessage("runScriptDone");
+
+        // Load a new page.
+        loaded = promisePageShowNotFromBFCache();
+        bc.postMessage({ message: "load", url: "file_blockBFCache.html" });
+        await loaded;
+
+        // Go back to the previous page and check that it does/doesn't come
+        // from the BFCache.
+        goneBack = promisePageShow(!shouldBlockBFCache);
+        bc.postMessage({ message: "back" });
+        result = await goneBack;
+        ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
+
+        if (waitForDone) {
+          await waitForDone();
+        }
+
         bc.postMessage({ message: "close" });
 
         SpecialPowers.popPrefEnv();
