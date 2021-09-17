@@ -380,3 +380,14 @@ partial interface Element {
   [ChromeOnly]
   readonly attribute double firstLineBoxBSize;
 };
+
+
+// Sanitizer API, https://wicg.github.io/sanitizer-api/
+dictionary SetHTMLOptions {
+  Sanitizer sanitizer;
+};
+
+partial interface Element {
+  [Throws, Pref="dom.security.sanitizer.enabled"]
+    void setHTML(DOMString aInnerHTML, optional SetHTMLOptions options = {});
+};
