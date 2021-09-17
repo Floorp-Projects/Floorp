@@ -352,11 +352,20 @@ class nsHttpConnection final : public HttpConnectionBase,
   // Helper variable for 0RTT handshake;
   // Possible 0RTT has been checked.
   bool m0RTTChecked{false};
-  // We have are sending 0RTT data and we are waiting
-  // for the end of the handsake.
-  bool mWaitingFor0RTTResponse{false};
+  // 0RTT data state.
+  enum EarlyData {
+    NOT_AVAILABLE,
+    USED,
+    CANNOT_BE_USED,
+    DONE,
+  };
+  EarlyData mEarlyDataState{EarlyData::NOT_AVAILABLE};
+  bool EarlyDataAvailable() const {
+    return mEarlyDataState == EarlyData::USED ||
+           mEarlyDataState == EarlyData::CANNOT_BE_USED;
+  }
+  bool EarlyDataUsed() const { return mEarlyDataState == EarlyData::USED; }
   int64_t mContentBytesWritten0RTT{0};
-  bool mEarlyDataNegotiated{false};  // Only used for telemetry
   nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy{false};
   bool mTlsHandshakeComplitionPending{false};

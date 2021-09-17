@@ -383,7 +383,6 @@ void nsHttpConnection::Check0RttEnabled(nsISSLSocketControl* ssl) {
         ("nsHttpConnection::Check0RttEnabled %p - "
          "early selected alpn not available",
          this));
-    mEarlyDataNegotiated = false;
   } else {
     LOG1(
         ("nsHttpConnection::Check0RttEnabled %p -"
@@ -399,7 +398,12 @@ void nsHttpConnection::Check0RttEnabled(nsISSLSocketControl* ssl) {
             ("nsHttpConnection::Check0RttEnabled [this=%p] - We "
              "can do 0RTT (http/1)!",
              this));
-        mWaitingFor0RTTResponse = true;
+        mEarlyDataState = EarlyData::USED;
+      } else {
+        mEarlyDataState = EarlyData::CANNOT_BE_USED;
+        // Poll for read now. Polling for write will cause us to busy wait.
+        // When the handshake ia done the polling flags will be set correctly.
+        Unused << ResumeRecv();
       }
     } else {
       // We have h2, we can at least 0-RTT the preamble and opening
@@ -408,10 +412,9 @@ void nsHttpConnection::Check0RttEnabled(nsISSLSocketControl* ssl) {
           ("nsHttpConnection::Check0RttEnabled [this=%p] - Starting "
            "0RTT for h2!",
            this));
-      mWaitingFor0RTTResponse = true;
+      mEarlyDataState = EarlyData::USED;
       Start0RTTSpdy(info->Version[infoIndex]);
     }
-    mEarlyDataNegotiated = true;
   }
 }
 
@@ -420,12 +423,12 @@ void nsHttpConnection::EarlyDataTelemetry(int16_t tlsVersion,
   // Send the 0RTT telemetry only for tls1.3
   if (tlsVersion > nsISSLSocketControl::TLS_VERSION_1_2) {
     Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
-                          (!mEarlyDataNegotiated)
+                          (mEarlyDataState == EarlyData::NOT_AVAILABLE)
                               ? TLS_EARLY_DATA_NOT_AVAILABLE
-                              : ((mWaitingFor0RTTResponse)
+                              : ((mEarlyDataState == EarlyData::USED)
                                      ? TLS_EARLY_DATA_AVAILABLE_AND_USED
                                      : TLS_EARLY_DATA_AVAILABLE_BUT_NOT_USED));
-    if (mWaitingFor0RTTResponse) {
+    if (EarlyDataUsed()) {
       Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_ACCEPTED,
                             earlyDataAccepted);
     }
@@ -464,6 +467,7 @@ bool nsHttpConnection::EnsureNPNComplete() {
   nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
   if (NS_FAILED(rv)) {
     FinishNPNSetup(false, false);
+    return true;
   }
 
   if (!m0RTTChecked) {
@@ -477,13 +481,15 @@ bool nsHttpConnection::EnsureNPNComplete() {
   rv = ssl->DriveHandshake();
   if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
     FinishNPNSetup(false, true);
+    return true;
   }
 
   Check0RttEnabled(ssl);
   return false;
 }
 
-void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded, bool hasSecurityInfo) {
+void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
+                                      bool hasSecurityInfo) {
   mNPNComplete = true;
 
   mTransaction->OnTransportStatus(mSocketTransport,
@@ -504,17 +510,16 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded, bool hasSecurityI
     mBootstrappedTimings.connectEnd = TimeStamp::Now();
   }
 
-  if (mWaitingFor0RTTResponse) {
+  if (EarlyDataUsed()) {
     // Didn't get 0RTT OK, back out of the "attempting 0RTT" state
-    mWaitingFor0RTTResponse = false;
     LOG(("nsHttpConnection::FinishNPNSetup [this=%p] 0rtt failed", this));
-    if (NS_FAILED(mTransaction->Finish0RTT(
-            true, true))) {
+    if (NS_FAILED(mTransaction->Finish0RTT(true, true))) {
       mTransaction->Close(NS_ERROR_NET_RESET);
     }
     mContentBytesWritten0RTT = 0;
     Reset0RttForSpdy();
   }
+  mEarlyDataState = EarlyData::DONE;
 
   if (hasSecurityInfo) {
     // Telemetry for tls failure rate with and without esni;
@@ -1665,7 +1670,7 @@ nsresult nsHttpConnection::ReadFromStream(nsIInputStream* input, void* closure,
 }
 
 bool nsHttpConnection::CheckCanWrite0RTTData() {
-  MOZ_ASSERT(mWaitingFor0RTTResponse);
+  MOZ_ASSERT(EarlyDataAvailable());
   nsCOMPtr<nsISupports> securityInfo;
   GetSecurityInfo(getter_AddRefs(securityInfo));
   if (!securityInfo) {
@@ -1710,7 +1715,7 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   // handshake already.
   // IsAlive() calls drive the handshake and that may cause nss and necko
   // to be out of sync.
-  if (mWaitingFor0RTTResponse && !CheckCanWrite0RTTData()) {
+  if (EarlyDataAvailable() && !CheckCanWrite0RTTData()) {
     MOZ_DIAGNOSTIC_ASSERT(!mTlsHandshakeComplitionPending);
     LOG(
         ("nsHttpConnection::OnReadSegment Do not write any data, wait"
@@ -1778,7 +1783,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
     // etc.. and that is negotiated with NPN/ALPN in the SSL handshake.
     if (mConnInfo->UsingHttpsProxy() &&
         !EnsureNPNComplete()) {
-      MOZ_DIAGNOSTIC_ASSERT(!mWaitingFor0RTTResponse);
+      MOZ_DIAGNOSTIC_ASSERT(!EarlyDataAvailable());
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (mProxyConnectStream) {
       // If we're need an HTTP/1 CONNECT tunnel through a proxy
@@ -1788,25 +1793,27 @@ nsresult nsHttpConnection::OnSocketWritable() {
                                              nsIOService::gDefaultSegmentSize,
                                              &transactionBytes);
     } else if (!EnsureNPNComplete() &&
-               (!mWaitingFor0RTTResponse || mTlsHandshakeComplitionPending)) {
+               (!EarlyDataUsed() || mTlsHandshakeComplitionPending)) {
+      // The handshake is not done and we cannot write 0RTT data or nss has already
+      // finished 0RTT data.
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (!mTransaction) {
       rv = NS_ERROR_FAILURE;
       LOG(("  No Transaction In OnSocketWritable\n"));
     } else if (NS_SUCCEEDED(rv)) {
       // for non spdy sessions let the connection manager know
-      if (!mReportedSpdy && !mWaitingFor0RTTResponse) {
+      if (!mReportedSpdy && mNPNComplete) {
         mReportedSpdy = true;
         MOZ_ASSERT(!mEverUsedSpdy);
         gHttpHandler->ConnMgr()->ReportSpdyConnection(this, false);
       }
 
       LOG(("  writing transaction request stream\n"));
-      MOZ_DIAGNOSTIC_ASSERT(!mProxyConnectInProgress || !mWaitingFor0RTTResponse);
+      MOZ_DIAGNOSTIC_ASSERT(!mProxyConnectInProgress || !EarlyDataAvailable());
       mProxyConnectInProgress = false;
       rv = mTransaction->ReadSegmentsAgain(
           this, nsIOService::gDefaultSegmentSize, &transactionBytes, &again);
-      if (mWaitingFor0RTTResponse) {
+      if (EarlyDataUsed()) {
         mContentBytesWritten0RTT += transactionBytes;
         if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
           // If an error happens while writting 0RTT data, restart
@@ -1843,8 +1850,11 @@ nsresult nsHttpConnection::OnSocketWritable() {
         if (mTLSFilter) {
           LOG(("  blocked tunnel (handshake?)\n"));
           rv = mTLSFilter->NudgeTunnel(this);
-        } else {
-          rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);  // continue writing
+        } else if (mEarlyDataState != EarlyData::CANNOT_BE_USED) {
+          // continue writing
+          // We are not going to poll for write if the handshake is in progress, but
+          // early data cannot be used.
+          rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
         }
       } else {
         rv = mSocketOutCondition;
@@ -1953,7 +1963,9 @@ nsresult nsHttpConnection::OnSocketReadable() {
           ("nsHttpConnection::OnSocketReadable %p return due to inactive "
            "tunnel setup but incomplete NPN state\n",
            this));
-      rv = ResumeRecv();
+      if (EarlyDataAvailable()) {
+        rv = ResumeRecv();
+      }
       break;
     }
 
@@ -2549,7 +2561,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
   MOZ_ASSERT(NS_SUCCEEDED(rvDebug));
 
   bool earlyDataAccepted = false;
-  if (mWaitingFor0RTTResponse) {
+  if (EarlyDataUsed()) {
     // Check if early data has been accepted.
     nsresult rvEarlyData = ssl->GetEarlyDataAccepted(&earlyDataAccepted);
     LOG(
@@ -2572,14 +2584,16 @@ void nsHttpConnection::HandshakeDoneInternal() {
     if (mDid0RTTSpdy && (negotiatedNPN != mEarlyNegotiatedALPN)) {
       Reset0RttForSpdy();
     }
-    if (!earlyDataAccepted) {
-      // We need to start from the begining here and start writing
-      // the request again.
-      if (mSocketIn) {
-        mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
-      }
-      Unused << ResumeSend();
+  }
+
+  if (EarlyDataAvailable() && !earlyDataAccepted) {
+    // When the early-data were used but not accepted, we need to start
+    // from the begining here and start writing the request again.
+    // The same is true if 0RTT was available but not used.
+    if (mSocketIn) {
+      mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
     }
+    Unused << ResumeSend();
   }
 
   int16_t tlsVersion;
@@ -2620,7 +2634,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
 
   Telemetry::Accumulate(Telemetry::SPDY_NPN_CONNECT, UsingSpdy());
 
-  mWaitingFor0RTTResponse = false;
+  mEarlyDataState = EarlyData::DONE;
 
   FinishNPNSetup(true, true);
   return;
