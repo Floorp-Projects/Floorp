@@ -51,6 +51,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isMajorUpgrade](#ismajorupgrade)
 * [hasActiveEnterprisePolicies](#hasactiveenterprisepolicies)
 * [userMonthlyActivity](#usermonthlyactivity)
+* [doesAppNeedPin](#doesappneedpin)
 
 ## Detailed usage
 
@@ -822,3 +823,7 @@ A boolean. `true` if any Enterprise Policies are active.
 
 Returns an array of entries in the form `[int, unixTimestamp]` for each day of
 user activity where the first entry is the total urls visited for that day.
+
+### `doesAppNeedPin`
+
+Checks if Firefox app can and isn't pinned to OS taskbar/dock.
