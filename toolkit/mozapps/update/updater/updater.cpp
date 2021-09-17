@@ -2777,14 +2777,6 @@ int NS_main(int argc, NS_tchar** argv) {
     }
 #endif
 
-#ifdef XP_MACOSX
-    if (!isElevated) {
-#endif
-      InitProgressUI(&argc, &argv);
-#ifdef XP_MACOSX
-    }
-#endif
-
     // To process an update the updater command line must at a minimum have the
     // directory path containing the updater.mar file to process as the first
     // argument, the install directory as the second argument, and the directory
@@ -3013,6 +3005,14 @@ int NS_main(int argc, NS_tchar** argv) {
     }
 
   }  // if (!isDMGInstall)
+
+  if (!sUpdateSilently && !isDMGInstall
+#ifdef XP_MACOSX
+      && !isElevated
+#endif
+  ) {
+    InitProgressUI(&argc, &argv);
+  }
 
 #ifdef XP_MACOSX
   if (!isElevated && (!IsRecursivelyWritable(argv[2]) || isDMGInstall)) {
