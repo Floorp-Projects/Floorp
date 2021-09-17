@@ -30,7 +30,7 @@
                        /setting immutable field/);
 }
 
-// MVA v1 restriction: structs are not constructible from JS.
+// MVA v1 restriction: structs have no prototype
 
 {
     let ins = wasmEvalText(`(module
@@ -45,8 +45,8 @@
                              (func (export "mkr") (result eqref)
                               (struct.new_with_rtt $r (ref.null eq) (rtt.canon $r))))`).exports;
 
-    assertEq(ins.mkp().constructor, Object);
-    assertEq(ins.mkr().constructor, Object);
+    assertEq(Object.getPrototypeOf(ins.mkp()), null);
+    assertEq(Object.getPrototypeOf(ins.mkr()), null);
 }
 
 // MVA v1 restriction: all fields are immutable
@@ -90,8 +90,6 @@
     let p = ins.mkp();
     assertEq(typeof p, "object");
     assertEq(p[0], 0x1234567887654321n)
-
-    assertEq(p.constructor, Object);
 
     assertErrorMessage(() => { p[0] = 0 },
                        Error,
