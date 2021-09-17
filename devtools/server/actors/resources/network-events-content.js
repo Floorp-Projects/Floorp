@@ -73,6 +73,17 @@ class NetworkEventContentWatcher {
     const event = NetworkUtils.createNetworkEvent(channel, {
       blockedReason: channel.loadInfo.requestBlockingReason,
     });
+
+    // For same-origin iframe targets, we're notified about this event from both the top-level
+    // target *and* the iframe one. We ignore the event if it doesn't come from the same
+    // browsing context as the target's one to avoid duplicate messages in the netmonitor.
+    if (
+      this.targetActor.ignoreSubFrames &&
+      event.browsingContextID !== this.targetActor.browsingContext.id
+    ) {
+      return;
+    }
+
     const actor = new NetworkEventActor(
       this,
       {
