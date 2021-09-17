@@ -6,35 +6,31 @@
 
 #include "WMFEncoderModule.h"
 
-#include "MP4Decoder.h"
 #include "WMFMediaDataEncoder.h"
 
 namespace mozilla {
 extern LazyLogModule sPEMLog;
 
-static MediaDataEncoder::CodecType MimeTypeToCodecType(
-    const nsACString& aMimeType) {
-  if (MP4Decoder::IsH264(aMimeType)) {
-    return MediaDataEncoder::CodecType::H264;
-  } else {
-    MOZ_ASSERT(false, "Unsupported Mimetype");
-    return MediaDataEncoder::CodecType::Unknown;
-  }
-}
-
 bool WMFEncoderModule::SupportsMimeType(const nsACString& aMimeType) const {
-  return CanCreateWMFEncoder(MimeTypeToCodecType(aMimeType));
+  return CanCreateWMFEncoder(CreateEncoderParams::CodecTypeForMime(aMimeType));
 }
 
 already_AddRefed<MediaDataEncoder> WMFEncoderModule::CreateVideoEncoder(
     const CreateEncoderParams& aParams) const {
   MediaDataEncoder::CodecType codec =
-      MimeTypeToCodecType(aParams.mConfig.mMimeType);
+      CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType);
   RefPtr<MediaDataEncoder> encoder;
   switch (codec) {
     case MediaDataEncoder::CodecType::H264:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::H264Config>(
           aParams.ToH264Config(), aParams.mTaskQueue);
+      break;
+    case MediaDataEncoder::CodecType::VP8:
+      encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP8Config>(
+          aParams.ToVP8Config(), aParams.mTaskQueue);
+    case MediaDataEncoder::CodecType::VP9:
+      encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP9Config>(
+          aParams.ToVP9Config(), aParams.mTaskQueue);
       break;
     default:
       // Do nothing.
