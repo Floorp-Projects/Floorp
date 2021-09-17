@@ -1110,3 +1110,11 @@ add_task(async function check_userMonthlyActivity() {
     "value is an array"
   );
 });
+
+add_task(async function check_doesAppNeedPing() {
+  is(
+    typeof (await ASRouterTargeting.Environment.doesAppNeedPin),
+    "boolean",
+    "Should return a boolean"
+  );
+});

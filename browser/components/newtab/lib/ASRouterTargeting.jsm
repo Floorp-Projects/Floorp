@@ -127,7 +127,8 @@ const jexlEvaluationCache = new Map();
 function CachedTargetingGetter(
   property,
   options = null,
-  updateInterval = FRECENT_SITES_UPDATE_INTERVAL
+  updateInterval = FRECENT_SITES_UPDATE_INTERVAL,
+  getter = asProvider
 ) {
   return {
     _lastUpdated: 0,
@@ -140,7 +141,7 @@ function CachedTargetingGetter(
     async get() {
       const now = Date.now();
       if (now - this._lastUpdated >= updateInterval) {
-        this._value = await asProvider[property](options);
+        this._value = await getter[property](options);
         this._lastUpdated = now;
       }
       return this._value;
@@ -230,6 +231,9 @@ const QueryCache = {
     Object.keys(this.queries).forEach(query => {
       this.queries[query].expire();
     });
+    Object.keys(this.getters).forEach(key => {
+      this.getters[key].expire();
+    });
   },
   queries: {
     TopFrecentSites: new CachedTargetingGetter("getTopFrecentSites", {
@@ -244,6 +248,14 @@ const QueryCache = {
     RecentBookmarks: new CachedTargetingGetter("getRecentBookmarks"),
     ListAttachedOAuthClients: new CacheListAttachedOAuthClients(),
     UserMonthlyActivity: new CachedTargetingGetter("getUserMonthlyActivity"),
+  },
+  getters: {
+    doesAppNeedPin: new CachedTargetingGetter(
+      "doesAppNeedPin",
+      null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      ShellService
+    ),
   },
 };
 
@@ -638,6 +650,10 @@ const TargetingGetters = {
 
   get userMonthlyActivity() {
     return QueryCache.queries.UserMonthlyActivity.get();
+  },
+
+  get doesAppNeedPin() {
+    return QueryCache.getters.doesAppNeedPin.get();
   },
 };
 
