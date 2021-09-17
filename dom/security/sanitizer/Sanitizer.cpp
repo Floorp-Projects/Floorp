@@ -123,19 +123,17 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
   return fragment.forget();
 }
 
-void Sanitizer::SanitizeToString(
-    const StringOrDocumentFragmentOrDocument& aInput, nsAString& outSanitized,
-    ErrorResult& aRv) {
-  outSanitized.Truncate();
-  ErrorResult error;
-  RefPtr<DocumentFragment> fragment =
-      Sanitizer::InputToNewFragment(aInput, error);
-  if (error.Failed()) {
-    return;
+RefPtr<DocumentFragment> Sanitizer::SanitizeFragment(
+    RefPtr<DocumentFragment> aFragment, ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
+  if (!window || !window->GetDoc()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
-
-  mTreeSanitizer.Sanitize(fragment);
-  fragment->GetInnerHTML(outSanitized);
+  // FIXME(freddyb)
+  // (how) can we assert that the supplied doc is indeed inert?
+  mTreeSanitizer.Sanitize(aFragment);
+  return aFragment.forget();
 }
 
 /* ------ Logging ------ */
