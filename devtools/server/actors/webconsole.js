@@ -696,7 +696,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // service workers requests)
             new NetworkMonitorActor(
               this.conn,
-              { window: global },
+              {
+                window: global,
+                matchExactWindow: this.parentActor.ignoreSubFrames,
+              },
               this.actorID,
               mmMockParent
             );
@@ -711,7 +714,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // requests, as well with the NetworkMonitorActor running in the parent
             // process. It will communicate via message manager for this one.
             this.stackTraceCollector = new StackTraceCollector(
-              { window: global },
+              {
+                window: global,
+                matchExactWindow: this.parentActor.ignoreSubFrames,
+              },
               this.netmonitors
             );
             this.stackTraceCollector.init();
