@@ -21,7 +21,6 @@ import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 
 // Modules imported without destructuring
 import classnames from "classnames";
-import devtoolsSplitter from "devtools-splitter";
 import move from "lodash-move";
 
 // We cannot directly export literals containing special characters
@@ -30,7 +29,6 @@ import move from "lodash-move";
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 export const vendored = {
   classnames,
-  "devtools-splitter": devtoolsSplitter,
   "devtools-utils": devtoolsUtils,
   "fuzzaldrin-plus": fuzzaldrinPlus,
   "lodash-move": move,

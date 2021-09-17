@@ -1,5 +1,0 @@
-### DevTools Splitter
-
-
-![](https://camo.githubusercontent.com/fbac8bbd498e50e8e4b03bb3b8c632161f011a99/687474703a2f2f672e7265636f726469742e636f2f6442493372777a7552672e676966)
-

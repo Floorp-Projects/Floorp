@@ -54,3 +54,5 @@
 @import url("chrome://devtools/content/debugger/src/components/ShortcutsModal.css");
 @import url("chrome://devtools/content/debugger/src/components/WelcomeBox.css");
 @import url("chrome://devtools/content/debugger/src/utils/editor/source-editor.css");
+
+@import url("chrome://devtools/content/shared/components/splitter/SplitBox.css");

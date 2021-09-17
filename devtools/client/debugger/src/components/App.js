@@ -21,6 +21,7 @@ import {
 } from "../selectors";
 
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
 import Services from "devtools-services";
 const shortcuts = new KeyShortcuts({ window });
@@ -39,7 +40,6 @@ import "./App.css";
 
 import "./shared/menu.css";
 
-import SplitBox from "devtools-splitter";
 import ProjectSearch from "./ProjectSearch";
 import PrimaryPanes from "./PrimaryPanes";
 import Editor from "./Editor";
