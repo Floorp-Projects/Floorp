@@ -170,10 +170,12 @@ class EncryptedMediaParent extends JSWindowActorParent {
 
     let iconURL = "chrome://browser/skin/drm-icon.svg";
     notificationBox.appendNotification(
-      notificationMessage,
       notificationId,
-      iconURL,
-      notificationBox.PRIORITY_INFO_HIGH,
+      {
+        label: notificationMessage,
+        image: iconURL,
+        priority: notificationBox.PRIORITY_INFO_HIGH,
+      },
       buttons
     );
   }
