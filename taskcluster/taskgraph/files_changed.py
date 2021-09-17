@@ -8,12 +8,12 @@ Support for optimizing tasks based on the set of files that have changed.
 
 
 import logging
-import requests
-from redo import retry
 from mozpack.path import match as mozpackmatch, join as join_path
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 from subprocess import CalledProcessError
 from mozbuild.util import memoize
+
+from taskgraph.util.hg import get_json_automationrelevance
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +24,7 @@ def get_changed_files(repository, revision):
     Get the set of files changed in the push headed by the given revision.
     Responses are cached, so multiple calls with the same arguments are OK.
     """
-    url = "{}/json-automationrelevance/{}".format(repository.rstrip("/"), revision)
-    logger.debug("Querying version control for metadata: %s", url)
-
-    def get_automationrelevance():
-        response = requests.get(url, timeout=30)
-        return response.json()
-
-    contents = retry(get_automationrelevance, attempts=10, sleeptime=10)
-
+    contents = get_json_automationrelevance(repository, revision)
     logger.debug(
         "{} commits influencing task scheduling:".format(len(contents["changesets"]))
     )
