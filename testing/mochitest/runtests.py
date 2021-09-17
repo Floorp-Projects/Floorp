@@ -2885,6 +2885,7 @@ toolbar#nav-bar {
                 "swgl": self.extraPrefs.get("gfx.webrender.software", False),
                 "verify": options.verify,
                 "verify_fission": options.verify_fission,
+                "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
                 "webrender": options.enable_webrender,
                 "xorigin": options.xOriginTests,
             }
