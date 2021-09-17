@@ -454,15 +454,19 @@ function setupEnvironment() {
       ["media.navigator.video.max_fr", 10],
       ["media.autoplay.default", Ci.nsIAutoplay.ALLOWED]
     );
-  } else {
-    // For platforms other than Android, the tests use Fake H.264 GMP encoder.
-    // We can't use that with a real decoder until bug 1509012 is done.
-    // So force using the Fake H.264 GMP decoder for now.
-    defaultMochitestPrefs.set.push([
-      "media.navigator.mediadatadecoder_h264_enabled",
-      false,
-    ]);
   }
+
+  // All platforms but Linux support MediaDataEncoder and the tryserver Windows
+  // machine doesn't have HW H.264 encoder. In these cases, Fake GMP encoder is
+  // used so the pref needs to stay disabled.
+  // [TODO] re-enable after bug 1509012 is done or platform encoder available.
+  const alwaysHasHW264 =
+    !!navigator.userAgent.includes("Android") ||
+    !!navigator.userAgent.includes("Mac OS X");
+  defaultMochitestPrefs.set.push([
+    "media.navigator.mediadatadecoder_h264_enabled",
+    alwaysHasHW264,
+  ]);
 
   // Running as a Mochitest.
   SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
