@@ -127,10 +127,19 @@ function map(
     );
   }
   if (prefType == "Json") {
-    map(self, cache, accessorName, "Char", prefsRoot, prefName, fallbackValue, {
-      in: JSON.parse,
-      out: JSON.stringify,
-    });
+    map(
+      self,
+      cache,
+      accessorName,
+      "String",
+      prefsRoot,
+      prefName,
+      fallbackValue,
+      {
+        in: JSON.parse,
+        out: JSON.stringify,
+      }
+    );
     return;
   }
   if (prefType == "Float") {
