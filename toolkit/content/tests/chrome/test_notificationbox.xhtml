@@ -126,8 +126,11 @@ var tests =
   {
     test(nb, ntf) {
       // append a new notification
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+        }, testtag_notificationbox_buttons);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
       return ntf;
     },
@@ -158,10 +161,12 @@ var tests =
   {
     test(nb, ntf) {
       // append a new notification, but now with an event callback
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_LOW,
-                                      testtag_notificationbox_buttons,
-                                      notification_eventCallback);
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_buttons);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification with callback");
       return ntf;
     },
@@ -185,15 +190,20 @@ var tests =
   },
   {
     test(nb, ntf) {
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_LOW,
-                                      testtag_notificationbox_buttons,
-                                      notification_eventCallback);
-      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification with callback");
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_MEDIUM,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification with object");
       return ntf;
     },
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append with callback", ntf, 1);
+      testtag_notificationbox_State(nb, "append using object", ntf, 1);
+      testtag_notification_State(nb, ntf, "append object", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_INFO_MEDIUM);
       return ntf;
     }
   },
@@ -214,14 +224,14 @@ var tests =
   },
   {
     test(nb, ntf) {
-      ntf = nb.appendNotification(
-        "Notification", "note", "happy.png",
-        nb.PRIORITY_WARNING_LOW,
-        [{
+      ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority: nb.PRIORITY_WARNING_LOW,
+          eventCallback: notification_eventCallback,
+        }, [{
           label: "Button",
-        }]
-      );
-
+        }]);
       return ntf;
     },
     result(nb, ntf) {
@@ -241,8 +251,11 @@ var tests =
       switch (idx) {
         case 1:
           // append a new notification
-          ntf = nb.appendNotification("Notification", "note", "happy.png",
-                            nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
+          ntf = nb.appendNotification("note", {
+              label: "Notification",
+              image: "happy.png",
+              priority: nb.PRIORITY_INFO_LOW,
+            }, testtag_notificationbox_buttons);
           SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
 
           // Test persistence
@@ -286,8 +299,11 @@ var tests =
   {
     test(nb, ntf) {
       // append another notification
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_MEDIUM, testtag_notificationbox_buttons);
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_MEDIUM,
+        }, testtag_notificationbox_buttons);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification again");
       return ntf;
     },
@@ -311,8 +327,11 @@ var tests =
   },
   {
     test(nb, ntf) {
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_HIGH, testtag_notificationbox_buttons);
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_HIGH,
+        }, testtag_notificationbox_buttons);
       return ntf;
     },
     result(nb, ntf) {
@@ -325,10 +344,12 @@ var tests =
   },
   {
     test(nb, ntf) {
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_LOW,
-                                      testtag_notificationbox_links,
-                                      notification_eventCallback);
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+          eventCallback: notification_eventCallback,
+        }, testtag_notificationbox_links);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append link notification with callback");
       return ntf;
     },
@@ -350,8 +371,11 @@ var tests =
   {
     test(nb, ntf) {
       // append a new notification
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                  nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons_nopopup);
+      ntf = nb.appendNotification("note", {
+          label: "Notification",
+          image: "happy.png",
+          priority: nb.PRIORITY_INFO_LOW,
+        }, testtag_notificationbox_buttons_nopopup);
       return ntf;
     },
     result(nb, ntf) {
@@ -374,10 +398,12 @@ var tests =
   },
   {
     test(nb, ntf) {
-      ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      nb.PRIORITY_INFO_LOW,
-                                      testtag_notificationbox_supportpage,
-                                      notification_eventCallback);
+      ntf = nb.appendNotification("note", {
+        label: "Notification",
+        image: "happy.png",
+        priority: nb.PRIORITY_INFO_LOW,
+        eventCallback: notification_eventCallback,
+      }, testtag_notificationbox_supportpage);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append support page notification");
       return ntf;
     },
@@ -400,16 +426,18 @@ var tests =
   {
     test(nb, unused) {
       // add a number of notifications and check that they are added in order
-      nb.appendNotification("Four", "4", null, nb.PRIORITY_INFO_HIGH, testtag_notificationbox_buttons);
-      nb.appendNotification("Seven", "7", null, nb.PRIORITY_WARNING_HIGH, testtag_notificationbox_buttons);
-      nb.appendNotification("Two", "2", null, nb.PRIORITY_INFO_LOW, null);
-      nb.appendNotification("Eight", "8", null, nb.PRIORITY_CRITICAL_LOW, null);
-      nb.appendNotification("Five", "5", null, nb.PRIORITY_WARNING_LOW, null);
-      nb.appendNotification("Six", "6", null, nb.PRIORITY_WARNING_HIGH, null);
-      nb.appendNotification("One", "1", null, nb.PRIORITY_INFO_LOW, null);
-      nb.appendNotification("Nine", "9", null, nb.PRIORITY_CRITICAL_MEDIUM, null);
-      var ntf = nb.appendNotification("Ten", "10", null, nb.PRIORITY_CRITICAL_HIGH, null);
-      nb.appendNotification("Three", "3", null, nb.PRIORITY_INFO_MEDIUM, null);
+      nb.appendNotification("4", { label: "Four", priority: nb.PRIORITY_INFO_HIGH },
+                            testtag_notificationbox_buttons);
+      nb.appendNotification("7", { label: "Seven", priority: nb.PRIORITY_WARNING_HIGH },
+                            testtag_notificationbox_buttons);
+      nb.appendNotification("2", { label: "Two", priority: nb.PRIORITY_INFO_LOW });
+      nb.appendNotification("8", { label: "Eight", priority: nb.PRIORITY_CRITICAL_LOW });
+      nb.appendNotification("5", { label: "Five", priority: nb.PRIORITY_WARNING_LOW });
+      nb.appendNotification("6", { label: "Six", priority: nb.PRIORITY_WARNING_HIGH });
+      nb.appendNotification("1", { label: "One", priority: nb.PRIORITY_INFO_LOW });
+      nb.appendNotification("9", { label: "Nine", priority: nb.PRIORITY_CRITICAL_MEDIUM });
+      let ntf = nb.appendNotification("10", { label: "Ten", priority: nb.PRIORITY_CRITICAL_HIGH });
+      nb.appendNotification("3", { label: "Three", priority: nb.PRIORITY_INFO_MEDIUM });
       return ntf;
     },
     result(nb, ntf) {
@@ -445,13 +473,13 @@ var tests =
     test(nb, ntf) {
       var exh = false;
       try {
-        nb.appendNotification("no", "no", "no", -1, null);
+        nb.appendNotification("no", { label: "no", priority: -1 });
       } catch (ex) { exh = true; }
       SimpleTest.is(exh, true, "appendNotification priority too low");
 
       exh = false;
       try {
-        nb.appendNotification("no", "no", "no", 11, null);
+        nb.appendNotification("no", { label: "no", priority: 11 });
       } catch (ex) { exh = true; }
       SimpleTest.is(exh, true, "appendNotification priority too high");
 
@@ -464,8 +492,11 @@ var tests =
 var appendPriorityTests = [
   {
     test(nb, priority) {
-      var ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                      priority, testtag_notificationbox_buttons);
+      let ntf = nb.appendNotification("note", {
+          label: "Notification", 
+          image: "happy.png",
+          priority,
+        }, testtag_notificationbox_buttons);
       SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification " + priority);
       return [ntf, priority];
     },
@@ -481,8 +512,11 @@ var appendPriorityTests = [
     },
     result(nb, priority) {
       if (priority == nb.PRIORITY_CRITICAL_HIGH) {
-        let ntf = nb.appendNotification("Notification", "note", "happy.png",
-                                        nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
+        let ntf = nb.appendNotification("note", {
+            label: "Notification", 
+            image: "happy.png",
+            priority: nb.PRIORITY_INFO_LOW,
+          }, testtag_notificationbox_buttons);
         setTimeout(checkPopupTest, 50, nb, ntf);
       }
       else {

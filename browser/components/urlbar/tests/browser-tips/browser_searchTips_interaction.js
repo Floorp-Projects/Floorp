@@ -478,15 +478,10 @@ add_task(async function pickingTipDoesNotDisableOtherKinds() {
 add_task(async function notification() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     let box = gBrowser.getNotificationBox();
-    let note = box.appendNotification(
-      "Test",
-      "urlbar-test",
-      null,
-      box.PRIORITY_INFO_HIGH,
-      null,
-      null,
-      null
-    );
+    let note = box.appendNotification("urlbar-test", {
+      label: "Test",
+      priority: box.PRIORITY_INFO_HIGH,
+    });
     // Give it a big persistence so it doesn't go away on page load.
     note.persistence = 100;
     await withDNSRedirect("www.google.com", "/", async url => {
