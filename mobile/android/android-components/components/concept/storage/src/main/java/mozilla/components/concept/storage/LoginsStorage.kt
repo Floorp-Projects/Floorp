@@ -260,7 +260,6 @@ interface LoginValidationDelegate {
         data class CanBeUpdated(val foundLogin: Login) : Result()
     }
 
-
     /**
      *
      * Checks whether a [login] should be saved or updated.

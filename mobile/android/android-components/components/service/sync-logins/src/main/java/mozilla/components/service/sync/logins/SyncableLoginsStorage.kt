@@ -10,18 +10,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import mozilla.appservices.logins.LoginStore
+import mozilla.appservices.logins.migrateLogins
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.storage.EncryptedLogin
+import mozilla.components.concept.storage.KeyGenerationReason
+import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
 import org.json.JSONObject
 import java.io.Closeable
 
-const val DB_NAME = "logins.sqlite"
+// Older database that was encrypted using SQLCipher
+const val DB_NAME_SQLCIPHER = "logins.sqlite"
+// Current database
+const val DB_NAME = "logins2.sqlite"
+// Key that we stored the old SQLCipher encryption key
+const val ENCRYPTION_KEY_SQLCIPHER = "passwords"
 
 /**
  * The telemetry ping from a successful sync
@@ -97,11 +106,13 @@ typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageExcep
  */
 class SyncableLoginsStorage(
     private val context: Context,
-    private val key: String
-) : LoginsStorage, SyncableStore, AutoCloseable {
+    private val securePrefs: Lazy<SecureAbove22Preferences>
+) : LoginsStorage, SyncableStore, KeyRecoveryHandler, AutoCloseable {
     private val logger = Logger("SyncableLoginsStorage")
     private val coroutineContext by lazy { Dispatchers.IO }
+    private val crypto by lazy { LoginsCrypto(context, securePrefs.value, this) }
     private val conn by lazy {
+        migrateSQLCipherDBIfNeeded()
         LoginStorageConnection.init(dbPath = context.getDatabasePath(DB_NAME).absolutePath)
         LoginStorageConnection
     }
@@ -148,7 +159,7 @@ class SyncableLoginsStorage(
     @Throws(LoginsStorageException::class)
     override suspend fun get(guid: String): Login? = withContext(coroutineContext) {
         val encryptedLogin = conn.getStorage().get(guid)?.toEncryptedLogin()
-        if(encryptedLogin == null) null else decryptLogin(encryptedLogin)
+        if (encryptedLogin == null) null else decryptLogin(encryptedLogin)
     }
 
     /**
@@ -178,7 +189,7 @@ class SyncableLoginsStorage(
      */
     @Throws(CryptoException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun add(entry: LoginEntry) = withContext(coroutineContext) {
-        conn.getStorage().add(entry.toLoginEntry(), key).toEncryptedLogin()
+        conn.getStorage().add(entry.toLoginEntry(), crypto.key().key).toEncryptedLogin()
     }
 
     /**
@@ -190,7 +201,7 @@ class SyncableLoginsStorage(
      */
     @Throws(CryptoException::class, NoSuchRecordException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun update(guid: String, entry: LoginEntry) = withContext(coroutineContext) {
-        conn.getStorage().update(guid, entry.toLoginEntry(), key).toEncryptedLogin()
+        conn.getStorage().update(guid, entry.toLoginEntry(), crypto.key().key).toEncryptedLogin()
     }
 
     /**
@@ -201,7 +212,7 @@ class SyncableLoginsStorage(
      */
     @Throws(CryptoException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun addOrUpdate(entry: LoginEntry) = withContext(coroutineContext) {
-        conn.getStorage().addOrUpdate(entry.toLoginEntry(), key).toEncryptedLogin()
+        conn.getStorage().addOrUpdate(entry.toLoginEntry(), crypto.key().key).toEncryptedLogin()
     }
 
     override fun registerWithSyncManager() {
@@ -219,7 +230,7 @@ class SyncableLoginsStorage(
      */
     @Throws(CryptoException::class, LoginsStorageException::class)
     override suspend fun importLoginsAsync(logins: List<Login>): JSONObject = withContext(coroutineContext) {
-        JSONObject(conn.getStorage().importMultiple(logins.map { it.toLogin() }, key))
+        JSONObject(conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.key().key))
     }
 
     /**
@@ -236,37 +247,53 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override fun findLoginToUpdate(entry: LoginEntry): Login? {
-        return conn.getStorage().findLoginToUpdate(entry.toLoginEntry(), key)?.toLogin()
+        return conn.getStorage().findLoginToUpdate(entry.toLoginEntry(), crypto.key().key)?.toLogin()
     }
 
     /**
      * @throws [CryptoException] invalid encryption key
      */
-    override fun decryptLogin(login: EncryptedLogin): Login {
-        val secFields = mozilla.appservices.logins.decryptFields(login.secFields, key)
-        return Login (
-            guid = login.guid,
-            origin = login.origin,
-            username = secFields.username,
-            password = secFields.password,
-            formActionOrigin = login.formActionOrigin,
-            httpRealm = login.httpRealm,
-            usernameField = login.usernameField,
-            passwordField = login.passwordField,
-            timesUsed = login.timesUsed,
-            timeCreated = login.timeCreated,
-            timeLastUsed = login.timeLastUsed,
-            timePasswordChanged = login.timePasswordChanged,
-        )
-    }
+    override fun decryptLogin(login: EncryptedLogin) = crypto.decryptLogin(login)
 
     override fun close() {
         coroutineContext.cancel()
         conn.close()
     }
 
-    companion object {
-        fun createKey() = mozilla.appservices.logins.createKey()
+    override fun recoverFromBadKey(reason: KeyGenerationReason.RecoveryNeeded) {
+        when (reason) {
+            is KeyGenerationReason.RecoveryNeeded.Lost -> logger.warn("Logins key lost, new one generated")
+            is KeyGenerationReason.RecoveryNeeded.Corrupt -> logger.warn("Logins key was corrupted, new one generated")
+            is KeyGenerationReason.RecoveryNeeded.AbnormalState -> logger.warn(
+                "Logins key lost due to storage malfunction, new one generated"
+            )
+        }
+        // If the key needed to be regenerated, then we lose all
+        // usernames/passwords which were encrypted with the old key.  This
+        // means we can't really use the logins anymore and wipeLocal() is the
+        // best we can do.
+        conn.getStorage().wipeLocal()
+    }
+
+    private fun migrateSQLCipherDBIfNeeded() {
+        // Migrate the SQLCipher DB if needed
+        val sqlcipherKey = securePrefs.value.getString(ENCRYPTION_KEY_SQLCIPHER)
+        if (sqlcipherKey == null) return
+
+        try {
+            migrateLogins(
+                context.getDatabasePath(DB_NAME).absolutePath,
+                crypto.key().key,
+                context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
+                sqlcipherKey,
+                null
+            )
+            // TODO: migrateLogins returns a JSON string with metrics.  We need to report those somehow.
+        } finally {
+            // Delete the old key regardless of if the migration succeeded.  If
+            // it failed, it's just going to fail again next time.
+            securePrefs.value.remove(ENCRYPTION_KEY_SQLCIPHER)
+        }
     }
 }
 

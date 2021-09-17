@@ -61,7 +61,7 @@ class DummyLoginsStorage : LoginsStorage {
     }
 
     override suspend fun update(guid: String, entry: LoginEntry): EncryptedLogin {
-        var login: Login? = null;
+        var login: Login? = null
         logins.map { current ->
             if (current.guid == guid) {
                 login = makeLogin(guid, entry)
@@ -72,7 +72,7 @@ class DummyLoginsStorage : LoginsStorage {
         return encryptLogin(login!!)
     }
 
-   // Simplified version of the findLoginToUpdate logic from application-services
+    // Simplified version of the findLoginToUpdate logic from application-services
     override fun findLoginToUpdate(entry: LoginEntry): Login? {
         return logins.firstOrNull { it.username == entry.username }
     }
