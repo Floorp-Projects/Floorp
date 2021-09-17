@@ -10,8 +10,10 @@ from argparse import Namespace
 from functools import partial
 
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 logger = None
@@ -105,13 +107,15 @@ def setup_argument_parser():
     return parser
 
 
-@Command(
-    "reftest",
-    category="testing",
-    description="Run the reftest harness.",
-    parser=setup_argument_parser,
-)
-def reftest(command_context, **kwargs):
-    command_context._mach_context.activate_mozharness_venv()
-    kwargs["suite"] = "reftest"
-    return run_reftest(command_context._mach_context, **kwargs)
+@CommandProvider
+class ReftestCommands(MachCommandBase):
+    @Command(
+        "reftest",
+        category="testing",
+        description="Run the reftest harness.",
+        parser=setup_argument_parser,
+    )
+    def reftest(self, command_context, **kwargs):
+        command_context._mach_context.activate_mozharness_venv()
+        kwargs["suite"] = "reftest"
+        return run_reftest(command_context._mach_context, **kwargs)

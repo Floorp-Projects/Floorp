@@ -17,9 +17,10 @@ import subprocess
 import sys
 
 import mozfile
-from mach.decorators import Command
+from mach.decorators import Command, CommandProvider
 from mozboot.util import get_state_dir
 from mozbuild.base import (
+    MachCommandBase,
     MozbuildObject,
     BinaryNotFoundException,
 )
@@ -309,86 +310,91 @@ def create_parser():
     return create_parser(mach_interface=True)
 
 
-@Command(
-    "raptor",
-    category="testing",
-    description="Run Raptor performance tests.",
-    parser=create_parser,
-)
-def run_raptor(command_context, **kwargs):
-    # Defers this import so that a transitive dependency doesn't
-    # stop |mach bootstrap| from running
-    from raptor.power import enable_charging, disable_charging
+@CommandProvider
+class MachRaptor(MachCommandBase):
+    @Command(
+        "raptor",
+        category="testing",
+        description="Run Raptor performance tests.",
+        parser=create_parser,
+    )
+    def run_raptor(self, command_context, **kwargs):
+        # Defers this import so that a transitive dependency doesn't
+        # stop |mach bootstrap| from running
+        from raptor.power import enable_charging, disable_charging
 
-    build_obj = command_context
+        build_obj = command_context
 
-    is_android = Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
-
-    if is_android:
-        from mozrunner.devices.android_device import (
-            verify_android_device,
-            InstallIntent,
+        is_android = (
+            Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
         )
-        from mozdevice import ADBDeviceFactory
 
-        install = (
-            InstallIntent.NO if kwargs.pop("noinstall", False) else InstallIntent.YES
-        )
-        verbose = False
-        if (
-            kwargs.get("log_mach_verbose")
-            or kwargs.get("log_tbpl_level") == "debug"
-            or kwargs.get("log_mach_level") == "debug"
-            or kwargs.get("log_raw_level") == "debug"
-        ):
-            verbose = True
-        if not verify_android_device(
-            build_obj,
-            install=install,
-            app=kwargs["binary"],
-            verbose=verbose,
-            xre=True,
-        ):  # Equivalent to 'run_local' = True.
+        if is_android:
+            from mozrunner.devices.android_device import (
+                verify_android_device,
+                InstallIntent,
+            )
+            from mozdevice import ADBDeviceFactory
+
+            install = (
+                InstallIntent.NO
+                if kwargs.pop("noinstall", False)
+                else InstallIntent.YES
+            )
+            verbose = False
+            if (
+                kwargs.get("log_mach_verbose")
+                or kwargs.get("log_tbpl_level") == "debug"
+                or kwargs.get("log_mach_level") == "debug"
+                or kwargs.get("log_raw_level") == "debug"
+            ):
+                verbose = True
+            if not verify_android_device(
+                build_obj,
+                install=install,
+                app=kwargs["binary"],
+                verbose=verbose,
+                xre=True,
+            ):  # Equivalent to 'run_local' = True.
+                return 1
+
+        # Remove mach global arguments from sys.argv to prevent them
+        # from being consumed by raptor. Treat any item in sys.argv
+        # occuring before "raptor" as a mach global argument.
+        argv = []
+        in_mach = True
+        for arg in sys.argv:
+            if not in_mach:
+                argv.append(arg)
+            if arg.startswith("raptor"):
+                in_mach = False
+
+        raptor = command_context._spawn(RaptorRunner)
+        device = None
+
+        try:
+            if kwargs["power_test"] and is_android:
+                device = ADBDeviceFactory(verbose=True)
+                disable_charging(device)
+            return raptor.run_test(argv, kwargs)
+        except BinaryNotFoundException as e:
+            command_context.log(
+                logging.ERROR, "raptor", {"error": str(e)}, "ERROR: {error}"
+            )
+            command_context.log(logging.INFO, "raptor", {"help": e.help()}, "{help}")
             return 1
+        except Exception as e:
+            print(repr(e))
+            return 1
+        finally:
+            if kwargs["power_test"] and device:
+                enable_charging(device)
 
-    # Remove mach global arguments from sys.argv to prevent them
-    # from being consumed by raptor. Treat any item in sys.argv
-    # occuring before "raptor" as a mach global argument.
-    argv = []
-    in_mach = True
-    for arg in sys.argv:
-        if not in_mach:
-            argv.append(arg)
-        if arg.startswith("raptor"):
-            in_mach = False
-
-    raptor = command_context._spawn(RaptorRunner)
-    device = None
-
-    try:
-        if kwargs["power_test"] and is_android:
-            device = ADBDeviceFactory(verbose=True)
-            disable_charging(device)
-        return raptor.run_test(argv, kwargs)
-    except BinaryNotFoundException as e:
-        command_context.log(
-            logging.ERROR, "raptor", {"error": str(e)}, "ERROR: {error}"
-        )
-        command_context.log(logging.INFO, "raptor", {"help": e.help()}, "{help}")
-        return 1
-    except Exception as e:
-        print(repr(e))
-        return 1
-    finally:
-        if kwargs["power_test"] and device:
-            enable_charging(device)
-
-
-@Command(
-    "raptor-test",
-    category="testing",
-    description="Run Raptor performance tests.",
-    parser=create_parser,
-)
-def run_raptor_test(command_context, **kwargs):
-    return run_raptor(command_context, **kwargs)
+    @Command(
+        "raptor-test",
+        category="testing",
+        description="Run Raptor performance tests.",
+        parser=create_parser,
+    )
+    def run_raptor_test(self, command_context, **kwargs):
+        return self.run_raptor(command_context, **kwargs)
