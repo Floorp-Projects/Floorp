@@ -22,5 +22,5 @@ class DefaultInactiveTabsInteractor(
  * TODO This should be replaced with the AppStore.
  */
 object InactiveTabsState {
-    var isExpanded = true
+    var isExpanded = false
 }

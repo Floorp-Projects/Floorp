@@ -4,10 +4,10 @@
 
 package org.mozilla.fenix.tabstray.browser
 
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
@@ -23,19 +23,21 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 @OptIn(ExperimentalCoroutinesApi::class)
 class SelectedItemAdapterBinding(
     store: TabsTrayStore,
-    val adapter: BrowserTabsAdapter
+    val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it.mode }
-            // ignore initial mode update; the adapter is already in an updated state.
-            .drop(1)
             .ifChanged()
             .collect { mode ->
                 notifyAdapter(mode)
             }
     }
 
+    /**
+     * N.B: This method should be made more performant to find the position of the multi-selected tab that has
+     * changed in the adapter, and then [RecyclerView.Adapter.notifyItemChanged].
+     */
     private fun notifyAdapter(mode: Mode) = with(adapter) {
         if (mode == Mode.Normal) {
             notifyItemRangeChanged(0, itemCount, PAYLOAD_HIGHLIGHT_SELECTED_ITEM)

@@ -8,7 +8,7 @@ import android.content.Context
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval
 
-private const val MIN_COLUMN_WIDTH_DP = 180
+const val MIN_COLUMN_WIDTH_DP = 180
 
 /**
  * Returns the number of grid columns we can fit on the screen in the tabs tray.

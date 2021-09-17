@@ -217,7 +217,7 @@ class TabsTrayFragmentTest {
 
         val adapter = (tabsTrayBinding.tabsTray.adapter as TrayPagerAdapter)
         assertSame(context, adapter.context)
-        assertSame(store, adapter.store)
+        assertSame(store, adapter.tabsTrayStore)
         assertSame(trayInteractor, adapter.interactor)
         assertSame(browserInteractor, adapter.browserInteractor)
         assertSame(navigationInteractor, adapter.navInteractor)

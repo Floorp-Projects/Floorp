@@ -56,7 +56,7 @@ class BrowserTabsAdapterTest {
         val adapter = BrowserTabsAdapter(context, interactor, store, "Test")
         val binding = TabTrayItemBinding.inflate(LayoutInflater.from(testContext))
         val holder = spyk(
-            BrowserTabListViewHolder(
+            BrowserTabViewHolder.ListViewHolder(
                 imageLoader = mockk(),
                 browserTrayInteractor = interactor,
                 store = store,

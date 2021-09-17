@@ -63,4 +63,9 @@ object FeatureFlags {
      * Enables customizing the home screen
      */
     val customizeHome = Config.channel.isNightlyOrDebug
+
+    /**
+     * Identifies and separates the tabs list with a group containing search term tabs.
+     */
+    val tabGroupFeature = Config.channel.isNightlyOrDebug
 }

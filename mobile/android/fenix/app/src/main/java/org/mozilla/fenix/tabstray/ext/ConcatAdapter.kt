@@ -6,7 +6,9 @@ package org.mozilla.fenix.tabstray.ext
 
 import androidx.recyclerview.widget.ConcatAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
+import org.mozilla.fenix.tabstray.browser.TitleHeaderAdapter
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
+import org.mozilla.fenix.tabstray.browser.TabGroupAdapter
 
 /**
  * A convenience binding for retrieving the [BrowserTabsAdapter] from the [ConcatAdapter].
@@ -19,3 +21,15 @@ internal val ConcatAdapter.browserAdapter
  */
 internal val ConcatAdapter.inactiveTabsAdapter
     get() = adapters.find { it is InactiveTabsAdapter } as InactiveTabsAdapter
+
+/**
+ * A convenience binding for retrieving the [TabGroupAdapter] from the [ConcatAdapter].
+ */
+internal val ConcatAdapter.tabGroupAdapter
+    get() = adapters.find { it is TabGroupAdapter } as TabGroupAdapter
+
+/**
+ * A convenience binding for retrieving the [TitleHeaderAdapter] from the [ConcatAdapter].
+ */
+internal val ConcatAdapter.titleHeaderAdapter
+    get() = adapters.find { it is TitleHeaderAdapter } as TitleHeaderAdapter

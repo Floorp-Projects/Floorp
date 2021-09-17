@@ -10,16 +10,13 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.browser.TitleHeaderAdapter
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
-import org.mozilla.fenix.tabstray.browser.maxActiveTime
-import org.mozilla.fenix.tabstray.ext.isNormalTabActive
+import org.mozilla.fenix.tabstray.browser.TabGroupAdapter
 import org.mozilla.fenix.tabstray.syncedtabs.TabClickDelegate
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
@@ -28,48 +25,62 @@ import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
 class TrayPagerAdapter(
     @VisibleForTesting internal val context: Context,
-    @VisibleForTesting internal val store: TabsTrayStore,
+    @VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
     @VisibleForTesting internal val browserInteractor: BrowserTrayInteractor,
     @VisibleForTesting internal val navInteractor: NavigationInteractor,
     @VisibleForTesting internal val interactor: TabsTrayInteractor,
     @VisibleForTesting internal val browserStore: BrowserStore
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
+    /**
+     * ⚠️ N.B: Scrolling to the selected tab depends on the order of these adapters. If you change
+     * the ordering or add/remove an adapter, please update [NormalBrowserPageViewHolder.scrollToTab] and
+     * the layout manager.
+     */
     private val normalAdapter by lazy {
         ConcatAdapter(
-            BrowserTabsAdapter(context, browserInteractor, store, TABS_TRAY_FEATURE_NAME),
-            InactiveTabsAdapter(context, browserInteractor, INACTIVE_TABS_FEATURE_NAME)
+            InactiveTabsAdapter(context, browserInteractor, INACTIVE_TABS_FEATURE_NAME),
+            TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME),
+            TitleHeaderAdapter(browserStore),
+            BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME)
         )
     }
-    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store, TABS_TRAY_FEATURE_NAME) }
-    private val syncedTabsAdapter by lazy { SyncedTabsAdapter(TabClickDelegate(navInteractor)) }
+    private val privateAdapter by lazy {
+        BrowserTabsAdapter(
+            context,
+            browserInteractor,
+            tabsTrayStore,
+            TABS_TRAY_FEATURE_NAME
+        )
+    }
+    private val syncedTabsAdapter by lazy {
+        SyncedTabsAdapter(TabClickDelegate(navInteractor))
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractPageViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-
-        val selectedTab = browserStore.state.selectedTab
 
         return when (viewType) {
             NormalBrowserPageViewHolder.LAYOUT_ID -> {
                 NormalBrowserPageViewHolder(
                     itemView,
-                    store,
-                    interactor,
-                    browserStore.state.normalTabs.filter { it.isNormalTabActive(maxActiveTime) }.indexOf(selectedTab)
+                    tabsTrayStore,
+                    browserStore,
+                    interactor
                 )
             }
             PrivateBrowserPageViewHolder.LAYOUT_ID -> {
                 PrivateBrowserPageViewHolder(
                     itemView,
-                    store,
-                    interactor,
-                    browserStore.state.privateTabs.indexOf(selectedTab)
+                    tabsTrayStore,
+                    browserStore,
+                    interactor
                 )
             }
             SyncedTabsPageViewHolder.LAYOUT_ID -> {
                 SyncedTabsPageViewHolder(
                     itemView,
-                    store
+                    tabsTrayStore
                 )
             }
             else -> throw IllegalStateException("Unknown viewType.")
@@ -102,6 +113,7 @@ class TrayPagerAdapter(
 
         // Telemetry keys for identifying from which app features the a was opened / closed.
         const val TABS_TRAY_FEATURE_NAME = "Tabs tray"
+        const val TAB_GROUP_FEATURE_NAME = "Tab group"
         const val INACTIVE_TABS_FEATURE_NAME = "Inactive tabs"
 
         val POSITION_NORMAL_TABS = Page.NormalTabs.ordinal

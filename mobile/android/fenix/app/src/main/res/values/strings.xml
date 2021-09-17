@@ -740,6 +740,8 @@
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Save</string>
+    <!-- Text for normal tabs header title. -->
+    <string name="tab_tray_header_title">Other</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->

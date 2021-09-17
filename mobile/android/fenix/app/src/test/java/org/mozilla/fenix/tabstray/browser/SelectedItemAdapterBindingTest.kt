@@ -33,18 +33,6 @@ class SelectedItemAdapterBindingTest {
     }
 
     @Test
-    fun `WHEN observing on start THEN ignore the initial state update`() {
-        val store = TabsTrayStore()
-        val binding = SelectedItemAdapterBinding(store, adapter)
-
-        binding.start()
-
-        verify(exactly = 0) {
-            adapter.notifyItemRangeChanged(any(), any(), any())
-        }
-    }
-
-    @Test
     fun `WHEN mode changes THEN notify the adapter`() {
         val store = TabsTrayStore()
         val binding = SelectedItemAdapterBinding(store, adapter)

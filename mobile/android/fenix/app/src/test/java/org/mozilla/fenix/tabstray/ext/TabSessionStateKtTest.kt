@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -102,5 +103,27 @@ class TabSessionStateKtTest {
             private = true
         )
         assertFalse(tab.isNormalTabActive(maxTime))
+    }
+
+    @Test
+    fun `WHEN tab has a search term or metadata THEN return true `() {
+        val tab = createTab(
+            url = "https://mozilla.org",
+            createdAt = System.currentTimeMillis(),
+            historyMetadata = HistoryMetadataKey("https://getpockjet.com", "cats")
+        )
+        val tab2 = createTab(
+            url = "https://mozilla.org",
+            createdAt = System.currentTimeMillis(),
+            searchTerms = "dogs"
+        )
+        val tab3 = createTab(
+            url = "https://mozilla.org",
+            createdAt = inactiveTimestamp,
+            searchTerms = "dogs"
+        )
+        assertTrue(tab.isNormalTabActiveWithSearchTerm(maxTime))
+        assertTrue(tab2.isNormalTabActiveWithSearchTerm(maxTime))
+        assertFalse(tab3.isNormalTabActiveWithSearchTerm(maxTime))
     }
 }

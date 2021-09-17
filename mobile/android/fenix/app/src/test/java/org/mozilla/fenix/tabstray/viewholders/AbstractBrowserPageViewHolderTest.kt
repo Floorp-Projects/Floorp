@@ -9,6 +9,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.TextView
 import io.mockk.mockk
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
@@ -25,16 +26,17 @@ import org.mozilla.fenix.tabstray.browser.createTab
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AbstractBrowserPageViewHolderTest {
-    val store: TabsTrayStore = TabsTrayStore()
+    val tabsTrayStore: TabsTrayStore = TabsTrayStore()
+    val browserStore = BrowserStore()
     val interactor = mockk<TabsTrayInteractor>(relaxed = true)
     val browserTrayInteractor = mockk<BrowserTrayInteractor>(relaxed = true)
-    val adapter = BrowserTabsAdapter(testContext, browserTrayInteractor, store, "Test")
+    val adapter = BrowserTabsAdapter(testContext, browserTrayInteractor, tabsTrayStore, "Test")
 
     @Test
     fun `WHEN tabs inserted THEN show tray`() {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
-        val viewHolder = PrivateBrowserPageViewHolder(itemView, store, interactor, 5)
+        val viewHolder = PrivateBrowserPageViewHolder(itemView, tabsTrayStore, browserStore, interactor)
         val trayList: AbstractBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
@@ -58,7 +60,7 @@ class AbstractBrowserPageViewHolderTest {
     fun `WHEN no tabs THEN show empty view`() {
         val itemView =
             LayoutInflater.from(testContext).inflate(R.layout.normal_browser_tray_list, null)
-        val viewHolder = PrivateBrowserPageViewHolder(itemView, store, interactor, 5)
+        val viewHolder = PrivateBrowserPageViewHolder(itemView, tabsTrayStore, browserStore, interactor)
         val trayList: AbstractBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 

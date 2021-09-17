@@ -14,6 +14,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.AbstractBrowserTrayList
+import org.mozilla.fenix.tabstray.ext.observeFirstInsert
 
 /**
  * A shared view holder for browser tabs tray list.
@@ -22,7 +23,6 @@ abstract class AbstractBrowserPageViewHolder(
     containerView: View,
     tabsTrayStore: TabsTrayStore,
     interactor: TabsTrayInteractor,
-    private val currentTabIndex: Int
 ) : AbstractPageViewHolder(containerView) {
 
     private val trayList: AbstractBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
@@ -35,17 +35,23 @@ abstract class AbstractBrowserPageViewHolder(
         emptyList.text = emptyStringText
     }
 
+    /**
+     * A way for an implementor of [AbstractBrowserPageViewHolder] to define their own scroll-to-tab behaviour.
+     */
+    abstract fun scrollToTab(
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
+        layoutManager: RecyclerView.LayoutManager
+    )
+
     @CallSuper
     protected fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
         layoutManager: RecyclerView.LayoutManager
     ) {
-        adapter.registerAdapterDataObserver(
-            OneTimeAdapterObserver(adapter) {
-                trayList.scrollToPosition(currentTabIndex)
-                updateTrayVisibility(adapter.itemCount)
-            }
-        )
+        adapter.observeFirstInsert {
+            updateTrayVisibility(adapter.itemCount)
+        }
+        scrollToTab(adapter, layoutManager)
         trayList.layoutManager = layoutManager
         trayList.adapter = adapter
     }
@@ -58,18 +64,5 @@ abstract class AbstractBrowserPageViewHolder(
             trayList.visibility = VISIBLE
             emptyList.visibility = GONE
         }
-    }
-}
-
-/**
- * Observes the adapter and invokes the callback when data is first inserted.
- */
-class OneTimeAdapterObserver(
-    private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-    private val onAdapterReady: () -> Unit
-) : RecyclerView.AdapterDataObserver() {
-    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-        onAdapterReady.invoke()
-        adapter.unregisterAdapterDataObserver(this)
     }
 }
