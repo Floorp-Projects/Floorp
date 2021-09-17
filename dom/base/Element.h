@@ -113,6 +113,7 @@ struct URLValue;
 }  // namespace css
 namespace dom {
 struct CustomElementData;
+struct SetHTMLOptions;
 struct GetAnimationsOptions;
 struct ScrollIntoViewOptions;
 struct ScrollToOptions;
@@ -127,6 +128,7 @@ class DOMMatrixReadOnly;
 class Element;
 class ElementOrCSSPseudoElement;
 class Promise;
+class Sanitizer;
 class ShadowRoot;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
 template <typename T>
@@ -1385,6 +1387,9 @@ class Element : public FragmentOrElement {
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           ErrorResult& aError);
+
+  void SetHTML(const nsAString& aInnerHTML, const SetHTMLOptions& aOptions,
+               ErrorResult& aError);
 
   //----------------------------------------
 
