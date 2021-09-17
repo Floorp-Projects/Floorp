@@ -35,16 +35,15 @@ linux64-mingw32-nsis:
         symbol: TMW(mingw32-nsis)
     run:
         script: build-mingw32-nsis.sh
-        resources:
-            - 'build/unix/build-gcc/build-gcc.sh'
-            - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/nsis.tar.zst
     fetches:
         fetch:
             - nsis-3.07
             - zlib-1.2.11
         toolchain:
-            - linux64-mingw32-gcc
+            - linux64-binutils
+            - linux64-clang-mingw-x86
+            - sysroot-x86_64-linux-gnu
 
 linux64-mingw-fxc2-x86:
     description: "fxc2.exe x86 build for MinGW Cross Compile"
