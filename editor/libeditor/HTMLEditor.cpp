@@ -5845,12 +5845,14 @@ Element* HTMLEditor::GetActiveEditingHost(
   }
   nsIContent* content = focusNode->AsContent();
 
-  // If the active content isn't editable, or it has independent selection,
-  // we're not active.
-  if (!content->HasFlag(NODE_IS_EDITABLE) ||
-      content->HasIndependentSelection()) {
+  // If the active content isn't editable, we're not active.
+  if (!content->HasFlag(NODE_IS_EDITABLE)) {
     return nullptr;
   }
+  // Note that `Selection` shouldn't be in the native anonymous subtree of
+  // <input>/<textarea>, but can be in them (e.g., collapsed at {<input> - 0}).
+  // Even in such case, we need to look for an ancestor which does not have
+  // editable parent.
   Element* candidateEditingHost = content->GetEditingHost();
   if (!candidateEditingHost) {
     return nullptr;
