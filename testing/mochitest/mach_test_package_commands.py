@@ -11,10 +11,8 @@ from argparse import Namespace
 from functools import partial
 
 from mach.decorators import (
-    CommandProvider,
     Command,
 )
-from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None
@@ -193,24 +191,23 @@ def setup_junit_argument_parser():
     return parser
 
 
-@CommandProvider
-class MochitestCommands(MachCommandBase):
-    @Command(
-        "mochitest",
-        category="testing",
-        description="Run the mochitest harness.",
-        parser=setup_mochitest_argument_parser,
-    )
-    def mochitest(self, command_context, **kwargs):
-        command_context._mach_context.activate_mozharness_venv()
-        return run_test(command_context._mach_context, False, **kwargs)
+@Command(
+    "mochitest",
+    category="testing",
+    description="Run the mochitest harness.",
+    parser=setup_mochitest_argument_parser,
+)
+def mochitest(command_context, **kwargs):
+    command_context._mach_context.activate_mozharness_venv()
+    return run_test(command_context._mach_context, False, **kwargs)
 
-    @Command(
-        "geckoview-junit",
-        category="testing",
-        description="Run the geckoview-junit harness.",
-        parser=setup_junit_argument_parser,
-    )
-    def geckoview_junit(self, command_context, **kwargs):
-        command_context._mach_context.activate_mozharness_venv()
-        return run_test(command_context._mach_context, True, **kwargs)
+
+@Command(
+    "geckoview-junit",
+    category="testing",
+    description="Run the geckoview-junit harness.",
+    parser=setup_junit_argument_parser,
+)
+def geckoview_junit(command_context, **kwargs):
+    command_context._mach_context.activate_mozharness_venv()
+    return run_test(command_context._mach_context, True, **kwargs)
