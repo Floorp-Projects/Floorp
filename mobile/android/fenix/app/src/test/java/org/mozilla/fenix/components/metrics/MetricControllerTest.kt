@@ -10,8 +10,14 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.feature.customtabs.CustomTabsFacts
+import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
+import mozilla.components.feature.pwa.ProgressiveWebAppFacts
+import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
+import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -471,5 +477,37 @@ class MetricControllerTest {
         verify { dataService1.track(Event.CreditCardAutofillPromptDismissed) }
         verify { dataService1.track(Event.CreditCardManagementAddTapped) }
         verify { dataService1.track(Event.CreditCardManagementCardTapped) }
+    }
+
+    @Test
+    fun `WHEN changing Fact(component, item) without additional vals to events THEN it returns the right event`() {
+        // This naive test was added for a refactoring. It only covers the comparisons that were easy to add.
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+
+        val simpleMappings = listOf(
+            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.DISPLAY, Event.LoginDialogPromptDisplayed),
+            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.CANCEL, Event.LoginDialogPromptCancelled),
+            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.NEVER_SAVE, Event.LoginDialogPromptNeverSave),
+            Triple(Component.FEATURE_PROMPTS, LoginDialogFacts.Items.SAVE, Event.LoginDialogPromptSave),
+            // CreditCardAutofillDialogFacts.Items is already tested.
+            Triple(Component.FEATURE_CUSTOMTABS, CustomTabsFacts.Items.CLOSE, Event.CustomTabsClosed),
+            Triple(Component.FEATURE_CUSTOMTABS, CustomTabsFacts.Items.ACTION_BUTTON, Event.CustomTabsActionTapped),
+            Triple(Component.FEATURE_PWA, ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP, Event.ProgressiveWebAppOpenFromHomescreenTap),
+            Triple(Component.FEATURE_PWA, ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT, Event.ProgressiveWebAppInstallAsShortcut),
+            Triple(Component.FEATURE_SYNCEDTABS, SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED, Event.SyncedTabSuggestionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED, Event.BookmarkSuggestionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED, Event.ClipboardSuggestionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED, Event.HistorySuggestionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED, Event.SearchActionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED, Event.SearchSuggestionClicked),
+            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED, Event.OpenedTabSuggestionClicked),
+            Triple(Component.LIB_DATAPROTECT, SecurePrefsReliabilityExperiment.Companion.Actions.RESET, Event.SecurePrefsReset),
+        )
+
+        simpleMappings.forEach { (component, item, expectedEvent) ->
+            val fact = Fact(component, Action.CANCEL, item)
+            val message = "$expectedEvent $component $item"
+            assertEquals(message, expectedEvent, controller.factToEvent(fact))
+        }
     }
 }
