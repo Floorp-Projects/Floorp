@@ -239,16 +239,8 @@ def get_attribute_label(node):
     while isinstance(subtarget, ast.Attribute):
         label = subtarget.attr + ("." if label else "") + label
         subtarget = subtarget.value
-
-    if isinstance(subtarget, ast.Name):
-        label = subtarget.id + "." + label
-    elif isinstance(subtarget, ast.Subscript) and isinstance(subtarget.value, ast.Name):
-        label = subtarget.value.id + "." + label
-    else:
-        raise Exception(
-            "Unxpected subtarget of type %s found in get_attribute_label. label=%s"
-            % (subtarget, label)
-        )
+    assert isinstance(subtarget, ast.Name)
+    label = subtarget.id + "." + label
 
     return label
 
@@ -263,13 +255,10 @@ def ast_get_source_segment(code, node):
     ):
         return ast.original_get_source_segment(code, node)
 
-    if caller.function == "assignment_node_to_source_filename_list":
+    if caller.function == "log":
         return ""
 
-    raise Exception(
-        "ast_get_source_segment is not available with this Python version. (ver=%s.%s, caller=%s)"
-        % (sys.version_info.major, sys.version_info.minor, caller.function)
-    )
+    raise Exception("ast_get_source_segment is not available with this Python version.")
 
 
 # Overwrite it so we don't accidently use it
