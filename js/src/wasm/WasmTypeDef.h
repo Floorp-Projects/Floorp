@@ -646,100 +646,107 @@ class TypeContext {
   // Type equivalence
 
   template <class T>
-  TypeResult isEquivalent(T one, T two, TypeCache* cache) const {
+  TypeResult isEquivalent(T first, T second, TypeCache* cache) const {
     // Anything's equal to itself.
-    if (one == two) {
+    if (first == second) {
       return TypeResult::True;
     }
 
     // A reference may be equal to another reference
-    if (one.isReference() && two.isReference()) {
-      return isRefEquivalent(one.refType(), two.refType(), cache);
+    if (first.isReference() && second.isReference()) {
+      return isRefEquivalent(first.refType(), second.refType(), cache);
     }
 
 #ifdef ENABLE_WASM_GC
     // An rtt may be a equal to another rtt
-    if (one.isRtt() && two.isRtt()) {
+    if (first.isRtt() && second.isRtt()) {
       // Equivalent rtts must both have depths or not have depths
-      if (one.hasRttDepth() != two.hasRttDepth()) {
+      if (first.hasRttDepth() != second.hasRttDepth()) {
         return TypeResult::False;
       }
       // Equivalent rtts must have the same depth, if any
-      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+      if (second.hasRttDepth() && first.rttDepth() != second.rttDepth()) {
         return TypeResult::False;
       }
-      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+      return isTypeIndexEquivalent(first.typeIndex(), second.typeIndex(),
+                                   cache);
     }
 #endif
 
     return TypeResult::False;
   }
 
-  TypeResult isRefEquivalent(RefType one, RefType two, TypeCache* cache) const;
+  TypeResult isRefEquivalent(RefType first, RefType second,
+                             TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeIndexEquivalent(uint32_t one, uint32_t two,
+  TypeResult isTypeIndexEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                    TypeCache* cache) const;
 #endif
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isStructEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                 TypeCache* cache) const;
-  TypeResult isStructFieldEquivalent(const StructField one,
-                                     const StructField two,
+  TypeResult isStructFieldEquivalent(const StructField first,
+                                     const StructField second,
                                      TypeCache* cache) const;
-  TypeResult isArrayEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isArrayEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                TypeCache* cache) const;
-  TypeResult isArrayElementEquivalent(const ArrayType& one,
-                                      const ArrayType& two,
+  TypeResult isArrayElementEquivalent(const ArrayType& first,
+                                      const ArrayType& second,
                                       TypeCache* cache) const;
 #endif
 
   // Subtyping
 
   template <class T>
-  TypeResult isSubtypeOf(T one, T two, TypeCache* cache) const {
+  TypeResult isSubtypeOf(T subType, T superType, TypeCache* cache) const {
     // Anything's a subtype of itself.
-    if (one == two) {
+    if (subType == superType) {
       return TypeResult::True;
     }
 
     // A reference may be a subtype of another reference
-    if (one.isReference() && two.isReference()) {
-      return isRefSubtypeOf(one.refType(), two.refType(), cache);
+    if (subType.isReference() && superType.isReference()) {
+      return isRefSubtypeOf(subType.refType(), superType.refType(), cache);
     }
 
     // An rtt may be a subtype of another rtt
 #ifdef ENABLE_WASM_GC
-    if (one.isRtt() && two.isRtt()) {
+    if (subType.isRtt() && superType.isRtt()) {
       // A subtype must have a depth if the supertype has depth
-      if (!one.hasRttDepth() && two.hasRttDepth()) {
+      if (!subType.hasRttDepth() && superType.hasRttDepth()) {
         return TypeResult::False;
       }
       // A subtype must have the same depth as the supertype, if it has any
-      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+      if (superType.hasRttDepth() &&
+          subType.rttDepth() != superType.rttDepth()) {
         return TypeResult::False;
       }
-      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+      return isTypeIndexEquivalent(subType.typeIndex(), superType.typeIndex(),
+                                   cache);
     }
 #endif
 
     return TypeResult::False;
   }
 
-  TypeResult isRefSubtypeOf(RefType one, RefType two, TypeCache* cache) const;
+  TypeResult isRefSubtypeOf(RefType subType, RefType superType,
+                            TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
+  TypeResult isTypeIndexSubtypeOf(uint32_t subTypeIndex,
+                                  uint32_t superTypeIndex,
                                   TypeCache* cache) const;
 #endif
 
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructSubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isStructSubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                                TypeCache* cache) const;
-  TypeResult isStructFieldSubtypeOf(const StructField one,
-                                    const StructField two,
+  TypeResult isStructFieldSubtypeOf(const StructField subType,
+                                    const StructField superType,
                                     TypeCache* cache) const;
-  TypeResult isArraySubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isArraySubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                               TypeCache* cache) const;
-  TypeResult isArrayElementSubtypeOf(const ArrayType& one, const ArrayType& two,
+  TypeResult isArrayElementSubtypeOf(const ArrayType& subType,
+                                     const ArrayType& superType,
                                      TypeCache* cache) const;
 #endif
 };
