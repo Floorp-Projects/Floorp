@@ -43,7 +43,6 @@ function isRequire(t, node) {
 const VENDORS = [
   "classnames",
   "devtools-environment",
-  "devtools-splitter",
   "devtools-utils",
   "fuzzaldrin-plus",
   "lodash-move",
