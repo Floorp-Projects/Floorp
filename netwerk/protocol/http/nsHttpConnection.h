@@ -247,6 +247,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool CheckCanWrite0RTTData();
   void Check0RttEnabled(nsISSLSocketControl* ssl);
   void EarlyDataTelemetry(int16_t tlsVersion, bool earlyDataAccepted);
+  void FinishNPNSetup(bool handshakeSucceeded, bool hasSecurityInfo);
+  void Reset0RttForSpdy();
 
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
