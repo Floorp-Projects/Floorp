@@ -27,7 +27,7 @@ diff:
         cwd: '{checkout}'
         command: >-
             mkdir -p /builds/worker/artifacts/diffs &&
-            ./mach taskgraph target --fast -p "taskcluster/test/params" -o "/builds/worker/artifacts/diffs/diff_{params}.txt" --diff
+            ./mach taskgraph target --fast -p "taskcluster/test/params" -o "/builds/worker/artifacts/diffs/diff.txt" --diff {base_rev}
     when:
         files-changed:
             - 'taskcluster/ci/**'
