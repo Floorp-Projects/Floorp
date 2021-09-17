@@ -12,7 +12,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:background="?android:attr/selectableItemBackground"
+    android:background="@drawable/background_open_in_item"
     android:focusable="true"
     android:clickable="true"
     android:paddingStart="16dp"
