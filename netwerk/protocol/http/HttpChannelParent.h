@@ -188,8 +188,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const OriginAttributes& originAttributes) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
   virtual mozilla::ipc::IPCResult RecvOpenOriginalCacheInputStream() override;
-  virtual mozilla::ipc::IPCResult RecvOpenAltDataCacheInputStream(
-      const nsCString& aType) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   friend class ParentChannelListener;

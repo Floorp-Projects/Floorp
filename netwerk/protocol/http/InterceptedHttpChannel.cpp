@@ -1235,7 +1235,7 @@ InterceptedHttpChannel::SetPreferCacheLoadOverBypass(
 NS_IMETHODIMP
 InterceptedHttpChannel::PreferAlternativeDataType(
     const nsACString& aType, const nsACString& aContentType,
-    bool aDeliverAltData) {
+    PreferredAlternativeDataDeliveryType aDeliverAltData) {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
   mPreferredCachedAltDataTypes.AppendElement(PreferredAlternativeDataTypeParams(
       nsCString(aType), nsCString(aContentType), aDeliverAltData));
@@ -1276,10 +1276,10 @@ InterceptedHttpChannel::GetOriginalInputStream(
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetAltDataInputStream(
-    const nsACString& aType, nsIInputStreamReceiver* aReceiver) {
+InterceptedHttpChannel::GetAlternativeDataInputStream(
+    nsIInputStream** aInputStream) {
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetAltDataInputStream(aType, aReceiver);
+    return mSynthesizedCacheInfo->GetAlternativeDataInputStream(aInputStream);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
