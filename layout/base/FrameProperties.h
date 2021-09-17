@@ -64,7 +64,7 @@ struct FramePropertyDescriptorUntyped {
 template <typename T>
 struct FramePropertyDescriptor : public FramePropertyDescriptorUntyped {
   typedef void Destructor(T* aPropertyValue);
-  typedef void DestructorWithFrame(const nsIFrame* aFrame, T* aPropertyValue);
+  typedef void DestructorWithFrame(const nsIFrame* aaFrame, T* aPropertyValue);
 
   template <Destructor Dtor>
   static constexpr const FramePropertyDescriptor<T> NewWithDestructor() {
@@ -98,9 +98,9 @@ struct FramePropertyDescriptor : public FramePropertyDescriptorUntyped {
 };
 
 // SmallValueHolder<T> is a placeholder intended to be used as template
-// argument of FramePropertyDescriptor for types which can fit directly into our
-// internal value slot (i.e. types that can fit in 64 bits). This class should
-// never be defined, so that we won't use it for unexpected purpose by mistake.
+// argument of FramePropertyDescriptor for types which can fit into the
+// size of a pointer directly. This class should never be defined, so
+// that we won't use it for unexpected purpose by mistake.
 template <typename T>
 class SmallValueHolder;
 
@@ -121,6 +121,12 @@ struct FramePropertyTypeHelper<SmallValueHolder<T>> {
  * The FrameProperties class is optimized for storing 0 or 1 properties on
  * a given frame. Storing very large numbers of properties on a single
  * frame will not be efficient.
+ *
+ * Property values are passed as void* but do not actually have to be
+ * valid pointers. You can use NS_INT32_TO_PTR/NS_PTR_TO_INT32 to
+ * store int32_t values. Null/zero values can be stored and retrieved.
+ * Of course, the destructor function (if any) must handle such values
+ * correctly.
  */
 class FrameProperties {
  public:
@@ -150,8 +156,8 @@ class FrameProperties {
   template <typename T>
   void Set(Descriptor<T> aProperty, PropertyType<T> aValue,
            const nsIFrame* aFrame) {
-    uint64_t v = ReinterpretHelper<T>::ToInternalValue(aValue);
-    SetInternal(aProperty, v, aFrame);
+    void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
+    SetInternal(aProperty, ptr, aFrame);
   }
 
   /**
@@ -160,8 +166,8 @@ class FrameProperties {
   template <typename T>
   void Add(Descriptor<T> aProperty, PropertyType<T> aValue) {
     MOZ_ASSERT(!Has(aProperty), "duplicate frame property");
-    uint64_t v = ReinterpretHelper<T>::ToInternalValue(aValue);
-    AddInternal(aProperty, v);
+    void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
+    AddInternal(aProperty, ptr);
   }
 
   /**
@@ -198,8 +204,8 @@ class FrameProperties {
   template <typename T>
   PropertyType<T> Get(Descriptor<T> aProperty,
                       bool* aFoundResult = nullptr) const {
-    uint64_t v = GetInternal(aProperty, aFoundResult);
-    return ReinterpretHelper<T>::FromInternalValue(v);
+    void* ptr = GetInternal(aProperty, aFoundResult);
+    return ReinterpretHelper<T>::FromPointer(ptr);
   }
 
   /**
@@ -215,8 +221,8 @@ class FrameProperties {
    */
   template <typename T>
   PropertyType<T> Take(Descriptor<T> aProperty, bool* aFoundResult = nullptr) {
-    uint64_t v = TakeInternal(aProperty, aFoundResult);
-    return ReinterpretHelper<T>::FromInternalValue(v);
+    void* ptr = TakeInternal(aProperty, aFoundResult);
+    return ReinterpretHelper<T>::FromPointer(ptr);
   }
 
   /**
@@ -273,63 +279,62 @@ class FrameProperties {
   FrameProperties(const FrameProperties&) = delete;
   FrameProperties& operator=(const FrameProperties&) = delete;
 
-  inline void SetInternal(UntypedDescriptor aProperty, uint64_t aValue,
+  inline void SetInternal(UntypedDescriptor aProperty, void* aValue,
                           const nsIFrame* aFrame);
 
-  inline void AddInternal(UntypedDescriptor aProperty, uint64_t aValue);
+  inline void AddInternal(UntypedDescriptor aProperty, void* aValue);
 
-  inline uint64_t GetInternal(UntypedDescriptor aProperty,
-                              bool* aFoundResult) const;
+  inline void* GetInternal(UntypedDescriptor aProperty,
+                           bool* aFoundResult) const;
 
-  inline uint64_t TakeInternal(UntypedDescriptor aProperty, bool* aFoundResult);
+  inline void* TakeInternal(UntypedDescriptor aProperty, bool* aFoundResult);
 
   inline void RemoveInternal(UntypedDescriptor aProperty,
                              const nsIFrame* aFrame);
 
   template <typename T>
   struct ReinterpretHelper {
-    static_assert(sizeof(PropertyType<T>) <= sizeof(uint64_t),
-                  "size of the value must never be larger than 64 bits");
+    static_assert(sizeof(PropertyType<T>) <= sizeof(void*),
+                  "size of the value must never be larger than a pointer");
 
-    static uint64_t ToInternalValue(PropertyType<T> aValue) {
-      uint64_t v = 0;
-      memcpy(&v, &aValue, sizeof(aValue));
-      return v;
+    static void* ToPointer(PropertyType<T> aValue) {
+      void* ptr = nullptr;
+      memcpy(&ptr, &aValue, sizeof(aValue));
+      return ptr;
     }
 
-    static PropertyType<T> FromInternalValue(uint64_t aInternalValue) {
+    static PropertyType<T> FromPointer(void* aPtr) {
       PropertyType<T> value;
-      memcpy(&value, &aInternalValue, sizeof(value));
+      memcpy(&value, &aPtr, sizeof(value));
       return value;
     }
+  };
+
+  template <typename T>
+  struct ReinterpretHelper<T*> {
+    static void* ToPointer(T* aValue) { return static_cast<void*>(aValue); }
+
+    static T* FromPointer(void* aPtr) { return static_cast<T*>(aPtr); }
   };
 
   /**
    * Stores a property descriptor/value pair.
    */
   struct PropertyValue {
-    PropertyValue() : mProperty(nullptr), mValue(0) {}
-    PropertyValue(UntypedDescriptor aProperty, uint64_t aValue)
+    PropertyValue() : mProperty(nullptr), mValue(nullptr) {}
+    PropertyValue(UntypedDescriptor aProperty, void* aValue)
         : mProperty(aProperty), mValue(aValue) {}
 
-    // NOTE: This function converts our internal 64-bit-integer representation
-    // to a pointer-type representation. This is lossy on 32-bit systems, but it
-    // should be fine, as long as we *only* do this in cases where we're sure
-    // that the stored property-value is in fact a pointer. And we should have
-    // that assurance, since only pointer-typed frame properties are expected to
-    // have a destructor
     void DestroyValueFor(const nsIFrame* aFrame) {
       if (mProperty->mDestructor) {
-        mProperty->mDestructor(
-            ReinterpretHelper<void*>::FromInternalValue(mValue));
+        mProperty->mDestructor(mValue);
       } else if (mProperty->mDestructorWithFrame) {
-        mProperty->mDestructorWithFrame(
-            aFrame, ReinterpretHelper<void*>::FromInternalValue(mValue));
+        mProperty->mDestructorWithFrame(aFrame, mValue);
       }
     }
 
     UntypedDescriptor mProperty;
-    uint64_t mValue;
+    void* mValue;
   };
 
   /**
@@ -352,29 +357,28 @@ class FrameProperties {
   nsTArray<PropertyValue> mProperties;
 };
 
-inline uint64_t FrameProperties::GetInternal(UntypedDescriptor aProperty,
-                                             bool* aFoundResult) const {
+inline void* FrameProperties::GetInternal(UntypedDescriptor aProperty,
+                                          bool* aFoundResult) const {
   MOZ_ASSERT(aProperty, "Null property?");
 
   return mProperties.ApplyIf(
       aProperty, 0, PropertyComparator(),
-      [&aFoundResult](const PropertyValue& aPV) -> uint64_t {
+      [&aFoundResult](const PropertyValue& aPV) -> void* {
         if (aFoundResult) {
           *aFoundResult = true;
         }
         return aPV.mValue;
       },
-      [&aFoundResult]() -> uint64_t {
+      [&aFoundResult]() -> void* {
         if (aFoundResult) {
           *aFoundResult = false;
         }
-        return 0;
+        return nullptr;
       });
 }
 
 inline void FrameProperties::SetInternal(UntypedDescriptor aProperty,
-                                         uint64_t aValue,
-                                         const nsIFrame* aFrame) {
+                                         void* aValue, const nsIFrame* aFrame) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");
 
@@ -388,15 +392,15 @@ inline void FrameProperties::SetInternal(UntypedDescriptor aProperty,
 }
 
 inline void FrameProperties::AddInternal(UntypedDescriptor aProperty,
-                                         uint64_t aValue) {
+                                         void* aValue) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");
 
   mProperties.AppendElement(PropertyValue(aProperty, aValue));
 }
 
-inline uint64_t FrameProperties::TakeInternal(UntypedDescriptor aProperty,
-                                              bool* aFoundResult) {
+inline void* FrameProperties::TakeInternal(UntypedDescriptor aProperty,
+                                           bool* aFoundResult) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");
 
@@ -405,14 +409,14 @@ inline uint64_t FrameProperties::TakeInternal(UntypedDescriptor aProperty,
     if (aFoundResult) {
       *aFoundResult = false;
     }
-    return 0;
+    return nullptr;
   }
 
   if (aFoundResult) {
     *aFoundResult = true;
   }
 
-  uint64_t result = mProperties.Elements()[index].mValue;
+  void* result = mProperties.Elements()[index].mValue;
   mProperties.RemoveElementAt(index);
 
   return result;
