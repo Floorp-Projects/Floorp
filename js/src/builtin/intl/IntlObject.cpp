@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/Collator.h"
+#include "mozilla/intl/Currency.h"
 
 #include <algorithm>
 #include <array>
@@ -41,9 +42,6 @@
 #include "js/Result.h"
 #include "js/StableStringChars.h"
 #include "unicode/ucal.h"
-#include "unicode/ucurr.h"
-#include "unicode/uenum.h"
-#include "unicode/uloc.h"
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
@@ -57,8 +55,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-
-using js::intl::IcuLocale;
 
 /******************** Intl ********************/
 
@@ -582,64 +578,6 @@ static bool EnumerationIntoList(JSContext* cx, Enumeration values,
 }
 
 /**
- * Create an array from an UEnumeration.
- */
-template <const auto& unsupported, const auto& missing>
-static bool EnumerationIntoList(JSContext* cx, UEnumeration* values,
-                                MutableHandle<StringList> list) {
-  while (true) {
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t len;
-    const char* value = uenum_next(values, &len, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (value == nullptr) {
-      break;
-    }
-
-    // Skip over known, unsupported values.
-    if (std::any_of(
-            std::begin(unsupported), std::end(unsupported),
-            [value](const auto& e) { return std::strcmp(value, e) == 0; })) {
-      continue;
-    }
-
-    auto* string = NewStringCopyN<CanGC>(cx, value, size_t(len));
-    if (!string) {
-      return false;
-    }
-    if (!list.append(string)) {
-      return false;
-    }
-  }
-
-  // Add known missing values.
-  for (const char* value : missing) {
-    auto* string = NewStringCopyZ<CanGC>(cx, value);
-    if (!string) {
-      return false;
-    }
-    if (!list.append(string)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static void CloseEnumeration(UEnumeration* ptr) {
-  // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258> prevents this function
-  // to be a lambda.
-
-  // Tell the analysis the |uenum_close| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  uenum_close(ptr);
-}
-
-/**
  * Returns the list of calendar types which mustn't be returned by
  * |Intl.supportedValuesOf()|.
  */
@@ -743,7 +681,7 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
 
 /**
  * Returns a list of known, unsupported currencies which are returned by
- * |ucurr_openISOCurrencies|.
+ * |Currency::GetISOCurrencies()|.
  */
 static constexpr auto UnsupportedCurrencies() {
   // "MVP" is also marked with "questionable, remove?" in ucurr.cpp, but only
@@ -757,7 +695,7 @@ static constexpr auto UnsupportedCurrencies() {
 
 /**
  * Return a list of known, missing currencies which aren't returned by
- * |ucurr_openISOCurrencies|.
+ * |Currency::GetISOCurrencies()|.
  */
 static constexpr auto MissingCurrencies() {
   return std::array{
@@ -775,20 +713,36 @@ static constexpr auto MissingCurrenciesArray = MissingCurrencies();
  * AvailableCurrencies ( )
  */
 static ArrayObject* AvailableCurrencies(JSContext* cx) {
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values = ucurr_openISOCurrencies(UCURR_ALL, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  ScopedICUObject<UEnumeration, CloseEnumeration> toClose(values);
+  Rooted<StringList> list(cx, StringList(cx));
 
-  static constexpr auto& unsupported = UnsupportedCurrenciesArray;
+  {
+    // Hazard analysis complains that the mozilla::Result destructor calls a GC
+    // function, which is unsound when returning an unrooted value. Work around
+    // this issue by restricting the lifetime of |keywords| to a separate block.
+    auto currencies = mozilla::intl::Currency::GetISOCurrencies();
+    if (currencies.isErr()) {
+      intl::ReportInternalError(cx, currencies.unwrapErr());
+      return nullptr;
+    }
+
+    static constexpr auto& unsupported = UnsupportedCurrenciesArray;
+
+    if (!EnumerationIntoList<unsupported>(cx, currencies.unwrap(), &list)) {
+      return nullptr;
+    }
+  }
+
   static constexpr auto& missing = MissingCurrenciesArray;
 
-  Rooted<StringList> list(cx, StringList(cx));
-  if (!EnumerationIntoList<unsupported, missing>(cx, values, &list)) {
-    return nullptr;
+  // Add known missing values.
+  for (const char* value : missing) {
+    auto* string = NewStringCopyZ<CanGC>(cx, value);
+    if (!string) {
+      return nullptr;
+    }
+    if (!list.append(string)) {
+      return nullptr;
+    }
   }
 
   return CreateArrayFromList(cx, &list);
