@@ -3,11 +3,7 @@ import json
 import pytest
 
 from tests.support.http_request import HTTPRequest
-
-
-def set_context(session, context):
-    body = {"context": context}
-    session.send_session_command("POST", "moz/context", body)
+from . import using_context
 
 
 def test_debugger_address_not_set(session):
@@ -37,10 +33,11 @@ def test_debugger_address_true_fission_disabled(session):
         assert session.capabilities["browserVersion"] in data["Browser"]
 
     # Force disabling Fission until Remote Agent is compatible
-    set_context(session, "chrome")
-    assert (
-        session.execute_script("""return Services.appinfo.fissionAutostart""") is False
-    )
+    with using_context(session, "chrome"):
+        assert (
+            session.execute_script("""return Services.appinfo.fissionAutostart""")
+            is False
+        )
 
 
 @pytest.mark.capabilities(
@@ -68,7 +65,8 @@ def test_debugger_address_true_fission_override(session):
         assert session.capabilities["browserVersion"] in data["Browser"]
 
     # Allow Fission to be enabled when setting the preference
-    set_context(session, "chrome")
-    assert (
-        session.execute_script("""return Services.appinfo.fissionAutostart""") is True
-    )
+    with using_context(session, "chrome"):
+        assert (
+            session.execute_script("""return Services.appinfo.fissionAutostart""")
+            is True
+        )

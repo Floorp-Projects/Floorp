@@ -1259,7 +1259,9 @@ class Marionette(object):
         :returns: unique window handle
         :rtype: string
         """
-        self.window = self._send_message("WebDriver:GetWindowHandle", key="value")
+        with self.using_context("content"):
+            self.window = self._send_message("WebDriver:GetWindowHandle", key="value")
+
         return self.window
 
     @property
@@ -1275,9 +1277,10 @@ class Marionette(object):
         :returns: unique window handle
         :rtype: string
         """
-        self.chrome_window = self._send_message(
-            "WebDriver:GetChromeWindowHandle", key="value"
-        )
+        with self.using_context("chrome"):
+            self.chrome_window = self._send_message(
+                "WebDriver:GetWindowHandle", key="value"
+            )
 
         return self.chrome_window
 
@@ -1317,16 +1320,15 @@ class Marionette(object):
         """Get list of windows in the current context.
 
         If called in the content context it will return a list of
-        references to all available browser windows.  Called in the
-        chrome context, it will list all available windows, not just
-        browser windows (e.g. not just navigator.browser).
+        references to all available browser windows.
 
         Each window handle is assigned by the server, and the list of
         strings returned does not have a guaranteed ordering.
 
         :returns: Unordered list of unique window handles as strings
         """
-        return self._send_message("WebDriver:GetWindowHandles")
+        with self.using_context("content"):
+            return self._send_message("WebDriver:GetWindowHandles")
 
     @property
     def chrome_window_handles(self):
@@ -1337,7 +1339,8 @@ class Marionette(object):
 
         :returns: Unordered list of unique chrome window handles as strings
         """
-        return self._send_message("WebDriver:GetChromeWindowHandles")
+        with self.using_context("chrome"):
+            return self._send_message("WebDriver:GetWindowHandles")
 
     @property
     def page_source(self):
