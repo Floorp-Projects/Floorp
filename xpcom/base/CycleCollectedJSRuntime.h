@@ -94,6 +94,10 @@ class JSHolderMap {
 
   JSHolderMap();
 
+#ifdef DEBUG
+  ~JSHolderMap() { MOZ_RELEASE_ASSERT(!mHasIterator); }
+#endif
+
   bool Has(void* aHolder) const;
   nsScriptObjectTracer* Get(void* aHolder) const;
   nsScriptObjectTracer* Extract(void* aHolder);
@@ -139,6 +143,12 @@ class JSHolderMap {
   // Currently this will only contain wrapper cache wrappers since these are the
   // only holders to pass a zone parameter through to AddJSHolder.
   EntryVectorMap mPerZoneJSHolders;
+
+#ifdef DEBUG
+  // Iterators can mutate the element vectors by removing stale elements. Allow
+  // at most one to exist at a time.
+  bool mHasIterator = false;
+#endif
 };
 
 // An iterator over an EntryVector that skips over removed entries and removes
@@ -173,6 +183,13 @@ class JSHolderMap::EntryVectorIter {
 class JSHolderMap::Iter {
  public:
   explicit Iter(JSHolderMap& aMap, WhichHolders aWhich = AllHolders);
+
+#ifdef DEBUG
+  ~Iter() {
+    MOZ_RELEASE_ASSERT(mHolderMap.mHasIterator);
+    mHolderMap.mHasIterator = false;
+  }
+#endif
 
   bool Done() const { return mIter.Done(); }
   const Entry& Get() const { return mIter.Get(); }
