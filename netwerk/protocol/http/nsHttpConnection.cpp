@@ -2368,6 +2368,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpConnection)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsITlsHandshakeCallbackListener)
   NS_INTERFACE_MAP_ENTRY(HttpConnectionBase)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpConnection)
 NS_INTERFACE_MAP_END
@@ -2595,6 +2596,11 @@ bool nsHttpConnection::GetEchConfigUsed() {
     mSocketTransport->GetEchConfigUsed(&val);
   }
   return val;
+}
+
+NS_IMETHODIMP
+nsHttpConnection::HandshakeDone() {
+  return NS_OK;
 }
 
 }  // namespace net

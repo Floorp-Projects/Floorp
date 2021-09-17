@@ -15,6 +15,7 @@
 #include "ssl.h"
 #include "mozilla/net/SSLTokensCache.h"
 #include "nsICertOverrideService.h"
+#include "nsITlsHandshakeListener.h"
 
 using namespace mozilla;
 
@@ -352,6 +353,12 @@ CommonSocketControl::GetPeerId(nsACString& aResult) {
 
 NS_IMETHODIMP
 CommonSocketControl::GetRetryEchConfig(nsACString& aEchConfig) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CommonSocketControl::SetHandshakeCallbackListener(
+    nsITlsHandshakeCallbackListener* callback) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
