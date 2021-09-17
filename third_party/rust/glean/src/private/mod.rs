@@ -21,6 +21,7 @@ mod string;
 mod string_list;
 mod timespan;
 mod timing_distribution;
+mod url;
 mod uuid;
 
 pub use self::uuid::UuidMetric;
@@ -41,3 +42,4 @@ pub use string::StringMetric;
 pub use string_list::StringListMetric;
 pub use timespan::TimespanMetric;
 pub use timing_distribution::TimingDistributionMetric;
+pub use url::UrlMetric;
