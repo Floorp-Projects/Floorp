@@ -42,6 +42,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/Unused.h"
 
 #include "Fetch.h"
@@ -826,7 +827,7 @@ nsresult FetchDriver::HttpFetch(
     if (mRequest->GetIntegrity().IsEmpty()) {
       MOZ_ASSERT(!FetchUtil::WasmAltDataType.IsEmpty());
       nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
-      if (cic) {
+      if (cic && StaticPrefs::javascript_options_wasm_caching()) {
         cic->PreferAlternativeDataType(
             FetchUtil::WasmAltDataType, nsLiteralCString(WASM_CONTENT_TYPE),
             nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::
