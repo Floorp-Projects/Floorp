@@ -226,6 +226,28 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `AddNewTabUseCase uses provided history metadata`() {
+        val historyMetadata = HistoryMetadataKey(
+            "https://www.mozilla.org",
+            searchTerm = "test",
+            referrerUrl = "http://firefox.com"
+        )
+
+        tabsUseCases.addTab.invoke(
+            "https://www.mozilla.org",
+            flags = LoadUrlFlags.external(),
+            startLoading = true,
+            historyMetadata = historyMetadata
+        )
+
+        store.waitUntilIdle()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals(historyMetadata, store.state.tabs[0].historyMetadata)
+    }
+
+    @Test
     @Suppress("DEPRECATION")
     fun `AddNewPrivateTabUseCase will not load URL if flag is set to false`() {
         tabsUseCases.addPrivateTab("https://www.mozilla.org", startLoading = false)

@@ -132,6 +132,12 @@ class TabsUseCases(
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          * @param contextId the session context id to use for this tab.
          * @param engineSession (optional) engine session to use for this tab.
+         * @param source The [SessionState.Source] of the new tab.
+         * @param searchTerms The search terms of this new tab if it represents an active
+         * search (result) page.
+         * @param private Whether or not the new tab should be private.
+         * @param historyMetadata the [HistoryMetadataKey] of the new tab in case this tab
+         * was opened from history.
          * @return The ID of the created tab.
          */
         @Suppress("LongParameterList")
@@ -145,7 +151,8 @@ class TabsUseCases(
             engineSession: EngineSession? = null,
             source: SessionState.Source = SessionState.Source.Internal.NewTab,
             searchTerms: String = "",
-            private: Boolean = false
+            private: Boolean = false,
+            historyMetadata: HistoryMetadataKey? = null
         ): String {
             val tab = createTab(
                 url = url,
@@ -155,7 +162,8 @@ class TabsUseCases(
                 parent = parentId?.let { store.state.findTab(it) },
                 engineSession = engineSession,
                 searchTerms = searchTerms,
-                initialLoadFlags = flags
+                initialLoadFlags = flags,
+                historyMetadata = historyMetadata
             )
 
             store.dispatch(TabListAction.AddTabAction(tab, select = selectTab))
