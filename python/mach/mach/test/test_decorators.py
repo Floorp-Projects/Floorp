@@ -9,13 +9,12 @@ import os
 import pytest
 from unittest.mock import Mock
 
-from mozbuild.base import MachCommandBase
 from mozunit import main
 
 import mach.registrar
 import mach.decorators
 from mach.base import MachError
-from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
+from mach.decorators import CommandArgument, Command, SubCommand
 
 
 @pytest.fixture
@@ -33,12 +32,10 @@ def test_register_command_with_argument(registrar):
     context = Mock()
     context.cwd = "."
 
-    @CommandProvider
-    class CommandFoo(MachCommandBase):
-        @Command("cmd_foo", category="testing")
-        @CommandArgument("--arg", default=None, help="Argument help.")
-        def run_foo(self, command_context, arg):
-            inner_function(arg)
+    @Command("cmd_foo", category="testing")
+    @CommandArgument("--arg", default=None, help="Argument help.")
+    def run_foo(command_context, arg):
+        inner_function(arg)
 
     registrar.dispatch("cmd_foo", context, arg="argument")
 
@@ -53,15 +50,13 @@ def test_register_command_with_metrics_path(registrar):
     metrics_mock = Mock()
     context.telemetry.metrics.return_value = metrics_mock
 
-    @CommandProvider
-    class CommandFoo(MachCommandBase):
-        @Command("cmd_foo", category="testing", metrics_path=metrics_path)
-        def run_foo(self, command_context):
-            assert command_context.metrics == metrics_mock
+    @Command("cmd_foo", category="testing", metrics_path=metrics_path)
+    def run_foo(command_context):
+        assert command_context.metrics == metrics_mock
 
-        @SubCommand("cmd_foo", "sub_foo", metrics_path=metrics_path + "2")
-        def run_subfoo(self, command_context):
-            assert command_context.metrics == metrics_mock
+    @SubCommand("cmd_foo", "sub_foo", metrics_path=metrics_path + "2")
+    def run_subfoo(command_context):
+        assert command_context.metrics == metrics_mock
 
     registrar.dispatch("cmd_foo", context)
 
@@ -78,25 +73,23 @@ def test_register_command_sets_up_class_at_runtime(registrar):
     context = Mock()
     context.cwd = "."
 
-    # Inside the following class, we test that the virtualenv is set up properly
-    # dynamically on the instance that actually runs the command.
-    @CommandProvider
-    class CommandFoo(MachCommandBase):
-        @Command("cmd_foo", category="testing", virtualenv_name="env_foo")
-        def run_foo(self, command_context):
-            assert (
-                os.path.basename(command_context.virtualenv_manager.virtualenv_root)
-                == "env_foo"
-            )
-            inner_function("foo")
+    # We test that the virtualenv is set up properly dynamically on
+    # the instance that actually runs the command.
+    @Command("cmd_foo", category="testing", virtualenv_name="env_foo")
+    def run_foo(command_context):
+        assert (
+            os.path.basename(command_context.virtualenv_manager.virtualenv_root)
+            == "env_foo"
+        )
+        inner_function("foo")
 
-        @Command("cmd_bar", category="testing", virtualenv_name="env_bar")
-        def run_bar(self, command_context):
-            assert (
-                os.path.basename(command_context.virtualenv_manager.virtualenv_root)
-                == "env_bar"
-            )
-            inner_function("bar")
+    @Command("cmd_bar", category="testing", virtualenv_name="env_bar")
+    def run_bar(command_context):
+        assert (
+            os.path.basename(command_context.virtualenv_manager.virtualenv_root)
+            == "env_bar"
+        )
+        inner_function("bar")
 
     registrar.dispatch("cmd_foo", context)
     inner_function.assert_called_with("foo")
@@ -107,21 +100,17 @@ def test_register_command_sets_up_class_at_runtime(registrar):
 def test_cannot_create_command_nonexisting_category(registrar):
     with pytest.raises(MachError):
 
-        @CommandProvider
-        class CommandFoo(MachCommandBase):
-            @Command("cmd_foo", category="bar")
-            def run_foo(self, command_context):
-                pass
+        @Command("cmd_foo", category="bar")
+        def run_foo(command_context):
+            pass
 
 
 def test_subcommand_requires_parent_to_exist(registrar):
     with pytest.raises(MachError):
 
-        @CommandProvider
-        class CommandFoo(MachCommandBase):
-            @SubCommand("sub_foo", "foo")
-            def run_foo(self, command_context):
-                pass
+        @SubCommand("sub_foo", "foo")
+        def run_foo(command_context):
+            pass
 
 
 if __name__ == "__main__":
