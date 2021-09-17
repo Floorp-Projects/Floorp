@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Mencari Secara Pribadi</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s menempatkan Anda dalam kendali.</p>
+<p>Gunakan sebagai peramban privat:
+  <ul>
+    <li>Cari dan jelajah langsung di dalam aplikasi</li>
+    <li>Blokir pelacak (atau ubah pengaturan untuk izinkan pelacak)</li>
+    <li>Hapus kuki termasuk juga pencarian dan riwayat penjelajahan</li>
+  </ul>
+ </p>
+<p>%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>
+<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
 
@@ -199,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Daftar lengkapi-otomatis Anda:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Tambahkan URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
 
@@ -263,8 +282,13 @@
     <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
     <string name="preference_privacy_category_cookies">Blokir kuki</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Tidak, terima kasih</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Hanya blokir kuki pelacak pihak ke-3</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ya</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Gunakan sidik jari untuk membuka aplikasi</string>
@@ -317,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Mesin pencari terpasang</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Pilih mesin pencari</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Pulihkan mesin pencari baku</string>
 
@@ -325,6 +352,11 @@
     <string name="preference_search_add2">+ Tambahkan mesin pencari lainnya</string>
     <string name="preference_search_remove_title">Hapus mesin pencari</string>
     <string name="preference_search_remove">Hapus</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Tambahkan mesin pencari lainnya</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Pilih mesin pilihan Anda:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -486,8 +518,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Tambah</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">YA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">TIDAK</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Pintasan akan terbuka dengan Perlindungan Pelacakan Dipertingkat dinonaktifkan</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -519,7 +561,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s tersedia untuk Anda di bawah persyaratan <a href="%2$s">Lisensi Publik Mozilla</a> dan lisensi sumber terbuka lainnya.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Anda tidak diberi izin atau lisensi apa pun atas merek dagang Mozilla Foundation atau pihak mana pun, termasuk nama atau logo Mozilla, Firefox, atau %1$s. Informasi lebih lanjut bisa ditemukan <a href="%2$s">di sini</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Kode sumber tambahan untuk %1$s tersedia dengan berbagai <a href="%2$s">lisensi</a> bebas dan sumber terbuka lainnya.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah <a href="%2$s">GNU General Public License v3</a>, dan tersedia <a href="%3$s">di sini</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Nama pengguna</string>
     <string name="gv_prompt_password_hint">Sandi</string>
     <string name="gv_prompt_clear">Bersihkan</string>
@@ -560,6 +623,9 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Situs desktop</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL tersalin</string>
 
@@ -583,6 +649,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Sesi Baru</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Buka Tautan di Sesi Baru</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Ikon sidik jari</string>
 
@@ -593,6 +663,13 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Jari bergerak terlalu cepat. Coba lagi.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Tampilkan saran pencarian?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Untuk mendapatkan saran, %1$s perlu mengirim apa yang Anda ketikkan di bilah alamat ke mesin pencari.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Tidak</string>
@@ -612,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Situs bertindak tidak terduga?\n Matikan Perlindungan Pelacakan</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Konten situs menghilang atau bertingkah aneh?\n
+    Coba matikan Perlindungan Pelacakan Dipertingkat</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Akses satu ketukan ke situs yang sering digunakan%1$s Menu > Tambahkan ke Beranda]]></string>
@@ -629,8 +711,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Ingin melihat versi lengkap situs?\n
+        Aktifkan Situs Desktop dari menu %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Nonaktifkan tips ini pada layar mulai</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Ingin menonaktifkan Perlindungan Pelacakan yang Disempurnakan untuk situs yang Anda percayai?\n
+        Tambahkan ke Daftar yang Diizinkan di Pengaturan
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Mengapa ya, kami tampilan berbeda sekarang!\n Baca selengkapnya tentang ini dan pembaruan %1$s lainnya.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Buat pintasan ke situs yang sering Anda kunjungi:\n
+    Pilih Tambahkan ke Pintasan dari menu %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
@@ -657,6 +759,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Hapus semua situs web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Blokir Kuki</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Apakah Anda ingin memblokir kuki?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Tab Mogok</string>
     <!-- Headline for the tab crash report screen -->
@@ -674,4 +782,37 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Pelacak diblokir sejak %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Konten</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Periklanan</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sosial</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analitis</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Perlindungan Pelacakan Dipertingkat</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Perlindungan DINONAKTIFKAN untuk situs ini</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Perlindungan DIAKTIFKAN untuk situs ini</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Sambungan aman</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Sambungan tidak aman</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Pelacak dan Skrip untuk Diblokir</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Kembali</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Hapus</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Gambar yang disimpan dan dibagikan &lt;b&gt;tidak akan dihapus&lt;/b&gt; ketika Anda menghapus riwayat %1$s.</string>
+</resources>
