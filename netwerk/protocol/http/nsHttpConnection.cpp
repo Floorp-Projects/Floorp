@@ -449,6 +449,10 @@ bool nsHttpConnection::EnsureNPNComplete() {
     return true;
   }
 
+  if (mTlsHandshakeComplitionPending) {
+    return false;
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupports> securityInfo;
   GetSecurityInfo(getter_AddRefs(securityInfo));
@@ -1707,6 +1711,7 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   // IsAlive() calls drive the handshake and that may cause nss and necko
   // to be out of sync.
   if (mWaitingFor0RTTResponse && !CheckCanWrite0RTTData()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mTlsHandshakeComplitionPending);
     LOG(
         ("nsHttpConnection::OnReadSegment Do not write any data, wait"
          " for EnsureNPNComplete to be called [this=%p]",
@@ -1782,7 +1787,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
       rv = mProxyConnectStream->ReadSegments(ReadFromStream, this,
                                              nsIOService::gDefaultSegmentSize,
                                              &transactionBytes);
-    } else if (!EnsureNPNComplete() && !mWaitingFor0RTTResponse) {
+    } else if (!EnsureNPNComplete() &&
+               (!mWaitingFor0RTTResponse || mTlsHandshakeComplitionPending)) {
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (!mTransaction) {
       rv = NS_ERROR_FAILURE;
@@ -2497,10 +2503,24 @@ bool nsHttpConnection::GetEchConfigUsed() {
 
 NS_IMETHODIMP
 nsHttpConnection::HandshakeDone() {
-  if (mNPNComplete) {
-    return NS_OK;
-  }
+  mTlsHandshakeComplitionPending = true;
 
+  // HandshakeDone needs to be dispatched so that it is not called inside
+  // nss locks.
+  RefPtr<nsHttpConnection> self(this);
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "nsHttpConnection::HandshakeDoneInternal",
+      [self{std::move(self)}]() {
+        self->HandshakeDoneInternal();
+        self->mTlsHandshakeComplitionPending = false;
+      }));
+  return NS_OK;
+}
+
+void nsHttpConnection::HandshakeDoneInternal() {
+  if (mNPNComplete) {
+    return;
+  }
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupports> securityInfo;
   nsCOMPtr<nsITransportSecurityInfo> info;
@@ -2510,19 +2530,19 @@ nsHttpConnection::HandshakeDone() {
   GetSecurityInfo(getter_AddRefs(securityInfo));
   if (!securityInfo) {
     FinishNPNSetup(false, false);
-    return NS_OK;
+    return;
   }
 
   ssl = do_QueryInterface(securityInfo, &rv);
   if (NS_FAILED(rv)) {
     FinishNPNSetup(false, false);
-    return NS_OK;
+    return;
   }
 
   info = do_QueryInterface(securityInfo, &rv);
   if (NS_FAILED(rv)) {
     FinishNPNSetup(false, false);
-    return NS_OK;
+    return;
   }
 
   DebugOnly<nsresult> rvDebug = info->GetNegotiatedNPN(negotiatedNPN);
@@ -2547,7 +2567,7 @@ nsHttpConnection::HandshakeDone() {
            this, mTransaction.get()));
       mTransaction->Close(NS_ERROR_NET_RESET);
       FinishNPNSetup(false, true);
-      return NS_OK;
+      return;
     }
     if (mDid0RTTSpdy && (negotiatedNPN != mEarlyNegotiatedALPN)) {
       Reset0RttForSpdy();
@@ -2603,7 +2623,7 @@ nsHttpConnection::HandshakeDone() {
   mWaitingFor0RTTResponse = false;
 
   FinishNPNSetup(true, true);
-  return NS_OK;
+  return;
 }
 
 }  // namespace net
