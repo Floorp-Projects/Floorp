@@ -14,8 +14,10 @@ import mozlog
 from xpcshellcommandline import parser_desktop
 
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 
 def run_xpcshell(context, **kwargs):
@@ -50,12 +52,14 @@ def run_xpcshell(context, **kwargs):
     return xpcshell.runTests(**vars(args))
 
 
-@Command(
-    "xpcshell-test",
-    category="testing",
-    description="Run the xpcshell harness.",
-    parser=parser_desktop,
-)
-def xpcshell(command_context, **kwargs):
-    command_context._mach_context.activate_mozharness_venv()
-    return run_xpcshell(command_context._mach_context, **kwargs)
+@CommandProvider
+class MochitestCommands(MachCommandBase):
+    @Command(
+        "xpcshell-test",
+        category="testing",
+        description="Run the xpcshell harness.",
+        parser=parser_desktop,
+    )
+    def xpcshell(self, command_context, **kwargs):
+        command_context._mach_context.activate_mozharness_venv()
+        return run_xpcshell(command_context._mach_context, **kwargs)

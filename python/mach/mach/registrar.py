@@ -95,7 +95,7 @@ class MachRegistrar(object):
             return 1
 
         self.command_depth += 1
-        fn = handler.func
+        fn = getattr(instance, handler.method)
 
         start_time = time.time()
 

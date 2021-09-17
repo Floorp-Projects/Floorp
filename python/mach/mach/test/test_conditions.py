@@ -49,7 +49,7 @@ class TestConditions(TestBase):
     def test_conditions_pass(self):
         """Test that a command which passes its conditions is runnable."""
 
-        self.assertEquals((0, "", ""), self._run(["cmd_condition_true"]))
+        self.assertEquals((0, "", ""), self._run(["cmd_foo"]))
         self.assertEquals((0, "", ""), self._run(["cmd_foo_ctx"], _populate_context))
 
     def test_invalid_context_message(self):
@@ -61,7 +61,7 @@ class TestConditions(TestBase):
 
         fail_conditions = [is_bar]
 
-        for name in ("cmd_condition_false", "cmd_condition_true_and_false"):
+        for name in ("cmd_bar", "cmd_foobar"):
             result, stdout, stderr = self._run([name])
             self.assertEquals(1, result)
 
@@ -90,9 +90,9 @@ class TestConditions(TestBase):
         """Test that commands that are not runnable do not show up in help."""
 
         result, stdout, stderr = self._run(["help"], _populate_context)
-        self.assertIn("cmd_condition_true", stdout)
-        self.assertNotIn("cmd_condition_false", stdout)
-        self.assertNotIn("cmd_condition_true_and_false", stdout)
+        self.assertIn("cmd_foo", stdout)
+        self.assertNotIn("cmd_bar", stdout)
+        self.assertNotIn("cmd_foobar", stdout)
         self.assertIn("cmd_foo_ctx", stdout)
         self.assertNotIn("cmd_bar_ctx", stdout)
         self.assertNotIn("cmd_foobar_ctx", stdout)
