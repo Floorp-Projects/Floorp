@@ -9322,6 +9322,23 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   bool savePresentation =
       CanSavePresentation(aLoadState->LoadType(), nullptr, nullptr);
 
+  // nsDocShell::CanSavePresentation is for non-SHIP version only. Do a
+  // separate check for SHIP so that we know if there are ongoing requests
+  // before calling Stop() below.
+  if (mozilla::SessionHistoryInParent()) {
+    Document* document = GetDocument();
+    uint16_t flags = 0;
+    if (document && !document->CanSavePresentation(nullptr, flags, true)) {
+      // This forces some flags into the WindowGlobalParent's mBFCacheStatus,
+      // which we'll then use in CanonicalBrowsingContext::AllowedInBFCache,
+      // and in particular we'll store BFCacheStatus::REQUEST if needed.
+      // Also, we want to report all the flags to the parent process here (and
+      // not just BFCacheStatus::NOT_ALLOWED), so that it can update the
+      // telemetry data correctly.
+      document->DisallowBFCaching(flags);
+    }
+  }
+
   // Don't stop current network activity for javascript: URL's since
   // they might not result in any data, and thus nothing should be
   // stopped in those cases. In the case where they do result in

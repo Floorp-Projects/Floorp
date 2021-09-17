@@ -6896,12 +6896,12 @@ void Document::DeletePresShell() {
   mDesignModeSheetAdded = false;
 }
 
-void Document::DisallowBFCaching() {
+void Document::DisallowBFCaching(uint16_t aStatus) {
   NS_ASSERTION(!mBFCacheEntry, "We're already in the bfcache!");
   if (!mBFCacheDisallowed) {
     WindowGlobalChild* wgc = GetWindowGlobalChild();
     if (wgc) {
-      wgc->BlockBFCacheFor(BFCacheStatus::NOT_ALLOWED);
+      wgc->SendUpdateBFCacheStatus(aStatus, 0);
     }
   }
   mBFCacheDisallowed = true;
