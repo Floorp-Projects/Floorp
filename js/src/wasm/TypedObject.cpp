@@ -66,21 +66,20 @@ const JSClass js::RttValue::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
     &RttValueClassOps};
 
-RttValue* RttValue::createFromHandle(JSContext* cx,
-                                     const wasm::SharedTypeContext& tycx,
-                                     TypeHandle handle) {
+RttValue* RttValue::create(JSContext* cx, TypeHandle handle) {
   Rooted<RttValue*> rtt(cx,
                         NewTenuredObjectWithGivenProto<RttValue>(cx, nullptr));
   if (!rtt) {
     return nullptr;
   }
 
-  rtt->initReservedSlot(RttValue::Handle, Int32Value(handle.index()));
   // Store the TypeContext in a slot and keep it alive until finalization by
   // manually addref'ing the RefPtr
-  tycx.get()->AddRef();
+  const SharedTypeContext& typeContext = handle.context();
+  typeContext.get()->AddRef();
   rtt->initReservedSlot(RttValue::TypeContext,
-                        PrivateValue((void*)tycx.get()));
+                        PrivateValue((void*)typeContext.get()));
+  rtt->initReservedSlot(RttValue::TypeDef, PrivateValue((void*)&handle.def()));
   rtt->initReservedSlot(RttValue::Parent, NullValue());
   rtt->initReservedSlot(RttValue::Children, PrivateValue(nullptr));
 
@@ -94,6 +93,10 @@ RttValue* RttValue::createFromHandle(JSContext* cx,
   return rtt;
 }
 
+RttValue* RttValue::rttCanon(JSContext* cx, TypeHandle handle) {
+  return RttValue::create(cx, handle);
+}
+
 RttValue* RttValue::rttSub(JSContext* cx, HandleRttValue parent,
                            HandleRttValue subCanon) {
   if (!parent->ensureChildren(cx)) {
@@ -105,10 +108,7 @@ RttValue* RttValue::rttSub(JSContext* cx, HandleRttValue parent,
     return &child->as<RttValue>();
   }
 
-  wasm::TypeHandle parentHandle = parent->handle();
-  Rooted<RttValue*> rtt(
-      cx, createFromHandle(cx, SharedTypeContext(parent->typeContext()),
-                           parentHandle));
+  Rooted<RttValue*> rtt(cx, create(cx, parent->typeHandle()));
   if (!rtt) {
     return nullptr;
   }
@@ -383,8 +383,6 @@ void OutlineTypedObject::obj_finalize(JSFreeOp* fop, JSObject* object) {
     typedObj.data_ = nullptr;
   }
 }
-
-const TypeDef& RttValue::typeDef() const { return handle().get(typeContext()); }
 
 bool RttValue::lookupProperty(JSContext* cx, HandleTypedObject object, jsid id,
                               uint32_t* offset, FieldType* type) {

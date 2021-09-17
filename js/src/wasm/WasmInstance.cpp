@@ -1330,8 +1330,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         }
 
         Rooted<RttValue*> rttValue(
-            cx, RttValue::createFromHandle(cx, SharedTypeContext(tycx),
-                                           TypeHandle(typeIndex)));
+            cx, RttValue::rttCanon(cx, TypeHandle(tycx, typeIndex)));
         if (!rttValue) {
           return false;
         }
