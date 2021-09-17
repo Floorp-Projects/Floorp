@@ -6,6 +6,7 @@
 EXPORTS.mozilla.intl = [
     "src/Calendar.h",
     "src/Collator.h",
+    "src/Currency.h",
     "src/DateTimeFormat.h",
     "src/DateTimePatternGenerator.h",
     "src/ICU4CGlue.h",
@@ -22,6 +23,7 @@ EXPORTS.mozilla.intl = [
 UNIFIED_SOURCES += [
     "src/Calendar.cpp",
     "src/Collator.cpp",
+    "src/Currency.cpp",
     "src/DateTimeFormat.cpp",
     "src/DateTimePatternGenerator.cpp",
     "src/ICU4CGlue.cpp",
