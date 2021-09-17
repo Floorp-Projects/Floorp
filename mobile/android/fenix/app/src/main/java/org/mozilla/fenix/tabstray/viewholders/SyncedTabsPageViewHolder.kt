@@ -27,6 +27,9 @@ class SyncedTabsPageViewHolder(
         binding.syncedTabsTrayLayout.tabsTrayStore = tabsTrayStore
     }
 
+    override fun detachedFromWindow() = Unit // no-op
+    override fun attachedToWindow() = Unit // no-op
+
     companion object {
         const val LAYOUT_ID = R.layout.component_sync_tabs_tray_layout
     }

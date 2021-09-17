@@ -15,7 +15,21 @@ abstract class AbstractPageViewHolder constructor(
     val containerView: View
 ) : RecyclerView.ViewHolder(containerView) {
 
+    /**
+     * Invoked when the nested [RecyclerView.Adapter] is bound to the [RecyclerView.ViewHolder].
+     */
     abstract fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
     )
+
+    /**
+     * Invoked when the [RecyclerView.ViewHolder] is attached from the window. This could have
+     * previously been bound and is now attached again.
+     */
+    abstract fun attachedToWindow()
+
+    /**
+     * Invoked when the [RecyclerView.ViewHolder] is detached from the window.
+     */
+    abstract fun detachedFromWindow()
 }

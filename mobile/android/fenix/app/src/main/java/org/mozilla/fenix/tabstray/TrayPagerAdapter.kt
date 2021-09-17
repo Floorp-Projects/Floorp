@@ -106,6 +106,14 @@ class TrayPagerAdapter(
         }
     }
 
+    override fun onViewAttachedToWindow(holder: AbstractPageViewHolder) {
+        holder.attachedToWindow()
+    }
+
+    override fun onViewDetachedFromWindow(holder: AbstractPageViewHolder) {
+        holder.detachedFromWindow()
+    }
+
     override fun getItemCount(): Int = TRAY_TABS_COUNT
 
     companion object {

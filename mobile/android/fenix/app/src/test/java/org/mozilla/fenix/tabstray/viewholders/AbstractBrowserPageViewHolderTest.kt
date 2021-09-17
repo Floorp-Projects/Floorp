@@ -41,6 +41,7 @@ class AbstractBrowserPageViewHolderTest {
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
         viewHolder.bind(adapter)
+        viewHolder.attachedToWindow()
 
         adapter.updateTabs(
             Tabs(
@@ -65,6 +66,7 @@ class AbstractBrowserPageViewHolderTest {
         val emptyList: TextView = itemView.findViewById(R.id.tab_tray_empty_view)
 
         viewHolder.bind(adapter)
+        viewHolder.attachedToWindow()
 
         adapter.updateTabs(
             Tabs(
