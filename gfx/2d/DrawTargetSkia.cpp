@@ -579,7 +579,15 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
       SkTileMode xTile = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
       SkTileMode yTile = ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
 
-      aPaint.setShader(image->makeShader(xTile, yTile, &mat));
+      sk_sp<SkShader> shader = image->makeShader(xTile, yTile, &mat);
+      if (shader) {
+        aPaint.setShader(shader);
+      } else {
+        gfxDebug() << "Failed creating Skia surface shader: x-tile="
+                   << (int)xTile << " y-tile=" << (int)yTile
+                   << " matrix=" << (mat.isFinite() ? "finite" : "non-finite");
+        aPaint.setColor(SK_ColorTRANSPARENT);
+      }
 
       if (pat.mSamplingFilter == SamplingFilter::POINT) {
         aPaint.setFilterQuality(kNone_SkFilterQuality);
