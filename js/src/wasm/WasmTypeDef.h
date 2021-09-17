@@ -109,14 +109,6 @@ class FuncType {
       result.renumber(renumbering);
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    for (auto& arg : args_) {
-      arg.offsetTypeIndex(offsetBy);
-    }
-    for (auto& result : results_) {
-      result.offsetTypeIndex(offsetBy);
-    }
-  }
 
   ValType arg(unsigned i) const { return args_[i]; }
   const ValTypeVector& args() const { return args_; }
@@ -222,11 +214,6 @@ class StructType {
       field.type.renumber(renumbering);
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    for (auto& field : fields_) {
-      field.type.offsetTypeIndex(offsetBy);
-    }
-  }
 
   bool isDefaultable() const {
     for (auto& field : fields_) {
@@ -284,9 +271,6 @@ class ArrayType {
 
   void renumber(const RenumberVector& renumbering) {
     elementType_.renumber(renumbering);
-  }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    elementType_.offsetTypeIndex(offsetBy);
   }
 
   bool isDefaultable() const { return elementType_.isDefaultable(); }
@@ -453,21 +437,6 @@ class TypeDef {
         break;
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    switch (kind_) {
-      case TypeDefKind::Func:
-        funcType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::Struct:
-        structType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::Array:
-        arrayType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::None:
-        break;
-    }
-  }
 
   WASM_DECLARE_SERIALIZABLE(TypeDef)
 };
@@ -552,8 +521,23 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
   TypeDefVector types_;
 
  public:
+  TypeContext() = default;
   TypeContext(const FeatureArgs& features, TypeDefVector&& types)
       : features_(features), types_(std::move(types)) {}
+
+  template <typename T>
+  [[nodiscard]] bool cloneDerived(const DerivedTypeDefVector<T>& source) {
+    MOZ_ASSERT(types_.length() == 0);
+    if (!types_.resize(source.length())) {
+      return false;
+    }
+    for (uint32_t i = 0; i < source.length(); i++) {
+      if (!types_[i].clone(source[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     return types_.sizeOfExcludingThis(mallocSizeOf);
@@ -578,22 +562,6 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     return types_.append(std::forward<U>(typeDef));
   }
   [[nodiscard]] bool resize(uint32_t length) { return types_.resize(length); }
-
-  template <typename T>
-  [[nodiscard]] bool transferTypes(const DerivedTypeDefVector<T>& types,
-                                   uint32_t* baseIndex) {
-    *baseIndex = length();
-    if (!resize(*baseIndex + types.length())) {
-      return false;
-    }
-    for (uint32_t i = 0; i < types.length(); i++) {
-      if (!types_[*baseIndex + i].clone(types[i])) {
-        return false;
-      }
-      types_[*baseIndex + i].offsetTypeIndex(*baseIndex);
-    }
-    return true;
-  }
 
   // FuncType accessors
 
