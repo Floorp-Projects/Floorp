@@ -60,7 +60,7 @@ job-template:
                 win.*:
                     - linux64-wine
                     - linux64-liblowercase
-                    - win64-nsis
+                    - nsis
         fetch:
             by-build-platform:
                 default: []
