@@ -1863,17 +1863,23 @@ class nsFlexContainerFrame::CachedFlexItemData {
   CachedFlexItemData(const ReflowInput& aReflowInput,
                      const ReflowOutput& aReflowOutput,
                      FlexItemReflowType aType) {
-    if (aType == FlexItemReflowType::Measuring) {
-      mBAxisMeasurement.emplace(aReflowInput, aReflowOutput);
-    } else {
-      UpdateFinalReflowSize(aReflowInput, aReflowOutput);
-    }
+    Update(aReflowInput, aReflowOutput, aType);
   }
 
-  // This method is intended to be called just after we perform a "final
-  // reflow" for a given flex item.
-  void UpdateFinalReflowSize(const ReflowInput& aReflowInput,
-                             const ReflowOutput& aReflowOutput) {
+  // This method is intended to be called after we perform either a "measuring
+  // reflow" or a "final reflow" for a given flex item.
+  void Update(const ReflowInput& aReflowInput,
+              const ReflowOutput& aReflowOutput, FlexItemReflowType aType) {
+    if (aType == FlexItemReflowType::Measuring) {
+      mBAxisMeasurement.reset();
+      mBAxisMeasurement.emplace(aReflowInput, aReflowOutput);
+      // Clear any cached "last final-reflow size", too, because now the most
+      // recent reflow was *not* a "final reflow".
+      mFinalReflowSize.reset();
+      return;
+    }
+
+    MOZ_ASSERT(aType == FlexItemReflowType::Final);
     auto wm = aReflowInput.GetWritingMode();
 
     // Update the cached size:
@@ -1899,7 +1905,7 @@ class nsFlexContainerFrame::CachedFlexItemData {
   // determined that the recent measuring reflow was sufficient).  That way,
   // our flex container can still skip a final reflow for this item in the
   // future as long as conditions are right.
-  void UpdateFinalReflowSize(const FlexItem& aItem, const LogicalSize& aSize) {
+  void Update(const FlexItem& aItem, const LogicalSize& aSize) {
     MOZ_ASSERT(!mFinalReflowSize,
                "This version of the method is only intended to be called when "
                "the most recent reflow was a 'measuring reflow'; and that "
@@ -1951,6 +1957,7 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
   if (cachedData && cachedData->mBAxisMeasurement) {
     if (!aItem.Frame()->IsSubtreeDirty() &&
         cachedData->mBAxisMeasurement->IsValidFor(aChildReflowInput)) {
+      FLEX_LOG("[perf] MeasureBSizeForFlexItem accepted cached value");
       return *(cachedData->mBAxisMeasurement);
     }
     FLEX_LOG("[perf] MeasureBSizeForFlexItem rejected cached value");
@@ -1990,11 +1997,8 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
   // Update (or add) our cached measurement, so that we can hopefully skip this
   // measuring reflow the next time around:
   if (cachedData) {
-    cachedData->mBAxisMeasurement.reset();
-    cachedData->mBAxisMeasurement.emplace(aChildReflowInput, childReflowOutput);
-    // Clear any cached "last final-reflow size", too, because now the most
-    // recent reflow was *not* a "final reflow".
-    cachedData->mFinalReflowSize.reset();
+    cachedData->Update(aChildReflowInput, childReflowOutput,
+                       FlexItemReflowType::Measuring);
   } else {
     cachedData = new CachedFlexItemData(aChildReflowInput, childReflowOutput,
                                         FlexItemReflowType::Measuring);
@@ -2501,7 +2505,7 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     // the measuring reflow *and* the final reflow (if conditions are the same
     // as they are now).
     if (auto* cache = mFrame->GetProperty(CachedFlexItemData::Prop())) {
-      cache->UpdateFinalReflowSize(*this, finalSize);
+      cache->Update(*this, finalSize);
     }
 
     return false;
@@ -5615,7 +5619,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
 
   // Update our cached flex item info:
   if (auto* cached = aItem.Frame()->GetProperty(CachedFlexItemData::Prop())) {
-    cached->UpdateFinalReflowSize(childReflowInput, childReflowOutput);
+    cached->Update(childReflowInput, childReflowOutput,
+                   FlexItemReflowType::Final);
   } else {
     cached = new CachedFlexItemData(childReflowInput, childReflowOutput,
                                     FlexItemReflowType::Final);
