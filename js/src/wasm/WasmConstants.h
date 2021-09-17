@@ -1073,6 +1073,17 @@ static const unsigned MaxTags = 1000000;
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 
+// 512KiB should be enough, considering how Rabaldr uses the stack and
+// what the standard limits are:
+//
+// - 1,000 parameters
+// - 50,000 locals
+// - 10,000 values on the eval stack (not an official limit)
+//
+// At sizeof(int64) bytes per slot this works out to about 480KiB.
+
+static const unsigned MaxFrameSize = 512 * 1024;
+
 // A magic value of rtt depth to signify that it was not specified.
 
 static const uint32_t RttDepthNone = MaxRttDepth + 1;
