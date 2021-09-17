@@ -55,7 +55,7 @@ struct ModuleEnvironment {
   // validating an asm.js module) and immutable during compilation:
   Maybe<uint32_t> dataCount;
   Maybe<MemoryDesc> memory;
-  TypeContext types;
+  MutableTypeContext types;
   TypeIdDescVector typeIds;
   FuncDescVector funcs;
   Uint32Vector funcImportGlobalDataOffsets;
@@ -81,13 +81,10 @@ struct ModuleEnvironment {
 
   explicit ModuleEnvironment(FeatureArgs features,
                              ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind),
-        features(features),
-        memory(Nothing()),
-        types(features, TypeDefVector()) {}
+      : kind(kind), features(features), memory(Nothing()) {}
 
   size_t numTables() const { return tables.length(); }
-  size_t numTypes() const { return types.length(); }
+  size_t numTypes() const { return types->length(); }
   size_t numFuncs() const { return funcs.length(); }
   size_t numFuncImports() const { return funcImportGlobalDataOffsets.length(); }
   size_t numFuncDefs() const {
@@ -115,6 +112,14 @@ struct ModuleEnvironment {
   bool usesMemory() const { return memory.isSome(); }
   bool usesSharedMemory() const {
     return memory.isSome() && memory->isShared();
+  }
+
+  bool initTypes(uint32_t numTypes) {
+    types = js_new<TypeContext>(features, TypeDefVector());
+    if (!types) {
+      return false;
+    }
+    return types->resize(numTypes) && typeIds.resize(numTypes);
   }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {

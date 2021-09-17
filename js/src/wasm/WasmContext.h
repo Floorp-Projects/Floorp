@@ -48,7 +48,7 @@ class Context {
   [[nodiscard]] bool ensureTypeContext(JSContext* cx);
 
   // The global type context.
-  UniquePtr<TypeContext> typeContext;
+  MutableTypeContext typeContext;
 
   // about:memory reporting
 
