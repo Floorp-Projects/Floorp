@@ -56,7 +56,6 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  `,
       raw: true,
-      exclude: /\.css$/,
     }),
     new ObjectRestSpreadPlugin(),
     new ExtractTextPlugin("[name].css"),
