@@ -100,6 +100,11 @@
      *    notificationIs
      *        Defines a Custom Element name to use as the "is" value on creation.
      *        This allows subclassing the created element.
+     *    telemetry
+     *        Specifies the telemetry key to use that triggers when the notification
+     *        is shown, dismissed and an action taken. This telemetry is a keyed scalar with keys for:
+     *          'shown', 'dismissed' and 'action'. If a button specifies a separate key,
+     *        then 'action' is replaced by values specific to each button.
      * aButtons
      *        Array of objects defining action buttons:
      *        {
@@ -126,6 +131,11 @@
      *          popup:
      *            If specified, the button will open the popup element with this
      *            ID, anchored to the button. This is alternative to "callback".
+     *          telemetry:
+     *            Specifies the key to add for the telemetry to trigger when the
+     *            button is pressed. If not specified, then 'action' is used for
+     *            a press on any button. Specify this only if you want to distinguish
+     *            which button has been pressed in telemetry data.
      *          is:
      *            Defines a Custom Element name to use as the "is" value on
      *            button creation.
@@ -194,6 +204,10 @@
         newitem.setButtons(aButtons);
       }
 
+      if (aNotification.telemetry) {
+        newitem.telemetry = aNotification.telemetry;
+      }
+
       newitem.priority = aNotification.priority;
       if (aNotification.priority == this.PRIORITY_SYSTEM) {
         newitem.setAttribute("type", "system");
@@ -217,6 +231,13 @@
       var event = document.createEvent("Events");
       event.initEvent("AlertActive", true, true);
       newitem.dispatchEvent(event);
+
+      // If the notification is not visible, don't call shown() on the
+      // new notification until it is visible. This will typically be
+      // a tabbrowser that does this when a tab is selected.
+      if (this.isShown) {
+        newitem.shown();
+      }
 
       return newitem;
     }
@@ -282,6 +303,22 @@
           this.removeNotification(notification, true);
         }
       }
+    }
+
+    shown() {
+      for (let notification of this.allNotifications) {
+        notification.shown();
+      }
+    }
+
+    get isShown() {
+      let stack = this.stack;
+      let parent = this.stack.parentNode;
+      if (parent.localName == "named-deck") {
+        return parent.selectedViewName == stack.getAttribute("name");
+      }
+
+      return true;
     }
 
     _showNotification(aNotification, aSlideIn, aSkipAnimation) {
@@ -375,6 +412,8 @@
       this.persistence = 0;
       this.priority = 0;
       this.timeout = 0;
+      this.telemetry = [];
+      this._shown = false;
     }
 
     connectedCallback() {
@@ -468,6 +507,8 @@
      * should call close() instead.
      */
     dismiss() {
+      this._doTelemetry("dismissed");
+
       if (this.eventCallback) {
         this.eventCallback("dismissed");
       }
@@ -481,12 +522,29 @@
       this.control.removeNotification(this);
     }
 
+    // This will be called when the host (such as a tabbrowser) determines that
+    // the notification is made visible to the user.
+    shown() {
+      if (!this._shown) {
+        this._shown = true;
+        this._doTelemetry("shown");
+      }
+    }
+
+    _doTelemetry(type) {
+      if (this.telemetry) {
+        Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
+      }
+    }
+
     _doButtonCommand(event) {
       if (!("buttonInfo" in event.target)) {
         return;
       }
 
       var button = event.target.buttonInfo;
+      this._doTelemetry(button.telemetry || "action");
+
       if (button.popup) {
         document
           .getElementById(button.popup)
@@ -525,6 +583,8 @@
         this.persistence = 0;
         this.priority = 0;
         this.timeout = 0;
+        this.telemetry = [];
+        this._shown = false;
       }
 
       connectedCallback() {
@@ -560,6 +620,12 @@
         }
       }
 
+      _doTelemetry(type) {
+        if (this.telemetry) {
+          Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
+        }
+      }
+
       get control() {
         return this.closest(".notificationbox-stack")._notificationBox;
       }
@@ -569,6 +635,15 @@
           return;
         }
         this.control.removeNotification(this);
+      }
+
+      // This will be called when the host (such as a tabbrowser) determines that
+      // the notification is made visible to the user.
+      shown() {
+        if (!this._shown) {
+          this._shown = true;
+          this._doTelemetry("shown");
+        }
       }
 
       setAlertRole() {
@@ -590,6 +665,9 @@
         if ("buttonInfo" in e.target) {
           let { buttonInfo } = e.target;
           let { callback, popup } = buttonInfo;
+
+          this._doTelemetry(buttonInfo.telemetry || "action");
+
           if (popup) {
             document
               .getElementById(popup)
@@ -669,6 +747,8 @@
       }
 
       dismiss() {
+        this._doTelemetry("dismissed");
+
         if (this.eventCallback) {
           this.eventCallback("dismissed");
         }
