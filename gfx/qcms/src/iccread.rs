@@ -1388,9 +1388,7 @@ impl From<TransferCharacteristics> for curveType {
                         assert!((0. ..=1. / 12.).contains(&y1));
                         y1
                     } else {
-                        let y2 = (std::f64::consts::E.powf((x - c) / a) + b) / 12.;
-                        assert!(y2 > 1. / 12. && y2 <= 1.);
-                        y2
+                        (std::f64::consts::E.powf((x - c) / a) + b) / 12.
                     }
                 });
                 curveType::Curve(table)
