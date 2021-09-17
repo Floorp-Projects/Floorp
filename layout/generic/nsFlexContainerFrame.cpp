@@ -524,6 +524,7 @@ class nsFlexContainerFrame::FlexItem final {
   bool IsBlockAxisCrossAxis() const { return mIsInlineAxisMainAxis; }
 
   WritingMode GetWritingMode() const { return mWM; }
+  WritingMode ContainingBlockWM() const { return mCBWM; }
   StyleAlignSelf AlignSelf() const { return mAlignSelf; }
   StyleAlignFlags AlignSelfFlags() const { return mAlignSelfFlags; }
 
@@ -1838,6 +1839,51 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
 };
 
 /**
+ * A cached copy of various metrics from a flex item's most recent final reflow.
+ * It can be used to determine whether we can optimize away the flex item's
+ * final reflow, when we perform an incremental reflow of its flex container.
+ */
+class CachedFinalReflowMetrics final {
+ public:
+  CachedFinalReflowMetrics(const ReflowInput& aReflowInput,
+                           const ReflowOutput& aReflowOutput)
+      : CachedFinalReflowMetrics(aReflowInput.GetWritingMode(), aReflowInput,
+                                 aReflowOutput) {}
+
+  CachedFinalReflowMetrics(const FlexItem& aItem, const LogicalSize& aSize)
+      : mBorderPadding(aItem.BorderPadding().ConvertTo(
+            aItem.GetWritingMode(), aItem.ContainingBlockWM())),
+        mSize(aSize),
+        mTreatBSizeAsIndefinite(aItem.TreatBSizeAsIndefinite()) {}
+
+  const LogicalSize& Size() const { return mSize; }
+  const LogicalMargin& BorderPadding() const { return mBorderPadding; }
+  bool TreatBSizeAsIndefinite() const { return mTreatBSizeAsIndefinite; }
+
+ private:
+  // A convenience constructor with a WritingMode argument.
+  CachedFinalReflowMetrics(WritingMode aWM, const ReflowInput& aReflowInput,
+                           const ReflowOutput& aReflowOutput)
+      : mBorderPadding(aReflowInput.ComputedLogicalBorderPadding(aWM)),
+        mSize(aReflowOutput.Size(aWM) - mBorderPadding.Size(aWM)),
+        mTreatBSizeAsIndefinite(aReflowInput.mFlags.mTreatBSizeAsIndefinite) {}
+
+  // The flex item's border and padding, in its own writing-mode, that it used
+  // used during its most recent "final reflow".
+  LogicalMargin mBorderPadding;
+
+  // The flex item's content-box size, in its own writing-mode, that it used
+  // during its most recent "final reflow".
+  LogicalSize mSize;
+
+  // True if the flex item's BSize was considered "indefinite" in its most
+  // recent "final reflow". (For a flex item "final reflow", this is fully
+  // determined by the mTreatBSizeAsIndefinite flag in ReflowInput. See the
+  // flag's documentation for more information.)
+  bool mTreatBSizeAsIndefinite;
+};
+
+/**
  * When we instantiate/update a CachedFlexItemData, this enum must be used to
  * indicate the sort of reflow whose results we're capturing. This impacts
  * what we cache & how we use the cached information.
@@ -1863,33 +1909,25 @@ class nsFlexContainerFrame::CachedFlexItemData {
   CachedFlexItemData(const ReflowInput& aReflowInput,
                      const ReflowOutput& aReflowOutput,
                      FlexItemReflowType aType) {
-    if (aType == FlexItemReflowType::Measuring) {
-      mBAxisMeasurement.emplace(aReflowInput, aReflowOutput);
-    } else {
-      UpdateFinalReflowSize(aReflowInput, aReflowOutput);
-    }
+    Update(aReflowInput, aReflowOutput, aType);
   }
 
-  // This method is intended to be called just after we perform a "final
-  // reflow" for a given flex item.
-  void UpdateFinalReflowSize(const ReflowInput& aReflowInput,
-                             const ReflowOutput& aReflowOutput) {
-    auto wm = aReflowInput.GetWritingMode();
+  // This method is intended to be called after we perform either a "measuring
+  // reflow" or a "final reflow" for a given flex item.
+  void Update(const ReflowInput& aReflowInput,
+              const ReflowOutput& aReflowOutput, FlexItemReflowType aType) {
+    if (aType == FlexItemReflowType::Measuring) {
+      mBAxisMeasurement.reset();
+      mBAxisMeasurement.emplace(aReflowInput, aReflowOutput);
+      // Clear any cached "last final reflow metrics", too, because now the most
+      // recent reflow was *not* a "final reflow".
+      mFinalReflowMetrics.reset();
+      return;
+    }
 
-    // Update the cached size:
-    mFinalReflowSize.reset();
-    mFinalReflowSize.emplace(
-        aReflowOutput.Size(wm) -
-        aReflowInput.ComputedLogicalBorderPadding(wm).Size(wm));
-    // Save whether this reflow's BSize was considered definite vs. indefinite.
-    // (For a flex item "final reflow", this is 100% determined by the
-    // "mTreatBSizeAsIndefinite" ReflowInput flag -- when we get to this
-    // reflow, the flex container has already resolved an exact BSize for the
-    // flex item (it has to, in order position/size the item in its axes); and
-    // the only question is whether we're pretending that BSize is definite
-    // vs. indefinite.)
-    mLastReflowTreatedBSizeAsIndefinite =
-        aReflowInput.mFlags.mTreatBSizeAsIndefinite;
+    MOZ_ASSERT(aType == FlexItemReflowType::Final);
+    mFinalReflowMetrics.reset();
+    mFinalReflowMetrics.emplace(aReflowInput, aReflowOutput);
   }
 
   // This method is intended to be called for situations where we decide to
@@ -1899,16 +1937,14 @@ class nsFlexContainerFrame::CachedFlexItemData {
   // determined that the recent measuring reflow was sufficient).  That way,
   // our flex container can still skip a final reflow for this item in the
   // future as long as conditions are right.
-  void UpdateFinalReflowSize(const FlexItem& aItem, const LogicalSize& aSize) {
-    MOZ_ASSERT(!mFinalReflowSize,
+  void Update(const FlexItem& aItem, const LogicalSize& aSize) {
+    MOZ_ASSERT(!mFinalReflowMetrics,
                "This version of the method is only intended to be called when "
                "the most recent reflow was a 'measuring reflow'; and that "
-               "should have cleared out mFinalReflowSize");
+               "should have cleared out mFinalReflowMetrics");
 
-    mFinalReflowSize.reset();  // Just in case this assert^ fails.
-    mFinalReflowSize.emplace(aSize);
-
-    mLastReflowTreatedBSizeAsIndefinite = aItem.TreatBSizeAsIndefinite();
+    mFinalReflowMetrics.reset();  // Just in case this assert^ fails.
+    mFinalReflowMetrics.emplace(aItem, aSize);
   }
 
   // If the flex container needs a measuring reflow for the flex item, then the
@@ -1916,19 +1952,13 @@ class nsFlexContainerFrame::CachedFlexItemData {
   // has been needed so far, then this member will be Nothing().
   Maybe<CachedBAxisMeasurement> mBAxisMeasurement;
 
-  // Content-box size that the corresponding flex item used in its most recent
+  // The metrics that the corresponding flex item used in its most recent
   // "final reflow". (Note: the assumption here is that this reflow was this
   // item's most recent reflow of any type.  If the item ends up undergoing a
   // subsequent measuring reflow, then this value needs to be cleared, because
   // at that point it's no longer an accurate way of reasoning about the
   // current state of the frame tree.)
-  Maybe<LogicalSize> mFinalReflowSize;
-
-  // True if the flex item's BSize was considered "indefinite" in its most
-  // recent "final reflow". (This bool is only meaningful if mFinalReflowSize
-  // is set; hence, the initial value is meaningless, but initialized to false
-  // to appease compilers' uninitialized-value checkers.)
-  bool mLastReflowTreatedBSizeAsIndefinite = false;
+  Maybe<CachedFinalReflowMetrics> mFinalReflowMetrics;
 
   // Instances of this class are stored under this frame property, on
   // frames that are flex items:
@@ -1940,7 +1970,7 @@ void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
   MOZ_ASSERT(aItemFrame->IsFlexItem());
   if (auto* cache = aItemFrame->GetProperty(CachedFlexItemData::Prop())) {
     cache->mBAxisMeasurement.reset();
-    cache->mFinalReflowSize.reset();
+    cache->mFinalReflowMetrics.reset();
   }
 }
 
@@ -1951,6 +1981,7 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
   if (cachedData && cachedData->mBAxisMeasurement) {
     if (!aItem.Frame()->IsSubtreeDirty() &&
         cachedData->mBAxisMeasurement->IsValidFor(aChildReflowInput)) {
+      FLEX_LOG("[perf] MeasureBSizeForFlexItem accepted cached value");
       return *(cachedData->mBAxisMeasurement);
     }
     FLEX_LOG("[perf] MeasureBSizeForFlexItem rejected cached value");
@@ -1990,11 +2021,8 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
   // Update (or add) our cached measurement, so that we can hopefully skip this
   // measuring reflow the next time around:
   if (cachedData) {
-    cachedData->mBAxisMeasurement.reset();
-    cachedData->mBAxisMeasurement.emplace(aChildReflowInput, childReflowOutput);
-    // Clear any cached "last final-reflow size", too, because now the most
-    // recent reflow was *not* a "final reflow".
-    cachedData->mFinalReflowSize.reset();
+    cachedData->Update(aChildReflowInput, childReflowOutput,
+                       FlexItemReflowType::Measuring);
   } else {
     cachedData = new CachedFlexItemData(aChildReflowInput, childReflowOutput,
                                         FlexItemReflowType::Measuring);
@@ -2501,7 +2529,7 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     // the measuring reflow *and* the final reflow (if conditions are the same
     // as they are now).
     if (auto* cache = mFrame->GetProperty(CachedFlexItemData::Prop())) {
-      cache->UpdateFinalReflowSize(*this, finalSize);
+      cache->Update(*this, finalSize);
     }
 
     return false;
@@ -2523,27 +2551,19 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
 
   // Cool; this item & its subtree haven't experienced any style/content
   // changes that would automatically require a reflow.
-  // (Note that if e.g. 'padding' had changed, that would cause our frame to
-  // be marked as dirty; this is how we can get away with only considering
-  // the content-box size below, even though the frame technically includes
-  // the space for border & padding. Also: hypothetically if our padding
-  // changed via being a percent value and its percent-basis changing, then
-  // the percent-basis change should've cleared descendant intrinsic sizes,
-  // which would purge cached values via MarkCachedFlexMeasurementsDirty
-  // and would make us fail the "if (cache...") check below.)
 
-  // Did we cache the content-box size from its most recent "final reflow"?
+  // Did we cache the metrics from its most recent "final reflow"?
   auto* cache = mFrame->GetProperty(CachedFlexItemData::Prop());
-  if (!cache || !cache->mFinalReflowSize) {
+  if (!cache || !cache->mFinalReflowMetrics) {
     FLEX_LOG(
         "[perf] Flex item %p needed a final reflow due to lacking a "
-        "cached mFinalReflowSize (maybe cache was cleared)",
+        "cached mFinalReflowMetrics (maybe cache was cleared)",
         mFrame);
     return true;
   }
 
   // Does the cached size match our current size?
-  if (*cache->mFinalReflowSize != finalSize) {
+  if (cache->mFinalReflowMetrics->Size() != finalSize) {
     FLEX_LOG(
         "[perf] Flex item %p needed a final reflow due to having a "
         "different content box size vs. its most recent final reflow",
@@ -2551,10 +2571,27 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     return true;
   }
 
+  // Does the cached border and padding match our current ones?
+  //
+  // Note: this is just to detect cases where we have a percent padding whose
+  // basis has changed. Any other sort of change to BorderPadding() (e.g. a new
+  // specified value) should result in the frame being marked dirty via proper
+  // change hint (see nsStylePadding::CalcDifference()), which will force it to
+  // reflow.
+  if (cache->mFinalReflowMetrics->BorderPadding() !=
+      BorderPadding().ConvertTo(mWM, mCBWM)) {
+    FLEX_LOG(
+        "[perf] Flex item %p needed a final reflow due to having a "
+        "different border and padding vs. its most recent final reflow",
+        mFrame);
+    return true;
+  }
+
   // The flex container is giving this flex item the same size that the item
   // had on its most recent "final reflow". But if its definiteness changed and
   // one of the descendants cares, then it would still need a reflow.
-  if (cache->mLastReflowTreatedBSizeAsIndefinite != mTreatBSizeAsIndefinite &&
+  if (cache->mFinalReflowMetrics->TreatBSizeAsIndefinite() !=
+          mTreatBSizeAsIndefinite &&
       FrameHasRelativeBSizeDependency(mFrame)) {
     FLEX_LOG(
         "[perf] Flex item %p needed a final reflow due to having "
@@ -5615,7 +5652,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
 
   // Update our cached flex item info:
   if (auto* cached = aItem.Frame()->GetProperty(CachedFlexItemData::Prop())) {
-    cached->UpdateFinalReflowSize(childReflowInput, childReflowOutput);
+    cached->Update(childReflowInput, childReflowOutput,
+                   FlexItemReflowType::Final);
   } else {
     cached = new CachedFlexItemData(childReflowInput, childReflowOutput,
                                     FlexItemReflowType::Final);
