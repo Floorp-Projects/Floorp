@@ -124,8 +124,7 @@ class JSHolderMap {
       mozilla::HashMap<JS::Zone*, UniquePtr<EntryVector>,
                        DefaultHasher<JS::Zone*>, InfallibleAllocPolicy>;
 
-  template <typename F>
-  void ForEach(EntryVector& aJSHolders, const F& f, JS::Zone* aZone);
+  class EntryVectorIter;
 
   bool RemoveEntry(EntryVector& aJSHolders, Entry* aEntry);
 
@@ -142,6 +141,35 @@ class JSHolderMap {
   // Currently this will only contain wrapper cache wrappers since these are the
   // only holders to pass a zone parameter through to AddJSHolder.
   EntryVectorMap mPerZoneJSHolders;
+};
+
+// An iterator over an EntryVector that skips over removed entries and removes
+// them from the map.
+class JSHolderMap::EntryVectorIter {
+ public:
+  EntryVectorIter(JSHolderMap& aMap, EntryVector& aVector)
+      : mHolderMap(aMap), mVector(aVector), mIter(aVector.Iter()) {
+    Settle();
+  }
+
+  const EntryVector& Vector() const { return mVector; }
+
+  bool Done() const { return mIter.Done(); }
+  const Entry& Get() const { return mIter.Get(); }
+  void Next() {
+    mIter.Next();
+    Settle();
+  }
+
+  operator const Entry*() const { return &Get(); }
+  const Entry* operator->() const { return &Get(); }
+
+ private:
+  void Settle();
+
+  JSHolderMap& mHolderMap;
+  EntryVector& mVector;
+  EntryVector::IterImpl mIter;
 };
 
 class CycleCollectedJSRuntime {
