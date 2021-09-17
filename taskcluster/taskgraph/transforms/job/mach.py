@@ -30,6 +30,10 @@ mach_schema = Schema(
         Required("comm-checkout"): bool,
         # Base work directory used to set up the task.
         Optional("workdir"): str,
+        # Context to substitute into the command using format string
+        # substitution (e.g {value}). This is useful if certain aspects of the
+        # command need to be generated in transforms.
+        Optional("command-context"): dict,
     }
 )
 

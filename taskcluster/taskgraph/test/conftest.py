@@ -112,6 +112,9 @@ def fake_load_graph_config(root_dir):
 class FakeParameters(dict):
     strict = True
 
+    def file_url(self, path, pretty=False):
+        return ""
+
 
 class FakeOptimization(OptimizationStrategy):
     def __init__(self, mode, *args, **kwargs):
