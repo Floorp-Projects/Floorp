@@ -77,7 +77,6 @@ static MediaDataEncoder::H264Specific::ProfileLevel ConvertProfileLevel(
 static MediaDataEncoder::H264Specific GetCodecSpecific(
     const webrtc::VideoCodec* aCodecSettings) {
   return MediaDataEncoder::H264Specific(
-      aCodecSettings->H264().keyFrameInterval,
       ConvertProfileLevel(aCodecSettings->H264().profile));
 }
 
@@ -166,6 +165,7 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
           GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
           "WebrtcMediaDataEncoder::mEncoder"),
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
+      aCodecSettings->H264().keyFrameInterval,
       mBitrateAdjuster.GetTargetBitrateBps(),
       GetCodecSpecific(aCodecSettings)));
 }
