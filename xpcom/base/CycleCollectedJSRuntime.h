@@ -270,7 +270,12 @@ class CycleCollectedJSRuntime {
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
-  static void TraceGrayJS(JSTracer* aTracer, void* aData);
+
+  // Trace gray JS roots until budget is exceeded and return whether we
+  // finished.
+  static bool TraceGrayJS(JSTracer* aTracer, js::SliceBudget& budget,
+                          void* aData);
+
   static void GCCallback(JSContext* aContext, JSGCStatus aStatus,
                          JS::GCReason aReason, void* aData);
   static void GCSliceCallback(JSContext* aContext, JS::GCProgress aProgress,
