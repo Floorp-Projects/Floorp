@@ -547,7 +547,7 @@ enum class TypeResult {
 // give ValType's meaning. It is used during compilation for modules, and
 // during runtime for all instances.
 
-class TypeContext {
+class TypeContext : public AtomicRefCounted<TypeContext> {
   FeatureArgs features_;
   TypeDefVector types_;
 
@@ -562,8 +562,8 @@ class TypeContext {
   // Disallow copy, allow move initialization
   TypeContext(const TypeContext&) = delete;
   TypeContext& operator=(const TypeContext&) = delete;
-  TypeContext(TypeContext&&) = default;
-  TypeContext& operator=(TypeContext&&) = default;
+  TypeContext(TypeContext&&) = delete;
+  TypeContext& operator=(TypeContext&&) = delete;
 
   TypeDef& type(uint32_t index) { return types_[index]; }
   const TypeDef& type(uint32_t index) const { return types_[index]; }
@@ -750,6 +750,9 @@ class TypeContext {
                                      TypeCache* cache) const;
 #endif
 };
+
+using SharedTypeContext = RefPtr<const TypeContext>;
+using MutableTypeContext = RefPtr<TypeContext>;
 
 class TypeHandle {
  private:
