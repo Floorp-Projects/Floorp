@@ -17,7 +17,7 @@
 #include "js/CharacterEncoding.h"
 #include "util/Memory.h"
 #include "util/Text.h"
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 #include "vm/JSContext.h"
 
 using mozilla::PodCopy;
