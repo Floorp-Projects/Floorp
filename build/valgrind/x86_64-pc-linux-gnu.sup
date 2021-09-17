@@ -612,27 +612,6 @@
 }
 
 
-# Conditional jump or move depends on uninitialised value(s)
-#    at 0xE626A5C: mozilla::image::imgFrame::Optimize() (in /builds/worker/work
-#    by 0xE626C68: mozilla::image::imgFrame::UnlockImageData() (in /home/work
-#    by 0xE608E8F: mozilla::image::RawAccessFrameRef::~RawAccessFrameRef() (i
-#    by 0xE61F5E4: mozilla::image::Decoder::~Decoder() (in /builds/worker/works
-#    by 0xE630E32: mozilla::image::nsIconDecoder::~nsIconDecoder() (in /home/
-#    by 0xE61A5B2: mozilla::image::Decoder::Release() (in /builds/worker/worksp
-#    by 0xE61DD73: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
-#    by 0xE61DD8F: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
-#  Uninitialised value was created by a stack allocation
-#    at 0xB8E46B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
-{
-   Bug 1248365: mochitest-libpixman-4
-   Memcheck:Cond
-   fun:_ZN7mozilla5image8imgFrame8OptimizeEv
-   fun:_ZN7mozilla5image8imgFrame15UnlockImageDataEv
-   fun:_ZN7mozilla5image17RawAccessFrameRefD1Ev
-   fun:_ZN7mozilla5image7DecoderD1Ev
-}
-
-
 # Not sure what this.  I can't reproduce it locally despite much trying.
 # Syscall param sendmsg(msg.msg_iov[0]) points to uninitialised byte(s)
 #    at 0x4E4533D: ??? (syscall-template.S:82)
