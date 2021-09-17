@@ -169,7 +169,8 @@
     {
       "login": false,
       "name": "ebay",
-      "test_url": "https://www.ebay.com/"
+      "test_url": "https://www.ebay.com/",
+      "secondary_url": "https://www.ebay.com/deals"
     },
     {
       "login": false,
