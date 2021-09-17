@@ -100,6 +100,19 @@ button:focus {
   display: none;
 }
 
+/**
+ * In RTL layouts, the Debugger UI overlays the splitters. See Bug 1731233.
+ * Note: we need to the `.debugger` prefix here to beat the specificity of the
+ * general rule defined in SlitBox.css for `.split-box.vert > .splitter`.
+ */
+.debugger .split-box.vert > .splitter {
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

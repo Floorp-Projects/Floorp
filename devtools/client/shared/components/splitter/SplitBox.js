@@ -32,12 +32,16 @@ class SplitBox extends Component {
       initialHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Left/top panel
       startPanel: PropTypes.any,
+      // Left/top panel collapse state.
+      startPanelCollapsed: PropTypes.bool,
       // Min panel size.
       minSize: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Max panel size.
       maxSize: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       // Right/bottom panel
       endPanel: PropTypes.any,
+      // Right/bottom panel collapse state.
+      endPanelCollapsed: PropTypes.bool,
       // True if the right/bottom panel should be controlled.
       endPanelControl: PropTypes.bool,
       // Size of the splitter handle bar.
@@ -48,6 +52,8 @@ class SplitBox extends Component {
       style: PropTypes.object,
       // Call when controlled panel was resized.
       onControlledPanelResized: PropTypes.func,
+      // Optional callback when splitbox resize stops
+      onResizeEnd: PropTypes.func,
       // Retrieve DOM reference to the start panel element
       onSelectContainerElement: PropTypes.any,
     };
@@ -153,6 +159,12 @@ class SplitBox extends Component {
     doc.documentElement.style.cursor = this.state.defaultCursor;
 
     this.splitBox.classList.remove("dragging");
+
+    if (this.props.onResizeEnd) {
+      this.props.onResizeEnd(
+        this.state.vert ? this.state.width : this.state.height
+      );
+    }
   }
 
   /**
@@ -225,7 +237,9 @@ class SplitBox extends Component {
     const { endPanelControl, splitterSize, vert } = this.state;
     const {
       startPanel,
+      startPanelCollapsed,
       endPanel,
+      endPanelCollapsed,
       minSize,
       maxSize,
       onSelectContainerElement,
@@ -291,7 +305,7 @@ class SplitBox extends Component {
         },
         style,
       },
-      startPanel
+      startPanel && !startPanelCollapsed
         ? dom.div(
             {
               className: endPanelControl ? "uncontrolled" : "controlled",
@@ -316,7 +330,7 @@ class SplitBox extends Component {
             onMove: this.onMove,
           })
         : null,
-      endPanel
+      endPanel && !endPanelCollapsed
         ? dom.div(
             {
               className: endPanelControl ? "controlled" : "uncontrolled",
