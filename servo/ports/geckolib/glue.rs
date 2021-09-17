@@ -87,10 +87,10 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerRule, RawServoMediaList,
-    RawServoMediaRule, RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule,
-    RawServoSharedMemoryBuilder, RawServoStyleSet, RawServoStyleSheetContents,
-    RawServoSupportsRule, ServoCssRules,
+    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerRule,
+    RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule, RawServoNamespaceRule,
+    RawServoPageRule, RawServoScrollTimelineRule, RawServoSharedMemoryBuilder, RawServoStyleSet,
+    RawServoStyleSheetContents, RawServoSupportsRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{
@@ -120,11 +120,10 @@ use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
-    StylesheetLoader as StyleStylesheetLoader, AllowImportRules,
-    SanitizationData, SanitizationKind, CounterStyleRule, CssRule, CssRuleType,
-    CssRules, CssRulesHelpers, DocumentRule, FontFaceRule,
-    FontFeatureValuesRule, ImportRule, KeyframesRule, LayerRule, MediaRule,
-    NamespaceRule, Origin, OriginSet, PageRule, StyleRule, StylesheetContents,
+    AllowImportRules, CounterStyleRule, CssRule, CssRuleType, CssRules, CssRulesHelpers,
+    DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule, LayerRule,
+    MediaRule, NamespaceRule, Origin, OriginSet, PageRule, SanitizationData, SanitizationKind,
+    ScrollTimelineRule, StyleRule, StylesheetContents, StylesheetLoader as StyleStylesheetLoader,
     SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
@@ -2311,6 +2310,13 @@ impl_basic_rule_funcs! { (Page, PageRule, RawServoPageRule),
     changed: Servo_StyleSet_PageRuleChanged,
 }
 
+impl_basic_rule_funcs! { (ScrollTimeline, ScrollTimelineRule, RawServoScrollTimelineRule),
+    getter: Servo_CssRules_GetScrollTimelineRuleAt,
+    debug: Servo_ScrollTimelineRule_Debug,
+    to_css: Servo_ScrollTimelineRule_GetCssText,
+    changed: Servo_StyleSet_ScrollTimelineRuleChanged,
+}
+
 impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     get_rules: Servo_SupportsRule_GetRules,
     getter: Servo_CssRules_GetSupportsRuleAt,
@@ -2760,6 +2766,60 @@ pub extern "C" fn Servo_KeyframesRule_AppendRule(
 pub extern "C" fn Servo_KeyframesRule_DeleteRule(rule: &RawServoKeyframesRule, index: u32) {
     write_locked_arc(rule, |rule: &mut KeyframesRule| {
         rule.keyframes.remove(index as usize);
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScrollTimelineRule_GetName(
+    rule: &RawServoScrollTimelineRule,
+) -> *mut nsAtom {
+    read_locked_arc(rule, |rule: &ScrollTimelineRule| {
+        rule.name.as_atom().as_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScrollTimelineRule_GetSource(
+    rule: &RawServoScrollTimelineRule,
+    result: &mut nsString,
+) {
+    read_locked_arc(rule, |rule: &ScrollTimelineRule| {
+        rule.descriptors
+            .source
+            .as_ref()
+            .unwrap_or(&Default::default())
+            .to_css(&mut CssWriter::new(result))
+            .unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScrollTimelineRule_GetOrientation(
+    rule: &RawServoScrollTimelineRule,
+    result: &mut nsString,
+) {
+    read_locked_arc(rule, |rule: &ScrollTimelineRule| {
+        rule.descriptors
+            .orientation
+            .as_ref()
+            .unwrap_or(&Default::default())
+            .to_css(&mut CssWriter::new(result))
+            .unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScrollTimelineRule_GetScrollOffsets(
+    rule: &RawServoScrollTimelineRule,
+    result: &mut nsString,
+) {
+    read_locked_arc(rule, |rule: &ScrollTimelineRule| {
+        rule.descriptors
+            .offsets
+            .as_ref()
+            .unwrap_or(&Default::default())
+            .to_css(&mut CssWriter::new(result))
+            .unwrap();
     })
 }
 
