@@ -889,7 +889,7 @@ check_prog("RPMBUILD", extra_programs.RPMBUILD, allow_missing=True)
 
 nsis = check_prog(
     "MAKENSISU",
-    ("makensis", "makensis.exe"),
+    ("makensis",),
     bootstrap="nsis/bin",
     allow_missing=True,
     when=target_is_windows,
@@ -898,19 +898,16 @@ nsis = check_prog(
 # Make sure the version of makensis is up to date.
 
 
-@depends(nsis, wine, when=nsis)
+@depends_if(nsis)
 @checking("for NSIS version")
 @imports("re")
-def nsis_version(nsis, wine):
+def nsis_version(nsis):
     nsis_min_version = "3.0b1"
 
     def onerror():
         return die("Failed to get nsis version.")
 
-    if wine and nsis.lower().endswith(".exe"):
-        out = check_cmd_output(wine, nsis, "-version", onerror=onerror)
-    else:
-        out = check_cmd_output(nsis, "-version", onerror=onerror)
+    out = check_cmd_output(nsis, "-version", onerror=onerror)
 
     m = re.search(r"(?<=v)[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?", out)
 
