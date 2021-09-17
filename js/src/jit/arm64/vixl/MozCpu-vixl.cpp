@@ -27,7 +27,7 @@
 #include "jit/arm64/vixl/Cpu-vixl.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 
 #if defined(XP_DARWIN)
 #  include <libkern/OSCacheControl.h>
