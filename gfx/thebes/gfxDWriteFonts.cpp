@@ -752,8 +752,7 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
   }
   if (!mAzureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool forceGDI =
-        aTarget->GetFormat() == SurfaceFormat::B8G8R8X8 && GetForceGDIClassic();
+    bool forceGDI = GetForceGDIClassic();
     bool useEmbeddedBitmap =
         (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
          forceGDI) &&
