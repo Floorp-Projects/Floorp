@@ -2341,6 +2341,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-darwin-firefox-ebay.manifest
    * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.ebay.com/deals>`__
    * **test url**: `<https://www.ebay.com/>`__
    * **type**: pageload
    * **unit**: ms
