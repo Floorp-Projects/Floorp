@@ -33,7 +33,8 @@
     {
       "login": false,
       "name": "cnn",
-      "test_url": "https://cnn.com"
+      "test_url": "https://cnn.com",
+      "secondary_url": "https://www.cnn.com/weather"
     },
     {
       "login": false,
@@ -162,7 +163,8 @@
     {
       "login": false,
       "name": "cnn",
-      "test_url": "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html"
+      "test_url": "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html",
+      "secondary_url": "https://www.cnn.com/weather"
     },
     {
       "login": false,

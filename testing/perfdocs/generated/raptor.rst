@@ -2264,8 +2264,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-cnn.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm6-linux-firefox-cnn.manifest
+   * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.cnn.com/weather>`__
    * **test url**: `<https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html>`__
    * **type**: pageload
    * **unit**: ms
