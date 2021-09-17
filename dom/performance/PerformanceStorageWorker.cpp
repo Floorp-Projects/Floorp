@@ -127,7 +127,7 @@ void PerformanceStorageWorker::ShutdownOnWorker() {
     return;
   }
 
-  MOZ_ASSERT(IsCurrentThreadRunningWorker());
+  MOZ_ASSERT(!NS_IsMainThread());
 
   mWorkerRef = nullptr;
 }
