@@ -15,6 +15,7 @@
 #include <array>
 #include <cstring>
 #include <iterator>
+#include <string_view>
 
 #include "builtin/Array.h"
 #include "builtin/intl/Collator.h"
@@ -549,6 +550,38 @@ static ArrayObject* CreateArrayFromSortedList(
 }
 
 /**
+ * Create an array from an intl::Enumeration.
+ */
+template <const auto& unsupported, class Enumeration>
+static bool EnumerationIntoList(JSContext* cx, Enumeration values,
+                                MutableHandle<StringList> list) {
+  for (auto value : values) {
+    if (value.isErr()) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+    auto span = value.unwrap();
+
+    // Skip over known, unsupported values.
+    std::string_view sv(span.data(), span.size());
+    if (std::any_of(std::begin(unsupported), std::end(unsupported),
+                    [sv](const auto& e) { return sv == e; })) {
+      continue;
+    }
+
+    auto* string = NewStringCopy<CanGC>(cx, span);
+    if (!string) {
+      return false;
+    }
+    if (!list.append(string)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Create an array from an UEnumeration.
  */
 template <const auto& unsupported, const auto& missing>
@@ -651,6 +684,19 @@ static void CloseEnumeration(UEnumeration* ptr) {
 }
 
 /**
+ * Returns the list of calendar types which mustn't be returned by
+ * |Intl.supportedValuesOf()|.
+ */
+static constexpr auto UnsupportedCalendars() {
+  // No calendar values are currently unsupported.
+  return std::array<const char*, 0>{};
+}
+
+// Defined outside of the function to workaround bugs in GCC<9.
+// Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
+static constexpr auto UnsupportedCalendarsArray = UnsupportedCalendars();
+
+/**
  * AvailableCalendars ( )
  */
 static ArrayObject* AvailableCalendars(JSContext* cx) {
@@ -666,19 +712,10 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
       return nullptr;
     }
 
-    for (auto keyword : keywords.unwrap()) {
-      if (keyword.isErr()) {
-        intl::ReportInternalError(cx);
-        return nullptr;
-      }
+    static constexpr auto& unsupported = UnsupportedCalendarsArray;
 
-      auto* string = NewStringCopy<CanGC>(cx, keyword.unwrap());
-      if (!string) {
-        return nullptr;
-      }
-      if (!list.append(string)) {
-        return nullptr;
-      }
+    if (!EnumerationIntoList<unsupported>(cx, keywords.unwrap(), &list)) {
+      return nullptr;
     }
   }
 
