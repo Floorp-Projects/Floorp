@@ -104,11 +104,7 @@ function asyncOpen() {
   var chan = make_channel(URL);
 
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(
-    altContentType,
-    "",
-    Ci.nsICacheInfoChannel.ASYNC
-  );
+  cc.preferAlternativeDataType(altContentType, "", true);
 
   chan.asyncOpen(new ChannelListener(readServerContent, null));
 }
@@ -162,17 +158,9 @@ function flushAndReadServerContentAgain() {
 function readServerContentAgain() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(
-    "dummy1",
-    "text/javascript",
-    Ci.nsICacheInfoChannel.ASYNC
-  );
-  cc.preferAlternativeDataType(
-    altContentType,
-    "text/plain",
-    Ci.nsICacheInfoChannel.ASYNC
-  );
-  cc.preferAlternativeDataType("dummy2", "", Ci.nsICacheInfoChannel.ASYNC);
+  cc.preferAlternativeDataType("dummy1", "text/javascript", true);
+  cc.preferAlternativeDataType(altContentType, "text/plain", true);
+  cc.preferAlternativeDataType("dummy2", "", true);
 
   chan.asyncOpen(new ChannelListener(readServerContentAgainCB, null));
 }

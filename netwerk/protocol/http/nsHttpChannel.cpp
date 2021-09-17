@@ -4261,9 +4261,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
       if (pref.type() == altDataType &&
           (pref.contentType().IsEmpty() || pref.contentType() == contentType)) {
         foundAltData = true;
-        deliverAltData =
-            pref.deliverAltData() ==
-            nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::ASYNC;
+        deliverAltData = pref.deliverAltData();
         break;
       }
     }
@@ -7906,9 +7904,9 @@ nsHttpChannel::GetPreferCacheLoadOverBypass(bool* aPreferCacheLoadOverBypass) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::PreferAlternativeDataType(
-    const nsACString& aType, const nsACString& aContentType,
-    PreferredAlternativeDataDeliveryType aDeliverAltData) {
+nsHttpChannel::PreferAlternativeDataType(const nsACString& aType,
+                                         const nsACString& aContentType,
+                                         bool aDeliverAltData) {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
   mPreferredCachedAltDataTypes.AppendElement(PreferredAlternativeDataTypeParams(
       nsCString(aType), nsCString(aContentType), aDeliverAltData));
@@ -7968,18 +7966,22 @@ nsHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver* aReceiver) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetAlternativeDataInputStream(nsIInputStream** aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
-
-  *aInputStream = nullptr;
+nsHttpChannel::GetAltDataInputStream(const nsACString& aType,
+                                     nsIInputStreamReceiver* aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIInputStream> inputStream;
 
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
-  if (!mAvailableCachedAltDataType.IsEmpty() && cacheEntry) {
+  if (cacheEntry) {
     nsresult rv = cacheEntry->OpenAlternativeInputStream(
-        mAvailableCachedAltDataType, aInputStream);
+        aType, getter_AddRefs(inputStream));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  aReceiver->OnInputStreamReady(inputStream);
   return NS_OK;
 }
 
