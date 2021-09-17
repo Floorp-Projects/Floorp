@@ -264,28 +264,30 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return 0;
 }
 
-TypeResult TypeContext::isRefEquivalent(RefType one, RefType two,
+TypeResult TypeContext::isRefEquivalent(RefType first, RefType second,
                                         TypeCache* cache) const {
   // Anything's equal to itself.
-  if (one == two) {
+  if (first == second) {
     return TypeResult::True;
   }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   if (features_.functionReferences) {
-    // Two references must have the same nullability to be equal
-    if (one.isNullable() != two.isNullable()) {
+    // second references must have the same nullability to be equal
+    if (first.isNullable() != second.isNullable()) {
       return TypeResult::False;
     }
 
     // Non type-index references are equal if they have the same kind
-    if (!one.isTypeIndex() && !two.isTypeIndex() && one.kind() == two.kind()) {
+    if (!first.isTypeIndex() && !second.isTypeIndex() &&
+        first.kind() == second.kind()) {
       return TypeResult::True;
     }
 
     // Type-index references can be equal
-    if (one.isTypeIndex() && two.isTypeIndex()) {
-      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+    if (first.isTypeIndex() && second.isTypeIndex()) {
+      return isTypeIndexEquivalent(first.typeIndex(), second.typeIndex(),
+                                   cache);
     }
   }
 #endif
@@ -293,25 +295,26 @@ TypeResult TypeContext::isRefEquivalent(RefType one, RefType two,
 }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-TypeResult TypeContext::isTypeIndexEquivalent(uint32_t one, uint32_t two,
+TypeResult TypeContext::isTypeIndexEquivalent(uint32_t firstIndex,
+                                              uint32_t secondIndex,
                                               TypeCache* cache) const {
   MOZ_ASSERT(features_.functionReferences);
 
   // Anything's equal to itself.
-  if (one == two) {
+  if (firstIndex == secondIndex) {
     return TypeResult::True;
   }
 
 #  ifdef ENABLE_WASM_GC
   if (features_.gc) {
     // A struct may be equal to a struct
-    if (isStructType(one) && isStructType(two)) {
-      return isStructEquivalent(one, two, cache);
+    if (isStructType(firstIndex) && isStructType(secondIndex)) {
+      return isStructEquivalent(firstIndex, secondIndex, cache);
     }
 
     // An array may be equal to an array
-    if (isArrayType(one) && isArrayType(two)) {
-      return isArrayEquivalent(one, two, cache);
+    if (isArrayType(firstIndex) && isArrayType(secondIndex)) {
+      return isArrayEquivalent(firstIndex, secondIndex, cache);
     }
   }
 #  endif
@@ -321,86 +324,88 @@ TypeResult TypeContext::isTypeIndexEquivalent(uint32_t one, uint32_t two,
 #endif
 
 #ifdef ENABLE_WASM_GC
-TypeResult TypeContext::isStructEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+TypeResult TypeContext::isStructEquivalent(uint32_t firstIndex,
+                                           uint32_t secondIndex,
                                            TypeCache* cache) const {
-  if (cache->isEquivalent(oneIndex, twoIndex)) {
+  if (cache->isEquivalent(firstIndex, secondIndex)) {
     return TypeResult::True;
   }
 
-  const StructType& one = structType(oneIndex);
-  const StructType& two = structType(twoIndex);
+  const StructType& subType = structType(firstIndex);
+  const StructType& superType = structType(secondIndex);
 
   // Structs must have the same number of fields to be equal
-  if (one.fields_.length() != two.fields_.length()) {
+  if (subType.fields_.length() != superType.fields_.length()) {
     return TypeResult::False;
   }
 
   // Assume these structs are equal while checking fields. If any field is
   // not equal then we remove the assumption.
-  if (!cache->markEquivalent(oneIndex, twoIndex)) {
+  if (!cache->markEquivalent(firstIndex, secondIndex)) {
     return TypeResult::OOM;
   }
 
-  for (uint32_t i = 0; i < two.fields_.length(); i++) {
-    TypeResult result =
-        isStructFieldEquivalent(one.fields_[i], two.fields_[i], cache);
+  for (uint32_t i = 0; i < superType.fields_.length(); i++) {
+    TypeResult result = isStructFieldEquivalent(subType.fields_[i],
+                                                superType.fields_[i], cache);
     if (result != TypeResult::True) {
-      cache->unmarkEquivalent(oneIndex, twoIndex);
+      cache->unmarkEquivalent(firstIndex, secondIndex);
       return result;
     }
   }
   return TypeResult::True;
 }
 
-TypeResult TypeContext::isStructFieldEquivalent(const StructField one,
-                                                const StructField two,
+TypeResult TypeContext::isStructFieldEquivalent(const StructField first,
+                                                const StructField second,
                                                 TypeCache* cache) const {
   // Struct fields must share the same mutability to equal
-  if (one.isMutable != two.isMutable) {
+  if (first.isMutable != second.isMutable) {
     return TypeResult::False;
   }
   // Struct field types must be equal
-  return isEquivalent(one.type, two.type, cache);
+  return isEquivalent(first.type, second.type, cache);
 }
 
-TypeResult TypeContext::isArrayEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+TypeResult TypeContext::isArrayEquivalent(uint32_t firstIndex,
+                                          uint32_t secondIndex,
                                           TypeCache* cache) const {
-  if (cache->isEquivalent(oneIndex, twoIndex)) {
+  if (cache->isEquivalent(firstIndex, secondIndex)) {
     return TypeResult::True;
   }
 
-  const ArrayType& one = arrayType(oneIndex);
-  const ArrayType& two = arrayType(twoIndex);
+  const ArrayType& subType = arrayType(firstIndex);
+  const ArrayType& superType = arrayType(secondIndex);
 
   // Assume these arrays are equal while checking fields. If the array
   // element is not equal then we remove the assumption.
-  if (!cache->markEquivalent(oneIndex, twoIndex)) {
+  if (!cache->markEquivalent(firstIndex, secondIndex)) {
     return TypeResult::OOM;
   }
 
-  TypeResult result = isArrayElementEquivalent(one, two, cache);
+  TypeResult result = isArrayElementEquivalent(subType, superType, cache);
   if (result != TypeResult::True) {
-    cache->unmarkEquivalent(oneIndex, twoIndex);
+    cache->unmarkEquivalent(firstIndex, secondIndex);
   }
   return result;
 }
 
-TypeResult TypeContext::isArrayElementEquivalent(const ArrayType& one,
-                                                 const ArrayType& two,
+TypeResult TypeContext::isArrayElementEquivalent(const ArrayType& first,
+                                                 const ArrayType& second,
                                                  TypeCache* cache) const {
   // Array elements must share the same mutability to be equal
-  if (one.isMutable_ != two.isMutable_) {
+  if (first.isMutable_ != second.isMutable_) {
     return TypeResult::False;
   }
   // Array elements must be equal
-  return isEquivalent(one.elementType_, two.elementType_, cache);
+  return isEquivalent(first.elementType_, second.elementType_, cache);
 }
 #endif
 
-TypeResult TypeContext::isRefSubtypeOf(RefType one, RefType two,
+TypeResult TypeContext::isRefSubtypeOf(RefType subType, RefType superType,
                                        TypeCache* cache) const {
   // Anything's a subtype of itself.
-  if (one == two) {
+  if (subType == superType) {
     return TypeResult::True;
   }
 
@@ -408,28 +413,31 @@ TypeResult TypeContext::isRefSubtypeOf(RefType one, RefType two,
   if (features_.functionReferences) {
     // A subtype must have the same nullability as the supertype or the
     // supertype must be nullable.
-    if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
+    if (!(subType.isNullable() == superType.isNullable() ||
+          superType.isNullable())) {
       return TypeResult::False;
     }
 
     // Non type-index references are subtypes if they have the same kind
-    if (!one.isTypeIndex() && !two.isTypeIndex() && one.kind() == two.kind()) {
+    if (!subType.isTypeIndex() && !superType.isTypeIndex() &&
+        subType.kind() == superType.kind()) {
       return TypeResult::True;
     }
 
     // Structs are subtypes of eqref
-    if (isStructType(one) && two.isEq()) {
+    if (isStructType(subType) && superType.isEq()) {
       return TypeResult::True;
     }
 
     // Arrays are subtypes of eqref
-    if (isArrayType(one) && two.isEq()) {
+    if (isArrayType(subType) && superType.isEq()) {
       return TypeResult::True;
     }
 
     // Type-index references can be subtypes
-    if (one.isTypeIndex() && two.isTypeIndex()) {
-      return isTypeIndexSubtypeOf(one.typeIndex(), two.typeIndex(), cache);
+    if (subType.isTypeIndex() && superType.isTypeIndex()) {
+      return isTypeIndexSubtypeOf(subType.typeIndex(), superType.typeIndex(),
+                                  cache);
     }
   }
 #endif
@@ -437,25 +445,26 @@ TypeResult TypeContext::isRefSubtypeOf(RefType one, RefType two,
 }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
+TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t subType,
+                                             uint32_t superType,
                                              TypeCache* cache) const {
   MOZ_ASSERT(features_.functionReferences);
 
   // Anything's a subtype of itself.
-  if (one == two) {
+  if (subType == superType) {
     return TypeResult::True;
   }
 
 #  ifdef ENABLE_WASM_GC
   if (features_.gc) {
     // Structs may be subtypes of structs
-    if (isStructType(one) && isStructType(two)) {
-      return isStructSubtypeOf(one, two, cache);
+    if (isStructType(subType) && isStructType(superType)) {
+      return isStructSubtypeOf(subType, superType, cache);
     }
 
     // Arrays may be subtypes of arrays
-    if (isArrayType(one) && isArrayType(two)) {
-      return isArraySubtypeOf(one, two, cache);
+    if (isArrayType(subType) && isArrayType(superType)) {
+      return isArraySubtypeOf(subType, superType, cache);
     }
   }
 #  endif
@@ -464,83 +473,85 @@ TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
 #endif
 
 #ifdef ENABLE_WASM_GC
-TypeResult TypeContext::isStructSubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+TypeResult TypeContext::isStructSubtypeOf(uint32_t subTypeIndex,
+                                          uint32_t superTypeIndex,
                                           TypeCache* cache) const {
-  if (cache->isSubtypeOf(oneIndex, twoIndex)) {
+  if (cache->isSubtypeOf(subTypeIndex, superTypeIndex)) {
     return TypeResult::True;
   }
 
-  const StructType& one = structType(oneIndex);
-  const StructType& two = structType(twoIndex);
+  const StructType& subType = structType(subTypeIndex);
+  const StructType& superType = structType(superTypeIndex);
 
   // A subtype must have at least as many fields as its supertype
-  if (one.fields_.length() < two.fields_.length()) {
+  if (subType.fields_.length() < superType.fields_.length()) {
     return TypeResult::False;
   }
 
   // Assume these structs are subtypes while checking fields. If any field
   // fails a check then we remove the assumption.
-  if (!cache->markSubtypeOf(oneIndex, twoIndex)) {
+  if (!cache->markSubtypeOf(subTypeIndex, superTypeIndex)) {
     return TypeResult::OOM;
   }
 
-  for (uint32_t i = 0; i < two.fields_.length(); i++) {
+  for (uint32_t i = 0; i < superType.fields_.length(); i++) {
     TypeResult result =
-        isStructFieldSubtypeOf(one.fields_[i], two.fields_[i], cache);
+        isStructFieldSubtypeOf(subType.fields_[i], superType.fields_[i], cache);
     if (result != TypeResult::True) {
-      cache->unmarkSubtypeOf(oneIndex, twoIndex);
+      cache->unmarkSubtypeOf(subTypeIndex, superTypeIndex);
       return result;
     }
   }
   return TypeResult::True;
 }
 
-TypeResult TypeContext::isStructFieldSubtypeOf(const StructField one,
-                                               const StructField two,
+TypeResult TypeContext::isStructFieldSubtypeOf(const StructField subType,
+                                               const StructField superType,
                                                TypeCache* cache) const {
   // Mutable fields are invariant w.r.t. field types
-  if (one.isMutable && two.isMutable) {
-    return isEquivalent(one.type, two.type, cache);
+  if (subType.isMutable && superType.isMutable) {
+    return isEquivalent(subType.type, superType.type, cache);
   }
   // Immutable fields are covariant w.r.t. field types
-  if (!one.isMutable && !two.isMutable) {
-    return isSubtypeOf(one.type, two.type, cache);
+  if (!subType.isMutable && !superType.isMutable) {
+    return isSubtypeOf(subType.type, superType.type, cache);
   }
   return TypeResult::False;
 }
 
-TypeResult TypeContext::isArraySubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+TypeResult TypeContext::isArraySubtypeOf(uint32_t subTypeIndex,
+                                         uint32_t superTypeIndex,
                                          TypeCache* cache) const {
-  if (cache->isSubtypeOf(oneIndex, twoIndex)) {
+  if (cache->isSubtypeOf(subTypeIndex, superTypeIndex)) {
     return TypeResult::True;
   }
 
-  const ArrayType& one = arrayType(oneIndex);
-  const ArrayType& two = arrayType(twoIndex);
+  const ArrayType& subType = arrayType(subTypeIndex);
+  const ArrayType& superType = arrayType(superTypeIndex);
 
   // Assume these arrays are subtypes while checking elements. If the elements
   // fail the check then we remove the assumption.
-  if (!cache->markSubtypeOf(oneIndex, twoIndex)) {
+  if (!cache->markSubtypeOf(subTypeIndex, superTypeIndex)) {
     return TypeResult::OOM;
   }
 
-  TypeResult result = isArrayElementSubtypeOf(one, two, cache);
+  TypeResult result = isArrayElementSubtypeOf(subType, superType, cache);
   if (result != TypeResult::True) {
-    cache->unmarkSubtypeOf(oneIndex, twoIndex);
+    cache->unmarkSubtypeOf(subTypeIndex, superTypeIndex);
   }
   return result;
 }
 
-TypeResult TypeContext::isArrayElementSubtypeOf(const ArrayType& one,
-                                                const ArrayType& two,
+TypeResult TypeContext::isArrayElementSubtypeOf(const ArrayType& subType,
+                                                const ArrayType& superType,
                                                 TypeCache* cache) const {
   // Mutable elements are invariant w.r.t. field types
-  if (one.isMutable_ && two.isMutable_) {
-    return isEquivalent(one.elementType_, two.elementType_, cache);
+  if (subType.isMutable_ && superType.isMutable_) {
+    return isEquivalent(subType.elementType_, superType.elementType_, cache);
   }
   // Immutable elements are covariant w.r.t. field types
-  if (!one.isMutable_ && !two.isMutable_) {
-    return isSubtypeOf(one.elementType_, two.elementType_, cache);
+  if (!subType.isMutable_ && !superType.isMutable_) {
+    return isSubtypeOf(subType.elementType_, superType.elementType_, cache);
   }
   return TypeResult::False;
 }
