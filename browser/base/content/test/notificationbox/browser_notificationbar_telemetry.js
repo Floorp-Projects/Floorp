@@ -91,6 +91,77 @@ add_task(async function showNotification() {
   notif3.dismiss();
   verifyTelemetry("dismiss notification for box 3", 1, 1, 1, 1, 1, 1, 1);
 
+  let notif4 = box1.appendNotification(
+    "infobar-testtwo-value",
+    {
+      label: "Additional message for tab 1",
+      priority: box1.PRIORITY_INFO_HIGH,
+      telemetry: TELEMETRY_BASE + "testone",
+      telemetryFilter: ["shown"],
+    },
+    [
+      {
+        label: "Button1",
+      },
+    ]
+  );
+  verifyTelemetry("show first filtered notification", 2, 1, 1, 1, 1, 1, 1);
+
+  notif4.buttonContainer.lastElementChild.click();
+  notif4.dismiss();
+  verifyTelemetry("dismiss first filtered notification", 2, 1, 1, 1, 1, 1, 1);
+
+  let notif5 = box1.appendNotification(
+    "infobar-testtwo-value",
+    {
+      label: "Dimissed additional message for tab 1",
+      priority: box1.PRIORITY_INFO_HIGH,
+      telemetry: TELEMETRY_BASE + "testone",
+      telemetryFilter: ["dismissed"],
+    },
+    [
+      {
+        label: "Button1",
+      },
+    ]
+  );
+  verifyTelemetry("show second filtered notification", 2, 1, 1, 1, 1, 1, 1);
+
+  notif5.buttonContainer.lastElementChild.click();
+  notif5.dismiss();
+  verifyTelemetry("dismiss second filtered notification", 2, 1, 1, 1, 2, 1, 1);
+
+  let notif6 = box1.appendNotification(
+    "infobar-testtwo-value",
+    {
+      label: "Dimissed additional message for tab 1",
+      priority: box1.PRIORITY_INFO_HIGH,
+      telemetry: TELEMETRY_BASE + "testone",
+      telemetryFilter: ["button1-pressed", "dismissed"],
+    },
+    [
+      {
+        label: "Button1",
+        telemetry: "button1-pressed",
+      },
+    ]
+  );
+  verifyTelemetry("show third filtered notification", 2, 1, 1, 1, 2, 1, 1);
+
+  notif6.buttonContainer.lastElementChild.click();
+  verifyTelemetry(
+    "click button in third filtered notification",
+    2,
+    1,
+    2,
+    1,
+    2,
+    1,
+    1
+  );
+  notif6.dismiss();
+  verifyTelemetry("dismiss third filtered notification", 2, 1, 2, 1, 3, 1, 1);
+
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   BrowserTestUtils.removeTab(tab3);

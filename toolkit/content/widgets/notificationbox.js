@@ -104,7 +104,11 @@
      *        Specifies the telemetry key to use that triggers when the notification
      *        is shown, dismissed and an action taken. This telemetry is a keyed scalar with keys for:
      *          'shown', 'dismissed' and 'action'. If a button specifies a separate key,
-     *        then 'action' is replaced by values specific to each button.
+     *        then 'action' is replaced by values specific to each button. The value telemetryFilter
+     *        can be used to filter out each type.
+     *    telemetryFilter
+     *        If assigned, then an array of the telemetry types to send telemetry for. If not set,
+     *        then all telemetry is sent.
      * aButtons
      *        Array of objects defining action buttons:
      *        {
@@ -206,6 +210,9 @@
 
       if (aNotification.telemetry) {
         newitem.telemetry = aNotification.telemetry;
+        if (aNotification.telemetryFilter) {
+          newitem.telemetryFilter = aNotification.telemetryFilter;
+        }
       }
 
       newitem.priority = aNotification.priority;
@@ -532,7 +539,10 @@
     }
 
     _doTelemetry(type) {
-      if (this.telemetry) {
+      if (
+        this.telemetry &&
+        (!this.telemetryFilter || this.telemetryFilter.includes(type))
+      ) {
         Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
       }
     }
@@ -621,7 +631,10 @@
       }
 
       _doTelemetry(type) {
-        if (this.telemetry) {
+        if (
+          this.telemetry &&
+          (!this.telemetryFilter || this.telemetryFilter.includes(type))
+        ) {
           Services.telemetry.keyedScalarAdd(this.telemetry, type, 1);
         }
       }
