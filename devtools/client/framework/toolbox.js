@@ -317,7 +317,6 @@ function Toolbox(
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
   this.toggleOptions = this.toggleOptions.bind(this);
   this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
-  this.toggleDragging = this.toggleDragging.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
@@ -519,10 +518,6 @@ Toolbox.prototype = {
    */
   getCurrentPanel: function() {
     return this._toolPanels.get(this.currentToolId);
-  },
-
-  toggleDragging: function() {
-    this.doc.querySelector("window").classList.toggle("dragging");
   },
 
   /**
