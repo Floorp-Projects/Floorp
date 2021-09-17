@@ -606,6 +606,21 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
     return NS_OK;
   }
 
+  // The exposed root of our editor may have been hidden or destroyed by a
+  // preceding event listener.  However, the destruction has not occurred yet if
+  // pending notifications have not been flushed yet.  Therefore, before
+  // handling user input, we need to get the latest state and if it's now
+  // destroyed with the flushing, we should just ignore this event instead of
+  // returning error since this is just a event listener.
+  RefPtr<Document> document = editorBase->GetDocument();
+  if (!document) {
+    return NS_OK;
+  }
+  document->FlushPendingNotifications(FlushType::Layout);
+  if (editorBase->Destroyed() || DetachedFromEditor()) {
+    return NS_OK;
+  }
+
   nsresult rv = editorBase->HandleKeyPressEvent(aKeyboardEvent);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::HandleKeyPressEvent() failed");
