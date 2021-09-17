@@ -33,21 +33,30 @@ class RttValue : public NativeObject {
   static const JSClass class_;
 
   enum Slot {
-    Handle = 0,    // Type handle index
-    Kind = 1,      // Kind of type
-    Size = 2,      // Size of struct, or size of array element
-    Proto = 3,     // Prototype for instances, if any
-    Parent = 4,    // Parent rtt for runtime casting
-    Children = 5,  // Child rtts for rtt.sub caching
+    Handle = 0,       // Type handle index
+    TypeContext = 1,  // Manually refcounted reference to TypeContext
+    Kind = 2,         // Kind of type
+    Size = 3,         // Size of struct, or size of array element
+    Proto = 4,        // Prototype for instances, if any
+    Parent = 5,       // Parent rtt for runtime casting
+    Children = 6,     // Child rtts for rtt.sub caching
     // Maximum number of slots
-    SlotCount = 6,
+    SlotCount = 7,
   };
 
-  static RttValue* createFromHandle(JSContext* cx, wasm::TypeHandle handle);
+  static RttValue* createFromHandle(JSContext* cx, const wasm::SharedTypeContext& tycx,
+                                    wasm::TypeHandle handle);
   static RttValue* rttSub(JSContext* cx, js::Handle<RttValue*> parent,
                           js::Handle<RttValue*> subCanon);
 
   bool isNewborn() { return getReservedSlot(Slot::Handle).isUndefined(); }
+
+  const wasm::TypeDef& typeDef() const;
+
+  const wasm::TypeContext* typeContext() const {
+    return (const wasm::TypeContext*)getReservedSlot(Slot::TypeContext)
+        .toPrivate();
+  }
 
   wasm::TypeHandle handle() const {
     return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
@@ -72,8 +81,6 @@ class RttValue : public NativeObject {
   }
   ObjectWeakMap& children() const { return *maybeChildren(); }
   bool ensureChildren(JSContext* cx);
-
-  const wasm::TypeDef& getType(JSContext* cx) const;
 
   [[nodiscard]] bool lookupProperty(JSContext* cx,
                                     js::Handle<TypedObject*> object, jsid id,

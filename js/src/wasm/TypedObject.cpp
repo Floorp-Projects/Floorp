@@ -87,9 +87,9 @@ const JSClass js::RttValue::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
     &RttValueClassOps};
 
-RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
-  const TypeDef& type = handle.get(cx->wasm().typeContext.get());
-
+RttValue* RttValue::createFromHandle(JSContext* cx,
+                                     const wasm::SharedTypeContext& tycx,
+                                     TypeHandle handle) {
   Rooted<RttValue*> rtt(cx,
                         NewTenuredObjectWithGivenProto<RttValue>(cx, nullptr));
   if (!rtt) {
@@ -101,7 +101,13 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
     return nullptr;
   }
 
+  const TypeDef& type = handle.get(tycx);
   rtt->initReservedSlot(RttValue::Handle, Int32Value(handle.index()));
+  // Store the TypeContext in a slot and keep it alive until finalization by
+  // manually addref'ing the RefPtr
+  tycx.get()->AddRef();
+  rtt->initReservedSlot(RttValue::TypeContext,
+                        PrivateValue((void*)tycx.get()));
   rtt->initReservedSlot(RttValue::Kind, Int32Value(uint32_t(type.kind())));
   if (type.isStructType()) {
     const StructType& structType = type.structType();
@@ -137,7 +143,9 @@ RttValue* RttValue::rttSub(JSContext* cx, HandleRttValue parent,
   }
 
   wasm::TypeHandle parentHandle = parent->handle();
-  Rooted<RttValue*> rtt(cx, createFromHandle(cx, parentHandle));
+  Rooted<RttValue*> rtt(
+      cx, createFromHandle(cx, SharedTypeContext(parent->typeContext()),
+                           parentHandle));
   if (!rtt) {
     return nullptr;
   }
@@ -177,10 +185,18 @@ void RttValue::trace(JSTracer* trc, JSObject* obj) {
 /* static */
 void RttValue::finalize(JSFreeOp* fop, JSObject* obj) {
   auto* rttValue = &obj->as<RttValue>();
+
+  // Nothing to free if we're not initialized yet
   if (rttValue->isNewborn()) {
     return;
   }
 
+  // Free the ref-counted TypeContext we took a strong reference to upon
+  // creation
+  rttValue->typeContext()->Release();
+  rttValue->setReservedSlot(Slot::TypeContext, PrivateValue(nullptr));
+
+  // Free the lazy-allocated children map, if any
   if (ObjectWeakMap* children = rttValue->maybeChildren()) {
     fop->delete_(obj, children, MemoryUse::WasmRttValueChildren);
   }
@@ -200,7 +216,7 @@ uint8_t* TypedObject::typedMem() const {
 template <typename V>
 void TypedObject::visitReferences(JSContext* cx, V& visitor) {
   RttValue& rtt = rttValue();
-  const auto& typeDef = rtt.getType(cx);
+  const auto& typeDef = rtt.typeDef();
   uint8_t* base = typedMem();
 
   switch (typeDef.kind()) {
@@ -340,7 +356,7 @@ OutlineTypedObject* OutlineTypedObject::createArray(JSContext* cx,
 TypedObject* TypedObject::createStruct(JSContext* cx, HandleRttValue rtt,
                                        gc::InitialHeap heap) {
   RootedTypedObject typedObj(cx);
-  uint32_t totalSize = rtt->getType(cx).structType().size_;
+  uint32_t totalSize = rtt->typeDef().structType().size_;
 
   // If possible, create an object with inline data.
   if (InlineTypedObject::canAccommodateSize(totalSize)) {
@@ -406,13 +422,11 @@ void OutlineTypedObject::obj_finalize(JSFreeOp* fop, JSObject* object) {
   }
 }
 
-const TypeDef& RttValue::getType(JSContext* cx) const {
-  return handle().get(cx->wasm().typeContext.get());
-}
+const TypeDef& RttValue::typeDef() const { return handle().get(typeContext()); }
 
 bool RttValue::lookupProperty(JSContext* cx, HandleTypedObject object, jsid id,
                               uint32_t* offset, FieldType* type) {
-  const auto& typeDef = getType(cx);
+  const auto& typeDef = this->typeDef();
 
   switch (typeDef.kind()) {
     case wasm::TypeDefKind::Struct: {
@@ -593,7 +607,7 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
   const auto& rtt = typedObj->rttValue();
-  const auto& typeDef = rtt.getType(cx);
+  const auto& typeDef = rtt.typeDef();
 
   size_t indexCount = 0;
   size_t otherCount = 0;
