@@ -2327,18 +2327,39 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
   updateMaxValues() {
     let maxWidth = this.toCurrentUnitValue(this._maxWidth);
     let maxHeight = this.toCurrentUnitValue(this._maxHeight);
-    this._customTopMargin.max = maxHeight - this._customBottomMargin.value;
-    this._customBottomMargin.max = maxHeight - this._customTopMargin.value;
-    this._customLeftMargin.max = maxWidth - this._customRightMargin.value;
-    this._customRightMargin.max = maxWidth - this._customLeftMargin.value;
+    this._customTopMargin.max = this.formatMaxAttr(
+      maxHeight - this._customBottomMargin.value
+    );
+    this._customBottomMargin.max = this.formatMaxAttr(
+      maxHeight - this._customTopMargin.value
+    );
+    this._customLeftMargin.max = this.formatMaxAttr(
+      maxWidth - this._customRightMargin.value
+    );
+    this._customRightMargin.max = this.formatMaxAttr(
+      maxWidth - this._customLeftMargin.value
+    );
+  }
+
+  truncateTwoDecimals(val) {
+    if (val.split(".")[1].length > 2) {
+      let dotIndex = val.indexOf(".");
+      return val.slice(0, dotIndex + 3);
+    }
+    return val;
+  }
+
+  formatMaxAttr(val) {
+    const strVal = val.toString();
+    if (strVal.includes(".")) {
+      return this.truncateTwoDecimals(strVal);
+    }
+    return val;
   }
 
   formatMargin(target) {
     if (target.value.includes(".")) {
-      if (target.value.split(".")[1].length > 2) {
-        let dotIndex = target.value.indexOf(".");
-        target.value = target.value.slice(0, dotIndex + 3);
-      }
+      target.value = this.truncateTwoDecimals(target.value);
     }
   }
 
