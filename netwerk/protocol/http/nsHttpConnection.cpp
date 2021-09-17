@@ -517,7 +517,9 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
       mTransaction->Close(NS_ERROR_NET_RESET);
     }
     mContentBytesWritten0RTT = 0;
-    Reset0RttForSpdy();
+    if (mDid0RTTSpdy) {
+      Reset0RttForSpdy();
+    }
   }
   mEarlyDataState = EarlyData::DONE;
 
@@ -536,7 +538,7 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
 }
 
 void nsHttpConnection::Reset0RttForSpdy() {
-   // Reset the work done by Start0RTTSpdy
+  // Reset the work done by Start0RTTSpdy
   mUsingSpdyVersion = SpdyVersion::NONE;
   mTransaction = nullptr;
   mSpdySession = nullptr;
@@ -816,7 +818,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
        static_cast<uint32_t>(reason)));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
+  mTlsHandshakeComplitionPending = false;
   // Ensure TCP keepalive timer is stopped.
   if (mTCPKeepaliveTransitionTimer) {
     mTCPKeepaliveTransitionTimer->Cancel();
@@ -2523,8 +2525,10 @@ nsHttpConnection::HandshakeDone() {
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
       "nsHttpConnection::HandshakeDoneInternal",
       [self{std::move(self)}]() {
-        self->HandshakeDoneInternal();
-        self->mTlsHandshakeComplitionPending = false;
+        if (self->mTlsHandshakeComplitionPending) {
+          self->HandshakeDoneInternal();
+          self->mTlsHandshakeComplitionPending = false;
+        }
       }));
   return NS_OK;
 }
