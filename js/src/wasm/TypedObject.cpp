@@ -101,7 +101,6 @@ RttValue* RttValue::createFromHandle(JSContext* cx,
     return nullptr;
   }
 
-  const TypeDef& type = handle.get(tycx);
   rtt->initReservedSlot(RttValue::Handle, Int32Value(handle.index()));
   // Store the TypeContext in a slot and keep it alive until finalization by
   // manually addref'ing the RefPtr
@@ -109,14 +108,6 @@ RttValue* RttValue::createFromHandle(JSContext* cx,
   rtt->initReservedSlot(RttValue::TypeContext,
                         PrivateValue((void*)tycx.get()));
   rtt->initReservedSlot(RttValue::Kind, Int32Value(uint32_t(type.kind())));
-  if (type.isStructType()) {
-    const StructType& structType = type.structType();
-    rtt->initReservedSlot(RttValue::Size, Int32Value(structType.size_));
-  } else {
-    const ArrayType& arrayType = type.arrayType();
-    rtt->initReservedSlot(RttValue::Size,
-                          Int32Value(arrayType.elementType_.size()));
-  }
   rtt->initReservedSlot(RttValue::Proto, ObjectValue(*proto));
   rtt->initReservedSlot(RttValue::Parent, NullValue());
   rtt->initReservedSlot(RttValue::Children, PrivateValue(nullptr));
@@ -330,7 +321,8 @@ OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
 OutlineTypedObject* OutlineTypedObject::createStruct(JSContext* cx,
                                                      HandleRttValue rtt,
                                                      gc::InitialHeap heap) {
-  return OutlineTypedObject::create(cx, rtt, rtt->size(), heap);
+  return OutlineTypedObject::create(cx, rtt, rtt->typeDef().structType().size_,
+                                    heap);
 }
 
 /*static*/
@@ -340,7 +332,7 @@ OutlineTypedObject* OutlineTypedObject::createArray(JSContext* cx,
                                                     gc::InitialHeap heap) {
   size_t byteLength = offsetOfArrayLength() +
                       sizeof(OutlineTypedObject::ArrayLength) +
-                      (rtt->size() * length);
+                      (rtt->typeDef().arrayType().elementType_.size() * length);
   Rooted<OutlineTypedObject*> obj(
       cx, OutlineTypedObject::create(cx, rtt, byteLength, heap));
   if (!obj) {
@@ -663,13 +655,14 @@ void TypedObject::initDefault() {
   RttValue& rtt = rttValue();
   switch (rtt.kind()) {
     case TypeDefKind::Struct: {
-      memset(typedMem(), 0, rtt.size());
+      memset(typedMem(), 0, rtt.typeDef().structType().size_);
       break;
     }
     case TypeDefKind::Array: {
       MOZ_ASSERT(is<OutlineTypedObject>());
       uint32_t length = as<OutlineTypedObject>().arrayLength();
-      memset(typedMem() + sizeof(uint32_t), 0, rtt.size() * length);
+      memset(typedMem() + sizeof(uint32_t), 0,
+             rtt.typeDef().arrayType().elementType_.size() * length);
       break;
     }
     default:
