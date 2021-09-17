@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1660452: NullPrincipals need to know whether they were spun off of a Secure Context</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+ok(window.isSecureContext, "top level should be a secure context");
+
+// eslint-disable-next-line
+let newWin = window.open("data:text/html,<script><"+"/script>");
+ok(newWin.isSecureContext, "data uri window should be a secure context");
+newWin.close();
+
+window.addEventListener("message", (event) => {
+    ok(event.data.isSecureContext, "data uri frames should be a secure context");
+    if(event.data.finish) {
+        SimpleTest.finish();
+        return;
+    }
+    let f2 = document.createElement("iframe");
+    // eslint-disable-next-line
+    f2.src = "data:text/html,<iframe src=\"data:text/html,<script>parent.parent.postMessage({isSecureContext: window.isSecureContext, finish: true}, '*');<"+"/script>\"></iframe>";
+    document.body.appendChild(f2);
+});
+
+let f = document.createElement("iframe");
+// eslint-disable-next-line
+f.src = "data:text/html,<script>parent.postMessage({isSecureContext: window.isSecureContext}, '*');<"+"/script>";
+document.body.appendChild(f);
+
+</script>
+</body>
+</html>
