@@ -438,6 +438,7 @@ fn correct_order() {
             MemoryDistribution(..)            => assert_eq!(12, disc),
             Jwe(..)                           => assert_eq!(13, disc),
             Rate(..)                          => assert_eq!(14, disc),
+            Url(..)                           => assert_eq!(15, disc),
         }
     }
 }
