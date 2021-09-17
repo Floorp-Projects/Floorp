@@ -50,13 +50,11 @@ linux64-clang-12-mingw-x86:
     description: "MinGW-Clang 12 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
+    worker-type: b-linux
     run:
         script: build-clang-mingw.sh
         arguments:
             - 'x86'
-            - 'build/build-clang/clang-12-mingw.json'
-        resources:
-            - 'build/build-clang/clang-12-mingw.json'
         toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
@@ -67,21 +65,18 @@ linux64-clang-12-mingw-x86:
             - llvm-mingw
             - gcc-9.3.0
         toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt
+            - linux64-clang-12
 
 linux64-clang-12-mingw-x64:
     description: "MinGW-Clang 12 x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
+    worker-type: b-linux
     run:
         script: build-clang-mingw.sh
         arguments:
             - 'x64'
-            - 'build/build-clang/clang-12-mingw.json'
-        resources:
-            - 'build/build-clang/clang-12-mingw.json'
         toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
@@ -92,8 +87,7 @@ linux64-clang-12-mingw-x64:
             - llvm-mingw
             - gcc-9.3.0
         toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt
+            - linux64-clang-12
 
 linux64-clang-10:
     description: "Clang 10 toolchain build"
