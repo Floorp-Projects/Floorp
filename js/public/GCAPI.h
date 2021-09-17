@@ -26,6 +26,7 @@ namespace js {
 namespace gc {
 class GCRuntime;
 }  // namespace gc
+class JS_PUBLIC_API SliceBudget;
 namespace gcstats {
 struct Statistics;
 }  // namespace gcstats
@@ -433,6 +434,18 @@ typedef enum JSGCParamKey {
  * location reachable from data.
  */
 typedef void (*JSTraceDataOp)(JSTracer* trc, void* data);
+
+/*
+ * Trace hook used to trace gray roots incrementally.
+ *
+ * This should return whether tracing is finished. It will be called repeatedly
+ * in subsequent GC slices until it returns true.
+ *
+ * While tracing this should check the budget and return false if it has been
+ * exceeded. When passed an unlimited budget it should always return true.
+ */
+typedef bool (*JSGrayRootsTracer)(JSTracer* trc, js::SliceBudget& budget,
+                                  void* data);
 
 typedef enum JSGCStatus { JSGC_BEGIN, JSGC_END } JSGCStatus;
 

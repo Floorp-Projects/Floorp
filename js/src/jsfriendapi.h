@@ -31,7 +31,7 @@ class JSJitInfo;
  * required.
  */
 extern JS_PUBLIC_API void JS_SetGrayGCRootsTracer(JSContext* cx,
-                                                  JSTraceDataOp traceOp,
+                                                  JSGrayRootsTracer traceOp,
                                                   void* data);
 
 extern JS_PUBLIC_API JSObject* JS_FindCompilationScope(JSContext* cx,

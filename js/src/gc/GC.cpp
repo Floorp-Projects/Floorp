@@ -1395,7 +1395,7 @@ void GCRuntime::removeBlackRootsTracer(JSTraceDataOp traceOp, void* data) {
   }
 }
 
-void GCRuntime::setGrayRootsTracer(JSTraceDataOp traceOp, void* data) {
+void GCRuntime::setGrayRootsTracer(JSGrayRootsTracer traceOp, void* data) {
   AssertHeapIsIdle();
   grayRootTracer.ref() = {traceOp, data};
 }

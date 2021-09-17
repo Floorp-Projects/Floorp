@@ -414,8 +414,9 @@ void GCRuntime::traceEmbeddingGrayRoots(JSTracer* trc) {
   JS::AutoSuppressGCAnalysis nogc;
 
   const auto& callback = grayRootTracer.ref();
-  if (JSTraceDataOp op = callback.op) {
-    (*op)(trc, callback.data);
+  if (JSGrayRootsTracer op = callback.op) {
+    SliceBudget budget = SliceBudget::unlimited();
+    MOZ_ALWAYS_TRUE((*op)(trc, budget, callback.data));
   }
 }
 

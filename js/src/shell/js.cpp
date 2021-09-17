@@ -787,7 +787,7 @@ ShellContext* js::shell::GetShellContext(JSContext* cx) {
   return sc;
 }
 
-static void TraceGrayRoots(JSTracer* trc, void* data) {
+static bool TraceGrayRoots(JSTracer* trc, SliceBudget& budget, void* data) {
   JSRuntime* rt = trc->runtime();
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -798,6 +798,8 @@ static void TraceGrayRoots(JSTracer* trc, void* data) {
       }
     }
   }
+
+  return true;
 }
 
 static mozilla::UniqueFreePtr<char[]> GetLine(FILE* file, const char* prompt) {
