@@ -4180,7 +4180,7 @@ class Document : public nsINode,
   class MOZ_RAII AutoEditorCommandTarget {
    public:
     MOZ_CAN_RUN_SCRIPT AutoEditorCommandTarget(
-        nsPresContext* aPresContext, const InternalCommandData& aCommandData);
+        Document& aDocument, const InternalCommandData& aCommandData);
     AutoEditorCommandTarget() = delete;
     explicit AutoEditorCommandTarget(const AutoEditorCommandTarget& aOther) =
         delete;
