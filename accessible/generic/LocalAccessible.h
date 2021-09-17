@@ -1073,8 +1073,10 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   /**
    * Push fields to cache.
+   * aCacheDomain - describes which fields to bundle and ultimately send
+   * aUpdate - describes whether this is an initial or subsequent update
    */
-  void SendCacheUpdate(uint64_t aCacheDomain);
+  void SendCache(uint64_t aCacheDomain, CacheUpdateType aUpdate);
 
   // Data Members
   nsCOMPtr<nsIContent> mContent;

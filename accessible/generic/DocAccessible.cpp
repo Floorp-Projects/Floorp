@@ -1446,6 +1446,13 @@ void DocAccessible::DoInitialUpdate() {
     DocAccessibleChild* ipcDoc = IPCDoc();
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
+      if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+        // If we're caching, we should send an initial update for this document
+        // and its attributes. Each acc contained in this doc will have its
+        // initial update sent in `InsertIntoIpcTree`.
+        SendCache(CacheDomain::All, CacheUpdateType::Initial);
+      }
+
       for (auto idx = 0U; idx < mChildren.Length(); idx++) {
         ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx, true);
       }
