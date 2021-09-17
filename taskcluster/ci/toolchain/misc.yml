@@ -298,13 +298,17 @@ win64-mozmake:
         fetch:
             - gnumake
 
-win64-nsis:
-    description: "NSIS for Windows"
+nsis:
+    description: "NSIS for Linux and Windows"
     treeherder:
-        symbol: TW64(nsis)
+        symbol: TL(nsis)
     run:
-        script: repack-nsis.sh
+        script: build-nsis.sh
         toolchain-artifact: public/build/nsis.tar.zst
     fetches:
         fetch:
+            - nsis-3.07
             - nsis-3.07-win
+        toolchain:
+            - linux64-clang-12
+            - sysroot-x86_64-linux-gnu

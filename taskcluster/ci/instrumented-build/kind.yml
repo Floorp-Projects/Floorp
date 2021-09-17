@@ -260,8 +260,8 @@ jobs:
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec
+                - nsis
                 - sysroot-x86_64-linux-gnu
-                - win64-nsis
             fetch:
                 - upx-3.95-win
 
@@ -304,8 +304,8 @@ jobs:
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec
+                - nsis
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
-                - win64-nsis
             fetch:
                 - upx-3.95-win
