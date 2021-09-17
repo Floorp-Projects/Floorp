@@ -524,6 +524,7 @@ class nsFlexContainerFrame::FlexItem final {
   bool IsBlockAxisCrossAxis() const { return mIsInlineAxisMainAxis; }
 
   WritingMode GetWritingMode() const { return mWM; }
+  WritingMode ContainingBlockWM() const { return mCBWM; }
   StyleAlignSelf AlignSelf() const { return mAlignSelf; }
   StyleAlignFlags AlignSelfFlags() const { return mAlignSelfFlags; }
 
@@ -1850,18 +1851,26 @@ class CachedFinalReflowMetrics final {
                                  aReflowOutput) {}
 
   CachedFinalReflowMetrics(const FlexItem& aItem, const LogicalSize& aSize)
-      : mSize(aSize), mTreatBSizeAsIndefinite(aItem.TreatBSizeAsIndefinite()) {}
+      : mBorderPadding(aItem.BorderPadding().ConvertTo(
+            aItem.GetWritingMode(), aItem.ContainingBlockWM())),
+        mSize(aSize),
+        mTreatBSizeAsIndefinite(aItem.TreatBSizeAsIndefinite()) {}
 
   const LogicalSize& Size() const { return mSize; }
+  const LogicalMargin& BorderPadding() const { return mBorderPadding; }
   bool TreatBSizeAsIndefinite() const { return mTreatBSizeAsIndefinite; }
 
  private:
   // A convenience constructor with a WritingMode argument.
   CachedFinalReflowMetrics(WritingMode aWM, const ReflowInput& aReflowInput,
                            const ReflowOutput& aReflowOutput)
-      : mSize(aReflowOutput.Size(aWM) -
-              aReflowInput.ComputedLogicalBorderPadding(aWM).Size(aWM)),
+      : mBorderPadding(aReflowInput.ComputedLogicalBorderPadding(aWM)),
+        mSize(aReflowOutput.Size(aWM) - mBorderPadding.Size(aWM)),
         mTreatBSizeAsIndefinite(aReflowInput.mFlags.mTreatBSizeAsIndefinite) {}
+
+  // The flex item's border and padding, in its own writing-mode, that it used
+  // used during its most recent "final reflow".
+  LogicalMargin mBorderPadding;
 
   // The flex item's content-box size, in its own writing-mode, that it used
   // during its most recent "final reflow".
@@ -2542,14 +2551,6 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
 
   // Cool; this item & its subtree haven't experienced any style/content
   // changes that would automatically require a reflow.
-  // (Note that if e.g. 'padding' had changed, that would cause our frame to
-  // be marked as dirty; this is how we can get away with only considering
-  // the content-box size below, even though the frame technically includes
-  // the space for border & padding. Also: hypothetically if our padding
-  // changed via being a percent value and its percent-basis changing, then
-  // the percent-basis change should've cleared descendant intrinsic sizes,
-  // which would purge cached values via MarkCachedFlexMeasurementsDirty
-  // and would make us fail the "if (cache...") check below.)
 
   // Did we cache the metrics from its most recent "final reflow"?
   auto* cache = mFrame->GetProperty(CachedFlexItemData::Prop());
@@ -2566,6 +2567,22 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     FLEX_LOG(
         "[perf] Flex item %p needed a final reflow due to having a "
         "different content box size vs. its most recent final reflow",
+        mFrame);
+    return true;
+  }
+
+  // Does the cached border and padding match our current ones?
+  //
+  // Note: this is just to detect cases where we have a percent padding whose
+  // basis has changed. Any other sort of change to BorderPadding() (e.g. a new
+  // specified value) should result in the frame being marked dirty via proper
+  // change hint (see nsStylePadding::CalcDifference()), which will force it to
+  // reflow.
+  if (cache->mFinalReflowMetrics->BorderPadding() !=
+      BorderPadding().ConvertTo(mWM, mCBWM)) {
+    FLEX_LOG(
+        "[perf] Flex item %p needed a final reflow due to having a "
+        "different border and padding vs. its most recent final reflow",
         mFrame);
     return true;
   }
