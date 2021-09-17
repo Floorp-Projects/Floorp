@@ -50,6 +50,11 @@ vendoring:
   exclude:
     - build/.gitattributes
     - build/.gitignore
+    - doc
+    - examples
+    - package
+    - tests
+    - tools
 
   update-actions:
     - action: copy-file
