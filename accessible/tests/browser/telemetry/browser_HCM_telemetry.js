@@ -96,6 +96,10 @@ add_task(async function testInit() {
   const dialogWin = await openColorsDialog();
   const menulistHCM = dialogWin.document.getElementById("useDocumentColors");
   if (AppConstants.platform == "win") {
+    ok(
+      Services.prefs.getBoolPref("browser.display.use_system_colors"),
+      "Use system colors is on by default on windows"
+    );
     is(
       menulistHCM.value,
       "0",
@@ -110,6 +114,11 @@ add_task(async function testInit() {
       false
     );
   } else {
+    ok(
+      !Services.prefs.getBoolPref("browser.display.use_system_colors"),
+      "Use system colors is off by default on non-windows platforms"
+    );
+
     is(
       menulistHCM.value,
       "1",
@@ -177,14 +186,26 @@ add_task(async function testSetAlways() {
   testIsWhite("a11y.HCM_background", snapshot);
   testIsBlack("a11y.HCM_foreground", snapshot);
 
-  // If we change the colors, our probes should be updated
+  // If we change the colors, our probes update on non-windows platforms.
+  // On windows, useSystemColors is on by default, and so the values we set here
+  // will not be written to our telemetry probes, because they capture
+  // used colors, not the values of browser.foreground/background_color directly.
+
   setBackgroundColor("#000000");
   snapshot = TelemetryTestUtils.getProcessScalars("parent", false, true);
-  testIsBlack("a11y.HCM_background", snapshot);
+  if (AppConstants.platform == "win") {
+    testIsWhite("a11y.HCM_background", snapshot);
+  } else {
+    testIsBlack("a11y.HCM_background", snapshot);
+  }
 
   setForegroundColor("#ffffff");
   snapshot = TelemetryTestUtils.getProcessScalars("parent", false, true);
-  testIsWhite("a11y.HCM_foreground", snapshot);
+  if (AppConstants.platform == "win") {
+    testIsBlack("a11y.HCM_foreground", snapshot);
+  } else {
+    testIsWhite("a11y.HCM_foreground", snapshot);
+  }
 
   reset();
   gBrowser.removeCurrentTab();
@@ -221,7 +242,7 @@ add_task(async function testSetDefault() {
     "Background color shouldn't be present."
   );
 
-  // If we change the colors, our probes should not be updated
+  // If we change the colors, our probes should not be updated anywhere
   await setForegroundColor("#ffffff"); // white
   await setBackgroundColor("#000000"); // black
 
@@ -270,7 +291,7 @@ add_task(async function testSetNever() {
     "Background color shouldn't be present."
   );
 
-  // If we change the colors, our probes should not be updated
+  // If we change the colors, our probes should not be updated anywhere
   await setForegroundColor("#ffffff"); // white
   await setBackgroundColor("#000000"); // black
 
