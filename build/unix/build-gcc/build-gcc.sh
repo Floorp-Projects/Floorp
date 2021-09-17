@@ -5,20 +5,6 @@ set -x
 
 make_flags="-j$(nproc)"
 
-prepare_mingw() {
-  export prefix=/tools/mingw32
-  export install_dir=$root_dir$prefix
-  mkdir -p $install_dir
-  export PATH=$PATH:$install_dir/bin/
-
-  cd $root_dir
-
-  git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
-  pushd mingw-w64
-  git checkout $mingw_version # Asserts the integrity of the checkout (Right?)
-  popd
-}
-
 apply_patch() {
   if [ $# -ge 2 ]; then
     pushd $root_dir/$1
@@ -74,50 +60,5 @@ build_gcc() {
   ln -s gcc gcc/bin/cc
 
   tar caf $root_dir/gcc.tar.zst gcc/
-  popd
-}
-
-build_gcc_and_mingw() {
-  mkdir gcc-objdir
-  pushd gcc-objdir
-  ../gcc-source/configure --prefix=$install_dir --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --disable-multilib --enable-threads=posix
-  make $make_flags all-gcc
-  make $make_flags install-gcc
-  popd
-
-  mkdir mingw-w64-headers32
-  pushd mingw-w64-headers32
-  ../mingw-w64/mingw-w64-headers/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/ --enable-sdk=all --enable-secure-api --enable-idl
-  make $make_flags install
-  popd
-
-  mkdir mingw-w64-crt32
-  pushd mingw-w64-crt32
-  ../mingw-w64/mingw-w64-crt/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/
-  make
-  make install
-  popd
-
-  mkdir mingw-w64-pthread
-  pushd mingw-w64-pthread
-  ../mingw-w64/mingw-w64-libraries/winpthreads/configure --host=i686-w64-mingw32 --prefix=$install_dir/i686-w64-mingw32/
-  make
-  make install
-  popd
-
-  pushd gcc-objdir
-  make
-  make install
-  popd
-
-  mkdir widl32
-  pushd widl32
-  ../mingw-w64/mingw-w64-tools/widl/configure --prefix=$install_dir --target=i686-w64-mingw32
-  make
-  make install
-  popd
-
-  pushd $(dirname $install_dir)
-  tar caf $root_dir/mingw32.tar.zst $(basename $install_dir)/
   popd
 }

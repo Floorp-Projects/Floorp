@@ -2,20 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-binutils-2.27:
-    description: binutils 2.27 source code
-    fetch:
-        type: static-url
-        url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.27.tar.bz2
-        sha256: 369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88
-        size: 26099568
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
-        artifact-name: binutils-source.tar.zst
-        strip-components: 1
-        add-prefix: binutils-source/
-
 binutils-2.31.1:
     description: binutils 2.31.1 source code
     fetch:
@@ -43,20 +29,6 @@ binutils-2.36.1:
         artifact-name: binutils-source.tar.zst
         strip-components: 1
         add-prefix: binutils-source/
-
-gcc-6.5.0:
-    description: GCC 6.5.0 source code
-    fetch:
-        type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-6.5.0/gcc-6.5.0.tar.xz
-        sha256: 7ef1796ce497e89479183702635b14bb7a46b53249209a5e0f999bebf4740945
-        size: 74355588
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/33C235A34C46AA3FFB293709A328C3A2C3C45C06.key
-        artifact-name: gcc-source.tar.zst
-        strip-components: 1
-        add-prefix: gcc-source/
 
 gcc-7.5.0:
     description: GCC 7.5.0 source code
@@ -110,20 +82,6 @@ gcc-11.1.0:
         artifact-name: gcc-source.tar.zst
         path-prefix: gcc-source/
 
-gmp-5.1.3:
-    description: GMP 5.1.3 source code
-    fetch:
-        type: static-url
-        url: https://ftp.gnu.org/gnu/gmp/gmp-5.1.3.tar.bz2
-        sha256: 752079520b4690531171d0f4532e40f08600215feefede70b24fabdc6f1ab160
-        size: 2196480
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
-        artifact-name: gmp-source.tar.zst
-        strip-components: 1
-        add-prefix: gmp-source/
-
 gmp-6.1.0:
     description: GMP 6.1.0 source code
     fetch:
@@ -153,17 +111,6 @@ iris-2.0:
         repo: https://github.com/mozilla/iris_firefox
         revision: a91a1cb88a16b0ee4d30f0dfc165d2cacf48b10c
 
-isl-0.15:
-    description: ISL 0.15 source code
-    fetch:
-        type: static-url
-        url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.15.tar.bz2
-        sha256: 8ceebbf4d9a81afa2b4449113cee4b7cb14a687d7a549a963deb5e2a41458b6b
-        size: 1574964
-        artifact-name: isl-source.tar.zst
-        strip-components: 1
-        add-prefix: isl-source/
-
 isl-0.16.1:
     description: ISL 0.16.1 source code
     fetch:
@@ -174,20 +121,6 @@ isl-0.16.1:
         artifact-name: isl-source.tar.zst
         strip-components: 1
         add-prefix: isl-source/
-
-mpc-0.8.2:
-    description: mpc 0.8.2 source code
-    fetch:
-        type: static-url
-        url: http://www.multiprecision.org/downloads/mpc-0.8.2.tar.gz
-        sha256: ae79f8d41d8a86456b68607e9ca398d00f8b7342d1d83bcf4428178ac45380c7
-        size: 548401
-        gpg-signature:
-            sig-url: "{url}.asc"
-            key-path: build/unix/build-gcc/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
-        artifact-name: mpc-source.tar.zst
-        strip-components: 1
-        add-prefix: mpc-source/
 
 mpc-1.0.3:
     description: mpc 1.0.3 source code
@@ -210,20 +143,6 @@ mpfr-3.1.4:
         url: http://www.mpfr.org/mpfr-3.1.4/mpfr-3.1.4.tar.bz2
         sha256: d3103a80cdad2407ed581f3618c4bed04e0c92d1cf771a65ead662cc397f7775
         size: 1279284
-        gpg-signature:
-            sig-url: "{url}.asc"
-            key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
-        artifact-name: mpfr-source.tar.zst
-        strip-components: 1
-        add-prefix: mpfr-source/
-
-mpfr-3.1.5:
-    description: mpfr 3.1.5 source code
-    fetch:
-        type: static-url
-        url: http://www.mpfr.org/mpfr-3.1.5/mpfr-3.1.5.tar.bz2
-        sha256: ca498c1c7a74dd37a576f353312d1e68d490978de4395fa28f1cbd46a364e658
-        size: 1279489
         gpg-signature:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
