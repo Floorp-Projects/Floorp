@@ -17,8 +17,6 @@ static TimeDuration kFrameDuration = TimeDuration::FromSeconds(1.0 / 60.0);
 
 static mozilla::TimeStamp sNow = TimeStamp::Now();
 
-static mozilla::TimeStamp sStartupTime = sNow;
-
 static mozilla::TimeStamp AdvanceTime(TimeDuration aDuration) {
   sNow += aDuration;
   return sNow;
