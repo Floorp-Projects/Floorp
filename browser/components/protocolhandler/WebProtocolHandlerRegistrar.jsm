@@ -164,10 +164,12 @@ WebProtocolHandlerRegistrar.prototype = {
     };
     let notificationBox = browser.getTabBrowser().getNotificationBox(browser);
     notificationBox.appendNotification(
-      message,
       notificationValue,
-      notificationIcon,
-      notificationBox.PRIORITY_INFO_LOW,
+      {
+        label: message,
+        image: notificationIcon,
+        priority: notificationBox.PRIORITY_INFO_LOW,
+      },
       [addButton]
     );
   },

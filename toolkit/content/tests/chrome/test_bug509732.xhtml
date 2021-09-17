@@ -28,10 +28,8 @@ function test() {
 
   is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
 
-  gNotificationBox.appendNotification("Test notification",
-                                      "notification1", null,
-                                      gNotificationBox.PRIORITY_INFO_LOW,
-                                      null);
+  gNotificationBox.appendNotification("notification1",
+    { label: "Test notification", priority: gNotificationBox.PRIORITY_INFO_LOW });
 
   is(gNotificationBox.allNotifications.length, 1, "Notification exists");
   is(gNotificationBox._animating, false, "Notification shouldn't be animating");
