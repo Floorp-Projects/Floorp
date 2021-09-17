@@ -4,6 +4,268 @@
       "params": {
         "searchUrlGetParams": [
           {
+            "name": "client",
+            "value": "firefox-b-d"
+          },
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1631783318084,
+      "appliesTo": [
+        {
+          "default": "yes-if-no-other",
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 2000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "telemetryId": "google-b-e"
+        },
+        {
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "ru",
+                "tr",
+                "be",
+                "kk"
+              ],
+              "startsWith": [
+                "en"
+              ]
+            },
+            "regions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
+            ],
+            "telemetryId": "google"
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "ru",
+                "tr",
+                "be",
+                "kk"
+              ],
+              "startsWith": [
+                "en"
+              ]
+            },
+            "regions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
+            ],
+            "telemetryId": "google"
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          }
+        },
+        {
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-d"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "pref": "google_channel_us",
+              "condition": "pref"
+            }
+          ],
+          "telemetryId": "google-b-1-d"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "pref": "google_channel_us",
+              "condition": "pref"
+            }
+          ],
+          "telemetryId": "google-b-1-e"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "ubuntu"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "canonical",
+              "canonical-001",
+              "canonical-002"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "value": "fs"
+            }
+          ],
+          "telemetryId": "google-canonical"
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "channel",
+          "pref": "google_channel_row",
+          "condition": "pref"
+        }
+      ],
+      "telemetryId": "google-b-d",
+      "webExtension": {
+        "id": "google@search.mozilla.org"
+      },
+      "id": "cb8e7210-9f0b-48fa-8708-b9a03df79eea",
+      "last_modified": 1631888538882
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
             "name": "pc",
             "value": "MOZI"
           },
@@ -13,7 +275,7 @@
           }
         ]
       },
-      "schema": 1629736603297,
+      "schema": 1631378203300,
       "appliesTo": [
         {
           "included": {
@@ -97,6 +359,10 @@
           "params": {
             "searchUrlGetParams": [
               {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
                 "name": "pc",
                 "value": "MZSL01"
               },
@@ -119,6 +385,10 @@
           "params": {
             "searchUrlGetParams": [
               {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
                 "name": "pc",
                 "value": "MZSL02"
               },
@@ -140,6 +410,10 @@
         {
           "params": {
             "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
               {
                 "name": "pc",
                 "value": "MZSL03"
@@ -316,7 +590,7 @@
         "id": "bing@search.mozilla.org"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1630005303731
+      "last_modified": 1631888538878
     },
     {
       "schema": 1627058212123,
@@ -1814,314 +2088,6 @@
       },
       "id": "3f3beb1d-e32e-40a4-b6ed-56741803e1d8",
       "last_modified": 1613587855064
-    },
-    {
-      "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "client",
-            "value": "firefox-b-d"
-          },
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1605047692074,
-      "appliesTo": [
-        {
-          "default": "yes-if-no-other",
-          "included": {
-            "everywhere": true
-          }
-        },
-        {
-          "override": true,
-          "orderHint": 2000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
-          "telemetryId": "google-b-e"
-        },
-        {
-          "default": "no",
-          "included": {
-            "locales": {
-              "matches": [
-                "ru",
-                "tr",
-                "be",
-                "kk"
-              ],
-              "startsWith": [
-                "en"
-              ]
-            },
-            "regions": [
-              "ru",
-              "tr",
-              "by",
-              "kz"
-            ],
-            "telemetryId": "google"
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "no",
-          "included": {
-            "locales": {
-              "matches": [
-                "ru",
-                "tr",
-                "be",
-                "kk"
-              ],
-              "startsWith": [
-                "en"
-              ]
-            },
-            "regions": [
-              "ru",
-              "tr",
-              "by",
-              "kz"
-            ],
-            "telemetryId": "google"
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          }
-        },
-        {
-          "default": "no",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "no",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-1-d"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "channel",
-              "pref": "google_channel_us",
-              "condition": "pref"
-            }
-          ],
-          "telemetryId": "google-b-1-d"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-1-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "channel",
-              "pref": "google_channel_us",
-              "condition": "pref"
-            }
-          ],
-          "telemetryId": "google-b-1-e"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-oem1"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-oem1",
-              "sweetlabs-r-oem1"
-            ]
-          },
-          "telemetryId": "google-sweetlabs"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-oem2"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-oem2",
-              "sweetlabs-r-oem2"
-            ]
-          },
-          "telemetryId": "google-sweetlabs"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "ubuntu"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "channel",
-              "value": "fs"
-            }
-          ],
-          "telemetryId": "google-canonical"
-        }
-      ],
-      "extraParams": [
-        {
-          "name": "channel",
-          "pref": "google_channel_row",
-          "condition": "pref"
-        }
-      ],
-      "telemetryId": "google-b-d",
-      "webExtension": {
-        "id": "google@search.mozilla.org"
-      },
-      "id": "cb8e7210-9f0b-48fa-8708-b9a03df79eea",
-      "last_modified": 1605203142486
     },
     {
       "schema": 1596483697391,
