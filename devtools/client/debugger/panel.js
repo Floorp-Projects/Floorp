@@ -65,15 +65,6 @@ class DebuggerPanel {
     this._selectors = selectors;
     this._client = client;
 
-    this.panelWin.document.addEventListener(
-      "drag:start",
-      this.toolbox.toggleDragging
-    );
-    this.panelWin.document.addEventListener(
-      "drag:end",
-      this.toolbox.toggleDragging
-    );
-
     registerStoreObserver(this._store, this._onDebuggerStateChange.bind(this));
 
     return this;
