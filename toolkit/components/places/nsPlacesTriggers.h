@@ -396,11 +396,35 @@
         "AFTER DELETE ON moz_places_metadata_groups_to_snapshots "      \
         "FOR EACH ROW "                                                 \
         "BEGIN "                                                        \
-        "DELETE FROM moz_places_metadata_groups "                       \
-        "WHERE id = OLD.id AND NOT EXISTS ( "                           \
+        "DELETE FROM moz_places_metadata_snapshots_groups "             \
+        "WHERE id = OLD.group_id AND NOT EXISTS ( "                     \
         "SELECT group_id FROM moz_places_metadata_groups_to_snapshots " \
-        "WHERE group_id = OLD.id "                                      \
+        "WHERE group_id = OLD.group_id "                                \
         "); "                                                           \
+        "END")
+
+// This trigger increments foreign_count when sessions are altered.
+#  define CREATE_PLACES_SESSION_TO_PLACE_AFTERINSERT_TRIGGER       \
+    nsLiteralCString(                                              \
+        "CREATE TEMP TRIGGER "                                     \
+        "moz_session_to_places_after_insert_trigger "              \
+        "AFTER INSERT ON moz_session_to_places "                   \
+        "FOR EACH ROW "                                            \
+        "BEGIN "                                                   \
+        "UPDATE moz_places SET foreign_count = foreign_count + 1 " \
+        "WHERE id = NEW.place_id; "                                \
+        "END")
+
+// This trigger decrements foreign_count when sessions are removed.
+#  define CREATE_PLACES_SESSION_TO_PLACE_AFTERDELETE_TRIGGER       \
+    nsLiteralCString(                                              \
+        "CREATE TEMP TRIGGER "                                     \
+        "moz_session_to_places_afterdelete_trigger "               \
+        "AFTER DELETE ON moz_session_to_places "                   \
+        "FOR EACH ROW "                                            \
+        "BEGIN "                                                   \
+        "UPDATE moz_places SET foreign_count = foreign_count - 1 " \
+        "WHERE id = OLD.place_id; "                                \
         "END")
 
 #endif  // __nsPlacesTriggers_h__
