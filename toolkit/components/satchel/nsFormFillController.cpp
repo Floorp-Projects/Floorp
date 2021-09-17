@@ -788,7 +788,9 @@ nsFormFillController::StopSearch() {
   if (mLastFormAutoComplete) {
     mLastFormAutoComplete->StopAutoCompleteSearch();
     mLastFormAutoComplete = nullptr;
-  } else if (mLoginManagerAC) {
+  }
+
+  if (mLoginManagerAC) {
     mLoginManagerAC->StopSearch();
   }
   return NS_OK;
