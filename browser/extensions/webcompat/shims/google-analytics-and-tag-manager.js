@@ -154,6 +154,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
   if (Array.isArray(dl)) {
     const push = o => {
       setTimeout(() => run(o?.eventCallback), 1);
+      return true;
     };
     dl.push = push;
     dl.forEach(o => push(o));
