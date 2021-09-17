@@ -253,7 +253,7 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (MOZ_UNLIKELY(!mProperties.IsEmpty())) {
     using T = mozilla::FrameProperties::UntypedDescriptor;
     bool hasO = false, hasOC = false, hasEOC = false, hasBackdrop = false;
-    mProperties.ForEach([&](const T& aProp, void*) {
+    mProperties.ForEach([&](const T& aProp, uint64_t) {
       if (aProp == OverflowProperty()) {
         hasO = true;
       } else if (aProp == OverflowContainersProperty()) {
@@ -332,22 +332,24 @@ void nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   mFrames.AppendIfNonempty(aLists, kPrincipalList);
 
   using T = mozilla::FrameProperties::UntypedDescriptor;
-  mProperties.ForEach([this, aLists](const T& aProp, void* aValue) {
+  mProperties.ForEach([this, aLists](const T& aProp, uint64_t aValue) {
     typedef const nsFrameList* L;
     if (aProp == OverflowProperty()) {
-      L(aValue)->AppendIfNonempty(aLists, kOverflowList);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists, kOverflowList);
     } else if (aProp == OverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected OverflowContainersProperty");
       Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
-      L(aValue)->AppendIfNonempty(aLists, kOverflowContainersList);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists,
+                                                    kOverflowContainersList);
     } else if (aProp == ExcessOverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected ExcessOverflowContainersProperty");
       Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
-      L(aValue)->AppendIfNonempty(aLists, kExcessOverflowContainersList);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(
+          aLists, kExcessOverflowContainersList);
     } else if (aProp == BackdropProperty()) {
-      L(aValue)->AppendIfNonempty(aLists, kBackdropList);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists, kBackdropList);
     }
     return true;
   });
