@@ -357,6 +357,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
   UpdateDebugFlags();
   UpdateQualitySettings();
   UpdateProfilerUI();
+  UpdateParameters();
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
