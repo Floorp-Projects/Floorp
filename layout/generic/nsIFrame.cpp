@@ -71,7 +71,6 @@
 #include "nsInlineFrame.h"
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
-#include "nsGridContainerFrame.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCanvasFrame.h"
 
@@ -5750,10 +5749,6 @@ void nsIFrame::MarkIntrinsicISizesDirty() {
 
   if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
     nsFontInflationData::MarkFontInflationDataTextDirty(this);
-  }
-
-  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
-    RemoveProperty(nsGridContainerFrame::CachedBAxisMeasurement::Prop());
   }
 }
 
