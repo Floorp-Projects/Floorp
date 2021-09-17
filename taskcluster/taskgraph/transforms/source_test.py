@@ -10,9 +10,11 @@ treeherder configuration and attributes for that platform.
 import copy
 import os
 
+import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.job import job_description_schema
 from taskgraph.util.attributes import keymatch
+from taskgraph.util.hg import get_json_automationrelevance
 from taskgraph.util.schema import (
     resolve_keyed_by,
     optionally_keyed_by,
@@ -242,4 +244,26 @@ def set_code_review_env(config, jobs):
             env = job["worker"].setdefault("env", {})
             env["CODE_REVIEW"] = "1"
 
+        yield job
+
+
+@transforms.add
+def set_base_revision_in_tgdiff(config, jobs):
+    # Don't attempt to download 'json-automation' locally as the revision may
+    # not exist in the repository.
+    if not os.environ.get("MOZ_AUTOMATION") or taskgraph.fast:
+        yield from jobs
+        return
+
+    data = get_json_automationrelevance(
+        config.params["head_repository"], config.params["head_rev"]
+    )
+    for job in jobs:
+        if job["name"] != "taskgraph-diff":
+            yield job
+            continue
+
+        job["run"]["command-context"] = {
+            "base_rev": data["changesets"][0]["parents"][0]
+        }
         yield job
