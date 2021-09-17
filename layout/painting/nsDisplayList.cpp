@@ -438,6 +438,14 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
   mUsed = true;
 }
 
+nsDisplayListBuilder::AutoContainerASRTracker::AutoContainerASRTracker(
+    nsDisplayListBuilder* aBuilder)
+    : mBuilder(aBuilder), mSavedContainerASR(aBuilder->mCurrentContainerASR) {
+  mBuilder->mCurrentContainerASR = ActiveScrolledRoot::PickDescendant(
+      mBuilder->ClipState().GetContentClipASR(),
+      mBuilder->mCurrentActiveScrolledRoot);
+}
+
 nsPresContext* nsDisplayListBuilder::CurrentPresContext() {
   return CurrentPresShellState()->mPresShell->GetPresContext();
 }
