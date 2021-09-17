@@ -3240,16 +3240,22 @@ IncrementalProgress GCRuntime::markWeakReferencesInCurrentGroup(
 }
 
 template <class ZoneIterT>
-void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
+IncrementalProgress GCRuntime::markGrayRoots(SliceBudget& budget,
+                                             gcstats::PhaseKind phase) {
   MOZ_ASSERT(marker.markColor() == MarkColor::Gray);
 
   gcstats::AutoPhase ap(stats(), phase);
 
   AutoUpdateLiveCompartments updateLive(this);
 
-  traceEmbeddingGrayRoots(&marker);
+  if (traceEmbeddingGrayRoots(&marker, budget) == NotFinished) {
+    return NotFinished;
+  }
+
   Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
       &marker, Compartment::GrayEdges);
+
+  return Finished;
 }
 
 IncrementalProgress GCRuntime::markAllWeakReferences() {
@@ -3258,7 +3264,8 @@ IncrementalProgress GCRuntime::markAllWeakReferences() {
 }
 
 void GCRuntime::markAllGrayReferences(gcstats::PhaseKind phase) {
-  markGrayRoots<GCZonesIter>(phase);
+  SliceBudget budget = SliceBudget::unlimited();
+  markGrayRoots<GCZonesIter>(budget, phase);
   drainMarkStack();
 }
 
@@ -3745,8 +3752,8 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 #endif
 }
 
-IncrementalProgress GCRuntime::markGrayRootsInCurrentGroup(
-    JSFreeOp* fop, SliceBudget& budget) {
+IncrementalProgress GCRuntime::beginMarkingSweepGroup(JSFreeOp* fop,
+                                                      SliceBudget& budget) {
   MOZ_ASSERT(!markOnBackgroundThreadDuringSweeping);
   MOZ_ASSERT(marker.isDrained());
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
@@ -3768,9 +3775,17 @@ IncrementalProgress GCRuntime::markGrayRootsInCurrentGroup(
   // Mark incoming gray pointers from previously swept compartments.
   markIncomingGrayCrossCompartmentPointers();
 
-  markGrayRoots<SweepGroupZonesIter>(gcstats::PhaseKind::SWEEP_MARK_GRAY);
-
   return Finished;
+}
+
+IncrementalProgress GCRuntime::markGrayRootsInCurrentGroup(
+    JSFreeOp* fop, SliceBudget& budget) {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
+
+  AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
+
+  return markGrayRoots<SweepGroupZonesIter>(
+      budget, gcstats::PhaseKind::SWEEP_MARK_GRAY);
 }
 
 IncrementalProgress GCRuntime::markGray(JSFreeOp* fop, SliceBudget& budget) {
@@ -4887,6 +4902,7 @@ bool GCRuntime::initSweepActions() {
   sweepActions.ref() = RepeatForSweepGroup(
       rt,
       Sequence(
+          Call(&GCRuntime::beginMarkingSweepGroup),
           Call(&GCRuntime::markGrayRootsInCurrentGroup),
           MaybeYield(ZealMode::YieldWhileGrayMarking),
           Call(&GCRuntime::markGray), Call(&GCRuntime::endMarkingSweepGroup),
