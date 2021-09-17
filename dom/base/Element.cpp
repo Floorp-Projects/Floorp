@@ -84,6 +84,7 @@
 #include "mozilla/dom/HTMLPreElement.h"
 #include "mozilla/dom/HTMLSpanElement.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -92,6 +93,7 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Sanitizer.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -4515,6 +4517,112 @@ void Element::RegUnRegAccessKey(bool aDoReg) {
     } else {
       esm->UnregisterAccessKey(this, (uint32_t)accessKey.First());
     }
+  }
+}
+
+void Element::SetHTML(const nsAString& aInnerHTML,
+                      const SetHTMLOptions& aOptions, ErrorResult& aError) {
+  FragmentOrElement* target = this;
+  // Handle template case.
+  if (target->IsTemplateElement()) {
+    DocumentFragment* frag =
+        static_cast<HTMLTemplateElement*>(target)->Content();
+    MOZ_ASSERT(frag);
+    target = frag;
+  }
+
+  // TODO: Avoid parsing and implement a fast-path for non-markup input,
+  // Filed as bug 1731215.
+
+  Document* doc = target->OwnerDoc();
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(doc, nullptr);
+
+  target->FireNodeRemovedForChildren();
+
+  // Needed when innerHTML is used in combination with contenteditable
+  mozAutoDocUpdate updateBatch(doc, true);
+
+  // Remove childnodes.
+  nsAutoMutationBatch mb(target, true, false);
+  while (target->HasChildren()) {
+    target->RemoveChildNode(target->GetFirstChild(), true);
+  }
+  mb.RemovalDone();
+
+  nsAutoScriptLoaderDisabler sld(doc);
+
+  FragmentOrElement* parseContext = this;
+  if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(parseContext)) {
+    // Fix up the context to be the host of the ShadowRoot.  See
+    // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml setter step 1.
+    parseContext = shadowRoot->GetHost();
+  }
+
+  // We MUST NOT cause any requests during parsing, so we'll
+  // create an inert Document and parse into a new DocumentFragment.
+  RefPtr<Document> inertDoc;
+  nsAtom* contextLocalName = parseContext->NodeInfo()->NameAtom();
+  int32_t contextNameSpaceID = parseContext->GetNameSpaceID();
+  ElementCreationOptionsOrString options;
+  RefPtr<DocumentFragment> fragment;
+  if (doc->IsHTMLDocument()) {
+    inertDoc = nsContentUtils::CreateInertHTMLDocument(nullptr);
+    if (!inertDoc) {
+      aError = NS_ERROR_FAILURE;
+      return;
+    }
+    fragment = new (inertDoc->NodeInfoManager())
+        DocumentFragment(inertDoc->NodeInfoManager());
+
+    aError = nsContentUtils::ParseFragmentHTML(aInnerHTML, fragment,
+                                               contextLocalName,
+                                               contextNameSpaceID, false, true);
+
+  } else if (doc->IsXMLDocument()) {
+    inertDoc = nsContentUtils::CreateInertXMLDocument(nullptr);
+    if (!inertDoc) {
+      aError = NS_ERROR_FAILURE;
+      return;
+    }
+    fragment = new (inertDoc->NodeInfoManager())
+        DocumentFragment(inertDoc->NodeInfoManager());
+
+    // TODO(freddyb) `nsContentUtils::CreateContextualFragment` is actually
+    // collecting a ton of stacks to get in an (X)HTMLish state.
+    // I'm afraid we might need that too. Ugh.
+    AutoTArray<nsString, 0> emptyTagStack;
+    aError =
+        nsContentUtils::ParseFragmentXML(aInnerHTML, inertDoc, emptyTagStack,
+                                         true, -1, getter_AddRefs(fragment));
+  }
+
+  if (!aError.Failed()) {
+    // Suppress assertion about node removal mutation events that can't have
+    // listeners anyway, because no one has had the chance to register
+    // mutation listeners on the fragment that comes from the parser.
+    nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
+
+    int32_t oldChildCount = static_cast<int32_t>(target->GetChildCount());
+
+    if (!aOptions.IsAnyMemberPresent() || !aOptions.mSanitizer.WasPassed()) {
+      SanitizerConfig options;
+      nsCOMPtr<nsIGlobalObject> ownerGlobal = GetOwnerGlobal();
+      if (!ownerGlobal) {
+        aError.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      RefPtr<Sanitizer> sanitizer = new Sanitizer(ownerGlobal, options);
+      sanitizer->SanitizeFragment(fragment, aError);
+    } else {
+      aOptions.mSanitizer.Value().SanitizeFragment(fragment, aError);
+    }
+
+    target->AppendChild(*fragment, aError);
+    mb.NodesAdded();
+    nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
+                                                       oldChildCount);
   }
 }
 
