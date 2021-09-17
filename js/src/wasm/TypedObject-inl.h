@@ -13,9 +13,9 @@
 
 /* static */
 js::gc::AllocKind js::InlineTypedObject::allocKindForRttValue(RttValue* rtt) {
-  size_t nbytes = rtt->size();
-  MOZ_ASSERT(nbytes <= MaxInlineBytes);
   MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Struct);
+  size_t nbytes = rtt->typeDef().structType().size_;
+  MOZ_ASSERT(nbytes <= MaxInlineBytes);
 
   return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
 }

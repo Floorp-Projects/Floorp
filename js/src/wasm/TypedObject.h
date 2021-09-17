@@ -35,13 +35,11 @@ class RttValue : public NativeObject {
   enum Slot {
     Handle = 0,       // Type handle index
     TypeContext = 1,  // Manually refcounted reference to TypeContext
-    Kind = 2,         // Kind of type
-    Size = 3,         // Size of struct, or size of array element
-    Proto = 4,        // Prototype for instances, if any
-    Parent = 5,       // Parent rtt for runtime casting
-    Children = 6,     // Child rtts for rtt.sub caching
+    Proto = 2,        // Prototype for instances, if any
+    Parent = 3,       // Parent rtt for runtime casting
+    Children = 4,     // Child rtts for rtt.sub caching
     // Maximum number of slots
-    SlotCount = 7,
+    SlotCount = 5,
   };
 
   static RttValue* createFromHandle(JSContext* cx, const wasm::SharedTypeContext& tycx,
@@ -62,11 +60,7 @@ class RttValue : public NativeObject {
     return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
   }
 
-  wasm::TypeDefKind kind() const {
-    return wasm::TypeDefKind(getReservedSlot(Slot::Kind).toInt32());
-  }
-
-  size_t size() const { return getReservedSlot(Slot::Size).toInt32(); }
+  wasm::TypeDefKind kind() const { return typeDef().kind(); }
 
   TypedProto& typedProto() const {
     return getReservedSlot(Slot::Proto).toObject().as<TypedProto>();
@@ -246,7 +240,7 @@ class InlineTypedObject : public TypedObject {
 
   static bool canAccommodateType(HandleRttValue rtt) {
     return rtt->kind() == wasm::TypeDefKind::Struct &&
-           rtt->size() <= MaxInlineBytes;
+           rtt->typeDef().structType().size_ <= MaxInlineBytes;
   }
 
   static bool canAccommodateSize(size_t size) { return size <= MaxInlineBytes; }
