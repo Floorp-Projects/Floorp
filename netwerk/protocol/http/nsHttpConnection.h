@@ -249,6 +249,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   void EarlyDataTelemetry(int16_t tlsVersion, bool earlyDataAccepted);
   void FinishNPNSetup(bool handshakeSucceeded, bool hasSecurityInfo);
   void Reset0RttForSpdy();
+  void HandshakeDoneInternal();
 
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
@@ -358,6 +359,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool mEarlyDataNegotiated{false};  // Only used for telemetry
   nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy{false};
+  bool mTlsHandshakeComplitionPending{false};
 
   nsresult mErrorBeforeConnect = NS_OK;
 
