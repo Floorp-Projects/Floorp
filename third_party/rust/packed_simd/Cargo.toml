@@ -29,9 +29,6 @@ default = []
 into_bits = []
 libcore_neon = []
 
-[build-dependencies]
-rustc_version = "0.2"
-
 [dev-dependencies]
 paste = "^0.1.3"
 arrayvec = { version = "^0.5", default-features = false }
