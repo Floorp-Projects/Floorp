@@ -1239,6 +1239,8 @@
         this._tabAttrModified(oldTab, ["selected"]);
         this._tabAttrModified(newTab, ["selected"]);
 
+        this.readNotificationBox(newBrowser)?.shown();
+
         this._startMultiSelectChange();
         this._multiSelectChangeSelected = true;
         this.clearMultiSelectedTabs();
