@@ -8,6 +8,7 @@ import os
 import unittest
 
 from taskgraph import files_changed
+from taskgraph.util import hg
 from mozunit import main
 
 PARAMS = {
@@ -40,15 +41,15 @@ class FakeResponse:
 class TestGetChangedFiles(unittest.TestCase):
     def setUp(self):
         files_changed.get_changed_files.clear()
-        self.old_get = files_changed.requests.get
+        self.old_get = hg.requests.get
 
         def fake_get(url, **kwargs):
             return FakeResponse()
 
-        files_changed.requests.get = fake_get
+        hg.requests.get = fake_get
 
     def tearDown(self):
-        files_changed.requests.get = self.old_get
+        hg.requests.get = self.old_get
         files_changed.get_changed_files.clear()
 
     def test_get_changed_files(self):
