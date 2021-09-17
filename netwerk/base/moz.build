@@ -154,7 +154,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.net += [
-    "CacheInfoIPCTypes.h",
     "CaptivePortalService.h",
     "Dashboard.h",
     "DashboardTypes.h",
