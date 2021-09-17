@@ -1,4 +1,5 @@
 import { ASRouterTriggerListeners } from "lib/ASRouterTriggerListeners.jsm";
+import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("ASRouterTriggerListeners", () => {
@@ -9,11 +10,25 @@ describe("ASRouterTriggerListeners", () => {
   const triggerHandler = () => {};
   const openURLListener = ASRouterTriggerListeners.get("openURL");
   const frequentVisitsListener = ASRouterTriggerListeners.get("frequentVisits");
+  const captivePortalLoginListener = ASRouterTriggerListeners.get(
+    "captivePortalLogin"
+  );
   const bookmarkedURLListener = ASRouterTriggerListeners.get(
     "openBookmarkedURL"
   );
   const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
+
+  const regionFake = {
+    _home: "cn",
+    _current: "cn",
+    get home() {
+      return this._home;
+    },
+    get current() {
+      return this._current;
+    },
+  };
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
@@ -45,7 +60,10 @@ describe("ASRouterTriggerListeners", () => {
         ewUninit.get(id)(existingWindow);
       },
     });
+    globals.set("Region", regionFake);
+    globals.set("ASRouterPreferences", ASRouterPreferences);
   });
+
   afterEach(() => {
     sandbox.restore();
     globals.restore();
@@ -88,6 +106,117 @@ describe("ASRouterTriggerListeners", () => {
         assert.calledWithExactly(newTriggerHandler, subject, {
           id: bookmarkedURLListener.id,
         });
+      });
+    });
+  });
+
+  describe("captivePortal", () => {
+    describe("_shouldShowCaptivePortalVPNPromo", () => {
+      it("should return true if disable pref is false && neither home nor current regions are cn", () => {
+        regionFake._home = "us";
+        regionFake._current = "ca";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => false);
+
+        assert.isTrue(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+
+      it("should return false if disable pref is false and only the home region is 'cn'", () => {
+        regionFake._home = "cn";
+        regionFake._current = "us";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => false);
+
+        assert.isFalse(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+
+      it("should return false if disable pref is false and only the current region is 'cn'", () => {
+        regionFake._home = "us";
+        regionFake._current = "cn";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => false);
+
+        assert.isFalse(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+
+      it("should return false if the disable pref is false and a region check is cn", () => {
+        regionFake._home = "us";
+        regionFake._current = "cn";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => false);
+
+        assert.isFalse(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+
+      it("should return false if the disable pref is true and no regions are cn", () => {
+        regionFake._home = "us";
+        regionFake._current = "ca";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => true);
+
+        assert.isFalse(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+
+      it("should return false if the disable pref is true and a region is cn", () => {
+        regionFake._home = "us";
+        regionFake._current = "cn";
+        sandbox
+          .stub(ASRouterPreferences, "disableCaptivePortalVPNPromo")
+          .get(() => true);
+
+        assert.isFalse(
+          captivePortalLoginListener._shouldShowCaptivePortalVPNPromo()
+        );
+      });
+    });
+
+    describe("observe", () => {
+      it("should not call the trigger handler if _shouldShowCaptivePortalVPNPromo returns false", () => {
+        sandbox
+          .stub(captivePortalLoginListener, "_shouldShowCaptivePortalVPNPromo")
+          .returns(false);
+        captivePortalLoginListener._triggerHandler = sandbox.spy();
+
+        captivePortalLoginListener.observe(
+          null,
+          "captive-portal-login-success"
+        );
+
+        assert.notCalled(captivePortalLoginListener._triggerHandler);
+      });
+
+      it("should call the trigger handler if _shouldShowCaptivePortalVPNPromo returns true", () => {
+        sandbox
+          .stub(captivePortalLoginListener, "_shouldShowCaptivePortalVPNPromo")
+          .returns(true);
+        sandbox.stub(Services.wm, "getMostRecentBrowserWindow").returns({
+          gBrowser: {
+            selectedBrowser: true,
+          },
+        });
+        captivePortalLoginListener._triggerHandler = sandbox.spy();
+
+        captivePortalLoginListener.observe(
+          null,
+          "captive-portal-login-success"
+        );
+
+        assert.calledOnce(captivePortalLoginListener._triggerHandler);
       });
     });
   });
