@@ -25,7 +25,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nova aba privativa aberta</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">Link copiado para a área de transferência</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Link copiado para área de transferência</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Alternar</string>
     <!-- Text for context menu item to open the link in an external app. -->
