@@ -73,6 +73,7 @@
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif
+#include "wasm/WasmBinary.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmStubs.h"
 
@@ -11422,13 +11423,11 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   return true;
 }
 
-bool CodeGenerator::generateWasm(wasm::TypeIdDesc funcTypeId,
-                                 wasm::BytecodeOffset trapOffset,
-                                 const wasm::ArgTypeVector& argTypes,
-                                 const MachineState& trapExitLayout,
-                                 size_t trapExitLayoutNumWords,
-                                 wasm::FuncOffsets* offsets,
-                                 wasm::StackMaps* stackMaps) {
+bool CodeGenerator::generateWasm(
+    wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
+    const wasm::ArgTypeVector& argTypes, const MachineState& trapExitLayout,
+    size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
+    wasm::StackMaps* stackMaps, wasm::Decoder* decoder) {
   AutoCreatedBy acb(masm, "CodeGenerator::generateWasm");
 
   JitSpew(JitSpew_Codegen, "# Emitting wasm code");
@@ -11439,6 +11438,11 @@ bool CodeGenerator::generateWasm(wasm::TypeIdDesc funcTypeId,
   wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
 
   MOZ_ASSERT(masm.framePushed() == 0);
+
+  // Very large frames are implausible, probably an attack.
+  if (frameSize() > wasm::MaxFrameSize) {
+    return decoder->fail(decoder->beginOffset(), "stack frame is too large");
+  }
 
   if (omitOverRecursedCheck()) {
     masm.reserveStack(frameSize());

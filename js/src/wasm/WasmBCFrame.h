@@ -26,6 +26,7 @@
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCRegDefs.h"
 #include "wasm/WasmBCStk.h"
+#include "wasm/WasmConstants.h"        // For MaxFrameSize
 
 // The stack frame.
 //
@@ -554,17 +555,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 
   // Very large frames are implausible, probably an attack.
 
-  bool checkStackHeight() {
-    // 512KiB should be enough, considering how Rabaldr uses the stack and
-    // what the standard limits are:
-    //
-    // - 1,000 parameters
-    // - 50,000 locals
-    // - 10,000 values on the eval stack (not an official limit)
-    //
-    // At sizeof(int64) bytes per slot this works out to about 480KiB.
-    return maxFramePushed_ <= 512 * 1024;
-  }
+  bool checkStackHeight() { return maxFramePushed_ <= MaxFrameSize; }
 
   ///////////////////////////////////////////////////////////////////////////
   //
