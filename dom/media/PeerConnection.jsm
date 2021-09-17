@@ -1113,19 +1113,20 @@ class RTCPeerConnection {
     // avoid problems with the fact that identity validation doesn't block the
     // resolution of setRemoteDescription().
     const validate = async () => {
+      // Access this._impl synchronously in case pc is closed later
+      const identity = this._impl.peerIdentity;
       await this._lastIdentityValidation;
       const msg = await this._remoteIdp.verifyIdentityFromSDP(sdp, origin);
       // If this pc has an identity already, then the identity in sdp must match
-      if (
-        this._impl.peerIdentity &&
-        (!msg || msg.identity !== this._impl.peerIdentity)
-      ) {
+      if (identity && (!msg || msg.identity !== identity)) {
         throw new this._win.DOMException(
-          "Peer Identity mismatch, expected: " + this._impl.peerIdentity,
+          "Peer Identity mismatch, expected: " + identity,
           "OperationError"
         );
       }
-
+      if (this._closed) {
+        return;
+      }
       if (msg) {
         // Set new identity and generate an event.
         this._impl.peerIdentity = msg.identity;
@@ -1150,6 +1151,9 @@ class RTCPeerConnection {
     // interfere with the validation chain itself, even if the catch function
     // throws.
     haveValidation.catch(e => {
+      if (this._closed) {
+        return;
+      }
       this._rejectPeerIdentity(e);
 
       // If we don't expect a specific peer identity, failure to get a valid
@@ -1160,6 +1164,9 @@ class RTCPeerConnection {
       }
     });
 
+    if (this._closed) {
+      return;
+    }
     // Only wait for IdP validation if we need identity matching
     if (this._impl.peerIdentity) {
       await haveValidation;
@@ -1196,6 +1203,9 @@ class RTCPeerConnection {
           });
           this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
           this._updateCanTrickle();
+          if (this._closed) {
+            return;
+          }
         }
         this._sanityCheckSdp(sdp);
         const p = this._getPermission();
@@ -1214,6 +1224,9 @@ class RTCPeerConnection {
         await this._validateIdentity(sdp);
       }
       await haveSetRemote;
+      if (this._closed) {
+        return;
+      }
       this._negotiationNeeded = false;
       if (type == "answer") {
         if (this._localUfragsToReplace.size > 0) {
@@ -1332,6 +1345,9 @@ class RTCPeerConnection {
   }
 
   restartIce() {
+    if (this._closed) {
+      return;
+    }
     this._localUfragsToReplace = new Set([
       ...this._getUfragsWithPwds(this._impl.currentLocalDescription),
       ...this._getUfragsWithPwds(this._impl.pendingLocalDescription),
