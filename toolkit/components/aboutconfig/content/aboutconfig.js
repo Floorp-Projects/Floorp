@@ -169,6 +169,8 @@ class PrefRow {
     this._element._pref = this;
 
     let nameCell = document.createElement("th");
+    let nameCellSpan = document.createElement("span");
+    nameCell.appendChild(nameCellSpan);
     this._element.append(
       nameCell,
       (this.valueCell = document.createElement("td")),
@@ -188,9 +190,9 @@ class PrefRow {
     // Add <wbr> behind dots to prevent line breaking in random mid-word places.
     let parts = this.name.split(".");
     for (let i = 0; i < parts.length - 1; i++) {
-      nameCell.append(parts[i] + ".", document.createElement("wbr"));
+      nameCellSpan.append(parts[i] + ".", document.createElement("wbr"));
     }
-    nameCell.append(parts[parts.length - 1]);
+    nameCellSpan.append(parts[parts.length - 1]);
 
     this.refreshElement();
 
@@ -234,13 +236,13 @@ class PrefRow {
           this.editButton,
           "about-config-pref-toggle-button"
         );
-        this.editButton.className = "button-toggle";
+        this.editButton.className = "button-toggle semi-transparent";
       } else {
         document.l10n.setAttributes(
           this.editButton,
           "about-config-pref-edit-button"
         );
-        this.editButton.className = "button-edit";
+        this.editButton.className = "button-edit semi-transparent";
       }
       this.editButton.removeAttribute("form");
       delete this.inputField;
@@ -267,7 +269,7 @@ class PrefRow {
           this.editButton,
           "about-config-pref-save-button"
         );
-        this.editButton.className = "primary button-save";
+        this.editButton.className = "primary button-save semi-transparent";
       } else {
         delete this.inputField;
         for (let type of ["Boolean", "Number", "String"]) {
@@ -301,7 +303,7 @@ class PrefRow {
           this.editButton,
           "about-config-pref-add-button"
         );
-        this.editButton.className = "button-add";
+        this.editButton.className = "button-add semi-transparent";
       }
       this.valueCell.appendChild(form);
       this.editButton.setAttribute("form", "form-edit");
@@ -317,13 +319,15 @@ class PrefRow {
           this.resetButton,
           "about-config-pref-delete-button"
         );
-        this.resetButton.className = "button-delete ghost-button";
+        this.resetButton.className =
+          "button-delete ghost-button semi-transparent";
       } else {
         document.l10n.setAttributes(
           this.resetButton,
           "about-config-pref-reset-button"
         );
-        this.resetButton.className = "button-reset ghost-button";
+        this.resetButton.className =
+          "button-reset ghost-button semi-transparent";
       }
     } else if (this.resetButton) {
       this.resetButton.remove();
