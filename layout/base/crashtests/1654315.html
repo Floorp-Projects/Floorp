@@ -1,0 +1,13 @@
+<style>
+:not(svg) { -webkit-mask: url(#x); }
+</style>
+<script>
+function go() {
+  a.style.setProperty("content", "url(")
+  a.style.setProperty("position", "fixed")
+  a.style.setProperty("display", "-webkit-inline-flex")
+  a.style.setProperty("filter", "brightness(")
+}
+</script>
+<body onload=go()>
+<link id="a">x</link>

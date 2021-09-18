@@ -50,7 +50,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "util/Memory.h"
 #include "util/Text.h"
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/DateObject.h"

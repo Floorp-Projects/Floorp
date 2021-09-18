@@ -18,6 +18,7 @@
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
+#include "mozilla/dom/CSSScrollTimelineRule.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/IntegerRange.h"
@@ -89,6 +90,7 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE(FontFace, FontFace)
       CASE_RULE(CounterStyle, CounterStyle)
       CASE_RULE(Layer, Layer)
+      CASE_RULE(ScrollTimeline, ScrollTimeline)
 #undef CASE_RULE
       case StyleCssRuleType::Viewport:
         MOZ_ASSERT_UNREACHABLE("viewport is not implemented in Gecko");
@@ -241,6 +243,7 @@ void ServoCSSRuleList::SetRawAfterClone(RefPtr<ServoCssRules> aNewRules) {
       CASE_FOR(FontFace, FontFace)
       CASE_FOR(CounterStyle, CounterStyle)
       CASE_FOR(Layer, Layer)
+      CASE_FOR(ScrollTimeline, ScrollTimeline)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         break;

@@ -1,13 +1,13 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
-function assertSubtype(a, b, types) {
+function assertSubtype(superType, subType, types) {
   types = types || [];
   wasmEvalText(`(module
     ${types.map((x, i) => `(type \$${i} ${x})`).join('\n')}
     (func
       unreachable
-      (block (param ${b})
-        (block (param ${a})
+      (block (param ${subType})
+        (block (param ${superType})
           drop
         )
       )
@@ -15,9 +15,9 @@ function assertSubtype(a, b, types) {
   )`);
 }
 
-function assertNotSubtype(a, b, types) {
+function assertNotSubtype(superType, subType, types) {
   assertErrorMessage(() => {
-    assertSubtype(a, b, types);
+    assertSubtype(superType, subType, types);
   }, WebAssembly.CompileError, /type mismatch/);
 }
 

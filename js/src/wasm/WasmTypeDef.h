@@ -109,14 +109,6 @@ class FuncType {
       result.renumber(renumbering);
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    for (auto& arg : args_) {
-      arg.offsetTypeIndex(offsetBy);
-    }
-    for (auto& result : results_) {
-      result.offsetTypeIndex(offsetBy);
-    }
-  }
 
   ValType arg(unsigned i) const { return args_[i]; }
   const ValTypeVector& args() const { return args_; }
@@ -222,11 +214,6 @@ class StructType {
       field.type.renumber(renumbering);
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    for (auto& field : fields_) {
-      field.type.offsetTypeIndex(offsetBy);
-    }
-  }
 
   bool isDefaultable() const {
     for (auto& field : fields_) {
@@ -284,9 +271,6 @@ class ArrayType {
 
   void renumber(const RenumberVector& renumbering) {
     elementType_.renumber(renumbering);
-  }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    elementType_.offsetTypeIndex(offsetBy);
   }
 
   bool isDefaultable() const { return elementType_.isDefaultable(); }
@@ -453,21 +437,6 @@ class TypeDef {
         break;
     }
   }
-  void offsetTypeIndex(uint32_t offsetBy) {
-    switch (kind_) {
-      case TypeDefKind::Func:
-        funcType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::Struct:
-        structType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::Array:
-        arrayType_.offsetTypeIndex(offsetBy);
-        break;
-      case TypeDefKind::None:
-        break;
-    }
-  }
 
   WASM_DECLARE_SERIALIZABLE(TypeDef)
 };
@@ -547,13 +516,28 @@ enum class TypeResult {
 // give ValType's meaning. It is used during compilation for modules, and
 // during runtime for all instances.
 
-class TypeContext {
+class TypeContext : public AtomicRefCounted<TypeContext> {
   FeatureArgs features_;
   TypeDefVector types_;
 
  public:
+  TypeContext() = default;
   TypeContext(const FeatureArgs& features, TypeDefVector&& types)
       : features_(features), types_(std::move(types)) {}
+
+  template <typename T>
+  [[nodiscard]] bool cloneDerived(const DerivedTypeDefVector<T>& source) {
+    MOZ_ASSERT(types_.length() == 0);
+    if (!types_.resize(source.length())) {
+      return false;
+    }
+    for (uint32_t i = 0; i < source.length(); i++) {
+      if (!types_[i].clone(source[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     return types_.sizeOfExcludingThis(mallocSizeOf);
@@ -562,8 +546,8 @@ class TypeContext {
   // Disallow copy, allow move initialization
   TypeContext(const TypeContext&) = delete;
   TypeContext& operator=(const TypeContext&) = delete;
-  TypeContext(TypeContext&&) = default;
-  TypeContext& operator=(TypeContext&&) = default;
+  TypeContext(TypeContext&&) = delete;
+  TypeContext& operator=(TypeContext&&) = delete;
 
   TypeDef& type(uint32_t index) { return types_[index]; }
   const TypeDef& type(uint32_t index) const { return types_[index]; }
@@ -579,20 +563,12 @@ class TypeContext {
   }
   [[nodiscard]] bool resize(uint32_t length) { return types_.resize(length); }
 
-  template <typename T>
-  [[nodiscard]] bool transferTypes(const DerivedTypeDefVector<T>& types,
-                                   uint32_t* baseIndex) {
-    *baseIndex = length();
-    if (!resize(*baseIndex + types.length())) {
-      return false;
-    }
-    for (uint32_t i = 0; i < types.length(); i++) {
-      if (!types_[*baseIndex + i].clone(types[i])) {
-        return false;
-      }
-      types_[*baseIndex + i].offsetTypeIndex(*baseIndex);
-    }
-    return true;
+  // Map from type definition to index
+
+  uint32_t indexOf(const TypeDef& typeDef) const {
+    const TypeDef* elem = &typeDef;
+    MOZ_ASSERT(elem >= types_.begin() && elem < types_.end());
+    return elem - types_.begin();
   }
 
   // FuncType accessors
@@ -646,120 +622,135 @@ class TypeContext {
   // Type equivalence
 
   template <class T>
-  TypeResult isEquivalent(T one, T two, TypeCache* cache) const {
+  TypeResult isEquivalent(T first, T second, TypeCache* cache) const {
     // Anything's equal to itself.
-    if (one == two) {
+    if (first == second) {
       return TypeResult::True;
     }
 
     // A reference may be equal to another reference
-    if (one.isReference() && two.isReference()) {
-      return isRefEquivalent(one.refType(), two.refType(), cache);
+    if (first.isReference() && second.isReference()) {
+      return isRefEquivalent(first.refType(), second.refType(), cache);
     }
 
 #ifdef ENABLE_WASM_GC
     // An rtt may be a equal to another rtt
-    if (one.isRtt() && two.isRtt()) {
+    if (first.isRtt() && second.isRtt()) {
       // Equivalent rtts must both have depths or not have depths
-      if (one.hasRttDepth() != two.hasRttDepth()) {
+      if (first.hasRttDepth() != second.hasRttDepth()) {
         return TypeResult::False;
       }
       // Equivalent rtts must have the same depth, if any
-      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+      if (second.hasRttDepth() && first.rttDepth() != second.rttDepth()) {
         return TypeResult::False;
       }
-      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+      return isTypeIndexEquivalent(first.typeIndex(), second.typeIndex(),
+                                   cache);
     }
 #endif
 
     return TypeResult::False;
   }
 
-  TypeResult isRefEquivalent(RefType one, RefType two, TypeCache* cache) const;
+  TypeResult isRefEquivalent(RefType first, RefType second,
+                             TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeIndexEquivalent(uint32_t one, uint32_t two,
+  TypeResult isTypeIndexEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                    TypeCache* cache) const;
 #endif
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isStructEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                 TypeCache* cache) const;
-  TypeResult isStructFieldEquivalent(const StructField one,
-                                     const StructField two,
+  TypeResult isStructFieldEquivalent(const StructField first,
+                                     const StructField second,
                                      TypeCache* cache) const;
-  TypeResult isArrayEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isArrayEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                TypeCache* cache) const;
-  TypeResult isArrayElementEquivalent(const ArrayType& one,
-                                      const ArrayType& two,
+  TypeResult isArrayElementEquivalent(const ArrayType& first,
+                                      const ArrayType& second,
                                       TypeCache* cache) const;
 #endif
 
   // Subtyping
 
   template <class T>
-  TypeResult isSubtypeOf(T one, T two, TypeCache* cache) const {
+  TypeResult isSubtypeOf(T subType, T superType, TypeCache* cache) const {
     // Anything's a subtype of itself.
-    if (one == two) {
+    if (subType == superType) {
       return TypeResult::True;
     }
 
     // A reference may be a subtype of another reference
-    if (one.isReference() && two.isReference()) {
-      return isRefSubtypeOf(one.refType(), two.refType(), cache);
+    if (subType.isReference() && superType.isReference()) {
+      return isRefSubtypeOf(subType.refType(), superType.refType(), cache);
     }
 
     // An rtt may be a subtype of another rtt
 #ifdef ENABLE_WASM_GC
-    if (one.isRtt() && two.isRtt()) {
+    if (subType.isRtt() && superType.isRtt()) {
       // A subtype must have a depth if the supertype has depth
-      if (!one.hasRttDepth() && two.hasRttDepth()) {
+      if (!subType.hasRttDepth() && superType.hasRttDepth()) {
         return TypeResult::False;
       }
       // A subtype must have the same depth as the supertype, if it has any
-      if (two.hasRttDepth() && one.rttDepth() != two.rttDepth()) {
+      if (superType.hasRttDepth() &&
+          subType.rttDepth() != superType.rttDepth()) {
         return TypeResult::False;
       }
-      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+      return isTypeIndexEquivalent(subType.typeIndex(), superType.typeIndex(),
+                                   cache);
     }
 #endif
 
     return TypeResult::False;
   }
 
-  TypeResult isRefSubtypeOf(RefType one, RefType two, TypeCache* cache) const;
+  TypeResult isRefSubtypeOf(RefType subType, RefType superType,
+                            TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
+  TypeResult isTypeIndexSubtypeOf(uint32_t subTypeIndex,
+                                  uint32_t superTypeIndex,
                                   TypeCache* cache) const;
 #endif
 
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructSubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isStructSubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                                TypeCache* cache) const;
-  TypeResult isStructFieldSubtypeOf(const StructField one,
-                                    const StructField two,
+  TypeResult isStructFieldSubtypeOf(const StructField subType,
+                                    const StructField superType,
                                     TypeCache* cache) const;
-  TypeResult isArraySubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+  TypeResult isArraySubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                               TypeCache* cache) const;
-  TypeResult isArrayElementSubtypeOf(const ArrayType& one, const ArrayType& two,
+  TypeResult isArrayElementSubtypeOf(const ArrayType& subType,
+                                     const ArrayType& superType,
                                      TypeCache* cache) const;
 #endif
 };
 
+using SharedTypeContext = RefPtr<const TypeContext>;
+using MutableTypeContext = RefPtr<TypeContext>;
+
+// An unambiguous strong reference to a type definition in a specific type
+// context.
 class TypeHandle {
  private:
+  SharedTypeContext context_;
   uint32_t index_;
 
  public:
-  explicit TypeHandle(uint32_t index) : index_(index) {}
+  TypeHandle(SharedTypeContext context, uint32_t index)
+      : context_(context), index_(index) {
+    MOZ_ASSERT(index_ < context_->length());
+  }
+  TypeHandle(SharedTypeContext context, const TypeDef& def)
+      : context_(context), index_(context->indexOf(def)) {}
 
   TypeHandle(const TypeHandle&) = default;
   TypeHandle& operator=(const TypeHandle&) = default;
 
-  TypeDef& get(TypeContext* tycx) const { return tycx->type(index_); }
-  const TypeDef& get(const TypeContext* tycx) const {
-    return tycx->type(index_);
-  }
-
+  const SharedTypeContext& context() const { return context_; }
   uint32_t index() const { return index_; }
+  const TypeDef& def() const { return context_->type(index_); }
 };
 
 // [SMDOC] Signatures and runtime types

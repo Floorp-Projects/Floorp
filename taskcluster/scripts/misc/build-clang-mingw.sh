@@ -273,10 +273,9 @@ build_libssp() {
 
 build_utils() {
   pushd $INSTALL_DIR/bin/
-  ln -s llvm-nm $machine-w64-mingw32-nm
-  ln -s llvm-strip $machine-w64-mingw32-strip
-  ln -s llvm-readobj $machine-w64-mingw32-readobj
-  ln -s llvm-objcopy $machine-w64-mingw32-objcopy
+  for prog in ar nm objcopy ranlib readobj strip; do
+    ln -s llvm-$prog $machine-w64-mingw32-$prog
+  done
   ./clang $MOZ_FETCHES_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
   popd
 }

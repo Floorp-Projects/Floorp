@@ -960,6 +960,9 @@ GeckoDriver.prototype.refresh = async function() {
  * Get the current window's handle. On desktop this typically corresponds
  * to the currently selected tab.
  *
+ * For chrome scope it returns the window identifier for the current chrome
+ * window for tests interested in managing the chrome window and tab separately.
+ *
  * Return an opaque server-assigned identifier to this window that
  * uniquely identifies it within this Marionette instance.  This can
  * be used to switch to this window at a later point.
@@ -971,13 +974,11 @@ GeckoDriver.prototype.refresh = async function() {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getWindowHandle = function() {
-  assert.open(
-    this.getBrowsingContext({
-      context: Context.Content,
-      top: true,
-    })
-  );
+  assert.open(this.getBrowsingContext({ top: true }));
 
+  if (this.context == Context.Chrome) {
+    return windowManager.getIdForWindow(this.curBrowser.window);
+  }
   return windowManager.getIdForBrowser(this.curBrowser.contentBrowser);
 };
 
@@ -986,6 +987,9 @@ GeckoDriver.prototype.getWindowHandle = function() {
  * corresponds to the set of open tabs for browser windows, or the window
  * itself for non-browser chrome windows.
  *
+ * For chrome scope it returns identifiers for each open chrome window for
+ * tests interested in managing a set of chrome windows and tabs separately.
+ *
  * Each window handle is assigned by the server and is guaranteed unique,
  * however the return array does not have a specified ordering.
  *
@@ -993,45 +997,10 @@ GeckoDriver.prototype.getWindowHandle = function() {
  *     Unique window handles.
  */
 GeckoDriver.prototype.getWindowHandles = function() {
+  if (this.context == Context.Chrome) {
+    return windowManager.chromeWindowHandles.map(String);
+  }
   return windowManager.windowHandles.map(String);
-};
-
-/**
- * Get the current window's handle.  This corresponds to a window that
- * may itself contain tabs.
- *
- * Return an opaque server-assigned identifier to this window that
- * uniquely identifies it within this Marionette instance.  This can
- * be used to switch to this window at a later point.
- *
- * @return {string}
- *     Unique window handle.
- *
- * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
- * @throws {UnknownError}
- *     Internal browsing context reference not found
- */
-GeckoDriver.prototype.getChromeWindowHandle = function() {
-  assert.open(
-    this.getBrowsingContext({
-      context: Context.Chrome,
-      top: true,
-    })
-  );
-
-  return windowManager.getIdForWindow(this.curBrowser.window);
-};
-
-/**
- * Returns identifiers for each open chrome window for tests interested in
- * managing a set of chrome windows and tabs separately.
- *
- * @return {Array.<string>}
- *     Unique window handles.
- */
-GeckoDriver.prototype.getChromeWindowHandles = function() {
-  return windowManager.chromeWindowHandles.map(String);
 };
 
 /**
@@ -2989,13 +2958,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
   "WebDriver:GetCapabilities": GeckoDriver.prototype.getSessionCapabilities,
-  "WebDriver:GetChromeWindowHandle":
-    GeckoDriver.prototype.getChromeWindowHandle,
-  "WebDriver:GetChromeWindowHandles":
-    GeckoDriver.prototype.getChromeWindowHandles,
   "WebDriver:GetCookies": GeckoDriver.prototype.getCookies,
-  "WebDriver:GetCurrentChromeWindowHandle":
-    GeckoDriver.prototype.getChromeWindowHandle,
   "WebDriver:GetCurrentURL": GeckoDriver.prototype.getCurrentUrl,
   "WebDriver:GetElementAttribute": GeckoDriver.prototype.getElementAttribute,
   "WebDriver:GetElementCSSValue":

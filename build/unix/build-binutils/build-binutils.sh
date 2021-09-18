@@ -62,7 +62,7 @@ EOF
 
 cd ..
 
-TARGETS="aarch64-linux-gnu"
+TARGETS="aarch64-linux-gnu i686-w64-mingw32"
 
 if [ -d $MOZ_FETCHES_DIR/sysroot ]; then
   # Don't silently use a non-existing directory for C++ headers.

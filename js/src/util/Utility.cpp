@@ -18,7 +18,7 @@
 #include "jstypes.h"
 
 #include "util/Poison.h"
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 #include "vm/HelperThreads.h"
 
 using namespace js;

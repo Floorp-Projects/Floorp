@@ -28,8 +28,8 @@
 #include "wasm/WasmInstance.h"
 
 #if defined(XP_WIN)
-#  include <winternl.h>  // must include before util/Windows.h's `#undef`s
-#  include "util/Windows.h"
+#  include <winternl.h>  // must include before util/WindowsWrapper.h's `#undef`s
+#  include "util/WindowsWrapper.h"
 #elif defined(XP_DARWIN)
 #  include <mach/exc.h>
 #  include <mach/mach.h>

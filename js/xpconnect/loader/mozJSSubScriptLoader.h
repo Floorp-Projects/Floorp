@@ -7,6 +7,7 @@
 #include "nsCOMPtr.h"
 #include "mozIJSSubScriptLoader.h"
 
+#include "js/experimental/JSStencil.h"
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 
 class nsIPrincipal;
@@ -33,9 +34,9 @@ class mozJSSubScriptLoader : public mozIJSSubScriptLoader {
  private:
   virtual ~mozJSSubScriptLoader();
 
-  bool ReadScript(JS::MutableHandle<JSScript*> script, nsIURI* uri,
-                  JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                  nsIIOService* serv, bool useCompilationScope);
+  bool ReadStencil(JS::Stencil** stencilOut, nsIURI* uri, JSContext* cx,
+                   const JS::ReadOnlyCompileOptions& options,
+                   nsIIOService* serv, bool useCompilationScope);
 
   nsresult ReadScriptAsync(nsIURI* uri, JS::HandleObject targetObj,
                            JS::HandleObject loadScope, nsIIOService* serv,
