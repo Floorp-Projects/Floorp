@@ -174,18 +174,30 @@ class HistoryMetadataMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN normal tab WHEN user navigates and new page starts loading THEN meta data is updated`() {
+    fun `GIVEN normal tab WHEN update url action event with a different url is received THEN meta data is updated`() {
         val existingKey = HistoryMetadataKey(url = "https://mozilla.org")
         val tab = createTab(url = existingKey.url, historyMetadata = existingKey)
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         verify { service wasNot Called }
 
-        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://www.someother.url")).joinBlocking()
         val capturedTab = slot<TabSessionState>()
         verify { service.updateMetadata(existingKey, capture(capturedTab)) }
 
         assertEquals(tab.id, capturedTab.captured.id)
+    }
+
+    @Test
+    fun `GIVEN normal tab WHEN update url action event with the same url is received THEN meta data is not updated`() {
+        val existingKey = HistoryMetadataKey(url = "https://mozilla.org")
+        val tab = createTab(url = existingKey.url, historyMetadata = existingKey)
+
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        verify { service wasNot Called }
+
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, existingKey.url)).joinBlocking()
+        verify { service wasNot Called }
     }
 
     @Test

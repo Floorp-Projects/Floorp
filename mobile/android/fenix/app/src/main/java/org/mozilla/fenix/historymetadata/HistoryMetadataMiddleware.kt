@@ -67,13 +67,19 @@ class HistoryMetadataMiddleware(
                     }
                 }
             }
-            is ContentAction.UpdateLoadingStateAction -> {
+            is ContentAction.UpdateUrlAction -> {
                 context.state.findNormalTab(action.sessionId)?.let { tab ->
                     val selectedTab = tab.id == context.state.selectedTabId
-                    if (!tab.content.loading && action.loading && selectedTab) {
-                        // When a page starts loading (e.g. user navigated away by
-                        // clicking on a link) we update metadata for the selected
-                        // (i.e. previous) url of this tab.
+                    // When page url changes (e.g. user navigated away by clicking on a link)
+                    // we update metadata for the selected (i.e. previous) url of this tab.
+                    // We don't update metadata for cases or reload or restore.
+                    // In case of a reload it's not necessary - metadata will be updated when
+                    // user moves away from the page or tab.
+                    // In case of restore, it's both unnecessary (like for a reload) and
+                    // problematic, since our lastAccess time will be from before the tab was
+                    // restored, resulting in an incorrect (too long) viewTime observation, as if
+                    // the user was looking at the page while the browser wasn't even running.
+                    if (selectedTab && action.url != tab.content.url) {
                         updateHistoryMetadata(tab)
                     }
                 }
