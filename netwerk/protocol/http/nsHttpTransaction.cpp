@@ -1389,13 +1389,6 @@ void nsHttpTransaction::Close(nsresult reason) {
   if (mConnection) {
     connReused = mConnection->IsReused();
     isHttp2or3 = mConnection->Version() >= HttpVersion::v2_0;
-    if (!mConnected) {
-      // Try to get SecurityInfo for this transaction.
-      nsCOMPtr<nsISupports> info;
-      mConnection->GetSecurityInfo(getter_AddRefs(info));
-      MutexAutoLock lock(mLock);
-      mSecurityInfo = info;
-    }
   }
   mConnected = false;
   mTunnelProvider = nullptr;
