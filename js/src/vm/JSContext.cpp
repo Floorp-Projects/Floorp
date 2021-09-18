@@ -327,11 +327,12 @@ JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
     if (maybecx->isHelperThreadContext()) {
       maybecx->addPendingOverRecursed();
     } else {
-      // If ReportError fails (due to OOM) the resulting error is OOM rather
-      // than OverRecursed.
+      // Try to construct an over-recursed error and then update the exception
+      // status to `OverRecursed`. Creating the error can fail, so check there
+      // is a reasonable looking exception pending before updating status.
       JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
                                 JSMSG_OVER_RECURSED);
-      if (!maybecx->isThrowingOutOfMemory()) {
+      if (maybecx->isExceptionPending() && !maybecx->isThrowingOutOfMemory()) {
         MOZ_ASSERT(maybecx->unwrappedException().isObject());
         MOZ_ASSERT(maybecx->status == JS::ExceptionStatus::Throwing);
         maybecx->status = JS::ExceptionStatus::OverRecursed;
