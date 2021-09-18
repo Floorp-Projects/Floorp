@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptPreloader-inl.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Monitor.h"
+
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 
@@ -26,6 +28,7 @@
 #include "mozilla/dom/Document.h"
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/experimental/JSStencil.h"
 #include "js/Transcoding.h"
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
@@ -199,22 +202,6 @@ ProcessType ScriptPreloader::GetChildProcessType(const nsACString& remoteType) {
   return ProcessType::Web;
 }
 
-namespace {
-
-static void TraceOp(JSTracer* trc, void* data) {
-  auto preloader = static_cast<ScriptPreloader*>(data);
-
-  preloader->Trace(trc);
-}
-
-}  // anonymous namespace
-
-void ScriptPreloader::Trace(JSTracer* trc) {
-  for (const auto& script : mScripts.Values()) {
-    script->mScript.Trace(trc);
-  }
-}
-
 ScriptPreloader::ScriptPreloader()
     : mMonitor("[ScriptPreloader.mMonitor]"),
       mSaveMonitor("[ScriptPreloader.mSaveMonitor]") {
@@ -236,9 +223,6 @@ ScriptPreloader::ScriptPreloader()
 
   obs->AddObserver(this, CLEANUP_TOPIC, false);
   obs->AddObserver(this, CACHE_INVALIDATE_TOPIC, false);
-
-  AutoSafeJSAPI jsapi;
-  JS_AddExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
 }
 
 void ScriptPreloader::Cleanup() {
@@ -251,9 +235,6 @@ void ScriptPreloader::Cleanup() {
 
     mScripts.Clear();
   }
-
-  AutoSafeJSAPI jsapi;
-  JS_RemoveExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
 
   UnregisterWeakMemoryReporter(this);
 }
@@ -520,6 +501,8 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
   }
 
   auto data = mCacheData.get<uint8_t>();
+  MOZ_RELEASE_ASSERT(JS::IsTranscodingBytecodeAligned(data.get()));
+
   auto end = data + size;
 
   if (memcmp(MAGIC, data.get(), sizeof(MAGIC))) {
@@ -537,19 +520,25 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
   {
     auto cleanup = MakeScopeExit([&]() { mScripts.Clear(); });
 
-    LinkedList<CachedScript> scripts;
+    LinkedList<CachedStencil> scripts;
 
     Range<uint8_t> header(data, data + headerSize);
     data += headerSize;
+
+    // Reconstruct alignment padding if required.
+    size_t currentOffset = data - mCacheData.get<uint8_t>();
+    data += JS::AlignTranscodingBytecodeOffset(currentOffset) - currentOffset;
 
     InputBuffer buf(header);
 
     size_t offset = 0;
     while (!buf.finished()) {
-      auto script = MakeUnique<CachedScript>(*this, buf);
+      auto script = MakeUnique<CachedStencil>(*this, buf);
       MOZ_RELEASE_ASSERT(script);
 
       auto scriptData = data + script->mOffset;
+      MOZ_RELEASE_ASSERT(JS::IsTranscodingBytecodeAligned(scriptData.get()));
+
       if (scriptData + script->mSize > end) {
         return Err(NS_ERROR_UNEXPECTED);
       }
@@ -603,12 +592,13 @@ void ScriptPreloader::PrepareCacheWriteInternal() {
   }
 
   AutoSafeJSAPI jsapi;
+  JSAutoRealm ar(jsapi.cx(), xpc::PrivilegedJunkScope());
   bool found = false;
   for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
     // Don't write any scripts that are also in the child cache. They'll be
     // loaded from the child cache in that case, so there's no need to write
     // them twice.
-    CachedScript* childScript =
+    CachedStencil* childScript =
         mChildCache ? mChildCache->mScripts.Get(script->mCachePath) : nullptr;
     if (childScript && !childScript->mProcessTypes.isEmpty()) {
       childScript->UpdateLoadTime(script->mLoadTime);
@@ -692,7 +682,7 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     mMonitor.AssertNotCurrentThreadOwns();
     MonitorAutoLock mal(mMonitor);
 
-    nsTArray<CachedScript*> scripts;
+    nsTArray<CachedStencil*> scripts;
     for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
       scripts.AppendElement(script);
     }
@@ -700,7 +690,7 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     // Sort scripts by load time, with async loaded scripts before sync scripts.
     // Since async scripts are always loaded immediately at startup, it helps to
     // have them stored contiguously.
-    scripts.Sort(CachedScript::Comparator());
+    scripts.Sort(CachedStencil::Comparator());
 
     OutputBuffer buf;
     size_t offset = 0;
@@ -717,10 +707,23 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
     MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
     MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
+
+    // Align the start of the scripts section to the transcode alignment.
+    size_t written = sizeof(MAGIC) + sizeof(headerSize) + buf.cursor();
+    size_t padding = JS::AlignTranscodingBytecodeOffset(written) - written;
+    if (padding) {
+      MOZ_TRY(WritePadding(fd, padding));
+      written += padding;
+    }
+
     for (auto script : scripts) {
+      MOZ_DIAGNOSTIC_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(written));
       MOZ_TRY(Write(fd, script->Range().begin().get(), script->mSize));
 
-      if (script->mScript) {
+      written += script->mSize;
+      // We can only free the XDR data if the stencil isn't borrowing data from
+      // it.
+      if (script->mStencil && !JS::StencilIsBorrowed(script->mStencil)) {
         script->FreeData();
       }
     }
@@ -774,14 +777,14 @@ void ScriptPreloader::CacheWriteComplete() {
   barrier->RemoveBlocker(this);
 }
 
-void ScriptPreloader::NoteScript(const nsCString& url,
-                                 const nsCString& cachePath,
-                                 JS::HandleScript jsscript, bool isRunOnce) {
+void ScriptPreloader::NoteStencil(const nsCString& url,
+                                  const nsCString& cachePath,
+                                  JS::Stencil* stencil, bool isRunOnce) {
   if (!Active()) {
     if (isRunOnce) {
       if (auto script = mScripts.Get(cachePath)) {
         script->mIsRunOnce = true;
-        script->MaybeDropScript();
+        script->MaybeDropStencil();
       }
     }
     return;
@@ -799,15 +802,15 @@ void ScriptPreloader::NoteScript(const nsCString& url,
     return;
   }
 
-  auto script =
-      mScripts.GetOrInsertNew(cachePath, *this, url, cachePath, jsscript);
+  auto* script =
+      mScripts.GetOrInsertNew(cachePath, *this, url, cachePath, stencil);
   if (isRunOnce) {
     script->mIsRunOnce = true;
   }
 
-  if (!script->MaybeDropScript() && !script->mScript) {
-    MOZ_ASSERT(jsscript);
-    script->mScript.Set(jsscript);
+  if (!script->MaybeDropStencil() && !script->mStencil) {
+    MOZ_ASSERT(stencil);
+    script->mStencil = stencil;
     script->mReadyToExecute = true;
   }
 
@@ -815,11 +818,11 @@ void ScriptPreloader::NoteScript(const nsCString& url,
   script->mProcessTypes += CurrentProcessType();
 }
 
-void ScriptPreloader::NoteScript(const nsCString& url,
-                                 const nsCString& cachePath,
-                                 ProcessType processType,
-                                 nsTArray<uint8_t>&& xdrData,
-                                 TimeStamp loadTime) {
+void ScriptPreloader::NoteStencil(const nsCString& url,
+                                  const nsCString& cachePath,
+                                  ProcessType processType,
+                                  nsTArray<uint8_t>&& xdrData,
+                                  TimeStamp loadTime) {
   // After data has been prepared, there's no point in noting further scripts,
   // since the cache either has already been written, or is about to be
   // written. Any time prior to the data being prepared, we can safely mutate
@@ -829,7 +832,7 @@ void ScriptPreloader::NoteScript(const nsCString& url,
     return;
   }
 
-  auto script =
+  auto* script =
       mScripts.GetOrInsertNew(cachePath, *this, url, cachePath, nullptr);
 
   if (!script->HasRange()) {
@@ -843,8 +846,8 @@ void ScriptPreloader::NoteScript(const nsCString& url,
     script->mXDRRange.emplace(data.Elements(), data.Length());
   }
 
-  if (!script->mSize && !script->mScript) {
-    // If the content process is sending us a script entry for a script
+  if (!script->mSize && !script->mStencil) {
+    // If the content process is sending us an entry for a stencil
     // which was in the cache at startup, it expects us to already have this
     // script data, so it doesn't send it.
     //
@@ -863,7 +866,7 @@ void ScriptPreloader::NoteScript(const nsCString& url,
 }
 
 /* static */
-void ScriptPreloader::FillCompileOptionsForCachedScript(
+void ScriptPreloader::FillCompileOptionsForCachedStencil(
     JS::CompileOptions& options) {
   // Users of the cache do not require return values, so inform the JS parser in
   // order for it to generate simpler bytecode.
@@ -876,7 +879,7 @@ void ScriptPreloader::FillCompileOptionsForCachedScript(
   options.setSourceIsLazy(true);
 }
 
-JSScript* ScriptPreloader::GetCachedScript(
+already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const nsCString& path) {
   // Users of ScriptPreloader must agree on a standard set of compile options so
@@ -889,36 +892,35 @@ JSScript* ScriptPreloader::GetCachedScript(
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
-    RootedScript script(
-        cx, mChildCache->GetCachedScriptInternal(cx, options, path));
-    if (script) {
+    RefPtr<JS::Stencil> stencil =
+        mChildCache->GetCachedStencilInternal(cx, options, path);
+    if (stencil) {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::HitChild);
-      return script;
+      return stencil.forget();
     }
   }
 
-  RootedScript script(cx, GetCachedScriptInternal(cx, options, path));
+  RefPtr<JS::Stencil> stencil = GetCachedStencilInternal(cx, options, path);
   Telemetry::AccumulateCategorical(
-      script ? Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Hit
-             : Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Miss);
-  return script;
+      stencil ? Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Hit
+              : Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Miss);
+  return stencil.forget();
 }
 
-JSScript* ScriptPreloader::GetCachedScriptInternal(
+already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const nsCString& path) {
-  auto script = mScripts.Get(path);
-  if (script) {
-    return WaitForCachedScript(cx, options, script);
+  auto* cachedScript = mScripts.Get(path);
+  if (cachedScript) {
+    return WaitForCachedStencil(cx, options, cachedScript);
   }
-
   return nullptr;
 }
 
-JSScript* ScriptPreloader::WaitForCachedScript(
+already_AddRefed<JS::Stencil> ScriptPreloader::WaitForCachedStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    CachedScript* script) {
+    CachedStencil* script) {
   // Always check for finished operations so that we can move on to decoding the
   // next batch as soon as possible after the pending batch is ready. If we wait
   // until we hit an unfinished script, we wind up having at most one batch of
@@ -961,7 +963,7 @@ JSScript* ScriptPreloader::WaitForCachedScript(
     LOG(Debug, "Waited %fms\n", waitedMS);
   }
 
-  return script->GetJSScript(cx, options);
+  return script->GetStencil(cx, options);
 }
 
 /* static */
@@ -1034,7 +1036,7 @@ void ScriptPreloader::FinishOffThreadDecode(JS::OffThreadToken* token) {
   JSContext* cx = jsapi.cx();
 
   JSAutoRealm ar(cx, xpc::CompilationScope());
-  JS::Rooted<JS::ScriptVector> jsScripts(cx, JS::ScriptVector(cx));
+  Vector<RefPtr<JS::Stencil>> stencils;
 
   // If this fails, we still need to mark the scripts as finished. Any that
   // weren't successfully compiled in this operation (which should never
@@ -1043,13 +1045,13 @@ void ScriptPreloader::FinishOffThreadDecode(JS::OffThreadToken* token) {
   //
   // The exception from the off-thread decode operation will be reported when
   // we pop the AutoJSAPI off the stack.
-  Unused << JS::FinishMultiOffThreadScriptsDecoder(cx, token, &jsScripts);
+  Unused << JS::FinishMultiOffThreadStencilDecoder(cx, token, &stencils);
 
   unsigned i = 0;
   for (auto script : mParsingScripts) {
     LOG(Debug, "Finished off-thread decode of %s\n", script->mURL.get());
-    if (i < jsScripts.length()) {
-      script->mScript.Set(jsScripts[i++]);
+    if (i < stencils.length()) {
+      script->mStencil = stencils[i++].forget();
     }
     script->mReadyToExecute = true;
   }
@@ -1069,8 +1071,8 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   LOG(Debug, "Off-thread decoding scripts...\n");
 
   size_t size = 0;
-  for (CachedScript* next = mPendingScripts.getFirst(); next;) {
-    auto script = next;
+  for (CachedStencil* next = mPendingScripts.getFirst(); next;) {
+    auto* script = next;
     next = script->getNext();
 
     // Skip any scripts that we decoded on the main thread rather than
@@ -1106,12 +1108,12 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   JSAutoRealm ar(cx, scope ? scope : xpc::CompilationScope());
 
   JS::CompileOptions options(cx);
-  FillCompileOptionsForCachedScript(options);
+  FillCompileOptionsForCachedStencil(options);
 
   if (!JS::CanCompileOffThread(cx, options, size) ||
-      !JS::DecodeMultiOffThreadScripts(cx, options, mParsingSources,
-                                       OffThreadDecodeCallback,
-                                       static_cast<void*>(this))) {
+      !JS::DecodeMultiOffThreadStencils(cx, options, mParsingSources,
+                                        OffThreadDecodeCallback,
+                                        static_cast<void*>(this))) {
     // If we fail here, we don't move on to process the next batch, so make
     // sure we don't have any other scripts left to process.
     MOZ_ASSERT(mPendingScripts.isEmpty());
@@ -1134,8 +1136,8 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
       (TimeStamp::Now() - start).ToMilliseconds());
 }
 
-ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache,
-                                            InputBuffer& buf)
+ScriptPreloader::CachedStencil::CachedStencil(ScriptPreloader& cache,
+                                              InputBuffer& buf)
     : mCache(cache) {
   Code(buf);
 
@@ -1146,34 +1148,16 @@ ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache,
   mProcessTypes = {};
 }
 
-// JS::TraceEdge() can change the value of mScript, but not whether it is
-// null, so we don't update mHasScript to avoid a race.
-void ScriptPreloader::CachedScript::ScriptHolder::Trace(JSTracer* trc) {
-  JS::TraceEdge(trc, &mScript, "ScriptPreloader::CachedScript.mScript");
-}
-
-void ScriptPreloader::CachedScript::ScriptHolder::Set(
-    JS::HandleScript jsscript) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mScript = jsscript;
-  mHasScript = mScript;
-}
-
-void ScriptPreloader::CachedScript::ScriptHolder::Clear() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mScript = nullptr;
-  mHasScript = false;
-}
-
-bool ScriptPreloader::CachedScript::XDREncode(JSContext* cx) {
-  auto cleanup = MakeScopeExit([&]() { MaybeDropScript(); });
-
-  JSAutoRealm ar(cx, mScript.Get());
-  JS::RootedScript jsscript(cx, mScript.Get());
+bool ScriptPreloader::CachedStencil::XDREncode(JSContext* cx) {
+  auto cleanup = MakeScopeExit([&]() { MaybeDropStencil(); });
 
   mXDRData.construct<JS::TranscodeBuffer>();
 
-  JS::TranscodeResult code = JS::EncodeScript(cx, Buffer(), jsscript);
+  JS::CompileOptions compileOptions(cx);
+  FillCompileOptionsForCachedStencil(compileOptions);
+
+  JS::TranscodeResult code =
+      JS::EncodeStencil(cx, compileOptions, mStencil, Buffer());
   if (code == JS::TranscodeResult::Ok) {
     mXDRRange.emplace(Buffer().begin(), Buffer().length());
     mSize = Range().length();
@@ -1184,15 +1168,11 @@ bool ScriptPreloader::CachedScript::XDREncode(JSContext* cx) {
   return false;
 }
 
-JSScript* ScriptPreloader::CachedScript::GetJSScript(
+already_AddRefed<JS::Stencil> ScriptPreloader::CachedStencil::GetStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(mReadyToExecute);
-  if (mScript) {
-    if (JS::CheckCompileOptionsMatch(options, mScript.Get())) {
-      return mScript.Get();
-    }
-    LOG(Error, "Cached script %s has different options\n", mURL.get());
-    MOZ_DIAGNOSTIC_ASSERT(false, "Cached script has different options");
+  if (mStencil) {
+    return do_AddRef(mStencil);
   }
 
   if (!HasRange()) {
@@ -1209,10 +1189,10 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(
   // it synchronously the first time it's needed.
 
   auto start = TimeStamp::Now();
-  LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
+  LOG(Info, "Decoding stencil %s on main thread...\n", mURL.get());
 
-  JS::RootedScript script(cx);
-  if (JS::DecodeScript(cx, options, Range(), &script) ==
+  RefPtr<JS::Stencil> stencil;
+  if (JS::DecodeStencil(cx, options, Range(), getter_AddRefs(stencil)) ==
       JS::TranscodeResult::Ok) {
     // Lock the monitor here to avoid data races on mScript
     // from other threads like the cache writing thread.
@@ -1225,17 +1205,22 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(
     // mScript.
     mCache.mMonitor.AssertNotCurrentThreadOwns();
     MonitorAutoLock mal(mCache.mMonitor);
-    mScript.Set(script);
+
+    mStencil = stencil.forget();
 
     if (mCache.mSaveComplete) {
-      FreeData();
+      // We can only free XDR data if the stencil isn't borrowing data out of
+      // it.
+      if (!JS::StencilIsBorrowed(mStencil)) {
+        FreeData();
+      }
     }
   }
 
   LOG(Debug, "Finished decoding in %fms",
       (TimeStamp::Now() - start).ToMilliseconds());
 
-  return mScript.Get();
+  return do_AddRef(mStencil);
 }
 
 // nsIAsyncShutdownBlocker

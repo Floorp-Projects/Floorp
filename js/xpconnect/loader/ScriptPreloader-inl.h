@@ -34,6 +34,22 @@ static inline Result<Ok, nsresult> Write(PRFileDesc* fd, const void* data,
   return Ok();
 }
 
+static inline Result<Ok, nsresult> WritePadding(PRFileDesc* fd,
+                                                uint8_t padding) {
+  static const char paddingBytes[8] = "PADBYTE";
+  MOZ_DIAGNOSTIC_ASSERT(padding <= sizeof(paddingBytes));
+
+  if (padding == 0) {
+    return Ok();
+  }
+
+  if (PR_Write(fd, static_cast<const void*>(paddingBytes), padding) !=
+      padding) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  return Ok();
+}
+
 struct MOZ_RAII AutoSafeJSAPI : public AutoJSAPI {
   AutoSafeJSAPI() { Init(); }
 };

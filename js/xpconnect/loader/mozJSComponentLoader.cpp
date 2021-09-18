@@ -752,16 +752,15 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   NS_ENSURE_SUCCESS(rv, rv);
 
   CompileOptions options(cx);
-  ScriptPreloader::FillCompileOptionsForCachedScript(options);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(options);
   options.setFileAndLine(nativePath.get(), 1);
   options.setForceStrictMode();
   options.setNonSyntacticScope(true);
 
-  RootedScript script(cx, ScriptPreloader::GetSingleton().GetCachedScript(
-                              cx, options, cachePath));
+  RefPtr<JS::Stencil> stencil =
+      ScriptPreloader::GetSingleton().GetCachedStencil(cx, options, cachePath);
 
-  RefPtr<JS::Stencil> stencil;
-  if (!script && cache) {
+  if (!stencil && cache) {
     ReadCachedStencil(cache, cachePath, cx, options, getter_AddRefs(stencil));
     if (!stencil) {
       JS_ClearPendingException(cx);
@@ -770,7 +769,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     }
   }
 
-  if (script || stencil) {
+  if (stencil) {
     LOG(("Successfully loaded %s from cache\n", nativePath.get()));
   } else {
     // The script wasn't in the cache , so compile it now.
@@ -796,8 +795,6 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       if (srcBuf.init(cx, buf.get(), map.size(),
                       JS::SourceOwnership::Borrowed)) {
         stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
-      } else {
-        MOZ_ASSERT(!stencil);
       }
     } else {
       nsCString str;
@@ -807,8 +804,6 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       if (srcBuf.init(cx, str.get(), str.Length(),
                       JS::SourceOwnership::Borrowed)) {
         stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
-      } else {
-        MOZ_ASSERT(!stencil);
       }
     }
 
@@ -824,24 +819,22 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     }
   }
 
+  RootedScript script(cx, JS::InstantiateGlobalStencil(cx, options, stencil));
   if (!script) {
-    script = JS::InstantiateGlobalStencil(cx, options, stencil);
-    if (!script) {
-      // Propagate the exception, if one exists. Also, don't leave the stale
-      // exception on this context.
-      if (aPropagateExceptions && jsapi.HasException()) {
-        if (!jsapi.StealException(aException)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+    // Propagate the exception, if one exists. Also, don't leave the stale
+    // exception on this context.
+    if (aPropagateExceptions && jsapi.HasException()) {
+      if (!jsapi.StealException(aException)) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
-      return NS_ERROR_FAILURE;
     }
+    return NS_ERROR_FAILURE;
   }
 
   // ScriptPreloader::NoteScript needs to be called unconditionally, to
   // reflect the usage into the next session's cache.
   MOZ_ASSERT_IF(ScriptPreloader::GetSingleton().Active(), options.sourceIsLazy);
-  ScriptPreloader::GetSingleton().NoteScript(nativePath, cachePath, script);
+  ScriptPreloader::GetSingleton().NoteStencil(nativePath, cachePath, stencil);
 
   // Write to startup cache only when we didn't have any cache for the script
   // and compiled it.

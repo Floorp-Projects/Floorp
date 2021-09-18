@@ -14,8 +14,10 @@
  * building script loaders.
  */
 
-#include "mozilla/RefPtr.h"  // RefPtr, already_AddRefed
-#include "mozilla/Utf8.h"    // mozilla::Utf8Unit
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+#include "mozilla/RefPtr.h"           // RefPtr, already_AddRefed
+#include "mozilla/Utf8.h"             // mozilla::Utf8Unit
+#include "mozilla/Vector.h"           // mozilla::Vector
 
 #include <stddef.h>  // size_t
 
@@ -24,7 +26,7 @@
 #include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
-#include "js/Transcoding.h"
+#include "js/Transcoding.h"                 // JS::TranscodeSource
 
 struct JS_PUBLIC_API JSContext;
 
@@ -81,6 +83,10 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options, Stencil* stencil);
 
+// Return true if the stencil relies on external data as a result of XDR
+// decoding.
+extern JS_PUBLIC_API bool StencilIsBorrowed(Stencil* stencil);
+
 // Instantiate a module Stencil and return the associated object. Inside the
 // engine this is a js::ModuleObject.
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
@@ -96,6 +102,9 @@ extern JS_PUBLIC_API TranscodeResult
 DecodeStencil(JSContext* cx, const ReadOnlyCompileOptions& options,
               const TranscodeRange& range, Stencil** stencilOut);
 
+extern JS_PUBLIC_API size_t SizeOfStencil(Stencil* stencil,
+                                          mozilla::MallocSizeOf mallocSizeOf);
+
 extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
@@ -108,6 +117,15 @@ extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
 
 extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadCompileToStencil(
     JSContext* cx, OffThreadToken* token);
+
+extern JS_PUBLIC_API OffThreadToken* DecodeMultiOffThreadStencils(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    mozilla::Vector<TranscodeSource>& sources,
+    OffThreadCompileCallback callback, void* callbackData);
+
+extern JS_PUBLIC_API bool FinishMultiOffThreadStencilDecoder(
+    JSContext* cx, OffThreadToken* token,
+    mozilla::Vector<RefPtr<Stencil>>* stencils);
 
 }  // namespace JS
 

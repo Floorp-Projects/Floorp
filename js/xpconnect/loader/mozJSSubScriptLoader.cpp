@@ -192,29 +192,7 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
 
     nsCString uriStr;
     if (storeIntoPreloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
-      // Note that, when called during startup, this will keep the
-      // original JSScript object alive for an indefinite amount of time.
-      // This has the side-effect of keeping the global that the script
-      // was compiled for alive, too.
-      //
-      // For most startups, the global in question will be the
-      // CompilationScope, since we pre-compile any scripts that were
-      // needed during the last startup in that scope. But for startups
-      // when a non-cached script is used (e.g., after add-on
-      // installation), this may be a Sandbox global, which may be
-      // nuked but held alive by the JSScript. We can avoid this problem
-      // by using a different scope when compiling the script. See
-      // useCompilationScope in ReadScript().
-      //
-      // In general, this isn't a problem, since add-on Sandboxes which
-      // use the script preloader are not destroyed until add-on shutdown,
-      // and when add-ons are uninstalled or upgraded, the preloader cache
-      // is immediately flushed after shutdown. But it's possible to
-      // disable and reenable an add-on without uninstalling it, leading
-      // to cached scripts being held alive, and tied to nuked Sandbox
-      // globals. Given the unusual circumstances required to trigger
-      // this, it's not a major concern. But it should be kept in mind.
-      ScriptPreloader::GetSingleton().NoteScript(uriStr, cachePath, script);
+      ScriptPreloader::GetSingleton().NoteStencil(uriStr, cachePath, stencil);
     }
 
     if (storeIntoStartupCache) {
@@ -455,7 +433,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   SubscriptCachePath(cx, uri, targetObj, cachePath);
 
   JS::CompileOptions compileOptions(cx);
-  ScriptPreloader::FillCompileOptionsForCachedScript(compileOptions);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(compileOptions);
   compileOptions.setFileAndLine(uriStr.get(), 1);
   compileOptions.setNonSyntacticScope(!JS_IsGlobalObject(targetObj));
 
@@ -465,22 +443,17 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
 
   RefPtr<JS::Stencil> stencil;
   if (!options.ignoreCache) {
-    // We temporarily disable the ScriptPreloader here until it too is converted
-    // to use Stencils to avoid trying to support both Stencil and Script
-    // evaluation in this function.
-    //
-    // if (!options.wantReturnValue) {
-    //   // NOTE: If we need the return value, we cannot use ScriptPreloader.
-    //   script = ScriptPreloader::GetSingleton().GetCachedScript(
-    //       cx, compileOptions, cachePath);
-    // }
-    if (cache) {
+    if (!options.wantReturnValue) {
+      // NOTE: If we need the return value, we cannot use ScriptPreloader.
+      stencil = ScriptPreloader::GetSingleton().GetCachedStencil(
+          cx, compileOptions, cachePath);
+    }
+    if (!stencil && cache) {
       rv = ReadCachedStencil(cache, cachePath, cx, compileOptions,
                              getter_AddRefs(stencil));
-    }
-    if (NS_FAILED(rv) || !stencil) {
-      // ReadCachedScript may have set a pending exception.
-      JS_ClearPendingException(cx);
+      if (NS_FAILED(rv) || !stencil) {
+        JS_ClearPendingException(cx);
+      }
     }
   }
 
