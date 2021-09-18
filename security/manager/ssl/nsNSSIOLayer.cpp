@@ -250,11 +250,6 @@ void nsNSSSocketInfo::SetHandshakeCompleted() {
           ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*)mFd));
 
   mIsFullHandshake = false;  // reset for next handshake on this connection
-
-  if (mTlsHandshakeCallback) {
-    auto callback = std::move(mTlsHandshakeCallback);
-    Unused << callback->HandshakeDone();
-  }
 }
 
 void nsNSSSocketInfo::SetNegotiatedNPN(const char* value, uint32_t length) {
@@ -458,13 +453,6 @@ nsNSSSocketInfo::DisableEarlyData() {
   if (SSL_OptionSet(mFd, SSL_ENABLE_0RTT_DATA, false) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetHandshakeCallbackListener(
-    nsITlsHandshakeCallbackListener* callback) {
-  mTlsHandshakeCallback = callback;
   return NS_OK;
 }
 
