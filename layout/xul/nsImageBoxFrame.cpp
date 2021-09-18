@@ -38,7 +38,6 @@
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 #include "nsDisplayList.h"
-#include "ImageLayers.h"
 #include "ImageRegion.h"
 #include "ImageContainer.h"
 #include "nsIContent.h"

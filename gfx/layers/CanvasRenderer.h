@@ -26,7 +26,6 @@ class nsICanvasRenderingContextInternal;
 namespace mozilla {
 namespace layers {
 
-class ClientCanvasRenderer;
 class KnowsCompositor;
 class PersistentBufferProvider;
 class WebRenderCanvasRendererAsync;
@@ -64,8 +63,6 @@ struct CanvasRendererData final {
 // different in different LayerManager. So that we have following classes
 // inherit ShareableCanvasRenderer.
 //
-// ClientCanvasRenderer inherits ShareableCanvasRenderer and be used in
-// ClientCanvasLayer.
 // WebRenderCanvasRenderer inherits ShareableCanvasRenderer and provides all
 // functionality that WebRender uses.
 // WebRenderCanvasRendererAsync inherits WebRenderCanvasRenderer and be used in
@@ -81,17 +78,16 @@ struct CanvasRendererData final {
 //                   +-----------+-----------+
 //                   |ShareableCanvasRenderer|
 //                   +-----+-----------------+
-//                         ^      ^
-//           +-------------+      +-------+
-//           |                            |
-// +--------------------+       +---------+-------------+
-// |ClientCanvasRenderer|       |WebRenderCanvasRenderer|
-// +--------------------+       +-----------+-----------+
-//                                          ^
-//                                          |
-//                           +-------------+--------------+
-//                           |WebRenderCanvasRendererAsync|
-//                           +----------------------------+
+//                               ^
+//                               |
+//                   +-----------+-----------+
+//                   |WebRenderCanvasRenderer|
+//                   +-----------+-----------+
+//                               ^
+//                               |
+//                 +-------------+--------------+
+//                 |WebRenderCanvasRendererAsync|
+//                 +----------------------------+
 
 class BorrowedSourceSurface final {
  public:
@@ -135,7 +131,6 @@ class CanvasRenderer : public RefCounted<CanvasRenderer> {
   void ResetDirty() { mDirty = false; }
   bool IsDirty() const { return mDirty; }
 
-  virtual ClientCanvasRenderer* AsClientCanvasRenderer() { return nullptr; }
   virtual WebRenderCanvasRendererAsync* AsWebRenderCanvasRendererAsync() {
     return nullptr;
   }

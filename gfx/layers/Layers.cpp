@@ -15,7 +15,6 @@
 #include <type_traits>         // for remove_reference<>::type
 #include "CompositableHost.h"  // for CompositableHost
 #include "GeckoProfiler.h"  // for profiler_can_accept_markers, PROFILER_MARKER_TEXT
-#include "ImageLayers.h"    // for ImageLayer
 #include "LayerUserData.h"  // for LayerUserData
 #include "ReadbackLayer.h"  // for ReadbackLayer
 #include "TreeTraversal.h"  // for ForwardIterator, ForEachNode, DepthFirstSearch, TraversalFlag, TraversalFl...
@@ -1324,33 +1323,6 @@ void ContainerLayer::PrintInfo(std::stringstream& aStream,
 void ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
   aStream << " [color=" << mColor << "] [bounds=" << mBounds << "]";
-}
-
-CanvasLayer::CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData), mSamplingFilter(SamplingFilter::GOOD) {}
-
-CanvasLayer::~CanvasLayer() = default;
-
-void CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  if (mSamplingFilter != SamplingFilter::GOOD) {
-    aStream << " [filter=" << mSamplingFilter << "]";
-  }
-}
-
-RefPtr<CanvasRenderer> CanvasLayer::CreateOrGetCanvasRenderer() {
-  if (!mCanvasRenderer) {
-    mCanvasRenderer = CreateCanvasRendererInternal();
-  }
-
-  return mCanvasRenderer;
-}
-
-void ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  if (mSamplingFilter != SamplingFilter::GOOD) {
-    aStream << " [filter=" << mSamplingFilter << "]";
-  }
 }
 
 void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {

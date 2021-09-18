@@ -79,7 +79,6 @@
 #include "nsBidiPresUtils.h"
 
 #include "gfxRect.h"
-#include "ImageLayers.h"
 #include "ImageRegion.h"
 #include "ImageContainer.h"
 #include "mozilla/ServoStyleSet.h"
