@@ -739,10 +739,11 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Before compiling the script, first check to see if we have it in
-  // the startupcache.  Note: as a rule, startupcache errors are not fatal
-  // to loading the script, since we can always slow-load.
+  // the preloader cache or the startupcache.  Note: as a rule, preloader cache
+  // errors and startupcache errors are not fatal to loading the script, since
+  // we can always slow-load.
 
-  bool writeToCache = false;
+  bool storeIntoStartupCache = false;
   StartupCache* cache = StartupCache::GetSingleton();
 
   aInfo.EnsureResolvedURI();
@@ -761,20 +762,16 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       ScriptPreloader::GetSingleton().GetCachedScript(cx, options, cachePath);
   if (!script && cache) {
     ReadCachedScript(cache, cachePath, cx, options, &script);
+    if (!script) {
+      JS_ClearPendingException(cx);
+
+      storeIntoStartupCache = true;
+    }
   }
 
   if (script) {
-    LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
-  } else if (cache) {
-    // This is ok, it just means the script is not yet in the
-    // cache. Could mean that the cache was corrupted and got removed,
-    // but either way we're going to write this out.
-    writeToCache = true;
-    // ReadCachedScript may have set a pending exception.
-    JS_ClearPendingException(cx);
-  }
-
-  if (!script) {
+    LOG(("Successfully loaded %s from cache\n", nativePath.get()));
+  } else {
     // The script wasn't in the cache , so compile it now.
     LOG(("Slow loading %s\n", nativePath.get()));
 
@@ -782,7 +779,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     // and instead let normal syntax parsing occur. This can occur in content
     // processes after the ScriptPreloader is flushed where we can read but no
     // longer write.
-    if (!cache && !ScriptPreloader::GetSingleton().Active()) {
+    if (!storeIntoStartupCache && !ScriptPreloader::GetSingleton().Active()) {
       options.setSourceIsLazy(false);
     }
 
@@ -813,23 +810,27 @@ nsresult mozJSComponentLoader::ObjectForLocation(
         MOZ_ASSERT(!script);
       }
     }
-    // Propagate the exception, if one exists. Also, don't leave the stale
-    // exception on this context.
-    if (!script && aPropagateExceptions && jsapi.HasException()) {
-      if (!jsapi.StealException(aException)) {
-        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!script) {
+      // Propagate the exception, if one exists. Also, don't leave the stale
+      // exception on this context.
+      if (aPropagateExceptions && jsapi.HasException()) {
+        if (!jsapi.StealException(aException)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
+      return NS_ERROR_FAILURE;
     }
   }
 
-  if (!script) {
-    return NS_ERROR_FAILURE;
-  }
-
+  // ScriptPreloader::NoteScript needs to be called unconditionally, to
+  // reflect the usage into the next session's cache.
   MOZ_ASSERT_IF(ScriptPreloader::GetSingleton().Active(), options.sourceIsLazy);
   ScriptPreloader::GetSingleton().NoteScript(nativePath, cachePath, script);
 
-  if (writeToCache) {
+  // Write to startup cache only when we didn't have any cache for the script
+  // and compiled it.
+  if (storeIntoStartupCache) {
     MOZ_ASSERT(options.sourceIsLazy);
 
     // We successfully compiled the script, so cache it.
