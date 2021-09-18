@@ -126,6 +126,8 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   bool IsTelemetryEnabledAndNotSleepPhase();
   PRIntervalTime MaxTimeForPrClosePref() { return mMaxTimeForPrClosePref; }
 
+  void SetNotTrustedMitmDetected() { mNotTrustedMitmDetected = true; }
+
   // According the preference value of `network.socket.forcePort` this method
   // possibly remaps the port number passed as the arg.
   void ApplyPortRemap(uint16_t* aPort);
@@ -341,6 +343,8 @@ class nsSocketTransportService final : public nsPISocketTransportService,
 #endif
 
   void TryRepairPollableEvent();
+
+  bool mNotTrustedMitmDetected{false};
 
   CopyableTArray<nsCOMPtr<nsISTSShutdownObserver>> mShutdownObservers;
 };
