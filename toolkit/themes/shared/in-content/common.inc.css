@@ -467,6 +467,20 @@ xul|button.primary:not([disabled="true"]):hover:active {
   background-color: var(--in-content-primary-button-background-active);
 }
 
+@media not (prefers-contrast) {
+  html|button.semi-transparent:not(.ghost-button, .primary):enabled {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  html|button.semi-transparent:not(.primary):enabled:hover {
+    background-color: color-mix(in srgb, currentColor 20%, transparent);
+  }
+
+  html|button.semi-transparent:not(.primary):enabled:hover:active {
+    background-color: color-mix(in srgb, currentColor 30%, transparent);
+  }
+}
+
 @media (prefers-contrast) {
   html|button[autofocus]:enabled:hover,
   html|button[type="submit"]:enabled:hover,
@@ -499,22 +513,12 @@ html|button.ghost-button {
   background-color: transparent;
 }
 
-html|button.ghost-button:enabled:hover {
-  background-color: var(--in-content-button-background);
-  color: var(--in-content-button-text-color);
-}
-
-html|button.ghost-button:enabled:hover:active {
+html|button.ghost-button:not(.semi-transparent):enabled:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
 
-html|button.ghost-button:enabled:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-html|button.ghost-button:enabled:hover:active {
+html|button.ghost-button:not(.semi-transparent):enabled:hover:active {
   background-color: var(--in-content-button-background-active);
 }
 

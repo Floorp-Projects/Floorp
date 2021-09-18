@@ -35,6 +35,7 @@
 #toolbar {
   position: sticky;
   top: 0;
+  z-index: 1;
   box-sizing: border-box;
   width: 100%;
   background-color: var(--in-content-page-background);
@@ -54,19 +55,23 @@
 #about-config-search {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: 0.4;
   box-sizing: border-box;
   flex-grow: 1;
   background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-repeat: no-repeat;
   background-position: 8px center;
   background-size: 16px;
-  z-index: 1;
   /* Set horizontal margin to 0 to ensure alignment with table. */
   margin-inline: 0;
   text-align: match-parent;
   /* All prefs must be left-to-right. */
   direction: ltr;
+}
+
+@media not (prefers-contrast) {
+  #about-config-search {
+    fill-opacity: 0.4;
+  }
 }
 
 #about-config-search:placeholder-shown {
@@ -101,7 +106,7 @@
   min-width: 644px;
   /* To stay consistent with about:preferences (664px - 20px margin). */
   border: var(--prefs-table-border);
-  border-radius: 2px;
+  border-radius: 4px;
   border-spacing: 0;
 }
 
@@ -152,7 +157,7 @@
   padding-right: 30px;
 }
 
-#prefs > tr.deleted > th {
+#prefs > tr.deleted > th > span {
   font-weight: bold;
   color: var(--in-content-deemphasized-text);
 }
@@ -276,4 +281,16 @@ td.cell-value > form > input[type="number"] {
   border-top: var(--prefs-table-border);
   padding-top: 14px;
   position: relative;
+}
+
+@media (prefers-contrast) {
+  #prefs > tr.deleted:hover > th > span {
+    color: inherit;
+  }
+
+  td:is(.cell-edit, .cell-reset) > button:hover,
+  tr:hover > td > button.primary,
+  tr.deleted:hover input[type="radio"]:checked:not(:hover) {
+    border-color: ThreeDShadow;
+  }
 }
