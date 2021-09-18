@@ -5000,26 +5000,35 @@ Document::InternalCommandData Document::ConvertToInternalCommand(
 }
 
 Document::AutoEditorCommandTarget::AutoEditorCommandTarget(
-    nsPresContext* aPresContext, const InternalCommandData& aCommandData)
+    Document& aDocument, const InternalCommandData& aCommandData)
     : mCommandData(aCommandData) {
-  // Consider context of command handling which is automatically resolved
-  // by order of controllers in `nsCommandManager::GetControllerForCommand()`.
-  // The order is:
-  //   1. TextEditor if there is an active element and it has TextEditor like
-  //      <input type="text"> or <textarea>.
-  //   2. HTMLEditor for the document, if there is.
-  //   3. Retarget to the DocShell or nsCommandManager as what we've done.
-  if (aPresContext) {
+  // We'll retrieve an editor with current DOM tree and layout information.
+  // However, JS may have already hidden or remove exposed root content of
+  // the editor.  Therefore, we need the latest layout information here.
+  aDocument.FlushPendingNotifications(FlushType::Layout);
+  if (!aDocument.GetPresShell() || aDocument.GetPresShell()->IsDestroying()) {
+    mDoNothing = true;
+    return;
+  }
+
+  if (nsPresContext* presContext = aDocument.GetPresContext()) {
+    // Consider context of command handling which is automatically resolved
+    // by order of controllers in `nsCommandManager::GetControllerForCommand()`.
+    // The order is:
+    //   1. TextEditor if there is an active element and it has TextEditor like
+    //      <input type="text"> or <textarea>.
+    //   2. HTMLEditor for the document, if there is.
+    //   3. Retarget to the DocShell or nsCommandManager as what we've done.
     if (aCommandData.IsCutOrCopyCommand()) {
       // Note that we used to use DocShell to handle `cut` and `copy` command
       // for dispatching corresponding events for making possible web apps to
       // implement their own editor without editable elements but supports
       // standard shortcut keys, etc.  In this case, we prefer to use active
       // element's editor to keep same behavior.
-      mActiveEditor = nsContentUtils::GetActiveEditor(aPresContext);
+      mActiveEditor = nsContentUtils::GetActiveEditor(presContext);
     } else {
-      mActiveEditor = nsContentUtils::GetActiveEditor(aPresContext);
-      mHTMLEditor = nsContentUtils::GetHTMLEditor(aPresContext);
+      mActiveEditor = nsContentUtils::GetActiveEditor(presContext);
+      mHTMLEditor = nsContentUtils::GetHTMLEditor(presContext);
       if (!mActiveEditor) {
         mActiveEditor = mHTMLEditor;
       }
@@ -5223,10 +5232,11 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
     }
   }
 
+  AutoRunningExecCommandMarker markRunningExecCommand(*this);
+
   // Next, consider context of command handling which is automatically resolved
   // by order of controllers in `nsCommandManager::GetControllerForCommand()`.
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  AutoEditorCommandTarget editCommandTarget(presContext, commandData);
+  AutoEditorCommandTarget editCommandTarget(*this, commandData);
   if (commandData.IsAvailableOnlyWhenEditable() &&
       !editCommandTarget.IsEditable(this)) {
     return false;
@@ -5235,8 +5245,6 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
   if (editCommandTarget.DoNothing()) {
     return false;
   }
-
-  AutoRunningExecCommandMarker markRunningExecCommand(*this);
 
   // If we cannot use EditorCommand instance directly, we need to handle the
   // command with traditional path (i.e., with DocShell or nsCommandManager).
@@ -5407,8 +5415,7 @@ bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
     return false;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  AutoEditorCommandTarget editCommandTarget(presContext, commandData);
+  AutoEditorCommandTarget editCommandTarget(*this, commandData);
   if (commandData.IsAvailableOnlyWhenEditable() &&
       !editCommandTarget.IsEditable(this)) {
     return false;
@@ -5448,8 +5455,7 @@ bool Document::QueryCommandIndeterm(const nsAString& aHTMLCommandName,
     return false;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  AutoEditorCommandTarget editCommandTarget(presContext, commandData);
+  AutoEditorCommandTarget editCommandTarget(*this, commandData);
   if (commandData.IsAvailableOnlyWhenEditable() &&
       !editCommandTarget.IsEditable(this)) {
     return false;
@@ -5526,8 +5532,7 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
     return false;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  AutoEditorCommandTarget editCommandTarget(presContext, commandData);
+  AutoEditorCommandTarget editCommandTarget(*this, commandData);
   if (commandData.IsAvailableOnlyWhenEditable() &&
       !editCommandTarget.IsEditable(this)) {
     return false;
@@ -5713,8 +5718,7 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
       break;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
-  AutoEditorCommandTarget editCommandTarget(presContext, commandData);
+  AutoEditorCommandTarget editCommandTarget(*this, commandData);
   if (commandData.IsAvailableOnlyWhenEditable() &&
       !editCommandTarget.IsEditable(this)) {
     return;

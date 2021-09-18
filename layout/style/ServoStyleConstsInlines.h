@@ -54,6 +54,7 @@ template struct StyleStrong<RawServoSupportsRule>;
 template struct StyleStrong<RawServoFontFeatureValuesRule>;
 template struct StyleStrong<RawServoFontFaceRule>;
 template struct StyleStrong<RawServoCounterStyleRule>;
+template struct StyleStrong<RawServoScrollTimelineRule>;
 
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {

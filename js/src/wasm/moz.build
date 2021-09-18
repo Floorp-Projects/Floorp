@@ -28,7 +28,6 @@ UNIFIED_SOURCES += [
     "WasmCode.cpp",
     "WasmCodegenTypes.cpp",
     "WasmCompile.cpp",
-    "WasmContext.cpp",
     "WasmDebug.cpp",
     "WasmDebugFrame.cpp",
     "WasmException.cpp",

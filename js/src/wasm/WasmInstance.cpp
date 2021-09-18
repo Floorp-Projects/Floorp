@@ -1317,9 +1317,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 #ifdef ENABLE_WASM_GC
     if (GcAvailable(cx)) {
       // Transfer and allocate type objects for the struct types in the module
-      uint32_t baseGcTypeIndex = 0;
-      if (!cx->wasm().typeContext->transferTypes(metadata().types,
-                                                 &baseGcTypeIndex)) {
+      MutableTypeContext tycx = js_new<TypeContext>();
+      if (!tycx || !tycx->cloneDerived(metadata().types)) {
         return false;
       }
 
@@ -1329,10 +1328,9 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         if (!typeDef.isStructType() && !typeDef.isArrayType()) {
           continue;
         }
-        uint32_t globalTypeIndex = baseGcTypeIndex + typeIndex;
-        Rooted<RttValue*> rttValue(
-            cx, RttValue::createFromHandle(cx, TypeHandle(globalTypeIndex)));
 
+        Rooted<RttValue*> rttValue(
+            cx, RttValue::rttCanon(cx, TypeHandle(tycx, typeIndex)));
         if (!rttValue) {
           return false;
         }

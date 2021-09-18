@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 
+const FIREFOX_SUGGEST_UPDATE_TOPIC = "firefox-suggest-update";
+
 // Prefs are defined as [pref name, default value] or [pref name, [default
 // value, type]].  In the former case, the getter method name is inferred from
 // the typeof the default value.
@@ -639,6 +641,17 @@ class Preferences {
     // Set `quicksuggest.enabled` last so that if any observers depend on it
     // specifically, all prefs will have been updated when they're called.
     defaults.setBoolPref("quicksuggest.enabled", enabled);
+
+    // Update the pref cache in TelemetryEnvironment. This is only necessary
+    // when we're initializing the scenario on startup, but the scenario will
+    // rarely if ever change after that, so there's no harm in always doing it.
+    // See bug 1731373.
+    //
+    // IMPORTANT: Send the notification only after setting the prefs above.
+    // TelemetryEnvironment updates its cache by fetching the prefs from the
+    // pref service, so the new values need to be set beforehand. See also the
+    // comments in D126017.
+    Services.obs.notifyObservers(null, FIREFOX_SUGGEST_UPDATE_TOPIC);
   }
 
   /**

@@ -898,8 +898,9 @@ bool nsBaseWidget::UseAPZ() {
   return (gfxPlatform::AsyncPanZoomEnabled() &&
           (WindowType() == eWindowType_toplevel ||
            WindowType() == eWindowType_child ||
-           (WindowType() == eWindowType_popup && HasRemoteContent() &&
-            StaticPrefs::apz_popups_enabled())));
+           ((WindowType() == eWindowType_popup ||
+             WindowType() == eWindowType_dialog) &&
+            HasRemoteContent() && StaticPrefs::apz_popups_enabled())));
 }
 
 void nsBaseWidget::CreateCompositor() {

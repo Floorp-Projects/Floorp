@@ -1111,15 +1111,15 @@ inline bool OpIter<Policy>::readBlockType(BlockType* type) {
   }
 
   int32_t x;
-  if (!d_.readVarS32(&x) || x < 0 || uint32_t(x) >= env_.types.length()) {
+  if (!d_.readVarS32(&x) || x < 0 || uint32_t(x) >= env_.types->length()) {
     return fail("invalid block type type index");
   }
 
-  if (!env_.types.isFuncType(x)) {
+  if (!env_.types->isFuncType(x)) {
     return fail("block type type index must be func type");
   }
 
-  *type = BlockType::Func(env_.types.funcType(x));
+  *type = BlockType::Func(env_.types->funcType(x));
 
   return true;
 }
@@ -1206,12 +1206,12 @@ inline bool OpIter<Policy>::endInitExpr() {
 
 template <typename Policy>
 inline bool OpIter<Policy>::readValType(ValType* type) {
-  return d_.readValType(env_.types, env_.features, type);
+  return d_.readValType(*env_.types, env_.features, type);
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
-  return d_.readHeapType(env_.types, env_.features, nullable, type);
+  return d_.readHeapType(*env_.types, env_.features, nullable, type);
 }
 
 template <typename Policy>
@@ -2214,7 +2214,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRefNull(RefType* type) {
   MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
 
-  if (!d_.readRefNull(env_.types, env_.features, type)) {
+  if (!d_.readRefNull(*env_.types, env_.features, type)) {
     return false;
   }
   return push(*type);
@@ -2350,11 +2350,11 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return false;
   }
 
-  if (!env_.types.isFuncType(*funcTypeIndex)) {
+  if (!env_.types->isFuncType(*funcTypeIndex)) {
     return fail("expected signature type");
   }
 
-  const FuncType& funcType = env_.types.funcType(*funcTypeIndex);
+  const FuncType& funcType = env_.types->funcType(*funcTypeIndex);
 
 #ifdef WASM_PRIVATE_REFTYPES
   if (env_.tables[*tableIndex].importedOrExported &&
@@ -2414,11 +2414,11 @@ inline bool OpIter<Policy>::readOldCallIndirect(uint32_t* funcTypeIndex,
     return fail("signature index out of range");
   }
 
-  if (!env_.types.isFuncType(*funcTypeIndex)) {
+  if (!env_.types->isFuncType(*funcTypeIndex)) {
     return fail("expected signature type");
   }
 
-  const FuncType& funcType = env_.types.funcType(*funcTypeIndex);
+  const FuncType& funcType = env_.types->funcType(*funcTypeIndex);
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
@@ -2845,12 +2845,12 @@ inline bool OpIter<Policy>::readGcTypeIndex(uint32_t* typeIndex) {
     return false;
   }
 
-  if (*typeIndex >= env_.types.length()) {
+  if (*typeIndex >= env_.types->length()) {
     return fail("type index out of range");
   }
 
-  if (!env_.types.isStructType(*typeIndex) &&
-      !env_.types.isArrayType(*typeIndex)) {
+  if (!env_.types->isStructType(*typeIndex) &&
+      !env_.types->isArrayType(*typeIndex)) {
     return fail("not a gc type");
   }
 
@@ -2863,11 +2863,11 @@ inline bool OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex) {
     return fail("unable to read type index");
   }
 
-  if (*typeIndex >= env_.types.length()) {
+  if (*typeIndex >= env_.types->length()) {
     return fail("type index out of range");
   }
 
-  if (!env_.types.isStructType(*typeIndex)) {
+  if (!env_.types->isStructType(*typeIndex)) {
     return fail("not a struct type");
   }
 
@@ -2880,11 +2880,11 @@ inline bool OpIter<Policy>::readArrayTypeIndex(uint32_t* typeIndex) {
     return fail("unable to read type index");
   }
 
-  if (*typeIndex >= env_.types.length()) {
+  if (*typeIndex >= env_.types->length()) {
     return fail("type index out of range");
   }
 
-  if (!env_.types.isArrayType(*typeIndex)) {
+  if (!env_.types->isArrayType(*typeIndex)) {
     return fail("not an array type");
   }
 
@@ -2917,7 +2917,7 @@ inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& str = env_.types.structType(*typeIndex);
+  const StructType& str = env_.types->structType(*typeIndex);
   const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
@@ -2948,7 +2948,7 @@ inline bool OpIter<Policy>::readStructNewDefaultWithRtt(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& str = env_.types.structType(*typeIndex);
+  const StructType& str = env_.types->structType(*typeIndex);
   const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
@@ -2974,7 +2974,7 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types.structType(*typeIndex);
+  const StructType& structType = env_.types->structType(*typeIndex);
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
@@ -3008,7 +3008,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types.structType(*typeIndex);
+  const StructType& structType = env_.types->structType(*typeIndex);
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
@@ -3040,7 +3040,7 @@ inline bool OpIter<Policy>::readArrayNewWithRtt(uint32_t* typeIndex, Value* rtt,
     return false;
   }
 
-  const ArrayType& arr = env_.types.arrayType(*typeIndex);
+  const ArrayType& arr = env_.types->arrayType(*typeIndex);
   const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
@@ -3068,7 +3068,7 @@ inline bool OpIter<Policy>::readArrayNewDefaultWithRtt(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arr = env_.types.arrayType(*typeIndex);
+  const ArrayType& arr = env_.types->arrayType(*typeIndex);
   const ValType rttType = ValType::fromRtt(*typeIndex, RttDepthNone);
 
   if (!popWithType(rttType, rtt)) {
@@ -3096,7 +3096,7 @@ inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arrayType = env_.types.arrayType(*typeIndex);
+  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
 
   if (!popWithType(ValType::I32, index)) {
     return false;
@@ -3128,7 +3128,7 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
     return false;
   }
 
-  const ArrayType& arrayType = env_.types.arrayType(*typeIndex);
+  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
 
   if (!arrayType.isMutable_) {
     return fail("array is not mutable");

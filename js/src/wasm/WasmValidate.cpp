@@ -139,7 +139,7 @@ bool wasm::DecodeValidatedLocalEntries(Decoder& d, ValTypeVector* locals) {
 bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
                             size_t opcodeOffset, ValType actual,
                             ValType expected, TypeCache* cache) {
-  switch (env.types.isSubtypeOf(actual, expected, cache)) {
+  switch (env.types->isSubtypeOf(actual, expected, cache)) {
     case TypeResult::OOM:
       return false;
     case TypeResult::True:
@@ -1385,7 +1385,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
 
   const uint8_t* bodyBegin = d.currentPosition();
 
-  if (!DecodeLocalEntries(d, env.types, env.features, &locals)) {
+  if (!DecodeLocalEntries(d, *env.types, env.features, &locals)) {
     return false;
   }
 
@@ -1451,18 +1451,18 @@ static bool FuncTypeIsJSCompatible(Decoder& d, const FuncType& ft) {
 }
 #endif
 
-static bool DecodeTypeVector(Decoder& d, ModuleEnvironment* env,
-                             TypeStateVector* typeState, uint32_t count,
-                             ValTypeVector* types) {
-  if (!types->resize(count)) {
+static bool DecodeValTypeVector(Decoder& d, ModuleEnvironment* env,
+                                TypeStateVector* typeState, uint32_t count,
+                                ValTypeVector* valTypes) {
+  if (!valTypes->resize(count)) {
     return false;
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    if (!d.readValType(env->types.length(), env->features, &(*types)[i])) {
+    if (!d.readValType(env->types->length(), env->features, &(*valTypes)[i])) {
       return false;
     }
-    if (!ValidateTypeState(d, typeState, (*types)[i])) {
+    if (!ValidateTypeState(d, typeState, (*valTypes)[i])) {
       return false;
     }
   }
@@ -1479,7 +1479,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
     return d.fail("too many arguments in signature");
   }
   ValTypeVector args;
-  if (!DecodeTypeVector(d, env, typeState, numArgs, &args)) {
+  if (!DecodeValTypeVector(d, env, typeState, numArgs, &args)) {
     return false;
   }
 
@@ -1491,7 +1491,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
     return d.fail("too many returns in signature");
   }
   ValTypeVector results;
-  if (!DecodeTypeVector(d, env, typeState, numResults, &results)) {
+  if (!DecodeValTypeVector(d, env, typeState, numResults, &results)) {
     return false;
   }
 
@@ -1499,7 +1499,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
     return d.fail("function type entry referenced as gc");
   }
 
-  env->types[typeIndex] =
+  (*env->types)[typeIndex] =
       TypeDef(FuncType(std::move(args), std::move(results)));
   (*typeState)[typeIndex] = TypeState::Func;
 
@@ -1532,7 +1532,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < numFields; i++) {
-    if (!d.readPackedType(env->types.length(), env->features,
+    if (!d.readPackedType(env->types->length(), env->features,
                           &fields[i].type)) {
       return false;
     }
@@ -1557,7 +1557,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     return d.fail("Struct type too large");
   }
 
-  env->types[typeIndex] = TypeDef(std::move(structType));
+  (*env->types)[typeIndex] = TypeDef(std::move(structType));
   (*typeState)[typeIndex] = TypeState::Gc;
 
   return true;
@@ -1575,7 +1575,7 @@ static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
   }
 
   FieldType elementType;
-  if (!d.readFieldType(env->types.length(), env->features, &elementType)) {
+  if (!d.readFieldType(env->types->length(), env->features, &elementType)) {
     return false;
   }
 
@@ -1592,7 +1592,7 @@ static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
     return false;
   }
 
-  env->types[typeIndex] = TypeDef(ArrayType(elementType, isMutable));
+  (*env->types)[typeIndex] = TypeDef(ArrayType(elementType, isMutable));
   (*typeState)[typeIndex] = TypeState::Gc;
 
   return true;
@@ -1604,7 +1604,7 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
   if (!range) {
-    return true;
+    return env->initTypes(0);
   }
 
   uint32_t numTypes;
@@ -1616,7 +1616,7 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("too many types");
   }
 
-  if (!env->types.resize(numTypes) || !env->typeIds.resize(numTypes)) {
+  if (!env->initTypes(numTypes)) {
     return false;
   }
 
@@ -1685,17 +1685,17 @@ static UniqueChars DecodeName(Decoder& d) {
   return name;
 }
 
-static bool DecodeFuncTypeIndex(Decoder& d, const TypeContext& types,
+static bool DecodeFuncTypeIndex(Decoder& d, const SharedTypeContext& types,
                                 uint32_t* funcTypeIndex) {
   if (!d.readVarU32(funcTypeIndex)) {
     return d.fail("expected signature index");
   }
 
-  if (*funcTypeIndex >= types.length()) {
+  if (*funcTypeIndex >= types->length()) {
     return d.fail("signature index out of range");
   }
 
-  const TypeDef& def = types[*funcTypeIndex];
+  const TypeDef& def = (*types)[*funcTypeIndex];
 
   if (!def.isFuncType()) {
     return d.fail("signature index references non-signature");
@@ -1768,10 +1768,10 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
 }
 
 static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
-                                     const TypeContext& types,
+                                     const SharedTypeContext& types,
                                      TableDescVector* tables) {
   RefType tableElemType;
-  if (!d.readRefType(types, features, &tableElemType)) {
+  if (!d.readRefType(*types, features, &tableElemType)) {
     return false;
   }
   if (!tableElemType.isNullable()) {
@@ -1842,10 +1842,10 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
   return true;
 }
 
-static bool DecodeGlobalType(Decoder& d, const TypeContext& types,
+static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
                              const FeatureArgs& features, ValType* type,
                              bool* isMutable) {
-  if (!d.readValType(types, features, type)) {
+  if (!d.readValType(*types, features, type)) {
     return d.fail("expected global type");
   }
 
@@ -1928,10 +1928,10 @@ static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
   if (*funcTypeIndex >= env->numTypes()) {
     return d.fail("function type index in tag out of bounds");
   }
-  if (!env->types[*funcTypeIndex].isFuncType()) {
+  if (!(*env->types)[*funcTypeIndex].isFuncType()) {
     return d.fail("function type index must index a function type");
   }
-  if (env->types[*funcTypeIndex].funcType().results().length() != 0) {
+  if ((*env->types)[*funcTypeIndex].funcType().results().length() != 0) {
     return d.fail("tag function types must not return anything");
   }
   return true;
@@ -1963,11 +1963,11 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d, env->types.funcType(funcTypeIndex))) {
+      if (!FuncTypeIsJSCompatible(d, env->types->funcType(funcTypeIndex))) {
         return false;
       }
 #endif
-      if (!env->funcs.append(FuncDesc(&env->types.funcType(funcTypeIndex),
+      if (!env->funcs.append(FuncDesc(&env->types->funcType(funcTypeIndex),
                                       &env->typeIds[funcTypeIndex],
                                       funcTypeIndex))) {
         return false;
@@ -2016,7 +2016,8 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
         return false;
       }
-      const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
+      const ValTypeVector& args =
+          (*env->types)[funcTypeIndex].funcType().args();
 #  ifdef WASM_PRIVATE_REFTYPES
       if (!TagIsJSCompatible(d, args)) {
         return false;
@@ -2116,7 +2117,7 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
       return false;
     }
-    env->funcs.infallibleAppend(FuncDesc(&env->types.funcType(funcTypeIndex),
+    env->funcs.infallibleAppend(FuncDesc(&env->types->funcType(funcTypeIndex),
                                          &env->typeIds[funcTypeIndex],
                                          funcTypeIndex));
   }
@@ -2252,7 +2253,7 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeTag(d, env, &tagKind, &funcTypeIndex)) {
       return false;
     }
-    const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
+    const ValTypeVector& args = (*env->types)[funcTypeIndex].funcType().args();
     ValTypeVector tagArgs;
     if (!tagArgs.appendAll(args)) {
       return false;
@@ -2562,7 +2563,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     } else {
       switch (payload) {
         case ElemSegmentPayload::ElemExpression: {
-          if (!d.readRefType(env->types, env->features, &elemType)) {
+          if (!d.readRefType(*env->types, env->features, &elemType)) {
             return false;
           }
           break;
@@ -2648,7 +2649,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
-            if (!d.readHeapType(env->types, env->features, true, &initType)) {
+            if (!d.readHeapType(*env->types, env->features, true, &initType)) {
               return false;
             }
             needIndex = false;

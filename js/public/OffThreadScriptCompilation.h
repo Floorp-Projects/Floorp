@@ -18,15 +18,14 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/GCVector.h"  // JS::GCVector
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/GCVector.h"        // JS::GCVector
+#include "js/Transcoding.h"     // JS::TranscodeSource
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSScript;
 
 namespace JS {
-
-class JS_PUBLIC_API ReadOnlyCompileOptions;
-struct TranscodeSource;
 
 template <typename UnitT>
 class SourceText;
@@ -155,16 +154,6 @@ extern JS_PUBLIC_API JSScript* FinishOffThreadScriptDecoder(
 
 extern JS_PUBLIC_API void CancelOffThreadScriptDecoder(JSContext* cx,
                                                        OffThreadToken* token);
-
-// Decode multiple JSScript from the sources.
-extern JS_PUBLIC_API OffThreadToken* DecodeMultiOffThreadScripts(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    mozilla::Vector<TranscodeSource>& sources,
-    OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API bool FinishMultiOffThreadScriptsDecoder(
-    JSContext* cx, OffThreadToken* token,
-    MutableHandle<GCVector<JSScript*>> scripts);
 
 extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
     JSContext* cx, OffThreadToken* token);

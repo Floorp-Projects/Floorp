@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozJSSubScriptLoader.h"
+#include "js/experimental/JSStencil.h"
 #include "mozJSComponentLoader.h"
 #include "mozJSLoaderUtils.h"
 
@@ -122,22 +123,19 @@ static void ReportError(JSContext* cx, const char* origMsg, nsIURI* uri) {
   ReportError(cx, msg);
 }
 
-static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
-                               const char* buf, int64_t len) {
-  JS::SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, buf, len, JS::SourceOwnership::Borrowed)) {
-    return nullptr;
-  }
-
-  return JS::Compile(cx, options, srcBuf);
-}
-
-static bool EvalScript(JSContext* cx, HandleObject targetObj,
-                       HandleObject loadScope, MutableHandleValue retval,
-                       nsIURI* uri, bool startupCache, bool preloadCache,
-                       MutableHandleScript script) {
+static bool EvalStencil(JSContext* cx, HandleObject targetObj,
+                        HandleObject loadScope, MutableHandleValue retval,
+                        nsIURI* uri, bool storeIntoStartupCache,
+                        bool storeIntoPreloadCache,
+                        const ReadOnlyCompileOptions& options,
+                        JS::Stencil* stencil) {
   MOZ_ASSERT(!js::IsWrapper(targetObj));
+
+  JS::RootedScript script(cx,
+                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  if (!script) {
+    return false;
+  }
 
   if (JS_IsGlobalObject(targetObj)) {
     if (!JS::CloneAndExecuteScript(cx, script, retval)) {
@@ -188,51 +186,29 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
     return false;
   }
 
-  if (script && (startupCache || preloadCache)) {
+  if (script && (storeIntoStartupCache || storeIntoPreloadCache)) {
     nsAutoCString cachePath;
     SubscriptCachePath(cx, uri, targetObj, cachePath);
 
     nsCString uriStr;
-    if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
-      // Note that, when called during startup, this will keep the
-      // original JSScript object alive for an indefinite amount of time.
-      // This has the side-effect of keeping the global that the script
-      // was compiled for alive, too.
-      //
-      // For most startups, the global in question will be the
-      // CompilationScope, since we pre-compile any scripts that were
-      // needed during the last startup in that scope. But for startups
-      // when a non-cached script is used (e.g., after add-on
-      // installation), this may be a Sandbox global, which may be
-      // nuked but held alive by the JSScript. We can avoid this problem
-      // by using a different scope when compiling the script. See
-      // useCompilationScope in ReadScript().
-      //
-      // In general, this isn't a problem, since add-on Sandboxes which
-      // use the script preloader are not destroyed until add-on shutdown,
-      // and when add-ons are uninstalled or upgraded, the preloader cache
-      // is immediately flushed after shutdown. But it's possible to
-      // disable and reenable an add-on without uninstalling it, leading
-      // to cached scripts being held alive, and tied to nuked Sandbox
-      // globals. Given the unusual circumstances required to trigger
-      // this, it's not a major concern. But it should be kept in mind.
-      ScriptPreloader::GetSingleton().NoteScript(uriStr, cachePath, script);
+    if (storeIntoPreloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
+      ScriptPreloader::GetSingleton().NoteStencil(uriStr, cachePath, stencil);
     }
 
-    if (startupCache) {
+    if (storeIntoStartupCache) {
       JSAutoRealm ar(cx, script);
-      WriteCachedScript(StartupCache::GetSingleton(), cachePath, cx, script);
+      WriteCachedStencil(StartupCache::GetSingleton(), cachePath, cx, options,
+                         stencil);
     }
   }
 
   return true;
 }
 
-bool mozJSSubScriptLoader::ReadScript(JS::MutableHandle<JSScript*> script,
-                                      nsIURI* uri, JSContext* cx,
-                                      const JS::ReadOnlyCompileOptions& options,
-                                      nsIIOService* serv,
-                                      bool useCompilationScope) {
+bool mozJSSubScriptLoader::ReadStencil(
+    JS::Stencil** stencilOut, nsIURI* uri, JSContext* cx,
+    const JS::ReadOnlyCompileOptions& options, nsIIOService* serv,
+    bool useCompilationScope) {
   // We create a channel and call SetContentType, to avoid expensive MIME type
   // lookups (bug 632490).
   nsCOMPtr<nsIChannel> chan;
@@ -304,13 +280,15 @@ bool mozJSSubScriptLoader::ReadScript(JS::MutableHandle<JSScript*> script,
     ar.emplace(cx, xpc::CompilationScope());
   }
 
-  JSScript* ret = PrepareScript(uri, cx, options, buf.get(), len);
-  if (!ret) {
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, buf.get(), len, JS::SourceOwnership::Borrowed)) {
     return false;
   }
 
-  script.set(ret);
-  return true;
+  RefPtr<JS::Stencil> stencil =
+      JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+  stencil.forget(stencilOut);
+  return *stencilOut;
 }
 
 NS_IMETHODIMP
@@ -455,7 +433,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   SubscriptCachePath(cx, uri, targetObj, cachePath);
 
   JS::CompileOptions compileOptions(cx);
-  ScriptPreloader::FillCompileOptionsForCachedScript(compileOptions);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(compileOptions);
   compileOptions.setFileAndLine(uriStr.get(), 1);
   compileOptions.setNonSyntacticScope(!JS_IsGlobalObject(targetObj));
 
@@ -463,34 +441,38 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     compileOptions.setNoScriptRval(false);
   }
 
-  RootedScript script(cx);
+  RefPtr<JS::Stencil> stencil;
   if (!options.ignoreCache) {
     if (!options.wantReturnValue) {
       // NOTE: If we need the return value, we cannot use ScriptPreloader.
-      script = ScriptPreloader::GetSingleton().GetCachedScript(
+      stencil = ScriptPreloader::GetSingleton().GetCachedStencil(
           cx, compileOptions, cachePath);
     }
-    if (!script && cache) {
-      rv = ReadCachedScript(cache, cachePath, cx, compileOptions, &script);
-    }
-    if (NS_FAILED(rv) || !script) {
-      // ReadCachedScript may have set a pending exception.
-      JS_ClearPendingException(cx);
+    if (!stencil && cache) {
+      rv = ReadCachedStencil(cache, cachePath, cx, compileOptions,
+                             getter_AddRefs(stencil));
+      if (NS_FAILED(rv) || !stencil) {
+        JS_ClearPendingException(cx);
+      }
     }
   }
 
-  if (script) {
-    // |script| came from the cache, so don't bother writing it
-    // |back there.
-    cache = nullptr;
-  } else {
-    if (!ReadScript(&script, uri, cx, compileOptions, serv,
-                    useCompilationScope)) {
+  bool storeIntoStartupCache = false;
+  if (!stencil) {
+    // Store into startup cache only when the script isn't come from any cache.
+    storeIntoStartupCache = cache;
+    if (!ReadStencil(getter_AddRefs(stencil), uri, cx, compileOptions, serv,
+                     useCompilationScope)) {
       return NS_OK;
     }
   }
 
-  Unused << EvalScript(cx, targetObj, loadScope, retval, uri, !!cache,
-                       !ignoreCache && !options.wantReturnValue, &script);
+  // As a policy choice, we don't store scripts that want return values
+  // into the preload cache.
+  bool storeIntoPreloadCache = !ignoreCache && !options.wantReturnValue;
+
+  Unused << EvalStencil(cx, targetObj, loadScope, retval, uri,
+                        storeIntoStartupCache, storeIntoPreloadCache,
+                        compileOptions, stencil);
   return NS_OK;
 }

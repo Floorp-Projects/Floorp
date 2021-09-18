@@ -15,11 +15,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/RefPtr.h"  // RefPtr
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Vector.h"  // mozilla::Vector
 
 #include "ds/Fifo.h"
 #include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil, CompilationGCOutput
 #include "js/CompileOptions.h"
+#include "js/experimental/JSStencil.h"
 #include "js/HelperThreadAPI.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
@@ -60,8 +63,8 @@ enum class ParseTaskKind {
   // The output is JSScript.
   ScriptDecode,
 
-  // The output is an array of JSScript.
-  MultiScriptsDecode,
+  // The output is an array of CompilationStencil.
+  MultiStencilsDecode,
 };
 enum class StartEncoding { No, Yes };
 
@@ -391,7 +394,7 @@ class GlobalHelperThreadState {
   bool generateLCovSources(JSContext* cx, ParseTask* parseTask);
   bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                             JS::OffThreadToken* token,
-                            MutableHandle<ScriptVector> scripts);
+                            mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
 
   void mergeParseTaskRealm(JSContext* cx, ParseTask* parseTask,
                            JS::Realm* dest);
@@ -409,8 +412,9 @@ class GlobalHelperThreadState {
   UniquePtr<frontend::CompilationStencil> finishCompileToStencilTask(
       JSContext* cx, JS::OffThreadToken* token);
   JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
-  bool finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token,
-                                    MutableHandle<ScriptVector> scripts);
+  bool finishMultiStencilsDecodeTask(
+      JSContext* cx, JS::OffThreadToken* token,
+      mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
   JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
 
   frontend::CompilationStencil* finishStencilParseTask(
@@ -511,6 +515,10 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // ParseTask.
   GCVector<JSScript*, 1, SystemAllocPolicy> scripts;
 
+  // For the multi-decode stencil case, holds onto the set of stencils produced
+  // offthread
+  mozilla::Vector<RefPtr<JS::Stencil>> stencils;
+
   // Holds the ScriptSourceObjects generated for the script compilation.
   GCVector<ScriptSourceObject*, 1, SystemAllocPolicy> sourceObjects;
 
@@ -564,12 +572,12 @@ struct ScriptDecodeTask : public ParseTask {
   void parse(JSContext* cx) override;
 };
 
-struct MultiScriptsDecodeTask : public ParseTask {
+struct MultiStencilsDecodeTask : public ParseTask {
   JS::TranscodeSources* sources;
 
-  MultiScriptsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
-                         JS::OffThreadCompileCallback callback,
-                         void* callbackData);
+  MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
+                          JS::OffThreadCompileCallback callback,
+                          void* callbackData);
   void parse(JSContext* cx) override;
 };
 
