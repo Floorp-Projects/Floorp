@@ -80,7 +80,7 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">dec</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Gerer authenticationes</string>
+    <string name="mozac_feature_prompts_manage_logins">Gerer credentiales</string>
 
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description">Expander le credentiales suggerite</string>
