@@ -15,9 +15,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "ErrorList.h"
+#include "js/experimental/JSStencil.h"
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"
 #include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -48,7 +50,6 @@
 #include "nscore.h"
 
 class JSObject;
-class JSScript;
 class nsAttrValueOrString;
 class nsIControllers;
 class nsIObjectInputStream;
@@ -195,9 +196,6 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
 
   void Unlink();
 
-  // Trace all scripts held by this element and its children.
-  void TraceAllScripts(JSTracer* aTrc);
-
   nsPrototypeArray mChildren;
 
   RefPtr<mozilla::dom::NodeInfo> mNodeInfo;
@@ -214,7 +212,7 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
   explicit nsXULPrototypeScript(uint32_t aLineNo);
 
  private:
-  virtual ~nsXULPrototypeScript();
+  virtual ~nsXULPrototypeScript() = default;
 
   void FillCompileOptions(JS::CompileOptions& options);
 
@@ -236,26 +234,15 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
                    uint32_t aLineNo, mozilla::dom::Document* aDocument,
                    nsIOffThreadScriptReceiver* aOffThreadReceiver = nullptr);
 
-  void UnlinkJSObjects();
+  void UnlinkStencil() { mStencil = nullptr; }
 
-  void Set(JSScript* aObject);
+  void Set(JS::Stencil* aStencil);
 
-  bool HasScriptObject() {
-    // Conversion to bool doesn't trigger mScriptObject's read barrier.
-    return mScriptObject;
-  }
+  bool HasStencil() { return mStencil; }
 
-  JSScript* GetScriptObject() { return mScriptObject; }
+  JS::Stencil* GetStencil() { return mStencil.get(); }
 
-  void TraceScriptObject(JSTracer* aTrc) {
-    JS::TraceEdge(aTrc, &mScriptObject, "active window XUL prototype script");
-  }
-
-  void Trace(const TraceCallbacks& aCallbacks, void* aClosure) {
-    if (mScriptObject) {
-      aCallbacks.Trace(&mScriptObject, "mScriptObject", aClosure);
-    }
-  }
+  nsresult InstantiateScript(JSContext* aCx, JS::MutableHandleScript aScript);
 
   nsCOMPtr<nsIURI> mSrcURI;
   uint32_t mLineNo;
@@ -264,7 +251,7 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
   mozilla::dom::PrototypeDocumentContentSink*
       mSrcLoadWaiters;  // [OWNER] but not COMPtr
  private:
-  JS::Heap<JSScript*> mScriptObject;
+  RefPtr<JS::Stencil> mStencil;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode {
