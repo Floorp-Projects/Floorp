@@ -9,6 +9,7 @@
 
 #include "nsString.h"
 
+#include "js/experimental/JSStencil.h"
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 
 namespace mozilla {
@@ -17,13 +18,14 @@ class StartupCache;
 }  // namespace scache
 }  // namespace mozilla
 
-nsresult ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
-                          JSContext* cx,
-                          const JS::ReadOnlyCompileOptions& options,
-                          JS::MutableHandleScript scriptp);
-
-nsresult WriteCachedScript(mozilla::scache::StartupCache* cache,
+nsresult ReadCachedStencil(mozilla::scache::StartupCache* cache,
                            nsACString& uri, JSContext* cx,
-                           JS::HandleScript script);
+                           const JS::ReadOnlyCompileOptions& options,
+                           JS::Stencil** stencilOut);
+
+nsresult WriteCachedStencil(mozilla::scache::StartupCache* cache,
+                            nsACString& uri, JSContext* cx,
+                            const JS::ReadOnlyCompileOptions& options,
+                            JS::Stencil* stencil);
 
 #endif /* mozJSLoaderUtils_h */
