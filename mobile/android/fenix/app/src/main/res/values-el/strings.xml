@@ -207,6 +207,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Επεξεργασία</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Προσαρμογή αρχικής</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Αρχική οθόνη</string>
@@ -400,6 +402,16 @@
     <string name="customize_addon_collection_user_hint">Κάτοχος συλλογής (ID χρήστη)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Η συλλογή προσθέτων τροποποιήθηκε. Κλείσιμο εφαρμογής για εφαρμογή αλλαγών…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Άμεση επιστροφή</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Πρόσφατα αποθηκευμένα</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Πρόσφατες επισκέψεις</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1481,6 +1493,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Διαγράφει τα cookies από ανακατευθύνσεις σε γνωστούς ιστοτόπους καταγραφής.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Ορισμένοι ιχνηλάτες παρακάτω έχουν επιτραπεί μερικώς στη σελίδα επειδή αλληλεπιδράσατε μαζί τους *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Μάθετε περισσότερα</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Υποστήριξη</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1551,6 +1569,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Συμπλήρωση στοιχείων σύνδεσης σε άλλες εφαρμογές της συσκευής σας.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Προσθήκη σύνδεσης</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Συγχρονισμός συνδέσεων</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1613,6 +1634,8 @@
     <string name="saved_login_copy_username">Αντιγραφή ονόματος χρήστη</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Εκκαθάριση ονόματος χρήστη</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Απαλοιφή ονόματος κεντρικού υπολογιστή</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Αντιγραφή ιστοτόπου</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1784,9 +1807,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Ενεργοποιήστε το <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Ασφαλής σύνδεση</string>
+    <string name="quick_settings_sheet_secure_connection_2">Η σύνδεση είναι ασφαλής</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Μη ασφαλής σύνδεση</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Η σύνδεση δεν είναι ασφαλής</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Ασφαλής σύνδεση</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Μη ασφαλής σύνδεση</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Θέλετε σίγουρα να διαγράψετε όλα τα δικαιώματα για όλους τους ιστοτόπους;</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1826,8 +1853,14 @@
     <string name="discard_changes">Απόρριψη αλλαγών</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Επεξεργασία</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Προσθήκη νέας σύνδεσης</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Απαιτείται κωδικός πρόσβασης</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Απαιτείται όνομα χρήστη</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Απαιτείται όνομα κεντρικού υπολογιστή</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Φωνητική αναζήτηση</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1835,6 +1868,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Υπάρχει ήδη σύνδεση με αυτό το όνομα χρήστη</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">H διεύθυνση ιστού πρέπει να περιέχει «https://» ή «http://»</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Απαιτείται έγκυρο όνομα κεντρικού υπολογιστή</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1862,8 +1902,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Εμφάνιση πιο συχνών κορυφαίων ιστοτόπων</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Εμφάνιση πιο συχνών ιστοτόπων</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Εμφάνιση πιο συχνών ιστοτόπων</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Όνομα</string>

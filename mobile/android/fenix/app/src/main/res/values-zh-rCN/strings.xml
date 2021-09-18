@@ -206,6 +206,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">编辑</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">定制主页</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">主屏幕</string>
@@ -401,6 +403,16 @@
     <string name="customize_addon_collection_user_hint">收藏集所有者（用户 ID）</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">已更改附加组件收藏集设置。退出应用程序以应用更改…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">回到先前页面</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">最近保存</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">最近访问</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1502,6 +1514,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">清除通过重定向设置到已知跟踪网站的 Cookie。</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">由于您已与此页面上的部分跟踪器交互过，已取消拦截下列标记的跟踪器 *。</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">详细了解</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">用户支持</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1571,6 +1589,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">在您设备上的其他应用程序中填充用户名和密码。</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">添加登录信息</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">同步登录信息</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1633,6 +1654,8 @@
     <string name="saved_login_copy_username">复制用户名</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">清除用户名</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">清除主机名</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">复制网站</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1802,9 +1825,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. 开启<b>%1$s</b>权限]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">安全连接</string>
+    <string name="quick_settings_sheet_secure_connection_2">连接安全</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">不安全连接</string>
+    <string name="quick_settings_sheet_insecure_connection_2">连接不安全</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">安全连接</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">不安全连接</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">您确定要清除所有网站的所有权限吗？</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1844,8 +1871,14 @@
     <string name="discard_changes">放弃更改</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">编辑</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">新建登录信息</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">需要密码</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">用户名不能为空</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">主机名不能为空</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">语音搜索</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1853,6 +1886,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">已有同用户名的登录信息存在</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">网址须包含\“https://\”或\“http://\”</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">需为有效的主机名</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1879,8 +1919,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">我知道了</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">显示最常访问的网站</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">显示最常访问的网站</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">显示最常访问的网站</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">名称</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Priwatny %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -199,6 +199,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Wobdźěłać</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Startowu wobrazowku přiměrić</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Startowa wobrazowka</string>
@@ -390,6 +392,16 @@
     <string name="customize_addon_collection_user_hint">Wobsedźer zběrki (wužiwarski ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Přidatkowa zběrka je so změniła. Nałoženje so kónči, zo bychu so změny nałožili…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Wróćo skočić</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Njedawno składowane</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Njedawno wopytane</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -648,7 +660,7 @@
     <string name="studies_restart_dialog_cancel">Přetorhnyć</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">Nałoženje so kónči, zo bychu so změny wuskutkowali …</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Nałoženje so kónči, zo bychu so změny wuskutkowali …</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1141,7 +1153,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Zhašeć</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Přetorhnyć</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Přetorhnyć</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Połna wobrazowka so pokazuje</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1307,7 +1319,7 @@
     <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Začinić</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Začinić</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Přehladowanje započeć</string>
@@ -1437,7 +1449,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zadźěwa začitanju wabjenja, widejow a druheho wobsaha, kotrež slědowanski kod wobsahuja. Móže někotrym funkcijam websydłow wadźić.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Kóždy raz, hdyž tarč je wioletna, je %s přesćěhowaki na sydle zablokował. Podótkńće za dalše informacije.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Kóždy raz, hdyž tarč je wioletna, je %s přesćěhowaki na sydle zablokował. Podótkńće za dalše informacije.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Škit je zmóžnjeny za tute sydło</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1461,6 +1473,12 @@
     <string name="etp_redirect_trackers_title">Sposrědkowanske přesćěhowaki</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Zhaša placki, kotrež su so přez dalesposrědkowanja k znatym slědowacym websydłam stajili.</string>
+
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Blokowanje někotrych deleka markěrowanych přesćěhowakow je so zdźěla na tutej stronje zběhnyło, dokelž sće z nimi interagěrował *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Dalše informacije</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Pomoc</string>
@@ -1519,7 +1537,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ženje njeskładować</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Awtomatisce wupjelnić</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Awtomatisce wupjelnić</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">W %1$s awtomatisce wupjelnić</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -1529,6 +1547,9 @@
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Wužiwarske mjena a hesła w druhich nałoženjach na wašim graće zasadźić.</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Přizjewjenje přidać</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Přizjewjenja synchronizować</string>
@@ -1592,6 +1613,8 @@
     <string name="saved_login_copy_username">Wužiwarske mjeno kopěrować</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Wužiwarske mjeno zhašeć</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Hostmjeno zhašeć</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Sydło kopěrować</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1763,9 +1786,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. ZAPINAJĆE <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Wěsty zwisk</string>
+    <string name="quick_settings_sheet_secure_connection_2">Zwisk je wěsty</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Njewěsty zwisk</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Zwisk wěsty njeje</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Wěsty zwisk</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Njewěsty zwisk</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Chceće woprawdźe wšě prawa za wšě sydła zhašeć?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1805,8 +1832,14 @@
     <string name="discard_changes">Změny zaćisnyć</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Wobdźěłać</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Nowe přizjewjenje přidać</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Hesło trěbne</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Wužiwarske mjeno trěbne</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostmjeno trěbne</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Rěčenske pytanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1814,6 +1847,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Přizjewjenje z tym wužiwarskim mjenom hižo eksistuje.</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Webadresa dyrbi \„https://\“ abo \„http://\“ wobsahować</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Płaćiwe hostmjeno trěbne</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1840,8 +1880,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">W porjadku, sym zrozumił</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Najhusćišo wopytowane sydła pokazać</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Najhusćišo wopytane sydła pokazać</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Najhusćišo wopytane sydła pokazać</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Mjeno</string>

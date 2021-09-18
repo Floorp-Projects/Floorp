@@ -199,6 +199,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editar</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Personalizar página inicial</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Tela inicial</string>
@@ -391,6 +393,9 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Coleção de extensões modificada. Saindo do aplicativo para aplicar as alterações…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Retornar</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recently_saved_bookmarks">Salvo recentemente</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
@@ -1608,6 +1613,8 @@
     <string name="saved_login_copy_username">Copiar nome de usuário</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Limpar nome de usuário</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Limpar nome de servidor</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1826,9 +1833,11 @@
     <!--  The page title for adding new login. -->
     <string name="add_login">Adicionar conta</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">A senha é obrigatória</string>
+    <string name="saved_login_password_required">Senha é obrigatória</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Nome de usuário é obrigatório</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Nome de servidor é obrigatório</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Pesquisa por voz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1841,6 +1850,9 @@
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_1">O endereço web deve conter \“https://\“ ou \“http://\“</string>
+
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Nome de servidor válido é obrigatório</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1868,6 +1880,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, entendi</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Mostrar sites preferidos mais visitados</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Mostrar os sites mais visitados</string>
 

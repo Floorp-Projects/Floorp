@@ -199,6 +199,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Chỉnh sửa</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Tùy chỉnh trang chủ</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Màn hình chính</string>
@@ -389,6 +391,16 @@
     <string name="customize_addon_collection_user_hint">Chủ sở hữu bộ sưu tập (ID người dùng)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Đã sửa đổi bộ sưu tập tiện ích mở rộng. Thoát ứng dụng để áp dụng các thay đổi…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Quay lại trang trước</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Đã lưu gần đây</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Đã xem gần đây</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1451,6 +1463,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Xóa cookie được đặt bởi chuyển hướng đến các trang web theo dõi đã biết.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Một số trình theo dõi được đánh dấu bên dưới đã được bỏ chặn một phần trên trang này vì bạn đã tương tác với chúng *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Tìm hiểu thêm</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Hỗ trợ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1517,6 +1535,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Điền tên người dùng và mật khẩu vào các ứng dụng khác trên thiết bị của bạn.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Thêm thông tin đăng nhập</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1579,6 +1600,8 @@
     <string name="saved_login_copy_username">Sao chép tên người dùng</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Xóa tên người dùng</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Xóa tên máy chủ</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Sao chép URL trang web</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1746,9 +1769,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Gạt công tắc <b>%1$s</b> sang BẬT]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Kết nối an toàn</string>
+    <string name="quick_settings_sheet_secure_connection_2">Kết nối an toàn</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Kết nối không an toàn</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Kết nối không an toàn</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Kết nối an toàn</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Kết nối không an toàn</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Bạn có chắc chắn rằng bạn muốn xóa tất cả các quyền hạn trên tất cả các trang web?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1788,8 +1815,14 @@
     <string name="discard_changes">Loại bỏ những thay đổi</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Chỉnh sửa</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Thêm thông tin đăng nhập mới</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Yêu cầu mật khẩu</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Yêu cầu tên đăng nhập</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Yêu cầu tên máy chủ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Tìm kiếm bằng giọng nói</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1797,6 +1830,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Một thông tin đăng nhập với tên người dùng đó đã tồn tại</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Địa chỉ web phải chứa \“https://\“ hoặc \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Cần có tên máy chủ hợp lệ</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1823,8 +1863,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, đã hiểu</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Hiển thị các trang web hàng đầu được xem nhiều nhất</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Hiển thị các trang web được truy cập nhiều nhất</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Hiển thị các trang web được truy cập nhiều nhất</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Tên</string>

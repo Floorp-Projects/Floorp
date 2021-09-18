@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -200,6 +200,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Rediger</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Personalisar pagina initial</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Pagina initial</string>
@@ -395,6 +397,16 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Collection de additivos modificate. Quitante le application pro applicar cambiamentos…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Revenir hic</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Salvate recentemente</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Visitate recentemente</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Le additivo non es supportate</string>
@@ -518,7 +530,7 @@
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Aperir session</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">Authenticar se pro reconnecter se</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Aperi session pro reconnecter te</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Remover le conto</string>
 
@@ -667,7 +679,7 @@
     <string name="studies_restart_dialog_cancel">Cancellar</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">Quitar le application pro applicar le modificationes…</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Quitar le application pro applicar le modificationes…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -865,15 +877,15 @@
     <!-- Screen title for editing bookmarks -->
     <string name="bookmark_edit">Rediger le marcapaginas</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Eliger le plica</string>
+    <string name="bookmark_select_folder">Selige un dossier</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
-    <string name="bookmark_delete_folder_confirmation_dialog">Desira tu vermente deler iste plica?</string>
+    <string name="bookmark_delete_folder_confirmation_dialog">Desira tu vermente deler iste dossier?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s delera le elementos eligite.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">Delite %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">Adder plica</string>
+    <string name="bookmark_add_folder">Adder dossier</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Marcapagina salvate!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -901,23 +913,23 @@
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Rediger le marcapaginas</string>
     <!-- Bookmark folder editing screen title -->
-    <string name="edit_bookmark_folder_fragment_title">Rediger plicas</string>
+    <string name="edit_bookmark_folder_fragment_title">Modificar dossier</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">Authenticar se pro vider le marcapaginas synchronisate</string>
+    <string name="bookmark_sign_in_button">Aperi session pro vider le marcapaginas synchronisate</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
 
     <!-- Bookmark FOLDER editing field label -->
-    <string name="bookmark_folder_label">PLICA</string>
+    <string name="bookmark_folder_label">DOSSIER</string>
 
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">NOMINE</string>
     <!-- Bookmark add folder screen title -->
-    <string name="bookmark_add_folder_fragment_label">Adder plica</string>
+    <string name="bookmark_add_folder_fragment_label">Adder dossier</string>
     <!-- Bookmark select folder screen title -->
-    <string name="bookmark_select_folder_fragment_label">Eliger plica</string>
+    <string name="bookmark_select_folder_fragment_label">Seliger un dossier</string>
     <!-- Bookmark editing error missing title -->
-    <string name="bookmark_empty_title_error">Illo debe haber un titulo</string>
+    <string name="bookmark_empty_title_error">Le titulo es obligatori</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">URL non valide</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
@@ -928,7 +940,7 @@
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Marcapaginas delite</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
-    <string name="bookmark_deletion_multiple_snackbar_message_3">Deletion del plicas eligite</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Deletion del dossiers seligite</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DISFACER</string>
 
@@ -1073,7 +1085,7 @@
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Accede pro synchronisar</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Authenticar se a Sync</string>
+    <string name="sync_sign_in">Aperir session in Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Inviar a tote le apparatos</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1083,7 +1095,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Connecter un altere apparato</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Pro inviar un scheda, authenticar se a Firefox sur al minus un altere apparato.</string>
+    <string name="sync_connect_device_dialog">Pro inviar un scheda, aperi session in Firefox sur al minus un altere apparato.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Comprendite</string>
     <!-- Share error message -->
@@ -1173,7 +1185,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Deler</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancellar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancellar</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Entrante in modo plen schermo</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1296,9 +1308,9 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Tu es authenticate como %s sur un altere navigator Firefox sur iste apparato. Vole tu acceder con iste conto?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Tu es in session como %s sur un altere navigator Firefox sur iste apparato. Vole tu aperir session con iste conto?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Si, authenticar me</string>
+    <string name="onboarding_firefox_account_auto_signin_confirm">Si, aperir session</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Apertura de session…</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1308,7 +1320,7 @@
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync es activate</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Authentication impossibile</string>
+    <string name="onboarding_firefox_account_automatic_signin_failed">Le apertura de session ha fallite</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Confidentialitate sempre active</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
@@ -1345,7 +1357,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lege nostre aviso de confidentialitate</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Clauder</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Clauder</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Comenciar a navigar</string>
@@ -1397,7 +1409,7 @@
     <string name="sign_out_cancel">Cancellar</string>
 
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
-    <string name="bookmark_cannot_edit_root">Impossibile rediger plicas predefinite</string>
+    <string name="bookmark_cannot_edit_root">Impossibile modificar dossiers predefinite</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -1407,7 +1419,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Naviga sin lassar te sequer</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantene tu datos pro te mesme. %s te protege contra multe del plus commun traciatores que seque lo que tu face online.
+    <string name="preference_enhanced_tracking_protection_explanation">Mantene tu datos pro te mesme. %s te protege contra le majoritate del traciatores commun que seque lo que tu face in linea.
 </string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saper plus</string>
@@ -1481,7 +1493,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impedi cargar avisos publicitari, videos e altere contento externe que contine codification de traciamento. Pote interessar le functionalitate de alcun sito web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cata vice le escudo es purpuree, %s ha blocate traciatores sur un sito. Tocca pro altere informationes.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cata vice que le scuto es purpuree, %s ha blocate traciatores sur un sito. Tocca pro plus informationes.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Le protectiones es ACTIVE pro iste sito</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1506,6 +1518,12 @@
 
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Clara cookies definite per re-directiones a note sitos web de traciamento.</string>
+
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Alcun traciatores marcate infra ha essite partialmente disblocate sur iste pagina, perque tu ha interagite con illos *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Saper plus</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Supporto</string>
@@ -1565,7 +1583,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Jammais salvar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autoplenar</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autoplenar</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Plenar %1$s</string>
@@ -1577,6 +1595,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Plenar nomines de usator e contrasignos in altere apps sur tu apparato.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Adder credentiales</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronisar credentiales</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1584,9 +1605,9 @@
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconnecter</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Authenticar se a Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Aperir session in Sync</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Authenticationes salvate</string>
+    <string name="preferences_passwords_saved_logins">Credentiales salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Le credentiales que tu salva o synchronisa a in %s apparera hic.</string>
     <!-- Preference to access list of saved logins -->
@@ -1654,7 +1675,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Implementa un patrono de blocada apparato, PIN o contrasigno pro proteger tu credentiales e contrasignos salvate de esser accedite, si alcuno altere ha tu apparato.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_later"></string>
+    <string name="logins_warning_dialog_later">Plus tarde</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">Implementar ora</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
@@ -1810,9 +1831,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Commuta <b>%1$s</b> a Active]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Connexion secur</string>
+    <string name="quick_settings_sheet_secure_connection_2">Connexion secur</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Connexion non secur</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Connexion non secur</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Connexion secur</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Connexion non secur</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Es tu secur que tu vole clarar tote le permissos sur tote le sitos?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1853,8 +1878,14 @@
     <!--  The page title for editing a saved login. -->
     <string name="edit">Rediger</string>
 
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Adder nove credential</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Contrasigno requirite</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Nomine de usator necesse.</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Nomine de servitor necesse.</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Recerca vocal</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1862,6 +1893,9 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Un credential con ille nomine de usator existe jam</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1887,7 +1921,7 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">De accordo</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Monstrar le sitos plus visitate</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Monstrar le sitos plus visitate</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nomine</string>
 	<!-- Hint for renaming title of a top site -->
