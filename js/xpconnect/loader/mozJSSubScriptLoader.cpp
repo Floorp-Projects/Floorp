@@ -135,8 +135,8 @@ static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
 
 static bool EvalScript(JSContext* cx, HandleObject targetObj,
                        HandleObject loadScope, MutableHandleValue retval,
-                       nsIURI* uri, bool startupCache, bool preloadCache,
-                       MutableHandleScript script) {
+                       nsIURI* uri, bool storeIntoStartupCache,
+                       bool storeIntoPreloadCache, MutableHandleScript script) {
   MOZ_ASSERT(!js::IsWrapper(targetObj));
 
   if (JS_IsGlobalObject(targetObj)) {
@@ -188,12 +188,12 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
     return false;
   }
 
-  if (script && (startupCache || preloadCache)) {
+  if (script && (storeIntoStartupCache || storeIntoPreloadCache)) {
     nsAutoCString cachePath;
     SubscriptCachePath(cx, uri, targetObj, cachePath);
 
     nsCString uriStr;
-    if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
+    if (storeIntoPreloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
       // Note that, when called during startup, this will keep the
       // original JSScript object alive for an indefinite amount of time.
       // This has the side-effect of keeping the global that the script
@@ -219,7 +219,7 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
       ScriptPreloader::GetSingleton().NoteScript(uriStr, cachePath, script);
     }
 
-    if (startupCache) {
+    if (storeIntoStartupCache) {
       JSAutoRealm ar(cx, script);
       WriteCachedScript(StartupCache::GetSingleton(), cachePath, cx, script);
     }
@@ -479,18 +479,21 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     }
   }
 
-  if (script) {
-    // |script| came from the cache, so don't bother writing it
-    // |back there.
-    cache = nullptr;
-  } else {
+  bool storeIntoStartupCache = false;
+  if (!script) {
+    // Store into startup cache only when the script isn't come from any cache.
+    storeIntoStartupCache = cache;
     if (!ReadScript(&script, uri, cx, compileOptions, serv,
                     useCompilationScope)) {
       return NS_OK;
     }
   }
 
-  Unused << EvalScript(cx, targetObj, loadScope, retval, uri, !!cache,
-                       !ignoreCache && !options.wantReturnValue, &script);
+  // As a policy choice, we don't store scripts that want return values
+  // into the preload cache.
+  bool storeIntoPreloadCache = !ignoreCache && !options.wantReturnValue;
+
+  Unused << EvalScript(cx, targetObj, loadScope, retval, uri,
+                       storeIntoStartupCache, storeIntoPreloadCache, &script);
   return NS_OK;
 }
