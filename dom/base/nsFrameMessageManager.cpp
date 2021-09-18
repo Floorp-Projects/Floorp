@@ -19,6 +19,7 @@
 #include "chrome/common/ipc_channel.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS_CallFunctionValue
 #include "js/CompilationAndEvaluation.h"
+#include "js/experimental/JSStencil.h"
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "js/SourceText.h"
@@ -1254,17 +1255,17 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   JSContext* cx = jsapi.cx();
 
   JS::CompileOptions options(cx);
-  ScriptPreloader::FillCompileOptionsForCachedScript(options);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(options);
   options.setFileAndLine(url.get(), 1);
   options.setNonSyntacticScope(true);
 
-  JS::Rooted<JSScript*> script(cx);
+  RefPtr<JS::Stencil> stencil;
   if (useScriptPreloader) {
-    script =
-        ScriptPreloader::GetChildSingleton().GetCachedScript(cx, options, url);
+    stencil =
+        ScriptPreloader::GetChildSingleton().GetCachedStencil(cx, options, url);
   }
 
-  if (!script) {
+  if (!stencil) {
     nsCOMPtr<nsIChannel> channel;
     NS_NewChannel(getter_AddRefs(channel), uri,
                   nsContentUtils::GetSystemPrincipal(),
@@ -1311,18 +1312,25 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
       return;
     }
 
-    script = JS::Compile(cx, options, srcBuf);
-    if (!script) {
+    stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+    if (!stencil) {
       return;
     }
   }
 
-  MOZ_ASSERT(script);
+  MOZ_ASSERT(stencil);
+
+  JS::Rooted<JSScript*> script(
+      cx, JS::InstantiateGlobalStencil(cx, options, stencil));
+  if (!script) {
+    return;
+  }
+
   aScriptp.set(script);
 
   if (useScriptPreloader) {
-    ScriptPreloader::GetChildSingleton().NoteScript(url, url, script,
-                                                    isRunOnce);
+    ScriptPreloader::GetChildSingleton().NoteStencil(url, url, stencil,
+                                                     isRunOnce);
 
     // If this script will only run once per process, only cache it in the
     // preloader cache, not the session cache.

@@ -1122,7 +1122,7 @@ void js::FillImmutableFlagsFromCompileOptionsForFunction(
 // FillImmutableFlagsFromCompileOptionsForTopLevel above.
 //
 // If isMultiDecode is true, this check minimal set of CompileOptions that is
-// shared across multiple scripts in JS::DecodeMultiOffThreadScripts.
+// shared across multiple scripts in JS::DecodeMultiOffThreadStencils.
 // Other options should be checked when getting the decoded script from the
 // cache.
 bool js::CheckCompileOptionsMatch(const ReadOnlyCompileOptions& options,
@@ -1207,7 +1207,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     // should fail. This only applies to the top-level and not its inner
     // functions.
     //
-    // Also, JS::DecodeMultiOffThreadScripts uses single CompileOptions for
+    // Also, JS::DecodeMultiOffThreadStencils uses single CompileOptions for
     // multiple scripts with different CompileOptions.
     // We should check minimal set of common flags here, and let the consumer
     // check the full flags when getting from the cache.
