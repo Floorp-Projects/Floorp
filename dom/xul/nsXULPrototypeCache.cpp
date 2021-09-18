@@ -20,6 +20,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 
+#include "js/experimental/JSStencil.h"
 #include "js/TracingAPI.h"
 
 #include "mozilla/StyleSheetInlines.h"
@@ -27,6 +28,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/intl/LocaleService.h"
 
 using namespace mozilla;
@@ -72,8 +74,6 @@ static void DisableXULCacheChangedCallback(const char* aPref, void* aClosure) {
 nsXULPrototypeCache* nsXULPrototypeCache::sInstance = nullptr;
 
 nsXULPrototypeCache::nsXULPrototypeCache() = default;
-
-nsXULPrototypeCache::~nsXULPrototypeCache() { FlushScripts(); }
 
 NS_IMPL_ISUPPORTS(nsXULPrototypeCache, nsIObserver)
 
@@ -165,19 +165,18 @@ nsresult nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument) {
   return NS_OK;
 }
 
-JSScript* nsXULPrototypeCache::GetScript(nsIURI* aURI) {
-  if (auto* entry = mScriptTable.GetEntry(aURI)) {
-    return entry->mScript.get();
+JS::Stencil* nsXULPrototypeCache::GetStencil(nsIURI* aURI) {
+  if (auto* entry = mStencilTable.GetEntry(aURI)) {
+    return entry->mStencil;
   }
   return nullptr;
 }
 
-nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
-                                        JS::Handle<JSScript*> aScriptObject) {
-  MOZ_ASSERT(aScriptObject, "Need a non-NULL script");
+nsresult nsXULPrototypeCache::PutStencil(nsIURI* aURI, JS::Stencil* aStencil) {
+  MOZ_ASSERT(aStencil, "Need a non-NULL stencil");
 
 #ifdef DEBUG_BUG_392650
-  if (mScriptTable.Get(aURI)) {
+  if (mStencilTable.Get(aURI)) {
     nsAutoCString scriptName;
     aURI->GetSpec(scriptName);
     nsAutoCString message("Loaded script ");
@@ -187,16 +186,14 @@ nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
   }
 #endif
 
-  mScriptTable.PutEntry(aURI)->mScript.set(aScriptObject);
+  mStencilTable.PutEntry(aURI)->mStencil = aStencil;
 
   return NS_OK;
 }
 
-void nsXULPrototypeCache::FlushScripts() { mScriptTable.Clear(); }
-
 void nsXULPrototypeCache::Flush() {
   mPrototypeTable.Clear();
-  mScriptTable.Clear();
+  mStencilTable.Clear();
 }
 
 bool nsXULPrototypeCache::IsEnabled() { return !gDisableXULCache; }
@@ -461,12 +458,6 @@ void nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration) {
   }
 }
 
-void nsXULPrototypeCache::MarkInGC(JSTracer* aTrc) {
-  for (auto& entry : mScriptTable) {
-    JS::TraceEdge(aTrc, &entry.mScript, "nsXULPrototypeCache script");
-  }
-}
-
 MOZ_DEFINE_MALLOC_SIZE_OF(CacheMallocSizeOf)
 
 static void ReportSize(const nsCString& aPath, size_t aAmount,
@@ -496,8 +487,8 @@ void nsXULPrototypeCache::CollectMemoryReports(
   other += sInstance->mPrototypeTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content in mPrototypeTable?
 
-  other += sInstance->mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  // TODO Report content inside mScriptTable?
+  other += sInstance->mStencilTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO Report content inside mStencilTable?
 
   other +=
       sInstance->mStartupCacheURITable.ShallowSizeOfExcludingThis(mallocSizeOf);
