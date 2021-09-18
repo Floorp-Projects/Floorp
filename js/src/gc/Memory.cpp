@@ -17,7 +17,7 @@
 
 #ifdef XP_WIN
 
-#  include "util/Windows.h"
+#  include "util/WindowsWrapper.h"
 #  include <psapi.h>
 
 #else

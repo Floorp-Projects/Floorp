@@ -401,11 +401,6 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
-  // Lazily initialize the global type context
-  if (!cx->wasm().ensureTypeContext(cx)) {
-    return false;
-  }
-
   // Test only whether the compilers are supported on the hardware, not whether
   // they are enabled.
   return BaselinePlatformSupport() || IonPlatformSupport() ||
@@ -4195,21 +4190,22 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
                                   OptimizedBackend::Ion, DebugEnabled::False);
   compilerEnv.computeParameters();
 
-  // Add the import for the function
+  // Initialize the type section
+  if (!moduleEnv.initTypes(1)) {
+    return nullptr;
+  }
   FuncType funcType = FuncType(std::move(params), std::move(results));
-  TypeDef funcTypeDef = TypeDef(std::move(funcType));
-  if (!moduleEnv.types.append(std::move(funcTypeDef))) {
-    return nullptr;
-  }
-  if (!moduleEnv.typeIds.resize(1)) {
-    return nullptr;
-  }
+  (*moduleEnv.types)[0] = TypeDef(std::move(funcType));
+
+  // Add an (import (func ...))
   FuncDesc funcDesc =
-      FuncDesc(&moduleEnv.types[0].funcType(), &moduleEnv.typeIds[0], 0);
+      FuncDesc(&(*moduleEnv.types)[0].funcType(), &moduleEnv.typeIds[0], 0);
   if (!moduleEnv.funcs.append(funcDesc) ||
       !moduleEnv.funcImportGlobalDataOffsets.resize(1)) {
     return nullptr;
   }
+
+  // Add an (export (func 0))
   moduleEnv.declareFuncExported(0, false, false);
 
   // We will be looking up and using the function in the future by index so the

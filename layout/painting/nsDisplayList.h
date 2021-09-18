@@ -1191,13 +1191,7 @@ class nsDisplayListBuilder {
    */
   class AutoContainerASRTracker {
    public:
-    explicit AutoContainerASRTracker(nsDisplayListBuilder* aBuilder)
-        : mBuilder(aBuilder),
-          mSavedContainerASR(aBuilder->mCurrentContainerASR) {
-      mBuilder->mCurrentContainerASR = ActiveScrolledRoot::PickDescendant(
-          mBuilder->ClipState().GetContentClipASR(),
-          mBuilder->mCurrentActiveScrolledRoot);
-    }
+    explicit AutoContainerASRTracker(nsDisplayListBuilder* aBuilder);
 
     const ActiveScrolledRoot* GetContainerASR() {
       return mBuilder->mCurrentContainerASR;

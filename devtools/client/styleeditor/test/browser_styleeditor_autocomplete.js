@@ -130,6 +130,13 @@ function getTestCases(cssProperties) {
 }
 
 add_task(async function() {
+  // We try to type "background" above, so backdrop-filter enabledness affects
+  // the expectations. Instead of branching on the test set the pref to true
+  // here as that is the end state, and it doesn't interact with the test in
+  // other ways.
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.backdrop-filter.enabled", true]],
+  });
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
   const { cssProperties } = ui;
   const testCases = getTestCases(cssProperties);

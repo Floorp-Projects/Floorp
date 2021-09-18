@@ -603,6 +603,9 @@ nsresult nsAppShellService::JustCreateTopWindow(
   if (aChromeMask & nsIWebBrowserChrome::CHROME_FISSION_WINDOW)
     widgetInitData.mFissionWindow = true;
 
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW)
+    widgetInitData.mHasRemoteContent = true;
+
 #ifdef MOZ_WIDGET_GTK
   // Linux/Gtk PIP window support. It's Chrome Toplevel window, always on top
   // and without any bar.

@@ -336,7 +336,7 @@ class nsMessageManagerScriptExecutor {
   void LoadScriptInternal(JS::Handle<JSObject*> aMessageManager,
                           const nsAString& aURL, bool aRunInUniqueScope);
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                    bool aRunInUniqueScope, bool aShouldCache,
+                                    bool aRunInUniqueScope,
                                     JS::Handle<JSObject*> aMessageManager,
                                     JS::MutableHandle<JSScript*> aScriptp);
   bool Init();

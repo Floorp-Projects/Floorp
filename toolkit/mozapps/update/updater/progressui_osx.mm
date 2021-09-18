@@ -96,6 +96,11 @@ int InitProgressUI(int* pargc, char*** pargv) {
 }
 
 int ShowProgressUI(bool indeterminate) {
+  if (!sUpdatePath) {
+    // InitProgressUI was never called.
+    return -1;
+  }
+
   // Only show the Progress UI if the process is taking a significant amount of
   // time where a significant amount of time is defined as .5 seconds after
   // ShowProgressUI is called sProgress is less than 70.

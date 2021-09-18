@@ -959,12 +959,12 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
 #endif
         case nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE:
         case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
-          SendCacheUpdate(CacheDomain::NameAndDescription);
+          SendCache(CacheDomain::NameAndDescription, CacheUpdateType::Update);
           ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         }
         case nsIAccessibleEvent::EVENT_VALUE_CHANGE: {
-          SendCacheUpdate(CacheDomain::Value);
+          SendCache(CacheDomain::Value, CacheUpdateType::Update);
           ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         }
@@ -1236,7 +1236,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       (aAttribute == nsGkAtoms::aria_valuemax ||
        aAttribute == nsGkAtoms::aria_valuemin || aAttribute == nsGkAtoms::min ||
        aAttribute == nsGkAtoms::max || aAttribute == nsGkAtoms::step)) {
-    SendCacheUpdate(CacheDomain::Value);
+    SendCache(CacheDomain::Value, CacheUpdateType::Update);
     return;
   }
 
@@ -1256,7 +1256,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     } else {
       // We need to update the cache here since we won't get an event if
       // aria-valuenow is shadowed by aria-valuetext.
-      SendCacheUpdate(CacheDomain::Value);
+      SendCache(CacheDomain::Value, CacheUpdateType::Update);
     }
     return;
   }
@@ -2996,7 +2996,8 @@ AccGroupInfo* LocalAccessible::GetGroupInfo() const {
   return mBits.groupInfo;
 }
 
-void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
+void LocalAccessible::SendCache(uint64_t aCacheDomain,
+                                CacheUpdateType aUpdateType) {
   if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return;
   }
@@ -3009,11 +3010,11 @@ void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
   MOZ_ASSERT(ipcDoc);
 
   RefPtr<AccAttributes> fields =
-      BundleFieldsForCache(aCacheDomain, CacheUpdateType::Update);
+      BundleFieldsForCache(aCacheDomain, aUpdateType);
   nsTArray<CacheData> data;
   data.AppendElement(
       CacheData(IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
-  ipcDoc->SendCache(CacheUpdateType::Update, data, true);
+  ipcDoc->SendCache(aUpdateType, data, true);
 }
 
 already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(

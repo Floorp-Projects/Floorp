@@ -9,42 +9,21 @@ job-defaults:
     worker:
         max-run-time: 3600
 
-linux64-mingw32-gcc:
-    description: "GCC toolchain build for MinGW32 Cross Compile"
-    treeherder:
-        symbol: TMW(mingw32-gcc)
-    worker:
-        max-run-time: 10800
-    run:
-        script: build-gcc-mingw32.sh
-        resources:
-            - 'build/unix/build-gcc/build-gcc.sh'
-        toolchain-artifact: public/build/mingw32.tar.zst
-    fetches:
-        fetch:
-            - binutils-2.27
-            - gcc-6.5.0
-            - gmp-5.1.3
-            - isl-0.15
-            - mpc-0.8.2
-            - mpfr-3.1.5
-
 linux64-mingw32-nsis:
     description: "NSIS build for MinGW32 Cross Compile"
     treeherder:
         symbol: TMW(mingw32-nsis)
     run:
         script: build-mingw32-nsis.sh
-        resources:
-            - 'build/unix/build-gcc/build-gcc.sh'
-            - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/nsis.tar.zst
     fetches:
         fetch:
             - nsis-3.07
             - zlib-1.2.11
         toolchain:
-            - linux64-mingw32-gcc
+            - linux64-binutils
+            - linux64-clang-mingw-x86
+            - sysroot-x86_64-linux-gnu
 
 linux64-mingw-fxc2-x86:
     description: "fxc2.exe x86 build for MinGW Cross Compile"

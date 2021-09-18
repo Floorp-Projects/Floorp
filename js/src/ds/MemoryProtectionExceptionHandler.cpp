@@ -10,7 +10,7 @@
 #include "mozilla/Atomics.h"
 
 #if defined(XP_WIN)
-#  include "util/Windows.h"
+#  include "util/WindowsWrapper.h"
 #elif defined(__wasi__)
 // Nothing.
 #elif defined(XP_UNIX) && !defined(XP_DARWIN)

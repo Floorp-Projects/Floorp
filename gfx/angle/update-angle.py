@@ -193,6 +193,7 @@ libraries = json.loads(p.stdout.decode())
 # platforms.
 # descs["//:angle_common"]["sources"] +=
 EXTRA_ANGLE_COMMON_SOURCES = [
+    "//src/common/system_utils_apple.cpp",
     "//src/common/system_utils_linux.cpp",
     "//src/common/system_utils_mac.cpp",
     "//src/common/system_utils_posix.cpp",
@@ -415,7 +416,7 @@ def export_target(target_full_name) -> Set[str]:
             elif b.endswith("_linux"):
                 # Include these on BSDs too.
                 config = 'CONFIG["OS_ARCH"] not in ("Darwin", "WINNT")'
-            elif b.endswith("_mac"):
+            elif b.endswith("_apple") or b.endswith("_mac"):
                 config = 'CONFIG["OS_ARCH"] == "Darwin"'
             elif b.endswith("_posix"):
                 config = 'CONFIG["OS_ARCH"] != "WINNT"'

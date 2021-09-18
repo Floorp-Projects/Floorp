@@ -363,16 +363,6 @@ UNIFIED_SOURCES += [
     "threading/Mutex.cpp",
     "threading/ProtectedData.cpp",
     "threading/Thread.cpp",
-    "util/AllocationLogging.cpp",
-    "util/AllocPolicy.cpp",
-    "util/CompleteFile.cpp",
-    "util/DumpFunctions.cpp",
-    "util/NativeStack.cpp",
-    "util/Printf.cpp",
-    "util/StringBuffer.cpp",
-    "util/StructuredSpewer.cpp",
-    "util/Text.cpp",
-    "util/Unicode.cpp",
     "vm/Activation.cpp",
     "vm/ArgumentsObject.cpp",
     "vm/ArrayBufferObject.cpp",
@@ -470,17 +460,11 @@ UNIFIED_SOURCES += [
 #   win32 test slowdowns
 # jsmath.cpp cannot be built in unified mode because it needs to re-#define the
 #   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
-# util/DoubleToString.cpp cannot be built in unified mode because we want to
-#   suppress compiler warnings in third-party dtoa.c.
-# util/Utility.cpp cannot be built in unified mode because it is needed for
-#   check-vanilla-allocations.
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
     "builtin/RegExp.cpp",
     "jsmath.cpp",
-    "util/DoubleToString.cpp",
-    "util/Utility.cpp",
     "vm/Interpreter.cpp",
     "vm/ProfilingStack.cpp",
 ]
@@ -558,7 +542,7 @@ if CONFIG["MOZ_VTUNE"]:
         if int(CONFIG["CC_VERSION"].split(".")[0]) >= 8:
             SOURCES["vtune/ittnotify_static.c"].flags += ["-Wno-stringop-truncation"]
 
-DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "wasm"]
+DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "util", "wasm"]
 
 if CONFIG["JS_JITSPEW"]:
     DIRS += ["zydis"]
@@ -636,7 +620,3 @@ if CONFIG["JS_HAS_INTL_API"]:
     ]
 
     USE_LIBS += ["intlcomponents"]
-
-# Suppress warnings in third-party code.
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    SOURCES["util/DoubleToString.cpp"].flags += ["-Wno-implicit-fallthrough"]

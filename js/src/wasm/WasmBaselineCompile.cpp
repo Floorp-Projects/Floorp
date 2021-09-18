@@ -643,7 +643,7 @@ bool BaseCompiler::endFunction() {
   offsets_.end = masm.currentOffset();
 
   if (!fr.checkStackHeight()) {
-    return false;
+    return decoder_.fail(decoder_.beginOffset(), "stack frame is too large");
   }
 
   JitSpew(JitSpew_Codegen, "# endFunction: end of OOL code for index %d",
@@ -4337,7 +4337,7 @@ bool BaseCompiler::emitCallIndirect() {
 
   sync();
 
-  const FuncType& funcType = moduleEnv_.types[funcTypeIndex].funcType();
+  const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
 
   // Stack: ... arg1 .. argn callee
 
@@ -5942,7 +5942,7 @@ bool BaseCompiler::emitStructNewWithRtt() {
     return true;
   }
 
-  const StructType& structType = moduleEnv_.types[typeIndex].structType();
+  const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
   // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
   // guaranteed to be at the top of the stack by validation.
@@ -6034,7 +6034,7 @@ bool BaseCompiler::emitStructGet(FieldExtension extension) {
     return true;
   }
 
-  const StructType& structType = moduleEnv_.types[typeIndex].structType();
+  const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
   RegRef rp = popRef();
 
@@ -6086,7 +6086,7 @@ bool BaseCompiler::emitStructSet() {
     return true;
   }
 
-  const StructType& structType = moduleEnv_.types[typeIndex].structType();
+  const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
   const StructField& structField = structType.fields_[fieldIndex];
 
   // Reserve this register early if we will need it so that it is not taken by
@@ -6153,7 +6153,7 @@ bool BaseCompiler::emitArrayNewWithRtt() {
     return true;
   }
 
-  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+  const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
   // Allocate zeroed storage.  The parameter to ArrayNew is a rtt value and
   // length that are guaranteed to be at the top of the stack by validation.
@@ -6238,7 +6238,7 @@ bool BaseCompiler::emitArrayGet(FieldExtension extension) {
     return true;
   }
 
-  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+  const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
   RegI32 index = popI32();
   RegRef rp = popRef();
@@ -6286,7 +6286,7 @@ bool BaseCompiler::emitArraySet() {
     return true;
   }
 
-  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+  const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
@@ -9553,6 +9553,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
       alloc_(alloc->fallible()),
       masm(*masm),
       // Compilation state
+      decoder_(decoder),
       iter_(moduleEnv, decoder),
       fr(*masm),
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
@@ -9680,7 +9681,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
     if (!locals.appendAll(moduleEnv.funcs[func.index].type->args())) {
       return false;
     }
-    if (!DecodeLocalEntries(d, moduleEnv.types, moduleEnv.features, &locals)) {
+    if (!DecodeLocalEntries(d, *moduleEnv.types, moduleEnv.features, &locals)) {
       return false;
     }
 

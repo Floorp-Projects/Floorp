@@ -240,7 +240,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "util/DifferentialTesting.h"
 #include "util/Poison.h"
-#include "util/Windows.h"
+#include "util/WindowsWrapper.h"
 #include "vm/BigIntType.h"
 #include "vm/GetterSetter.h"
 #include "vm/HelperThreadState.h"
