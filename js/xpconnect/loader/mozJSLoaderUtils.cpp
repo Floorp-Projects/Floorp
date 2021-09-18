@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Transcoding.h"
 #include "mozilla/scache/StartupCache.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CompileOptions.h"
+#include "js/Transcoding.h"
+#include "js/experimental/JSStencil.h"
 
 #include "mozilla/BasePrincipal.h"
 
@@ -31,36 +33,26 @@ static nsresult HandleTranscodeResult(JSContext* cx,
   return NS_ERROR_FAILURE;
 }
 
-// We only serialize scripts with system principals. So we don't serialize the
-// principals when writing a script. Instead, when reading it back, we set the
-// principals to the system principals.
-nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
-                          const JS::ReadOnlyCompileOptions& options,
-                          MutableHandleScript scriptp) {
+nsresult ReadCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
+                           const JS::ReadOnlyCompileOptions& options,
+                           JS::Stencil** stencilOut) {
   const char* buf;
   uint32_t len;
   nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
   if (NS_FAILED(rv)) {
     return rv;  // don't warn since NOT_AVAILABLE is an ok error
   }
-  void* copy = malloc(len);
-  if (!copy) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  memcpy(copy, buf, len);
-  JS::TranscodeBuffer buffer;
-  buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(copy), len);
-  JS::TranscodeResult code = JS::DecodeScript(cx, options, buffer, scriptp);
+
+  JS::TranscodeRange range(AsBytes(Span(buf, len)));
+  JS::TranscodeResult code = JS::DecodeStencil(cx, options, range, stencilOut);
   return HandleTranscodeResult(cx, code);
 }
 
-nsresult WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
-                           HandleScript script) {
-  MOZ_ASSERT(
-      nsJSPrincipals::get(JS_GetScriptPrincipals(script))->IsSystemPrincipal());
-
+nsresult WriteCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
+                            const JS::ReadOnlyCompileOptions& options,
+                            JS::Stencil* stencil) {
   JS::TranscodeBuffer buffer;
-  JS::TranscodeResult code = JS::EncodeScript(cx, buffer, script);
+  JS::TranscodeResult code = JS::EncodeStencil(cx, options, stencil, buffer);
   if (code != JS::TranscodeResult::Ok) {
     return HandleTranscodeResult(cx, code);
   }
