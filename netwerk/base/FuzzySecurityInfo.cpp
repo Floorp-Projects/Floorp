@@ -369,10 +369,5 @@ NS_IMETHODIMP FuzzySecurityInfo::DisableEarlyData(void) {
   return NS_OK;
 }
 
-NS_IMETHODIMP FuzzySecurityInfo::SetHandshakeCallbackListener(
-    nsITlsHandshakeCallbackListener* callback) {
-  return NS_OK;
-}
-
 }  // namespace net
 }  // namespace mozilla
