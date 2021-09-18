@@ -15,7 +15,6 @@
 #include "nsTHashMap.h"
 #include "nsIProxyInfo.h"
 #include "nsISSLSocketControl.h"
-#include "nsITlsHandshakeListener.h"
 #include "nsNSSCertificate.h"
 #include "nsTHashtable.h"
 #include "sslt.h"
@@ -74,8 +73,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   NS_IMETHOD GetPeerId(nsACString& aResult) override;
   NS_IMETHOD GetRetryEchConfig(nsACString& aEchConfig) override;
   NS_IMETHOD DisableEarlyData(void) override;
-  NS_IMETHOD SetHandshakeCallbackListener(
-      nsITlsHandshakeCallbackListener* callback) override;
 
   PRStatus CloseSocketAndDestroy();
 
@@ -244,8 +241,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   // rest of the session. This is normally used when you have per
   // socket tls flags overriding session wide defaults.
   RefPtr<mozilla::psm::SharedSSLState> mOwningSharedRef;
-
-  nsCOMPtr<nsITlsHandshakeCallbackListener> mTlsHandshakeCallback;
 };
 
 // This class is used to store the needed information for invoking the client
