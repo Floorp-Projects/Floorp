@@ -11,7 +11,7 @@
 #include <string.h>
 #include <utility>
 #include "ErrorList.h"
-#include "js/experimental/JSStencil.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "mozilla/AlreadyAddRefed.h"
@@ -308,14 +308,14 @@ class nsSameProcessAsyncMessageBase {
 class nsScriptCacheCleaner;
 
 struct nsMessageManagerScriptHolder {
-  explicit nsMessageManagerScriptHolder(JS::Stencil* aStencil)
-      : mStencil(aStencil) {
+  nsMessageManagerScriptHolder(JSContext* aCx, JSScript* aScript)
+      : mScript(aCx, aScript) {
     MOZ_COUNT_CTOR(nsMessageManagerScriptHolder);
   }
 
   MOZ_COUNTED_DTOR(nsMessageManagerScriptHolder)
 
-  RefPtr<JS::Stencil> mStencil;
+  JS::PersistentRooted<JSScript*> mScript;
 };
 
 class nsMessageManagerScriptExecutor {
@@ -335,9 +335,10 @@ class nsMessageManagerScriptExecutor {
   void DidCreateScriptLoader();
   void LoadScriptInternal(JS::Handle<JSObject*> aMessageManager,
                           const nsAString& aURL, bool aRunInUniqueScope);
-  already_AddRefed<JS::Stencil> TryCacheLoadAndCompileScript(
-      const nsAString& aURL, bool aRunInUniqueScope,
-      JS::Handle<JSObject*> aMessageManager);
+  void TryCacheLoadAndCompileScript(const nsAString& aURL,
+                                    bool aRunInUniqueScope,
+                                    JS::Handle<JSObject*> aMessageManager,
+                                    JS::MutableHandle<JSScript*> aScriptp);
   bool Init();
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();

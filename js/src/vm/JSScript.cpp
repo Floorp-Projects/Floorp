@@ -4455,9 +4455,8 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   SourceExtent extent = src->extent();
 
   ImmutableScriptFlags flags = src->immutableFlags();
-  // The source/target of clone should agree with syntactic scope.
-  MOZ_ASSERT(flags.hasFlag(JSScript::ImmutableFlags::HasNonSyntacticScope) ==
-             scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+  flags.setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
+                scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
 
   // FunctionFlags and ImmutableScriptFlags should agree on self-hosting status.
   MOZ_ASSERT_IF(functionOrGlobal->is<JSFunction>(),
