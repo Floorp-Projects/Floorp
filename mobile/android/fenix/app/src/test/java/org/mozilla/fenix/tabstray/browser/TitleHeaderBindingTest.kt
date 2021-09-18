@@ -5,11 +5,13 @@
 package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
@@ -17,19 +19,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class TitleHeaderBindingTest {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `WHEN normal tabs are added to the list THEN return true`() {
+    fun `WHEN normal tabs are added to the list THEN return true`() = runBlockingTest {
         var result = false
         val store = BrowserStore()
         val binding = TitleHeaderBinding(store) { result = it }
 
-        store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org")))
+        store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org"))).joinBlocking()
 
         binding.start()
 
@@ -39,7 +41,7 @@ class TitleHeaderBindingTest {
     }
 
     @Test
-    fun `WHEN grouped tabs are added to the list THEN return false`() {
+    fun `WHEN grouped tabs are added to the list THEN return false`() = runBlockingTest {
         var result = false
         val store = BrowserStore()
         val binding = TitleHeaderBinding(store) { result = it }
@@ -54,7 +56,7 @@ class TitleHeaderBindingTest {
                     )
                 )
             )
-        )
+        ).joinBlocking()
 
         binding.start()
 
@@ -64,7 +66,7 @@ class TitleHeaderBindingTest {
     }
 
     @Test
-    fun `WHEN normal tabs are all removed THEN return false`() {
+    fun `WHEN normal tabs are all removed THEN return false`() = runBlockingTest {
         var result = false
         val store = BrowserStore(
             initialState = BrowserState(
@@ -73,7 +75,7 @@ class TitleHeaderBindingTest {
         )
         val binding = TitleHeaderBinding(store) { result = it }
 
-        store.dispatch(TabListAction.RemoveTabAction("123"))
+        store.dispatch(TabListAction.RemoveTabAction("123")).joinBlocking()
 
         binding.start()
 
