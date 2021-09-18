@@ -21,8 +21,6 @@
 #include "nsIScriptContext.h"
 #include "nsICSSLoaderObserver.h"
 #include "mozilla/Logging.h"
-#include "js/experimental/JSStencil.h"
-#include "mozilla/RefPtr.h"
 
 class nsIURI;
 class nsIChannel;
@@ -88,7 +86,7 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
                               nsresult aStatus) override;
 
   // nsIOffThreadScriptReceiver
-  NS_IMETHOD OnScriptCompileComplete(JS::Stencil* aStencil,
+  NS_IMETHOD OnScriptCompileComplete(JSScript* aScript,
                                      nsresult aStatus) override;
 
   nsresult OnPrototypeLoadDone(nsXULPrototypeDocument* aPrototype);

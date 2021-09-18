@@ -249,6 +249,7 @@ class nsXPConnect final : public nsIXPConnect {
 
   XPCJSContext* mContext = nullptr;
   XPCJSRuntime* mRuntime = nullptr;
+  bool mShuttingDown;
 
   friend class nsIXPConnect;
 
