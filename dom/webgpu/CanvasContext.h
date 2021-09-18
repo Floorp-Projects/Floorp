@@ -81,9 +81,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override {}
   bool GetIsOpaque() override { return true; }
   NS_IMETHOD Reset() override { return NS_OK; }
-  already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                         Layer* aOldLayer,
-                                         LayerManager* aManager) override;
   bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
                                  WebRenderCanvasData* aCanvasData) override;
   void MarkContextClean() override {}

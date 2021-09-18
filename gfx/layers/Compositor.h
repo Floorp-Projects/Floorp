@@ -199,11 +199,6 @@ class Compositor : public TextureSourceProvider {
    */
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() = 0;
 
-  /**
-   * Properties of the compositor.
-   */
-  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) = 0;
-
   typedef uint32_t MakeCurrentFlags;
   static const MakeCurrentFlags ForceMakeCurrent = 0x1;
   /**

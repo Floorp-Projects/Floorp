@@ -20,7 +20,6 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
-#include "ImageLayers.h"
 #include "Layers.h"
 #include "ActiveLayerTracker.h"
 
