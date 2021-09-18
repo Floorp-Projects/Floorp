@@ -369,6 +369,7 @@ const BACKGROUND_UPDATE_PREF_CHANGE_TOPIC =
   UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"]
     .observerTopic;
 const SERVICES_INFO_CHANGE_TOPIC = "sync-ui-state:update";
+const FIREFOX_SUGGEST_UPDATE_TOPIC = "firefox-suggest-update";
 
 /**
  * Enforces the parameter to a boolean value.
@@ -1296,6 +1297,7 @@ EnvironmentCache.prototype = {
     Services.obs.addObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.addObserver(this, BACKGROUND_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.addObserver(this, SERVICES_INFO_CHANGE_TOPIC);
+    Services.obs.addObserver(this, FIREFOX_SUGGEST_UPDATE_TOPIC);
   },
 
   _removeObservers() {
@@ -1314,6 +1316,7 @@ EnvironmentCache.prototype = {
     Services.obs.removeObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.removeObserver(this, BACKGROUND_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.removeObserver(this, SERVICES_INFO_CHANGE_TOPIC);
+    Services.obs.removeObserver(this, FIREFOX_SUGGEST_UPDATE_TOPIC);
   },
 
   observe(aSubject, aTopic, aData) {
@@ -1386,6 +1389,9 @@ EnvironmentCache.prototype = {
         break;
       case SERVICES_INFO_CHANGE_TOPIC:
         this._updateServicesInfo();
+        break;
+      case FIREFOX_SUGGEST_UPDATE_TOPIC:
+        this._updateFirefoxSuggest();
         break;
     }
   },
@@ -1768,6 +1774,21 @@ EnvironmentCache.prototype = {
       accountEnabled,
       syncEnabled,
     };
+  },
+
+  /**
+   * Updates environment data related to Firefox Suggest.
+   */
+  _updateFirefoxSuggest() {
+    let prefs = [
+      "browser.urlbar.suggest.quicksuggest",
+      "browser.urlbar.suggest.quicksuggest.sponsored",
+    ];
+    for (let p of prefs) {
+      this._currentEnvironment.settings.userPrefs[
+        p
+      ] = Services.prefs.getBoolPref(p);
+    }
   },
 
   /**
