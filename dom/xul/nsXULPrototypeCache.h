@@ -16,8 +16,6 @@
 #include "nsIStorageStream.h"
 
 #include "mozilla/scache/StartupCache.h"
-#include "js/experimental/JSStencil.h"
-#include "mozilla/RefPtr.h"
 
 class nsIHandleReportCallback;
 namespace mozilla {
@@ -58,8 +56,8 @@ class nsXULPrototypeCache : public nsIObserver {
   nsXULPrototypeDocument* GetPrototype(nsIURI* aURI);
   nsresult PutPrototype(nsXULPrototypeDocument* aDocument);
 
-  JS::Stencil* GetStencil(nsIURI* aURI);
-  nsresult PutStencil(nsIURI* aURI, JS::Stencil* aStencil);
+  JSScript* GetScript(nsIURI* aURI);
+  nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
   /**
    * Write the XUL prototype document to a cache file. The proto must be
@@ -83,6 +81,8 @@ class nsXULPrototypeCache : public nsIObserver {
   static void ReleaseGlobals() { NS_IF_RELEASE(sInstance); }
 
   void MarkInCCGeneration(uint32_t aGeneration);
+  void MarkInGC(JSTracer* aTrc);
+  void FlushScripts();
 
   static void CollectMemoryReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData);
@@ -92,22 +92,26 @@ class nsXULPrototypeCache : public nsIObserver {
                                           void** aResult);
 
   nsXULPrototypeCache();
-  virtual ~nsXULPrototypeCache() = default;
+  virtual ~nsXULPrototypeCache();
 
   static nsXULPrototypeCache* sInstance;
 
   nsRefPtrHashtable<nsURIHashKey, nsXULPrototypeDocument>
       mPrototypeTable;  // owns the prototypes
 
-  class StencilHashKey : public nsURIHashKey {
+  class ScriptHashKey : public nsURIHashKey {
    public:
-    explicit StencilHashKey(const nsIURI* aKey) : nsURIHashKey(aKey) {}
-    StencilHashKey(StencilHashKey&&) = default;
+    explicit ScriptHashKey(const nsIURI* aKey) : nsURIHashKey(aKey) {}
+    ScriptHashKey(ScriptHashKey&&) = default;
 
-    RefPtr<JS::Stencil> mStencil;
+    // Mark ALLOW_MEMMOVE as false, as hash tables containing JS:Heap<T>
+    // values must be copied rather than memmoved.
+    enum { ALLOW_MEMMOVE = false };
+
+    JS::Heap<JSScript*> mScript;
   };
 
-  nsTHashtable<StencilHashKey> mStencilTable;
+  nsTHashtable<ScriptHashKey> mScriptTable;
 
   // URIs already written to the startup cache, to prevent double-caching.
   nsTHashtable<nsURIHashKey> mStartupCacheURITable;

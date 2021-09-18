@@ -42,7 +42,11 @@ uint32_t nsXULPrototypeDocument::gRefCnt;
 //
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
-    : mRoot(nullptr), mLoaded(false), mCCGeneration(0), mWasL10nCached(false) {
+    : mRoot(nullptr),
+      mLoaded(false),
+      mCCGeneration(0),
+      mGCNumber(0),
+      mWasL10nCached(false) {
   ++gRefCnt;
 }
 
@@ -421,6 +425,21 @@ nsresult nsXULPrototypeDocument::NotifyLoadDone() {
   mPrototypeWaiters.Clear();
 
   return NS_OK;
+}
+
+void nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc) {
+  // Only trace the protos once per GC if we are marking.
+  if (aTrc->isMarkingTracer()) {
+    uint32_t currentGCNumber = aTrc->gcNumberForMarking();
+    if (mGCNumber == currentGCNumber) {
+      return;
+    }
+    mGCNumber = currentGCNumber;
+  }
+
+  if (mRoot) {
+    mRoot->TraceAllScripts(aTrc);
+  }
 }
 
 void nsXULPrototypeDocument::SetIsL10nCached(bool aIsCached) {

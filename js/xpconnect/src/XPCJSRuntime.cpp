@@ -695,7 +695,7 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc) {
     }
   }
 
-  dom::TraceBlackJS(trc);
+  dom::TraceBlackJS(trc, nsIXPConnect::XPConnect()->GetIsShuttingDown());
 }
 
 void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc) {

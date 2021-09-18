@@ -12,8 +12,6 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "jspubtd.h"
-#include "js/experimental/JSStencil.h"
-#include "mozilla/RefPtr.h"
 
 class nsIScriptGlobalObject;
 
@@ -79,12 +77,11 @@ class nsIOffThreadScriptReceiver : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOFFTHREADSCRIPTRECEIVER_IID)
 
   /**
-   * Notify this object that a previous Compile call specifying this as
+   * Notify this object that a previous CompileScript call specifying this as
    * aOffThreadReceiver has completed. The script being passed in must be
    * rooted before any call which could trigger GC.
    */
-  NS_IMETHOD OnScriptCompileComplete(JS::Stencil* aStencil,
-                                     nsresult aStatus) = 0;
+  NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIOffThreadScriptReceiver,

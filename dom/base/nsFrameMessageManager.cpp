@@ -15,20 +15,15 @@
 #include "ContentChild.h"
 #include "ErrorList.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/Unused.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_channel.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS_CallFunctionValue
 #include "js/CompilationAndEvaluation.h"
-#include "js/CompileOptions.h"
 #include "js/experimental/JSStencil.h"
-#include "js/GCVector.h"
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty
-#include "js/RootingAPI.h"
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"
-#include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -1173,11 +1168,6 @@ void nsMessageManagerScriptExecutor::Shutdown() {
   }
 }
 
-static void FillCompileOptionsForCachedStencil(JS::CompileOptions& aOptions) {
-  ScriptPreloader::FillCompileOptionsForCachedStencil(aOptions);
-  aOptions.setNonSyntacticScope(true);
-}
-
 void nsMessageManagerScriptExecutor::LoadScriptInternal(
     JS::Handle<JSObject*> aMessageManager, const nsAString& aURL,
     bool aRunInUniqueScope) {
@@ -1188,59 +1178,48 @@ void nsMessageManagerScriptExecutor::LoadScriptInternal(
     return;
   }
 
-  RefPtr<JS::Stencil> stencil;
+  JS::RootingContext* rcx = RootingCx();
+  JS::Rooted<JSScript*> script(rcx);
+
   nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);
   if (holder) {
-    stencil = holder->mStencil;
+    script = holder->mScript;
   } else {
-    stencil =
-        TryCacheLoadAndCompileScript(aURL, aRunInUniqueScope, aMessageManager);
+    TryCacheLoadAndCompileScript(aURL, aRunInUniqueScope, aMessageManager,
+                                 &script);
   }
 
   AutoEntryScript aes(aMessageManager, "message manager script load");
   JSContext* cx = aes.cx();
-  if (stencil) {
-    JS::CompileOptions options(cx);
-    FillCompileOptionsForCachedStencil(options);
-
-    if (JS::StencilCanLazilyParse(stencil)) {
-      // See TryCacheLoadAndCompileScript.
-      options.setSourceIsLazy(false);
-    }
-
-    JS::Rooted<JSScript*> script(
-        cx, JS::InstantiateGlobalStencil(cx, options, stencil));
-
-    if (script) {
-      if (aRunInUniqueScope) {
-        JS::Rooted<JSObject*> scope(cx);
-        bool ok = js::ExecuteInFrameScriptEnvironment(cx, aMessageManager,
-                                                      script, &scope);
-        if (ok) {
-          // Force the scope to stay alive.
-          mAnonymousGlobalScopes.AppendElement(scope);
-        }
-      } else {
-        JS::RootedValue rval(cx);
-        JS::RootedVector<JSObject*> envChain(cx);
-        if (!envChain.append(aMessageManager)) {
-          return;
-        }
-        Unused << JS_ExecuteScript(cx, envChain, script, &rval);
+  if (script) {
+    if (aRunInUniqueScope) {
+      JS::Rooted<JSObject*> scope(cx);
+      bool ok = js::ExecuteInFrameScriptEnvironment(cx, aMessageManager, script,
+                                                    &scope);
+      if (ok) {
+        // Force the scope to stay alive.
+        mAnonymousGlobalScopes.AppendElement(scope);
       }
+    } else {
+      JS::RootedValue rval(cx);
+      JS::RootedVector<JSObject*> envChain(cx);
+      if (!envChain.append(aMessageManager)) {
+        return;
+      }
+      JS::CloneAndExecuteScript(cx, envChain, script, &rval);
     }
   }
 }
 
-already_AddRefed<JS::Stencil>
-nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
+void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     const nsAString& aURL, bool aRunInUniqueScope,
-    JS::Handle<JSObject*> aMessageManager) {
+    JS::Handle<JSObject*> aMessageManager,
+    JS::MutableHandle<JSScript*> aScriptp) {
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
   if (NS_FAILED(rv)) {
-    return nullptr;
+    return;
   }
 
   bool hasFlags;
@@ -1248,7 +1227,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
                            &hasFlags);
   if (NS_FAILED(rv) || !hasFlags) {
     NS_WARNING("Will not load a frame script!");
-    return nullptr;
+    return;
   }
 
   // If this script won't be cached, or there is only one of this type of
@@ -1271,13 +1250,14 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   // compartment alive.
   AutoJSAPI jsapi;
   if (!jsapi.Init(isRunOnce ? aMessageManager : xpc::CompilationScope())) {
-    return nullptr;
+    return;
   }
   JSContext* cx = jsapi.cx();
 
   JS::CompileOptions options(cx);
-  FillCompileOptionsForCachedStencil(options);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(options);
   options.setFileAndLine(url.get(), 1);
+  options.setNonSyntacticScope(true);
 
   RefPtr<JS::Stencil> stencil;
   if (useScriptPreloader) {
@@ -1293,12 +1273,12 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
                   nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT);
 
     if (!channel) {
-      return nullptr;
+      return;
     }
 
     nsCOMPtr<nsIInputStream> input;
     rv = channel->Open(getter_AddRefs(input));
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    NS_ENSURE_SUCCESS_VOID(rv);
     nsString dataString;
     char16_t* dataStringBuf = nullptr;
     size_t dataStringLength = 0;
@@ -1306,7 +1286,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
       nsCString buffer;
       uint64_t written;
       if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, -1, &written))) {
-        return nullptr;
+        return;
       }
 
       uint32_t size = (uint32_t)std::min(written, (uint64_t)UINT32_MAX);
@@ -1316,7 +1296,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     }
 
     if (!dataStringBuf || dataStringLength == 0) {
-      return nullptr;
+      return;
     }
 
     // If we are not encoding to the ScriptPreloader cache, we can now relax the
@@ -1329,16 +1309,24 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
 
     JS::SourceText<char16_t> srcBuf;
     if (!srcBuf.init(cx, std::move(srcChars), dataStringLength)) {
-      return nullptr;
+      return;
     }
 
     stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
     if (!stencil) {
-      return nullptr;
+      return;
     }
   }
 
   MOZ_ASSERT(stencil);
+
+  JS::Rooted<JSScript*> script(
+      cx, JS::InstantiateGlobalStencil(cx, options, stencil));
+  if (!script) {
+    return;
+  }
+
+  aScriptp.set(script);
 
   if (useScriptPreloader) {
     ScriptPreloader::GetChildSingleton().NoteStencil(url, url, stencil,
@@ -1348,12 +1336,10 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     // preloader cache, not the session cache.
     if (!isRunOnce) {
       // Root the object also for caching.
-      auto* holder = new nsMessageManagerScriptHolder(stencil);
+      auto* holder = new nsMessageManagerScriptHolder(cx, script);
       sCachedScripts->InsertOrUpdate(aURL, holder);
     }
   }
-
-  return stencil.forget();
 }
 
 void nsMessageManagerScriptExecutor::Trace(const TraceCallbacks& aCallbacks,

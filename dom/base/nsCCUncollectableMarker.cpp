@@ -429,7 +429,20 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void mozilla::dom::TraceBlackJS(JSTracer* aTrc) {
+void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
+#ifdef MOZ_XUL
+  // Mark the scripts held in the XULPrototypeCache. This is required to keep
+  // the JS script in the cache live across GC.
+  nsXULPrototypeCache* cache = nsXULPrototypeCache::MaybeGetInstance();
+  if (cache) {
+    if (aIsShutdownGC) {
+      cache->FlushScripts();
+    } else {
+      cache->MarkInGC(aTrc);
+    }
+  }
+#endif
+
   if (!nsCCUncollectableMarker::sGeneration) {
     return;
   }
@@ -491,6 +504,13 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc) {
             }
           }
         }
+
+#ifdef MOZ_XUL
+        Document* doc = window->GetExtantDoc();
+        if (doc) {
+          doc->TraceProtos(aTrc);
+        }
+#endif
       }
     }
   }
