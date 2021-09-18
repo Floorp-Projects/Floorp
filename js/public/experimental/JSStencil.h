@@ -87,6 +87,9 @@ extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
 // decoding.
 extern JS_PUBLIC_API bool StencilIsBorrowed(Stencil* stencil);
 
+// Return true if the stencil is lazily parsed.
+extern JS_PUBLIC_API bool StencilCanLazilyParse(Stencil* stencil);
+
 // Instantiate a module Stencil and return the associated object. Inside the
 // engine this is a js::ModuleObject.
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
