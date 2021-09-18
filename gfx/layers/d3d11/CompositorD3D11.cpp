@@ -346,16 +346,6 @@ TextureFactoryIdentifier CompositorD3D11::GetTextureFactoryIdentifier() {
   return ident;
 }
 
-bool CompositorD3D11::CanUseCanvasLayerForSize(const gfx::IntSize& aSize) {
-  int32_t maxTextureSize = GetMaxTextureSize();
-
-  if (aSize.width > maxTextureSize || aSize.height > maxTextureSize) {
-    return false;
-  }
-
-  return true;
-}
-
 int32_t CompositorD3D11::GetMaxTextureSize() const {
   return GetMaxTextureSizeForFeatureLevel(mFeatureLevel);
 }

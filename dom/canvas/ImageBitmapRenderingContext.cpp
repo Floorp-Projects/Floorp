@@ -4,10 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageBitmapRenderingContext.h"
+#include "gfxPlatform.h"
+#include "gfx2DGlue.h"
 #include "mozilla/dom/ImageBitmapRenderingContextBinding.h"
 #include "nsComponentManagerUtils.h"
+#include "nsRegion.h"
 #include "ImageContainer.h"
-#include "ImageLayers.h"
 
 namespace mozilla::dom {
 
@@ -196,40 +198,6 @@ ImageBitmapRenderingContext::Reset() {
   mImage = nullptr;
   mIsCapturedFrameInvalid = false;
   return NS_OK;
-}
-
-already_AddRefed<layers::Layer> ImageBitmapRenderingContext::GetCanvasLayer(
-    nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
-  if (!mImage) {
-    // No DidTransactionCallback will be received, so mark the context clean
-    // now so future invalidations will be dispatched.
-    MarkContextClean();
-    return nullptr;
-  }
-
-  RefPtr<layers::ImageLayer> imageLayer;
-
-  if (aOldLayer) {
-    imageLayer = static_cast<layers::ImageLayer*>(aOldLayer);
-  } else {
-    imageLayer = aManager->CreateImageLayer();
-  }
-
-  RefPtr<layers::ImageContainer> imageContainer = imageLayer->GetContainer();
-  if (!imageContainer) {
-    imageContainer = LayerManager::CreateImageContainer();
-    imageLayer->SetContainer(imageContainer);
-  }
-
-  AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
-  RefPtr<layers::Image> image = ClipToIntrinsicSize();
-  if (!image) {
-    return nullptr;
-  }
-  imageList.AppendElement(layers::ImageContainer::NonOwningImage(image));
-  imageContainer->SetCurrentImages(imageList);
-
-  return imageLayer.forget();
 }
 
 bool ImageBitmapRenderingContext::UpdateWebRenderCanvasData(

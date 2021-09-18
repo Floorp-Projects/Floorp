@@ -4,6 +4,7 @@
  */
 
 #include "TestLayers.h"
+#include "gfxPlatform.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "LayerUserData.h"
@@ -54,9 +55,6 @@ class TestLayerManager : public LayerManager {
   virtual void GetBackendName(nsAString& aName) {}
   virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
   virtual bool BeginTransaction(const nsCString& = nsCString()) { return true; }
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() {
-    MOZ_CRASH("Not implemented.");
-  }
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() {
     RefPtr<PaintedLayer> layer = new TestPaintedLayer(this);
     return layer.forget();
@@ -68,9 +66,6 @@ class TestLayerManager : public LayerManager {
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget,
                                           const nsCString& = nsCString()) {
     return true;
-  }
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
-    MOZ_CRASH("Not implemented.");
   }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
