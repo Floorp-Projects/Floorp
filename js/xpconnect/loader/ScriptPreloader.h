@@ -107,6 +107,8 @@ class ScriptPreloader : public nsIObserver,
   void NoteScript(const nsCString& url, const nsCString& cachePath,
                   JS::HandleScript script, bool isRunOnce = false);
 
+  // Notes the IPC arrival of the XDR data of a script compiled by some
+  // child process. See ScriptCacheChild::SendScriptsAndFinalize.
   void NoteScript(const nsCString& url, const nsCString& cachePath,
                   ProcessType processType, nsTArray<uint8_t>&& xdrData,
                   TimeStamp loadTime);
@@ -395,6 +397,10 @@ class ScriptPreloader : public nsIObserver,
 
     // XDR data which was generated from a script compiled during this
     // session, and will be written to the cache file.
+    //
+    // The format is JS::TranscodeBuffer if the script was XDR'd as part
+    // of this process, or nsTArray<> if the script was transfered by IPC
+    // from a child process.
     MaybeOneOf<JS::TranscodeBuffer, nsTArray<uint8_t>> mXDRData;
   } JS_HAZ_NON_GC_POINTER;
 
