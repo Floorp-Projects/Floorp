@@ -4040,6 +4040,10 @@ JSScript* JS::InstantiateGlobalStencil(
   return gcOutput.get().script;
 }
 
+JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
+  return stencil->hasExternalDependency;
+}
+
 JSObject* JS::InstantiateModuleStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
     JS::Stencil* stencil) {
@@ -4100,4 +4104,9 @@ already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   return do_AddRef(HelperThreadState().finishStencilParseTask(cx, token));
+}
+
+JS_PUBLIC_API size_t JS::SizeOfStencil(Stencil* stencil,
+                                       mozilla::MallocSizeOf mallocSizeOf) {
+  return stencil->sizeOfIncludingThis(mallocSizeOf);
 }

@@ -230,7 +230,7 @@ JS::OffThreadToken* StartOffThreadDecodeScript(
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
     void* callbackData);
 
-JS::OffThreadToken* StartOffThreadDecodeMultiScripts(
+JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
     void* callbackData);
