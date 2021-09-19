@@ -596,8 +596,12 @@ void BaseCapturerPipeWire::OnSessionRequestResponseSignal(
   guint32 portal_response;
   GVariant* response_data;
   g_variant_get(parameters, "(u@a{sv})", &portal_response, &response_data);
-  g_variant_lookup(response_data, "session_handle", "s",
-                   &that->session_handle_);
+
+  GVariant* session_handle =
+      g_variant_lookup_value(response_data, "session_handle", NULL);
+  that->session_handle_ = g_variant_dup_string(session_handle, NULL);
+
+  g_variant_unref(session_handle);
   g_variant_unref(response_data);
 
   if (!that->session_handle_ || portal_response) {
