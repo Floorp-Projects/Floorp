@@ -628,6 +628,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   params.paintSVGGlyphs =
       !aParams.callbacks || aParams.callbacks->mShouldPaintSVGGlyphs;
   params.dt = aParams.context->GetDrawTarget();
+  params.allowGDI = aParams.allowGDI;
 
   GlyphRunIterator iter(this, aRange);
   gfxFloat advance = 0.0;

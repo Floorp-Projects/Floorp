@@ -253,6 +253,7 @@ class gfxTextRun : public gfxShapedText {
     gfxFloat* advanceWidth = nullptr;
     mozilla::SVGContextPaint* contextPaint = nullptr;
     gfxTextRunDrawCallbacks* callbacks = nullptr;
+    bool allowGDI = true;
     explicit DrawParams(gfxContext* aContext) : context(aContext) {}
   };
 
