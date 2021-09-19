@@ -180,7 +180,6 @@
         android:textOn="@string/search_scan_button"
         app:drawableStartCompat="@drawable/ic_qr"
         app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
-        app:layout_constraintEnd_toStartOf="@id/search_engines_shortcut_button"
         app:layout_constraintStart_toStartOf="@id/pill_wrapper"
         app:layout_constraintTop_toTopOf="@id/pill_wrapper" />
 
