@@ -195,6 +195,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ჩასწორება</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">მთავარის მორგება</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">მთავარი ეკრანი</string>
@@ -387,6 +389,16 @@
     <string name="customize_addon_collection_user_hint">კრებულის მფლობელი (მომხმარებლის ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">დამატებების კრებული შეიცვალა. დატოვეთ პროგრამა ცვლილებების ასასახად…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">წინაზე გადასვლა</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">ბოლოს შენახული</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">ბოლოს ნანახი</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -743,6 +755,9 @@
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">შენახვა</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">სხვა</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1331,7 +1346,7 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">კოდის წაკითხვა</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[გახსენით კომპიუტერში Firefox და იხილეთ <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[გახსენით კომპიუტერში Firefox და იხილეთ გვერდი <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">მზადაა წასაკითხად</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -1458,6 +1473,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">ასუფთავებს გადამისამართებით მიღებულ ფუნთუშებს, ცნობილი მეთვალყურეებისგან.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ქვემოთ მონიშნული ზოგი მეთვალყურე ნაწილობრივ დაშვებულია ამ გვერდზე, მათთან თქვენი ურთიერთქმედების გამო *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">ვრცლად</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">მხარდაჭერა</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1524,6 +1545,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">შეავსეთ სახელები და პაროლები თქვენი მოწყობილობის სხვა პროგრამებში.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">ანგარიშის დამატება</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ანგარიშების დასინქრონება</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1588,6 +1612,8 @@
     <string name="saved_login_copy_username">მომხმარებლის ასლი</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">სახელის გასუფთავება</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">მისამართის გასუფთავება</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">საიტის ასლი</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1757,9 +1783,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. გახადეთ <b>%1$s</b> დაშვებული]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">დაცული კავშირი</string>
+    <string name="quick_settings_sheet_secure_connection_2">კავშირი დაცულია</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">დაუცველი კავშირი</string>
+    <string name="quick_settings_sheet_insecure_connection_2">კავშირი დაუცველია</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">დაცული კავშირი</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">დაუცველი კავშირი</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">ნამდვილად გსურთ ყველა ნებართვის გასუფთავება თითოეულ საიტზე?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1799,8 +1829,14 @@
     <string name="discard_changes">ცვლილებების გაუქმება</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">ჩასწორება</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">ახალი ანგარიში</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">პაროლი აუცილებელია</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">სახელი აუცილებელია</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">მისამართი აუცილებელია</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ხმოვანი ძიება</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1808,6 +1844,14 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">ანგარიში ამ სახელით უკვე არსებობს</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">მისამართის დასაწყისია ხოლმე „https://“ ან „http://“</string>
+
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">მართებული მისამართი აუცილებელია</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1835,8 +1879,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">კარგი, გასაგებია</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">ხშირად მონახულებულების ჩვენება</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">ხშირად მონახულებულების ჩვენება</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ხშირად მონახულებულების ჩვენება</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">სახელი</string>

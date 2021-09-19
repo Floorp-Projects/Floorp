@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s en privao</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -1044,7 +1044,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Desaniciar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Encaboxar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Encaboxar</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Tas nel mou a pantalla completa</string>
@@ -1215,7 +1215,7 @@ en llinia y con nós.</string>
     <string name="onboarding_privacy_notice_read_button">Lleer el nuesu avisu de privacidá</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Zarrar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Zarrar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Comenzar a restolar</string>
@@ -1320,6 +1320,9 @@ en llinia y con nós.</string>
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineros</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Xeneradores de buelgues</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detalles</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blóquiase</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permítese</string>
@@ -1345,7 +1348,7 @@ en llinia y con nós.</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Para la carga d\'anuncios, vídeos y otru conteníu esternu que contenga códigu que rastrexe. Quiciabes afeute a la funcionalidá de dalgunos sitios web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Cada vegada que l\'escudu tea moráu indica que %s bloquió rastrexadores nun sitiu. Tócalu pa más información.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cada vegada que l\'escudu tea moráu indica que %s bloquió rastrexadores nun sitiu. Tócalu pa más información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ACTIVÓSE nesti sitiu</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1430,7 +1433,13 @@ en llinia y con nós.</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nun guardar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Autocompletáu de formularios</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autocompletáu de formularios</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Autorrellenu en %1$s</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Autorrellenu n\'otres aplicaciones</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronización d\'anicios de sesión</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
@@ -1536,6 +1545,8 @@ en llinia y con nós.</string>
 
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar les tarxetes en tolos preseos</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sincronizar les tarxetes</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Amestar una tarxeta de creitu</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1642,9 +1653,13 @@ en llinia y con nós.</string>
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Alterna <b>%1$s</b> a SÍ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">La conexón ye segura</string>
+    <string name="quick_settings_sheet_secure_connection_2">La conexón ye segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">La conexón ye insegura</string>
+    <string name="quick_settings_sheet_insecure_connection_2">La conexón nun ye segura</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">La conexón ye segura</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">La conexón ye insegura</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">¿De xuru que quies quitar tolos permisos de tolos sitios?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1681,7 +1696,7 @@ en llinia y con nós.</string>
     <string name="discard_changes">Escartar los cambeos</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edición</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Ríquese la contraseña</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Busca pela voz</string>
@@ -1718,7 +1733,7 @@ en llinia y con nós.</string>
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Amosar los sitios más visitaos</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Amosar los sitios más visitaos</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nome</string>
@@ -1728,6 +1743,14 @@ en llinia y con nós.</string>
 	<string name="top_sites_rename_dialog_ok">Aceutar</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Encaboxar</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Llingüetes inactives</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 díes</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 selmana</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Quitar</string>

@@ -198,6 +198,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">แก้ไข</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">ปรับแต่งหน้าแรก</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">หน้าแรก</string>
@@ -390,6 +392,16 @@
     <string name="customize_addon_collection_user_hint">เจ้าของชุดสะสม (ไอดีผู้ใช้)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">ชุดสะสมส่วนเสริมได้ถูกแก้ไขแล้ว ออกจากแอปพลิเคชันเพื่อใช้การเปลี่ยนแปลง…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">กลับเข้าไป</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">บันทึกไว้ล่าสุด</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">เยี่ยมชมล่าสุด</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1456,6 +1468,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">ล้างคุกกี้ที่ตั้งโดยการเปลี่ยนเส้นทางไปยังเว็บไซต์ติดตามที่รู้จัก</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ตัวติดตามบางตัวที่ถูกทำเครื่องหมายไว้ด้านล่างนี้ได้ถูกเลิกปิดกั้นบนหน้านี้เนื่องจากคุณมีการโต้ตอบกับตัวติดตามเหล่านั้น *</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">เรียนรู้เพิ่มเติม</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">การสนับสนุน</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1517,6 +1535,15 @@
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">กรอกอัตโนมัติ %1$s</string>
+
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">เติมและบันทึกชื่อผู้ใช้และรหัสผ่านในเว็บไซต์ต่าง ๆ ขณะที่ใช้ %1$s</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">เติมข้อมูลในแอปอื่น ๆ อัตโนมัติ</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">เติมชื่อผู้ใช้และรหัสผ่านในแอปอื่น ๆ บนอุปกรณ์ของคุณ</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">เพิ่มการเข้าสู่ระบบ</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ซิงค์การเข้าสู่ระบบ</string>
@@ -1580,6 +1607,8 @@
     <string name="saved_login_copy_username">คัดลอกชื่อผู้ใช้</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">ล้างชื่อผู้ใช้</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">ล้างชื่อโฮสต์</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">คัดลอกไซต์</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1747,9 +1776,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. สลับ <b>%1$s</b> เป็นเปิด]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">การเชื่อมต่อปลอดภัย</string>
+    <string name="quick_settings_sheet_secure_connection_2">การเชื่อมต่อปลอดภัย</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">การเชื่อมต่อไม่ปลอดภัย</string>
+    <string name="quick_settings_sheet_insecure_connection_2">การเชื่อมต่อไม่ปลอดภัย</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">การเชื่อมต่อปลอดภัย</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">การเชื่อมต่อไม่ปลอดภัย</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตทั้งหมดบนไซต์ทั้งหมด?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1789,8 +1822,14 @@
     <string name="discard_changes">ละทิ้งการเปลี่ยนแปลง</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">แก้ไข</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">เพิ่มการเข้าสู่ระบบใหม่</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">ต้องการรหัสผ่าน</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">ต้องการชื่อผู้ใช้</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ต้องการชื่อโฮสต์</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ค้นหาด้วยเสียง</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1798,6 +1837,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">การเข้าสู่ระบบที่มีชื่อผู้ใช้นี้มีอยู่แล้ว</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">ที่อยู่เว็บต้องมี \“https://\“ หรือ \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">ต้องการชื่อโฮสต์ที่ถูกต้อง</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1825,8 +1871,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">แสดงไซต์เด่นที่เยี่ยมชมบ่อยที่สุด</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">แสดงไซต์ที่เยี่ยมชมบ่อยที่สุด</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">แสดงไซต์ที่เยี่ยมชมบ่อยที่สุด</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ชื่อ</string>
@@ -1840,6 +1888,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">แท็บที่ไม่ได้ใช้งาน</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">แท็บจะปรากฏที่นี่เป็นเวลา %s หลังจากนั้น แท็บต่าง ๆ จะถูกปิดโดยอัตโนมัติ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 วัน</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

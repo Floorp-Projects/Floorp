@@ -197,6 +197,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Uredi</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Prilagodi početnu</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Početni zaslon</string>
@@ -389,6 +391,16 @@
     <string name="customize_addon_collection_user_hint">Vlasnik kolekcije (ID korisnika)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Izmijenjena je kolekcija dodataka. Napuštanje aplikacije za primjenu izmjena…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Vrati se natrag</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Nedavno spremljeno</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Nedavno posjećeno</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1469,6 +1481,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Čisti kolačiće koje postavljaju preusmjeravanja na poznate stranice za praćenje.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Neki programi za praćenje označeni ispod djelomično su deblokirani na ovoj stranici jer ste bili u interakciji s njima *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Saznaj više</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Podrška</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1535,6 +1553,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Ispuni korisnička imena i lozinke u drugim aplikacijama na tvom uređaju.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Dodaj prijavu</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinkroniziraj prijave</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1598,6 +1619,8 @@
     <string name="saved_login_copy_username">Kopiraj korisničko ime</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Očisti korisničko ime</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Očisti domenu</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopiraj web-stranicu</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1771,9 +1794,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Prebaci <b>%1$s</b> na UKLJUČENO]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Sigurna veza</string>
+    <string name="quick_settings_sheet_secure_connection_2">Veza je sigurna</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Nesigurna veza</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Veza nije sigurna</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Sigurna veza</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Nesigurna veza</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Sigurno želiš izbrisati sve dozvole na svim web-stranicama?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1813,8 +1840,14 @@
     <string name="discard_changes">Odbaci izmjene</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Uređivanje</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Dodaj novu prijavu</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Potrebna je lozinka</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Korisničko ime je potrebno</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Domena je potrebna</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Glasovno pretraživanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1822,6 +1855,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Prijava s tim korisničkim imenom već postoji</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Web-adresa mora sadržavati \“https://\“ ili \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Valjana domena je potrebna</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1849,8 +1889,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">U redu, shvaćam</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Prikaži najposjećenije omiljene stranice</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Prikaži najposjećenije stranice</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Prikaži najposjećenije stranice</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Naziv</string>
