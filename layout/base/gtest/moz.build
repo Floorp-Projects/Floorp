@@ -28,5 +28,3 @@ if CONFIG["CC_TYPE"] == "clang":
     CXXFLAGS += ["-Wno-null-dereference"]
 
 FINAL_LIBRARY = "xul-gtest"
-
-REQUIRES_UNIFIED_BUILD = True
