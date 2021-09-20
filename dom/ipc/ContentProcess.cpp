@@ -15,6 +15,10 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+#  include "mozilla/WindowsProcessMitigations.h"
+#endif
+
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  include "nsAppDirectoryServiceDefs.h"
@@ -53,8 +57,9 @@ static void SetUpSandboxEnvironment() {
       "SetUpSandboxEnvironment relies on nsDirectoryService being initialized");
 
   // On Windows, a sandbox-writable temp directory is used whenever the sandbox
-  // is enabled.
-  if (!IsContentSandboxEnabled()) {
+  // is enabled, except when win32k is locked down when we no longer require a
+  // temp directory.
+  if (!IsContentSandboxEnabled() || IsWin32kLockedDown()) {
     return;
   }
 
