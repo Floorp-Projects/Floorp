@@ -7,6 +7,7 @@
 
 #import <AppKit/NSAnimationContext.h>
 #import <AppKit/NSColor.h>
+#import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
@@ -1014,6 +1015,46 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
   return GetRepresentation(aRepresentation).UnderlyingCALayer();
 }
 
+bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
+  // Convert the IOSurfaceRef into a CMSampleBuffer, so we can enqueue it in mContentCALayer
+  CVPixelBufferRef pixelBuffer = nullptr;
+  CVReturn cvValue =
+      CVPixelBufferCreateWithIOSurface(kCFAllocatorDefault, aSurfaceRef, nullptr, &pixelBuffer);
+  if (cvValue != kCVReturnSuccess) {
+    return false;
+  }
+
+  CMVideoFormatDescriptionRef formatDescription;
+  OSStatus osValue = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixelBuffer,
+                                                                  &formatDescription);
+  if (osValue != noErr) {
+    return false;
+  }
+
+  CMSampleBufferRef sampleBuffer = nullptr;
+  osValue = CMSampleBufferCreateReadyWithImageBuffer(
+      kCFAllocatorDefault, pixelBuffer, formatDescription, &kCMTimingInfoInvalid, &sampleBuffer);
+  if (osValue != noErr) {
+    return false;
+  }
+
+  // Since we don't have timing information for the sample, before we enqueue it, we
+  // attach an attribute that specifies that the sample should be played immediately.
+  CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+  if (!attachmentsArray || CFArrayGetCount(attachmentsArray) == 0) {
+    // No dictionary to alter.
+    return false;
+  }
+  CFMutableDictionaryRef sample0Dictionary = reinterpret_cast<CFMutableDictionaryRef>(
+      const_cast<void*>(CFArrayGetValueAtIndex(attachmentsArray, 0)));
+  CFDictionarySetValue(sample0Dictionary, kCMSampleAttachmentKey_DisplayImmediately,
+                       kCFBooleanTrue);
+
+  [(AVSampleBufferDisplayLayer*)mContentCALayer enqueueSampleBuffer:sampleBuffer];
+
+  return true;
+}
+
 void NativeLayerCA::Representation::ApplyChanges(
     const IntSize& aSize, bool aIsOpaque, const IntPoint& aPosition, const Matrix4x4& aTransform,
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect, float aBackingScale,
@@ -1036,7 +1077,11 @@ void NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.anchorPoint = NSZeroPoint;
     mWrappingCALayer.contentsGravity = kCAGravityTopLeft;
     mWrappingCALayer.edgeAntialiasingMask = 0;
-    mContentCALayer = [[CALayer layer] retain];
+    if (aSpecializeVideo) {
+      mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
+    } else {
+      mContentCALayer = [[CALayer layer] retain];
+    }
     mContentCALayer.position = NSZeroPoint;
     mContentCALayer.anchorPoint = NSZeroPoint;
     mContentCALayer.contentsGravity = kCAGravityTopLeft;
@@ -1151,7 +1196,15 @@ void NativeLayerCA::Representation::ApplyChanges(
   }
 
   if (mMutatedFrontSurface) {
-    mContentCALayer.contents = (id)aFrontSurface.get();
+    bool isEnqueued = false;
+    if (aSpecializeVideo) {
+      // Attempt to enqueue this as a video frame. If we fail, we'll fall back to image case.
+      isEnqueued = EnqueueSurface(aFrontSurface.get());
+    }
+
+    if (!isEnqueued) {
+      mContentCALayer.contents = (id)aFrontSurface.get();
+    }
   }
 
   if (mMutatedSamplingFilter) {
