@@ -862,13 +862,13 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
 #if XP_WIN
     // psapi.dll added for GetMappedFileNameW, which could possibly be avoided
     // in future versions, see bug 1383611 for details.
-    mLibs = "dxva2.dll, psapi.dll"_ns;
+    mLibs = "dxva2.dll, ole32.dll, psapi.dll"_ns;
 #endif
   } else if (mDisplayName.EqualsASCII("fake")) {
     // The fake CDM just exposes a key system with id "fake".
     video.mAPITags.AppendElement(nsCString{"fake"});
 #if XP_WIN
-    mLibs = "dxva2.dll"_ns;
+    mLibs = "dxva2.dll, ole32.dll"_ns;
 #endif
   } else {
     GMP_PARENT_LOG_DEBUG("%s: Unrecognized key system: %s, failing.",
