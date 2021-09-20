@@ -12,6 +12,7 @@
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ShutdownPhase.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIFOG.h"
@@ -44,10 +45,12 @@ already_AddRefed<FOG> FOG::GetSingleton() {
     glean::fog::failed_idle_registration.Set(true);
   }
 
-  RunOnShutdown([&] {
-    gFOG->Shutdown();
-    gFOG = nullptr;
-  });
+  RunOnShutdown(
+      [&] {
+        gFOG->Shutdown();
+        gFOG = nullptr;
+      },
+      ShutdownPhase::XPCOMShutdown);
   return do_AddRef(gFOG);
 }
 
