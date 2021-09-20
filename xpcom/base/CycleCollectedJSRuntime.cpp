@@ -65,7 +65,6 @@
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetPrivate
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Warnings.h"            // JS::SetWarningReporter
-#include "js/SliceBudget.h"
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
@@ -533,11 +532,6 @@ void JSHolderMap::Iter::Settle() {
   }
 }
 
-void JSHolderMap::Iter::UpdateForRemovals() {
-  mIter.Settle();
-  Settle();
-}
-
 JSHolderMap::JSHolderMap() : mJSHolderMap(256) {}
 
 bool JSHolderMap::RemoveEntry(EntryVector& aJSHolders, Entry* aEntry) {
@@ -592,8 +586,7 @@ inline nsScriptObjectTracer* JSHolderMap::Extract(void* aHolder) {
   MOZ_ASSERT(entry->mHolder == aHolder);
   nsScriptObjectTracer* tracer = entry->mTracer;
 
-  // Clear the entry's contents. It will be removed the next time iteration
-  // visits this entry.
+  // Clear the entry's contents. It will be removed during the next iteration.
   *entry = Entry();
 
   mJSHolderMap.remove(ptr);
@@ -751,7 +744,7 @@ void CycleCollectedJSRuntime::Shutdown(JSContext* cx) {
 #ifdef NS_BUILD_REFCNT_LOGGING
   JSLeakTracer tracer(Runtime());
   TraceNativeBlackRoots(&tracer);
-  TraceAllNativeGrayRoots(&tracer);
+  TraceNativeGrayRoots(&tracer, JSHolderMap::AllHolders);
 #endif
 
 #ifdef DEBUG
@@ -991,9 +984,7 @@ void CycleCollectedJSRuntime::TraceBlackJS(JSTracer* aTracer, void* aData) {
 }
 
 /* static */
-bool CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer,
-                                          js::SliceBudget& budget,
-                                          void* aData) {
+void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
   // Mark these roots as gray so the CC can walk them later.
@@ -1004,7 +995,7 @@ bool CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer,
     which = JSHolderMap::AllHolders;
   }
 
-  return self->TraceNativeGrayRoots(aTracer, which, budget);
+  self->TraceNativeGrayRoots(aTracer, which);
 }
 
 /* static */
@@ -1410,63 +1401,28 @@ static inline bool ShouldCheckSingleZoneHolders() {
 #endif
 }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-void CycleCollectedJSRuntime::TraceAllNativeGrayRoots(JSTracer* aTracer) {
-  MOZ_RELEASE_ASSERT(mHolderIter.isNothing());
-  js::SliceBudget budget = js::SliceBudget::unlimited();
-  MOZ_ALWAYS_TRUE(
-      TraceNativeGrayRoots(aTracer, JSHolderMap::AllHolders, budget));
-}
-#endif
+void CycleCollectedJSRuntime::TraceNativeGrayRoots(
+    JSTracer* aTracer, JSHolderMap::WhichHolders aWhich) {
+  // NB: This is here just to preserve the existing XPConnect order. I doubt it
+  // would hurt to do this after the JS holders.
+  TraceAdditionalNativeGrayRoots(aTracer);
 
-bool CycleCollectedJSRuntime::TraceNativeGrayRoots(
-    JSTracer* aTracer, JSHolderMap::WhichHolders aWhich,
-    js::SliceBudget& aBudget) {
-  if (!mHolderIter) {
-    // NB: This is here just to preserve the existing XPConnect order. I doubt
-    // it would hurt to do this after the JS holders.
-    TraceAdditionalNativeGrayRoots(aTracer);
-
-    mHolderIter.emplace(mJSHolders, aWhich);
-    aBudget.stepAndForceCheck();
-  } else {
-    // Holders may have been removed between slices, so we may need to update
-    // the iterator.
-    mHolderIter->UpdateForRemovals();
-  }
-
-  bool finished = TraceJSHolders(aTracer, *mHolderIter, aBudget);
-  if (finished) {
-    mHolderIter.reset();
-  }
-
-  return finished;
-}
-
-bool CycleCollectedJSRuntime::TraceJSHolders(JSTracer* aTracer,
-                                             JSHolderMap::Iter& aIter,
-                                             js::SliceBudget& aBudget) {
   bool checkSingleZoneHolders = ShouldCheckSingleZoneHolders();
-
-  while (!aIter.Done() && !aBudget.isOverBudget()) {
-    void* holder = aIter->mHolder;
-    nsScriptObjectTracer* tracer = aIter->mTracer;
+  for (JSHolderMap::Iter entry(mJSHolders, aWhich); !entry.Done();
+       entry.Next()) {
+    void* holder = entry->mHolder;
+    nsScriptObjectTracer* tracer = entry->mTracer;
 
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
     if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
-      CheckHolderIsSingleZone(holder, tracer, aIter.Zone());
+      CheckHolderIsSingleZone(holder, tracer, entry.Zone());
     }
 #else
     Unused << checkSingleZoneHolders;
 #endif
 
     tracer->Trace(holder, JsGcTracer(), aTracer);
-
-    aIter.Next();
-    aBudget.step();
   }
-
-  return aIter.Done();
 }
 
 void CycleCollectedJSRuntime::AddJSHolder(void* aHolder,
