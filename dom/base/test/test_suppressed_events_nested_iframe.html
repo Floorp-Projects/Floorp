@@ -43,6 +43,28 @@ add_task(async function test_sync_xhr() {
   w.close();
 });
 
+add_task(async function test_modalstate() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", false],
+    ["dom.events.coalesce.mousemove", false],
+  ]});
+
+  let w = window.open("file_suppressed_events_top_modalstate.html");
+  await waitForMessage("done");
+  w.close();
+});
+
+add_task(async function test_suppress_event_handling() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", false],
+    ["dom.events.coalesce.mousemove", false],
+  ]});
+
+  let w = window.open("file_suppressed_events_top.html");
+  await waitForMessage("done");
+  w.close();
+});
+
 </script>
 </pre>
 </body>

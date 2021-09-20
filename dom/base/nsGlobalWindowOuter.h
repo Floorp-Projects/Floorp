@@ -328,6 +328,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   virtual void EnsureSizeAndPositionUpToDate() override;
 
+  virtual void SuppressEventHandling() override;
+  virtual void UnsuppressEventHandling() override;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsGlobalWindowOuter* EnterModalState()
       override;
   virtual void LeaveModalState() override;
@@ -1128,10 +1131,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // It's useful when we get matched EnterModalState/LeaveModalState calls, in
   // which case the outer window is responsible for unsuspending events on the
-  // document. If we don't (for example, if the outer window is closed before
-  // the LeaveModalState call), then the inner window whose mDoc is our
-  // mSuspendedDoc is responsible for unsuspending it.
-  RefPtr<Document> mSuspendedDoc;
+  // documents. If we don't (for example, if the outer window is closed before
+  // the LeaveModalState call), then the inner window whose mDoc is in our
+  // mSuspendedDocs is responsible for unsuspending.
+  nsTArray<RefPtr<Document>> mSuspendedDocs;
 
   // This is the CC generation the last time we called CanSkip.
   uint32_t mCanSkipCCGeneration;
