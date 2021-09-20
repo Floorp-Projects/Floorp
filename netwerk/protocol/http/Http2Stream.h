@@ -161,7 +161,7 @@ class Http2Stream : public nsAHttpSegmentReader,
   // This is a no-op on pull streams. Pushed streams override this.
   virtual void SetPushComplete(){};
 
-  Http2Session* Session() { return mSession; }
+  Http2Session* Session();
 
   [[nodiscard]] static nsresult MakeOriginURL(const nsACString& origin,
                                               nsCOMPtr<nsIURI>& url);
@@ -199,7 +199,7 @@ class Http2Stream : public nsAHttpSegmentReader,
   uint32_t mStreamID;
 
   // The session that this stream is a subset of
-  Http2Session* mSession;
+  nsWeakPtr mSession;
 
   // These are temporary state variables to hold the argument to
   // Read/WriteSegments so it can be accessed by On(read/write)segment
