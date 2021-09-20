@@ -19,17 +19,15 @@ Adding Metrics to a new Command
 If you would like to submit telemetry metrics from your mach ``@Command``, you should take two steps:
 
 #. Parameterize your ``@Command`` annotation with ``metrics_path``.
-#. Use the ``self.metrics`` handle provided by ``MachCommandBase``
+#. Use the ``command_context.metrics`` handle provided by ``MachCommandBase``
 
 For example::
 
     METRICS_PATH = os.path.abspath(os.path.join(__file__, '..', '..', 'metrics.yaml'))
 
-    @CommandProvider
-    class CustomCommand(MachCommandBase):
-        @Command('custom-command', metrics_path=METRICS_PATH)
-        def custom_command(self):
-            self.metrics.custom.foo.set('bar')
+    @Command('custom-command', metrics_path=METRICS_PATH)
+    def custom_command(command_context):
+        command_context.metrics.custom.foo.set('bar')
 
 Updating Generated Metrics Docs
 ===============================

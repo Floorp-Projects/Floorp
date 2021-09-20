@@ -6,50 +6,55 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from mach.decorators import (
-    CommandProvider,
     Command,
 )
-from mozbuild.base import MachCommandBase
 
 
-def is_foo(cls):
+def is_true(cls):
+    return True
+
+
+def is_false(cls):
+    return False
+
+
+@Command("cmd_condition_true", category="testing", conditions=[is_true])
+def run_condition_true(self, command_context):
+    pass
+
+
+@Command("cmd_condition_false", category="testing", conditions=[is_false])
+def run_condition_false(self, command_context):
+    pass
+
+
+@Command(
+    "cmd_condition_true_and_false", category="testing", conditions=[is_true, is_false]
+)
+def run_condition_true_and_false(self, command_context):
+    pass
+
+
+def is_ctx_foo(cls):
     """Foo must be true"""
-    return cls.foo
+    return cls._mach_context.foo
 
 
-def is_bar(cls):
+def is_ctx_bar(cls):
     """Bar must be true"""
-    return cls.bar
+    return cls._mach_context.bar
 
 
-@CommandProvider
-class ConditionsProvider(MachCommandBase):
-    foo = True
-    bar = False
-
-    @Command("cmd_foo", category="testing", conditions=[is_foo])
-    def run_foo(self, command_context):
-        pass
-
-    @Command("cmd_bar", category="testing", conditions=[is_bar])
-    def run_bar(self, command_context):
-        pass
-
-    @Command("cmd_foobar", category="testing", conditions=[is_foo, is_bar])
-    def run_foobar(self, command_context):
-        pass
+@Command("cmd_foo_ctx", category="testing", conditions=[is_ctx_foo])
+def run_foo_ctx(self, command_context):
+    pass
 
 
-@CommandProvider
-class ConditionsContextProvider(MachCommandBase):
-    @Command("cmd_foo_ctx", category="testing", conditions=[is_foo])
-    def run_foo(self, command_context):
-        pass
+@Command("cmd_bar_ctx", category="testing", conditions=[is_ctx_bar])
+def run_bar_ctx(self, command_context):
+    pass
 
-    @Command("cmd_bar_ctx", category="testing", conditions=[is_bar])
-    def run_bar(self, command_context):
-        pass
 
-    @Command("cmd_foobar_ctx", category="testing", conditions=[is_foo, is_bar])
-    def run_foobar(self, command_context):
-        pass
+@Command("cmd_foobar_ctx", category="testing", conditions=[is_ctx_foo, is_ctx_bar])
+def run_foobar_ctx(self, command_context):
+    pass
