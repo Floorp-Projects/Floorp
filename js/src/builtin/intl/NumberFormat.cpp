@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/intl/MeasureUnit.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/NumberRangeFormat.h"
 #include "mozilla/Span.h"
@@ -40,13 +41,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
-#include "unicode/udata.h"
-#include "unicode/ufieldpositer.h"
-#include "unicode/uformattedvalue.h"
-#include "unicode/unum.h"
-#include "unicode/unumberformatter.h"
 #include "unicode/unumsys.h"
-#include "unicode/ures.h"
 #include "unicode/utypes.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
@@ -64,12 +59,7 @@
 using namespace js;
 
 using mozilla::AssertedCast;
-using mozilla::IsFinite;
-using mozilla::IsNaN;
-using mozilla::IsNegative;
-using mozilla::SpecificNaN;
 
-using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::FieldType;
 using js::intl::IcuLocale;
@@ -247,14 +237,6 @@ bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #if DEBUG || MOZ_SYSTEM_ICU
-class UResourceBundleDeleter {
- public:
-  void operator()(UResourceBundle* aPtr) { ures_close(aPtr); }
-};
-
-using UniqueUResourceBundle =
-    mozilla::UniquePtr<UResourceBundle, UResourceBundleDeleter>;
-
 bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -265,61 +247,28 @@ bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Lookup the available measurement units in the resource boundle of the root
-  // locale.
-
-  static const char packageName[] =
-      U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "unit";
-  static const char rootLocale[] = "";
-
-  UErrorCode status = U_ZERO_ERROR;
-  UResourceBundle* rawRes = ures_open(packageName, rootLocale, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto units = mozilla::intl::MeasureUnit::GetAvailable();
+  if (units.isErr()) {
+    intl::ReportInternalError(cx, units.unwrapErr());
     return false;
   }
-  UniqueUResourceBundle res(rawRes);
-
-  UResourceBundle* rawUnits =
-      ures_getByKey(res.get(), "units", nullptr, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  UniqueUResourceBundle units(rawUnits);
 
   RootedAtom unitAtom(cx);
-
-  int32_t unitsSize = ures_getSize(units.get());
-  for (int32_t i = 0; i < unitsSize; i++) {
-    UResourceBundle* rawType =
-        ures_getByIndex(units.get(), i, nullptr, &status);
-    if (U_FAILURE(status)) {
+  for (auto unit : units.unwrap()) {
+    if (unit.isErr()) {
       intl::ReportInternalError(cx);
       return false;
     }
-    UniqueUResourceBundle type(rawType);
+    auto unitIdentifier = unit.unwrap();
 
-    int32_t typeSize = ures_getSize(type.get());
-    for (int32_t j = 0; j < typeSize; j++) {
-      UResourceBundle* rawSubtype =
-          ures_getByIndex(type.get(), j, nullptr, &status);
-      if (U_FAILURE(status)) {
-        intl::ReportInternalError(cx);
-        return false;
-      }
-      UniqueUResourceBundle subtype(rawSubtype);
+    unitAtom = Atomize(cx, unitIdentifier.data(), unitIdentifier.size());
+    if (!unitAtom) {
+      return false;
+    }
 
-      const char* unitIdentifier = ures_getKey(subtype.get());
-
-      unitAtom = Atomize(cx, unitIdentifier, strlen(unitIdentifier));
-      if (!unitAtom) {
-        return false;
-      }
-      if (!DefineDataProperty(cx, measurementUnits, unitAtom->asPropertyName(),
-                              TrueHandleValue)) {
-        return false;
-      }
+    if (!DefineDataProperty(cx, measurementUnits, unitAtom->asPropertyName(),
+                            TrueHandleValue)) {
+      return false;
     }
   }
 
