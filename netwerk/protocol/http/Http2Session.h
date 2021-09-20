@@ -33,6 +33,14 @@ class Http2PushedStream;
 class Http2Stream;
 class nsHttpTransaction;
 
+// b23b147c-c4f8-4d6e-841a-09f29a010de7
+#define NS_HTTP2SESSION_IID                          \
+  {                                                  \
+    0xb23b147c, 0xc4f8, 0x4d6e, {                    \
+      0x84, 0x1a, 0x09, 0xf2, 0x9a, 0x01, 0x0d, 0xe7 \
+    }                                                \
+  }
+
 class Http2Session final : public ASpdySession,
                            public nsAHttpConnection,
                            public nsAHttpSegmentReader,
@@ -40,6 +48,8 @@ class Http2Session final : public ASpdySession,
   ~Http2Session();
 
  public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTP2SESSION_IID)
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
   NS_DECL_NSAHTTPCONNECTION(mConnection)
@@ -599,6 +609,8 @@ class Http2Session final : public ASpdySession,
                            // opening SETTINGS
   nsCOMArray<nsIInterfaceRequestor> mWaitingWebsocketCallbacks;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(Http2Session, NS_HTTP2SESSION_IID);
 
 }  // namespace net
 }  // namespace mozilla
