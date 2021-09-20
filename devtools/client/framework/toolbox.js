@@ -708,6 +708,10 @@ Toolbox.prototype = {
       // These methods expect the target to be attached, which is guaranteed by the time
       // _onTargetAvailable is called by the targetCommand.
       await this._listFrames();
+      // The target may have been destroyed while calling _listFrames if we navigate quickly
+      if (targetFront.isDestroyed()) {
+        return;
+      }
       await this.initPerformance();
     }
   },
