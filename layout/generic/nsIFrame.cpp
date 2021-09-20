@@ -7494,9 +7494,10 @@ void nsIFrame::MovePositionBy(const nsPoint& aTranslation) {
 nsRect nsIFrame::GetNormalRect() const {
   // It might be faster to first check
   // StyleDisplay()->IsRelativelyPositionedStyle().
-  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
-  if (normalPosition) {
-    return nsRect(*normalPosition, GetSize());
+  bool hasProperty;
+  nsPoint normalPosition = GetProperty(NormalPositionProperty(), &hasProperty);
+  if (hasProperty) {
+    return nsRect(normalPosition, GetSize());
   }
   return GetRect();
 }
