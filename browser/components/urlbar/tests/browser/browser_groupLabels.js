@@ -63,6 +63,33 @@ add_task(async function init() {
   });
 });
 
+// The Firefox Suggest label should not appear when the locale is not en-*.
+add_task(async function unsupportedLocale() {
+  await withLocales(["de"], async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(MAX_RESULTS, {});
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+// The Firefox Suggest label should appear when the locale is en-* but not
+// en-US.
+add_task(async function supportedLocaleNonUS() {
+  await withLocales(["en-GB"], async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+    await checkLabels(MAX_RESULTS, {
+      1: FIREFOX_SUGGEST_LABEL,
+    });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
 // The Firefox Suggest label should not appear when the labels pref is disabled.
 add_task(async function prefDisabled() {
   await SpecialPowers.pushPrefEnv({
@@ -538,4 +565,41 @@ function click(element, { x = undefined, y = undefined } = {}) {
   }
   EventUtils.synthesizeMouse(element, x, y, { type: "mousedown" });
   EventUtils.synthesizeMouse(element, x, y, { type: "mouseup" });
+}
+
+/**
+ * Sets the app's locales, calls your callback, and resets locales.
+ *
+ * @param {array} locales
+ *   An array of locale strings. The entire array will be set as the available
+ *   locales, and the first locale in the array will be set as the requested
+ *   locale.
+ * @param {function} callback
+ */
+async function withLocales(locales, callback) {
+  let available = Services.locale.availableLocales;
+  let requested = Services.locale.requestedLocales;
+
+  // Wait for engines to reload after changing locales. Otherwise there are TV
+  // failures.
+  let enginesPromise = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  Services.locale.availableLocales = locales;
+  Services.locale.requestedLocales = locales.slice(0, 1);
+  await enginesPromise;
+  Assert.equal(
+    Services.locale.appLocaleAsBCP47,
+    locales[0],
+    "App locale is now " + locales[0]
+  );
+
+  await callback();
+
+  enginesPromise = SearchTestUtils.promiseSearchNotification(
+    "engines-reloaded"
+  );
+  Services.locale.availableLocales = available;
+  Services.locale.requestedLocales = requested;
+  await enginesPromise;
 }
