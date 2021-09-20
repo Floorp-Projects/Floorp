@@ -14,12 +14,7 @@ toolkit.jar:
   content/mozapps/extensions/abuse-report-frame.html            (content/abuse-report-frame.html)
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
-  content/mozapps/extensions/default-theme.svg                  (content/default-theme.svg)
   content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
-  content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)
-  content/mozapps/extensions/firefox-compact-light.svg          (content/firefox-compact-light.svg)
-  content/mozapps/extensions/firefox-monochromatic-purple.svg   (content/firefox-monochromatic-purple.svg)
-  content/mozapps/extensions/firefox-alpenglow.svg              (content/firefox-alpenglow.svg)
   content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
   content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
   content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
@@ -28,6 +23,6 @@ toolkit.jar:
   content/mozapps/extensions/view-controller.js                 (content/view-controller.js)
 
 % resource default-theme %content/mozapps/extensions/default-theme/
-  content/mozapps/extensions/default-theme/icon.svg             (default-theme/icon.svg)
+  content/mozapps/extensions/default-theme                      (default-theme/*.svg)
   content/mozapps/extensions/default-theme/manifest.json        (default-theme/manifest.json)
 #endif

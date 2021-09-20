@@ -1393,28 +1393,35 @@ BrowserGlue.prototype = {
         false
       )
     ) {
-      // Temporarily install a prototype monochromatic theme for UX iteration.
-      // We uninstall it during shutdown so it does not persist if the pref is
-      // disabled.
-      const kMonochromaticThemeID = "firefox-monochromatic-purple@mozilla.org";
-      AddonManager.maybeInstallBuiltinAddon(
-        kMonochromaticThemeID,
-        "1.0",
-        "resource://builtin-themes/monochromatic-purple/"
-      );
-      AsyncShutdown.profileChangeTeardown.addBlocker(
-        "Uninstall Prototype Monochromatic Theme",
-        async () => {
-          try {
-            let addon = await AddonManager.getAddonByID(kMonochromaticThemeID);
-            await addon.uninstall();
-          } catch (e) {
-            Cu.reportError(
-              "Failed to uninstall firefox-monochromatic-purple on shutdown"
-            );
+      // List of monochromatic themes. The themes are represented by objects
+      // containing their id, current version, and path relative to
+      // resource://builtin-themes/monochromatic/.
+      const kMonochromaticThemeList = [
+        {
+          id: "firefox-lush-bold@mozilla.org",
+          version: "1.0",
+          path: "lush/bold/",
+        },
+      ];
+      for (let { id, version, path } of kMonochromaticThemeList) {
+        AddonManager.maybeInstallBuiltinAddon(
+          id,
+          version,
+          `resource://builtin-themes/monochromatic/${path}`
+        );
+
+        AsyncShutdown.profileChangeTeardown.addBlocker(
+          "Uninstall Monochromatic Theme",
+          async () => {
+            try {
+              let addon = await AddonManager.getAddonByID(id);
+              await addon.uninstall();
+            } catch (e) {
+              Cu.reportError(`Failed to uninstall ${id} on shutdown`);
+            }
           }
-        }
-      );
+        );
+      }
     }
 
     if (AppConstants.MOZ_NORMANDY) {
@@ -3315,7 +3322,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 117;
+    const UI_VERSION = 118;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3941,6 +3948,18 @@ BrowserGlue.prototype = {
       // 116 (bug 1717509): Remove HEURISTIC_UNIFIED_COMPLETE group
       // 117 (bug 1710518): Add GENERAL_PARENT group
       UrlbarPrefs.migrateResultBuckets();
+    }
+
+    if (currentUIVersion < 118 && AppConstants.NIGHTLY_BUILD) {
+      // Uninstall experimental monochromatic purple theme.
+      (async () => {
+        let addon = await AddonManager.getAddonByID(
+          "firefox-monochromatic-purple@mozilla.org"
+        );
+        if (addon) {
+          addon.uninstall().catch(Cu.reportError);
+        }
+      })();
     }
 
     // Update the migration version.
