@@ -12,7 +12,7 @@ transforms:
 jobs:
     verify:
         description: Verify Job for Updatebot
-        run-on-projects: []
+        run-on-projects: ['autoland']
         treeherder:
             kind: other
             platform: updatebot/all
@@ -27,7 +27,7 @@ jobs:
         run:
             using: run-task
             cwd: '{checkout}'
-            command: $GECKO_PATH/taskcluster/scripts/misc/verify-updatebot.py
+            command: ./mach python taskcluster/scripts/misc/verify-updatebot.py
         notifications:
             subject: 'updatebot verify job failed'
             message: 'updatebot verify job failed'
