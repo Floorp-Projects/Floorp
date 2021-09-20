@@ -9,9 +9,12 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Maybe.h"
+#include "nsHttp.h"
 
 namespace mozilla {
 namespace net {
+
+class DNSHTTPSSVCRecordBase;
 
 enum SvcParamKey : uint16_t {
   SvcParamKeyMandatory = 0,
@@ -96,8 +99,8 @@ struct SVCB {
   bool operator<(const SVCB& aOther) const;
   Maybe<uint16_t> GetPort() const;
   bool NoDefaultAlpn() const;
-  Maybe<Tuple<nsCString, bool>> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
   void GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const;
+  nsTArray<nsCString> GetAllAlpn() const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   nsCString mEchConfig;
@@ -107,21 +110,29 @@ struct SVCB {
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };
 
+struct SVCBWrapper {
+  explicit SVCBWrapper(const SVCB& aRecord) : mRecord(aRecord) {}
+  Maybe<Tuple<nsCString, SupportedAlpnType>> mAlpn;
+  const SVCB& mRecord;
+};
+
 class SVCBRecord : public nsISVCBRecord {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISVCBRECORD
  public:
   explicit SVCBRecord(const SVCB& data)
       : mData(data), mPort(Nothing()), mAlpn(Nothing()) {}
-  explicit SVCBRecord(const SVCB& data, Maybe<uint16_t>&& aPort,
-                      Maybe<Tuple<nsCString, bool>>&& aAlpn)
-      : mData(data), mPort(std::move(aPort)), mAlpn(std::move(aAlpn)) {}
+  explicit SVCBRecord(const SVCB& data,
+                      Maybe<Tuple<nsCString, SupportedAlpnType>> aAlpn);
 
  private:
+  friend class DNSHTTPSSVCRecordBase;
+
   virtual ~SVCBRecord() = default;
+
   SVCB mData;
   Maybe<uint16_t> mPort;
-  Maybe<Tuple<nsCString, bool>> mAlpn;
+  Maybe<Tuple<nsCString, SupportedAlpnType>> mAlpn;
 };
 
 class DNSHTTPSSVCRecordBase {

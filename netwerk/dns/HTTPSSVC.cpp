@@ -185,24 +185,6 @@ bool SVCB::NoDefaultAlpn() const {
   return false;
 }
 
-Maybe<Tuple<nsCString, bool>> SVCB::GetAlpn(bool aNoHttp2,
-                                            bool aNoHttp3) const {
-  Maybe<Tuple<nsCString, bool>> alpn;
-  for (const auto& value : mSvcFieldValue) {
-    if (value.mValue.is<SvcParamAlpn>()) {
-      nsTArray<nsCString> alpnList;
-      alpnList.AppendElements(value.mValue.as<SvcParamAlpn>().mValue);
-      if (!alpnList.IsEmpty()) {
-        alpn.emplace();
-        alpn = Some(SelectAlpnFromAlpnList(alpnList, aNoHttp2, aNoHttp3));
-      }
-      return alpn;
-    }
-  }
-
-  return Nothing();
-}
-
 void SVCB::GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const {
   if (mSvcFieldPriority == 0) {
     return;
@@ -217,6 +199,22 @@ void SVCB::GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const {
   }
 }
 
+nsTArray<nsCString> SVCB::GetAllAlpn() const {
+  nsTArray<nsCString> alpnList;
+  for (const auto& value : mSvcFieldValue) {
+    if (value.mValue.is<SvcParamAlpn>()) {
+      alpnList.AppendElements(value.mValue.as<SvcParamAlpn>().mValue);
+    }
+  }
+  return alpnList;
+}
+
+SVCBRecord::SVCBRecord(const SVCB& data,
+                       Maybe<Tuple<nsCString, SupportedAlpnType>> aAlpn)
+    : mData(data), mAlpn(aAlpn) {
+  mPort = mData.GetPort();
+}
+
 NS_IMETHODIMP SVCBRecord::GetPriority(uint16_t* aPriority) {
   *aPriority = mData.mSvcFieldPriority;
   return NS_OK;
@@ -229,7 +227,18 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
 
 Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
-Maybe<Tuple<nsCString, bool>> SVCBRecord::GetAlpn() { return mAlpn; }
+Maybe<Tuple<nsCString, SupportedAlpnType>> SVCBRecord::GetAlpn() {
+  return mAlpn;
+}
+
+NS_IMETHODIMP SVCBRecord::GetSelectedAlpn(nsACString& aAlpn) {
+  if (!mAlpn) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aAlpn = Get<0>(*mAlpn);
+  return NS_OK;
+}
 
 NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
   aEchConfig = mData.mEchConfig;
@@ -254,95 +263,159 @@ NS_IMETHODIMP SVCBRecord::GetHasIPHintAddress(bool* aHasIPHintAddress) {
   return NS_OK;
 }
 
-static bool CheckAlpnIsUsable(const nsACString& aTargetName,
-                              const nsACString& aAlpn, bool aIsHttp3,
-                              uint32_t& aExcludedCount) {
-  if (aAlpn.IsEmpty()) {
-    return false;
+static bool CheckRecordIsUsable(const SVCB& aRecord, nsIDNSService* aDNSService,
+                                const nsACString& aHost,
+                                uint32_t& aExcludedCount) {
+  if (!aHost.IsEmpty()) {
+    bool excluded = false;
+    if (NS_SUCCEEDED(aDNSService->IsSVCDomainNameFailed(
+            aHost, aRecord.mSvcDomainName, &excluded)) &&
+        excluded) {
+      // Skip if the domain name of this record was failed to connect before.
+      ++aExcludedCount;
+      return false;
+    }
   }
 
-  if (aIsHttp3 && gHttpHandler->IsHttp3Excluded(aTargetName)) {
-    aExcludedCount++;
+  Maybe<uint16_t> port = aRecord.GetPort();
+  if (port && *port == 0) {
+    // Found an unsafe port, skip this record.
     return false;
   }
 
   return true;
 }
 
+static bool CheckAlpnIsUsable(SupportedAlpnType aAlpnType, bool aNoHttp2,
+                              bool aNoHttp3, bool aCheckHttp3ExcludedList,
+                              const nsACString& aTargetName,
+                              uint32_t& aExcludedCount) {
+  // Skip if this alpn is not supported.
+  if (aAlpnType == SupportedAlpnType::NOT_SUPPORTED) {
+    return false;
+  }
+
+  // Skip if we don't want to use http2.
+  if (aNoHttp2 && aAlpnType == SupportedAlpnType::HTTP_2) {
+    return false;
+  }
+
+  if (aAlpnType == SupportedAlpnType::HTTP_3) {
+    if (aCheckHttp3ExcludedList && gHttpHandler->IsHttp3Excluded(aTargetName)) {
+      aExcludedCount++;
+      return false;
+    }
+
+    if (aNoHttp3) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static nsTArray<SVCBWrapper> FlattenRecords(const nsTArray<SVCB>& aRecords) {
+  nsTArray<SVCBWrapper> result;
+  for (const auto& record : aRecords) {
+    nsTArray<nsCString> alpnList = record.GetAllAlpn();
+    if (alpnList.IsEmpty()) {
+      result.AppendElement(SVCBWrapper(record));
+    } else {
+      for (const auto& alpn : alpnList) {
+        SVCBWrapper wrapper(record);
+        wrapper.mAlpn.emplace(MakeTuple(alpn, IsAlpnSupported(alpn)));
+        result.AppendElement(wrapper);
+      }
+    }
+  }
+  return result;
+}
+
 already_AddRefed<nsISVCBRecord>
 DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,
     bool& aRecordsAllExcluded, bool aCheckHttp3ExcludedList) {
-  nsCOMPtr<nsISVCBRecord> selectedRecord;
+  RefPtr<SVCBRecord> selectedRecord;
+  RefPtr<SVCBRecord> h3RecordWithEchConfig;
   uint32_t recordHasNoDefaultAlpnCount = 0;
   uint32_t recordExcludedCount = 0;
   aRecordsAllExcluded = false;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-  bool RRSetHasEchConfig = false;
   uint32_t h3ExcludedCount = 0;
 
-  for (const SVCB& record : aRecords) {
-    if (record.mSvcFieldPriority == 0) {
+  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords);
+  for (const auto& record : records) {
+    if (record.mRecord.mSvcFieldPriority == 0) {
       // In ServiceMode, the SvcPriority should never be 0.
       return nullptr;
     }
 
-    if (record.NoDefaultAlpn()) {
+    if (record.mRecord.NoDefaultAlpn()) {
       ++recordHasNoDefaultAlpnCount;
     }
 
-    RRSetHasEchConfig |= record.mHasEchConfig;
-
-    bool excluded = false;
-    if (NS_SUCCEEDED(dns->IsSVCDomainNameFailed(mHost, record.mSvcDomainName,
-                                                &excluded)) &&
-        excluded) {
-      // Skip if the domain name of this record was failed to connect before.
-      ++recordExcludedCount;
+    if (!CheckRecordIsUsable(record.mRecord, dns, mHost, recordExcludedCount)) {
+      // Skip if this record is not usable.
       continue;
     }
 
-    Maybe<uint16_t> port = record.GetPort();
-    if (port && *port == 0) {
-      // Found an unsafe port, skip this record.
-      continue;
-    }
-
-    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
-    if (alpn) {
-      if (!CheckAlpnIsUsable(record.mSvcDomainName, Get<0>(*alpn),
-                             aCheckHttp3ExcludedList && Get<1>(*alpn),
-                             h3ExcludedCount)) {
+    if (record.mAlpn) {
+      if (!CheckAlpnIsUsable(Get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
+                             aCheckHttp3ExcludedList,
+                             record.mRecord.mSvcDomainName, h3ExcludedCount)) {
         continue;
+      }
+
+      if (Get<1>(*(record.mAlpn)) == SupportedAlpnType::HTTP_3) {
+        // If the selected alpn is h3 and ech for h3 is disabled, we want
+        // to find out if there is another non-h3 record that has
+        // echConfig. If yes, we'll use the non-h3 record with echConfig
+        // to connect. If not, we'll use h3 to connect without echConfig.
+        if (record.mRecord.mHasEchConfig &&
+            (gHttpHandler->EchConfigEnabled() &&
+             !gHttpHandler->EchConfigEnabled(true))) {
+          if (!h3RecordWithEchConfig) {
+            // Save this h3 record for later use.
+            h3RecordWithEchConfig =
+                new SVCBRecord(record.mRecord, record.mAlpn);
+            // Make sure the next record is not h3.
+            aNoHttp3 = true;
+            continue;
+          }
+        }
       }
     }
 
-    if (gHttpHandler->EchConfigEnabled() && RRSetHasEchConfig &&
-        !record.mHasEchConfig) {
-      // Don't use this record if this record has no echConfig, but others have.
-      continue;
-    }
-
     if (!selectedRecord) {
-      selectedRecord = new SVCBRecord(record, std::move(port), std::move(alpn));
+      selectedRecord = new SVCBRecord(record.mRecord, record.mAlpn);
     }
   }
 
-  // If all records indicate "no-default-alpn", we should not use this RRSet.
-  if (recordHasNoDefaultAlpnCount == aRecords.Length()) {
-    return nullptr;
+  if (!selectedRecord && !h3RecordWithEchConfig) {
+    // If all records indicate "no-default-alpn", we should not use this RRSet.
+    if (recordHasNoDefaultAlpnCount == records.Length()) {
+      return nullptr;
+    }
+
+    if (recordExcludedCount == records.Length()) {
+      aRecordsAllExcluded = true;
+      return nullptr;
+    }
+
+    // If all records are in http3 excluded list, try again without checking the
+    // excluded list. This is better than returning nothing.
+    if (h3ExcludedCount == records.Length() && aCheckHttp3ExcludedList) {
+      return GetServiceModeRecordInternal(aNoHttp2, aNoHttp3, aRecords,
+                                          aRecordsAllExcluded, false);
+    }
   }
 
-  if (recordExcludedCount == aRecords.Length()) {
-    aRecordsAllExcluded = true;
-    return nullptr;
-  }
+  if (h3RecordWithEchConfig) {
+    if (selectedRecord && selectedRecord->mData.mHasEchConfig) {
+      return selectedRecord.forget();
+    }
 
-  // If all records are in http3 excluded list, try again without checking the
-  // excluded list. This is better than returning nothing.
-  if (h3ExcludedCount == aRecords.Length() && aCheckHttp3ExcludedList) {
-    return GetServiceModeRecordInternal(aNoHttp2, aNoHttp3, aRecords,
-                                        aRecordsAllExcluded, false);
+    return h3RecordWithEchConfig.forget();
   }
 
   return selectedRecord.forget();
@@ -364,8 +437,9 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
   }
 
   uint32_t h3ExcludedCount = 0;
-  for (const SVCB& record : aRecords) {
-    if (record.mSvcFieldPriority == 0) {
+  nsTArray<SVCBWrapper> records = FlattenRecords(aRecords);
+  for (const auto& record : records) {
+    if (record.mRecord.mSvcFieldPriority == 0) {
       // This should not happen, since GetAllRecordsWithEchConfigInternal()
       // should be called only if GetServiceModeRecordInternal() returns a
       // non-null record.
@@ -375,35 +449,34 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
 
     // Records with echConfig are in front of records without echConfig, so we
     // don't have to continue.
-    *aAllRecordsHaveEchConfig &= record.mHasEchConfig;
+    *aAllRecordsHaveEchConfig &= record.mRecord.mHasEchConfig;
     if (!(*aAllRecordsHaveEchConfig)) {
       aResult.Clear();
       return;
     }
 
-    Maybe<uint16_t> port = record.GetPort();
+    Maybe<uint16_t> port = record.mRecord.GetPort();
     if (port && *port == 0) {
       // Found an unsafe port, skip this record.
       continue;
     }
 
-    Maybe<Tuple<nsCString, bool>> alpn = record.GetAlpn(aNoHttp2, aNoHttp3);
-    if (alpn) {
-      if (!CheckAlpnIsUsable(record.mSvcDomainName, Get<0>(*alpn),
-                             aCheckHttp3ExcludedList && Get<1>(*alpn),
-                             h3ExcludedCount)) {
+    if (record.mAlpn) {
+      if (!CheckAlpnIsUsable(Get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
+                             aCheckHttp3ExcludedList,
+                             record.mRecord.mSvcDomainName, h3ExcludedCount)) {
         continue;
       }
     }
 
     RefPtr<nsISVCBRecord> svcbRecord =
-        new SVCBRecord(record, std::move(port), std::move(alpn));
+        new SVCBRecord(record.mRecord, record.mAlpn);
     aResult.AppendElement(svcbRecord);
   }
 
   // If all records are in http3 excluded list, try again without checking the
   // excluded list. This is better than returning nothing.
-  if (h3ExcludedCount == aRecords.Length() && aCheckHttp3ExcludedList) {
+  if (h3ExcludedCount == records.Length() && aCheckHttp3ExcludedList) {
     GetAllRecordsWithEchConfigInternal(
         aNoHttp2, aNoHttp3, aRecords, aAllRecordsHaveEchConfig,
         aAllRecordsInH3ExcludedList, aResult, false);

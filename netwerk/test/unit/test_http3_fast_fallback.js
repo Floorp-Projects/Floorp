@@ -51,6 +51,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
+  Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
   Services.prefs.clearUserPref("network.http.http3.enabled");
@@ -367,6 +368,7 @@ add_task(async function testFastfallbackWithEchConfig() {
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
 
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
@@ -829,6 +831,67 @@ add_task(async function testH3FastFallbackWithMultipleTransactions() {
     let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
     Assert.equal(internal.remotePort, h2Port);
   });
+
+  await trrServer.stop();
+});
+
+add_task(async function testFastfallbackToTheSameRecord() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
+  Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
+  Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    1000
+  );
+
+  await trrServer.registerDoHAnswers("test.ech.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.ech1.org",
+          values: [
+            { key: "alpn", value: ["h3-29", "h2"] },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.ech1.org", "A", {
+    answers: [
+      {
+        name: "test.ech1.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  let chan = makeChan(`https://test.ech.org/server-timing`);
+  let [req] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h2");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h2Port);
 
   await trrServer.stop();
 });

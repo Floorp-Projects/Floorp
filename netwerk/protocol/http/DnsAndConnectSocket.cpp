@@ -1195,6 +1195,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (gHttpHandler->EchConfigEnabled()) {
+    MOZ_ASSERT(!ci->IsHttp3());
     rv = socketTransport->SetEchConfig(ci->GetEchConfig());
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -9,6 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Tuple.h"
 #include "nsTArrayForwardDeclare.h"
+#include "nsHttp.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
@@ -29,7 +30,7 @@ namespace net {
 native TypeResult(mozilla::net::TypeRecordResultType);
 
 native MaybePort(mozilla::Maybe<uint16_t>);
-native MaybeAlpnTuple(mozilla::Maybe<mozilla::Tuple<nsCString, bool>>);
+native MaybeAlpnTuple(mozilla::Maybe<mozilla::Tuple<nsCString, mozilla::net::SupportedAlpnType>>);
 
 [scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
 interface nsIDNSByTypeRecord : nsIDNSRecord
@@ -98,6 +99,7 @@ interface nsISVCBRecord : nsISupports {
   readonly attribute ACString name;
   [noscript, nostdcall, notxpcom] readonly attribute MaybePort port;
   [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpnTuple alpn;
+  readonly attribute ACString selectedAlpn;
   readonly attribute ACString echConfig;
   readonly attribute ACString ODoHConfig;
   readonly attribute bool hasIPHintAddress;

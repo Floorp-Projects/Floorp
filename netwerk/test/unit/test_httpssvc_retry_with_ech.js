@@ -25,6 +25,7 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
 
   add_tls_server_setup(
     "EncryptedClientHelloServer",
@@ -49,6 +50,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
+  Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   if (trrServer) {
     await trrServer.stop();

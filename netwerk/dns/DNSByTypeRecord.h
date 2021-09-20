@@ -83,6 +83,10 @@ struct IPDLParamTraits<mozilla::net::SVCB> {
                     const paramType& aParam) {
     WriteIPDLParam(aMsg, aActor, aParam.mSvcFieldPriority);
     WriteIPDLParam(aMsg, aActor, aParam.mSvcDomainName);
+    WriteIPDLParam(aMsg, aActor, aParam.mEchConfig);
+    WriteIPDLParam(aMsg, aActor, aParam.mODoHConfig);
+    WriteIPDLParam(aMsg, aActor, aParam.mHasIPHints);
+    WriteIPDLParam(aMsg, aActor, aParam.mHasEchConfig);
     WriteIPDLParam(aMsg, aActor, aParam.mSvcFieldValue);
   }
 
@@ -92,6 +96,18 @@ struct IPDLParamTraits<mozilla::net::SVCB> {
       return false;
     }
     if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSvcDomainName)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEchConfig)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mODoHConfig)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mHasIPHints)) {
+      return false;
+    }
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mHasEchConfig)) {
       return false;
     }
     if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSvcFieldValue)) {
