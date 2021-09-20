@@ -2892,8 +2892,13 @@ bool nsHttpHandler::UseHTTPSRRAsAltSvcEnabled() const {
   return StaticPrefs::network_dns_use_https_rr_as_altsvc();
 }
 
-bool nsHttpHandler::EchConfigEnabled() const {
-  return StaticPrefs::network_dns_echconfig_enabled();
+bool nsHttpHandler::EchConfigEnabled(bool aIsHttp3) const {
+  if (!aIsHttp3) {
+    return StaticPrefs::network_dns_echconfig_enabled();
+  }
+
+  return StaticPrefs::network_dns_echconfig_enabled() &&
+         StaticPrefs::network_dns_http3_echconfig_enabled();
 }
 
 bool nsHttpHandler::FallbackToOriginIfConfigsAreECHAndAllFailed() const {

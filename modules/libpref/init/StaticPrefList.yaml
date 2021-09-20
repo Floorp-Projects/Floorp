@@ -9886,6 +9886,12 @@
   value: false
   mirror: always
 
+# Whether to enable echconfig for http3.
+- name: network.dns.http3_echconfig.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # This pref needs to be worked together with network.dns.echconfig.enabled
 # being true and there is no record without ECHConfig.
 # When we try all records with ECHConfig in HTTPS RRs and still can't connect,
