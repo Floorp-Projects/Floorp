@@ -19,6 +19,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,10 +32,11 @@ class LastAccessMiddlewareTest {
 
     @Before
     fun setup() {
-        store = mock()
+        store = BrowserStore()
         context = mock()
 
         whenever(context.store).thenReturn(store)
+        whenever(context.state).thenReturn(store.state)
     }
 
     @Test
@@ -135,6 +137,155 @@ class LastAccessMiddlewareTest {
         store.dispatch(ContentAction.UpdateUrlAction(newTab.id, "https://mozilla.org")).joinBlocking()
         assertEquals(0L, store.state.selectedTab?.lastAccess)
         assertEquals(0L, store.state.findTab(newTab.id)?.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is dispatched when tab is selected during removal of single tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123"),
+                    createTab("https://firefox.com", id = "456")
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+
+        store.dispatch(TabListAction.RemoveTabAction("123")).joinBlocking()
+
+        val selectedTab = store.state.findTab("456")
+        assertNotNull(selectedTab)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertNotEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is not dispatched when no new tab is selected during removal of single tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123"),
+                    createTab("https://firefox.com", id = "456")
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+
+        store.dispatch(TabListAction.RemoveTabAction("456")).joinBlocking()
+        val selectedTab = store.state.findTab("123")
+        assertNotNull(selectedTab)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is dispatched when tab is selected during removal of multiple tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123"),
+                    createTab("https://firefox.com", id = "456"),
+                    createTab("https://getpocket.com", id = "789")
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+        assertEquals(0L, store.state.tabs[2].lastAccess)
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("123", "456"))).joinBlocking()
+
+        val selectedTab = store.state.findTab("789")
+        assertNotNull(selectedTab)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertNotEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is not dispatched when no new tab is selected during removal of multiple tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123"),
+                    createTab("https://firefox.com", id = "456"),
+                    createTab("https://getpocket.com", id = "789")
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+        assertEquals(0L, store.state.tabs[2].lastAccess)
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("456", "789"))).joinBlocking()
+        val selectedTab = store.state.findTab("123")
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is dispatched when tab is selected during removal of all private tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123", private = true),
+                    createTab("https://firefox.com", id = "456", private = true),
+                    createTab("https://getpocket.com", id = "789")
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+        assertEquals(0L, store.state.tabs[2].lastAccess)
+
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
+        val selectedTab = store.state.findTab("789")
+        assertNotNull(selectedTab)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertNotEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is not dispatched when no new tab is selected during removal of all private tab`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab("https://mozilla.org", id = "123"),
+                    createTab("https://firefox.com", id = "456", private = true),
+                    createTab("https://getpocket.com", id = "789", private = true)
+                ),
+                selectedTabId = "123"
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+
+        assertEquals(0L, store.state.tabs[0].lastAccess)
+        assertEquals(0L, store.state.tabs[1].lastAccess)
+        assertEquals(0L, store.state.tabs[2].lastAccess)
+
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
+        val selectedTab = store.state.findTab("123")
+        assertNotNull(selectedTab)
+        assertEquals(selectedTab!!.id, store.state.selectedTabId)
+        assertEquals(0L, selectedTab.lastAccess)
     }
 
     @Test
