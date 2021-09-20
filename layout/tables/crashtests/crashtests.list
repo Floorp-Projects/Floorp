@@ -31,7 +31,6 @@ load 308752-2.html
 load 316636-1.html
 load 317876.html
 load chrome://reftest/content/crashtests/layout/tables/crashtests/322779-1.xhtml
-load 323489-1.html
 load 323604-1.html
 load 323604-2.xhtml
 load 329891.xhtml

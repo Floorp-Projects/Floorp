@@ -640,9 +640,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool mDidHistoryRestore : 1;
   // Is this the scrollframe for the document's viewport?
   bool mIsRoot : 1;
-  // True if we should clip all descendants, false if we should only clip
-  // descendants for which we are the containing block.
-  bool mClipAllDescendants : 1;
   // If true, don't try to layout the scrollbars in Reflow().  This can be
   // useful if multiple passes are involved, because we don't want to place the
   // scrollbars at the wrong size.
@@ -1289,8 +1286,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
 
   friend nsXULScrollFrame* NS_NewXULScrollFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle,
-                                                bool aIsRoot,
-                                                bool aClipAllDescendants);
+                                                bool aIsRoot);
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) final {
@@ -1712,8 +1708,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
 #endif
 
  protected:
-  nsXULScrollFrame(ComputedStyle*, nsPresContext*, bool aIsRoot,
-                   bool aClipAllDescendants);
+  nsXULScrollFrame(ComputedStyle*, nsPresContext*, bool aIsRoot);
 
   void ClampAndSetBounds(nsBoxLayoutState& aState, nsRect& aRect,
                          nsPoint aScrollPosition,

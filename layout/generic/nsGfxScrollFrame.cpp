@@ -1458,21 +1458,18 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 //----------nsXULScrollFrame-------------------------------------------
 
 nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
-                                       ComputedStyle* aStyle, bool aIsRoot,
-                                       bool aClipAllDescendants) {
-  return new (aPresShell) nsXULScrollFrame(aStyle, aPresShell->GetPresContext(),
-                                           aIsRoot, aClipAllDescendants);
+                                       ComputedStyle* aStyle, bool aIsRoot) {
+  return new (aPresShell)
+      nsXULScrollFrame(aStyle, aPresShell->GetPresContext(), aIsRoot);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
 nsXULScrollFrame::nsXULScrollFrame(ComputedStyle* aStyle,
-                                   nsPresContext* aPresContext, bool aIsRoot,
-                                   bool aClipAllDescendants)
+                                   nsPresContext* aPresContext, bool aIsRoot)
     : nsBoxFrame(aStyle, aPresContext, kClassID, aIsRoot),
       mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot) {
   SetXULLayoutManager(nullptr);
-  mHelper.mClipAllDescendants = aClipAllDescendants;
 }
 
 void nsXULScrollFrame::ScrollbarActivityStarted() const {
@@ -2214,7 +2211,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mFrameIsUpdatingScrollbar(false),
       mDidHistoryRestore(false),
       mIsRoot(aIsRoot),
-      mClipAllDescendants(aIsRoot),
       mSuppressScrollbarUpdate(false),
       mSkippedScrollbarLayout(false),
       mHadNonInitialReflow(false),
@@ -3864,7 +3860,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // (clipRect) will be applied to the zoom container itself below.
     nsRect clipRectForContents =
         willBuildAsyncZoomContainer ? scrollPortClip : clipRect;
-    if (mClipAllDescendants) {
+    if (mIsRoot) {
       clipState.ClipContentDescendants(clipRectForContents,
                                        haveRadii ? radii : nullptr);
     } else {
@@ -3876,7 +3872,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     ;
     if (contentBoxClip) {
       contentBoxClipState.emplace(aBuilder);
-      if (mClipAllDescendants) {
+      if (mIsRoot) {
         contentBoxClipState->ClipContentDescendants(*contentBoxClip);
       } else {
         contentBoxClipState->ClipContainingBlockDescendants(*contentBoxClip);
@@ -4049,7 +4045,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   if (willBuildAsyncZoomContainer) {
-    MOZ_ASSERT(mClipAllDescendants);
+    MOZ_ASSERT(mIsRoot);
 
     // Wrap all our scrolled contents in an nsDisplayAsyncZoom. This will be
     // the layer that gets scaled for APZ zooming. It does not have the

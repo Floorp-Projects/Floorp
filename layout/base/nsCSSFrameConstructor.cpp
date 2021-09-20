@@ -224,8 +224,6 @@ nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewStackFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
 nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewImageBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -257,8 +255,7 @@ nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle, bool aIsRoot);
 
 nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
-                                       ComputedStyle* aStyle, bool aIsRoot,
-                                       bool aClipAllDescendants);
+                                       ComputedStyle* aStyle, bool aIsRoot);
 
 nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
@@ -4234,9 +4231,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     // HTMLScrollFrame
     const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
     if (displayStyle->IsXULDisplayStyle()) {
-      gfxScrollFrame = NS_NewXULScrollFrame(
-          mPresShell, contentStyle, aIsRoot,
-          displayStyle->mDisplay == StyleDisplay::MozStack);
+      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
@@ -4557,11 +4552,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       return &data;
     }
 #ifdef MOZ_XUL
-    case StyleDisplayInside::MozStack: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
-      return &data;
-    }
     case StyleDisplayInside::MozDeck: {
       static const FrameConstructionData data =
           SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
