@@ -25,9 +25,6 @@
 #include "nsThread.h"
 #include "prenv.h"
 #include "prsystem.h"
-#ifdef XP_WIN
-#  include "objbase.h"
-#endif
 
 namespace mozilla {
 
@@ -212,10 +209,6 @@ void TaskController::RunPoolThread() {
   // to post events themselves.
   RefPtr<Task> lastTask;
 
-#ifdef XP_WIN
-  ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-#endif
-
   nsAutoCString threadName;
   threadName.AppendLiteral("TaskController #");
   threadName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
@@ -318,10 +311,6 @@ void TaskController::RunPoolThread() {
       mThreadPoolCV.Wait();
     }
   }
-
-#ifdef XP_WIN
-  ::CoUninitialize();
-#endif
 }
 
 void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
