@@ -7405,7 +7405,7 @@ bool Document::ContainsMSEContent() {
   return containsMSE;
 }
 
-static void NotifyActivityChanged(nsISupports* aSupports) {
+static void NotifyActivityChangedCallback(nsISupports* aSupports) {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
   if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     mediaElem->NotifyOwnerDocumentActivityChanged();
@@ -7431,6 +7431,10 @@ static void NotifyActivityChanged(nsISupports* aSupports) {
   }
 }
 
+void Document::NotifyActivityChanged() {
+  EnumerateActivityObservers(NotifyActivityChangedCallback);
+}
+
 bool Document::IsTopLevelWindowInactive() const {
   if (BrowsingContext* bc = GetBrowsingContext()) {
     return !bc->GetIsActiveBrowserWindow();
@@ -7449,7 +7453,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
   mInChromeDocShell =
       aContainer && aContainer->GetBrowsingContext()->IsChrome();
 
-  EnumerateActivityObservers(NotifyActivityChanged);
+  NotifyActivityChanged();
 
   // IsTopLevelWindowInactive depends on the docshell, so
   // update the cached value now that it's available.
@@ -11273,7 +11277,7 @@ void Document::RemovedFromDocShell() {
   if (mRemovedFromDocShell) return;
 
   mRemovedFromDocShell = true;
-  EnumerateActivityObservers(NotifyActivityChanged);
+  NotifyActivityChanged();
 
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
@@ -11543,7 +11547,7 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     UpdateVisibilityState();
   }
 
-  EnumerateActivityObservers(NotifyActivityChanged);
+  NotifyActivityChanged();
 
   auto notifyExternal = [aPersisted](Document& aExternalResource) {
     aExternalResource.OnPageShow(aPersisted, nullptr);
@@ -11667,7 +11671,7 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     return CallState::Continue;
   };
   EnumerateExternalResources(notifyExternal);
-  EnumerateActivityObservers(NotifyActivityChanged);
+  NotifyActivityChanged();
 
   ClearPendingFullscreenRequests(this);
   if (GetUnretargetedFullScreenElement()) {
@@ -12501,6 +12505,11 @@ void Document::SetSuppressedEventListener(EventListener* aListener) {
     return CallState::Continue;
   };
   EnumerateSubDocuments(setOnSubDocs);
+}
+
+bool Document::IsActive() const {
+  return mDocumentContainer && !mRemovedFromDocShell && GetBrowsingContext() &&
+         !GetBrowsingContext()->IsInBFCache();
 }
 
 nsISupports* Document::GetCurrentContentSink() {
@@ -14921,7 +14930,7 @@ void Document::UpdateVisibilityState(DispatchVisibilityChange aDispatchEvent) {
                                            u"visibilitychange"_ns,
                                            CanBubble::eYes, Cancelable::eNo);
     }
-    EnumerateActivityObservers(NotifyActivityChanged);
+    NotifyActivityChanged();
     if (mVisibilityState == dom::VisibilityState::Visible) {
       MaybeActiveMediaComponents();
     }
@@ -15566,7 +15575,7 @@ void Document::IncLazyLoadImageReachViewport(bool aLoading) {
 }
 
 void Document::NotifyLayerManagerRecreated() {
-  EnumerateActivityObservers(NotifyActivityChanged);
+  NotifyActivityChanged();
   EnumerateSubDocuments([](Document& aSubDoc) {
     aSubDoc.NotifyLayerManagerRecreated();
     return CallState::Continue;
