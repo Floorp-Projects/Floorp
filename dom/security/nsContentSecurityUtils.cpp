@@ -54,8 +54,6 @@ using namespace mozilla::Telemetry;
 extern mozilla::LazyLogModule sCSMLog;
 extern Atomic<bool, mozilla::Relaxed> sJSHacksChecked;
 extern Atomic<bool, mozilla::Relaxed> sJSHacksPresent;
-extern Atomic<bool, mozilla::Relaxed> sCSSHacksChecked;
-extern Atomic<bool, mozilla::Relaxed> sCSSHacksPresent;
 extern Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled;
 
 // Helper function for IsConsideredSameOriginForUIR which makes
@@ -796,10 +794,7 @@ void nsContentSecurityUtils::DetectJsHacks() {
   // project to run legacy-style 'extensions', some of which use eval,
   // all of which run in the System Principal context.
   nsAutoString jsConfigPref;
-  nsresult rv = Preferences::GetString("general.config.filename", jsConfigPref);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  Preferences::GetString("general.config.filename", jsConfigPref);
   if (!jsConfigPref.IsEmpty()) {
     sJSHacksPresent = true;
   }
@@ -807,36 +802,13 @@ void nsContentSecurityUtils::DetectJsHacks() {
   // This preference is required by bootstrapLoader.xpi, which is an
   // alternate way to load legacy-style extensions. It only works on
   // DevEdition/Nightly.
-  bool xpinstallSignatures =
-      Preferences::GetBool("xpinstall.signatures.required", false);
+  bool xpinstallSignatures;
+  Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
   if (!xpinstallSignatures) {
     sJSHacksPresent = true;
   }
 
   sJSHacksChecked = true;
-}
-
-/* static */
-void nsContentSecurityUtils::DetectCssHacks() {
-  // We can only perform the check of this preference on the Main Thread
-  // It's possible that this function may therefore race and we expect the
-  // caller to ensure that the checks have actually happened.
-  if (!NS_IsMainThread()) {
-    return;
-  }
-  // No need to check again.
-  if (MOZ_LIKELY(sCSSHacksChecked)) {
-    return;
-  }
-  // This preference is a bool to see if userChrome css is loaded
-  bool customStylesPresent = Preferences::GetBool(
-      "toolkit.legacyUserProfileCustomizations.stylesheets", false);
-
-  if (customStylesPresent) {
-    sCSSHacksPresent = true;
-  }
-
-  sCSSHacksChecked = true;
 }
 
 /* static */
