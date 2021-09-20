@@ -1103,10 +1103,12 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void UpdateCharSet(NotNull<const Encoding*> aCharSet);
 
+  void DoForceReflowForFontInfoUpdateFromStyle();
  public:
   // Used by the PresShell to force a reflow when some aspect of font info
   // has been updated, potentially affecting font selection and layout.
   void ForceReflowForFontInfoUpdate(bool aNeedsReframe);
+  void ForceReflowForFontInfoUpdateFromStyle();
 
   /**
    * Checks for MozAfterPaint listeners on the document
@@ -1311,6 +1313,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // widget::ThemeChangeKind
   unsigned mPendingThemeChangeKind : kThemeChangeKindBits;
   unsigned mPendingUIResolutionChanged : 1;
+  unsigned mPendingFontInfoUpdateReflowFromStyle : 1;
 
   // Are we currently drawing an SVG glyph?
   unsigned mIsGlyph : 1;

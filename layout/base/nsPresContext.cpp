@@ -136,6 +136,52 @@ bool nsPresContext::IsDOMPaintEventPending() {
   return false;
 }
 
+struct WeakRunnableMethod : Runnable {
+  using Method = void (nsPresContext::*)();
+
+  WeakRunnableMethod(const char* aName, nsPresContext* aPc, Method aMethod)
+      : Runnable(aName), mPresContext(aPc), mMethod(aMethod) {}
+
+  NS_IMETHOD Run() override {
+    if (nsPresContext* pc = mPresContext.get()) {
+      (pc->*mMethod)();
+    }
+    return NS_OK;
+  }
+
+ private:
+  WeakPtr<nsPresContext> mPresContext;
+  Method mMethod;
+};
+
+// When forcing a font-info-update reflow from style, we don't need to reframe,
+// but we'll need to restyle to pick up updated font metrics. In order to avoid
+// synchronously having to deal with multiple restyles, we use an early refresh
+// driver runner, which should prevent flashing for users.
+//
+// We might do a bit of extra work if the page flushes layout between the
+// restyle and when this happens, which is a bit unfortunate, but not worse than
+// what we used to do...
+//
+// A better solution would be to be able to synchronously initialize font
+// information from style worker threads, perhaps...
+void nsPresContext::ForceReflowForFontInfoUpdateFromStyle() {
+  if (mPendingFontInfoUpdateReflowFromStyle) {
+    return;
+  }
+
+  mPendingFontInfoUpdateReflowFromStyle = true;
+  nsCOMPtr<nsIRunnable> ev = new WeakRunnableMethod(
+      "nsPresContext::DoForceReflowForFontInfoUpdateFromStyle", this,
+      &nsPresContext::DoForceReflowForFontInfoUpdateFromStyle);
+  RefreshDriver()->AddEarlyRunner(ev);
+}
+
+void nsPresContext::DoForceReflowForFontInfoUpdateFromStyle() {
+  mPendingFontInfoUpdateReflowFromStyle = false;
+  ForceReflowForFontInfoUpdate(false);
+}
+
 void nsPresContext::ForceReflowForFontInfoUpdate(bool aNeedsReframe) {
   // In the case of a static-clone document used for printing or print-preview,
   // this is undesirable because the nsPrintJob is holding weak refs to frames
@@ -223,6 +269,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingThemeChanged(false),
       mPendingThemeChangeKind(0),
       mPendingUIResolutionChanged(false),
+      mPendingFontInfoUpdateReflowFromStyle(false),
       mIsGlyph(false),
       mUsesExChUnits(false),
       mCounterStylesDirty(true),
@@ -653,24 +700,6 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
 
   InvalidatePaintedLayers();
 }
-
-struct WeakRunnableMethod : Runnable {
-  using Method = void (nsPresContext::*)();
-
-  WeakRunnableMethod(const char* aName, nsPresContext* aPc, Method aMethod)
-      : Runnable(aName), mPresContext(aPc), mMethod(aMethod) {}
-
-  NS_IMETHOD Run() override {
-    if (nsPresContext* pc = mPresContext.get()) {
-      (pc->*mMethod)();
-    }
-    return NS_OK;
-  }
-
- private:
-  WeakPtr<nsPresContext> mPresContext;
-  Method mMethod;
-};
 
 nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   NS_ASSERTION(!mInitialized, "attempt to reinit pres context");

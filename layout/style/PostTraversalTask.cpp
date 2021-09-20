@@ -47,10 +47,8 @@ void PostTraversalTask::Run() {
       break;
 
     case Type::FontInfoUpdate:
-      nsPresContext* pc =
-          static_cast<ServoStyleSet*>(mTarget)->GetPresContext();
-      if (pc) {
-        pc->ForceReflowForFontInfoUpdate(/* aNeedsReframe = */ false);
+      if (auto* pc = static_cast<ServoStyleSet*>(mTarget)->GetPresContext()) {
+        pc->ForceReflowForFontInfoUpdateFromStyle();
       }
       break;
   }
