@@ -25,18 +25,36 @@ def Libxul(name, output_category=None):
         SHARED_LIBRARY_NAME = "xul"
 
     DELAYLOAD_DLLS += [
+        "avrt.dll",
         "comdlg32.dll",
         "credui.dll",
         "d3d11.dll",
         "D3DCompiler_47.dll",
+        "dhcpcsvc.dll",
+        "dnsapi.dll",
+        "dwmapi.dll",
         "dxgi.dll",
+        "gdi32.dll",
         "hid.dll",
+        "imm32.dll",
+        "iphlpapi.dll",
+        "msi.dll",
         "msimg32.dll",
         "netapi32.dll",
+        "ole32.dll",
+        "oleaut32.dll",
         "secur32.dll",
+        "setupapi.dll",
+        "shell32.dll",
+        "shlwapi.dll",
         "urlmon.dll",
+        "user32.dll",
+        "userenv.dll",
+        "usp10.dll",
+        "uxtheme.dll",
         "wininet.dll",
         "winspool.drv",
+        "wtsapi32.dll",
     ]
 
     if CONFIG["ACCESSIBILITY"]:
