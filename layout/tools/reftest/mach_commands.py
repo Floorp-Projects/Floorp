@@ -10,13 +10,11 @@ import sys
 from argparse import Namespace
 
 from mozbuild.base import (
-    MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
 )
 
 from mach.decorators import (
-    CommandProvider,
     Command,
 )
 
@@ -228,77 +226,76 @@ def get_parser():
     return parser
 
 
-@CommandProvider
-class MachCommands(MachCommandBase):
-    @Command(
-        "reftest",
-        category="testing",
-        description="Run reftests (layout and graphics correctness).",
-        parser=get_parser,
-    )
-    def run_reftest(self, command_context, **kwargs):
-        kwargs["suite"] = "reftest"
-        return self._run_reftest(command_context, **kwargs)
+@Command(
+    "reftest",
+    category="testing",
+    description="Run reftests (layout and graphics correctness).",
+    parser=get_parser,
+)
+def run_reftest(command_context, **kwargs):
+    kwargs["suite"] = "reftest"
+    return _run_reftest(command_context, **kwargs)
 
-    @Command(
-        "jstestbrowser",
-        category="testing",
-        description="Run js/src/tests in the browser.",
-        parser=get_parser,
-    )
-    def run_jstestbrowser(self, command_context, **kwargs):
-        if "--enable-js-shell" not in command_context.mozconfig["configure_args"]:
-            raise Exception(
-                "jstestbrowser requires --enable-js-shell be specified in mozconfig."
-            )
-        command_context._mach_context.commands.dispatch(
-            "build", command_context._mach_context, what=["stage-jstests"]
+
+@Command(
+    "jstestbrowser",
+    category="testing",
+    description="Run js/src/tests in the browser.",
+    parser=get_parser,
+)
+def run_jstestbrowser(command_context, **kwargs):
+    if "--enable-js-shell" not in command_context.mozconfig["configure_args"]:
+        raise Exception(
+            "jstestbrowser requires --enable-js-shell be specified in mozconfig."
         )
-        kwargs["suite"] = "jstestbrowser"
-        return self._run_reftest(command_context, **kwargs)
-
-    @Command(
-        "crashtest",
-        category="testing",
-        description="Run crashtests (Check if crashes on a page).",
-        parser=get_parser,
+    command_context._mach_context.commands.dispatch(
+        "build", command_context._mach_context, what=["stage-jstests"]
     )
-    def run_crashtest(self, command_context, **kwargs):
-        kwargs["suite"] = "crashtest"
-        return self._run_reftest(command_context, **kwargs)
+    kwargs["suite"] = "jstestbrowser"
+    return _run_reftest(command_context, **kwargs)
 
-    def _run_reftest(self, command_context, **kwargs):
-        kwargs["topsrcdir"] = command_context.topsrcdir
-        process_test_objects(kwargs)
-        reftest = command_context._spawn(ReftestRunner)
-        # Unstructured logging must be enabled prior to calling
-        # adb which uses an unstructured logger in its constructor.
-        reftest.log_manager.enable_unstructured()
-        if conditions.is_android(command_context):
-            from mozrunner.devices.android_device import (
-                verify_android_device,
-                InstallIntent,
-            )
 
-            install = (
-                InstallIntent.NO if kwargs.get("no_install") else InstallIntent.YES
-            )
-            verbose = False
-            if (
-                kwargs.get("log_mach_verbose")
-                or kwargs.get("log_tbpl_level") == "debug"
-                or kwargs.get("log_mach_level") == "debug"
-                or kwargs.get("log_raw_level") == "debug"
-            ):
-                verbose = True
-            verify_android_device(
-                command_context,
-                install=install,
-                xre=True,
-                network=True,
-                app=kwargs["app"],
-                device_serial=kwargs["deviceSerial"],
-                verbose=verbose,
-            )
-            return reftest.run_android_test(**kwargs)
-        return reftest.run_desktop_test(**kwargs)
+@Command(
+    "crashtest",
+    category="testing",
+    description="Run crashtests (Check if crashes on a page).",
+    parser=get_parser,
+)
+def run_crashtest(command_context, **kwargs):
+    kwargs["suite"] = "crashtest"
+    return _run_reftest(command_context, **kwargs)
+
+
+def _run_reftest(command_context, **kwargs):
+    kwargs["topsrcdir"] = command_context.topsrcdir
+    process_test_objects(kwargs)
+    reftest = command_context._spawn(ReftestRunner)
+    # Unstructured logging must be enabled prior to calling
+    # adb which uses an unstructured logger in its constructor.
+    reftest.log_manager.enable_unstructured()
+    if conditions.is_android(command_context):
+        from mozrunner.devices.android_device import (
+            verify_android_device,
+            InstallIntent,
+        )
+
+        install = InstallIntent.NO if kwargs.get("no_install") else InstallIntent.YES
+        verbose = False
+        if (
+            kwargs.get("log_mach_verbose")
+            or kwargs.get("log_tbpl_level") == "debug"
+            or kwargs.get("log_mach_level") == "debug"
+            or kwargs.get("log_raw_level") == "debug"
+        ):
+            verbose = True
+        verify_android_device(
+            command_context,
+            install=install,
+            xre=True,
+            network=True,
+            app=kwargs["app"],
+            device_serial=kwargs["deviceSerial"],
+            verbose=verbose,
+        )
+        return reftest.run_android_test(**kwargs)
+    return reftest.run_desktop_test(**kwargs)

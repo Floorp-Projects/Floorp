@@ -15,10 +15,9 @@ import socket
 
 from mozbuild.base import (
     MozbuildObject,
-    MachCommandBase,
     BinaryNotFoundException,
 )
-from mach.decorators import CommandProvider, Command
+from mach.decorators import Command
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
@@ -123,19 +122,17 @@ def create_parser():
     return create_parser(mach_interface=True)
 
 
-@CommandProvider
-class MachCommands(MachCommandBase):
-    @Command(
-        "talos-test",
-        category="testing",
-        description="Run talos tests (performance testing).",
-        parser=create_parser,
-    )
-    def run_talos_test(self, command_context, **kwargs):
-        talos = command_context._spawn(TalosRunner)
+@Command(
+    "talos-test",
+    category="testing",
+    description="Run talos tests (performance testing).",
+    parser=create_parser,
+)
+def run_talos_test(command_context, **kwargs):
+    talos = command_context._spawn(TalosRunner)
 
-        try:
-            return talos.run_test(sys.argv[2:])
-        except Exception as e:
-            print(str(e))
-            return 1
+    try:
+        return talos.run_test(sys.argv[2:])
+    except Exception as e:
+        print(str(e))
+        return 1
