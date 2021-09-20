@@ -54,6 +54,10 @@ var gExceptionPaths = [
   // Paths from this folder are constructed in NetErrorParent.jsm based on
   // the type of cert or net error the user is encountering.
   "chrome://browser/content/certerror/supportpages/",
+
+  // Points to theme preview images, which are defined in browser/ but only used
+  // in toolkit/mozapps/extensions/content/aboutaddons.js.
+  "resource://usercontext-content/builtin-themes/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
@@ -270,18 +274,6 @@ var whitelist = [
 
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
-
-  // Theme preview images are defined in browser/ but only used in
-  // toolkit/mozapps/extensions/content/aboutaddons.js.
-  { file: "resource://usercontext-content/builtin-themes/light/preview.svg" },
-  { file: "resource://usercontext-content/builtin-themes/dark/preview.svg" },
-  {
-    file: "resource://usercontext-content/builtin-themes/alpenglow/preview.svg",
-  },
-  {
-    file:
-      "resource://usercontext-content/builtin-themes/monochromatic/lush/bold/preview.svg",
-  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
