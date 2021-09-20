@@ -1181,16 +1181,17 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
     MOZ_ASSERT(textControlElement);
     textControlElement->InitializeKeyboardEventListeners();
 
-    if (nsPoint* contentScrollPos = TakeProperty(ContentScrollPos())) {
+    bool hasProperty;
+    nsPoint contentScrollPos = TakeProperty(ContentScrollPos(), &hasProperty);
+    if (hasProperty) {
       // If we have a scroll pos stored to be passed to our anonymous
       // div, do it here!
       nsIStatefulFrame* statefulFrame = do_QueryFrame(frame);
       NS_ASSERTION(statefulFrame,
                    "unexpected type of frame for the anonymous div");
       UniquePtr<PresState> fakePresState = NewPresState();
-      fakePresState->scrollState() = *contentScrollPos;
+      fakePresState->scrollState() = contentScrollPos;
       statefulFrame->RestoreState(fakePresState.get());
-      delete contentScrollPos;
     }
   } else {
     MOZ_ASSERT(!mRootNode || PrincipalChildList().IsEmpty());
@@ -1285,7 +1286,7 @@ nsTextControlFrame::RestoreState(PresState* aState) {
   // Most likely, we don't have our anonymous content constructed yet, which
   // would cause us to end up here.  In this case, we'll just store the scroll
   // pos ourselves, and forward it to the scroll frame later when it's created.
-  SetProperty(ContentScrollPos(), new nsPoint(aState->scrollState()));
+  SetProperty(ContentScrollPos(), aState->scrollState());
   return NS_OK;
 }
 

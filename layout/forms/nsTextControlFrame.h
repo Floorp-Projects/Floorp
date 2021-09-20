@@ -36,7 +36,7 @@ class nsTextControlFrame : public nsContainerFrame,
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ContentScrollPos, nsPoint)
 
  protected:
   nsTextControlFrame(ComputedStyle*, nsPresContext*, nsIFrame::ClassID);
