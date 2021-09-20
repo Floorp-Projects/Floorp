@@ -8,8 +8,6 @@
   }
 }
 
-@media (-moz-proton) {
 body {
   border-radius: 8px;
-}
 }
