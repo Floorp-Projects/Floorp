@@ -1110,8 +1110,7 @@ struct BaseCompiler final {
 
   RegI32 needRotate64Temp();
   void pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved);
-  void pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
-                         RegI64* reserved);
+  void pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp);
   void pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved);
   RegI32 popI32RhsForShift();
   RegI32 popI32RhsForShiftI64();
