@@ -71,6 +71,24 @@ class nsHttpConnectionInfo final : public ARefBase {
   void BuildHashKey();
   void RebuildHashKey();
 
+  // See comments in nsHttpConnectionInfo::BuildHashKey for the meaning of each
+  // field.
+  enum class HashKeyIndex : uint32_t {
+    Proxy = 0,
+    EndToEndSSL,
+    Anonymous,
+    Private,
+    InsecureScheme,
+    NoSpdy,
+    BeConservative,
+    AnonymousAllowClientCert,
+    FallbackConnection,
+    End,
+  };
+  constexpr inline auto UnderlyingIndex(HashKeyIndex aIndex) const {
+    return std::underlying_type_t<HashKeyIndex>(aIndex);
+  }
+
  public:
   const nsCString& HashKey() const { return mHashKey; }
 
@@ -130,38 +148,54 @@ class nsHttpConnectionInfo final : public ARefBase {
   int32_t DefaultPort() const {
     return mEndToEndSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
   }
-  void SetAnonymous(bool anon) { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
-  bool GetAnonymous() const { return mHashKey.CharAt(2) == 'A'; }
-  void SetPrivate(bool priv) { mHashKey.SetCharAt(priv ? 'P' : '.', 3); }
-  bool GetPrivate() const { return mHashKey.CharAt(3) == 'P'; }
-  void SetInsecureScheme(bool insecureScheme) {
-    mHashKey.SetCharAt(insecureScheme ? 'I' : '.', 4);
+  void SetAnonymous(bool anon) {
+    SetHashCharAt(anon ? 'A' : '.', HashKeyIndex::Anonymous);
   }
-  bool GetInsecureScheme() const { return mHashKey.CharAt(4) == 'I'; }
+  bool GetAnonymous() const {
+    return GetHashCharAt(HashKeyIndex::Anonymous) == 'A';
+  }
+  void SetPrivate(bool priv) {
+    SetHashCharAt(priv ? 'P' : '.', HashKeyIndex::Private);
+  }
+  bool GetPrivate() const {
+    return GetHashCharAt(HashKeyIndex::Private) == 'P';
+  }
+  void SetInsecureScheme(bool insecureScheme) {
+    SetHashCharAt(insecureScheme ? 'I' : '.', HashKeyIndex::InsecureScheme);
+  }
+  bool GetInsecureScheme() const {
+    return GetHashCharAt(HashKeyIndex::InsecureScheme) == 'I';
+  }
 
   void SetNoSpdy(bool aNoSpdy) {
-    mHashKey.SetCharAt(aNoSpdy ? 'X' : '.', 5);
+    SetHashCharAt(aNoSpdy ? 'X' : '.', HashKeyIndex::NoSpdy);
     if (aNoSpdy && mNPNToken == "h2"_ns) {
       mNPNToken.Truncate();
       RebuildHashKey();
     }
   }
-  bool GetNoSpdy() const { return mHashKey.CharAt(5) == 'X'; }
+  bool GetNoSpdy() const { return GetHashCharAt(HashKeyIndex::NoSpdy) == 'X'; }
 
   void SetBeConservative(bool aBeConservative) {
-    mHashKey.SetCharAt(aBeConservative ? 'C' : '.', 6);
+    SetHashCharAt(aBeConservative ? 'C' : '.', HashKeyIndex::BeConservative);
   }
-  bool GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
+  bool GetBeConservative() const {
+    return GetHashCharAt(HashKeyIndex::BeConservative) == 'C';
+  }
 
   void SetAnonymousAllowClientCert(bool anon) {
-    mHashKey.SetCharAt(anon ? 'B' : '.', 7);
+    SetHashCharAt(anon ? 'B' : '.', HashKeyIndex::AnonymousAllowClientCert);
   }
-  bool GetAnonymousAllowClientCert() const { return mHashKey.CharAt(7) == 'B'; }
+  bool GetAnonymousAllowClientCert() const {
+    return GetHashCharAt(HashKeyIndex::AnonymousAllowClientCert) == 'B';
+  }
 
   void SetFallbackConnection(bool aFallback) {
-    mHashKey.SetCharAt(aFallback ? 'F' : '.', 8);
+    SetHashCharAt(aFallback ? 'F' : '.', HashKeyIndex::FallbackConnection);
   }
-  bool GetFallbackConnection() const { return mHashKey.CharAt(8) == 'F'; }
+  bool GetFallbackConnection() const {
+    return GetHashCharAt(HashKeyIndex::FallbackConnection) == 'F';
+  }
 
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
@@ -229,6 +263,12 @@ class nsHttpConnectionInfo final : public ARefBase {
             const OriginAttributes& originAttributes, bool e2eSSL,
             bool aIsHttp3);
   void SetOriginServer(const nsACString& host, int32_t port);
+  nsCString::char_type GetHashCharAt(HashKeyIndex aIndex) const {
+    return mHashKey.CharAt(UnderlyingIndex(aIndex));
+  }
+  void SetHashCharAt(nsCString::char_type aValue, HashKeyIndex aIndex) {
+    mHashKey.SetCharAt(aValue, UnderlyingIndex(aIndex));
+  }
 
   nsCString mOrigin;
   int32_t mOriginPort = 0;

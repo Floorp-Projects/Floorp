@@ -130,7 +130,7 @@ void nsHttpConnectionInfo::BuildHashKey() {
     keyPort = OriginPort();
   }
 
-  // The hashkey has 4 fields followed by host connection info
+  // The hashkey has 9 fields followed by host connection info
   // byte 0 is P/T/. {P,T} for Plaintext/TLS Proxy over HTTP
   // byte 1 is S/. S is for end to end ssl such as https:// uris
   // byte 2 is A/. A is for an anonymous channel (no cookies, etc..)
@@ -144,7 +144,10 @@ void nsHttpConnectionInfo::BuildHashKey() {
   // corresponding data fields on the object itself, you may also need to
   // modify RebuildHashKey.
 
-  mHashKey.AssignLiteral(".........[tlsflags0x00000000]");
+  const auto keyTemplate =
+      std::string(UnderlyingIndex(HashKeyIndex::End), '.') +
+      std::string("[tlsflags0x00000000]");
+  mHashKey.Assign(keyTemplate.c_str());
 
   mHashKey.Append(keyHost);
   mHashKey.Append(':');
@@ -156,12 +159,12 @@ void nsHttpConnectionInfo::BuildHashKey() {
   }
 
   if (mUsingHttpsProxy) {
-    mHashKey.SetCharAt('T', 0);
+    SetHashCharAt('T', HashKeyIndex::Proxy);
   } else if (mUsingHttpProxy) {
-    mHashKey.SetCharAt('P', 0);
+    SetHashCharAt('P', HashKeyIndex::Proxy);
   }
   if (mEndToEndSSL) {
-    mHashKey.SetCharAt('S', 1);
+    SetHashCharAt('S', HashKeyIndex::EndToEndSSL);
   }
 
   // NOTE: for transparent proxies (e.g., SOCKS) we need to encode the proxy
@@ -521,8 +524,9 @@ void nsHttpConnectionInfo::SetIPv6Disabled(bool aNoIPv6) {
 
 void nsHttpConnectionInfo::SetTlsFlags(uint32_t aTlsFlags) {
   mTlsFlags = aTlsFlags;
-
-  mHashKey.Replace(20, 8, nsPrintfCString("%08x", mTlsFlags));
+  const uint32_t tlsFlagsIndex =
+      UnderlyingIndex(HashKeyIndex::End) + strlen("[tlsflags0x");
+  mHashKey.Replace(tlsFlagsIndex, 8, nsPrintfCString("%08x", mTlsFlags));
 }
 
 bool nsHttpConnectionInfo::UsingProxy() {
