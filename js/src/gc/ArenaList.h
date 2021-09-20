@@ -30,6 +30,7 @@ struct Statistics;
 namespace gc {
 
 class Arena;
+struct FinalizePhase;
 class FreeSpan;
 class TenuredCell;
 
@@ -342,7 +343,8 @@ class ArenaLists {
   void setIncrementalSweptArenas(AllocKind kind, SortedArenaList& arenas);
   void clearIncrementalSweptArenas();
 
-  void mergeFinalizedArenas(AllocKind thingKind, SortedArenaList& finalizedArenas);
+  void mergeFinalizedArenas(AllocKind thingKind,
+                            SortedArenaList& finalizedArenas);
 
   void setParallelAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
