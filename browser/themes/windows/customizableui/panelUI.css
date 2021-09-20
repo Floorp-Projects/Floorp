@@ -4,7 +4,6 @@
 
 %include ../../shared/customizableui/panelUI.inc.css
 
-@media (-moz-proton) {
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
   margin-inline: -13px;
@@ -18,7 +17,6 @@
 #notification-popup {
   margin-block: -4px;
 }
-} /** END Proton **/
 
 /* bookmark panel submenus */
 
