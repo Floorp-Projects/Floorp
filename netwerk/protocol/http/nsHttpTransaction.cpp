@@ -139,13 +139,14 @@ void nsHttpTransaction::SetClassOfService(uint32_t cos) {
   }
 }
 
-class ReleaseH2WSTrans final : public Runnable {
+class ReleaseOnSocketThread final : public mozilla::Runnable {
  public:
-  explicit ReleaseH2WSTrans(RefPtr<SpdyConnectTransaction>&& trans)
-      : Runnable("ReleaseH2WSTrans"), mTrans(std::move(trans)) {}
+  explicit ReleaseOnSocketThread(nsTArray<nsCOMPtr<nsISupports>>&& aDoomed)
+      : Runnable("ReleaseOnSocketThread"), mDoomed(std::move(aDoomed)) {}
 
-  NS_IMETHOD Run() override {
-    mTrans = nullptr;
+  NS_IMETHOD
+  Run() override {
+    mDoomed.Clear();
     return NS_OK;
   }
 
@@ -156,7 +157,9 @@ class ReleaseH2WSTrans final : public Runnable {
   }
 
  private:
-  RefPtr<SpdyConnectTransaction> mTrans;
+  virtual ~ReleaseOnSocketThread() = default;
+
+  nsTArray<nsCOMPtr<nsISupports>> mDoomed;
 };
 
 nsHttpTransaction::~nsHttpTransaction() {
@@ -174,15 +177,22 @@ nsHttpTransaction::~nsHttpTransaction() {
 
   // Force the callbacks and connection to be released right now
   mCallbacks = nullptr;
-  mConnection = nullptr;
 
   delete mResponseHead;
   delete mChunkedDecoder;
   ReleaseBlockingTransaction();
 
+  nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
+  if (mConnection) {
+    arrayToRelease.AppendElement(mConnection.forget());
+  }
   if (mH2WSTransaction) {
-    RefPtr<ReleaseH2WSTrans> r =
-        new ReleaseH2WSTrans(std::move(mH2WSTransaction));
+    arrayToRelease.AppendElement(mH2WSTransaction.forget());
+  }
+
+  if (!arrayToRelease.IsEmpty()) {
+    RefPtr<ReleaseOnSocketThread> r =
+        new ReleaseOnSocketThread(std::move(arrayToRelease));
     r->Dispatch();
   }
 }
