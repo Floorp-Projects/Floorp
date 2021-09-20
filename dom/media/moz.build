@@ -181,7 +181,6 @@ EXPORTS += [
     "SeekTarget.h",
     "SelfRef.h",
     "SharedBuffer.h",
-    "ThreadPoolCOMListener.h",
     "TimeUnits.h",
     "Tracing.h",
     "VideoFrameContainer.h",
@@ -303,11 +302,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     UNIFIED_SOURCES += ["UnderrunHandlerLinux.cpp"]
 else:
     UNIFIED_SOURCES += ["UnderrunHandlerNoop.cpp"]
-
-if CONFIG["OS_TARGET"] == "WINNT":
-    SOURCES += [
-        "ThreadPoolCOMListener.cpp",
-    ]
 
 # CubebUtils.cpp needs to be built separately due to what appears to be some kind
 # of compiler bug on Android 4.2 x86 opt. See bug 1408459.
