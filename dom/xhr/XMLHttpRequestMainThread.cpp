@@ -2096,6 +2096,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
     return NS_OK;
   }
 
+  auto resetFlagSyncLooping = MakeScopeExit([&] { mFlagSyncLooping = false; });
+
   // Send the decoder the signal that we've hit the end of the stream,
   // but only when decoding text eagerly.
   if (mDecoder && ((mResponseType == XMLHttpRequestResponseType::Text) ||
@@ -2215,6 +2217,9 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
       status = NS_ERROR_UNEXPECTED;
     }
   }
+
+  // mFlagSyncLooping will be set to false below, so release this scope object.
+  resetFlagSyncLooping.release();
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
