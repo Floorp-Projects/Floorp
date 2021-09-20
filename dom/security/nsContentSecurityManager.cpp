@@ -64,6 +64,8 @@ mozilla::LazyLogModule sCSMLog("CSMLog");
 //   (which can't be checked off-main-thread).
 Atomic<bool, mozilla::Relaxed> sJSHacksChecked(false);
 Atomic<bool, mozilla::Relaxed> sJSHacksPresent(false);
+Atomic<bool, mozilla::Relaxed> sCSSHacksChecked(false);
+Atomic<bool, mozilla::Relaxed> sCSSHacksPresent(false);
 Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
 
 /* static */
@@ -875,7 +877,12 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
     return;
   }
   nsContentSecurityUtils::DetectJsHacks();
-  if (MOZ_UNLIKELY(sJSHacksPresent)) {
+  nsContentSecurityUtils::DetectCssHacks();
+  // The detection only work on the main-thread.
+  // To avoid races and early reports, we need to ensure the checks actually
+  // happened.
+  if (MOZ_UNLIKELY(sJSHacksPresent || !sJSHacksChecked || sCSSHacksPresent ||
+                   !sCSSHacksChecked)) {
     return;
   }
 
