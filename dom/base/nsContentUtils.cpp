@@ -673,7 +673,7 @@ class SameOriginCheckerImpl final : public nsIChannelEventSink,
 
 }  // namespace
 
-void AutoSuppressEventHandlingAndSuspend::SuppressDocument(Document* aDoc) {
+void AutoSuppressEventHandling::SuppressDocument(Document* aDoc) {
   // Note: Document::SuppressEventHandling will also automatically suppress
   // event handling for any in-process sub-documents. However, since we need
   // to deal with cases where remote BrowsingContexts may be interleaved
@@ -682,21 +682,28 @@ void AutoSuppressEventHandlingAndSuspend::SuppressDocument(Document* aDoc) {
   // suppressions maintain a count of current blockers, it does not cause
   // any problems.
   aDoc->SuppressEventHandling();
+}
+
+void AutoSuppressEventHandling::UnsuppressDocument(Document* aDoc) {
+  aDoc->UnsuppressEventHandlingAndFireEvents(true);
+}
+
+AutoSuppressEventHandling::~AutoSuppressEventHandling() {
+  UnsuppressDocuments();
+}
+
+void AutoSuppressEventHandlingAndSuspend::SuppressDocument(Document* aDoc) {
+  AutoSuppressEventHandling::SuppressDocument(aDoc);
   if (nsCOMPtr<nsPIDOMWindowInner> win = aDoc->GetInnerWindow()) {
     win->Suspend();
     mWindows.AppendElement(win);
   }
 }
 
-void AutoSuppressEventHandlingAndSuspend::UnsuppressDocument(Document* aDoc) {
-  aDoc->UnsuppressEventHandlingAndFireEvents(true);
-}
-
 AutoSuppressEventHandlingAndSuspend::~AutoSuppressEventHandlingAndSuspend() {
   for (const auto& win : mWindows) {
     win->Resume();
   }
-  UnsuppressDocuments();
 }
 
 /**
