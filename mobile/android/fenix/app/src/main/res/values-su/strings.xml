@@ -197,6 +197,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ropéa</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Kustomkeun tepas</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Layar tepas</string>
@@ -391,6 +393,16 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Koléksi Émboh geus dirobah. Kaluar ti aplikasi pikeun nerapkeun parobahan…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Asup deui</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Anyar diteundeun</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Anyar dianjangan</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Saku</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -749,6 +761,9 @@
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Teundeun</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">Lianna</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1471,6 +1486,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Meresihan réréméh anu diatur ku alihan ka raramatloka palacak anu dipikawanoh.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Sababaraha palacak anu ditandaan di handap sawaréh geus teu dipeungpeuk di ieu kaca kusabab geus aya interaksi jeung anjeun *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Lenyepan</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Pangrojong</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1540,6 +1561,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Eusian sandiasma jeung kecap sandi dina séjén aplikasi dina parabot anjeun.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Tambahkeun login</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Singkronkeun login</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1603,6 +1627,8 @@
     <string name="saved_login_copy_username">Niron sandiasma</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Beresihan sandiasma</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Beresihan ngaran host</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Niron loka</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1769,9 +1795,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Gilir <b>%1$s</b> ka ON]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Sambungan Aman</string>
+    <string name="quick_settings_sheet_secure_connection_2">Sambungan aman</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Sambungan Teu Aman</string>
+    <string name="quick_settings_sheet_insecure_connection_2">Sambungan teu aman</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Sambungan Aman</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Sambungan Teu Aman</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Yakin rék ngaberesihan sadaya idin di sadaya loka?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1813,8 +1843,14 @@
     <string name="discard_changes">Piceun parobahan</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Édit</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Tambahkeun login anyar</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Butuh kecap sandi</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Kudu ngeusian sandiasma</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Kudu ngeusian ngaran host</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Sungsi sora</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1822,6 +1858,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Login maké éta sandiasma geus aya</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.conto.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Alamat raramat kudu ngandung \“https://\“ atawa \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Ngaran host sah diperlukeun</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1848,8 +1891,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Témbongkeun loka anu pangmindengna dianjangan</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Témbongkeun loka anu pangmindengna dianjangan</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Témbongkeun loka anu pangmindengna dianjangan</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Ngaran</string>
