@@ -44,7 +44,7 @@
         app:layout_constraintStart_toStartOf="@id/hostnameHeaderText"
         app:layout_constraintTop_toBottomOf="@id/hostnameHeaderText"
         app:helperTextEnabled="true"
-        app:helperText="@string/add_login_hostname_invalid_text_1"
+        app:helperText="@string/add_login_hostname_invalid_text_3"
         app:hintEnabled="false" >
 
         <com.google.android.material.textfield.TextInputEditText

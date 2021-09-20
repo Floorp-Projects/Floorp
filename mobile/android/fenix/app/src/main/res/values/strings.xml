@@ -1805,7 +1805,9 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">Web address must contain \“https://\“ or \“http://\“</string>
+    <string name="add_login_hostname_invalid_text_1" moz:removedIn="94" tools:ignore="UnusedResources">Web address must contain "https://" or "http://"</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Web address must contain "https://" or "http://"</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Valid hostname required</string>
 
