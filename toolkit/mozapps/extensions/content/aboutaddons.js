@@ -81,23 +81,23 @@ const EXTENSION_ICON_URL =
 const BUILTIN_THEME_PREVIEWS = new Map([
   [
     "default-theme@mozilla.org",
-    "chrome://mozapps/content/extensions/default-theme.svg",
+    "chrome://mozapps/content/extensions/default-theme/preview.svg",
   ],
   [
     "firefox-compact-light@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-compact-light.svg",
+    "resource://builtin-themes/light/preview.svg",
   ],
   [
     "firefox-compact-dark@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-compact-dark.svg",
+    "resource://builtin-themes/dark/preview.svg",
   ],
   [
     "firefox-alpenglow@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-alpenglow.svg",
+    "resource://builtin-themes/alpenglow/preview.svg",
   ],
   [
-    "firefox-monochromatic-purple@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-monochromatic-purple.svg",
+    "firefox-lush-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/bold/preview.svg",
   ],
 ]);
 

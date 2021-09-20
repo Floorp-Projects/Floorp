@@ -27,7 +27,8 @@
         "left top",
         "right top"
       ],
-      "additional_backgrounds_tiling": ["no-repeat", "no-repeat", "repeat-x"]
+      "additional_backgrounds_tiling": ["no-repeat", "no-repeat", "repeat-x"],
+      "zap_gradient": "linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"
     },
     "colors": {
       "frame": "hsla(240, 20%, 98%, 1)",
@@ -83,7 +84,8 @@
         "left top",
         "right top"
       ],
-      "additional_backgrounds_tiling": ["no-repeat", "no-repeat", "repeat-x"]
+      "additional_backgrounds_tiling": ["no-repeat", "no-repeat", "repeat-x"],
+      "zap_gradient": "linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"
     },
     "colors": {
       "frame": "hsla(240, 20%, 98%, 1)",
@@ -129,6 +131,9 @@
   "theme_experiment": {
     "colors": {
       "focus_outline": "--focus-outline-color"
+    },
+    "properties": {
+      "zap_gradient": "--panel-separator-zap-gradient"
     }
   }
 }
