@@ -779,6 +779,10 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
     SuspendAsyncCATransactions();
     mBounds.width = width;
     mBounds.height = height;
+
+    CALayer* layer = [mView rootCALayer];
+    double scale = BackingScaleFactor();
+    layer.bounds = CGRectMake(0, 0, width / scale, height / scale);
   }
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{

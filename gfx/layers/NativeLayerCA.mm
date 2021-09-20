@@ -238,7 +238,7 @@ bool NativeLayerRootCA::CommitToScreen() {
       return false;
     }
 
-    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers);
+    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers, mWindowIsFullscreen);
 
     mCommitPending = false;
   }
@@ -286,7 +286,7 @@ void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
 
 void NativeLayerRootCA::CommitOffscreen() {
   MutexAutoLock lock(mMutex);
-  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers);
+  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers, mWindowIsFullscreen);
 }
 
 template <typename F>
@@ -310,7 +310,8 @@ NativeLayerRootCA::Representation::~Representation() {
 }
 
 void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentation,
-                                               const nsTArray<RefPtr<NativeLayerCA>>& aSublayers) {
+                                               const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+                                               bool aWindowIsFullscreen) {
   if (!mMutated &&
       std::none_of(aSublayers.begin(), aSublayers.end(), [=](const RefPtr<NativeLayerCA>& layer) {
         return layer->HasUpdate(aRepresentation);
@@ -334,8 +335,98 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
       [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
     }
     mRootCALayer.sublayers = sublayers;
+
+    // Now that we've set these layer relationships, we check to see if we should break
+    // them and isolate a single video layer. It's important to do this *after* the
+    // sublayers have been set, because we need the relationships there to do the
+    // bounds checking of layer spaces against each other.
+    if (aWindowIsFullscreen && aRepresentation == WhichRepresentation::ONSCREEN &&
+        StaticPrefs::gfx_core_animation_specialize_video()) {
+      CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, aSublayers);
+      if (isolatedLayer) {
+        // Create a full coverage black layer behind the isolated layer.
+        CGFloat rootWidth = mRootCALayer.bounds.size.width;
+        CGFloat rootHeight = mRootCALayer.bounds.size.height;
+
+        // Reaching the low-power mode requires that there is a single black layer
+        // covering the entire window behind the video layer. Create that layer.
+        CALayer* blackLayer = [CALayer layer];
+        blackLayer.position = NSZeroPoint;
+        blackLayer.anchorPoint = NSZeroPoint;
+        blackLayer.bounds = CGRectMake(0, 0, rootWidth, rootHeight);
+        blackLayer.backgroundColor = [[NSColor blackColor] CGColor];
+
+        mRootCALayer.sublayers = @[ blackLayer, isolatedLayer ];
+      }
+    }
+
     mMutated = false;
   }
+}
+
+CALayer* NativeLayerRootCA::Representation::FindVideoLayerToIsolate(
+    WhichRepresentation aRepresentation, const nsTArray<RefPtr<NativeLayerCA>>& aSublayers) {
+  // Run a heuristic to determine if any one of aSublayers is a video layer that should be
+  // isolated. These layers are ordered back-to-front. This function will return a candidate
+  // CALayer if all of the following are true:
+  // 1) The candidate layer is the topmost layer, and is a video layer.
+  // 2) The candidate layer bounds covers at least 80% of the bounds of the root layer.
+  // 3) The candidate layer center is "near" the center of the root layer.
+  // 4) There are no other video layers other than the candidate layer.
+  // Notably, this heuristic doesn't check the contents or bounds of layers that appear
+  // before the candidate layer. This means that video layers on top of other content
+  // may be selected for isolation and that other content will be replaced with a black
+  // background.
+  // Bug 1731136 will make this heuristic simpler, or completely unnecessary.
+
+  auto topLayer = aSublayers.LastElement();
+  if (!topLayer || !topLayer->IsVideo()) {
+    // FAIL Step 1: the topmost layer is not video.
+    return nil;
+  }
+
+  CALayer* candidateLayer = topLayer->UnderlyingCALayer(aRepresentation);
+  MOZ_ASSERT(candidateLayer);
+
+  // Check coverage of the candidate layer's bounds. We need the size of the root
+  // layer to do this.
+  CGFloat rootWidth = mRootCALayer.bounds.size.width;
+  CGFloat rootHeight = mRootCALayer.bounds.size.height;
+  CGFloat rootArea = rootWidth * rootHeight;
+  CGFloat minimumRootArea = rootArea * 0.8;
+
+  // Translate the candidate layer bounds into root layer space.
+  CGRect candidateBoundsInRoot = [mRootCALayer convertRect:candidateLayer.bounds
+                                                 fromLayer:candidateLayer];
+  CGFloat candidateArea = candidateBoundsInRoot.size.width * candidateBoundsInRoot.size.height;
+  if (candidateArea < minimumRootArea) {
+    // FAIL Step 2: the candidate layer is not big enough.
+    return nil;
+  }
+
+  // Check center of the candidate layer, relative to the root layer's center.
+  CGFloat centerZoneWidth = rootWidth * 0.05;
+  CGFloat centerZoneHeight = rootHeight * 0.05;
+  CGRect centerZone =
+      CGRectMake((rootWidth * 0.5) - (centerZoneWidth * 0.5),
+                 (rootHeight * 0.5) - (centerZoneHeight * 0.5), centerZoneWidth, centerZoneHeight);
+  CGPoint candidateCenterInRoot =
+      CGPointMake(candidateBoundsInRoot.origin.x + (candidateBoundsInRoot.size.width * 0.5),
+                  candidateBoundsInRoot.origin.y + (candidateBoundsInRoot.size.height * 0.5));
+  if (!CGRectContainsPoint(centerZone, candidateCenterInRoot)) {
+    // FAIL Step 3: the candidate layer is off-center.
+    return nil;
+  }
+
+  // See if there are any other video layers behind the candidate layer.
+  for (auto layer : aSublayers) {
+    if (layer->IsVideo() && layer != topLayer) {
+      // FAIL Step 4: there are multiple video layers.
+      return nil;
+    }
+  }
+
+  return candidateLayer;
 }
 
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA> NativeLayerRootSnapshotterCA::Create(
