@@ -257,17 +257,12 @@ nsIFrame* nsIFrame::GetClosestFlattenedTreeAncestorPrimaryFrame() const {
 }
 
 nsPoint nsIFrame::GetNormalPosition(bool* aHasProperty) const {
-  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
-  if (normalPosition) {
-    if (aHasProperty) {
-      *aHasProperty = true;
-    }
-    return *normalPosition;
-  }
+  bool hasProperty;
+  nsPoint normalPosition = GetProperty(NormalPositionProperty(), &hasProperty);
   if (aHasProperty) {
-    *aHasProperty = false;
+    *aHasProperty = hasProperty;
   }
-  return GetPosition();
+  return hasProperty ? normalPosition : GetPosition();
 }
 
 mozilla::LogicalPoint nsIFrame::GetLogicalNormalPosition(
