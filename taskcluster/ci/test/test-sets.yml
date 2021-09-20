@@ -81,16 +81,6 @@ talos-ref-hw:
     - talos-g4
     - talos-webgl
 
-raptor-firefox:
-    - raptor-youtube-playback-widevine-hfr-firefox
-    - raptor-youtube-playback-widevine-h264-sfr-firefox
-    - raptor-youtube-playback-widevine-vp9-sfr-firefox
-
-raptor-chrome:
-    - raptor-youtube-playback-widevine-hfr-chrome
-    - raptor-youtube-playback-widevine-h264-sfr-chrome
-    - raptor-youtube-playback-widevine-vp9-sfr-chrome
-
 browsertime:
     - browsertime-tp6
     - browsertime-tp6-essential
