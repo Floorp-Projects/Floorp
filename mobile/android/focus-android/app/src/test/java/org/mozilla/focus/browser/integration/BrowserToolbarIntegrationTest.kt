@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.browser.integration
 
+import android.view.View
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -32,6 +33,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.fragment.BrowserFragment
 import org.robolectric.RobolectricTestRunner
 
@@ -46,6 +48,12 @@ class BrowserToolbarIntegrationTest {
     private lateinit var fragment: BrowserFragment
 
     private lateinit var browserToolbarIntegration: BrowserToolbarIntegration
+
+    @Mock
+    private lateinit var toolbarView: DisplayToolbar
+
+    @Mock
+    private lateinit var fragmentView: View
 
     private lateinit var store: BrowserStore
 
@@ -67,11 +75,13 @@ class BrowserToolbarIntegrationTest {
 
         whenever(fragment.resources).thenReturn(testContext.resources)
         whenever(fragment.context).thenReturn(testContext)
+        whenever(fragment.view).thenReturn(fragmentView)
 
         browserToolbarIntegration = spy(
             BrowserToolbarIntegration(
                 store,
                 toolbar,
+                toolbarView,
                 fragment,
                 mock(),
                 mock(),

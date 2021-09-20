@@ -12,8 +12,10 @@ import androidx.core.content.res.ResourcesCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
@@ -21,12 +23,14 @@ import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.toolbar.ToolbarPresenter
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.ColorUtils
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
+import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
@@ -36,6 +40,7 @@ import org.mozilla.focus.utils.HardwareUtils
 class BrowserToolbarIntegration(
     private val store: BrowserStore,
     private val toolbar: BrowserToolbar,
+    private val toolbarView: DisplayToolbar,
     private val fragment: BrowserFragment,
     controller: BrowserMenuController,
     sessionUseCases: SessionUseCases,
@@ -164,6 +169,17 @@ class BrowserToolbarIntegration(
         customTabsFeature?.start()
         navigationButtonsIntegration?.start()
         observerSecurityIndicatorChanges()
+        observeCurrentUrlChanges()
+    }
+
+    private fun observeCurrentUrlChanges() {
+        fragment.consumeFlow(store) { flow ->
+            flow.map { state -> state.selectedTab?.content?.url }
+                .ifChanged()
+                .collect {
+                    toolbarView.setExpanded(true, true)
+                }
+        }
     }
 
     @VisibleForTesting
