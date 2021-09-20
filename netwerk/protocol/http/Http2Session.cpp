@@ -48,6 +48,8 @@ namespace net {
 NS_IMPL_ADDREF(Http2Session)
 NS_IMPL_RELEASE(Http2Session)
 NS_INTERFACE_MAP_BEGIN(Http2Session)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(Http2Session)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsAHttpConnection)
 NS_INTERFACE_MAP_END
 
@@ -217,6 +219,7 @@ void Http2Session::Shutdown() {
 }
 
 Http2Session::~Http2Session() {
+  MOZ_DIAGNOSTIC_ASSERT(OnSocketThread());
   LOG3(("Http2Session::~Http2Session %p mDownstreamState=%X", this,
         mDownstreamState));
 
