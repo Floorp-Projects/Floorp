@@ -18,11 +18,6 @@ SOURCES += [
 
 SharedLibrary("fakeopenh264")
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    OS_LIBS += [
-        "ole32",
-    ]
-
 USE_STATIC_LIBS = True
 NoVisibilityFlags()
 # Don't use STL wrappers; this isn't Gecko code
