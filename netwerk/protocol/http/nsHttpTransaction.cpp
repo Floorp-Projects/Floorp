@@ -1172,8 +1172,9 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
        this, static_cast<uint32_t>(aReason)));
   RefPtr<nsHttpConnectionInfo> failedConnInfo = mConnInfo->Clone();
   mConnInfo = nullptr;
-  bool echConfigUsed = gHttpHandler->EchConfigEnabled() &&
-                       !failedConnInfo->GetEchConfig().IsEmpty();
+  bool echConfigUsed =
+      gHttpHandler->EchConfigEnabled(failedConnInfo->IsHttp3()) &&
+      !failedConnInfo->GetEchConfig().IsEmpty();
 
   if (mFastFallbackTriggered) {
     mFastFallbackTriggered = false;
@@ -3264,8 +3265,8 @@ void nsHttpTransaction::OnFastFallbackTimer() {
     return;
   }
 
-  bool echConfigUsed =
-      gHttpHandler->EchConfigEnabled() && !mConnInfo->GetEchConfig().IsEmpty();
+  bool echConfigUsed = gHttpHandler->EchConfigEnabled(mConnInfo->IsHttp3()) &&
+                       !mConnInfo->GetEchConfig().IsEmpty();
   mBackupConnInfo = PrepareFastFallbackConnInfo(echConfigUsed);
   if (!mBackupConnInfo) {
     return;

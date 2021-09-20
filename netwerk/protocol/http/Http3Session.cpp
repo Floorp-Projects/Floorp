@@ -195,7 +195,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     ZeroRttTelemetry(ZeroRttOutcome::NOT_USED);
   }
 
-  if (gHttpHandler->EchConfigEnabled()) {
+  if (gHttpHandler->EchConfigEnabled(true)) {
     mSocketControl->SetEchConfig(mConnInfo->GetEchConfig());
   }
 

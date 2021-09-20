@@ -37,6 +37,13 @@ enum class HttpVersion {
 
 enum class SpdyVersion { NONE = 0, HTTP_2 = 5 };
 
+enum class SupportedAlpnType : uint8_t {
+  HTTP_3 = 0,
+  HTTP_2,
+  HTTP_1_1,
+  NOT_SUPPORTED
+};
+
 extern const uint32_t kHttp3VersionCount;
 extern const nsCString kHttp3Versions[];
 
@@ -383,13 +390,8 @@ void LogHeaders(const char* lineStart);
 // CONNECT method.
 nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode);
 
-// Given a list of alpn-id, this function returns a supported alpn-id. If both
-// h3 and h2 are enabled, h3 alpn is preferred. This function returns a
-// Tuple<alpn-id, isHttp3>. The first element is the alpn-id and the second one
-// is a boolean to indicate if this alpn-id is for http3. If no supported
-// alpn-id is found, the first element would be a n empty string.
-Tuple<nsCString, bool> SelectAlpnFromAlpnList(
-    const nsTArray<nsCString>& aAlpnList, bool aNoHttp2, bool aNoHttp3);
+// Convert an alpn string to SupportedAlpnType.
+SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn);
 
 static inline bool AllowedErrorForHTTPSRRFallback(nsresult aError) {
   return psm::IsNSSErrorCode(-1 * NS_ERROR_GET_CODE(aError)) ||

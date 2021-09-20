@@ -1001,43 +1001,23 @@ nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
   return rv;
 }
 
-Tuple<nsCString, bool> SelectAlpnFromAlpnList(
-    const nsTArray<nsCString>& aAlpnList, bool aNoHttp2, bool aNoHttp3) {
-  nsCString h3Value;
-  nsCString h2Value;
-  nsCString h1Value;
-  for (const auto& npnToken : aAlpnList) {
-    bool isHttp3 = gHttpHandler->IsHttp3VersionSupported(npnToken);
-    if (isHttp3 && h3Value.IsEmpty()) {
-      h3Value.Assign(npnToken);
-    }
-
-    uint32_t spdyIndex;
-    SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
-    if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
-        spdyInfo->ProtocolEnabled(spdyIndex) && h2Value.IsEmpty()) {
-      h2Value.Assign(npnToken);
-    }
-
-    if (npnToken.LowerCaseEqualsASCII("http/1.1") && h1Value.IsEmpty()) {
-      h1Value.Assign(npnToken);
-    }
+SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn) {
+  if (gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
+    return SupportedAlpnType::HTTP_3;
   }
 
-  if (!h3Value.IsEmpty() && gHttpHandler->IsHttp3Enabled() && !aNoHttp3) {
-    return MakeTuple(h3Value, true);
+  uint32_t spdyIndex;
+  SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
+  if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&
+      spdyInfo->ProtocolEnabled(spdyIndex)) {
+    return SupportedAlpnType::HTTP_2;
   }
 
-  if (!h2Value.IsEmpty() && gHttpHandler->IsSpdyEnabled() && !aNoHttp2) {
-    return MakeTuple(h2Value, false);
+  if (aAlpn.LowerCaseEqualsASCII("http/1.1")) {
+    return SupportedAlpnType::HTTP_1_1;
   }
 
-  if (!h1Value.IsEmpty()) {
-    return MakeTuple(h1Value, false);
-  }
-
-  // If we are here, there is no supported alpn can be used.
-  return MakeTuple(EmptyCString(), false);
+  return SupportedAlpnType::NOT_SUPPORTED;
 }
 
 }  // namespace net
