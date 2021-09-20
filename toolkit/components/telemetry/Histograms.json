@@ -9917,9 +9917,9 @@
   "STORAGE_ACCESS_API_UI": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jhofmann@mozilla.com"],
-    "bug_numbers": [1513309, 1588844, 1643432, 1689262],
-    "expires_in_version": "95",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jhofmann@mozilla.com", "tihuang@mozilla.com"],
+    "bug_numbers": [1513309, 1588844, 1643432, 1689262, 1730043],
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["Request", "AllowAutomatically", "Deny", "Allow", "AllowOnAnySite"],
     "description": "Storage Access API UI events."
