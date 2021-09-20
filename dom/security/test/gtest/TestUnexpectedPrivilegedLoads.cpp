@@ -33,20 +33,14 @@ using namespace TelemetryTestHelpers;
 
 extern Atomic<bool, mozilla::Relaxed> sJSHacksChecked;
 extern Atomic<bool, mozilla::Relaxed> sJSHacksPresent;
-extern Atomic<bool, mozilla::Relaxed> sCSSHacksChecked;
-extern Atomic<bool, mozilla::Relaxed> sCSSHacksPresent;
 
 TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
-  // Disable JS/CSS Hacks Detection, which would consider this current profile
-  // as uninteresting for our measurements:
-  bool origJSHacksPresent = sJSHacksPresent;
-  bool origJSHacksChecked = sJSHacksChecked;
+  // Disable JS Hacks Detection, which would consider this current profile as
+  // uninteresting for our measurements:
+  bool hacksPresent = sJSHacksPresent;
+  bool hacksChecked = sJSHacksChecked;
   sJSHacksPresent = false;
   sJSHacksChecked = true;
-  bool origCSSHacksPresent = sCSSHacksPresent;
-  bool origCSSHacksChecked = sCSSHacksChecked;
-  sCSSHacksPresent = false;
-  sCSSHacksChecked = true;
 
   struct testResults {
     nsCString fileinfo;
@@ -302,9 +296,7 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
         << currentTest.expected.extraValueRedirects.get();
   }
 
-  // Re-store JS/CSS hacks detection state
-  sJSHacksPresent = origJSHacksPresent;
-  sJSHacksChecked = origJSHacksChecked;
-  sCSSHacksPresent = origCSSHacksPresent;
-  sCSSHacksChecked = origCSSHacksChecked;
+  // Re-enable JS hacks detection
+  sJSHacksPresent = hacksPresent;
+  sJSHacksChecked = hacksChecked;
 }
