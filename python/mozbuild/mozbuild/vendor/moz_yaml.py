@@ -135,6 +135,7 @@ updatebot:
       enabled: True
       filter: security
       frequency: every
+      platform: windows
     - type: vendoring
       branch: master
       enabled: False
@@ -384,6 +385,7 @@ def _schema_1():
                             ),
                             "source-extensions": Unique([str]),
                             "frequency": Match(r"^(every|release|[1-9][0-9]* weeks?)$"),
+                            "platform": Match(r"^(windows|linux)$"),
                         }
                     ],
                 ),
