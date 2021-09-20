@@ -2230,8 +2230,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-expedia.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm6-linux-firefox-expedia.manifest
+   * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.expedia.com/Activities>`__
    * **test url**: `<https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2>`__
    * **type**: pageload
    * **unit**: ms
