@@ -1136,6 +1136,11 @@ var Policies = {
           param.Pocket,
           locked
         );
+        setDefaultPref(
+          "browser.newtabpage.activity-stream.feeds.section.topstories",
+          param.Pocket,
+          locked
+        );
       }
       if ("Snippets" in param) {
         setDefaultPref(

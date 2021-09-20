@@ -66,3 +66,52 @@ add_task(async function test_firefox_home_with_policy() {
   });
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_firefoxhome_preferences_set() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear",
+        "",
+      ],
+    ],
+  });
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      FirefoxHome: {
+        Search: false,
+        TopSites: false,
+        Highlights: false,
+        Pocket: false,
+        Snippets: false,
+        Locked: true,
+      },
+    },
+  });
+
+  await BrowserTestUtils.withNewTab("about:preferences#home", async browser => {
+    let data = {
+      Search: "browser.newtabpage.activity-stream.showSearch",
+      TopSites: "browser.newtabpage.activity-stream.feeds.topsites",
+      Highlights: "browser.newtabpage.activity-stream.feeds.section.highlights",
+      Pocket: "browser.newtabpage.activity-stream.feeds.section.topstories",
+      Snippets: "browser.newtabpage.activity-stream.feeds.snippets",
+    };
+    for (let [section, preference] of Object.entries(data)) {
+      is(
+        browser.contentDocument.querySelector(
+          `checkbox[preference='${preference}']`
+        ).disabled,
+        true,
+        `${section} checkbox should be disabled`
+      );
+    }
+  });
+  await setupPolicyEngineWithJson({
+    policies: {
+      FirefoxHome: {},
+    },
+  });
+  await SpecialPowers.popPrefEnv();
+});
