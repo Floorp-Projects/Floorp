@@ -1507,7 +1507,8 @@ RegI32 BaseCompiler::needRotate64Temp() {
 #endif
 }
 
-void BaseCompiler::pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved) {
+void BaseCompiler::popAndAllocateForDivAndRemI32(RegI32* r0, RegI32* r1,
+                                                 RegI32* reserved) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   // r0 must be eax, and edx will be clobbered.
   need2xI32(specific_.eax, specific_.edx);
@@ -1517,6 +1518,46 @@ void BaseCompiler::pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved) {
 #else
   pop2xI32(r0, r1);
 #endif
+}
+
+void BaseCompiler::quotientI32(RegI32 rs, RegI32 rsd, RegI32 reserved,
+                               IsUnsigned isUnsigned, bool isConst, int32_t c) {
+  if (!isConst || c == 0) {
+    checkDivideByZeroI32(rs);
+  }
+
+  Label done;
+  if (!isUnsigned && (!isConst || c == -1)) {
+    checkDivideSignedOverflowI32(rs, rsd, &done, ZeroOnOverflow(false));
+  }
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  masm.quotient32(rs, rsd, reserved, isUnsigned);
+#else
+  masm.quotient32(rs, rsd, isUnsigned);
+#endif
+
+  masm.bind(&done);
+}
+
+void BaseCompiler::remainderI32(RegI32 rs, RegI32 rsd, RegI32 reserved,
+                                IsUnsigned isUnsigned, bool isConst,
+                                int32_t c) {
+  if (!isConst || c == 0) {
+    checkDivideByZeroI32(rs);
+  }
+
+  Label done;
+  if (!isUnsigned && (!isConst || c == -1)) {
+    checkDivideSignedOverflowI32(rs, rsd, &done, ZeroOnOverflow(true));
+  }
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  masm.remainder32(rs, rsd, reserved, isUnsigned);
+#else
+  masm.remainder32(rs, rsd, isUnsigned);
+#endif
+  masm.bind(&done);
 }
 
 void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp) {
@@ -2257,19 +2298,8 @@ void BaseCompiler::emitQuotientI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-
-    Label done;
-    if (!isConst || c == -1) {
-      checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(false));
-    }
-    masm.quotient32(rs, r, IsUnsigned(false));
-    masm.bind(&done);
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientI32(rs, r, reserved, IsUnsigned(false), isConst, c);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2288,13 +2318,8 @@ void BaseCompiler::emitQuotientU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-    masm.quotient32(rs, r, IsUnsigned(true));
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientI32(rs, r, reserved, IsUnsigned(true), isConst, c);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2323,19 +2348,8 @@ void BaseCompiler::emitRemainderI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-
-    Label done;
-    if (!isConst || c == -1) {
-      checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(true));
-    }
-    masm.remainder32(rs, r, IsUnsigned(false));
-    masm.bind(&done);
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    remainderI32(rs, r, reserved, IsUnsigned(false), isConst, c);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2352,13 +2366,8 @@ void BaseCompiler::emitRemainderU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-    masm.remainder32(rs, r, IsUnsigned(true));
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    remainderI32(rs, r, reserved, IsUnsigned(true), isConst, c);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
