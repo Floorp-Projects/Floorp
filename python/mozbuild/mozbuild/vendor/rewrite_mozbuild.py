@@ -239,8 +239,16 @@ def get_attribute_label(node):
     while isinstance(subtarget, ast.Attribute):
         label = subtarget.attr + ("." if label else "") + label
         subtarget = subtarget.value
-    assert isinstance(subtarget, ast.Name)
-    label = subtarget.id + "." + label
+
+    if isinstance(subtarget, ast.Name):
+        label = subtarget.id + "." + label
+    elif isinstance(subtarget, ast.Subscript) and isinstance(subtarget.value, ast.Name):
+        label = subtarget.value.id + "." + label
+    else:
+        raise Exception(
+            "Unxpected subtarget of type %s found in get_attribute_label. label=%s"
+            % (subtarget, label)
+        )
 
     return label
 
