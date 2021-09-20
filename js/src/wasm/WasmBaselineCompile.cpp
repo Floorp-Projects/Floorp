@@ -1507,8 +1507,7 @@ RegI32 BaseCompiler::needRotate64Temp() {
 #endif
 }
 
-void BaseCompiler::pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1,
-                                        RegI32* reserved) {
+void BaseCompiler::pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   // r0 must be eax, and edx will be clobbered.
   need2xI32(specific_.eax, specific_.edx);
@@ -1843,6 +1842,10 @@ static void SubI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
 
 static void SubImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
   masm.sub32(Imm32(c), rsd);
+}
+
+static void MulI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.mul32(rs, rsd);
 }
 
 static void OrI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
@@ -2232,15 +2235,6 @@ static void ExtendI32_16(MacroAssembler& masm, RegI32 rsd) {
   masm.move16SignExtend(rsd, rsd);
 }
 
-void BaseCompiler::emitMultiplyI32() {
-  RegI32 r, rs, reserved;
-  pop2xI32ForMulDivI32(&r, &rs, &reserved);
-  masm.mul32(rs, r);
-  maybeFree(reserved);
-  freeI32(rs);
-  pushI32(r);
-}
-
 void BaseCompiler::emitMultiplyI64() {
   RegI64 r, rs, reserved;
   RegI32 temp;
@@ -2269,7 +2263,7 @@ void BaseCompiler::emitQuotientI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
+    pop2xI32ForDivI32(&r, &rs, &reserved);
 
     if (!isConst || c == 0) {
       checkDivideByZeroI32(rs);
@@ -2300,7 +2294,7 @@ void BaseCompiler::emitQuotientU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
+    pop2xI32ForDivI32(&r, &rs, &reserved);
 
     if (!isConst || c == 0) {
       checkDivideByZeroI32(rs);
@@ -2335,7 +2329,7 @@ void BaseCompiler::emitRemainderI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
+    pop2xI32ForDivI32(&r, &rs, &reserved);
 
     if (!isConst || c == 0) {
       checkDivideByZeroI32(rs);
@@ -2364,7 +2358,7 @@ void BaseCompiler::emitRemainderU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
+    pop2xI32ForDivI32(&r, &rs, &reserved);
 
     if (!isConst || c == 0) {
       checkDivideByZeroI32(rs);
@@ -7934,7 +7928,7 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I32Sub):
         CHECK_NEXT(dispatchBinary2(SubI32, SubImmI32, ValType::I32));
       case uint16_t(Op::I32Mul):
-        CHECK_NEXT(dispatchBinary0(emitMultiplyI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary1(MulI32, ValType::I32));
       case uint16_t(Op::I32DivS):
         CHECK_NEXT(dispatchBinary0(emitQuotientI32, ValType::I32));
       case uint16_t(Op::I32DivU):
