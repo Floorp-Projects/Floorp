@@ -255,10 +255,13 @@ def ast_get_source_segment(code, node):
     ):
         return ast.original_get_source_segment(code, node)
 
-    if caller.function == "log":
+    if caller.function == "assignment_node_to_source_filename_list":
         return ""
 
-    raise Exception("ast_get_source_segment is not available with this Python version.")
+    raise Exception(
+        "ast_get_source_segment is not available with this Python version. (ver=%s.%s, caller=%s)"
+        % (sys.version_info.major, sys.version_info.minor, caller.function)
+    )
 
 
 # Overwrite it so we don't accidently use it
