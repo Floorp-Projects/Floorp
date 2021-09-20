@@ -57,37 +57,37 @@ public class FloatingSessionsButton extends FloatingActionButton {
     }
 
     public void updateSessionsCount(int tabCount) {
-        this.tabCount = tabCount;
+        if (this.tabCount != tabCount) {
+            this.tabCount = tabCount;
+            setContentDescription(
+                    getResources().getString(R.string.content_description_tab_counter, String.valueOf(tabCount)));
 
-        setContentDescription(
-            getResources().getString(R.string.content_description_tab_counter, String.valueOf(tabCount)));
+            final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
+            final FloatingActionButtonBehavior behavior = (FloatingActionButtonBehavior) params.getBehavior();
 
-        final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
-        final FloatingActionButtonBehavior behavior = (FloatingActionButtonBehavior) params.getBehavior();
+            final boolean shouldBeVisible = tabCount >= 2;
 
-        final boolean shouldBeVisible = tabCount >= 2;
+            if (behavior != null) {
+                behavior.setEnabled(shouldBeVisible);
+            }
 
-        if (behavior != null) {
-            behavior.setEnabled(shouldBeVisible);
-        }
-
-        if (shouldBeVisible) {
-            show();
-            invalidate();
-        } else {
-            hide();
+            if (shouldBeVisible) {
+                show();
+                invalidate();
+            } else {
+                hide();
+            }
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        final float x = canvas.getWidth() / 2f;
-        final float y = (canvas.getHeight() / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f);
-
-        final String text = tabCount < TOO_MANY_TABS ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
-
-        canvas.drawText(text, x, y, textPaint);
+        if (tabCount >= 2) {
+            super.onDraw(canvas);
+            final float x = canvas.getWidth() / 2f;
+            final float y = (canvas.getHeight() / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f);
+            final String text = tabCount < TOO_MANY_TABS ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
+            canvas.drawText(text, x, y, textPaint);
+        }
     }
 }
