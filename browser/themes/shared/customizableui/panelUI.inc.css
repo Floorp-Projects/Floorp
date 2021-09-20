@@ -998,6 +998,11 @@ panelview .toolbarbutton-1,
   background-color: transparent;
 }
 
+.subviewbutton {
+  /* toolbarbuttons default to centered, but we don't want that for subviews. */
+  -moz-box-pack: start;
+}
+
 .subviewbutton:focus {
   outline: 0;
 }
