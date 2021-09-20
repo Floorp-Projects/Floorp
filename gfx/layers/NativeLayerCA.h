@@ -235,6 +235,10 @@ class NativeLayerCA : public NativeLayer {
 
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
+  bool IsVideo();
+  bool ShouldSpecializeVideo();
+  void SetRootWindowIsFullscreen(bool aFullscreen);
+
  protected:
   friend class NativeLayerRootCA;
 
@@ -307,6 +311,7 @@ class NativeLayerCA : public NativeLayer {
                       const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
                       bool aSurfaceIsFlipped,
                       gfx::SamplingFilter aSamplingFilter,
+                      bool aSpecializeVideo,
                       CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
 
     // Return whether any aspects of this layer representation have been mutated
@@ -334,6 +339,7 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedSurfaceIsFlipped : 1;
     bool mMutatedFrontSurface : 1;
     bool mMutatedSamplingFilter : 1;
+    bool mMutatedSpecializeVideo : 1;
   };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
@@ -406,6 +412,7 @@ class NativeLayerCA : public NativeLayer {
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
+  bool mRootWindowIsFullscreen = false;
 };
 
 }  // namespace layers
