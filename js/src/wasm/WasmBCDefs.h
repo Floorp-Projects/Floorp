@@ -74,6 +74,7 @@ using HandleNaNSpecially = bool;
 using InvertBranch = bool;
 using IsKnownNotZero = bool;
 using IsUnsigned = bool;
+using IsRemainder = bool;
 using NeedsBoundsCheck = bool;
 using WantResult = bool;
 using ZeroOnOverflow = bool;
