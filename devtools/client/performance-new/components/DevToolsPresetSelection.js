@@ -139,13 +139,6 @@ class DevToolsPresetSelection extends PureComponent {
               description ? description.name : feature
             );
           })
-        ),
-        button(
-          {
-            className: "perf-external-link",
-            onClick: onEditSettingsLinkClicked,
-          },
-          Localized({ id: "perftools-button-edit-settings" })
         )
       );
     }
@@ -176,6 +169,13 @@ class DevToolsPresetSelection extends PureComponent {
         div(
           { className: "perf-presets-details-row perf-presets-description" },
           presetDescription
+        ),
+        button(
+          {
+            className: "perf-external-link",
+            onClick: onEditSettingsLinkClicked,
+          },
+          Localized({ id: "perftools-button-edit-settings" })
         )
       )
     );
