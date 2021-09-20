@@ -56,7 +56,6 @@ linux1804-64-qr/opt:
         - web-platform-tests-wdspec-headless
         - linux-talos-flex
         - talos
-        - raptor-firefox
         - browsertime
 
 linux1804-64-shippable-qr/opt:
@@ -74,7 +73,6 @@ linux1804-64-shippable-qr/opt:
         - linux-talos-flex
         - talos
         - talos-profiling
-        - raptor-firefox
         - browsertime
         - browsertime-profiling
 
@@ -133,15 +131,12 @@ windows10-32-shippable-qr/opt:
     build-platform: win32-shippable/opt
     test-sets:
         - browsertime
-        - raptor-chrome
-        - raptor-firefox
         - windows-talos
 
 windows10-32-qr/opt:
     build-platform: win32/opt
     test-sets:
         - browsertime
-        - raptor-firefox
         - windows-talos
 
 windows10-32-2004-shippable-qr/opt:
@@ -191,7 +186,6 @@ windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
         - windows-talos
-        - raptor-firefox
         - browsertime
 
 windows10-aarch64-qr/opt:
@@ -202,7 +196,6 @@ windows10-aarch64-qr/opt:
 windows10-64-ref-hw-2017-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
-        - raptor-firefox
         - browsertime
         - talos-ref-hw
 
@@ -210,8 +203,6 @@ windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - windows-talos
-        - raptor-chrome
-        - raptor-firefox
         - browsertime
 
 # win10-64 2004
@@ -298,8 +289,6 @@ macosx1015-64-shippable-qr/opt:
         - desktop-screenshot-capture
         - macosx1015-64-qr-tests
         - macosx64-talos
-        - raptor-chrome
-        - raptor-firefox
         - raptor-firefox-power
         - talos-profiling
         - web-platform-tests
