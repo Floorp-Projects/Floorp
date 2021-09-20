@@ -5418,7 +5418,7 @@ var XULBrowserWindow = {
 
     let closeOpenPanels = selector => {
       for (let panel of document.querySelectorAll(selector)) {
-        if (panel.state != "closed") {
+        if (panel.state == "open") {
           panel.hidePopup();
         }
       }

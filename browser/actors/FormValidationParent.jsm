@@ -15,6 +15,7 @@ class FormValidationParent extends JSWindowActorParent {
     super();
 
     this._panel = null;
+    this._anchor = null;
   }
 
   /*
@@ -23,6 +24,7 @@ class FormValidationParent extends JSWindowActorParent {
 
   uninit() {
     this._panel = null;
+    this._anchor = null;
   }
 
   hidePopup() {
@@ -84,6 +86,8 @@ class FormValidationParent extends JSWindowActorParent {
     tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);
 
     this._panel = null;
+    this._anchor.hidden = true;
+    this._anchor = null;
   }
 
   /*
@@ -105,6 +109,8 @@ class FormValidationParent extends JSWindowActorParent {
     let window = browser.ownerGlobal;
 
     let tabBrowser = window.gBrowser;
+    this._anchor = tabBrowser.selectedBrowser.popupAnchor;
+    this._anchor.hidden = false;
 
     // Display the panel if it isn't already visible.
     if (!previouslyShown) {
@@ -135,7 +141,9 @@ class FormValidationParent extends JSWindowActorParent {
    * above if visible.
    */
   _hidePopup() {
-    this._panel?.hidePopup();
+    if (this._panel) {
+      this._panel.hidePopup();
+    }
   }
 
   _getAndMaybeCreatePanel() {
