@@ -50,7 +50,6 @@ exclude =
     toolkit/nss.configure,
 
     # These paths are intentionally excluded (not necessarily for good reason).
-    build/build-infer/build-infer.py,
     build/moz.configure/*.configure,
     build/pymake/,
     browser/extensions/mortar/ppapi/,
@@ -74,7 +73,6 @@ exclude =
     testing/mozharness/configs/test/test_malformed.py,
     testing/web-platform/tests,
     tools/lint/test/files,
-    tools/infer/test/*.configure,
     tools/crashreporter/*.configure,
     .ycm_extra_conf.py,
 

@@ -84,7 +84,6 @@ _OPT\.OBJ/
 
 # Gradle cache.
 ^.gradle/
-^tools/infer/test/.gradle/
 
 # Local Gradle configuration properties.
 ^local.properties$
@@ -191,9 +190,6 @@ tps_result\.json
 
 # Ignore Visual Studio Code workspace files.
 \.vscode/(?!extensions\.json|tasks\.json)
-
-# Ignore Infer output
-^infer-out/
 
 # https://bz.mercurial-scm.org/show_bug.cgi?id=5322
 ^comm/
