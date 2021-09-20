@@ -18,6 +18,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #include <comutil.h>
 
@@ -31,6 +32,11 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
     return false;
   }
 
+  // This should never be called if the cache is enabled. We can't get a COM
+  // proxy from the content process in that case. Instead, the code below would
+  // return an MsaaAccessible from our process which would end up calling
+  // methods here in RemoteAccessible, causing infinite recursion.
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
   if (!mCOMProxy && mSafeToRecurse) {
     RemoteAccessible* thisPtr = const_cast<RemoteAccessible*>(this);
     // See if we can lazily obtain a COM proxy
@@ -119,7 +125,7 @@ static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
 }
 
 ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Name(aName);
   }
 
@@ -161,7 +167,7 @@ void RemoteAccessible::Value(nsString& aValue) const {
 }
 
 double RemoteAccessible::Step() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Step();
   }
 
@@ -180,7 +186,7 @@ double RemoteAccessible::Step() const {
 }
 
 void RemoteAccessible::Description(nsString& aDesc) const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Description(aDesc);
   }
 
@@ -403,7 +409,7 @@ nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
 }
 
 double RemoteAccessible::CurValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::CurValue();
   }
 
@@ -436,7 +442,7 @@ bool RemoteAccessible::SetCurValue(double aValue) {
 }
 
 double RemoteAccessible::MinValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MinValue();
   }
 
@@ -455,7 +461,7 @@ double RemoteAccessible::MinValue() const {
 }
 
 double RemoteAccessible::MaxValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MaxValue();
   }
 
