@@ -5,7 +5,7 @@
 package org.mozilla.fenix.historymetadata
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.DocumentType
@@ -13,6 +13,8 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataObservation
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.utils.NamedThreadFactory
+import java.util.concurrent.Executors
 
 /**
  * Service for managing (creating, updating, deleting) history metadata.
@@ -51,10 +53,17 @@ interface HistoryMetadataService {
 
 class DefaultHistoryMetadataService(
     private val storage: HistoryMetadataStorage,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(
+        Executors.newSingleThreadExecutor(
+            NamedThreadFactory("HistoryMetadataService")
+        ).asCoroutineDispatcher()
+    )
 ) : HistoryMetadataService {
 
     private val logger = Logger("DefaultHistoryMetadataService")
+
+    // NB: this map is only accessed from a single-thread executor (dispatcher of `scope`).
+    private val tabsLastUpdated = mutableMapOf<String, Long>()
 
     override fun createMetadata(tab: TabSessionState, searchTerms: String?, referrerUrl: String?): HistoryMetadataKey {
         logger.debug("Creating metadata for tab ${tab.id}")
@@ -81,6 +90,7 @@ class DefaultHistoryMetadataService(
     }
 
     override fun updateMetadata(key: HistoryMetadataKey, tab: TabSessionState) {
+        val now = System.currentTimeMillis()
         val lastAccess = tab.lastAccess
         if (lastAccess == 0L) {
             logger.debug("Not updating metadata for tab $tab - lastAccess=0")
@@ -89,11 +99,24 @@ class DefaultHistoryMetadataService(
             logger.debug("Updating metadata for tab $tab")
         }
 
+        // If it's possible that multiple threads overlap and run this block simultaneously, we
+        // may over-observe, and record when we didn't intend to.
+        // To make these cases easier to reason through (and likely correct),
+        // `scope` is a single-threaded dispatcher. Execution of these blocks is thus serialized.
         scope.launch {
+            val lastUpdated = tabsLastUpdated[tab.id] ?: 0
+            if (lastUpdated > lastAccess) {
+                logger.debug(
+                    "Failed to update metadata because it was already recorded or lastAccess is incorrect"
+                )
+                return@launch
+            }
+
             val viewTimeObservation = HistoryMetadataObservation.ViewTimeObservation(
-                viewTime = (System.currentTimeMillis() - lastAccess).toInt()
+                viewTime = (now - lastAccess).toInt()
             )
             storage.noteHistoryMetadataObservation(key, viewTimeObservation)
+            tabsLastUpdated[tab.id] = now
         }
     }
 

@@ -95,6 +95,34 @@ class HistoryMetadataServiceTest {
     }
 
     @Test
+    fun `WHEN metadata is updated for a tab with no lastAccess THEN view time observation is not recorded`() {
+        val key = HistoryMetadataKey(url = "https://blog.mozilla.org")
+        val tab = createTab(key.url, historyMetadata = key, lastAccess = 0)
+        service.updateMetadata(key, tab)
+        testDispatcher.advanceUntilIdle()
+
+        coVerify(exactly = 0) { storage.noteHistoryMetadataObservation(key, any()) }
+    }
+
+    @Test
+    fun `WHEN metadata is updated for a tab with unchanged lastAccess THEN view time observation is not recorded`() {
+        val now = System.currentTimeMillis()
+        val key = HistoryMetadataKey(url = "https://blog.mozilla.org")
+        val tab = createTab(key.url, historyMetadata = key, lastAccess = now - 60 * 1000)
+        service.updateMetadata(key, tab)
+        testDispatcher.advanceUntilIdle()
+
+        val observation = slot<HistoryMetadataObservation.ViewTimeObservation>()
+        coVerify(exactly = 1) { storage.noteHistoryMetadataObservation(key, capture(observation)) }
+        assertTrue(observation.captured.viewTime >= 60 * 1000)
+
+        // Now, call update again with the same lastAccess value. Storage method won't be hit again.
+        service.updateMetadata(key, tab)
+        testDispatcher.advanceUntilIdle()
+        coVerify(exactly = 1) { storage.noteHistoryMetadataObservation(key, any()) }
+    }
+
+    @Test
     fun `WHEN cleanup is called THEN old metadata is deleted`() {
         val timestamp = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
         service.cleanup(timestamp)
