@@ -204,8 +204,8 @@ void MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::quotient32(Register rhs, Register srcDest,
-                                bool isUnsigned) {
-  MOZ_ASSERT(srcDest == eax);
+                                Register tempEdx, bool isUnsigned) {
+  MOZ_ASSERT(srcDest == eax && tempEdx == edx);
 
   // Sign extend eax into edx to make (edx:eax): idiv/udiv are 64-bit.
   if (isUnsigned) {
@@ -218,8 +218,8 @@ void MacroAssembler::quotient32(Register rhs, Register srcDest,
 }
 
 void MacroAssembler::remainder32(Register rhs, Register srcDest,
-                                 bool isUnsigned) {
-  MOZ_ASSERT(srcDest == eax);
+                                 Register tempEdx, bool isUnsigned) {
+  MOZ_ASSERT(srcDest == eax && tempEdx == edx);
 
   // Sign extend eax into edx to make (edx:eax): idiv/udiv are 64-bit.
   if (isUnsigned) {
