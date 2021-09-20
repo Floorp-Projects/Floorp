@@ -17,13 +17,13 @@
 #endif
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/mscom/COMWrappers.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/Objref.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
 
-#include <objbase.h>
 #include <objidl.h>
 #include <shlwapi.h>
 #include <winnt.h>
@@ -40,14 +40,14 @@ namespace mscom {
 bool IsCOMInitializedOnCurrentThread() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
-  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  HRESULT hr = wrapped::CoGetApartmentType(&aptType, &aptTypeQualifier);
   return hr != CO_E_NOTINITIALIZED;
 }
 
 bool IsCurrentThreadMTA() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
-  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  HRESULT hr = wrapped::CoGetApartmentType(&aptType, &aptTypeQualifier);
   if (FAILED(hr)) {
     return false;
   }
@@ -58,7 +58,7 @@ bool IsCurrentThreadMTA() {
 bool IsCurrentThreadExplicitMTA() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
-  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  HRESULT hr = wrapped::CoGetApartmentType(&aptType, &aptTypeQualifier);
   if (FAILED(hr)) {
     return false;
   }
@@ -70,7 +70,7 @@ bool IsCurrentThreadExplicitMTA() {
 bool IsCurrentThreadImplicitMTA() {
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
-  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  HRESULT hr = wrapped::CoGetApartmentType(&aptType, &aptTypeQualifier);
   if (FAILED(hr)) {
     return false;
   }
