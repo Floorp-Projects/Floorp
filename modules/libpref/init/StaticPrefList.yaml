@@ -4756,6 +4756,15 @@
   value: false
   mirror: always
 
+#ifdef XP_MACOSX
+  # Create specialized video-only layers for video content, and
+  # attempt to isolate video layers in fullscreen windows.
+-   name: gfx.core-animation.specialize-video
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif
+
 #if defined(MOZ_WIDGET_ANDROID)
   # Overrides the glClear color used when the surface origin is not (0, 0)
   # Used for drawing a border around the content.
