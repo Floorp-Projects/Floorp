@@ -30,7 +30,6 @@ struct Statistics;
 namespace gc {
 
 class Arena;
-struct FinalizePhase;
 class FreeSpan;
 class TenuredCell;
 
