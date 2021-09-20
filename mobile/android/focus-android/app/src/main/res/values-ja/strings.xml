@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">一般</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">既定のブラウザー、タブ、言語</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">既定のブラウザー、言語</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">データの収集と使用</string>

@@ -21,6 +21,9 @@
     <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
     <string name="feedback_erase2">היסטוריית הגלישה נמחקה</string>
 
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">היסטוריית הגלישה של הלשונית נמחקה.</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">חיפוש עבור %1$s</string>
 
@@ -146,8 +149,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">כללי</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">דפדפן ברירת מחדל, לשוניות, שפה</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">דפדפן ברירת מחדל, שפה</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">איסוף ושימוש במידע</string>
@@ -705,6 +708,10 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tip_explain_allowlist3">רוצה שהגנת המעקב המתקדמת תישאר כבויה עבור אתר מהימן כלשהו?\n
         ניתן להוסיף אותו לרשימת המותרים בהגדרות
     </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">ובכן כן, יש לנו מראה חדיש ומחודש!\n אפשר לקרוא עוד על כך ועל עדכונים נוספים שבוצעו ב־%1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">לשונית חדשה נפתחה</string>

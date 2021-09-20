@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">ค้นหาแบบส่วนตัว</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ให้คุณควบคุมได้ทุกอย่าง</p>
+<p>ใช้เป็นเบราว์เซอร์ส่วนตัว:
+  <ul>
+    <li>ค้นหาและเรียกดูได้จากในแอปโดยตรง</li>
+    <li>ปิดกั้นตัวติดตาม (หรืออัปเดตการตั้งค่าเพื่ออนุญาตตัวติดตาม)</li>
+    <li>ล้างเพื่อลบคุกกี้รวมทั้งประวัติการค้นหาและการเรียกดู</li>
+  </ul>
+</p>
+<p>%1$s ถูกสร้างขึ้นโดย Mozilla ภารกิจของเราคือส่งเสริมอินเทอร์เน็ตที่สมบูรณ์และเปิดกว้าง<br/>
+<a href="%2$s">เรียนรู้เพิ่มเติม</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">ความเป็นส่วนตัวและความปลอดภัย</string>
 
@@ -137,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">เกี่ยวกับ %1$s, ช่วยเหลือ</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">การป้องกันการติดตาม</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">การป้องกันการติดตามที่มากขึ้น</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">เนื้อหาเว็บ</string>
@@ -149,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">ทั่วไป</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">เบราว์เซอร์เริ่มต้น, แท็บ, ภาษา</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">เบราว์เซอร์เริ่มต้น, ภาษา</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">การเก็บรวบรวมและใช้ข้อมูล</string>
@@ -198,6 +211,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">รายการเติมอัตโนมัติของคุณ:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">เพิ่ม URL</string>
@@ -339,6 +355,9 @@
 
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">เพิ่มเครื่องมือค้นหาอื่น</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">เลือกเครื่องมือที่คุณต้องการ:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -509,9 +528,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">ไม่</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตาม</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตามที่มากขึ้น</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -543,7 +562,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s ให้คุณใช้ภายใต้เงื่อนไขของ <a href="%2$s">Mozilla Public License</a> และสัญญาอนุญาตการเปิดต้นฉบับอื่น ๆ]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[คุณไม่ได้รับสิทธิหรือสัญญาอนุญาตใด ๆ ในเครื่องหมายการค้าของมูลนิธิ Mozilla หรือบุคคลใด ๆ รวมทั้งชื่อหรือโลโก้ Mozilla, Firefox หรือ %1$s ข้อมูลเพิ่มเติมอาจพบได้ <a href="%2$s">ที่นี่</a>]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[โค้ดต้นฉบับเพิ่มเติมสำหรับ %1$s ใช้ได้ภายใต้ <a href="%2$s">สัญญาอนุญาต</a> เสรีและเปิดต้นฉบับต่าง ๆ]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s ยังใช้รายการปิดกั้นที่ให้บริการโดย Disconnect, Inc. ซึ่งเป็นงานแยกและเป็นอิสระภายใต้ <a href="%2$s">GNU General Public License v3</a> และใช้ได้ <a href="%3$s">ที่นี่</a>]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
     <string name="gv_prompt_password_hint">รหัสผ่าน</string>
     <string name="gv_prompt_clear">ล้าง</string>
@@ -628,6 +668,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">แสดงข้อเสนอแนะการค้นหา?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description"> เพื่อรับข้อเสนอแนะ %1$s จำเป็นต้องส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหา</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">ไม่</string>
 
@@ -646,6 +690,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">ไซต์ไม่มีเนื้อหาอะไรเลยหรือทำงานแปลก ๆ?\n
+    ลองปิดการป้องกันการติดตามที่มากขึ้น</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด%1$s เมนู > เพิ่มไปยังหน้าจอหลัก]]></string>
@@ -663,8 +712,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">ต้องการดูเว็บไซต์รุ่นเต็มหรือไม่?\n
+        เปิด ไซต์เดสก์ท็อป จากเมนู %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">ปิดเคล็ดลับในหน้าจอเริ่มต้น</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">ต้องการปิดการป้องกันการติดตามที่มากขึ้นสำหรับไซต์ที่คุณเชื่อถือหรือไม่?\n
+        เพิ่มลงในรายการอนุญาตในการตั้งค่า
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">ใช่ เรามีรูปลักษณ์โฉมใหม่แล้ว!\n อ่านเพิ่มเติมเกี่ยวกับสิ่งนี้และการอัปเดตอื่น ๆ ของ %1$s</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">สร้างทางลัดไปยังไซต์ที่คุณเข้าชมบ่อยที่สุด:\n
+    เลือก เพิ่มทางลัด จากเมนู %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">เปิดแท็บใหม่แล้ว</string>
@@ -746,5 +815,5 @@
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">&lt;b&gt;จะไม่ลบ&lt;/b&gt;ภาพที่บันทึกไว้และแบ่งปันเมื่อคุณล้างประวัติของ %1s</string>
+    <string name="contextmenu_erased_images_note2">&lt;b&gt;จะไม่ลบ&lt;/b&gt;ภาพที่บันทึกไว้และแบ่งปันเมื่อคุณล้างประวัติของ %1$s</string>
 </resources>

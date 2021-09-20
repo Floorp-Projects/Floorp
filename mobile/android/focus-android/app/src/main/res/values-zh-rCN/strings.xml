@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">常规</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">默认浏览器、标签页、语言</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">默认浏览器、语言</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">数据收集与使用</string>

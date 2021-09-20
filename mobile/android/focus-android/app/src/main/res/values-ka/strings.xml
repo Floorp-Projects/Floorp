@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">მთავარი</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">ნაგულისხმევი ბრაუზერი, ჩანართები, ენა</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">ნაგულისხმევი ბრაუზერი, ენა</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">მონაცემთა აღრიცხვა და გამოყენება</string>

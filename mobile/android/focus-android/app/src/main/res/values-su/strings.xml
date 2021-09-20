@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Umum</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Panyungsi, tab, jeung basa baku</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Panyungsi, basa baku</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Pangumpulan &amp; Pamakéan Data</string>

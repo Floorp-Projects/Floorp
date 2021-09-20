@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Genel</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Varsayılan tarayıcı, sekmeler, dil</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Varsayılan tarayıcı, dil</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Veri toplanması ve kullanımı</string>
@@ -286,7 +286,7 @@
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Hayır</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Yalnızca üçüncü taraf takipçi çerezlerini engelle</string>
-    <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca 3. taraf çerezlerini engelle</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca üçüncü taraf çerezlerini engelle</string>
 
     <string name="preference_privacy_should_block_cookies_yes_option2">Evet</string>
 

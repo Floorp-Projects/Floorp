@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">General</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Navigator, scheda, lingua predefinite</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Navigator, lingua predefinite</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Colligimento e uso de datos</string>
@@ -785,7 +785,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
     <string name="trackers_count_note">Traciatores blocate desde %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
-    <string name="content"></string>
+    <string name="content">Contento</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
     <string name="advertising">Publicitate</string>
     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
