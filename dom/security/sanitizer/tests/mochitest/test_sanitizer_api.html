@@ -2,7 +2,6 @@
 <title>Test sanitizer api</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
-<div id="div"></div>
 <script type="text/javascript">
 "use strict";
 /* global Sanitizer */
@@ -10,16 +9,11 @@
 SimpleTest.waitForExplicitFinish();
 (async function() {
   // Ensure Sanitizer is not exposed when the pref is false
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.sanitizer.enabled", false]],
-  });
-  ok(typeof Sanitizer === "undefined", "Sanitizer undefined when preffed off");
-
-  // The rest of this test assumes the sanitizer is enabled
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.sanitizer.enabled", true]],
-  });
-
+  const isEnabled = SpecialPowers.getBoolPref("dom.security.sanitizer.enabled");
+  if (!isEnabled) {
+    ok(false, "This test should only be run with dom.security.sanitizer.enabled set to true");
+    SimpleTest.finish();
+  }
 
   function* possibleInputTypes(inputStr) {
     /* This generator function, given a string, yields all possible input objects
@@ -43,6 +37,7 @@ SimpleTest.waitForExplicitFinish();
   const mySanitizer = new Sanitizer();
   ok(mySanitizer, "Sanitizer constructor works");
   ok(mySanitizer.sanitize, "sanitize function exists");
+  ok("setHTML" in Element.prototype, "Element.setHTML exists");
 
   // testing sanitizer results
   const testCases = [
@@ -105,7 +100,7 @@ SimpleTest.waitForExplicitFinish();
   ];
 
 
-  const div = document.getElementById("div");
+  const div = document.createElement("div");
   for (let test of testCases) {
     const {testString, testExpected, sanitizerOptions} = test;
     const testSanitizer = new Sanitizer(sanitizerOptions);
@@ -132,6 +127,7 @@ SimpleTest.waitForExplicitFinish();
       catch (e) {
         ok(false, 'Error in setHTML() test: ' + e)
       }
+
       // test sanitizeFor:
       try {
         const newDiv = testSanitizer.sanitizeFor('div', testString);
