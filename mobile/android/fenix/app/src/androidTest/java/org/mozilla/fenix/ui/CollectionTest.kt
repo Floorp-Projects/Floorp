@@ -212,6 +212,7 @@ class CollectionTest {
         }.openTabDrawer {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
+            mDevice.waitForIdle()
         }.openTabDrawer {
             longClickTab(firstWebPage.title)
             verifyTabsMultiSelectionCounter(1)

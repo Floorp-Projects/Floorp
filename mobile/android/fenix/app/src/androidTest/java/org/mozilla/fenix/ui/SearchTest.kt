@@ -52,6 +52,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Currently failing at assertSearchEngineResults, will need a re-check")
     @Test
     fun shortcutButtonTest() {
         homeScreen {

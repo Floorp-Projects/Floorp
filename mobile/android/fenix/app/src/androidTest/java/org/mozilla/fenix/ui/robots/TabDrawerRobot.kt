@@ -252,7 +252,7 @@ class TabDrawerRobot {
         fun openNewTab(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle()
 
-            newTabButton().perform(click())
+            newTabButton().click()
             SearchRobot().interact()
             return SearchRobot.Transition()
         }
@@ -392,7 +392,7 @@ private fun normalBrowsingButton() = onView(
 )
 
 private fun privateBrowsingButton() = onView(withContentDescription("Private tabs"))
-private fun newTabButton() = onView(withId(R.id.new_tab_button))
+private fun newTabButton() = mDevice.findObject(UiSelector().resourceId("$packageName:id/new_tab_button"))
 private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
 private fun assertExistingOpenTabs(title: String) {

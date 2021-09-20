@@ -38,7 +38,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.mozilla.fenix.R
@@ -451,10 +450,10 @@ class BrowserRobot {
     fun swipeNavBarRight(tabUrl: String) {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
-            navURLBar().perform(ViewActions.swipeRight())
+            navURLBar().swipeRight(3)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         } catch (e: AssertionError) {
-            navURLBar().perform(ViewActions.swipeRight())
+            navURLBar().swipeRight(3)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         }
     }
@@ -462,10 +461,10 @@ class BrowserRobot {
     fun swipeNavBarLeft(tabUrl: String) {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
-            navURLBar().perform(ViewActions.swipeLeft())
+            navURLBar().swipeRight(3)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         } catch (e: AssertionError) {
-            navURLBar().perform(ViewActions.swipeLeft())
+            navURLBar().swipeRight(3)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         }
     }
@@ -489,7 +488,8 @@ class BrowserRobot {
         }
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
-            mDevice.waitForIdle(waitingTime)
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
+                .waitForExists(waitingTime)
             navURLBar().click()
 
             NavigationToolbarRobot().interact()
@@ -498,6 +498,11 @@ class BrowserRobot {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.waitForIdle(waitingTime)
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/counter_box")
+                    .descriptionContains("The tab counter toolbar button.")
+            ).waitForExists(waitingTime)
             tabsCounter().click()
             mDevice.waitNotNull(
                 Until.findObject(By.res("$packageName:id/tab_layout")),
@@ -511,9 +516,7 @@ class BrowserRobot {
         fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
             mDevice.waitForIdle(waitingTime)
 
-            tabsCounter().perform(
-                ViewActions.longClick()
-            )
+            tabsCounter().click(LONG_CLICK_DURATION)
 
             NavigationToolbarRobot().interact()
             return NavigationToolbarRobot.Transition()
@@ -563,13 +566,11 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
     return BrowserRobot.Transition()
 }
 
-fun navURLBar() = onView(withId(R.id.toolbar))
+fun navURLBar() = mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
 
-private fun assertNavURLBar() = navURLBar()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertNavURLBar() = assertTrue(navURLBar().waitForExists(waitingTime))
 
-private fun assertNavURLBarHidden() = navURLBar()
-    .check(matches(not(isDisplayed())))
+private fun assertNavURLBarHidden() = assertTrue(navURLBar().waitUntilGone(waitingTime))
 
 private fun assertEnhancedTrackingProtectionSwitch() {
     withText(R.id.trackingProtectionSwitch)
@@ -593,7 +594,7 @@ private fun assertMenuButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun tabsCounter() = onView(withId(R.id.counter_box))
+private fun tabsCounter() = mDevice.findObject(By.res("$packageName:id/counter_box"))
 
 private fun mediaPlayerPlayButton() =
     mDevice.findObject(
