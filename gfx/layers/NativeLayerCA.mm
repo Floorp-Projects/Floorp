@@ -160,6 +160,7 @@ void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
 
   mSublayers.AppendElement(layerCA);
   layerCA->SetBackingScale(mBackingScale);
+  layerCA->SetRootWindowIsFullscreen(mWindowIsFullscreen);
   ForAllRepresentations([&](Representation& r) { r.mMutated = true; });
 }
 
@@ -187,6 +188,7 @@ void NativeLayerRootCA::SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) 
     RefPtr<NativeLayerCA> layerCA = layer->AsNativeLayerCA();
     MOZ_RELEASE_ASSERT(layerCA);
     layerCA->SetBackingScale(mBackingScale);
+    layerCA->SetRootWindowIsFullscreen(mWindowIsFullscreen);
     layersCA.AppendElement(std::move(layerCA));
   }
 
@@ -381,6 +383,10 @@ void NativeLayerRootCA::DumpLayerTreeToFile(const char* aPath) {
 void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
   if (mWindowIsFullscreen != aFullscreen) {
     mWindowIsFullscreen = aFullscreen;
+
+    for (auto layer : mSublayers) {
+      layer->SetRootWindowIsFullscreen(mWindowIsFullscreen);
+    }
     PrepareForCommit();
     CommitToScreen();
   }
@@ -548,17 +554,40 @@ NativeLayerCA::~NativeLayerCA() {
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
+  bool oldSpecializeVideo = ShouldSpecializeVideo();
+
   wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
   MOZ_ASSERT(texture);
   mTextureHost = texture;
   mSize = texture->GetSize(0);
   mDisplayRect = IntRect(IntPoint{}, mSize);
 
+  bool changedSpecializeVideo = ShouldSpecializeVideo() != oldSpecializeVideo;
+
   ForAllRepresentations([&](Representation& r) {
     r.mMutatedFrontSurface = true;
     r.mMutatedDisplayRect = true;
     r.mMutatedSize = true;
+    r.mMutatedSpecializeVideo = changedSpecializeVideo;
   });
+}
+
+bool NativeLayerCA::IsVideo() {
+  // Anything with a texture host is considered a video source.
+  return mTextureHost;
+}
+
+bool NativeLayerCA::ShouldSpecializeVideo() {
+  return StaticPrefs::gfx_core_animation_specialize_video() && mRootWindowIsFullscreen && IsVideo();
+}
+
+void NativeLayerCA::SetRootWindowIsFullscreen(bool aFullscreen) {
+  bool oldSpecializeVideo = ShouldSpecializeVideo();
+  mRootWindowIsFullscreen = aFullscreen;
+
+  if (ShouldSpecializeVideo() != oldSpecializeVideo) {
+    ForAllRepresentations([&](Representation& r) { r.mMutatedSpecializeVideo = true; });
+  }
 }
 
 void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
@@ -764,7 +793,8 @@ NativeLayerCA::Representation::Representation()
       mMutatedSize(true),
       mMutatedSurfaceIsFlipped(true),
       mMutatedFrontSurface(true),
-      mMutatedSamplingFilter(true) {}
+      mMutatedSamplingFilter(true),
+      mMutatedSpecializeVideo(true) {}
 
 NativeLayerCA::Representation::~Representation() {
   [mContentCALayer release];
@@ -971,7 +1001,7 @@ void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   }
   GetRepresentation(aRepresentation)
       .ApplyChanges(mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale,
-                    mSurfaceIsFlipped, mSamplingFilter, surface);
+                    mSurfaceIsFlipped, mSamplingFilter, ShouldSpecializeVideo(), surface);
 }
 
 bool NativeLayerCA::HasUpdate(WhichRepresentation aRepresentation) {
@@ -987,8 +1017,18 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
 void NativeLayerCA::Representation::ApplyChanges(
     const IntSize& aSize, bool aIsOpaque, const IntPoint& aPosition, const Matrix4x4& aTransform,
     const IntRect& aDisplayRect, const Maybe<IntRect>& aClipRect, float aBackingScale,
-    bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter,
+    bool aSurfaceIsFlipped, gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
     CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
+  if (mWrappingCALayer && mMutatedSpecializeVideo) {
+    // Since specialize video changes the way we construct our wrapping and content layers,
+    // we have to scrap them if this value has changed. We can leave mOpaquenessTintLayer alone.
+    [mContentCALayer release];
+    mContentCALayer = nil;
+    [mWrappingCALayer removeFromSuperlayer];
+    [mWrappingCALayer release];
+    mWrappingCALayer = nil;
+  }
+
   if (!mWrappingCALayer) {
     mWrappingCALayer = [[CALayer layer] retain];
     mWrappingCALayer.position = NSZeroPoint;
@@ -1133,6 +1173,7 @@ void NativeLayerCA::Representation::ApplyChanges(
   mMutatedClipRect = false;
   mMutatedFrontSurface = false;
   mMutatedSamplingFilter = false;
+  mMutatedSpecializeVideo = false;
 }
 
 bool NativeLayerCA::Representation::HasUpdate() {
@@ -1142,7 +1183,7 @@ bool NativeLayerCA::Representation::HasUpdate() {
 
   return mMutatedPosition || mMutatedTransform || mMutatedDisplayRect || mMutatedClipRect ||
          mMutatedBackingScale || mMutatedSize || mMutatedSurfaceIsFlipped || mMutatedFrontSurface ||
-         mMutatedSamplingFilter;
+         mMutatedSamplingFilter || mMutatedSpecializeVideo;
 }
 
 // Called when mMutex is already being held by the current thread.
