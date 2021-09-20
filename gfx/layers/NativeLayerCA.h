@@ -300,6 +300,8 @@ class NativeLayerCA : public NativeLayer {
 
     CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
 
+    bool EnqueueSurface(IOSurfaceRef aSurfaceRef);
+
     // Applies buffered changes to the native CALayers. The contract with the
     // caller is as follows: If any of these values have changed since the last
     // call to ApplyChanges, mMutated[Field] needs to have been set to true
