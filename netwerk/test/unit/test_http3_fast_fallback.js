@@ -473,6 +473,7 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
 
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
@@ -524,6 +525,18 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
     answers: [
       {
         name: "test.partial_ech1.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.partial_ech2.org", "A", {
+    answers: [
+      {
+        name: "test.partial_ech2.org",
         ttl: 55,
         type: "A",
         flush: false,
