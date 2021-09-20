@@ -1182,12 +1182,13 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
     OwnerDoc()->ReportShadowDOMUsage();
   }
 
-  return AttachShadowWithoutNameChecks(aInit.mMode, aInit.mDelegatesFocus,
+  return AttachShadowWithoutNameChecks(aInit.mMode,
+                                       DelegatesFocus(aInit.mDelegatesFocus),
                                        aInit.mSlotAssignment);
 }
 
 already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
-    ShadowRootMode aMode, bool aDelegatesFocus,
+    ShadowRootMode aMode, DelegatesFocus aDelegatesFocus,
     SlotAssignmentMode aSlotAssignment) {
   nsAutoScriptBlocker scriptBlocker;
 
@@ -1252,7 +1253,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   return shadowRoot.forget();
 }
 
-void Element::AttachAndSetUAShadowRoot(NotifyUAWidgetSetup aNotify) {
+void Element::AttachAndSetUAShadowRoot(NotifyUAWidgetSetup aNotify,
+                                       DelegatesFocus aDelegatesFocus) {
   MOZ_DIAGNOSTIC_ASSERT(!CanAttachShadowDOM(),
                         "Cannot be used to attach UI shadow DOM");
   if (OwnerDoc()->IsStaticDocument()) {
@@ -1261,7 +1263,7 @@ void Element::AttachAndSetUAShadowRoot(NotifyUAWidgetSetup aNotify) {
 
   if (!GetShadowRoot()) {
     RefPtr<ShadowRoot> shadowRoot =
-        AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+        AttachShadowWithoutNameChecks(ShadowRootMode::Closed, aDelegatesFocus);
     shadowRoot->SetIsUAWidget();
   }
 

@@ -113,7 +113,7 @@ this.DateTimeBoxWidget = class {
     this.buildEditFields();
 
     if (focused) {
-      this.focusInnerTextBox();
+      this.mInputElement.focus();
     }
   }
 
@@ -294,8 +294,6 @@ this.DateTimeBoxWidget = class {
     return [
       "MozDateTimeValueChanged",
       "MozNotifyMinMaxStepAttrChanged",
-      "MozFocusInnerTextBox",
-      "MozBlurInnerTextBox",
       "MozDateTimeAttributeChanged",
       "MozPickerValueChanged",
       "MozSetDateTimePickerState",
@@ -402,38 +400,6 @@ this.DateTimeBoxWidget = class {
       this.mResetButton.style.visibility = "";
     } else {
       this.mResetButton.style.visibility = "hidden";
-    }
-  }
-
-  focusInnerTextBox() {
-    this.log("Focus inner editable field.");
-
-    let editRoot = this.shadowRoot.getElementById("edit-wrapper");
-    for (let child of editRoot.querySelectorAll(
-      ":scope > span.datetime-edit-field"
-    )) {
-      this.mLastFocusedField = child;
-      child.focus();
-      this.log("focused");
-      break;
-    }
-  }
-
-  blurInnerTextBox() {
-    this.log("Blur inner editable field.");
-
-    if (this.mLastFocusedField) {
-      this.mLastFocusedField.blur();
-    } else {
-      // If .mLastFocusedField hasn't been set, blur all editable fields,
-      // so that the bound element will actually be blurred. Note that
-      // blurring on a element that has no focus won't have any effect.
-      let editRoot = this.shadowRoot.getElementById("edit-wrapper");
-      for (let child of editRoot.querySelectorAll(
-        ":scope > span.datetime-edit-field"
-      )) {
-        child.blur();
-      }
     }
   }
 
@@ -580,14 +546,6 @@ this.DateTimeBoxWidget = class {
       }
       case "MozNotifyMinMaxStepAttrChanged": {
         this.notifyMinMaxStepAttrChanged();
-        break;
-      }
-      case "MozFocusInnerTextBox": {
-        this.focusInnerTextBox();
-        break;
-      }
-      case "MozBlurInnerTextBox": {
-        this.blurInnerTextBox();
         break;
       }
       case "MozDateTimeAttributeChanged": {
