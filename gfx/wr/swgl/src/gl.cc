@@ -222,6 +222,13 @@ struct VertexAttrib {
   int vertex_buffer = 0;
   char* buf = nullptr;  // XXX: this can easily dangle
   size_t buf_size = 0;  // this will let us bounds check
+
+  // Mark the buffer as invalid so we don't accidentally use stale data.
+  void disable() {
+    enabled = false;
+    buf = nullptr;
+    buf_size = 0;
+  }
 };
 
 static int bytes_for_internal_format(GLenum internal_format) {
@@ -980,7 +987,8 @@ template <typename T>
 void load_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
                  int count) {
   typedef decltype(force_scalar(attrib)) scalar_type;
-  if (!va.enabled) {
+  // If no buffer is available, just use a zero default.
+  if (!va.buf_size) {
     attrib = T(scalar_type{0});
   } else if (va.divisor != 0) {
     char* src = (char*)va.buf + va.stride * instance + va.offset;
@@ -1029,7 +1037,8 @@ template <typename T>
 void load_flat_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
                       int count) {
   typedef decltype(force_scalar(attrib)) scalar_type;
-  if (!va.enabled) {
+  // If no buffer is available, just use a zero default.
+  if (!va.buf_size) {
     attrib = T{0};
     return;
   }
@@ -1967,7 +1976,7 @@ void DisableVertexAttribArray(GLuint index) {
   if (va.enabled) {
     ctx->validate_vertex_array = true;
   }
-  va.enabled = false;
+  va.disable();
 }
 
 void VertexAttribDivisor(GLuint index, GLuint divisor) {
