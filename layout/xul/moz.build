@@ -33,7 +33,6 @@ UNIFIED_SOURCES += [
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",
     "nsSprocketLayout.cpp",
-    "nsStackFrame.cpp",
     "nsStackLayout.cpp",
     "nsXULTooltipListener.cpp",
 ]

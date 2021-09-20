@@ -127,7 +127,7 @@ class nsBoxFrame : public nsContainerFrame {
 
   virtual bool HonorPrintBackgroundSettings() const override;
 
-  // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
+  // virtual so nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
                                            const nsDisplayListSet& aLists);

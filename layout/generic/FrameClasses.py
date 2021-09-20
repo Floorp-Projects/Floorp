@@ -92,7 +92,6 @@ FRAME_CLASSES = [
     Frame("nsPageSequenceFrame", "PageSequence", NOT_LEAF),
     Frame("nsSliderFrame", "Slider", NOT_LEAF),
     Frame("nsSplitterFrame", "Box", NOT_LEAF),
-    Frame("nsStackFrame", "Box", NOT_LEAF),
     Frame("nsSubDocumentFrame", "SubDocument", LEAF),
     Frame("PrintedSheetFrame", "PrintedSheet", NOT_LEAF),
     Frame("SVGAFrame", "SVGA", NOT_LEAF),
