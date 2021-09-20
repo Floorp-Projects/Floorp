@@ -33,17 +33,11 @@ void main(void) {
 
 // Give ourselves a scope to return early from:
 (function() {
-  var gl = WebGLUtil.getWebGL('c');
+  var gl = c.getContext('webgl');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
   }
-
-  function errorFunc(str) {
-    ok(false, 'Error: ' + str);
-  }
-  WebGLUtil.setErrorFunc(errorFunc);
-  WebGLUtil.setWarningFunc(errorFunc);
 
   gl.disable(gl.DEPTH_TEST);
 

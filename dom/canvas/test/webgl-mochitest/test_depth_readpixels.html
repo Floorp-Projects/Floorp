@@ -13,7 +13,7 @@
 "use strict";
 
 (function() {
-  var gl = WebGLUtil.getWebGL('c');
+  var gl = c.getContext('webgl');
   if (!gl) {
     todo(gl, 'Get GL working here first.');
     return;

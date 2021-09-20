@@ -37,19 +37,13 @@ void main(void) {
 
 // Give ourselves a scope to return early from:
 (function() {
-  var gl = WebGLUtil.getWebGL('c');
+  var gl = c.getContext('webgl');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
   }
 
   DriverInfo.dump(x => ok(true, x));
-
-  function errorFunc(str) {
-    ok(false, 'Error: ' + str);
-  }
-  WebGLUtil.setErrorFunc(errorFunc);
-  WebGLUtil.setWarningFunc(errorFunc);
 
   var attribProg   = WebGLUtil.createProgramByIds(gl, 'vs-attrib',    'fs');
   var noAttribProg = WebGLUtil.createProgramByIds(gl, 'vs-no-attrib', 'fs');

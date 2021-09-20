@@ -3,24 +3,17 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <script src="driver-info.js"></script>
-<script src="webgl-util.js"></script>
 <body>
 <canvas id="c"></canvas>
 <script>
 
 // Give ourselves a scope to return early from:
 (function() {
-  var gl = WebGLUtil.getWebGL('c');
+  var gl = c.getContext('webgl');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
   }
-
-  // Catch actual WebGLUtil errors, not GL errors.
-  function errorFunc(str) {
-    ok(false, 'Error: ' + str);
-  }
-  WebGLUtil.setErrorFunc(errorFunc);
 
   function checkGLError(func, info, reference) {
     var error = gl.getError();
