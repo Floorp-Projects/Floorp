@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#![deny(broken_intra_doc_links)]
+#![deny(rustdoc::broken_intra_doc_links)]
 #![deny(missing_docs)]
 
 //! Glean is a modern approach for recording and sending Telemetry data.
@@ -357,10 +357,7 @@ fn initialize_internal(
     Some(init_handle)
 }
 
-/// Shuts down Glean.
-///
-/// This currently only attempts to shut down the
-/// internal dispatcher.
+/// Shuts down Glean in an orderly fashion.
 pub fn shutdown() {
     if global_glean().is_none() {
         log::warn!("Shutdown called before Glean is initialized");
@@ -379,6 +376,13 @@ pub fn shutdown() {
     if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);
     }
+
+    // Be sure to call this _after_ draining the dispatcher
+    crate::with_glean(|glean| {
+        if let Err(e) = glean.persist_ping_lifetime_data() {
+            log::error!("Can't persist ping lifetime data: {:?}", e);
+        }
+    });
 }
 
 /// Unblock the global dispatcher to start processing queued tasks.
@@ -782,6 +786,23 @@ pub fn set_source_tags(tags: Vec<String>) {
 /// Returns a timestamp corresponding to "now" with millisecond precision.
 pub fn get_timestamp_ms() -> u64 {
     glean_core::get_timestamp_ms()
+}
+
+/// Asks the database to persist ping-lifetime data to disk. Probably expensive to call.
+/// Only has effect when Glean is configured with `delay_ping_lifetime_io: true`.
+/// If Glean hasn't been initialized this will dispatch and return Ok(()),
+/// otherwise it will block until the persist is done and return its Result.
+pub fn persist_ping_lifetime_data() -> Result<()> {
+    if !was_initialize_called() {
+        crate::launch_with_glean(|glean| {
+            // This is async, we can't get the Error back to the caller.
+            let _ = glean.persist_ping_lifetime_data();
+        });
+        Ok(())
+    } else {
+        block_on_dispatcher();
+        with_glean(|glean| glean.persist_ping_lifetime_data())
+    }
 }
 
 #[cfg(test)]
