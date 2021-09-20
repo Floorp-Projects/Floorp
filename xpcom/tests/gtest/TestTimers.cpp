@@ -325,7 +325,11 @@ class FindExpirationTimeState final {
 
       // NS_GetTimerDeadlineHintOnCurrentThread returns clearUntil if there are
       // no pending timers before clearUntil.
-      TimeStamp t = NS_GetTimerDeadlineHintOnCurrentThread(clearUntil, 100);
+      // Passing 0 ensures that we examine the next timer to fire, regardless
+      // of its thread target. This is important, because lots of the checks
+      // we perform in the test get confused by timers targeted at other
+      // threads.
+      TimeStamp t = NS_GetTimerDeadlineHintOnCurrentThread(clearUntil, 0);
       if (t >= clearUntil) {
         break;
       }
