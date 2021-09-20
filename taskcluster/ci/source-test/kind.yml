@@ -23,7 +23,6 @@ jobs-from:
     - cram.yml
     - doc.yml
     - file-metadata.yml
-    - infer.yml
     - jsshell.yml
     - mozlint.yml
     - mozlint-android.yml

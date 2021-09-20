@@ -59,7 +59,6 @@ jobs:
             toolchain:
                 - linux64-clang
                 - linux64-clang-tidy
-                - linux64-infer
                 - linux64-rust
                 - linux64-sccache
                 - linux64-cbindgen

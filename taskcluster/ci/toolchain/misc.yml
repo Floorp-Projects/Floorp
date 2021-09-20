@@ -7,23 +7,6 @@ job-defaults:
     worker:
         max-run-time: 1800
 
-linux64-infer:
-    description: "infer build"
-    index:
-        product: static-analysis
-        job-name: linux64-infer
-    treeherder:
-        symbol: TL(infer)
-    worker:
-        docker-image: {in-tree: static-analysis-build}
-        max-run-time: 3600
-    run:
-        script: build-infer-linux.sh
-        resources:
-            - 'build/build-infer/build-infer.py'
-            - 'build/build-infer/infer-linux64.json'
-        toolchain-artifact: public/build/infer.tar.zst
-
 linux64-binutils-2.31.1:
     description: "Binutils toolchain build"
     treeherder:
