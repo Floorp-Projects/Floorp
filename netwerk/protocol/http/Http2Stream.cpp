@@ -37,7 +37,8 @@ namespace net {
 Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
                          Http2Session* session, int32_t priority, uint64_t bcId)
     : mStreamID(0),
-      mSession(session),
+      mSession(
+          do_GetWeakReference(static_cast<nsISupportsWeakReference*>(session))),
       mSegmentReader(nullptr),
       mSegmentWriter(nullptr),
       mUpstreamState(GENERATING_HEADERS),
@@ -108,11 +109,19 @@ Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
 }
 
 Http2Stream::~Http2Stream() {
+  MOZ_DIAGNOSTIC_ASSERT(OnSocketThread());
+
   ClearPushSource();
   ClearTransactionsBlockedOnTunnel();
   mStreamID = Http2Session::kDeadStreamID;
 
   LOG3(("Http2Stream::~Http2Stream %p", this));
+}
+
+Http2Session* Http2Stream::Session() {
+  RefPtr<Http2Session> session = do_QueryReferent(mSession);
+  MOZ_RELEASE_ASSERT(session);
+  return session.get();
 }
 
 void Http2Stream::ClearPushSource() {
@@ -132,7 +141,7 @@ nsresult Http2Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
   LOG3(("Http2Stream %p ReadSegments reader=%p count=%d state=%x", this, reader,
         count, mUpstreamState));
   // Reader is nullptr when this is a push stream.
-  MOZ_DIAGNOSTIC_ASSERT(!reader || (reader == mSession));
+  MOZ_DIAGNOSTIC_ASSERT(!reader || (reader == Session()));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -173,7 +182,7 @@ nsresult Http2Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
       // If not, mark the stream for callback when writing can proceed.
       if (NS_SUCCEEDED(rv) && mUpstreamState == GENERATING_HEADERS &&
           !mRequestHeadersDone) {
-        mSession->TransactionHasDataToWrite(this);
+        Session()->TransactionHasDataToWrite(this);
       }
 
       // mTxinlineFrameUsed represents any queued un-sent frame. It might
@@ -230,7 +239,7 @@ nsresult Http2Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
         } else {
           GenerateDataFrameHeader(0, true);
           ChangeState(SENDING_FIN_STREAM);
-          mSession->TransactionHasDataToWrite(this);
+          Session()->TransactionHasDataToWrite(this);
           rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
       }
@@ -451,7 +460,7 @@ nsresult Http2Stream::ParseHttpRequestHeaders(const char* buf, uint32_t avail,
   mSocketTransport->GetOriginAttributes(&originAttributes);
 
   CreatePushHashKey(nsDependentCString(head->IsHTTPS() ? "https" : "http"),
-                    authorityHeader, originAttributes, mSession->Serial(),
+                    authorityHeader, originAttributes, Session()->Serial(),
                     requestURI, mOrigin, hashkey);
 
   // check the push cache for GET
@@ -472,14 +481,14 @@ nsresult Http2Stream::ParseHttpRequestHeaders(const char* buf, uint32_t avail,
     nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
     if (trans && (pushedStreamWrapper = trans->TakePushedStream()) &&
         (pushedStream = pushedStreamWrapper->GetStream())) {
-      if (pushedStream->mSession == mSession) {
+      if (pushedStream->Session() == Session()) {
         LOG3(("Pushed Stream match based on OnPush correlation %p",
               pushedStream));
       } else {
         LOG3(("Pushed Stream match failed due to stream mismatch %p %" PRId64
               " %" PRId64 "\n",
-              pushedStream, pushedStream->mSession->Serial(),
-              mSession->Serial()));
+              pushedStream, pushedStream->Session()->Serial(),
+              Session()->Serial()));
         pushedStream->OnPushFailed();
         pushedStream = nullptr;
       }
@@ -495,7 +504,7 @@ nsresult Http2Stream::ParseHttpRequestHeaders(const char* buf, uint32_t avail,
     LOG3(
         ("Pushed Stream Lookup "
          "session=%p key=%s requestcontext=%p cache=%p hit=%p\n",
-         mSession, hashkey.get(), requestContext, cache, pushedStream));
+         Session(), hashkey.get(), requestContext, cache, pushedStream));
 
     if (pushedStream) {
       LOG3(("Pushed Stream Match located %p id=0x%X key=%s\n", pushedStream,
@@ -507,13 +516,13 @@ nsresult Http2Stream::ParseHttpRequestHeaders(const char* buf, uint32_t avail,
 
       // There is probably pushed data buffered so trigger a read manually
       // as we can't rely on future network events to do it
-      mSession->ConnectPushedStream(this);
+      Session()->ConnectPushedStream(this);
       mOpenGenerated = 1;
 
       // if the "mother stream" had TRR, this one is a TRR stream too!
       RefPtr<nsHttpConnectionInfo> ci(Transaction()->ConnectionInfo());
       if (ci && ci->GetIsTrrServiceChannel()) {
-        mSession->IncrementTrrCounter();
+        Session()->IncrementTrrCounter();
       }
 
       return NS_OK;
@@ -527,7 +536,7 @@ nsresult Http2Stream::GenerateOpen() {
   // It is now OK to assign a streamID that we are assured will
   // be monotonically increasing amongst new streams on this
   // session
-  mStreamID = mSession->RegisterStreamID(this);
+  mStreamID = Session()->RegisterStreamID(this);
   MOZ_ASSERT(mStreamID & 1, "Http2 Stream Channel ID must be odd");
   MOZ_ASSERT(!mOpenGenerated);
 
@@ -537,7 +546,7 @@ nsresult Http2Stream::GenerateOpen() {
   nsAutoCString requestURI;
   head->RequestURI(requestURI);
   LOG3(("Http2Stream %p Stream ID 0x%X [session=%p] for URI %s\n", this,
-        mStreamID, mSession, requestURI.get()));
+        mStreamID, Session(), requestURI.get()));
 
   if (mStreamID >= 0x80000000) {
     // streamID must fit in 31 bits. Evading This is theoretically possible
@@ -599,12 +608,12 @@ nsresult Http2Stream::GenerateOpen() {
     useSimpleConnect = false;
     protocol.AppendLiteral("websocket");
   }
-  rv = mSession->Compressor()->EncodeHeaderBlock(
+  rv = Session()->Compressor()->EncodeHeaderBlock(
       mFlatHttpRequestHeaders, method, path, authorityHeader, scheme, protocol,
       useSimpleConnect, compressedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int64_t clVal = mSession->Compressor()->GetParsedContentLength();
+  int64_t clVal = Session()->Compressor()->GetParsedContentLength();
   if (clVal != -1) {
     mRequestBodyLenRemaining = clVal;
   }
@@ -689,11 +698,11 @@ nsresult Http2Stream::GenerateOpen() {
     }
     dataLength -= frameLen;
 
-    mSession->CreateFrameHeader(mTxInlineFrame.get() + outputOffset,
-                                frameLen + (idx ? 0 : 5),
-                                (idx) ? Http2Session::FRAME_TYPE_CONTINUATION
-                                      : Http2Session::FRAME_TYPE_HEADERS,
-                                flags, mStreamID);
+    Session()->CreateFrameHeader(mTxInlineFrame.get() + outputOffset,
+                                 frameLen + (idx ? 0 : 5),
+                                 (idx) ? Http2Session::FRAME_TYPE_CONTINUATION
+                                       : Http2Session::FRAME_TYPE_HEADERS,
+                                 flags, mStreamID);
     outputOffset += Http2Session::kFrameHeaderBytes;
 
     if (!idx) {
@@ -758,8 +767,8 @@ void Http2Stream::AdjustInitialWindow() {
                ? (trans->InitialRwin() - mClientReceiveWindow)
                : 0;
   } else {
-    MOZ_ASSERT(mSession->InitialRwin() >= mClientReceiveWindow);
-    bump = mSession->InitialRwin() - mClientReceiveWindow;
+    MOZ_ASSERT(Session()->InitialRwin() >= mClientReceiveWindow);
+    bump = Session()->InitialRwin() - mClientReceiveWindow;
   }
 
   LOG3(("AdjustInitialwindow increased flow control window %p 0x%X %u\n", this,
@@ -774,8 +783,8 @@ void Http2Stream::AdjustInitialWindow() {
   uint8_t* packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   mTxInlineFrameUsed += Http2Session::kFrameHeaderBytes + 4;
 
-  mSession->CreateFrameHeader(packet, 4, Http2Session::FRAME_TYPE_WINDOW_UPDATE,
-                              0, stream->mStreamID);
+  Session()->CreateFrameHeader(
+      packet, 4, Http2Session::FRAME_TYPE_WINDOW_UPDATE, 0, stream->mStreamID);
 
   mClientReceiveWindow += bump;
   bump = PR_htonl(bump);
@@ -803,8 +812,8 @@ void Http2Stream::AdjustPushedPriority() {
   uint8_t* packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   mTxInlineFrameUsed += Http2Session::kFrameHeaderBytes + 5;
 
-  mSession->CreateFrameHeader(packet, 5, Http2Session::FRAME_TYPE_PRIORITY, 0,
-                              mPushSource->mStreamID);
+  Session()->CreateFrameHeader(packet, 5, Http2Session::FRAME_TYPE_PRIORITY, 0,
+                               mPushSource->mStreamID);
 
   mPushSource->SetPriorityDependency(mPriority, mPriorityDependency);
   uint32_t wireDep = PR_htonl(mPriorityDependency);
@@ -903,7 +912,7 @@ nsresult Http2Stream::TransmitFrame(const char* buf, uint32_t* countUsed,
 
   if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
     MOZ_ASSERT(!forceCommitment, "forceCommitment with WOULD_BLOCK");
-    mSession->TransactionHasDataToWrite(this);
+    Session()->TransactionHasDataToWrite(this);
   }
   if (NS_FAILED(rv)) {  // this will include WOULD_BLOCK
     return rv;
@@ -914,12 +923,12 @@ nsresult Http2Stream::TransmitFrame(const char* buf, uint32_t* countUsed,
   // which calls the socket write function. It will accept all of the inline and
   // stream data because of the above 'commitment' even if it has to buffer
 
-  rv = mSession->BufferOutput(reinterpret_cast<char*>(mTxInlineFrame.get()),
-                              mTxInlineFrameUsed, &transmittedCount);
+  rv = Session()->BufferOutput(reinterpret_cast<char*>(mTxInlineFrame.get()),
+                               mTxInlineFrameUsed, &transmittedCount);
   LOG3(
       ("Http2Stream::TransmitFrame for inline BufferOutput session=%p "
        "stream=%p result %" PRIx32 " len=%d",
-       mSession, this, static_cast<uint32_t>(rv), transmittedCount));
+       Session(), this, static_cast<uint32_t>(rv), transmittedCount));
 
   MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK,
              "inconsistent inline commitment result");
@@ -929,7 +938,7 @@ nsresult Http2Stream::TransmitFrame(const char* buf, uint32_t* countUsed,
   MOZ_ASSERT(transmittedCount == mTxInlineFrameUsed,
              "inconsistent inline commitment count");
 
-  Http2Session::LogIO(mSession, this, "Writing from Inline Buffer",
+  Http2Session::LogIO(Session(), this, "Writing from Inline Buffer",
                       reinterpret_cast<char*>(mTxInlineFrame.get()),
                       transmittedCount);
 
@@ -945,16 +954,16 @@ nsresult Http2Stream::TransmitFrame(const char* buf, uint32_t* countUsed,
 
     // If there is already data buffered, just add to that to form
     // a single TLS Application Data Record - otherwise skip the memcpy
-    if (mSession->AmountOfOutputBuffered()) {
-      rv = mSession->BufferOutput(buf, mTxStreamFrameSize, &transmittedCount);
+    if (Session()->AmountOfOutputBuffered()) {
+      rv = Session()->BufferOutput(buf, mTxStreamFrameSize, &transmittedCount);
     } else {
-      rv = mSession->OnReadSegment(buf, mTxStreamFrameSize, &transmittedCount);
+      rv = Session()->OnReadSegment(buf, mTxStreamFrameSize, &transmittedCount);
     }
 
     LOG3(
         ("Http2Stream::TransmitFrame for regular session=%p "
          "stream=%p result %" PRIx32 " len=%d",
-         mSession, this, static_cast<uint32_t>(rv), transmittedCount));
+         Session(), this, static_cast<uint32_t>(rv), transmittedCount));
 
     MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK,
                "inconsistent stream commitment result");
@@ -964,14 +973,14 @@ nsresult Http2Stream::TransmitFrame(const char* buf, uint32_t* countUsed,
     MOZ_ASSERT(transmittedCount == mTxStreamFrameSize,
                "inconsistent stream commitment count");
 
-    Http2Session::LogIO(mSession, this, "Writing from Transaction Buffer", buf,
+    Http2Session::LogIO(Session(), this, "Writing from Transaction Buffer", buf,
                         transmittedCount);
 
     *countUsed += mTxStreamFrameSize;
   }
 
   if (!mAttempting0RTT) {
-    mSession->FlushOutputQueue();
+    Session()->FlushOutputQueue();
   }
 
   // calling this will trigger waiting_for if mRequestBodyLenRemaining is 0
@@ -1003,9 +1012,9 @@ void Http2Stream::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame) {
     if (dataLength) SetSentFin(true);
   }
 
-  mSession->CreateFrameHeader(mTxInlineFrame.get(), dataLength,
-                              Http2Session::FRAME_TYPE_DATA, frameFlags,
-                              mStreamID);
+  Session()->CreateFrameHeader(mTxInlineFrame.get(), dataLength,
+                               Http2Session::FRAME_TYPE_DATA, frameFlags,
+                               mStreamID);
 
   mTxInlineFrameUsed = Http2Session::kFrameHeaderBytes;
   mTxStreamFrameSize = dataLength;
@@ -1070,7 +1079,7 @@ nsresult Http2Stream::ConvertResponseHeaders(Http2Decompressor* decompressor,
 
   if (httpResponseCode == 421) {
     // Origin Frame requires 421 to remove this origin from the origin set
-    mSession->Received421(mTransaction->ConnectionInfo());
+    Session()->Received421(mTransaction->ConnectionInfo());
   }
 
   if (aHeadersIn.Length() && aHeadersOut.Length()) {
@@ -1193,7 +1202,7 @@ void Http2Stream::SetAllHeadersReceived() {
 }
 
 bool Http2Stream::AllowFlowControlledWrite() {
-  return (mSession->ServerSessionWindow() > 0) && (mServerReceiveWindow > 0);
+  return (Session()->ServerSessionWindow() > 0) && (mServerReceiveWindow > 0);
 }
 
 void Http2Stream::UpdateServerReceiveWindow(int32_t delta) {
@@ -1204,7 +1213,7 @@ void Http2Stream::UpdateServerReceiveWindow(int32_t delta) {
         ("Http2Stream::UpdateServerReceived UnPause %p 0x%X "
          "Open stream window\n",
          this, mStreamID));
-    mSession->TransactionHasDataToWrite(this);
+    Session()->TransactionHasDataToWrite(this);
   }
 }
 
@@ -1261,7 +1270,7 @@ static uint32_t GetPriorityDependencyFromTransaction(nsHttpTransaction* trans) {
 }
 
 void Http2Stream::UpdatePriorityDependency() {
-  if (!mSession->UseH2Deps()) {
+  if (!Session()->UseH2Deps()) {
     return;
   }
 
@@ -1327,7 +1336,7 @@ void Http2Stream::TopBrowsingContextIdChangedInternal(uint64_t id) {
 
   mCurrentTopBrowsingContextId = id;
 
-  if (!mSession->UseH2Deps()) {
+  if (!Session()->UseH2Deps()) {
     return;
   }
 
@@ -1363,8 +1372,8 @@ void Http2Stream::TopBrowsingContextIdChangedInternal(uint64_t id) {
     modifyStreamID = mPushSource->StreamID();
   }
   if (modifyStreamID) {
-    mSession->SendPriorityFrame(modifyStreamID, mPriorityDependency,
-                                mPriorityWeight);
+    Session()->SendPriorityFrame(modifyStreamID, mPriorityDependency,
+                                 mPriorityWeight);
   }
 }
 
@@ -1433,7 +1442,7 @@ nsresult Http2Stream::OnReadSegment(const char* buf, uint32_t count,
       }
 
       if (mRequestHeadersDone && !mOpenGenerated) {
-        if (!mSession->TryToActivate(this)) {
+        if (!Session()->TryToActivate(this)) {
           LOG3(("Http2Stream::OnReadSegment %p cannot activate now. queued.\n",
                 this));
           return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
@@ -1468,7 +1477,7 @@ nsresult Http2Stream::OnReadSegment(const char* buf, uint32_t count,
             ("Http2Stream this=%p, id 0x%X request body suspended because "
              "remote window is stream=%" PRId64 " session=%" PRId64 ".\n",
              this, mStreamID, mServerReceiveWindow,
-             mSession->ServerSessionWindow()));
+             Session()->ServerSessionWindow()));
         mBlockedOnRwin = true;
         return NS_BASE_STREAM_WOULD_BLOCK;
       }
@@ -1483,8 +1492,8 @@ nsresult Http2Stream::OnReadSegment(const char* buf, uint32_t count,
         dataLength = Http2Session::kMaxFrameData;
       }
 
-      if (dataLength > mSession->ServerSessionWindow()) {
-        dataLength = static_cast<uint32_t>(mSession->ServerSessionWindow());
+      if (dataLength > Session()->ServerSessionWindow()) {
+        dataLength = static_cast<uint32_t>(Session()->ServerSessionWindow());
       }
 
       if (dataLength > mServerReceiveWindow) {
@@ -1497,10 +1506,10 @@ nsresult Http2Stream::OnReadSegment(const char* buf, uint32_t count,
            " session window=%" PRId64 " "
            "max frame=%d USING=%u\n",
            this, mStreamID, count, mChunkSize, mServerReceiveWindow,
-           mSession->ServerSessionWindow(), Http2Session::kMaxFrameData,
+           Session()->ServerSessionWindow(), Http2Session::kMaxFrameData,
            dataLength));
 
-      mSession->DecrementServerSessionWindow(dataLength);
+      Session()->DecrementServerSessionWindow(dataLength);
       mServerReceiveWindow -= dataLength;
 
       LOG3(("Http2Stream %p id 0x%x request len remaining %" PRId64 ", "
@@ -1571,7 +1580,7 @@ nsresult Http2Stream::OnWriteSegment(char* buf, uint32_t count,
     rv = mPushSource->GetBufferedData(buf, count, countWritten);
     if (NS_FAILED(rv)) return rv;
 
-    mSession->ConnectPushedStream(this);
+    Session()->ConnectPushedStream(this);
     return NS_OK;
   }
 
