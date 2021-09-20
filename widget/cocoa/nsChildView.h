@@ -511,6 +511,9 @@ class nsChildView final : public nsBaseWidget {
   // compositor thread again.
   void UnsuspendAsyncCATransactions();
 
+  // Called by nsCocoaWindow when the window's fullscreen state changes.
+  void UpdateFullscreen(bool aFullscreen);
+
  protected:
   virtual ~nsChildView();
 

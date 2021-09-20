@@ -1598,6 +1598,12 @@ void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
   if (mWidgetListener && wasInFullscreen != aFullScreen) {
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
+
+  // Notify the mainChildView with our new fullscreen state.
+  nsChildView* mainChildView = static_cast<nsChildView*>([[mWindow mainChildView] widget]);
+  if (mainChildView) {
+    mainChildView->UpdateFullscreen(aFullScreen);
+  }
 }
 
 inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
