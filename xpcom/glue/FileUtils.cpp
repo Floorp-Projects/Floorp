@@ -274,6 +274,9 @@ class ScopedMMap {
     }
     size = st.st_size;
     buf = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (buf == MAP_FAILED) {
+      buf = nullptr;
+    }
   }
   ~ScopedMMap() {
     if (buf) {
