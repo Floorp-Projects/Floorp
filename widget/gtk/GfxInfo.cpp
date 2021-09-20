@@ -290,13 +290,14 @@ void GfxInfo::GetData() {
           GfxDriverInfo::GetDriverVendor(DriverVendor::MesaSoftPipe),
           mDriverVendor);
       mIsAccelerated = false;
-    } else if (strcasestr(glRenderer.get(), "software rasterizer") ||
-               !mIsAccelerated) {
-      // Fallback to reporting swrast if GLX_MESA_query_renderer tells us
-      // we're using an unaccelerated context.
+    } else if (strcasestr(glRenderer.get(), "software rasterizer")) {
       CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverVendor::MesaSWRast),
                       mDriverVendor);
       mIsAccelerated = false;
+    } else if (!mIsAccelerated) {
+      CopyUTF16toUTF8(
+          GfxDriverInfo::GetDriverVendor(DriverVendor::MesaSWUnknown),
+          mDriverVendor);
     } else if (!driDriver.IsEmpty()) {
       mDriverVendor = nsPrintfCString("mesa/%s", driDriver.get());
     } else {

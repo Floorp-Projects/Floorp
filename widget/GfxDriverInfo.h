@@ -234,6 +234,7 @@ enum DriverVendor : uint8_t {
   MesaLLVMPipe,
   MesaSoftPipe,
   MesaSWRast,
+  MesaSWUnknown,
   // AMD
   MesaR600,
   // Nouveau: Open-source nvidia
