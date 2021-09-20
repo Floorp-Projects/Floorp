@@ -67,8 +67,7 @@ JS::RootingContext::RootingContext() : realm_(nullptr), zone_(nullptr) {
 #endif
 }
 
-JS_PUBLIC_API void JS_SetGrayGCRootsTracer(JSContext* cx,
-                                           JSGrayRootsTracer traceOp,
+JS_PUBLIC_API void JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp,
                                            void* data) {
   cx->runtime()->gc.setGrayRootsTracer(traceOp, data);
 }

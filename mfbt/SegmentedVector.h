@@ -289,11 +289,7 @@ class SegmentedVector : private AllocPolicy {
     }
 
    public:
-    bool Done() const {
-      MOZ_ASSERT_IF(mSegment, mSegment->isInList());
-      MOZ_ASSERT_IF(mSegment, mIndex < mSegment->Length());
-      return !mSegment;
-    }
+    bool Done() const { return !mSegment; }
 
     T& Get() {
       MOZ_ASSERT(!Done());
