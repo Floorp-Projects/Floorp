@@ -5616,6 +5616,8 @@ bool profiler_is_locked_on_current_thread() {
   // - The ProfilerParent or ProfilerChild mutex, used to store and process
   //   buffer chunk updates.
   return PSAutoLock::IsLockedOnCurrentThread() ||
+         ThreadRegistry::IsRegistryMutexLockedOnCurrentThread() ||
+         ThreadRegistration::IsDataMutexLockedOnCurrentThread() ||
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread() ||
          ProfilerParent::IsLockedOnCurrentThread() ||
          ProfilerChild::IsLockedOnCurrentThread();
