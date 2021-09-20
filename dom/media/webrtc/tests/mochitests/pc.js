@@ -1901,14 +1901,48 @@ PeerConnectionWrapper.prototype = {
       }
       return report;
     };
+    // Returns true if there is proof in aStats of rtcp flow for all remote stats
+    // objects, compared to baseStats.
+    const hasAllRtcpUpdated = (baseStats, stats) => {
+      let hasRtcpStats = false;
+      for (const v of stats.values()) {
+        if (v.type == "remote-outbound-rtp") {
+          hasRtcpStats = true;
+          if (!v.remoteTimestamp) {
+            // `remoteTimestamp` is 0 or not present.
+            return false;
+          }
+          if (v.remoteTimestamp <= baseStats.get(v.id)?.remoteTimestamp) {
+            // `remoteTimestamp` has not advanced further than the base stats,
+            // i.e., no new sender report has been received.
+            return false;
+          }
+        } else if (v.type == "remote-inbound-rtp") {
+          hasRtcpStats = true;
+          // The ideal thing here would be to check `reportsReceived`, but it's
+          // not yet implemented.
+          if (!v.packetsReceived) {
+            // `packetsReceived` is 0 or not present.
+            return false;
+          }
+          if (v.packetsReceived <= baseStats.get(v.id)?.packetsReceived) {
+            // `packetsReceived` has not advanced further than the base stats,
+            // i.e., no new receiver report has been received.
+            return false;
+          }
+        }
+      }
+      return hasRtcpStats;
+    };
     let attempts = 0;
+    const baseStats = await this._pc.getStats();
     // Time-units are MS
     const waitPeriod = 100;
     const maxTime = 20000;
     for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
       try {
         let syncedStats = await ensureSyncedRtcp();
-        if (syncedStats) {
+        if (syncedStats && hasAllRtcpUpdated(baseStats, syncedStats)) {
           return syncedStats;
         }
       } catch (e) {
