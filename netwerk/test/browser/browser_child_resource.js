@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
 
 // This must be loaded in the remote process for this test to be useful
-const TEST_URL = "http://example.com/browser/netwerk/test/browser/dummy.html";
+const TEST_URL = "https://example.com/browser/netwerk/test/browser/dummy.html";
 
 const expectedRemote = gMultiProcessBrowser ? "true" : "";
 
