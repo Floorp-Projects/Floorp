@@ -24,7 +24,7 @@ class PluralRulesObject : public NativeObject {
   static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
-  static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
+  static constexpr uint32_t PLURAL_RULES_SLOT = 1;
   static constexpr uint32_t SLOT_COUNT = 2;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
@@ -38,7 +38,7 @@ class PluralRulesObject : public NativeObject {
   static constexpr size_t UPluralRulesEstimatedMemoryUse = 5736;
 
   mozilla::intl::PluralRules* getPluralRules() const {
-    const auto& slot = getFixedSlot(UPLURAL_RULES_SLOT);
+    const auto& slot = getFixedSlot(PLURAL_RULES_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
@@ -46,7 +46,7 @@ class PluralRulesObject : public NativeObject {
   }
 
   void setPluralRules(mozilla::intl::PluralRules* pluralRules) {
-    setFixedSlot(UPLURAL_RULES_SLOT, PrivateValue(pluralRules));
+    setFixedSlot(PLURAL_RULES_SLOT, PrivateValue(pluralRules));
   }
 
  private:

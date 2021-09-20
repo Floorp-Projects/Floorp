@@ -15,15 +15,9 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
-#include "unicode/uenum.h"
-#include "unicode/uloc.h"
-#include "unicode/unumberformatter.h"
-#include "unicode/upluralrules.h"
-#include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
@@ -36,9 +30,6 @@
 using namespace js;
 
 using mozilla::AssertedCast;
-
-using js::intl::CallICU;
-using js::intl::IcuLocale;
 
 const JSClassOps PluralRulesObject::classOps_ = {
     nullptr,                      // addProperty
