@@ -135,7 +135,6 @@ function createViewControllers(state, elements) {
       const preset = presets[presetName];
       if (preset) {
         elements.presetDescription.style.display = "block";
-        elements.presetCustom.style.display = "none";
         elements.presetDescription.textContent = preset.description;
         elements.presetsMenuList.value = presetName;
         // This works around XULElement height issues.
@@ -143,7 +142,6 @@ function createViewControllers(state, elements) {
         elements.presetDescription.style.height = `${height}px`;
       } else {
         elements.presetDescription.style.display = "none";
-        elements.presetCustom.style.display = "block";
         elements.presetsMenuList.value = "custom";
       }
       const { PanelMultiView } = lazy.PanelMultiView();
