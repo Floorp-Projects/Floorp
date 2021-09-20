@@ -70,7 +70,7 @@ class Vendor(MachCommandBase):
         command_context.populate_logger()
         command_context.log_manager.enable_unstructured()
         if check_for_update:
-            logging.disable()
+            logging.disable(level=logging.CRITICAL)
 
         try:
             manifest = load_moz_yaml(library)
