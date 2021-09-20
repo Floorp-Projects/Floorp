@@ -1101,18 +1101,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Perform an integer division, returning the integer part rounded toward
   // zero. rhs must not be zero, and the division must not overflow.
   //
-  // On x86_shared, srcDest must be eax and edx will be clobbered.
   // On ARM, the chip must have hardware division instructions.
-  inline void quotient32(Register rhs, Register srcDest,
-                         bool isUnsigned) PER_SHARED_ARCH;
+  inline void quotient32(Register rhs, Register srcDest, bool isUnsigned)
+      DEFINED_ON(mips_shared, arm, arm64);
+
+  // As above, but srcDest must be eax and tempEdx must be edx.
+  inline void quotient32(Register rhs, Register srcDest, Register tempEdx,
+                         bool isUnsigned) DEFINED_ON(x86_shared);
 
   // Perform an integer division, returning the remainder part.
   // rhs must not be zero, and the division must not overflow.
   //
-  // On x86_shared, srcDest must be eax and edx will be clobbered.
   // On ARM, the chip must have hardware division instructions.
-  inline void remainder32(Register rhs, Register srcDest,
-                          bool isUnsigned) PER_SHARED_ARCH;
+  inline void remainder32(Register rhs, Register srcDest, bool isUnsigned)
+      DEFINED_ON(mips_shared, arm, arm64);
+
+  // As above, but srcDest must be eax and tempEdx must be edx.
+  inline void remainder32(Register rhs, Register srcDest, Register tempEdx,
+                          bool isUnsigned) DEFINED_ON(x86_shared);
 
   // Perform an integer division, returning the integer part rounded toward
   // zero. rhs must not be zero, and the division must not overflow.
