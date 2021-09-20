@@ -2086,11 +2086,14 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.drawOptions = *aRunParams.drawOpts;
   }
 
-  fontParams.scaledFont = GetScaledFont(aRunParams.dt);
+  if (aRunParams.allowGDI) {
+    fontParams.scaledFont = GetScaledFont(aRunParams.dt);
+  } else {
+    fontParams.scaledFont = GetScaledFontNoGDI(aRunParams.dt);
+  }
   if (!fontParams.scaledFont) {
     return;
   }
-
   auto* textDrawer = aRunParams.context->GetTextDrawer();
 
   fontParams.obliqueSkew = SkewForSyntheticOblique();

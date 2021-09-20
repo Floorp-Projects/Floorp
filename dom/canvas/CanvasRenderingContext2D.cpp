@@ -3647,6 +3647,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     }
     gfxTextRun::DrawParams params(thebes);
 
+    params.allowGDI = false;
+
     const ContextState* state = &mCtx->CurrentState();
     if (state->StyleIsColor(style)) {  // Color
       nscolor fontColor = state->colorStyles[style];

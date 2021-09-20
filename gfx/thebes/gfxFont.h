@@ -1877,6 +1877,10 @@ class gfxFont {
 
   virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       DrawTarget* aTarget) = 0;
+  virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFontNoGDI(
+      DrawTarget* aTarget) {
+    return GetScaledFont(aTarget);
+  }
 
   void InitializeScaledFont();
 
@@ -2283,6 +2287,7 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   bool isVerticalRun;
   bool isRTL;
   bool paintSVGGlyphs;
+  bool allowGDI;
 };
 
 struct MOZ_STACK_CLASS FontDrawParams {

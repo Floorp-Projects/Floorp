@@ -160,14 +160,14 @@ bool BaseCompiler::addInterruptCheck() {
   return createStackMap("addInterruptCheck");
 }
 
-void BaseCompiler::checkDivideByZeroI32(RegI32 rhs) {
+void BaseCompiler::checkDivideByZero(RegI32 rhs) {
   Label nonZero;
   masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
   trap(Trap::IntegerDivideByZero);
   masm.bind(&nonZero);
 }
 
-void BaseCompiler::checkDivideByZeroI64(RegI64 r) {
+void BaseCompiler::checkDivideByZero(RegI64 r) {
   Label nonZero;
   ScratchI32 scratch(*this);
   masm.branchTest64(Assembler::NonZero, r, r, scratch, &nonZero);
@@ -175,9 +175,8 @@ void BaseCompiler::checkDivideByZeroI64(RegI64 r) {
   masm.bind(&nonZero);
 }
 
-void BaseCompiler::checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest,
-                                                Label* done,
-                                                bool zeroOnOverflow) {
+void BaseCompiler::checkDivideSignedOverflow(RegI32 rhs, RegI32 srcDest,
+                                             Label* done, bool zeroOnOverflow) {
   Label notMin;
   masm.branch32(Assembler::NotEqual, srcDest, Imm32(INT32_MIN), &notMin);
   if (zeroOnOverflow) {
@@ -191,9 +190,8 @@ void BaseCompiler::checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest,
   masm.bind(&notMin);
 }
 
-void BaseCompiler::checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest,
-                                                Label* done,
-                                                bool zeroOnOverflow) {
+void BaseCompiler::checkDivideSignedOverflow(RegI64 rhs, RegI64 srcDest,
+                                             Label* done, bool zeroOnOverflow) {
   Label notmin;
   masm.branch64(Assembler::NotEqual, srcDest, Imm64(INT64_MIN), &notmin);
   masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
@@ -292,104 +290,6 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
   MOZ_CRASH("BaseCompiler platform hook: tableSwitch");
 #endif
 }
-
-#ifndef RABALDR_INT_DIV_I64_CALLOUT
-void BaseCompiler::quotientI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved,
-                               IsUnsigned isUnsigned, bool isConst, int64_t c) {
-  Label done;
-
-  if (!isConst || c == 0) {
-    checkDivideByZeroI64(rhs);
-  }
-
-  if (!isUnsigned && (!isConst || c == -1)) {
-    checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
-  }
-
-#  if defined(JS_CODEGEN_X64)
-  // The caller must set up the following situation.
-  MOZ_ASSERT(srcDest.reg == rax);
-  MOZ_ASSERT(reserved == specific_.rdx);
-  if (isUnsigned) {
-    masm.xorq(rdx, rdx);
-    masm.udivq(rhs.reg);
-  } else {
-    masm.cqo();
-    masm.idivq(rhs.reg);
-  }
-#  elif defined(JS_CODEGEN_MIPS64)
-  if (isUnsigned) {
-    masm.as_ddivu(srcDest.reg, rhs.reg);
-  } else {
-    masm.as_ddiv(srcDest.reg, rhs.reg);
-  }
-  masm.as_mflo(srcDest.reg);
-#  elif defined(JS_CODEGEN_ARM64)
-  ARMRegister sd(srcDest.reg, 64);
-  ARMRegister r(rhs.reg, 64);
-  if (isUnsigned) {
-    masm.Udiv(sd, sd, r);
-  } else {
-    masm.Sdiv(sd, sd, r);
-  }
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: quotientI64");
-#  endif
-  masm.bind(&done);
-}
-
-void BaseCompiler::remainderI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved,
-                                IsUnsigned isUnsigned, bool isConst,
-                                int64_t c) {
-  Label done;
-
-  if (!isConst || c == 0) {
-    checkDivideByZeroI64(rhs);
-  }
-
-  if (!isUnsigned && (!isConst || c == -1)) {
-    checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
-  }
-
-#  if defined(JS_CODEGEN_X64)
-  // The caller must set up the following situation.
-  MOZ_ASSERT(srcDest.reg == rax);
-  MOZ_ASSERT(reserved == specific_.rdx);
-
-  if (isUnsigned) {
-    masm.xorq(rdx, rdx);
-    masm.udivq(rhs.reg);
-  } else {
-    masm.cqo();
-    masm.idivq(rhs.reg);
-  }
-  masm.movq(rdx, rax);
-#  elif defined(JS_CODEGEN_MIPS64)
-  if (isUnsigned) {
-    masm.as_ddivu(srcDest.reg, rhs.reg);
-  } else {
-    masm.as_ddiv(srcDest.reg, rhs.reg);
-  }
-  masm.as_mfhi(srcDest.reg);
-#  elif defined(JS_CODEGEN_ARM64)
-  MOZ_ASSERT(reserved.isInvalid());
-  ARMRegister sd(srcDest.reg, 64);
-  ARMRegister r(rhs.reg, 64);
-  ScratchI32 temp(*this);
-  ARMRegister t(temp, 64);
-  if (isUnsigned) {
-    masm.Udiv(t, sd, r);
-  } else {
-    masm.Sdiv(t, sd, r);
-  }
-  masm.Mul(t, t, r);
-  masm.Sub(sd, sd, t);
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: remainderI64");
-#  endif
-  masm.bind(&done);
-}
-#endif  // RABALDR_INT_DIV_I64_CALLOUT
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1507,8 +1407,8 @@ RegI32 BaseCompiler::needRotate64Temp() {
 #endif
 }
 
-void BaseCompiler::pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1,
-                                        RegI32* reserved) {
+void BaseCompiler::popAndAllocateForDivAndRemI32(RegI32* r0, RegI32* r1,
+                                                 RegI32* reserved) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   // r0 must be eax, and edx will be clobbered.
   need2xI32(specific_.eax, specific_.edx);
@@ -1520,17 +1420,31 @@ void BaseCompiler::pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1,
 #endif
 }
 
-void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
-                                     RegI64* reserved) {
+static void QuotientI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd,
+                        RegI32 reserved, IsUnsigned isUnsigned) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  masm.quotient32(rs, rsd, reserved, isUnsigned);
+#else
+  masm.quotient32(rs, rsd, isUnsigned);
+#endif
+}
+
+static void RemainderI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd,
+                         RegI32 reserved, IsUnsigned isUnsigned) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  masm.remainder32(rs, rsd, reserved, isUnsigned);
+#else
+  masm.remainder32(rs, rsd, isUnsigned);
+#endif
+}
+
+void BaseCompiler::popAndAllocateForMulI64(RegI64* r0, RegI64* r1,
+                                           RegI32* temp) {
 #if defined(JS_CODEGEN_X64)
-  // r0 must be rax, and rdx will be clobbered.
-  need2xI64(specific_.rax, specific_.rdx);
-  *r1 = popI64();
-  *r0 = popI64ToSpecific(specific_.rax);
-  *reserved = specific_.rdx;
+  pop2xI64(r0, r1);
 #elif defined(JS_CODEGEN_X86)
-  // As for x64, though edx is part of r0.
-  need2xI32(specific_.eax, specific_.edx);
+  // lhsDest must be edx:eax and rhs must not be that.
+  needI64(specific_.edx_eax);
   *r1 = popI64();
   *r0 = popI64ToSpecific(specific_.edx_eax);
   *temp = needI32();
@@ -1542,21 +1456,106 @@ void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
 #elif defined(JS_CODEGEN_ARM64)
   pop2xI64(r0, r1);
 #else
-  MOZ_CRASH("BaseCompiler porting interface: pop2xI64ForMulI64");
+  MOZ_CRASH("BaseCompiler porting interface: popAndAllocateForMulI64");
 #endif
 }
 
-void BaseCompiler::pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved) {
-#if defined(JS_CODEGEN_X64)
+#ifndef RABALDR_INT_DIV_I64_CALLOUT
+
+void BaseCompiler::popAndAllocateForDivAndRemI64(RegI64* r0, RegI64* r1,
+                                                 RegI64* reserved,
+                                                 IsRemainder isRemainder) {
+#  if defined(JS_CODEGEN_X64)
   // r0 must be rax, and rdx will be clobbered.
   need2xI64(specific_.rax, specific_.rdx);
   *r1 = popI64();
   *r0 = popI64ToSpecific(specific_.rax);
   *reserved = specific_.rdx;
-#else
+#  elif defined(JS_CODEGEN_ARM64)
   pop2xI64(r0, r1);
-#endif
+  if (isRemainder) {
+    *reserved = needI64();
+  }
+#  else
+  pop2xI64(r0, r1);
+#  endif
 }
+
+static void QuotientI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
+                        RegI64 reserved, IsUnsigned isUnsigned) {
+#  if defined(JS_CODEGEN_X64)
+  // The caller must set up the following situation.
+  MOZ_ASSERT(srcDest.reg == rax);
+  MOZ_ASSERT(reserved.reg == rdx);
+  if (isUnsigned) {
+    masm.xorq(rdx, rdx);
+    masm.udivq(rhs.reg);
+  } else {
+    masm.cqo();
+    masm.idivq(rhs.reg);
+  }
+#  elif defined(JS_CODEGEN_MIPS64)
+  MOZ_ASSERT(reserved.isInvalid());
+  if (isUnsigned) {
+    masm.as_ddivu(srcDest.reg, rhs.reg);
+  } else {
+    masm.as_ddiv(srcDest.reg, rhs.reg);
+  }
+  masm.as_mflo(srcDest.reg);
+#  elif defined(JS_CODEGEN_ARM64)
+  MOZ_ASSERT(reserved.isInvalid());
+  ARMRegister sd(srcDest.reg, 64);
+  ARMRegister r(rhs.reg, 64);
+  if (isUnsigned) {
+    masm.Udiv(sd, sd, r);
+  } else {
+    masm.Sdiv(sd, sd, r);
+  }
+#  else
+  MOZ_CRASH("BaseCompiler platform hook: quotientI64");
+#  endif
+}
+
+static void RemainderI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
+                         RegI64 reserved, IsUnsigned isUnsigned) {
+#  if defined(JS_CODEGEN_X64)
+  // The caller must set up the following situation.
+  MOZ_ASSERT(srcDest.reg == rax);
+  MOZ_ASSERT(reserved.reg == rdx);
+
+  if (isUnsigned) {
+    masm.xorq(rdx, rdx);
+    masm.udivq(rhs.reg);
+  } else {
+    masm.cqo();
+    masm.idivq(rhs.reg);
+  }
+  masm.movq(rdx, rax);
+#  elif defined(JS_CODEGEN_MIPS64)
+  MOZ_ASSERT(reserved.isInvalid());
+  if (isUnsigned) {
+    masm.as_ddivu(srcDest.reg, rhs.reg);
+  } else {
+    masm.as_ddiv(srcDest.reg, rhs.reg);
+  }
+  masm.as_mfhi(srcDest.reg);
+#  elif defined(JS_CODEGEN_ARM64)
+  ARMRegister sd(srcDest.reg, 64);
+  ARMRegister r(rhs.reg, 64);
+  ARMRegister t(reserved.reg, 64);
+  if (isUnsigned) {
+    masm.Udiv(t, sd, r);
+  } else {
+    masm.Sdiv(t, sd, r);
+  }
+  masm.Mul(t, t, r);
+  masm.Sub(sd, sd, t);
+#  else
+  MOZ_CRASH("BaseCompiler platform hook: remainderI64");
+#  endif
+}
+
+#endif  // RABALDR_INT_DIV_I64_CALLOUT
 
 RegI32 BaseCompiler::popI32RhsForShift() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
@@ -1843,6 +1842,10 @@ static void SubI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
 
 static void SubImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
   masm.sub32(Imm32(c), rsd);
+}
+
+static void MulI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.mul32(rs, rsd);
 }
 
 static void OrI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
@@ -2232,24 +2235,31 @@ static void ExtendI32_16(MacroAssembler& masm, RegI32 rsd) {
   masm.move16SignExtend(rsd, rsd);
 }
 
-void BaseCompiler::emitMultiplyI32() {
-  RegI32 r, rs, reserved;
-  pop2xI32ForMulDivI32(&r, &rs, &reserved);
-  masm.mul32(rs, r);
-  maybeFree(reserved);
-  freeI32(rs);
-  pushI32(r);
-}
-
 void BaseCompiler::emitMultiplyI64() {
-  RegI64 r, rs, reserved;
+  RegI64 r, rs;
   RegI32 temp;
-  pop2xI64ForMulI64(&r, &rs, &temp, &reserved);
+  popAndAllocateForMulI64(&r, &rs, &temp);
   masm.mul64(rs, r, temp);
-  maybeFree(reserved);
   maybeFree(temp);
   freeI64(rs);
   pushI64(r);
+}
+
+template <typename RegType, typename IntType>
+void BaseCompiler::quotientOrRemainder(
+    RegType rs, RegType rsd, RegType reserved, IsUnsigned isUnsigned,
+    ZeroOnOverflow zeroOnOverflow, bool isConst, IntType c,
+    void (*operate)(MacroAssembler& masm, RegType rs, RegType rsd,
+                    RegType reserved, IsUnsigned isUnsigned)) {
+  Label done;
+  if (!isConst || c == 0) {
+    checkDivideByZero(rs);
+  }
+  if (!isUnsigned && (!isConst || c == -1)) {
+    checkDivideSignedOverflow(rs, rsd, &done, zeroOnOverflow);
+  }
+  operate(masm, rs, rsd, reserved, isUnsigned);
+  masm.bind(&done);
 }
 
 void BaseCompiler::emitQuotientI32() {
@@ -2269,19 +2279,9 @@ void BaseCompiler::emitQuotientI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-
-    Label done;
-    if (!isConst || c == -1) {
-      checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(false));
-    }
-    masm.quotient32(rs, r, IsUnsigned(false));
-    masm.bind(&done);
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(false),
+                        ZeroOnOverflow(false), isConst, c, QuotientI32);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2300,13 +2300,9 @@ void BaseCompiler::emitQuotientU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-    masm.quotient32(rs, r, IsUnsigned(true));
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(true),
+                        ZeroOnOverflow(false), isConst, c, QuotientI32);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2335,19 +2331,9 @@ void BaseCompiler::emitRemainderI32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-
-    Label done;
-    if (!isConst || c == -1) {
-      checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(true));
-    }
-    masm.remainder32(rs, r, IsUnsigned(false));
-    masm.bind(&done);
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(false),
+                        ZeroOnOverflow(true), isConst, c, RemainderI32);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2364,13 +2350,9 @@ void BaseCompiler::emitRemainderU32() {
   } else {
     bool isConst = peekConst(&c);
     RegI32 r, rs, reserved;
-    pop2xI32ForMulDivI32(&r, &rs, &reserved);
-
-    if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs);
-    }
-    masm.remainder32(rs, r, IsUnsigned(true));
-
+    popAndAllocateForDivAndRemI32(&r, &rs, &reserved);
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(true), ZeroOnOverflow(true),
+                        isConst, c, RemainderI32);
     maybeFree(reserved);
     freeI32(rs);
     pushI32(r);
@@ -2379,7 +2361,6 @@ void BaseCompiler::emitRemainderU32() {
 
 #ifndef RABALDR_INT_DIV_I64_CALLOUT
 void BaseCompiler::emitQuotientI64() {
-#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwo(&c, &power, 0)) {
@@ -2397,19 +2378,16 @@ void BaseCompiler::emitQuotientI64() {
   } else {
     bool isConst = peekConst(&c);
     RegI64 r, rs, reserved;
-    pop2xI64ForDivI64(&r, &rs, &reserved);
-    quotientI64(rs, r, reserved, IsUnsigned(false), isConst, c);
+    popAndAllocateForDivAndRemI64(&r, &rs, &reserved, IsRemainder(false));
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(false),
+                        ZeroOnOverflow(false), isConst, c, QuotientI64);
     maybeFree(reserved);
     freeI64(rs);
     pushI64(r);
   }
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
-#  endif
 }
 
 void BaseCompiler::emitQuotientU64() {
-#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwo(&c, &power, 0)) {
@@ -2421,19 +2399,16 @@ void BaseCompiler::emitQuotientU64() {
   } else {
     bool isConst = peekConst(&c);
     RegI64 r, rs, reserved;
-    pop2xI64ForDivI64(&r, &rs, &reserved);
-    quotientI64(rs, r, reserved, IsUnsigned(true), isConst, c);
+    popAndAllocateForDivAndRemI64(&r, &rs, &reserved, IsRemainder(false));
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(true),
+                        ZeroOnOverflow(false), isConst, c, QuotientI64);
     maybeFree(reserved);
     freeI64(rs);
     pushI64(r);
   }
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
-#  endif
 }
 
 void BaseCompiler::emitRemainderI64() {
-#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwo(&c, &power, 1)) {
@@ -2456,19 +2431,16 @@ void BaseCompiler::emitRemainderI64() {
   } else {
     bool isConst = peekConst(&c);
     RegI64 r, rs, reserved;
-    pop2xI64ForDivI64(&r, &rs, &reserved);
-    remainderI64(rs, r, reserved, IsUnsigned(false), isConst, c);
+    popAndAllocateForDivAndRemI64(&r, &rs, &reserved, IsRemainder(true));
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(false),
+                        ZeroOnOverflow(true), isConst, c, RemainderI64);
     maybeFree(reserved);
     freeI64(rs);
     pushI64(r);
   }
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
-#  endif
 }
 
 void BaseCompiler::emitRemainderU64() {
-#  ifdef JS_64BIT
   int64_t c;
   uint_fast8_t power;
   if (popConstPositivePowerOfTwo(&c, &power, 1)) {
@@ -2478,15 +2450,13 @@ void BaseCompiler::emitRemainderU64() {
   } else {
     bool isConst = peekConst(&c);
     RegI64 r, rs, reserved;
-    pop2xI64ForDivI64(&r, &rs, &reserved);
-    remainderI64(rs, r, reserved, IsUnsigned(true), isConst, c);
+    popAndAllocateForDivAndRemI64(&r, &rs, &reserved, IsRemainder(true));
+    quotientOrRemainder(rs, r, reserved, IsUnsigned(true), ZeroOnOverflow(true),
+                        isConst, c, RemainderI64);
     maybeFree(reserved);
     freeI64(rs);
     pushI64(r);
   }
-#  else
-  MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
-#  endif
 }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
 
@@ -4454,12 +4424,12 @@ bool BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
 
   Label done;
 
-  checkDivideByZeroI64(rhs);
+  checkDivideByZero(rhs);
 
   if (callee == SymbolicAddress::DivI64) {
-    checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
+    checkDivideSignedOverflow(rhs, srcDest, &done, ZeroOnOverflow(false));
   } else if (callee == SymbolicAddress::ModI64) {
-    checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
+    checkDivideSignedOverflow(rhs, srcDest, &done, ZeroOnOverflow(true));
   }
 
   masm.setupWasmABICall();
@@ -7934,7 +7904,7 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I32Sub):
         CHECK_NEXT(dispatchBinary2(SubI32, SubImmI32, ValType::I32));
       case uint16_t(Op::I32Mul):
-        CHECK_NEXT(dispatchBinary0(emitMultiplyI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary1(MulI32, ValType::I32));
       case uint16_t(Op::I32DivS):
         CHECK_NEXT(dispatchBinary0(emitQuotientI32, ValType::I32));
       case uint16_t(Op::I32DivU):
