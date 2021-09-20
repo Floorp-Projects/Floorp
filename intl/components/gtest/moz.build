@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     "TestDateTimeFormat.cpp",
     "TestListFormat.cpp",
     "TestLocaleCanonicalizer.cpp",
+    "TestMeasureUnit.cpp",
     "TestNumberFormat.cpp",
     "TestPluralRules.cpp",
     "TestRelativeTimeFormat.cpp",
