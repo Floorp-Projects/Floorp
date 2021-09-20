@@ -18,7 +18,6 @@
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-@media (-moz-proton) {
 #identity-popup[type="arrow"][side="top"],
 #identity-popup[type="arrow"][side="bottom"],
 #notification-popup[type="arrow"][side="top"],
@@ -46,4 +45,3 @@
 #protections-popup[type="arrow"][side="right"] {
   margin-block: calc(-16px + 2 * var(--urlbar-container-padding));
 }
-} /** END Proton **/
