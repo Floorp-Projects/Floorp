@@ -254,7 +254,9 @@ class MachBrowsertime(MachCommandBase):
                 finally:
                     os.chdir(cwd)
 
-    def setup(self, command_context, should_clobber=False, new_upstream_url=""):
+    def setup_browsertime(
+        self, command_context, should_clobber=False, new_upstream_url=""
+    ):
         r"""Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
 
         sys.path.append(
@@ -656,9 +658,11 @@ class MachBrowsertime(MachCommandBase):
         time.sleep(5)
 
         if update_upstream_url:
-            return self.setup(command_context, new_upstream_url=update_upstream_url)
+            return self.setup_browsertime(
+                command_context, new_upstream_url=update_upstream_url
+            )
         elif setup:
-            return self.setup(command_context, should_clobber=clobber)
+            return self.setup_browsertime(command_context, should_clobber=clobber)
         else:
             if not self._verify_node_install(command_context):
                 return 1
