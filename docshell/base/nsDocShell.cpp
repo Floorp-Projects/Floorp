@@ -1161,6 +1161,7 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
     mFiredUnloadEvent = false;
     RefPtr<Document> doc = contentViewer->GetDocument();
     if (doc) {
+      doc->NotifyActivityChanged();
       RefPtr<nsGlobalWindowInner> inner =
           mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindowInternal()
                         : nullptr;
