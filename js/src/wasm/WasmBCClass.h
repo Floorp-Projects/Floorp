@@ -1109,7 +1109,7 @@ struct BaseCompiler final {
   // operation being targeted.
 
   RegI32 needRotate64Temp();
-  void pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1, RegI32* reserved);
+  void pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved);
   void pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
                          RegI64* reserved);
   void pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved);
@@ -1357,7 +1357,6 @@ struct BaseCompiler final {
   [[nodiscard]] inline bool emitInstanceCallOp(
       const SymbolicAddressSignature& fn, R reader);
 
-  void emitMultiplyI32();
   void emitMultiplyI64();
   void emitQuotientI32();
   void emitQuotientU32();
