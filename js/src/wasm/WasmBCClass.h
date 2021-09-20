@@ -974,15 +974,15 @@ struct BaseCompiler final {
   [[nodiscard]] bool addInterruptCheck();
 
   // Check that the value is not zero, trap if it is.
-  void checkDivideByZeroI32(RegI32 rhs);
-  void checkDivideByZeroI64(RegI64 r);
+  void checkDivideByZero(RegI32 rhs);
+  void checkDivideByZero(RegI64 r);
 
   // Check that a signed division will not overflow, trap or flush-to-zero if it
   // will according to `zeroOnOverflow`.
-  void checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest, Label* done,
-                                    bool zeroOnOverflow);
-  void checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest, Label* done,
-                                    bool zeroOnOverflow);
+  void checkDivideSignedOverflow(RegI32 rhs, RegI32 srcDest, Label* done,
+                                 bool zeroOnOverflow);
+  void checkDivideSignedOverflow(RegI64 rhs, RegI64 srcDest, Label* done,
+                                 bool zeroOnOverflow);
 
   // Emit a jump table to be used by tableSwitch()
   void jumpTable(const LabelVector& labels, Label* theTable);
@@ -1019,12 +1019,12 @@ struct BaseCompiler final {
   //
   // Code generators for actual operations.
 
-#ifndef RABALDR_INT_DIV_I64_CALLOUT
-  void quotientI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved,
-                   IsUnsigned isUnsigned, bool isConst, int64_t c);
-  void remainderI64(RegI64 rhs, RegI64 srcDest, RegI64 reserved,
-                    IsUnsigned isUnsigned, bool isConst, int64_t c);
-#endif
+  template <typename RegType, typename IntType>
+  void quotientOrRemainder(RegType rs, RegType rsd, RegType reserved,
+                           IsUnsigned isUnsigned, ZeroOnOverflow zeroOnOverflow,
+                           bool isConst, IntType c,
+                           void (*operate)(MacroAssembler&, RegType, RegType,
+                                           RegType, IsUnsigned));
 
   [[nodiscard]] bool truncateF32ToI32(RegF32 src, RegI32 dest,
                                       TruncFlags flags);
@@ -1109,10 +1109,12 @@ struct BaseCompiler final {
   // operation being targeted.
 
   RegI32 needRotate64Temp();
-  void pop2xI32ForMulDivI32(RegI32* r0, RegI32* r1, RegI32* reserved);
-  void pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
-                         RegI64* reserved);
-  void pop2xI64ForDivI64(RegI64* r0, RegI64* r1, RegI64* reserved);
+  void popAndAllocateForDivAndRemI32(RegI32* r0, RegI32* r1, RegI32* reserved);
+  void popAndAllocateForMulI64(RegI64* r0, RegI64* r1, RegI32* temp);
+#ifndef RABALDR_INT_DIV_I64_CALLOUT
+  void popAndAllocateForDivAndRemI64(RegI64* r0, RegI64* r1, RegI64* reserved,
+                                     IsRemainder isRemainder);
+#endif
   RegI32 popI32RhsForShift();
   RegI32 popI32RhsForShiftI64();
   RegI64 popI64RhsForShift();
@@ -1357,7 +1359,6 @@ struct BaseCompiler final {
   [[nodiscard]] inline bool emitInstanceCallOp(
       const SymbolicAddressSignature& fn, R reader);
 
-  void emitMultiplyI32();
   void emitMultiplyI64();
   void emitQuotientI32();
   void emitQuotientU32();

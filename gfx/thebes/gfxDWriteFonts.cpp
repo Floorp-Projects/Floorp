@@ -773,6 +773,39 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
   return scaledFont.forget();
 }
 
+already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFontNoGDI(
+    mozilla::gfx::DrawTarget* aTarget) {
+  if (!GetForceGDIClassic()) {
+    return GetScaledFont(aTarget);
+  }
+
+  if (mAzureScaledFontNoGDIUsedClearType != UsingClearType()) {
+    mAzureScaledFontNoGDI = nullptr;
+  }
+  if (!mAzureScaledFontNoGDI) {
+    gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+    bool useEmbeddedBitmap =
+        gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT &&
+        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
+
+    const gfxFontStyle* fontStyle = GetStyle();
+    mAzureScaledFontNoGDI = Factory::CreateScaledFontForDWriteFont(
+        mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
+        useEmbeddedBitmap, false);
+    if (!mAzureScaledFontNoGDI) {
+      return nullptr;
+    }
+    float angle = AngleForSyntheticOblique();
+    if (angle != 0.0f) {
+      mAzureScaledFontNoGDI->SetSyntheticObliqueAngle(angle);
+    }
+    mAzureScaledFontNoGDIUsedClearType = UsingClearType();
+  }
+
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFontNoGDI);
+  return scaledFont.forget();
+}
+
 bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {
   // show_glyphs is implemented on the font and so is used for all Cairo
   // surface types; however, it may pixel-snap depending on the dwrite
