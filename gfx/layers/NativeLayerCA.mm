@@ -755,6 +755,17 @@ gfx::IntRect NativeLayerCA::CurrentSurfaceDisplayRect() {
   return mDisplayRect;
 }
 
+NativeLayerCA::Representation::Representation()
+    : mMutatedPosition(true),
+      mMutatedTransform(true),
+      mMutatedDisplayRect(true),
+      mMutatedClipRect(true),
+      mMutatedBackingScale(true),
+      mMutatedSize(true),
+      mMutatedSurfaceIsFlipped(true),
+      mMutatedFrontSurface(true),
+      mMutatedSamplingFilter(true) {}
+
 NativeLayerCA::Representation::~Representation() {
   [mContentCALayer release];
   [mOpaquenessTintLayer release];
