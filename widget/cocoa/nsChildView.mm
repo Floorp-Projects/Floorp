@@ -855,6 +855,12 @@ void nsChildView::UnsuspendAsyncCATransactions() {
   }
 }
 
+void nsChildView::UpdateFullscreen(bool aFullscreen) {
+  if (mNativeLayerRoot) {
+    mNativeLayerRoot->SetWindowIsFullscreen(aFullscreen);
+  }
+}
+
 nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                int32_t aNativeKeyCode, uint32_t aModifierFlags,
                                                const nsAString& aCharacters,

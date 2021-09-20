@@ -118,6 +118,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
   already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
       bool aIsOpaque) override;
 
+  void SetWindowIsFullscreen(bool aFullscreen);
+
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
   ~NativeLayerRootCA() override;
@@ -153,6 +155,10 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // indicates that CommitToScreen() needs to be called at the next available
   // opportunity.
   bool mCommitPending = false;
+
+  // Updated by the layer's view's window to match the fullscreen state
+  // of that window.
+  bool mWindowIsFullscreen = false;
 };
 
 class RenderSourceNLRS;

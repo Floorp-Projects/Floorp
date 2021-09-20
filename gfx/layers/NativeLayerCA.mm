@@ -378,6 +378,14 @@ void NativeLayerRootCA::DumpLayerTreeToFile(const char* aPath) {
   fileOutput.close();
 }
 
+void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
+  if (mWindowIsFullscreen != aFullscreen) {
+    mWindowIsFullscreen = aFullscreen;
+    PrepareForCommit();
+    CommitToScreen();
+  }
+}
+
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
                                                            RefPtr<GLContext>&& aGL,
                                                            CALayer* aRootCALayer)
