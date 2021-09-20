@@ -1952,7 +1952,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm6-darwin-firefox-buzzfeed.manifest
+   * **playback pageset manifest**: mitm6-linux-firefox-buzzfeed.manifest
    * **playback version**: 6.0.2
    * **secondary url**: `<https://www.buzzfeed.com/quizzes>`__
    * **test url**: `<https://www.buzzfeed.com/>`__
