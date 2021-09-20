@@ -1270,13 +1270,16 @@ class Element : public FragmentOrElement {
                                             ErrorResult& aError);
   bool CanAttachShadowDOM() const;
 
+  enum class DelegatesFocus : bool { No, Yes };
+
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(
-      ShadowRootMode aMode, bool aDelegatesFocus = false,
+      ShadowRootMode aMode, DelegatesFocus = DelegatesFocus::No,
       SlotAssignmentMode aSlotAssignmentMode = SlotAssignmentMode::Named);
 
   // Attach UA Shadow Root if it is not attached.
   enum class NotifyUAWidgetSetup : bool { No, Yes };
-  void AttachAndSetUAShadowRoot(NotifyUAWidgetSetup = NotifyUAWidgetSetup::Yes);
+  void AttachAndSetUAShadowRoot(NotifyUAWidgetSetup = NotifyUAWidgetSetup::Yes,
+                                DelegatesFocus = DelegatesFocus::No);
 
   // Dispatch an event to UAWidgetsChild, triggering construction
   // or onchange callback on the existing widget.
