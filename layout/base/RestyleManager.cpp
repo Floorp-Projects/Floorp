@@ -774,8 +774,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         bool hasProperty;
         nsPoint normalPosition = cont->GetNormalPosition(&hasProperty);
         if (!hasProperty) {
-          cont->AddProperty(nsIFrame::NormalPositionProperty(),
-                            new nsPoint(normalPosition));
+          cont->AddProperty(nsIFrame::NormalPositionProperty(), normalPosition);
         }
         cont->SetPosition(normalPosition +
                           nsPoint(newOffsets.left, newOffsets.top));

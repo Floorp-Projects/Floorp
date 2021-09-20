@@ -875,7 +875,7 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
                                            const nsMargin& aComputedOffsets,
                                            nsPoint* aPosition) {
   if (!aFrame->IsRelativelyPositioned()) {
-    NS_ASSERTION(!aFrame->GetProperty(nsIFrame::NormalPositionProperty()),
+    NS_ASSERTION(!aFrame->HasProperty(nsIFrame::NormalPositionProperty()),
                  "We assume that changing the 'position' property causes "
                  "frame reconstruction.  If that ever changes, this code "
                  "should call "
@@ -884,14 +884,7 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
   }
 
   // Store the normal position
-  nsPoint* normalPosition =
-      aFrame->GetProperty(nsIFrame::NormalPositionProperty());
-  if (normalPosition) {
-    *normalPosition = *aPosition;
-  } else {
-    aFrame->AddProperty(nsIFrame::NormalPositionProperty(),
-                        new nsPoint(*aPosition));
-  }
+  aFrame->SetProperty(nsIFrame::NormalPositionProperty(), *aPosition);
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   if (StylePositionProperty::Relative == display->mPosition) {
