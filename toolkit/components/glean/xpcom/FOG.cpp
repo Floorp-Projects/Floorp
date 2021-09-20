@@ -47,6 +47,13 @@ already_AddRefed<FOG> FOG::GetSingleton() {
 
   RunOnShutdown(
       [&] {
+        nsresult rv;
+        nsCOMPtr<nsIUserIdleService> idleService =
+            do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(idleService);
+          Unused << idleService->RemoveIdleObserver(gFOG, kIdleSecs);
+        }
         gFOG->Shutdown();
         gFOG = nullptr;
       },
