@@ -49,6 +49,8 @@ using TrackListValue =
 using TrackRepeat = StyleGenericTrackRepeat<LengthPercentage, StyleInteger>;
 using NameList = StyleOwnedSlice<StyleCustomIdent>;
 using SizingConstraint = nsGridContainerFrame::SizingConstraint;
+using GridItemCachedBAxisMeasurement =
+    nsGridContainerFrame::CachedBAxisMeasurement;
 
 static const int32_t kMaxLine = StyleMAX_GRID_LINE;
 static const int32_t kMinLine = StyleMIN_GRID_LINE;
@@ -5020,6 +5022,19 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
       nsIFrame::ReflowChildFlags::NoMoveFrame |
       nsIFrame::ReflowChildFlags::NoSizeView |
       nsIFrame::ReflowChildFlags::NoDeleteNextInFlowChild;
+
+  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
+    bool found;
+    GridItemCachedBAxisMeasurement cachedMeasurement =
+        aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
+    if (found && cachedMeasurement.IsValidFor(aChild, aCBSize)) {
+      childSize.BSize(wm) = cachedMeasurement.BSize();
+      nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
+                                          LogicalPoint(wm), nsSize(), flags);
+      return cachedMeasurement.BSize();
+    }
+  }
+
   parent->ReflowChild(aChild, pc, childSize, childRI, wm, LogicalPoint(wm),
                       nsSize(), flags, childStatus);
   nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
@@ -5027,6 +5042,26 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
 #ifdef DEBUG
   parent->RemoveProperty(nsContainerFrame::DebugReflowingWithInfiniteISize());
 #endif
+
+  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
+    bool found;
+    GridItemCachedBAxisMeasurement cachedMeasurement =
+        aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
+    if (!found &&
+        GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild, aCBSize)) {
+      GridItemCachedBAxisMeasurement cachedMeasurement(aChild, aCBSize,
+                                                       childSize.BSize(wm));
+      aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
+                          cachedMeasurement);
+    } else if (found) {
+      if (GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild,
+                                                              aCBSize)) {
+        cachedMeasurement.Update(aChild, aCBSize, childSize.BSize(wm));
+      } else {
+        aChild->RemoveProperty(GridItemCachedBAxisMeasurement::Prop());
+      }
+    }
+  }
   return childSize.BSize(wm);
 }
 
@@ -8410,8 +8445,8 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
       if (!child->IsPlaceholderFrame()) {
         info = &aState.mGridItems[aState.mIter.ItemIndex()];
       }
-      ReflowInFlowChild(*aState.mIter, info, aContainerSize, Nothing(), nullptr,
-                        aState, aContentArea, aDesiredSize, aStatus);
+      ReflowInFlowChild(child, info, aContainerSize, Nothing(), nullptr, aState,
+                        aContentArea, aDesiredSize, aStatus);
       MOZ_ASSERT(aStatus.IsComplete(),
                  "child should be complete in unconstrained reflow");
     }
