@@ -1519,17 +1519,12 @@ void BaseCompiler::pop2xI32ForDivI32(RegI32* r0, RegI32* r1, RegI32* reserved) {
 #endif
 }
 
-void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp,
-                                     RegI64* reserved) {
+void BaseCompiler::pop2xI64ForMulI64(RegI64* r0, RegI64* r1, RegI32* temp) {
 #if defined(JS_CODEGEN_X64)
-  // r0 must be rax, and rdx will be clobbered.
-  need2xI64(specific_.rax, specific_.rdx);
-  *r1 = popI64();
-  *r0 = popI64ToSpecific(specific_.rax);
-  *reserved = specific_.rdx;
+  pop2xI64(r0, r1);
 #elif defined(JS_CODEGEN_X86)
-  // As for x64, though edx is part of r0.
-  need2xI32(specific_.eax, specific_.edx);
+  // lhsDest must be edx:eax and rhs must not be that.
+  needI64(specific_.edx_eax);
   *r1 = popI64();
   *r0 = popI64ToSpecific(specific_.edx_eax);
   *temp = needI32();
@@ -2236,11 +2231,10 @@ static void ExtendI32_16(MacroAssembler& masm, RegI32 rsd) {
 }
 
 void BaseCompiler::emitMultiplyI64() {
-  RegI64 r, rs, reserved;
+  RegI64 r, rs;
   RegI32 temp;
-  pop2xI64ForMulI64(&r, &rs, &temp, &reserved);
+  pop2xI64ForMulI64(&r, &rs, &temp);
   masm.mul64(rs, r, temp);
-  maybeFree(reserved);
   maybeFree(temp);
   freeI64(rs);
   pushI64(r);
