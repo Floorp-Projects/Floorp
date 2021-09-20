@@ -49,6 +49,8 @@ class nsContentSecurityUtils {
   // disabled. We can't/won't enforce strong security for people with those
   // hacks. The function will cache its result.
   static void DetectJsHacks();
+  // Helper function for detecting custom agent styles
+  static void DetectCssHacks();
 
   // Helper function to query the HTTP Channel of a potential
   // multi-part channel. Mostly used for querying response headers
