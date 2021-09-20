@@ -40,8 +40,7 @@ const FeatureManifest = {
         // IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.jsm.
         type: "string",
         description:
-          "The Firefox Suggest scenario in which the user is enrolled",
-        enum: ["history", "offline", "online"],
+          "The Firefox Suggest scenario in which the user is enrolled, one of: 'history', 'offline', 'online'",
       },
       quickSuggestShouldShowOnboardingDialog: {
         type: "boolean",

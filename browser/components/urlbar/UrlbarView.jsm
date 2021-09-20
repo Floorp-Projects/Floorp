@@ -1727,6 +1727,7 @@ class UrlbarView {
     // Labels aren't shown for top sites, i.e., when the search string is empty.
     if (
       UrlbarPrefs.get("groupLabels.enabled") &&
+      Services.locale.appLocaleAsBCP47.substring(0, 2) == "en" &&
       this._queryContext?.searchString &&
       !row.result.heuristic
     ) {
