@@ -10,6 +10,7 @@ EXPORTS.mozilla.mscom += [
     "ApartmentRegion.h",
     "AsyncInvoker.h",
     "COMPtrHolder.h",
+    "COMWrappers.h",
     "EnsureMTA.h",
     "Objref.h",
     "PassthruProxy.h",
@@ -30,6 +31,7 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     "AgileReference.cpp",
+    "COMWrappers.cpp",
     "EnsureMTA.cpp",
     "Objref.cpp",
     "PassthruProxy.cpp",

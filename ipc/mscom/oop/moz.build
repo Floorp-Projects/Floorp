@@ -8,6 +8,7 @@ Library("mscom_oop")
 
 SOURCES += [
     "../ActivationContext.cpp",
+    "../COMWrappers.cpp",
     "../Objref.cpp",
     "../Registration.cpp",
     "../StructStream.cpp",
