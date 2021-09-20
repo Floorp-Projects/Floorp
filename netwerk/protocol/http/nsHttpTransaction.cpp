@@ -1144,6 +1144,14 @@ nsHttpTransaction::PrepareFastFallbackConnInfo(bool aEchConfigUsed) {
   Unused << mHTTPSSVCRecord->GetServiceModeRecord(
       mCaps & NS_HTTP_DISALLOW_SPDY, true, getter_AddRefs(fastFallbackRecord));
 
+  if (fastFallbackRecord && aEchConfigUsed) {
+    nsAutoCString echConfig;
+    Unused << fastFallbackRecord->GetEchConfig(echConfig);
+    if (echConfig.IsEmpty()) {
+      fastFallbackRecord = nullptr;
+    }
+  }
+
   if (!fastFallbackRecord) {
     if (aEchConfigUsed) {
       LOG(
