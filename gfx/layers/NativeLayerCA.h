@@ -291,6 +291,7 @@ class NativeLayerCA : public NativeLayer {
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
+    Representation();
     ~Representation();
 
     CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
@@ -324,15 +325,15 @@ class NativeLayerCA : public NativeLayer {
     CALayer* mContentCALayer = nullptr;       // strong
     CALayer* mOpaquenessTintLayer = nullptr;  // strong
 
-    bool mMutatedPosition = true;
-    bool mMutatedTransform = true;
-    bool mMutatedDisplayRect = true;
-    bool mMutatedClipRect = true;
-    bool mMutatedBackingScale = true;
-    bool mMutatedSize = true;
-    bool mMutatedSurfaceIsFlipped = true;
-    bool mMutatedFrontSurface = true;
-    bool mMutatedSamplingFilter = true;
+    bool mMutatedPosition : 1;
+    bool mMutatedTransform : 1;
+    bool mMutatedDisplayRect : 1;
+    bool mMutatedClipRect : 1;
+    bool mMutatedBackingScale : 1;
+    bool mMutatedSize : 1;
+    bool mMutatedSurfaceIsFlipped : 1;
+    bool mMutatedFrontSurface : 1;
+    bool mMutatedSamplingFilter : 1;
   };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
