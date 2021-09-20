@@ -926,6 +926,4 @@ pub static MEDIA_FEATURES: [MediaFeatureDescription; 60] = [
     lnf_int_feature!(atom!("-moz-gtk-csd-close-button"), GTKCSDCloseButton),
     lnf_int_feature!(atom!("-moz-gtk-csd-reversed-placement"), GTKCSDReversedPlacement),
     lnf_int_feature!(atom!("-moz-system-dark-theme"), SystemUsesDarkTheme),
-    bool_pref_feature!(atom!("-moz-proton"), "browser.proton.enabled"),
-    bool_pref_feature!(atom!("-moz-proton-places-tooltip"), "browser.proton.places-tooltip.enabled"),
 ];

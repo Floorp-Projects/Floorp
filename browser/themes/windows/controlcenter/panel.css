@@ -4,7 +4,6 @@
 
 %include ../../shared/controlcenter/panel.inc.css
 
-@media (-moz-proton) {
 #identity-popup[type="arrow"][side="top"],
 #identity-popup[type="arrow"][side="bottom"],
 #notification-popup[type="arrow"][side="top"],
@@ -38,7 +37,6 @@
 #protections-popup[type="arrow"][side="right"] {
   margin-block: calc(-20px + 2 * var(--urlbar-container-padding));
 }
-} /** END Proton **/
 
 .protections-popup-tp-switch:-moz-focusring {
   outline: 1px dotted;
