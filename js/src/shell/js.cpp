@@ -5657,6 +5657,132 @@ static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "instantiateModuleStencil", 1)) {
+    return false;
+  }
+
+  /* Prepare the input byte array. */
+  if (!args[0].isObject() || !args[0].toObject().is<js::StencilObject>()) {
+    JS_ReportErrorASCII(cx,
+                        "instantiateModuleStencil: Stencil object expected");
+    return false;
+  }
+  Rooted<js::StencilObject*> stencilObj(
+      cx, &args[0].toObject().as<js::StencilObject>());
+
+  if (!stencilObj->stencil()->isModule()) {
+    JS_ReportErrorASCII(cx,
+                        "instantiateModuleStencil: Module stencil expected");
+    return false;
+  }
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
+  /* Prepare the CompilationStencil for decoding. */
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForModule(cx)) {
+    return false;
+  }
+
+  /* Instantiate the stencil. */
+  Rooted<frontend::CompilationGCOutput> output(cx);
+  if (!frontend::CompilationStencil::instantiateStencils(
+          cx, input.get(), *stencilObj->stencil(), output.get())) {
+    return false;
+  }
+
+  Rooted<ModuleObject*> modObject(cx, output.get().module);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, modObject));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
+  return true;
+}
+
+static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "InstantiateModuleStencilXDR", 1)) {
+    return false;
+  }
+
+  /* Prepare the input byte array. */
+  if (!args[0].isObject() || !args[0].toObject().is<StencilXDRBufferObject>()) {
+    JS_ReportErrorASCII(
+        cx, "InstantiateModuleStencilXDR: stencil XDR object expected");
+    return false;
+  }
+  Rooted<StencilXDRBufferObject*> xdrObj(
+      cx, &args[0].toObject().as<StencilXDRBufferObject>());
+  MOZ_ASSERT(xdrObj->hasBuffer());
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
+  /* Prepare the CompilationStencil for decoding. */
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForModule(cx)) {
+    return false;
+  }
+  frontend::CompilationStencil stencil(nullptr);
+
+  /* Deserialize the stencil from XDR. */
+  JS::TranscodeRange xdrRange(xdrObj->buffer(), xdrObj->bufferLength());
+  bool succeeded = false;
+  if (!stencil.deserializeStencils(cx, input.get(), xdrRange, &succeeded)) {
+    return false;
+  }
+  if (!succeeded) {
+    JS_ReportErrorASCII(cx, "Decoding failure");
+    return false;
+  }
+
+  if (!stencil.isModule()) {
+    JS_ReportErrorASCII(cx,
+                        "InstantiateModuleStencilXDR: Module stencil expected");
+    return false;
+  }
+
+  /* Instantiate the stencil. */
+  Rooted<frontend::CompilationGCOutput> output(cx);
+  if (!frontend::CompilationStencil::instantiateStencils(
+          cx, input.get(), stencil, output.get())) {
+    return false;
+  }
+
+  Rooted<ModuleObject*> modObject(cx, output.get().module);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, modObject));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
+  return true;
+}
+
 static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "registerModule", 2)) {
@@ -9585,6 +9711,15 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "decodeModule(code)",
 "   Takes a XDR bytecode representation of an uninstantiated\n"
 "   ModuleObject and returns a ModuleObject wrapper."),
+
+    JS_FN_HELP("instantiateModuleStencil", InstantiateModuleStencil, 1, 0,
+"instantiateModuleStencil(stencil, [options])",
+"  Instantiates the given stencil as module, and return the module object."),
+
+    JS_FN_HELP("instantiateModuleStencilXDR", InstantiateModuleStencilXDR, 1, 0,
+"instantiateModuleStencilXDR(stencil, [options])",
+"  Reads the given stencil XDR object, instantiates the stencil as module, and"
+"  return the module object."),
 
     JS_FN_HELP("registerModule", RegisterModule, 2, 0,
 "registerModule(specifier, module)",
