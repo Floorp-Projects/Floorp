@@ -45,8 +45,8 @@ struct DeleteEntry {
 class AccAttributes {
   friend struct IPC::ParamTraits<AccAttributes*>;
   using AttrValueType =
-      Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
-              CSSCoord, FontSize, Color, DeleteEntry>;
+      Variant<bool, float, double, int32_t, RefPtr<nsAtom>,
+              CopyableTArray<int32_t>, CSSCoord, FontSize, Color, DeleteEntry>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
@@ -62,35 +62,29 @@ class AccAttributes {
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::a11y::AccAttributes)
 
-  template <typename T,
-            typename std::enable_if<!std::is_convertible_v<T, nsString> &&
-                                        !std::is_convertible_v<T, nsAtom*>,
-                                    bool>::type = true>
-  void SetAttribute(nsAtom* aAttrName, T&& aAttrValue) {
-    mData.InsertOrUpdate(aAttrName, AsVariant(std::forward<T>(aAttrValue)));
-  }
-
-  void SetAttribute(nsAtom* aAttrName, const nsAString& aAttrValue) {
-    RefPtr<nsAtom> atomValue = NS_Atomize(aAttrValue);
-    mData.InsertOrUpdate(aAttrName, AsVariant(atomValue));
-  }
-
-  void SetAttribute(nsAtom* aAttrName, nsAtom* aAttrValue) {
-    mData.InsertOrUpdate(aAttrName, AsVariant(RefPtr<nsAtom>(aAttrValue)));
+  template <typename T>
+  void SetAttribute(nsAtom* aAttrName, const T& aAttrValue) {
+    if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
+      mData.InsertOrUpdate(aAttrName, AsVariant(RefPtr<nsAtom>(aAttrValue)));
+    } else if constexpr (std::is_base_of_v<nsAString, T> ||
+                         std::is_base_of_v<nsLiteralString, T>) {
+      RefPtr<nsAtom> atomValue = NS_Atomize(aAttrValue);
+      mData.InsertOrUpdate(aAttrName, AsVariant(atomValue));
+    } else {
+      mData.InsertOrUpdate(aAttrName, AsVariant(aAttrValue));
+    }
   }
 
   template <typename T>
-  Maybe<const T&> GetAttribute(nsAtom* aAttrName) {
+  Maybe<T> GetAttribute(nsAtom* aAttrName) {
     if (auto value = mData.Lookup(aAttrName)) {
       if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
         if (value->is<RefPtr<nsAtom>>()) {
-          nsAtom* const& val = value->as<RefPtr<nsAtom>>().get();
-          return SomeRef(val);
+          return Some(value->as<RefPtr<nsAtom>>().get());
         }
       } else {
         if (value->is<T>()) {
-          const T& val = value->as<T>();
-          return SomeRef(val);
+          return Some(value->as<T>());
         }
       }
     }
@@ -104,8 +98,6 @@ class AccAttributes {
 
   uint32_t Count() const { return mData.Count(); }
 
-  // Update one instance with the entries in another. The supplied AccAttributes
-  // will be emptied.
   void Update(AccAttributes* aOther);
 
   // An entry class for our iterator.
@@ -117,16 +109,14 @@ class AccAttributes {
     nsAtom* Name() { return mName; }
 
     template <typename T>
-    Maybe<const T&> Value() {
+    Maybe<T> Value() {
       if constexpr (std::is_base_of_v<nsAtom, std::remove_pointer_t<T>>) {
         if (mValue->is<RefPtr<nsAtom>>()) {
-          nsAtom* const& val = mValue->as<RefPtr<nsAtom>>().get();
-          return SomeRef(val);
+          return Some(mValue->as<RefPtr<nsAtom>>().get());
         }
       } else {
         if (mValue->is<T>()) {
-          const T& val = mValue->as<T>();
-          return SomeRef(val);
+          return Some(mValue->as<T>());
         }
       }
       return Nothing();

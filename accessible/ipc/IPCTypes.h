@@ -40,7 +40,8 @@ struct ParamTraits<mozilla::a11y::AccGenericType>
 template <>
 struct ParamTraits<mozilla::a11y::CacheUpdateType>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::a11y::CacheUpdateType, mozilla::a11y::CacheUpdateType::Initial,
+          mozilla::a11y::CacheUpdateType,
+          mozilla::a11y::CacheUpdateType::Initial,
           mozilla::a11y::CacheUpdateType::Update> {};
 
 template <>
@@ -132,7 +133,7 @@ struct ParamTraits<mozilla::a11y::AccAttributes*> {
       if (!ReadParam(aMsg, aIter, &val)) {
         return false;
       }
-      (*aResult)->mData.InsertOrUpdate(key, std::move(val));
+      (*aResult)->mData.InsertOrUpdate(key, val);
     }
     return true;
   }
