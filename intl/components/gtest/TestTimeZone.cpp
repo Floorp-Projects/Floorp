@@ -8,6 +8,8 @@
 #include "mozilla/Span.h"
 #include "TestBuffer.h"
 
+#include <string>
+
 namespace mozilla::intl {
 
 // These tests are dependent on the machine that this test is being run on.
@@ -41,6 +43,34 @@ TEST(IntlTimeZone, GetCanonicalTimeZoneID)
   ASSERT_TRUE(TimeZone::GetCanonicalTimeZoneID(
                   MakeStringSpan(u"Not a time zone"), buffer)
                   .isErr());
+}
+
+TEST(IntlTimeZone, GetAvailableTimeZones)
+{
+  constexpr auto EuropeBerlin = MakeStringSpan("Europe/Berlin");
+  constexpr auto EuropeBusingen = MakeStringSpan("Europe/Busingen");
+
+  auto timeZones = TimeZone::GetAvailableTimeZones("DE").unwrap();
+
+  bool hasEuropeBerlin = false;
+  bool hasEuropeBusingen = false;
+
+  for (auto timeZone : timeZones) {
+    auto span = timeZone.unwrap();
+    if (span == EuropeBerlin) {
+      ASSERT_FALSE(hasEuropeBerlin);
+      hasEuropeBerlin = true;
+    } else if (span == EuropeBusingen) {
+      ASSERT_FALSE(hasEuropeBusingen);
+      hasEuropeBusingen = true;
+    } else {
+      std::string str(span.data(), span.size());
+      ADD_FAILURE() << "Unexpected time zone: " << str;
+    }
+  }
+
+  ASSERT_TRUE(hasEuropeBerlin);
+  ASSERT_TRUE(hasEuropeBusingen);
 }
 
 }  // namespace mozilla::intl
