@@ -12,7 +12,6 @@ import subprocess
 
 from mach.decorators import (
     CommandArgument,
-    CommandProvider,
     Command,
     SettingsProvider,
     SubCommand,
@@ -20,7 +19,6 @@ from mach.decorators import (
 
 from mozbuild.base import (
     BuildEnvironmentNotFoundException,
-    MachCommandBase,
     MachCommandConditions as conditions,
 )
 
@@ -160,548 +158,536 @@ def create_parser_addtest():
     return parser
 
 
-@CommandProvider
-class AddTest(MachCommandBase):
-    @Command(
-        "addtest",
-        category="testing",
-        description="Generate tests based on templates",
-        parser=create_parser_addtest,
-    )
-    def addtest(
-        self,
-        command_context,
-        suite=None,
-        test=None,
-        doc=None,
-        overwrite=False,
-        editor=MISSING_ARG,
-        **kwargs,
-    ):
-        import addtest
-        import io
-        from moztest.resolve import TEST_SUITES
+@Command(
+    "addtest",
+    category="testing",
+    description="Generate tests based on templates",
+    parser=create_parser_addtest,
+)
+def addtest(
+    command_context,
+    suite=None,
+    test=None,
+    doc=None,
+    overwrite=False,
+    editor=MISSING_ARG,
+    **kwargs,
+):
+    import addtest
+    import io
+    from moztest.resolve import TEST_SUITES
 
-        if not suite and not test:
-            return create_parser_addtest().parse_args(["--help"])
+    if not suite and not test:
+        return create_parser_addtest().parse_args(["--help"])
 
-        if suite in SUITE_SYNONYMS:
-            suite = SUITE_SYNONYMS[suite]
+    if suite in SUITE_SYNONYMS:
+        suite = SUITE_SYNONYMS[suite]
 
-        if test:
-            if not overwrite and os.path.isfile(os.path.abspath(test)):
-                print("Error: can't generate a test that already exists:", test)
+    if test:
+        if not overwrite and os.path.isfile(os.path.abspath(test)):
+            print("Error: can't generate a test that already exists:", test)
+            return 1
+
+        abs_test = os.path.abspath(test)
+        if doc is None:
+            doc = guess_doc(abs_test)
+        if suite is None:
+            guessed_suite, err = guess_suite(abs_test)
+            if err:
+                print(err)
                 return 1
+            suite = guessed_suite
 
-            abs_test = os.path.abspath(test)
-            if doc is None:
-                doc = self.guess_doc(abs_test)
-            if suite is None:
-                guessed_suite, err = self.guess_suite(abs_test)
-                if err:
-                    print(err)
-                    return 1
-                suite = guessed_suite
+    else:
+        test = None
+        if doc is None:
+            doc = "html"
 
+    if not suite:
+        print(
+            "We couldn't automatically determine a suite. "
+            "Please specify `--suite` with one of the following options:\n{}\n"
+            "If you'd like to add support to a new suite, please file a bug "
+            "blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1540285.".format(
+                ADD_TEST_SUPPORTED_SUITES
+            )
+        )
+        return 1
+
+    if doc not in ADD_TEST_SUPPORTED_DOCS:
+        print(
+            "Error: invalid `doc`. Either pass in a test with a valid extension"
+            "({}) or pass in the `doc` argument".format(ADD_TEST_SUPPORTED_DOCS)
+        )
+        return 1
+
+    creator_cls = addtest.creator_for_suite(suite)
+
+    if creator_cls is None:
+        print("Sorry, `addtest` doesn't currently know how to add {}".format(suite))
+        return 1
+
+    creator = creator_cls(command_context.topsrcdir, test, suite, doc, **kwargs)
+
+    creator.check_args()
+
+    paths = []
+    added_tests = False
+    for path, template in creator:
+        if not template:
+            continue
+        added_tests = True
+        if path:
+            paths.append(path)
+            print("Adding a test file at {} (suite `{}`)".format(path, suite))
+
+            try:
+                os.makedirs(os.path.dirname(path))
+            except OSError:
+                pass
+
+            with io.open(path, "w", newline="\n") as f:
+                f.write(template)
         else:
-            test = None
-            if doc is None:
-                doc = "html"
+            # write to stdout if you passed only suite and doc and not a file path
+            print(template)
 
-        if not suite:
-            print(
-                "We couldn't automatically determine a suite. "
-                "Please specify `--suite` with one of the following options:\n{}\n"
-                "If you'd like to add support to a new suite, please file a bug "
-                "blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1540285.".format(
-                    ADD_TEST_SUPPORTED_SUITES
-                )
+    if not added_tests:
+        return 1
+
+    if test:
+        creator.update_manifest()
+
+        # Small hack, should really do this better
+        if suite.startswith("wpt-"):
+            suite = "web-platform-tests"
+
+        mach_command = TEST_SUITES[suite]["mach_command"]
+        print(
+            "Please make sure to add the new test to your commit. "
+            "You can now run the test with:\n    ./mach {} {}".format(
+                mach_command, test
             )
-            return 1
-
-        if doc not in ADD_TEST_SUPPORTED_DOCS:
-            print(
-                "Error: invalid `doc`. Either pass in a test with a valid extension"
-                "({}) or pass in the `doc` argument".format(ADD_TEST_SUPPORTED_DOCS)
-            )
-            return 1
-
-        creator_cls = addtest.creator_for_suite(suite)
-
-        if creator_cls is None:
-            print("Sorry, `addtest` doesn't currently know how to add {}".format(suite))
-            return 1
-
-        creator = creator_cls(command_context.topsrcdir, test, suite, doc, **kwargs)
-
-        creator.check_args()
-
-        paths = []
-        added_tests = False
-        for path, template in creator:
-            if not template:
-                continue
-            added_tests = True
-            if path:
-                paths.append(path)
-                print("Adding a test file at {} (suite `{}`)".format(path, suite))
-
-                try:
-                    os.makedirs(os.path.dirname(path))
-                except OSError:
-                    pass
-
-                with io.open(path, "w", newline="\n") as f:
-                    f.write(template)
-            else:
-                # write to stdout if you passed only suite and doc and not a file path
-                print(template)
-
-        if not added_tests:
-            return 1
-
-        if test:
-            creator.update_manifest()
-
-            # Small hack, should really do this better
-            if suite.startswith("wpt-"):
-                suite = "web-platform-tests"
-
-            mach_command = TEST_SUITES[suite]["mach_command"]
-            print(
-                "Please make sure to add the new test to your commit. "
-                "You can now run the test with:\n    ./mach {} {}".format(
-                    mach_command, test
-                )
-            )
-
-        if editor is not MISSING_ARG:
-            if editor is not None:
-                editor = editor
-            elif "VISUAL" in os.environ:
-                editor = os.environ["VISUAL"]
-            elif "EDITOR" in os.environ:
-                editor = os.environ["EDITOR"]
-            else:
-                print("Unable to determine editor; please specify a binary")
-                editor = None
-
-            proc = None
-            if editor:
-                import subprocess
-
-                proc = subprocess.Popen("%s %s" % (editor, " ".join(paths)), shell=True)
-
-            if proc:
-                proc.wait()
-
-        return 0
-
-    def guess_doc(self, abs_test):
-        filename = os.path.basename(abs_test)
-        return os.path.splitext(filename)[1].strip(".")
-
-    def guess_suite(self, abs_test):
-        # If you pass a abs_test, try to detect the type based on the name
-        # and folder. This detection can be skipped if you pass the `type` arg.
-        err = None
-        guessed_suite = None
-        parent = os.path.dirname(abs_test)
-        filename = os.path.basename(abs_test)
-
-        has_browser_ini = os.path.isfile(os.path.join(parent, "browser.ini"))
-        has_chrome_ini = os.path.isfile(os.path.join(parent, "chrome.ini"))
-        has_plain_ini = os.path.isfile(os.path.join(parent, "mochitest.ini"))
-        has_xpcshell_ini = os.path.isfile(os.path.join(parent, "xpcshell.ini"))
-
-        in_wpt_folder = abs_test.startswith(
-            os.path.abspath(os.path.join("testing", "web-platform"))
         )
 
-        if in_wpt_folder:
-            guessed_suite = "web-platform-tests-testharness"
-            if "/css/" in abs_test:
-                guessed_suite = "web-platform-tests-reftest"
-        elif (
-            filename.startswith("test_")
-            and has_xpcshell_ini
-            and self.guess_doc(abs_test) == "js"
-        ):
-            guessed_suite = "xpcshell"
+    if editor is not MISSING_ARG:
+        if editor is not None:
+            editor = editor
+        elif "VISUAL" in os.environ:
+            editor = os.environ["VISUAL"]
+        elif "EDITOR" in os.environ:
+            editor = os.environ["EDITOR"]
         else:
-            if filename.startswith("browser_") and has_browser_ini:
-                guessed_suite = "mochitest-browser-chrome"
-            elif filename.startswith("test_"):
-                if has_chrome_ini and has_plain_ini:
-                    err = (
-                        "Error: directory contains both a chrome.ini and mochitest.ini. "
-                        "Please set --suite=mochitest-chrome or --suite=mochitest-plain."
-                    )
-                elif has_chrome_ini:
-                    guessed_suite = "mochitest-chrome"
-                elif has_plain_ini:
-                    guessed_suite = "mochitest-plain"
-        return guessed_suite, err
+            print("Unable to determine editor; please specify a binary")
+            editor = None
+
+        proc = None
+        if editor:
+            import subprocess
+
+            proc = subprocess.Popen("%s %s" % (editor, " ".join(paths)), shell=True)
+
+        if proc:
+            proc.wait()
+
+    return 0
 
 
-@CommandProvider
-class Test(MachCommandBase):
-    @Command(
-        "test",
-        category="testing",
-        description="Run tests (detects the kind of test and runs it).",
-        parser=get_test_parser,
+def guess_doc(abs_test):
+    filename = os.path.basename(abs_test)
+    return os.path.splitext(filename)[1].strip(".")
+
+
+def guess_suite(abs_test):
+    # If you pass a abs_test, try to detect the type based on the name
+    # and folder. This detection can be skipped if you pass the `type` arg.
+    err = None
+    guessed_suite = None
+    parent = os.path.dirname(abs_test)
+    filename = os.path.basename(abs_test)
+
+    has_browser_ini = os.path.isfile(os.path.join(parent, "browser.ini"))
+    has_chrome_ini = os.path.isfile(os.path.join(parent, "chrome.ini"))
+    has_plain_ini = os.path.isfile(os.path.join(parent, "mochitest.ini"))
+    has_xpcshell_ini = os.path.isfile(os.path.join(parent, "xpcshell.ini"))
+
+    in_wpt_folder = abs_test.startswith(
+        os.path.abspath(os.path.join("testing", "web-platform"))
     )
-    def test(self, command_context, what, extra_args, **log_args):
-        """Run tests from names or paths.
 
-        mach test accepts arguments specifying which tests to run. Each argument
-        can be:
-
-        * The path to a test file
-        * A directory containing tests
-        * A test suite name
-        * An alias to a test suite name (codes used on TreeHerder)
-
-        When paths or directories are given, they are first resolved to test
-        files known to the build system.
-
-        If resolved tests belong to more than one test type/flavor/harness,
-        the harness for each relevant type/flavor will be invoked. e.g. if
-        you specify a directory with xpcshell and browser chrome mochitests,
-        both harnesses will be invoked.
-
-        Warning: `mach test` does not automatically re-build.
-        Please remember to run `mach build` when necessary.
-
-        EXAMPLES
-
-        Run all test files in the devtools/client/shared/redux/middleware/xpcshell/
-        directory:
-
-        `./mach test devtools/client/shared/redux/middleware/xpcshell/`
-
-        The below command prints a short summary of results instead of
-        the default more verbose output.
-        Do not forget the - (minus sign) after --log-grouped!
-
-        `./mach test --log-grouped - devtools/client/shared/redux/middleware/xpcshell/`
-        """
-        from mozlog.commandline import setup_logging
-        from mozlog.handlers import StreamHandler
-        from moztest.resolve import get_suite_definition, TestResolver, TEST_SUITES
-
-        resolver = command_context._spawn(TestResolver)
-        run_suites, run_tests = resolver.resolve_metadata(what)
-
-        if not run_suites and not run_tests:
-            print(UNKNOWN_TEST)
-            return 1
-
-        if log_args.get("debugger", None):
-            import mozdebug
-
-            if not mozdebug.get_debugger_info(log_args.get("debugger")):
-                sys.exit(1)
-            extra_args_debugger_notation = "=".join(
-                ["--debugger", log_args.get("debugger")]
-            )
-            if extra_args:
-                extra_args.append(extra_args_debugger_notation)
-            else:
-                extra_args = [extra_args_debugger_notation]
-
-        # Create shared logger
-        format_args = {"level": command_context._mach_context.settings["test"]["level"]}
-        if not run_suites and len(run_tests) == 1:
-            format_args["verbose"] = True
-            format_args["compact"] = False
-
-        default_format = command_context._mach_context.settings["test"]["format"]
-        log = setup_logging(
-            "mach-test", log_args, {default_format: sys.stdout}, format_args
-        )
-        for handler in log.handlers:
-            if isinstance(handler, StreamHandler):
-                handler.formatter.inner.summary_on_shutdown = True
-
-        status = None
-        for suite_name in run_suites:
-            suite = TEST_SUITES[suite_name]
-            kwargs = suite["kwargs"]
-            kwargs["log"] = log
-            kwargs.setdefault("subsuite", None)
-
-            if "mach_command" in suite:
-                res = command_context._mach_context.commands.dispatch(
-                    suite["mach_command"],
-                    command_context._mach_context,
-                    argv=extra_args,
-                    **kwargs,
+    if in_wpt_folder:
+        guessed_suite = "web-platform-tests-testharness"
+        if "/css/" in abs_test:
+            guessed_suite = "web-platform-tests-reftest"
+    elif (
+        filename.startswith("test_")
+        and has_xpcshell_ini
+        and guess_doc(abs_test) == "js"
+    ):
+        guessed_suite = "xpcshell"
+    else:
+        if filename.startswith("browser_") and has_browser_ini:
+            guessed_suite = "mochitest-browser-chrome"
+        elif filename.startswith("test_"):
+            if has_chrome_ini and has_plain_ini:
+                err = (
+                    "Error: directory contains both a chrome.ini and mochitest.ini. "
+                    "Please set --suite=mochitest-chrome or --suite=mochitest-plain."
                 )
-                if res:
-                    status = res
+            elif has_chrome_ini:
+                guessed_suite = "mochitest-chrome"
+            elif has_plain_ini:
+                guessed_suite = "mochitest-plain"
+    return guessed_suite, err
 
-        buckets = {}
-        for test in run_tests:
-            key = (test["flavor"], test.get("subsuite", ""))
-            buckets.setdefault(key, []).append(test)
 
-        for (flavor, subsuite), tests in sorted(buckets.items()):
-            _, m = get_suite_definition(flavor, subsuite)
-            if "mach_command" not in m:
-                substr = "-{}".format(subsuite) if subsuite else ""
-                print(UNKNOWN_FLAVOR % (flavor, substr))
-                status = 1
-                continue
+@Command(
+    "test",
+    category="testing",
+    description="Run tests (detects the kind of test and runs it).",
+    parser=get_test_parser,
+)
+def test(command_context, what, extra_args, **log_args):
+    """Run tests from names or paths.
 
-            kwargs = dict(m["kwargs"])
-            kwargs["log"] = log
-            kwargs.setdefault("subsuite", None)
+    mach test accepts arguments specifying which tests to run. Each argument
+    can be:
 
+    * The path to a test file
+    * A directory containing tests
+    * A test suite name
+    * An alias to a test suite name (codes used on TreeHerder)
+
+    When paths or directories are given, they are first resolved to test
+    files known to the build system.
+
+    If resolved tests belong to more than one test type/flavor/harness,
+    the harness for each relevant type/flavor will be invoked. e.g. if
+    you specify a directory with xpcshell and browser chrome mochitests,
+    both harnesses will be invoked.
+
+    Warning: `mach test` does not automatically re-build.
+    Please remember to run `mach build` when necessary.
+
+    EXAMPLES
+
+    Run all test files in the devtools/client/shared/redux/middleware/xpcshell/
+    directory:
+
+    `./mach test devtools/client/shared/redux/middleware/xpcshell/`
+
+    The below command prints a short summary of results instead of
+    the default more verbose output.
+    Do not forget the - (minus sign) after --log-grouped!
+
+    `./mach test --log-grouped - devtools/client/shared/redux/middleware/xpcshell/`
+    """
+    from mozlog.commandline import setup_logging
+    from mozlog.handlers import StreamHandler
+    from moztest.resolve import get_suite_definition, TestResolver, TEST_SUITES
+
+    resolver = command_context._spawn(TestResolver)
+    run_suites, run_tests = resolver.resolve_metadata(what)
+
+    if not run_suites and not run_tests:
+        print(UNKNOWN_TEST)
+        return 1
+
+    if log_args.get("debugger", None):
+        import mozdebug
+
+        if not mozdebug.get_debugger_info(log_args.get("debugger")):
+            sys.exit(1)
+        extra_args_debugger_notation = "=".join(
+            ["--debugger", log_args.get("debugger")]
+        )
+        if extra_args:
+            extra_args.append(extra_args_debugger_notation)
+        else:
+            extra_args = [extra_args_debugger_notation]
+
+    # Create shared logger
+    format_args = {"level": command_context._mach_context.settings["test"]["level"]}
+    if not run_suites and len(run_tests) == 1:
+        format_args["verbose"] = True
+        format_args["compact"] = False
+
+    default_format = command_context._mach_context.settings["test"]["format"]
+    log = setup_logging(
+        "mach-test", log_args, {default_format: sys.stdout}, format_args
+    )
+    for handler in log.handlers:
+        if isinstance(handler, StreamHandler):
+            handler.formatter.inner.summary_on_shutdown = True
+
+    status = None
+    for suite_name in run_suites:
+        suite = TEST_SUITES[suite_name]
+        kwargs = suite["kwargs"]
+        kwargs["log"] = log
+        kwargs.setdefault("subsuite", None)
+
+        if "mach_command" in suite:
             res = command_context._mach_context.commands.dispatch(
-                m["mach_command"],
+                suite["mach_command"],
                 command_context._mach_context,
                 argv=extra_args,
-                test_objects=tests,
                 **kwargs,
             )
             if res:
                 status = res
 
-        log.shutdown()
-        return status
+    buckets = {}
+    for test in run_tests:
+        key = (test["flavor"], test.get("subsuite", ""))
+        buckets.setdefault(key, []).append(test)
+
+    for (flavor, subsuite), tests in sorted(buckets.items()):
+        _, m = get_suite_definition(flavor, subsuite)
+        if "mach_command" not in m:
+            substr = "-{}".format(subsuite) if subsuite else ""
+            print(UNKNOWN_FLAVOR % (flavor, substr))
+            status = 1
+            continue
+
+        kwargs = dict(m["kwargs"])
+        kwargs["log"] = log
+        kwargs.setdefault("subsuite", None)
+
+        res = command_context._mach_context.commands.dispatch(
+            m["mach_command"],
+            command_context._mach_context,
+            argv=extra_args,
+            test_objects=tests,
+            **kwargs,
+        )
+        if res:
+            status = res
+
+    log.shutdown()
+    return status
 
 
-@CommandProvider
-class MachCommands(MachCommandBase):
-    @Command(
-        "cppunittest", category="testing", description="Run cpp unit tests (C++ tests)."
-    )
-    @CommandArgument(
-        "--enable-webrender",
-        action="store_true",
-        default=False,
-        dest="enable_webrender",
-        help="Enable the WebRender compositor in Gecko.",
-    )
-    @CommandArgument(
-        "test_files",
-        nargs="*",
-        metavar="N",
-        help="Test to run. Can be specified as one or more files or "
-        "directories, or omitted. If omitted, the entire test suite is "
-        "executed.",
-    )
-    def run_cppunit_test(self, command_context, **params):
-        from mozlog import commandline
+@Command(
+    "cppunittest", category="testing", description="Run cpp unit tests (C++ tests)."
+)
+@CommandArgument(
+    "--enable-webrender",
+    action="store_true",
+    default=False,
+    dest="enable_webrender",
+    help="Enable the WebRender compositor in Gecko.",
+)
+@CommandArgument(
+    "test_files",
+    nargs="*",
+    metavar="N",
+    help="Test to run. Can be specified as one or more files or "
+    "directories, or omitted. If omitted, the entire test suite is "
+    "executed.",
+)
+def run_cppunit_test(command_context, **params):
+    from mozlog import commandline
 
-        log = params.get("log")
-        if not log:
-            log = commandline.setup_logging("cppunittest", {}, {"tbpl": sys.stdout})
+    log = params.get("log")
+    if not log:
+        log = commandline.setup_logging("cppunittest", {}, {"tbpl": sys.stdout})
 
-        # See if we have crash symbols
-        symbols_path = os.path.join(command_context.distdir, "crashreporter-symbols")
-        if not os.path.isdir(symbols_path):
-            symbols_path = None
+    # See if we have crash symbols
+    symbols_path = os.path.join(command_context.distdir, "crashreporter-symbols")
+    if not os.path.isdir(symbols_path):
+        symbols_path = None
 
-        # If no tests specified, run all tests in main manifest
-        tests = params["test_files"]
-        if not tests:
-            tests = [os.path.join(command_context.distdir, "cppunittests")]
-            manifest_path = os.path.join(
-                command_context.topsrcdir, "testing", "cppunittest.ini"
-            )
-        else:
-            manifest_path = None
+    # If no tests specified, run all tests in main manifest
+    tests = params["test_files"]
+    if not tests:
+        tests = [os.path.join(command_context.distdir, "cppunittests")]
+        manifest_path = os.path.join(
+            command_context.topsrcdir, "testing", "cppunittest.ini"
+        )
+    else:
+        manifest_path = None
 
-        utility_path = command_context.bindir
+    utility_path = command_context.bindir
 
-        if conditions.is_android(command_context):
-            from mozrunner.devices.android_device import (
-                verify_android_device,
-                InstallIntent,
-            )
-
-            verify_android_device(command_context, install=InstallIntent.NO)
-            return self.run_android_test(tests, symbols_path, manifest_path, log)
-
-        return self.run_desktop_test(
-            command_context, tests, symbols_path, manifest_path, utility_path, log
+    if conditions.is_android(command_context):
+        from mozrunner.devices.android_device import (
+            verify_android_device,
+            InstallIntent,
         )
 
-    def run_desktop_test(
-        self, command_context, tests, symbols_path, manifest_path, utility_path, log
-    ):
-        import runcppunittests as cppunittests
-        from mozlog import commandline
+        verify_android_device(command_context, install=InstallIntent.NO)
+        return run_android_test(tests, symbols_path, manifest_path, log)
 
-        parser = cppunittests.CPPUnittestOptions()
-        commandline.add_logging_group(parser)
-        options, args = parser.parse_args()
+    return run_desktop_test(
+        command_context, tests, symbols_path, manifest_path, utility_path, log
+    )
 
-        options.symbols_path = symbols_path
-        options.manifest_path = manifest_path
-        options.utility_path = utility_path
-        options.xre_path = command_context.bindir
 
-        try:
-            result = cppunittests.run_test_harness(options, tests)
-        except Exception as e:
-            log.error("Caught exception running cpp unit tests: %s" % str(e))
-            result = False
-            raise
+def run_desktop_test(
+    command_context, tests, symbols_path, manifest_path, utility_path, log
+):
+    import runcppunittests as cppunittests
+    from mozlog import commandline
 
-        return 0 if result else 1
+    parser = cppunittests.CPPUnittestOptions()
+    commandline.add_logging_group(parser)
+    options, args = parser.parse_args()
 
-    def run_android_test(
-        self, command_context, tests, symbols_path, manifest_path, log
-    ):
-        import remotecppunittests as remotecppunittests
-        from mozlog import commandline
+    options.symbols_path = symbols_path
+    options.manifest_path = manifest_path
+    options.utility_path = utility_path
+    options.xre_path = command_context.bindir
 
-        parser = remotecppunittests.RemoteCPPUnittestOptions()
-        commandline.add_logging_group(parser)
-        options, args = parser.parse_args()
+    try:
+        result = cppunittests.run_test_harness(options, tests)
+    except Exception as e:
+        log.error("Caught exception running cpp unit tests: %s" % str(e))
+        result = False
+        raise
 
-        if not options.adb_path:
-            from mozrunner.devices.android_device import get_adb_path
+    return 0 if result else 1
 
-            options.adb_path = get_adb_path(command_context)
-        options.symbols_path = symbols_path
-        options.manifest_path = manifest_path
-        options.xre_path = command_context.bindir
-        options.local_lib = command_context.bindir.replace("bin", "fennec")
-        for file in os.listdir(os.path.join(command_context.topobjdir, "dist")):
-            if file.endswith(".apk") and file.startswith("fennec"):
-                options.local_apk = os.path.join(
-                    command_context.topobjdir, "dist", file
-                )
-                log.info("using APK: " + options.local_apk)
-                break
 
-        try:
-            result = remotecppunittests.run_test_harness(options, tests)
-        except Exception as e:
-            log.error("Caught exception running cpp unit tests: %s" % str(e))
-            result = False
-            raise
+def run_android_test(command_context, tests, symbols_path, manifest_path, log):
+    import remotecppunittests as remotecppunittests
+    from mozlog import commandline
 
-        return 0 if result else 1
+    parser = remotecppunittests.RemoteCPPUnittestOptions()
+    commandline.add_logging_group(parser)
+    options, args = parser.parse_args()
+
+    if not options.adb_path:
+        from mozrunner.devices.android_device import get_adb_path
+
+        options.adb_path = get_adb_path(command_context)
+    options.symbols_path = symbols_path
+    options.manifest_path = manifest_path
+    options.xre_path = command_context.bindir
+    options.local_lib = command_context.bindir.replace("bin", "fennec")
+    for file in os.listdir(os.path.join(command_context.topobjdir, "dist")):
+        if file.endswith(".apk") and file.startswith("fennec"):
+            options.local_apk = os.path.join(command_context.topobjdir, "dist", file)
+            log.info("using APK: " + options.local_apk)
+            break
+
+    try:
+        result = remotecppunittests.run_test_harness(options, tests)
+    except Exception as e:
+        log.error("Caught exception running cpp unit tests: %s" % str(e))
+        result = False
+        raise
+
+    return 0 if result else 1
 
 
 def executable_name(name):
     return name + ".exe" if sys.platform.startswith("win") else name
 
 
-@CommandProvider
-class SpiderMonkeyTests(MachCommandBase):
-    @Command(
-        "jstests",
-        category="testing",
-        description="Run SpiderMonkey JS tests in the JS shell.",
-    )
-    @CommandArgument("--shell", help="The shell to be used")
-    @CommandArgument(
-        "params",
-        nargs=argparse.REMAINDER,
-        help="Extra arguments to pass down to the test harness.",
-    )
-    def run_jstests(self, command_context, shell, params):
-        import subprocess
+@Command(
+    "jstests",
+    category="testing",
+    description="Run SpiderMonkey JS tests in the JS shell.",
+)
+@CommandArgument("--shell", help="The shell to be used")
+@CommandArgument(
+    "params",
+    nargs=argparse.REMAINDER,
+    help="Extra arguments to pass down to the test harness.",
+)
+def run_jstests(command_context, shell, params):
+    import subprocess
 
-        command_context.virtualenv_manager.ensure()
-        python = command_context.virtualenv_manager.python_path
+    command_context.virtualenv_manager.ensure()
+    python = command_context.virtualenv_manager.python_path
 
-        js = shell or os.path.join(command_context.bindir, executable_name("js"))
-        jstest_cmd = [
-            python,
-            os.path.join(command_context.topsrcdir, "js", "src", "tests", "jstests.py"),
-            js,
-        ] + params
+    js = shell or os.path.join(command_context.bindir, executable_name("js"))
+    jstest_cmd = [
+        python,
+        os.path.join(command_context.topsrcdir, "js", "src", "tests", "jstests.py"),
+        js,
+    ] + params
 
-        return subprocess.call(jstest_cmd)
+    return subprocess.call(jstest_cmd)
 
-    @Command(
-        "jit-test",
-        category="testing",
-        description="Run SpiderMonkey jit-tests in the JS shell.",
-        ok_if_tests_disabled=True,
-    )
-    @CommandArgument("--shell", help="The shell to be used")
-    @CommandArgument(
-        "--cgc",
-        action="store_true",
-        default=False,
-        help="Run with the SM(cgc) job's env vars",
-    )
-    @CommandArgument(
-        "params",
-        nargs=argparse.REMAINDER,
-        help="Extra arguments to pass down to the test harness.",
-    )
-    def run_jittests(self, command_context, shell, cgc, params):
-        import subprocess
 
-        command_context.virtualenv_manager.ensure()
-        python = command_context.virtualenv_manager.python_path
+@Command(
+    "jit-test",
+    category="testing",
+    description="Run SpiderMonkey jit-tests in the JS shell.",
+    ok_if_tests_disabled=True,
+)
+@CommandArgument("--shell", help="The shell to be used")
+@CommandArgument(
+    "--cgc",
+    action="store_true",
+    default=False,
+    help="Run with the SM(cgc) job's env vars",
+)
+@CommandArgument(
+    "params",
+    nargs=argparse.REMAINDER,
+    help="Extra arguments to pass down to the test harness.",
+)
+def run_jittests(command_context, shell, cgc, params):
+    import subprocess
 
-        js = shell or os.path.join(command_context.bindir, executable_name("js"))
-        jittest_cmd = [
-            python,
-            os.path.join(
-                command_context.topsrcdir, "js", "src", "jit-test", "jit_test.py"
-            ),
-            js,
-        ] + params
+    command_context.virtualenv_manager.ensure()
+    python = command_context.virtualenv_manager.python_path
 
-        env = os.environ.copy()
-        if cgc:
-            env["JS_GC_ZEAL"] = "IncrementalMultipleSlices"
+    js = shell or os.path.join(command_context.bindir, executable_name("js"))
+    jittest_cmd = [
+        python,
+        os.path.join(command_context.topsrcdir, "js", "src", "jit-test", "jit_test.py"),
+        js,
+    ] + params
 
-        return subprocess.call(jittest_cmd, env=env)
+    env = os.environ.copy()
+    if cgc:
+        env["JS_GC_ZEAL"] = "IncrementalMultipleSlices"
 
-    @Command(
-        "jsapi-tests", category="testing", description="Run SpiderMonkey JSAPI tests."
-    )
-    @CommandArgument(
-        "test_name",
-        nargs="?",
-        metavar="N",
-        help="Test to run. Can be a prefix or omitted. If "
-        "omitted, the entire test suite is executed.",
-    )
-    def run_jsapitests(self, command_context, test_name=None):
-        import subprocess
+    return subprocess.call(jittest_cmd, env=env)
 
-        jsapi_tests_cmd = [
-            os.path.join(command_context.bindir, executable_name("jsapi-tests"))
-        ]
-        if test_name:
-            jsapi_tests_cmd.append(test_name)
 
-        test_env = os.environ.copy()
-        test_env["TOPSRCDIR"] = command_context.topsrcdir
+@Command("jsapi-tests", category="testing", description="Run SpiderMonkey JSAPI tests.")
+@CommandArgument(
+    "test_name",
+    nargs="?",
+    metavar="N",
+    help="Test to run. Can be a prefix or omitted. If "
+    "omitted, the entire test suite is executed.",
+)
+def run_jsapitests(command_context, test_name=None):
+    import subprocess
 
-        result = subprocess.call(jsapi_tests_cmd, env=test_env)
-        if result != 0:
-            print(f"jsapi-tests failed, exit code {result}")
-        return result
+    jsapi_tests_cmd = [
+        os.path.join(command_context.bindir, executable_name("jsapi-tests"))
+    ]
+    if test_name:
+        jsapi_tests_cmd.append(test_name)
 
-    def run_check_js_msg(self, command_context):
-        import subprocess
+    test_env = os.environ.copy()
+    test_env["TOPSRCDIR"] = command_context.topsrcdir
 
-        command_context.virtualenv_manager.ensure()
-        python = command_context.virtualenv_manager.python_path
+    result = subprocess.call(jsapi_tests_cmd, env=test_env)
+    if result != 0:
+        print(f"jsapi-tests failed, exit code {result}")
+    return result
 
-        check_cmd = [
-            python,
-            os.path.join(
-                command_context.topsrcdir, "config", "check_js_msg_encoding.py"
-            ),
-        ]
 
-        return subprocess.call(check_cmd)
+def run_check_js_msg(command_context):
+    import subprocess
+
+    command_context.virtualenv_manager.ensure()
+    python = command_context.virtualenv_manager.python_path
+
+    check_cmd = [
+        python,
+        os.path.join(command_context.topsrcdir, "config", "check_js_msg_encoding.py"),
+    ]
+
+    return subprocess.call(check_cmd)
 
 
 def get_jsshell_parser():
@@ -710,196 +696,213 @@ def get_jsshell_parser():
     return get_parser()
 
 
-@CommandProvider
-class JsShellTests(MachCommandBase):
-    @Command(
-        "jsshell-bench",
-        category="testing",
-        parser=get_jsshell_parser,
-        description="Run benchmarks in the SpiderMonkey JS shell.",
-    )
-    def run_jsshelltests(self, command_context, **kwargs):
-        command_context.activate_virtualenv()
-        from jsshell import benchmark
+@Command(
+    "jsshell-bench",
+    category="testing",
+    parser=get_jsshell_parser,
+    description="Run benchmarks in the SpiderMonkey JS shell.",
+)
+def run_jsshelltests(command_context, **kwargs):
+    command_context.activate_virtualenv()
+    from jsshell import benchmark
 
-        return benchmark.run(**kwargs)
+    return benchmark.run(**kwargs)
 
 
-@CommandProvider
-class CramTest(MachCommandBase):
-    @Command(
-        "cramtest",
-        category="testing",
-        description="Mercurial style .t tests for command line applications.",
-    )
-    @CommandArgument(
-        "test_paths",
-        nargs="*",
-        metavar="N",
-        help="Test paths to run. Each path can be a test file or directory. "
-        "If omitted, the entire suite will be run.",
-    )
-    @CommandArgument(
-        "cram_args",
-        nargs=argparse.REMAINDER,
-        help="Extra arguments to pass down to the cram binary. See "
-        "'./mach python -m cram -- -h' for a list of available options.",
-    )
-    def cramtest(
-        self, command_context, cram_args=None, test_paths=None, test_objects=None
-    ):
-        command_context.activate_virtualenv()
-        import mozinfo
-        from manifestparser import TestManifest
+@Command(
+    "cramtest",
+    category="testing",
+    description="Mercurial style .t tests for command line applications.",
+)
+@CommandArgument(
+    "test_paths",
+    nargs="*",
+    metavar="N",
+    help="Test paths to run. Each path can be a test file or directory. "
+    "If omitted, the entire suite will be run.",
+)
+@CommandArgument(
+    "cram_args",
+    nargs=argparse.REMAINDER,
+    help="Extra arguments to pass down to the cram binary. See "
+    "'./mach python -m cram -- -h' for a list of available options.",
+)
+def cramtest(command_context, cram_args=None, test_paths=None, test_objects=None):
+    command_context.activate_virtualenv()
+    import mozinfo
+    from manifestparser import TestManifest
 
-        if test_objects is None:
-            from moztest.resolve import TestResolver
+    if test_objects is None:
+        from moztest.resolve import TestResolver
 
-            resolver = command_context._spawn(TestResolver)
-            if test_paths:
-                # If we were given test paths, try to find tests matching them.
-                test_objects = resolver.resolve_tests(paths=test_paths, flavor="cram")
-            else:
-                # Otherwise just run everything in CRAMTEST_MANIFESTS
-                test_objects = resolver.resolve_tests(flavor="cram")
+        resolver = command_context._spawn(TestResolver)
+        if test_paths:
+            # If we were given test paths, try to find tests matching them.
+            test_objects = resolver.resolve_tests(paths=test_paths, flavor="cram")
+        else:
+            # Otherwise just run everything in CRAMTEST_MANIFESTS
+            test_objects = resolver.resolve_tests(flavor="cram")
 
-        if not test_objects:
-            message = "No tests were collected, check spelling of the test paths."
-            command_context.log(logging.WARN, "cramtest", {}, message)
-            return 1
+    if not test_objects:
+        message = "No tests were collected, check spelling of the test paths."
+        command_context.log(logging.WARN, "cramtest", {}, message)
+        return 1
 
-        mp = TestManifest()
-        mp.tests.extend(test_objects)
-        tests = mp.active_tests(disabled=False, **mozinfo.info)
+    mp = TestManifest()
+    mp.tests.extend(test_objects)
+    tests = mp.active_tests(disabled=False, **mozinfo.info)
 
-        python = command_context.virtualenv_manager.python_path
-        cmd = [python, "-m", "cram"] + cram_args + [t["relpath"] for t in tests]
-        return subprocess.call(cmd, cwd=command_context.topsrcdir)
+    python = command_context.virtualenv_manager.python_path
+    cmd = [python, "-m", "cram"] + cram_args + [t["relpath"] for t in tests]
+    return subprocess.call(cmd, cwd=command_context.topsrcdir)
 
 
-@CommandProvider
-class TestInfoCommand(MachCommandBase):
-    from datetime import date, timedelta
+from datetime import date, timedelta
 
-    @Command(
-        "test-info", category="testing", description="Display historical test results."
-    )
-    def test_info(self, command_context):
-        """
-        All functions implemented as subcommands.
-        """
 
-    @SubCommand(
-        "test-info",
-        "tests",
-        description="Display historical test result summary for named tests.",
-    )
-    @CommandArgument(
-        "test_names", nargs=argparse.REMAINDER, help="Test(s) of interest."
-    )
-    @CommandArgument(
-        "--start",
-        default=(date.today() - timedelta(7)).strftime("%Y-%m-%d"),
-        help="Start date (YYYY-MM-DD)",
-    )
-    @CommandArgument(
-        "--end", default=date.today().strftime("%Y-%m-%d"), help="End date (YYYY-MM-DD)"
-    )
-    @CommandArgument(
-        "--show-info",
-        action="store_true",
-        help="Retrieve and display general test information.",
-    )
-    @CommandArgument(
-        "--show-bugs",
-        action="store_true",
-        help="Retrieve and display related Bugzilla bugs.",
-    )
-    @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
-    def test_info_tests(
-        self,
-        command_context,
+@Command(
+    "test-info", category="testing", description="Display historical test results."
+)
+def test_info(command_context):
+    """
+    All functions implemented as subcommands.
+    """
+
+
+@SubCommand(
+    "test-info",
+    "tests",
+    description="Display historical test result summary for named tests.",
+)
+@CommandArgument("test_names", nargs=argparse.REMAINDER, help="Test(s) of interest.")
+@CommandArgument(
+    "--start",
+    default=(date.today() - timedelta(7)).strftime("%Y-%m-%d"),
+    help="Start date (YYYY-MM-DD)",
+)
+@CommandArgument(
+    "--end", default=date.today().strftime("%Y-%m-%d"), help="End date (YYYY-MM-DD)"
+)
+@CommandArgument(
+    "--show-info",
+    action="store_true",
+    help="Retrieve and display general test information.",
+)
+@CommandArgument(
+    "--show-bugs",
+    action="store_true",
+    help="Retrieve and display related Bugzilla bugs.",
+)
+@CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
+def test_info_tests(
+    command_context,
+    test_names,
+    start,
+    end,
+    show_info,
+    show_bugs,
+    verbose,
+):
+    import testinfo
+
+    ti = testinfo.TestInfoTests(verbose)
+    ti.report(
         test_names,
         start,
         end,
         show_info,
         show_bugs,
-        verbose,
-    ):
-        import testinfo
+    )
 
-        ti = testinfo.TestInfoTests(verbose)
-        ti.report(
-            test_names,
-            start,
-            end,
-            show_info,
-            show_bugs,
-        )
 
-    @SubCommand(
-        "test-info",
-        "report",
-        description="Generate a json report of test manifests and/or tests "
-        "categorized by Bugzilla component and optionally filtered "
-        "by path, component, and/or manifest annotations.",
-    )
-    @CommandArgument(
-        "--components",
-        default=None,
-        help="Comma-separated list of Bugzilla components."
-        " eg. Testing::General,Core::WebVR",
-    )
-    @CommandArgument(
-        "--flavor",
-        help='Limit results to tests of the specified flavor (eg. "xpcshell").',
-    )
-    @CommandArgument(
-        "--subsuite",
-        help='Limit results to tests of the specified subsuite (eg. "devtools").',
-    )
-    @CommandArgument(
-        "paths", nargs=argparse.REMAINDER, help="File system paths of interest."
-    )
-    @CommandArgument(
-        "--show-manifests",
-        action="store_true",
-        help="Include test manifests in report.",
-    )
-    @CommandArgument(
-        "--show-tests", action="store_true", help="Include individual tests in report."
-    )
-    @CommandArgument(
-        "--show-summary", action="store_true", help="Include summary in report."
-    )
-    @CommandArgument(
-        "--show-annotations",
-        action="store_true",
-        help="Include list of manifest annotation conditions in report.",
-    )
-    @CommandArgument(
-        "--filter-values",
-        help="Comma-separated list of value regular expressions to filter on; "
-        "displayed tests contain all specified values.",
-    )
-    @CommandArgument(
-        "--filter-keys",
-        help="Comma-separated list of test keys to filter on, "
-        'like "skip-if"; only these fields will be searched '
-        "for filter-values.",
-    )
-    @CommandArgument(
-        "--no-component-report",
-        action="store_false",
-        dest="show_components",
-        default=True,
-        help="Do not categorize by bugzilla component.",
-    )
-    @CommandArgument("--output-file", help="Path to report file.")
-    @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
-    def test_report(
-        self,
-        command_context,
+@SubCommand(
+    "test-info",
+    "report",
+    description="Generate a json report of test manifests and/or tests "
+    "categorized by Bugzilla component and optionally filtered "
+    "by path, component, and/or manifest annotations.",
+)
+@CommandArgument(
+    "--components",
+    default=None,
+    help="Comma-separated list of Bugzilla components."
+    " eg. Testing::General,Core::WebVR",
+)
+@CommandArgument(
+    "--flavor",
+    help='Limit results to tests of the specified flavor (eg. "xpcshell").',
+)
+@CommandArgument(
+    "--subsuite",
+    help='Limit results to tests of the specified subsuite (eg. "devtools").',
+)
+@CommandArgument(
+    "paths", nargs=argparse.REMAINDER, help="File system paths of interest."
+)
+@CommandArgument(
+    "--show-manifests",
+    action="store_true",
+    help="Include test manifests in report.",
+)
+@CommandArgument(
+    "--show-tests", action="store_true", help="Include individual tests in report."
+)
+@CommandArgument(
+    "--show-summary", action="store_true", help="Include summary in report."
+)
+@CommandArgument(
+    "--show-annotations",
+    action="store_true",
+    help="Include list of manifest annotation conditions in report.",
+)
+@CommandArgument(
+    "--filter-values",
+    help="Comma-separated list of value regular expressions to filter on; "
+    "displayed tests contain all specified values.",
+)
+@CommandArgument(
+    "--filter-keys",
+    help="Comma-separated list of test keys to filter on, "
+    'like "skip-if"; only these fields will be searched '
+    "for filter-values.",
+)
+@CommandArgument(
+    "--no-component-report",
+    action="store_false",
+    dest="show_components",
+    default=True,
+    help="Do not categorize by bugzilla component.",
+)
+@CommandArgument("--output-file", help="Path to report file.")
+@CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
+def test_report(
+    command_context,
+    components,
+    flavor,
+    subsuite,
+    paths,
+    show_manifests,
+    show_tests,
+    show_summary,
+    show_annotations,
+    filter_values,
+    filter_keys,
+    show_components,
+    output_file,
+    verbose,
+):
+    import testinfo
+    from mozbuild.build_commands import Build
+
+    try:
+        command_context.config_environment
+    except BuildEnvironmentNotFoundException:
+        print("Looks like configure has not run yet, running it now...")
+        builder = Build(command_context._mach_context, None)
+        builder.configure(command_context)
+
+    ti = testinfo.TestInfoReport(verbose)
+    ti.report(
         components,
         flavor,
         subsuite,
@@ -912,122 +915,93 @@ class TestInfoCommand(MachCommandBase):
         filter_keys,
         show_components,
         output_file,
-        verbose,
-    ):
-        import testinfo
-        from mozbuild.build_commands import Build
+    )
 
+
+@SubCommand(
+    "test-info",
+    "report-diff",
+    description='Compare two reports generated by "test-info reports".',
+)
+@CommandArgument(
+    "--before",
+    default=None,
+    help="The first (earlier) report file; path to local file or url.",
+)
+@CommandArgument(
+    "--after", help="The second (later) report file; path to local file or url."
+)
+@CommandArgument(
+    "--output-file",
+    help="Path to report file to be written. If not specified, report"
+    "will be written to standard output.",
+)
+@CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
+def test_report_diff(command_context, before, after, output_file, verbose):
+    import testinfo
+
+    ti = testinfo.TestInfoReport(verbose)
+    ti.report_diff(before, after, output_file)
+
+
+@Command(
+    "rusttests",
+    category="testing",
+    conditions=[conditions.is_non_artifact_build],
+    description="Run rust unit tests (via cargo test).",
+)
+def run_rusttests(command_context, **kwargs):
+    return command_context._mach_context.commands.dispatch(
+        "build",
+        command_context._mach_context,
+        what=["pre-export", "export", "recurse_rusttests"],
+    )
+
+
+@Command(
+    "fluent-migration-test",
+    category="testing",
+    description="Test Fluent migration recipes.",
+)
+@CommandArgument("test_paths", nargs="*", metavar="N", help="Recipe paths to test.")
+def run_migration_tests(command_context, test_paths=None, **kwargs):
+    if not test_paths:
+        test_paths = []
+    command_context.activate_virtualenv()
+    from test_fluent_migrations import fmt
+
+    rv = 0
+    with_context = []
+    for to_test in test_paths:
         try:
-            command_context.config_environment
-        except BuildEnvironmentNotFoundException:
-            print("Looks like configure has not run yet, running it now...")
-            builder = Build(command_context._mach_context, None)
-            builder.configure(command_context)
-
-        ti = testinfo.TestInfoReport(verbose)
-        ti.report(
-            components,
-            flavor,
-            subsuite,
-            paths,
-            show_manifests,
-            show_tests,
-            show_summary,
-            show_annotations,
-            filter_values,
-            filter_keys,
-            show_components,
-            output_file,
-        )
-
-    @SubCommand(
-        "test-info",
-        "report-diff",
-        description='Compare two reports generated by "test-info reports".',
-    )
-    @CommandArgument(
-        "--before",
-        default=None,
-        help="The first (earlier) report file; path to local file or url.",
-    )
-    @CommandArgument(
-        "--after", help="The second (later) report file; path to local file or url."
-    )
-    @CommandArgument(
-        "--output-file",
-        help="Path to report file to be written. If not specified, report"
-        "will be written to standard output.",
-    )
-    @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
-    def test_report_diff(self, command_context, before, after, output_file, verbose):
-        import testinfo
-
-        ti = testinfo.TestInfoReport(verbose)
-        ti.report_diff(before, after, output_file)
-
-
-@CommandProvider
-class RustTests(MachCommandBase):
-    @Command(
-        "rusttests",
-        category="testing",
-        conditions=[conditions.is_non_artifact_build],
-        description="Run rust unit tests (via cargo test).",
-    )
-    def run_rusttests(self, command_context, **kwargs):
-        return command_context._mach_context.commands.dispatch(
-            "build",
-            command_context._mach_context,
-            what=["pre-export", "export", "recurse_rusttests"],
-        )
-
-
-@CommandProvider
-class TestFluentMigration(MachCommandBase):
-    @Command(
-        "fluent-migration-test",
-        category="testing",
-        description="Test Fluent migration recipes.",
-    )
-    @CommandArgument("test_paths", nargs="*", metavar="N", help="Recipe paths to test.")
-    def run_migration_tests(self, command_context, test_paths=None, **kwargs):
-        if not test_paths:
-            test_paths = []
-        command_context.activate_virtualenv()
-        from test_fluent_migrations import fmt
-
-        rv = 0
-        with_context = []
-        for to_test in test_paths:
-            try:
-                context = fmt.inspect_migration(to_test)
-                for issue in context["issues"]:
-                    command_context.log(
-                        logging.ERROR,
-                        "fluent-migration-test",
-                        {
-                            "error": issue["msg"],
-                            "file": to_test,
-                        },
-                        "ERROR in {file}: {error}",
-                    )
-                if context["issues"]:
-                    continue
-                with_context.append(
-                    {
-                        "to_test": to_test,
-                        "references": context["references"],
-                    }
-                )
-            except Exception as e:
+            context = fmt.inspect_migration(to_test)
+            for issue in context["issues"]:
                 command_context.log(
                     logging.ERROR,
                     "fluent-migration-test",
-                    {"error": str(e), "file": to_test},
+                    {
+                        "error": issue["msg"],
+                        "file": to_test,
+                    },
                     "ERROR in {file}: {error}",
                 )
-                rv |= 1
-        obj_dir = fmt.prepare_object_dir(command_context)
-        for context in with_context:
-            rv |= fmt.test_migration(command_context, obj_dir, **context)
-        return rv
+            if context["issues"]:
+                continue
+            with_context.append(
+                {
+                    "to_test": to_test,
+                    "references": context["references"],
+                }
+            )
+        except Exception as e:
+            command_context.log(
+                logging.ERROR,
+                "fluent-migration-test",
+                {"error": str(e), "file": to_test},
+                "ERROR in {file}: {error}",
+            )
+            rv |= 1
+    obj_dir = fmt.prepare_object_dir(command_context)
+    for context in with_context:
+        rv |= fmt.test_migration(command_context, obj_dir, **context)
+    return rv
