@@ -8364,23 +8364,23 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "  Returns true if a scripted function is small enough to be inlinable."),
 
     JS_FN_HELP("compileToStencil", CompileToStencil, 1, 0,
-"compileToStencil(string)",
+"compileToStencil(string, [options])",
 "  Parses the given string argument as js script, returns the stencil"
 "  for it."),
 
     JS_FN_HELP("evalStencil", EvalStencil, 1, 0,
-"compileStencil(stencil)",
+"evalStencil(stencil, [options])",
 "  Instantiates the given stencil, and evaluates the top-level script it"
 "  defines."),
 
     JS_FN_HELP("compileToStencilXDR", CompileToStencilXDR, 1, 0,
-"compileToStencilXDR(string)",
+"compileToStencilXDR(string, [options])",
 "  Parses the given string argument as js script, produces the stencil"
 "  for it, XDR-encodes the stencil, and returns an object that contains the"
 "  XDR buffer."),
 
     JS_FN_HELP("evalStencilXDR", EvalStencilXDR, 1, 0,
-"evalStencilXDR(stencilXDR)",
+"evalStencilXDR(stencilXDR, [options])",
 "  Reads the given stencil XDR object, and evaluates the top-level script it"
 "  defines."),
 
