@@ -41,7 +41,7 @@ class nsCCUncollectableMarker final : public nsIObserver {
 
 namespace mozilla {
 namespace dom {
-void TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC);
+void TraceBlackJS(JSTracer* aTrc);
 }  // namespace dom
 }  // namespace mozilla
 

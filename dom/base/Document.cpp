@@ -16224,12 +16224,6 @@ bool Document::IsExtensionPage() const {
          BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
 }
 
-void Document::TraceProtos(JSTracer* aTrc) {
-  if (mPrototypeDocument) {
-    mPrototypeDocument->TraceProtos(aTrc);
-  }
-}
-
 /**
  * Retrieves the classification of the Flash plugins in the document based on
  * the classification lists. For more information, see
