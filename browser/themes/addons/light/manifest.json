@@ -62,7 +62,8 @@
       "panel_active": "color-mix(in srgb, currentColor 20%, transparent)",
       "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)",
       "toolbar_field_icon_opacity": "0.72",
-      "input_border_color": "color-mix(in srgb, currentColor 41%, transparent)"
+      "input_border_color": "color-mix(in srgb, currentColor 41%, transparent)",
+      "zap_gradient": "linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"
     }
   },
 
@@ -95,7 +96,8 @@
       "panel_active": "-arrowpanel-dimmed-further",
       "panel_active_darker": "--arrowpanel-dimmed-even-further",
       "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity",
-      "input_border_color": "--input-border-color"
+      "input_border_color": "--input-border-color",
+      "zap_gradient": "--panel-separator-zap-gradient"
     }
   }
 }
