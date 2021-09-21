@@ -123,7 +123,7 @@ class SafeBrowsingTest {
         }.openSearchBar {
         }.loadPage(insecurePageUrl) {
             verifyPageURL(insecurePageUrl)
-            verifySiteSecurityIconShown()
+            verifySiteSecurityIndicatorShown()
             verifySiteConnectionInfoIsSecure(false)
             mDevice.pressBack()
         }

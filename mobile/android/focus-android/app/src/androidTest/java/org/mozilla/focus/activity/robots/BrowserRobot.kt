@@ -141,8 +141,14 @@ class BrowserRobot {
 
     fun verifySiteSecurityIconShown(): ViewInteraction = securityIcon.check(matches(isDisplayed()))
 
+    fun verifySiteSecurityIndicatorShown(): ViewInteraction = site_security_indicator.check(matches(isDisplayed()))
+
     fun verifySiteConnectionInfoIsSecure(isSecure: Boolean) {
-        securityIcon.perform(click())
+        if (isSecure) {
+            securityIcon.perform(click())
+        } else {
+            site_security_indicator.perform(click())
+        }
         assertTrue(site_security_info.waitForExists(waitingTime))
         site_identity_title.check(matches(isDisplayed()))
         site_identity_Icon.check(matches(isDisplayed()))
@@ -236,3 +242,5 @@ private val site_security_info = mDevice.findObject(UiSelector().resourceId("$pa
 private val site_identity_title = onView(withId(R.id.site_title))
 
 private val site_identity_Icon = onView(withId(R.id.site_favicon))
+
+private val site_security_indicator = onView(withId(R.id.mozac_browser_toolbar_security_indicator))
