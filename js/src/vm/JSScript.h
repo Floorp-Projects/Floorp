@@ -1352,10 +1352,6 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
                                      js::HandleScope scriptEnclosingScope,
                                      js::HandleObject funOrMod);
 
-  // Clone src script data into dst script.
-  static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
-                    js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
-
   static bool InitFromStencil(
       JSContext* cx, js::HandleScript script,
       const js::frontend::CompilationAtomCache& atomCache,
@@ -1730,10 +1726,6 @@ class JSScript : public js::BaseScript {
       js::XDRState<mode>* xdr, js::HandleScript script,
       js::HandleScriptSourceObject sourceObject,
       js::HandleScope scriptEnclosingScope, js::HandleObject funOrMod);
-
-  friend bool js::PrivateScriptData::Clone(
-      JSContext* cx, js::HandleScript src, js::HandleScript dst,
-      js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
@@ -2291,10 +2283,6 @@ extern void DescribeScriptedCallerForCompilation(
 extern void DescribeScriptedCallerForDirectEval(
     JSContext* cx, HandleScript script, jsbytecode* pc, const char** file,
     unsigned* linenop, uint32_t* pcOffset, bool* mutedErrors);
-
-JSScript* CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
-                                  HandleFunction fun, HandleScript src,
-                                  Handle<ScriptSourceObject*> sourceObject);
 
 bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
                               js::ImmutableScriptFlags flags,

@@ -1101,8 +1101,6 @@ bool js::ParseRegExpFlags(JSContext* cx, JSString* flagStr,
 template <XDRMode mode>
 XDRResult js::XDRScriptRegExpObject(XDRState<mode>* xdr,
                                     MutableHandle<RegExpObject*> objp) {
-  /* NB: Keep this in sync with CloneScriptRegExpObject. */
-
   RootedAtom source(xdr->cx());
   uint8_t flags = 0;
 
@@ -1131,15 +1129,6 @@ template XDRResult js::XDRScriptRegExpObject(XDRState<XDR_ENCODE>* xdr,
 
 template XDRResult js::XDRScriptRegExpObject(XDRState<XDR_DECODE>* xdr,
                                              MutableHandle<RegExpObject*> objp);
-
-JSObject* js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj) {
-  /* NB: Keep this in sync with XDRScriptRegExpObject. */
-
-  RootedAtom source(cx, reobj.getSource());
-  cx->markAtom(source);
-
-  return RegExpObject::create(cx, source, reobj.getFlags(), TenuredObject);
-}
 
 JS::ubi::Node::Size JS::ubi::Concrete<RegExpShared>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
