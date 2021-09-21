@@ -30,7 +30,7 @@ macro_rules! try_intersect {
         } else {
             warn!("skipping item with non-intersecting bounds and clip_rect");
             return;
-        };
+        }
     }
 }
 
