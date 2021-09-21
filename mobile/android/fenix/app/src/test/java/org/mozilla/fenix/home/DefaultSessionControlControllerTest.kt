@@ -604,30 +604,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun handleOpenSettingsClicked() {
-        createController().handleOpenSettingsClicked()
-        verify {
-            navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_privateBrowsingFragment },
-                null
-            )
-        }
-    }
-
-    @Test
-    fun handleWhatsNewGetAnswersClicked() {
-        createController().handleWhatsNewGetAnswersClicked()
-        val whatsNewUrl = SupportUtils.getWhatsNewUrl(activity)
-        verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = whatsNewUrl,
-                newTab = true,
-                from = BrowserDirection.FromHome
-            )
-        }
-    }
-
-    @Test
     fun handleReadPrivacyNoticeClicked() {
         createController().handleReadPrivacyNoticeClicked()
         verify {

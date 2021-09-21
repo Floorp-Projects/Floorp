@@ -143,16 +143,6 @@ interface OnboardingInteractor {
     fun onStartBrowsingClicked()
 
     /**
-     * Hides the onboarding and navigates to Settings. Called when a user clicks on the "Open settings" button.
-     */
-    fun onOpenSettingsClicked()
-
-    /**
-     * Opens a custom tab to what's new url. Called when a user clicks on the "Get answers here" link.
-     */
-    fun onWhatsNewGetAnswersClicked()
-
-    /**
      * Opens a custom tab to privacy notice url. Called when a user clicks on the "read our privacy notice" button.
      */
     fun onReadPrivacyNoticeClicked()
@@ -293,14 +283,6 @@ class SessionControlInteractor(
 
     override fun onStartBrowsingClicked() {
         controller.handleStartBrowsingClicked()
-    }
-
-    override fun onOpenSettingsClicked() {
-        controller.handleOpenSettingsClicked()
-    }
-
-    override fun onWhatsNewGetAnswersClicked() {
-        controller.handleWhatsNewGetAnswersClicked()
     }
 
     override fun onReadPrivacyNoticeClicked() {

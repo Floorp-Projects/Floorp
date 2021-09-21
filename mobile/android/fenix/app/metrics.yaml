@@ -441,23 +441,6 @@ onboarding:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2022-02-01"
-  pref_toggled_private_browsing:
-    type: event
-    description:
-      The private browsing preference was selected from the onboarding card.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/10824
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/11867
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - erichards@mozilla.com
-    expires: "2022-02-01"
   pref_toggled_toolbar_position:
     type: event
     description:

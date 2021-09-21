@@ -7424,17 +7424,6 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.drawable.ic_whats_new_notification` appears to be unused"
-        errorLine1="&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
-        errorLine2="^">
-        <location
-            file="src/main/res/drawable/ic_whats_new_notification.xml"
-            line="5"
-            column="1"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.integer.strike_thru_start_offset` appears to be unused"
         errorLine1="    &lt;integer name=&quot;strike_thru_start_offset&quot;>0&lt;/integer>"
         errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">

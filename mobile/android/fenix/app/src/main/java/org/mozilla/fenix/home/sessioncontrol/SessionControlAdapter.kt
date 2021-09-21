@@ -42,12 +42,10 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFi
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingManualSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPrivacyNoticeViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPrivateBrowsingViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingThemePickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingToolbarPositionPickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingWhatsNewViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketStoriesViewHolder
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
@@ -156,13 +154,10 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object OnboardingTrackingProtection :
         AdapterItem(OnboardingTrackingProtectionViewHolder.LAYOUT_ID)
 
-    object OnboardingPrivateBrowsing : AdapterItem(OnboardingPrivateBrowsingViewHolder.LAYOUT_ID)
     object OnboardingPrivacyNotice : AdapterItem(OnboardingPrivacyNoticeViewHolder.LAYOUT_ID)
     object OnboardingFinish : AdapterItem(OnboardingFinishViewHolder.LAYOUT_ID)
     object OnboardingToolbarPositionPicker :
         AdapterItem(OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID)
-
-    object OnboardingWhatsNew : AdapterItem(OnboardingWhatsNewViewHolder.LAYOUT_ID)
 
     object CustomizeHomeButton : AdapterItem(CustomizeHomeButtonViewHolder.LAYOUT_ID)
 
@@ -299,17 +294,12 @@ class SessionControlAdapter(
             OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(
                 view
             )
-            OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(
-                view,
-                interactor
-            )
             OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(
                 view,
                 interactor
             )
             CustomizeHomeButtonViewHolder.LAYOUT_ID -> CustomizeHomeButtonViewHolder(view, interactor)
             OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, interactor)
-            OnboardingWhatsNewViewHolder.LAYOUT_ID -> OnboardingWhatsNewViewHolder(view, interactor)
             OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID -> OnboardingToolbarPositionPickerViewHolder(
                 view
             )

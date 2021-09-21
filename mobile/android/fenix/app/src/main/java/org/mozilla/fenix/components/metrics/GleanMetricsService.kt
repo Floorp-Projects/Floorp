@@ -515,9 +515,6 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.tabCounterMenuAction.record(it) },
             { Events.tabCounterMenuActionKeys.valueOf(it) }
         )
-        is Event.OnboardingPrivateBrowsing -> EventWrapper<NoExtraKeys>(
-            { Onboarding.prefToggledPrivateBrowsing.record(it) }
-        )
         is Event.OnboardingPrivacyNotice -> EventWrapper<NoExtraKeys>(
             { Onboarding.privacyNotice.record(it) }
         )

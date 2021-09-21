@@ -134,7 +134,6 @@ sealed class Event {
     object OnboardingAutoSignIn : Event()
     object OnboardingManualSignIn : Event()
     object OnboardingPrivacyNotice : Event()
-    object OnboardingPrivateBrowsing : Event()
     object OnboardingFinish : Event()
     object ChangedToDefaultBrowser : Event()
     object DefaultBrowserNotifTapped : Event()

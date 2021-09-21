@@ -1239,12 +1239,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Already have an account?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">See what’s new</string>
+    <string name="onboarding_whats_new_header1" moz:removedIn="94" tools:ignore="UnusedResources">See what’s new</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Have questions about the redesigned %s? Want to know what’s changed?</string>
+    <string name="onboarding_whats_new_description" moz:removedIn="94" tools:ignore="UnusedResources">Have questions about the redesigned %s? Want to know what’s changed?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Get answers here</string>
+    <string name="onboarding_whats_new_description_linktext" moz:removedIn="94" tools:ignore="UnusedResources">Get answers here</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sync Firefox between devices</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1284,14 +1284,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Browse privately</string>
+    <string name="onboarding_private_browsing_header" moz:removedIn="94" tools:ignore="UnusedResources">Browse privately</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Open a private tab once: Tap the %s icon.</string>
+    <string name="onboarding_private_browsing_description1" moz:removedIn="94" tools:ignore="UnusedResources">Open a private tab once: Tap the %s icon.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Open private tabs every time: Update your private browsing settings.</string>
+    <string name="onboarding_private_browsing_always_description" moz:removedIn="94" tools:ignore="UnusedResources">Open private tabs every time: Update your private browsing settings.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Open settings</string>
+    <string name="onboarding_private_browsing_button" moz:removedIn="94" tools:ignore="UnusedResources">Open settings</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
