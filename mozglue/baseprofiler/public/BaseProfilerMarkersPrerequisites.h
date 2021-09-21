@@ -384,6 +384,14 @@ class MarkerTiming {
     return static_cast<uint8_t>(mPhase);
   }
 
+  // This is a constructor for Rust FFI bindings. It must not be used outside of
+  // this! Please see the other static constructors above.
+  static void UnsafeConstruct(MarkerTiming* aMarkerTiming,
+                              const TimeStamp& aStartTime,
+                              const TimeStamp& aEndTime, Phase aPhase) {
+    new (aMarkerTiming) MarkerTiming{aStartTime, aEndTime, aPhase};
+  }
+
  private:
   friend ProfileBufferEntryWriter::Serializer<MarkerTiming>;
   friend ProfileBufferEntryReader::Deserializer<MarkerTiming>;
