@@ -25,6 +25,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
  * @param orientation Whether the AwesomeBar is oriented to the top or the bottom of the screen.
  * @param onSuggestionClicked Gets invoked whenever the user clicks on a suggestion in the AwesomeBar.
  * @param onAutoComplete Gets invoked when the user clicks on the "autocomplete" icon of a suggestion.
+ * @param onScroll Gets invoked at the beginning of the user performing a scroll gesture.
  */
 @Composable
 fun AwesomeBar(
@@ -33,7 +34,8 @@ fun AwesomeBar(
     providers: List<AwesomeBar.SuggestionProvider>,
     orientation: AwesomeBarOrientation = AwesomeBarOrientation.TOP,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
+    onScroll: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -52,7 +54,8 @@ fun AwesomeBar(
             colors,
             orientation,
             onSuggestionClicked,
-            onAutoComplete
+            onAutoComplete,
+            onScroll
         )
     }
 }

@@ -5,8 +5,12 @@
 package mozilla.components.compose.browser.awesomebar.internal
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.RememberObserver
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
@@ -14,14 +18,21 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 @Composable
+@Suppress("LongParameterList")
 internal fun Suggestions(
     suggestions: List<AwesomeBar.Suggestion>,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
+    onScroll: () -> Unit
 ) {
+    val state = rememberLazyListState()
+
+    ScrollHandler(state, onScroll)
+
     LazyColumn(
+        state = state,
         modifier = Modifier.testTag("mozac.awesomebar.suggestions")
     ) {
         items(suggestions) { suggestion ->
@@ -32,6 +43,39 @@ internal fun Suggestions(
                 onSuggestionClicked,
                 onAutoComplete
             )
+        }
+    }
+}
+
+/**
+ * An effect for handling scrolls in a [LazyColumn]. Will invoke [onScroll] at the beginning
+ * of a scroll gesture.
+ */
+@Composable
+private fun ScrollHandler(
+    state: LazyListState,
+    onScroll: () -> Unit
+) {
+    val scrollInProgress = state.isScrollInProgress
+    remember(scrollInProgress) {
+        ScrollHandlerImpl(scrollInProgress, onScroll)
+    }
+}
+
+/**
+ * [RememberObserver] implementation that will make sure that [onScroll] get called only once as
+ * long as [scrollInProgress] doesn't change.
+ */
+private class ScrollHandlerImpl(
+    private val scrollInProgress: Boolean,
+    private val onScroll: () -> Unit,
+) : RememberObserver {
+    override fun onAbandoned() = Unit
+    override fun onForgotten() = Unit
+
+    override fun onRemembered() {
+        if (scrollInProgress) {
+            onScroll()
         }
     }
 }
