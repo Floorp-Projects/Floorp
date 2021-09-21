@@ -877,6 +877,10 @@ void ScriptPreloader::FillCompileOptionsForCachedStencil(
   // called on functions in these scripts, the source-hook will fetch it over,
   // so using `toString` of functions should be avoided in chrome js.
   options.setSourceIsLazy(true);
+
+  // ScriptPreloader's XDR buffer is alive during the entire browser lifetime.
+  // The decoded stencil can borrow from it.
+  options.borrowBuffer = true;
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(

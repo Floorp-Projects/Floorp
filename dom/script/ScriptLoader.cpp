@@ -2937,6 +2937,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
 
   aOptions->setdeferDebugMetadata(true);
 
+  aOptions->borrowBuffer = true;
+
   return NS_OK;
 }
 

@@ -2672,6 +2672,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
   if (xdrCache.Length() > 0) {
     // Allow the VM to directly use bytecode from the XDR buffer without
     // copying it. The buffer must outlive all runtimes (including workers).
+    options.borrowBuffer = true;
     options.usePinnedBytecode = true;
 
     Rooted<UniquePtr<frontend::CompilationInput>> input(

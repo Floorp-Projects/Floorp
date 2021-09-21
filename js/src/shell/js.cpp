@@ -2307,6 +2307,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       .setFileAndLine("@evaluate", 1)
       .setdeferDebugMetadata();
 
+  options.borrowBuffer = true;
+
   global = JS::CurrentGlobalOrNull(cx);
   MOZ_ASSERT(global);
 
@@ -6613,6 +6615,8 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
       CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Script;
   options.useStencilXDR =
       CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Stencil;
+
+  options.borrowBuffer = true;
 
   // In browser, we always use off-thread parse global for decode task, for
   // performance reason.

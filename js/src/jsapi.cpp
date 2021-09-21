@@ -4530,8 +4530,11 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   // The buffer contains stencil.
 
+  CompileOptions opts(cx, options);
+  opts.borrowBuffer = true;
+
   Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
+                                           frontend::CompilationInput(opts));
   frontend::CompilationStencil stencil(nullptr);
 
   JS::TranscodeResult res =
@@ -4574,8 +4577,11 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     size_t cursorIndex) {
   MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
+  CompileOptions opts(cx, options);
+  opts.borrowBuffer = true;
+
   Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
+                                           frontend::CompilationInput(opts));
   frontend::CompilationStencil stencil(nullptr);
 
   JS::TranscodeResult res =
@@ -4603,7 +4609,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   }
 
   if (!gcOutput.get().script->scriptSource()->startIncrementalEncoding(
-          cx, options, std::move(initial))) {
+          cx, opts, std::move(initial))) {
     return JS::TranscodeResult::Throw;
   }
 
