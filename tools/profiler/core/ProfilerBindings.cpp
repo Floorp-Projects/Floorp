@@ -284,3 +284,64 @@ void gecko_profiler_add_marker_text(
       mozilla::ProfilerString8View(aText, aTextLength));
 #endif
 }
+
+void gecko_profiler_add_marker(
+    const char* aName, size_t aNameLength,
+    mozilla::baseprofiler::ProfilingCategoryPair aCategoryPair,
+    mozilla::MarkerTiming* aMarkerTiming,
+    mozilla::StackCaptureOptions aStackCaptureOptions, uint8_t aMarkerTag,
+    const uint8_t* aPayload, size_t aPayloadSize) {
+#ifdef MOZ_GECKO_PROFILER
+  // Copy the marker timing and create the marker option.
+  mozilla::MarkerOptions markerOptions(
+      std::move(*aMarkerTiming),
+      mozilla::MarkerStack::WithCaptureOptions(aStackCaptureOptions));
+
+  // Currently it's not possible to add a threadId option, but we will
+  // have it soon.
+  if (markerOptions.ThreadId().IsUnspecified()) {
+    // If yet unspecified, set thread to this thread where the marker is added.
+    markerOptions.Set(mozilla::MarkerThreadId::CurrentThread());
+  }
+
+  auto& buffer = profiler_markers_detail::CachedCoreBuffer();
+  mozilla::Span payload(aPayload, aPayloadSize);
+
+  mozilla::StackCaptureOptions captureOptions =
+      markerOptions.Stack().CaptureOptions();
+  if (captureOptions != mozilla::StackCaptureOptions::NoStack) {
+    // A capture was requested, let's attempt to do it here&now. This avoids a
+    // lot of allocations that would be necessary if capturing a backtrace
+    // separately.
+    // TODO use a local on-stack byte buffer to remove last allocation.
+    // TODO reduce internal profiler stack levels, see bug 1659872.
+    mozilla::ProfileBufferChunkManagerSingle chunkManager(
+        mozilla::ProfileBufferChunkManager::scExpectedMaximumStackSize);
+    mozilla::ProfileChunkedBuffer chunkedBuffer(
+        mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+        chunkManager);
+    markerOptions.StackRef().UseRequestedBacktrace(
+        profiler_capture_backtrace_into(chunkedBuffer, captureOptions)
+            ? &chunkedBuffer
+            : nullptr);
+
+    // This call must be made from here, while chunkedBuffer is in scope.
+    buffer.PutObjects(
+        mozilla::ProfileBufferEntryKind::Marker, markerOptions,
+        mozilla::ProfilerString8View(aName, aNameLength),
+        mozilla::MarkerCategory{aCategoryPair},
+        mozilla::base_profiler_markers_detail::Streaming::DeserializerTag(
+            aMarkerTag),
+        mozilla::MarkerPayloadType::Rust, payload);
+    return;
+  }
+
+  buffer.PutObjects(
+      mozilla::ProfileBufferEntryKind::Marker, markerOptions,
+      mozilla::ProfilerString8View(aName, aNameLength),
+      mozilla::MarkerCategory{aCategoryPair},
+      mozilla::base_profiler_markers_detail::Streaming::DeserializerTag(
+          aMarkerTag),
+      mozilla::MarkerPayloadType::Rust, payload);
+#endif
+}
