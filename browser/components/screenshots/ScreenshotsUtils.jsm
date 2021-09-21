@@ -26,18 +26,4 @@ var ScreenshotsUtils = {
       { features: "resizable=no", sizeTo: "available" }
     );
   },
-  notify(window, type) {
-    if (window.document.getElementById("screenshot-button").disabled) {
-      return;
-    }
-
-    if (Services.prefs.getBoolPref("screenshots.browser.component.enabled")) {
-      Services.obs.notifyObservers(
-        window.event.currentTarget.ownerGlobal,
-        "menuitem-screenshot"
-      );
-    } else {
-      Services.obs.notifyObservers(null, "menuitem-screenshot-extension", type);
-    }
-  },
 };
