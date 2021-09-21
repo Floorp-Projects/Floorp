@@ -117,6 +117,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   enum class HitTestKind { WebRender, Internal };
   APZCTreeManager(LayersId aRootLayersId, HitTestKind aHitTestKind);
 
+  static mozilla::LazyLogModule sLog;
+
   void SetSampler(APZSampler* aSampler);
   void SetUpdater(APZUpdater* aUpdater);
 
