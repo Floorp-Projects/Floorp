@@ -141,6 +141,18 @@ class Collator final {
   static SpanResult<char> KeywordValueToBcp47Extension(const char* aKeyword,
                                                        int32_t aLength);
 
+  enum class CommonlyUsed : bool {
+    /**
+     * Select all possible values, even when not commonly used by a locale.
+     */
+    No,
+
+    /**
+     * Only select the values which are commonly used by a locale.
+     */
+    Yes,
+  };
+
   using Bcp47ExtEnumeration =
       Enumeration<char, SpanResult<char>,
                   Collator::KeywordValueToBcp47Extension>;
@@ -155,7 +167,7 @@ class Collator final {
    * http://cldr.unicode.org/core-spec/#Key_Type_Definitions
    */
   static Result<Bcp47ExtEnumeration, ICUError> GetBcp47KeywordValuesForLocale(
-      const char* aLocale);
+      const char* aLocale, CommonlyUsed aCommonlyUsed = CommonlyUsed::No);
 
   /**
    * Returns an iterator over all possible collator locale extensions.

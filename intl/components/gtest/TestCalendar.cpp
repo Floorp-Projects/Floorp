@@ -52,6 +52,28 @@ TEST(IntlCalendar, GetBcp47KeywordValuesForLocale)
   ASSERT_TRUE(hasIslamic);
 }
 
+TEST(IntlCalendar, GetBcp47KeywordValuesForLocaleCommonlyUsed)
+{
+  bool hasGregory = false;
+  bool hasIslamic = false;
+  auto gregory = MakeStringSpan("gregory");
+  auto islamic = MakeStringSpan("islamic");
+  auto keywords = Calendar::GetBcp47KeywordValuesForLocale(
+                      "en-US", Calendar::CommonlyUsed::Yes)
+                      .unwrap();
+  for (auto name : keywords) {
+    // Check a few keywords, as this list may not be stable between ICU updates.
+    if (name.unwrap() == gregory) {
+      hasGregory = true;
+    }
+    if (name.unwrap() == islamic) {
+      hasIslamic = true;
+    }
+  }
+  ASSERT_TRUE(hasGregory);
+  ASSERT_FALSE(hasIslamic);
+}
+
 TEST(IntlCalendar, GetBcp47Type)
 {
   auto calendar =
