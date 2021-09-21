@@ -528,37 +528,6 @@ MOZ_NEVER_INLINE JS_PUBLIC_API bool JS_ExecuteScript(
   return ExecuteScript(cx, envChain, scriptArg, &rval);
 }
 
-JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
-                                             HandleScript scriptArg,
-                                             JS::MutableHandleValue rval) {
-  CHECK_THREAD(cx);
-  RootedScript script(cx, scriptArg);
-  RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-  if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, script);
-    if (!script) {
-      return false;
-    }
-  }
-  return ExecuteScript(cx, globalLexical, script, rval);
-}
-
-JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
-                                             JS::HandleObjectVector envChain,
-                                             HandleScript scriptArg,
-                                             JS::MutableHandleValue rval) {
-  CHECK_THREAD(cx);
-  MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
-  RootedScript script(cx, scriptArg);
-  if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, script);
-    if (!script) {
-      return false;
-    }
-  }
-  return ExecuteScript(cx, envChain, script, rval);
-}
-
 template <typename Unit>
 static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
                                  Handle<JSObject*> env,
