@@ -31,3 +31,11 @@ void gecko_profiler_destruct_label(mozilla::AutoProfilerLabel* aAutoLabel) {
   aAutoLabel->~AutoProfilerLabel();
 #endif
 }
+
+void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp) {
+  new (aTimeStamp) mozilla::TimeStamp(mozilla::TimeStamp::Now());
+}
+
+void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp) {
+  aTimeStamp->~TimeStamp();
+}

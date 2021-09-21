@@ -13,6 +13,7 @@
 
 namespace mozilla {
 class AutoProfilerLabel;
+class TimeStamp;
 }  // namespace mozilla
 
 namespace JS {
@@ -29,6 +30,10 @@ void gecko_profiler_unregister_thread();
 void gecko_profiler_construct_label(mozilla::AutoProfilerLabel* aAutoLabel,
                                     JS::ProfilingCategoryPair aCategoryPair);
 void gecko_profiler_destruct_label(mozilla::AutoProfilerLabel* aAutoLabel);
+
+// Construct and destruct the timestamp for profiler time.
+void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp);
+void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp);
 
 }  // extern "C"
 
