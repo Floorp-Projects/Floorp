@@ -26,6 +26,7 @@
 
 #include "jit/Assembler.h"
 #include "jit/JitOptions.h"
+#include "js/Printf.h"
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
@@ -83,9 +84,11 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args,
                                  ModuleEnvironment* moduleEnv,
                                  CompilerEnvironment* compilerEnv,
                                  const Atomic<bool>* cancelled,
-                                 UniqueChars* error)
+                                 UniqueChars* error,
+                                 UniqueCharsVector* warnings)
     : compileArgs_(&args),
       error_(error),
+      warnings_(warnings),
       cancelled_(cancelled),
       moduleEnv_(moduleEnv),
       compilerEnv_(compilerEnv),
@@ -1080,6 +1083,7 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
   UniqueModuleSegment segment =
       ModuleSegment::create(tier(), masm_, *linkData_);
   if (!segment) {
+    warnf("failed to allocate executable memory for module");
     return nullptr;
   }
 
@@ -1291,6 +1295,22 @@ bool ModuleGenerator::finishTier2(const Module& module) {
   }
 
   return module.finishTier2(*linkData_, std::move(codeTier));
+}
+
+void ModuleGenerator::warnf(const char* msg, ...) {
+  if (!warnings_) {
+    return;
+  }
+
+  va_list ap;
+  va_start(ap, msg);
+  UniqueChars str(JS_vsmprintf(msg, ap));
+  va_end(ap);
+  if (!str) {
+    return;
+  }
+
+  (void)warnings_->append(std::move(str));
 }
 
 size_t CompiledCode::sizeOfExcludingThis(
