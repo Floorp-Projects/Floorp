@@ -1383,6 +1383,9 @@ bool js::IteratorCloseForException(JSContext* cx, HandleObject obj) {
 void js::UnwindIteratorForUncatchableException(JSObject* obj) {
   if (obj->is<PropertyIteratorObject>()) {
     NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
+    if (ni->isEmptyIteratorSingleton()) {
+      return;
+    }
     ni->unlink();
   }
 }
