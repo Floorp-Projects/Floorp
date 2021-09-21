@@ -995,57 +995,6 @@ static bool GetScriptPlainObjectProperties(
   return true;
 }
 
-static bool DeepCloneValue(JSContext* cx, Value* vp) {
-  if (vp->isObject()) {
-    RootedObject obj(cx, &vp->toObject());
-    obj = DeepCloneObjectLiteral(cx, obj);
-    if (!obj) {
-      return false;
-    }
-    vp->setObject(*obj);
-  } else {
-    cx->markAtomValue(*vp);
-  }
-  return true;
-}
-
-JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
-  /* NB: Keep this in sync with XDRObjectLiteral. */
-  MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
-
-  if (obj->is<ArrayObject>()) {
-    Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
-    if (!GetScriptArrayObjectElements(obj.as<ArrayObject>(), &values)) {
-      return nullptr;
-    }
-
-    // Deep clone any elements.
-    for (uint32_t i = 0; i < values.length(); ++i) {
-      if (!DeepCloneValue(cx, values[i].address())) {
-        return nullptr;
-      }
-    }
-
-    return NewDenseCopiedArray(cx, values.length(), values.begin(),
-                               TenuredObject);
-  }
-
-  Rooted<IdValueVector> properties(cx, IdValueVector(cx));
-  if (!GetScriptPlainObjectProperties(obj, &properties)) {
-    return nullptr;
-  }
-
-  for (size_t i = 0; i < properties.length(); i++) {
-    cx->markId(properties[i].get().id);
-    if (!DeepCloneValue(cx, &properties[i].get().value)) {
-      return nullptr;
-    }
-  }
-
-  return NewPlainObjectWithProperties(cx, properties.begin(),
-                                      properties.length(), TenuredObject);
-}
-
 static bool InitializePropertiesFromCompatibleNativeObject(
     JSContext* cx, HandleNativeObject dst, HandleNativeObject src) {
   cx->check(src, dst);
@@ -1109,8 +1058,6 @@ JS_PUBLIC_API bool JS_InitializePropertiesFromCompatibleNativeObject(
 
 template <XDRMode mode>
 XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
-  /* NB: Keep this in sync with DeepCloneObjectLiteral. */
-
   JSContext* cx = xdr->cx();
   cx->check(obj);
 

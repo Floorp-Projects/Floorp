@@ -353,8 +353,6 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
       XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
       MutableHandle<typename ConcreteScope::RuntimeData*> data);
 
-  Shape* maybeCloneEnvironmentShape(JSContext* cx);
-
   template <typename ConcreteScope>
   void initData(
       MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
@@ -447,8 +445,6 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
     }
     return false;
   }
-
-  static Scope* clone(JSContext* cx, HandleScope scope, HandleScope enclosing);
 
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
@@ -777,9 +773,6 @@ class FunctionScope : public Scope {
           data,
       bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
       ShapeT envShape);
-
-  static FunctionScope* clone(JSContext* cx, Handle<FunctionScope*> scope,
-                              HandleFunction fun, HandleScope enclosing);
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, HandleFunction fun,
