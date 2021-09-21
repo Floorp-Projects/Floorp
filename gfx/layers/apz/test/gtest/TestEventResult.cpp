@@ -297,7 +297,7 @@ TEST_F(APZEventResultTester, ScrollableDirections) {
 class APZEventResultTesterInternal : public APZEventResultTester {
  public:
   APZEventResultTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 };
 

@@ -13,9 +13,7 @@
 
 class APZCSnappingTesterInternal : public APZCTreeManagerTester {
  public:
-  APZCSnappingTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
-  }
+  APZCSnappingTesterInternal() { mHitTester = MakeUnique<InternalHitTester>(); }
 };
 
 TEST_F(APZCSnappingTesterInternal, Bug1265510) {
