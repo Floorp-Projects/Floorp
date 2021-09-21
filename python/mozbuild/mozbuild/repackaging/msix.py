@@ -266,25 +266,6 @@ def repackage_msix(
     # kebab-name` seems to fail in some cases.
     identity = identity or "{}.{}".format(vendor, displayname.replace(" ", "."))
 
-    defines = {
-        "APPX_ARCH": _MSIX_ARCH[arch],
-        "APPX_DISPLAYNAME": brandFullName,
-        "APPX_DESCRIPTION": brandFullName,
-        # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
-        "APPX_IDENTITY": identity,
-        # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox
-        # Beta Package Root'.  See above.
-        "APPX_INSTDIR": instdir,
-        # Like 'Firefox%20Package%20Root'.
-        "APPX_INSTDIR_QUOTED": urllib.parse.quote(instdir),
-        "APPX_PUBLISHER": publisher,
-        "APPX_VERSION": version,
-        "MOZ_APP_DISPLAYNAME": displayname,
-        "MOZ_APP_NAME": app_name,
-        "MOZ_APP_VENDOR": vendor,
-        "MOZ_IGECKOBACKCHANNEL_IID": MOZ_IGECKOBACKCHANNEL_IID,
-    }
-
     # We might want to include the publisher ID hash here.  I.e.,
     # "__{publisherID}".  My locally produced MSIX was named like
     # `Mozilla.Firefox.Nightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
@@ -302,26 +283,21 @@ def repackage_msix(
     log(logging.INFO, "msix", {"output": output}, "Repackaging to: {output}")
 
     m = InstallManifest()
-    m.add_preprocess(
-        mozpath.join(template, "AppxManifest.xml.in"),
-        "AppxManifest.xml",
-        [],
-        defines=defines,
-        marker="<!-- #",  # So that we can have well-formed XML.
-    )
     m.add_copy(mozpath.join(template, "Resources.pri"), "Resources.pri")
 
     m.add_pattern_copy(mozpath.join(branding, "msix", "Assets"), "**", "Assets")
     m.add_pattern_copy(mozpath.join(template, "VFS"), "**", "VFS")
 
     copier = FileCopier()
-    m.populate_registry(copier)
 
     # TODO: Bug 1710147: filter out MSVCRT files and use a dependency instead.
     for p, f in finder:
         # `p` is like "firefox/firefox.exe"; we want just "firefox.exe".
         pp = os.path.relpath(p, "firefox")
         copier.add(mozpath.normsep(mozpath.join("VFS", "ProgramFiles", instdir, pp)), f)
+
+    # Locales to declare as supported in `AppxManifest.xml`.
+    locales = set(["en-US"])
 
     for distribution_dir in [
         mozpath.join(template, "distribution")
@@ -343,6 +319,7 @@ def repackage_msix(
             if os.path.basename(p) == "target.langpack.xpi":
                 # Turn "/path/to/LOCALE/target.langpack.xpi" into "LOCALE".
                 base, locale = os.path.split(os.path.dirname(p))
+                locales.add(locale)
 
                 # Like "locale-LOCALE/langpack-LOCALE@firefox.mozilla.org.xpi".  This is what AMO
                 # serves and how flatpak builds name langpacks, but not how snap builds name
@@ -370,6 +347,41 @@ def repackage_msix(
                 ),
                 f,
             )
+
+    locales.remove("en-US")
+    locales = ["en-US"] + list(sorted(locales))
+    resource_language_list = "\n".join(
+        f'    <Resource Language="{locale}" />' for locale in sorted(locales)
+    )
+
+    defines = {
+        "APPX_ARCH": _MSIX_ARCH[arch],
+        "APPX_DISPLAYNAME": brandFullName,
+        "APPX_DESCRIPTION": brandFullName,
+        # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
+        "APPX_IDENTITY": identity,
+        # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox
+        # Beta Package Root'.  See above.
+        "APPX_INSTDIR": instdir,
+        # Like 'Firefox%20Package%20Root'.
+        "APPX_INSTDIR_QUOTED": urllib.parse.quote(instdir),
+        "APPX_PUBLISHER": publisher,
+        "APPX_RESOURCE_LANGUAGE_LIST": resource_language_list,
+        "APPX_VERSION": version,
+        "MOZ_APP_DISPLAYNAME": displayname,
+        "MOZ_APP_NAME": app_name,
+        "MOZ_APP_VENDOR": vendor,
+        "MOZ_IGECKOBACKCHANNEL_IID": MOZ_IGECKOBACKCHANNEL_IID,
+    }
+
+    m.add_preprocess(
+        mozpath.join(template, "AppxManifest.xml.in"),
+        "AppxManifest.xml",
+        [],
+        defines=defines,
+        marker="<!-- #",  # So that we can have well-formed XML.
+    )
+    m.populate_registry(copier)
 
     output_dir = mozpath.abspath(output_dir)
     ensureParentDir(output_dir)
