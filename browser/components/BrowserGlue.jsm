@@ -1398,9 +1398,104 @@ BrowserGlue.prototype = {
       // resource://builtin-themes/monochromatic/.
       const kMonochromaticThemeList = [
         {
+          id: "firefox-lush-soft@mozilla.org",
+          version: "1.0",
+          path: "lush/soft/",
+        },
+        {
+          id: "firefox-lush-balanced@mozilla.org",
+          version: "1.0",
+          path: "lush/balanced/",
+        },
+        {
+          id: "firefox-lush-soft@mozilla.org",
+          version: "1.0",
+          path: "lush/soft/",
+        },
+        {
+          id: "firefox-lush-balanced@mozilla.org",
+          version: "1.0",
+          path: "lush/balanced/",
+        },
+        {
           id: "firefox-lush-bold@mozilla.org",
           version: "1.0",
           path: "lush/bold/",
+        },
+        {
+          id: "firefox-abstract-soft@mozilla.org",
+          version: "1.0",
+          path: "abstract/soft/",
+        },
+        {
+          id: "firefox-abstract-balanced@mozilla.org",
+          version: "1.0",
+          path: "abstract/balanced/",
+        },
+        {
+          id: "firefox-abstract-bold@mozilla.org",
+          version: "1.0",
+          path: "abstract/bold/",
+        },
+        {
+          id: "firefox-elemental-soft@mozilla.org",
+          version: "1.0",
+          path: "elemental/soft/",
+        },
+        {
+          id: "firefox-elemental-balanced@mozilla.org",
+          version: "1.0",
+          path: "elemental/balanced/",
+        },
+        {
+          id: "firefox-elemental-bold@mozilla.org",
+          version: "1.0",
+          path: "elemental/bold/",
+        },
+        {
+          id: "firefox-cheers-soft@mozilla.org",
+          version: "1.0",
+          path: "cheers/soft/",
+        },
+        {
+          id: "firefox-cheers-balanced@mozilla.org",
+          version: "1.0",
+          path: "cheers/balanced/",
+        },
+        {
+          id: "firefox-cheers-bold@mozilla.org",
+          version: "1.0",
+          path: "cheers/bold/",
+        },
+        {
+          id: "firefox-graffiti-soft@mozilla.org",
+          version: "1.0",
+          path: "graffiti/soft/",
+        },
+        {
+          id: "firefox-graffiti-balanced@mozilla.org",
+          version: "1.0",
+          path: "graffiti/balanced/",
+        },
+        {
+          id: "firefox-graffiti-bold@mozilla.org",
+          version: "1.0",
+          path: "graffiti/bold/",
+        },
+        {
+          id: "firefox-foto-soft@mozilla.org",
+          version: "1.0",
+          path: "foto/soft/",
+        },
+        {
+          id: "firefox-foto-balanced@mozilla.org",
+          version: "1.0",
+          path: "foto/balanced/",
+        },
+        {
+          id: "firefox-foto-bold@mozilla.org",
+          version: "1.0",
+          path: "foto/bold/",
         },
       ];
       for (let { id, version, path } of kMonochromaticThemeList) {
