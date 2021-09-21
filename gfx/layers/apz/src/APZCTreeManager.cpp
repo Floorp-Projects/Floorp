@@ -55,8 +55,9 @@
 #include "GestureEventListener.h"  // for GestureEventListener::setLongTapEnabled
 #include "UnitTransforms.h"        // for ViewAs
 
-static mozilla::LazyLogModule sApzMgrLog("apz.manager");
-#define APZCTM_LOG(...) MOZ_LOG(sApzMgrLog, LogLevel::Debug, (__VA_ARGS__))
+mozilla::LazyLogModule mozilla::layers::APZCTreeManager::sLog("apz.manager");
+#define APZCTM_LOG(...) \
+  MOZ_LOG(APZCTreeManager::sLog, LogLevel::Debug, (__VA_ARGS__))
 
 static mozilla::LazyLogModule sApzKeyLog("apz.key");
 #define APZ_KEY_LOG(...) MOZ_LOG(sApzKeyLog, LogLevel::Debug, (__VA_ARGS__))
@@ -683,7 +684,7 @@ void APZCTreeManager::UpdateHitTestingTree(
   }
 
   APZCTM_LOG("APZCTreeManager (%p)\n", this);
-  if (mRootNode && MOZ_LOG_TEST(sApzMgrLog, LogLevel::Debug)) {
+  if (mRootNode && MOZ_LOG_TEST(sLog, LogLevel::Debug)) {
     mRootNode->Dump("  ");
   }
   SendSubtreeTransformsToChromeMainThread(nullptr);
