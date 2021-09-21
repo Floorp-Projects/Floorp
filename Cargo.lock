@@ -1781,9 +1781,11 @@ dependencies = [
 name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "bindgen",
  "lazy_static",
  "profiler-macros",
+ "serde",
 ]
 
 [[package]]

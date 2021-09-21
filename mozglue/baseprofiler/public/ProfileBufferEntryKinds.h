@@ -97,6 +97,12 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   MODERN_LIMIT
 };
 
+using MarkerPayloadTypeUnderlyingType = uint8_t;
+enum class MarkerPayloadType : MarkerPayloadTypeUnderlyingType {
+  Cpp,
+  Rust,
+};
+
 }  // namespace mozilla
 
 #endif  // ProfileBufferEntryKinds_h
