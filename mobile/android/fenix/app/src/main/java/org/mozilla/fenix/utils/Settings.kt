@@ -32,6 +32,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagPreference
+import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.FeatureId
@@ -107,9 +108,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     override val preferences: SharedPreferences =
         appContext.getSharedPreferences(FENIX_PREFERENCES, MODE_PRIVATE)
 
-    var showTopFrecentSites by booleanPreference(
+    var showTopFrecentSites by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_enable_top_frecent_sites),
-        default = true
+        featureFlag = true,
+        default = { appContext.components.analytics.features.homeScreen.isTopSitesActive() }
     )
 
     var numberOfAppLaunches by intPreference(
@@ -1140,9 +1142,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    var historyMetadataUIFeature by featureFlagPreference(
+    var historyMetadataUIFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
-        default = FeatureFlags.historyMetadataUIFeature,
+        default = { appContext.components.analytics.features.homeScreen.isRecentExplorationsActive() },
         featureFlag = FeatureFlags.historyMetadataUIFeature || isHistoryMetadataEnabled
     )
 
@@ -1150,19 +1152,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Indicates if the recent tabs functionality should be visible.
      * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_tabs] are true.
      */
-    var showRecentTabsFeature by featureFlagPreference(
+    var showRecentTabsFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_tabs),
-        default = FeatureFlags.showRecentTabsFeature,
-        featureFlag = FeatureFlags.showRecentTabsFeature
+        featureFlag = FeatureFlags.showRecentTabsFeature,
+        default = { appContext.components.analytics.features.homeScreen.isRecentlyTabsActive() }
     )
 
     /**
      * Indicates if the recent saved bookmarks functionality should be visible.
      * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_bookmarks] are true.
      */
-    var showRecentBookmarksFeature by featureFlagPreference(
+    var showRecentBookmarksFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_bookmarks),
-        default = FeatureFlags.recentBookmarksFeature,
+        default = { appContext.components.analytics.features.homeScreen.isRecentlySavedActive() },
         featureFlag = FeatureFlags.recentBookmarksFeature
     )
 
@@ -1191,8 +1193,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    var pocketRecommendations by booleanPreference(
+    var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
-        default = true
+        featureFlag = FeatureFlags.isPocketRecommendationsFeatureEnabled(appContext),
+        default = { appContext.components.analytics.features.homeScreen.isPocketRecommendationsActive() },
     )
 }

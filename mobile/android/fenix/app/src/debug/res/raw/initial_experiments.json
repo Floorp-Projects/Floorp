@@ -4,46 +4,56 @@
           "appId": "org.mozilla.fenix",
           "appName": "fenix",
           "channel": "nightly",
-          "branches": [{
-                  "slug": "control",
+          "branches": [
+              {
+                  "slug": "no-mr2",
+                  "ratio": 0,
+                  "feature": {
+                      "value": {
+                           "sections-enabled": {
+                               "topSites": true,
+                               "recentExplorations": true,
+                               "recentlySaved": false,
+                               "jumpBackIn": false,
+                               "pocket": false
+                          }
+                      },
+                      "enabled": true,
+                      "featureId": "homescreen"
+                  }
+              },
+              {
+                  "slug": "full-mr2",
                   "ratio": 100,
                   "feature": {
-                      "value": {},
+                      "value": {
+                          "sections-enabled": {
+                              "topSites": true,
+                              "recentExplorations": true,
+                              "recentlySaved": true,
+                              "jumpBackIn": true,
+                              "pocket": true
+                          }
+                      },
                       "enabled": true,
-                      "featureId": "nimbus-validation"
+                      "featureId": "homescreen"
                   }
               },
               {
-                  "slug": "fancy-settings",
+                  "slug": "distraction-free",
                   "ratio": 0,
                   "feature": {
                       "value": {
-                          "settings-title": "Fancy Settings"
+                          "sections-enabled": {
+                              "topSites": true,
+                              "recentExplorations": false,
+                              "recentlySaved": false,
+                              "jumpBackIn": false,
+                              "pocket": false
+                          }
                       },
                       "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "smiley",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title-punctuation": "\uD83D\uDE03"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "bundled-text",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title": "preferences_category_general"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
+                      "featureId": "homescreen"
                   }
               }
           ],
@@ -53,7 +63,7 @@
           "startDate": null,
           "targeting": "true",
           "featureIds": [
-              "nimbus-validation"
+              "homescreen"
           ],
           "application": "org.mozilla.firefox_beta",
           "bucketConfig": {
@@ -64,181 +74,12 @@
               "randomizationUnit": "nimbus_id"
           },
           "schemaVersion": "1.5.0",
-          "userFacingName": "Nimbus Text Variables Validation",
+          "userFacingName": "Home screen sections test",
           "referenceBranch": "control",
           "proposedDuration": 14,
           "isEnrollmentPaused": false,
           "proposedEnrollment": 7,
-          "userFacingDescription": "Demonstration experiment to make trivial visible changes to text in Settings",
-          "last_modified": 1621443780172
-      },
-      {
-          "slug": "feature-icon-variables-validation-android",
-          "appId": "org.mozilla.fenix",
-          "appName": "fenix",
-          "channel": "nightly",
-          "branches": [{
-                  "slug": "control",
-                  "ratio": 100,
-                  "feature": {
-                      "value": {},
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "edit-menu-icon",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title": "preferences_category_general",
-                          "settings-icon": "ic_edit"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              }
-          ],
-          "outcomes": [],
-          "arguments": {},
-          "probeSets": [],
-          "startDate": null,
-          "targeting": "true",
-          "featureIds": [
-              "nimbus-validation"
-          ],
-          "application": "org.mozilla.firefox_beta",
-          "bucketConfig": {
-              "count": 0,
-              "start": 0,
-              "total": 10000,
-              "namespace": "nimbus-validation-2",
-              "randomizationUnit": "nimbus_id"
-          },
-          "schemaVersion": "1.5.0",
-          "userFacingName": "Nimbus Icon Variables Validation",
-          "referenceBranch": "control",
-          "proposedDuration": 14,
-          "isEnrollmentPaused": false,
-          "proposedEnrollment": 7,
-          "userFacingDescription": "Demonstration experiment to make trivial visible changes to icons in Settings",
-          "last_modified": 1621443780172
-      },
-
-      {
-          "slug": "feature-text-variables-validation-ios",
-          "appId": "org.mozilla.ios.Fennec",
-          "appName": "firefox_ios",
-          "channel": "nightly",
-          "branches": [{
-                  "slug": "control",
-                  "ratio": 100,
-                  "feature": {
-                      "value": {},
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "a1",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title": "Menu/Menu.OpenSettingsAction.Title",
-                          "settings-title-punctuation": "…"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "a2",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title": "Settings.General.SectionName",
-                          "settings-title-punctuation": "!"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              }
-          ],
-          "outcomes": [],
-          "arguments": {},
-          "probeSets": [],
-          "startDate": null,
-          "targeting": "true",
-          "featureIds": [
-              "nimbus-validation"
-          ],
-          "application": "org.mozilla.ios.Fennec",
-          "bucketConfig": {
-              "count": 0,
-              "start": 0,
-              "total": 10000,
-              "namespace": "nimbus-validation-2",
-              "randomizationUnit": "nimbus_id"
-          },
-          "schemaVersion": "1.5.0",
-          "userFacingName": "Nimbus Text Variables Validation",
-          "referenceBranch": "control",
-          "proposedDuration": 14,
-          "isEnrollmentPaused": false,
-          "proposedEnrollment": 7,
-          "userFacingDescription": "Demonstration experiment to make trivial visible changes to text in Settings",
-          "last_modified": 1621443780172
-      },
-      {
-          "slug": "feature-icon-variables-validation-ios",
-          "appId": "org.mozilla.ios.Fennec",
-          "appName": "firefox_ios",
-          "channel": "nightly",
-          "branches": [{
-                  "slug": "control",
-                  "ratio": 100,
-                  "feature": {
-                      "value": {},
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              },
-              {
-                  "slug": "treatment",
-                  "ratio": 0,
-                  "feature": {
-                      "value": {
-                          "settings-title": "Fancy Settings",
-                          "settings-icon": "menu-ViewMobile"
-                      },
-                      "enabled": true,
-                      "featureId": "nimbus-validation"
-                  }
-              }
-          ],
-          "outcomes": [],
-          "arguments": {},
-          "probeSets": [],
-          "startDate": null,
-          "targeting": "true",
-          "featureIds": [
-              "nimbus-validation"
-          ],
-          "application": "org.mozilla.ios.Fennec",
-          "bucketConfig": {
-              "count": 0,
-              "start": 0,
-              "total": 10000,
-              "namespace": "nimbus-validation-2",
-              "randomizationUnit": "nimbus_id"
-          },
-          "schemaVersion": "1.5.0",
-          "userFacingName": "Nimbus Icon Variables Validation",
-          "referenceBranch": "control",
-          "proposedDuration": 14,
-          "isEnrollmentPaused": false,
-          "proposedEnrollment": 7,
-          "userFacingDescription": "Demonstration experiment to make trivial visible changes to icons in Settings",
+          "userFacingDescription": "Experiment to test the home screen configurations",
           "last_modified": 1621443780172
       }
   ]

@@ -160,7 +160,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
 
         requirePreference<SwitchPreference>(R.string.pref_key_pocket_homescreen_recommendations).apply {
             isVisible = FeatureFlags.isPocketRecommendationsFeatureEnabled(context)
-            isChecked = context.settings().pocketRecommendations
+            isChecked = context.settings().showPocketRecommendationsFeature
             onPreferenceChangeListener = CustomizeHomeMetricsUpdater()
         }
 

@@ -23,3 +23,26 @@ fun featureFlagPreference(key: String, default: Boolean, featureFlag: Boolean) =
     } else {
         DummyProperty()
     }
+
+private class LazyPreference(val key: String, val default: () -> Boolean) :
+    ReadWriteProperty<PreferencesHolder, Boolean> {
+    private val property: ReadWriteProperty<PreferencesHolder, Boolean> by lazy {
+        booleanPreference(key, default())
+    }
+
+    override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>) =
+        this.property.getValue(thisRef, property)
+
+    override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: Boolean) =
+        this.property.setValue(thisRef, property, value)
+}
+
+/**
+ * Property delegate for getting and setting lazily a boolean shared preference gated by a feature flag.
+ */
+fun lazyFeatureFlagPreference(key: String, featureFlag: Boolean, default: () -> Boolean) =
+    if (featureFlag) {
+        LazyPreference(key, default)
+    } else {
+        DummyProperty()
+    }

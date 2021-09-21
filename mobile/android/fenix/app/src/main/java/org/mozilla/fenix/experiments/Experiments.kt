@@ -14,7 +14,8 @@ package org.mozilla.fenix.experiments
 enum class FeatureId(val jsonName: String) {
     NIMBUS_VALIDATION("nimbus-validation"),
     ANDROID_KEYSTORE("fenix-android-keystore"),
-    DEFAULT_BROWSER("fenix-default-browser")
+    DEFAULT_BROWSER("fenix-default-browser"),
+    HOME_PAGE("homescreen")
 }
 
 /**

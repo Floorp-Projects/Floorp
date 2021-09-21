@@ -269,7 +269,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
-        if (settings().pocketRecommendations) {
+        if (settings().showPocketRecommendationsFeature) {
             components.core.pocketStoriesService.startPeriodicStoriesRefresh()
         }
 

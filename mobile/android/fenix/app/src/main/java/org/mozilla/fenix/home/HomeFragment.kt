@@ -94,10 +94,12 @@ import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.asRecentTabs
+import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.recordExposureEvent
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
@@ -253,9 +255,7 @@ class HomeFragment : Fragment() {
         }
 
         lifecycleScope.launch(IO) {
-            if (FeatureFlags.isPocketRecommendationsFeatureEnabled(requireContext()) &&
-                requireContext().settings().pocketRecommendations
-            ) {
+            if (requireContext().settings().showPocketRecommendationsFeature) {
                 val categories = components.core.pocketStoriesService.getStories()
                     .groupBy { story -> story.category }
                     .map { (category, stories) -> PocketRecommendedStoryCategory(category, stories) }
@@ -370,6 +370,8 @@ class HomeFragment : Fragment() {
         appBarLayout = binding.homeAppBar
 
         activity.themeManager.applyStatusBarTheme(activity)
+
+        requireContext().components.analytics.experiments.recordExposureEvent(FeatureId.HOME_PAGE)
         return binding.root
     }
 

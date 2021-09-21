@@ -31,7 +31,7 @@ object FeatureFlags {
     /**
      * Enables the Home button in the browser toolbar to navigate back to the home screen.
      */
-    val showHomeButtonFeature = Config.channel.isNightlyOrDebug
+    val showHomeButtonFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Enables the Start On Home feature in the settings page.
@@ -41,17 +41,17 @@ object FeatureFlags {
     /**
      * Enables the "recent" tabs feature in the home screen.
      */
-    val showRecentTabsFeature = Config.channel.isNightlyOrDebug
+    val showRecentTabsFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Enables UI features based on history metadata.
      */
-    val historyMetadataUIFeature = Config.channel.isNightlyOrDebug
+    val historyMetadataUIFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Enables the recently saved bookmarks feature in the home screen.
      */
-    val recentBookmarksFeature = Config.channel.isNightlyOrDebug
+    val recentBookmarksFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Identifies and separates the tabs list with a secondary section containing least used tabs.
@@ -66,7 +66,7 @@ object FeatureFlags {
     /**
      * Enables customizing the home screen
      */
-    val customizeHome = Config.channel.isNightlyOrDebug
+    val customizeHome = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Identifies and separates the tabs list with a group containing search term tabs.
@@ -82,7 +82,9 @@ object FeatureFlags {
      * Show Pocket recommended stories on home.
      */
     fun isPocketRecommendationsFeatureEnabled(context: Context): Boolean {
-        return Config.channel.isNightlyOrDebug &&
-            "en-US" == LocaleManager.getCurrentLocale(context)?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
+        return Config.channel.isBeta || (
+            Config.channel.isNightlyOrDebug && "en-US" == LocaleManager.getCurrentLocale(context)
+                ?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
+            )
     }
 }
