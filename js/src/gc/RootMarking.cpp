@@ -51,6 +51,9 @@ template <typename T>
 static inline void TraceExactStackRootList(JSTracer* trc,
                                            StackRootedBase* listHead,
                                            const char* name) {
+  // Check size of Rooted<T> does not increase.
+  static_assert(sizeof(Rooted<T>) == sizeof(T) + 2 * sizeof(uintptr_t));
+
   for (StackRootedBase* root = listHead; root; root = root->previous()) {
     static_cast<Rooted<T>*>(root)->trace(trc, name);
   }
