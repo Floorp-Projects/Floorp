@@ -417,7 +417,7 @@ case "$target" in
 *-darwin*)
     MOZ_OPTIMIZE_FLAGS="-O3"
     CFLAGS="$CFLAGS -fno-common"
-    CXXFLAGS="$CXXFLAGS -fno-common -stdlib=libc++"
+    CXXFLAGS="$CXXFLAGS -fno-common"
     DSO_LDOPTS=''
     LDFLAGS="$LDFLAGS -lobjc"
     # The ExceptionHandling framework is needed for Objective-C exception

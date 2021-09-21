@@ -493,7 +493,6 @@ dnl ========================================================
 case "$target" in
 *-darwin*)
     MOZ_OPTIMIZE_FLAGS="-O3"
-    CXXFLAGS="$CXXFLAGS -stdlib=libc++"
     DSO_LDOPTS=''
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
