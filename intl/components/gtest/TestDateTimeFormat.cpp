@@ -137,6 +137,25 @@ TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
   ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 12:07:30 PM"));
 }
 
+TEST(IntlDateTimeFormat, GetAllowedHourCycles)
+{
+  auto allowed_en_US = DateTimeFormat::GetAllowedHourCycles(
+                           MakeStringSpan("en"), Some(MakeStringSpan("US")))
+                           .unwrap();
+
+  ASSERT_TRUE(allowed_en_US.length() == 2);
+  ASSERT_EQ(allowed_en_US[0], DateTimeFormat::HourCycle::H12);
+  ASSERT_EQ(allowed_en_US[1], DateTimeFormat::HourCycle::H23);
+
+  auto allowed_de =
+      DateTimeFormat::GetAllowedHourCycles(MakeStringSpan("de"), Nothing())
+          .unwrap();
+
+  ASSERT_TRUE(allowed_de.length() == 2);
+  ASSERT_EQ(allowed_de[0], DateTimeFormat::HourCycle::H23);
+  ASSERT_EQ(allowed_de[1], DateTimeFormat::HourCycle::H12);
+}
+
 TEST(IntlDateTimePatternGenerator, GetBestPattern)
 {
   auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
