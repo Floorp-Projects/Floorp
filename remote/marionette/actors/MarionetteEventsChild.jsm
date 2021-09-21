@@ -22,6 +22,14 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 );
 
 class MarionetteEventsChild extends JSWindowActorChild {
+  constructor() {
+    super();
+
+    // The unregistering flag will be set right before the actors are
+    // unregistered.
+    this._unregistering = false;
+  }
+
   get innerWindowId() {
     return this.manager.innerWindowId;
   }
@@ -39,6 +47,12 @@ class MarionetteEventsChild extends JSWindowActorChild {
   }
 
   handleEvent({ target, type }) {
+    if (this._unregistering) {
+      // If the actors are about to be unregistered, stop sending any event as
+      // they might lead to confusing errors. See Bug 1691954.
+      return;
+    }
+
     // Ignore invalid combinations of load events and document's readyState.
     if (
       (type === "DOMContentLoaded" && target.readyState != "interactive") ||
@@ -75,6 +89,16 @@ class MarionetteEventsChild extends JSWindowActorChild {
       case "dblclick":
       case "unload":
         event.DoubleClickTracker.resetClick();
+        break;
+    }
+  }
+
+  async receiveMessage(msg) {
+    const { name } = msg;
+
+    switch (name) {
+      case "MarionetteEventsParent:beforeUnregisterActor":
+        this._unregistering = true;
         break;
     }
   }
