@@ -89,10 +89,11 @@ SpanResult<char> Calendar::LegacyIdentifierToBcp47(const char* aIdentifier,
 
 /* static */
 Result<Calendar::Bcp47IdentifierEnumeration, ICUError>
-Calendar::GetBcp47KeywordValuesForLocale(const char* aLocale) {
+Calendar::GetBcp47KeywordValuesForLocale(const char* aLocale,
+                                         CommonlyUsed aCommonlyUsed) {
   UErrorCode status = U_ZERO_ERROR;
   UEnumeration* enumeration = ucal_getKeywordValuesForLocale(
-      "calendar", aLocale, /* commonlyUsed */ false, &status);
+      "calendar", aLocale, static_cast<bool>(aCommonlyUsed), &status);
 
   if (U_SUCCESS(status)) {
     return Bcp47IdentifierEnumeration(enumeration);
