@@ -11,8 +11,10 @@ import sys
 from functools import partial
 
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 parser = None
 
@@ -59,13 +61,15 @@ def setup_marionette_argument_parser():
     return parser
 
 
-@Command(
-    "marionette-test",
-    category="testing",
-    description="Run a Marionette test (Check UI or the internal JavaScript "
-    "using marionette).",
-    parser=setup_marionette_argument_parser,
-)
-def run_marionette_test(command_context, **kwargs):
-    command_context.context.activate_mozharness_venv()
-    return run_marionette(command_context.context, **kwargs)
+@CommandProvider
+class MachCommands(MachCommandBase):
+    @Command(
+        "marionette-test",
+        category="testing",
+        description="Run a Marionette test (Check UI or the internal JavaScript "
+        "using marionette).",
+        parser=setup_marionette_argument_parser,
+    )
+    def run_marionette_test(self, command_context, **kwargs):
+        command_context.context.activate_mozharness_venv()
+        return run_marionette(command_context.context, **kwargs)
