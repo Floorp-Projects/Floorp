@@ -13,17 +13,9 @@ function evalWithCache(code, ctx) {
   if (!("global" in ctx))
       ctx.global = newGlobal({newCompartment: ctx.newCompartment});
 
-  // NOTE: Run-once scripts must use incremental mode since they may use
-  // singleton objects that are mutated by the time the bytecode is captured in
-  // non-incremental mode.
-  if (!("isRunOnce" in ctx))
-    ctx.isRunOnce = incremental;
-
-  var ctx_save;
-  if (incremental)
-    ctx_save = Object.create(ctx, {saveIncrementalBytecode: { value: true } });
-  else
-    ctx_save = Object.create(ctx, {saveBytecode: { value: true } });
+  var ctx_save = Object.create(ctx, {
+    saveIncrementalBytecode: { value: true }
+  });
 
   // Fetch the verification function from the evaluation context.  This function
   // is used to assert the state of the script/function after each run of the

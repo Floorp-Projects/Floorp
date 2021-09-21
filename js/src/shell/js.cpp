@@ -2049,14 +2049,7 @@ static void my_LargeAllocFailCallback() {
 
 static const uint32_t CacheEntry_SOURCE = 0;
 static const uint32_t CacheEntry_BYTECODE = 1;
-static const uint32_t CacheEntry_KIND = 2;
-static const uint32_t CacheEntry_OPTIONS = 3;
-
-enum class BytecodeCacheKind : uint32_t {
-  Undefined = 0,
-  Script,
-  Stencil,
-};
+static const uint32_t CacheEntry_OPTIONS = 2;
 
 // Some compile options can't be combined differently between save and load.
 //
@@ -2105,7 +2098,7 @@ static bool CacheOptionsCompatible(const CacheOptionSet& a,
 }
 
 static const JSClass CacheEntry_class = {"CacheEntryObject",
-                                         JSCLASS_HAS_RESERVED_SLOTS(4)};
+                                         JSCLASS_HAS_RESERVED_SLOTS(3)};
 
 static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2123,8 +2116,6 @@ static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   JS::SetReservedSlot(obj, CacheEntry_SOURCE, args[0]);
   JS::SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
-  JS::SetReservedSlot(obj, CacheEntry_KIND,
-                      Int32Value(int32_t(BytecodeCacheKind::Undefined)));
 
   // Fill in empty option set.
   CacheOptionSet defaultOptions;
@@ -2149,18 +2140,6 @@ static JSString* CacheEntry_getSource(JSContext* cx, HandleObject cache) {
   }
 
   return v.toString();
-}
-
-static BytecodeCacheKind CacheEntry_getKind(JSContext* cx, HandleObject cache) {
-  MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
-  Value v = JS::GetReservedSlot(cache, CacheEntry_KIND);
-  return BytecodeCacheKind(v.toInt32());
-}
-
-static void CacheEntry_setKind(JSContext* cx, HandleObject cache,
-                               BytecodeCacheKind kind) {
-  MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
-  JS::SetReservedSlot(cache, CacheEntry_KIND, Int32Value(int32_t(kind)));
 }
 
 static bool CacheEntry_compatible(JSContext* cx, HandleObject cache,
@@ -2295,7 +2274,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject global(cx, nullptr);
   bool catchTermination = false;
   bool loadBytecode = false;
-  bool saveBytecode = false;
   bool saveIncrementalBytecode = false;
   bool transcodeOnly = false;
   bool assertEqBytecode = false;
@@ -2359,13 +2337,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       loadBytecode = ToBoolean(v);
     }
 
-    if (!JS_GetProperty(cx, opts, "saveBytecode", &v)) {
-      return false;
-    }
-    if (!v.isUndefined()) {
-      saveBytecode = ToBoolean(v);
-    }
-
     if (!JS_GetProperty(cx, opts, "saveIncrementalBytecode", &v)) {
       return false;
     }
@@ -2409,22 +2380,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
     // We cannot load or save the bytecode if we have no object where the
     // bytecode cache is stored.
-    if (loadBytecode || saveBytecode || saveIncrementalBytecode) {
+    if (loadBytecode || saveIncrementalBytecode) {
       if (!cacheEntry) {
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
                                   JSSMSG_INVALID_ARGS, "evaluate");
-        return false;
-      }
-      if (saveIncrementalBytecode && saveBytecode) {
-        JS_ReportErrorASCII(
-            cx,
-            "saveIncrementalBytecode and saveBytecode cannot be used"
-            " at the same time.");
-        return false;
-      }
-      if (saveIncrementalBytecode && js::UseOffThreadParseGlobal()) {
-        JS_ReportErrorASCII(
-            cx, "saveIncrementalBytecode cannot be used with legacy XDR.");
         return false;
       }
     }
@@ -2488,8 +2447,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
   JS::TranscodeBuffer loadBuffer;
   JS::TranscodeBuffer saveBuffer;
-  BytecodeCacheKind loadCacheKind = BytecodeCacheKind::Undefined;
-  BytecodeCacheKind saveCacheKind = BytecodeCacheKind::Undefined;
 
   if (loadBytecode) {
     size_t loadLength = 0;
@@ -2507,7 +2464,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
-    loadCacheKind = CacheEntry_getKind(cx, cacheEntry);
   }
 
   {
@@ -2518,44 +2474,12 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (loadBytecode) {
         JS::TranscodeResult rv;
         if (saveIncrementalBytecode) {
-          bool useStencilXDR = !options.useOffThreadParseGlobal;
-          if (useStencilXDR) {
-            if (CacheEntry_getKind(cx, cacheEntry) !=
-                BytecodeCacheKind::Stencil) {
-              // This can happen.
-              JS_ReportErrorASCII(
-                  cx,
-                  "if both loadBytecode and saveIncrementalBytecode are set "
-                  "and --off-thread-parse-global isn't used, bytecode should "
-                  "have been saved with saveIncrementalBytecode");
-              return false;
-            }
-          } else {
-            if (CacheEntry_getKind(cx, cacheEntry) !=
-                BytecodeCacheKind::Script) {
-              // NOTE: This shouldn't happen unless the cache is used across
-              // processes with different --no-off-thread-parse-global option.
-              JS_ReportErrorASCII(
-                  cx,
-                  "if both loadBytecode and saveIncrementalBytecode are set "
-                  "and --off-thread-parse-global is used, bytecode "
-                  "should have been saved with saveBytecode");
-              return false;
-            }
-          }
-
           rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, options,
                                                            loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
           }
-        } else if (loadCacheKind == BytecodeCacheKind::Script) {
-          rv = JS::DecodeScript(cx, options, loadBuffer, &script);
-          if (!ConvertTranscodeResultToJSException(cx, rv)) {
-            return false;
-          }
         } else {
-          MOZ_ASSERT(loadCacheKind == BytecodeCacheKind::Stencil);
           rv = JS::DecodeScriptMaybeStencil(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
@@ -2624,30 +2548,16 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // Encode the bytecode after the execution of the script.
-    if (saveBytecode) {
-      JS::TranscodeResult rv = JS::EncodeScript(cx, saveBuffer, script);
-      if (!ConvertTranscodeResultToJSException(cx, rv)) {
-        return false;
-      }
-      saveCacheKind = BytecodeCacheKind::Script;
-    }
-
     // Serialize the encoded bytecode, recorded before the execution, into a
     // buffer which can be deserialized linearly.
     if (saveIncrementalBytecode) {
       if (!FinishIncrementalEncoding(cx, script, saveBuffer)) {
         return false;
       }
-      if (options.useStencilXDR) {
-        saveCacheKind = BytecodeCacheKind::Stencil;
-      } else {
-        saveCacheKind = BytecodeCacheKind::Script;
-      }
     }
   }
 
-  if (saveBytecode || saveIncrementalBytecode) {
+  if (saveIncrementalBytecode) {
     // If we are both loading and saving, we assert that we are going to
     // replace the current bytecode by the same stream of bytes.
     if (loadBytecode && assertEqBytecode) {
@@ -2682,8 +2592,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       js_free(saveData);
       return false;
     }
-    MOZ_ASSERT(saveCacheKind != BytecodeCacheKind::Undefined);
-    CacheEntry_setKind(cx, cacheEntry, saveCacheKind);
   }
 
   return JS_WrapValue(cx, args.rval());
@@ -6657,12 +6565,6 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadDecodeScript")
       .setFileAndLine("<string>", 1);
-  // NOTE: If --off-thread-parse-global is not used, input can be either script
-  // for saveBytecode, or stencil for saveIncrementalBytecode.
-  options.useOffThreadParseGlobal =
-      CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Script;
-  options.useStencilXDR =
-      CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Stencil;
 
   options.borrowBuffer = true;
 
@@ -9457,10 +9359,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      loadBytecode: if true, and if the source is a CacheEntryObject,\n"
 "         the bytecode would be loaded and decoded from the cache entry instead\n"
 "         of being parsed, then it would be executed as usual.\n"
-"      saveBytecode: if true, and if the source is a CacheEntryObject,\n"
-"         the bytecode would be encoded and saved into the cache entry after\n"
-"         the script execution.\n"
-"         The encoded bytecode's kind is 'script'\n"
 "      saveIncrementalBytecode: if true, and if the source is a\n"
 "         CacheEntryObject, the bytecode would be incrementally encoded and\n"
 "         saved into the cache entry.\n"
@@ -9471,7 +9369,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         kind should be 'stencil'."
 "      transcodeOnly: if true, do not execute the script.\n"
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
-"         saveBytecode or saveIncrementalBytecode is true, then the loaded\n"
+"         saveIncrementalBytecode is true, then the loaded\n"
 "         bytecode and the encoded bytecode are compared.\n"
 "         and an assertion is raised if they differ.\n"
 "      envChainObject: object to put on the scope chain, with its fields added\n"
@@ -9900,7 +9798,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Return a new opaque object which emulates a cache entry of a script.  This\n"
 "  object encapsulates the code and its cached content. The cache entry is filled\n"
 "  and read by the \"evaluate\" function by using it in place of the source, and\n"
-"  by setting \"saveBytecode\" and \"loadBytecode\" options."),
+"  by setting \"saveIncrementalBytecode\" and \"loadBytecode\" options."),
 
     JS_FN_HELP("streamCacheEntry", StreamCacheEntryObject::construct, 1, 0,
 "streamCacheEntry(buffer)",
