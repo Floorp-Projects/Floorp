@@ -111,6 +111,107 @@ void gecko_profiler_destruct_marker_timing(
 #endif
 }
 
+void gecko_profiler_construct_marker_schema(
+    mozilla::MarkerSchema* aMarkerSchema,
+    const mozilla::MarkerSchema::Location* aLocations, size_t aLength) {
+#ifdef MOZ_GECKO_PROFILER
+  new (aMarkerSchema) mozilla::MarkerSchema(aLocations, aLength);
+#endif
+}
+
+void gecko_profiler_construct_marker_schema_with_special_front_end_location(
+    mozilla::MarkerSchema* aMarkerSchema) {
+#ifdef MOZ_GECKO_PROFILER
+  new (aMarkerSchema)
+      mozilla::MarkerSchema(mozilla::MarkerSchema::SpecialFrontendLocation{});
+#endif
+}
+
+void gecko_profiler_destruct_marker_schema(
+    mozilla::MarkerSchema* aMarkerSchema) {
+#ifdef MOZ_GECKO_PROFILER
+  aMarkerSchema->~MarkerSchema();
+#endif
+}
+
+void gecko_profiler_marker_schema_set_chart_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->SetChartLabel(std::string(aLabel, aLabelLength));
+#endif
+}
+
+void gecko_profiler_marker_schema_set_tooltip_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->SetTooltipLabel(std::string(aLabel, aLabelLength));
+#endif
+}
+
+void gecko_profiler_marker_schema_set_table_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->SetTableLabel(std::string(aLabel, aLabelLength));
+#endif
+}
+
+void gecko_profiler_marker_schema_set_all_labels(mozilla::MarkerSchema* aSchema,
+                                                 const char* aLabel,
+                                                 size_t aLabelLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->SetAllLabels(std::string(aLabel, aLabelLength));
+#endif
+}
+
+void gecko_profiler_marker_schema_add_key_format(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    mozilla::MarkerSchema::Format aFormat) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->AddKeyFormat(std::string(aKey, aKeyLength), aFormat);
+#endif
+}
+
+void gecko_profiler_marker_schema_add_key_label_format(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    const char* aLabel, size_t aLabelLength,
+    mozilla::MarkerSchema::Format aFormat) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->AddKeyLabelFormat(std::string(aKey, aKeyLength),
+                             std::string(aLabel, aLabelLength), aFormat);
+#endif
+}
+
+void gecko_profiler_marker_schema_add_key_format_searchable(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    mozilla::MarkerSchema::Format aFormat,
+    mozilla::MarkerSchema::Searchable aSearchable) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->AddKeyFormatSearchable(std::string(aKey, aKeyLength), aFormat,
+                                  aSearchable);
+#endif
+}
+
+void gecko_profiler_marker_schema_add_key_label_format_searchable(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    const char* aLabel, size_t aLabelLength,
+    mozilla::MarkerSchema::Format aFormat,
+    mozilla::MarkerSchema::Searchable aSearchable) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->AddKeyLabelFormatSearchable(std::string(aKey, aKeyLength),
+                                       std::string(aLabel, aLabelLength),
+                                       aFormat, aSearchable);
+#endif
+}
+
+void gecko_profiler_marker_schema_add_static_label_value(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength,
+    const char* aValue, size_t aValueLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aSchema->AddStaticLabelValue(std::string(aLabel, aLabelLength),
+                               std::string(aValue, aValueLength));
+#endif
+}
+
 void gecko_profiler_json_writer_int_property(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
     size_t aNameLength, int64_t aValue) {

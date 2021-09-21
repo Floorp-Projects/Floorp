@@ -760,6 +760,11 @@ class MarkerSchema {
   explicit MarkerSchema(Location aLocation, Locations... aLocations)
       : mLocations{aLocation, aLocations...} {}
 
+  // Alternative constructor for MarkerSchema.
+  explicit MarkerSchema(const mozilla::MarkerSchema::Location* aLocations,
+                        size_t aLength)
+      : mLocations(aLocations, aLocations + aLength) {}
+
   // Marker schema for types that have special frontend handling.
   // Nothing else should be set in this case.
   // Implicit to allow quick return from MarkerTypeDisplay functions.
