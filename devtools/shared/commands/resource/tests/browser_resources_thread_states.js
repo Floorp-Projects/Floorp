@@ -485,17 +485,17 @@ async function checkDebuggerStatementInIframes() {
   });
 
   const iframeTarget = threadState.targetFront;
-  if (isFissionEnabled()) {
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     is(
       iframeTarget.url,
       REMOTE_IFRAME_URL,
-      "With fission, the pause is from the iframe's target"
+      "With fission/EFT, the pause is from the iframe's target"
     );
   } else {
     is(
       iframeTarget,
       targetCommand.targetFront,
-      "Without fission, the pause is from the top level target"
+      "Without fission/EFT, the pause is from the top level target"
     );
   }
   const { threadFront } = iframeTarget;

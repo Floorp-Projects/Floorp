@@ -785,6 +785,13 @@ function isServerTargetSwitchingEnabled() {
   return Services.prefs.getBoolPref(TARGET_SWITCHING_PREF);
 }
 
+function isEveryFrameTargetEnabled() {
+  return Services.prefs.getBoolPref(
+    "devtools.every-frame-target.enabled",
+    false
+  );
+}
+
 /**
  * Open the inspector in a tab with given URL.
  * @param {string} url  The URL to open.
