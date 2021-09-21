@@ -342,27 +342,27 @@ fn make_window(
                 .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
 
             if angle {
-                let (_window, _context) = angle::Context::with_window(
+                angle::Context::with_window(
                     window_builder, context_builder, events_loop
-                ).unwrap();
+                ).map(|(_window, _context)| {
+                    unsafe {
+                        _context
+                            .make_current()
+                            .expect("unable to make context current!");
+                    }
 
-                unsafe {
-                    _context
-                        .make_current()
-                        .expect("unable to make context current!");
-                }
+                    let gl = match _context.get_api() {
+                        glutin::Api::OpenGl => unsafe {
+                            gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
+                        },
+                        glutin::Api::OpenGlEs => unsafe {
+                            gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
+                        },
+                        glutin::Api::WebGl => unimplemented!(),
+                    };
 
-                let gl = match _context.get_api() {
-                    glutin::Api::OpenGl => unsafe {
-                        gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                    },
-                    glutin::Api::OpenGlEs => unsafe {
-                        gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                    },
-                    glutin::Api::WebGl => unimplemented!(),
-                };
-
-                WindowWrapper::Angle(_window, _context, gl, sw_ctx)
+                    WindowWrapper::Angle(_window, _context, gl, sw_ctx)
+                }).unwrap()
             } else {
                 let windowed_context = context_builder
                     .build_windowed(window_builder, events_loop)
