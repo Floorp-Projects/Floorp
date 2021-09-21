@@ -24,7 +24,6 @@
 #include "vm/PropertyResult.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
-#include "vm/Xdr.h"
 
 namespace JS {
 struct ClassInfo;
@@ -954,9 +953,6 @@ MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
   }
   return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
-
-template <XDRMode mode>
-XDRResult XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
 
 /*
  * Report a TypeError: "so-and-so is not an object".

@@ -3721,61 +3721,6 @@ JS::ubi::Node::Size JS::ubi::Concrete<BigInt>::size(
   return size;
 }
 
-template <XDRMode mode>
-XDRResult js::XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi) {
-  JSContext* cx = xdr->cx();
-
-  uint8_t sign;
-  uint32_t length;
-
-  if (mode == XDR_ENCODE) {
-    cx->check(bi);
-    sign = static_cast<uint8_t>(bi->isNegative());
-    uint64_t sz = bi->digitLength() * sizeof(BigInt::Digit);
-    // As the maximum source code size is currently UINT32_MAX code units
-    // (see BytecodeCompiler::checkLength), any bigint literal's length in
-    // word-sized digits will be less than UINT32_MAX as well.  That could
-    // change or FoldConstants could start creating these though, so leave
-    // this as a release-enabled assert.
-    MOZ_RELEASE_ASSERT(sz <= UINT32_MAX);
-    length = static_cast<uint32_t>(sz);
-  }
-
-  MOZ_TRY(xdr->codeUint8(&sign));
-  MOZ_TRY(xdr->codeUint32(&length));
-
-  MOZ_RELEASE_ASSERT(length % sizeof(BigInt::Digit) == 0);
-  uint32_t digitLength = length / sizeof(BigInt::Digit);
-  auto buf = cx->make_pod_array<BigInt::Digit>(digitLength);
-  if (!buf) {
-    return xdr->fail(JS::TranscodeResult::Throw);
-  }
-
-  if (mode == XDR_ENCODE) {
-    std::uninitialized_copy_n(bi->digits().Elements(), digitLength, buf.get());
-  }
-
-  MOZ_TRY(xdr->codeBytes(buf.get(), length));
-
-  if (mode == XDR_DECODE) {
-    BigInt* res =
-        BigInt::createUninitialized(cx, digitLength, sign, gc::TenuredHeap);
-    if (!res) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-    std::uninitialized_copy_n(buf.get(), digitLength, res->digits().Elements());
-    bi.set(res);
-  }
-
-  return Ok();
-}
-
-template XDRResult js::XDRBigInt(XDRState<XDR_ENCODE>* xdr,
-                                 MutableHandleBigInt bi);
-
-template XDRResult js::XDRBigInt(XDRState<XDR_DECODE>* xdr,
-                                 MutableHandleBigInt bi);
-
 // Public API
 
 BigInt* JS::NumberToBigInt(JSContext* cx, double num) {

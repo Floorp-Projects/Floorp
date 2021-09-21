@@ -356,92 +356,6 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
   return scopeData;
 }
 
-static constexpr size_t HasAtomMask = 1;
-static constexpr size_t HasAtomShift = 1;
-
-static XDRResult XDRTrailingName(XDRState<XDR_ENCODE>* xdr,
-                                 BindingName* bindingName,
-                                 const uint32_t* length) {
-  JSContext* cx = xdr->cx();
-
-  RootedAtom atom(cx, bindingName->name());
-  bool hasAtom = !!atom;
-
-  uint8_t flags = bindingName->flagsForXDR();
-  MOZ_ASSERT(((flags << HasAtomShift) >> HasAtomShift) == flags);
-  uint8_t u8 = (flags << HasAtomShift) | uint8_t(hasAtom);
-  MOZ_TRY(xdr->codeUint8(&u8));
-
-  if (hasAtom) {
-    MOZ_TRY(XDRAtom(xdr, &atom));
-  }
-
-  return Ok();
-}
-
-static XDRResult XDRTrailingName(XDRState<XDR_DECODE>* xdr, void* bindingName,
-                                 uint32_t* length) {
-  JSContext* cx = xdr->cx();
-
-  uint8_t u8;
-  MOZ_TRY(xdr->codeUint8(&u8));
-
-  bool hasAtom = u8 & HasAtomMask;
-  RootedAtom atom(cx);
-  if (hasAtom) {
-    MOZ_TRY(XDRAtom(xdr, &atom));
-  }
-
-  uint8_t flags = u8 >> HasAtomShift;
-  new (bindingName) BindingName(BindingName::fromXDR(atom, flags));
-  ++*length;
-
-  return Ok();
-}
-
-template <typename ConcreteScope, XDRMode mode>
-/* static */
-XDRResult Scope::XDRSizedBindingNames(
-    XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-    MutableHandle<typename ConcreteScope::RuntimeData*> data) {
-  MOZ_ASSERT(!data);
-
-  JSContext* cx = xdr->cx();
-
-  uint32_t length;
-  if (mode == XDR_ENCODE) {
-    length = scope->data().length;
-  }
-  MOZ_TRY(xdr->codeUint32(&length));
-
-  if (mode == XDR_ENCODE) {
-    data.set(&scope->data());
-  } else {
-    data.set(NewEmptyScopeData<ConcreteScope, JSAtom>(cx, length).release());
-    if (!data) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
-  auto dataGuard = mozilla::MakeScopeExit([&]() {
-    if (mode == XDR_DECODE) {
-      js_delete(data.get());
-      data.set(nullptr);
-    }
-  });
-
-  BindingName* names = GetScopeDataTrailingNamesPointer(data.get());
-  for (uint32_t i = 0; i < length; i++) {
-    if (mode == XDR_DECODE) {
-      MOZ_ASSERT(i == data->length, "must be decoding at the end");
-    }
-    MOZ_TRY(XDRTrailingName(xdr, &names[i], &data->length));
-  }
-
-  dataGuard.release();
-  return Ok();
-}
-
 /* static */
 Scope* Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                      HandleShape envShape) {
@@ -775,61 +689,6 @@ Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), ObjectFlags());
 }
 
-template <XDRMode mode>
-/* static */
-XDRResult LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
-                            HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(
-      XDRSizedBindingNames<LexicalScope>(xdr, scope.as<LexicalScope>(), &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    uint32_t firstFrameSlot;
-    uint32_t nextFrameSlot;
-    if (mode == XDR_ENCODE) {
-      firstFrameSlot = scope->firstFrameSlot();
-      nextFrameSlot = data->slotInfo.nextFrameSlot;
-    }
-
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.constStart));
-    MOZ_TRY(xdr->codeUint32(&firstFrameSlot));
-    MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
-
-    if (mode == XDR_DECODE) {
-      scope.set(createWithData(cx, kind, &uniqueData.ref(), firstFrameSlot,
-                               enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-
-      // nextFrameSlot is used only for this correctness check.
-      MOZ_ASSERT(nextFrameSlot ==
-                 scope->as<LexicalScope>().data().slotInfo.nextFrameSlot);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    LexicalScope::XDR(XDRState<XDR_ENCODE>* xdr, ScopeKind kind,
-                      HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    LexicalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
-                      HandleScope enclosing, MutableHandleScope scope);
-
 template <typename AtomT, typename ShapeT>
 bool ClassBodyScope::prepareForScopeCreation(
     JSContext* cx, ScopeKind kind, uint32_t firstFrameSlot,
@@ -863,60 +722,6 @@ ClassBodyScope* ClassBodyScope::createWithData(
   MOZ_ASSERT(scope->firstFrameSlot() == firstFrameSlot);
   return scope;
 }
-
-template <XDRMode mode>
-/* static */
-XDRResult ClassBodyScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
-                              HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(XDRSizedBindingNames<ClassBodyScope>(xdr, scope.as<ClassBodyScope>(),
-                                               &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    uint32_t firstFrameSlot;
-    uint32_t nextFrameSlot;
-    if (mode == XDR_ENCODE) {
-      firstFrameSlot = scope->firstFrameSlot();
-      nextFrameSlot = data->slotInfo.nextFrameSlot;
-    }
-
-    MOZ_TRY(xdr->codeUint32(&firstFrameSlot));
-    MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
-
-    if (mode == XDR_DECODE) {
-      scope.set(createWithData(cx, kind, &uniqueData.ref(), firstFrameSlot,
-                               enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-
-      // nextFrameSlot is used only for this correctness check.
-      MOZ_ASSERT(nextFrameSlot ==
-                 scope->as<ClassBodyScope>().data().slotInfo.nextFrameSlot);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    ClassBodyScope::XDR(XDRState<XDR_ENCODE>* xdr, ScopeKind kind,
-                        HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    ClassBodyScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
-                        HandleScope enclosing, MutableHandleScope scope);
 
 static void SetCanonicalFunction(FunctionScope::RuntimeData& data,
                                  HandleFunction fun) {
@@ -991,69 +796,6 @@ bool FunctionScope::isSpecialName(JSContext* cx,
          name == frontend::TaggedParserAtomIndex::WellKnown::dotGenerator();
 }
 
-template <XDRMode mode>
-/* static */
-XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
-                             HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(XDRSizedBindingNames<FunctionScope>(xdr, scope.as<FunctionScope>(),
-                                              &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    uint8_t needsEnvironment;
-    uint8_t hasParameterExprs;
-    uint32_t nextFrameSlot;
-    if (mode == XDR_ENCODE) {
-      needsEnvironment = scope->hasEnvironment();
-      hasParameterExprs = data->slotInfo.hasParameterExprs();
-      nextFrameSlot = data->slotInfo.nextFrameSlot;
-    }
-    MOZ_TRY(xdr->codeUint8(&needsEnvironment));
-    MOZ_TRY(xdr->codeUint8(&hasParameterExprs));
-    MOZ_TRY(xdr->codeUint16(&data->slotInfo.nonPositionalFormalStart));
-    MOZ_TRY(xdr->codeUint16(&data->slotInfo.varStart));
-    MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
-
-    if (mode == XDR_DECODE) {
-      if (!data->length) {
-        MOZ_ASSERT(!data->slotInfo.nonPositionalFormalStart);
-        MOZ_ASSERT(!data->slotInfo.varStart);
-        MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
-      }
-
-      scope.set(createWithData(cx, &uniqueData.ref(), hasParameterExprs,
-                               needsEnvironment, fun, enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-
-      // nextFrameSlot is used only for this correctness check.
-      MOZ_ASSERT(nextFrameSlot ==
-                 scope->as<FunctionScope>().data().slotInfo.nextFrameSlot);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    FunctionScope::XDR(XDRState<XDR_ENCODE>* xdr, HandleFunction fun,
-                       HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    FunctionScope::XDR(XDRState<XDR_DECODE>* xdr, HandleFunction fun,
-                       HandleScope enclosing, MutableHandleScope scope);
-
 template <typename AtomT, typename ShapeT>
 bool VarScope::prepareForScopeCreation(
     JSContext* cx, ScopeKind kind,
@@ -1090,64 +832,6 @@ VarScope* VarScope::createWithData(JSContext* cx, ScopeKind kind,
   return Scope::create<VarScope>(cx, kind, enclosing, envShape, data);
 }
 
-template <XDRMode mode>
-/* static */
-XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
-                        HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(XDRSizedBindingNames<VarScope>(xdr, scope.as<VarScope>(), &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    uint8_t needsEnvironment;
-    uint32_t firstFrameSlot;
-    uint32_t nextFrameSlot;
-    if (mode == XDR_ENCODE) {
-      needsEnvironment = scope->hasEnvironment();
-      firstFrameSlot = scope->firstFrameSlot();
-      nextFrameSlot = data->slotInfo.nextFrameSlot;
-    }
-    MOZ_TRY(xdr->codeUint8(&needsEnvironment));
-    MOZ_TRY(xdr->codeUint32(&firstFrameSlot));
-    MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
-
-    if (mode == XDR_DECODE) {
-      if (!data->length) {
-        MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
-      }
-
-      scope.set(createWithData(cx, kind, &uniqueData.ref(), firstFrameSlot,
-                               needsEnvironment, enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-
-      // nextFrameSlot is used only for this correctness check.
-      MOZ_ASSERT(nextFrameSlot ==
-                 scope->as<VarScope>().data().slotInfo.nextFrameSlot);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    VarScope::XDR(XDRState<XDR_ENCODE>* xdr, ScopeKind kind,
-                  HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    VarScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
-                  HandleScope enclosing, MutableHandleScope scope);
-
 /* static */
 GlobalScope* GlobalScope::create(JSContext* cx, ScopeKind kind,
                                  Handle<RuntimeData*> dataArg) {
@@ -1175,86 +859,11 @@ GlobalScope* GlobalScope::createWithData(
   return Scope::create<GlobalScope>(cx, kind, nullptr, nullptr, data);
 }
 
-template <XDRMode mode>
-/* static */
-XDRResult GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
-                           MutableHandleScope scope) {
-  MOZ_ASSERT((mode == XDR_DECODE) == !scope);
-
-  JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(
-      XDRSizedBindingNames<GlobalScope>(xdr, scope.as<GlobalScope>(), &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.letStart));
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.constStart));
-
-    if (mode == XDR_DECODE) {
-      if (!data->length) {
-        MOZ_ASSERT(!data->slotInfo.letStart);
-        MOZ_ASSERT(!data->slotInfo.constStart);
-      }
-
-      scope.set(createWithData(cx, kind, &uniqueData.ref()));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    GlobalScope::XDR(XDRState<XDR_ENCODE>* xdr, ScopeKind kind,
-                     MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    GlobalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
-                     MutableHandleScope scope);
-
 /* static */
 WithScope* WithScope::create(JSContext* cx, HandleScope enclosing) {
   Scope* scope = Scope::create(cx, ScopeKind::With, enclosing, nullptr);
   return static_cast<WithScope*>(scope);
 }
-
-template <XDRMode mode>
-/* static */
-XDRResult WithScope::XDR(XDRState<mode>* xdr, HandleScope enclosing,
-                         MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-  if (mode == XDR_DECODE) {
-    scope.set(create(cx, enclosing));
-    if (!scope) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    WithScope::XDR(XDRState<XDR_ENCODE>* xdr, HandleScope enclosing,
-                   MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    WithScope::XDR(XDRState<XDR_DECODE>* xdr, HandleScope enclosing,
-                   MutableHandleScope scope);
 
 template <typename AtomT, typename ShapeT>
 bool EvalScope::prepareForScopeCreation(
@@ -1302,47 +911,6 @@ Scope* EvalScope::nearestVarScopeForDirectEval(Scope* scope) {
   }
   return nullptr;
 }
-
-template <XDRMode mode>
-/* static */
-XDRResult EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
-                         HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    MOZ_TRY(XDRSizedBindingNames<EvalScope>(xdr, scope.as<EvalScope>(), &data));
-
-    if (mode == XDR_DECODE) {
-      if (!data->length) {
-        MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
-      }
-      scope.set(createWithData(cx, kind, &uniqueData.ref(), enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    EvalScope::XDR(XDRState<XDR_ENCODE>* xdr, ScopeKind kind,
-                   HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    EvalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
-                   HandleScope enclosing, MutableHandleScope scope);
 
 ModuleScope::RuntimeData::RuntimeData(size_t length) {
   PoisonNames(this, length);
@@ -1408,65 +976,6 @@ static JSAtom* GenerateWasmName(JSContext* cx,
 
   return sb.finishAtom();
 }
-
-template <XDRMode mode>
-/* static */
-XDRResult ModuleScope::XDR(XDRState<mode>* xdr, HandleModuleObject module,
-                           HandleScope enclosing, MutableHandleScope scope) {
-  JSContext* cx = xdr->cx();
-  Rooted<RuntimeData*> data(cx);
-  MOZ_TRY(
-      XDRSizedBindingNames<ModuleScope>(xdr, scope.as<ModuleScope>(), &data));
-
-  {
-    Maybe<Rooted<UniquePtr<RuntimeData>>> uniqueData;
-    if (mode == XDR_DECODE) {
-      uniqueData.emplace(cx, data);
-    }
-
-    uint32_t nextFrameSlot;
-    if (mode == XDR_ENCODE) {
-      nextFrameSlot = data->slotInfo.nextFrameSlot;
-    }
-
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.varStart));
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.letStart));
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.constStart));
-    MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
-
-    if (mode == XDR_DECODE) {
-      if (!data->length) {
-        MOZ_ASSERT(!data->slotInfo.varStart);
-        MOZ_ASSERT(!data->slotInfo.letStart);
-        MOZ_ASSERT(!data->slotInfo.constStart);
-        MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
-      }
-
-      scope.set(createWithData(cx, &uniqueData.ref(), module, enclosing));
-      if (!scope) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-
-      // nextFrameSlot is used only for this correctness check.
-      MOZ_ASSERT(nextFrameSlot ==
-                 scope->as<ModuleScope>().data().slotInfo.nextFrameSlot);
-    }
-  }
-
-  return Ok();
-}
-
-template
-    /* static */
-    XDRResult
-    ModuleScope::XDR(XDRState<XDR_ENCODE>* xdr, HandleModuleObject module,
-                     HandleScope enclosing, MutableHandleScope scope);
-
-template
-    /* static */
-    XDRResult
-    ModuleScope::XDR(XDRState<XDR_DECODE>* xdr, HandleModuleObject module,
-                     HandleScope enclosing, MutableHandleScope scope);
 
 static void InitializeTrailingName(AbstractBindingName<JSAtom>* trailingNames,
                                    size_t i, JSAtom* name) {
