@@ -1666,9 +1666,8 @@ const JSClass ScriptSourceObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
     &ScriptSourceObjectClassOps};
 
-ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
-                                                       ScriptSource* source,
-                                                       HandleObject canonical) {
+ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
+                                               ScriptSource* source) {
   ScriptSourceObject* obj =
       NewObjectWithGivenProto<ScriptSourceObject>(cx, nullptr);
   if (!obj) {
@@ -1678,11 +1677,7 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   // The matching decref is in ScriptSourceObject::finalize.
   obj->initReservedSlot(SOURCE_SLOT, PrivateValue(do_AddRef(source).take()));
 
-  if (canonical) {
-    obj->initReservedSlot(CANONICAL_SLOT, ObjectValue(*canonical));
-  } else {
-    obj->initReservedSlot(CANONICAL_SLOT, ObjectValue(*obj));
-  }
+  obj->initReservedSlot(CANONICAL_SLOT, ObjectValue(*obj));
 
   // The slots below should either be populated by a call to initFromOptions or,
   // if this is a non-canonical ScriptSourceObject, they are unused. Poison
@@ -1691,23 +1686,6 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
 
   return obj;
-}
-
-ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
-                                               ScriptSource* source) {
-  return createInternal(cx, source, nullptr);
-}
-
-ScriptSourceObject* ScriptSourceObject::clone(JSContext* cx,
-                                              HandleScriptSourceObject sso) {
-  MOZ_ASSERT(cx->compartment() != sso->compartment());
-
-  RootedObject wrapped(cx, sso);
-  if (!cx->compartment()->wrap(cx, &wrapped)) {
-    return nullptr;
-  }
-
-  return createInternal(cx, sso->source(), wrapped);
 }
 
 ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
@@ -4478,44 +4456,6 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
 
   // The SharedImmutableScriptData can be reused by any zone in the Runtime.
   dst->initSharedData(src->sharedData());
-
-  return dst;
-}
-
-JSScript* js::CloneGlobalScript(JSContext* cx, HandleScript src) {
-  MOZ_ASSERT(src->realm() != cx->realm(),
-             "js::CloneGlobalScript should only be used for for realm "
-             "mismatches. Otherwise just share the script directly.");
-
-  Rooted<ScriptSourceObject*> sourceObject(cx, src->sourceObject());
-  if (cx->compartment() != sourceObject->compartment()) {
-    sourceObject = ScriptSourceObject::clone(cx, sourceObject);
-    if (!sourceObject) {
-      return nullptr;
-    }
-  }
-
-  MOZ_ASSERT(src->bodyScopeIndex() == GCThingIndex::outermostScopeIndex());
-  Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
-  Rooted<GlobalScope*> original(cx, &src->bodyScope()->as<GlobalScope>());
-  GlobalScope* clone = GlobalScope::clone(cx, original);
-  if (!clone || !scopes.append(clone)) {
-    return nullptr;
-  }
-
-  RootedObject global(cx, cx->global());
-  RootedScript dst(cx, CopyScriptImpl(cx, src, global, sourceObject, &scopes));
-  if (!dst) {
-    return nullptr;
-  }
-
-  if (coverage::IsLCovEnabled()) {
-    if (!coverage::InitScriptCoverage(cx, dst)) {
-      return nullptr;
-    }
-  }
-
-  DebugAPI::onNewScript(cx, dst);
 
   return dst;
 }
