@@ -787,6 +787,8 @@ struct CompilationStencil {
   // Steal ExtensibleCompilationStencil content.
   [[nodiscard]] bool steal(JSContext* cx, ExtensibleCompilationStencil&& other);
 
+  bool isModule() const;
+
 #ifdef DEBUG
   void assertNoExternalDependency() const;
 #endif
@@ -904,6 +906,8 @@ struct ExtensibleCompilationStencil {
 
   // Steal CompilationStencil content.
   [[nodiscard]] bool steal(JSContext* cx, CompilationStencil&& other);
+
+  bool isModule() const;
 
   inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
