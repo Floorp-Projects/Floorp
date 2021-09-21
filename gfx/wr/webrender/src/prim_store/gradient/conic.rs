@@ -135,19 +135,58 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         stretch_size.width = stretch_size.width.min(common.prim_rect.width());
         stretch_size.height = stretch_size.height.min(common.prim_rect.height());
 
+        fn approx_eq(a: f32, b: f32) -> bool { (a - b).abs() < 0.01 }
+
+        // Attempt to detect some of the common configurations with hard gradient stops. Allow
+        // those a higher maximum resolution to avoid the worst cases of aliasing artifacts with
+        // large conic gradients. A better solution would be to go back to rendering very large
+        // conic gradients via a brush shader instead of caching all of them (unclear whether
+        // it is important enough to warrant the better solution).
+        let mut has_hard_stops = false;
+        let mut prev_stop = None;
+        let offset_range = item.params.end_offset - item.params.start_offset;
+        for stop in &stops {
+            if offset_range <= 0.0 {
+                break;
+            }
+            if let Some(prev_offset) = prev_stop {
+                // Check whether two consecutive stops are very close (hard stops).
+                if stop.offset < prev_offset + 0.005 / offset_range {
+                    // a is the angle of the stop normalized into 0-1 space and repeating in the 0-0.25 range.
+                    // If close to 0.0 or 0.25 it means the stop is vertical or horizontal. For those, the lower
+                    // resolution isn't a big issue.
+                    let a = item.params.angle / (2.0 * std::f32::consts::PI)
+                        + item.params.start_offset
+                        + stop.offset / offset_range;
+                    let a = a.rem_euclid(0.25);
+
+                    if !approx_eq(a, 0.0) && !approx_eq(a, 0.25) {
+                        has_hard_stops = true;
+                        break;
+                    }
+                }
+            }
+            prev_stop = Some(stop.offset);
+        }
+
+        let max_size = if has_hard_stops {
+            2048.0
+        } else {
+            1024.0
+        };
+
         // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution that 1024 would produce noticeable
         // differences, especially with 8 bits per channel.
-        const MAX_SIZE: f32 = 1024.0;
         let mut task_size: DeviceSize = stretch_size.cast_unit();
         let mut scale = vec2(1.0, 1.0);
-        if task_size.width > MAX_SIZE {
-            scale.x = task_size.width / MAX_SIZE;
-            task_size.width = MAX_SIZE;
+        if task_size.width > max_size {
+            scale.x = task_size.width / max_size;
+            task_size.width = max_size;
         }
-        if task_size.height > MAX_SIZE {
-            scale.y = task_size.height / MAX_SIZE;
-            task_size.height = MAX_SIZE;
+        if task_size.height > max_size {
+            scale.y = task_size.height / max_size;
+            task_size.height = max_size;
         }
 
         ConicGradientTemplate {
