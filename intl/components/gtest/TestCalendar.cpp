@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/intl/Calendar.h"
+#include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/Span.h"
 #include "TestBuffer.h"
 
@@ -81,21 +82,13 @@ TEST(IntlCalendar, GetBcp47Type)
   ASSERT_STREQ(calendar->GetBcp47Type().unwrap(), "gregory");
 }
 
-// These tests are dependent on the machine that this test is being run on.
-// Unwrap the results to ensure it doesn't fail, but don't check the values.
-TEST(IntlCalendar, SystemDependentTests)
+TEST(IntlCalendar, SetTimeInMs)
 {
   auto calendar =
       Calendar::TryCreate("en-US", Some(MakeStringSpan(u"GMT+3"))).unwrap();
-  TestBuffer<char16_t> buffer;
-  // e.g. For America/Chicago: 1000 * 60 * 60 * -6
-  calendar->GetDefaultTimeZoneOffsetMs().unwrap();
 
-  // e.g. "America/Chicago"
-  Calendar::GetDefaultTimeZone(buffer).unwrap();
-
-  // This isn't system dependent, but currently there is no way to verify the
-  // results.
+  // There is no way to verify the results. Unwrap the results to ensure it
+  // doesn't fail, but don't check the values.
   calendar->SetTimeInMs(CALENDAR_DATE).unwrap();
 }
 
@@ -113,26 +106,6 @@ TEST(IntlCalendar, CloneFrom)
                       .unwrap();
 
   dtFormat->CloneCalendar(CALENDAR_DATE).unwrap();
-}
-
-TEST(IntlCalendar, GetCanonicalTimeZoneID)
-{
-  TestBuffer<char16_t> buffer;
-
-  // Providing a canonical time zone results in the same string at the end.
-  Calendar::GetCanonicalTimeZoneID(MakeStringSpan(u"America/Chicago"), buffer)
-      .unwrap();
-  ASSERT_EQ(buffer.get_string_view(), u"America/Chicago");
-
-  // Providing an alias will result in the canonical representation.
-  Calendar::GetCanonicalTimeZoneID(MakeStringSpan(u"Europe/Belfast"), buffer)
-      .unwrap();
-  ASSERT_EQ(buffer.get_string_view(), u"Europe/London");
-
-  // An unknown time zone results in an error.
-  ASSERT_TRUE(Calendar::GetCanonicalTimeZoneID(
-                  MakeStringSpan(u"Not a time zone"), buffer)
-                  .isErr());
 }
 
 }  // namespace mozilla::intl

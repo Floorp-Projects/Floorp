@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/intl/Calendar.h"
-#include "unicode/udat.h"
+
+#include "unicode/ucal.h"
+#include "unicode/uloc.h"
 #include "unicode/utypes.h"
 
 namespace mozilla::intl {
@@ -42,15 +44,6 @@ Result<const char*, ICUError> Calendar::GetBcp47Type() {
   }
 
   return bcp47Type;
-}
-
-Result<int32_t, ICUError> Calendar::GetDefaultTimeZoneOffsetMs() {
-  UErrorCode status = U_ZERO_ERROR;
-  int32_t offset = ucal_get(mCalendar, UCAL_ZONE_OFFSET, &status);
-  if (U_FAILURE(status)) {
-    return Err(ToICUError(status));
-  }
-  return offset;
 }
 
 Result<Ok, ICUError> Calendar::SetTimeInMs(double aUnixEpoch) {

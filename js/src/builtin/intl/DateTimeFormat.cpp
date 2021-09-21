@@ -13,6 +13,7 @@
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
+#include "mozilla/intl/TimeZone.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -388,7 +389,7 @@ bool js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> canonicalTimeZone(cx);
-  auto result = mozilla::intl::Calendar::GetCanonicalTimeZoneID(
+  auto result = mozilla::intl::TimeZone::GetCanonicalTimeZoneID(
       stableChars.twoByteRange(), canonicalTimeZone);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
@@ -414,7 +415,7 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   js::ResyncICUDefaultTimeZone();
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> timeZone(cx);
-  auto result = mozilla::intl::Calendar::GetDefaultTimeZone(timeZone);
+  auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(timeZone);
   if (result.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -433,18 +434,13 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  // An empty string is used for the root locale. This is regarded as the base
-  // locale of all locales, and is used as the language/country neutral locale
-  // for locale sensitive operations.
-  const char* rootLocale = "";
-
-  auto calendar = mozilla::intl::Calendar::TryCreate(rootLocale);
-  if (calendar.isErr()) {
+  auto timeZone = mozilla::intl::TimeZone::TryCreate();
+  if (timeZone.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
 
-  auto offset = calendar.unwrap()->GetDefaultTimeZoneOffsetMs();
+  auto offset = timeZone.unwrap()->GetDefaultTimeZoneOffsetMs();
   if (offset.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -472,7 +468,7 @@ bool js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   js::ResyncICUDefaultTimeZone();
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-  auto result = mozilla::intl::Calendar::GetDefaultTimeZone(chars);
+  auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(chars);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return false;
