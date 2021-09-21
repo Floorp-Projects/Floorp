@@ -1217,7 +1217,7 @@ class MutableWrappedPtrOperations<JS::Value, Wrapper>
  * type-querying, value-extracting, and mutating operations.
  */
 template <typename Wrapper>
-class HeapBase<JS::Value, Wrapper>
+class HeapOperations<JS::Value, Wrapper>
     : public MutableWrappedPtrOperations<JS::Value, Wrapper> {};
 
 MOZ_HAVE_NORETURN MOZ_COLD MOZ_NEVER_INLINE void ReportBadValueTypeAndCrash(
