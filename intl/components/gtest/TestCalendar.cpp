@@ -108,4 +108,49 @@ TEST(IntlCalendar, CloneFrom)
   dtFormat->CloneCalendar(CALENDAR_DATE).unwrap();
 }
 
+TEST(IntlCalendar, GetWeekend)
+{
+  auto calendar_en_US = Calendar::TryCreate("en-US").unwrap();
+  auto weekend_en_US = calendar_en_US->GetWeekend().unwrap();
+  ASSERT_EQ(weekend_en_US, EnumSet({Weekday::Saturday, Weekday::Sunday}));
+
+  auto calendar_de_DE = Calendar::TryCreate("de-DE").unwrap();
+  auto weekend_de_DE = calendar_de_DE->GetWeekend().unwrap();
+  ASSERT_EQ(weekend_de_DE, EnumSet({Weekday::Saturday, Weekday::Sunday}));
+
+  auto calendar_ar_EG = Calendar::TryCreate("ar-EG").unwrap();
+  auto weekend_ar_EG = calendar_ar_EG->GetWeekend().unwrap();
+  ASSERT_EQ(weekend_ar_EG, EnumSet({Weekday::Friday, Weekday::Saturday}));
+}
+
+TEST(IntlCalendar, GetFirstDayOfWeek)
+{
+  auto calendar_en_US = Calendar::TryCreate("en-US").unwrap();
+  auto firstDayOfWeek_en_US = calendar_en_US->GetFirstDayOfWeek();
+  ASSERT_EQ(firstDayOfWeek_en_US, Weekday::Sunday);
+
+  auto calendar_de_DE = Calendar::TryCreate("de-DE").unwrap();
+  auto firstDayOfWeek_de_DE = calendar_de_DE->GetFirstDayOfWeek();
+  ASSERT_EQ(firstDayOfWeek_de_DE, Weekday::Monday);
+
+  auto calendar_ar_EG = Calendar::TryCreate("ar-EG").unwrap();
+  auto firstDayOfWeek_ar_EG = calendar_ar_EG->GetFirstDayOfWeek();
+  ASSERT_EQ(firstDayOfWeek_ar_EG, Weekday::Saturday);
+}
+
+TEST(IntlCalendar, GetMinimalDaysInFirstWeek)
+{
+  auto calendar_en_US = Calendar::TryCreate("en-US").unwrap();
+  auto minimalDays_en_US = calendar_en_US->GetMinimalDaysInFirstWeek();
+  ASSERT_EQ(minimalDays_en_US, 1);
+
+  auto calendar_de_DE = Calendar::TryCreate("de-DE").unwrap();
+  auto minimalDays_de_DE = calendar_de_DE->GetMinimalDaysInFirstWeek();
+  ASSERT_EQ(minimalDays_de_DE, 4);
+
+  auto calendar_ar_EG = Calendar::TryCreate("ar-EG").unwrap();
+  auto minimalDays_ar_EG = calendar_ar_EG->GetMinimalDaysInFirstWeek();
+  ASSERT_EQ(minimalDays_ar_EG, 1);
+}
+
 }  // namespace mozilla::intl
