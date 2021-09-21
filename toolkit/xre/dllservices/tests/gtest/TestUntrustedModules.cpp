@@ -281,10 +281,17 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
     moduleSet.PutEntry(module);
   }
 
+  size_t numBlockedEvents = 0;
   for (const auto& evt : aData.mEvents) {
     const nsDependentSubstring leafName =
         nt::GetLeafName(evt.mModule->mResolvedNtName);
     const nsAutoString leafNameStr(leafName.Data(), leafName.Length());
+    const ModuleLoadInfo::Status loadStatus =
+        static_cast<ModuleLoadInfo::Status>(evt.mLoadStatus);
+    if (loadStatus == ModuleLoadInfo::Status::Blocked) {
+      ++numBlockedEvents;
+    }
+
     size_t match;
     if (BinarySearchIf(
             kKnownModules, 0, ArrayLength(kKnownModules),
@@ -292,8 +299,7 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
               return _wcsicmp(leafNameStr.get(), aVal.mName);
             },
             &match)) {
-      EXPECT_EQ(evt.mLoadStatus,
-                static_cast<uint32_t>(kKnownModules[match].mStatus));
+      EXPECT_EQ(loadStatus, kKnownModules[match].mStatus);
     } else {
       EXPECT_EQ(evt.mLoadStatus, 0);
     }
@@ -317,7 +323,12 @@ void UntrustedModulesFixture::ValidateUntrustedModules(
   // No check for the mXULLoadDurationMS field because the field has a value
   // in CCov build GTest, but it is empty in non-CCov build (bug 1681936).
   EXPECT_GT(aData.mEvents.length(), 0);
-  EXPECT_GT(aData.mStacks.GetModuleCount(), 0);
+  if (numBlockedEvents == aData.mEvents.length()) {
+    // If all loading events were blocked, the stacks are empty.
+    EXPECT_EQ(aData.mStacks.GetModuleCount(), 0);
+  } else {
+    EXPECT_GT(aData.mStacks.GetModuleCount(), 0);
+  }
   EXPECT_EQ(aData.mSanitizationFailures, 0);
   EXPECT_EQ(aData.mTrustTestFailures, 0);
 }
