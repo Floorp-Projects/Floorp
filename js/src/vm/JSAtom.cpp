@@ -30,7 +30,6 @@
 #include "vm/JSContext.h"
 #include "vm/SymbolType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
-#include "vm/Xdr.h"
 
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSContext-inl.h"
@@ -873,13 +872,6 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
   return NewStringCopyN<NoGC>(cx, chars, length, gc::TenuredHeap);
 }
 
-// MakeLinearStringForAtomization has one further variant -- a non-template
-// overload accepting LittleEndianChars.
-static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
-    JSContext* cx, LittleEndianChars chars, size_t length) {
-  return NewStringFromLittleEndianNoGC(cx, chars, length, gc::TenuredHeap);
-}
-
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
     JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
@@ -1254,107 +1246,6 @@ JSAtom* js::ToAtom(JSContext* cx,
 template JSAtom* js::ToAtom<CanGC>(JSContext* cx, HandleValue v);
 
 template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
-
-static JSAtom* AtomizeLittleEndianTwoByteChars(JSContext* cx,
-                                               const uint8_t* leTwoByte,
-                                               size_t length) {
-  LittleEndianChars chars(leTwoByte);
-
-  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
-    return s;
-  }
-
-  AtomHasher::Lookup lookup(chars, length);
-  return AtomizeAndCopyCharsFromLookup(cx, chars, length, lookup, DoNotPinAtom,
-                                       Nothing());
-}
-
-template <XDRMode mode>
-XDRResult js::XDRAtomOrNull(XDRState<mode>* xdr, MutableHandleAtom atomp) {
-  uint8_t isNull = false;
-  if (mode == XDR_ENCODE) {
-    if (!atomp) {
-      isNull = true;
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&isNull));
-
-  if (!isNull) {
-    MOZ_TRY(XDRAtom(xdr, atomp));
-  } else if (mode == XDR_DECODE) {
-    atomp.set(nullptr);
-  }
-
-  return Ok();
-}
-
-template XDRResult js::XDRAtomOrNull(XDRState<XDR_DECODE>* xdr,
-                                     MutableHandleAtom atomp);
-
-template XDRResult js::XDRAtomOrNull(XDRState<XDR_ENCODE>* xdr,
-                                     MutableHandleAtom atomp);
-
-template <XDRMode mode>
-XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
-  bool latin1 = false;
-  uint32_t length = 0;
-  uint32_t lengthAndEncoding = 0;
-
-  if (mode == XDR_ENCODE) {
-    JS::AutoCheckCannotGC nogc;
-    static_assert(JSString::MAX_LENGTH <= INT32_MAX,
-                  "String length must fit in 31 bits");
-    latin1 = atomp->hasLatin1Chars();
-    length = atomp->length();
-    lengthAndEncoding = (length << 1) | uint32_t(latin1);
-    MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
-    if (latin1) {
-      return xdr->codeChars(
-          const_cast<JS::Latin1Char*>(atomp->latin1Chars(nogc)), length);
-    }
-    return xdr->codeChars(const_cast<char16_t*>(atomp->twoByteChars(nogc)),
-                          length);
-  }
-
-  MOZ_ASSERT(mode == XDR_DECODE);
-  /* Avoid JSString allocation for already existing atoms. See bug 321985. */
-  JSContext* cx = xdr->cx();
-  JSAtom* atom = nullptr;
-  MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
-  length = lengthAndEncoding >> 1;
-  latin1 = lengthAndEncoding & 0x1;
-
-  if (latin1) {
-    const Latin1Char* chars = nullptr;
-    if (length) {
-      const uint8_t* ptr;
-      size_t nbyte = length * sizeof(Latin1Char);
-      MOZ_TRY(xdr->readData(&ptr, nbyte));
-      chars = reinterpret_cast<const Latin1Char*>(ptr);
-    }
-    atom = AtomizeChars(cx, chars, length);
-  } else {
-    const uint8_t* twoByteCharsLE = nullptr;
-    if (length) {
-      size_t nbyte = length * sizeof(char16_t);
-      MOZ_TRY(xdr->readData(&twoByteCharsLE, nbyte));
-    }
-    atom = AtomizeLittleEndianTwoByteChars(cx, twoByteCharsLE, length);
-  }
-
-  if (!atom) {
-    return xdr->fail(JS::TranscodeResult::Throw);
-  }
-  atomp.set(atom);
-  return Ok();
-}
-
-template XDRResult js::XDRAtom(XDRState<XDR_DECODE>* xdr,
-                               MutableHandleAtom atomp);
-
-template XDRResult js::XDRAtom(XDRState<XDR_ENCODE>* xdr,
-                               MutableHandleAtom atomp);
 
 Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
   return ClassName(key, cx->names());
