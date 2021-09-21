@@ -150,8 +150,25 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // CompilationStencil back to main thread before allocating GC objects.
   bool useOffThreadParseGlobal = true;
 
-  // When decoding from XDR, borrow ImmutableScriptData from the XDR buffer
-  // instead of copying out of it.
+  // When decoding from XDR into a Stencil, directly reference data in the
+  // buffer (where possible) instead of copying it. This is an optional
+  // performance optimization, and may also reduce memory if the buffer is going
+  // remain alive anyways.
+  //
+  // NOTE: The XDR buffer must remain alive as long as the Stencil does. Special
+  //       care must be taken that there are no addition shared references to
+  //       the Stencil.
+  //
+  // NOTE: Instantiated GC things may still outlive the buffer as long as the
+  //       Stencil was cleaned up. This is covers a typical case where a decoded
+  //       Stencil is instantiated once and then thrown away.
+  bool borrowBuffer = false;
+
+  // Similar to `borrowBuffer`, but additionally the JSRuntime may directly
+  // reference data in the buffer for JS bytecode. The `borrowBuffer` flag must
+  // be set if this is set. This can be a memory optimization in multi-process
+  // architectures where a (read-only) XDR buffer is mapped into multiple
+  // processes.
   //
   // NOTE: When using this mode, the XDR buffer must live until JS_Shutdown is
   // called. There is currently no mechanism to release the data sooner.
