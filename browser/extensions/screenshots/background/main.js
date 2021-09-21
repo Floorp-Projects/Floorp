@@ -74,7 +74,7 @@ this.main = (function() {
     _startShotFlow(tab, "context-menu");
   });
 
-  exports.onCommand = catcher.watchFunction(tab => {
+  exports.onShortcut = catcher.watchFunction(tab => {
     _startShotFlow(tab, "keyboard-shortcut");
   });
 
