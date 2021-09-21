@@ -45,7 +45,7 @@ class TimeZone final {
   /**
    * A number indicating the raw offset from GMT in milliseconds.
    */
-  Result<int32_t, ICUError> GetDefaultTimeZoneOffsetMs();
+  Result<int32_t, ICUError> GetRawOffsetMs();
 
   /**
    * Fill the buffer with the system's default IANA time zone identifier, e.g.
