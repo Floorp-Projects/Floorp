@@ -117,13 +117,27 @@ class Calendar final {
                                                   int32_t aLength);
 
  public:
+  enum class CommonlyUsed : bool {
+    /**
+     * Select all possible values, even when not commonly used by a locale.
+     */
+    No,
+
+    /**
+     * Only select the values which are commonly used by a locale.
+     */
+    Yes,
+  };
+
   using Bcp47IdentifierEnumeration =
       Enumeration<char, SpanResult<char>, Calendar::LegacyIdentifierToBcp47>;
+
   /**
    * Return BCP 47 Unicode locale extension type keywords.
    */
   static Result<Bcp47IdentifierEnumeration, ICUError>
-  GetBcp47KeywordValuesForLocale(const char* aLocale);
+  GetBcp47KeywordValuesForLocale(const char* aLocale,
+                                 CommonlyUsed aCommonlyUsed = CommonlyUsed::No);
 
   ~Calendar();
 
