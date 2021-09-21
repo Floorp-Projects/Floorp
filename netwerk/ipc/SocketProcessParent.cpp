@@ -22,7 +22,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "nsIAppStartup.h"
-#include "nsIConsoleService.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsIObserverService.h"
 #include "nsNSSIOLayer.h"
@@ -453,16 +452,6 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvExcludeHttp2OrHttp3(
     gHttpHandler->ExcludeHttp3(cinfo);
   } else {
     gHttpHandler->ExcludeHttp2(cinfo);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult SocketProcessParent::RecvOnConsoleMessage(
-    const nsString& aMessage) {
-  nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (consoleService) {
-    consoleService->LogStringMessage(aMessage.get());
   }
   return IPC_OK();
 }
