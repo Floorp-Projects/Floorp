@@ -1,0 +1,104 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.build:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - toolchain
+
+job-defaults:
+    apk-artifact-template:
+        type: file
+        name: 'public/build/{fileName}'
+        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - android-gradle-dependencies
+    run:
+        using: gradlew
+        use-caches: false
+        workdir: '/builds/worker'
+    run-on-tasks-for: []
+    treeherder:
+        kind: build
+        symbol: B
+        platform: android-all/opt
+        tier: 1
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 7200
+        chain-of-trust: true
+
+jobs:
+    focus-debug:
+        description: 'Focus debug build from source code'
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            gradle-build-type: debug
+            gradle-build-name: focusDebug
+            gradle-build: focus
+        treeherder:
+            symbol: debug(Bf)
+
+    klar-debug:
+        description: 'Klar debug build from source code'
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            gradle-build-type: debug
+            gradle-build-name: klarDebug
+            gradle-build: klar
+        treeherder:
+            symbol: debug(Bkl)
+
+    focus-release:
+        description: 'Release Focus build for debugging'
+        run-on-tasks-for: [github-pull-request]
+        run:
+            gradle-build-type: release
+            gradle-build-name: focusRelease
+            gradle-build: focus
+        treeherder:
+            symbol: release(Bf)
+
+    klar-release:
+        description: 'Release Klar build for debugging'
+        run-on-tasks-for: [github-pull-request]
+        run:
+            gradle-build-type: release
+            gradle-build-name: klarRelease
+            gradle-build: klar
+        treeherder:
+            symbol: release(Bkl)
+
+    nightly:
+        description: 'Nightly focus build for debugging'
+        run-on-tasks-for: [github-pull-request]
+        run:
+            gradle-build-type: nightly
+            gradle-build-name: focusNightly
+            gradle-build: focus
+        treeherder:
+            symbol: nightly(B)
+
+    beta:
+        description: 'Beta focus build for debugging'
+        run-on-tasks-for: [github-pull-request]
+        run:
+            gradle-build-type: beta
+            gradle-build-name: focusBeta
+            gradle-build: focus
+        treeherder:
+            symbol: beta(B)
+
+
+    # TODO modify release, nightly and beta (focus only for the latter two) for signing and push-apk
+    # Add androidTest as a separate task
+    # Note: nightly and beta will not push to google plaly store

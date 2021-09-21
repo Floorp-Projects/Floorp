@@ -9,6 +9,7 @@ apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
 import com.android.build.OutputFile
+import groovy.json.JsonOutput
 
 android {
     compileSdkVersion 30
@@ -538,4 +539,31 @@ if (gradle.hasProperty('localProperties.autoPublish.android-components.dir')) {
 if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
     ext.appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
     apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+}
+
+// -------------------------------------------------------------------------------------------------
+// Task for printing APK information for the requested variant
+// Taskgraph Usage: "./gradlew printVariants
+// -------------------------------------------------------------------------------------------------
+tasks.register('printVariants') {
+    doLast {
+        def variants = android.applicationVariants.collect { variant -> [
+            apks: variant.outputs.collect { output -> [
+                abi: output.getFilter(com.android.build.VariantOutput.FilterType.ABI),
+                fileName: output.outputFile.name
+            ]},
+            build_type: variant.buildType.name,
+            name: variant.name,
+        ]}
+        // AndroidTest is a special case not included above
+        variants.add([
+            apks: [[
+                abi: 'noarch',
+                fileName: 'app-focus-debug-androidTest.apk',
+            ]],
+            build_type: 'debug',
+            name: 'FocusDebugAndroidTest',
+        ])
+        println 'variants: ' + JsonOutput.toJson(variants)
+    }
 }

@@ -1,5 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+import org.mozilla.focus.gradle.tasks.GithubDetailsTask
+
 buildscript {
     ext.espresso_version = '3.1.0-alpha4'
     ext.coroutines_version = '1.4.2'
@@ -97,4 +99,16 @@ task ktlintFormat(type: JavaExec, group: "formatting") {
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
     args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
+}
+
+tasks.register("githubTestDetails", GithubDetailsTask) {
+    text = "### [Unit Test Results]({reportsUrl}/test/testFocusDebugUnitTest/index.html)"
+}
+
+tasks.register("githubLintDetektDetails", GithubDetailsTask) {
+    text = "### [Detekt Results]({reportsUrl}/detekt.html)"
+}
+
+tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
+    text = "### [Android Lint Results]({reportsUrl}/lint-results-debug.html)"
 }
