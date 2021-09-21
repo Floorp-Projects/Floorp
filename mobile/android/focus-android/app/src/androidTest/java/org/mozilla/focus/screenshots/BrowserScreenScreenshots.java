@@ -163,7 +163,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .perform(pressImeActionButton());
 
         device.findObject(new UiSelector()
-                .resourceId(TestHelper.getAppName() + ":id/webview")
+                .resourceId(TestHelper.getAppName() + ":id/engineView")
                 .enabled(true))
                 .waitForExists(waitingTime);
 

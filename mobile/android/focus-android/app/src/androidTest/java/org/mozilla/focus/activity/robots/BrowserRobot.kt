@@ -36,14 +36,14 @@ class BrowserRobot {
 
     fun verifyBrowserView() =
         assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
                 .waitForExists(webPageLoadwaitingTime)
         )
 
     fun verifyPageContent(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
             .waitForExists(webPageLoadwaitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {

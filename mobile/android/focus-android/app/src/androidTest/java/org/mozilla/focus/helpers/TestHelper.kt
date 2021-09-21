@@ -90,7 +90,7 @@ object TestHelper {
     // exit to the main view
     fun exitToTop() {
         val homeScreen =
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/keyboardLinearLayout"))
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/landingLayout"))
         var homeScreenVisible = false
         while (!homeScreenVisible) {
             mDevice.pressBack()
@@ -177,7 +177,7 @@ object TestHelper {
     )
     var geckoView = mDevice.findObject(
         UiSelector()
-            .resourceId(packageName + ":id/webview")
+            .resourceId(packageName + ":id/engineView")
             .enabled(true)
     )
 

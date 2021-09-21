@@ -72,7 +72,7 @@ class SearchRobot {
                     BrowserRobot().progressBar.waitUntilGone(webPageLoadwaitingTime)
                 )
                 assertTrue(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
                         .waitForExists(webPageLoadwaitingTime)
                 )
             }
