@@ -20,6 +20,7 @@ EXPORTS.mozilla.intl = [
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",
     "src/RelativeTimeFormat.h",
+    "src/String.h",
     "src/TimeZone.h",
 ]
 
