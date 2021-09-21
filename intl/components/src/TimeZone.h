@@ -89,6 +89,13 @@ class TimeZone final {
         });
   }
 
+  /**
+   * Return an enumeration over all time zones commonly used in the given
+   * region.
+   */
+  static Result<SpanEnumeration<char>, ICUError> GetAvailableTimeZones(
+      const char* aRegion);
+
  private:
   UCalendar* mCalendar = nullptr;
 };
