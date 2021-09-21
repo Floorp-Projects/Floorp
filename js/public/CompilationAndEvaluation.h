@@ -98,24 +98,6 @@ using JSSourceElementCallback = JSObject* (*)(JSContext*, JS::HandleValue);
 namespace JS {
 
 /**
- * Like the above, but handles a cross-compartment script. If the script is
- * cross-compartment, it is cloned into the current compartment before
- * executing.
- */
-extern JS_PUBLIC_API bool CloneAndExecuteScript(JSContext* cx,
-                                                Handle<JSScript*> script,
-                                                MutableHandle<Value> rval);
-
-/**
- * Like CloneAndExecuteScript above, but allows executing under a non-syntactic
- * environment chain.
- */
-extern JS_PUBLIC_API bool CloneAndExecuteScript(JSContext* cx,
-                                                HandleObjectVector envChain,
-                                                Handle<JSScript*> script,
-                                                MutableHandle<Value> rval);
-
-/**
  * Evaluate the given source buffer in the scope of the current global of cx,
  * and return the completion value in |rval|.
  */
