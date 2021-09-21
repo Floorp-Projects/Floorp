@@ -344,11 +344,15 @@ def repackage_msix(
                 # Turn "/path/to/LOCALE/target.langpack.xpi" into "LOCALE".
                 base, locale = os.path.split(os.path.dirname(p))
 
-                # Like "langpack-LOCALE@firefox.mozilla.org.xpi".  This is what AMO serves and how
-                # flatpak builds name langpacks, but not how snap builds name langpacks.  I can't
-                # explain the discrepancy.
+                # Like "locale-LOCALE/langpack-LOCALE@firefox.mozilla.org.xpi".  This is what AMO
+                # serves and how flatpak builds name langpacks, but not how snap builds name
+                # langpacks.  I can't explain the discrepancy.
                 dest = mozpath.normsep(
-                    mozpath.join(base, f"langpack-{locale}@firefox.mozilla.org.xpi")
+                    mozpath.join(
+                        base,
+                        f"locale-{locale}",
+                        f"langpack-{locale}@firefox.mozilla.org.xpi",
+                    )
                 )
 
                 log(
