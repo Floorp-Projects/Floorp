@@ -334,7 +334,7 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
 
 // ptr and dest may be the same iff dest is I32.
 // This may destroy ptr even if ptr and dest are not the same.
-bool BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
+void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
                         RegPtr tls, RegI32 ptr, AnyReg dest, RegI32 temp) {
   prepareMemoryAccess(access, check, tls, ptr);
 
@@ -402,13 +402,11 @@ bool BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
 #else
   MOZ_CRASH("BaseCompiler platform hook: load");
 #endif
-
-  return true;
 }
 
 // ptr and src must not be the same register.
 // This may destroy ptr and src.
-bool BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
+void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
                          RegPtr tls, RegI32 ptr, AnyReg src, RegI32 temp) {
   prepareMemoryAccess(access, check, tls, ptr);
 
@@ -488,11 +486,9 @@ bool BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
 #else
   MOZ_CRASH("BaseCompiler platform hook: store");
 #endif
-
-  return true;
 }
 
-bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
+void BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
                               ValType type) {
   RegPtr tls;
   RegI32 temp;
@@ -504,9 +500,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
     case ValType::I32: {
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rp), temp)) {
-        return false;
-      }
+      load(access, &check, tls, rp, AnyReg(rp), temp);
       pushI32(rp);
       break;
     }
@@ -522,9 +516,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       rv = needI64();
 #endif
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      load(access, &check, tls, rp, AnyReg(rv), temp);
       pushI64(rv);
       freeI32(rp);
       break;
@@ -533,9 +525,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegF32 rv = needF32();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      load(access, &check, tls, rp, AnyReg(rv), temp);
       pushF32(rv);
       freeI32(rp);
       break;
@@ -544,9 +534,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegF64 rv = needF64();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      load(access, &check, tls, rp, AnyReg(rv), temp);
       pushF64(rv);
       freeI32(rp);
       break;
@@ -556,9 +544,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegV128 rv = needV128();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      load(access, &check, tls, rp, AnyReg(rv), temp);
       pushV128(rv);
       freeI32(rp);
       break;
@@ -571,11 +557,9 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
 
   maybeFree(tls);
   maybeFree(temp);
-
-  return true;
 }
 
-bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
+void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
                                ValType resultType) {
   RegPtr tls;
   RegI32 temp;
@@ -588,9 +572,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rv = popI32();
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      store(access, &check, tls, rp, AnyReg(rv), temp);
       freeI32(rp);
       freeI32(rv);
       break;
@@ -599,9 +581,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI64 rv = popI64();
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      store(access, &check, tls, rp, AnyReg(rv), temp);
       freeI32(rp);
       freeI64(rv);
       break;
@@ -610,9 +590,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
       RegF32 rv = popF32();
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      store(access, &check, tls, rp, AnyReg(rv), temp);
       freeI32(rp);
       freeF32(rv);
       break;
@@ -621,9 +599,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
       RegF64 rv = popF64();
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      store(access, &check, tls, rp, AnyReg(rv), temp);
       freeI32(rp);
       freeF64(rv);
       break;
@@ -633,9 +609,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
       RegV128 rv = popV128();
       RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
-      if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
-        return false;
-      }
+      store(access, &check, tls, rp, AnyReg(rv), temp);
       freeI32(rp);
       freeV128(rv);
       break;
@@ -648,8 +622,6 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 
   maybeFree(tls);
   maybeFree(temp);
-
-  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -737,10 +709,11 @@ static void Deallocate(BaseCompiler*, RegI64) {}
 
 }  // namespace atomic_load64
 
-bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
+void BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
   Scalar::Type viewType = access->type();
   if (Scalar::byteSize(viewType) <= sizeof(void*)) {
-    return loadCommon(access, AccessCheck(), type);
+    loadCommon(access, AccessCheck(), type);
+    return;
   }
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
@@ -769,15 +742,14 @@ bool BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
   atomic_load64::Deallocate(this, temp);
   pushI64(rd);
 #endif  // JS_64BIT
-
-  return true;
 }
 
-bool BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
+void BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
   Scalar::Type viewType = access->type();
 
   if (Scalar::byteSize(viewType) <= sizeof(void*)) {
-    return storeCommon(access, AccessCheck(), type);
+    storeCommon(access, AccessCheck(), type);
+    return;
   }
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
@@ -786,7 +758,6 @@ bool BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
   MOZ_CRASH("Should not happen");
 #else
   atomicXchg64(access, WantResult(false));
-  return true;
 #endif
 }
 
@@ -1680,9 +1651,61 @@ void BaseCompiler::atomicCmpXchg64(MemoryAccessDesc* access, ValType type) {
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// Synchronization.
+
+bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
+                              uint32_t lineOrBytecode) {
+  switch (type.kind()) {
+    case ValType::I32: {
+      RegI64 timeout = popI64();
+      RegI32 val = popI32();
+
+      computeEffectiveAddress(access);
+
+      pushI32(val);
+      pushI64(timeout);
+
+      if (!emitInstanceCall(lineOrBytecode, SASigWaitI32)) {
+        return false;
+      }
+      break;
+    }
+    case ValType::I64: {
+      RegI64 timeout = popI64();
+      RegI64 val = popI64();
+
+      computeEffectiveAddress(access);
+
+      pushI64(val);
+      pushI64(timeout);
+
+      if (!emitInstanceCall(lineOrBytecode, SASigWaitI64)) {
+        return false;
+      }
+      break;
+    }
+    default:
+      MOZ_CRASH();
+  }
+
+  return true;
+}
+
+bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
+                              uint32_t lineOrBytecode) {
+  RegI32 count = popI32();
+
+  computeEffectiveAddress(access);
+
+  pushI32(count);
+  return emitInstanceCall(lineOrBytecode, SASigWake);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
 // Bulk memory.
 
-bool BaseCompiler::emitMemCopyInline() {
+void BaseCompiler::emitMemCopyInline() {
   MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
 
   int32_t signedLength;
@@ -1727,9 +1750,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!loadCommon(&access, check, ValType::V128)) {
-      return false;
-    }
+    loadCommon(&access, check, ValType::V128);
 
     offset += sizeof(V128);
     omitBoundsCheck = true;
@@ -1745,9 +1766,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!loadCommon(&access, check, ValType::I64)) {
-      return false;
-    }
+    loadCommon(&access, check, ValType::I64);
 
     offset += sizeof(uint64_t);
     omitBoundsCheck = true;
@@ -1762,9 +1781,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!loadCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    loadCommon(&access, check, ValType::I32);
 
     offset += sizeof(uint32_t);
     omitBoundsCheck = true;
@@ -1778,9 +1795,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!loadCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    loadCommon(&access, check, ValType::I32);
 
     offset += sizeof(uint16_t);
     omitBoundsCheck = true;
@@ -1794,9 +1809,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!loadCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    loadCommon(&access, check, ValType::I32);
   }
 
   // Store all source bytes from the value stack to the destination from
@@ -1816,9 +1829,7 @@ bool BaseCompiler::emitMemCopyInline() {
 
     MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
     AccessCheck check;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -1835,9 +1846,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -1854,9 +1863,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -1874,9 +1881,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I64)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I64);
 
     omitBoundsCheck = true;
   }
@@ -1895,9 +1900,7 @@ bool BaseCompiler::emitMemCopyInline() {
     MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::V128)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::V128);
 
     omitBoundsCheck = true;
   }
@@ -1905,10 +1908,9 @@ bool BaseCompiler::emitMemCopyInline() {
 
   freeI32(dest);
   freeI32(src);
-  return true;
 }
 
-bool BaseCompiler::emitMemFillInline() {
+void BaseCompiler::emitMemFillInline() {
   MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
 
   int32_t signedLength;
@@ -1969,9 +1971,7 @@ bool BaseCompiler::emitMemFillInline() {
 
     MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
     AccessCheck check;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -1987,9 +1987,7 @@ bool BaseCompiler::emitMemFillInline() {
     MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -2005,9 +2003,7 @@ bool BaseCompiler::emitMemFillInline() {
     MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I32)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I32);
 
     omitBoundsCheck = true;
   }
@@ -2024,9 +2020,7 @@ bool BaseCompiler::emitMemFillInline() {
     MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::I64)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::I64);
 
     omitBoundsCheck = true;
   }
@@ -2044,16 +2038,13 @@ bool BaseCompiler::emitMemFillInline() {
     MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
-    if (!storeCommon(&access, check, ValType::V128)) {
-      return false;
-    }
+    storeCommon(&access, check, ValType::V128);
 
     omitBoundsCheck = true;
   }
 #endif
 
   freeI32(dest);
-  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2061,7 +2052,7 @@ bool BaseCompiler::emitMemFillInline() {
 // SIMD and Relaxed SIMD.
 
 #ifdef ENABLE_WASM_SIMD
-bool BaseCompiler::loadSplat(MemoryAccessDesc* access) {
+void BaseCompiler::loadSplat(MemoryAccessDesc* access) {
   // We can implement loadSplat mostly as load + splat because the push of the
   // result onto the value stack in loadCommon normally will not generate any
   // code, it will leave the value in a register which we will consume.
@@ -2072,36 +2063,28 @@ bool BaseCompiler::loadSplat(MemoryAccessDesc* access) {
   RegV128 rd = needV128();
   switch (access->type()) {
     case Scalar::Uint8: {
-      if (!loadCommon(access, AccessCheck(), ValType::I32)) {
-        return false;
-      }
+      loadCommon(access, AccessCheck(), ValType::I32);
       RegI32 rs = popI32();
       masm.splatX16(rs, rd);
       free(rs);
       break;
     }
     case Scalar::Uint16: {
-      if (!loadCommon(access, AccessCheck(), ValType::I32)) {
-        return false;
-      }
+      loadCommon(access, AccessCheck(), ValType::I32);
       RegI32 rs = popI32();
       masm.splatX8(rs, rd);
       free(rs);
       break;
     }
     case Scalar::Uint32: {
-      if (!loadCommon(access, AccessCheck(), ValType::I32)) {
-        return false;
-      }
+      loadCommon(access, AccessCheck(), ValType::I32);
       RegI32 rs = popI32();
       masm.splatX4(rs, rd);
       free(rs);
       break;
     }
     case Scalar::Int64: {
-      if (!loadCommon(access, AccessCheck(), ValType::I64)) {
-        return false;
-      }
+      loadCommon(access, AccessCheck(), ValType::I64);
       RegI64 rs = popI64();
       masm.splatX2(rs, rd);
       free(rs);
@@ -2111,18 +2094,15 @@ bool BaseCompiler::loadSplat(MemoryAccessDesc* access) {
       MOZ_CRASH();
   }
   pushV128(rd);
-  return true;
 }
 
-bool BaseCompiler::loadZero(MemoryAccessDesc* access) {
+void BaseCompiler::loadZero(MemoryAccessDesc* access) {
   access->setZeroExtendSimd128Load();
-  return loadCommon(access, AccessCheck(), ValType::V128);
+  loadCommon(access, AccessCheck(), ValType::V128);
 }
 
-bool BaseCompiler::loadExtend(MemoryAccessDesc* access, Scalar::Type viewType) {
-  if (!loadCommon(access, AccessCheck(), ValType::I64)) {
-    return false;
-  }
+void BaseCompiler::loadExtend(MemoryAccessDesc* access, Scalar::Type viewType) {
+  loadCommon(access, AccessCheck(), ValType::I64);
 
   RegI64 rs = popI64();
   RegV128 rd = needV128();
@@ -2151,17 +2131,13 @@ bool BaseCompiler::loadExtend(MemoryAccessDesc* access, Scalar::Type viewType) {
   }
   freeI64(rs);
   pushV128(rd);
-
-  return true;
 }
 
-bool BaseCompiler::loadLane(MemoryAccessDesc* access, uint32_t laneIndex) {
+void BaseCompiler::loadLane(MemoryAccessDesc* access, uint32_t laneIndex) {
   ValType type = access->type() == Scalar::Int64 ? ValType::I64 : ValType::I32;
 
   RegV128 rsd = popV128();
-  if (!loadCommon(access, AccessCheck(), type)) {
-    return false;
-  }
+  loadCommon(access, AccessCheck(), type);
 
   if (type == ValType::I32) {
     RegI32 rs = popI32();
@@ -2187,11 +2163,9 @@ bool BaseCompiler::loadLane(MemoryAccessDesc* access, uint32_t laneIndex) {
   }
 
   pushV128(rsd);
-
-  return true;
 }
 
-bool BaseCompiler::storeLane(MemoryAccessDesc* access, uint32_t laneIndex) {
+void BaseCompiler::storeLane(MemoryAccessDesc* access, uint32_t laneIndex) {
   ValType type = access->type() == Scalar::Int64 ? ValType::I64 : ValType::I32;
 
   RegV128 rs = popV128();
@@ -2219,7 +2193,7 @@ bool BaseCompiler::storeLane(MemoryAccessDesc* access, uint32_t laneIndex) {
   }
   freeV128(rs);
 
-  return storeCommon(access, AccessCheck(), type);
+  storeCommon(access, AccessCheck(), type);
 }
 #endif  // ENABLE_WASM_SIMD
 
