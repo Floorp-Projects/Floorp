@@ -2297,8 +2297,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  RootedValue referencingPrivate(cx,
-                                 script->sourceObject()->canonicalPrivate());
+  RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
   cx->runtime()->addRefScriptPrivate(referencingPrivate);
 
   RootedAtom specifierAtom(cx, AtomizeString(cx, specifier));

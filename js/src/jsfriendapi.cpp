@@ -746,7 +746,7 @@ JS_PUBLIC_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
     return UndefinedValue();
   }
 
-  return object->as<ScriptSourceObject>().canonicalPrivate();
+  return object->as<ScriptSourceObject>().getPrivate();
 }
 
 JS_PUBLIC_API uint64_t js::GetGCHeapUsageForObjectZone(JSObject* obj) {
