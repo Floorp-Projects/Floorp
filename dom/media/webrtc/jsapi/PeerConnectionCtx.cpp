@@ -570,7 +570,6 @@ nsresult PeerConnectionCtx::Cleanup() {
   mQueuedJSEPOperations.Clear();
   mGMPService = nullptr;
   mTransportHandler = nullptr;
-  mSharedWebrtcState = nullptr;
   for (auto& [id, pc] : mPeerConnections) {
     (void)id;
     pc->Close();
