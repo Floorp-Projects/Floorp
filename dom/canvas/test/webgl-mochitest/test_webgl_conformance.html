@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: 'webgl' context request</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+var gl = WebGLUtil.getWebGL('c', true);
+
+var isMobile = /Mobile/.test(navigator.userAgent);
+var isTablet = /Tablet/.test(navigator.userAgent);
+var shouldBeConformant = !isMobile && !isTablet;
+
+if (shouldBeConformant) {
+  // Desktop.
+  ok(gl, 'Expected conformance on: ' + navigator.userAgent);
+} else {
+  // Fennec, B2G.
+  ok(!gl, 'Expected no conformance on: ' + navigator.userAgent);
+}
+
+</script>
+</body>
+</html>

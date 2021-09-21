@@ -1,6 +1,62 @@
 WebGLUtil = (function() {
   // ---------------------------------------------------------------------------
+  // Error handling (for obvious failures, such as invalid element ids)
+
+  function defaultErrorFunc(str) {
+    console.log("Error: " + str);
+  }
+
+  var gErrorFunc = defaultErrorFunc;
+  function setErrorFunc(func) {
+    gErrorFunc = func;
+  }
+
+  function error(str) {
+    gErrorFunc(str);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Warning handling (for failures that may be intentional)
+
+  function defaultWarningFunc(str) {
+    console.log("Warning: " + str);
+  }
+
+  var gWarningFunc = defaultWarningFunc;
+  function setWarningFunc(func) {
+    gWarningFunc = func;
+  }
+
+  function warning(str) {
+    gWarningFunc(str);
+  }
+
+  // ---------------------------------------------------------------------------
   // WebGL helpers
+
+  function getWebGL(canvasId, requireConformant, attributes) {
+    // `requireConformant` will default to falsey if it is not supplied.
+
+    var canvas = document.getElementById(canvasId);
+
+    var gl = null;
+    try {
+      gl = canvas.getContext("webgl", attributes);
+    } catch (e) {}
+
+    if (!gl && !requireConformant) {
+      try {
+        gl = canvas.getContext("experimental-webgl", attributes);
+      } catch (e) {}
+    }
+
+    if (!gl) {
+      error("WebGL context could not be retrieved from '" + canvasId + "'.");
+      return null;
+    }
+
+    return gl;
+  }
 
   function withWebGL2(canvasId, callback, onFinished) {
     var run = function() {
@@ -16,6 +72,12 @@ WebGLUtil = (function() {
         onFinished();
         return;
       }
+
+      function errorFunc(str) {
+        ok(false, "Error: " + str);
+      }
+      setErrorFunc(errorFunc);
+      setWarningFunc(errorFunc);
 
       callback(gl);
       onFinished();
@@ -34,16 +96,29 @@ WebGLUtil = (function() {
     }
   }
 
+  function getContentFromElem(elem) {
+    var str = "";
+    var k = elem.firstChild;
+    while (k) {
+      if (k.nodeType == 3) {
+        str += k.textContent;
+      }
+
+      k = k.nextSibling;
+    }
+
+    return str;
+  }
+
   // Returns a valid shader, or null on errors.
   function createShaderById(gl, id) {
     var elem = document.getElementById(id);
     if (!elem) {
-      throw new Error(
-        "Failed to create shader from non-existent id '" + id + "'."
-      );
+      error("Failed to create shader from non-existent id '" + id + "'.");
+      return null;
     }
 
-    var src = elem.innerHTML.trim();
+    var src = getContentFromElem(elem);
 
     var shader;
     if (elem.type == "x-shader/x-fragment") {
@@ -51,9 +126,8 @@ WebGLUtil = (function() {
     } else if (elem.type == "x-shader/x-vertex") {
       shader = gl.createShader(gl.VERTEX_SHADER);
     } else {
-      throw new Error(
-        "Bad MIME type for shader '" + id + "': " + elem.type + "."
-      );
+      error("Bad MIME type for shader '" + id + "': " + elem.type + ".");
+      return null;
     }
 
     gl.shaderSource(shader, src);
@@ -79,7 +153,7 @@ WebGLUtil = (function() {
       str += "\nShader program info log:\n" + gl.getProgramInfoLog(prog);
       str += "\n\nVert shader log:\n" + gl.getShaderInfoLog(vs);
       str += "\n\nFrag shader log:\n" + gl.getShaderInfoLog(fs);
-      console.error(str);
+      warning(str);
       return null;
     }
 
@@ -87,8 +161,11 @@ WebGLUtil = (function() {
   }
 
   return {
-    withWebGL2,
+    setErrorFunc,
+    setWarningFunc,
 
+    getWebGL,
+    withWebGL2,
     createShaderById,
     createProgramByIds,
 

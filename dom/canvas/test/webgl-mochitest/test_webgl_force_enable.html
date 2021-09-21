@@ -4,6 +4,7 @@
 <title>WebGL test: Check that WebGL works (or not) if it should (or should not).</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
 <script src="driver-info.js"></script>
 </head>
 <body>
@@ -25,7 +26,7 @@ function test() {
     shouldFail = false;
   }
 
-  var gl = c.getContext('webgl');
+  var gl = WebGLUtil.getWebGL('c');
   if (shouldSucceed) {
     ok(gl, 'Expected WebGL creation to succeed.');
   }
