@@ -375,19 +375,19 @@ static void LogOleSetClipboardResult(const HRESULT aHres) {
   }
 }
 
-// Other apps can block access to the clipboard. This repeatedly
-// calls `::OleSetClipboard` for a fixed number of times and should be called
-// instead of `::OleSetClipboard`.
-static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
+template <typename Function, typename LogFunction, typename Arg>
+static HRESULT RepeatedlyTry(Function aFunction, LogFunction aLogFunction,
+                             Arg&& aArg) {
   // These are magic values based on local testing. They are chosen not higher
   // to avoid jank (<https://developer.mozilla.org/en-US/docs/Glossary/Jank>).
   // When changing them, be careful.
   static constexpr int kNumberOfTries = 3;
   static constexpr int kDelayInMs = 3;
 
+  HRESULT hres;
   for (int i = 0; i < kNumberOfTries; ++i) {
-    const HRESULT hres = ::OleSetClipboard(aDataObj);
-    LogOleSetClipboardResult(hres);
+    hres = aFunction(aArg);
+    aLogFunction(hres);
 
     if (hres == S_OK) {
       break;
@@ -395,6 +395,15 @@ static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(kDelayInMs));
   }
+
+  return hres;
+}
+
+// Other apps can block access to the clipboard. This repeatedly
+// calls `::OleSetClipboard` for a fixed number of times and should be called
+// instead of `::OleSetClipboard`.
+static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
+  RepeatedlyTry(::OleSetClipboard, LogOleSetClipboardResult, aDataObj);
 }
 
 //-------------------------------------------------------------------------
@@ -1121,6 +1130,13 @@ bool nsClipboard ::FindURLFromNativeURL(IDataObject* inDataObject, UINT inIndex,
   return dataFound;
 }  // FindURLFromNativeURL
 
+// Other apps can block access to the clipboard. This repeatedly
+// calls `::OleGetClipboard` for a fixed number of times and should be called
+// instead of `::OleGetClipboard`.
+static HRESULT RepeatedlyTryOleGetClipboard(IDataObject** aDataObj) {
+  return RepeatedlyTry(::OleGetClipboard, LogOleGetClipboardResult, aDataObj);
+}
+
 //
 // ResolveShortcut
 //
@@ -1166,9 +1182,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
 
   // This makes sure we can use the OLE functionality for the clipboard
   IDataObject* dataObj;
-  const HRESULT hres = ::OleGetClipboard(&dataObj);
-  LogOleGetClipboardResult(hres);
-  if (S_OK == hres) {
+  if (S_OK == RepeatedlyTryOleGetClipboard(&dataObj)) {
     // Use OLE IDataObject for clipboard operations
     MOZ_LOG(gWin32ClipboardLog, LogLevel::Verbose,
             ("%s: use OLE IDataObject.", __FUNCTION__));
