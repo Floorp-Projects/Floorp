@@ -1,0 +1,14 @@
+---
+root:
+  items:
+    - type: conic-gradient
+      bounds: 50 50 2048 2048
+      center: 100 100
+      angle: 0
+      stops: [0.0, red, 0.2, red, 0.2, yellow, 1.0, yellow]
+    - type: rect
+      bounds: 0 300 2048 2048
+      color: white
+    - type: rect
+      bounds: 300 0 2048 2048
+      color: white
