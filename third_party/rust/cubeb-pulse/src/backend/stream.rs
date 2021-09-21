@@ -436,7 +436,7 @@ impl<'ctx> PulseStream<'ctx> {
 
                         let battr = pa_buffer_attr {
                             maxlength: u32::max_value(),
-                            prebuf: 0,
+                            prebuf: u32::max_value(),
                             fragsize: u32::max_value(),
                             tlength: buffer_size_bytes * 2,
                             minreq: buffer_size_bytes / 4,
@@ -601,8 +601,30 @@ impl<'ctx> Drop for PulseStream<'ctx> {
 
 impl<'ctx> StreamOps for PulseStream<'ctx> {
     fn start(&mut self) -> Result<()> {
+        fn output_preroll(_: &pulse::MainloopApi, u: *mut c_void) {
+            let stm = unsafe { &mut *(u as *mut PulseStream) };
+            if !stm.shutdown {
+                let size = stm
+                    .output_stream
+                    .as_ref()
+                    .map_or(0, |s| s.writable_size().unwrap_or(0));
+                stm.trigger_user_callback(std::ptr::null(), size);
+            }
+        }
         self.shutdown = false;
         self.cork(CorkState::uncork() | CorkState::notify());
+
+        if self.output_stream.is_some() {
+            /* When doing output-only or duplex, we need to manually call user cb once in order to
+             * make things roll. This is done via a defer event in order to execute it from PA
+             * server thread. */
+            self.context.mainloop.lock();
+            self.context
+                .mainloop
+                .get_api()
+                .once(output_preroll, self as *const _ as *mut _);
+            self.context.mainloop.unlock();
+        }
 
         Ok(())
     }
