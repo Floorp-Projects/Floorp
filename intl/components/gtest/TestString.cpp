@@ -59,6 +59,128 @@ TEST(IntlString, ToLocaleUpperCase)
             u"GRÖSSENMASSSTÄBE");
 }
 
+TEST(IntlString, NormalizeNFC)
+{
+  using namespace std::literals;
+
+  using NormalizationForm = String::NormalizationForm;
+  using AlreadyNormalized = String::AlreadyNormalized;
+
+  TestBuffer<char16_t> buf;
+
+  auto alreadyNormalized =
+      String::Normalize(NormalizationForm::NFC, u""sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFC, u"abcdef"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFC, u"a\u0308"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"ä");
+
+  buf.clear();
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFC, u"½"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+}
+
+TEST(IntlString, NormalizeNFD)
+{
+  using namespace std::literals;
+
+  using NormalizationForm = String::NormalizationForm;
+  using AlreadyNormalized = String::AlreadyNormalized;
+
+  TestBuffer<char16_t> buf;
+
+  auto alreadyNormalized =
+      String::Normalize(NormalizationForm::NFD, u""sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFD, u"abcdef"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFD, u"ä"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"a\u0308");
+
+  buf.clear();
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFD, u"½"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+}
+
+TEST(IntlString, NormalizeNFKC)
+{
+  using namespace std::literals;
+
+  using NormalizationForm = String::NormalizationForm;
+  using AlreadyNormalized = String::AlreadyNormalized;
+
+  TestBuffer<char16_t> buf;
+
+  auto alreadyNormalized =
+      String::Normalize(NormalizationForm::NFKC, u""sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFKC, u"abcdef"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFKC, u"a\u0308"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"ä");
+
+  buf.clear();
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFKC, u"½"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"1⁄2");
+}
+
+TEST(IntlString, NormalizeNFKD)
+{
+  using namespace std::literals;
+
+  using NormalizationForm = String::NormalizationForm;
+  using AlreadyNormalized = String::AlreadyNormalized;
+
+  TestBuffer<char16_t> buf;
+
+  auto alreadyNormalized =
+      String::Normalize(NormalizationForm::NFKD, u""sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized =
+      String::Normalize(NormalizationForm::NFKD, u"abcdef"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
+  ASSERT_EQ(buf.get_string_view(), u"");
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFKD, u"ä"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"a\u0308");
+
+  buf.clear();
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFKD, u"½"sv, buf);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf.get_string_view(), u"1⁄2");
+}
+
 TEST(IntlString, IsCased)
 {
   ASSERT_TRUE(String::IsCased(U'a'));
