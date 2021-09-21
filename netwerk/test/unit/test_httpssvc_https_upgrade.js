@@ -48,6 +48,8 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(
     "network.dns.use_https_rr_for_speculative_connection"
   );
+  Services.prefs.clearUserPref("network.dns.notifyResolution");
+  Services.prefs.clearUserPref("network.dns.disablePrefetch");
 });
 
 function makeChan(url) {
@@ -240,5 +242,65 @@ add_task(async function testEndlessUpgradeDowngrade() {
 
   let [, response] = await channelOpenPromise(chan);
   Assert.equal(response, content);
+  await new Promise(resolve => httpserv.stop(resolve));
+});
+
+add_task(async function testHttpRequestBlocked() {
+  dns.clearCache(true);
+
+  let dnsRequestObserver = {
+    register() {
+      this.obs = Cc["@mozilla.org/observer-service;1"].getService(
+        Ci.nsIObserverService
+      );
+      this.obs.addObserver(this, "dns-resolution-request");
+    },
+    unregister() {
+      if (this.obs) {
+        this.obs.removeObserver(this, "dns-resolution-request");
+      }
+    },
+    observe(subject, topic, data) {
+      if (topic == "dns-resolution-request") {
+        Assert.ok(false, "unreachable");
+      }
+    },
+  };
+
+  dnsRequestObserver.register();
+  Services.prefs.setBoolPref("network.dns.notifyResolution", true);
+  Services.prefs.setBoolPref("network.dns.disablePrefetch", true);
+
+  let httpserv = new HttpServer();
+  httpserv.registerPathHandler("/", function handler(metadata, response) {
+    Assert.ok(false, "unreachable");
+  });
+  httpserv.start(-1);
+  httpserv.identity.setPrimary(
+    "http",
+    "foo.blocked.com",
+    httpserv.identity.primaryPort
+  );
+
+  let chan = makeChan(
+    `http://foo.blocked.com:${httpserv.identity.primaryPort}/`
+  );
+
+  let topic = "http-on-modify-request";
+  let observer = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    observe(aSubject, aTopic, aData) {
+      if (aTopic == topic) {
+        Services.obs.removeObserver(observer, topic);
+        let channel = aSubject.QueryInterface(Ci.nsIChannel);
+        channel.cancel(Cr.NS_BINDING_ABORTED);
+      }
+    },
+  };
+
+  let [request] = await channelOpenPromise(chan, CL_EXPECT_FAILURE, observer);
+  request.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(request.status, Cr.NS_BINDING_ABORTED);
+  dnsRequestObserver.unregister();
   await new Promise(resolve => httpserv.stop(resolve));
 });
