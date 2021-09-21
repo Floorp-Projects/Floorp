@@ -111,6 +111,46 @@ void gecko_profiler_destruct_marker_timing(
 #endif
 }
 
+void gecko_profiler_json_writer_int_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, int64_t aValue) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->IntProperty(mozilla::Span(aName, aNameLength), aValue);
+#endif
+}
+
+void gecko_profiler_json_writer_float_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, double aValue) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->DoubleProperty(mozilla::Span(aName, aNameLength), aValue);
+#endif
+}
+
+void gecko_profiler_json_writer_bool_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, bool aValue) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->BoolProperty(mozilla::Span(aName, aNameLength), aValue);
+#endif
+}
+void gecko_profiler_json_writer_string_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, const char* aValue, size_t aValueLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->StringProperty(mozilla::Span(aName, aNameLength),
+                          mozilla::Span(aValue, aValueLength));
+#endif
+}
+
+void gecko_profiler_json_writer_null_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->NullProperty(mozilla::Span(aName, aNameLength));
+#endif
+}
+
 void gecko_profiler_add_marker_untyped(
     const char* aName, size_t aNameLength,
     mozilla::baseprofiler::ProfilingCategoryPair aCategoryPair,
