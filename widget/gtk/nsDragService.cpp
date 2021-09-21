@@ -30,6 +30,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "GRefPtr.h"
 
@@ -112,7 +113,8 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
 
 nsDragService::nsDragService()
     : mScheduledTask(eDragTaskNone),
-      mTaskSource(0)
+      mTaskSource(0),
+      mScheduledTaskIsRunning(false)
 #ifdef MOZ_WAYLAND
       ,
       mPendingWaylandDataOffer(nullptr),
@@ -481,6 +483,8 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 #ifdef MOZ_WAYLAND
   mTargetWaylandDataOfferForRemote = nullptr;
 #endif
+  mTargetWindow = nullptr;
+  mPendingWindow = nullptr;
 
   return nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
 }
@@ -978,6 +982,7 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
     }
   }
 
+  LOGDRAGSERVICE(("  gdk_drag_status() action %d", action));
   gdk_drag_status(aDragContext, action, mTargetTime);
 }
 
@@ -1142,7 +1147,7 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
     }
   }
 #ifdef MOZ_WAYLAND
-  else {
+  else if (mTargetWaylandDataOffer) {
     mTargetDragData = mTargetWaylandDataOffer->GetDragData(
         gdk_atom_name(aFlavor), &mTargetDragDataLen);
     mTargetDragDataReceived = true;
@@ -1847,6 +1852,16 @@ gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
   return TRUE;
 }
 
+#ifdef MOZ_LOGGING
+const char* nsDragService::GetDragServiceTaskName(DragTask aTask) {
+  static const char* taskNames[] = {"eDragTaskNone", "eDragTaskMotion",
+                                    "eDragTaskLeave", "eDragTaskDrop",
+                                    "eDragTaskSourceEnd"};
+  MOZ_ASSERT(size_t(aTask) < ArrayLength(taskNames));
+  return taskNames[aTask];
+}
+#endif
+
 gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
                                  GdkDragContext* aDragContext,
                                  RefPtr<DataOffer> aWaylandDataOffer,
@@ -1861,9 +1876,15 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   // within the allowed time).  Otherwise, if we haven't yet run a scheduled
   // drop or end task, just say that we are not ready to receive another
   // drop.
+  LOGDRAGSERVICE(("nsDragService::Schedule() task %s window %p\n",
+                  GetDragServiceTaskName(aTask), aWindow));
+
   if (mScheduledTask == eDragTaskSourceEnd ||
-      (mScheduledTask == eDragTaskDrop && aTask != eDragTaskSourceEnd))
+      (mScheduledTask == eDragTaskDrop && aTask != eDragTaskSourceEnd)) {
+    LOGDRAGSERVICE(("   task does not fit recent task %s, quit!\n",
+                    GetDragServiceTaskName(mScheduledTask)));
     return FALSE;
+  }
 
   mScheduledTask = aTask;
   mPendingWindow = aWindow;
@@ -1875,14 +1896,15 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   mPendingTime = aTime;
 
   if (!mTaskSource) {
-    // High priority is used here because the native events involved have
-    // already waited at default priority.  Perhaps a lower than default
-    // priority could be used for motion tasks because there is a chance
-    // that a leave or drop is waiting, but managing different priorities
-    // may not be worth the effort.  Motion tasks shouldn't queue up as
-    // they should be throttled based on replies.
-    mTaskSource =
-        g_idle_add_full(G_PRIORITY_HIGH, TaskDispatchCallback, this, nullptr);
+    // High priority is used here because we want to process motion events
+    // right after drag_motion event handler which is called by Gtk.
+    // An ideal scenario is to call TaskDispatchCallback() directly here
+    // but we can't do that. TaskDispatchCallback() spins gtk event loop
+    // while nsDragService::Schedule() is already called from event loop
+    // (by drag_motion* gtk_widget events) so that direct call will cause
+    // nested recursion.
+    mTaskSource = g_timeout_add_full(G_PRIORITY_HIGH, 0, TaskDispatchCallback,
+                                     this, nullptr);
   }
   return TRUE;
 }
@@ -1893,9 +1915,22 @@ gboolean nsDragService::TaskDispatchCallback(gpointer data) {
 }
 
 gboolean nsDragService::RunScheduledTask() {
+  LOGDRAGSERVICE(
+      ("nsDragService::RunScheduledTask() task %s mTargetWindow %p "
+       "mPendingWindow %p\n",
+       GetDragServiceTaskName(mScheduledTask), mTargetWindow.get(),
+       mPendingWindow.get()));
+
+  // Don't run RunScheduledTask() twice. As we use it in main thread only
+  // we don't need to be thread safe here.
+  if (mScheduledTaskIsRunning) {
+    return FALSE;
+  }
+  AutoRestore<bool> guard(mScheduledTaskIsRunning);
+  mScheduledTaskIsRunning = true;
+
   if (mTargetWindow && mTargetWindow != mPendingWindow) {
-    LOGDRAGSERVICE(
-        ("nsDragService: dispatch drag leave (%p)\n", mTargetWindow.get()));
+    LOGDRAGSERVICE(("  dispatch eDragExit (%p)\n", mTargetWindow.get()));
     mTargetWindow->DispatchDragEvent(eDragExit, mTargetWindowPoint, 0);
 
     if (!mSourceNode) {
@@ -1921,6 +1956,7 @@ gboolean nsDragService::RunScheduledTask() {
   mTargetWindowPoint = mPendingWindowPoint;
 
   if (task == eDragTaskLeave || task == eDragTaskSourceEnd) {
+    LOGDRAGSERVICE(("  quit, task %s\n", GetDragServiceTaskName(task)));
     if (task == eDragTaskSourceEnd) {
       // Dispatch drag end events.
       EndDragSession(true, GetCurrentModifiers());
@@ -1939,7 +1975,11 @@ gboolean nsDragService::RunScheduledTask() {
   // (The leave event is not scheduled if a drop task is still scheduled.)
   // We still reply appropriately to indicate that the drop will or didn't
   // succeeed.
-  mTargetWidget = mTargetWindow->GetMozContainerWidget();
+  mTargetWidget =
+      mTargetWindow ? mTargetWindow->GetMozContainerWidget() : nullptr;
+  LOGDRAGSERVICE(("  start drag session mTargetWindow %p mTargetWidget %p\n",
+                  mTargetWindow.get(), mTargetWidget.get()));
+
   mTargetDragContext = std::move(mPendingDragContext);
 #ifdef MOZ_WAYLAND
   mTargetWaylandDataOffer = std::move(mPendingWaylandDataOffer);
@@ -1971,6 +2011,7 @@ gboolean nsDragService::RunScheduledTask() {
   // contain a position.  However, we can't assume the same when the Motif
   // protocol is used.
   if (task == eDragTaskMotion || positionHasChanged) {
+    LOGDRAGSERVICE(("  process motion event\n"));
     UpdateDragAction();
     TakeDragEventDispatchedToChildProcess();  // Clear the old value.
     DispatchMotionEvents();
@@ -1996,12 +2037,14 @@ gboolean nsDragService::RunScheduledTask() {
   }
 
   if (task == eDragTaskDrop) {
+    LOGDRAGSERVICE(("  process drop task\n"));
     gboolean success = DispatchDropEvent();
 
     // Perhaps we should set the del parameter to TRUE when the drag
     // action is move, but we don't know whether the data was successfully
     // transferred.
     if (mTargetDragContext) {
+      LOGDRAGSERVICE(("  drag finished\n"));
       gtk_drag_finish(mTargetDragContext, success,
                       /* del = */ FALSE, mTargetTime);
     }
@@ -2015,6 +2058,7 @@ gboolean nsDragService::RunScheduledTask() {
   }
 
   // We're done with the drag context.
+  LOGDRAGSERVICE(("  clear mTargetWindow mTargetWidget and other data\n"));
   mTargetWidget = nullptr;
   mTargetDragContext = nullptr;
 #ifdef MOZ_WAYLAND
@@ -2030,6 +2074,7 @@ gboolean nsDragService::RunScheduledTask() {
 
   // We have no task scheduled.
   // Returning false removes the task source from the event loop.
+  LOGDRAGSERVICE(("  remove task source\n"));
   mTaskSource = 0;
   return FALSE;
 }
@@ -2045,6 +2090,7 @@ void nsDragService::UpdateDragAction() {
   // more appropriate.  GdkDragContext::actions should be used to set
   // dataTransfer.effectAllowed, which doesn't currently happen with
   // external sources.
+  LOGDRAGSERVICE(("nsDragService::UpdateDragAction()\n"));
 
   // default is to do nothing
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
@@ -2080,6 +2126,8 @@ void nsDragService::UpdateDragAction() {
 
 NS_IMETHODIMP
 nsDragService::UpdateDragEffect() {
+  LOGDRAGSERVICE(
+      ("nsDragService::UpdateDragEffect() from e10s child process\n"));
   if (mTargetDragContextForRemote) {
     ReplyToDragMotion(mTargetDragContextForRemote);
     mTargetDragContextForRemote = nullptr;
