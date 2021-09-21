@@ -8,7 +8,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="mozac_browser_menu_new_tab">Nove scheda</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="mozac_browser_menu_new_private_tab">Nove scheda anonyme</string>
+    <string name="mozac_browser_menu_new_private_tab">Nove scheda private</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Clauder scheda</string>
     <!-- Menu option to duplicate the current tab -->

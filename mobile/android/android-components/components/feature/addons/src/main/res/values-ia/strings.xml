@@ -85,9 +85,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Inactive</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitter in Navigation anonyme.</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitter in navigation private</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Exequer in navigation anonyme.</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Exequer in navigation private</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Activate</string>
     <!-- Indicates the add-on is disabled. -->
