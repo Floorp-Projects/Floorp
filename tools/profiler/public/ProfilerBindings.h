@@ -105,6 +105,11 @@ void gecko_profiler_marker_schema_add_static_label_value(
     mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength,
     const char* aValue, size_t aValueLength);
 
+// Stream MarkerSchema to SpliceableJSONWriter.
+void gecko_profiler_marker_schema_stream(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema);
+
 // Various SpliceableJSONWriter methods to add properties.
 void gecko_profiler_json_writer_int_property(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
