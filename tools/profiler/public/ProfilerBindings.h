@@ -20,6 +20,7 @@ enum class StackCaptureOptions;
 
 namespace baseprofiler {
 enum class ProfilingCategoryPair : uint32_t;
+class SpliceableJSONWriter;
 }  // namespace baseprofiler
 
 }  // namespace mozilla
@@ -59,6 +60,23 @@ void gecko_profiler_construct_marker_timing_interval_end(
     mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
 void gecko_profiler_destruct_marker_timing(
     mozilla::MarkerTiming* aMarkerTiming);
+
+// Various SpliceableJSONWriter methods to add properties.
+void gecko_profiler_json_writer_int_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, int64_t aValue);
+void gecko_profiler_json_writer_float_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, double aValue);
+void gecko_profiler_json_writer_bool_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, bool aValue);
+void gecko_profiler_json_writer_string_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, const char* aValue, size_t aValueLength);
+void gecko_profiler_json_writer_null_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength);
 
 // Marker APIs.
 void gecko_profiler_add_marker_untyped(
