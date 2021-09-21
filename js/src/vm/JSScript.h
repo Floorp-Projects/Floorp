@@ -1086,9 +1086,6 @@ class ScriptSource {
 class ScriptSourceObject : public NativeObject {
   static const JSClassOps classOps_;
 
-  static ScriptSourceObject* createInternal(JSContext* cx, ScriptSource* source,
-                                            HandleObject canonical);
-
   bool isCanonical() const {
     return &getReservedSlot(CANONICAL_SLOT).toObject() == this;
   }
@@ -2298,8 +2295,6 @@ extern void DescribeScriptedCallerForDirectEval(
 JSScript* CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
                                   HandleFunction fun, HandleScript src,
                                   Handle<ScriptSourceObject*> sourceObject);
-
-JSScript* CloneGlobalScript(JSContext* cx, HandleScript src);
 
 bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
                               js::ImmutableScriptFlags flags,

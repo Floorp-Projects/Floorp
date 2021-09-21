@@ -1307,18 +1307,6 @@ GlobalScope* GlobalScope::createWithData(
   return Scope::create<GlobalScope>(cx, kind, nullptr, nullptr, data);
 }
 
-/* static */
-GlobalScope* GlobalScope::clone(JSContext* cx, Handle<GlobalScope*> scope) {
-  Rooted<RuntimeData*> dataOriginal(cx, &scope->as<GlobalScope>().data());
-  Rooted<UniquePtr<RuntimeData>> dataClone(
-      cx, CopyScopeData<GlobalScope>(cx, dataOriginal));
-  if (!dataClone) {
-    return nullptr;
-  }
-  return Scope::create<GlobalScope>(cx, scope->kind(), nullptr, nullptr,
-                                    &dataClone);
-}
-
 template <XDRMode mode>
 /* static */
 XDRResult GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
