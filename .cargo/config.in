@@ -47,6 +47,11 @@ git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
 rev = "2e56bb9bae5d8211137980a717ee991cc4a5eb98"
 
+[source."https://github.com/kvark/wgpu"]
+branch = "gecko-beta-solaris"
+git = "https://github.com/kvark/wgpu"
+replace-with = "vendored-sources"
+
 [source."https://github.com/kvark/dummy-web"]
 git = "https://github.com/kvark/dummy-web"
 replace-with = "vendored-sources"
@@ -80,11 +85,6 @@ rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
 rev = "302c995f91f44cf26e77dc4758ad56c3ff0153ad"
-
-[source."https://github.com/gfx-rs/wgpu"]
-git = "https://github.com/gfx-rs/wgpu"
-replace-with = "vendored-sources"
-rev = "d23288e"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
