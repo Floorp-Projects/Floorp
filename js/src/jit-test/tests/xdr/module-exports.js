@@ -3,13 +3,13 @@ const count = 10;
 let s = "";
 for (let i = 0; i < count; i++)
     s += "export let e" + i + " = " + (i * i) + ";\n";
-let stencil = compileToStencilXDR(s, {module: true});
-let m = instantiateModuleStencilXDR(stencil);
-let a = registerModule('a', m);
+let og = parseModule(s);
+let bc = codeModule(og);
+let a = registerModule('a', decodeModule(bc));
 
-stencil = compileToStencilXDR("import * as ns from 'a'", {module: true});
-m = instantiateModuleStencilXDR(stencil);
-let b = registerModule('b', m);
+og = parseModule("import * as ns from 'a'");
+bc = codeModule(og);
+let b = registerModule('b', decodeModule(bc));
 
 b.declarationInstantiation();
 b.evaluation();

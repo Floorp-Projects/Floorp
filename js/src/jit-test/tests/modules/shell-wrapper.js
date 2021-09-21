@@ -204,8 +204,7 @@ p.evaluation();
 testMethod(p, "declarationInstantiation");
 testMethod(p, "evaluation");
 
-const xdr = compileToStencilXDR(``, {module: true});
-const q = instantiateModuleStencilXDR(xdr);
+const q = decodeModule(codeModule(parseModule(``)));
 q.declarationInstantiation();
 q.evaluation();
 testMethod(q, "declarationInstantiation");
@@ -219,13 +218,6 @@ if (helperThreadCount() > 0) {
   testMethod(r, "declarationInstantiation");
   testMethod(r, "evaluation");
 }
-
-const stencil = compileToStencil(``, {module: true});
-const t = instantiateModuleStencil(stencil);
-t.declarationInstantiation();
-t.evaluation();
-testMethod(t, "declarationInstantiation");
-testMethod(t, "evaluation");
 
 // ==== gatherAsyncParentCompletions method shouldn't be exposed ====
 const s = parseModule(``);

@@ -1,8 +1,8 @@
 const count = 10;
 
-let stencil = compileToStencilXDR("export let a = 1;", {module: true});
-let m = instantiateModuleStencilXDR(stencil);
-let a = registerModule('a', m);
+let og = parseModule("export let a = 1;");
+let bc = codeModule(og);
+let a = registerModule('a', decodeModule(bc));
 
 let s = "";
 for (let i = 0; i < count; i++) {
@@ -10,16 +10,17 @@ for (let i = 0; i < count; i++) {
     s += "assertEq(i" + i + ", 1);\n";
 }
 
-stencil = compileToStencilXDR(s, {module: true});
-m = instantiateModuleStencilXDR(stencil);
-let b = registerModule('b', m);
+og = parseModule(s);
+bc = codeModule(og);
+let b = registerModule('b', decodeModule(bc));
 
 b.declarationInstantiation();
 b.evaluation();
 
 
-stencil = compileToStencilXDR("import * as nsa from 'a'; import * as nsb from 'b';", {module: true});
-m = instantiateModuleStencilXDR(stencil);
+og = parseModule("import * as nsa from 'a'; import * as nsb from 'b';");
+bc = codeModule(og);
+let m = decodeModule(bc);
 
 m.declarationInstantiation();
 m.evaluation();
