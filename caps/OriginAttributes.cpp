@@ -11,6 +11,8 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsURLHelper.h"
 
 static const char kSourceChar = ':';

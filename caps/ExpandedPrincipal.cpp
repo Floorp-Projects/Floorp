@@ -9,6 +9,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Base64.h"
+#include "json/json.h"
 
 using namespace mozilla;
 
