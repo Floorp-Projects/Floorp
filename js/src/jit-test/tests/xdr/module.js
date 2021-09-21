@@ -3,8 +3,9 @@
 load(libdir + "asserts.js");
 
 async function parseAndEvaluate(source) {
-    let stencil = compileToStencilXDR(source, {module: true});
-    let m = instantiateModuleStencilXDR(stencil);
+    let og = parseModule(source);
+    let bc = codeModule(og);
+    let m = decodeModule(bc);
     m.declarationInstantiation();
     await m.evaluation();
     return m;
@@ -18,8 +19,9 @@ async function parseAndEvaluate(source) {
 (async () => {
   // Check that evaluation returns evaluation promise,
   // and promise is always the same.
-  let stencil = compileToStencilXDR("1", {module: true});
-  let m = instantiateModuleStencilXDR(stencil);
+  let og = parseModule("1");
+  let bc = codeModule(og);
+  let m = decodeModule(bc);
   m.declarationInstantiation();
   assertEq(typeof m.evaluation(), "object");
   assertEq(m.evaluation() instanceof Promise, true);
@@ -28,8 +30,9 @@ async function parseAndEvaluate(source) {
 
 (async () => {
   // Check top level variables are initialized by evaluation.
-  let stencil = compileToStencilXDR("export var x = 2 + 2;", {module: true});
-  let m = instantiateModuleStencilXDR(stencil);
+  let og = parseModule("export var x = 2 + 2;");
+  let bc = codeModule(og);
+  let m = decodeModule(bc);
   assertEq(typeof getModuleEnvironmentValue(m, "x"), "undefined");
   m.declarationInstantiation();
   await m.evaluation();
@@ -41,14 +44,12 @@ async function parseAndEvaluate(source) {
   assertEq(getModuleEnvironmentValue(m, "x"), 6);
 
   // Set up a module to import from.
-  let stencil = compileToStencilXDR(
-    `var x = 1;
-     export { x };
-     export default 2;
-     export function f(x) { return x + 1; }`,
-  {module: true});
-  let mod = instantiateModuleStencilXDR(stencil);
-  let a = registerModule('a', mod);
+  let og = parseModule(`var x = 1;
+                          export { x };
+                          export default 2;
+                          export function f(x) { return x + 1; }`);
+  let bc = codeModule(og);
+  let a = registerModule('a', decodeModule(bc));
 
   // Check we can evaluate top level definitions.
   await parseAndEvaluate("var foo = 1;");
