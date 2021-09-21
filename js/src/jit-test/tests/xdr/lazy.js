@@ -154,7 +154,7 @@ var g1 = newGlobal({ cloneSingletons: true });
 var g2 = newGlobal();
 var res = "function f(){}";
 var code = cacheEntry(res + "; f();");
-evaluate(code, {global:g1, compileAndGo: true, saveBytecode: {value: true}});
+evaluate(code, {global:g1, saveIncrementalBytecode: {value: true}});
 evaluate(code, {global:g2, loadBytecode: true});
 gc();
 assertEq(g2.f.toString(), res);
