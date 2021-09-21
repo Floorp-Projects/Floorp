@@ -110,3 +110,18 @@ void gecko_profiler_destruct_marker_timing(
   aMarkerTiming->~MarkerTiming();
 #endif
 }
+
+void gecko_profiler_add_marker_untyped(
+    const char* aName, size_t aNameLength,
+    mozilla::baseprofiler::ProfilingCategoryPair aCategoryPair,
+    mozilla::MarkerTiming* aMarkerTiming,
+    mozilla::StackCaptureOptions aStackCaptureOptions) {
+#ifdef MOZ_GECKO_PROFILER
+  profiler_add_marker(
+      mozilla::ProfilerString8View(aName, aNameLength),
+      mozilla::MarkerCategory{aCategoryPair},
+      mozilla::MarkerOptions(
+          std::move(*aMarkerTiming),
+          mozilla::MarkerStack::WithCaptureOptions(aStackCaptureOptions)));
+#endif
+}
