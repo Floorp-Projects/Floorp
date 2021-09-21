@@ -95,10 +95,10 @@ async function downloadUpdate(onDownloadStartCallback) {
 async function testUpdateDoesNotDownload() {
   let updates = await new Promise(resolve => {
     let listener = {
-      onCheckComplete: (request, results) => {
+      onCheckComplete: async (request, results) => {
         resolve(results);
       },
-      onError: (request, update) => {
+      onError: async (request, update) => {
         Assert.ok(false, "Update check should have succeeded");
         resolve([]);
       },
