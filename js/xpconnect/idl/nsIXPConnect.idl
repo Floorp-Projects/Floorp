@@ -25,7 +25,6 @@ class nsWrapperCache;
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
-[ptr] native JSScriptPtr(JSScript);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
       native JSHandleId(JS::Handle<jsid>);
 [ref] native const_JSReadOnlyCompileOptionsRef(const JS::ReadOnlyCompileOptions);
@@ -259,14 +258,4 @@ interface nsIXPConnect : nsISupports
     [noscript] jsval evalInSandboxObject(in AString source, in string filename,
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox);
-
-    [noscript] void writeScript(in nsIObjectOutputStream aStream,
-                                in JSContextPtr aJSContext,
-                                in JSScriptPtr aJSScript);
-
-    [noscript] JSScriptPtr readScript(in nsIObjectInputStream aStream,
-                                      in JSContextPtr aJSContext,
-                                      in const_JSReadOnlyCompileOptionsRef aOptions);
-
-    [infallible] readonly attribute boolean isShuttingDown;
 };
