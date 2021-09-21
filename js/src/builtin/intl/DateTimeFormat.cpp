@@ -440,7 +440,7 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  auto offset = timeZone.unwrap()->GetDefaultTimeZoneOffsetMs();
+  auto offset = timeZone.unwrap()->GetRawOffsetMs();
   if (offset.isErr()) {
     intl::ReportInternalError(cx);
     return false;
