@@ -96,8 +96,76 @@ const BUILTIN_THEME_PREVIEWS = new Map([
     "resource://builtin-themes/alpenglow/preview.svg",
   ],
   [
+    "firefox-lush-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/soft/preview.svg",
+  ],
+  [
+    "firefox-lush-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/balanced/preview.svg",
+  ],
+  [
     "firefox-lush-bold@mozilla.org",
     "resource://builtin-themes/monochromatic/lush/bold/preview.svg",
+  ],
+  [
+    "firefox-abstract-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/soft/preview.svg",
+  ],
+  [
+    "firefox-abstract-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/balanced/preview.svg",
+  ],
+  [
+    "firefox-abstract-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/bold/preview.svg",
+  ],
+  [
+    "firefox-elemental-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/soft/preview.svg",
+  ],
+  [
+    "firefox-elemental-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/balanced/preview.svg",
+  ],
+  [
+    "firefox-elemental-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/bold/preview.svg",
+  ],
+  [
+    "firefox-cheers-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/soft/preview.svg",
+  ],
+  [
+    "firefox-cheers-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/balanced/preview.svg",
+  ],
+  [
+    "firefox-cheers-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/bold/preview.svg",
+  ],
+  [
+    "firefox-graffiti-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/soft/preview.svg",
+  ],
+  [
+    "firefox-graffiti-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/balanced/preview.svg",
+  ],
+  [
+    "firefox-graffiti-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/bold/preview.svg",
+  ],
+  [
+    "firefox-foto-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/soft/preview.svg",
+  ],
+  [
+    "firefox-foto-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/balanced/preview.svg",
+  ],
+  [
+    "firefox-foto-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/bold/preview.svg",
   ],
 ]);
 
