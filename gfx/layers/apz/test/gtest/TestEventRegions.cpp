@@ -266,7 +266,7 @@ TEST_F(APZEventRegionsTesterInternal, Obscuration) {
 
   Pan(parent, 75, 25, PanOptions::NoFling);
 
-  APZCTreeManager::HitTestResult hit =
+  IAPZHitTester::HitTestResult hit =
       manager->GetTargetAPZC(ScreenPoint(50, 75));
   EXPECT_EQ(child, hit.mTargetApzc.get());
   EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
@@ -275,7 +275,7 @@ TEST_F(APZEventRegionsTesterInternal, Obscuration) {
 TEST_F(APZEventRegionsTester, Bug1119497) {
   CreateBug1119497LayerTree();
 
-  APZCTreeManager::HitTestResult hit =
+  IAPZHitTester::HitTestResult hit =
       manager->GetTargetAPZC(ScreenPoint(50, 50));
   // We should hit layers[2], so |result| will be eVisibleToHitTest but there's
   // no actual APZC on layers[2], so it will be the APZC of the root layer.
