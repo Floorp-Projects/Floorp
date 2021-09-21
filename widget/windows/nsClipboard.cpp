@@ -11,6 +11,7 @@
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
 
+#include <functional>
 #include <thread>
 #include <chrono>
 
@@ -375,9 +376,9 @@ static void LogOleSetClipboardResult(const HRESULT aHres) {
   }
 }
 
-template <typename Function, typename LogFunction, typename Arg>
+template <typename Function, typename LogFunction, typename... Args>
 static HRESULT RepeatedlyTry(Function aFunction, LogFunction aLogFunction,
-                             Arg&& aArg) {
+                             Args... aArgs) {
   // These are magic values based on local testing. They are chosen not higher
   // to avoid jank (<https://developer.mozilla.org/en-US/docs/Glossary/Jank>).
   // When changing them, be careful.
@@ -386,7 +387,7 @@ static HRESULT RepeatedlyTry(Function aFunction, LogFunction aLogFunction,
 
   HRESULT hres;
   for (int i = 0; i < kNumberOfTries; ++i) {
-    hres = aFunction(aArg);
+    hres = aFunction(aArgs...);
     aLogFunction(hres);
 
     if (hres == S_OK) {
@@ -524,6 +525,21 @@ static void LogIDataObjectMethodResult(const HRESULT aHres,
   }
 }
 
+// Other apps can block access to the clipboard. This repeatedly calls
+// `GetData` for a fixed number of times and should be called instead of
+// `GetData`. See
+// <https://docs.microsoft.com/en-us/windows/win32/api/objidl/nf-objidl-idataobject-getdata>.
+// While Microsoft's documentation doesn't include `CLIPBRD_E_CANT_OPEN`
+// explicitly, it allows it implicitly and in local experiments it was indeed
+// returned.
+static HRESULT RepeatedlyTryGetData(IDataObject& aDataObject, LPFORMATETC pFE,
+                                    LPSTGMEDIUM pSTM) {
+  return RepeatedlyTry(
+      [&aDataObject, &pFE, &pSTM]() { return aDataObject.GetData(pFE, pSTM); },
+      std::bind(LogIDataObjectMethodResult, std::placeholders::_1,
+                "GetData"_ns));
+}
+
 //-------------------------------------------------------------------------
 // static
 HRESULT nsClipboard::FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
@@ -537,8 +553,7 @@ HRESULT nsClipboard::FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
   hres = aDataObject->QueryGetData(pFE);
   LogIDataObjectMethodResult(hres, "QueryGetData"_ns);
   if (S_OK == hres) {
-    hres = aDataObject->GetData(pFE, pSTM);
-    LogIDataObjectMethodResult(hres, "GetData"_ns);
+    hres = RepeatedlyTryGetData(*aDataObject, pFE, pSTM);
   }
   return hres;
 }
