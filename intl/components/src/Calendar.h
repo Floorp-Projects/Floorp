@@ -5,6 +5,7 @@
 #define intl_components_Calendar_h_
 
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/Maybe.h"
@@ -15,6 +16,19 @@
 using UCalendar = void*;
 
 namespace mozilla::intl {
+
+/**
+ * Weekdays in the ISO-8601 calendar.
+ */
+enum class Weekday : uint8_t {
+  Monday = 1,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday,
+};
 
 /**
  * This component is a Mozilla-focused API for working with calendar systems in
@@ -45,6 +59,21 @@ class Calendar final {
    * instance "gregory", "chinese", "islamic-civil", etc.
    */
   Result<const char*, ICUError> GetBcp47Type();
+
+  /**
+   * Return the set of weekdays which are considered as part of the weekend.
+   */
+  Result<EnumSet<Weekday>, ICUError> GetWeekend();
+
+  /**
+   * Return the weekday which is considered the first day of the week.
+   */
+  Weekday GetFirstDayOfWeek();
+
+  /**
+   * Return the minimal number of days in the first week of a year.
+   */
+  int32_t GetMinimalDaysInFirstWeek();
 
   /**
    * Set the time for the calendar relative to the number of milliseconds since
