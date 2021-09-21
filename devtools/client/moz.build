@@ -41,7 +41,7 @@ DevToolsModules(
 
 if not CONFIG["MOZILLA_OFFICIAL"]:
     DevToolsModules(
-        "devtools-fission-prefs.js",
+        "devtools-experimental-prefs.js",
     )
 
 with Files("**"):
