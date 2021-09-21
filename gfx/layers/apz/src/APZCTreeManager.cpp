@@ -2393,11 +2393,6 @@ void APZCTreeManager::SetTargetAPZC(
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 
-static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
-                                            const ScrollableLayerGuid& aTwo) {
-  return aOne.mLayersId == aTwo.mLayersId && aOne.mScrollId == aTwo.mScrollId;
-}
-
 void APZCTreeManager::UpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
@@ -2434,7 +2429,7 @@ void APZCTreeManager::UpdateZoomConstraints(
       mRootNode.get(), [&aGuid](HitTestingTreeNode* aNode) {
         bool matches = false;
         if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
-          matches = GuidComparatorIgnoringPresShell(
+          matches = ScrollableLayerGuid::EqualsIgnoringPresShell(
               aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId));
         }
         return matches;
@@ -2461,12 +2456,13 @@ void APZCTreeManager::UpdateZoomConstraints(
       if (aNode != node) {
         // don't go into other async zoom containers
         if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
-          MOZ_ASSERT(!GuidComparatorIgnoringPresShell(
+          MOZ_ASSERT(!ScrollableLayerGuid::EqualsIgnoringPresShell(
               aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId)));
           return TraversalFlag::Skip;
         }
         if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
-          if (!GuidComparatorIgnoringPresShell(aGuid, childApzc->GetGuid())) {
+          if (!ScrollableLayerGuid::EqualsIgnoringPresShell(
+                  aGuid, childApzc->GetGuid())) {
             // We can have subtrees with their own zoom constraints - leave
             // these alone.
             if (this->mZoomConstraints.find(childApzc->GetGuid()) !=
@@ -2839,7 +2835,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
       continue;
     }
     RefPtr<HitTestingTreeNode> node =
-        GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+        GetTargetNode(guid, &ScrollableLayerGuid::EqualsIgnoringPresShell);
     if (!node) {
       APZCTM_LOG("no corresponding node found, falling back to root.\n");
       // We can enter here during normal codepaths for cases where the
@@ -3674,8 +3670,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     // AsyncCompositionManager.
     ScrollableLayerGuid guid{aNode->GetLayersId(), 0,
                              aNode->GetScrollTargetId()};
-    if (RefPtr<HitTestingTreeNode> scrollTargetNode =
-            GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
+    if (RefPtr<HitTestingTreeNode> scrollTargetNode = GetTargetNode(
+            guid, &ScrollableLayerGuid::EqualsIgnoringPresShell)) {
       AsyncPanZoomController* scrollTargetApzc = scrollTargetNode->GetApzc();
       MOZ_ASSERT(scrollTargetApzc);
       return scrollTargetApzc->CallWithLastContentPaintMetrics(

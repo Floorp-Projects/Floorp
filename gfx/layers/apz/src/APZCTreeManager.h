@@ -586,8 +586,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   ScreenMargin GetCompositorFixedLayerMargins() const;
 
  private:
-  typedef bool (*GuidComparator)(const ScrollableLayerGuid&,
-                                 const ScrollableLayerGuid&);
+  using GuidComparator = ScrollableLayerGuid::Comparator;
   using ScrollNode = WebRenderScrollDataWrapper;
 
   /* Helpers */
