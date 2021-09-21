@@ -3101,11 +3101,11 @@ UpdateService.prototype = {
     this._attemptResume();
   },
 
-  onCheckComplete: function AUS_onCheckComplete(request, updates) {
-    this._selectAndInstallUpdate(updates);
+  onCheckComplete: async function AUS_onCheckComplete(request, updates) {
+    await this._selectAndInstallUpdate(updates);
   },
 
-  onError: function AUS_onError(request, update) {
+  onError: async function AUS_onError(request, update) {
     LOG(
       "UpdateService:onError - error during background update. error code: " +
         update.errorCode +
