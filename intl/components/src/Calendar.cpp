@@ -46,6 +46,75 @@ Result<const char*, ICUError> Calendar::GetBcp47Type() {
   return bcp47Type;
 }
 
+static Weekday WeekdayFromDaysOfWeek(UCalendarDaysOfWeek weekday) {
+  switch (weekday) {
+    case UCAL_MONDAY:
+      return Weekday::Monday;
+    case UCAL_TUESDAY:
+      return Weekday::Tuesday;
+    case UCAL_WEDNESDAY:
+      return Weekday::Wednesday;
+    case UCAL_THURSDAY:
+      return Weekday::Thursday;
+    case UCAL_FRIDAY:
+      return Weekday::Friday;
+    case UCAL_SATURDAY:
+      return Weekday::Saturday;
+    case UCAL_SUNDAY:
+      return Weekday::Sunday;
+  }
+  MOZ_CRASH("unexpected weekday value");
+}
+
+Result<EnumSet<Weekday>, ICUError> Calendar::GetWeekend() {
+  static_assert(static_cast<int32_t>(UCAL_SUNDAY) == 1);
+  static_assert(static_cast<int32_t>(UCAL_SATURDAY) == 7);
+
+  UErrorCode status = U_ZERO_ERROR;
+
+  EnumSet<Weekday> weekend;
+  for (int32_t i = UCAL_SUNDAY; i <= UCAL_SATURDAY; i++) {
+    auto dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
+    auto type = ucal_getDayOfWeekType(mCalendar, dayOfWeek, &status);
+    if (U_FAILURE(status)) {
+      return Err(ToICUError(status));
+    }
+
+    switch (type) {
+      case UCAL_WEEKEND_ONSET:
+        // Treat days which start as a weekday as weekdays.
+        [[fallthrough]];
+      case UCAL_WEEKDAY:
+        break;
+
+      case UCAL_WEEKEND_CEASE:
+        // Treat days which start as a weekend day as weekend days.
+        [[fallthrough]];
+      case UCAL_WEEKEND:
+        weekend += WeekdayFromDaysOfWeek(dayOfWeek);
+        break;
+    }
+  }
+
+  return weekend;
+}
+
+Weekday Calendar::GetFirstDayOfWeek() {
+  int32_t firstDayOfWeek = ucal_getAttribute(mCalendar, UCAL_FIRST_DAY_OF_WEEK);
+  MOZ_ASSERT(UCAL_SUNDAY <= firstDayOfWeek && firstDayOfWeek <= UCAL_SATURDAY);
+
+  return WeekdayFromDaysOfWeek(
+      static_cast<UCalendarDaysOfWeek>(firstDayOfWeek));
+}
+
+int32_t Calendar::GetMinimalDaysInFirstWeek() {
+  int32_t minimalDays =
+      ucal_getAttribute(mCalendar, UCAL_MINIMAL_DAYS_IN_FIRST_WEEK);
+  MOZ_ASSERT(1 <= minimalDays && minimalDays <= 7);
+
+  return minimalDays;
+}
+
 Result<Ok, ICUError> Calendar::SetTimeInMs(double aUnixEpoch) {
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, aUnixEpoch, &status);
