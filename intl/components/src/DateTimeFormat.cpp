@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cstring>
+
 #include "unicode/ucal.h"
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
+#include "unicode/ures.h"
 
 #include "ScopedICUObject.h"
 
+#include "mozilla/EnumSet.h"
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
@@ -655,6 +659,178 @@ Result<UniquePtr<Calendar>, ICUError> DateTimeFormat::CloneCalendar(
   MOZ_TRY(calendar->SetTimeInMs(aUnixEpoch));
 
   return calendar;
+}
+
+/**
+ * ICU locale identifier consisting of a language and a region subtag.
+ */
+class LanguageRegionLocaleId {
+  // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
+  static constexpr size_t LanguageLength = 8;
+
+  // unicode_region_subtag = (alpha{2} | digit{3}) ;
+  static constexpr size_t RegionLength = 3;
+
+  // Add +1 to account for the separator.
+  static constexpr size_t LRLength = LanguageLength + RegionLength + 1;
+
+  // Add +1 to zero terminate the string.
+  char mLocale[LRLength + 1] = {};
+
+  // Pointer to the start of the region subtag within |locale_|.
+  char* mRegion = nullptr;
+
+ public:
+  LanguageRegionLocaleId(Span<const char> aLanguage,
+                         Maybe<Span<const char>> aRegion);
+
+  const char* languageRegion() const { return mLocale; }
+  const char* region() const { return mRegion; }
+};
+
+LanguageRegionLocaleId::LanguageRegionLocaleId(
+    Span<const char> aLanguage, Maybe<Span<const char>> aRegion) {
+  MOZ_RELEASE_ASSERT(aLanguage.Length() <= LanguageLength);
+  MOZ_RELEASE_ASSERT(!aRegion || aRegion->Length() <= RegionLength);
+
+  size_t languageLength = aLanguage.Length();
+
+  std::memcpy(mLocale, aLanguage.Elements(), languageLength);
+
+  // ICU locale identifiers are separated by underscores.
+  mLocale[languageLength] = '_';
+
+  mRegion = mLocale + languageLength + 1;
+  if (aRegion) {
+    std::memcpy(mRegion, aRegion->Elements(), aRegion->Length());
+  } else {
+    // Use "001" (UN M.49 code for the World) as the fallback to match ICU.
+    std::strcpy(mRegion, "001");
+  }
+}
+
+/* static */
+Result<DateTimeFormat::HourCyclesVector, ICUError>
+DateTimeFormat::GetAllowedHourCycles(Span<const char> aLanguage,
+                                     Maybe<Span<const char>> aRegion) {
+  // ICU doesn't expose a public API to retrieve the hour cyles for a locale, so
+  // we have to reconstruct |DateTimePatternGenerator::getAllowedHourFormats()|
+  // using the public UResourceBundle API.
+  //
+  // The time data format is specified in UTS 35 at [1] and the data itself is
+  // located at [2].
+  //
+  // [1] https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
+  // [2]
+  // https://github.com/unicode-org/cldr/blob/master/common/supplemental/supplementalData.xml
+
+  HourCyclesVector result;
+
+  // Reserve space for the maximum number of hour cycles. This call always
+  // succeeds because it matches the inline capacity. We can now infallibly
+  // append all hour cycles to the vector.
+  MOZ_ALWAYS_TRUE(result.reserve(HourCyclesVector::InlineLength));
+
+  LanguageRegionLocaleId localeId(aLanguage, aRegion);
+
+  // First open the "supplementalData" resource bundle.
+  UErrorCode status = U_ZERO_ERROR;
+  UResourceBundle* res = ures_openDirect(nullptr, "supplementalData", &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  ScopedICUObject<UResourceBundle, ures_close> closeRes(res);
+  MOZ_ASSERT(ures_getType(res) == URES_TABLE);
+
+  // Locate "timeDate" within the "supplementalData" resource bundle.
+  UResourceBundle* timeData = ures_getByKey(res, "timeData", nullptr, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  ScopedICUObject<UResourceBundle, ures_close> closeTimeData(timeData);
+  MOZ_ASSERT(ures_getType(timeData) == URES_TABLE);
+
+  // Try to find a matching resource within "timeData". The two possible keys
+  // into the "timeData" resource bundle are `language_region` and `region`.
+  // Prefer `language_region` and otherwise fallback to `region`.
+  UResourceBundle* hclocale =
+      ures_getByKey(timeData, localeId.languageRegion(), nullptr, &status);
+  if (status == U_MISSING_RESOURCE_ERROR) {
+    status = U_ZERO_ERROR;
+    hclocale = ures_getByKey(timeData, localeId.region(), nullptr, &status);
+  }
+  if (status == U_MISSING_RESOURCE_ERROR) {
+    // Default to "h23" if no resource was found at all. This matches ICU.
+    result.infallibleAppend(HourCycle::H23);
+    return result;
+  }
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  ScopedICUObject<UResourceBundle, ures_close> closeHcLocale(hclocale);
+  MOZ_ASSERT(ures_getType(hclocale) == URES_TABLE);
+
+  EnumSet<HourCycle> added{};
+
+  auto addToResult = [&](const UChar* str, int32_t len) {
+    // An hour cycle strings is one of "K", "h", "H", or "k"; optionally
+    // followed by the suffix "b" or "B". We ignore the suffix because day
+    // periods can't be expressed in the "hc" Unicode extension.
+    MOZ_ASSERT(len == 1 || len == 2);
+
+    // Default to "h23" for unsupported hour cycle strings.
+    HourCycle hc = HourCycle::H23;
+    switch (str[0]) {
+      case 'K':
+        hc = HourCycle::H11;
+        break;
+      case 'h':
+        hc = HourCycle::H12;
+        break;
+      case 'H':
+        hc = HourCycle::H23;
+        break;
+      case 'k':
+        hc = HourCycle::H24;
+        break;
+    }
+
+    // Add each unique hour cycle to the result array.
+    if (!added.contains(hc)) {
+      added += hc;
+
+      result.infallibleAppend(hc);
+    }
+  };
+
+  // Determine the preferred hour cycle for the locale.
+  int32_t len = 0;
+  const UChar* hc = ures_getStringByKey(hclocale, "preferred", &len, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  addToResult(hc, len);
+
+  // Find any additionally allowed hour cycles of the locale.
+  UResourceBundle* allowed =
+      ures_getByKey(hclocale, "allowed", nullptr, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  ScopedICUObject<UResourceBundle, ures_close> closeAllowed(allowed);
+  MOZ_ASSERT(ures_getType(allowed) == URES_ARRAY ||
+             ures_getType(allowed) == URES_STRING);
+
+  while (ures_hasNext(allowed)) {
+    int32_t len = 0;
+    const UChar* hc = ures_getNextString(allowed, &len, nullptr, &status);
+    if (U_FAILURE(status)) {
+      return Err(ToICUError(status));
+    }
+    addToResult(hc, len);
+  }
+
+  return result;
 }
 
 Result<DateTimeFormat::ComponentsBag, ICUError>
