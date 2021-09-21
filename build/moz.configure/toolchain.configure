@@ -1149,6 +1149,9 @@ def compiler(
 
         info = check_compiler(wrapper + [compiler] + flags, language, host_or_target)
 
+        if info.type == "clang" and language == "C++" and host_or_target.os == "OSX":
+            flags.append("-stdlib=libc++")
+
         # Check that the additional flags we got are enough to not require any
         # more flags. If we get an exception, just ignore it; it's liable to be
         # invalid command-line flags, which means the compiler we're checking

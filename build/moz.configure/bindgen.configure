@@ -338,7 +338,7 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_f
         "GNU": ["-DOS_LINUX=1"],
         "NetBSD": ["-DOS_BSD=1", "-DOS_NETBSD=1"],
         "OpenBSD": ["-DOS_BSD=1", "-DOS_OPENBSD=1"],
-        "OSX": ["-DOS_MACOSX=1", "-stdlib=libc++"],
+        "OSX": ["-DOS_MACOSX=1"],
         "SunOS": ["-DOS_SOLARIS=1"],
         "WINNT": [
             "-DOS_WIN=1",
