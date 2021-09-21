@@ -395,18 +395,11 @@ static bool ExecuteInExtensibleLexicalEnvironment(
     Handle<ExtensibleLexicalEnvironmentObject*> env) {
   CHECK_THREAD(cx);
   cx->check(env);
+  cx->check(scriptArg);
   MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
-  RootedScript script(cx, scriptArg);
-  if (script->realm() != cx->realm()) {
-    script = CloneGlobalScript(cx, script);
-    if (!script) {
-      return false;
-    }
-  }
-
   RootedValue rval(cx);
-  return ExecuteKernel(cx, script, env, UndefinedHandleValue,
+  return ExecuteKernel(cx, scriptArg, env, UndefinedHandleValue,
                        NullFramePtr() /* evalInFrame */, &rval);
 }
 
