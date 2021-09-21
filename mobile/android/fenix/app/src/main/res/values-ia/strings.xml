@@ -3,26 +3,26 @@
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_5">%s anonyme</string>
+    <string name="app_name_private_5">%s private</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_4">%s (nav. anonyme)</string>
+    <string name="app_name_private_4">%s (private)</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu"></string>
 
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Activar le Navigation anonyme.</string>
+    <string name="content_description_private_browsing_button">Activar le navigation private</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">Disactivar le Navigation anonyme.</string>
+    <string name="content_description_disable_private_browsing_button">Disactivar le navigation private.</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Insere un adresse o face un recerca</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tu schedas aperte essera monstrate hic.</string>
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Tu schedas anonyme essera monstrate hic.</string>
+    <string name="no_private_tabs_description">Tu schedas private apparera hic.</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 scheda aperte. Tocca pro mutar schedas.
+    <string name="open_tab_tray_single">1 scheda aperte. Tocca pro commutar schedas.
 </string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s schedas aperte. Tocca pro mutar schedas.</string>
@@ -64,19 +64,19 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Tu es in un session anonyme</string>
+    <string name="private_browsing_title">Tu es in un session private</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s clara tu chronologia de recerca e de navigation del schedas anonyme quando tu claude los o quita le app. Ben que isto non te rende anonyme al sitos web o a tu fornitor de servicio internet, isto rende plus facile mantener lo que tu face online reservatemente contra quicunque altere usa iste apparato.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s rade tu chronologia de recerca e de navigation del schedas private quando tu los claude o quita le application. Ben que isto non te rende anonyme pro sitos web o pro tu fornitor de servicio internet, isto rende plus facile mantener tu activitates in linea private pro altere personas que usa iste apparato.</string>
     <string name="private_browsing_common_myths">
-       Mythos commun re le navigation anonyme
+       Mythos commun sur le navigation private
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Deler le session</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Adde un via-breve pro aperir schedas anonyme de tu Pagina initial.</string>
+    <string name="cfr_message">Adde un accesso directe pro aperir schedas private desde tu schermo initial.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Adder via-breve</string>
     <!-- Text for the negative button -->
@@ -109,7 +109,7 @@
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nove scheda</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">Nove scheda anonyme</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nove scheda private</string>
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Sitos popular</string>
 
@@ -167,7 +167,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Trovar in le pagina</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Scheda anonyme</string>
+    <string name="browser_menu_private_tab">Scheda private</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Salvar al collection</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -222,7 +222,7 @@
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">Scander</string>
+    <string name="search_scan_button">Scannar</string>
     <!-- Button in the search view that lets a user change their search engine -->
     <string name="search_engine_button">Motor de recerca</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
@@ -236,7 +236,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Non permitter</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Permitter suggestiones de recerca in sessiones anonyme?</string>
+    <string name="search_suggestions_onboarding_title">Permitter suggestiones de recerca in sessiones private?</string>
 
 
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -301,15 +301,15 @@
 
 
     <!-- Preference for private browsing options -->
-    <string name="preferences_private_browsing_options">Navigation anonyme</string>
+    <string name="preferences_private_browsing_options">Navigation private</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Aperi le ligamines in un scheda anonyme</string>
+    <string name="preferences_open_links_in_a_private_tab">Aperir ligamines in un scheda private</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Permitte instantaneos in navigation anonyme</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Permitte instantaneos in navigation private</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">Si consentite, le schedas anonyme essera alsi visibile quando plure applicationes es aperte</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Si permittite, le schedas private essera visibile anque quando plure applicationes es aperte</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Adder via-breve de navigation anonyme</string>
+    <string name="preferences_add_private_browsing_shortcut">Adder accesso directe de navigation private</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilitate</string>
     <!-- Preference to override the Firefox Account server -->
@@ -359,7 +359,7 @@
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Monstrar recerca vocal</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">Monstrar in sessiones anonyme</string>
+    <string name="preferences_show_search_suggestions_in_private">Monstrar in sessiones private</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Monstrar suggestiones de area de transferentia</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -524,7 +524,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activar Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Scander le codice de accopulamento in Firefox scriptorio</string>
+    <string name="preferences_sync_pair">Scannar le codice de accopulamento in Firefox scriptorio</string>
 
 
     <!-- Preference for account login -->
@@ -536,7 +536,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Scande le codice QR monstrate a <b>firefox.com/par</b>]]></string>
+    <string name="pair_instructions_2"><![CDATA[Scanna le codice QR monstrate a <b>firefox.com/par</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Aperir Camera</string>
     <!-- Button to cancel pairing -->
@@ -685,9 +685,9 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Schedas aperte</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Session anonyme</string>
+    <string name="tabs_header_private_title">Session private</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">Schedas anonyme</string>
+    <string name="tabs_header_private_tabs_title">Schedas private</string>
 
 
     <!-- Title for the list of tabs in the synced tabs -->
@@ -695,9 +695,9 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Adder un scheda</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_private_tab">Adder scheda anonyme</string>
+    <string name="add_private_tab">Adder scheda private</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-    <string name="tab_drawer_fab_content">Anonyme</string>
+    <string name="tab_drawer_fab_content">Private</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Synchronisar</string>
     <!-- Text shown as the title of the open tab tray -->
@@ -785,7 +785,7 @@
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Deler del chronologia</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
-    <string name="pwa_site_controls_title_private">%1$s (Modo anonyme)</string>
+    <string name="pwa_site_controls_title_private">%1$s (modo private)</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Salvar</string>
 
@@ -810,7 +810,7 @@
     <!-- History overflow menu open in new tab button -->
     <string name="history_menu_open_in_new_tab_button">Aperir un nove scheda</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Aperi in scheda anonyme</string>
+    <string name="history_menu_open_in_private_tab_button">Aperir in scheda private</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Deler</string>
     <!-- History multi select title in app bar
@@ -905,7 +905,7 @@
     <string name="bookmark_menu_open_in_new_tab_button">Aperir in un nove scheda
 </string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">Aperi in scheda anonyme</string>
+    <string name="bookmark_menu_open_in_private_tab_button">Aperir in scheda private</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Deler</string>
     <!--Bookmark overflow menu save button -->
@@ -1115,11 +1115,11 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Session de navigation anonyme</string>
+    <string name="notification_pbm_channel_name">Session de navigation private</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Deler schedas anonyme</string>
+    <string name="notification_pbm_delete_text">Deler schedas private</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">Clauder schedas anonyme</string>
+    <string name="notification_pbm_delete_text_2">Clauder schedas private</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Aperir</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -1158,11 +1158,11 @@
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Addite a sitos principal!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">Scheda anonyme claudite</string>
+    <string name="snackbar_private_tab_closed">Scheda private claudite</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">Schedas anonyme claudite</string>
+    <string name="snackbar_private_tabs_closed">Schedas private claudite</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Schedas anonyme delite
+    <string name="snackbar_private_tabs_deleted">Schedas private delite
 </string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DISFACER</string>
@@ -1347,9 +1347,9 @@
     <string name="onboarding_private_browsing_header">Naviga reservatemente</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Aperi un scheda anonyme un sol vice: tocca le icone %s.</string>
+    <string name="onboarding_private_browsing_description1">Aperir un scheda private un sol vice: tocca le icone %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Aperi schedas anonyme cata vice: actualisa tu parametros de navigation anonyme.</string>
+    <string name="onboarding_private_browsing_always_description">Aperir schedas private cata vice: adjusta tu parametros de navigation private.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Aperir le parametros</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1391,11 +1391,11 @@
     <string name="sync_sent_tab_error_snackbar_action">RETENTAR</string>
 
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">Scander le codice</string>
+    <string name="sync_scan_code">Scannar le codice</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Aperi Firefox sur tu computator e va a  <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Preste a scander</string>
+    <string name="sign_in_ready_for_scan">Preste a scannar</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Accede con tu camera</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1461,7 +1461,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">In tote le schedas</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Solo in Schedas anonyme</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Solo in schedas private</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Solo in Schedas personalisate</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1902,6 +1902,11 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_1">Un adresse web debe continer \“https://\“ o \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Un nomine valide de servitor es requirite</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Connecter un altere apparato.</string>
@@ -1925,6 +1930,8 @@
     <string name="top_sites_max_limit_content_2">Pro adder un altere sito principal, remove un. Tocca e retene le sito e selige remover.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">De accordo</string>
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Monstrar le sitos principal plus visitate</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Monstrar le sitos plus visitate</string>
 	<!-- Title text displayed in the rename top site dialog. -->
