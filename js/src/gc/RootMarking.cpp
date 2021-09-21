@@ -112,12 +112,9 @@ static void TraceExactStackRoots(JSContext* cx, JSTracer* trc) {
 
 template <typename T>
 static inline void TracePersistentRootedList(
-    JSTracer* trc,
-    LinkedList<PersistentRooted<JS::detail::RootListEntry*>>& list,
-    const char* name) {
-  auto& typedList = reinterpret_cast<LinkedList<PersistentRooted<T>>&>(list);
-  for (PersistentRooted<T>* root : typedList) {
-    root->trace(trc, name);
+    JSTracer* trc, LinkedList<PersistentRootedBase>& list, const char* name) {
+  for (PersistentRootedBase* root : list) {
+    static_cast<PersistentRooted<T>*>(root)->trace(trc, name);
   }
 }
 
@@ -145,10 +142,9 @@ static void TracePersistentRooted(JSRuntime* rt, JSTracer* trc) {
 
 template <typename T>
 static void FinishPersistentRootedChain(
-    LinkedList<PersistentRooted<JS::detail::RootListEntry*>>& listArg) {
-  auto& list = reinterpret_cast<LinkedList<PersistentRooted<T>>&>(listArg);
+    LinkedList<PersistentRootedBase>& list) {
   while (!list.isEmpty()) {
-    list.getFirst()->reset();
+    static_cast<PersistentRooted<T>*>(list.getFirst())->reset();
   }
 }
 
@@ -468,15 +464,13 @@ void js::gc::GCRuntime::checkNoRuntimeRoots(AutoGCSession& session) {
 #endif  // DEBUG
 }
 
-JS_PUBLIC_API void JS::AddPersistentRoot(
-    JS::RootingContext* cx, RootKind kind,
-    PersistentRooted<JS::detail::RootListEntry*>* root) {
-  static_cast<JSContext*>(cx)->runtime()->heapRoots.ref()[kind].insertBack(
-      root);
+JS_PUBLIC_API void JS::AddPersistentRoot(JS::RootingContext* cx, RootKind kind,
+                                         PersistentRootedBase* root) {
+  JSRuntime* rt = static_cast<JSContext*>(cx)->runtime();
+  rt->heapRoots.ref()[kind].insertBack(root);
 }
 
-JS_PUBLIC_API void JS::AddPersistentRoot(
-    JSRuntime* rt, RootKind kind,
-    PersistentRooted<JS::detail::RootListEntry*>* root) {
+JS_PUBLIC_API void JS::AddPersistentRoot(JSRuntime* rt, RootKind kind,
+                                         PersistentRootedBase* root) {
   rt->heapRoots.ref()[kind].insertBack(root);
 }
