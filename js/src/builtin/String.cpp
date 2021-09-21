@@ -9,6 +9,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#if JS_HAS_INTL_API
+#  include "mozilla/intl/String.h"
+#endif
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TextUtils.h"
@@ -25,6 +28,7 @@
 #include "builtin/Boolean.h"
 #if JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
+#  include "builtin/intl/FormatBuffer.h"
 #endif
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
@@ -41,7 +45,6 @@
 #if JS_HAS_INTL_API
 #  include "unicode/uchar.h"
 #  include "unicode/unorm2.h"
-#  include "unicode/ustring.h"
 #  include "unicode/utypes.h"
 #endif
 #include "util/StringBuffer.h"
@@ -955,23 +958,15 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 
   static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
 
-  Vector<char16_t, INLINE_CAPACITY> chars(cx);
-  if (!chars.resize(std::max(INLINE_CAPACITY, input.length()))) {
+  intl::FormatBuffer<char16_t, INLINE_CAPACITY> buffer(cx);
+
+  auto ok = mozilla::intl::String::ToLocaleLowerCase(locale, input, buffer);
+  if (ok.isErr()) {
+    intl::ReportInternalError(cx, ok.unwrapErr());
     return false;
   }
 
-  int32_t size = intl::CallICU(
-      cx,
-      [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
-        return u_strToLower(chars, size, input.begin().get(), input.length(),
-                            locale, status);
-      },
-      chars);
-  if (size < 0) {
-    return false;
-  }
-
-  JSString* result = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+  JSString* result = buffer.toString();
   if (!result) {
     return false;
   }
@@ -1369,23 +1364,15 @@ bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
 
   static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
 
-  Vector<char16_t, INLINE_CAPACITY> chars(cx);
-  if (!chars.resize(std::max(INLINE_CAPACITY, input.length()))) {
+  intl::FormatBuffer<char16_t, INLINE_CAPACITY> buffer(cx);
+
+  auto ok = mozilla::intl::String::ToLocaleUpperCase(locale, input, buffer);
+  if (ok.isErr()) {
+    intl::ReportInternalError(cx, ok.unwrapErr());
     return false;
   }
 
-  int32_t size = intl::CallICU(
-      cx,
-      [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
-        return u_strToUpper(chars, size, input.begin().get(), input.length(),
-                            locale, status);
-      },
-      chars);
-  if (size < 0) {
-    return false;
-  }
-
-  JSString* result = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+  JSString* result = buffer.toString();
   if (!result) {
     return false;
   }
