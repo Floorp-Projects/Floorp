@@ -9,12 +9,19 @@
 #ifndef ProfilerBindings_h
 #define ProfilerBindings_h
 
+#include <cstddef>
 #include <stdint.h>
 
 namespace mozilla {
 class AutoProfilerLabel;
 class MarkerTiming;
 class TimeStamp;
+enum class StackCaptureOptions;
+
+namespace baseprofiler {
+enum class ProfilingCategoryPair : uint32_t;
+}  // namespace baseprofiler
+
 }  // namespace mozilla
 
 namespace JS {
@@ -52,6 +59,13 @@ void gecko_profiler_construct_marker_timing_interval_end(
     mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
 void gecko_profiler_destruct_marker_timing(
     mozilla::MarkerTiming* aMarkerTiming);
+
+// Marker APIs.
+void gecko_profiler_add_marker_untyped(
+    const char* aName, size_t aNameLength,
+    mozilla::baseprofiler::ProfilingCategoryPair aCategoryPair,
+    mozilla::MarkerTiming* aMarkerTiming,
+    mozilla::StackCaptureOptions aStackCaptureOptions);
 
 }  // extern "C"
 
