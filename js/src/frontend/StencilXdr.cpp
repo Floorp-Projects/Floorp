@@ -142,6 +142,10 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, LifoAlloc& alloc,
         MOZ_TRY(xdr->borrowedData(&data, sizeof(T) * size));
       } else {
         data = alloc.template newArrayUninitialized<T>(size);
+        if (!data) {
+          js::ReportOutOfMemory(xdr->cx());
+          return xdr->fail(JS::TranscodeResult::Throw);
+        }
         MOZ_TRY(xdr->codeBytes(data, sizeof(T) * size));
       }
     }
@@ -254,6 +258,10 @@ template <XDRMode mode>
     } else {
       baseScopeData =
           reinterpret_cast<BaseParserScopeData*>(alloc.alloc(totalLength));
+      if (!baseScopeData) {
+        js::ReportOutOfMemory(xdr->cx());
+        return xdr->fail(JS::TranscodeResult::Throw);
+      }
       MOZ_TRY(xdr->codeBytes(baseScopeData, totalLength));
     }
   }
@@ -481,6 +489,10 @@ template <XDRMode mode>
       MOZ_TRY(xdr->borrowedData(atomp, totalLength));
     } else {
       *atomp = reinterpret_cast<ParserAtom*>(alloc.alloc(totalLength));
+      if (!*atomp) {
+        js::ReportOutOfMemory(xdr->cx());
+        return xdr->fail(JS::TranscodeResult::Throw);
+      }
       MOZ_TRY(xdr->codeBytes(*atomp, totalLength));
     }
   }
