@@ -525,7 +525,6 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
 if (!screenshotsDisabled) {
   CustomizableWidgets.push({
     id: "screenshot-button",
-    shortcutId: "key_screenshot",
     l10nId: "screenshot-toolbarbutton",
     onCommand(aEvent) {
       if (SCREENSHOT_BROWSER_COMPONENT) {
@@ -534,11 +533,7 @@ if (!screenshotsDisabled) {
           "menuitem-screenshot"
         );
       } else {
-        Services.obs.notifyObservers(
-          null,
-          "menuitem-screenshot-extension",
-          "toolbar"
-        );
+        Services.obs.notifyObservers(null, "menuitem-screenshot-extension");
       }
     },
     onCreated(aNode) {
