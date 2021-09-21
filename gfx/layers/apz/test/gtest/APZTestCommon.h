@@ -225,8 +225,8 @@ class MockContentControllerDelayed : public MockContentController {
 class TestAPZCTreeManager : public APZCTreeManager {
  public:
   explicit TestAPZCTreeManager(MockContentControllerDelayed* aMcc,
-                               HitTestKind aHitTestKind)
-      : APZCTreeManager(LayersId{0}, aHitTestKind), mcc(aMcc) {}
+                               UniquePtr<IAPZHitTester> aHitTester = nullptr)
+      : APZCTreeManager(LayersId{0}, std::move(aHitTester)), mcc(aMcc) {}
 
   RefPtr<InputQueue> GetInputQueue() const { return mInputQueue; }
 

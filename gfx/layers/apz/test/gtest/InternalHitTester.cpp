@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InternalHitTester.h"
-#include "AsyncPanZoomController.h"
-#include "APZCTreeManager.h"
 #include "TreeTraversal.h"  // for ForEachNode
 #include "mozilla/gfx/CompositorHitTestInfo.h"
+#include "apz/src/APZCTreeManager.h"
+#include "apz/src/AsyncPanZoomController.h"
 
 #define APZCTM_LOG(...) \
   MOZ_LOG(APZCTreeManager::sLog, LogLevel::Debug, (__VA_ARGS__))

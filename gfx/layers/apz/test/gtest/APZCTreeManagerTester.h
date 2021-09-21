@@ -15,6 +15,8 @@
 #include "APZTestAccess.h"
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
+#include "InternalHitTester.h"
+#include "apz/src/WRHitTester.h"
 
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
@@ -22,8 +24,7 @@
 
 class APZCTreeManagerTester : public APZCTesterBase {
  protected:
-  APZCTreeManagerTester()
-      : mHitTestKind(APZCTreeManager::HitTestKind::WebRender) {}
+  APZCTreeManagerTester() : mHitTester(MakeUnique<WRHitTester>()) {}
 
   virtual void SetUp() {
     APZCTesterBase::SetUp();
@@ -31,7 +32,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 
-    manager = new TestAPZCTreeManager(mcc, mHitTestKind);
+    manager = new TestAPZCTreeManager(mcc, std::move(mHitTester));
     updater = new APZUpdater(manager, false);
     sampler = new APZSampler(manager, false);
   }
@@ -97,7 +98,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   TestWRScrollData layers;
   WebRenderLayerScrollData* root = nullptr;
 
-  APZCTreeManager::HitTestKind mHitTestKind;
+  UniquePtr<IAPZHitTester> mHitTester;
 
  protected:
   static ScrollMetadata BuildScrollMetadata(

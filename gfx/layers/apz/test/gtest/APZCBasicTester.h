@@ -29,7 +29,7 @@ class APZCBasicTester : public APZCTesterBase {
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 
-    tm = new TestAPZCTreeManager(mcc, APZCTreeManager::HitTestKind::WebRender);
+    tm = new TestAPZCTreeManager(mcc);
     updater = new APZUpdater(tm, false);
     sampler = new APZSampler(tm, false);
     apzc =
