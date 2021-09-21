@@ -872,7 +872,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     bool executeOk = false;
     if (JS_IsGlobalObject(obj)) {
       JS::RootedValue rval(cx);
-      executeOk = JS::CloneAndExecuteScript(aescx, script, &rval);
+      executeOk = JS_ExecuteScript(aescx, script, &rval);
     } else {
       executeOk = JS::ExecuteInJSMEnvironment(aescx, script, obj);
     }
