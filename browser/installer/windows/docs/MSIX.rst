@@ -67,7 +67,7 @@ make testing the first-run experience challenging. What can be done is
 to install the MSIX package (perhaps using
 ``Add-AppxPackage -Path ...``) and determine the profile directory
 (using ``about:support``). Uninstall the MSIX package (perhaps using
-``Get-AppxPackage | Where -Property Name -like "Mozilla.Firefox.*" | Remove-AppxPackage``).
+``Get-AppxPackage | Where -Property Name -like "Mozilla.*" | Remove-AppxPackage``).
 Delete the contents of the profile directory entirely, but add a file
 ``user.js`` containing:
 

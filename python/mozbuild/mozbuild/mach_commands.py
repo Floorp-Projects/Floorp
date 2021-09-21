@@ -2164,14 +2164,38 @@ class Repackage(MachCommandBase):
         help="The architecture you are building (Choices: 'x86', 'x86_64', 'aarch64').",
     )
     @CommandArgument(
+        "--vendor",
+        type=str,
+        default="Mozilla",
+        required=False,
+        help="The vendor to use in the Package/Identity/Name string to use in the App Manifest."
+        + " Defaults to 'Mozilla'.",
+    )
+    @CommandArgument(
+        "--identity-name",
+        type=str,
+        default=None,
+        required=False,
+        help="The Package/Identity/Name string to use in the App Manifest."
+        + " Defaults to '<vendor>.Firefox', '<vendor>.FirefoxBeta', etc.",
+    )
+    @CommandArgument(
         "--publisher",
         type=str,
         # This default is baked into enough places under `browser/` that we need
         # not extract a constant.
         default="CN=Mozilla Corporation, OU=MSIX Packaging",
         required=False,
-        help="The Publisher string to use in the App Manifest."
-        + " It must match the subject on the certificate used for signing",
+        help="The Package/Identity/Publisher string to use in the App Manifest."
+        + " It must match the subject on the certificate used for signing.",
+    )
+    @CommandArgument(
+        "--publisher-display-name",
+        type=str,
+        default="Mozilla Corporation",
+        required=False,
+        help="The Package/Properties/PublisherDisplayName string to use in the App Manifest. "
+        + " Defaults to 'Mozilla Corporation'.",
     )
     @CommandArgument(
         "--makeappx",
@@ -2203,7 +2227,10 @@ class Repackage(MachCommandBase):
         channel=None,
         distribution_dirs=[],
         arch=None,
+        identity_name=None,
+        vendor=None,
         publisher=None,
+        publisher_display_name=None,
         verbose=False,
         output=None,
         makeappx=None,
@@ -2238,7 +2265,10 @@ class Repackage(MachCommandBase):
             template=template,
             branding=branding,
             arch=arch,
+            displayname=identity_name,
+            vendor=vendor,
             publisher=publisher,
+            publisher_display_name=publisher_display_name,
             version=version,
             distribution_dirs=distribution_dirs,
             locale_allowlist=locale_allowlist,

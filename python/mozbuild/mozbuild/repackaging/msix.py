@@ -164,12 +164,13 @@ def repackage_msix(
     distribution_dirs=[],
     locale_allowlist=set(),
     version=None,
-    vendor="Mozilla",
+    vendor=None,
     displayname=None,
     app_name="firefox",
     identity=None,
-    arch=None,
     publisher=None,
+    publisher_display_name="Mozilla Corporation",
+    arch=None,
     output=None,
     force=False,
     log=None,
@@ -205,11 +206,14 @@ def repackage_msix(
     values = get_application_ini_values(
         finder,
         dict(section="App", value="CodeName", fallback="Name"),
+        dict(section="App", value="Vendor"),
         dict(section="App", value="Version"),
         dict(section="App", value="BuildID"),
     )
     first = next(values)
-    displayname = displayname or first
+    displayname = displayname or "Mozilla {}".format(first)
+    second = next(values)
+    vendor = vendor or second
     if not version:
         version = next(values)
         buildid = next(values)
@@ -262,14 +266,12 @@ def repackage_msix(
     # and/or errors between regularly installed builds and App Package builds.
     instdir = "{} Package Root".format(displayname)
 
-    # Microsoft names its packages like "Microsoft.VCLibs.140.00.UWPDesktop".
-    # Hyphenated (kebab) names seem to install correctly, but `Remove-AppPackage
-    # kebab-name` seems to fail in some cases.
-    identity = identity or "{}.{}".format(vendor, displayname.replace(" ", "."))
+    # The standard package name is like "CompanyNoSpaces.ProductNoSpaces".
+    identity = identity or "{}.{}".format(vendor, displayname).replace(" ", "")
 
     # We might want to include the publisher ID hash here.  I.e.,
     # "__{publisherID}".  My locally produced MSIX was named like
-    # `Mozilla.Firefox.Nightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
+    # `Mozilla.MozillaFirefoxNightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
     # missing field, but it's necessary, since this is just an output file name.
     package_output_name = "{identity}_{version}_{arch}".format(
         identity=identity, version=version, arch=_MSIX_ARCH[arch]
@@ -403,11 +405,11 @@ def repackage_msix(
         # Like 'Firefox%20Package%20Root'.
         "APPX_INSTDIR_QUOTED": urllib.parse.quote(instdir),
         "APPX_PUBLISHER": publisher,
+        "APPX_PUBLISHER_DISPLAY_NAME": publisher_display_name,
         "APPX_RESOURCE_LANGUAGE_LIST": resource_language_list,
         "APPX_VERSION": version,
         "MOZ_APP_DISPLAYNAME": displayname,
         "MOZ_APP_NAME": app_name,
-        "MOZ_APP_VENDOR": vendor,
         "MOZ_IGECKOBACKCHANNEL_IID": MOZ_IGECKOBACKCHANNEL_IID,
     }
 
@@ -686,7 +688,7 @@ powershell -c 'Get-AuthenticodeSignature -FilePath "{output}" | Format-List *'
 To install this MSIX:
 powershell -c 'Add-AppPackage -path "{output}"'
 To see details after installing:
-powershell -c 'Get-AppPackage -name Mozilla.Firefox(.Beta,...)'
+powershell -c 'Get-AppPackage -name Mozilla.MozillaFirefox(Beta,...)'
                 """.strip(),
             )
 
