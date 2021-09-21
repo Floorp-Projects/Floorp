@@ -1850,6 +1850,25 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
     std::swap(pageSize.width, pageSize.height);
   }
 
+  // If the document has a specified CSS page-size, we rotate the page to
+  // reflect this. Changing the orientation is reflected by the result of
+  // FinishPrintPreview, so that the frontend can reflect this.
+  // The new document has not yet been reflowed, so we have to query the
+  // original document for any CSS page-size.
+  if (const Maybe<StyleOrientation> maybeOrientation =
+          aPO->mDocument->GetPresShell()
+              ->StyleSet()
+              ->GetDefaultPageOrientation()) {
+    if (maybeOrientation.value() == StyleOrientation::Landscape &&
+        pageSize.width < pageSize.height) {
+      // Paper is in portrait, CSS page size is landscape.
+      std::swap(pageSize.width, pageSize.height);
+    } else if (maybeOrientation.value() == StyleOrientation::Portrait &&
+               pageSize.width > pageSize.height) {
+      // Paper is in landscape, CSS page size is portrait.
+      std::swap(pageSize.width, pageSize.height);
+    }
+  }
   aPO->mPresContext->SetPageSize(pageSize);
 
   int32_t p2a = aPO->mPresContext->DeviceContext()->AppUnitsPerDevPixel();
