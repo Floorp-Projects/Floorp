@@ -564,7 +564,7 @@ inline bool JSObject::is<JSObject>() const {
 
 template <typename Wrapper>
 template <typename U>
-MOZ_ALWAYS_INLINE JS::Handle<U*> js::RootedOperations<JSObject*, Wrapper>::as()
+MOZ_ALWAYS_INLINE JS::Handle<U*> js::RootedBase<JSObject*, Wrapper>::as()
     const {
   const Wrapper& self = *static_cast<const Wrapper*>(this);
   MOZ_ASSERT(self->template is<U>());
@@ -574,7 +574,7 @@ MOZ_ALWAYS_INLINE JS::Handle<U*> js::RootedOperations<JSObject*, Wrapper>::as()
 
 template <typename Wrapper>
 template <class U>
-MOZ_ALWAYS_INLINE JS::Handle<U*> js::HandleOperations<JSObject*, Wrapper>::as()
+MOZ_ALWAYS_INLINE JS::Handle<U*> js::HandleBase<JSObject*, Wrapper>::as()
     const {
   const JS::Handle<JSObject*>& self =
       *static_cast<const JS::Handle<JSObject*>*>(this);
