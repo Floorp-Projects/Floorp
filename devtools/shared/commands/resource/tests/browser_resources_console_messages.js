@@ -142,7 +142,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
     () => availableResources.length === expectedRuntimeConsoleCalls.length
   );
   const expectedTargetFront =
-    executeInIframe && isFissionEnabled()
+    executeInIframe && (isFissionEnabled() || isEveryFrameTargetEnabled())
       ? targetCommand
           .getAllTargets([targetCommand.TYPES.FRAME])
           .find(target => target.url == IFRAME_URL)
