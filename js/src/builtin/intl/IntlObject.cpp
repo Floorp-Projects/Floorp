@@ -12,6 +12,7 @@
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/Collator.h"
 #include "mozilla/intl/Currency.h"
+#include "mozilla/intl/TimeZone.h"
 
 #include <algorithm>
 #include <array>
@@ -802,7 +803,7 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
 
       intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE>
           canonicalTimeZone(cx);
-      auto result = mozilla::intl::Calendar::GetCanonicalTimeZoneID(
+      auto result = mozilla::intl::TimeZone::GetCanonicalTimeZoneID(
           stableChars.twoByteRange(), canonicalTimeZone);
       if (result.isErr()) {
         intl::ReportInternalError(cx, result.unwrapErr());
