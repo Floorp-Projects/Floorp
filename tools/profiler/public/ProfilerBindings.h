@@ -134,6 +134,12 @@ void gecko_profiler_add_marker_text(
     mozilla::MarkerTiming* aMarkerTiming,
     mozilla::StackCaptureOptions aStackCaptureOptions, const char* aText,
     size_t aTextLength);
+void gecko_profiler_add_marker(
+    const char* aName, size_t aNameLength,
+    mozilla::baseprofiler::ProfilingCategoryPair aCategoryPair,
+    mozilla::MarkerTiming* aMarkerTiming,
+    mozilla::StackCaptureOptions aStackCaptureOptions, uint8_t aMarkerTag,
+    const uint8_t* aPayload, size_t aPayloadSize);
 
 }  // extern "C"
 

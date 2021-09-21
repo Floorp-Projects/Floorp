@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ///! Profiler Rust API
+
+#[macro_use]
+extern crate lazy_static;
+
 pub mod gecko_bindings;
 mod json_writer;
 mod label;
@@ -21,3 +25,5 @@ pub use profiler_macros::gecko_profiler_fn_label;
 pub use profiler_state::*;
 pub use thread::*;
 pub use time::*;
+
+pub use serde::{Deserialize, Serialize};
