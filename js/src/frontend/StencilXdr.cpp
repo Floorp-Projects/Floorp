@@ -134,11 +134,12 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, LifoAlloc& alloc,
     MOZ_TRY(xdr->align32());
 
     T* data;
-    if (mode == XDR_ENCODE) {
+    if constexpr (mode == XDR_ENCODE) {
       data = span.data();
       MOZ_TRY(xdr->codeBytes(data, sizeof(T) * size));
     } else {
-      if (xdr->hasOptions() && xdr->options().borrowBuffer) {
+      const auto& options = static_cast<XDRStencilDecoder*>(xdr)->options();
+      if (options.borrowBuffer) {
         MOZ_TRY(xdr->borrowedData(&data, sizeof(T) * size));
       } else {
         data = alloc.template newArrayUninitialized<T>(size);
@@ -250,10 +251,11 @@ template <XDRMode mode>
   // for the specialized scope-data type without needing to encode
   // a distinguishing prefix.
   uint32_t totalLength = SizeOfParserScopeData(stencil.kind_, length);
-  if (mode == XDR_ENCODE) {
+  if constexpr (mode == XDR_ENCODE) {
     MOZ_TRY(xdr->codeBytes(baseScopeData, totalLength));
   } else {
-    if (xdr->hasOptions() && xdr->options().borrowBuffer) {
+    const auto& options = static_cast<XDRStencilDecoder*>(xdr)->options();
+    if (options.borrowBuffer) {
       MOZ_TRY(xdr->borrowedData(&baseScopeData, totalLength));
     } else {
       baseScopeData =
@@ -307,7 +309,7 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
   MOZ_TRY(xdr->align32());
   static_assert(alignof(ImmutableScriptData) <= alignof(uint32_t));
 
-  if (mode == XDR_ENCODE) {
+  if constexpr (mode == XDR_ENCODE) {
     uint8_t* data = const_cast<uint8_t*>(sisd->get()->immutableData().data());
     MOZ_ASSERT(data == reinterpret_cast<const uint8_t*>(sisd->get()),
                "Decode below relies on the data placement");
@@ -318,8 +320,9 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
       return xdr->fail(JS::TranscodeResult::Throw);
     }
 
-    if (xdr->hasOptions() && xdr->options().usePinnedBytecode) {
-      MOZ_ASSERT(xdr->options().borrowBuffer);
+    const auto& options = static_cast<XDRStencilDecoder*>(xdr)->options();
+    if (options.usePinnedBytecode) {
+      MOZ_ASSERT(options.borrowBuffer);
       ImmutableScriptData* isd;
       MOZ_TRY(xdr->borrowedData(&isd, size));
       sisd->setExternal(isd);
@@ -482,10 +485,11 @@ template <XDRMode mode>
       header->hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
   uint32_t totalLength = sizeof(ParserAtom) + (CharSize * header->length());
 
-  if (mode == XDR_ENCODE) {
+  if constexpr (mode == XDR_ENCODE) {
     MOZ_TRY(xdr->codeBytes(*atomp, totalLength));
   } else {
-    if (xdr->hasOptions() && xdr->options().borrowBuffer) {
+    const auto& options = static_cast<XDRStencilDecoder*>(xdr)->options();
+    if (options.borrowBuffer) {
       MOZ_TRY(xdr->borrowedData(atomp, totalLength));
     } else {
       *atomp = reinterpret_cast<ParserAtom*>(alloc.alloc(totalLength));
@@ -720,7 +724,7 @@ template <XDRMode mode>
   if (mode == XDR_DECODE) {
     stencil.canLazilyParse = canLazilyParse;
     // NOTE: stencil.canLazilyParse can be different than
-    //       CanLazilyParse(xdr->options()).
+    //       CanLazilyParse(static_cast<XDRStencilDecoder*>(xdr)->options()).
     //       See bug 1726498 for removing the redundancy.
   }
 
