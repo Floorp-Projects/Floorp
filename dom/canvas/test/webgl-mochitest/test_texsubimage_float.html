@@ -10,11 +10,17 @@
 
 // Give ourselves a scope to return early from:
 (function() {
-  var gl = c.getContext('webgl');
+  var gl = WebGLUtil.getWebGL('c');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
   }
+
+  // Catch actual WebGLUtil errors, not GL errors.
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
 
   function checkGLError(func, info, reference) {
     var error = gl.getError();
