@@ -375,24 +375,27 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t rttTypeIndex,
                                     uint32_t* rttDepth);
   [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
-  [[nodiscard]] bool topWithType(ResultType expected, ValueVector* values);
+  [[nodiscard]] bool topWithTypeAndPush(ResultType expected,
+                                        ValueVector* values);
 
   [[nodiscard]] bool pushControl(LabelKind kind, BlockType type);
   [[nodiscard]] bool checkStackAtEndOfBlock(ResultType* type,
                                             ValueVector* values);
   [[nodiscard]] bool getControl(uint32_t relativeDepth, Control** controlEntry);
-  [[nodiscard]] bool checkBranchValue(uint32_t relativeDepth, ResultType* type,
-                                      ValueVector* values);
-  [[nodiscard]] bool checkCastedBranchValue(uint32_t relativeDepth,
-                                            ValType castedFromType,
-                                            ValType castedToType,
-                                            ResultType* branchTargetType,
-                                            ValueVector* values);
-  [[nodiscard]] bool checkBrTableEntry(uint32_t* relativeDepth,
-                                       ResultType prevBranchType,
-                                       ResultType* branchType,
-                                       ValueVector* branchValues);
+  [[nodiscard]] bool checkBranchValueAndPush(uint32_t relativeDepth,
+                                             ResultType* type,
+                                             ValueVector* values);
+  [[nodiscard]] bool checkCastedBranchValueAndPush(uint32_t relativeDepth,
+                                                   ValType castedFromType,
+                                                   ValType castedToType,
+                                                   ResultType* branchTargetType,
+                                                   ValueVector* values);
+  [[nodiscard]] bool checkBrTableEntryAndPush(uint32_t* relativeDepth,
+                                              ResultType prevBranchType,
+                                              ResultType* branchType,
+                                              ValueVector* branchValues);
 
+  [[nodiscard]] bool push(StackType t) { return valueStack_.emplaceBack(t); }
   [[nodiscard]] bool push(ValType t) { return valueStack_.emplaceBack(t); }
   [[nodiscard]] bool push(TypeAndValue tv) { return valueStack_.append(tv); }
   [[nodiscard]] bool push(ResultType t) {
@@ -990,8 +993,8 @@ inline bool OpIter<Policy>::popThenPushType(ResultType expected,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::topWithType(ResultType expected,
-                                        ValueVector* values) {
+inline bool OpIter<Policy>::topWithTypeAndPush(ResultType expected,
+                                               ValueVector* values) {
   if (expected.empty()) {
     return true;
   }
@@ -1349,16 +1352,16 @@ inline void OpIter<Policy>::popEnd() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::checkBranchValue(uint32_t relativeDepth,
-                                             ResultType* type,
-                                             ValueVector* values) {
+inline bool OpIter<Policy>::checkBranchValueAndPush(uint32_t relativeDepth,
+                                                    ResultType* type,
+                                                    ValueVector* values) {
   Control* block = nullptr;
   if (!getControl(relativeDepth, &block)) {
     return false;
   }
 
   *type = block->branchTargetType();
-  return topWithType(*type, values);
+  return topWithTypeAndPush(*type, values);
 }
 
 // Check the typing of a branch instruction which casts an input type to
@@ -1366,11 +1369,9 @@ inline bool OpIter<Policy>::checkBranchValue(uint32_t relativeDepth,
 // type along with extra values from the stack. On casting failure, the
 // original input type and extra values are left on the stack.
 template <typename Policy>
-inline bool OpIter<Policy>::checkCastedBranchValue(uint32_t relativeDepth,
-                                                   ValType castedFromType,
-                                                   ValType castedToType,
-                                                   ResultType* branchTargetType,
-                                                   ValueVector* values) {
+inline bool OpIter<Policy>::checkCastedBranchValueAndPush(
+    uint32_t relativeDepth, ValType castedFromType, ValType castedToType,
+    ResultType* branchTargetType, ValueVector* values) {
   // Get the branch target type, which will determine the type of extra values
   // that are passed along with the casted type.
   Control* block = nullptr;
@@ -1410,14 +1411,14 @@ inline bool OpIter<Policy>::checkCastedBranchValue(uint32_t relativeDepth,
   // types to branch to the target type.
   //
   // TODO: We could avoid a potential allocation here by handwriting a custom
-  //       topWithType that handles this case.
+  //       topWithTypeAndPush that handles this case.
   ValTypeVector stackTargetType;
   if (!branchTargetType->cloneToVector(&stackTargetType)) {
     return false;
   }
   stackTargetType[castTypeIndex] = castedFromType;
 
-  return topWithType(ResultType::Vector(stackTargetType), values);
+  return topWithTypeAndPush(ResultType::Vector(stackTargetType), values);
 }
 
 template <typename Policy>
@@ -1429,7 +1430,7 @@ inline bool OpIter<Policy>::readBr(uint32_t* relativeDepth, ResultType* type,
     return fail("unable to read br depth");
   }
 
-  if (!checkBranchValue(*relativeDepth, type, values)) {
+  if (!checkBranchValueAndPush(*relativeDepth, type, values)) {
     return false;
   }
 
@@ -1450,16 +1451,15 @@ inline bool OpIter<Policy>::readBrIf(uint32_t* relativeDepth, ResultType* type,
     return false;
   }
 
-  return checkBranchValue(*relativeDepth, type, values);
+  return checkBranchValueAndPush(*relativeDepth, type, values);
 }
 
 #define UNKNOWN_ARITY UINT32_MAX
 
 template <typename Policy>
-inline bool OpIter<Policy>::checkBrTableEntry(uint32_t* relativeDepth,
-                                              ResultType prevBranchType,
-                                              ResultType* type,
-                                              ValueVector* branchValues) {
+inline bool OpIter<Policy>::checkBrTableEntryAndPush(
+    uint32_t* relativeDepth, ResultType prevBranchType, ResultType* type,
+    ValueVector* branchValues) {
   if (!readVarU32(relativeDepth)) {
     return fail("unable to read br_table depth");
   }
@@ -1480,7 +1480,7 @@ inline bool OpIter<Policy>::checkBrTableEntry(uint32_t* relativeDepth,
     branchValues = nullptr;
   }
 
-  return topWithType(*type, branchValues);
+  return topWithTypeAndPush(*type, branchValues);
 }
 
 template <typename Policy>
@@ -1511,15 +1511,15 @@ inline bool OpIter<Policy>::readBrTable(Uint32Vector* depths,
   ResultType prevBranchType;
   for (uint32_t i = 0; i < tableLength; i++) {
     ResultType branchType;
-    if (!checkBrTableEntry(&(*depths)[i], prevBranchType, &branchType,
-                           branchValues)) {
+    if (!checkBrTableEntryAndPush(&(*depths)[i], prevBranchType, &branchType,
+                                  branchValues)) {
       return false;
     }
     prevBranchType = branchType;
   }
 
-  if (!checkBrTableEntry(defaultDepth, prevBranchType, defaultBranchType,
-                         branchValues)) {
+  if (!checkBrTableEntryAndPush(defaultDepth, prevBranchType, defaultBranchType,
+                                branchValues)) {
     return false;
   }
 
@@ -2263,16 +2263,14 @@ inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
     return false;
   }
 
-  if (!checkBranchValue(*relativeDepth, type, values)) {
+  if (!checkBranchValueAndPush(*relativeDepth, type, values)) {
     return false;
   }
 
   if (refType.isBottom()) {
-    infalliblePush(refType);
-  } else {
-    infalliblePush(refType.asNonNullable());
+    return push(refType);
   }
-  return true;
+  return push(refType.asNonNullable());
 }
 
 template <typename Policy>
@@ -3259,8 +3257,8 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth, Value* rtt,
   // by the input rtt on the stack
   ValType castedToType(RefType::fromTypeIndex(*rttTypeIndex, false));
 
-  return checkCastedBranchValue(*relativeDepth, castedFromType, castedToType,
-                                branchTargetType, values);
+  return checkCastedBranchValueAndPush(*relativeDepth, castedFromType,
+                                       castedToType, branchTargetType, values);
 }
 
 #endif  // ENABLE_WASM_GC
