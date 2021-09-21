@@ -4901,11 +4901,6 @@ void nsWindow::OnDragDataReceivedEvent(GtkWidget* aWidget,
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
   dragService->TargetDataReceived(aWidget, aDragContext, aX, aY, aSelectionData,
                                   aInfo, aTime);
-
-  // When we get data from D&D operation, speed up data transfer to content
-  // process by emulating drag_move event. This is correct as we have all
-  // needed info (x/y coordinates and transaction time).
-  WindowDragMotionHandler(aWidget, aDragContext, nullptr, aX, aY, aTime);
 }
 
 nsWindow* nsWindow::GetTransientForWindowIfPopup() {
