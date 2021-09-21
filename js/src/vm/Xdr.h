@@ -222,14 +222,9 @@ class XDRState : public XDRCoderBase {
   XDRState(const XDRState&) = delete;
   XDRState& operator=(const XDRState&) = delete;
 
-  virtual ~XDRState() = default;
+  ~XDRState() = default;
 
   JSContext* cx() const { return mainBuf.cx(); }
-
-  virtual bool hasOptions() const { return false; }
-  virtual const JS::ReadOnlyCompileOptions& options() {
-    MOZ_CRASH("does not have options");
-  }
 
   template <typename T = mozilla::Ok>
   XDRResultT<T> fail(JS::TranscodeResult code) {
@@ -473,8 +468,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
   XDRResult codeStencil(const JS::ReadOnlyCompileOptions& options,
                         frontend::CompilationStencil& stencil);
 
-  bool hasOptions() const override { return !!options_; }
-  const JS::ReadOnlyCompileOptions& options() override {
+  const JS::ReadOnlyCompileOptions& options() {
     MOZ_ASSERT(options_);
     return *options_;
   }
