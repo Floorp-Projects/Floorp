@@ -477,7 +477,8 @@ impl SwCompositeThread {
             // so using the default stack size is excessive. A reasonably small
             // stack size should be more than enough for SWGL and reduce memory
             // overhead.
-            .stack_size(32 * 1024)
+            // Bug 1731569 - Need at least 36K to avoid problems with ASAN.
+            .stack_size(40 * 1024)
             .spawn(move || {
                 profiler::register_thread(thread_name);
                 // Process any available jobs. This will return a non-Ok
