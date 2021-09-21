@@ -346,9 +346,9 @@ const AVAILABLE_SHIMS = [
     bug: "1713685",
     file: "google-publisher-tags.js",
     matches: [
-      "*://www.googletagservices.com/tag/js/gpt.js",
-      "*://securepubads.g.doubleclick.net/tag/js/gpt.js",
-      "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js",
+      "*://www.googletagservices.com/tag/js/gpt.js*",
+      "*://securepubads.g.doubleclick.net/tag/js/gpt.js*",
+      "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js*",
     ],
     onlyIfBlockedByETP: true,
   },
