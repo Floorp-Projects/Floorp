@@ -138,7 +138,7 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
   }
 
   if (JS_IsGlobalObject(targetObj)) {
-    if (!JS::CloneAndExecuteScript(cx, script, retval)) {
+    if (!JS_ExecuteScript(cx, script, retval)) {
       return false;
     }
   } else if (JS::IsJSMEnvironment(targetObj)) {
@@ -165,11 +165,11 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
           !mozJSComponentLoader::Get()->IsLoaderGlobal(targetGlobal),
           "Don't load subscript into target in a shared-global JSM");
 #endif
-      if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
+      if (!JS_ExecuteScript(cx, envChain, script, retval)) {
         return false;
       }
     } else if (JS_IsGlobalObject(loadScope)) {
-      if (!JS::CloneAndExecuteScript(cx, envChain, script, retval)) {
+      if (!JS_ExecuteScript(cx, envChain, script, retval)) {
         return false;
       }
     } else {
