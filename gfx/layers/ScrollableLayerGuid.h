@@ -51,6 +51,12 @@ struct ScrollableLayerGuid {
   friend std::ostream& operator<<(std::ostream& aOut,
                                   const ScrollableLayerGuid& aGuid);
 
+  using Comparator = bool (*)(const ScrollableLayerGuid&,
+                              const ScrollableLayerGuid&);
+
+  static bool EqualsIgnoringPresShell(const ScrollableLayerGuid& aA,
+                                      const ScrollableLayerGuid& aB);
+
   // Helper structs to use as hash/equality functions in std::unordered_map.
   // e.g. std::unordered_map<ScrollableLayerGuid,
   //                    ValueType,
