@@ -43,7 +43,6 @@
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #if JS_HAS_INTL_API
-#  include "unicode/uchar.h"
 #  include "unicode/unorm2.h"
 #  include "unicode/utypes.h"
 #endif
@@ -636,7 +635,7 @@ static char16_t Final_Sigma(const char16_t* chars, size_t length,
 
 #if JS_HAS_INTL_API
   // Tell the analysis the BinaryProperty.contains function pointer called by
-  // u_hasBinaryProperty cannot GC.
+  // mozilla::intl::String::Is{CaseIgnorable, Cased} cannot GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   bool precededByCased = false;
@@ -654,11 +653,11 @@ static char16_t Final_Sigma(const char16_t* chars, size_t length,
     // Ignore any characters with the property Case_Ignorable.
     // NB: We need to skip over all Case_Ignorable characters, even when
     // they also have the Cased binary property.
-    if (u_hasBinaryProperty(codePoint, UCHAR_CASE_IGNORABLE)) {
+    if (mozilla::intl::String::IsCaseIgnorable(codePoint)) {
       continue;
     }
 
-    precededByCased = u_hasBinaryProperty(codePoint, UCHAR_CASED);
+    precededByCased = mozilla::intl::String::IsCased(codePoint);
     break;
   }
   if (!precededByCased) {
@@ -680,11 +679,11 @@ static char16_t Final_Sigma(const char16_t* chars, size_t length,
     // Ignore any characters with the property Case_Ignorable.
     // NB: We need to skip over all Case_Ignorable characters, even when
     // they also have the Cased binary property.
-    if (u_hasBinaryProperty(codePoint, UCHAR_CASE_IGNORABLE)) {
+    if (mozilla::intl::String::IsCaseIgnorable(codePoint)) {
       continue;
     }
 
-    followedByCased = u_hasBinaryProperty(codePoint, UCHAR_CASED);
+    followedByCased = mozilla::intl::String::IsCased(codePoint);
     break;
   }
   if (!followedByCased) {
