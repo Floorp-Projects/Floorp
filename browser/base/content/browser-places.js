@@ -931,11 +931,7 @@ var BookmarksEventHandler = {
       return false;
     }
 
-    if (
-      gProtonPlacesTooltip &&
-      tooltipNode &&
-      !tooltipNode.closest("menupopup")
-    ) {
+    if (tooltipNode && !tooltipNode.closest("menupopup")) {
       aEvent.target.setAttribute("position", "after_start");
       aEvent.target.moveToAnchor(tooltipNode, "after_start");
     }

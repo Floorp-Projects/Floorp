@@ -4073,9 +4073,6 @@ BrowserGlue.prototype = {
     const dialogVersion = 89;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {
-      if (!Services.prefs.getBoolPref("browser.proton.enabled", true)) {
-        return "no-proton";
-      }
       if (!BrowserHandler.majorUpgrade) {
         return "not-major";
       }

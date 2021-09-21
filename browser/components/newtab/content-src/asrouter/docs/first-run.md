@@ -23,14 +23,6 @@ Testing instructions: Set `browser.aboutwelcome.enabled` to `false` in about:con
 
 A full-page multistep experience that shows a large splash screen and several subsequent screens. See [Default experience variations](#default-experience-variations) for more information.
 
-##### Legacy (non-proton)
-
-An older multi-stage experience that has been available since Fx80 but was deprecated in Fx89 and support removed in Fx92.
-
-Testing instructions: 
-- In Fx89, set `browser.proton.enabled` as `false` in about:config.
-- In Fx90+, set `browser.aboutwelcome.protonDesign` as `false` in about:config
-
 ##### Return to AMO (RTAMO)
 
 Special custom onboarding experience shown to users when they try to download an addon from addons.mozilla.org but don’t have Firefox installed. This experience allows them to install the addon they were trying to install directly from a button on RTAMO.
