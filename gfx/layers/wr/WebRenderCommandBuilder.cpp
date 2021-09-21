@@ -2409,39 +2409,16 @@ WebRenderCommandBuilder::GenerateFallbackData(
   return fallbackData.forget();
 }
 
-class WebRenderMaskData : public WebRenderUserData {
- public:
-  explicit WebRenderMaskData(RenderRootStateManager* aManager,
-                             nsDisplayItem* aItem)
-      : WebRenderUserData(aManager, aItem),
-        mMaskStyle(nsStyleImageLayers::LayerType::Mask),
-        mShouldHandleOpacity(false) {
-    MOZ_COUNT_CTOR(WebRenderMaskData);
+void WebRenderMaskData::ClearImageKey() {
+  if (mBlobKey) {
+    mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
   }
-  virtual ~WebRenderMaskData() {
-    MOZ_COUNT_DTOR(WebRenderMaskData);
-    ClearImageKey();
-  }
+  mBlobKey.reset();
+}
 
-  void ClearImageKey() {
-    if (mBlobKey) {
-      mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
-    }
-    mBlobKey.reset();
-  }
-
-  UserDataType GetType() override { return UserDataType::eMask; }
-  static UserDataType Type() { return UserDataType::eMask; }
-
-  Maybe<wr::BlobImageKey> mBlobKey;
-  std::vector<RefPtr<gfx::ScaledFont>> mFonts;
-  std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
-  LayerIntRect mItemRect;
-  nsPoint mMaskOffset;
-  nsStyleImageLayers mMaskStyle;
-  gfx::Size mScale;
-  bool mShouldHandleOpacity;
-};
+void WebRenderMaskData::Invalidate() {
+  mMaskStyle = nsStyleImageLayers(nsStyleImageLayers::LayerType::Mask);
+}
 
 Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
