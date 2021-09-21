@@ -3,7 +3,7 @@
 var gi = newGlobal({ newCompartment: true, invisibleToDebugger: true });
 
 var gv = newGlobal({newCompartment: true});
-gi.cloneAndExecuteScript('function f() {}', gv);
+gi.evaluate('function f() {}', {global: gv});
 
 var dbg = new Debugger;
 var gvw = dbg.addDebuggee(gv);

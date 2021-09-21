@@ -7,6 +7,6 @@ gczeal(2,21);
 var gi = newGlobal();
 
 var gv = newGlobal();
-gi.cloneAndExecuteScript('function f() {}', gv);
+gi.evaluate('function f() {}', {global: gv});
 
 var dbg = new Debugger;
