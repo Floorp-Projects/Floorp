@@ -101,6 +101,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // set the drag icon during drag-begin
   void SetDragIcon(GdkDragContext* aContext);
+  gboolean IsDragActive() { return mScheduledTask != eDragTaskNone; }
 
  protected:
   virtual ~nsDragService();
@@ -121,6 +122,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // mTaskSource is the GSource id for the task that is either scheduled
   // or currently running.  It is 0 if no task is scheduled or running.
   guint mTaskSource;
+  bool mScheduledTaskIsRunning;
 
   // target/destination side vars
   // These variables keep track of the state of the current drag.
@@ -207,6 +209,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   void ReplyToDragMotion(GdkDragContext* aDragContext);
 #ifdef MOZ_WAYLAND
   void ReplyToDragMotion(RefPtr<DataOffer> aDragContext);
+#endif
+#ifdef MOZ_LOGGING
+  const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
