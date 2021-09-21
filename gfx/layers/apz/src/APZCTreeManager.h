@@ -11,6 +11,7 @@
 
 #include "FocusState.h"          // for FocusState
 #include "HitTestingTreeNode.h"  // for HitTestingTreeNodeAutoLock
+#include "IAPZHitTester.h"       // for IAPZHitTester::HitTestResult
 #include "gfxPoint.h"            // for gfxPoint
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
 #include "mozilla/DataMutex.h"   // for DataMutex
@@ -56,7 +57,6 @@ struct FlingHandoffState;
 class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
-class HitTestingTreeNodeAutoLock;
 class SampleTime;
 class WebRenderScrollDataWrapper;
 struct AncestorTransform;
@@ -106,6 +106,7 @@ struct ZoomTarget;
 class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
+  using HitTestResult = IAPZHitTester::HitTestResult;
 
   // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
@@ -518,37 +519,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   mutable DataMutex<Maybe<TimeStamp>> mTestSampleTime;
 
  public:
-  // Represents the results of an APZ hit test.
-  struct HitTestResult {
-    // The APZC targeted by the hit test.
-    RefPtr<AsyncPanZoomController> mTargetApzc;
-    // The applicable hit test flags.
-    gfx::CompositorHitTestInfo mHitResult;
-    // The layers id of the content that was hit.
-    // This effectively identifiers the process that was hit for
-    // Fission purposes.
-    LayersId mLayersId;
-    // If a scrollbar was hit, this will be populated with the
-    // scrollbar node. The AutoLock allows accessing the scrollbar
-    // node without having to hold the tree lock.
-    HitTestingTreeNodeAutoLock mScrollbarNode;
-    // If content that is fixed to the root-content APZC was hit,
-    // the sides of the viewport to which the content is fixed.
-    SideBits mFixedPosSides = SideBits::eNone;
-    // This is set to true If mTargetApzc is overscrolled and the
-    // event targeted the gap space ("gutter") created by the overscroll.
-    bool mHitOverscrollGutter = false;
-
-    HitTestResult() = default;
-    // Make it move-only.
-    HitTestResult(HitTestResult&&) = default;
-    HitTestResult& operator=(HitTestResult&&) = default;
-
-    // Make a copy of all the fields except mScrollbarNode (the field
-    // that makes this move-only).
-    HitTestResult CopyWithoutScrollbarNode() const;
-  };
-
   /* Some helper functions to find an APZC given some identifying input. These
      functions lock the tree of APZCs while they find the right one, and then
      return an addref'd pointer to it. This allows caller code to just use the
@@ -600,16 +570,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   HitTestingTreeNode* FindTargetNode(HitTestingTreeNode* aNode,
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
-  AsyncPanZoomController* GetTargetApzcForNode(HitTestingTreeNode* aNode);
+  AsyncPanZoomController* GetTargetApzcForNode(const HitTestingTreeNode* aNode);
   AsyncPanZoomController* FindHandoffParent(
       const AsyncPanZoomController* aApzc);
-  HitTestResult GetAPZCAtPoint(const ScreenPoint& aHitTestPoint,
-                               const RecursiveMutexAutoLock& aProofOfTreeLock);
-  HitTestResult GetAPZCAtPointWR(
-      const ScreenPoint& aHitTestPoint,
-      const RecursiveMutexAutoLock& aProofOfTreeLock);
   HitTestingTreeNode* FindRootNodeForLayersId(LayersId aLayersId) const;
-  AsyncPanZoomController* FindRootApzcForLayersId(LayersId aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(
       LayersId aLayersId) const;
   already_AddRefed<AsyncPanZoomController> GetZoomableTarget(
@@ -1032,7 +996,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   // This must only be touched on the controller thread.
   float mDPI;
 
-  HitTestKind mHitTestKind;
+  friend class IAPZHitTester;
+  UniquePtr<IAPZHitTester> mHitTester;
 
 #if defined(MOZ_WIDGET_ANDROID)
  private:
