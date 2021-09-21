@@ -4,6 +4,9 @@
 
 package mozilla.components.concept.storage
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 /**
  * The possible document types to record history metadata for.
  */
@@ -43,11 +46,12 @@ sealed class HistoryMetadataObservation {
  * this record was created in response to a user opening
  * a page in a new tab.
  */
+@Parcelize
 data class HistoryMetadataKey(
     val url: String,
     val searchTerm: String? = null,
     val referrerUrl: String? = null
-)
+) : Parcelable
 
 /**
  * Represents a history metadata record, which describes metadata for a history visit, such as metadata
