@@ -1,7 +1,18 @@
 pull_request_rules:
   - name: Needs landing - Rebase
     conditions:
-      - status-success=FirefoxCI (pull_request)
+      - status-success=build-klar-release
+      - status-success=test-debug
+      # - status-success=ui-test-x86-debug
+      - status-success=build-beta
+      - status-success=build-focus-debug
+      - status-success=build-focus-release
+      - status-success=build-klar-debug
+      - status-success=build-nightly
+      - status-success=lint-compare-locales
+      - status-success=lint-detekt
+      - status-success=lint-ktlint
+      - status-success=lint-lint
       - label=🛬 needs landing
       - "#approved-reviews-by>=1"
       - -draft
@@ -11,7 +22,18 @@ pull_request_rules:
         strict: smart
   - name: Needs landing - Squash
     conditions:
-      - status-success=FirefoxCI (pull_request)
+      - status-success=build-klar-release
+      - status-success=test-debug
+      # - status-success=ui-test-x86-debug
+      - status-success=build-beta
+      - status-success=build-focus-debug
+      - status-success=build-focus-release
+      - status-success=build-klar-debug
+      - status-success=build-nightly
+      - status-success=lint-compare-locales
+      - status-success=lint-detekt
+      - status-success=lint-ktlint
+      - status-success=lint-lint
       - label=🛬 needs landing (squash)
       - "#approved-reviews-by>=1"
       - -draft
