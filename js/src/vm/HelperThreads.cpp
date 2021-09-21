@@ -840,60 +840,34 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   RootedScript resultScript(cx);
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
-  if (options.useStencilXDR) {
-    // The buffer contains stencil.
-
-    stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-    if (!stencilInput_) {
-      return;
-    }
-    if (!stencilInput_->initForGlobal(cx)) {
-      return;
-    }
-
-    stencil_ =
-        cx->make_unique<frontend::CompilationStencil>(stencilInput_->source);
-    if (!stencil_) {
-      return;
-    }
-
-    XDRStencilDecoder decoder(cx, range);
-    XDRResult res = decoder.codeStencil(stencilInput_->options, *stencil_);
-    if (!res.isOk()) {
-      stencil_.reset();
-      return;
-    }
-
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
-                                         gcOutput_)) {
-      stencil_.reset();
-    }
-
-    if (options.useOffThreadParseGlobal) {
-      (void)instantiateStencils(cx);
-    }
-
+  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+  if (!stencilInput_) {
+    return;
+  }
+  if (!stencilInput_->initForGlobal(cx)) {
     return;
   }
 
-  // The buffer contains JSScript.
-  auto decoder = js::MakeUnique<XDROffThreadDecoder>(
-      cx, &options, XDROffThreadDecoder::Type::Single,
-      /* sourceObjectOut = */ &sourceObject.get(), range);
-  if (!decoder) {
-    ReportOutOfMemory(cx);
+  stencil_ =
+      cx->make_unique<frontend::CompilationStencil>(stencilInput_->source);
+  if (!stencil_) {
     return;
   }
 
-  mozilla::DebugOnly<XDRResult> res = decoder->codeScript(&resultScript);
-  MOZ_ASSERT(bool(resultScript) == static_cast<const XDRResult&>(res).isOk());
-
-  if (sourceObject) {
-    sourceObjects.infallibleAppend(sourceObject);
+  XDRStencilDecoder decoder(cx, range);
+  XDRResult res = decoder.codeStencil(stencilInput_->options, *stencil_);
+  if (!res.isOk()) {
+    stencil_.reset();
+    return;
   }
 
-  if (resultScript) {
-    scripts.infallibleAppend(resultScript);
+  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+                                       gcOutput_)) {
+    stencil_.reset();
+  }
+
+  if (options.useOffThreadParseGlobal) {
+    (void)instantiateStencils(cx);
   }
 }
 
@@ -1289,9 +1263,6 @@ JS::OffThreadToken* js::StartOffThreadDecodeScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
     void* callbackData) {
-  // XDR data must be Stencil format, or a parse-global must be available.
-  MOZ_RELEASE_ASSERT(options.useStencilXDR || options.useOffThreadParseGlobal);
-
   auto task =
       cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
   if (!task) {
@@ -2237,8 +2208,6 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   // Start the incremental-XDR encoder.
   if (startEncoding == StartEncoding::Yes) {
-    MOZ_DIAGNOSTIC_ASSERT(parseTask->options.useStencilXDR);
-
     if (parseTask->stencil_) {
       auto initial = js::MakeUnique<frontend::ExtensibleCompilationStencil>(
           cx, *parseTask->stencilInput_);

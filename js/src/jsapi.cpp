@@ -2312,7 +2312,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
   classStaticBlocks = rhs.classStaticBlocks;
-  useStencilXDR = rhs.useStencilXDR;
   useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
@@ -2399,7 +2398,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
 
   classStaticBlocks = cx->options().classStaticBlocks();
 
-  useStencilXDR = !UseOffThreadParseGlobal();
   useOffThreadParseGlobal = UseOffThreadParseGlobal();
 
   useFdlibmForSinCosTan = math_use_fdlibm_for_sin_cos_tan();
@@ -4520,11 +4518,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  if (!options.useStencilXDR) {
-    // The buffer contains JSScript.
-    return JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
-  }
-
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursorIndex));
 
@@ -4575,8 +4568,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
-
   CompileOptions opts(cx, options);
   opts.borrowBuffer = true;
 
