@@ -40,38 +40,11 @@ using RootRange = RootedValueMap::Range;
 using RootEntry = RootedValueMap::Entry;
 using RootEnum = RootedValueMap::Enum;
 
-// For more detail see JS::Rooted::root and js::RootedTraceable.
-//
-// The JS::RootKind::Traceable list contains a bunch of totally disparate types,
-// but to refer to this list we need /something/ in the type field. We use the
-// following type as a compatible stand-in. No actual methods from
-// ConcreteTraceable type are actually used at runtime.
-struct ConcreteTraceable {
-  ConcreteTraceable() = delete;
-  void trace(JSTracer*) = delete;
-};
-
-template <typename T>
-inline void RootedGCThingTraits<T>::trace(JSTracer* trc, T* thingp,
-                                          const char* name) {
-  TraceNullableRoot(trc, thingp, name);
-}
-
-template <typename T>
-inline void RootedTraceableTraits<T>::trace(JSTracer* trc,
-                                            VirtualTraceable* thingp,
-                                            const char* name) {
-  thingp->trace(trc, name);
-}
-
-template <typename T>
-inline void JS::Rooted<T>::trace(JSTracer* trc, const char* name) {
-  PtrTraits::trace(trc, &ptr, name);
-}
-
-template <typename T>
-inline void JS::PersistentRooted<T>::trace(JSTracer* trc, const char* name) {
-  PtrTraits::trace(trc, &ptr, name);
+template <typename Base, typename T>
+inline void TypedRootedGCThingBase<Base, T>::trace(JSTracer* trc,
+                                                   const char* name) {
+  auto* self = this->template derived<T>();
+  TraceNullableRoot(trc, self->address(), name);
 }
 
 template <typename T>
@@ -80,6 +53,14 @@ static inline void TraceExactStackRootList(JSTracer* trc,
                                            const char* name) {
   for (StackRootedBase* root = listHead; root; root = root->previous()) {
     static_cast<Rooted<T>*>(root)->trace(trc, name);
+  }
+}
+
+static inline void TraceExactStackRootTraceableList(JSTracer* trc,
+                                                    StackRootedBase* listHead,
+                                                    const char* name) {
+  for (StackRootedBase* root = listHead; root; root = root->previous()) {
+    static_cast<StackRootedTraceableBase*>(root)->trace(trc, name);
   }
 }
 
@@ -97,8 +78,8 @@ static inline void TraceStackRoots(JSTracer* trc,
   // RootedTraceable uses virtual dispatch.
   JS::AutoSuppressGCAnalysis nogc;
 
-  TraceExactStackRootList<ConcreteTraceable>(
-      trc, stackRoots[JS::RootKind::Traceable], "Traceable");
+  TraceExactStackRootTraceableList(trc, stackRoots[JS::RootKind::Traceable],
+                                   "Traceable");
 }
 
 void JS::RootingContext::traceStackRoots(JSTracer* trc) {
@@ -117,6 +98,13 @@ static inline void TracePersistentRootedList(
   }
 }
 
+static inline void TracePersistentRootedTraceableList(
+    JSTracer* trc, LinkedList<PersistentRootedBase>& list, const char* name) {
+  for (PersistentRootedBase* root : list) {
+    static_cast<PersistentRootedTraceableBase*>(root)->trace(trc, name);
+  }
+}
+
 void JSRuntime::tracePersistentRoots(JSTracer* trc) {
 #define TRACE_ROOTS(name, type, _, _1)                                       \
   TracePersistentRootedList<type*>(trc, heapRoots.ref()[JS::RootKind::name], \
@@ -131,7 +119,7 @@ void JSRuntime::tracePersistentRoots(JSTracer* trc) {
   // RootedTraceable uses virtual dispatch.
   JS::AutoSuppressGCAnalysis nogc;
 
-  TracePersistentRootedList<ConcreteTraceable>(
+  TracePersistentRootedTraceableList(
       trc, heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
 }
 
