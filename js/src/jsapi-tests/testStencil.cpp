@@ -233,18 +233,26 @@ BEGIN_TEST(testStencil_Transcode) {
   CHECK(!found);
 
   {
-    JS::TranscodeRange range(buffer.begin(), buffer.length());
-
     // Decode the stencil into new range
     JS::CompileOptions options(cx);
     RefPtr<JS::Stencil> stencil;
-    JS::TranscodeResult res =
-        JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
-    CHECK(res == JS::TranscodeResult::Ok);
+
+    {
+      JS::TranscodeRange range(buffer.begin(), buffer.length());
+      JS::TranscodeResult res =
+          JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
+      CHECK(res == JS::TranscodeResult::Ok);
+    }
+
+    // Delete the buffer to verify that the decoded stencil has no dependency
+    // to the buffer.
+    memset(buffer.begin(), 0, buffer.length());
+    buffer.clear();
 
     // Instantiate and Run
     JS::RootedScript script(cx,
                             JS::InstantiateGlobalStencil(cx, options, stencil));
+    stencil = nullptr;
     JS::RootedValue rval(cx);
     CHECK(script);
     CHECK(JS_ExecuteScript(cx, script, &rval));
@@ -258,6 +266,61 @@ static bool TestGetBuildId(JS::BuildIdCharVector* buildId) {
   return buildId->append(buildid, sizeof(buildid));
 }
 END_TEST(testStencil_Transcode)
+
+BEGIN_TEST(testStencil_TranscodeBorrowing) {
+  JS::SetProcessBuildIdOp(TestGetBuildId);
+
+  JS::TranscodeBuffer buffer;
+
+  {
+    const char* chars =
+        "function f() { return 42; }"
+        "f();";
+
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+
+    JS::CompileOptions options(cx);
+    RefPtr<JS::Stencil> stencil =
+        JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+    CHECK(stencil);
+
+    // Encode Stencil to XDR
+    JS::TranscodeResult res = JS::EncodeStencil(cx, options, stencil, buffer);
+    CHECK(res == JS::TranscodeResult::Ok);
+    CHECK(!buffer.empty());
+  }
+
+  JS::RootedScript script(cx);
+  {
+    JS::TranscodeRange range(buffer.begin(), buffer.length());
+    JS::CompileOptions options(cx);
+    options.borrowBuffer = true;
+    RefPtr<JS::Stencil> stencil;
+    JS::TranscodeResult res =
+        JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
+    CHECK(res == JS::TranscodeResult::Ok);
+
+    script = JS::InstantiateGlobalStencil(cx, options, stencil);
+    CHECK(script);
+  }
+
+  // Delete the buffer to verify that the instantiated script has no dependency
+  // to the buffer.
+  memset(buffer.begin(), 0, buffer.length());
+  buffer.clear();
+
+  JS::RootedValue rval(cx);
+  CHECK(JS_ExecuteScript(cx, script, &rval));
+  CHECK(rval.isNumber() && rval.toNumber() == 42);
+
+  return true;
+}
+static bool TestGetBuildId(JS::BuildIdCharVector* buildId) {
+  const char buildid[] = "testXDR";
+  return buildId->append(buildid, sizeof(buildid));
+}
+END_TEST(testStencil_TranscodeBorrowing)
 
 BEGIN_TEST(testStencil_OffThread) {
   const char* chars =

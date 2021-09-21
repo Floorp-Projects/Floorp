@@ -48,14 +48,16 @@ struct CanCopyDataToDisk {
 class StencilXDR {
  public:
   template <XDRMode mode>
-  static XDRResult codeBigInt(XDRState<mode>* xdr, BigIntStencil& stencil);
+  static XDRResult codeBigInt(XDRState<mode>* xdr, LifoAlloc& alloc,
+                              BigIntStencil& stencil);
 
   template <XDRMode mode>
-  static XDRResult codeObjLiteral(XDRState<mode>* xdr,
+  static XDRResult codeObjLiteral(XDRState<mode>* xdr, LifoAlloc& alloc,
                                   ObjLiteralStencil& stencil);
 
   template <XDRMode mode>
-  static XDRResult codeScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
+  static XDRResult codeScopeData(XDRState<mode>* xdr, LifoAlloc& alloc,
+                                 ScopeStencil& stencil,
                                  BaseParserScopeData*& baseScopeData);
 
   template <XDRMode mode>
@@ -67,7 +69,8 @@ class StencilXDR {
                                            SharedDataContainer& sharedData);
 
   template <XDRMode mode>
-  static XDRResult codeParserAtom(XDRState<mode>* xdr, ParserAtom** atomp);
+  static XDRResult codeParserAtom(XDRState<mode>* xdr, LifoAlloc& alloc,
+                                  ParserAtom** atomp);
 
   template <XDRMode mode>
   static XDRResult codeParserAtomSpan(XDRState<mode>* xdr, LifoAlloc& alloc,
