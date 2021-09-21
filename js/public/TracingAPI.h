@@ -456,7 +456,7 @@ inline void TraceEdge(JSTracer* trc, JS::TenuredHeap<T>* thingp,
   MOZ_ASSERT(thingp);
   if (T ptr = thingp->unbarrieredGetPtr()) {
     js::gc::TraceExternalEdge(trc, &ptr, name);
-    thingp->unbarrieredSetPtr(ptr);
+    thingp->setPtr(ptr);
   }
 }
 
