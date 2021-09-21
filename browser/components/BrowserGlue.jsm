@@ -1393,130 +1393,28 @@ BrowserGlue.prototype = {
         false
       )
     ) {
-      // List of monochromatic themes. The themes are represented by objects
-      // containing their id, current version, and path relative to
-      // resource://builtin-themes/monochromatic/.
-      const kMonochromaticThemeList = [
-        {
-          id: "firefox-lush-soft@mozilla.org",
-          version: "1.0",
-          path: "lush/soft/",
-        },
-        {
-          id: "firefox-lush-balanced@mozilla.org",
-          version: "1.0",
-          path: "lush/balanced/",
-        },
-        {
-          id: "firefox-lush-soft@mozilla.org",
-          version: "1.0",
-          path: "lush/soft/",
-        },
-        {
-          id: "firefox-lush-balanced@mozilla.org",
-          version: "1.0",
-          path: "lush/balanced/",
-        },
-        {
-          id: "firefox-lush-bold@mozilla.org",
-          version: "1.0",
-          path: "lush/bold/",
-        },
-        {
-          id: "firefox-abstract-soft@mozilla.org",
-          version: "1.0",
-          path: "abstract/soft/",
-        },
-        {
-          id: "firefox-abstract-balanced@mozilla.org",
-          version: "1.0",
-          path: "abstract/balanced/",
-        },
-        {
-          id: "firefox-abstract-bold@mozilla.org",
-          version: "1.0",
-          path: "abstract/bold/",
-        },
-        {
-          id: "firefox-elemental-soft@mozilla.org",
-          version: "1.0",
-          path: "elemental/soft/",
-        },
-        {
-          id: "firefox-elemental-balanced@mozilla.org",
-          version: "1.0",
-          path: "elemental/balanced/",
-        },
-        {
-          id: "firefox-elemental-bold@mozilla.org",
-          version: "1.0",
-          path: "elemental/bold/",
-        },
-        {
-          id: "firefox-cheers-soft@mozilla.org",
-          version: "1.0",
-          path: "cheers/soft/",
-        },
-        {
-          id: "firefox-cheers-balanced@mozilla.org",
-          version: "1.0",
-          path: "cheers/balanced/",
-        },
-        {
-          id: "firefox-cheers-bold@mozilla.org",
-          version: "1.0",
-          path: "cheers/bold/",
-        },
-        {
-          id: "firefox-graffiti-soft@mozilla.org",
-          version: "1.0",
-          path: "graffiti/soft/",
-        },
-        {
-          id: "firefox-graffiti-balanced@mozilla.org",
-          version: "1.0",
-          path: "graffiti/balanced/",
-        },
-        {
-          id: "firefox-graffiti-bold@mozilla.org",
-          version: "1.0",
-          path: "graffiti/bold/",
-        },
-        {
-          id: "firefox-foto-soft@mozilla.org",
-          version: "1.0",
-          path: "foto/soft/",
-        },
-        {
-          id: "firefox-foto-balanced@mozilla.org",
-          version: "1.0",
-          path: "foto/balanced/",
-        },
-        {
-          id: "firefox-foto-bold@mozilla.org",
-          version: "1.0",
-          path: "foto/bold/",
-        },
-      ];
-      for (let { id, version, path } of kMonochromaticThemeList) {
-        AddonManager.maybeInstallBuiltinAddon(
-          id,
-          version,
-          `resource://builtin-themes/monochromatic/${path}`
-        );
-
-        AsyncShutdown.profileChangeTeardown.addBlocker(
-          "Uninstall Monochromatic Theme",
-          async () => {
-            try {
-              let addon = await AddonManager.getAddonByID(id);
-              await addon.uninstall();
-            } catch (e) {
-              Cu.reportError(`Failed to uninstall ${id} on shutdown`);
-            }
+      // Temporarily install a prototype monochromatic theme for UX iteration.
+      // We uninstall it during shutdown so it does not persist if the pref is
+      // disabled.
+      const kMonochromaticThemeID = "firefox-monochromatic-purple@mozilla.org";
+      AddonManager.maybeInstallBuiltinAddon(
+        kMonochromaticThemeID,
+        "1.0",
+        "resource://builtin-themes/monochromatic-purple/"
+      );
+      AsyncShutdown.profileChangeTeardown.addBlocker(
+        "Uninstall Prototype Monochromatic Theme",
+        async () => {
+          try {
+            let addon = await AddonManager.getAddonByID(kMonochromaticThemeID);
+            await addon.uninstall();
+          } catch (e) {
+            Cu.reportError(
+              "Failed to uninstall firefox-monochromatic-purple on shutdown"
+            );
           }
-        );
-      }
+        }
+      );
     }
 
     if (AppConstants.MOZ_NORMANDY) {
@@ -3417,7 +3315,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 118;
+    const UI_VERSION = 117;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4045,18 +3943,6 @@ BrowserGlue.prototype = {
       UrlbarPrefs.migrateResultBuckets();
     }
 
-    if (currentUIVersion < 118 && AppConstants.NIGHTLY_BUILD) {
-      // Uninstall experimental monochromatic purple theme.
-      (async () => {
-        let addon = await AddonManager.getAddonByID(
-          "firefox-monochromatic-purple@mozilla.org"
-        );
-        if (addon) {
-          addon.uninstall().catch(Cu.reportError);
-        }
-      })();
-    }
-
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -4073,6 +3959,9 @@ BrowserGlue.prototype = {
     const dialogVersion = 89;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {
+      if (!Services.prefs.getBoolPref("browser.proton.enabled", true)) {
+        return "no-proton";
+      }
       if (!BrowserHandler.majorUpgrade) {
         return "not-major";
       }

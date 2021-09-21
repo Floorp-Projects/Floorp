@@ -5283,7 +5283,8 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
       doc->PrefersColorScheme(Document::IgnoreRFP::Yes) ==
           StylePrefersColorScheme::Dark) {
     // Use --in-content-page-background for prefers-color-scheme: dark.
-    return NS_RGB(0x1C, 0x1B, 0x22);
+    return StaticPrefs::browser_proton_enabled() ? NS_RGB(0x1C, 0x1B, 0x22)
+                                                 : NS_RGB(0x2A, 0x2A, 0x2E);
   }
 
   return backgroundColor;
