@@ -32,20 +32,19 @@ class TestStaticAnalysis(unittest.TestCase):
         # world we should test the clang_analysis mach command
         # since that small function is an internal detail.
         # But there is zero test infra for that mach command
-        from mozbuild.code_analysis.mach_commands import StaticAnalysis
+        from mozbuild.code_analysis.mach_commands import _is_ignored_path
 
         config = MozbuildObject.from_environment()
         context = mock.MagicMock()
         context.cwd = config.topsrcdir
 
-        cmd = StaticAnalysis(context)
         command_context = mock.MagicMock()
         command_context.topsrcdir = os.path.join("/root", "dir")
         path = os.path.join("/root", "dir", "path1")
 
         ignored_dirs_re = r"path1|path2/here|path3\there"
         self.assertTrue(
-            cmd._is_ignored_path(command_context, ignored_dirs_re, path) is not None
+            _is_ignored_path(command_context, ignored_dirs_re, path) is not None
         )
 
         # simulating a win32 env
@@ -55,27 +54,26 @@ class TestStaticAnalysis(unittest.TestCase):
         os.sep = "\\"
         try:
             self.assertTrue(
-                cmd._is_ignored_path(command_context, ignored_dirs_re, win32_path)
+                _is_ignored_path(command_context, ignored_dirs_re, win32_path)
                 is not None
             )
         finally:
             os.sep = old_sep
 
         self.assertTrue(
-            cmd._is_ignored_path(command_context, ignored_dirs_re, "path2") is None
+            _is_ignored_path(command_context, ignored_dirs_re, "path2") is None
         )
 
     def test_get_files(self):
-        from mozbuild.code_analysis.mach_commands import StaticAnalysis
+        from mozbuild.code_analysis.mach_commands import get_abspath_files
 
         config = MozbuildObject.from_environment()
         context = mock.MagicMock()
         context.cwd = config.topsrcdir
 
-        cmd = StaticAnalysis(context)
         command_context = mock.MagicMock()
         command_context.topsrcdir = mozpath.join("/root", "dir")
-        source = cmd.get_abspath_files(
+        source = get_abspath_files(
             command_context, ["file1", mozpath.join("directory", "file2")]
         )
 
