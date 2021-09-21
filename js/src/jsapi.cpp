@@ -4478,23 +4478,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
   return JS::TranscodeResult::Ok;
 }
 
-JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
-    size_t cursorIndex) {
-  auto decoder = js::MakeUnique<XDRDecoder>(cx, &options, buffer, cursorIndex);
-  if (!decoder) {
-    ReportOutOfMemory(cx);
-    return JS::TranscodeResult::Throw;
-  }
-  XDRResult res = decoder->codeScript(scriptp);
-  MOZ_ASSERT(bool(scriptp) == res.isOk());
-  if (res.isErr()) {
-    return res.unwrapErr();
-  }
-  return JS::TranscodeResult::Ok;
-}
-
 static JS::TranscodeResult DecodeStencil(JSContext* cx,
                                          JS::TranscodeBuffer& buffer,
                                          frontend::CompilationInput& input,
@@ -4545,22 +4528,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
   MOZ_ASSERT(gcOutput.get().script);
   scriptp.set(gcOutput.get().script);
 
-  return JS::TranscodeResult::Ok;
-}
-
-JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const TranscodeRange& range, JS::MutableHandleScript scriptp) {
-  auto decoder = js::MakeUnique<XDRDecoder>(cx, &options, range);
-  if (!decoder) {
-    ReportOutOfMemory(cx);
-    return JS::TranscodeResult::Throw;
-  }
-  XDRResult res = decoder->codeScript(scriptp);
-  MOZ_ASSERT(bool(scriptp) == res.isOk());
-  if (res.isErr()) {
-    return res.unwrapErr();
-  }
   return JS::TranscodeResult::Ok;
 }
 
