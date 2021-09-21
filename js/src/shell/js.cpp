@@ -2429,12 +2429,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (saveIncrementalBytecode && assertEqBytecode) {
-      JS_ReportErrorASCII(
-          cx, "saveIncrementalBytecode cannot be used with assertEqBytecode.");
-      return false;
-    }
-
     // NOTE: Check custom "global" after handling all CompileOption-related
     //       properties.
     if (!JS_GetProperty(cx, opts, "global", &v)) {
