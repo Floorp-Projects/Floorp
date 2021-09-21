@@ -1,4 +1,4 @@
-// Debugger should be notified of scripts created with ExecuteInGlobalAndReturnScope.
+// ExecuteInFrameScriptEnvironment shouldn't create yet another script.
 
 var g = newGlobal({newCompartment: true});
 var g2 = newGlobal({newCompartment: true});
@@ -9,14 +9,15 @@ var canary = 42;
 dbg.onNewScript = function (evalScript) {
   log += 'e';
 
-  dbg.onNewScript = function (clonedScript) {
-    log += 'c';
-    clonedScript.setBreakpoint(0, {
-      hit(frame) {
-        log += 'b';
-        assertEq(frame.script, clonedScript);
-      }
-    });
+  evalScript.setBreakpoint(0, {
+    hit(frame) {
+      log += 'b';
+      assertEq(frame.script, evalScript);
+    }
+  });
+
+  dbg.onNewScript = function (anotherScript) {
+    log += '!';
   };
 };
 
@@ -26,6 +27,6 @@ dbg.onDebuggerStatement = function (frame) {
 
 assertEq(log, '');
 var evalScope = g.evalReturningScope("canary = 'dead'; let lex = 42; debugger; // nee", g2);
-assertEq(log, 'ecbd');
+assertEq(log, 'ebd');
 assertEq(canary, 42);
 assertEq(evalScope.canary, 'dead');
