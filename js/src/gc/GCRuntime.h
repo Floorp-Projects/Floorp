@@ -46,6 +46,7 @@ class AutoCallGCCallbacks;
 class AutoGCSession;
 class AutoHeapSession;
 class AutoTraceSession;
+struct FinalizePhase;
 class MarkingValidator;
 struct MovingTracer;
 enum class ShouldCheckThresholds;
@@ -764,11 +765,13 @@ class GCRuntime {
   IncrementalProgress markAllWeakReferences();
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
+  // GC Sweeping. Implemented in Sweeping.cpp.
   void beginSweepPhase(JS::GCReason reason, AutoGCSession& session);
   void dropStringWrappers();
   void groupZonesForSweeping(JS::GCReason reason);
   [[nodiscard]] bool findSweepGroupEdges();
   void getNextSweepGroup();
+  void resetGrayList(Compartment* comp);
   IncrementalProgress markGrayRootsInCurrentGroup(JSFreeOp* fop,
                                                   SliceBudget& budget);
   IncrementalProgress markGray(JSFreeOp* fop, SliceBudget& budget);
@@ -780,7 +783,6 @@ class GCRuntime {
                                const FinalizePhase& phase);
   void queueForBackgroundSweep(Zone* zone, JSFreeOp* fop,
                                const FinalizePhase& phase);
-
   IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
   void updateAtomsBitmap();
   void sweepCCWrappers();
@@ -805,11 +807,6 @@ class GCRuntime {
                           SortedArenaList& sweepList);
   IncrementalProgress sweepPropMapTree(JSFreeOp* fop, SliceBudget& budget);
   void endSweepPhase(bool lastGC);
-  bool allCCVisibleZonesWereCollected();
-  void sweepZones(JSFreeOp* fop, bool destroyingRuntime);
-  void startDecommit();
-  void decommitFreeArenas(const bool& canel, AutoLockGC& lock);
-  void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
   void queueZonesAndStartBackgroundSweep(ZoneList& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
   void startBackgroundFree();
@@ -817,6 +814,12 @@ class GCRuntime {
   void sweepBackgroundThings(ZoneList& zones);
   void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
   void assertBackgroundSweepingFinished();
+
+  bool allCCVisibleZonesWereCollected();
+  void sweepZones(JSFreeOp* fop, bool destroyingRuntime);
+  void startDecommit();
+  void decommitFreeArenas(const bool& canel, AutoLockGC& lock);
+  void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
   // Compacting GC. Implemented in Compacting.cpp.
   bool shouldCompact();
