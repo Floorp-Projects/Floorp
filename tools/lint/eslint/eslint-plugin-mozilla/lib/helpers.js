@@ -20,34 +20,38 @@ var gRootDir = null;
 var directoryManifests = new Map();
 
 const callExpressionDefinitions = [
-  /^loader\.lazyGetter\(this, "(\w+)"/,
-  /^loader\.lazyImporter\(this, "(\w+)"/,
-  /^loader\.lazyServiceGetter\(this, "(\w+)"/,
-  /^loader\.lazyRequireGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
-  /^ChromeUtils\.defineModuleGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyPreferenceGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyProxy\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyScriptGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyServiceGetter\(this, "(\w+)"/,
-  /^XPCOMUtils\.defineConstant\(this, "(\w+)"/,
-  /^DevToolsUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
-  /^DevToolsUtils\.defineLazyGetter\(this, "(\w+)"/,
-  /^Object\.defineProperty\(this, "(\w+)"/,
-  /^Reflect\.defineProperty\(this, "(\w+)"/,
+  /^loader\.lazyGetter\((?:globalThis|this), "(\w+)"/,
+  /^loader\.lazyImporter\((?:globalThis|this), "(\w+)"/,
+  /^loader\.lazyServiceGetter\((?:globalThis|this), "(\w+)"/,
+  /^loader\.lazyRequireGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyModuleGetter\((?:globalThis|this), "(\w+)"/,
+  /^ChromeUtils\.defineModuleGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyPreferenceGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyProxy\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyScriptGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineLazyServiceGetter\((?:globalThis|this), "(\w+)"/,
+  /^XPCOMUtils\.defineConstant\((?:globalThis|this), "(\w+)"/,
+  /^DevToolsUtils\.defineLazyModuleGetter\((?:globalThis|this), "(\w+)"/,
+  /^DevToolsUtils\.defineLazyGetter\((?:globalThis|this), "(\w+)"/,
+  /^Object\.defineProperty\((?:globalThis|this), "(\w+)"/,
+  /^Reflect\.defineProperty\((?:globalThis|this), "(\w+)"/,
   /^this\.__defineGetter__\("(\w+)"/,
 ];
 
 const callExpressionMultiDefinitions = [
   "XPCOMUtils.defineLazyGlobalGetters(this,",
+  "XPCOMUtils.defineLazyGlobalGetters(globalThis,",
   "XPCOMUtils.defineLazyModuleGetters(this,",
+  "XPCOMUtils.defineLazyModuleGetters(globalThis,",
   "XPCOMUtils.defineLazyServiceGetters(this,",
+  "XPCOMUtils.defineLazyServiceGetters(globalThis,",
   "loader.lazyRequireGetter(this,",
+  "loader.lazyRequireGetter(globalThis,",
 ];
 
 const imports = [
-  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)", this\)/,
+  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)", (?:globalThis|this)\)/,
 ];
 
 const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
