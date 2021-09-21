@@ -2220,7 +2220,9 @@ void nsWindow::WaylandPopupSetDirectPosition(GdkPoint* aPosition,
     LOG_POPUP(("  setting new bounds [%d, %d]\n", mBounds.x, mBounds.y));
     NotifyWindowMoved(mBounds.x, mBounds.y);
     nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-    popupFrame->MoveTo(CSSIntPoint(mPopupPosition.x, mPopupPosition.y), true);
+    if (popupFrame) {
+      popupFrame->MoveTo(CSSIntPoint(mPopupPosition.x, mPopupPosition.y), true);
+    }
   }
 }
 
