@@ -19,8 +19,10 @@ class ScreenshotsUI extends HTMLElement {
   constructor() {
     super();
   }
-  connectedCallback() {
+  async connectedCallback() {
     this.initialize();
+
+    await this.takeScreenshot();
   }
 
   initialize() {
@@ -177,6 +179,34 @@ class ScreenshotsUI extends HTMLElement {
     }
     let extension = ".png";
     return clipFilename + extension;
+  }
+
+  async takeScreenshot() {
+    let params = new URLSearchParams(location.search);
+    let browsingContextId = parseInt(params.get("browsingContextId"), 10);
+    let browsingContext = BrowsingContext.get(browsingContextId);
+
+    let snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
+      null,
+      1,
+      "rgb(255,255,255)"
+    );
+
+    let canvas = this.ownerDocument.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
+    let context = canvas.getContext("2d");
+
+    canvas.width = snapshot.width;
+    canvas.height = snapshot.height;
+
+    context.drawImage(snapshot, 0, 0);
+
+    let imgEle = this.ownerDocument.getElementById("placeholder-image");
+    imgEle.src = canvas.toDataURL();
+
+    snapshot.close();
   }
 }
 customElements.define("screenshots-ui", ScreenshotsUI);
