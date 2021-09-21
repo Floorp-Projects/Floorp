@@ -535,6 +535,13 @@ class BrowserRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.pressBack()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
         fun clickTabCrashedCloseButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
 
             assertTrue(
