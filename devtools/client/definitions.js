@@ -89,8 +89,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DevToolsFissionPrefs",
-  "devtools/client/devtools-fission-prefs"
+  "DevToolsExperimentalPrefs",
+  "devtools/client/devtools-experimental-prefs"
 );
 loader.lazyRequireGetter(
   this,
@@ -511,11 +511,11 @@ exports.ToolboxButtons = [
     },
   },
   {
-    id: "command-button-fission-prefs",
-    description: "DevTools Fission preferences",
+    id: "command-button-experimental-prefs",
+    description: "DevTools Experimental preferences",
     isTargetSupported: target => !AppConstants.MOZILLA_OFFICIAL,
-    onClick: (event, toolbox) => DevToolsFissionPrefs.showTooltip(toolbox),
-    isChecked: () => DevToolsFissionPrefs.isAnyPreferenceEnabled(),
+    onClick: (event, toolbox) => DevToolsExperimentalPrefs.showTooltip(toolbox),
+    isChecked: () => DevToolsExperimentalPrefs.isAnyPreferenceEnabled(),
   },
   {
     id: "command-button-responsive",
