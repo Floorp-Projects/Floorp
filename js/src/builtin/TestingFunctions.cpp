@@ -5770,76 +5770,6 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ShellCloneAndExecuteScript(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "cloneAndExecuteScript", 2)) {
-    return false;
-  }
-
-  RootedString str(cx, ToString(cx, args[0]));
-  if (!str) {
-    return false;
-  }
-
-  RootedObject global(cx, ToObject(cx, args[1]));
-  if (!global) {
-    return false;
-  }
-
-  AutoStableStringChars strChars(cx);
-  if (!strChars.initTwoByte(cx, str)) {
-    return false;
-  }
-
-  mozilla::Range<const char16_t> chars = strChars.twoByteRange();
-  size_t srclen = chars.length();
-  const char16_t* src = chars.begin().get();
-
-  JS::AutoFilename filename;
-  unsigned lineno;
-
-  JS::DescribeScriptedCaller(cx, &filename, &lineno);
-
-  JS::CompileOptions options(cx);
-  options.setFileAndLine(filename.get(), lineno);
-
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
-    return false;
-  }
-
-  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  if (!script) {
-    return false;
-  }
-
-  global = CheckedUnwrapDynamic(global, cx, /* stopAtWindowProxy = */ false);
-  if (!global) {
-    JS_ReportErrorASCII(cx, "Permission denied to access global");
-    return false;
-  }
-  if (!global->is<GlobalObject>()) {
-    JS_ReportErrorASCII(cx, "Argument must be a global object");
-    return false;
-  }
-
-  JS::RootedValue rval(cx);
-  {
-    AutoRealm ar(cx, global);
-    if (!JS::CloneAndExecuteScript(cx, script, &rval)) {
-      return false;
-    }
-  }
-
-  if (!cx->compartment()->wrap(cx, &rval)) {
-    return false;
-  }
-
-  args.rval().set(rval);
-  return true;
-}
-
 static bool ByteSize(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   mozilla::MallocSizeOf mallocSizeOf = cx->runtime()->debuggerMallocSizeOf;
@@ -8213,11 +8143,6 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "evalReturningScope(scriptStr, [global])",
 "  Evaluate the script in a new scope and return the scope.\n"
 "  If |global| is present, clone the script to |global| before executing."),
-
-    JS_FN_HELP("cloneAndExecuteScript", ShellCloneAndExecuteScript, 2, 0,
-"cloneAndExecuteScript(source, global)",
-"  Compile |source| in the current compartment, clone it into |global|'s\n"
-"  compartment, and run it there."),
 
     JS_FN_HELP("backtrace", DumpBacktrace, 1, 0,
 "backtrace()",

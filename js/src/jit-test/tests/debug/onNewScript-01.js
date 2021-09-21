@@ -35,10 +35,3 @@ var fn = g.Function("a", "return 5 + a;");
 assertEq(hits, 1);
 assertEq(fn(8), 13);
 assertEq(hits, 1);
-
-// cloning functions across compartments
-var g2 = newGlobal({newCompartment: true});
-dbg.addDebuggee(g2, dbg);
-hits = 0;
-cloneAndExecuteScript("(function(a) { return 5 + a; })", g2);
-assertEq(hits, 1);
