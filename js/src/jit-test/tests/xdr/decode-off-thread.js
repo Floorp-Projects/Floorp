@@ -8,17 +8,13 @@ function evalWithCacheLoadOffThread(code, ctx) {
   });
   code = code instanceof Object ? code : cacheEntry(code);
 
-  var incremental = ctx.incremental || false;
-
   // We create a new global ...
   if (!("global" in ctx))
-    ctx.global = newGlobal({ cloneSingletons: !incremental });
+    ctx.global = newGlobal();
 
-  var ctx_save;
-  if (incremental)
-    ctx_save = Object.create(ctx, {saveIncrementalBytecode: { value: true } });
-  else
-    ctx_save = Object.create(ctx, {saveBytecode: { value: true } });
+  var ctx_save = Object.create(ctx, {
+    saveIncrementalBytecode: { value: true }
+  });
 
   ctx.global.generation = 0;
   evaluate(code, ctx_save);
@@ -34,7 +30,6 @@ test = `
   1;
 `;
 evalWithCacheLoadOffThread(test, {});
-evalWithCacheLoadOffThread(test, { incremental: true });
 
 // Decode object literals.
 test = `
@@ -43,7 +38,6 @@ test = `
   assertEq(obj.a, 2);
 `;
 evalWithCacheLoadOffThread(test, {});
-evalWithCacheLoadOffThread(test, { incremental: true });
 
 // Decode functions.
 test = `
@@ -53,6 +47,5 @@ test = `
   assertEq(g()(), 1);
 `;
 evalWithCacheLoadOffThread(test, {});
-evalWithCacheLoadOffThread(test, { incremental: true });
 
 
