@@ -59,4 +59,16 @@ TEST(IntlString, ToLocaleUpperCase)
             u"GRÖSSENMASSSTÄBE");
 }
 
+TEST(IntlString, IsCased)
+{
+  ASSERT_TRUE(String::IsCased(U'a'));
+  ASSERT_FALSE(String::IsCased(U'0'));
+}
+
+TEST(IntlString, IsCaseIgnorable)
+{
+  ASSERT_FALSE(String::IsCaseIgnorable(U'a'));
+  ASSERT_TRUE(String::IsCaseIgnorable(U'.'));
+}
+
 }  // namespace mozilla::intl
