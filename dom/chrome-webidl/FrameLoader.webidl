@@ -203,6 +203,12 @@ interface mixin WebBrowserPersistable
                         nsIWebBrowserPersistDocumentReceiver aRecv);
 };
 
+enum PrintPreviewOrientation {
+    "landscape",
+    "portrait",
+    "unspecified"
+};
+
 /**
  * Interface for the object that's used to resolve the Promise returned from
  * FrameLoader.printPreview() if that method successfully creates the print
@@ -238,6 +244,11 @@ dictionary PrintPreviewSuccessInfo {
    * Whether the previewed document has a selection itself.
    */
   boolean hasSelfSelection = false;
+
+  /**
+   * Specified orientation of the document, or "unspecified".
+   */
+  PrintPreviewOrientation orientation = "unspecified";
 };
 
 FrameLoader includes WebBrowserPersistable;

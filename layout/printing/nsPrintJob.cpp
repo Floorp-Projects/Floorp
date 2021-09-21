@@ -23,6 +23,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Telemetry.h"
 #include "nsIBrowserChild.h"
@@ -872,8 +874,9 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
       CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
+      // signal error
       mPrintPreviewCallback(
-          PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
+          PrintPreviewResultInfo(0, 0, false, false, false, {}));
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -1088,8 +1091,9 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 //---------------------------------------------------------------------
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
+    // signal error
     mPrintPreviewCallback(
-        PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
+        PrintPreviewResultInfo(0, 0, false, false, false, {}));
     mPrintPreviewCallback = nullptr;
   }
 
@@ -2629,9 +2633,18 @@ nsresult nsPrintJob::FinishPrintPreview() {
   if (mPrintPreviewCallback) {
     const bool hasSelection =
         !mDisallowSelectionPrint && printData->mSelectionRoot;
+    // Determine if there is a specified page size, and if we should set the
+    // paper orientation to match it.
+    const Maybe<bool> maybeLandscape =
+        printData->mPrintObject->mPresShell->StyleSet()
+            ->GetDefaultPageOrientation()
+            .map([](StyleOrientation o) -> bool {
+              return o == StyleOrientation::Landscape;
+            });
     mPrintPreviewCallback(PrintPreviewResultInfo(
         GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
-        hasSelection, hasSelection && printData->mPrintObject->HasSelection()));
+        hasSelection, hasSelection && printData->mPrintObject->HasSelection(),
+        maybeLandscape));
     mPrintPreviewCallback = nullptr;
   }
 

@@ -3355,6 +3355,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
   return promise.forget();
 #else
   auto resolve = [promise](PrintPreviewResultInfo aInfo) {
+    using Orientation = dom::PrintPreviewOrientation;
     if (aInfo.sheetCount() > 0) {
       PrintPreviewSuccessInfo info;
       info.mSheetCount = aInfo.sheetCount();
@@ -3362,6 +3363,13 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       info.mHasSelection = aInfo.hasSelection();
       info.mHasSelfSelection = aInfo.hasSelfSelection();
       info.mIsEmpty = aInfo.isEmpty();
+      if (aInfo.printLandscape()) {
+        info.mOrientation = aInfo.printLandscape().value()
+                                ? Orientation::Landscape
+                                : Orientation::Portrait;
+      } else {
+        MOZ_ASSERT(info.mOrientation == Orientation::Unspecified);
+      }
       promise->MaybeResolve(info);
     } else {
       promise->MaybeRejectWithUnknownError("Print preview failed");
