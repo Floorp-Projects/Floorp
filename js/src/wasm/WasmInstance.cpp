@@ -60,6 +60,10 @@ using mozilla::DebugOnly;
 
 using CheckedU32 = CheckedInt<uint32_t>;
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Functions and invocation.
+
 class FuncTypeIdSet {
   using Map =
       HashMap<const FuncType*, uint32_t, FuncTypeHashPolicy, SystemAllocPolicy>;
@@ -318,37 +322,9 @@ Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
   return instance->callImport(cx, funcImportIndex, argc, argv);
 }
 
-/* static */ uint32_t Instance::memoryGrow_i32(Instance* instance,
-                                               uint32_t delta) {
-  MOZ_ASSERT(SASigMemoryGrow.failureMode == FailureMode::Infallible);
-  MOZ_ASSERT(!instance->isAsmJS());
-
-  JSContext* cx = TlsContext.get();
-  RootedWasmMemoryObject memory(cx, instance->memory_);
-
-  uint32_t ret = WasmMemoryObject::grow(memory, delta, cx);
-
-  // If there has been a moving grow, this Instance should have been notified.
-  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase ==
-                     instance->memory_->buffer().dataPointerEither());
-
-  return ret;
-}
-
-/* static */ uint32_t Instance::memorySize_i32(Instance* instance) {
-  MOZ_ASSERT(SASigMemorySize.failureMode == FailureMode::Infallible);
-
-  // This invariant must hold when running Wasm code. Assert it here so we can
-  // write tests for cross-realm calls.
-  MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
-
-  Pages pages = instance->memory()->volatilePages();
-#ifdef JS_64BIT
-  // Ensure that the memory size is no more than 4GiB.
-  MOZ_ASSERT(pages <= Pages(MaxMemory32LimitField));
-#endif
-  return uint32_t(pages.value());
-}
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic operations and shared memory.
 
 template <typename T>
 static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
@@ -444,6 +420,42 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   return int32_t(woken);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bulk memory operations.
+
+/* static */ uint32_t Instance::memoryGrow_i32(Instance* instance,
+                                               uint32_t delta) {
+  MOZ_ASSERT(SASigMemoryGrow.failureMode == FailureMode::Infallible);
+  MOZ_ASSERT(!instance->isAsmJS());
+
+  JSContext* cx = TlsContext.get();
+  RootedWasmMemoryObject memory(cx, instance->memory_);
+
+  uint32_t ret = WasmMemoryObject::grow(memory, delta, cx);
+
+  // If there has been a moving grow, this Instance should have been notified.
+  MOZ_RELEASE_ASSERT(instance->tlsData()->memoryBase ==
+                     instance->memory_->buffer().dataPointerEither());
+
+  return ret;
+}
+
+/* static */ uint32_t Instance::memorySize_i32(Instance* instance) {
+  MOZ_ASSERT(SASigMemorySize.failureMode == FailureMode::Infallible);
+
+  // This invariant must hold when running Wasm code. Assert it here so we can
+  // write tests for cross-realm calls.
+  MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
+
+  Pages pages = instance->memory()->volatilePages();
+#ifdef JS_64BIT
+  // Ensure that the memory size is no more than 4GiB.
+  MOZ_ASSERT(pages <= Pages(MaxMemory32LimitField));
+#endif
+  return uint32_t(pages.value());
+}
+
 template <typename T, typename F>
 inline int32_t WasmMemoryCopy32(T memBase, size_t memLen,
                                 uint32_t dstByteOffset, uint32_t srcByteOffset,
@@ -480,7 +492,7 @@ inline int32_t WasmMemoryCopy32(T memBase, size_t memLen,
                                                uint32_t dstByteOffset,
                                                uint32_t srcByteOffset,
                                                uint32_t len, uint8_t* memBase) {
-  MOZ_ASSERT(SASigMemCopy32.failureMode == FailureMode::FailOnNegI32);
+  MOZ_ASSERT(SASigMemCopyShared32.failureMode == FailureMode::FailOnNegI32);
 
   using RacyMemMove =
       void (*)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
@@ -492,24 +504,6 @@ inline int32_t WasmMemoryCopy32(T memBase, size_t memLen,
   return WasmMemoryCopy32<SharedMem<uint8_t*>, RacyMemMove>(
       SharedMem<uint8_t*>::shared(memBase), memLen, dstByteOffset,
       srcByteOffset, len, AtomicOperations::memmoveSafeWhenRacy);
-}
-
-/* static */ int32_t Instance::dataDrop(Instance* instance, uint32_t segIndex) {
-  MOZ_ASSERT(SASigDataDrop.failureMode == FailureMode::FailOnNegI32);
-
-  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
-                     "ensured by validation");
-
-  if (!instance->passiveDataSegments_[segIndex]) {
-    return 0;
-  }
-
-  SharedDataSegment& segRefPtr = instance->passiveDataSegments_[segIndex];
-  MOZ_RELEASE_ASSERT(!segRefPtr->active());
-
-  // Drop this instance's reference to the DataSegment so it can be released.
-  segRefPtr = nullptr;
-  return 0;
 }
 
 template <typename T, typename F>
@@ -546,7 +540,7 @@ inline int32_t WasmMemoryFill32(T memBase, size_t memLen, uint32_t byteOffset,
                                                uint32_t byteOffset,
                                                uint32_t value, uint32_t len,
                                                uint8_t* memBase) {
-  MOZ_ASSERT(SASigMemFill32.failureMode == FailureMode::FailOnNegI32);
+  MOZ_ASSERT(SASigMemFillShared32.failureMode == FailureMode::FailOnNegI32);
 
   const SharedArrayRawBuffer* rawBuf =
       SharedArrayRawBuffer::fromDataPtr(memBase);
@@ -612,6 +606,10 @@ inline int32_t WasmMemoryFill32(T memBase, size_t memLen, uint32_t byteOffset,
   return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bulk table operations.
+
 /* static */ int32_t Instance::tableCopy(Instance* instance, uint32_t dstOffset,
                                          uint32_t srcOffset, uint32_t len,
                                          uint32_t dstTableIndex,
@@ -658,24 +656,6 @@ inline int32_t WasmMemoryFill32(T memBase, size_t memLen, uint32_t byteOffset,
   if (isOOM) {
     return -1;
   }
-  return 0;
-}
-
-/* static */ int32_t Instance::elemDrop(Instance* instance, uint32_t segIndex) {
-  MOZ_ASSERT(SASigDataDrop.failureMode == FailureMode::FailOnNegI32);
-
-  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
-                     "ensured by validation");
-
-  if (!instance->passiveElemSegments_[segIndex]) {
-    return 0;
-  }
-
-  SharedElemSegment& segRefPtr = instance->passiveElemSegments_[segIndex];
-  MOZ_RELEASE_ASSERT(!segRefPtr->active());
-
-  // Drop this instance's reference to the ElemSegment so it can be released.
-  segRefPtr = nullptr;
   return 0;
 }
 
@@ -935,6 +915,50 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return FuncRef::fromJSFunction(fun).forCompiledCode();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Segment management.
+
+/* static */ int32_t Instance::elemDrop(Instance* instance, uint32_t segIndex) {
+  MOZ_ASSERT(SASigElemDrop.failureMode == FailureMode::FailOnNegI32);
+
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
+                     "ensured by validation");
+
+  if (!instance->passiveElemSegments_[segIndex]) {
+    return 0;
+  }
+
+  SharedElemSegment& segRefPtr = instance->passiveElemSegments_[segIndex];
+  MOZ_RELEASE_ASSERT(!segRefPtr->active());
+
+  // Drop this instance's reference to the ElemSegment so it can be released.
+  segRefPtr = nullptr;
+  return 0;
+}
+
+/* static */ int32_t Instance::dataDrop(Instance* instance, uint32_t segIndex) {
+  MOZ_ASSERT(SASigDataDrop.failureMode == FailureMode::FailOnNegI32);
+
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
+                     "ensured by validation");
+
+  if (!instance->passiveDataSegments_[segIndex]) {
+    return 0;
+  }
+
+  SharedDataSegment& segRefPtr = instance->passiveDataSegments_[segIndex];
+  MOZ_RELEASE_ASSERT(!segRefPtr->active());
+
+  // Drop this instance's reference to the DataSegment so it can be released.
+  segRefPtr = nullptr;
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Object support.
+
 /* static */ void Instance::preBarrierFiltering(Instance* instance,
                                                 gc::Cell** location) {
   MOZ_ASSERT(SASigPreBarrierFiltering.failureMode == FailureMode::Infallible);
@@ -952,7 +976,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
 /* static */ void Instance::postBarrierFiltering(Instance* instance,
                                                  gc::Cell** location) {
-  MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
+  MOZ_ASSERT(SASigPostBarrierFiltering.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
   if (*location == nullptr || !gc::IsInsideNursery(*location)) {
     return;
@@ -960,6 +984,10 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   TlsContext.get()->runtime()->gc.storeBuffer().putCell(
       reinterpret_cast<JSObject**>(location));
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// GC and exception handling support.
 
 // The typeIndex is an index into the rttValues_ table in the instance.
 // That table holds RttValue objects.
@@ -1198,6 +1226,10 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,

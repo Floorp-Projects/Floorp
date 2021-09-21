@@ -4881,7 +4881,8 @@ bool BaseCompiler::emitLoad(ValType type, Scalar::Type viewType) {
     return true;
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return loadCommon(&access, AccessCheck(), type);
+  loadCommon(&access, AccessCheck(), type);
+  return true;
 }
 
 bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
@@ -4895,7 +4896,8 @@ bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
     return true;
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return storeCommon(&access, AccessCheck(), resultType);
+  storeCommon(&access, AccessCheck(), resultType);
+  return true;
 }
 
 bool BaseCompiler::emitSelect(bool typed) {
@@ -5190,17 +5192,9 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   return true;
 }
 
-bool BaseCompiler::emitMemoryGrow() {
-  return emitInstanceCallOp(SASigMemoryGrow, [this]() -> bool {
-    Nothing arg;
-    return iter_.readMemoryGrow(&arg);
-  });
-}
-
-bool BaseCompiler::emitMemorySize() {
-  return emitInstanceCallOp(
-      SASigMemorySize, [this]() -> bool { return iter_.readMemorySize(); });
-}
+//////////////////////////////////////////////////////////////////////////////
+//
+// Reference types.
 
 bool BaseCompiler::emitRefFunc() {
   return emitInstanceCallOp<uint32_t>(SASigRefFunc,
@@ -5263,6 +5257,10 @@ bool BaseCompiler::emitRefAsNonNull() {
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Atomic operations.
+
 bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   LinearMemoryAddress<Nothing> addr;
   Nothing unused{};
@@ -5289,7 +5287,8 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Load());
-  return atomicLoad(&access, type);
+  atomicLoad(&access, type);
+  return true;
 }
 
 bool BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType,
@@ -5321,7 +5320,8 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Store());
-  return atomicStore(&access, type);
+  atomicStore(&access, type);
+  return true;
 }
 
 bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
@@ -5342,79 +5342,33 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
 
 bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
   Nothing nothing;
   LinearMemoryAddress<Nothing> addr;
   if (!iter_.readWait(&addr, type, byteSize, &nothing, &nothing)) {
     return false;
   }
-
   if (deadCode_) {
     return true;
   }
-
-  switch (type.kind()) {
-    case ValType::I32: {
-      RegI64 timeout = popI64();
-      RegI32 val = popI32();
-
-      MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
-                              bytecodeOffset());
-      computeEffectiveAddress(&access);
-
-      pushI32(val);
-      pushI64(timeout);
-
-      if (!emitInstanceCall(lineOrBytecode, SASigWaitI32)) {
-        return false;
-      }
-      break;
-    }
-    case ValType::I64: {
-      RegI64 timeout = popI64();
-      RegI64 val = popI64();
-
-      MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
-                              bytecodeOffset());
-      computeEffectiveAddress(&access);
-
-      pushI64(val);
-      pushI64(timeout);
-
-      if (!emitInstanceCall(lineOrBytecode, SASigWaitI64)) {
-        return false;
-      }
-      break;
-    }
-    default:
-      MOZ_CRASH();
-  }
-
-  return true;
+  MemoryAccessDesc access(
+      type.kind() == ValType::I32 ? Scalar::Int32 : Scalar::Int64, addr.align,
+      addr.offset, bytecodeOffset());
+  return atomicWait(type, &access, lineOrBytecode);
 }
 
 bool BaseCompiler::emitWake() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
   Nothing nothing;
   LinearMemoryAddress<Nothing> addr;
   if (!iter_.readWake(&addr, &nothing)) {
     return false;
   }
-
   if (deadCode_) {
     return true;
   }
-
-  RegI32 count = popI32();
-
   MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
                           bytecodeOffset());
-  computeEffectiveAddress(&access);
-
-  pushI32(count);
-
-  return emitInstanceCall(lineOrBytecode, SASigWake);
+  return atomicWake(&access, lineOrBytecode);
 }
 
 bool BaseCompiler::emitFence() {
@@ -5424,9 +5378,24 @@ bool BaseCompiler::emitFence() {
   if (deadCode_) {
     return true;
   }
-
   masm.memoryBarrier(MembarFull);
   return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bulk memory operations.
+
+bool BaseCompiler::emitMemoryGrow() {
+  return emitInstanceCallOp(SASigMemoryGrow, [this]() -> bool {
+    Nothing arg;
+    return iter_.readMemoryGrow(&arg);
+  });
+}
+
+bool BaseCompiler::emitMemorySize() {
+  return emitInstanceCallOp(
+      SASigMemorySize, [this]() -> bool { return iter_.readMemorySize(); });
 }
 
 bool BaseCompiler::emitMemCopy() {
@@ -5447,7 +5416,8 @@ bool BaseCompiler::emitMemCopy() {
   int32_t signedLength;
   if (peekConst(&signedLength) && signedLength != 0 &&
       uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
-    return emitMemCopyInline();
+    emitMemCopyInline();
+    return true;
   }
 
   return emitMemCopyCall(lineOrBytecode);
@@ -5459,6 +5429,52 @@ bool BaseCompiler::emitMemCopyCall(uint32_t lineOrBytecode) {
                                               ? SASigMemCopyShared32
                                               : SASigMemCopy32);
 }
+
+bool BaseCompiler::emitMemFill() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Nothing nothing;
+  if (!iter_.readMemFill(&nothing, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  int32_t signedLength;
+  int32_t signedValue;
+  if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
+      uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
+    emitMemFillInline();
+    return true;
+  }
+  return emitMemFillCall(lineOrBytecode);
+}
+
+bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
+  pushHeapBase();
+  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
+                                              ? SASigMemFillShared32
+                                              : SASigMemFill32);
+}
+
+bool BaseCompiler::emitMemInit() {
+  return emitInstanceCallOp<uint32_t>(
+      SASigMemInit32, [this](uint32_t* segIndex) -> bool {
+        uint32_t dstTableIndex;
+        Nothing nothing;
+        if (iter_.readMemOrTableInit(/*isMem*/ true, segIndex, &dstTableIndex,
+                                     &nothing, &nothing, &nothing)) {
+          return true;
+        }
+        return false;
+      });
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bulk table operations.
 
 bool BaseCompiler::emitTableCopy() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
@@ -5478,52 +5494,6 @@ bool BaseCompiler::emitTableCopy() {
   pushI32(dstMemOrTableIndex);
   pushI32(srcMemOrTableIndex);
   return emitInstanceCall(lineOrBytecode, SASigTableCopy);
-}
-
-bool BaseCompiler::emitDataOrElemDrop(bool isData) {
-  return emitInstanceCallOp<uint32_t>(
-      isData ? SASigDataDrop : SASigElemDrop, [&](uint32_t* segIndex) -> bool {
-        return iter_.readDataOrElemDrop(isData, segIndex);
-      });
-}
-
-bool BaseCompiler::emitMemFill() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  Nothing nothing;
-  if (!iter_.readMemFill(&nothing, &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  int32_t signedLength;
-  int32_t signedValue;
-  if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
-      uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
-    return emitMemFillInline();
-  }
-  return emitMemFillCall(lineOrBytecode);
-}
-
-bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
-  pushHeapBase();
-  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
-                                              ? SASigMemFillShared32
-                                              : SASigMemFill32);
-}
-
-bool BaseCompiler::emitMemInit() {
-  return emitInstanceCallOp<uint32_t>(
-      SASigMemInit32, [this](uint32_t* segIndex) -> bool {
-        uint32_t dstTableIndex;
-        Nothing nothing;
-        return iter_.readMemOrTableInit(/*isMem*/ true, segIndex,
-                                        &dstTableIndex, &nothing, &nothing,
-                                        &nothing);
-      });
 }
 
 bool BaseCompiler::emitTableInit() {
@@ -5581,9 +5551,20 @@ bool BaseCompiler::emitTableSize() {
                                       });
 }
 
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 //
-// Object support.
+// Data and element segment management.
+
+bool BaseCompiler::emitDataOrElemDrop(bool isData) {
+  return emitInstanceCallOp<uint32_t>(
+      isData ? SASigDataDrop : SASigElemDrop, [&](uint32_t* segIndex) -> bool {
+        return iter_.readDataOrElemDrop(isData, segIndex);
+      });
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// General object support.
 
 void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   Label skipBarrier;
@@ -5656,6 +5637,10 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
   masm.bind(&skipBarrier);
   return true;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// GC proposal.
 
 #ifdef ENABLE_WASM_GC
 
@@ -7425,7 +7410,8 @@ bool BaseCompiler::emitLoadSplat(Scalar::Type viewType) {
     return true;
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return loadSplat(&access);
+  loadSplat(&access);
+  return true;
 }
 
 bool BaseCompiler::emitLoadZero(Scalar::Type viewType) {
@@ -7438,7 +7424,8 @@ bool BaseCompiler::emitLoadZero(Scalar::Type viewType) {
     return true;
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return loadZero(&access);
+  loadZero(&access);
+  return true;
 }
 
 bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
@@ -7451,7 +7438,8 @@ bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
   }
   MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
                           bytecodeOffset());
-  return loadExtend(&access, viewType);
+  loadExtend(&access, viewType);
+  return true;
 }
 
 bool BaseCompiler::emitLoadLane(uint32_t laneSize) {
@@ -7482,7 +7470,8 @@ bool BaseCompiler::emitLoadLane(uint32_t laneSize) {
       MOZ_CRASH("unsupported laneSize");
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return loadLane(&access, laneIndex);
+  loadLane(&access, laneIndex);
+  return true;
 }
 
 bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
@@ -7513,7 +7502,8 @@ bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
       MOZ_CRASH("unsupported laneSize");
   }
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return storeLane(&access, laneIndex);
+  storeLane(&access, laneIndex);
+  return true;
 }
 
 bool BaseCompiler::emitVectorShuffle() {
