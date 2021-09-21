@@ -4,6 +4,7 @@
 
 ///! Profiler Rust API
 pub mod gecko_bindings;
+mod json_writer;
 mod label;
 mod marker;
 mod profiler_state;
@@ -11,6 +12,7 @@ mod thread;
 mod time;
 
 pub use gecko_bindings::profiling_categories::*;
+pub use json_writer::*;
 pub use label::*;
 pub use marker::options::*;
 pub use marker::schema::MarkerSchema;
