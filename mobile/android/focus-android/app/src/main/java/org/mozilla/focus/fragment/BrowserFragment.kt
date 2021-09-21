@@ -151,7 +151,9 @@ class BrowserFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val components = requireComponents
 
-        engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
+        engineView = (view.findViewById<View>(R.id.engineView) as EngineView).apply {
+            setDynamicToolbarMaxHeight(resources.getDimension(R.dimen.display_toolbar_height).toInt())
+        }
 
         toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
