@@ -125,16 +125,17 @@ class MutableWrappedPtrOperations
     : public WrappedPtrOperations<Element, Wrapper> {};
 
 template <typename T, typename Wrapper>
-class RootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
+class RootedOperations : public MutableWrappedPtrOperations<T, Wrapper> {};
 
 template <typename T, typename Wrapper>
-class HandleBase : public WrappedPtrOperations<T, Wrapper> {};
+class HandleOperations : public WrappedPtrOperations<T, Wrapper> {};
 
 template <typename T, typename Wrapper>
-class MutableHandleBase : public MutableWrappedPtrOperations<T, Wrapper> {};
+class MutableHandleOperations : public MutableWrappedPtrOperations<T, Wrapper> {
+};
 
 template <typename T, typename Wrapper>
-class HeapBase : public MutableWrappedPtrOperations<T, Wrapper> {};
+class HeapOperations : public MutableWrappedPtrOperations<T, Wrapper> {};
 
 // Cannot use FOR_EACH_HEAP_ABLE_GC_POINTER_TYPE, as this would import too many
 // macros into scope
@@ -289,7 +290,7 @@ inline void AssertGCThingIsNotNurseryAllocable(js::gc::Cell* cell) {}
  * Type T must be a public GC pointer type.
  */
 template <typename T>
-class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
+class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
   // Please note: this can actually also be used by nsXBLMaybeCompiled<T>, for
   // legacy reasons.
   static_assert(js::IsHeapConstructibleType<T>::value,
@@ -449,7 +450,7 @@ inline void AssertObjectIsNotGray(const JS::Heap<JSObject*>& obj) {}
  *  - It is not possible to store flag bits in a Heap<T>.
  */
 template <typename T>
-class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
+class TenuredHeap : public js::HeapOperations<T, TenuredHeap<T>> {
  public:
   using ElementType = T;
 
@@ -569,10 +570,10 @@ class PersistentRooted;
  * rooted. See "Move GC Stack Rooting" above.
  *
  * If you want to add additional methods to Handle for a specific
- * specialization, define a HandleBase<T> specialization containing them.
+ * specialization, define a HandleOperations<T> specialization containing them.
  */
 template <typename T>
-class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
+class MOZ_NONHEAP_CLASS Handle : public js::HandleOperations<T, Handle<T>> {
   friend class MutableHandle<T>;
 
  public:
@@ -667,12 +668,12 @@ struct DefineComparisonOps<Handle<T>> : std::true_type {
  * useful for outparams.
  *
  * If you want to add additional methods to MutableHandle for a specific
- * specialization, define a MutableHandleBase<T> specialization containing
+ * specialization, define a MutableHandleOperations<T> specialization containing
  * them.
  */
 template <typename T>
 class MOZ_STACK_CLASS MutableHandle
-    : public js::MutableHandleBase<T, MutableHandle<T>> {
+    : public js::MutableHandleOperations<T, MutableHandle<T>> {
  public:
   using ElementType = T;
 
@@ -1103,10 +1104,10 @@ using RootedPtrTraits =
  * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
  *
  * If you want to add additional methods to Rooted for a specific
- * specialization, define a RootedBase<T> specialization containing them.
+ * specialization, define a RootedOperations<T> specialization containing them.
  */
 template <typename T>
-class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
+class MOZ_RAII Rooted : public js::RootedOperations<T, Rooted<T>> {
   using Ptr = detail::RootedPtr<T>;
   using PtrTraits = detail::RootedPtrTraits<T>;
 
@@ -1266,7 +1267,7 @@ inline ProfilingStack* GetContextProfilingStackIfEnabled(JSContext* cx) {
  *   Handle<StringObject*> h = rooted;
  */
 template <typename Container>
-class RootedBase<JSObject*, Container>
+class RootedOperations<JSObject*, Container>
     : public MutableWrappedPtrOperations<JSObject*, Container> {
  public:
   template <class U>
@@ -1284,7 +1285,7 @@ class RootedBase<JSObject*, Container>
  *   Handle<StringObject*> h = rooted;
  */
 template <typename Container>
-class HandleBase<JSObject*, Container>
+class HandleOperations<JSObject*, Container>
     : public WrappedPtrOperations<JSObject*, Container> {
  public:
   template <class U>
@@ -1376,7 +1377,7 @@ JS_PUBLIC_API void AddPersistentRoot(
  */
 template <typename T>
 class PersistentRooted
-    : public js::RootedBase<T, PersistentRooted<T>>,
+    : public js::RootedOperations<T, PersistentRooted<T>>,
       private mozilla::LinkedListElement<PersistentRooted<T>> {
   using ListBase = mozilla::LinkedListElement<PersistentRooted<T>>;
   using Ptr = detail::RootedPtr<T>;
