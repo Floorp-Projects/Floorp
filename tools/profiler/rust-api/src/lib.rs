@@ -5,12 +5,16 @@
 ///! Profiler Rust API
 pub mod gecko_bindings;
 mod label;
+mod marker;
 mod profiler_state;
 mod thread;
 mod time;
 
 pub use gecko_bindings::profiling_categories::*;
 pub use label::*;
+pub use marker::options::*;
+pub use marker::schema::MarkerSchema;
+pub use marker::*;
 pub use profiler_macros::gecko_profiler_fn_label;
 pub use profiler_state::*;
 pub use thread::*;

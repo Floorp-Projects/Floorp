@@ -13,6 +13,7 @@
 
 namespace mozilla {
 class AutoProfilerLabel;
+class MarkerTiming;
 class TimeStamp;
 }  // namespace mozilla
 
@@ -34,6 +35,23 @@ void gecko_profiler_destruct_label(mozilla::AutoProfilerLabel* aAutoLabel);
 // Construct and destruct the timestamp for profiler time.
 void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp);
 void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp);
+
+// Various MarkerTiming constructors and a destructor.
+void gecko_profiler_construct_marker_timing_instant_at(
+    mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
+void gecko_profiler_construct_marker_timing_instant_now(
+    mozilla::MarkerTiming* aMarkerTiming);
+void gecko_profiler_construct_marker_timing_interval(
+    mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aStartTime,
+    const mozilla::TimeStamp* aEndTime);
+void gecko_profiler_construct_marker_timing_interval_until_now_from(
+    mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aStartTime);
+void gecko_profiler_construct_marker_timing_interval_start(
+    mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
+void gecko_profiler_construct_marker_timing_interval_end(
+    mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
+void gecko_profiler_destruct_marker_timing(
+    mozilla::MarkerTiming* aMarkerTiming);
 
 }  // extern "C"
 
