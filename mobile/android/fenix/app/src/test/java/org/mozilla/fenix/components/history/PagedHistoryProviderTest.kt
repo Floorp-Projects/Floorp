@@ -52,8 +52,9 @@ class PagedHistoryProviderTest {
             visitTime = 1,
             visitType = VisitType.LINK
         )
+        val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
         val historyEntry1 = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
+            key = historyMetadataKey1,
             title = "mozilla",
             createdAt = 5,
             updatedAt = 5,
@@ -61,8 +62,9 @@ class PagedHistoryProviderTest {
             documentType = DocumentType.Regular,
             previewImageUrl = null
         )
+        val historyMetadataKey2 = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
         val historyEntry2 = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.firefox.com", "mozilla", null),
+            key = historyMetadataKey2,
             title = "firefox",
             createdAt = 2,
             updatedAt = 2,
@@ -106,14 +108,16 @@ class PagedHistoryProviderTest {
                         title = historyEntry1.title!!,
                         url = historyEntry1.key.url,
                         visitedAt = historyEntry1.createdAt,
-                        totalViewTime = historyEntry1.totalViewTime
+                        totalViewTime = historyEntry1.totalViewTime,
+                        historyMetadataKey = historyMetadataKey1
                     ),
                     History.Metadata(
                         id = historyEntry2.createdAt.toInt(),
                         title = historyEntry2.title!!,
                         url = historyEntry2.key.url,
                         visitedAt = historyEntry2.createdAt,
-                        totalViewTime = historyEntry2.totalViewTime
+                        totalViewTime = historyEntry2.totalViewTime,
+                        historyMetadataKey = historyMetadataKey2
                     )
                 )
             ),

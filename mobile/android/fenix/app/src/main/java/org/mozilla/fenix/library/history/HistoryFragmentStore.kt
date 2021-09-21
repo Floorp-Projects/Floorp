@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.history
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -44,6 +45,8 @@ sealed class History : Parcelable {
      * @property url URL of the history metadata item.
      * @property visitedAt Timestamp of when this history metadata item was visited.
      * @property totalViewTime Total time the user viewed the page associated with this record.
+     * @property historyMetadataKey The [HistoryMetadataKey] of the new tab in case this tab
+     * was opened from history.
      * @property selected Whether or not the history metadata item is selected.
      */
     @Parcelize data class Metadata(
@@ -52,6 +55,7 @@ sealed class History : Parcelable {
         val url: String,
         override val visitedAt: Long,
         val totalViewTime: Int,
+        val historyMetadataKey: HistoryMetadataKey,
         override val selected: Boolean = false
     ) : History()
 

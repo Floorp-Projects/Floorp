@@ -68,7 +68,8 @@ class DefaultHistoryMetadataGroupController(
         activity.openToBrowserAndLoad(
             searchTermOrURL = item.url,
             newTab = true,
-            from = BrowserDirection.FromHistoryMetadataGroup
+            from = BrowserDirection.FromHistoryMetadataGroup,
+            historyMetadata = item.historyMetadataKey
         )
     }
 

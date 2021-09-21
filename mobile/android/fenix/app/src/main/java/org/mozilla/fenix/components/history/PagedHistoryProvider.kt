@@ -67,7 +67,8 @@ class DefaultPagedHistoryProvider(
                                             ?: it.key.url.tryGetHostFromUrl(),
                                         url = it.key.url,
                                         visitedAt = it.createdAt,
-                                        totalViewTime = it.totalViewTime
+                                        totalViewTime = it.totalViewTime,
+                                        historyMetadataKey = it.key
                                     )
                                 }
                             )

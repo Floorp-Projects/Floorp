@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.historymetadata
 
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -22,14 +23,16 @@ class HistoryMetadataGroupFragmentStoreTest {
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
-        totalViewTime = 0
+        totalViewTime = 0,
+        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
         id = 0,
         title = "Firefox",
         url = "firefox.com",
         visitedAt = 0,
-        totalViewTime = 0
+        totalViewTime = 0,
+        historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
     )
 
     @Before

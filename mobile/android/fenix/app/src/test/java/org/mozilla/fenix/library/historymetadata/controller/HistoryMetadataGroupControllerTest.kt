@@ -10,6 +10,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -44,14 +45,16 @@ class HistoryMetadataGroupControllerTest {
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
-        totalViewTime = 1
+        totalViewTime = 1,
+        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
         id = 0,
         title = "Firefox",
         url = "firefox.com",
         visitedAt = 0,
-        totalViewTime = 1
+        totalViewTime = 1,
+        historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
     )
 
     private lateinit var controller: DefaultHistoryMetadataGroupController

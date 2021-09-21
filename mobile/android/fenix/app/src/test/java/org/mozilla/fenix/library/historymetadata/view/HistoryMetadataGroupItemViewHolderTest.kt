@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.historymetadata.view
 import android.view.LayoutInflater
 import androidx.navigation.Navigation
 import io.mockk.mockk
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -29,7 +30,8 @@ class HistoryMetadataGroupItemViewHolderTest {
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
-        totalViewTime = 0
+        totalViewTime = 0,
+        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
     )
 
     @Before
