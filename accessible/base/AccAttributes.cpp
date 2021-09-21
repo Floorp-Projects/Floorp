@@ -35,7 +35,7 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       [&aValueString](const RefPtr<nsAtom>& val) {
         val->ToString(aValueString);
       },
-      [&aValueString](const CopyableTArray<int32_t>& val) {
+      [&aValueString](const nsTArray<int32_t>& val) {
         for (size_t i = 0; i < val.Length() - 1; i++) {
           aValueString.AppendInt(val[i]);
           aValueString.Append(u", ");
@@ -59,12 +59,12 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
 }
 
 void AccAttributes::Update(AccAttributes* aOther) {
-  for (auto entry : *aOther) {
-    if (entry.mValue->is<DeleteEntry>()) {
-      mData.Remove(entry.mName);
-      continue;
+  for (auto iter = aOther->mData.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.Data().is<DeleteEntry>()) {
+      mData.Remove(iter.Key());
+    } else {
+      mData.InsertOrUpdate(iter.Key(), std::move(iter.Data()));
     }
-
-    mData.InsertOrUpdate(entry.mName, *entry.mValue);
+    iter.Remove();
   }
 }
