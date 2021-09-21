@@ -126,7 +126,7 @@ class ToggleBlockTest {
                     )
                 )
             )
-        Espresso.onView(ViewMatchers.withId(R.id.webview)).perform(ViewActions.click())
+        Espresso.onView(ViewMatchers.withId(R.id.engineView)).perform(ViewActions.click())
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
         Espresso.onView(ViewMatchers.withId(R.id.menuView))

@@ -151,7 +151,7 @@ class BrowserFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val components = requireComponents
 
-        engineView = (view.findViewById<View>(R.id.webview) as EngineView)
+        engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
 
         toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
