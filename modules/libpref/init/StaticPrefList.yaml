@@ -4761,7 +4761,7 @@
   # attempt to isolate video layers in fullscreen windows.
 -   name: gfx.core-animation.specialize-video
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 #endif
 
