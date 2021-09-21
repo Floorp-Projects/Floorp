@@ -304,7 +304,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
 
-  void ResumeTimeout();
+  void UnsuppressEventHandlingAndResume();
 
   void MaybeLowerChannelPriority();
 
@@ -679,6 +679,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void StartTimeoutTimer();
   void HandleTimeoutCallback();
 
+  RefPtr<Document> mSuspendedDoc;
   nsCOMPtr<nsIRunnable> mResumeTimeoutRunnable;
 
   nsCOMPtr<nsITimer> mSyncTimeoutTimer;
