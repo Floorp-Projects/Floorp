@@ -307,13 +307,13 @@ async function testIframeNavigations() {
   };
   await targetCommand.watchTargets([TYPES.FRAME], onAvailable);
 
-  // When fission is off, there isn't much to test for iframes as they are debugged
+  // When fission/EFT is off, there isn't much to test for iframes as they are debugged
   // when the unique top level target
-  if (!isFissionEnabled()) {
+  if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
     is(
       targets.length,
       1,
-      "when fission is off, there is only the top level target"
+      "Without fission/EFT, there is only the top level target"
     );
     return;
   }
