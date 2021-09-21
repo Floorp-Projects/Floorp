@@ -9,11 +9,14 @@
 #ifndef ProfilerBindings_h
 #define ProfilerBindings_h
 
+#include "mozilla/BaseProfilerMarkersPrerequisites.h"
+
 #include <cstddef>
 #include <stdint.h>
 
 namespace mozilla {
 class AutoProfilerLabel;
+class MarkerSchema;
 class MarkerTiming;
 class TimeStamp;
 enum class StackCaptureOptions;
@@ -60,6 +63,47 @@ void gecko_profiler_construct_marker_timing_interval_end(
     mozilla::MarkerTiming* aMarkerTiming, const mozilla::TimeStamp* aTime);
 void gecko_profiler_destruct_marker_timing(
     mozilla::MarkerTiming* aMarkerTiming);
+
+// MarkerSchema constructors and destructor.
+void gecko_profiler_construct_marker_schema(
+    mozilla::MarkerSchema* aMarkerSchema,
+    const mozilla::MarkerSchema::Location* aLocations, size_t aLength);
+void gecko_profiler_construct_marker_schema_with_special_front_end_location(
+    mozilla::MarkerSchema* aMarkerSchema);
+void gecko_profiler_destruct_marker_schema(
+    mozilla::MarkerSchema* aMarkerSchema);
+
+// MarkerSchema methods for adding labels.
+void gecko_profiler_marker_schema_set_chart_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength);
+void gecko_profiler_marker_schema_set_tooltip_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength);
+void gecko_profiler_marker_schema_set_table_label(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength);
+void gecko_profiler_marker_schema_set_all_labels(mozilla::MarkerSchema* aSchema,
+                                                 const char* aLabel,
+                                                 size_t aLabelLength);
+
+// MarkerSchema methods for adding key/key-label values.
+void gecko_profiler_marker_schema_add_key_format(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    mozilla::MarkerSchema::Format aFormat);
+void gecko_profiler_marker_schema_add_key_label_format(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    const char* aLabel, size_t aLabelLength,
+    mozilla::MarkerSchema::Format aFormat);
+void gecko_profiler_marker_schema_add_key_format_searchable(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    mozilla::MarkerSchema::Format aFormat,
+    mozilla::MarkerSchema::Searchable aSearchable);
+void gecko_profiler_marker_schema_add_key_label_format_searchable(
+    mozilla::MarkerSchema* aSchema, const char* aKey, size_t aKeyLength,
+    const char* aLabel, size_t aLabelLength,
+    mozilla::MarkerSchema::Format aFormat,
+    mozilla::MarkerSchema::Searchable aSearchable);
+void gecko_profiler_marker_schema_add_static_label_value(
+    mozilla::MarkerSchema* aSchema, const char* aLabel, size_t aLabelLength,
+    const char* aValue, size_t aValueLength);
 
 // Various SpliceableJSONWriter methods to add properties.
 void gecko_profiler_json_writer_int_property(
