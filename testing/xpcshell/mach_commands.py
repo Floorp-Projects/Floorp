@@ -14,14 +14,12 @@ import sys
 from mozlog import structured
 
 from mozbuild.base import (
-    MachCommandBase,
     MozbuildObject,
     MachCommandConditions as conditions,
     BinaryNotFoundException,
 )
 
 from mach.decorators import (
-    CommandProvider,
     Command,
 )
 
@@ -219,76 +217,74 @@ def get_parser():
         return parser_desktop()
 
 
-@CommandProvider
-class MachCommands(MachCommandBase):
-    @Command(
-        "xpcshell-test",
-        category="testing",
-        description="Run XPCOM Shell tests (API direct unit testing)",
-        conditions=[lambda *args: True],
-        parser=get_parser,
-    )
-    def run_xpcshell_test(self, command_context, test_objects=None, **params):
-        from mozbuild.controller.building import BuildDriver
+@Command(
+    "xpcshell-test",
+    category="testing",
+    description="Run XPCOM Shell tests (API direct unit testing)",
+    conditions=[lambda *args: True],
+    parser=get_parser,
+)
+def run_xpcshell_test(command_context, test_objects=None, **params):
+    from mozbuild.controller.building import BuildDriver
 
-        if test_objects is not None:
-            from manifestparser import TestManifest
+    if test_objects is not None:
+        from manifestparser import TestManifest
 
-            m = TestManifest()
-            m.tests.extend(test_objects)
-            params["manifest"] = m
+        m = TestManifest()
+        m.tests.extend(test_objects)
+        params["manifest"] = m
 
-        driver = command_context._spawn(BuildDriver)
-        driver.install_tests()
+    driver = command_context._spawn(BuildDriver)
+    driver.install_tests()
 
-        # We should probably have a utility function to ensure the tree is
-        # ready to run tests. Until then, we just create the state dir (in
-        # case the tree wasn't built with mach).
-        command_context._ensure_state_subdir_exists(".")
+    # We should probably have a utility function to ensure the tree is
+    # ready to run tests. Until then, we just create the state dir (in
+    # case the tree wasn't built with mach).
+    command_context._ensure_state_subdir_exists(".")
 
-        if not params.get("log"):
-            log_defaults = {
-                command_context._mach_context.settings["test"]["format"]: sys.stdout
-            }
-            fmt_defaults = {
-                "level": command_context._mach_context.settings["test"]["level"],
-                "verbose": True,
-            }
-            params["log"] = structured.commandline.setup_logging(
-                "XPCShellTests", params, log_defaults, fmt_defaults
-            )
+    if not params.get("log"):
+        log_defaults = {
+            command_context._mach_context.settings["test"]["format"]: sys.stdout
+        }
+        fmt_defaults = {
+            "level": command_context._mach_context.settings["test"]["level"],
+            "verbose": True,
+        }
+        params["log"] = structured.commandline.setup_logging(
+            "XPCShellTests", params, log_defaults, fmt_defaults
+        )
 
-        if not params["threadCount"]:
-            # pylint --py3k W1619
-            params["threadCount"] = int((cpu_count() * 3) / 2)
+    if not params["threadCount"]:
+        # pylint --py3k W1619
+        params["threadCount"] = int((cpu_count() * 3) / 2)
 
-        if (
-            conditions.is_android(command_context)
-            or command_context.substs.get("MOZ_BUILD_APP") == "b2g"
-        ):
-            from mozrunner.devices.android_device import (
-                verify_android_device,
-                get_adb_path,
-                InstallIntent,
-            )
+    if (
+        conditions.is_android(command_context)
+        or command_context.substs.get("MOZ_BUILD_APP") == "b2g"
+    ):
+        from mozrunner.devices.android_device import (
+            verify_android_device,
+            get_adb_path,
+            InstallIntent,
+        )
 
-            install = InstallIntent.YES if params["setup"] else InstallIntent.NO
-            device_serial = params.get("deviceSerial")
-            verify_android_device(
-                command_context,
-                network=True,
-                install=install,
-                device_serial=device_serial,
-            )
-            if not params["adbPath"]:
-                params["adbPath"] = get_adb_path(command_context)
-            xpcshell = command_context._spawn(AndroidXPCShellRunner)
-        else:
-            xpcshell = command_context._spawn(XPCShellRunner)
-        xpcshell.cwd = command_context._mach_context.cwd
+        install = InstallIntent.YES if params["setup"] else InstallIntent.NO
+        device_serial = params.get("deviceSerial")
+        verify_android_device(
+            command_context,
+            network=True,
+            install=install,
+            device_serial=device_serial,
+        )
+        if not params["adbPath"]:
+            params["adbPath"] = get_adb_path(command_context)
+        xpcshell = command_context._spawn(AndroidXPCShellRunner)
+    else:
+        xpcshell = command_context._spawn(XPCShellRunner)
+    xpcshell.cwd = command_context._mach_context.cwd
 
-        try:
-            return xpcshell.run_test(**params)
-        except InvalidTestPathError as e:
-            print(str(e))
-            return 1
+    try:
+        return xpcshell.run_test(**params)
+    except InvalidTestPathError as e:
+        print(str(e))
+        return 1
