@@ -295,12 +295,12 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
       aBuffer, aName, aCategory, std::move(aOptions), aTs...);
 }
 
-template <typename StackCallback>
+template <typename StackCallback, typename RustMarkerCallback>
 [[nodiscard]] bool DeserializeAfterKindAndStream(
     ProfileBufferEntryReader& aEntryReader,
     baseprofiler::SpliceableJSONWriter& aWriter,
     baseprofiler::BaseProfilerThreadId aThreadIdOrUnspecified,
-    StackCallback&& aStackCallback) {
+    StackCallback&& aStackCallback, RustMarkerCallback&& aRustMarkerCallback) {
   // Each entry is made up of the following:
   //   ProfileBufferEntry::Kind::Marker, <- already read by caller
   //   options,                          <- next location in entries
@@ -378,8 +378,7 @@ template <typename StackCallback>
             break;
           }
           case mozilla::MarkerPayloadType::Rust:
-            // FIXME: Not implemented yet. It will be implemented in the
-            // following patch.
+            std::forward<RustMarkerCallback>(aRustMarkerCallback)(tag);
             break;
           default:
             MOZ_ASSERT_UNREACHABLE("Unknown payload type.");

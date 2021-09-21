@@ -10,6 +10,7 @@
 #include "platform.h"
 #include "ProfileBuffer.h"
 #include "ProfilerBacktrace.h"
+#include "ProfilerRustBindings.h"
 
 #include "js/ProfilingFrameIterator.h"
 #include "jsapi.h"
@@ -1287,6 +1288,27 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
               [&](ProfileChunkedBuffer& aChunkedBuffer) {
                 ProfilerBacktrace backtrace("", &aChunkedBuffer);
                 backtrace.StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+              },
+              [&](mozilla::base_profiler_markers_detail::Streaming::
+                      DeserializerTag aTag) {
+                size_t payloadSize = aER.RemainingBytes();
+
+                ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
+                    aER.ReadSpans(payloadSize);
+                if (MOZ_LIKELY(spans.IsSingleSpan())) {
+                  // Only a single span, we can just refer to it directly
+                  // instead of copying it.
+                  profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+                      aTag, spans.mFirstOrOnly.Elements(), payloadSize,
+                      &aWriter);
+                } else {
+                  // Two spans, we need to concatenate them by copying.
+                  uint8_t* payloadBuffer = new uint8_t[payloadSize];
+                  spans.CopyBytesTo(payloadBuffer);
+                  profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+                      aTag, payloadBuffer, payloadSize, &aWriter);
+                  delete[] payloadBuffer;
+                }
               });
     }
 

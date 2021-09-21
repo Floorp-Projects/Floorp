@@ -6,7 +6,7 @@ use crate::json_writer::JSONWriter;
 use crate::marker::schema::MarkerSchema;
 use crate::marker::{transmute_and_stream, ProfilerMarker};
 use std::collections::HashMap;
-use std::sync::RwLock;
+use std::sync::{RwLock, RwLockReadGuard};
 
 lazy_static! {
     static ref DESERIALIZER_TAGS_STATE: RwLock<DeserializerTagsState> =
@@ -87,5 +87,30 @@ where
             deserializer_tag
         }
         Some(deserializer_tag) => *deserializer_tag,
+    }
+}
+
+/// A guard that will be used by the marker FFI functions for getting marker type functions.
+pub struct MarkerTypeFunctionsReadGuard {
+    guard: RwLockReadGuard<'static, DeserializerTagsState>,
+}
+
+impl MarkerTypeFunctionsReadGuard {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a MarkerTypeFunctions> {
+        self.guard.marker_type_functions_1_based.iter()
+    }
+
+    pub fn get<'a>(&'a self, deserializer_tag: u8) -> &'a MarkerTypeFunctions {
+        self.guard
+            .marker_type_functions_1_based
+            .get(deserializer_tag as usize - 1)
+            .expect("Failed to find the marker type functions for given deserializer tag")
+    }
+}
+
+/// Locks the DESERIALIZER_TAGS_STATE and returns the marker type functions read guard.
+pub fn get_marker_type_functions_read_guard() -> MarkerTypeFunctionsReadGuard {
+    MarkerTypeFunctionsReadGuard {
+        guard: DESERIALIZER_TAGS_STATE.read().unwrap(),
     }
 }
