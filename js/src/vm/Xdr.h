@@ -429,9 +429,6 @@ class XDRState : public XDRCoderBase {
   XDRResult codeCharsZ(XDRTranscodeString<char16_t>& buffer);
 };
 
-using XDREncoder = XDRState<XDR_ENCODE>;
-using XDRDecoderBase = XDRState<XDR_DECODE>;
-
 /*
  * The structure of the Stencil XDR buffer is:
  *
@@ -452,16 +449,18 @@ using XDRDecoderBase = XDRState<XDR_DECODE>;
  * The decoded stencils borrow the input `buffer`/`range`, and the consumer
  * has to keep the buffer alive while the decoded stencils are alive.
  */
-class XDRStencilDecoder : public XDRDecoderBase {
+class XDRStencilDecoder : public XDRState<XDR_DECODE> {
+  using Base = XDRState<XDR_DECODE>;
+
  public:
   XDRStencilDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
-      : XDRDecoderBase(cx, buffer, cursor) {
+      : Base(cx, buffer, cursor) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
     MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursor));
   }
 
   XDRStencilDecoder(JSContext* cx, const JS::TranscodeRange& range)
-      : XDRDecoderBase(cx, range) {
+      : Base(cx, range) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
   }
 
@@ -479,10 +478,12 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
 class XDRIncrementalStencilEncoder;
 
-class XDRStencilEncoder : public XDREncoder {
+class XDRStencilEncoder : public XDRState<XDR_ENCODE> {
+  using Base = XDRState<XDR_ENCODE>;
+
  public:
   XDRStencilEncoder(JSContext* cx, JS::TranscodeBuffer& buffer)
-      : XDREncoder(cx, buffer, buffer.length()) {
+      : Base(cx, buffer, buffer.length()) {
     // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.
     MOZ_ASSERT_IF(!buffer.empty(),
                   JS::IsTranscodingBytecodeAligned(buffer.begin()));
