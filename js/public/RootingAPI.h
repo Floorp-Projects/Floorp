@@ -878,28 +878,6 @@ struct VirtualTraceable {
   virtual void trace(JSTracer* trc, const char* name) = 0;
 };
 
-template <typename T>
-struct RootedTraceable final : public VirtualTraceable {
-  static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-                "RootedTraceable is intended only for usage with a Traceable");
-
-  T ptr;
-
-  template <typename... CtorArgs>
-  explicit RootedTraceable(std::in_place_t, CtorArgs... args)
-      : ptr(std::forward<CtorArgs>(args)...) {}
-
-  template <typename U, typename = typename std::is_constructible<T, U>::type>
-  MOZ_IMPLICIT RootedTraceable(U&& initial) : ptr(std::forward<U>(initial)) {}
-
-  operator T&() { return ptr; }
-  operator const T&() const { return ptr; }
-
-  void trace(JSTracer* trc, const char* name) override {
-    JS::GCPolicy<T>::trace(trc, &ptr, name);
-  }
-};
-
 class StackRootedBase {
  public:
   StackRootedBase* previous() { return prev; }
@@ -907,6 +885,11 @@ class StackRootedBase {
  protected:
   StackRootedBase** stack;
   StackRootedBase* prev;
+
+  template <typename T>
+  auto* derived() {
+    return static_cast<JS::Rooted<T>*>(this);
+  }
 };
 
 class PersistentRootedBase
@@ -914,20 +897,45 @@ class PersistentRootedBase
  protected:
   friend class mozilla::LinkedList<PersistentRootedBase>;
   friend class mozilla::LinkedListElement<PersistentRootedBase>;
+
+  template <typename T>
+  auto* derived() {
+    return static_cast<JS::PersistentRooted<T>*>(this);
+  }
+};
+
+struct StackRootedTraceableBase : public StackRootedBase,
+                                  public VirtualTraceable {};
+
+class PersistentRootedTraceableBase : public PersistentRootedBase,
+                                      public VirtualTraceable {};
+
+template <typename Base, typename T>
+class TypedRootedGCThingBase : public Base {
+ public:
+  void trace(JSTracer* trc, const char* name);
+};
+
+template <typename Base, typename T>
+class TypedRootedTraceableBase : public Base {
+ public:
+  void trace(JSTracer* trc, const char* name) override {
+    auto* self = this->template derived<T>();
+    JS::GCPolicy<T>::trace(trc, self->address(), name);
+  }
 };
 
 template <typename T>
 struct RootedTraceableTraits {
-  static T* address(RootedTraceable<T>& self) { return &self.ptr; }
-  static const T* address(const RootedTraceable<T>& self) { return &self.ptr; }
-  static void trace(JSTracer* trc, VirtualTraceable* thingp, const char* name);
+  using StackBase = TypedRootedTraceableBase<StackRootedTraceableBase, T>;
+  using PersistentBase =
+      TypedRootedTraceableBase<PersistentRootedTraceableBase, T>;
 };
 
 template <typename T>
 struct RootedGCThingTraits {
-  static T* address(T& self) { return &self; }
-  static const T* address(const T& self) { return &self; }
-  static void trace(JSTracer* trc, T* thingp, const char* name);
+  using StackBase = TypedRootedGCThingBase<StackRootedBase, T>;
+  using PersistentBase = TypedRootedGCThingBase<PersistentRootedBase, T>;
 };
 
 } /* namespace js */
@@ -1083,11 +1091,7 @@ constexpr bool IsTraceable_v =
     MapTypeToRootKind<T>::kind == JS::RootKind::Traceable;
 
 template <typename T>
-using RootedPtr =
-    std::conditional_t<IsTraceable_v<T>, js::RootedTraceable<T>, T>;
-
-template <typename T>
-using RootedPtrTraits =
+using RootedTraits =
     std::conditional_t<IsTraceable_v<T>, js::RootedTraceableTraits<T>,
                        js::RootedGCThingTraits<T>>;
 
@@ -1102,15 +1106,12 @@ using RootedPtrTraits =
  * specialization, define a RootedOperations<T> specialization containing them.
  */
 template <typename T>
-class MOZ_RAII Rooted : public js::StackRootedBase,
+class MOZ_RAII Rooted : public detail::RootedTraits<T>::StackBase,
                         public js::RootedOperations<T, Rooted<T>> {
-  using Ptr = detail::RootedPtr<T>;
-  using PtrTraits = detail::RootedPtrTraits<T>;
-
   inline void registerWithRootLists(RootedListHeads& roots) {
     this->stack = &roots[JS::MapTypeToRootKind<T>::kind];
-    this->prev = *stack;
-    *stack = this;
+    this->prev = *this->stack;
+    *this->stack = this;
   }
 
   inline RootedListHeads& rootLists(RootingContext* cx) {
@@ -1157,14 +1158,14 @@ class MOZ_RAII Rooted : public js::StackRootedBase,
       typename RootingContext, typename... CtorArgs,
       typename = std::enable_if_t<detail::IsTraceable_v<T>, RootingContext>>
   explicit Rooted(const RootingContext& cx, CtorArgs... args)
-      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
+      : ptr(std::forward<CtorArgs>(args)...) {
     MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     registerWithRootLists(rootLists(cx));
   }
 
   ~Rooted() {
-    MOZ_ASSERT(*stack == this);
-    *stack = prev;
+    MOZ_ASSERT(*this->stack == this);
+    *this->stack = this->prev;
   }
 
   /*
@@ -1186,13 +1187,11 @@ class MOZ_RAII Rooted : public js::StackRootedBase,
   T& get() { return ptr; }
   const T& get() const { return ptr; }
 
-  T* address() { return PtrTraits::address(ptr); }
-  const T* address() const { return PtrTraits::address(ptr); }
-
-  void trace(JSTracer* trc, const char* name);
+  T* address() { return &ptr; }
+  const T* address() const { return &ptr; }
 
  private:
-  Ptr ptr;
+  T ptr;
 
   Rooted(const Rooted&) = delete;
 } JS_HAZ_ROOTED;
@@ -1359,11 +1358,8 @@ JS_PUBLIC_API void AddPersistentRoot(JSRuntime* rt, RootKind kind,
  * marked when the object itself is marked.
  */
 template <typename T>
-class PersistentRooted : public js::PersistentRootedBase,
+class PersistentRooted : public detail::RootedTraits<T>::PersistentBase,
                          public js::RootedOperations<T, PersistentRooted<T>> {
-  using Ptr = detail::RootedPtr<T>;
-  using PtrTraits = detail::RootedPtrTraits<T>;
-
   void registerWithRootLists(RootingContext* cx) {
     MOZ_ASSERT(!initialized());
     JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
@@ -1405,7 +1401,7 @@ class PersistentRooted : public js::PersistentRootedBase,
   template <typename RootHolder, typename... CtorArgs,
             typename = std::enable_if_t<detail::IsTraceable_v<T>, RootHolder>>
   explicit PersistentRooted(const RootHolder& cx, CtorArgs... args)
-      : ptr(std::in_place, std::forward<CtorArgs>(args)...) {
+      : ptr(std::forward<CtorArgs>(args)...) {
     registerWithRootLists(cx);
   }
 
@@ -1421,7 +1417,7 @@ class PersistentRooted : public js::PersistentRootedBase,
     const_cast<PersistentRooted&>(rhs).setNext(this);
   }
 
-  bool initialized() const { return isInList(); }
+  bool initialized() const { return this->isInList(); }
 
   void init(RootingContext* cx) { init(cx, SafelyInitialized<T>()); }
   void init(JSContext* cx) { init(RootingContext::get(cx)); }
@@ -1440,7 +1436,7 @@ class PersistentRooted : public js::PersistentRootedBase,
   void reset() {
     if (initialized()) {
       set(SafelyInitialized<T>());
-      remove();
+      this->remove();
     }
   }
 
@@ -1452,9 +1448,9 @@ class PersistentRooted : public js::PersistentRootedBase,
 
   T* address() {
     MOZ_ASSERT(initialized());
-    return PtrTraits::address(ptr);
+    return &ptr;
   }
-  const T* address() const { return PtrTraits::address(ptr); }
+  const T* address() const { return &ptr; }
 
   template <typename U>
   void set(U&& value) {
@@ -1462,10 +1458,8 @@ class PersistentRooted : public js::PersistentRootedBase,
     ptr = std::forward<U>(value);
   }
 
-  void trace(JSTracer* trc, const char* name);
-
  private:
-  Ptr ptr;
+  T ptr;
 } JS_HAZ_ROOTED;
 
 namespace detail {
