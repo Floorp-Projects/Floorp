@@ -5590,7 +5590,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.10.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=d23288e#d23288e455eec657c5632d7c24410d0d2ef2057e"
+source = "git+https://github.com/kvark/wgpu?branch=gecko-beta-solaris#5a3a555b56c4cb87fcc21eade004ee902f5ed3dc"
 dependencies = [
  "arrayvec 0.7.1",
  "bitflags",
@@ -5612,7 +5612,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.10.1"
-source = "git+https://github.com/gfx-rs/wgpu?rev=d23288e#d23288e455eec657c5632d7c24410d0d2ef2057e"
+source = "git+https://github.com/kvark/wgpu?branch=gecko-beta-solaris#5a3a555b56c4cb87fcc21eade004ee902f5ed3dc"
 dependencies = [
  "arrayvec 0.7.1",
  "ash",
@@ -5645,7 +5645,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.10.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=d23288e#d23288e455eec657c5632d7c24410d0d2ef2057e"
+source = "git+https://github.com/kvark/wgpu?branch=gecko-beta-solaris#5a3a555b56c4cb87fcc21eade004ee902f5ed3dc"
 dependencies = [
  "bitflags",
  "serde",

@@ -16,19 +16,19 @@ default = []
 
 [dependencies.wgc]
 package = "wgpu-core"
-git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+git = "https://github.com/kvark/wgpu"
+branch = "gecko-beta-solaris"
 features = ["replay", "trace", "serial-pass"]
 
 [dependencies.wgt]
 package = "wgpu-types"
-git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+git = "https://github.com/kvark/wgpu"
+branch = "gecko-beta-solaris"
 
 [dependencies.wgh]
 package = "wgpu-hal"
-git = "https://github.com/gfx-rs/wgpu"
-rev = "d23288e"
+git = "https://github.com/kvark/wgpu"
+branch = "gecko-beta-solaris"
 
 [dependencies]
 bincode = "1"
