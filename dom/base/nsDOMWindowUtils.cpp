@@ -1635,13 +1635,13 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SuppressEventHandling(bool aSuppress) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
+  nsCOMPtr<Document> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (aSuppress) {
-    window->SuppressEventHandling();
+    doc->SuppressEventHandling();
   } else {
-    window->UnsuppressEventHandling();
+    doc->UnsuppressEventHandlingAndFireEvents(true);
   }
 
   return NS_OK;
