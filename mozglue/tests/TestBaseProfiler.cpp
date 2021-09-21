@@ -4372,7 +4372,9 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
               mozilla::baseprofiler::BaseProfilerThreadId{},
               [&](mozilla::ProfileChunkedBuffer&) {
                 aWriter.StringElement("Real backtrace would be here");
-              });
+              },
+              [&](mozilla::base_profiler_markers_detail::Streaming::
+                      DeserializerTag) {});
       MOZ_RELEASE_ASSERT(success);
     });
   }
