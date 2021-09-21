@@ -262,14 +262,9 @@ struct BarrierMethods<jsid> {
     }
     return nullptr;
   }
-  static void writeBarriers(jsid* idp, jsid prev, jsid next) {
-    if (prev.isString()) {
-      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(prev.toString()));
-      MOZ_ASSERT(!gc::IsInsideNursery(next.toString()));
-    }
-    if (prev.isSymbol()) {
-      JS::IncrementalPreWriteBarrier(JS::GCCellPtr(prev.toSymbol()));
-    }
+  static void postWriteBarrier(jsid* idp, jsid prev, jsid next) {
+    MOZ_ASSERT_IF(JSID_IS_STRING(next),
+                  !gc::IsInsideNursery(JSID_TO_STRING(next)));
   }
   static void exposeToJS(jsid id) {
     if (id.isGCThing()) {
