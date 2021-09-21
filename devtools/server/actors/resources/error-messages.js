@@ -78,6 +78,13 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
       return false;
     }
 
+    if (targetActor.ignoreSubFrames) {
+      return (
+        WebConsoleUtils.getInnerWindowId(targetActor.window) ===
+        message.innerWindowID
+      );
+    }
+
     const ids = WebConsoleUtils.getInnerWindowIDsForFrames(targetActor.window);
     return ids.includes(message.innerWindowID);
   }
