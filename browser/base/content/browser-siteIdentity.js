@@ -974,7 +974,11 @@ var gIdentityHandler = {
       connection = "file";
     }
 
-    document.getElementById("identity-popup-security-button").disabled = ![
+    let securityButtonNode = document.getElementById(
+      "identity-popup-security-button"
+    );
+
+    let disableSecurityButton = ![
       "not-secure",
       "secure",
       "secure-ev",
@@ -983,6 +987,13 @@ var gIdentityHandler = {
       "net-error-page",
       "https-only-error-page",
     ].includes(connection);
+    if (disableSecurityButton) {
+      securityButtonNode.disabled = true;
+      securityButtonNode.classList.remove("subviewbutton-nav");
+    } else {
+      securityButtonNode.disabled = false;
+      securityButtonNode.classList.add("subviewbutton-nav");
+    }
 
     // Determine the mixed content state.
     let mixedcontent = [];
