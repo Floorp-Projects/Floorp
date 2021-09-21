@@ -52,6 +52,11 @@ std::ostream& operator<<(std::ostream& aOut, const ScrollableLayerGuid& aGuid) {
                      .get();
 }
 
+bool ScrollableLayerGuid::EqualsIgnoringPresShell(
+    const ScrollableLayerGuid& aA, const ScrollableLayerGuid& aB) {
+  return aA.mLayersId == aB.mLayersId && aA.mScrollId == aB.mScrollId;
+}
+
 std::size_t ScrollableLayerGuid::HashFn::operator()(
     const ScrollableLayerGuid& aGuid) const {
   return HashGeneric(uint64_t(aGuid.mLayersId), aGuid.mPresShellId,
@@ -65,7 +70,7 @@ std::size_t ScrollableLayerGuid::HashIgnoringPresShellFn::operator()(
 
 bool ScrollableLayerGuid::EqualIgnoringPresShellFn::operator()(
     const ScrollableLayerGuid& lhs, const ScrollableLayerGuid& rhs) const {
-  return lhs.mLayersId == rhs.mLayersId && lhs.mScrollId == rhs.mScrollId;
+  return EqualsIgnoringPresShell(lhs, rhs);
 }
 
 }  // namespace layers
