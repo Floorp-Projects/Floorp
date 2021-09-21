@@ -14,7 +14,6 @@ let { PromptUtils } = ChromeUtils.import(
 const AdjustableTitle = {
   _cssSnippet: `
     #titleContainer {
-      display: flex; /* Try removing me when browser.proton.enabled goes away. */
       flex-shrink: 0;
 
       flex-direction: row;
