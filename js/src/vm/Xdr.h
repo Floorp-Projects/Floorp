@@ -441,64 +441,6 @@ class XDRState : public XDRCoderBase {
 using XDREncoder = XDRState<XDR_ENCODE>;
 using XDRDecoderBase = XDRState<XDR_DECODE>;
 
-class XDRDecoder : public XDRDecoderBase {
- public:
-  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-             JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : XDRDecoderBase(cx, buffer, cursor), options_(options) {
-    MOZ_ASSERT(options);
-  }
-
-  template <typename RangeType>
-  XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-             const RangeType& range)
-      : XDRDecoderBase(cx, range), options_(options) {
-    MOZ_ASSERT(options);
-  }
-
-  bool hasOptions() const override { return true; }
-  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
-
- private:
-  const JS::ReadOnlyCompileOptions* options_;
-};
-
-class XDROffThreadDecoder : public XDRDecoder {
-  ScriptSourceObject** sourceObjectOut_;
-  bool isMultiDecode_;
-
- public:
-  enum class Type {
-    Single,
-    Multi,
-  };
-
-  // Note, when providing an JSContext, where isJSContext is false,
-  // then the initialization of the ScriptSourceObject would remain
-  // incomplete. Thus, the sourceObjectOut must be used to finish the
-  // initialization with ScriptSourceObject::initFromOptions after the
-  // decoding.
-  //
-  // When providing a sourceObjectOut pointer, you have to ensure that it is
-  // marked by the GC to avoid dangling pointers.
-  XDROffThreadDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                      Type type, ScriptSourceObject** sourceObjectOut,
-                      const JS::TranscodeRange& range)
-      : XDRDecoder(cx, options, range),
-        sourceObjectOut_(sourceObjectOut),
-        isMultiDecode_(type == Type::Multi) {
-    MOZ_ASSERT(sourceObjectOut);
-    MOZ_ASSERT(*sourceObjectOut == nullptr);
-  }
-
-  bool isMultiDecode() const override { return isMultiDecode_; }
-
-  bool hasScriptSourceObjectOut() const override { return true; }
-  ScriptSourceObject** scriptSourceObjectOut() override {
-    return sourceObjectOut_;
-  }
-};
-
 /*
  * The structure of the Stencil XDR buffer is:
  *
