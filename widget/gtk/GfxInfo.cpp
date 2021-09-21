@@ -164,6 +164,8 @@ void GfxInfo::GetData() {
 
   nsCString drmRenderDevice;
 
+  nsCString ddxDriver;
+
   AutoTArray<nsCString, 2> pciVendors;
   AutoTArray<nsCString, 2> pciDevices;
 
@@ -196,6 +198,8 @@ void GfxInfo::GetData() {
       stringToFill = &mesaAccelerated;
     } else if (!strcmp(line, "MESA_VRAM")) {
       stringToFill = &adapterRam;
+    } else if (!strcmp(line, "DDX_DRIVER")) {
+      stringToFill = &ddxDriver;
     } else if (!strcmp(line, "DRI_DRIVER")) {
       stringToFill = &driDriver;
     } else if (!strcmp(line, "SCREEN_INFO")) {
@@ -587,6 +591,18 @@ void GfxInfo::GetData() {
     }
   }
 
+  if (!ddxDriver.IsEmpty()) {
+    PRInt32 start = 0;
+    PRInt32 loc = ddxDriver.Find(";", PR_FALSE, start);
+    while (loc != kNotFound) {
+      nsCString line(ddxDriver.get() + start, loc - start);
+      mDdxDrivers.AppendElement(std::move(line));
+
+      start = loc + 1;
+      loc = ddxDriver.Find(";", PR_FALSE, start);
+    }
+  }
+
   if (error || errorLog || mTestType.IsEmpty()) {
     if (!mAdapterDescription.IsEmpty()) {
       mAdapterDescription.AppendLiteral(" (See failure log)");
@@ -921,6 +937,16 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
     aFailureId = "FEATURE_FAILURE_SOFTWARE_GL";
     return NS_OK;
+  }
+
+  if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER) {
+    for (const nsCString& driver : mDdxDrivers) {
+      if (strcasestr(driver.get(), "Intel")) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_DDX_INTEL";
+        return NS_OK;
+      }
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(
