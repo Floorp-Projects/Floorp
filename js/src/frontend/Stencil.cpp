@@ -4044,6 +4044,10 @@ JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
   return stencil->hasExternalDependency;
 }
 
+JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {
+  return stencil->canLazilyParse;
+}
+
 JSObject* JS::InstantiateModuleStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
     JS::Stencil* stencil) {
