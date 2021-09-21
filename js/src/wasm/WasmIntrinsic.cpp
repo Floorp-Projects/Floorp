@@ -167,7 +167,8 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
 
   // Compile the module functions
   UniqueChars error;
-  ModuleGenerator mg(*compileArgs, &moduleEnv, &compilerEnv, nullptr, &error);
+  ModuleGenerator mg(*compileArgs, &moduleEnv, &compilerEnv, nullptr, &error,
+                     nullptr);
   if (!mg.init(nullptr)) {
     ReportOutOfMemory(cx);
     return false;

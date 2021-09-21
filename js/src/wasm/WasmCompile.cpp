@@ -695,7 +695,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   CompilerEnvironment compilerEnv(args);
   compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error, warnings);
   if (!mg.init(nullptr)) {
     return nullptr;
   }
@@ -728,7 +728,8 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
                                   optimizedBackend, DebugEnabled::False);
   compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, &error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, &error,
+                     nullptr);
   if (!mg.init(nullptr)) {
     return;
   }
@@ -747,6 +748,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 
   // The caller doesn't care about success or failure; only that compilation
   // is inactive, so there is no success to return here.
+  // TODO: report warnings to the console
 }
 
 class StreamingDecoder {
@@ -850,7 +852,8 @@ SharedModule wasm::CompileStreaming(
     MOZ_RELEASE_ASSERT(d.done());
   }
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error,
+                     warnings);
   if (!mg.init(nullptr)) {
     return nullptr;
   }
