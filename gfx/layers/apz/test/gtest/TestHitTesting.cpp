@@ -123,7 +123,7 @@ class APZHitTestingTester : public APZCTreeManagerTester {
 class APZHitTestingTesterInternal : public APZHitTestingTester {
  public:
   APZHitTestingTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 };
 

@@ -1565,7 +1565,7 @@ TEST_F(APZCOverscrollTester, SmallAmountOfOverscroll) {
 class APZCOverscrollTesterForInternal : public APZCTreeManagerTester {
  public:
   APZCOverscrollTesterForInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 
   UniquePtr<ScopedLayerTreeRegistration> registration;

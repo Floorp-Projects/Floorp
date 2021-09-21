@@ -176,7 +176,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 class APZEventRegionsTesterInternal : public APZEventRegionsTester {
  public:
   APZEventRegionsTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 };
 

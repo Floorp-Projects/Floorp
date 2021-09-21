@@ -179,7 +179,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 class APZScrollHandoffTesterInternal : public APZScrollHandoffTester {
  public:
   APZScrollHandoffTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 };
 

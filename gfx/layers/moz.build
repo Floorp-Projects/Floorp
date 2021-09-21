@@ -306,7 +306,6 @@ UNIFIED_SOURCES += [
     "apz/src/IAPZHitTester.cpp",
     "apz/src/InputBlockState.cpp",
     "apz/src/InputQueue.cpp",
-    "apz/src/InternalHitTester.cpp",
     "apz/src/KeyboardMap.cpp",
     "apz/src/KeyboardScrollAction.cpp",
     "apz/src/OverscrollHandoffState.cpp",

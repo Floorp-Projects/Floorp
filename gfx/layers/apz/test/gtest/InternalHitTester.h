@@ -7,7 +7,7 @@
 #ifndef mozilla_layers_InternalHitTester_h
 #define mozilla_layers_InternalHitTester_h
 
-#include "IAPZHitTester.h"
+#include "apz/src/IAPZHitTester.h"
 
 namespace mozilla {
 namespace layers {

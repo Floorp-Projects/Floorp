@@ -13,7 +13,7 @@
 class APZCSnappingOnMomentumTesterInternal : public APZCTreeManagerTester {
  public:
   APZCSnappingOnMomentumTesterInternal() {
-    mHitTestKind = APZCTreeManager::HitTestKind::Internal;
+    mHitTester = MakeUnique<InternalHitTester>();
   }
 };
 

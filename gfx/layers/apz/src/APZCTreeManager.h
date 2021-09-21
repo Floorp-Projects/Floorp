@@ -115,8 +115,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   struct TreeBuildingState;
 
  public:
-  enum class HitTestKind { WebRender, Internal };
-  APZCTreeManager(LayersId aRootLayersId, HitTestKind aHitTestKind);
+  explicit APZCTreeManager(LayersId aRootLayersId,
+                           UniquePtr<IAPZHitTester> aHitTester = nullptr);
 
   static mozilla::LazyLogModule sLog;
 
