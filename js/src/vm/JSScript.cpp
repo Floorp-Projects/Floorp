@@ -1620,9 +1620,7 @@ void JSScript::resetScriptCounts() {
 void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
-  if (sso->isCanonical()) {
-    sso->source()->finalizeGCData();
-  }
+  sso->source()->finalizeGCData();
   sso->source()->Release();
 
   // Clear the private value, calling the release hook if necessary.
@@ -1659,22 +1657,12 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
   // The matching decref is in ScriptSourceObject::finalize.
   obj->initReservedSlot(SOURCE_SLOT, PrivateValue(do_AddRef(source).take()));
 
-  obj->initReservedSlot(CANONICAL_SLOT, ObjectValue(*obj));
-
-  // The slots below should either be populated by a call to initFromOptions or,
-  // if this is a non-canonical ScriptSourceObject, they are unused. Poison
+  // The slots below should be populated by a call to initFromOptions. Poison
   // them.
   obj->initReservedSlot(ELEMENT_PROPERTY_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
 
   return obj;
-}
-
-ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromAnyThread()));
-
-  JSObject* obj = &getReservedSlot(CANONICAL_SLOT).toObject();
-  return &UncheckedUnwrap(obj)->as<ScriptSourceObject>();
 }
 
 [[nodiscard]] static bool MaybeValidateFilename(
@@ -1714,7 +1702,6 @@ bool ScriptSourceObject::initFromOptions(
     JSContext* cx, HandleScriptSourceObject source,
     const ReadOnlyCompileOptions& options) {
   cx->releaseCheck(source);
-  MOZ_ASSERT(source->isCanonical());
   MOZ_ASSERT(
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT)
@@ -1746,8 +1733,6 @@ bool ScriptSourceObject::initFromOptions(
 bool ScriptSourceObject::initElementProperties(JSContext* cx,
                                                HandleScriptSourceObject source,
                                                HandleString elementAttrName) {
-  MOZ_ASSERT(source->isCanonical());
-
   RootedValue nameValue(cx);
   if (elementAttrName) {
     nameValue = StringValue(elementAttrName);
@@ -1773,7 +1758,7 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
 }
 
 JSObject* ScriptSourceObject::unwrappedElement(JSContext* cx) const {
-  JS::RootedValue privateValue(cx, unwrappedCanonical()->canonicalPrivate());
+  JS::RootedValue privateValue(cx, getPrivate());
   if (privateValue.isUndefined()) {
     return nullptr;
   }
@@ -2459,7 +2444,7 @@ template bool ScriptSource::assignSource(JSContext* cx,
 void ScriptSource::finalizeGCData() {
   // This should be kept in sync with ScriptSource::trace above.
 
-  // When the canonical ScriptSourceObject's finalizer runs, this
+  // When the ScriptSourceObject's finalizer runs, this
   // ScriptSource can no longer be accessed from the main
   // thread. However, an offthread source compression task may still
   // hold a reference. We must clean up any GC pointers owned by this

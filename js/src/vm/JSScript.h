@@ -552,8 +552,6 @@ class ScriptSource {
   // The bytecode cache encoder is used to encode only the content of function
   // which are delazified.  If this value is not nullptr, then each delazified
   // function should be recorded before their first execution.
-  // This value is logically owned by the canonical ScriptSourceObject, and
-  // will be released in the canonical SSO's finalizer.
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder_ = nullptr;
 
   // A string indicating how this source code was introduced into the system.
@@ -1067,29 +1065,8 @@ class ScriptSource {
 // [SMDOC] ScriptSourceObject
 //
 // ScriptSourceObject stores the ScriptSource and GC pointers related to it.
-//
-// ScriptSourceObjects can be cloned when we clone the JSScript (in order to
-// execute the script in a different compartment). In this case we create a new
-// SSO that stores (a wrapper for) the original SSO in its "canonical slot".
-// The canonical SSO is always used for the private, introductionScript,
-// element, elementAttributeName slots. This means their accessors may return an
-// object in a different compartment, hence the "unwrapped" prefix.
-//
-// Note that we don't clone the SSO when cloning the script for a different
-// realm in the same compartment, so sso->realm() does not necessarily match the
-// script's realm.
-//
-// We need ScriptSourceObject (instead of storing these GC pointers in the
-// ScriptSource itself) to properly account for cross-zone pointers: the
-// canonical SSO will be stored in the wrapper map if necessary so GC will do
-// the right thing.
 class ScriptSourceObject : public NativeObject {
   static const JSClassOps classOps_;
-
-  bool isCanonical() const {
-    return &getReservedSlot(CANONICAL_SLOT).toObject() == this;
-  }
-  ScriptSourceObject* unwrappedCanonical() const;
 
  public:
   static const JSClass class_;
@@ -1097,7 +1074,6 @@ class ScriptSourceObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 
   static ScriptSourceObject* create(JSContext* cx, ScriptSource* source);
-  static ScriptSourceObject* clone(JSContext* cx, HandleScriptSourceObject sso);
 
   // Initialize those properties of this ScriptSourceObject whose values
   // are provided by |options|, re-wrapping as necessary.
@@ -1117,15 +1093,13 @@ class ScriptSourceObject : public NativeObject {
 
   const Value& unwrappedElementAttributeName() const {
     MOZ_ASSERT(isInitialized());
-    const Value& v =
-        unwrappedCanonical()->getReservedSlot(ELEMENT_PROPERTY_SLOT);
+    const Value& v = getReservedSlot(ELEMENT_PROPERTY_SLOT);
     MOZ_ASSERT(!v.isMagic());
     return v;
   }
   BaseScript* unwrappedIntroductionScript() const {
     MOZ_ASSERT(isInitialized());
-    Value value =
-        unwrappedCanonical()->getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
+    Value value = getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
     if (value.isUndefined()) {
       return nullptr;
     }
@@ -1138,23 +1112,15 @@ class ScriptSourceObject : public NativeObject {
     setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
   }
 
-  Value canonicalPrivate() const {
+  Value getPrivate() const {
     MOZ_ASSERT(isInitialized());
     Value value = getReservedSlot(PRIVATE_SLOT);
-    MOZ_ASSERT_IF(!isCanonical(), value.isUndefined());
     return value;
   }
 
  private:
 #ifdef DEBUG
   bool isInitialized() const {
-    if (!isCanonical()) {
-      // While it might be nice to check the unwrapped canonical value,
-      // unwrapping at arbitrary points isn't supported, so we simply
-      // return true and only validate canonical results.
-      return true;
-    }
-
     Value element = getReservedSlot(ELEMENT_PROPERTY_SLOT);
     if (element.isMagic(JS_GENERIC_MAGIC)) {
       return false;
@@ -1165,7 +1131,6 @@ class ScriptSourceObject : public NativeObject {
 
   enum {
     SOURCE_SLOT = 0,
-    CANONICAL_SLOT,
     ELEMENT_PROPERTY_SLOT,
     INTRODUCTION_SCRIPT_SLOT,
     PRIVATE_SLOT,
@@ -1463,8 +1428,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   const GCPtrObject functionOrGlobal_ = {};
 
   // The ScriptSourceObject for this script. This is always same-compartment
-  // with this script, but may be a clone if the original source object is in a
-  // different compartment.
+  // with this script.
   const GCPtr<ScriptSourceObject*> sourceObject_ = {};
 
   // Position of the function in the source buffer. Both in terms of line/column
