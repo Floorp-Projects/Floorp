@@ -60,7 +60,9 @@ fn add_include(name: &str) -> String {
         Some(file) => file,
         None => panic!("Include not found: {}", name),
     };
-    String::from(file.to_str().unwrap())
+    let file_path = String::from(file.to_str().unwrap());
+    println!("cargo:rerun-if-changed={}", file_path);
+    file_path
 }
 
 fn generate_bindings() {
