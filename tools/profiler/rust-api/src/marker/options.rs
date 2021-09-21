@@ -112,6 +112,15 @@ impl Drop for MarkerTiming {
     }
 }
 
+/// Marker option that contains marker stack information.
+pub type MarkerStack = mozilla::StackCaptureOptions;
+
+impl Default for MarkerStack {
+    fn default() -> Self {
+        MarkerStack::NoStack
+    }
+}
+
 /// This class combines each of the possible marker options above.
 /// Use Default::default() for the options that you don't want to provide or the
 /// options you want to leave as default. Example usage:
@@ -125,4 +134,5 @@ impl Drop for MarkerTiming {
 #[derive(Debug, Default)]
 pub struct MarkerOptions {
     pub timing: MarkerTiming,
+    pub stack: MarkerStack,
 }
