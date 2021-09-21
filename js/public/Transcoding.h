@@ -84,20 +84,6 @@ inline bool IsTranscodingBytecodeAligned(const void* offset) {
   return IsTranscodingBytecodeOffsetAligned(size_t(offset));
 }
 
-// Encode JSScript into the buffer.
-//
-// If the `buffer` isn't empty, the start of the `buffer` should meet
-// IsTranscodingBytecodeAligned, and the length should meet
-// IsTranscodingBytecodeOffsetAligned.
-//
-// NOTE: As long as IsTranscodingBytecodeOffsetAligned is met, that means
-//       there's JS::BytecodeOffsetAlignment+extra bytes in the buffer,
-//       IsTranscodingBytecodeAligned should be guaranteed to meet by
-//       malloc, used by MallocAllocPolicy in mozilla::Vector.
-extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
-                                                  TranscodeBuffer& buffer,
-                                                  Handle<JSScript*> script);
-
 // Decode CompilationStencil from the buffer and instantiate JSScript from it.
 //
 // The start of `buffer` and `cursorIndex` should meet
