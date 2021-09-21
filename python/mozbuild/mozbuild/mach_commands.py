@@ -488,7 +488,7 @@ class Warnings(MachCommandBase):
         help="Warnings report to display. If not defined, show the most "
         "recent report.",
     )
-    def list(self, command_context, directory=None, flags=None, report=None):
+    def list_warnings(self, command_context, directory=None, flags=None, report=None):
         database = self.get_warnings_database(command_context)
 
         by_name = sorted(database.warnings)
