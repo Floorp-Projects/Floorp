@@ -10,6 +10,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 
+#include "unicode/uchar.h"
 #include "unicode/ustring.h"
 #include "unicode/utypes.h"
 
@@ -55,6 +56,21 @@ class String final {
           return u_strToUpper(target, length, aString.data(), aString.size(),
                               aLocale, status);
         });
+  }
+
+  /**
+   * Return true if the code point has the binary property "Cased".
+   */
+  static bool IsCased(char32_t codePoint) {
+    return u_hasBinaryProperty(static_cast<UChar32>(codePoint), UCHAR_CASED);
+  }
+
+  /**
+   * Return true if the code point has the binary property "Case_Ignorable".
+   */
+  static bool IsCaseIgnorable(char32_t codePoint) {
+    return u_hasBinaryProperty(static_cast<UChar32>(codePoint),
+                               UCHAR_CASE_IGNORABLE);
   }
 };
 
