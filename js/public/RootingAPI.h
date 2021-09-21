@@ -900,6 +900,13 @@ struct RootedTraceable final : public VirtualTraceable {
   }
 };
 
+class PersistentRootedBase
+    : protected mozilla::LinkedListElement<PersistentRootedBase> {
+ protected:
+  friend class mozilla::LinkedList<PersistentRootedBase>;
+  friend class mozilla::LinkedListElement<PersistentRootedBase>;
+};
+
 template <typename T>
 struct RootedTraceableTraits {
   static T* address(RootedTraceable<T>& self) { return &self.ptr; }
@@ -1334,13 +1341,11 @@ inline MutableHandle<T>::MutableHandle(PersistentRooted<T>* root) {
   ptr = root->address();
 }
 
-JS_PUBLIC_API void AddPersistentRoot(
-    RootingContext* cx, RootKind kind,
-    PersistentRooted<detail::RootListEntry*>* root);
+JS_PUBLIC_API void AddPersistentRoot(RootingContext* cx, RootKind kind,
+                                     js::PersistentRootedBase* root);
 
-JS_PUBLIC_API void AddPersistentRoot(
-    JSRuntime* rt, RootKind kind,
-    PersistentRooted<detail::RootListEntry*>* root);
+JS_PUBLIC_API void AddPersistentRoot(JSRuntime* rt, RootKind kind,
+                                     js::PersistentRootedBase* root);
 
 /**
  * A copyable, assignable global GC root type with arbitrary lifetime, an
@@ -1376,30 +1381,21 @@ JS_PUBLIC_API void AddPersistentRoot(
  * marked when the object itself is marked.
  */
 template <typename T>
-class PersistentRooted
-    : public js::RootedOperations<T, PersistentRooted<T>>,
-      private mozilla::LinkedListElement<PersistentRooted<T>> {
-  using ListBase = mozilla::LinkedListElement<PersistentRooted<T>>;
+class PersistentRooted : public js::PersistentRootedBase,
+                         public js::RootedOperations<T, PersistentRooted<T>> {
   using Ptr = detail::RootedPtr<T>;
   using PtrTraits = detail::RootedPtrTraits<T>;
-
-  friend class mozilla::LinkedList<PersistentRooted>;
-  friend class mozilla::LinkedListElement<PersistentRooted>;
 
   void registerWithRootLists(RootingContext* cx) {
     MOZ_ASSERT(!initialized());
     JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
-    AddPersistentRoot(
-        cx, kind,
-        reinterpret_cast<JS::PersistentRooted<detail::RootListEntry*>*>(this));
+    AddPersistentRoot(cx, kind, this);
   }
 
   void registerWithRootLists(JSRuntime* rt) {
     MOZ_ASSERT(!initialized());
     JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
-    AddPersistentRoot(
-        rt, kind,
-        reinterpret_cast<JS::PersistentRooted<detail::RootListEntry*>*>(this));
+    AddPersistentRoot(rt, kind, this);
   }
 
   // Used when JSContext type is incomplete and so it is not known to inherit
@@ -1435,8 +1431,7 @@ class PersistentRooted
     registerWithRootLists(cx);
   }
 
-  PersistentRooted(const PersistentRooted& rhs)
-      : mozilla::LinkedListElement<PersistentRooted<T>>(), ptr(rhs.ptr) {
+  PersistentRooted(const PersistentRooted& rhs) : ptr(rhs.ptr) {
     /*
      * Copy construction takes advantage of the fact that the original
      * is already inserted, and simply adds itself to whatever list the
@@ -1448,7 +1443,7 @@ class PersistentRooted
     const_cast<PersistentRooted&>(rhs).setNext(this);
   }
 
-  bool initialized() const { return ListBase::isInList(); }
+  bool initialized() const { return isInList(); }
 
   void init(RootingContext* cx) { init(cx, SafelyInitialized<T>()); }
   void init(JSContext* cx) { init(RootingContext::get(cx)); }
@@ -1467,7 +1462,7 @@ class PersistentRooted
   void reset() {
     if (initialized()) {
       set(SafelyInitialized<T>());
-      ListBase::remove();
+      remove();
     }
   }
 
