@@ -5417,6 +5417,11 @@
         label = this.getTabTooltip(tab);
       }
 
+      if (!gProtonPlacesTooltip) {
+        event.target.setAttribute("label", label);
+        return;
+      }
+
       if (alignToTab) {
         event.target.setAttribute("position", "after_start");
         event.target.moveToAnchor(tab, "after_start");

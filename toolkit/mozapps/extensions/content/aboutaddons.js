@@ -81,91 +81,23 @@ const EXTENSION_ICON_URL =
 const BUILTIN_THEME_PREVIEWS = new Map([
   [
     "default-theme@mozilla.org",
-    "chrome://mozapps/content/extensions/default-theme/preview.svg",
+    "chrome://mozapps/content/extensions/default-theme.svg",
   ],
   [
     "firefox-compact-light@mozilla.org",
-    "resource://builtin-themes/light/preview.svg",
+    "chrome://mozapps/content/extensions/firefox-compact-light.svg",
   ],
   [
     "firefox-compact-dark@mozilla.org",
-    "resource://builtin-themes/dark/preview.svg",
+    "chrome://mozapps/content/extensions/firefox-compact-dark.svg",
   ],
   [
     "firefox-alpenglow@mozilla.org",
-    "resource://builtin-themes/alpenglow/preview.svg",
+    "chrome://mozapps/content/extensions/firefox-alpenglow.svg",
   ],
   [
-    "firefox-lush-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/soft/preview.svg",
-  ],
-  [
-    "firefox-lush-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/balanced/preview.svg",
-  ],
-  [
-    "firefox-lush-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/bold/preview.svg",
-  ],
-  [
-    "firefox-abstract-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/soft/preview.svg",
-  ],
-  [
-    "firefox-abstract-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/balanced/preview.svg",
-  ],
-  [
-    "firefox-abstract-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/bold/preview.svg",
-  ],
-  [
-    "firefox-elemental-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/soft/preview.svg",
-  ],
-  [
-    "firefox-elemental-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/balanced/preview.svg",
-  ],
-  [
-    "firefox-elemental-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/bold/preview.svg",
-  ],
-  [
-    "firefox-cheers-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/soft/preview.svg",
-  ],
-  [
-    "firefox-cheers-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/balanced/preview.svg",
-  ],
-  [
-    "firefox-cheers-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/bold/preview.svg",
-  ],
-  [
-    "firefox-graffiti-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/soft/preview.svg",
-  ],
-  [
-    "firefox-graffiti-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/balanced/preview.svg",
-  ],
-  [
-    "firefox-graffiti-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/bold/preview.svg",
-  ],
-  [
-    "firefox-foto-soft@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/soft/preview.svg",
-  ],
-  [
-    "firefox-foto-balanced@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/balanced/preview.svg",
-  ],
-  [
-    "firefox-foto-bold@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/bold/preview.svg",
+    "firefox-monochromatic-purple@mozilla.org",
+    "chrome://mozapps/content/extensions/firefox-monochromatic-purple.svg",
   ],
 ]);
 
@@ -848,6 +780,14 @@ class PanelList extends HTMLElement {
     let leftOffset;
     let leftAlignX = anchorLeft;
     let rightAlignX = anchorLeft + anchorWidth - panelWidth;
+    if (!Services.prefs.getBoolPref("browser.proton.enabled")) {
+      // NOTE: Remove arrow from HTML template when this branch is removed.
+      // The tip of the arrow is 25px from the edge of the panel,
+      // but 26px looks right.
+      let arrowOffset = 26;
+      leftAlignX += anchorWidth / 2 - arrowOffset;
+      rightAlignX += -anchorWidth / 2 + arrowOffset;
+    }
 
     if (Services.locale.isAppLocaleRTL) {
       // Prefer aligning on the right.
