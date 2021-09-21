@@ -48,7 +48,7 @@
 #include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
-#include "vm/Xdr.h"           // XDRMode, XDRResult, XDREncoder
+#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRStencilEncoder, XDRStencilDecoder
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 
