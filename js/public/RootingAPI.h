@@ -1141,8 +1141,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
 
   // Provide an initial value. Requires T to be constructible from the given
   // argument.
-  template <typename RootingContext, typename S,
-            typename = typename std::is_constructible<T, S>::type>
+  template <typename RootingContext, typename S>
   Rooted(const RootingContext& cx, S&& initial)
       : ptr(std::forward<S>(initial)) {
     MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
