@@ -118,6 +118,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 # Exercise the cached gradient scaling code path
 fuzzy(2,23000) == linear-large.yaml linear-large-ref.yaml
 == conic-large.yaml conic-large-ref.yaml
+== conic-large-hard-stop.yaml conic-large-hard-stop-ref.yaml
 fuzzy(1,7000) == radial-large.yaml radial-large-ref.png
 
 # crash tests
