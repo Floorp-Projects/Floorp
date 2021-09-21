@@ -98,25 +98,6 @@ extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
                                                   TranscodeBuffer& buffer,
                                                   Handle<JSScript*> script);
 
-// Decode JSScript from the buffer.
-//
-// The start of `buffer` and `cursorIndex` should meet
-// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-             TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
-             size_t cursorIndex = 0);
-
-// Decode JSScript from the range.
-//
-// The start of `range` should meet IsTranscodingBytecodeAligned and
-// IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-             const TranscodeRange& range, MutableHandle<JSScript*> scriptp);
-
 // Decode CompilationStencil from the buffer and instantiate JSScript from it.
 //
 // The start of `buffer` and `cursorIndex` should meet
