@@ -17,7 +17,7 @@ TEST(IntlTimeZone, SystemDependentTests)
   auto timeZone = TimeZone::TryCreate(Some(MakeStringSpan(u"GMT+3"))).unwrap();
   TestBuffer<char16_t> buffer;
   // e.g. For America/Chicago: 1000 * 60 * 60 * -6
-  timeZone->GetDefaultTimeZoneOffsetMs().unwrap();
+  timeZone->GetRawOffsetMs().unwrap();
 
   // e.g. "America/Chicago"
   TimeZone::GetDefaultTimeZone(buffer).unwrap();

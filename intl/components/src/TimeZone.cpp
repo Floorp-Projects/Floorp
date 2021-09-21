@@ -32,7 +32,7 @@ Result<UniquePtr<TimeZone>, ICUError> TimeZone::TryCreate(
   return MakeUnique<TimeZone>(calendar);
 }
 
-Result<int32_t, ICUError> TimeZone::GetDefaultTimeZoneOffsetMs() {
+Result<int32_t, ICUError> TimeZone::GetRawOffsetMs() {
   UErrorCode status = U_ZERO_ERROR;
   int32_t offset = ucal_get(mCalendar, UCAL_ZONE_OFFSET, &status);
   if (U_FAILURE(status)) {
