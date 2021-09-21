@@ -142,7 +142,7 @@ class MachCommands(MachCommandBase):
         description="Format files, alternative to 'lint --fix' ",
         parser=setup_argument_parser,
     )
-    def format(self, command_context, paths, extra_args=[], **kwargs):
+    def format_files(self, command_context, paths, extra_args=[], **kwargs):
         linters = kwargs["linters"]
 
         if not linters:
