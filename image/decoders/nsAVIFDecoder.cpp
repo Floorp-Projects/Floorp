@@ -359,16 +359,14 @@ static gfx::YUVColorSpace GetAVIFColorSpace(const NclxColourInformation* aNclx,
       .valueOr(gfx::YUVColorSpace::BT601);
 }
 
-static gfx::ColorRange GetAVIFColorRange(
-    const NclxColourInformation* aNclx,
-    const Maybe<gfx::ColorRange> av1ColorRange) {
+static gfx::ColorRange GetAVIFColorRange(const NclxColourInformation* aNclx,
+                                         const gfx::ColorRange av1ColorRange) {
   return ToMaybe(aNclx)
       .map([=](const auto& nclx) {
-        return Some(aNclx->full_range_flag ? gfx::ColorRange::FULL
-                                           : gfx::ColorRange::LIMITED);
+        return aNclx->full_range_flag ? gfx::ColorRange::FULL
+                                      : gfx::ColorRange::LIMITED;
       })
-      .valueOr(av1ColorRange)
-      .valueOr(gfx::ColorRange::FULL);
+      .valueOr(av1ColorRange);
 }
 
 void AVIFDecodedData::SetCicpValues(
@@ -993,21 +991,25 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
   auto av1TransferCharacteristics =
       CICP::TransferCharacteristics::TC_UNSPECIFIED;
   auto av1MatrixCoefficients = CICP::MatrixCoefficients::MC_UNSPECIFIED;
-  Maybe<gfx::ColorRange> av1ColorRange = Nothing();
 
-  if (aPicture->seq_hdr && aPicture->seq_hdr->color_description_present) {
-    auto& seq_hdr = *aPicture->seq_hdr;
+  MOZ_ASSERT(aPicture->seq_hdr);
+  auto& seq_hdr = *aPicture->seq_hdr;
+
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("seq_hdr.color_description_present: %d",
+           seq_hdr.color_description_present));
+  if (seq_hdr.color_description_present) {
     av1ColourPrimaries = static_cast<CICP::ColourPrimaries>(seq_hdr.pri);
     av1TransferCharacteristics =
         static_cast<CICP::TransferCharacteristics>(seq_hdr.trc);
     av1MatrixCoefficients = static_cast<CICP::MatrixCoefficients>(seq_hdr.mtrx);
-    av1ColorRange = seq_hdr.color_range ? Some(gfx::ColorRange::FULL)
-                                        : Some(gfx::ColorRange::LIMITED);
   }
 
   data.SetCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
                      av1MatrixCoefficients);
 
+  gfx::ColorRange av1ColorRange =
+      seq_hdr.color_range ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
   data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
   if (aAlphaPlane) {
@@ -1078,11 +1080,12 @@ AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
                                       sAVIFLog);
   });
 
-  Maybe<gfx::ColorRange> av1ColorRange = Nothing();
+  gfx::ColorRange av1ColorRange;
   if (aImage->range == AOM_CR_STUDIO_RANGE) {
-    av1ColorRange = Some(gfx::ColorRange::LIMITED);
-  } else if (aImage->range == AOM_CR_FULL_RANGE) {
-    av1ColorRange = Some(gfx::ColorRange::FULL);
+    av1ColorRange = gfx::ColorRange::LIMITED;
+  } else {
+    MOZ_ASSERT(aImage->range == AOM_CR_FULL_RANGE);
+    av1ColorRange = gfx::ColorRange::FULL;
   }
   data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
@@ -1314,6 +1317,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
              CICP::TransferCharacteristics::TC_UNSPECIFIED);
   MOZ_ASSERT(decodedData.mColorRange <= gfx::ColorRange::_Last);
   MOZ_ASSERT(decodedData.mYUVColorSpace <= gfx::YUVColorSpace::_Last);
+
+  MOZ_LOG(sAVIFLog, LogLevel::Debug,
+          ("[this=%p] decodedData.mColorRange: %hhd", this,
+           static_cast<uint8_t>(decodedData.mColorRange)));
 
   // Technically it's valid but we don't handle it now (Bug 1682318).
   if (decodedData.mAlpha && decodedData.mAlpha->mSize != decodedData.mYSize) {
