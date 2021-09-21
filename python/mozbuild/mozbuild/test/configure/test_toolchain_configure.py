@@ -874,7 +874,7 @@ class OSXToolchainTest(BaseToolchainTest):
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=["-std=gnu++17"],
+        flags=["-stdlib=libc++", "-std=gnu++17"],
         version="5.0.2",
         type="clang",
         compiler="/usr/bin/clang++",
@@ -1455,6 +1455,7 @@ class OSXCrossToolchainTest(BaseToolchainTest):
                 + OSXToolchainTest.SYSROOT_FLAGS
                 + {"flags": ["--target=i686-apple-darwin11.2.0"]},
                 "cxx_compiler": self.DEFAULT_CLANGXX_RESULT
+                + {"flags": PrependFlags(["-stdlib=libc++"])}
                 + OSXToolchainTest.SYSROOT_FLAGS
                 + {"flags": ["--target=i686-apple-darwin11.2.0"]},
                 "host_c_compiler": self.DEFAULT_CLANG_RESULT,
