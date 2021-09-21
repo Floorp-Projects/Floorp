@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     "TestLocaleCanonicalizer.cpp",
     "TestMeasureUnit.cpp",
     "TestNumberFormat.cpp",
+    "TestNumberingSystem.cpp",
     "TestPluralRules.cpp",
     "TestRelativeTimeFormat.cpp",
 ]
