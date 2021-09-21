@@ -42,10 +42,6 @@
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
-#if JS_HAS_INTL_API
-#  include "unicode/unorm2.h"
-#  include "unicode/utypes.h"
-#endif
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/BytecodeUtil.h"
@@ -1487,12 +1483,12 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  enum NormalizationForm { NFC, NFD, NFKC, NFKD };
+  using NormalizationForm = mozilla::intl::String::NormalizationForm;
 
   NormalizationForm form;
   if (!args.hasDefined(0)) {
     // Step 3.
-    form = NFC;
+    form = NormalizationForm::NFC;
   } else {
     // Step 4.
     JSLinearString* formStr = ArgToLinearString(cx, args, 0);
@@ -1502,13 +1498,13 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
 
     // Step 5.
     if (EqualStrings(formStr, cx->names().NFC)) {
-      form = NFC;
+      form = NormalizationForm::NFC;
     } else if (EqualStrings(formStr, cx->names().NFD)) {
-      form = NFD;
+      form = NormalizationForm::NFD;
     } else if (EqualStrings(formStr, cx->names().NFKC)) {
-      form = NFKC;
+      form = NormalizationForm::NFKC;
     } else if (EqualStrings(formStr, cx->names().NFKD)) {
-      form = NFKD;
+      form = NormalizationForm::NFKD;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_INVALID_NORMALIZE_FORM);
@@ -1517,7 +1513,7 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Latin-1 strings are already in Normalization Form C.
-  if (form == NFC && str->hasLatin1Chars()) {
+  if (form == NormalizationForm::NFC && str->hasLatin1Chars()) {
     // Step 7.
     args.rval().setString(str);
     return true;
@@ -1531,73 +1527,27 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
 
   mozilla::Range<const char16_t> srcChars = stableChars.twoByteRange();
 
-  // The unorm2_getXXXInstance() methods return a shared instance which must
-  // not be deleted.
-  UErrorCode status = U_ZERO_ERROR;
-  const UNormalizer2* normalizer;
-  if (form == NFC) {
-    normalizer = unorm2_getNFCInstance(&status);
-  } else if (form == NFD) {
-    normalizer = unorm2_getNFDInstance(&status);
-  } else if (form == NFKC) {
-    normalizer = unorm2_getNFKCInstance(&status);
-  } else {
-    MOZ_ASSERT(form == NFKD);
-    normalizer = unorm2_getNFKDInstance(&status);
-  }
-  if (U_FAILURE(status)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INTERNAL_INTL_ERROR);
+  static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
+
+  intl::FormatBuffer<char16_t, INLINE_CAPACITY> buffer(cx);
+
+  auto alreadyNormalized =
+      mozilla::intl::String::Normalize(form, srcChars, buffer);
+  if (alreadyNormalized.isErr()) {
+    intl::ReportInternalError(cx, alreadyNormalized.unwrapErr());
     return false;
   }
 
-  int32_t spanLengthInt = unorm2_spanQuickCheckYes(
-      normalizer, srcChars.begin().get(), srcChars.length(), &status);
-  if (U_FAILURE(status)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INTERNAL_INTL_ERROR);
-    return false;
-  }
-  MOZ_ASSERT(0 <= spanLengthInt && size_t(spanLengthInt) <= srcChars.length());
-  size_t spanLength = size_t(spanLengthInt);
+  using AlreadyNormalized = mozilla::intl::String::AlreadyNormalized;
 
   // Return if the input string is already normalized.
-  if (spanLength == srcChars.length()) {
+  if (alreadyNormalized.unwrap() == AlreadyNormalized::Yes) {
     // Step 7.
     args.rval().setString(str);
     return true;
   }
 
-  static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
-
-  Vector<char16_t, INLINE_CAPACITY> chars(cx);
-  if (!chars.resize(std::max(INLINE_CAPACITY, srcChars.length()))) {
-    return false;
-  }
-
-  // Copy the already normalized prefix.
-  if (spanLength > 0) {
-    PodCopy(chars.begin(), srcChars.begin().get(), spanLength);
-  }
-
-  int32_t size = intl::CallICU(
-      cx,
-      [normalizer, &srcChars, spanLength](UChar* chars, uint32_t size,
-                                          UErrorCode* status) {
-        mozilla::RangedPtr<const char16_t> remainingStart =
-            srcChars.begin() + spanLength;
-        size_t remainingLength = srcChars.length() - spanLength;
-
-        return unorm2_normalizeSecondAndAppend(normalizer, chars, spanLength,
-                                               size, remainingStart.get(),
-                                               remainingLength, status);
-      },
-      chars);
-  if (size < 0) {
-    return false;
-  }
-
-  JSString* ns = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+  JSString* ns = buffer.toString();
   if (!ns) {
     return false;
   }
