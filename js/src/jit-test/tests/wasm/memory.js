@@ -470,3 +470,37 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memor
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 1 (i32.const 0) ""))`)),
                    WebAssembly.CompileError,
                    /memory index must be zero/);
+
+
+// Make sure we handle memory instructions without memory
+
+var nomem = /(can't touch memory without memory)|(unknown memory)/;
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func (result i32) memory.size))`)),
+                   WebAssembly.CompileError,
+                   nomem);
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func (result i32) (memory.grow 1)))`)),
+                   WebAssembly.CompileError,
+                   nomem);
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
+(module (func (param i32 i32 i32)
+  (memory.copy (local.get 0) (local.get 1) (local.get 2))))`)),
+                   WebAssembly.CompileError,
+                   nomem);
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
+(module (func (param i32 i32 i32)
+  (memory.fill (local.get 0) (local.get 1) (local.get 2))))`)),
+                   WebAssembly.CompileError,
+                   nomem);
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
+(module
+  (data $d passive "01234")
+  (func (param i32 i32)
+    (memory.init $d (local.get 0) (local.get 1))))`)),
+                   WebAssembly.CompileError,
+                   nomem);
+

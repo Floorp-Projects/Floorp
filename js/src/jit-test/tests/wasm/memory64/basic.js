@@ -153,7 +153,6 @@ for (let [memType, ptrType] of memTypes ) {
 if (wasmSimdEnabled()) {
     for (let [memType, ptrType] of memTypes ) {
         for (let offs of validOffsets[memType]) {
-            print(memType + " " + ptrType + " " + offs);
             assertEq(WebAssembly.validate(wasmTextToBinary(`
 (module
   (memory ${memType} 1)

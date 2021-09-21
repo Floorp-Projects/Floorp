@@ -1076,16 +1076,20 @@ struct BaseCompiler final {
 
   // ptr and dest may be the same iff dest is I32.
   // This may destroy ptr even if ptr and dest are not the same.
-  [[nodiscard]] bool load(MemoryAccessDesc* access, AccessCheck* check,
-                          RegPtr tls, RegI32 ptr, AnyReg dest, RegI32 temp);
+  void load(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+            RegI32 ptr, AnyReg dest, RegI32 temp);
 
   // ptr and src must not be the same register.
   // This may destroy ptr and src.
-  [[nodiscard]] bool store(MemoryAccessDesc* access, AccessCheck* check,
-                           RegPtr tls, RegI32 ptr, AnyReg src, RegI32 temp);
+  void store(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+             RegI32 ptr, AnyReg src, RegI32 temp);
 
-  bool atomicLoad(MemoryAccessDesc* access, ValType type);
-  bool atomicStore(MemoryAccessDesc* access, ValType type);
+  void loadCommon(MemoryAccessDesc* access, AccessCheck check, ValType type);
+  void storeCommon(MemoryAccessDesc* access, AccessCheck check,
+                   ValType resultType);
+
+  void atomicLoad(MemoryAccessDesc* access, ValType type);
+  void atomicStore(MemoryAccessDesc* access, ValType type);
   void atomicRMW(MemoryAccessDesc* access, ValType type, AtomicOp op);
   void atomicRMW32(MemoryAccessDesc* access, ValType type, AtomicOp op);
   void atomicRMW64(MemoryAccessDesc* access, ValType type, AtomicOp op);
@@ -1247,11 +1251,7 @@ struct BaseCompiler final {
   [[nodiscard]] RegPtr maybeLoadTlsForAccess(const AccessCheck& check,
                                              RegPtr specific);
   [[nodiscard]] bool emitLoad(ValType type, Scalar::Type viewType);
-  [[nodiscard]] bool loadCommon(MemoryAccessDesc* access, AccessCheck check,
-                                ValType type);
   [[nodiscard]] bool emitStore(ValType resultType, Scalar::Type viewType);
-  [[nodiscard]] bool storeCommon(MemoryAccessDesc* access, AccessCheck check,
-                                 ValType resultType);
   [[nodiscard]] bool emitSelect(bool typed);
 
   template <bool isSetLocal>
@@ -1424,18 +1424,22 @@ struct BaseCompiler final {
                                    AtomicOp op);
   [[nodiscard]] bool emitAtomicStore(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool emitWait(ValType type, uint32_t byteSize);
+  [[nodiscard]] bool atomicWait(ValType type, MemoryAccessDesc* access,
+                                uint32_t lineOrBytecode);
   [[nodiscard]] bool emitWake();
+  [[nodiscard]] bool atomicWake(MemoryAccessDesc* access,
+                                uint32_t lineOrBytecode);
   [[nodiscard]] bool emitFence();
   [[nodiscard]] bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool emitMemInit();
   [[nodiscard]] bool emitMemCopy();
   [[nodiscard]] bool emitMemCopyCall(uint32_t lineOrBytecode);
-  [[nodiscard]] bool emitMemCopyInline();
+  void emitMemCopyInline();
   [[nodiscard]] bool emitTableCopy();
   [[nodiscard]] bool emitDataOrElemDrop(bool isData);
   [[nodiscard]] bool emitMemFill();
   [[nodiscard]] bool emitMemFillCall(uint32_t lineOrBytecode);
-  [[nodiscard]] bool emitMemFillInline();
+  void emitMemFillInline();
   [[nodiscard]] bool emitTableInit();
   [[nodiscard]] bool emitTableFill();
   [[nodiscard]] bool emitTableGet();
@@ -1477,12 +1481,11 @@ struct BaseCompiler final {
 #ifdef ENABLE_WASM_SIMD
   void emitVectorAndNot();
 
-  [[nodiscard]] bool loadSplat(MemoryAccessDesc* access);
-  [[nodiscard]] bool loadZero(MemoryAccessDesc* access);
-  [[nodiscard]] bool loadExtend(MemoryAccessDesc* access,
-                                Scalar::Type viewType);
-  [[nodiscard]] bool loadLane(MemoryAccessDesc* access, uint32_t laneIndex);
-  [[nodiscard]] bool storeLane(MemoryAccessDesc* access, uint32_t laneIndex);
+  void loadSplat(MemoryAccessDesc* access);
+  void loadZero(MemoryAccessDesc* access);
+  void loadExtend(MemoryAccessDesc* access, Scalar::Type viewType);
+  void loadLane(MemoryAccessDesc* access, uint32_t laneIndex);
+  void storeLane(MemoryAccessDesc* access, uint32_t laneIndex);
 
   [[nodiscard]] bool emitLoadSplat(Scalar::Type viewType);
   [[nodiscard]] bool emitLoadZero(Scalar::Type viewType);
