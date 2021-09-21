@@ -935,8 +935,6 @@ class GlobalScope : public Scope {
     return create(cx, kind, nullptr);
   }
 
-  static GlobalScope* clone(JSContext* cx, Handle<GlobalScope*> scope);
-
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
                        MutableHandleScope scope);
