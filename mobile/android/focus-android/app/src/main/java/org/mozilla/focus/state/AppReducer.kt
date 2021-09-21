@@ -51,7 +51,7 @@ private fun selectionChanged(state: AppState, action: AppAction.SelectionChanged
  * All tabs have been closed.
  */
 private fun noTabs(state: AppState): AppState {
-    if (state.screen is Screen.Home || state.screen is Screen.FirstRun || state.screen is Screen.Browser) {
+    if (state.screen is Screen.Home || state.screen is Screen.FirstRun) {
         return state
     }
 
