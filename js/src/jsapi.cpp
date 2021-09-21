@@ -2503,7 +2503,7 @@ JS_PUBLIC_API void JS::SetScriptPrivate(JSScript* script,
 }
 
 JS_PUBLIC_API JS::Value JS::GetScriptPrivate(JSScript* script) {
-  return script->sourceObject()->canonicalPrivate();
+  return script->sourceObject()->getPrivate();
 }
 
 JS_PUBLIC_API JS::Value JS::GetScriptedCallerPrivate(JSContext* cx) {
@@ -2515,7 +2515,7 @@ JS_PUBLIC_API JS::Value JS::GetScriptedCallerPrivate(JSContext* cx) {
     return UndefinedValue();
   }
 
-  return iter.script()->sourceObject()->canonicalPrivate();
+  return iter.script()->sourceObject()->getPrivate();
 }
 
 JS_PUBLIC_API void JS::SetScriptPrivateReferenceHooks(

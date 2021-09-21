@@ -113,7 +113,7 @@ JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {
 }
 
 JS_PUBLIC_API JS::Value JS::GetModulePrivate(JSObject* module) {
-  return module->as<ModuleObject>().scriptSourceObject()->canonicalPrivate();
+  return module->as<ModuleObject>().scriptSourceObject()->getPrivate();
 }
 
 JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
