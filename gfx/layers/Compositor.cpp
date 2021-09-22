@@ -54,24 +54,17 @@ class CompositorRecordedFrame final : public RecordedFrame {
   RefPtr<gfx::DataSourceSurface> mSurface;
 };
 
-Compositor::Compositor(widget::CompositorWidget* aWidget,
-                       CompositorBridgeParent* aParent)
-    : mParent(aParent),
-      mPixelsPerFrame(0),
-      mPixelsFilled(0),
-      mScreenRotation(ROTATION_0),
-      mWidget(aWidget),
+Compositor::Compositor(widget::CompositorWidget* aWidget)
+    : mWidget(aWidget),
       mIsDestroyed(false)
 #if defined(MOZ_WIDGET_ANDROID)
       // If the default color isn't white for Fennec, there is a black
       // flash before the first page of a tab is loaded.
       ,
-      mClearColor(ToDeviceColor(sRGBColor::OpaqueWhite())),
-      mDefaultClearColor(ToDeviceColor(sRGBColor::OpaqueWhite()))
+      mClearColor(ToDeviceColor(sRGBColor::OpaqueWhite()))
 #else
       ,
-      mClearColor(gfx::DeviceColor()),
-      mDefaultClearColor(gfx::DeviceColor())
+      mClearColor(gfx::DeviceColor())
 #endif
 {
 }
@@ -90,124 +83,6 @@ void Compositor::EndFrame() {
   mLastCompositionEndTime = TimeStamp::Now();
 }
 
-static void UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
-                                     const gfx::Rect& aRect,
-                                     const gfx::Rect& aIntersection,
-                                     const gfx::Rect& aTextureCoords) {
-  // Calculate the relative offset of the intersection within the layer.
-  float dx = (aIntersection.X() - aRect.X()) / aRect.Width();
-  float dy = (aIntersection.Y() - aRect.Y()) / aRect.Height();
-
-  // Update the texture offset.
-  float x = aTextureCoords.X() + dx * aTextureCoords.Width();
-  float y = aTextureCoords.Y() + dy * aTextureCoords.Height();
-
-  // Scale the texture width and height.
-  float w = aTextureCoords.Width() * aIntersection.Width() / aRect.Width();
-  float h = aTextureCoords.Height() * aIntersection.Height() / aRect.Height();
-
-  static const auto Clamp = [](float& f) {
-    if (f >= 1.0f) f = 1.0f;
-    if (f <= 0.0f) f = 0.0f;
-  };
-
-  auto UpdatePoint = [&](const gfx::Point& p, gfx::Point& t) {
-    t.x = x + (p.x - aIntersection.X()) / aIntersection.Width() * w;
-    t.y = y + (p.y - aIntersection.Y()) / aIntersection.Height() * h;
-
-    Clamp(t.x);
-    Clamp(t.y);
-  };
-
-  UpdatePoint(aTriangle.p1, aTriangle.textureCoords.p1);
-  UpdatePoint(aTriangle.p2, aTriangle.textureCoords.p2);
-  UpdatePoint(aTriangle.p3, aTriangle.textureCoords.p3);
-}
-
-void Compositor::DrawGeometry(const gfx::Rect& aRect,
-                              const gfx::IntRect& aClipRect,
-                              const EffectChain& aEffectChain,
-                              gfx::Float aOpacity,
-                              const gfx::Matrix4x4& aTransform,
-                              const gfx::Rect& aVisibleRect,
-                              const Maybe<gfx::Polygon>& aGeometry) {
-  if (aRect.IsEmpty()) {
-    return;
-  }
-
-  if (!aGeometry || !SupportsLayerGeometry()) {
-    DrawQuad(aRect, aClipRect, aEffectChain, aOpacity, aTransform,
-             aVisibleRect);
-    return;
-  }
-
-  // Cull completely invisible polygons.
-  if (aRect.Intersect(aGeometry->BoundingBox()).IsEmpty()) {
-    return;
-  }
-
-  const gfx::Polygon clipped = aGeometry->ClipPolygon(aRect);
-
-  // Cull polygons with no area.
-  if (clipped.IsEmpty()) {
-    return;
-  }
-
-  DrawPolygon(clipped, aRect, aClipRect, aEffectChain, aOpacity, aTransform,
-              aVisibleRect);
-}
-
-void Compositor::DrawTriangles(
-    const nsTArray<gfx::TexturedTriangle>& aTriangles, const gfx::Rect& aRect,
-    const gfx::IntRect& aClipRect, const EffectChain& aEffectChain,
-    gfx::Float aOpacity, const gfx::Matrix4x4& aTransform,
-    const gfx::Rect& aVisibleRect) {
-  for (const gfx::TexturedTriangle& triangle : aTriangles) {
-    DrawTriangle(triangle, aClipRect, aEffectChain, aOpacity, aTransform,
-                 aVisibleRect);
-  }
-}
-
-nsTArray<gfx::TexturedTriangle> GenerateTexturedTriangles(
-    const gfx::Polygon& aPolygon, const gfx::Rect& aRect,
-    const gfx::Rect& aTexRect) {
-  nsTArray<gfx::TexturedTriangle> texturedTriangles;
-
-  gfx::Rect layerRects[4];
-  gfx::Rect textureRects[4];
-  size_t rects =
-      DecomposeIntoNoRepeatRects(aRect, aTexRect, &layerRects, &textureRects);
-  for (size_t i = 0; i < rects; ++i) {
-    const gfx::Rect& rect = layerRects[i];
-    const gfx::Rect& texRect = textureRects[i];
-    const gfx::Polygon clipped = aPolygon.ClipPolygon(rect);
-
-    if (clipped.IsEmpty()) {
-      continue;
-    }
-
-    for (const gfx::Triangle& triangle : clipped.ToTriangles()) {
-      const gfx::Rect intersection = rect.Intersect(triangle.BoundingBox());
-
-      // Cull completely invisible triangles.
-      if (intersection.IsEmpty()) {
-        continue;
-      }
-
-      MOZ_ASSERT(rect.Width() > 0.0f && rect.Height() > 0.0f);
-      MOZ_ASSERT(intersection.Width() > 0.0f && intersection.Height() > 0.0f);
-
-      // Since the texture was created for non-split geometry, we need to
-      // update the texture coordinates to account for the split.
-      gfx::TexturedTriangle t(triangle);
-      UpdateTextureCoordinates(t, rect, intersection, texRect);
-      texturedTriangles.AppendElement(std::move(t));
-    }
-  }
-
-  return texturedTriangles;
-}
-
 nsTArray<TexturedVertex> TexturedTrianglesToVertexArray(
     const nsTArray<gfx::TexturedTriangle>& aTriangles) {
   const auto VertexFromPoints = [](const gfx::Point& p, const gfx::Point& t) {
@@ -223,76 +98,6 @@ nsTArray<TexturedVertex> TexturedTrianglesToVertexArray(
   }
 
   return vertices;
-}
-
-void Compositor::DrawPolygon(const gfx::Polygon& aPolygon,
-                             const gfx::Rect& aRect,
-                             const gfx::IntRect& aClipRect,
-                             const EffectChain& aEffectChain,
-                             gfx::Float aOpacity,
-                             const gfx::Matrix4x4& aTransform,
-                             const gfx::Rect& aVisibleRect) {
-  nsTArray<gfx::TexturedTriangle> texturedTriangles;
-
-  TexturedEffect* texturedEffect =
-      aEffectChain.mPrimaryEffect->AsTexturedEffect();
-
-  if (texturedEffect) {
-    texturedTriangles = GenerateTexturedTriangles(
-        aPolygon, aRect, texturedEffect->mTextureCoords);
-  } else {
-    for (const gfx::Triangle& triangle : aPolygon.ToTriangles()) {
-      texturedTriangles.AppendElement(gfx::TexturedTriangle(triangle));
-    }
-  }
-
-  if (texturedTriangles.IsEmpty()) {
-    // Nothing to render.
-    return;
-  }
-
-  DrawTriangles(texturedTriangles, aRect, aClipRect, aEffectChain, aOpacity,
-                aTransform, aVisibleRect);
-}
-
-void Compositor::SlowDrawRect(const gfx::Rect& aRect,
-                              const gfx::DeviceColor& aColor,
-                              const gfx::IntRect& aClipRect,
-                              const gfx::Matrix4x4& aTransform,
-                              int aStrokeWidth) {
-  // TODO This should draw a rect using a single draw call but since
-  // this is only used for debugging overlays it's not worth optimizing ATM.
-  float opacity = 1.0f;
-  EffectChain effects;
-
-  effects.mPrimaryEffect = new EffectSolidColor(aColor);
-  // left
-  this->DrawQuad(gfx::Rect(aRect.X(), aRect.Y(), aStrokeWidth, aRect.Height()),
-                 aClipRect, effects, opacity, aTransform);
-  // top
-  this->DrawQuad(gfx::Rect(aRect.X() + aStrokeWidth, aRect.Y(),
-                           aRect.Width() - 2 * aStrokeWidth, aStrokeWidth),
-                 aClipRect, effects, opacity, aTransform);
-  // right
-  this->DrawQuad(gfx::Rect(aRect.XMost() - aStrokeWidth, aRect.Y(),
-                           aStrokeWidth, aRect.Height()),
-                 aClipRect, effects, opacity, aTransform);
-  // bottom
-  this->DrawQuad(
-      gfx::Rect(aRect.X() + aStrokeWidth, aRect.YMost() - aStrokeWidth,
-                aRect.Width() - 2 * aStrokeWidth, aStrokeWidth),
-      aClipRect, effects, opacity, aTransform);
-}
-
-void Compositor::FillRect(const gfx::Rect& aRect,
-                          const gfx::DeviceColor& aColor,
-                          const gfx::IntRect& aClipRect,
-                          const gfx::Matrix4x4& aTransform) {
-  float opacity = 1.0f;
-  EffectChain effects;
-
-  effects.mPrimaryEffect = new EffectSolidColor(aColor);
-  this->DrawQuad(aRect, aClipRect, effects, opacity, aTransform);
 }
 
 static float WrapTexCoord(float v) {
@@ -456,10 +261,6 @@ gfx::IntRect Compositor::ComputeBackdropCopyRect(
                                  aOutTransform, aOutLayerQuad);
 }
 
-void Compositor::SetInvalid() { mParent = nullptr; }
-
-bool Compositor::IsValid() const { return !!mParent; }
-
 void Compositor::UnlockAfterComposition(TextureHost* aTexture) {
   TextureSourceProvider::UnlockAfterComposition(aTexture);
 
@@ -475,11 +276,6 @@ bool Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost) {
     return false;
   }
   return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);
-}
-
-void Compositor::GetFrameStats(GPUStats* aStats) {
-  aStats->mInvalidPixels = mPixelsPerFrame;
-  aStats->mPixelsFilled = mPixelsFilled;
 }
 
 already_AddRefed<RecordedFrame> Compositor::RecordFrame(

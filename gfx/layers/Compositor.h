@@ -185,34 +185,13 @@ class Compositor : public TextureSourceProvider {
   virtual ~Compositor();
 
  public:
-  explicit Compositor(widget::CompositorWidget* aWidget,
-                      CompositorBridgeParent* aParent = nullptr);
+  explicit Compositor(widget::CompositorWidget* aWidget);
+
+  bool IsValid() const override { return true; }
 
   virtual bool Initialize(nsCString* const out_failureReason) = 0;
   void Destroy() override;
   bool IsDestroyed() const { return mIsDestroyed; }
-
-  /**
-   * Request a texture host identifier that may be used for creating textures
-   * across process or thread boundaries that are compatible with this
-   * compositor.
-   */
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() = 0;
-
-  typedef uint32_t MakeCurrentFlags;
-  static const MakeCurrentFlags ForceMakeCurrent = 0x1;
-  /**
-   * Make this compositor's rendering context the current context for the
-   * underlying graphics API. This may be a global operation, depending on the
-   * API. Our context will remain the current one until someone else changes it.
-   *
-   * Clients of the compositor should call this at the start of the compositing
-   * process, it might be required by texture uploads etc.
-   *
-   * If aFlags == ForceMakeCurrent then we will (re-)set our context on the
-   * underlying API even if it is already the current context.
-   */
-  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) = 0;
 
   /**
    * Creates a Surface that can be used as a rendering target by this
@@ -222,18 +201,6 @@ class Compositor : public TextureSourceProvider {
       const gfx::IntRect& aRect, SurfaceInitMode aInit) = 0;
 
   /**
-   * Creates a Surface that can be used as a rendering target by this
-   * compositor, and initializes the surface by copying from aSource.
-   * If aSource is null, then the current screen buffer is used as source.
-   *
-   * aSourcePoint specifies the point in aSource to copy data from.
-   */
-  virtual already_AddRefed<CompositingRenderTarget>
-  CreateRenderTargetFromSource(const gfx::IntRect& aRect,
-                               const CompositingRenderTarget* aSource,
-                               const gfx::IntPoint& aSourcePoint) = 0;
-
-  /**
    * Grab a snapshot of aSource and store it in aDest, so that the pixels can
    * be read on the CPU by mapping aDest at some point in the future.
    * aSource and aDest must have the same size.
@@ -241,17 +208,13 @@ class Compositor : public TextureSourceProvider {
    * Returns whether the operation was successful.
    */
   virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
-                                    AsyncReadbackBuffer* aDest) {
-    return false;
-  }
+                                    AsyncReadbackBuffer* aDest) = 0;
 
   /**
    * Create an AsyncReadbackBuffer of the specified size. Can return null.
    */
   virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
-      const gfx::IntSize& aSize) {
-    return nullptr;
-  }
+      const gfx::IntSize& aSize) = 0;
 
   /**
    * Draw a part of aSource into the current render target.
@@ -260,9 +223,7 @@ class Compositor : public TextureSourceProvider {
    */
   virtual bool BlitRenderTarget(CompositingRenderTarget* aSource,
                                 const gfx::IntSize& aSourceSize,
-                                const gfx::IntSize& aDestSize) {
-    return false;
-  }
+                                const gfx::IntSize& aDestSize) = 0;
 
   /**
    * Sets the given surface as the target for subsequent calls to DrawQuad.
@@ -284,29 +245,13 @@ class Compositor : public TextureSourceProvider {
    * render target), this will return null.
    */
   virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
-      const {
-    return nullptr;
-  }
+      const = 0;
 
   /**
    * Mostly the compositor will pull the size from a widget and this method will
    * be ignored, but compositor implementations are free to use it if they like.
    */
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) = 0;
-
-  void DrawGeometry(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
-                    const EffectChain& aEffectChain, gfx::Float aOpacity,
-                    const gfx::Matrix4x4& aTransform,
-                    const gfx::Rect& aVisibleRect,
-                    const Maybe<gfx::Polygon>& aGeometry);
-
-  void DrawGeometry(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
-                    const EffectChain& aEffectChain, gfx::Float aOpacity,
-                    const gfx::Matrix4x4& aTransform,
-                    const Maybe<gfx::Polygon>& aGeometry) {
-    DrawGeometry(aRect, aClipRect, aEffectChain, aOpacity, aTransform, aRect,
-                 aGeometry);
-  }
 
   /**
    * Tell the compositor to draw a quad. What to do draw and how it is
@@ -332,46 +277,7 @@ class Compositor : public TextureSourceProvider {
     DrawQuad(aRect, aClipRect, aEffectChain, aOpacity, aTransform, aRect);
   }
 
-  virtual void DrawTriangle(const gfx::TexturedTriangle& aTriangle,
-                            const gfx::IntRect& aClipRect,
-                            const EffectChain& aEffectChain,
-                            gfx::Float aOpacity,
-                            const gfx::Matrix4x4& aTransform,
-                            const gfx::Rect& aVisibleRect) {
-    MOZ_CRASH(
-        "Compositor::DrawTriangle is not implemented for the current "
-        "platform!");
-  }
-
-  virtual bool SupportsLayerGeometry() const { return false; }
-
-  /**
-   * Draw an unfilled solid color rect. Typically used for debugging overlays.
-   */
-  void SlowDrawRect(const gfx::Rect& aRect, const gfx::DeviceColor& color,
-                    const gfx::IntRect& aClipRect = gfx::IntRect(),
-                    const gfx::Matrix4x4& aTransform = gfx::Matrix4x4(),
-                    int aStrokeWidth = 1);
-
-  /**
-   * Draw a solid color filled rect. This is a simple DrawQuad helper.
-   */
-  void FillRect(const gfx::Rect& aRect, const gfx::DeviceColor& color,
-                const gfx::IntRect& aClipRect = gfx::IntRect(),
-                const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
-
   void SetClearColor(const gfx::DeviceColor& aColor) { mClearColor = aColor; }
-
-  void SetDefaultClearColor(const gfx::DeviceColor& aColor) {
-    mDefaultClearColor = aColor;
-  }
-
-  void SetClearColorToDefault() { mClearColor = mDefaultClearColor; }
-
-  /*
-   * Clear aRect on current render target.
-   */
-  virtual void ClearRect(const gfx::Rect& aRect) = 0;
 
   /**
    * Start a new frame for rendering to the window.
@@ -392,105 +298,6 @@ class Compositor : public TextureSourceProvider {
       const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion) = 0;
 
   /**
-   * Start a new frame for rendering to a DrawTarget. Rendering can happen
-   * directly into the DrawTarget, or it can happen in an offscreen GPU buffer
-   * and read back into the DrawTarget in EndFrame, or it can happen inside the
-   * window and read back into the DrawTarget in EndFrame.
-   * Needs to be paired with a call to EndFrame() if the return value is not
-   * Nothing().
-   *
-   * aInvalidRegion is the invalid region in the target.
-   * aClipRect is the clip rect for all drawing (optional).
-   * aRenderBounds is the bounding rect for rendering.
-   * aOpaqueRegion is the area that contains opaque content.
-   * aTarget is the DrawTarget which should contain the rendering after
-   *         EndFrame() has been called.
-   * aTargetBounds are the DrawTarget's bounds.
-   * All coordinates are in window space.
-   *
-   * Returns the non-empty render bounds actually used by the compositor in
-   * window space, or Nothing() if composition should be aborted.
-   *
-   * If BeginFrame succeeds, the compositor keeps a reference to aTarget until
-   * EndFrame is called.
-   */
-  virtual Maybe<gfx::IntRect> BeginFrameForTarget(
-      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
-      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) = 0;
-
-  /**
-   * Start a new frame for rendering to one or more native layers. Needs to be
-   * paired with a call to EndFrame().
-   *
-   * This puts the compositor in a state where offscreen rendering is allowed.
-   * Rendering an actual native layer is only possible via a call to
-   * BeginRenderingToNativeLayer(), after BeginFrameForNativeLayers() has run.
-   *
-   * The following is true for the entire time between
-   * BeginFrameForNativeLayers() and EndFrame(), even outside pairs of calls to
-   * Begin/EndRenderingToNativeLayer():
-   *  - GetCurrentRenderTarget() will return something non-null.
-   *  - CreateRenderTarget() and SetRenderTarget() can be called, in order to
-   *    facilitate offscreen rendering.
-   * The render target that this method sets as the current render target is not
-   * useful. Do not render to it. It exists so that calls of the form
-   * SetRenderTarget(previousTarget) do not crash.
-   *
-   * Do not call on platforms that do not support native layers.
-   */
-  virtual void BeginFrameForNativeLayers() = 0;
-
-  /**
-   * Start rendering into aNativeLayer.
-   * Needs to be paired with a call to EndRenderingToNativeLayer() if the return
-   * value is not Nothing().
-   *
-   * Must be called between BeginFrameForNativeLayers() and EndFrame().
-   *
-   * aInvalidRegion is the invalid region in the native layer.
-   * aClipRect is the clip rect for all drawing (optional).
-   * aOpaqueRegion is the area that contains opaque content.
-   * aNativeLayer is the native layer.
-   * All coordinates, including aNativeLayer->GetRect(), are in window space.
-   *
-   * Returns the non-empty layer rect, or Nothing() if rendering to this layer
-   * should be skipped.
-   *
-   * If BeginRenderingToNativeLayer succeeds, the compositor keeps a reference
-   * to aNativeLayer until EndRenderingToNativeLayer is called.
-   *
-   * Do not call on platforms that do not support native layers.
-   */
-  virtual Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
-      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
-      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) = 0;
-
-  /**
-   * Stop rendering to the native layer and submit the rendering as the layer's
-   * new content.
-   *
-   * Do not call on platforms that do not support native layers.
-   */
-  virtual void EndRenderingToNativeLayer() = 0;
-
-  /**
-   * Notification that we've finished issuing draw commands for normal
-   * layers (as opposed to the diagnostic overlay which comes after).
-   * This is called between BeginFrame* and EndFrame, and it's called before
-   * GetWindowRenderTarget() is called for the purposes of screenshot capturing.
-   * That next call to GetWindowRenderTarget() expects up-to-date contents for
-   * the current frame.
-   * When rendering to native layers, this should be called for every layer,
-   * between BeginRenderingToNativeLayer and EndRenderingToNativeLayer, at a
-   * time at which the current render target is the one that
-   * BeginRenderingToNativeLayer has put in place.
-   * When not rendering to native layers, this should be called at a time when
-   * the current render target is the one that BeginFrameForWindow put in place.
-   */
-  virtual void NormalDrawingDone() {}
-
-  /**
    * Flush the current frame to the screen and tidy up.
    *
    * Derived class overriding this should call Compositor::EndFrame.
@@ -498,15 +305,6 @@ class Compositor : public TextureSourceProvider {
   virtual void EndFrame();
 
   virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
-
-  virtual void WaitForGPU() {}
-
-  virtual RefPtr<SurfacePoolHandle> GetSurfacePoolHandle() { return nullptr; }
-
-  /**
-   * Whether textures created by this compositor can receive partial updates.
-   */
-  virtual bool SupportsPartialTextureUpdate() = 0;
 
 #ifdef MOZ_DUMP_PAINTING
   virtual const char* Name() const = 0;
@@ -538,33 +336,7 @@ class Compositor : public TextureSourceProvider {
    */
   virtual bool Resume() { return true; }
 
-  /**
-   * Call before rendering begins to ensure the compositor is ready to
-   * composite. Returns false if rendering should be aborted.
-   */
-  virtual bool Ready() { return true; }
-
-  virtual void ForcePresent() {}
-
-  virtual bool IsPendingComposite() { return false; }
-
-  virtual void FinishPendingComposite() {}
-
   widget::CompositorWidget* GetWidget() const { return mWidget; }
-
-  // Return statistics for the most recent frame we computed statistics for.
-  virtual void GetFrameStats(GPUStats* aStats);
-
-  ScreenRotation GetScreenRotation() const { return mScreenRotation; }
-  void SetScreenRotation(ScreenRotation aRotation) {
-    mScreenRotation = aRotation;
-  }
-
-  // A stale Compositor has no CompositorBridgeParent; it will not process
-  // frames and should not be used.
-  void SetInvalid();
-  bool IsValid() const override;
-  CompositorBridgeParent* GetCompositorBridgeParent() const { return mParent; }
 
   /**
    * Request the compositor to allow recording its frames.
@@ -604,20 +376,6 @@ class Compositor : public TextureSourceProvider {
                                        gfx::Matrix4x4* aOutTransform,
                                        gfx::Rect* aOutLayerQuad = nullptr);
 
-  virtual void DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
-                             const gfx::Rect& aRect,
-                             const gfx::IntRect& aClipRect,
-                             const EffectChain& aEffectChain,
-                             gfx::Float aOpacity,
-                             const gfx::Matrix4x4& aTransform,
-                             const gfx::Rect& aVisibleRect);
-
-  virtual void DrawPolygon(const gfx::Polygon& aPolygon, const gfx::Rect& aRect,
-                           const gfx::IntRect& aClipRect,
-                           const EffectChain& aEffectChain, gfx::Float aOpacity,
-                           const gfx::Matrix4x4& aTransform,
-                           const gfx::Rect& aVisibleRect);
-
   /**
    * Whether or not the compositor should be prepared to record frames. While
    * this returns true, compositors are expected to maintain a full window
@@ -635,24 +393,11 @@ class Compositor : public TextureSourceProvider {
    */
   TimeStamp mLastCompositionEndTime;
 
-  CompositorBridgeParent* mParent;
-
-  /**
-   * We keep track of the total number of pixels filled as we composite the
-   * current frame. This value is an approximation and is not accurate,
-   * especially in the presence of transforms.
-   */
-  size_t mPixelsPerFrame;
-  size_t mPixelsFilled;
-
-  ScreenRotation mScreenRotation;
-
   widget::CompositorWidget* mWidget;
 
   bool mIsDestroyed;
 
   gfx::DeviceColor mClearColor;
-  gfx::DeviceColor mDefaultClearColor;
 
   bool mRecordFrames = false;
 
