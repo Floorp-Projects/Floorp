@@ -2735,10 +2735,9 @@
      */ \
     MACRO(CheckThis, check_this, NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Push the global environment onto the stack, unless the script has a
-     * non-syntactic global scope. In that case, this acts like JSOp::BindName.
-     *
-     * `nameIndex` is only used when acting like JSOp::BindName.
+     * Look up a name on the global lexical environment's chain and push the
+     * environment which contains a binding for that name. If no such binding
+     * exists, push the global lexical environment.
      *
      *   Category: Variables and scopes
      *   Type: Looking up bindings
