@@ -909,6 +909,14 @@ nsresult nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  if (!mConnected && !m0RTTInProgress) {
+    mConnected = true;
+    nsCOMPtr<nsISupports> info;
+    mConnection->GetSecurityInfo(getter_AddRefs(info));
+    MutexAutoLock lock(mLock);
+    mSecurityInfo = info;
+  }
+
   if (mTransactionDone) {
     return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
   }
