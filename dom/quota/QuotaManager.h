@@ -366,6 +366,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   uint64_t GetOriginUsage(const PrincipalMetadata& aPrincipalMetadata);
 
+  Maybe<FullOriginMetadata> GetFullOriginMetadata(
+      const OriginMetadata& aOriginMetadata);
+
   void NotifyStoragePressure(uint64_t aUsage);
 
   // Record a quota client shutdown step, if shutting down.

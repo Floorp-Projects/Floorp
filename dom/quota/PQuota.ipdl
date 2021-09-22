@@ -57,6 +57,12 @@ struct InitializeTemporaryOriginParams
   PrincipalInfo principalInfo;
 };
 
+struct GetFullOriginMetadataParams
+{
+  PersistenceType persistenceType;
+  PrincipalInfo principalInfo;
+};
+
 struct AllUsageParams
 {
   bool getAll;
@@ -135,6 +141,7 @@ union RequestParams
   InitTemporaryStorageParams;
   InitializePersistentOriginParams;
   InitializeTemporaryOriginParams;
+  GetFullOriginMetadataParams;
   ClearOriginParams;
   ResetOriginParams;
   ClearDataParams;

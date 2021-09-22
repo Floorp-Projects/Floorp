@@ -6,6 +6,22 @@
 
 #include "nsISupports.idl"
 
+[scriptable, function, uuid(4d8def75-014e-404d-bf30-e2f0Bfcf4d89)]
+interface nsIQuotaFullOriginMetadataResult : nsISupports
+{
+  readonly attribute ACString suffix;
+
+  readonly attribute ACString group;
+
+  readonly attribute ACString origin;
+
+  readonly attribute ACString persistenceType;
+
+  readonly attribute boolean persisted;
+
+  readonly attribute long long lastAccessTime;
+};
+
 [scriptable, function, uuid(d8c9328b-9aa8-4f5d-90e6-482de4a6d5b8)]
 interface nsIQuotaUsageResult : nsISupports
 {

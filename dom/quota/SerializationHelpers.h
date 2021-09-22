@@ -11,6 +11,7 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/OriginAttributes.h"
 
@@ -28,6 +29,30 @@ struct ParamTraits<mozilla::dom::quota::Client::Type>
     : public ContiguousEnumSerializer<mozilla::dom::quota::Client::Type,
                                       mozilla::dom::quota::Client::IDB,
                                       mozilla::dom::quota::Client::TYPE_MAX> {};
+
+template <>
+struct ParamTraits<mozilla::dom::quota::FullOriginMetadata> {
+  using ParamType = mozilla::dom::quota::FullOriginMetadata;
+
+  static void Write(Message* aMsg, const ParamType& aParam) {
+    WriteParam(aMsg, aParam.mSuffix);
+    WriteParam(aMsg, aParam.mGroup);
+    WriteParam(aMsg, aParam.mOrigin);
+    WriteParam(aMsg, aParam.mPersistenceType);
+    WriteParam(aMsg, aParam.mPersisted);
+    WriteParam(aMsg, aParam.mLastAccessTime);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   ParamType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mSuffix) &&
+           ReadParam(aMsg, aIter, &aResult->mGroup) &&
+           ReadParam(aMsg, aIter, &aResult->mOrigin) &&
+           ReadParam(aMsg, aIter, &aResult->mPersistenceType) &&
+           ReadParam(aMsg, aIter, &aResult->mPersisted) &&
+           ReadParam(aMsg, aIter, &aResult->mLastAccessTime);
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::OriginAttributesPattern> {
