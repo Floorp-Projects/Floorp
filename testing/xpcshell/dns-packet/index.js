@@ -1433,6 +1433,7 @@ svcparam.encode = function(param, buf, offset) {
           offset++;
         }
         svcparam.encode.bytes += svcparam.odoh.length;
+        svcparam.odoh = null;
       } else {
         buf.writeUInt16BE(param.value.length, offset);
         offset += 2;
