@@ -15,7 +15,7 @@ key1 = Value for Key 1
 key2 = Value for <a>Key 2<a/>.
 ` },
   ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   SimpleTest.waitForExplicitFinish();

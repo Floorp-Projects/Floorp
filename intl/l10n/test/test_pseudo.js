@@ -10,7 +10,7 @@ const originalValues = {
 const l10nReg = new L10nRegistry();
 
 function getMockRegistry() {
-  const mockSource = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}/", [
+  const mockSource = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}/", [
     {
       path: "/localization/en-US/mock.ftl",
       source: `

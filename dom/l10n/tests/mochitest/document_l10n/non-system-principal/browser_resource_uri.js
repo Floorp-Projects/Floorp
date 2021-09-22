@@ -17,7 +17,7 @@ let locales = Services.locale.appLocalesAsBCP47;
 
 // This source is actually using a real `FileSource` instead of a mocked one,
 // because we want to test that fetching real I/O out of the `uri` works in non-system-principal.
-let source = new L10nFileSource("test", locales, `${uri}localization/`);
+let source = new L10nFileSource("test", "app", locales, `${uri}localization/`);
 L10nRegistry.getInstance().registerSources([source]);
 
 registerCleanupFunction(() => {
