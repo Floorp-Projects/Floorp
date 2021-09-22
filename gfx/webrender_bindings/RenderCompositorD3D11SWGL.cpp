@@ -51,8 +51,7 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
     return nullptr;
   }
 
-  RefPtr<CompositorD3D11> compositor =
-      MakeAndAddRef<CompositorD3D11>(nullptr, aWidget);
+  RefPtr<CompositorD3D11> compositor = MakeAndAddRef<CompositorD3D11>(aWidget);
   nsCString log;
   if (!compositor->Initialize(&log)) {
     gfxCriticalNote << "Failed to initialize CompositorD3D11 for SWGL: "
