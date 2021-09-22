@@ -6195,22 +6195,47 @@ void PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) {
   }
 }
 
-class nsAutoNotifyDidPaint {
- public:
-  nsAutoNotifyDidPaint(PresShell* aShell, PaintFlags aFlags)
-      : mShell(aShell), mFlags(aFlags) {}
-  ~nsAutoNotifyDidPaint() {
-    if (!!(mFlags & PaintFlags::PaintComposite)) {
-      mShell->GetPresContext()->NotifyDidPaintForSubtree();
-    }
+void PresShell::PaintAndRequestComposite(nsView* aView, PaintFlags aFlags) {
+  if (!mIsActive) {
+    return;
   }
 
- private:
-  PresShell* mShell;
-  PaintFlags mFlags;
-};
+  WindowRenderer* renderer = aView->GetWidget()->GetWindowRenderer();
+  NS_ASSERTION(renderer, "Must be in paint event");
+  if (renderer->AsFallback()) {
+    // The fallback renderer doesn't do any retaining, so we
+    // just need to notify the view and widget that we're invalid, and
+    // we'll do a paint+composite from the PaintWindow callback.
+    GetViewManager()->InvalidateView(aView);
+    return;
+  }
 
-void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
+  // Otherwise we're a retained WebRenderLayerManager, so we want to call
+  // Paint to update with any changes and push those to WR.
+  PaintInternalFlags flags = PaintInternalFlags::None;
+  if (aFlags & PaintFlags::PaintSyncDecodeImages) {
+    flags |= PaintInternalFlags::PaintSyncDecodeImages;
+  }
+  PaintInternal(aView, flags);
+}
+
+void PresShell::SyncPaintFallback(nsView* aView) {
+  if (!mIsActive) {
+    return;
+  }
+
+  WindowRenderer* renderer = aView->GetWidget()->GetWindowRenderer();
+  NS_ASSERTION(renderer->AsFallback(),
+               "Can't do Sync paint for remote renderers");
+  if (!renderer->AsFallback()) {
+    return;
+  }
+
+  PaintInternal(aView, PaintInternalFlags::PaintComposite);
+  GetPresContext()->NotifyDidPaintForSubtree();
+}
+
+void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
   nsCString url;
   nsIURI* uri = mDocument->GetDocumentURI();
   Document* contentRoot = GetPrimaryContentDocument();
@@ -6226,7 +6251,7 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   // assert there. However, we don't rely on this assertion on Android because
   // we don't paint while JS is running.
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (!(aFlags & PaintFlags::PaintComposite)) {
+  if (!(aFlags & PaintInternalFlags::PaintComposite)) {
     // We need to allow content JS when the flag is set since we may trigger
     // MozAfterPaint events in content in those cases.
     nojs.emplace(dom::danger::GetJSContext());
@@ -6258,9 +6283,6 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   WindowRenderer* renderer = aViewToPaint->GetWidget()->GetWindowRenderer();
   NS_ASSERTION(renderer, "Must be in paint event");
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
-  bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
-
-  nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
 
   // Whether or not we should set first paint when painting is suppressed
   // is debatable. For now we'll do it because B2G relied on first paint
@@ -6277,13 +6299,6 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   }
 
   if (!renderer->BeginTransaction(url)) {
-    if (renderer->AsFallback() && !(aFlags & PaintFlags::PaintComposite)) {
-      // The fallback renderer doesn't do any retaining, and so always
-      // fails when called without PaintComposite (from the refresh driver).
-      // We just need to notify the view and widget that we're invalid, and
-      // we'll do a paint+composite from the PaintWindow callback.
-      aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
-    }
     return;
   }
 
@@ -6294,19 +6309,16 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   }
 
   if (frame) {
-    if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
+    if (!(aFlags & PaintInternalFlags::PaintSyncDecodeImages) &&
         !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager) {
         layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
       }
 
-      if (renderer->EndEmptyTransaction((aFlags & PaintFlags::PaintComposite)
-                                            ? LayerManager::END_DEFAULT
-                                            : LayerManager::END_NO_COMPOSITE)) {
-        if (shouldInvalidate) {
-          aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
-        }
-
+      if (renderer->EndEmptyTransaction(
+              (aFlags & PaintInternalFlags::PaintComposite)
+                  ? LayerManager::END_DEFAULT
+                  : LayerManager::END_NO_COMPOSITE)) {
         frame->UpdatePaintCountForPaintedPresShells();
         return;
       }
@@ -6323,7 +6335,7 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
 
   // We force sync-decode for printing / print-preview (printing already does
   // this from nsPageSequenceFrame::PrintNextSheet).
-  if (aFlags & PaintFlags::PaintSyncDecodeImages ||
+  if (aFlags & PaintInternalFlags::PaintSyncDecodeImages ||
       mDocument->IsStaticDocument()) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
@@ -6356,7 +6368,7 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   FallbackRenderer* fallback = renderer->AsFallback();
   MOZ_ASSERT(fallback);
 
-  if (aFlags & PaintFlags::PaintComposite) {
+  if (aFlags & PaintInternalFlags::PaintComposite) {
     nsIntRect bounds = presContext->GetVisibleArea().ToOutsidePixels(
         presContext->AppUnitsPerDevPixel());
     fallback->EndTransactionWithColor(bounds, ToDeviceColor(bgcolor));

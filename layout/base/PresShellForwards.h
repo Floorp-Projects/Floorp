@@ -188,13 +188,21 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AddCanvasBackgroundColorFlags)
 
 enum class PaintFlags {
   None = 0,
-  /* Composite layers to the window. */
-  PaintComposite = 1 << 1,
   /* Sync-decode images. */
-  PaintSyncDecodeImages = 1 << 2,
+  PaintSyncDecodeImages = 1 << 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintFlags)
+
+enum class PaintInternalFlags {
+  None = 0,
+  /* Sync-decode images. */
+  PaintSyncDecodeImages = 1 << 1,
+  /* Composite layers to the window. */
+  PaintComposite = 1 << 2,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintInternalFlags)
 
 // This is a private enum class of PresShell, but currently,
 // MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS isn't available in class definition.
