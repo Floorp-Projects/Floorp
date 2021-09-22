@@ -157,7 +157,7 @@ internal class ReleaseMetricController(
         MetricServiceType.Marketing -> isMarketingDataTelemetryEnabled()
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "MaxLineLength")
     private fun Fact.toEvent(): Event? = when {
         Component.FEATURE_PROMPTS == component && LoginDialogFacts.Items.DISPLAY == item -> Event.LoginDialogPromptDisplayed
         Component.FEATURE_PROMPTS == component && LoginDialogFacts.Items.CANCEL == item -> Event.LoginDialogPromptCancelled
