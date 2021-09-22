@@ -341,10 +341,8 @@ class CompositorOGL final : public Compositor {
                                  const gfx::IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion);
 
-  ShaderConfigOGL GetShaderConfigFor(
-      Effect* aEffect, TextureSourceOGL* aSourceMask = nullptr,
-      gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER,
-      bool aColorMatrix = false, bool aDEAAEnabled = false) const;
+  ShaderConfigOGL GetShaderConfigFor(Effect* aEffect,
+                                     bool aDEAAEnabled = false) const;
 
   ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL& aConfig);
 
@@ -412,13 +410,6 @@ class CompositorOGL final : public Compositor {
 
   gfx::Rect GetTextureCoordinates(gfx::Rect textureRect,
                                   TextureSource* aTexture);
-
-  /**
-   * Bind the texture behind the current render target as the backdrop for a
-   * mix-blend shader.
-   */
-  void BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop,
-                    GLenum aTexUnit);
 
   /**
    * Copies the content of the current render target to the set transaction

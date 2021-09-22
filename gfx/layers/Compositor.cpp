@@ -237,30 +237,6 @@ size_t DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   return 4;
 }
 
-gfx::IntRect Compositor::ComputeBackdropCopyRect(
-    const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
-    const gfx::Matrix4x4& aTransform, gfx::Matrix4x4* aOutTransform,
-    gfx::Rect* aOutLayerQuad) {
-  // Compute the clip.
-  RefPtr<CompositingRenderTarget> currentRenderTarget =
-      GetCurrentRenderTarget();
-  gfx::IntPoint rtOffset = currentRenderTarget->GetOrigin();
-  gfx::IntSize rtSize = currentRenderTarget->GetSize();
-
-  return layers::ComputeBackdropCopyRect(aRect, aClipRect, aTransform,
-                                         gfx::IntRect(rtOffset, rtSize),
-                                         aOutTransform, aOutLayerQuad);
-}
-
-gfx::IntRect Compositor::ComputeBackdropCopyRect(
-    const gfx::Triangle& aTriangle, const gfx::IntRect& aClipRect,
-    const gfx::Matrix4x4& aTransform, gfx::Matrix4x4* aOutTransform,
-    gfx::Rect* aOutLayerQuad) {
-  gfx::Rect boundingBox = aTriangle.BoundingBox();
-  return ComputeBackdropCopyRect(boundingBox, aClipRect, aTransform,
-                                 aOutTransform, aOutLayerQuad);
-}
-
 void Compositor::UnlockAfterComposition(TextureHost* aTexture) {
   TextureSourceProvider::UnlockAfterComposition(aTexture);
 

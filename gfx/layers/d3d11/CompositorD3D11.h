@@ -142,8 +142,7 @@ class CompositorD3D11 : public Compositor {
   bool UpdateConstantBuffers();
   void SetSamplerForSamplingFilter(gfx::SamplingFilter aSamplingFilter);
 
-  ID3D11PixelShader* GetPSForEffect(Effect* aEffect, const bool aUseBlendShader,
-                                    const MaskType aMaskType);
+  ID3D11PixelShader* GetPSForEffect(Effect* aEffect);
   Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const Maybe<gfx::IntRect>& aClipRect,
                                  const gfx::IntRect& aRenderBounds,
@@ -152,38 +151,12 @@ class CompositorD3D11 : public Compositor {
   RefPtr<ID3D11Texture2D> CreateTexture(const gfx::IntRect& aRect,
                                         const CompositingRenderTarget* aSource,
                                         const gfx::IntPoint& aSourcePoint);
-  bool CopyBackdrop(const gfx::IntRect& aRect,
-                    RefPtr<ID3D11Texture2D>* aOutTexture,
-                    RefPtr<ID3D11ShaderResourceView>* aOutView);
 
-  template <typename Geometry>
-  void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,
-                    const gfx::IntRect& aClipRect,
-                    const EffectChain& aEffectChain, gfx::Float aOpacity,
-                    const gfx::Matrix4x4& aTransform,
-                    const gfx::Rect& aVisibleRect);
-
-  bool UpdateDynamicVertexBuffer(
-      const nsTArray<gfx::TexturedTriangle>& aTriangles);
-
-  void PrepareDynamicVertexBuffer();
   void PrepareStaticVertexBuffer();
-
-  // Overloads for rendering both rects and triangles with same rendering path
-  void Draw(const nsTArray<gfx::TexturedTriangle>& aGeometry,
-            const gfx::Rect* aTexCoords);
 
   void Draw(const gfx::Rect& aGeometry, const gfx::Rect* aTexCoords);
 
   void Present();
-
-  ID3D11VertexShader* GetVSForGeometry(
-      const nsTArray<gfx::TexturedTriangle>& aTriangles,
-      const bool aUseBlendShader, const MaskType aMaskType);
-
-  ID3D11VertexShader* GetVSForGeometry(const gfx::Rect& aRect,
-                                       const bool aUseBlendShader,
-                                       const MaskType aMaskType);
 
   template <typename VertexType>
   void SetVertexBuffer(ID3D11Buffer* aBuffer);

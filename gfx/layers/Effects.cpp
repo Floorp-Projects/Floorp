@@ -25,38 +25,3 @@ void TexturedEffect::PrintInfo(std::stringstream& aStream,
 
   aStream << " [filter=" << mSamplingFilter << "]";
 }
-
-void EffectMask::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  aStream << aPrefix << nsPrintfCString("EffectMask (0x%p)", this).get()
-          << " [size=" << mSize << "]"
-          << " [mask-transform=" << mMaskTransform << "]";
-}
-
-void EffectRenderTarget::PrintInfo(std::stringstream& aStream,
-                                   const char* aPrefix) {
-  TexturedEffect::PrintInfo(aStream, aPrefix);
-  aStream << nsPrintfCString(" [render-target=%p]", mRenderTarget.get()).get();
-}
-
-void EffectSolidColor::PrintInfo(std::stringstream& aStream,
-                                 const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("EffectSolidColor (0x%p) [color=%x]", this,
-                             mColor.ToABGR())
-                 .get();
-}
-
-void EffectBlendMode::PrintInfo(std::stringstream& aStream,
-                                const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("EffectBlendMode (0x%p) [blendmode=%i]", this,
-                             (int)mBlendMode)
-                 .get();
-}
-
-void EffectColorMatrix::PrintInfo(std::stringstream& aStream,
-                                  const char* aPrefix) {
-  aStream << aPrefix;
-  aStream << nsPrintfCString("EffectColorMatrix (0x%p)", this).get()
-          << " [matrix=" << mColorMatrix << "]";
-}

@@ -77,59 +77,6 @@ struct TexturedEffect : public Effect {
   gfx::SamplingFilter mSamplingFilter;
 };
 
-// Support an alpha mask.
-struct EffectMask : public Effect {
-  EffectMask(TextureSource* aMaskTexture, gfx::IntSize aSize,
-             const gfx::Matrix4x4& aMaskTransform)
-      : Effect(EffectTypes::MASK),
-        mMaskTexture(aMaskTexture),
-        mSize(aSize),
-        mMaskTransform(aMaskTransform) {}
-
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  TextureSource* mMaskTexture;
-  gfx::IntSize mSize;
-  gfx::Matrix4x4 mMaskTransform;
-};
-
-struct EffectBlendMode : public Effect {
-  explicit EffectBlendMode(gfx::CompositionOp aBlendMode)
-      : Effect(EffectTypes::BLEND_MODE), mBlendMode(aBlendMode) {}
-
-  virtual const char* Name() { return "EffectBlendMode"; }
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  gfx::CompositionOp mBlendMode;
-};
-
-// Render to a render target rather than the screen.
-struct EffectRenderTarget : public TexturedEffect {
-  explicit EffectRenderTarget(CompositingRenderTarget* aRenderTarget)
-      : TexturedEffect(EffectTypes::RENDER_TARGET, aRenderTarget, true,
-                       gfx::SamplingFilter::LINEAR),
-        mRenderTarget(aRenderTarget) {}
-
-  const char* Name() override { return "EffectRenderTarget"; }
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  RefPtr<CompositingRenderTarget> mRenderTarget;
-
- protected:
-  EffectRenderTarget(EffectTypes aType, CompositingRenderTarget* aRenderTarget)
-      : TexturedEffect(aType, aRenderTarget, true, gfx::SamplingFilter::LINEAR),
-        mRenderTarget(aRenderTarget) {}
-};
-
-// Render to a render target rather than the screen.
-struct EffectColorMatrix : public Effect {
-  explicit EffectColorMatrix(gfx::Matrix5x4 aMatrix)
-      : Effect(EffectTypes::COLOR_MATRIX), mColorMatrix(aMatrix) {}
-
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-  const gfx::Matrix5x4 mColorMatrix;
-};
-
 struct EffectRGB : public TexturedEffect {
   EffectRGB(TextureSource* aTexture, bool aPremultiplied,
             gfx::SamplingFilter aSamplingFilter, bool aFlipped = false)
@@ -167,33 +114,8 @@ struct EffectNV12 : public EffectYCbCr {
   const char* Name() override { return "EffectNV12"; }
 };
 
-struct EffectComponentAlpha : public TexturedEffect {
-  EffectComponentAlpha(TextureSource* aOnBlack, TextureSource* aOnWhite,
-                       gfx::SamplingFilter aSamplingFilter)
-      : TexturedEffect(EffectTypes::COMPONENT_ALPHA, nullptr, false,
-                       aSamplingFilter),
-        mOnBlack(aOnBlack),
-        mOnWhite(aOnWhite) {}
-
-  const char* Name() override { return "EffectComponentAlpha"; }
-
-  TextureSource* mOnBlack;
-  TextureSource* mOnWhite;
-};
-
-struct EffectSolidColor : public Effect {
-  explicit EffectSolidColor(const gfx::DeviceColor& aColor)
-      : Effect(EffectTypes::SOLID_COLOR), mColor(aColor) {}
-
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  gfx::DeviceColor mColor;
-};
-
 struct EffectChain {
   RefPtr<Effect> mPrimaryEffect;
-  EnumeratedArray<EffectTypes, EffectTypes::MAX_SECONDARY, RefPtr<Effect>>
-      mSecondaryEffects;
 };
 
 /**
@@ -263,35 +185,14 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
 }
 
 /**
- * Create a textured effect based on aSource format and the presence of
- * aSourceOnWhite.
- *
- * aSourceOnWhite can be null.
- */
-inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
-    TextureSource* aSource, TextureSource* aSourceOnWhite,
-    const gfx::SamplingFilter aSamplingFilter, bool isAlphaPremultiplied) {
-  MOZ_ASSERT(aSource);
-  if (aSourceOnWhite) {
-    MOZ_ASSERT(aSource->GetFormat() == gfx::SurfaceFormat::R8G8B8X8 ||
-               aSource->GetFormat() == gfx::SurfaceFormat::B8G8R8X8);
-    MOZ_ASSERT(aSource->GetFormat() == aSourceOnWhite->GetFormat());
-    return MakeAndAddRef<EffectComponentAlpha>(aSource, aSourceOnWhite,
-                                               aSamplingFilter);
-  }
-
-  return CreateTexturedEffect(aSource->GetFormat(), aSource, aSamplingFilter,
-                              isAlphaPremultiplied);
-}
-
-/**
  * Create a textured effect based on aSource format.
  *
  * This version excudes the possibility of component alpha.
  */
 inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
     TextureSource* aTexture, const gfx::SamplingFilter aSamplingFilter) {
-  return CreateTexturedEffect(aTexture, nullptr, aSamplingFilter, true);
+  return CreateTexturedEffect(aTexture->GetFormat(), aTexture, aSamplingFilter,
+                              true);
 }
 
 }  // namespace layers
