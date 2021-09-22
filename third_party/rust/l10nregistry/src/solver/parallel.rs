@@ -42,6 +42,8 @@ impl<T: AsyncTester> ParallelProblemSolver<T> {
     }
 }
 
+type TestQuery = (Vec<(usize, usize)>, Vec<usize>);
+
 impl<T: AsyncTester> ParallelProblemSolver<T> {
     pub fn try_generate_complete_candidate(&mut self) -> bool {
         while !self.is_complete() {
@@ -57,7 +59,7 @@ impl<T: AsyncTester> ParallelProblemSolver<T> {
         true
     }
 
-    fn try_generate_test_query(&mut self) -> Result<(Vec<(usize, usize)>, Vec<usize>), usize> {
+    fn try_generate_test_query(&mut self) -> Result<TestQuery, usize> {
         let mut test_cells = vec![];
         let query = self
             .solution

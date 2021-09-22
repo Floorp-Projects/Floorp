@@ -27,7 +27,9 @@ fn source_bench(c: &mut Criterion) {
         let sources: Vec<_> = scenario
             .file_sources
             .iter()
-            .map(|s| fetcher.get_test_file_source(&s.name, get_locales(&s.locales), &s.path_scheme))
+            .map(|s| {
+                fetcher.get_test_file_source(&s.name, None, get_locales(&s.locales), &s.path_scheme)
+            })
             .collect();
 
         group.bench_function(format!("{}/has_file", scenario.name), |b| {
