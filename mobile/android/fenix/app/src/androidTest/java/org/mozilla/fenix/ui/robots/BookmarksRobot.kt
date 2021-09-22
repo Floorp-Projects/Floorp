@@ -52,6 +52,10 @@ class BookmarksRobot {
         assertBookmarksView()
     }
 
+    fun verifyAddFolderButton() = assertAddFolderButton()
+
+    fun verifyCloseButton() = assertCloseButton()
+
     fun verifyDeleteMultipleBookmarksSnackBar() = assertSnackBarText("Bookmarks deleted")
 
     fun verifyBookmarkFavicon(forUrl: Uri) = assertBookmarkFavicon(forUrl)
@@ -305,6 +309,11 @@ private fun assertBookmarksView() {
     )
         .check(matches(isDisplayed()))
 }
+
+private fun assertAddFolderButton() =
+    addFolderButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertCloseButton() = closeButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertEmptyBookmarksList() =
     onView(withId(R.id.bookmarks_empty_view)).check(matches(withText("No bookmarks here")))
