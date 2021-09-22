@@ -220,8 +220,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   // Makes certain the SSL handshake is complete and NPN negotiation
   // has had a chance to happen
-  [[nodiscard]] bool EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
-                                       uint32_t& aOut0RTTBytesWritten);
+  [[nodiscard]] bool EnsureNPNComplete();
 
   void SetupSSL();
 
