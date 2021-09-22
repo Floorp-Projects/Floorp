@@ -42,6 +42,7 @@ fn get_locale_from_gecko<'s>(input: Cow<'s, str>) -> Cow<'s, str> {
 #[no_mangle]
 pub extern "C" fn l10nfilesource_new(
     name: &nsACString,
+    metasource: &nsACString,
     locales: &ThinVec<nsCString>,
     pre_path: &nsACString,
     allow_override: bool,
@@ -71,6 +72,7 @@ pub extern "C" fn l10nfilesource_new(
 
     let mut source = FileSource::new(
         name.to_string(),
+        Some(metasource.to_string()),
         locales,
         pre_path.to_string(),
         FileSourceOptions { allow_override },
@@ -85,6 +87,7 @@ pub extern "C" fn l10nfilesource_new(
 #[no_mangle]
 pub unsafe extern "C" fn l10nfilesource_new_with_index(
     name: &nsACString,
+    metasource: &nsACString,
     locales: &ThinVec<nsCString>,
     pre_path: &nsACString,
     index_elements: *const nsCString,
@@ -126,6 +129,7 @@ pub unsafe extern "C" fn l10nfilesource_new_with_index(
 
     let mut source = FileSource::new_with_index(
         name.to_string(),
+        Some(metasource.to_string()),
         locales,
         pre_path.to_string(),
         FileSourceOptions { allow_override },
@@ -147,6 +151,7 @@ pub struct L10nFileSourceMockFile {
 #[no_mangle]
 pub extern "C" fn l10nfilesource_new_mock(
     name: &nsACString,
+    metasource: &nsACString,
     locales: &ThinVec<nsCString>,
     pre_path: &nsACString,
     fs: &ThinVec<L10nFileSourceMockFile>,
@@ -181,6 +186,7 @@ pub extern "C" fn l10nfilesource_new_mock(
     let fetcher = MockFileFetcher::new(fs);
     let mut source = FileSource::new(
         name.to_string(),
+        Some(metasource.to_string()),
         locales,
         pre_path.to_string(),
         Default::default(),
@@ -207,6 +213,11 @@ pub unsafe extern "C" fn l10nfilesource_release(source: *const FileSource) {
 #[no_mangle]
 pub extern "C" fn l10nfilesource_get_name(source: &FileSource, ret_val: &mut nsACString) {
     ret_val.assign(&source.name);
+}
+
+#[no_mangle]
+pub extern "C" fn l10nfilesource_get_metasource(source: &FileSource, ret_val: &mut nsACString) {
+    ret_val.assign(&source.metasource);
 }
 
 #[no_mangle]

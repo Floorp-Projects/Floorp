@@ -49,6 +49,7 @@ thread_local!(static L10N_REGISTRY: Rc<GeckoL10nRegistry> = {
              .map(|entry| {
                  FileSource::new(
                      entry.entry.to_string(),
+                     Some("app".to_string()),
                      packaged_locales.clone(),
                      entry.value.to_string(),
                      Default::default(),
@@ -139,6 +140,7 @@ pub fn set_l10n_registry(new_sources: &ThinVec<L10nFileSourceDescriptor>) {
             if !old_sources.contains(&desc.name.to_string()) {
                 add_sources.push(FileSource::new(
                     desc.name.to_string(),
+                    Some(desc.metasource.to_string()),
                     desc.locales
                         .iter()
                         .map(|s| s.to_utf8().parse().unwrap())
