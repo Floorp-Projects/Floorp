@@ -163,8 +163,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Všeobecné</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Predvolený prehliadač, karty, jazyk</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Predvolený prehliadač, jazyk</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Zbieranie údajov a ich použitie</string>
