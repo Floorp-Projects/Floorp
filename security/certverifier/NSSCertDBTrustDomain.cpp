@@ -1595,18 +1595,6 @@ bool LoadLoadableRoots(const nsCString& dir) {
   return LoadUserModuleAt(kRootModuleName, "nssckbi", dir);
 }
 
-void UnloadUserModules() {
-  UniqueSECMODModule rootsModule(SECMOD_FindModule(kRootModuleName));
-  if (rootsModule) {
-    SECMOD_UnloadUserModule(rootsModule.get());
-  }
-  UniqueSECMODModule osClientCertsModule(
-      SECMOD_FindModule(kOSClientCertsModuleName));
-  if (osClientCertsModule) {
-    SECMOD_UnloadUserModule(osClientCertsModule.get());
-  }
-}
-
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname) {
   MOZ_ASSERT(cert);

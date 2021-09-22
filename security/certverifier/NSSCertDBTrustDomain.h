@@ -76,11 +76,6 @@ bool LoadOSClientCertsModule(const nsCString& dir);
 
 extern const char* kOSClientCertsModuleName;
 
-/**
- * Unloads the loadable roots module and os client certs module, if loaded.
- */
-void UnloadUserModules();
-
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);
 
