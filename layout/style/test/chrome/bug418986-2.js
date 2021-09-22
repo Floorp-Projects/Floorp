@@ -306,17 +306,18 @@ var sleep = function(timeoutMs) {
 // Test to see if media queries are properly spoofed in picture elements
 // when we are resisting fingerprinting.
 var testMediaQueriesInPictureElements = async function(resisting) {
-  let picture = document.createElementNS(HTML_NS, "picture");
+  const MATCH = "/tests/layout/style/test/chrome/match.png";
+  let container = document.getElementById("pictures");
+  let testImages = [];
   for (let [key, offVal, onVal] of expected_values) {
     let expected = resisting ? onVal : offVal;
     if (expected) {
+      let picture = document.createElementNS(HTML_NS, "picture");
       let query = constructQuery(key, expected);
+      ok(matchMedia(query).matches, `${query} should match`);
 
       let source = document.createElementNS(HTML_NS, "source");
-      source.setAttribute(
-        "srcset",
-        "/tests/layout/style/test/chrome/match.png"
-      );
+      source.setAttribute("srcset", MATCH);
       source.setAttribute("media", query);
 
       let image = document.createElementNS(HTML_NS, "img");
@@ -325,16 +326,19 @@ var testMediaQueriesInPictureElements = async function(resisting) {
       image.setAttribute("src", "/tests/layout/style/test/chrome/mismatch.png");
       image.setAttribute("alt", key);
 
+      testImages.push(image);
+
       picture.appendChild(source);
       picture.appendChild(image);
+      container.appendChild(picture);
     }
   }
-  document.getElementById("pictures").appendChild(picture);
-  var testImages = document.getElementsByClassName("testImage");
+  const matchURI = new URL(MATCH, document.baseURI).href;
   await sleep(0);
   for (let testImage of testImages) {
-    ok(
-      testImage.currentSrc.endsWith("/match.png"),
+    is(
+      testImage.currentSrc,
+      matchURI,
       "Media query '" + testImage.title + "' in picture should match."
     );
   }
