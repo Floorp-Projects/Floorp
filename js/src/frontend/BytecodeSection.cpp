@@ -67,9 +67,9 @@ bool js::frontend::EmitScriptThingsVector(
     switch (thing.tag()) {
       case TaggedScriptThingIndex::Kind::ParserAtomIndex:
       case TaggedScriptThingIndex::Kind::WellKnown: {
-        JSAtom* atom = atomCache.getExistingAtomAt(cx, thing.toAtom());
-        MOZ_ASSERT(atom);
-        output[i] = JS::GCCellPtr(atom);
+        JSString* str = atomCache.getExistingStringAt(cx, thing.toAtom());
+        MOZ_ASSERT(str);
+        output[i] = JS::GCCellPtr(str);
         break;
       }
       case TaggedScriptThingIndex::Kind::Null:

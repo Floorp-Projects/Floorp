@@ -43,6 +43,9 @@
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // SharedImmutableScriptData
 
+class JSAtom;
+class JSString;
+
 namespace js {
 
 class JSONPrinter;
@@ -181,7 +184,7 @@ struct ScopeContext {
 
 struct CompilationAtomCache {
  public:
-  using AtomCacheVector = JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy>;
+  using AtomCacheVector = JS::GCVector<JSString*, 0, js::SystemAllocPolicy>;
 
  private:
   // Atoms lowered into or converted from CompilationStencil.parserAtomData.
@@ -192,12 +195,18 @@ struct CompilationAtomCache {
   AtomCacheVector atoms_;
 
  public:
+  JSString* getExistingStringAt(ParserAtomIndex index) const;
+  JSString* getExistingStringAt(JSContext* cx,
+                                TaggedParserAtomIndex taggedIndex) const;
+  JSString* getStringAt(ParserAtomIndex index) const;
+
   JSAtom* getExistingAtomAt(ParserAtomIndex index) const;
   JSAtom* getExistingAtomAt(JSContext* cx,
                             TaggedParserAtomIndex taggedIndex) const;
   JSAtom* getAtomAt(ParserAtomIndex index) const;
+
   bool hasAtomAt(ParserAtomIndex index) const;
-  bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSAtom* atom);
+  bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSString* atom);
   bool allocate(JSContext* cx, size_t length);
 
   void stealBuffer(AtomCacheVector& atoms);
