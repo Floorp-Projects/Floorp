@@ -243,6 +243,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] nsresult DisableTCPKeepalives();
 
   bool CheckCanWrite0RTTData();
+  void Check0RttEnabled(nsISSLSocketControl* ssl);
+  void EarlyDataTelemetry(int16_t tlsVersion, bool earlyDataAccepted);
 
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
