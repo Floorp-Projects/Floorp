@@ -8,6 +8,7 @@
 </head>
 <body>
 <iframe style="width:100%;" id="csp_testframe"></iframe>
+<iframe style="width:100%;" id="csp_testframe_no_xfo"></iframe>
 <iframe style="width:100%;" id="csp_ro_testframe"></iframe>
 
 <script class="testbody" type="text/javascript">
@@ -21,11 +22,32 @@
 
 SimpleTest.waitForExplicitFinish();
 
+var script = SpecialPowers.loadChromeScript(() => {
+  let ignoreCount = 0;
+  function listener(msg) {
+    if(msg.message.includes("Content Security Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive.")) {
+      ignoreCount++;
+      if(ignoreCount == 2) {
+        ok(false, 'The "Content Security Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive." warning should only appear once for the csp_testframe.');
+      }
+    }
+  }
+  Services.console.registerListener(listener);
+
+  addMessageListener("cleanup", () => {
+    Services.console.unregisterListener(listener);
+  });
+});
+
+SimpleTest.registerCleanupFunction(async () => {
+  await script.sendQuery("cleanup");
+});
+
 var testcounter = 0;
 function checkFinished() {
   testcounter++;
-  if (testcounter < 3) {
-  	return;
+  if (testcounter < 4) {
+    return;
   }
   // remove the listener and we are done.
   window.examiner.remove();
@@ -79,6 +101,18 @@ csp_ro_testframe.onerror = function() {
   checkFinished();
 }
 csp_ro_testframe.src = "file_ro_ignore_xfo.html";
+
+var csp_testframe_no_xfo = document.getElementById("csp_testframe_no_xfo");
+csp_testframe_no_xfo.onload = function() {
+  var msg = csp_testframe_no_xfo.contentDocument.getElementById("cspmessage");
+  is(msg.innerHTML, "Do not log xfo ignore warning when no xfo is set.", "Loading frame with with no XFO and CSP");
+  checkFinished();
+}
+csp_testframe_no_xfo.onerror = function() {
+  ok(false, "sanity: should not fire onerror for csp_testframe_no_xfo");
+  checkFinished();
+}
+csp_testframe_no_xfo.src = "file_no_log_ignore_xfo.html";
 
 </script>
 </body>
