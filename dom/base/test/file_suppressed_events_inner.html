@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test event suppression</title>
+</head>
+<body>
+<div>Inner</div>
+<script type="application/javascript">
+
+window.onload = function() {
+  top.postMessage("ready", "*");
+};
+
+</script>
+</body>
+</html>
