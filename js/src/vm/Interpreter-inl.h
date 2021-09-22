@@ -244,8 +244,10 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
   MOZ_ASSERT(JSOp(*pc) == JSOp::SetName || JSOp(*pc) == JSOp::StrictSetName ||
              JSOp(*pc) == JSOp::SetGName || JSOp(*pc) == JSOp::StrictSetGName);
   MOZ_ASSERT_IF(
-      (JSOp(*pc) == JSOp::SetGName || JSOp(*pc) == JSOp::StrictSetGName) &&
-          !script->hasNonSyntacticScope(),
+      JSOp(*pc) == JSOp::SetGName || JSOp(*pc) == JSOp::StrictSetGName,
+      !script->hasNonSyntacticScope());
+  MOZ_ASSERT_IF(
+      JSOp(*pc) == JSOp::SetGName || JSOp(*pc) == JSOp::StrictSetGName,
       env == cx->global() || env == &cx->global()->lexicalEnvironment() ||
           env->is<RuntimeLexicalErrorObject>());
 
