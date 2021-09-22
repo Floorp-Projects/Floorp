@@ -30,7 +30,7 @@ add_task(async function setup() {
     Services.perms.UNKNOWN
   );
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [["browser.download.enable_spam_prevention", true]],
   });
 
   registerCleanupFunction(async () => {
