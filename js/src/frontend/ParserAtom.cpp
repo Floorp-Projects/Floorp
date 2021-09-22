@@ -96,9 +96,22 @@ template <typename CharT, typename SeqCharT>
   return entry;
 }
 
+bool ParserAtom::isInstantiatedAsJSAtom() const {
+  if (isMarkedAtomize()) {
+    return true;
+  }
+
+  // Always use JSAtom for short strings.
+  if (length() < MinimumLengthForNonAtom) {
+    return true;
+  }
+
+  return false;
+}
+
 JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
                                         CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(!isMarkedAtomize());
+  MOZ_ASSERT(!isInstantiatedAsJSAtom());
 
   JSString* str;
   if (hasLatin1Chars()) {
@@ -121,7 +134,7 @@ JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
 JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
                                     CompilationAtomCache& atomCache) const {
   // See the comment in InstantiateMarkedAtoms for !cx->zone().
-  MOZ_ASSERT(isMarkedAtomize() || !cx->zone());
+  MOZ_ASSERT(isInstantiatedAsJSAtom() || !cx->zone());
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
@@ -700,7 +713,7 @@ bool ParserAtomsTable::isInstantiatedAsJSAtom(
     TaggedParserAtomIndex index) const {
   if (index.isParserAtomIndex()) {
     const auto* atom = getParserAtom(index.toParserAtomIndex());
-    return atom->isMarkedAtomize();
+    return atom->isInstantiatedAsJSAtom();
   }
 
   // Everything else are always JSAtom.
@@ -950,7 +963,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
       continue;
     }
 
-    if (allowNonAtom && !entry->isMarkedAtomize()) {
+    if (allowNonAtom && !entry->isInstantiatedAsJSAtom()) {
       if (!entry->instantiateString(cx, index, atomCache)) {
         return false;
       }
