@@ -239,23 +239,25 @@ void nsHttpConnection::Start0RTTSpdy(SpdyVersion spdyVersion) {
   mSpdySession =
       ASpdySession::NewSpdySession(spdyVersion, mSocketTransport, true);
 
-  nsTArray<RefPtr<nsAHttpTransaction> > list;
-  nsresult rv = TryTakeSubTransactions(list);
-  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
-    LOG(
-        ("nsHttpConnection::Start0RTTSpdy [this=%p] failed taking "
-         "subtransactions rv=%" PRIx32,
-         this, static_cast<uint32_t>(rv)));
-    return;
-  }
+  if (mTransaction) {
+    nsTArray<RefPtr<nsAHttpTransaction> > list;
+    nsresult rv = TryTakeSubTransactions(list);
+    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
+      LOG(
+          ("nsHttpConnection::Start0RTTSpdy [this=%p] failed taking "
+           "subtransactions rv=%" PRIx32,
+           this, static_cast<uint32_t>(rv)));
+      return;
+    }
 
-  rv = MoveTransactionsToSpdy(rv, list);
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("nsHttpConnection::Start0RTTSpdy [this=%p] failed moving "
-         "transactions rv=%" PRIx32,
-         this, static_cast<uint32_t>(rv)));
-    return;
+    rv = MoveTransactionsToSpdy(rv, list);
+    if (NS_FAILED(rv)) {
+      LOG(
+          ("nsHttpConnection::Start0RTTSpdy [this=%p] failed moving "
+           "transactions rv=%" PRIx32,
+           this, static_cast<uint32_t>(rv)));
+      return;
+    }
   }
 
   mTransaction = mSpdySession;
@@ -297,7 +299,7 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
 
   nsTArray<RefPtr<nsAHttpTransaction> > list;
   nsresult status = NS_OK;
-  if (!mDid0RTTSpdy) {
+  if (!mDid0RTTSpdy && mTransaction) {
     status = TryTakeSubTransactions(list);
 
     if (NS_FAILED(status) && status != NS_ERROR_NOT_IMPLEMENTED) {
@@ -329,7 +331,7 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
     MOZ_ASSERT(mConnInfo);
   }
 
-  if (!mDid0RTTSpdy) {
+  if (!mDid0RTTSpdy && mTransaction) {
     rv = MoveTransactionsToSpdy(status, list);
     if (NS_FAILED(rv)) {
       return;
@@ -492,12 +494,14 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
                                       bool hasSecurityInfo) {
   mNPNComplete = true;
 
-  mTransaction->OnTransportStatus(mSocketTransport,
-                                  NS_NET_STATUS_TLS_HANDSHAKE_ENDED, 0);
+  if (mTransaction) {
+    mTransaction->OnTransportStatus(mSocketTransport,
+                                    NS_NET_STATUS_TLS_HANDSHAKE_ENDED, 0);
+  }
 
   // this is happening after the bootstrap was originally written to. so update
   // it.
-  if (mTransaction->QueryNullTransaction() &&
+  if (mTransaction && mTransaction->QueryNullTransaction() &&
       (mBootstrappedTimings.secureConnectionStart.IsNull() ||
        mBootstrappedTimings.tcpConnectEnd.IsNull())) {
     mBootstrappedTimings.secureConnectionStart =
@@ -513,7 +517,7 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
   if (EarlyDataUsed()) {
     // Didn't get 0RTT OK, back out of the "attempting 0RTT" state
     LOG(("nsHttpConnection::FinishNPNSetup [this=%p] 0rtt failed", this));
-    if (NS_FAILED(mTransaction->Finish0RTT(true, true))) {
+    if (mTransaction && NS_FAILED(mTransaction->Finish0RTT(true, true))) {
       mTransaction->Close(NS_ERROR_NET_RESET);
     }
     mContentBytesWritten0RTT = 0;
@@ -1972,8 +1976,13 @@ nsresult nsHttpConnection::OnSocketReadable() {
     }
 
     mSocketInCondition = NS_OK;
-    rv = mTransaction->WriteSegmentsAgain(
-        this, nsIOService::gDefaultSegmentSize, &n, &again);
+    if (!mTransaction) {
+      rv = NS_ERROR_FAILURE;
+      LOG(("  No Transaction In OnSocketWritable\n"));
+    } else {
+      rv = mTransaction->WriteSegmentsAgain(
+          this, nsIOService::gDefaultSegmentSize, &n, &again);
+    }
     LOG(("nsHttpConnection::OnSocketReadable %p trans->ws rv=%" PRIx32
          " n=%d socketin=%" PRIx32 "\n",
          this, static_cast<uint32_t>(rv), n,
@@ -2575,13 +2584,15 @@ void nsHttpConnection::HandshakeDoneInternal() {
          static_cast<uint32_t>(rv)));
 
     if (NS_FAILED(rvEarlyData) ||
-        NS_FAILED(mTransaction->Finish0RTT(
-            !earlyDataAccepted, negotiatedNPN != mEarlyNegotiatedALPN))) {
+        (mTransaction && NS_FAILED(mTransaction->Finish0RTT(
+            !earlyDataAccepted, negotiatedNPN != mEarlyNegotiatedALPN)))) {
       LOG(
           ("nsHttpConection::HandshakeDone [this=%p] closing transaction "
            "%p",
            this, mTransaction.get()));
-      mTransaction->Close(NS_ERROR_NET_RESET);
+      if (mTransaction) {
+        mTransaction->Close(NS_ERROR_NET_RESET);
+      }
       FinishNPNSetup(false, true);
       return;
     }
@@ -2607,6 +2618,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
       (tlsVersion != nsISSLSocketControl::SSL_VERSION_UNKNOWN));
 
   EarlyDataTelemetry(tlsVersion, earlyDataAccepted);
+  mEarlyDataState = EarlyData::DONE;
 
   if (!earlyDataAccepted) {
     LOG(
@@ -2637,8 +2649,6 @@ void nsHttpConnection::HandshakeDoneInternal() {
   }
 
   Telemetry::Accumulate(Telemetry::SPDY_NPN_CONNECT, UsingSpdy());
-
-  mEarlyDataState = EarlyData::DONE;
 
   FinishNPNSetup(true, true);
   return;
