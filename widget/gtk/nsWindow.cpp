@@ -8154,13 +8154,17 @@ static gboolean drag_motion_event_cb(GtkWidget* aWidget,
 void WindowDragLeaveHandler(GtkWidget* aWidget) {
   LOGDRAG(("WindowDragLeaveHandler()\n"));
 
+  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
+  if (!dragService->IsDragActive()) {
+    LOGDRAG(("    Already finished.\n"));
+    return;
+  }
+
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
   if (!window) {
     LOGDRAG(("    Failed - can't find nsWindow!\n"));
     return;
   }
-
-  RefPtr<nsDragService> dragService = nsDragService::GetInstance();
 
   nsWindow* mostRecentDragWindow = dragService->GetMostRecentDestWindow();
   if (!mostRecentDragWindow) {

@@ -40,7 +40,8 @@ struct ParamTraits<mozilla::a11y::AccGenericType>
 template <>
 struct ParamTraits<mozilla::a11y::CacheUpdateType>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::a11y::CacheUpdateType, mozilla::a11y::CacheUpdateType::Initial,
+          mozilla::a11y::CacheUpdateType,
+          mozilla::a11y::CacheUpdateType::Initial,
           mozilla::a11y::CacheUpdateType::Update> {};
 
 template <>

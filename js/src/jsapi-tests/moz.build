@@ -127,7 +127,6 @@ UNIFIED_SOURCES += [
     "testWasmLEB128.cpp",
     "testWeakMap.cpp",
     "testWindowNonConfigurable.cpp",
-    "testXDR.cpp",
 ]
 
 SOURCES += [

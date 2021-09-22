@@ -144,6 +144,7 @@ EXPORTS += [
     "public/GeckoProfiler.h",
     "public/ProfilerBindings.h",
     "public/ProfilerParent.h",
+    "public/ProfilerRustBindings.h",
 ]
 
 EXPORTS.mozilla += [
@@ -175,6 +176,14 @@ GeneratedFile(
 CONFIGURE_SUBST_FILES += [
     "rust-api/extra-bindgen-flags",
 ]
+
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    CbindgenHeader("profiler_ffi_generated.h", inputs=["rust-api"])
+
+    EXPORTS.mozilla += [
+        "!profiler_ffi_generated.h",
+    ]
 
 FINAL_LIBRARY = "xul"
 

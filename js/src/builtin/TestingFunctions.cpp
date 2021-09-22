@@ -49,7 +49,8 @@
 #  include "frontend/TokenStream.h"
 #endif
 #include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse
-#include "frontend/CompilationStencil.h"   // frontend::CompilationStencil
+#include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
+#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
@@ -5891,6 +5892,25 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif
 
+static bool ParseCompileOptionsForModule(JSContext* cx,
+                                         JS::CompileOptions& options,
+                                         JS::Handle<JSObject*> opts,
+                                         bool& isModule) {
+  JS::Rooted<JS::Value> v(cx);
+
+  if (!JS_GetProperty(cx, opts, "module", &v)) {
+    return false;
+  }
+  if (!v.isUndefined() && JS::ToBoolean(v)) {
+    options.setModule();
+    isModule = true;
+  } else {
+    isModule = false;
+  }
+
+  return true;
+}
+
 static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5916,6 +5936,7 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  bool isModule = false;
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
@@ -5928,10 +5949,18 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+
+    if (!ParseCompileOptionsForModule(cx, options, opts, isModule)) {
+      return false;
+    }
   }
 
-  RefPtr<JS::Stencil> stencil =
-      JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+  RefPtr<JS::Stencil> stencil;
+  if (isModule) {
+    stencil = JS::CompileModuleScriptToStencil(cx, options, srcBuf);
+  } else {
+    stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+  }
   if (!stencil) {
     return false;
   }
@@ -5960,6 +5989,13 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   }
   Rooted<js::StencilObject*> stencilObj(
       cx, &args[0].toObject().as<js::StencilObject>());
+
+  if (stencilObj->stencil()->isModule()) {
+    JS_ReportErrorASCII(cx,
+                        "evalStencil: Module stencil cannot be evaluated. Use "
+                        "instantiateModuleStencil instead");
+    return false;
+  }
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
@@ -6034,6 +6070,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  bool isModule = false;
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
@@ -6046,13 +6083,22 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+
+    if (!ParseCompileOptionsForModule(cx, options, opts, isModule)) {
+      return false;
+    }
   }
 
   /* Compile the script text to stencil. */
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-      cx, input.get(), srcBuf, ScopeKind::Global);
+  UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
+  if (isModule) {
+    stencil = frontend::ParseModuleToExtensibleStencil(cx, input.get(), srcBuf);
+  } else {
+    stencil = frontend::CompileGlobalScriptToExtensibleStencil(
+        cx, input.get(), srcBuf, ScopeKind::Global);
+  }
   if (!stencil) {
     return false;
   }
@@ -6125,6 +6171,13 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
   if (!succeeded) {
     JS_ReportErrorASCII(cx, "Decoding failure");
+    return false;
+  }
+
+  if (stencil.isModule()) {
+    JS_ReportErrorASCII(cx,
+                        "evalStencilXDR: Module stencil cannot be evaluated. "
+                        "Use instantiateModuleStencilXDR instead");
     return false;
   }
 
@@ -8364,23 +8417,23 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "  Returns true if a scripted function is small enough to be inlinable."),
 
     JS_FN_HELP("compileToStencil", CompileToStencil, 1, 0,
-"compileToStencil(string)",
+"compileToStencil(string, [options])",
 "  Parses the given string argument as js script, returns the stencil"
 "  for it."),
 
     JS_FN_HELP("evalStencil", EvalStencil, 1, 0,
-"compileStencil(stencil)",
+"evalStencil(stencil, [options])",
 "  Instantiates the given stencil, and evaluates the top-level script it"
 "  defines."),
 
     JS_FN_HELP("compileToStencilXDR", CompileToStencilXDR, 1, 0,
-"compileToStencilXDR(string)",
+"compileToStencilXDR(string, [options])",
 "  Parses the given string argument as js script, produces the stencil"
 "  for it, XDR-encodes the stencil, and returns an object that contains the"
 "  XDR buffer."),
 
     JS_FN_HELP("evalStencilXDR", EvalStencilXDR, 1, 0,
-"evalStencilXDR(stencilXDR)",
+"evalStencilXDR(stencilXDR, [options])",
 "  Reads the given stencil XDR object, and evaluates the top-level script it"
 "  defines."),
 

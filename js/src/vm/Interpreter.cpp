@@ -1793,7 +1793,7 @@ static MOZ_ALWAYS_INLINE void InitElemArrayOperation(JSContext* cx,
  */
 
 template <typename T>
-class ReservedRooted : public RootedBase<T, ReservedRooted<T>> {
+class ReservedRooted : public RootedOperations<T, ReservedRooted<T>> {
   Rooted<T>* savedRoot;
 
  public:

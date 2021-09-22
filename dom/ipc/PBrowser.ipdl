@@ -168,6 +168,9 @@ struct PrintPreviewResultInfo
   bool hasSelection;
   // Whether there's a selection in the previewed page, excluding its subframes.
   bool hasSelfSelection;
+  // If present, indicates if the page should be printed landscape when true or
+  // portrait when false;
+  bool? printLandscape;
 };
 
 /**

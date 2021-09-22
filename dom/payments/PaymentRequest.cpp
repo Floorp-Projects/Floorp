@@ -875,18 +875,21 @@ void PaymentRequest::RespondAbortPayment(bool aSuccess) {
     return;
   }
 
-  MOZ_ASSERT(mAbortPromise);
-  MOZ_ASSERT(mState == eInteractive);
+  if (mState != eInteractive) {
+    return;
+  }
 
-  if (aSuccess) {
-    mAbortPromise->MaybeResolve(JS::UndefinedHandleValue);
-    mAbortPromise = nullptr;
-    ErrorResult abortResult;
-    abortResult.ThrowAbortError("The PaymentRequest is aborted");
-    RejectShowPayment(std::move(abortResult));
-  } else {
-    mAbortPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    mAbortPromise = nullptr;
+  if (mAbortPromise) {
+    if (aSuccess) {
+      mAbortPromise->MaybeResolve(JS::UndefinedHandleValue);
+      mAbortPromise = nullptr;
+      ErrorResult abortResult;
+      abortResult.ThrowAbortError("The PaymentRequest is aborted");
+      RejectShowPayment(std::move(abortResult));
+    } else {
+      mAbortPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      mAbortPromise = nullptr;
+    }
   }
 }
 

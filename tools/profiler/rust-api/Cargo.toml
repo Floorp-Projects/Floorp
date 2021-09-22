@@ -6,6 +6,9 @@ edition = "2018"
 
 [dependencies]
 profiler-macros = { path = "./macros" }
+lazy_static = "1"
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1"
 
 [build-dependencies]
 lazy_static = "1"

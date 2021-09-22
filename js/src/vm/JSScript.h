@@ -46,6 +46,7 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
 #include "vm/Time.h"
+#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRIncrementalStencilEncoder
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -1310,13 +1311,6 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   // Allocate a new PrivateScriptData. Headers and GCCellPtrs are initialized.
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
 
-  template <XDRMode mode>
-  [[nodiscard]] static XDRResult XDR(js::XDRState<mode>* xdr,
-                                     js::HandleScript script,
-                                     js::HandleScriptSourceObject sourceObject,
-                                     js::HandleScope scriptEnclosingScope,
-                                     js::HandleObject funOrMod);
-
   static bool InitFromStencil(
       JSContext* cx, js::HandleScript script,
       const js::frontend::CompilationAtomCache& atomCache,
@@ -1622,11 +1616,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
 
   inline JSScript* asJSScript();
 
-  template <XDRMode mode>
-  static XDRResult XDRLazyScriptData(XDRState<mode>* xdr,
-                                     HandleScriptSourceObject sourceObject,
-                                     Handle<BaseScript*> lazy);
-
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() { return offsetOfHeaderPtr(); }
   static constexpr size_t offsetOfPrivateData() {
@@ -1648,29 +1637,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   }
 };
 
-/*
- * NB: after a successful XDR_DECODE, XDRScript callers must do any required
- * subsequent set-up of owning function or script object and then call
- * CallNewScriptHook.
- */
-template <XDRMode mode>
-XDRResult XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope,
-                    HandleScriptSourceObject sourceObject,
-                    HandleObject funOrMod, MutableHandleScript scriptp);
-
-template <XDRMode mode>
-XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
-                        HandleScriptSourceObject sourceObject,
-                        HandleFunction fun, MutableHandle<BaseScript*> lazy);
-
 template <XDRMode mode>
 XDRResult XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent);
-
-/*
- * Code any constant value.
- */
-template <XDRMode mode>
-XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 
 extern void SweepScriptData(JSRuntime* rt);
 
@@ -1678,19 +1646,6 @@ extern void SweepScriptData(JSRuntime* rt);
 
 class JSScript : public js::BaseScript {
  private:
-  template <js::XDRMode mode>
-  friend js::XDRResult js::XDRScript(js::XDRState<mode>* xdr,
-                                     js::HandleScope enclosingScope,
-                                     js::HandleScriptSourceObject sourceObject,
-                                     js::HandleObject funOrMod,
-                                     js::MutableHandleScript scriptp);
-
-  template <js::XDRMode mode>
-  friend js::XDRResult js::PrivateScriptData::XDR(
-      js::XDRState<mode>* xdr, js::HandleScript script,
-      js::HandleScriptSourceObject sourceObject,
-      js::HandleScope scriptEnclosingScope, js::HandleObject funOrMod);
-
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
       const js::frontend::CompilationAtomCache& atomCache,

@@ -66,7 +66,8 @@
       "panel_hover": "color-mix(in srgb, currentColor 9%, transparent)",
       "panel_active": "color-mix(in srgb, currentColor 14%, transparent)",
       "panel_active_darker": "color-mix(in srgb, currentColor 25%, transparent)",
-      "toolbar_field_icon_opacity": "1"
+      "toolbar_field_icon_opacity": "1",
+      "zap_gradient": "linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"
     }
   },
 
@@ -96,7 +97,8 @@
       "panel_hover": "--arrowpanel-dimmed",
       "panel_active": "--arrowpanel-dimmed-further",
       "panel_active_darker": "--arrowpanel-dimmed-even-further",
-      "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity"
+      "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity",
+      "zap_gradient": "--panel-separator-zap-gradient"
     }
   }
 }

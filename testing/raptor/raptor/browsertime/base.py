@@ -355,6 +355,7 @@ class Browsertime(Perftest):
 
         # Add custom test-specific options and allow them to
         # overwrite our presets.
+        browsertime_all_options = browsertime_script + browsertime_options
         if test.get("browsertime_args", None):
             split_args = test.get("browsertime_args").strip().split()
             for split_arg in split_args:
@@ -365,21 +366,19 @@ class Browsertime(Perftest):
                         f"Expecting a --flag, or a --option=value pairing. Found: {split_arg}"
                     )
 
-                if pairing[0] in browsertime_options:
+                if pairing[0] in browsertime_all_options:
                     # If it's a flag, don't re-add it
                     if len(pairing) > 1:
-                        ind = browsertime_options.index(pairing[0])
-                        browsertime_options[ind + 1] = pairing[1]
+                        ind = browsertime_all_options.index(pairing[0])
+                        browsertime_all_options[ind + 1] = pairing[1]
                 else:
-                    browsertime_options.extend(pairing)
+                    browsertime_all_options.extend(pairing)
 
         return (
             [self.browsertime_node, self.browsertime_browsertimejs]
             + self.driver_paths
-            + browsertime_script
-            +
+            + browsertime_all_options
             # -n option for the browsertime to restart the browser
-            browsertime_options
             + ["-n", str(test.get("browser_cycles", 1))]
         )
 

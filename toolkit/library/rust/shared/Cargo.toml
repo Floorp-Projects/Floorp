@@ -20,7 +20,7 @@ profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = 
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "4ee3b283182926f9a8bb31d603219ff2db70d2fd", optional = true }
-cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="3ad5978575f501ab10b1753626f176f1bba3f584", optional = true, features=["pulse-dlopen"] }
+cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="b5aea956e1478b9d0c67911a35fe0aa9d544307a", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "fce878ff15f4e1dba1e5b54f82460af605fb4d14", optional = true }

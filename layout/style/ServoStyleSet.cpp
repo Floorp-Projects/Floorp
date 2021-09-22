@@ -631,6 +631,28 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
       Servo_StyleSet_GetSheetAt(mRawSet.get(), aOrigin, aIndex));
 }
 
+Maybe<StyleOrientation> ServoStyleSet::GetDefaultPageOrientation() {
+  const RefPtr<ComputedStyle> style =
+      ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType::pageContent);
+  const StylePageSize& pageSize = style->StylePage()->mSize;
+  if (pageSize.IsOrientation()) {
+    return Some(pageSize.AsOrientation());
+  }
+  if (pageSize.IsSize()) {
+    const CSSCoord w = pageSize.AsSize().width.ToCSSPixels();
+    const CSSCoord h = pageSize.AsSize().height.ToCSSPixels();
+    if (w > h) {
+      return Some(StyleOrientation::Landscape);
+    }
+    if (w < h) {
+      return Some(StyleOrientation::Portrait);
+    }
+  } else {
+    MOZ_ASSERT(pageSize.IsAuto(), "Impossible page size");
+  }
+  return Nothing();
+}
+
 void ServoStyleSet::AppendAllNonDocumentAuthorSheets(
     nsTArray<StyleSheet*>& aArray) const {
   EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {

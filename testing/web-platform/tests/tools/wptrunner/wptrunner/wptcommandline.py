@@ -147,9 +147,6 @@ scheme host and port.""")
                                       action="append",
                                       choices=["not-implementing", "backlog", "implementing"],
                                       help="Skip tests that have the given implementation status")
-    # TODO(bashi): Remove this. QuicTransport is obsolete.
-    test_selection_group.add_argument("--enable-quic", action="store_true", default=False,
-                                      help="Enable tests that require QUIC server (default: false)")
     # TODO(bashi): Remove this when WebTransport over HTTP/3 server is enabled by default.
     test_selection_group.add_argument("--enable-webtransport-h3",
                                       action="store_true",

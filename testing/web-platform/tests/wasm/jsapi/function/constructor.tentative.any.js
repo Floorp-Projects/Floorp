@@ -7,6 +7,29 @@ function addxy(x, y) {
 
 test(() => {
     assert_implements(WebAssembly.Function, "WebAssembly.Function is not implemented");
+    assert_function_name(WebAssembly.Function, "Function", "WebAssembly.Function");
+}, "name");
+
+test(() => {
+    assert_implements(WebAssembly.Function, "WebAssembly.Function is not implemented");
+    assert_function_length(WebAssembly.Function, 2, "WebAssembly.Function");
+}, "length");
+
+test(() => {
+    assert_implements(WebAssembly.Function, "WebAssembly.Function is not implemented");
+    assert_throws_js(TypeError, () => new WebAssembly.Function());
+    const argument = {parameters: [], results: []};
+    assert_throws_js(TypeError, () => new WebAssembly.Function(argument));
+}, "Too few arguments");
+
+test(() => {
+    assert_implements(WebAssembly.Function, "WebAssembly.Function is not implemented");
+    const arguments = [{parameters: ["i32", "i32"], results: ["i32"]}, addxy];
+    assert_throws_js(TypeError, () => WebAssembly.Function(...arguments));
+}, "Calling");
+
+test(() => {
+    assert_implements(WebAssembly.Function, "WebAssembly.Function is not implemented");
     var fun = new WebAssembly.Function({parameters: ["i32", "i32"], results: ["i32"]}, addxy);
     assert_true(fun instanceof WebAssembly.Function)
 }, "construct with JS function")

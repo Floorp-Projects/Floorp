@@ -87,8 +87,13 @@
 
     <vbox id="browserContainersbox" hidden="true">
       <hbox id="browserContainersExtensionContent"
-            align="center" class="extension-controlled">
-        <description control="disableContainersExtension" flex="1" />
+            align="center" class="extension-controlled info-box-container">
+        <hbox flex="1">
+          <hbox class="info-icon-container">
+            <image class="info-icon"></image>
+          </hbox>
+          <description control="disableContainersExtension" class="description-with-side-element" flex="1" />
+        </hbox>
         <button id="disableContainersExtension"
                 is="highlightable-button"
                 class="extension-controlled-button accessory-button"
@@ -546,7 +551,7 @@
 
 #ifdef MOZ_UPDATER
   <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
-  <vbox id="updateSettingsContainer">
+  <vbox id="updateSettingsContainer" class="info-box-container">
     <radiogroup id="updateRadioGroup">
       <radio id="autoDesktop"
              value="true"
@@ -561,9 +566,15 @@
              value="false"
              data-l10n-id="update-application-check-choose"/>
     </radiogroup>
-    <description id="updateSettingCrossUserWarning" hidden="true"
-                 data-l10n-id="update-application-warning-cross-user-setting">
-    </description>
+    <hbox id="updateSettingCrossUserWarningDesc" hidden="true">
+      <hbox class="info-icon-container">
+        <image class="info-icon"></image>
+      </hbox>
+      <description id="updateSettingCrossUserWarning"
+                   flex="1"
+                   data-l10n-id="update-application-warning-cross-user-setting">
+      </description>
+    </hbox>
   </vbox>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"

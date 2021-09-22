@@ -162,13 +162,15 @@ def repackage_msix(
     branding=None,
     template=None,
     distribution_dirs=[],
+    locale_allowlist=set(),
     version=None,
-    vendor="Mozilla",
+    vendor=None,
     displayname=None,
     app_name="firefox",
     identity=None,
-    arch=None,
     publisher=None,
+    publisher_display_name="Mozilla Corporation",
+    arch=None,
     output=None,
     force=False,
     log=None,
@@ -204,11 +206,14 @@ def repackage_msix(
     values = get_application_ini_values(
         finder,
         dict(section="App", value="CodeName", fallback="Name"),
+        dict(section="App", value="Vendor"),
         dict(section="App", value="Version"),
         dict(section="App", value="BuildID"),
     )
     first = next(values)
-    displayname = displayname or first
+    displayname = displayname or "Mozilla {}".format(first)
+    second = next(values)
+    vendor = vendor or second
     if not version:
         version = next(values)
         buildid = next(values)
@@ -261,33 +266,12 @@ def repackage_msix(
     # and/or errors between regularly installed builds and App Package builds.
     instdir = "{} Package Root".format(displayname)
 
-    # Microsoft names its packages like "Microsoft.VCLibs.140.00.UWPDesktop".
-    # Hyphenated (kebab) names seem to install correctly, but `Remove-AppPackage
-    # kebab-name` seems to fail in some cases.
-    identity = identity or "{}.{}".format(vendor, displayname.replace(" ", "."))
-
-    defines = {
-        "APPX_ARCH": _MSIX_ARCH[arch],
-        "APPX_DISPLAYNAME": brandFullName,
-        "APPX_DESCRIPTION": brandFullName,
-        # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
-        "APPX_IDENTITY": identity,
-        # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox
-        # Beta Package Root'.  See above.
-        "APPX_INSTDIR": instdir,
-        # Like 'Firefox%20Package%20Root'.
-        "APPX_INSTDIR_QUOTED": urllib.parse.quote(instdir),
-        "APPX_PUBLISHER": publisher,
-        "APPX_VERSION": version,
-        "MOZ_APP_DISPLAYNAME": displayname,
-        "MOZ_APP_NAME": app_name,
-        "MOZ_APP_VENDOR": vendor,
-        "MOZ_IGECKOBACKCHANNEL_IID": MOZ_IGECKOBACKCHANNEL_IID,
-    }
+    # The standard package name is like "CompanyNoSpaces.ProductNoSpaces".
+    identity = identity or "{}.{}".format(vendor, displayname).replace(" ", "")
 
     # We might want to include the publisher ID hash here.  I.e.,
     # "__{publisherID}".  My locally produced MSIX was named like
-    # `Mozilla.Firefox.Nightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
+    # `Mozilla.MozillaFirefoxNightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
     # missing field, but it's necessary, since this is just an output file name.
     package_output_name = "{identity}_{version}_{arch}".format(
         identity=identity, version=version, arch=_MSIX_ARCH[arch]
@@ -302,26 +286,21 @@ def repackage_msix(
     log(logging.INFO, "msix", {"output": output}, "Repackaging to: {output}")
 
     m = InstallManifest()
-    m.add_preprocess(
-        mozpath.join(template, "AppxManifest.xml.in"),
-        "AppxManifest.xml",
-        [],
-        defines=defines,
-        marker="<!-- #",  # So that we can have well-formed XML.
-    )
     m.add_copy(mozpath.join(template, "Resources.pri"), "Resources.pri")
 
     m.add_pattern_copy(mozpath.join(branding, "msix", "Assets"), "**", "Assets")
     m.add_pattern_copy(mozpath.join(template, "VFS"), "**", "VFS")
 
     copier = FileCopier()
-    m.populate_registry(copier)
 
     # TODO: Bug 1710147: filter out MSVCRT files and use a dependency instead.
     for p, f in finder:
         # `p` is like "firefox/firefox.exe"; we want just "firefox.exe".
         pp = os.path.relpath(p, "firefox")
         copier.add(mozpath.normsep(mozpath.join("VFS", "ProgramFiles", instdir, pp)), f)
+
+    # Locales to declare as supported in `AppxManifest.xml`.
+    locales = set(["en-US"])
 
     for distribution_dir in [
         mozpath.join(template, "distribution")
@@ -340,15 +319,20 @@ def repackage_msix(
         finder = FileFinder(distribution_dir)
 
         for p, f in finder:
+            locale = None
             if os.path.basename(p) == "target.langpack.xpi":
                 # Turn "/path/to/LOCALE/target.langpack.xpi" into "LOCALE".
                 base, locale = os.path.split(os.path.dirname(p))
 
-                # Like "langpack-LOCALE@firefox.mozilla.org.xpi".  This is what AMO serves and how
-                # flatpak builds name langpacks, but not how snap builds name langpacks.  I can't
-                # explain the discrepancy.
+                # Like "locale-LOCALE/langpack-LOCALE@firefox.mozilla.org.xpi".  This is what AMO
+                # serves and how flatpak builds name langpacks, but not how snap builds name
+                # langpacks.  I can't explain the discrepancy.
                 dest = mozpath.normsep(
-                    mozpath.join(base, f"langpack-{locale}@firefox.mozilla.org.xpi")
+                    mozpath.join(
+                        base,
+                        f"locale-{locale}",
+                        f"langpack-{locale}@firefox.mozilla.org.xpi",
+                    )
                 )
 
                 log(
@@ -360,12 +344,83 @@ def repackage_msix(
             else:
                 dest = p
 
+            if locale:
+                locale = locale.strip().lower()
+                locales.add(locale)
+                log(
+                    logging.DEBUG,
+                    "msix",
+                    {"locale": locale, "dest": dest},
+                    "Distributing locale '{locale}' from {dest}",
+                )
+
             copier.add(
                 mozpath.normsep(
                     mozpath.join("VFS", "ProgramFiles", instdir, "distribution", dest)
                 ),
                 f,
             )
+
+    locales.remove("en-US")
+
+    # Windows MSIX packages support a finite set of locales: see
+    # https://docs.microsoft.com/en-us/windows/uwp/publish/supported-languages, which is encoded in
+    # https://searchfox.org/mozilla-central/source/browser/installer/windows/msix/msix-all-locales.
+    # We distribute all of the langpacks supported by the release channel in our MSIX, which is
+    # encoded in https://searchfox.org/mozilla-central/source/browser/locales/all-locales.  But we
+    # only advertise support in the App manifest for the intersection of that set and the set of
+    # supported locales.
+    #
+    # We distribute all langpacks to avoid the following issue.  Suppose a user manually installs a
+    # langpack that is not supported by Windows, and then updates the installed MSIX package.  MSIX
+    # package upgrades are essentially paveover installs, so there is no opportunity for Firefox to
+    # update the langpack before the update.  But, since all langpacks are bundled with the MSIX,
+    # that langpack will be up-to-date, preventing one class of YSOD.
+    unadvertised = set()
+    if locale_allowlist:
+        unadvertised = locales - locale_allowlist
+        locales = locales & locale_allowlist
+    for locale in sorted(unadvertised):
+        log(
+            logging.INFO,
+            "msix",
+            {"locale": locale},
+            "Not advertising distributed locale '{locale}' that is not recognized by Windows",
+        )
+
+    locales = ["en-US"] + list(sorted(locales))
+    resource_language_list = "\n".join(
+        f'    <Resource Language="{locale}" />' for locale in sorted(locales)
+    )
+
+    defines = {
+        "APPX_ARCH": _MSIX_ARCH[arch],
+        "APPX_DISPLAYNAME": brandFullName,
+        "APPX_DESCRIPTION": brandFullName,
+        # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
+        "APPX_IDENTITY": identity,
+        # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox
+        # Beta Package Root'.  See above.
+        "APPX_INSTDIR": instdir,
+        # Like 'Firefox%20Package%20Root'.
+        "APPX_INSTDIR_QUOTED": urllib.parse.quote(instdir),
+        "APPX_PUBLISHER": publisher,
+        "APPX_PUBLISHER_DISPLAY_NAME": publisher_display_name,
+        "APPX_RESOURCE_LANGUAGE_LIST": resource_language_list,
+        "APPX_VERSION": version,
+        "MOZ_APP_DISPLAYNAME": displayname,
+        "MOZ_APP_NAME": app_name,
+        "MOZ_IGECKOBACKCHANNEL_IID": MOZ_IGECKOBACKCHANNEL_IID,
+    }
+
+    m.add_preprocess(
+        mozpath.join(template, "AppxManifest.xml.in"),
+        "AppxManifest.xml",
+        [],
+        defines=defines,
+        marker="<!-- #",  # So that we can have well-formed XML.
+    )
+    m.populate_registry(copier)
 
     output_dir = mozpath.abspath(output_dir)
     ensureParentDir(output_dir)
@@ -633,7 +688,7 @@ powershell -c 'Get-AuthenticodeSignature -FilePath "{output}" | Format-List *'
 To install this MSIX:
 powershell -c 'Add-AppPackage -path "{output}"'
 To see details after installing:
-powershell -c 'Get-AppPackage -name Mozilla.Firefox(.Beta,...)'
+powershell -c 'Get-AppPackage -name Mozilla.MozillaFirefox(Beta,...)'
                 """.strip(),
             )
 

@@ -12,3 +12,22 @@ include!(concat!(
     env!("MOZ_TOPOBJDIR"),
     "/tools/profiler/rust-api/src/gecko_bindings/profiling_categories.rs"
 ));
+
+/// Helper macro that returns the profiling category pair from either only
+/// "category", or "category + sub category" pair. Refer to `profiling_categories.yaml`
+/// or generated `profiling_categories.rs` to see all the marker categories.
+/// This is useful to make the APIs similar to each other since
+/// `gecko_profiler_label!` API also requires the same syntax.
+///
+/// Example usages:
+///  - `gecko_profiler_category!(DOM)`
+///  - `gecko_profiler_category!(JavaScript, Parsing)`
+#[macro_export]
+macro_rules! gecko_profiler_category {
+    ($category:ident) => {
+        $crate::ProfilingCategoryPair::$category(None)
+    };
+    ($category:ident, $subcategory:ident) => {
+        $crate::ProfilingCategoryPair::$category(Some($crate::$category::$subcategory))
+    };
+}

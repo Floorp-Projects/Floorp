@@ -48,7 +48,7 @@
 #include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
-#include "vm/Xdr.h"           // XDRMode, XDRResult, XDREncoder
+#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRStencilEncoder, XDRStencilDecoder
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 
@@ -1142,7 +1142,7 @@ static bool InstantiateModuleObject(JSContext* cx,
                                     CompilationAtomCache& atomCache,
                                     const CompilationStencil& stencil,
                                     CompilationGCOutput& gcOutput) {
-  MOZ_ASSERT(stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule());
+  MOZ_ASSERT(stencil.isModule());
 
   gcOutput.module = ModuleObject::create(cx);
   if (!gcOutput.module) {
@@ -2420,6 +2420,14 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
 #endif
 
   return true;
+}
+
+bool CompilationStencil::isModule() const {
+  return scriptExtra[CompilationStencil::TopLevelIndex].isModule();
+}
+
+bool ExtensibleCompilationStencil::isModule() const {
+  return scriptExtra[CompilationStencil::TopLevelIndex].isModule();
 }
 
 mozilla::Span<TaggedScriptThingIndex> ScriptStencil::gcthings(

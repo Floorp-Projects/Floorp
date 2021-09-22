@@ -101,6 +101,9 @@ var AUSTLMY = {
   // Update check was delayed because another instance of the application is
   // currently running
   CHK_OTHER_INSTANCE: 39,
+  // Cannot yet download update because no partial patch is available and an
+  // update has already been downloaded.
+  CHK_NO_PARTIAL_PATCH: 40,
 
   /**
    * Submit a telemetry ping for the update check result code or a telemetry

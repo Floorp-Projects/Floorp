@@ -536,6 +536,10 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
           // XXX: handle Blob data
           invalidateFrame = true;
           break;
+        case layers::WebRenderUserData::UserDataType::eMask:
+          static_cast<layers::WebRenderMaskData*>(data.get())->Invalidate();
+          invalidateFrame = true;
+          break;
         case layers::WebRenderUserData::UserDataType::eImage:
           if (static_cast<layers::WebRenderImageData*>(data.get())
                   ->UsingSharedSurface(aRequest->GetProducerId())) {

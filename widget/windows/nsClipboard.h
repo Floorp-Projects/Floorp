@@ -65,34 +65,9 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   static UINT GetCustomClipboardFormat();
 
  protected:
+  // @param aDataObject must be non-nullptr.
   static HRESULT FillSTGMedium(IDataObject* aDataObject, UINT aFormat,
                                LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed);
-
-  // See methods listed at
-  // <https://docs.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject#methods>.
-  static void IDataObjectMethodResultToString(HRESULT aHres,
-                                              nsACString& aResult);
-
-  // See methods listed at
-  // <https://docs.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject#methods>.
-  static void LogIDataObjectMethodResult(HRESULT aHres,
-                                         const nsCString& aMethodName);
-
-  // See
-  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olegetclipboard>.
-  static void LogOleGetClipboardResult(HRESULT aHres);
-
-  // See
-  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olegetclipboard>.
-  static void OleGetClipboardResultToString(HRESULT aHres, nsACString& aResult);
-
-  // See
-  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olesetclipboard>.
-  static void LogOleSetClipboardResult(HRESULT aHres);
-
-  // See
-  // <https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-olesetclipboard>.
-  static void OleSetClipboardResultToString(HRESULT aHres, nsACString& aResult);
 
   NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
@@ -108,6 +83,7 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   static bool FindPlatformHTML(IDataObject* inDataObject, UINT inIndex,
                                void** outData, uint32_t* outStartOfData,
                                uint32_t* outDataLen);
+
   static void ResolveShortcut(nsIFile* inFileName, nsACString& outURL);
 
   nsIWidget* mWindow;

@@ -33,7 +33,6 @@
 #include "vm/NativeObject.h"   // NativeObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/ProxyObject.h"    // ProxyObject
-#include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
 
 class JSFreeOp;
 class JSScript;
@@ -95,10 +94,6 @@ using HandleImportEntryObject = Handle<ImportEntryObject*>;
 using RootedImportEntryVector = Rooted<GCVector<ImportEntryObject*>>;
 using MutableHandleImportEntryObject = MutableHandle<ImportEntryObject*>;
 
-template <XDRMode mode>
-XDRResult XDRImportEntryObject(XDRState<mode>* xdr,
-                               MutableHandleImportEntryObject impObj);
-
 class ExportEntryObject : public NativeObject {
  public:
   enum {
@@ -126,9 +121,6 @@ class ExportEntryObject : public NativeObject {
   uint32_t columnNumber() const;
 };
 
-template <XDRMode mode>
-XDRResult XDRExportEntries(XDRState<mode>* xdr, MutableHandleArrayObject vec);
-
 using RootedExportEntryObject = Rooted<ExportEntryObject*>;
 using HandleExportEntryObject = Handle<ExportEntryObject*>;
 
@@ -155,15 +147,6 @@ using MutableHandleRequestedModuleObject =
 
 using RootedModuleRequestObject = Rooted<ModuleRequestObject*>;
 using MutableHandleModuleRequestObject = MutableHandle<ModuleRequestObject*>;
-
-template <XDRMode mode>
-XDRResult XDRRequestedModuleObject(XDRState<mode>* xdr,
-                                   MutableHandleRequestedModuleObject reqObj);
-
-template <XDRMode mode>
-XDRResult XDRModuleRequestObject(
-    XDRState<mode>* xdr, MutableHandleModuleRequestObject moduleRequestObj,
-    bool allowNullSpecifier);
 
 class IndirectBindingMap {
  public:
@@ -477,9 +460,6 @@ bool FinishDynamicModuleImport_NoTLA(JSContext* cx,
                                      HandleValue referencingPrivate,
                                      HandleObject moduleRequest,
                                      HandleObject promise);
-
-template <XDRMode mode>
-XDRResult XDRModuleObject(XDRState<mode>* xdr, MutableHandleModuleObject modp);
 
 }  // namespace js
 

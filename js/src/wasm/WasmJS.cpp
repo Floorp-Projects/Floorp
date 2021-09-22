@@ -1077,6 +1077,7 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
   return true;
 }
 
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
 [[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
                                                const ValTypeVector& valTypes) {
   RootedArrayObject arrayObj(cx, NewDenseEmptyArray(cx));
@@ -1092,7 +1093,6 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
   return arrayObj;
 }
 
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
 static JSObject* FuncTypeToObject(JSContext* cx, const FuncType& type) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
@@ -1387,6 +1387,7 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
   const Metadata& metadata = module->metadata();
   const MetadataTier& metadataTier =
       module->metadata(module->code().stableTier());
@@ -1395,7 +1396,10 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
   size_t numMemoryImport = 0;
   size_t numGlobalImport = 0;
   size_t numTableImport = 0;
+#  ifdef ENABLE_WASM_EXCEPTIONS
   size_t numTagImport = 0;
+#  endif  // ENABLE_WASM_EXCEPTIONS
+#endif    // ENABLE_WASM_TYPE_REFLECTIONS
 
   for (const Import& import : module->imports()) {
     Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -1424,53 +1428,53 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
     props.infallibleAppend(
         IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
-    if (fuzzingSafe) {
-      RootedObject typeObj(cx);
-      switch (import.kind) {
-        case DefinitionKind::Function: {
-          size_t funcIndex = numFuncImport++;
-          typeObj = FuncTypeToObject(
-              cx, metadataTier.funcImports[funcIndex].funcType());
-          break;
-        }
-        case DefinitionKind::Table: {
-          size_t tableIndex = numTableImport++;
-          const TableDesc& table = metadata.tables[tableIndex];
-          typeObj = TableTypeToObject(cx, table.elemType, table.initialLength,
-                                      table.maximumLength);
-          break;
-        }
-        case DefinitionKind::Memory: {
-          DebugOnly<size_t> memoryIndex = numMemoryImport++;
-          MOZ_ASSERT(memoryIndex == 0);
-          const MemoryDesc& memory = *metadata.memory;
-          typeObj =
-              MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
-                                 memory.maximumPages());
-          break;
-        }
-        case DefinitionKind::Global: {
-          size_t globalIndex = numGlobalImport++;
-          const GlobalDesc& global = metadata.globals[globalIndex];
-          typeObj = GlobalTypeToObject(cx, global.type(), global.isMutable());
-          break;
-        }
-#ifdef ENABLE_WASM_EXCEPTIONS
-        case DefinitionKind::Tag: {
-          size_t tagIndex = numTagImport++;
-          const TagDesc& tag = metadata.tags[tagIndex];
-          typeObj = TagTypeToObject(cx, tag.argTypes);
-          break;
-        }
-#endif  // ENABLE_WASM_EXCEPTIONS
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    RootedObject typeObj(cx);
+    switch (import.kind) {
+      case DefinitionKind::Function: {
+        size_t funcIndex = numFuncImport++;
+        typeObj = FuncTypeToObject(
+            cx, metadataTier.funcImports[funcIndex].funcType());
+        break;
       }
-
-      if (!typeObj || !props.append(IdValuePair(NameToId(names.type),
-                                                ObjectValue(*typeObj)))) {
-        ReportOutOfMemory(cx);
-        return false;
+      case DefinitionKind::Table: {
+        size_t tableIndex = numTableImport++;
+        const TableDesc& table = metadata.tables[tableIndex];
+        typeObj = TableTypeToObject(cx, table.elemType, table.initialLength,
+                                    table.maximumLength);
+        break;
       }
+      case DefinitionKind::Memory: {
+        DebugOnly<size_t> memoryIndex = numMemoryImport++;
+        MOZ_ASSERT(memoryIndex == 0);
+        const MemoryDesc& memory = *metadata.memory;
+        typeObj =
+            MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
+                               memory.maximumPages());
+        break;
+      }
+      case DefinitionKind::Global: {
+        size_t globalIndex = numGlobalImport++;
+        const GlobalDesc& global = metadata.globals[globalIndex];
+        typeObj = GlobalTypeToObject(cx, global.type(), global.isMutable());
+        break;
+      }
+#  ifdef ENABLE_WASM_EXCEPTIONS
+      case DefinitionKind::Tag: {
+        size_t tagIndex = numTagImport++;
+        const TagDesc& tag = metadata.tags[tagIndex];
+        typeObj = TagTypeToObject(cx, tag.argTypes);
+        break;
+      }
+#  endif  // ENABLE_WASM_EXCEPTIONS
     }
+
+    if (!typeObj || !props.append(IdValuePair(NameToId(names.type),
+                                              ObjectValue(*typeObj)))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+#endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
     JSObject* obj = NewPlainObjectWithProperties(cx, props.begin(),
                                                  props.length(), GenericObject);
@@ -1509,9 +1513,11 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
   const Metadata& metadata = module->metadata();
   const MetadataTier& metadataTier =
       module->metadata(module->code().stableTier());
+#endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
   for (const Export& exp : module->exports()) {
     Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -1533,47 +1539,47 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
     props.infallibleAppend(
         IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
-    if (fuzzingSafe) {
-      RootedObject typeObj(cx);
-      switch (exp.kind()) {
-        case DefinitionKind::Function: {
-          const FuncExport& fe = metadataTier.lookupFuncExport(exp.funcIndex());
-          typeObj = FuncTypeToObject(cx, fe.funcType());
-          break;
-        }
-        case DefinitionKind::Table: {
-          const TableDesc& table = metadata.tables[exp.tableIndex()];
-          typeObj = TableTypeToObject(cx, table.elemType, table.initialLength,
-                                      table.maximumLength);
-          break;
-        }
-        case DefinitionKind::Memory: {
-          const MemoryDesc& memory = *metadata.memory;
-          typeObj =
-              MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
-                                 memory.maximumPages());
-          break;
-        }
-        case DefinitionKind::Global: {
-          const GlobalDesc& global = metadata.globals[exp.globalIndex()];
-          typeObj = GlobalTypeToObject(cx, global.type(), global.isMutable());
-          break;
-        }
-#ifdef ENABLE_WASM_EXCEPTIONS
-        case DefinitionKind::Tag: {
-          const TagDesc& tag = metadata.tags[exp.tagIndex()];
-          typeObj = TagTypeToObject(cx, tag.argTypes);
-          break;
-        }
-#endif  // ENABLE_WASM_EXCEPTIONS
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    RootedObject typeObj(cx);
+    switch (exp.kind()) {
+      case DefinitionKind::Function: {
+        const FuncExport& fe = metadataTier.lookupFuncExport(exp.funcIndex());
+        typeObj = FuncTypeToObject(cx, fe.funcType());
+        break;
       }
-
-      if (!typeObj || !props.append(IdValuePair(NameToId(names.type),
-                                                ObjectValue(*typeObj)))) {
-        ReportOutOfMemory(cx);
-        return false;
+      case DefinitionKind::Table: {
+        const TableDesc& table = metadata.tables[exp.tableIndex()];
+        typeObj = TableTypeToObject(cx, table.elemType, table.initialLength,
+                                    table.maximumLength);
+        break;
       }
+      case DefinitionKind::Memory: {
+        const MemoryDesc& memory = *metadata.memory;
+        typeObj =
+            MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
+                               memory.maximumPages());
+        break;
+      }
+      case DefinitionKind::Global: {
+        const GlobalDesc& global = metadata.globals[exp.globalIndex()];
+        typeObj = GlobalTypeToObject(cx, global.type(), global.isMutable());
+        break;
+      }
+#  ifdef ENABLE_WASM_EXCEPTIONS
+      case DefinitionKind::Tag: {
+        const TagDesc& tag = metadata.tags[exp.tagIndex()];
+        typeObj = TagTypeToObject(cx, tag.argTypes);
+        break;
+      }
+#  endif  // ENABLE_WASM_EXCEPTIONS
     }
+
+    if (!typeObj || !props.append(IdValuePair(NameToId(names.type),
+                                              ObjectValue(*typeObj)))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+#endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
     JSObject* obj = NewPlainObjectWithProperties(cx, props.begin(),
                                                  props.length(), GenericObject);
@@ -1758,6 +1764,10 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   UniqueCharsVector warnings;
   SharedModule module =
       CompileBuffer(*compileArgs, *bytecode, &error, &warnings, nullptr);
+
+  if (!ReportCompileWarnings(cx, warnings)) {
+    return false;
+  }
   if (!module) {
     if (error) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -1765,10 +1775,6 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     ReportOutOfMemory(cx);
-    return false;
-  }
-
-  if (!ReportCompileWarnings(cx, warnings)) {
     return false;
   }
 
@@ -4216,7 +4222,8 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
     return nullptr;
   }
 
-  ModuleGenerator mg(*compileArgs, &moduleEnv, &compilerEnv, nullptr, nullptr);
+  ModuleGenerator mg(*compileArgs, &moduleEnv, &compilerEnv, nullptr, nullptr,
+                     nullptr);
   if (!mg.init(nullptr)) {
     return nullptr;
   }
@@ -4560,11 +4567,11 @@ struct CompileBufferTask : PromiseHelperTask {
   }
 
   bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
-    if (!module) {
-      return Reject(cx, *compileArgs, promise, error);
-    }
     if (!ReportCompileWarnings(cx, warnings)) {
       return false;
+    }
+    if (!module) {
+      return Reject(cx, *compileArgs, promise, error);
     }
     if (instantiate) {
       return AsyncInstantiate(cx, *module, importObj, Ret::Pair, promise);
@@ -5019,11 +5026,11 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
   bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
     MOZ_ASSERT(streamState_.lock() == Closed);
 
+    if (!ReportCompileWarnings(cx, warnings_)) {
+      return false;
+    }
     if (module_) {
       MOZ_ASSERT(!streamFailed_ && !streamError_ && !compileError_);
-      if (!ReportCompileWarnings(cx, warnings_)) {
-        return false;
-      }
       if (instantiate_) {
         return AsyncInstantiate(cx, *module_, importObj_, Ret::Pair, promise);
       }

@@ -36,8 +36,8 @@ add_task(async function() {
   ok(true, "debugger is paused");
 
   let highlighterTestFront;
-  if (isFissionEnabled()) {
-    // We need to retrieve the highlighterTestFront for the remote frame target.
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
+    // We need to retrieve the highlighterTestFront for the frame target.
     const iframeTarget = commands.targetCommand
       .getAllTargets([commands.targetCommand.TYPES.FRAME])
       .find(target => target.url.includes("example.org"));

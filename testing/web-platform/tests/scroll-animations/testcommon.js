@@ -15,7 +15,10 @@ function setupScrollTimelineTest(
   let scroller = document.createElement('div');
   scroller.style.width = '100px';
   scroller.style.height = '100px';
-  scroller.style.overflow = 'scroll';
+  // Hide the scrollbars, but maintain the ability to scroll. This setting
+  // ensures that variability in scrollbar sizing does not contribute to test
+  // failures or flakes.
+  scroller.style.overflow = 'hidden';
   for (const [key, value] of scrollerOverrides) {
     scroller.style[key] = value;
   }
@@ -90,7 +93,7 @@ function createScrollLinkedAnimationWithTiming(test, timing, timeline) {
     new KeyframeEffect(createDiv(test), KEYFRAMES, timing), timeline);
 }
 
-function assert_approx_equals_or_null(actual, expected, tolerance, name){
+function assert_approx_equals_or_null(actual, expected, tolerance, name) {
   if (actual === null || expected === null){
     assert_equals(actual, expected, name);
   }
@@ -99,7 +102,10 @@ function assert_approx_equals_or_null(actual, expected, tolerance, name){
   }
 }
 
-function assert_percents_equal(actual, expected, description){
+function assert_percents_approx_equal(actual, expected, maxScroll,
+                                      description) {
+  // Base the tolerance on being out by up to half a pixel.
+  const tolerance = 0.5 / maxScroll * 100;
   assert_equals(actual.unit, "percent", `'actual' unit type must be ` +
       `'percent' for "${description}"`);
   assert_true(actual instanceof CSSUnitValue, `'actual' must be of type ` +
@@ -109,10 +115,48 @@ function assert_percents_equal(actual, expected, description){
     // type
     assert_equals(expected.unit, "percent", `'expected' unit type must be ` +
         `'percent' for "${description}"`);
-    assert_approx_equals(actual.value, expected.value, 0.01, `values do not ` +
-        `match for "${description}"`);
+    assert_approx_equals(actual.value, expected.value, tolerance,
+        `values do not match for "${description}"`);
   } else if (typeof expected, "number"){
-    assert_approx_equals(actual.value, expected, 0.01, `values do not match ` +
-        `for "${description}"`);
+    assert_approx_equals(actual.value, expected, tolerance,
+        `values do not match for "${description}"`);
   }
+}
+
+function assert_percents_equal(actual, expected, description) {
+  // Rough estimate of the default size of the scrollable area based on
+  // sizes in setupScrollTimelineTest.
+  const defaultScrollRange = 400;
+  return assert_percents_approx_equal(actual, expected, defaultScrollRange,
+                                      description);
+}
+
+// These functions are used for the tests that have not yet been updated to be
+// compatible with progress based scroll animations. Once scroll timeline
+// "timeRange" is removed, these functions should also be removed.
+// Needed work tracked by crbug.com/1216655
+function createScrollTimelineWithTimeRange(test, options) {
+  options = options || {
+    scrollSource: createScroller(test),
+    timeRange: 1000
+  }
+  return new ScrollTimeline(options);
+}
+
+function createScrollTimelineWithOffsetsWithTimeRange(test, startOffset, endOffset) {
+  return createScrollTimelineWithTimeRange(test, {
+    scrollSource: createScroller(test),
+    orientation: "vertical",
+    scrollOffsets: [startOffset, endOffset],
+    timeRange: 1000
+  });
+}
+
+function createScrollLinkedAnimationWithTimeRange(test, timeline) {
+  if (timeline === undefined)
+    timeline = createScrollTimelineWithTimeRange(test);
+  const DURATION = 1000; // ms
+  const KEYFRAMES = { opacity: [0, 1] };
+  return new Animation(
+    new KeyframeEffect(createDiv(test), KEYFRAMES, DURATION), timeline);
 }

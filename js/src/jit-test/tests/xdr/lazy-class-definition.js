@@ -1,8 +1,3 @@
-// |jit-test| --off-thread-parse-global
-
-// NOTE: This tests legacy XDR behaviour. Once that support is removed, just
-//       remove this annotation and let test use Stencil.
-
 load(libdir + 'bytecode-cache.js');
 
 // Bury the class definition deep in a lazy function to hit edge cases of lazy
