@@ -2701,9 +2701,10 @@ static bool CanAttachGlobalName(JSContext* cx,
 
 AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
                                                             HandleId id) {
-  if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
+  if (!IsGlobalOp(JSOp(*pc_))) {
     return AttachDecision::NoAction;
   }
+  MOZ_ASSERT(!script_->hasNonSyntacticScope());
 
   auto* globalLexical = &env_->as<GlobalLexicalEnvironmentObject>();
 
@@ -2763,9 +2764,10 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
 
 AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
                                                              HandleId id) {
-  if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
+  if (!IsGlobalOp(JSOp(*pc_))) {
     return AttachDecision::NoAction;
   }
+  MOZ_ASSERT(!script_->hasNonSyntacticScope());
 
   Handle<GlobalLexicalEnvironmentObject*> globalLexical =
       env_.as<GlobalLexicalEnvironmentObject>();
