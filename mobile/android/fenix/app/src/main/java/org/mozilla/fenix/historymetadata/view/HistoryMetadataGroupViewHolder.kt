@@ -41,7 +41,7 @@ class HistoryMetadataGroupViewHolder(
                     recentVisits = recentVisits.value ?: emptyList(),
                     menuItems = listOfNotNull(
                         RecentVisitMenuItem(
-                            title = stringResource(R.string.recently_visited_delete_from_history),
+                            title = stringResource(R.string.recently_visited_menu_item_remove),
                             onClick = {
                                 // no-op
                             }
