@@ -275,7 +275,6 @@ pub struct PulseStream<'ctx> {
     drain_timer: *mut pa_time_event,
     output_sample_spec: pulse::SampleSpec,
     input_sample_spec: pulse::SampleSpec,
-    // output frames count excluding pre-buffering
     output_frame_count: AtomicUsize,
     shutdown: bool,
     volume: f32,
@@ -376,13 +375,12 @@ impl<'ctx> PulseStream<'ctx> {
                 return;
             }
 
-            let nframes = nbytes / stm.output_sample_spec.frame_size();
-            let first_callback = stm.output_frame_count.fetch_add(nframes, Ordering::SeqCst) == 0;
             if stm.input_stream.is_some() {
+                let nframes = nbytes / stm.output_sample_spec.frame_size();
                 let nsamples_input = nframes * stm.input_sample_spec.channels as usize;
                 let input_buffer_manager = stm.input_buffer_manager.as_mut().unwrap();
 
-                if first_callback {
+                if stm.output_frame_count.fetch_add(nframes, Ordering::SeqCst) == 0 {
                     let buffered_input_frames = input_buffer_manager.available_samples()
                         / stm.input_sample_spec.channels as usize;
                     if buffered_input_frames > nframes {
@@ -438,7 +436,7 @@ impl<'ctx> PulseStream<'ctx> {
 
                         let battr = pa_buffer_attr {
                             maxlength: u32::max_value(),
-                            prebuf: u32::max_value(),
+                            prebuf: 0,
                             fragsize: u32::max_value(),
                             tlength: buffer_size_bytes * 2,
                             minreq: buffer_size_bytes / 4,
@@ -603,30 +601,8 @@ impl<'ctx> Drop for PulseStream<'ctx> {
 
 impl<'ctx> StreamOps for PulseStream<'ctx> {
     fn start(&mut self) -> Result<()> {
-        fn output_preroll(_: &pulse::MainloopApi, u: *mut c_void) {
-            let stm = unsafe { &mut *(u as *mut PulseStream) };
-            if !stm.shutdown {
-                let size = stm
-                    .output_stream
-                    .as_ref()
-                    .map_or(0, |s| s.writable_size().unwrap_or(0));
-                stm.trigger_user_callback(std::ptr::null(), size);
-            }
-        }
         self.shutdown = false;
         self.cork(CorkState::uncork() | CorkState::notify());
-
-        if self.output_stream.is_some() {
-            /* When doing output-only or duplex, we need to manually call user cb once in order to
-             * make things roll. This is done via a defer event in order to execute it from PA
-             * server thread. */
-            self.context.mainloop.lock();
-            self.context
-                .mainloop
-                .get_api()
-                .once(output_preroll, self as *const _ as *mut _);
-            self.context.mainloop.unlock();
-        }
 
         Ok(())
     }
@@ -1017,7 +993,7 @@ impl<'ctx> PulseStream<'ctx> {
                             read_offset
                         );
                         let read_ptr = unsafe { (input_data as *const u8).add(read_offset) };
-                        let mut got = unsafe {
+                        let got = unsafe {
                             self.data_callback.unwrap()(
                                 self as *const _ as *mut _,
                                 self.user_ptr,
@@ -1057,40 +1033,15 @@ impl<'ctx> PulseStream<'ctx> {
                             }
                         }
 
-                        let should_drain = (got as usize) < size / frame_size;
-
-                        if should_drain && self.output_frame_count.load(Ordering::SeqCst) == 0 {
-                            // Draining during preroll, ensure `prebuf` frames are written so
-                            // the stream starts. If not, pad with a bit of silence.
-                            let prebuf_size_bytes = stm.get_buffer_attr().prebuf as usize;
-                            let got_bytes = got as usize * frame_size;
-                            if prebuf_size_bytes > got_bytes {
-                                let padding_bytes = prebuf_size_bytes - got_bytes;
-                                if padding_bytes + got_bytes <= size {
-                                    // A slice that starts after the data provided by the callback,
-                                    // with just enough room to provide a final buffer big enough.
-                                    let padding_buf: &mut [u8] = unsafe {
-                                        slice::from_raw_parts_mut::<u8>(
-                                            buffer.add(got_bytes) as *mut u8,
-                                            padding_bytes,
-                                        )
-                                    };
-                                    padding_buf.fill(0);
-                                    got += (padding_bytes / frame_size) as i64;
-                                }
-                            } else {
-                                cubeb_log!("Not enough room to pad up to prebuf when prebuffering.")
-                            }
-                        }
-
                         let r = stm.write(
                             buffer,
                             got as usize * frame_size,
                             0,
                             pulse::SeekMode::Relative,
                         );
+                        debug_assert!(r.is_ok());
 
-                        if should_drain {
+                        if (got as usize) < size / frame_size {
                             cubeb_logv!("Draining {} < {}", got, size / frame_size);
                             let latency = match stm.get_latency() {
                                 Ok(StreamLatency::Positive(l)) => l,
@@ -1121,8 +1072,6 @@ impl<'ctx> PulseStream<'ctx> {
                             self.shutdown = true;
                             return;
                         }
-
-                        debug_assert!(r.is_ok());
 
                         towrite -= size;
                     }
