@@ -310,8 +310,9 @@ class CommonNames {
    * @returns {string} The snapshot's common name.
    */
   static getName(snapshot) {
-    let commonName = snapshot.pageData.get(PageDataCollector.DATA_TYPE.GENERAL)
-      ?.site_name;
+    let commonName = snapshot.pageData.get(
+      PageDataCollector.DATA_TYPE.GENERAL
+    )?.[0]?.site_name;
     if (commonName) {
       return commonName;
     }
