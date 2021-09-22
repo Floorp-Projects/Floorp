@@ -313,7 +313,7 @@ Maybe<wr::BlobImageKey> WebRenderBlobImageData::UpdateImageKey(
 
 WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
                                              nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem), mInvalid(false) {}
+    : WebRenderUserData(aManager, aItem), mOpacity(1.0f), mInvalid(false) {}
 
 WebRenderFallbackData::~WebRenderFallbackData() { ClearImageKey(); }
 
