@@ -155,14 +155,21 @@ class FunctionFlags {
 
   // For flag combinations the type is int.
   bool hasFlags(uint16_t flags) const { return flags_ & flags; }
-  void setFlags(uint16_t flags) { flags_ |= flags; }
-  void clearFlags(uint16_t flags) { flags_ &= ~flags; }
-  void setFlags(uint16_t flags, bool set) {
+  FunctionFlags& setFlags(uint16_t flags) {
+    flags_ |= flags;
+    return *this;
+  }
+  FunctionFlags& clearFlags(uint16_t flags) {
+    flags_ &= ~flags;
+    return *this;
+  }
+  FunctionFlags& setFlags(uint16_t flags, bool set) {
     if (set) {
       setFlags(flags);
     } else {
       clearFlags(flags);
     }
+    return *this;
   }
 
   FunctionKind kind() const {
@@ -265,60 +272,61 @@ class FunctionFlags {
     return isSelfHostedOrIntrinsic() && isNativeFun();
   }
 
-  void setKind(FunctionKind kind) {
+  FunctionFlags& setKind(FunctionKind kind) {
     this->flags_ &= ~FUNCTION_KIND_MASK;
     this->flags_ |= static_cast<uint16_t>(kind) << FUNCTION_KIND_SHIFT;
+    return *this;
   }
 
   // Make the function constructible.
-  void setIsConstructor() {
+  FunctionFlags& setIsConstructor() {
     MOZ_ASSERT(!isConstructor());
     MOZ_ASSERT(isSelfHostedBuiltin());
-    setFlags(CONSTRUCTOR);
+    return setFlags(CONSTRUCTOR);
   }
 
-  void setIsBoundFunction() {
+  FunctionFlags& setIsBoundFunction() {
     MOZ_ASSERT(!isBoundFunction());
-    setFlags(BOUND_FUN);
+    return setFlags(BOUND_FUN);
   }
 
-  void setIsSelfHostedBuiltin() {
+  FunctionFlags& setIsSelfHostedBuiltin() {
     MOZ_ASSERT(isInterpreted());
     MOZ_ASSERT(!isSelfHostedBuiltin());
     setFlags(SELF_HOSTED);
     // Self-hosted functions should not be constructable.
-    clearFlags(CONSTRUCTOR);
+    return clearFlags(CONSTRUCTOR);
   }
-  void setIsIntrinsic() {
+  FunctionFlags& setIsIntrinsic() {
     MOZ_ASSERT(isNativeFun());
     MOZ_ASSERT(!isIntrinsic());
-    setFlags(SELF_HOSTED);
+    return setFlags(SELF_HOSTED);
   }
 
-  void setResolvedLength() { setFlags(RESOLVED_LENGTH); }
-  void setResolvedName() { setFlags(RESOLVED_NAME); }
+  FunctionFlags& setResolvedLength() { return setFlags(RESOLVED_LENGTH); }
+  FunctionFlags& setResolvedName() { return setFlags(RESOLVED_NAME); }
 
-  void setInferredName() { setFlags(HAS_INFERRED_NAME); }
+  FunctionFlags& setInferredName() { return setFlags(HAS_INFERRED_NAME); }
 
-  void setGuessedAtom() { setFlags(HAS_GUESSED_ATOM); }
+  FunctionFlags& setGuessedAtom() { return setFlags(HAS_GUESSED_ATOM); }
 
-  void setPrefixedBoundFunctionName() {
-    setFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
+  FunctionFlags& setPrefixedBoundFunctionName() {
+    return setFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
   }
 
-  void setSelfHostedLazy() { setFlags(SELFHOSTLAZY); }
-  void clearSelfHostedLazy() { clearFlags(SELFHOSTLAZY); }
-  void setBaseScript() { setFlags(BASESCRIPT); }
-  void clearBaseScript() { clearFlags(BASESCRIPT); }
+  FunctionFlags& setSelfHostedLazy() { return setFlags(SELFHOSTLAZY); }
+  FunctionFlags& clearSelfHostedLazy() { return clearFlags(SELFHOSTLAZY); }
+  FunctionFlags& setBaseScript() { return setFlags(BASESCRIPT); }
+  FunctionFlags& clearBaseScript() { return clearFlags(BASESCRIPT); }
 
-  void setWasmJitEntry() { setFlags(WASM_JIT_ENTRY); }
+  FunctionFlags& setWasmJitEntry() { return setFlags(WASM_JIT_ENTRY); }
 
   bool isExtended() const { return hasFlags(EXTENDED); }
-  void setIsExtended() { setFlags(EXTENDED); }
+  FunctionFlags& setIsExtended() { return setFlags(EXTENDED); }
 
   bool isNativeConstructor() const { return hasFlags(NATIVE_CTOR); }
 
-  void setIsGhost() { setFlags(GHOST_FUNCTION); }
+  FunctionFlags& setIsGhost() { return setFlags(GHOST_FUNCTION); }
   bool isGhost() const { return hasFlags(GHOST_FUNCTION); }
 
   static uint16_t HasJitEntryFlags(bool isConstructing) {
