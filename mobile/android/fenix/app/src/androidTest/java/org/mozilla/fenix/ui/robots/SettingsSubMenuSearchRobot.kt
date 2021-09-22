@@ -8,23 +8,28 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
+import org.hamcrest.Matchers.allOf
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -53,14 +58,45 @@ class SettingsSubMenuSearchRobot {
 
     fun saveNewSearchEngine() {
         addSearchEngineSaveButton().click()
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/recycler_view")
-        ).waitForExists(waitingTime)
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().textContains("Default search engine")
+            ).waitForExists(waitingTime)
+        )
     }
 
     fun addNewSearchEngine(searchEngineName: String) {
         selectSearchEngine(searchEngineName)
         saveNewSearchEngine()
+    }
+
+    fun selectAddCustomSearchEngine() = onView(withText("Other")).click()
+
+    fun typeCustomEngineDetails(engineName: String, engineURL: String) {
+        onView(withId(R.id.edit_engine_name))
+            .perform(clearText())
+            .perform(typeText(engineName))
+        onView(withId(R.id.edit_search_string))
+            .perform(clearText())
+            .perform(typeText(engineURL))
+    }
+
+    fun openEngineOverflowMenu(searchEngineName: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("org.mozilla.fenix.debug:id/overflow_menu")
+        ).waitForExists(waitingTime)
+        threeDotMenu(searchEngineName).click()
+    }
+
+    fun clickEdit() = onView(withText("Edit")).click()
+
+    fun saveEditSearchEngine() {
+        onView(withId(R.id.save_button)).click()
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().textContains("Saved")
+            ).waitForExists(waitingTime)
+        )
     }
 
     class Transition {
@@ -78,21 +114,21 @@ class SettingsSubMenuSearchRobot {
 
 private fun assertDefaultSearchEngineHeader() =
     onView(withText("Default search engine"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchEngineList() {
     onView(withText("Google"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(withText("Amazon.com"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(withText("Bing"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(withText("DuckDuckGo"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(withText("Wikipedia"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(withText("Add search engine"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertShowSearchSuggestions() {
@@ -102,7 +138,7 @@ private fun assertShowSearchSuggestions() {
         )
     )
     onView(withText("Show search suggestions"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertShowSearchShortcuts() {
@@ -112,7 +148,7 @@ private fun assertShowSearchShortcuts() {
         )
     )
     onView(withText("Show search engines"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertShowClipboardSuggestions() {
@@ -122,7 +158,7 @@ private fun assertShowClipboardSuggestions() {
         )
     )
     onView(withText("Show clipboard suggestions"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertSearchBrowsingHistory() {
@@ -132,7 +168,7 @@ private fun assertSearchBrowsingHistory() {
         )
     )
     onView(withText("Search browsing history"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertSearchBookmarks() {
@@ -142,12 +178,12 @@ private fun assertSearchBookmarks() {
         )
     )
     onView(withText("Search bookmarks"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun selectSearchEngine(searchEngine: String) {
     onView(withText(searchEngine))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 }
 
@@ -189,3 +225,11 @@ private fun addSearchEngineSaveButton() = onView(withId(R.id.add_search_engine))
 private fun assertEngineListContains(searchEngineName: String) {
     onView(withId(R.id.search_engine_group)).check(matches(hasDescendant(withText(searchEngineName))))
 }
+
+private fun threeDotMenu(searchEngineName: String) =
+    onView(
+        allOf(
+            withId(R.id.overflow_menu),
+            withParent(withChild(withText(searchEngineName)))
+        )
+    )

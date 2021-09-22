@@ -544,6 +544,37 @@ class SmokeTest {
         }
     }
 
+    @Test
+    // Verifies setting as default a customized search engine name and URL
+    fun editCustomSearchEngineTest() {
+        val searchEngine = object {
+            var title = "Elefant"
+            var url = "https://www.elefant.ro/search?SearchTerm=%s"
+            var newTitle = "Test"
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            openAddSearchEngineMenu()
+            selectAddCustomSearchEngine()
+            typeCustomEngineDetails(searchEngine.title, searchEngine.url)
+            saveNewSearchEngine()
+            openEngineOverflowMenu(searchEngine.title)
+            clickEdit()
+            typeCustomEngineDetails(searchEngine.newTitle, searchEngine.url)
+            saveEditSearchEngine()
+            changeDefaultSearchEngine(searchEngine.newTitle)
+        }.goBack {
+        }.goBack {
+        }.openSearch {
+            verifyDefaultSearchEngine(searchEngine.newTitle)
+            clickSearchEngineShortcutButton()
+            verifyEnginesListShortcutContains(activityTestRule, searchEngine.newTitle)
+        }
+    }
+
     @Ignore("Disabled for failing with new Compose Awesomebar")
     @Test
     // Test running on beta/release builds in CI:
