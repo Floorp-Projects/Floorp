@@ -2159,7 +2159,7 @@ void nsIFrame::UpdateVisibilitySynchronously() {
     }
     nsIFrame* parent = f->GetParent();
     if (!parent) {
-      parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+      parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(f);
       if (parent && parent->PresContext()->IsChrome()) {
         break;
       }
