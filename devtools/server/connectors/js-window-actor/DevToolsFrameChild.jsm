@@ -715,6 +715,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
       connectionInfo.connection.close();
     }
     this._connections.clear();
+    // If we spawned a loader, we bootstrap a server, from which we should
+    // unregister the listener in order to prevent leaking the JSWindow Actor.
+    if (this.loader) {
+      const { DevToolsServer } = this.loader.require(
+        "devtools/server/devtools-server"
+      );
+      DevToolsServer.off("connectionchange", this._onConnectionChange);
+    }
     if (this.useCustomLoader) {
       this.loader.destroy();
     }
