@@ -436,13 +436,9 @@ void nsHttpConnection::EarlyDataTelemetry(int16_t tlsVersion,
   }
 }
 
-bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
-                                         uint32_t& aOut0RTTBytesWritten) {
+bool nsHttpConnection::EnsureNPNComplete() {
   // If for some reason the components to check on NPN aren't available,
   // this function will just return true to continue on and disable SPDY
-
-  aOut0RTTWriteHandshakeValue = NS_OK;
-  aOut0RTTBytesWritten = 0;
 
   MOZ_ASSERT(mSocketTransport);
   if (!mSocketTransport) {
@@ -493,22 +489,7 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
 
   if (rv == NS_ERROR_NOT_CONNECTED) {
     Check0RttEnabled(ssl);
-
-    if (mWaitingFor0RTTResponse) {
-      aOut0RTTWriteHandshakeValue = mTransaction->ReadSegments(
-          this, nsIOService::gDefaultSegmentSize, &aOut0RTTBytesWritten);
-      if (NS_FAILED(aOut0RTTWriteHandshakeValue) &&
-          aOut0RTTWriteHandshakeValue != NS_BASE_STREAM_WOULD_BLOCK) {
-        goto npnComplete;
-      }
-      LOG(
-          ("nsHttpConnection::EnsureNPNComplete [this=%p] - written %d "
-           "bytes during 0RTT",
-           this, aOut0RTTBytesWritten));
-      mContentBytesWritten0RTT += aOut0RTTBytesWritten;
-    }
-
-    return false;
+    return mWaitingFor0RTTResponse;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1871,8 +1852,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
     // etc.. and that is negotiated with NPN/ALPN in the SSL handshake.
 
     if (mConnInfo->UsingHttpsProxy() &&
-        !EnsureNPNComplete(rv, transactionBytes)) {
-      MOZ_ASSERT(!transactionBytes);
+        !EnsureNPNComplete()) {
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (mProxyConnectStream) {
       // If we're need an HTTP/1 CONNECT tunnel through a proxy
@@ -1881,27 +1861,29 @@ nsresult nsHttpConnection::OnSocketWritable() {
       rv = mProxyConnectStream->ReadSegments(ReadFromStream, this,
                                              nsIOService::gDefaultSegmentSize,
                                              &transactionBytes);
-    } else if (!EnsureNPNComplete(rv, transactionBytes)) {
-      if (NS_SUCCEEDED(rv) && !transactionBytes &&
-          NS_SUCCEEDED(mSocketOutCondition)) {
-        mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
-      }
+    } else if (!EnsureNPNComplete()) {
+      mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (!mTransaction) {
       rv = NS_ERROR_FAILURE;
       LOG(("  No Transaction In OnSocketWritable\n"));
     } else if (NS_SUCCEEDED(rv)) {
       // for non spdy sessions let the connection manager know
-      if (!mReportedSpdy) {
+      if (!mReportedSpdy && !mWaitingFor0RTTResponse) {
         mReportedSpdy = true;
         MOZ_ASSERT(!mEverUsedSpdy);
         gHttpHandler->ConnMgr()->ReportSpdyConnection(this, false);
       }
 
       LOG(("  writing transaction request stream\n"));
+      MOZ_DIAGNOSTIC_ASSERT(!mProxyConnectInProgress || !mWaitingFor0RTTResponse);
       mProxyConnectInProgress = false;
       rv = mTransaction->ReadSegmentsAgain(
           this, nsIOService::gDefaultSegmentSize, &transactionBytes, &again);
-      mContentBytesWritten += transactionBytes;
+      if (mWaitingFor0RTTResponse) {
+        mContentBytesWritten0RTT += transactionBytes;
+      } else {
+        mContentBytesWritten += transactionBytes;
+      }
     }
 
     LOG(
