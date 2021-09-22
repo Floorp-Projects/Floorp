@@ -758,17 +758,25 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1673939",
         "https://gitlab.freedesktop.org/mesa/mesa/-/issues/3720");
 
-#ifndef EARLY_BETA_OR_EARLIER
     // Bug 1635186 - Poor performance with video playing in a background window
-    // on XWayland.
+    // on XWayland. Keep in sync with FEATURE_X11_EGL below to only enable them
+    // together by default. Only Mesa and Nvidia binary drivers are expected
+    // on Wayland rigth now.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::All, WindowProtocol::XWayland, DriverVendor::All,
-        DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186",
-        "https://bugzilla.mozilla.org/show_bug.cgi?id=1635186");
-#endif
+        DesktopEnvironment::All, WindowProtocol::XWayland,
+        DriverVendor::MesaAll, DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
+        V(21, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186",
+        "Mesa 21.0.0.0");
+
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        DesktopEnvironment::All, WindowProtocol::XWayland,
+        DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_WEBRENDER,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
+        V(470, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186", "470.0.0");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
