@@ -216,10 +216,7 @@ checkbox {
 
 .info-icon,
 .androidIcon,
-.iOSIcon,
-#updateSettingCrossUserWarning,
-.extension-controlled > description,
-.info-panel > description {
+.iOSIcon {
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -236,29 +233,12 @@ checkbox {
   font-weight: 600;
 }
 
-.info-panel,
+#browserContainersExtensionContent {
+  padding-block: 5px;
+}
+
 .extension-controlled {
-  margin-block: 18px !important;
-  background: var(--in-content-box-info-background);
-  border-radius: 5px;
-  padding-inline-end: 10px;
-}
-
-.info-panel > description,
-.extension-controlled > description {
-  line-height: 16px;
-  background: url(chrome://global/skin/icons/info.svg) 10px 14px no-repeat;
-  padding: 10px;
-  padding-inline-start: 32px;
-}
-
-.info-panel > description {
-  line-height: unset;
-}
-
-.info-panel > description:-moz-locale-dir(rtl),
-.extension-controlled > description:-moz-locale-dir(rtl) {
-  background-position-x: right 10px;
+  margin-block: 18px;
 }
 
 .extension-controlled-icon {
@@ -759,10 +739,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 }
 
 .sync-group {
-  border-radius: 4px;
-  padding: 16px;
   margin-block: 16px;
-  background-color: var(--in-content-box-info-background);
   border: 1px solid var(--in-content-border-color);
 }
 
@@ -930,28 +907,41 @@ image.update-throbber {
 }
 
 #policies-container {
-  background-color: var(--in-content-box-info-background);
-  padding: 0 8px;
   margin-inline-end: 16px;
-  border-radius: 2px;
+  /* Make sure the container is at least the same height as the searchbox.
+     This is needed in addition to the min-height above to make the info icon
+     the same height as the first line in the policies label.
+     Searchbox's height - line-height - border top and bottom */
+  padding-block: max(0px, calc((32px - 1.8em - 2px) / 2));
+}
+
+.info-box-container {
+  background-color: var(--in-content-box-info-background);
+  padding: 9px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.info-box-container.smaller-font-size {
   font-size: 85%;
 }
 
-.policies-label {
-  margin-inline-start: 2px;
+.info-icon-container {
+  display: flex;
 }
 
 .info-icon {
   list-style-image: url("chrome://global/skin/icons/info.svg");
   width: 16px;
   height: 16px;
+  margin-inline-end: 6px;
+  align-self: start;
+  margin-top: 0.4em;
+  flex-shrink: 0;
 }
 
-.info-icon-telemetry {
-  list-style-image: url("chrome://global/skin/icons/info.svg");
-  width: 16px;
-  height: 16px;
-  margin-inline: 2px 8px;
+.info-box-container.smaller-font-size .info-icon {
+  margin-top: 0.3em;
 }
 
 .sticky-container {
@@ -1089,25 +1079,12 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 .updateSettingCrossUserWarningContainer {
-  background: var(--in-content-box-info-background);
-  border-radius: 5px;
-  padding: 2px 8px 8px;
   margin-block-end: 17px;
 }
 
-#updateSettingCrossUserWarning {
-  padding-inline-start: 30px;
+#updateSettingCrossUserWarningDesc {
+  padding-inline-start: calc(16px + 6px); /* radio-check's width + margin-inline-end */
   margin-block-start: 20px;
-  line-height: 20px;
-  background-image: url("chrome://global/skin/icons/info.svg");
-  background-position-x: left 2px;
-  background-position-y: top 2px;
-  background-size: 16px 16px;
-  background-repeat: no-repeat;
-}
-
-#updateSettingCrossUserWarning:-moz-locale-dir(rtl) {
-  background-position-x: right 2px;
 }
 
 richlistitem .text-link {

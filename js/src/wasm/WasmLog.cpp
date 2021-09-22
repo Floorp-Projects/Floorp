@@ -49,6 +49,13 @@ void wasm::Log(JSContext* cx, const char* fmt, ...) {
   va_end(args);
 }
 
+void wasm::LogOffThread(const char* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+}
+
 #ifdef WASM_CODEGEN_DEBUG
 bool wasm::IsCodegenDebugEnabled(DebugChannel channel) {
   switch (channel) {

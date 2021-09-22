@@ -345,6 +345,36 @@ class WebRenderRemoteData : public WebRenderUserData {
   RefPtr<dom::RemoteBrowser> mRemoteBrowser;
 };
 
+class WebRenderMaskData : public WebRenderUserData {
+ public:
+  explicit WebRenderMaskData(RenderRootStateManager* aManager,
+                             nsDisplayItem* aItem)
+      : WebRenderUserData(aManager, aItem),
+        mMaskStyle(nsStyleImageLayers::LayerType::Mask),
+        mShouldHandleOpacity(false) {
+    MOZ_COUNT_CTOR(WebRenderMaskData);
+  }
+  virtual ~WebRenderMaskData() {
+    MOZ_COUNT_DTOR(WebRenderMaskData);
+    ClearImageKey();
+  }
+
+  void ClearImageKey();
+  void Invalidate();
+
+  UserDataType GetType() override { return UserDataType::eMask; }
+  static UserDataType Type() { return UserDataType::eMask; }
+
+  Maybe<wr::BlobImageKey> mBlobKey;
+  std::vector<RefPtr<gfx::ScaledFont>> mFonts;
+  std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
+  LayerIntRect mItemRect;
+  nsPoint mMaskOffset;
+  nsStyleImageLayers mMaskStyle;
+  gfx::Size mScale;
+  bool mShouldHandleOpacity;
+};
+
 extern void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable);
 
 struct WebRenderUserDataProperty {

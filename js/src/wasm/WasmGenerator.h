@@ -19,6 +19,7 @@
 #ifndef wasm_generator_h
 #define wasm_generator_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jit/MacroAssembler.h"
@@ -189,6 +190,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   // Constant parameters
   SharedCompileArgs const compileArgs_;
   UniqueChars* const error_;
+  UniqueCharsVector* const warnings_;
   const Atomic<bool>* const cancelled_;
   ModuleEnvironment* const moduleEnv_;
   CompilerEnvironment* const compilerEnv_;
@@ -245,10 +247,13 @@ class MOZ_STACK_CLASS ModuleGenerator {
   CompileMode mode() const { return compilerEnv_->mode(); }
   bool debugEnabled() const { return compilerEnv_->debugEnabled(); }
 
+  void warnf(const char* msg, ...) MOZ_FORMAT_PRINTF(2, 3);
+
  public:
   ModuleGenerator(const CompileArgs& args, ModuleEnvironment* moduleEnv,
                   CompilerEnvironment* compilerEnv,
-                  const Atomic<bool>* cancelled, UniqueChars* error);
+                  const Atomic<bool>* cancelled, UniqueChars* error,
+                  UniqueCharsVector* warnings);
   ~ModuleGenerator();
   [[nodiscard]] bool init(Metadata* maybeAsmJSMetadata = nullptr);
 

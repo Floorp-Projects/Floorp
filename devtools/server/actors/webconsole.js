@@ -626,7 +626,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (!this.consoleServiceListener) {
             this.consoleServiceListener = new ConsoleServiceListener(
               global,
-              this.onConsoleServiceMessage
+              this.onConsoleServiceMessage,
+              {
+                matchExactWindow: this.parentActor.ignoreSubFrames,
+              }
             );
             this.consoleServiceListener.init();
           }
@@ -639,7 +642,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             this.consoleAPIListener = new ConsoleAPIListener(
               global,
               this.onConsoleAPICall,
-              this.parentActor.consoleAPIListenerOptions
+              {
+                matchExactWindow: this.parentActor.ignoreSubFrames,
+                ...(this.parentActor.consoleAPIListenerOptions || {}),
+              }
             );
             this.consoleAPIListener.init();
           }
@@ -1509,6 +1515,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       // If were dealing with the root actor (e.g. the browser console), we want
       // to remove all cached messages, not only the ones specific to a window.
       Services.console.reset();
+    } else if (this.parentActor.ignoreSubFrames) {
+      Services.console.resetWindow(windowId);
     } else {
       WebConsoleUtils.getInnerWindowIDsForFrames(this.global).forEach(id =>
         Services.console.resetWindow(id)

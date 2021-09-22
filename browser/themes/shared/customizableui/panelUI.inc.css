@@ -27,9 +27,10 @@
 :root {
   --warning-icon-bgcolor: #FFA436;
 
-  --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
 
+  --panel-item-hover-bgcolor: var(--button-hover-bgcolor);
+  --panel-item-active-bgcolor: var(--button-active-bgcolor);
   --panel-banner-item-color: var(--button-color);
   --panel-banner-item-background-color: var(--button-bgcolor);
   --panel-banner-item-hover-bgcolor: var(--button-hover-bgcolor);
@@ -46,6 +47,10 @@
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
   --panel-subview-body-padding: 8px 0;
+}
+
+:root:not(:-moz-lwtheme) {
+  --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
 :root[uidensity=compact] {
@@ -1096,20 +1101,20 @@ panelview .toolbarbutton-1,
 
 #appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
 #appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
-  background-color: var(--button-hover-bgcolor);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 #appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon {
-  stroke: var(--button-hover-bgcolor);
+  stroke: var(--panel-item-hover-bgcolor);
 }
 
 #appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
 #appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
-  background-color: var(--button-active-bgcolor);
+  background-color: var(--panel-item-active-bgcolor);
 }
 #appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
-  stroke: var(--button-active-bgcolor);
+  stroke: var(--panel-item-active-bgcolor);
 }
 
 #appMenu-zoomReset-button2@buttonStateFocus@ > .toolbarbutton-text,
@@ -1302,7 +1307,7 @@ menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   color: inherit;
-  background-color: var(--button-hover-bgcolor);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 
 .subview-subheader {
@@ -1320,7 +1325,7 @@ menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   color: inherit;
-  background-color: var(--button-active-bgcolor);
+  background-color: var(--panel-item-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
@@ -1385,7 +1390,7 @@ menuitem.subviewbutton@menuStateActive@,
 }
 
 .PanelUI-subView toolbarseparator.proton-zap {
-  border-image: var(--panel-separator-zap-gradient) 1;
+  border-image: var(--panel-separator-zap-gradient, none) 1;
 }
 
 .PanelUI-subView toolbarseparator.small-separator {

@@ -84,45 +84,7 @@ inline bool IsTranscodingBytecodeAligned(const void* offset) {
   return IsTranscodingBytecodeOffsetAligned(size_t(offset));
 }
 
-// Encode JSScript into the buffer.
-//
-// If the `buffer` isn't empty, the start of the `buffer` should meet
-// IsTranscodingBytecodeAligned, and the length should meet
-// IsTranscodingBytecodeOffsetAligned.
-//
-// NOTE: As long as IsTranscodingBytecodeOffsetAligned is met, that means
-//       there's JS::BytecodeOffsetAlignment+extra bytes in the buffer,
-//       IsTranscodingBytecodeAligned should be guaranteed to meet by
-//       malloc, used by MallocAllocPolicy in mozilla::Vector.
-extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
-                                                  TranscodeBuffer& buffer,
-                                                  Handle<JSScript*> script);
-
-// Decode JSScript from the buffer.
-//
-// The start of `buffer` and `cursorIndex` should meet
-// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-             TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
-             size_t cursorIndex = 0);
-
-// Decode JSScript from the range.
-//
-// The start of `range` should meet IsTranscodingBytecodeAligned and
-// IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-extern JS_PUBLIC_API TranscodeResult
-DecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-             const TranscodeRange& range, MutableHandle<JSScript*> scriptp);
-
-// If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
-//
-// If js::UseOffThreadParseGlobal is false, decode CompilationStencil from the
-// buffer and instantiate JSScript from it.
-//
-// options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
+// Decode CompilationStencil from the buffer and instantiate JSScript from it.
 //
 // The start of `buffer` and `cursorIndex` should meet
 // IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
@@ -132,18 +94,13 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
     TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
-// If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
-//
-// If js::UseOffThreadParseGlobal is false, decode CompilationStencil from the
-// buffer and instantiate JSScript from it.
+// Decode CompilationStencil from the buffer and instantiate JSScript from it.
 //
 // And then register an encoder on its script source, such that all functions
 // can be encoded as they are parsed. This strategy is used to avoid blocking
 // the main thread in a non-interruptible way.
 //
 // See also JS::FinishIncrementalEncoding.
-//
-// options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 //
 // The start of `buffer` and `cursorIndex` should meet
 // IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
@@ -165,10 +122,7 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
 // the encoded bytecode into the buffer. If any of these functions failed, the
 // content of |buffer| would be undefined.
 //
-// If js::UseOffThreadParseGlobal is true, |buffer| contains encoded JSScript.
-//
-// If js::UseOffThreadParseGlobal is false, |buffer| contains encoded
-// CompilationStencil.
+// |buffer| contains encoded CompilationStencil.
 //
 // If the `buffer` isn't empty, the start of the `buffer` should meet
 // IsTranscodingBytecodeAligned, and the length should meet

@@ -7,7 +7,7 @@
   <Identity Name="@APPX_IDENTITY@" Publisher="@APPX_PUBLISHER@" Version="@APPX_VERSION@" ProcessorArchitecture="@APPX_ARCH@" />
   <Properties>
     <DisplayName>@APPX_DISPLAYNAME@</DisplayName>
-    <PublisherDisplayName>@MOZ_APP_VENDOR@</PublisherDisplayName>
+    <PublisherDisplayName>@APPX_PUBLISHER_DISPLAY_NAME@</PublisherDisplayName>
     <Description>@APPX_DESCRIPTION@</Description>
     <Logo>Assets\StoreLogo.png</Logo>
     <uap10:PackageIntegrity>
@@ -15,7 +15,7 @@
     </uap10:PackageIntegrity>
   </Properties>
   <Resources>
-    <Resource Language="en-us" />
+@APPX_RESOURCE_LANGUAGE_LIST@
   </Resources>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.1" />

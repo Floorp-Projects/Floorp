@@ -239,8 +239,9 @@ interface nsIUpdateCheckListener : nsISupports
    *          The XMLHttpRequest handling the update check.
    * @param   updates
    *          An array of nsIUpdate objects listing available updates.
+   * @returns A Promise that resolves when the callback is complete.
    */
-  void onCheckComplete(in jsval request, in Array<nsIUpdate> updates);
+  Promise onCheckComplete(in jsval request, in Array<nsIUpdate> updates);
 
   /**
    * An error occurred while loading the remote update service file.
@@ -249,9 +250,10 @@ interface nsIUpdateCheckListener : nsISupports
    * @param   update
    *          A nsIUpdate object that contains details about the
    *          error in its |statusText| property.
+   * @returns A Promise that resolves when the callback is complete.
    */
-  void onError(in jsval request,
-               in nsIUpdate update);
+  Promise onError(in jsval request,
+                  in nsIUpdate update);
 };
 
 /**

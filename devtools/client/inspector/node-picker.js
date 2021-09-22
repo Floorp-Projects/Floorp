@@ -101,7 +101,7 @@ class NodePicker extends EventEmitter {
    *        and we should avoid doing any RDP request.
    * @return {Promise}
    */
-  async _onInspectorFrontDestroyed(inspectorFront, { isDestroyCodepath }) {
+  async _onInspectorFrontDestroyed(inspectorFront, { isDestroyCodepath } = {}) {
     this._currentInspectorFronts.delete(inspectorFront);
 
     const { walker } = inspectorFront;

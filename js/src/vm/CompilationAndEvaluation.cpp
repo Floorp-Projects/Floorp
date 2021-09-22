@@ -116,7 +116,6 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     }
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
   if (!script->scriptSource()->startIncrementalEncoding(cx, options,
                                                         std::move(stencil))) {
     return nullptr;

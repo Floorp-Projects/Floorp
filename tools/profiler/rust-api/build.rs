@@ -60,7 +60,9 @@ fn add_include(name: &str) -> String {
         Some(file) => file,
         None => panic!("Include not found: {}", name),
     };
-    String::from(file.to_str().unwrap())
+    let file_path = String::from(file.to_str().unwrap());
+    println!("cargo:rerun-if-changed={}", file_path);
+    file_path
 }
 
 fn generate_bindings() {
@@ -87,6 +89,14 @@ fn generate_bindings() {
         .whitelist_function("gecko_profiler_.*")
         .whitelist_var("mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures")
         .whitelist_type("mozilla::profiler::detail::RacyFeatures")
+        .rustified_enum("mozilla::StackCaptureOptions")
+        .rustified_enum("mozilla::MarkerSchema_Location")
+        .rustified_enum("mozilla::MarkerSchema_Format")
+        .rustified_enum("mozilla::MarkerSchema_Searchable")
+        // Converting std::string to an opaque type makes some platforms build
+        // successfully. Otherwise, it fails to build because MarkerSchema has
+        // some std::strings as its fields.
+        .opaque_type("std::string")
         .raw_line("pub use self::root::*;")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.

@@ -25,22 +25,10 @@
 .content-blocking-category .checkbox-label-box,
 .extra-information-label > image,
 .arrowhead,
-.content-blocking-info-image,
 .reload-tabs-button,
-.content-blocking-warning-image,
-.fpi-warning-icon {
+.content-blocking-warning-image {
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-.fpi-warning-icon {
-  /* The target size for this icon is 14px, but to be consistent with the
-     other icons and alignment in the page we use a 20px size with 3px padding */
-  width: 20px;
-  height: 20px;
-  padding: 3px;
-  margin-inline-end: 10px; /* Aligns text with other sections */
-  margin-block-start: 3px;
 }
 
 .content-blocking-icon[disabled] {
@@ -99,9 +87,7 @@
 
 .content-blocking-category,
 #fpiIncompatibilityWarning {
-  border-radius: 4px;
   margin: 3px 0;
-  padding: 9px;
 }
 
 #fpiIncompatibilityWarning {
@@ -114,7 +100,7 @@
 }
 
 .content-blocking-category {
-  border: 1px solid var(--in-content-box-border-color);
+  border-color: var(--in-content-box-border-color);
 }
 
 .content-blocking-category.disabled {
@@ -125,9 +111,8 @@
   opacity: 1;
 }
 
-.content-blocking-warning > .indent,
 .content-blocking-category > .indent {
-  margin-inline-end: 28px;
+  margin-inline-end: 22px;
 }
 
 .arrowhead {
@@ -163,8 +148,6 @@
 .content-blocking-warning.reload-tabs:not([hidden]) {
   display: flex;
   flex-wrap: wrap;
-  /* Match .indent's horizontal padding: */
-  padding-inline: 28px;
 }
 
 .content-blocking-reload-desc-container {
@@ -174,19 +157,12 @@
    * item will stretch to fill all available space. */
   flex: 1 1 345px;
   display: flex;
+  align-self: center;
 }
 
 .content-blocking-reload-description {
   line-height: 1.8em;
   margin-inline-end: 5px;
-}
-
-.content-blocking-reload-desc-container > .content-blocking-info-image {
-  list-style-image: url(chrome://global/skin/icons/info.svg);
-  margin-inline-end: 12px;
-  margin-top: 0.4em;
-  flex-shrink: 0;
-  align-self: start;
 }
 
 .reload-tabs-button {
@@ -206,8 +182,8 @@
   color: inherit;
 }
 
-.content-blocking-category.expanded:not(.selected) .content-blocking-warning {
-  background-color: var(--in-content-box-info-background);
+.content-blocking-category.selected .content-blocking-warning {
+  background-color: var(--section-highlight-background-color);
 }
 
 .content-blocking-category.selected .arrowhead {
@@ -215,7 +191,7 @@
 }
 
 .content-blocking-category.selected {
-  border: 1px solid var(--in-content-accent-color);
+  border-color: var(--in-content-accent-color);
 }
 
 @media (prefers-contrast) {
@@ -271,9 +247,8 @@
 }
 
 .content-blocking-warning {
-  background-color: var(--section-highlight-background-color);
-  border-radius: 4px;
-  padding: 10px 0;
+  /* Match .indent's horizontal padding, minus the border added via .info-box-container: */
+  padding-inline: calc(22px - 1px);
   margin: 10px 0;
 }
 
@@ -294,7 +269,7 @@
 
 .content-blocking-warning-image {
   list-style-image: url("chrome://global/skin/icons/warning.svg");
-  margin-inline: 4px 8px;
+  margin-inline-end: 6px;
 }
 
 #blockCookiesMenu {
@@ -311,17 +286,9 @@
 }
 
 #telemetry-container {
-  border-radius: 4px;
-  background-color: rgba(12,12,13,0.2);
-  font-size: 85%;
-  padding: 3px;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-block: 4px;
+  line-height: 1.8em;
   width: 100%;
-}
-
-#dataDescriptionBox {
-  line-height: 1.3;
 }
 
 .content-blocking-category-description {
@@ -348,7 +315,7 @@
 }
 
 #deleteOnCloseNote {
-  margin-bottom: 0 !important; /* Overrides .info-panel margin-bottom. */
+  margin-top: 8px;
   margin-inline-end: 32px;
 }
 

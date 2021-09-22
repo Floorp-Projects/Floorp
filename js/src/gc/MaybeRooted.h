@@ -28,7 +28,7 @@ namespace js {
  * memory.
  */
 template <typename T>
-class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>> {
+class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
  public:
   using ElementType = T;
 
@@ -72,7 +72,7 @@ namespace js {
  */
 template <typename T>
 class FakeMutableHandle
-    : public js::MutableHandleBase<T, FakeMutableHandle<T>> {
+    : public js::MutableHandleOperations<T, FakeMutableHandle<T>> {
  public:
   using ElementType = T;
 

@@ -16,7 +16,6 @@ test(() => {
     supportedMethods: 'secure-payment-confirmation',
     data: {
        // All valid parameters.
-       action: 'authenticate',
        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
        payeeOrigin: window.location.origin,
@@ -33,24 +32,6 @@ test(() => {
   new PaymentRequest([{
     supportedMethods: 'secure-payment-confirmation',
     data: {
-       // Omitted action field.
-       credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-       challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-       payeeOrigin: window.location.origin,
-       timeout: 60000,
-       instrument: {
-         displayName: 'X',
-         icon: 'https://example.test/icon.png',
-       },
-    },
-  }], details);
-}, 'The action field is optional.');
-
-test(() => {
-  new PaymentRequest([{
-    supportedMethods: 'secure-payment-confirmation',
-    data: {
-       action: 'authenticate',
        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
        payeeOrigin: window.location.origin,
@@ -68,7 +49,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -87,7 +67,6 @@ test(() => {
     new PaymentRequest([{supportedMethods: 'basic-card'}, {
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -102,107 +81,10 @@ test(() => {
 }, 'Extra payment method not allowed beforehand.');
 
 test(() => {
-  assert_throws_js(RangeError, () => {
-    new PaymentRequest([{
-      supportedMethods: 'secure-payment-confirmation',
-      data: {
-        action: 'authenticate',
-        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-        payeeOrigin: window.location.origin,
-        timeout: 60000,
-        instrument: {
-          displayName: 'X',
-          icon: 'https://example.test/icon.png',
-        },
-      },
-    }], details, {requestShipping: true});
-  });
-}, 'Cannot request shipping information.');
-
-test(() => {
-  assert_throws_js(RangeError, () => {
-    new PaymentRequest([{
-      supportedMethods: 'secure-payment-confirmation',
-      data: {
-        action: 'authenticate',
-        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-        payeeOrigin: window.location.origin,
-        timeout: 60000,
-        instrument: {
-          displayName: 'X',
-          icon: 'https://example.test/icon.png',
-        },
-      },
-    }], details, {requestPayerName: true});
-  });
-}, 'Cannot request payer name.');
-
-test(() => {
-  assert_throws_js(RangeError, () => {
-    new PaymentRequest([{
-      supportedMethods: 'secure-payment-confirmation',
-      data: {
-        action: 'authenticate',
-        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-        payeeOrigin: window.location.origin,
-        timeout: 60000,
-        instrument: {
-          displayName: 'X',
-          icon: 'https://example.test/icon.png',
-        },
-      },
-    }], details, {requestPayerEmail: true});
-  });
-}, 'Cannot request payer email.');
-
-test(() => {
-  assert_throws_js(RangeError, () => {
-    new PaymentRequest([{
-      supportedMethods: 'secure-payment-confirmation',
-      data: {
-        action: 'authenticate',
-        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-        payeeOrigin: window.location.origin,
-        timeout: 60000,
-        instrument: {
-          displayName: 'X',
-          icon: 'https://example.test/icon.png',
-        },
-      },
-    }], details, {requestPayerPhone: true});
-  });
-}, 'Cannot request payer phone.');
-
-test(() => {
   assert_throws_js(TypeError, () => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        // Invalid action parameter.
-        action: 'authorize',
-        credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
-        challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
-        payeeOrigin: window.location.origin,
-        timeout: 60000,
-        instrument: {
-          displayName: 'X',
-          icon: 'https://example.test/icon.png',
-        },
-      },
-    }], details);
-  });
-}, 'Invalid action parameter throws an exception.');
-
-test(() => {
-  assert_throws_js(TypeError, () => {
-    new PaymentRequest([{
-      supportedMethods: 'secure-payment-confirmation',
-      data: {
-        action: 'authenticate',
         // Omitted credentialIds field.
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -221,7 +103,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         payeeOrigin: window.location.origin,
         // Omitted challenge field.
@@ -240,7 +121,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         relyingPartyId: 'relying-party.example',
         // Empty credentialIds field.
         credentialIds: [],
@@ -261,7 +141,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         // Null challenge fields.
         challenge: null,
@@ -281,7 +160,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         payeeOrigin: window.location.origin,
         // Empty challenge fields.
@@ -301,7 +179,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -321,7 +198,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         // Large credentialIds value.
         credentialIds: [Uint8Array.from(
             'x'.repeat(1024 * 1024), c => c.charCodeAt(0))],
@@ -342,7 +218,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         // Large challenge value.
         challenge: Uint8Array.from('x'.repeat(1024 * 1024), c => c.charCodeAt(0)),
@@ -362,7 +237,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -378,7 +252,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -397,7 +270,6 @@ test(() => {
     new PaymentRequest([{
       supportedMethods: 'secure-payment-confirmation',
       data: {
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         payeeOrigin: window.location.origin,
@@ -417,7 +289,6 @@ test(() => {
       supportedMethods: 'secure-payment-confirmation',
       data: {
         // Omitted payee origin.
-        action: 'authenticate',
         credentialIds: [Uint8Array.from('x', c => c.charCodeAt(0))],
         challenge: Uint8Array.from('x', c => c.charCodeAt(0)),
         timeout: 60000,

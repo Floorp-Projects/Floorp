@@ -4076,7 +4076,7 @@ function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
     gUpdateChecker.checkForUpdates(
       {
         onProgress: (aRequest, aPosition, aTotalSize) => {},
-        onCheckComplete: (request, updates) => {
+        onCheckComplete: async (request, updates) => {
           Assert.ok(aSuccess, "the update check should succeed");
           if (aExpectedValues.updateCount) {
             Assert.equal(
@@ -4087,7 +4087,7 @@ function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
           }
           resolve({ request, updates });
         },
-        onError: (request, update) => {
+        onError: async (request, update) => {
           Assert.ok(!aSuccess, "the update check should error");
           if (aExpectedValues.url) {
             Assert.equal(

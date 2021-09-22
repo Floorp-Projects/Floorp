@@ -23,6 +23,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Telemetry.h"
 #include "nsIBrowserChild.h"
@@ -872,8 +874,9 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
       CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
+      // signal error
       mPrintPreviewCallback(
-          PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
+          PrintPreviewResultInfo(0, 0, false, false, false, {}));
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -1088,8 +1091,9 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 //---------------------------------------------------------------------
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
+    // signal error
     mPrintPreviewCallback(
-        PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
+        PrintPreviewResultInfo(0, 0, false, false, false, {}));
     mPrintPreviewCallback = nullptr;
   }
 
@@ -1846,6 +1850,25 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
     std::swap(pageSize.width, pageSize.height);
   }
 
+  // If the document has a specified CSS page-size, we rotate the page to
+  // reflect this. Changing the orientation is reflected by the result of
+  // FinishPrintPreview, so that the frontend can reflect this.
+  // The new document has not yet been reflowed, so we have to query the
+  // original document for any CSS page-size.
+  if (const Maybe<StyleOrientation> maybeOrientation =
+          aPO->mDocument->GetPresShell()
+              ->StyleSet()
+              ->GetDefaultPageOrientation()) {
+    if (maybeOrientation.value() == StyleOrientation::Landscape &&
+        pageSize.width < pageSize.height) {
+      // Paper is in portrait, CSS page size is landscape.
+      std::swap(pageSize.width, pageSize.height);
+    } else if (maybeOrientation.value() == StyleOrientation::Portrait &&
+               pageSize.width > pageSize.height) {
+      // Paper is in landscape, CSS page size is portrait.
+      std::swap(pageSize.width, pageSize.height);
+    }
+  }
   aPO->mPresContext->SetPageSize(pageSize);
 
   int32_t p2a = aPO->mPresContext->DeviceContext()->AppUnitsPerDevPixel();
@@ -2629,9 +2652,18 @@ nsresult nsPrintJob::FinishPrintPreview() {
   if (mPrintPreviewCallback) {
     const bool hasSelection =
         !mDisallowSelectionPrint && printData->mSelectionRoot;
+    // Determine if there is a specified page size, and if we should set the
+    // paper orientation to match it.
+    const Maybe<bool> maybeLandscape =
+        printData->mPrintObject->mPresShell->StyleSet()
+            ->GetDefaultPageOrientation()
+            .map([](StyleOrientation o) -> bool {
+              return o == StyleOrientation::Landscape;
+            });
     mPrintPreviewCallback(PrintPreviewResultInfo(
         GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
-        hasSelection, hasSelection && printData->mPrintObject->HasSelection()));
+        hasSelection, hasSelection && printData->mPrintObject->HasSelection(),
+        maybeLandscape));
     mPrintPreviewCallback = nullptr;
   }
 

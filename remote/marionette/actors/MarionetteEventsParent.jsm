@@ -45,10 +45,6 @@ class MarionetteEventsParent extends JSWindowActorParent {
 
     return rv;
   }
-
-  beforeUnregisterActor() {
-    return this.sendQuery("MarionetteEventsParent:beforeUnregisterActor");
-  }
 }
 
 /**
@@ -93,19 +89,6 @@ function registerEventsActor() {
   }
 }
 
-async function unregisterEventsActor(browsingContext) {
-  if (browsingContext?.currentWindowGlobal) {
-    const actor = browsingContext.currentWindowGlobal.getActor(
-      "MarionetteEvents"
-    );
-    try {
-      await actor.beforeUnregisterActor();
-    } catch (e) {
-      if (e.name !== "AbortError") {
-        throw e;
-      }
-      // If the query was aborted, swallow the exception.
-    }
-  }
+function unregisterEventsActor() {
   ChromeUtils.unregisterWindowActor("MarionetteEvents");
 }

@@ -821,7 +821,7 @@ var PrintEventHandler = {
         .add(elapsed);
     }
 
-    let totalPageCount, sheetCount, isEmpty;
+    let totalPageCount, sheetCount, isEmpty, orientation;
     try {
       // This resolves with a PrintPreviewSuccessInfo dictionary.
       let { sourceVersion } = this.viewSettings;
@@ -831,6 +831,7 @@ var PrintEventHandler = {
         totalPageCount,
         sheetCount,
         isEmpty,
+        orientation,
       } = await this.printPreviewEl.printPreview(settings, {
         sourceVersion,
         sourceURI,
@@ -839,6 +840,18 @@ var PrintEventHandler = {
       this.reportPrintingError("PRINT_PREVIEW");
       Cu.reportError(e);
       throw e;
+    }
+
+    // If there is a set orientation, update the settings to use it. In this
+    // case, the document will already have used this orientation to create
+    // the print preview.
+    if (orientation != "unspecified") {
+      const kIPrintSettings = Ci.nsIPrintSettings;
+      settings.orientation =
+        orientation == "landscape"
+          ? kIPrintSettings.kLandscapeOrientation
+          : kIPrintSettings.kPortraitOrientation;
+      document.dispatchEvent(new CustomEvent("hide-orientation"));
     }
 
     this.previewIsEmpty = isEmpty;
@@ -1900,6 +1913,11 @@ customElements.define("paper-size-select", PaperSizePicker, {
 });
 
 class OrientationInput extends PrintUIControlMixin(HTMLElement) {
+  initialize() {
+    super.initialize();
+    document.addEventListener("hide-orientation", this);
+  }
+
   get templateId() {
     return "orientation-template";
   }
@@ -1911,6 +1929,10 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
+    if (e.type == "hide-orientation") {
+      document.getElementById("orientation").hidden = true;
+      return;
+    }
     this.dispatchSettingsChange({
       orientation: e.target.value,
     });

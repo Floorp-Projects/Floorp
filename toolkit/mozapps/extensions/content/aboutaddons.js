@@ -81,23 +81,91 @@ const EXTENSION_ICON_URL =
 const BUILTIN_THEME_PREVIEWS = new Map([
   [
     "default-theme@mozilla.org",
-    "chrome://mozapps/content/extensions/default-theme.svg",
+    "chrome://mozapps/content/extensions/default-theme/preview.svg",
   ],
   [
     "firefox-compact-light@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-compact-light.svg",
+    "resource://builtin-themes/light/preview.svg",
   ],
   [
     "firefox-compact-dark@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-compact-dark.svg",
+    "resource://builtin-themes/dark/preview.svg",
   ],
   [
     "firefox-alpenglow@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-alpenglow.svg",
+    "resource://builtin-themes/alpenglow/preview.svg",
   ],
   [
-    "firefox-monochromatic-purple@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-monochromatic-purple.svg",
+    "firefox-lush-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/soft/preview.svg",
+  ],
+  [
+    "firefox-lush-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/balanced/preview.svg",
+  ],
+  [
+    "firefox-lush-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/lush/bold/preview.svg",
+  ],
+  [
+    "firefox-abstract-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/soft/preview.svg",
+  ],
+  [
+    "firefox-abstract-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/balanced/preview.svg",
+  ],
+  [
+    "firefox-abstract-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/abstract/bold/preview.svg",
+  ],
+  [
+    "firefox-elemental-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/soft/preview.svg",
+  ],
+  [
+    "firefox-elemental-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/balanced/preview.svg",
+  ],
+  [
+    "firefox-elemental-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/elemental/bold/preview.svg",
+  ],
+  [
+    "firefox-cheers-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/soft/preview.svg",
+  ],
+  [
+    "firefox-cheers-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/balanced/preview.svg",
+  ],
+  [
+    "firefox-cheers-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/cheers/bold/preview.svg",
+  ],
+  [
+    "firefox-graffiti-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/soft/preview.svg",
+  ],
+  [
+    "firefox-graffiti-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/balanced/preview.svg",
+  ],
+  [
+    "firefox-graffiti-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/graffiti/bold/preview.svg",
+  ],
+  [
+    "firefox-foto-soft@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/soft/preview.svg",
+  ],
+  [
+    "firefox-foto-balanced@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/balanced/preview.svg",
+  ],
+  [
+    "firefox-foto-bold@mozilla.org",
+    "resource://builtin-themes/monochromatic/foto/bold/preview.svg",
   ],
 ]);
 
