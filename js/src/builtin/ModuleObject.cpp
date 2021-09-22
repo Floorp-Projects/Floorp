@@ -13,6 +13,7 @@
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable, ParserAtom
 #include "frontend/SharedContext.h"
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
@@ -2013,7 +2014,9 @@ bool ModuleBuilder::maybeAppendRequestedModule(
 }
 
 void ModuleBuilder::markUsedByStencil(frontend::TaggedParserAtomIndex name) {
-  eitherParser_.parserAtoms().markUsedByStencil(name);
+  // Imported/exported identifiers must be atomized.
+  eitherParser_.parserAtoms().markUsedByStencil(
+      name, frontend::ParserAtom::Atomize::Yes);
 }
 
 template <typename T>

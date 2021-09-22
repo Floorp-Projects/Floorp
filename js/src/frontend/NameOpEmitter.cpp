@@ -8,6 +8,7 @@
 
 #include "frontend/AbstractScopePtr.h"
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/ParserAtom.h"  // ParserAtom
 #include "frontend/SharedContext.h"
 #include "frontend/TDZCheckCache.h"
 #include "vm/Opcodes.h"
@@ -153,7 +154,7 @@ bool NameOpEmitter::prepareForRhs() {
     case NameLocation::Kind::Dynamic:
     case NameLocation::Kind::Import:
     case NameLocation::Kind::DynamicAnnexBVar:
-      if (!bce_->makeAtomIndex(name_, &atomIndex_)) {
+      if (!bce_->makeAtomIndex(name_, ParserAtom::Atomize::Yes, &atomIndex_)) {
         return false;
       }
       if (loc_.kind() == NameLocation::Kind::DynamicAnnexBVar) {
@@ -173,7 +174,7 @@ bool NameOpEmitter::prepareForRhs() {
       emittedBindOp_ = true;
       break;
     case NameLocation::Kind::Global:
-      if (!bce_->makeAtomIndex(name_, &atomIndex_)) {
+      if (!bce_->makeAtomIndex(name_, ParserAtom::Atomize::Yes, &atomIndex_)) {
         return false;
       }
       if (loc_.isLexical() && isInitialize()) {

@@ -2404,9 +2404,6 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     if (!index) {
       return false;
     }
-    if (entry->isUsedByStencil()) {
-      parserAtoms.markUsedByStencil(index);
-    }
   }
 
   sharedData = std::move(other.sharedData);
@@ -3616,9 +3613,6 @@ bool CompilationStencilMerger::buildAtomIndexMap(
     auto mappedIndex = initial_->parserAtoms.internExternalParserAtom(cx, atom);
     if (!mappedIndex) {
       return false;
-    }
-    if (atom->isUsedByStencil()) {
-      initial_->parserAtoms.markUsedByStencil(mappedIndex);
     }
     atomIndexMap.infallibleAppend(mappedIndex);
   }
