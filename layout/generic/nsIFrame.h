@@ -3543,15 +3543,8 @@ class nsIFrame : public nsQueryFrame {
    * @param aType PAINT_COMPOSITE_ONLY : No changes have been made
    * that require a layer tree update, so only schedule a layer
    * tree composite.
-   * PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after a delay, and
-   * put FrameLayerBuilder in 'compressed' mode that avoids short cut
-   * optimizations.
    */
-  enum PaintType {
-    PAINT_DEFAULT = 0,
-    PAINT_COMPOSITE_ONLY,
-    PAINT_DELAYED_COMPRESS
-  };
+  enum PaintType { PAINT_DEFAULT = 0, PAINT_COMPOSITE_ONLY };
   void SchedulePaint(PaintType aType = PAINT_DEFAULT,
                      bool aFrameChanged = true);
 
