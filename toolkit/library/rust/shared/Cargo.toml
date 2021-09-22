@@ -64,7 +64,7 @@ rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 fluent = { version = "0.16", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
-l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "a69df9836b1ef536727195209013b9ad6b132618" }
+l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "fd02134161505f978e132114cbabdac057ce3b71" }
 fluent-fallback = "0.5"
 localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 
