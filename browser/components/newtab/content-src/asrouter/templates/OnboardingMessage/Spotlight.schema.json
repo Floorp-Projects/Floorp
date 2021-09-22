@@ -36,9 +36,9 @@
                   "required": ["string_id"]
                 }
               ]
-            },
-            "required": ["label"]
-          }
+            }
+          },
+          "required": ["label"]
         },
         "text": {
           "type": "object",
@@ -61,9 +61,9 @@
                   "required": ["string_id"]
                 }
               ]
-            },
-            "required": ["label"]
-          }
+            }
+          },
+          "required": ["label"]
         },
         "primary": {
           "type": "object",
@@ -100,9 +100,9 @@
               },
               "required": ["type"],
               "additionalProperties": false
-            },
-            "required": ["label", "action"]
-          }
+            }
+          },
+          "required": ["label", "action"]
         },
         "secondary": {
           "type": "object",
@@ -125,9 +125,9 @@
                   "required": ["string_id"]
                 }
               ]
-            },
-            "required": ["label", "action"]
-          }
+            }
+          },
+          "required": ["label", "action"]
         }
       },
       "additionalProperties": false,
@@ -135,6 +135,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["body"]
+  "required": ["body", "template"]
 }
 
