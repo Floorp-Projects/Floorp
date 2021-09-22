@@ -169,10 +169,10 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented) {
     JS::PersistentRooted<MyContainer> cp3(cx, cx);
     JS::PersistentRooted<MyContainer> cp4(cx, cx, cx, cx);
 
-    CHECK_EQUAL(cp1.constructor(), 1);    // direct SafelyInitialized<T>
-    CHECK_EQUAL(cp2.constructor(), 2);    // direct MyContainer(double)
-    CHECK_EQUAL(cp3.constructor(), 3);    // direct MyContainer(cx)
-    CHECK_EQUAL(cp4.constructor(), 4);    // direct MyContainer(cx, cx, cx)
+    CHECK_EQUAL(cp1.constructor(), 1);  // direct SafelyInitialized<T>
+    CHECK_EQUAL(cp2.constructor(), 2);  // direct MyContainer(double)
+    CHECK_EQUAL(cp3.constructor(), 3);  // direct MyContainer(cx)
+    CHECK_EQUAL(cp4.constructor(), 4);  // direct MyContainer(cx, cx, cx)
 
     // Construct uncopyable type in place.
     JS::PersistentRooted<MyNonCopyableContainer> ncp1(cx);
