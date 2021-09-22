@@ -337,5 +337,12 @@ pid_t GetUIThreadId() {
   return uiThreadId;
 }
 
+bool IsOOMException(JNIEnv* aEnv) {
+  MOZ_ASSERT(aEnv->ExceptionCheck());
+  Throwable::LocalRef e =
+      Throwable::LocalRef::Adopt(aEnv, aEnv->ExceptionOccurred());
+  return sOOMErrorClass && aEnv->IsInstanceOf(e.Get(), sOOMErrorClass);
+}
+
 }  // namespace jni
 }  // namespace mozilla

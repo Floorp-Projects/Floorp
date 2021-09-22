@@ -142,6 +142,8 @@ int GetAPIVersion();
 
 pid_t GetUIThreadId();
 
+bool IsOOMException(JNIEnv* aEnv);
+
 }  // namespace jni
 }  // namespace mozilla
 
