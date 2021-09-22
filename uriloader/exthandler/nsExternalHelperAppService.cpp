@@ -1683,7 +1683,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
-  if (StaticPrefs::browser_download_improvements_to_download_panel() &&
+  if (StaticPrefs::browser_download_enable_spam_prevention() &&
       IsDownloadSpam(aChannel)) {
     return NS_OK;
   }
