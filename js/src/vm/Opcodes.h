@@ -1764,9 +1764,8 @@
      * implicit `this` passed to `getFullYear` is `date`, not `undefined`.
      *
      * This walks the run-time environment chain looking for the environment
-     * record that contains the function. If the function call is not inside a
-     * `with` statement, use `JSOp::GImplicitThis` instead. If the function call
-     * definitely refers to a local binding, use `JSOp::Undefined`.
+     * record that contains the function. If the function call definitely
+     * refers to a local binding, use `JSOp::Undefined`.
      *
      * Implements: [EvaluateCall][1] step 1.b. But not entirely correctly.
      * See [bug 1166408][2].
@@ -1780,19 +1779,6 @@
      *   Stack: => this
      */ \
     MACRO(ImplicitThis, implicit_this, "", 5, 0, 1, JOF_ATOM) \
-    /*
-     * Like `JSOp::ImplicitThis`, but the name must not be bound in any local
-     * environments.
-     *
-     * The result is always `undefined` except when the name refers to a
-     * binding in a non-syntactic `with` environment.
-     *
-     *   Category: Functions
-     *   Type: Calls
-     *   Operands: uint32_t nameIndex
-     *   Stack: => this
-     */ \
-    MACRO(GImplicitThis, g_implicit_this, "", 5, 0, 1, JOF_ATOM) \
     /*
      * Push the call site object for a tagged template call.
      *
@@ -3515,6 +3501,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(227)                                   \
   MACRO(228)                                   \
   MACRO(229)                                   \
   MACRO(230)                                   \

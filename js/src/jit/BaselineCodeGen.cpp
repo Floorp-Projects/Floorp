@@ -2195,7 +2195,6 @@ bool BaselineCodeGen<Handler>::emit_Void() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Undefined() {
-  // If this ever changes, change what JSOp::GImplicitThis does too.
   frame.push(UndefinedValue());
   return true;
 }
@@ -4574,17 +4573,6 @@ bool BaselineCodeGen<Handler>::emit_ImplicitThis() {
 
   frame.push(R0);
   return true;
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_GImplicitThis() {
-  auto pushUndefined = [this]() {
-    frame.push(UndefinedValue());
-    return true;
-  };
-  auto emitImplicitThis = [this]() { return emit_ImplicitThis(); };
-  return emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
-                            emitImplicitThis, pushUndefined, R2.scratchReg());
 }
 
 template <typename Handler>
