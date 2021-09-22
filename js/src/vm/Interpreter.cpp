@@ -2166,10 +2166,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(ForceInterpreter)
 
-    CASE(Undefined) {
-      // If this ever changes, change what JSOp::GImplicitThis does too.
-      PUSH_UNDEFINED();
-    }
+    CASE(Undefined) { PUSH_UNDEFINED(); }
     END_CASE(Undefined)
 
     CASE(Pop) { REGS.sp--; }
@@ -3356,27 +3353,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(ThrowMsg)
 
-    CASE(ImplicitThis)
-    CASE(GImplicitThis) {
-      JSOp op = JSOp(*REGS.pc);
-      if (op == JSOp::ImplicitThis || script->hasNonSyntacticScope()) {
-        ReservedRooted<PropertyName*> name(&rootName0,
-                                           script->getName(REGS.pc));
-        ReservedRooted<JSObject*> envObj(&rootObject0,
-                                         REGS.fp()->environmentChain());
-        ReservedRooted<JSObject*> env(&rootObject1);
-        if (!LookupNameWithGlobalDefault(cx, name, envObj, &env)) {
-          goto error;
-        }
-
-        Value v = ComputeImplicitThis(env);
-        PUSH_COPY(v);
-      } else {
-        // Treat it like JSOp::Undefined.
-        PUSH_UNDEFINED();
+    CASE(ImplicitThis) {
+      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+      ReservedRooted<JSObject*> envObj(&rootObject0,
+                                       REGS.fp()->environmentChain());
+      ReservedRooted<JSObject*> env(&rootObject1);
+      if (!LookupNameWithGlobalDefault(cx, name, envObj, &env)) {
+        goto error;
       }
-      static_assert(JSOpLength_ImplicitThis == JSOpLength_GImplicitThis,
-                    "We're sharing the END_CASE so the lengths better match");
+
+      Value v = ComputeImplicitThis(env);
+      PUSH_COPY(v);
     }
     END_CASE(ImplicitThis)
 

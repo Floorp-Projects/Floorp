@@ -1551,7 +1551,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::Instanceof:
     case JSOp::DebugLeaveLexicalEnv:
     case JSOp::Debugger:
-    case JSOp::GImplicitThis:
     case JSOp::ImplicitThis:
     case JSOp::NewTarget:
     case JSOp::CheckIsObj:

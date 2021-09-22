@@ -2123,13 +2123,6 @@ bool WarpBuilder::build_ImplicitThis(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_GImplicitThis(BytecodeLocation loc) {
-  if (script_->hasNonSyntacticScope()) {
-    return build_ImplicitThis(loc);
-  }
-  return build_Undefined(loc);
-}
-
 bool WarpBuilder::build_CheckClassHeritage(BytecodeLocation loc) {
   MDefinition* def = current->pop();
   auto* ins = MCheckClassHeritage::New(alloc(), def);

@@ -102,20 +102,23 @@ bool NameOpEmitter::emitGet() {
   }
 
   if (isCall()) {
+    MOZ_ASSERT(bce_->outermostScope().hasNonSyntacticScopeOnChain() ==
+               bce_->sc->hasNonSyntacticScope());
     switch (loc_.kind()) {
-      case NameLocation::Kind::Dynamic: {
-        JSOp thisOp = bce_->needsImplicitThis() ? JSOp::ImplicitThis
-                                                : JSOp::GImplicitThis;
-        if (!bce_->emitAtomOp(thisOp, name_)) {
-          //        [stack] CALLEE THIS
-          return false;
-        }
-        break;
-      }
+      case NameLocation::Kind::Dynamic:
       case NameLocation::Kind::Global:
-        if (!bce_->emitAtomOp(JSOp::GImplicitThis, name_)) {
-          //        [stack] CALLEE THIS
-          return false;
+        if (bce_->needsImplicitThis() || bce_->sc->hasNonSyntacticScope()) {
+          MOZ_ASSERT_IF(bce_->needsImplicitThis(),
+                        loc_.kind() == NameLocation::Kind::Dynamic);
+          if (!bce_->emitAtomOp(JSOp::ImplicitThis, name_)) {
+            //      [stack] CALLEE THIS
+            return false;
+          }
+        } else {
+          if (!bce_->emit1(JSOp::Undefined)) {
+            //      [stack] CALLEE UNDEF
+            return false;
+          }
         }
         break;
       case NameLocation::Kind::Intrinsic:
