@@ -168,6 +168,16 @@ function initTemporaryOrigin(persistence, principal, callback) {
   return request;
 }
 
+function getFullOriginMetadata(persistence, principal, callback) {
+  const request = SpecialPowers._getQuotaManager().getFullOriginMetadata(
+    persistence,
+    principal
+  );
+  request.callback = callback;
+
+  return request;
+}
+
 function clearClient(principal, persistence, client, callback) {
   let request = SpecialPowers._getQuotaManager().clearStoragesForPrincipal(
     principal,

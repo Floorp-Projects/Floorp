@@ -94,6 +94,24 @@ interface nsIQuotaManagerService : nsISupports
                             in nsIPrincipal aPrincipal);
 
   /**
+   * Gets full origin metadata cached in memory for the given persistence type
+   * and origin.
+   *
+   * NOTE: This operation may still be delayed by other operations on the QM
+   *       I/O thread that are peforming I/O.
+   *
+   * @param aPersistenceType
+   *        A string that tells what persistence type will be used for getting
+   *        the metadata (either "temporary" or "default").
+   * @param aPrincipal
+   *        A principal that tells which origin will be used for getting the
+   *        metadata.
+   */
+  [must_use] nsIQuotaRequest
+  getFullOriginMetadata(in ACString aPersistenceType,
+                        in nsIPrincipal aPrincipal);
+
+  /**
    * Schedules an asynchronous callback that will inspect all origins and
    * return the total amount of disk space being used by storages for each
    * origin separately.
