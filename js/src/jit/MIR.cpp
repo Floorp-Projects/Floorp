@@ -1588,8 +1588,8 @@ const JSJitInfo* MCallDOMNative::getJitInfo() const {
 
 MDefinition* MStringLength::foldsTo(TempAllocator& alloc) {
   if (string()->isConstant()) {
-    JSAtom* atom = &string()->toConstant()->toString()->asAtom();
-    return MConstant::New(alloc, Int32Value(atom->length()));
+    JSString* str = string()->toConstant()->toString();
+    return MConstant::New(alloc, Int32Value(str->length()));
   }
 
   return this;
@@ -1621,13 +1621,13 @@ MDefinition* MCharCodeAt::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  JSAtom* atom = &string->toConstant()->toString()->asAtom();
+  JSLinearString* str = &string->toConstant()->toString()->asLinear();
   int32_t idx = index->toConstant()->toInt32();
-  if (idx < 0 || uint32_t(idx) >= atom->length()) {
+  if (idx < 0 || uint32_t(idx) >= str->length()) {
     return this;
   }
 
-  char16_t ch = atom->latin1OrTwoByteChar(idx);
+  char16_t ch = str->latin1OrTwoByteChar(idx);
   return MConstant::New(alloc, Int32Value(ch));
 }
 
@@ -3980,8 +3980,8 @@ bool MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result) {
   if (lhs->type() == MIRType::String && rhs->type() == MIRType::String) {
     int32_t comp = 0;  // Default to equal.
     if (left != right) {
-      comp =
-          CompareAtoms(&lhs->toString()->asAtom(), &rhs->toString()->asAtom());
+      comp = CompareStrings(&lhs->toString()->asLinear(),
+                            &rhs->toString()->asLinear());
     }
     *result = FoldComparison(jsop_, comp, 0);
     return true;
@@ -4048,7 +4048,7 @@ MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
       return this;
     }
 
-    char16_t charCode = constant->toString()->asAtom().latin1OrTwoByteChar(0);
+    char16_t charCode = constant->toString()->asLinear().latin1OrTwoByteChar(0);
     MConstant* charCodeConst = MConstant::New(alloc, Int32Value(charCode));
     block()->insertBefore(this, charCodeConst);
 
@@ -5174,8 +5174,8 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  JSAtom* atom = &strArg->toConstant()->toString()->asAtom();
-  int32_t index = GetFirstDollarIndexRawFlat(atom);
+  JSLinearString* str = &strArg->toConstant()->toString()->asLinear();
+  int32_t index = GetFirstDollarIndexRawFlat(str);
   return MConstant::New(alloc, Int32Value(index));
 }
 
@@ -5467,9 +5467,12 @@ MDefinition* MGuardSpecificFunction::foldsTo(TempAllocator& alloc) {
 
 MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
   if (str()->isConstant()) {
-    JSAtom* cstAtom = &str()->toConstant()->toString()->asAtom();
-    if (cstAtom == atom()) {
-      return str();
+    JSString* s = str()->toConstant()->toString();
+    if (s->isAtom()) {
+      JSAtom* cstAtom = &s->asAtom();
+      if (cstAtom == atom()) {
+        return str();
+      }
     }
   }
 
@@ -5629,9 +5632,9 @@ MDefinition* MGuardStringToIndex::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  JSAtom* atom = &string()->toConstant()->toString()->asAtom();
+  JSString* str = string()->toConstant()->toString();
 
-  int32_t index = GetIndexFromString(atom);
+  int32_t index = GetIndexFromString(str);
   if (index < 0) {
     return this;
   }
@@ -5644,9 +5647,9 @@ MDefinition* MGuardStringToInt32::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  JSAtom* atom = &string()->toConstant()->toString()->asAtom();
+  JSLinearString* str = &string()->toConstant()->toString()->asLinear();
   double number;
-  if (!js::MaybeStringToNumber(atom, &number)) {
+  if (!js::MaybeStringToNumber(str, &number)) {
     return this;
   }
 
@@ -5663,9 +5666,9 @@ MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  JSAtom* atom = &string()->toConstant()->toString()->asAtom();
+  JSLinearString* str = &string()->toConstant()->toString()->asLinear();
   double number;
-  if (!js::MaybeStringToNumber(atom, &number)) {
+  if (!js::MaybeStringToNumber(str, &number)) {
     return this;
   }
 

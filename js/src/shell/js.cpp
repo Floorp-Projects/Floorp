@@ -3485,11 +3485,17 @@ static const char* TryNoteName(TryNoteKind kind) {
         }
       }
     } else if (gcThing.is<JSString>()) {
-      if (!sp->put("Atom       ")) {
-        return false;
+      RootedString str(cx, &gcThing.as<JSString>());
+      if (str->isAtom()) {
+        if (!sp->put("Atom       ")) {
+          return false;
+        }
+      } else {
+        if (!sp->put("String     ")) {
+          return false;
+        }
       }
-      RootedAtom atom(cx, &gcThing.as<JSString>().asAtom());
-      UniqueChars chars = QuoteString(cx, atom, '"');
+      UniqueChars chars = QuoteString(cx, str, '"');
       if (!chars) {
         return false;
       }

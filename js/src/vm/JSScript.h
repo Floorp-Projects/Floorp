@@ -1991,6 +1991,16 @@ class JSScript : public js::BaseScript {
     return immutableScriptData()->notes();
   }
 
+  JSString* getString(js::GCThingIndex index) const {
+    return &gcthings()[index].as<JSString>();
+  }
+
+  JSString* getString(jsbytecode* pc) const {
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
+    MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
+    return getString(GET_GCTHING_INDEX(pc));
+  }
+
   JSAtom* getAtom(js::GCThingIndex index) const {
     return &gcthings()[index].as<JSString>().asAtom();
   }
