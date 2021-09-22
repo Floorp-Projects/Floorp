@@ -23,6 +23,8 @@ profile-selection-delete-button =
   .label = Delete Profile…
   .accesskey = D
 
+profile-selection-conflict-message = Another copy of { -brand-product-name } has made changes to profiles. You must restart { -brand-short-name } before making more changes.
+
 ## Messages used in the profile manager
 
 profile-manager-description = { -brand-short-name } stores information about your settings, preferences, and other user items in your user profile.

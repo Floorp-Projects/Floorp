@@ -14,11 +14,20 @@ const I = Ci;
 
 const ToolkitProfileService = "@mozilla.org/toolkit/profile-service;1";
 
+const fluentStrings = new Localization([
+  "branding/brand.ftl",
+  "toolkit/global/profileSelection.ftl",
+]);
+
 var gDialogParams;
 var gProfileManagerBundle;
 var gBrandBundle;
 var gProfileService;
 var gNeedsFlush = false;
+
+function getFluentString(str) {
+  return fluentStrings.formatValue(str);
+}
 
 function startup() {
   try {
@@ -71,7 +80,7 @@ function startup() {
   document.addEventListener("dialogcancel", exitDialog);
 }
 
-function flush(cancelled) {
+async function flush(cancelled) {
   updateStartupPrefs();
 
   gDialogParams.SetInt(
@@ -83,7 +92,6 @@ function flush(cancelled) {
     try {
       gProfileService.flush();
     } catch (e) {
-      let productName = gBrandBundle.getString("brandProductName");
       let appName = gBrandBundle.getString("brandShortName");
 
       let title = gProfileManagerBundle.getString("flushFailTitle");
@@ -95,10 +103,7 @@ function flush(cancelled) {
 
       let message;
       if (e.result == undefined) {
-        message = gProfileManagerBundle.getFormattedString("conflictMessage", [
-          productName,
-          appName,
-        ]);
+        message = await getFluentString("profile-selection-conflict-message");
       } else {
         message = gProfileManagerBundle.getString("flushFailMessage");
       }
