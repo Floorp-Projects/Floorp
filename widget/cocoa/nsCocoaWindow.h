@@ -208,7 +208,7 @@ typedef struct _nsCocoaWindowList {
 - (void)setSheetAttachmentPosition:(CGFloat)aY;
 - (CGFloat)sheetAttachmentPosition;
 - (void)placeWindowButtons:(NSRect)aRect;
-- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (NSRect)windowButtonsRect;
 - (void)windowMainStateChanged;
 @end
 

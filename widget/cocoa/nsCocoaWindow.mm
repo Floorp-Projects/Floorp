@@ -2965,11 +2965,30 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 @implementation NSView (FrameViewMethodSwizzling)
 
 - (NSPoint)FrameView__closeButtonOrigin {
-  NSPoint defaultPosition = [self FrameView__closeButtonOrigin];
-  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
-    return [(ToolbarWindow*)[self window] windowButtonsPositionWithDefaultPosition:defaultPosition];
+  if (![self.window isKindOfClass:[ToolbarWindow class]]) {
+    return self.FrameView__closeButtonOrigin;
   }
-  return defaultPosition;
+  ToolbarWindow* win = (ToolbarWindow*)[self window];
+  if (win.drawsContentsIntoWindowFrame && !(win.styleMask & NSWindowStyleMaskFullScreen) &&
+      (win.styleMask & NSWindowStyleMaskTitled)) {
+    const NSRect buttonsRect = win.windowButtonsRect;
+    if (NSIsEmptyRect(buttonsRect)) {
+      // Empty rect. Let's hide the buttons.
+      // Position is in non-flipped window coordinates. Using frame's height
+      // for the vertical coordinate will move the buttons above the window,
+      // making them invisible.
+      return NSMakePoint(buttonsRect.origin.x, win.frame.size.height);
+    } else if (win.windowTitlebarLayoutDirection == NSUserInterfaceLayoutDirectionRightToLeft) {
+      // We're in RTL mode, which means that the close button is the rightmost
+      // button of the three window buttons. and buttonsRect.origin is the
+      // bottom left corner of the green (zoom) button. The close button is 40px
+      // to the right of the zoom button. This is confirmed to be the same on
+      // all macOS versions between 10.12 - 12.0.
+      return NSMakePoint(buttonsRect.origin.x + 40.0f, buttonsRect.origin.y);
+    }
+    return buttonsRect.origin;
+  }
+  return self.FrameView__closeButtonOrigin;
 }
 
 - (CGFloat)FrameView__titlebarHeight {
@@ -2980,8 +2999,12 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
     // corner of the window.
     ToolbarWindow* win = (ToolbarWindow*)[self window];
     CGFloat frameHeight = [self frame].size.height;
-    NSPoint pointAboveWindow = {0.0, frameHeight};
-    CGFloat windowButtonY = [win windowButtonsPositionWithDefaultPosition:pointAboveWindow].y;
+    CGFloat windowButtonY = frameHeight;
+    if (!NSIsEmptyRect(win.windowButtonsRect) && win.drawsContentsIntoWindowFrame &&
+        !(win.styleMask & NSWindowStyleMaskFullScreen) &&
+        (win.styleMask & NSWindowStyleMaskTitled)) {
+      windowButtonY = win.windowButtonsRect.origin.y;
+    }
     height = std::max(height, frameHeight - windowButtonY);
   }
   return height;
@@ -3754,20 +3777,8 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   }
 }
 
-- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition {
-  NSInteger styleMask = [self styleMask];
-  if ([self drawsContentsIntoWindowFrame] && !(styleMask & NSWindowStyleMaskFullScreen) &&
-      (styleMask & NSWindowStyleMaskTitled)) {
-    if (NSIsEmptyRect(mWindowButtonsRect)) {
-      // Empty rect. Let's hide the buttons.
-      // Position is in non-flipped window coordinates. Using frame's height
-      // for the vertical coordinate will move the buttons above the window,
-      // making them invisible.
-      return NSMakePoint(0, [self frame].size.height);
-    }
-    return NSMakePoint(mWindowButtonsRect.origin.x, mWindowButtonsRect.origin.y);
-  }
-  return aDefaultPosition;
+- (NSRect)windowButtonsRect {
+  return mWindowButtonsRect;
 }
 
 // Returning YES here makes the setShowsToolbarButton method work even though
