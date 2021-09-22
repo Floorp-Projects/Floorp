@@ -105,9 +105,6 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
   // Name of the private member, e.g. "#field".
   TaggedParserAtomIndex name_;
 
-  // The index for the property name's atom.
-  GCThingIndex atomIndex_;
-
   // Location of the slot containing the private name symbol; or, for a
   // non-static private method, the slot containing the method.
   mozilla::Maybe<NameLocation> loc_;
