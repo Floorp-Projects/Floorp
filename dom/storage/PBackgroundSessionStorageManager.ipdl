@@ -4,6 +4,10 @@
 
 include protocol PBackground;
 include protocol PBackgroundSessionStorageCache;
+include PBackgroundSharedTypes;
+
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
 
 namespace mozilla {
 namespace dom {
@@ -14,7 +18,9 @@ namespace dom {
  manages PBackgroundSessionStorageCache;
 
  parent:
-  async PBackgroundSessionStorageCache(nsCString aOriginAttrs, nsCString aOriginKey);
+  async PBackgroundSessionStorageCache(PrincipalInfo aPrincipalInfo, nsCString aOriginKey);
+
+  async ClearStorages(OriginAttributesPattern aPattern, nsCString aOriginScope);
 
   async DeleteMe();
 
