@@ -2015,8 +2015,6 @@ void nsNSSComponent::ShutdownNSS() {
     Unused << BlockUntilLoadableCertsLoaded();
   }
 
-  ::mozilla::psm::UnloadUserModules();
-
   PK11_SetPasswordFunc((PK11PasswordFunc) nullptr);
 
   Preferences::RemoveObserver(this, "security.");
