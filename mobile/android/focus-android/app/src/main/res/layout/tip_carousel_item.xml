@@ -7,7 +7,6 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
     android:gravity="center|bottom"
-    android:lineSpacingExtra="7sp"
     android:lines="5"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"

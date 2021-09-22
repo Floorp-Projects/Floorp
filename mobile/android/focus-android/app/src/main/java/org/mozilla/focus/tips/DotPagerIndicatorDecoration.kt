@@ -17,10 +17,10 @@ import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.focus.R
 import kotlin.math.max
 
-private const val HEIGHT = 16
-private const val STROKE_WIDTH = 4
-private const val ITEM_LENGTH = 4
-private const val ITEM_PADDING = 16
+private const val HEIGHT = 6
+private const val STROKE_WIDTH = 3
+private const val ITEM_LENGTH = 3
+private const val ITEM_PADDING = 12
 
 class DotPagerIndicatorDecoration : RecyclerView.ItemDecoration() {
     private val dp = Resources.getSystem().displayMetrics.density
@@ -64,7 +64,7 @@ class DotPagerIndicatorDecoration : RecyclerView.ItemDecoration() {
         val indicatorStartX = (parent.width - indicatorTotalWidth) / 2F
 
         // center vertically in the allotted space
-        val indicatorPosY: Float = parent.height - indicatorHeightInDp / 2F
+        val indicatorPosY: Float = parent.height - indicatorHeightInDp
 
         drawInactiveIndicators(canvas, parent.context, indicatorStartX, indicatorPosY, itemCount)
 
