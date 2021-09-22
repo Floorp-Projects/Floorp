@@ -169,6 +169,9 @@ var DevToolsServer = {
     this.closeAllSocketListeners();
     this._initialized = false;
 
+    // Unregister all listeners
+    this.off("connectionchange");
+
     dumpn("DevTools server is shut down.");
   },
 
