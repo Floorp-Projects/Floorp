@@ -30,7 +30,13 @@ add_task(async function setup() {
     Services.perms.UNKNOWN
   );
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      // We enable browser.download.improvements_to_download_panel here since
+      // the test expects the download to be saved directly to disk and not
+      // prompted by the UnknownContentType window.
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.enable_spam_prevention", true],
+    ],
   });
 
   registerCleanupFunction(async () => {
