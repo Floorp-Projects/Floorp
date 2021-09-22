@@ -774,7 +774,7 @@ var gPrivacyPane = {
       );
       setEventListener(
         "telemetryDataDeletionLearnMore",
-        "command",
+        "click",
         gPrivacyPane.showDataDeletion
       );
       if (AppConstants.MOZ_NORMANDY) {

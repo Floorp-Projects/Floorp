@@ -231,7 +231,7 @@ class AppUpdater {
         /**
          * See nsIUpdateService.idl
          */
-        onCheckComplete: (aRequest, aUpdates) => {
+        onCheckComplete: async (aRequest, aUpdates) => {
           this.update = this.aus.selectUpdate(aUpdates);
           if (!this.update) {
             this._setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
@@ -265,7 +265,7 @@ class AppUpdater {
         /**
          * See nsIUpdateService.idl
          */
-        onError: (aRequest, aUpdate) => {
+        onError: async (aRequest, aUpdate) => {
           // Errors in the update check are treated as no updates found. If the
           // update check fails repeatedly without a success the user will be
           // notified with the normal app update user interface so this is safe.

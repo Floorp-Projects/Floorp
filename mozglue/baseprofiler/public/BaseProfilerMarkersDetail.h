@@ -109,7 +109,8 @@ struct StreamFunctionTypeHelper<R(baseprofiler::SpliceableJSONWriter&, As...)> {
     // Note that options are first after the entry kind, because they contain
     // the thread id, which is handled first to filter markers by threads.
     return aBuffer.PutObjects(ProfileBufferEntryKind::Marker, aOptions, aName,
-                              aCategory, aDeserializerTag, aAs...);
+                              aCategory, aDeserializerTag,
+                              MarkerPayloadType::Cpp, aAs...);
   }
 };
 
@@ -294,16 +295,19 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
       aBuffer, aName, aCategory, std::move(aOptions), aTs...);
 }
 
-template <typename StackCallback>
+template <typename StackCallback, typename RustMarkerCallback>
 [[nodiscard]] bool DeserializeAfterKindAndStream(
     ProfileBufferEntryReader& aEntryReader,
     baseprofiler::SpliceableJSONWriter& aWriter,
     baseprofiler::BaseProfilerThreadId aThreadIdOrUnspecified,
-    StackCallback&& aStackCallback) {
+    StackCallback&& aStackCallback, RustMarkerCallback&& aRustMarkerCallback) {
   // Each entry is made up of the following:
   //   ProfileBufferEntry::Kind::Marker, <- already read by caller
   //   options,                          <- next location in entries
   //   name,
+  //   category,
+  //   deserializer tag,
+  //   payload type (cpp or rust)
   //   payload
   const MarkerOptions options = aEntryReader.ReadObject<MarkerOptions>();
   if (aThreadIdOrUnspecified.IsSpecified() &&
@@ -357,12 +361,29 @@ template <typename StackCallback>
           aWriter.EndObject();
         }
 
+        auto payloadType = static_cast<mozilla::MarkerPayloadType>(
+            aEntryReader
+                .ReadObject<mozilla::MarkerPayloadTypeUnderlyingType>());
+
         // Stream the payload, including the type.
-        mozilla::base_profiler_markers_detail::Streaming::MarkerDataDeserializer
-            deserializer = mozilla::base_profiler_markers_detail::Streaming::
-                DeserializerForTag(tag);
-        MOZ_RELEASE_ASSERT(deserializer);
-        deserializer(aEntryReader, aWriter);
+        switch (payloadType) {
+          case mozilla::MarkerPayloadType::Cpp: {
+            mozilla::base_profiler_markers_detail::Streaming::
+                MarkerDataDeserializer deserializer =
+                    mozilla::base_profiler_markers_detail::Streaming::
+                        DeserializerForTag(tag);
+
+            MOZ_RELEASE_ASSERT(deserializer);
+            deserializer(aEntryReader, aWriter);
+            break;
+          }
+          case mozilla::MarkerPayloadType::Rust:
+            std::forward<RustMarkerCallback>(aRustMarkerCallback)(tag);
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unknown payload type.");
+            break;
+        }
       }
       aWriter.EndObject();
     }

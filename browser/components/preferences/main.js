@@ -739,7 +739,9 @@ var gMainPane = {
           "updateSettingsContainer"
         );
         updateContainer.classList.add("updateSettingCrossUserWarningContainer");
-        document.getElementById("updateSettingCrossUserWarning").hidden = false;
+        document.getElementById(
+          "updateSettingCrossUserWarningDesc"
+        ).hidden = false;
       }
 
       if (AppConstants.MOZ_MAINTENANCE_SERVICE) {

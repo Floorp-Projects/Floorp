@@ -695,7 +695,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   CompilerEnvironment compilerEnv(args);
   compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error, warnings);
   if (!mg.init(nullptr)) {
     return nullptr;
   }
@@ -711,10 +711,10 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   return mg.finishModule(bytecode, listener);
 }
 
-void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
-                        const Module& module, Atomic<bool>* cancelled) {
-  UniqueChars error;
-  Decoder d(bytecode, 0, &error);
+bool wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
+                        const Module& module, UniqueChars* error,
+                        UniqueCharsVector* warnings, Atomic<bool>* cancelled) {
+  Decoder d(bytecode, 0, error);
 
   OptimizedBackend optimizedBackend = args.craneliftEnabled
                                           ? OptimizedBackend::Cranelift
@@ -722,31 +722,27 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 
   ModuleEnvironment moduleEnv(args.features);
   if (!DecodeModuleEnvironment(d, &moduleEnv)) {
-    return;
+    return false;
   }
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False);
   compilerEnv.computeParameters(d);
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, &error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, error,
+                     warnings);
   if (!mg.init(nullptr)) {
-    return;
+    return false;
   }
 
   if (!DecodeCodeSection(moduleEnv, d, mg)) {
-    return;
+    return false;
   }
 
   if (!DecodeModuleTail(d, &moduleEnv)) {
-    return;
+    return false;
   }
 
-  if (!mg.finishTier2(module)) {
-    return;
-  }
-
-  // The caller doesn't care about success or failure; only that compilation
-  // is inactive, so there is no success to return here.
+  return mg.finishTier2(module);
 }
 
 class StreamingDecoder {
@@ -850,7 +846,8 @@ SharedModule wasm::CompileStreaming(
     MOZ_RELEASE_ASSERT(d.done());
   }
 
-  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error);
+  ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error,
+                     warnings);
   if (!mg.init(nullptr)) {
     return nullptr;
   }

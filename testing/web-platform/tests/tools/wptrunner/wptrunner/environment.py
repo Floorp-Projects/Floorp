@@ -83,7 +83,7 @@ class TestEnvironment(object):
     websockets servers"""
     def __init__(self, test_paths, testharness_timeout_multipler,
                  pause_after_test, debug_test, debug_info, options, ssl_config, env_extras,
-                 enable_quic=False, enable_webtransport=False, mojojs_path=None):
+                 enable_webtransport=False, mojojs_path=None):
 
         self.test_paths = test_paths
         self.server = None
@@ -104,7 +104,6 @@ class TestEnvironment(object):
         self.env_extras = env_extras
         self.env_extras_cms = None
         self.ssl_config = ssl_config
-        self.enable_quic = enable_quic
         self.enable_webtransport = enable_webtransport
         self.mojojs_path = mojojs_path
 
@@ -131,7 +130,8 @@ class TestEnvironment(object):
                                    self.config,
                                    self.get_routes(),
                                    mp_context=mpcontext.get_context(),
-                                   log_handlers=[server_log_handler])
+                                   log_handlers=[server_log_handler],
+                                   webtransport_h3=self.enable_webtransport)
 
         if self.options.get("supports_debugger") and self.debug_info and self.debug_info.interactive:
             self.ignore_interrupts()
@@ -177,11 +177,8 @@ class TestEnvironment(object):
             "ws": [8888],
             "wss": [8889],
             "h2": [9000],
+            "webtransport-h3": [11000],
         }
-        if self.enable_quic:
-            ports["quic-transport"] = [10000]
-        if self.enable_webtransport:
-            ports["webtransport-h3"] = [11000]
         config.ports = ports
 
         if os.path.exists(override_path):
@@ -277,8 +274,9 @@ class TestEnvironment(object):
 
         if not failed and self.test_server_port:
             for scheme, servers in self.servers.items():
-                if scheme == "quic-transport" or scheme == "webtransport-h3":
-                    # TODO(bashi): Find a way to test QUIC's UDP port.
+                if scheme == "webtransport-h3":
+                    # TODO(bashi): Find a way to test WebTransport over HTTP/3
+                    # server's UDP port.
                     continue
                 for port, server in servers:
                     s = socket.socket()

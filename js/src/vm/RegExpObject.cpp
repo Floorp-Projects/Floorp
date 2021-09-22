@@ -32,7 +32,6 @@
 #  include "util/Unicode.h"
 #endif
 #include "vm/WellKnownAtom.h"  // js_*_str
-#include "vm/Xdr.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -1097,38 +1096,6 @@ bool js::ParseRegExpFlags(JSContext* cx, JSString* flagStr,
 
   return true;
 }
-
-template <XDRMode mode>
-XDRResult js::XDRScriptRegExpObject(XDRState<mode>* xdr,
-                                    MutableHandle<RegExpObject*> objp) {
-  RootedAtom source(xdr->cx());
-  uint8_t flags = 0;
-
-  if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(objp);
-    RegExpObject& reobj = *objp;
-    source = reobj.getSource();
-    flags = reobj.getFlags().value();
-  }
-  MOZ_TRY(XDRAtom(xdr, &source));
-  MOZ_TRY(xdr->codeUint8(&flags));
-  if (mode == XDR_DECODE) {
-    RegExpObject* reobj = RegExpObject::create(
-        xdr->cx(), source, RegExpFlags(flags), TenuredObject);
-    if (!reobj) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-
-    objp.set(reobj);
-  }
-  return Ok();
-}
-
-template XDRResult js::XDRScriptRegExpObject(XDRState<XDR_ENCODE>* xdr,
-                                             MutableHandle<RegExpObject*> objp);
-
-template XDRResult js::XDRScriptRegExpObject(XDRState<XDR_DECODE>* xdr,
-                                             MutableHandle<RegExpObject*> objp);
 
 JS::ubi::Node::Size JS::ubi::Concrete<RegExpShared>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {

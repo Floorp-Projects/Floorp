@@ -97,6 +97,8 @@ class GfxInfo final : public GfxInfoBase {
 
   nsCString mDrmRenderDevice;
 
+  nsTArray<nsCString> mDdxDrivers;
+
   struct ScreenInfo {
     uint32_t mWidth;
     uint32_t mHeight;

@@ -188,6 +188,27 @@ const kTests = [
       return doc.querySelector("div");
     },
   },
+
+  // bug 1731138: Animated mask
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div {
+          width: 100px;
+          height: 100px;
+          background-color: lime;
+          mask-clip: border-box;
+          mask-size: 100% 100%;
+          mask-image: url(animatedMask.gif);
+      }
+      </style>
+      <div></div>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
 ];
 
 onload = async function() {

@@ -12,14 +12,17 @@
 #include "nsMemory.h"
 #include "nsStringBuffer.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 // for mozilla::dom::workerinternals::kJSPrincipalsDebugToken
 #include "mozilla/dom/workerinternals/JSSettings.h"
 // for mozilla::dom::worklet::kJSPrincipalsDebugToken
 #include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 NS_IMETHODIMP_(MozExternalRefCountType)

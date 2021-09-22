@@ -2659,7 +2659,8 @@ nsDisplayContainer::nsDisplayContainer(
 
 nsRect nsDisplayItem::GetPaintRect(nsDisplayListBuilder* aBuilder,
                                    gfxContext* aCtx) {
-  nsRect result = GetClippedBounds(aBuilder);
+  bool dummy;
+  nsRect result = GetBounds(aBuilder, &dummy);
   if (aCtx) {
     result.IntersectRect(result,
                          nsLayoutUtils::RoundGfxRectToAppRect(

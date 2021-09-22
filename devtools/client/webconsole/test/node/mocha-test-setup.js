@@ -14,7 +14,8 @@ const mcRoot = `${__dirname}/../../../../../`;
 const getModule = mcPath =>
   `module.exports = require("${(mcRoot + mcPath).replace(/\\/gi, "/")}");`;
 
-const { pref } = require("devtools-services");
+const { pref } = require(mcRoot +
+  "devtools/client/shared/test-helpers/jest-fixtures/Services");
 pref("devtools.debugger.remote-timeout", 10000);
 pref("devtools.hud.loglimit", 10000);
 pref("devtools.webconsole.filter.error", true);
@@ -129,7 +130,8 @@ requireHacker.global_hook("default", (path, module) => {
       `module.exports = { addProfilerMarker: () => {}, import: () => ({}) }`,
     // Some modules depend on Chrome APIs which don't work in mocha. When such a module
     // is required, replace it with a mock version.
-    Services: () => `module.exports = require("devtools-services")`,
+    Services: () =>
+      getModule("devtools/client/shared/test-helpers/jest-fixtures/Services"),
     "devtools/server/devtools-server": () =>
       `module.exports = {DevToolsServer: {}}`,
     "devtools/client/shared/components/SmartTrace": () =>
@@ -140,10 +142,10 @@ requireHacker.global_hook("default", (path, module) => {
       this.recordEvent = () => {};
       this.getKeyedHistogramById = () => ({add: () => {}});
     }`,
-    "devtools/shared/event-emitter": () =>
-      `module.exports = require("devtools-modules/src/utils/event-emitter")`,
     "devtools/client/shared/unicode-url": () =>
-      `module.exports = require("devtools-modules/src/unicode-url")`,
+      getModule(
+        "devtools/client/shared/test-helpers/jest-fixtures/unicode-url"
+      ),
     "devtools/shared/DevToolsUtils": () =>
       getModule("devtools/client/webconsole/test/node/fixtures/DevToolsUtils"),
     "devtools/server/actors/reflow": () => "{}",

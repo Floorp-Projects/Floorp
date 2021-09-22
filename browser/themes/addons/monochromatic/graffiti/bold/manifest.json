@@ -1,0 +1,56 @@
+{
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "firefox-graffiti-bold@mozilla.org"
+    }
+  },
+  "name": "Graffiti – Bold",
+  "author": "Mozilla",
+  "version": "1.0",
+  "icons": {
+    "32": "icon.svg"
+  },
+  "theme": {
+    "colors": {
+      "tab_background_text": "hsl(0, 0%, 100%)",
+      "tab_text": "hsl(0, 0%, 100%)",
+      "tab_selected": "hsl(275, 15%, 22%)",
+      "tab_line": "hsl(278, 32%, 50%)",
+      "frame": "hsl(278, 32%, 35%)",
+      "popup": "hsl(275, 15%, 22%)",
+      "popup_text": "hsl(0, 0%, 100%)",
+      "popup_border": "hsl(278, 30%, 42%)",
+      "popup_highlight": "hsla(278, 33%, 52%, 0.6)",
+      "popup_highlight_text": "hsl(0, 0%, 100%)",
+      "toolbar": "hsl(278, 27%, 48%)",
+      "toolbar_text": "hsl(0, 0%, 100%)",
+      "toolbar_field": "hsl(278, 32%, 35%)",
+      "toolbar_field_text": "hsl(0, 0%, 100%)",
+      "toolbar_field_focus": "hsl(275, 15%, 22%)",
+      "toolbar_field_border_focus": "hsl(278, 30%, 42%)",
+      "ntp_background": "hsl(270, 10%, 12%)",
+      "ntp_card_background": "hsl(275, 15%, 22%)",
+      "ntp_text": "hsl(0, 0%, 100%)",
+      "sidebar": "hsl(275, 15%, 22%)",
+      "sidebar_text": "hsl(0, 0%, 100%)",
+      "sidebar_highlight": "hsla(278, 33%, 52%, 0.6)",
+      "address_bar_box": "hsl(275, 15%, 22%)",
+      "address_bar_box_focus": "hsl(278, 27%, 48%)",
+      "address_bar_url_color": "hsl(278, 80%, 88%)",
+      "panel_item_hover": "hsla(278, 33%, 52%, 0.6)",
+      "panel_item_active": "hsla(278, 33%, 52%, 0.75)",
+      "panel_separator": "hsl(278, 30%, 42%)"
+    }
+  },
+  "theme_experiment": {
+    "colors": {
+      "address_bar_box": "--urlbar-box-bgcolor",
+      "address_bar_box_focus": "--urlbar-box-focus-bgcolor",
+      "address_bar_url_color": "--urlbar-popup-url-color",
+      "panel_item_hover": "--panel-item-hover-bgcolor",
+      "panel_item_active": "--panel-item-active-bgcolor",
+      "panel_separator": "--panel-separator-color"
+    }
+  }
+}

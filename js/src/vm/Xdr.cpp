@@ -6,25 +6,32 @@
 
 #include "vm/Xdr.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/Utf8.h"
+#include "mozilla/ArrayUtils.h"   // mozilla::ArrayEqual
+#include "mozilla/Assertions.h"   // MOZ_ASSERT, MOZ_ASSERT_IF
+#include "mozilla/EndianUtils.h"  // mozilla::NativeEndian, MOZ_LITTLE_ENDIAN
+#include "mozilla/RefPtr.h"       // RefPtr
+#include "mozilla/Result.h"       // mozilla::{Result, Ok, Err}, MOZ_TRY
+#include "mozilla/ScopeExit.h"    // mozilla::MakeScopeExit
+#include "mozilla/Utf8.h"         // mozilla::Utf8Unit
 
-#include <algorithm>  // std::transform
-#include <string.h>
-#include <type_traits>  // std::is_same
+#include <algorithm>    // std::transform
+#include <stddef.h>     // size_t
+#include <stdint.h>     // uint8_t, uint32_t, uintptr_t
+#include <string>       // std::char_traits
+#include <type_traits>  // std::is_same_v
 #include <utility>      // std::move
 
-#include "builtin/ModuleObject.h"
-#include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
 #include "frontend/StencilXdr.h"          // frontend::StencilXDR
 #include "js/BuildId.h"                   // JS::BuildIdCharVector
-#include "js/OffThreadScriptCompilation.h"
-#include "vm/JSContext.h"
-#include "vm/JSScript.h"
-#include "vm/SharedStencil.h"  // js::SourceExtent
-#include "vm/TraceLogging.h"
+#include "js/CompileOptions.h"            // JS::ReadOnlyCompileOptions
+#include "js/Transcoding.h"  // JS::TranscodeResult, JS::TranscodeBuffer, JS::TranscodeRange
+#include "js/UniquePtr.h"   // UniquePtr
+#include "js/Utility.h"     // JS::FreePolicy, js_delete
+#include "vm/JSContext.h"   // JSContext, ReportAllocationOverflow
+#include "vm/JSScript.h"    // ScriptSource
+#include "vm/Runtime.h"     // GetBuildId
+#include "vm/StringType.h"  // JSString
 
 using namespace js;
 
@@ -169,14 +176,8 @@ XDRResult XDRState<mode>::codeCharsZ(XDRTranscodeString<char16_t>& buffer) {
   return XDRCodeCharsZ(this, buffer);
 }
 
-enum class XDRFormatType : uint8_t {
-  UseOption,
-  JSScript,
-  Stencil,
-};
-
-static bool GetScriptTranscodingBuildId(XDRFormatType formatType,
-                                        JS::BuildIdCharVector* buildId) {
+JS_PUBLIC_API bool JS::GetScriptTranscodingBuildId(
+    JS::BuildIdCharVector* buildId) {
   MOZ_ASSERT(buildId->empty());
   MOZ_ASSERT(GetBuildId);
 
@@ -198,36 +199,13 @@ static bool GetScriptTranscodingBuildId(XDRFormatType formatType,
   buildId->infallibleAppend(sizeof(uintptr_t) == 4 ? '4' : '8');
   buildId->infallibleAppend(MOZ_LITTLE_ENDIAN() ? 'l' : 'b');
 
-  // '0': Stencil
-  // '1': JSScript.
-  char formatChar = '0';
-  switch (formatType) {
-    case XDRFormatType::UseOption:
-      // If off-thread parse global isn't used for single script decoding,
-      // we use stencil XDR instead of JSScript XDR.
-      formatChar = js::UseOffThreadParseGlobal() ? '1' : '0';
-      break;
-    case XDRFormatType::JSScript:
-      formatChar = '1';
-      break;
-    case XDRFormatType::Stencil:
-      formatChar = '0';
-      break;
-  }
-  buildId->infallibleAppend(formatChar);
-
   return true;
 }
 
-JS_PUBLIC_API bool JS::GetScriptTranscodingBuildId(
-    JS::BuildIdCharVector* buildId) {
-  return GetScriptTranscodingBuildId(XDRFormatType::UseOption, buildId);
-}
-
 template <XDRMode mode>
-static XDRResult VersionCheck(XDRState<mode>* xdr, XDRFormatType formatType) {
+static XDRResult VersionCheck(XDRState<mode>* xdr) {
   JS::BuildIdCharVector buildId;
-  if (!GetScriptTranscodingBuildId(formatType, &buildId)) {
+  if (!JS::GetScriptTranscodingBuildId(&buildId)) {
     ReportOutOfMemory(xdr->cx());
     return xdr->fail(JS::TranscodeResult::Throw);
   }
@@ -268,55 +246,13 @@ static XDRResult VersionCheck(XDRState<mode>* xdr, XDRFormatType formatType) {
 }
 
 template <XDRMode mode>
-XDRResult XDRState<mode>::codeModuleObject(MutableHandleModuleObject modp) {
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-  if (mode == XDR_DECODE) {
-    modp.set(nullptr);
-  } else {
-    MOZ_ASSERT(modp->status() < MODULE_STATUS_LINKING);
-  }
-
-  MOZ_TRY(XDRModuleObject(this, modp));
-  return Ok();
-}
-
-template <XDRMode mode>
-XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
-  TraceLoggerTextId event =
-      mode == XDR_DECODE ? TraceLogger_DecodeScript : TraceLogger_EncodeScript;
-  AutoTraceLog tl(logger, event);
-
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-  auto guard = mozilla::MakeScopeExit([&] { scriptp.set(nullptr); });
-
-  if (mode == XDR_DECODE) {
-    scriptp.set(nullptr);
-  } else {
-    MOZ_ASSERT(!scriptp->enclosingScope());
-  }
-
-  MOZ_TRY(VersionCheck(this, XDRFormatType::JSScript));
-  MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
-
-  guard.release();
-  return Ok();
-}
-
-template <XDRMode mode>
 static XDRResult XDRStencilHeader(
     XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
     RefPtr<ScriptSource>& source) {
   // The XDR-Stencil header is inserted at beginning of buffer, but it is
   // computed at the end the incremental-encoding process.
 
-  MOZ_TRY(VersionCheck(xdr, XDRFormatType::Stencil));
+  MOZ_TRY(VersionCheck(xdr));
   MOZ_TRY(ScriptSource::XDR(xdr, maybeOptions, source));
 
   return Ok();

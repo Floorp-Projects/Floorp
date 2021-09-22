@@ -22,20 +22,12 @@
 #include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 #include "vm/StringType.h"
-#include "vm/Xdr.h"
 
 namespace JS {
 
 class JS_PUBLIC_API BigInt;
 
 }  // namespace JS
-
-namespace js {
-
-template <XDRMode mode>
-XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandle<JS::BigInt*> bi);
-
-}  // namespace js
 
 namespace JS {
 
@@ -416,9 +408,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
   friend struct ::JSStructuredCloneReader;
   friend struct ::JSStructuredCloneWriter;
-  template <js::XDRMode mode>
-  friend js::XDRResult js::XDRBigInt(js::XDRState<mode>* xdr,
-                                     MutableHandle<BigInt*> bi);
 
   BigInt() = delete;
   BigInt(const BigInt& other) = delete;

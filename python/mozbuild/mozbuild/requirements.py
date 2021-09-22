@@ -75,7 +75,7 @@ class MachEnvRequirements:
 def _parse_mach_env_requirements(
     requirements_output, root_requirements_path, topsrcdir, is_thunderbird
 ):
-    def _parse_requirements_line(line, is_thunderbird_packages_txt=False):
+    def _parse_requirements_line(line, is_thunderbird_packages_txt):
         line = line.strip()
         if not line or line.startswith("#"):
             return
@@ -84,9 +84,10 @@ def _parse_mach_env_requirements(
         if action == "pth":
             requirements_output.pth_requirements.append(PthSpecifier(params))
         elif action == "packages.txt":
-            nested_definition_path = os.path.join(topsrcdir, params)
-            assert os.path.isfile(nested_definition_path)
-            _parse_requirements_definition_file(nested_definition_path)
+            _parse_requirements_definition_file(
+                os.path.join(topsrcdir, params),
+                is_thunderbird_packages_txt,
+            )
         elif action == "pypi":
             if is_thunderbird_packages_txt:
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
@@ -112,18 +113,17 @@ def _parse_mach_env_requirements(
             )
         elif action == "thunderbird-packages.txt":
             if is_thunderbird:
-                nested_definition_path = os.path.join(topsrcdir, params)
-                assert os.path.isfile(nested_definition_path)
                 _parse_requirements_definition_file(
-                    nested_definition_path, is_thunderbird_packages_txt=True
+                    os.path.join(topsrcdir, params), is_thunderbird_packages_txt=True
                 )
         else:
             raise Exception("Unknown requirements definition action: %s" % action)
 
     def _parse_requirements_definition_file(
-        requirements_path, is_thunderbird_packages_txt=False
+        requirements_path, is_thunderbird_packages_txt
     ):
         """Parse requirements file into list of requirements"""
+        assert os.path.isfile(requirements_path)
         requirements_output.requirements_paths.append(requirements_path)
 
         with open(requirements_path, "r") as requirements_file:
@@ -132,7 +132,7 @@ def _parse_mach_env_requirements(
         for line in lines:
             _parse_requirements_line(line, is_thunderbird_packages_txt)
 
-    _parse_requirements_definition_file(root_requirements_path)
+    _parse_requirements_definition_file(root_requirements_path, False)
 
 
 def _parse_package_specifier(specifier):

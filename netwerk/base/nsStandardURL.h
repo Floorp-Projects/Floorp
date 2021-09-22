@@ -6,6 +6,8 @@
 #ifndef nsStandardURL_h__
 #define nsStandardURL_h__
 
+#include <bitset>
+
 #include "nsString.h"
 #include "nsISerializable.h"
 #include "nsIFileURL.h"
@@ -34,6 +36,74 @@ class nsIURLParser;
 namespace mozilla {
 class Encoding;
 namespace net {
+
+template <typename T>
+class URLSegmentNumber {
+  T mData{0};
+  bool mParity{false};
+
+ public:
+  URLSegmentNumber() = default;
+  explicit URLSegmentNumber(T data) : mData(data) {
+    mParity = CalculateParity();
+  }
+  bool operator==(URLSegmentNumber value) const { return mData == value.mData; }
+  bool operator!=(URLSegmentNumber value) const { return mData != value.mData; }
+  bool operator>(URLSegmentNumber value) const { return mData > value.mData; }
+  URLSegmentNumber operator+(int32_t value) const {
+    return URLSegmentNumber(mData + value);
+  }
+  URLSegmentNumber operator+(uint32_t value) const {
+    return URLSegmentNumber(mData + value);
+  }
+  URLSegmentNumber operator-(int32_t value) const {
+    return URLSegmentNumber(mData - value);
+  }
+  URLSegmentNumber operator-(uint32_t value) const {
+    return URLSegmentNumber(mData - value);
+  }
+  URLSegmentNumber operator+=(URLSegmentNumber value) {
+    mData += value.mData;
+    mParity = CalculateParity();
+    return *this;
+  }
+  URLSegmentNumber operator+=(T value) {
+    mData += value;
+    mParity = CalculateParity();
+    return *this;
+  }
+  URLSegmentNumber operator-=(URLSegmentNumber value) {
+    mData -= value.mData;
+    mParity = CalculateParity();
+    return *this;
+  }
+  URLSegmentNumber operator-=(T value) {
+    mData -= value;
+    mParity = CalculateParity();
+    return *this;
+  }
+  operator T() const { return mData; }
+  URLSegmentNumber& operator=(T value) {
+    mData = value;
+    mParity = CalculateParity();
+    return *this;
+  }
+  URLSegmentNumber& operator++() {
+    ++mData;
+    mParity = CalculateParity();
+    return *this;
+  }
+  URLSegmentNumber operator++(int) {
+    URLSegmentNumber value = *this;
+    *this += 1;
+    return value;
+  }
+  bool CalculateParity() const {
+    std::bitset<32> bits((uint32_t)mData);
+    return bits.count() % 2 == 0 ? false : true;
+  }
+  bool Parity() const { return mParity; }
+};
 
 //-----------------------------------------------------------------------------
 // standard URL implementation
@@ -74,8 +144,13 @@ class nsStandardURL : public nsIFileURL,
   // location and length of an url segment relative to mSpec
   //
   struct URLSegment {
+#ifdef EARLY_BETA_OR_EARLIER
+    URLSegmentNumber<uint32_t> mPos{0};
+    URLSegmentNumber<int32_t> mLen{-1};
+#else
     uint32_t mPos{0};
     int32_t mLen{-1};
+#endif
 
     URLSegment() = default;
     URLSegment(uint32_t pos, int32_t len) : mPos(pos), mLen(len) {}

@@ -45,8 +45,8 @@ struct DeleteEntry {
 class AccAttributes {
   friend struct IPC::ParamTraits<AccAttributes*>;
   using AttrValueType =
-      Variant<bool, float, double, int32_t, RefPtr<nsAtom>, CopyableTArray<int32_t>,
-              CSSCoord, FontSize, Color, DeleteEntry>;
+      Variant<bool, float, double, int32_t, RefPtr<nsAtom>,
+              CopyableTArray<int32_t>, CSSCoord, FontSize, Color, DeleteEntry>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
