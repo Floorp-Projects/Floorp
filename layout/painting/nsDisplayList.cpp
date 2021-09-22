@@ -2238,13 +2238,9 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   }
 
   bool temp = aBuilder->SetIsCompositingCheap(renderer->IsCompositingCheap());
-  LayerManager::EndTransactionFlags flags = LayerManager::END_DEFAULT;
-  if (renderer->NeedsWidgetInvalidation() && (aFlags & PAINT_NO_COMPOSITE)) {
-    flags = LayerManager::END_NO_COMPOSITE;
-  }
-
   fallback->EndTransactionWithList(aBuilder, this,
-                                   presContext->AppUnitsPerDevPixel(), flags);
+                                   presContext->AppUnitsPerDevPixel(),
+                                   LayerManager::END_DEFAULT);
 
   if (widgetTransaction ||
       // SVG-as-an-image docs don't paint as part of the retained layer tree,
@@ -2259,18 +2255,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   if (document && widgetTransaction) {
     TriggerPendingAnimations(*document, renderer->GetAnimationReadyTime());
   }
-
-  bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
-  if (view) {
-    if (shouldInvalidate) {
-      // If we're the fallback renderer, then we don't need to invalidate
-      // as we've just drawn directly to the window and don't need to do
-      // anything else.
-      NS_ASSERTION(!(aFlags & PAINT_NO_COMPOSITE),
-                   "Must be compositing during fallback");
-    }
-  }
-  return;
 }
 
 nsDisplayItem* nsDisplayList::RemoveBottom() {
