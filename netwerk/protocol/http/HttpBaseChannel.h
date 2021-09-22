@@ -493,7 +493,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
     Maybe<bool> privateBrowsing = Nothing();
     Maybe<nsCString> method;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    Maybe<dom::TimedChannelInfo> timedChannel;
+    Maybe<dom::TimedChannelInfo> timedChannelInfo;
     nsCOMPtr<nsIInputStream> uploadStream;
     uint64_t uploadStreamLength = 0;
     bool uploadStreamHasHeaders = false;

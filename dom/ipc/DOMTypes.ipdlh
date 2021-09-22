@@ -337,7 +337,7 @@ struct ReplacementChannelConfigInit
   bool? privateBrowsing;
   nsCString? method;
   nsIReferrerInfo referrerInfo;
-  TimedChannelInfo? timedChannel;
+  TimedChannelInfo? timedChannelInfo;
   nullable PRemoteLazyInputStream uploadStream;
   bool uploadStreamHasHeaders;
   nsCString? contentType;
