@@ -331,6 +331,7 @@ struct GMPCapabilityData
 
 struct L10nFileSourceDescriptor {
   nsCString name;
+  nsCString metasource;
   nsCString[] locales;
   nsCString prePath;
   nsCString[] index;
