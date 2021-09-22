@@ -1928,7 +1928,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::Int32:
       return sprinter.printf("%d", GetBytecodeInteger(pc));
     case JSOp::String:
-      return quote(loadAtom(pc), '"');
+      return quote(loadString(pc), '"');
     case JSOp::Symbol: {
       unsigned i = uint8_t(pc[1]);
       MOZ_ASSERT(i < JS::WellKnownSymbolLimit);

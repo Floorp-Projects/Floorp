@@ -964,7 +964,7 @@ bool BytecodeEmitter::emitStringOp(JSOp op, TaggedParserAtomIndex atom) {
 }
 
 bool BytecodeEmitter::emitStringOp(JSOp op, GCThingIndex atomIndex) {
-  MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
+  MOZ_ASSERT(JOF_OPTYPE(op) == JOF_STRING);
   return emitGCIndexOp(op, atomIndex);
 }
 

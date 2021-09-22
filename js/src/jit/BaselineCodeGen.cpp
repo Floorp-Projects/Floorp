@@ -2489,7 +2489,7 @@ bool BaselineInterpreterCodeGen::emit_BigInt() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_String() {
-  frame.push(StringValue(handler.script()->getAtom(handler.pc())));
+  frame.push(StringValue(handler.script()->getString(handler.pc())));
   return true;
 }
 
@@ -2497,7 +2497,7 @@ template <>
 bool BaselineInterpreterCodeGen::emit_String() {
   Register scratch1 = R0.scratchReg();
   Register scratch2 = R1.scratchReg();
-  loadScriptGCThing(ScriptGCThingType::Atom, scratch1, scratch2);
+  loadScriptGCThing(ScriptGCThingType::String, scratch1, scratch2);
   masm.tagValue(JSVAL_TYPE_STRING, scratch1, R0);
   frame.push(R0);
   return true;
