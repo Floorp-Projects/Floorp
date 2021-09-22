@@ -357,26 +357,6 @@ class Compositor : public TextureSourceProvider {
 
  protected:
   /**
-   * Given a layer rect, clip, and transform, compute the area of the backdrop
-   * that needs to be copied for mix-blending. The output transform translates
-   * from 0..1 space into the backdrop rect space.
-   *
-   * The transformed layer quad is also optionally returned - this is the same
-   * as the result rect, before rounding.
-   */
-  gfx::IntRect ComputeBackdropCopyRect(const gfx::Rect& aRect,
-                                       const gfx::IntRect& aClipRect,
-                                       const gfx::Matrix4x4& aTransform,
-                                       gfx::Matrix4x4* aOutTransform,
-                                       gfx::Rect* aOutLayerQuad = nullptr);
-
-  gfx::IntRect ComputeBackdropCopyRect(const gfx::Triangle& aTriangle,
-                                       const gfx::IntRect& aClipRect,
-                                       const gfx::Matrix4x4& aTransform,
-                                       gfx::Matrix4x4* aOutTransform,
-                                       gfx::Rect* aOutLayerQuad = nullptr);
-
-  /**
    * Whether or not the compositor should be prepared to record frames. While
    * this returns true, compositors are expected to maintain a full window
    * render target that they return from GetWindowRenderTarget() between

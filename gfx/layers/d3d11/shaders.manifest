@@ -2,13 +2,6 @@
   file: CompositorD3D11.hlsl
   shaders:
    - LayerQuadVS
-   - LayerDynamicVS
-   - LayerQuadMaskVS
-   - LayerDynamicMaskVS
-   - LayerQuadBlendVS
-   - LayerQuadBlendMaskVS
-   - LayerDynamicBlendVS
-   - LayerDynamicBlendMaskVS
 
 - type: ps_4_0_level_9_3
   file: CompositorD3D11.hlsl
@@ -16,13 +9,5 @@
    - SolidColorShader
    - RGBShader
    - RGBAShader
-   - ComponentAlphaShader
    - YCbCrShader
    - NV12Shader
-   - SolidColorShaderMask
-   - RGBShaderMask
-   - RGBAShaderMask
-   - YCbCrShaderMask
-   - NV12ShaderMask
-   - ComponentAlphaShaderMask
-   - BlendShader

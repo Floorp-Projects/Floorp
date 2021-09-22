@@ -16,11 +16,8 @@ namespace layers {
 
 using namespace gfx;
 
-static const size_t kInitialMaximumTriangles = 64;
-
 DeviceAttachmentsD3D11::DeviceAttachmentsD3D11(ID3D11Device* device)
-    : mMaximumTriangles(kInitialMaximumTriangles),
-      mDevice(device),
+    : mDevice(device),
       mContinueInit(true),
       mInitialized(false),
       mDeviceReset(false) {}
@@ -64,37 +61,6 @@ bool DeviceAttachmentsD3D11::Initialize() {
     mInitFailureId = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
     return false;
   }
-
-  // Create a second input layout for layers with dynamic geometry.
-  D3D11_INPUT_ELEMENT_DESC dynamicLayout[] = {
-      {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
-       D3D11_INPUT_PER_VERTEX_DATA, 0},
-      {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8,
-       D3D11_INPUT_PER_VERTEX_DATA, 0},
-  };
-
-  hr = mDevice->CreateInputLayout(
-      dynamicLayout, sizeof(dynamicLayout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
-      LayerDynamicVS, sizeof(LayerDynamicVS),
-      getter_AddRefs(mDynamicInputLayout));
-
-  if (Failed(hr, "CreateInputLayout")) {
-    mInitFailureId = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
-    return false;
-  }
-
-  // Allocate memory for the dynamic vertex buffer.
-  bufferDesc = CD3D11_BUFFER_DESC(
-      sizeof(TexturedVertex) * mMaximumTriangles * 3, D3D11_BIND_VERTEX_BUFFER,
-      D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-
-  hr = mDevice->CreateBuffer(&bufferDesc, nullptr,
-                             getter_AddRefs(mDynamicVertexBuffer));
-  if (Failed(hr, "create dynamic vertex buffer")) {
-    mInitFailureId = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
-    return false;
-  }
-
   if (!CreateShaders()) {
     mInitFailureId = "FEATURE_FAILURE_D3D11_CREATE_SHADERS";
     return false;
@@ -194,25 +160,6 @@ bool DeviceAttachmentsD3D11::Initialize() {
     return false;
   }
 
-  if (LayerManager::LayersComponentAlphaEnabled()) {
-    D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
-        TRUE,
-        D3D11_BLEND_ONE,
-        D3D11_BLEND_INV_SRC1_COLOR,
-        D3D11_BLEND_OP_ADD,
-        D3D11_BLEND_ONE,
-        D3D11_BLEND_INV_SRC_ALPHA,
-        D3D11_BLEND_OP_ADD,
-        D3D11_COLOR_WRITE_ENABLE_ALL};
-    blendDesc.RenderTarget[0] = rtBlendComponent;
-    hr = mDevice->CreateBlendState(&blendDesc,
-                                   getter_AddRefs(mComponentBlendState));
-    if (Failed(hr, "create component blender")) {
-      mInitFailureId = "FEATURE_FAILURE_D3D11_COMP_BLENDER";
-      return false;
-    }
-  }
-
   D3D11_RENDER_TARGET_BLEND_DESC rtBlendDisabled = {
       FALSE,
       D3D11_BLEND_SRC_ALPHA,
@@ -254,49 +201,14 @@ bool DeviceAttachmentsD3D11::InitSyncObject() {
   return mSyncObject->Init();
 }
 
-bool DeviceAttachmentsD3D11::InitBlendShaders() {
-  if (!mVSQuadBlendShader[MaskType::MaskNone]) {
-    InitVertexShader(sLayerQuadBlendVS, mVSQuadBlendShader, MaskType::MaskNone);
-    InitVertexShader(sLayerQuadBlendMaskVS, mVSQuadBlendShader, MaskType::Mask);
-  }
-
-  if (!mVSDynamicBlendShader[MaskType::MaskNone]) {
-    InitVertexShader(sLayerDynamicBlendVS, mVSDynamicBlendShader,
-                     MaskType::MaskNone);
-    InitVertexShader(sLayerDynamicBlendMaskVS, mVSDynamicBlendShader,
-                     MaskType::Mask);
-  }
-
-  if (!mBlendShader[MaskType::MaskNone]) {
-    InitPixelShader(sBlendShader, mBlendShader, MaskType::MaskNone);
-  }
-  return mContinueInit;
-}
-
 bool DeviceAttachmentsD3D11::CreateShaders() {
-  InitVertexShader(sLayerQuadVS, mVSQuadShader, MaskType::MaskNone);
-  InitVertexShader(sLayerQuadMaskVS, mVSQuadShader, MaskType::Mask);
+  InitVertexShader(sLayerQuadVS, mVSQuadShader);
 
-  InitVertexShader(sLayerDynamicVS, mVSDynamicShader, MaskType::MaskNone);
-  InitVertexShader(sLayerDynamicMaskVS, mVSDynamicShader, MaskType::Mask);
-
-  InitPixelShader(sSolidColorShader, mSolidColorShader, MaskType::MaskNone);
-  InitPixelShader(sSolidColorShaderMask, mSolidColorShader, MaskType::Mask);
-  InitPixelShader(sRGBShader, mRGBShader, MaskType::MaskNone);
-  InitPixelShader(sRGBShaderMask, mRGBShader, MaskType::Mask);
-  InitPixelShader(sRGBAShader, mRGBAShader, MaskType::MaskNone);
-  InitPixelShader(sRGBAShaderMask, mRGBAShader, MaskType::Mask);
-  InitPixelShader(sYCbCrShader, mYCbCrShader, MaskType::MaskNone);
-  InitPixelShader(sYCbCrShaderMask, mYCbCrShader, MaskType::Mask);
-  InitPixelShader(sNV12Shader, mNV12Shader, MaskType::MaskNone);
-  InitPixelShader(sNV12ShaderMask, mNV12Shader, MaskType::Mask);
-  if (LayerManager::LayersComponentAlphaEnabled()) {
-    InitPixelShader(sComponentAlphaShader, mComponentAlphaShader,
-                    MaskType::MaskNone);
-    InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader,
-                    MaskType::Mask);
-  }
-
+  InitPixelShader(sSolidColorShader, mSolidColorShader);
+  InitPixelShader(sRGBShader, mRGBShader);
+  InitPixelShader(sRGBAShader, mRGBAShader);
+  InitPixelShader(sYCbCrShader, mYCbCrShader);
+  InitPixelShader(sNV12Shader, mNV12Shader);
   return mContinueInit;
 }
 
@@ -330,26 +242,6 @@ bool DeviceAttachmentsD3D11::Failed(HRESULT hr, const char* aContext) {
   }
 
   gfxCriticalNote << "[D3D11] " << aContext << " failed: " << hexa(hr);
-  return true;
-}
-
-bool DeviceAttachmentsD3D11::EnsureTriangleBuffer(size_t aNumTriangles) {
-  if (aNumTriangles > mMaximumTriangles) {
-    CD3D11_BUFFER_DESC bufferDesc(sizeof(TexturedVertex) * aNumTriangles * 3,
-                                  D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC,
-                                  D3D11_CPU_ACCESS_WRITE);
-
-    HRESULT hr = mDevice->CreateBuffer(&bufferDesc, nullptr,
-                                       getter_AddRefs(mDynamicVertexBuffer));
-
-    if (Failed(hr, "resize dynamic vertex buffer")) {
-      return false;
-    }
-
-    mMaximumTriangles = aNumTriangles;
-  }
-
-  MOZ_ASSERT(mMaximumTriangles >= aNumTriangles);
   return true;
 }
 

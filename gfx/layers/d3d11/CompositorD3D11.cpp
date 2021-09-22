@@ -31,10 +31,10 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Telemetry.h"
-#include "BlendShaderConstants.h"
 
 #include "D3D11ShareHandleImage.h"
 #include "DeviceAttachmentsD3D11.h"
+#include "BlendShaderConstants.h"
 
 #include <versionhelpers.h>  // For IsWindows8OrGreater
 #include <winsdkver.h>
@@ -120,34 +120,6 @@ void CompositorD3D11::SetVertexBuffer(ID3D11Buffer* aBuffer) {
   UINT size = sizeof(VertexType);
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &aBuffer, &size, &offset);
-}
-
-bool CompositorD3D11::UpdateDynamicVertexBuffer(
-    const nsTArray<gfx::TexturedTriangle>& aTriangles) {
-  HRESULT hr;
-
-  // Resize the dynamic vertex buffer if needed.
-  if (!mAttachments->EnsureTriangleBuffer(aTriangles.Length())) {
-    return false;
-  }
-
-  D3D11_MAPPED_SUBRESOURCE resource{};
-  hr = mContext->Map(mAttachments->mDynamicVertexBuffer, 0,
-                     D3D11_MAP_WRITE_DISCARD, 0, &resource);
-
-  if (Failed(hr, "map dynamic vertex buffer")) {
-    return false;
-  }
-
-  const nsTArray<TexturedVertex> vertices =
-      TexturedTrianglesToVertexArray(aTriangles);
-
-  memcpy(resource.pData, vertices.Elements(),
-         vertices.Length() * sizeof(TexturedVertex));
-
-  mContext->Unmap(mAttachments->mDynamicVertexBuffer, 0);
-
-  return true;
 }
 
 bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
@@ -528,30 +500,6 @@ bool CompositorD3D11::BlitRenderTarget(CompositingRenderTarget* aSource,
   return true;
 }
 
-bool CompositorD3D11::CopyBackdrop(const gfx::IntRect& aRect,
-                                   RefPtr<ID3D11Texture2D>* aOutTexture,
-                                   RefPtr<ID3D11ShaderResourceView>* aOutView) {
-  RefPtr<ID3D11Texture2D> texture =
-      CreateTexture(aRect, mCurrentRT, aRect.TopLeft());
-  if (!texture) {
-    return false;
-  }
-
-  CD3D11_SHADER_RESOURCE_VIEW_DESC desc(D3D11_SRV_DIMENSION_TEXTURE2D,
-                                        DXGI_FORMAT_B8G8R8A8_UNORM);
-
-  RefPtr<ID3D11ShaderResourceView> srv;
-  HRESULT hr =
-      mDevice->CreateShaderResourceView(texture, &desc, getter_AddRefs(srv));
-  if (FAILED(hr) || !srv) {
-    return false;
-  }
-
-  *aOutTexture = texture.forget();
-  *aOutView = srv.forget();
-  return true;
-}
-
 void CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget) {
   MOZ_ASSERT(aRenderTarget);
   CompositingRenderTargetD3D11* newRT =
@@ -572,32 +520,20 @@ void CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget) {
   }
 }
 
-ID3D11PixelShader* CompositorD3D11::GetPSForEffect(Effect* aEffect,
-                                                   const bool aUseBlendShader,
-                                                   const MaskType aMaskType) {
-  if (aUseBlendShader) {
-    return mAttachments->mBlendShader[MaskType::MaskNone];
-  }
-
+ID3D11PixelShader* CompositorD3D11::GetPSForEffect(Effect* aEffect) {
   switch (aEffect->mType) {
-    case EffectTypes::SOLID_COLOR:
-      return mAttachments->mSolidColorShader[aMaskType];
-    case EffectTypes::RENDER_TARGET:
-      return mAttachments->mRGBAShader[aMaskType];
     case EffectTypes::RGB: {
       SurfaceFormat format =
           static_cast<TexturedEffect*>(aEffect)->mTexture->GetFormat();
       return (format == SurfaceFormat::B8G8R8A8 ||
               format == SurfaceFormat::R8G8B8A8)
-                 ? mAttachments->mRGBAShader[aMaskType]
-                 : mAttachments->mRGBShader[aMaskType];
+                 ? mAttachments->mRGBAShader
+                 : mAttachments->mRGBShader;
     }
     case EffectTypes::NV12:
-      return mAttachments->mNV12Shader[aMaskType];
+      return mAttachments->mNV12Shader;
     case EffectTypes::YCBCR:
-      return mAttachments->mYCbCrShader[aMaskType];
-    case EffectTypes::COMPONENT_ALPHA:
-      return mAttachments->mComponentAlphaShader[aMaskType];
+      return mAttachments->mYCbCrShader;
     default:
       NS_WARNING("No shader to load");
       return nullptr;
@@ -627,11 +563,9 @@ void CompositorD3D11::ClearRect(const gfx::Rect& aRect) {
   scissor.bottom = aRect.YMost();
   mContext->RSSetScissorRects(1, &scissor);
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-  mContext->VSSetShader(mAttachments->mVSQuadShader[MaskType::MaskNone],
-                        nullptr, 0);
+  mContext->VSSetShader(mAttachments->mVSQuadShader, nullptr, 0);
 
-  mContext->PSSetShader(mAttachments->mSolidColorShader[MaskType::MaskNone],
-                        nullptr, 0);
+  mContext->PSSetShader(mAttachments->mSolidColorShader, nullptr, 0);
   mPSConstants.layerColor[0] = 0;
   mPSConstants.layerColor[1] = 0;
   mPSConstants.layerColor[2] = 0;
@@ -649,76 +583,10 @@ void CompositorD3D11::ClearRect(const gfx::Rect& aRect) {
                             0xFFFFFFFF);
 }
 
-static inline bool EffectHasPremultipliedAlpha(Effect* aEffect) {
-  if (aEffect->mType == EffectTypes::RGB) {
-    return static_cast<TexturedEffect*>(aEffect)->mPremultiplied;
-  }
-  return true;
-}
-
-static inline int EffectToBlendLayerType(Effect* aEffect) {
-  switch (aEffect->mType) {
-    case EffectTypes::SOLID_COLOR:
-      return PS_LAYER_COLOR;
-    case EffectTypes::RGB: {
-      gfx::SurfaceFormat format =
-          static_cast<TexturedEffect*>(aEffect)->mTexture->GetFormat();
-      return (format == gfx::SurfaceFormat::B8G8R8A8 ||
-              format == gfx::SurfaceFormat::R8G8B8A8)
-                 ? PS_LAYER_RGBA
-                 : PS_LAYER_RGB;
-    }
-    case EffectTypes::RENDER_TARGET:
-      return PS_LAYER_RGBA;
-    case EffectTypes::YCBCR:
-      return PS_LAYER_YCBCR;
-    case EffectTypes::NV12:
-      return PS_LAYER_NV12;
-    default:
-      MOZ_ASSERT_UNREACHABLE("blending not supported for this layer type");
-      return 0;
-  }
-}
-
-void CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
-                               const gfx::IntRect& aClipRect,
-                               const EffectChain& aEffectChain,
-                               gfx::Float aOpacity,
-                               const gfx::Matrix4x4& aTransform,
-                               const gfx::Rect& aVisibleRect) {
-  DrawGeometry(aRect, aRect, aClipRect, aEffectChain, aOpacity, aTransform,
-               aVisibleRect);
-}
-
-void CompositorD3D11::PrepareDynamicVertexBuffer() {
-  mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  mContext->IASetInputLayout(mAttachments->mDynamicInputLayout);
-  SetVertexBuffer<TexturedVertex>(mAttachments->mDynamicVertexBuffer);
-}
-
 void CompositorD3D11::PrepareStaticVertexBuffer() {
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
   mContext->IASetInputLayout(mAttachments->mInputLayout);
   SetVertexBuffer<Vertex>(mAttachments->mVertexBuffer);
-}
-
-void CompositorD3D11::Draw(const nsTArray<gfx::TexturedTriangle>& aTriangles,
-                           const gfx::Rect*) {
-  if (!UpdateConstantBuffers()) {
-    NS_WARNING("Failed to update shader constant buffers");
-    return;
-  }
-
-  PrepareDynamicVertexBuffer();
-
-  if (!UpdateDynamicVertexBuffer(aTriangles)) {
-    NS_WARNING("Failed to update shader dynamic buffers");
-    return;
-  }
-
-  mContext->Draw(3 * aTriangles.Length(), 0);
-
-  PrepareStaticVertexBuffer();
 }
 
 void CompositorD3D11::Draw(const gfx::Rect& aRect,
@@ -745,28 +613,12 @@ void CompositorD3D11::Draw(const gfx::Rect& aRect,
   }
 }
 
-ID3D11VertexShader* CompositorD3D11::GetVSForGeometry(
-    const nsTArray<gfx::TexturedTriangle>& aTriangles,
-    const bool aUseBlendShaders, const MaskType aMaskType) {
-  return aUseBlendShaders ? mAttachments->mVSDynamicBlendShader[aMaskType]
-                          : mAttachments->mVSDynamicShader[aMaskType];
-}
-
-ID3D11VertexShader* CompositorD3D11::GetVSForGeometry(
-    const gfx::Rect& aRect, const bool aUseBlendShaders,
-    const MaskType aMaskType) {
-  return aUseBlendShaders ? mAttachments->mVSQuadBlendShader[aMaskType]
-                          : mAttachments->mVSQuadShader[aMaskType];
-}
-
-template <typename Geometry>
-void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
-                                   const gfx::Rect& aRect,
-                                   const gfx::IntRect& aClipRect,
-                                   const EffectChain& aEffectChain,
-                                   gfx::Float aOpacity,
-                                   const gfx::Matrix4x4& aTransform,
-                                   const gfx::Rect& aVisibleRect) {
+void CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
+                               const gfx::IntRect& aClipRect,
+                               const EffectChain& aEffectChain,
+                               gfx::Float aOpacity,
+                               const gfx::Matrix4x4& aTransform,
+                               const gfx::Rect& aVisibleRect) {
   if (mCurrentClip.IsEmpty()) {
     return;
   }
@@ -779,39 +631,6 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
   mVSConstants.renderTargetOffset[1] = origin.y;
 
   mPSConstants.layerOpacity[0] = aOpacity;
-
-  bool restoreBlendMode = false;
-
-  MaskType maskType = MaskType::MaskNone;
-
-  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    maskType = MaskType::Mask;
-
-    EffectMask* maskEffect = static_cast<EffectMask*>(
-        aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
-    TextureSourceD3D11* source = maskEffect->mMaskTexture->AsSourceD3D11();
-
-    if (!source) {
-      NS_WARNING("Missing texture source!");
-      return;
-    }
-
-    ID3D11ShaderResourceView* srView = source->GetShaderResourceView();
-    mContext->PSSetShaderResources(TexSlot::Mask, 1, &srView);
-
-    const gfx::Matrix4x4& maskTransform = maskEffect->mMaskTransform;
-    NS_ASSERTION(maskTransform.Is2D(),
-                 "How did we end up with a 3D transform here?!");
-    Rect bounds = Rect(Point(), Size(maskEffect->mSize));
-    bounds = maskTransform.As2D().TransformBounds(bounds);
-
-    Matrix4x4 transform;
-    transform._11 = 1.0f / bounds.Width();
-    transform._22 = 1.0f / bounds.Height();
-    transform._41 = float(-bounds.X()) / bounds.Width();
-    transform._42 = float(-bounds.Y()) / bounds.Height();
-    memcpy(mVSConstants.maskTransform, &transform._11, 64);
-  }
 
   D3D11_RECT scissor;
 
@@ -830,48 +649,14 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
   scissor.top = clipRect.Y();
   scissor.bottom = clipRect.YMost();
 
-  bool useBlendShaders = false;
-  RefPtr<ID3D11Texture2D> mixBlendBackdrop;
-  gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
-  if (aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE]) {
-    EffectBlendMode* blendEffect = static_cast<EffectBlendMode*>(
-        aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE].get());
-    blendMode = blendEffect->mBlendMode;
-
-    // If the blend operation needs to read from the backdrop, copy the
-    // current render target into a new texture and bind it now.
-    if (BlendOpIsMixBlendMode(blendMode)) {
-      gfx::Matrix4x4 backdropTransform;
-      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform,
-                                                  &backdropTransform);
-
-      RefPtr<ID3D11ShaderResourceView> srv;
-      if (CopyBackdrop(rect, &mixBlendBackdrop, &srv) &&
-          mAttachments->InitBlendShaders()) {
-        useBlendShaders = true;
-
-        ID3D11ShaderResourceView* srView = srv.get();
-        mContext->PSSetShaderResources(TexSlot::Backdrop, 1, &srView);
-
-        memcpy(&mVSConstants.backdropTransform, &backdropTransform._11, 64);
-
-        mPSConstants.blendConfig[0] =
-            EffectToBlendLayerType(aEffectChain.mPrimaryEffect);
-        mPSConstants.blendConfig[1] = int(maskType);
-        mPSConstants.blendConfig[2] = BlendOpToShaderConstant(blendMode);
-        mPSConstants.blendConfig[3] =
-            EffectHasPremultipliedAlpha(aEffectChain.mPrimaryEffect);
-      }
-    }
-  }
+  bool restoreBlendMode = false;
 
   mContext->RSSetScissorRects(1, &scissor);
 
-  RefPtr<ID3D11VertexShader> vertexShader =
-      GetVSForGeometry(aGeometry, useBlendShaders, maskType);
+  RefPtr<ID3D11VertexShader> vertexShader = mAttachments->mVSQuadShader;
 
   RefPtr<ID3D11PixelShader> pixelShader =
-      GetPSForEffect(aEffectChain.mPrimaryEffect, useBlendShaders, maskType);
+      GetPSForEffect(aEffectChain.mPrimaryEffect);
 
   mContext->VSSetShader(vertexShader, nullptr, 0);
   mContext->PSSetShader(pixelShader, nullptr, 0);
@@ -879,17 +664,7 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
   const Rect* pTexCoordRect = nullptr;
 
   switch (aEffectChain.mPrimaryEffect->mType) {
-    case EffectTypes::SOLID_COLOR: {
-      DeviceColor color =
-          static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get())
-              ->mColor;
-      mPSConstants.layerColor[0] = color.r * color.a * aOpacity;
-      mPSConstants.layerColor[1] = color.g * color.a * aOpacity;
-      mPSConstants.layerColor[2] = color.b * color.a * aOpacity;
-      mPSConstants.layerColor[3] = color.a * aOpacity;
-    } break;
-    case EffectTypes::RGB:
-    case EffectTypes::RENDER_TARGET: {
+    case EffectTypes::RGB: {
       TexturedEffect* texturedEffect =
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
 
@@ -1010,42 +785,12 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
           sourceCr->GetShaderResourceView()};
       mContext->PSSetShaderResources(TexSlot::Y, 3, srViews);
     } break;
-    case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(LayerManager::LayersComponentAlphaEnabled());
-      MOZ_ASSERT(mAttachments->mComponentBlendState);
-      EffectComponentAlpha* effectComponentAlpha =
-          static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
-
-      TextureSourceD3D11* sourceOnWhite =
-          effectComponentAlpha->mOnWhite->AsSourceD3D11();
-      TextureSourceD3D11* sourceOnBlack =
-          effectComponentAlpha->mOnBlack->AsSourceD3D11();
-
-      if (!sourceOnWhite || !sourceOnBlack) {
-        NS_WARNING("Missing texture source(s)!");
-        return;
-      }
-
-      SetSamplerForSamplingFilter(effectComponentAlpha->mSamplingFilter);
-
-      pTexCoordRect = &effectComponentAlpha->mTextureCoords;
-
-      ID3D11ShaderResourceView* srViews[2] = {
-          sourceOnBlack->GetShaderResourceView(),
-          sourceOnWhite->GetShaderResourceView()};
-      mContext->PSSetShaderResources(TexSlot::RGB, 1, &srViews[0]);
-      mContext->PSSetShaderResources(TexSlot::RGBWhite, 1, &srViews[1]);
-
-      mContext->OMSetBlendState(mAttachments->mComponentBlendState,
-                                sBlendFactor, 0xFFFFFFFF);
-      restoreBlendMode = true;
-    } break;
     default:
       NS_WARNING("Unknown shader type");
       return;
   }
 
-  Draw(aGeometry, pTexCoordRect);
+  Draw(aRect, pTexCoordRect);
 
   if (restoreBlendMode) {
     mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor,
