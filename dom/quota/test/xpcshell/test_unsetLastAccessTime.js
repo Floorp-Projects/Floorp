@@ -35,14 +35,13 @@ async function testSteps() {
 
   info("Installing package");
 
-  // The profile contains one initialized origin directory, a script for origin
-  // initialization and the storage database:
+  // The profile contains one initialized origin directory and the storage
+  // database:
   // - storage/default/https+++foo.example.com
-  // - create_db.js
   // - storage.sqlite
-  // The file create_db.js in the package was run locally, specifically it was
-  // temporarily added to xpcshell.ini and then executed:
-  //   mach xpcshell-test --interactive dom/quota/test/xpcshell/create_db.js
+  // The file make_unsetLastAccessTime.js was run locally, specifically it was
+  // temporarily enabled in xpcshell.ini and then executed:
+  // mach test --interactive dom/quota/test/xpcshell/make_unsetLastAccessTime.js
   // Note: to make it become the profile in the test, additional manual steps
   // are needed.
   // 1. Remove the folder "storage/temporary".
