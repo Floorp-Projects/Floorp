@@ -200,15 +200,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
       }
       return this._styleSheetManager;
     },
-
-    destroy() {
-      if (this._styleSheetManager) {
-        this._styleSheetManager.destroy();
-        this._styleSheetManager = null;
-      }
-
-      implementation.destroy.call(this);
-    },
   };
   // Use getOwnPropertyDescriptors in order to prevent calling getter from implementation
   Object.defineProperties(
@@ -222,6 +213,16 @@ module.exports = function(targetType, targetActorSpec, implementation) {
 
     if (typeof implementation.initialize == "function") {
       implementation.initialize.apply(this, arguments);
+    }
+  };
+  proto.destroy = function() {
+    if (this._styleSheetManager) {
+      this._styleSheetManager.destroy();
+      this._styleSheetManager = null;
+    }
+
+    if (typeof implementation.destroy == "function") {
+      implementation.destroy.apply(this, arguments);
     }
   };
   return ActorClassWithSpec(targetActorSpec, proto);
