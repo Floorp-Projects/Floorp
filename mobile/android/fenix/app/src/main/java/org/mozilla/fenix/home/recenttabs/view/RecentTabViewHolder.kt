@@ -36,7 +36,8 @@ class RecentTabViewHolder(
             FirefoxTheme {
                 RecentTabs(
                     recentTabs = recentTabs.value ?: emptyList(),
-                    onRecentTabClick = { interactor.onRecentTabClicked(it) }
+                    onRecentTabClick = { interactor.onRecentTabClicked(it) },
+                    onRecentSearchGroupClicked = { interactor.onRecentSearchGroupClicked(it) }
                 )
             }
         }

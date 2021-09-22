@@ -10,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
@@ -27,6 +26,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -111,7 +111,7 @@ class HomeFragmentStoreTest {
         assertEquals(0, homeFragmentStore.state.recentTabs.size)
 
         // Add 2 TabSessionState to the HomeFragmentStore.
-        val recentTabs: List<TabSessionState> = listOf(mockk(), mockk())
+        val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
         homeFragmentStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
@@ -163,7 +163,7 @@ class HomeFragmentStoreTest {
 
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
-            val recentTabs: List<TabSessionState> = listOf(mockk(), mockk())
+            val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
             val recentBookmarks: List<BookmarkNode> = listOf(mockk(), mockk())
             val historyMetadata: List<HistoryMetadataGroup> = listOf(mockk(), mockk())
 

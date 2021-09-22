@@ -27,6 +27,11 @@ interface RecentTabController {
     fun handleRecentTabClicked(tabId: String)
 
     /**
+     * @see [RecentTabInteractor.onRecentSearchGroupClicked]
+     */
+    fun handleRecentSearchGroupClicked(tabId: String)
+
+    /**
      * @see [RecentTabInteractor.onRecentTabShowAllClicked]
      */
     fun handleRecentTabShowAllClicked()
@@ -59,6 +64,11 @@ class DefaultRecentTabsController(
     override fun handleRecentTabShowAllClicked() {
         dismissSearchDialogIfDisplayed()
         metrics.track(Event.ShowAllRecentTabs)
+        navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())
+    }
+
+    override fun handleRecentSearchGroupClicked(tabId: String) {
+        selectTabUseCase.invoke(tabId)
         navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())
     }
 

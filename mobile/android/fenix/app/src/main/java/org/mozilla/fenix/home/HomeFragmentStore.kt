@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.graphics.Bitmap
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
@@ -17,6 +16,7 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
 
@@ -50,7 +50,7 @@ data class Tab(
  * @property tip The current [Tip] to show on the [HomeFragment].
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
  * @property showSetAsDefaultBrowserCard If true, shows the default browser card
- * @property recentTabs The list of recent [TabSessionState] in the [HomeFragment].
+ * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property historyMetadata The list of [HistoryMetadataGroup].
  * @property pocketArticles The list of [PocketRecommendedStory].
@@ -63,7 +63,7 @@ data class HomeFragmentState(
     val tip: Tip? = null,
     val showCollectionPlaceholder: Boolean = false,
     val showSetAsDefaultBrowserCard: Boolean = false,
-    val recentTabs: List<TabSessionState> = emptyList(),
+    val recentTabs: List<RecentTab> = emptyList(),
     val recentBookmarks: List<BookmarkNode> = emptyList(),
     val historyMetadata: List<HistoryMetadataGroup> = emptyList(),
     val pocketStories: List<PocketRecommendedStory> = emptyList(),
@@ -77,7 +77,7 @@ sealed class HomeFragmentAction : Action {
         val collections: List<TabCollection>,
         val tip: Tip? = null,
         val showCollectionPlaceholder: Boolean,
-        val recentTabs: List<TabSessionState>,
+        val recentTabs: List<RecentTab>,
         val recentBookmarks: List<BookmarkNode>,
         val historyMetadata: List<HistoryMetadataGroup>
     ) :
@@ -90,7 +90,7 @@ sealed class HomeFragmentAction : Action {
     data class ModeChange(val mode: Mode) : HomeFragmentAction()
     data class TopSitesChange(val topSites: List<TopSite>) : HomeFragmentAction()
     data class RemoveTip(val tip: Tip) : HomeFragmentAction()
-    data class RecentTabsChange(val recentTabs: List<TabSessionState>) : HomeFragmentAction()
+    data class RecentTabsChange(val recentTabs: List<RecentTab>) : HomeFragmentAction()
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
     data class SelectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()

@@ -118,6 +118,10 @@
     <string name="recent_tabs_header">Jump back in</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Show all</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab -->
+    <string name="recent_tabs_search_term">Your search for \"%1$s\"</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab -->
+    <string name="recent_tabs_search_term_count">%1$s sites</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the

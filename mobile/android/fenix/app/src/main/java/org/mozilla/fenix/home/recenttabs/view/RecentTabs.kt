@@ -24,47 +24,69 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
-import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.ui.colors.PhotonColors
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * A list of recent tabs to jump back to.
  *
- * @param recentTabs List of [TabSessionState] to display.
+ * @param recentTabs List of [RecentTab] to display.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
+ * @param onRecentSearchGroupClicked Invoked when the user clicks on a recent search group.
  */
 @Composable
 fun RecentTabs(
-    recentTabs: List<TabSessionState>,
-    onRecentTabClick: (String) -> Unit = {}
+    recentTabs: List<RecentTab>,
+    onRecentTabClick: (String) -> Unit = {},
+    onRecentSearchGroupClicked: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         recentTabs.forEach { tab ->
-            RecentTabItem(
-                tabId = tab.id,
-                url = tab.content.url,
-                title = tab.content.title,
-                icon = tab.content.icon,
-                onRecentTabClick = onRecentTabClick
-            )
+            when (tab) {
+                is RecentTab.Tab -> {
+                    RecentTabItem(
+                        tabId = tab.state.id,
+                        url = tab.state.content.url,
+                        title = tab.state.content.title,
+                        thumbnail = tab.state.content.thumbnail,
+                        onRecentTabClick = onRecentTabClick
+                    )
+                }
+                is RecentTab.SearchGroup -> {
+                    RecentSearchGroupItem(
+                        searchTerm = tab.searchTerm,
+                        tabId = tab.tabId,
+                        url = tab.url,
+                        thumbnail = tab.thumbnail,
+                        count = tab.count,
+                        onSearchGroupClicked = onRecentSearchGroupClicked
+                    )
+                }
+            }
         }
     }
 }
@@ -72,18 +94,20 @@ fun RecentTabs(
 /**
  * A recent tab item.
  *
- * @param tabId Tbe id of the tab.
+ * @param tabId The id of the tab.
  * @param url The loaded URL of the tab.
  * @param title The title of the tab.
- * @param icon The icon of the tab.
+ * @param thumbnail The icon of the tab.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
+@Suppress("LongParameterList")
 @Composable
 private fun RecentTabItem(
     tabId: String,
     url: String,
     title: String,
     icon: Bitmap? = null,
+    thumbnail: Bitmap? = null,
     onRecentTabClick: (String) -> Unit = {}
 ) {
     Card(
@@ -101,7 +125,9 @@ private fun RecentTabItem(
             RecentTabImage(
                 url = url,
                 modifier = Modifier.size(116.dp, 84.dp),
-                icon = icon
+                icon = thumbnail,
+                contentScale = ContentScale.FillWidth,
+                alignment = Alignment.TopCenter
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -112,7 +138,82 @@ private fun RecentTabItem(
             ) {
                 RecentTabTitle(title = title)
 
-                RecentTabSubtitle(url = url)
+                RecentTabSubtitle(subtitle = url)
+
+                Row {
+                    RecentTabImage(
+                        url = url,
+                        modifier = Modifier.size(18.dp, 18.dp),
+                        icon = icon
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    RecentTabSubtitle(subtitle = url)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A recent search group item.
+ *
+ * @param searchTerm The search term for the group.
+ * @param tabId The id of the last accessed tab in the group.
+ * @param url The loaded URL of the last accessed tab in the group.
+ * @param thumbnail The icon of the group.
+ * @param count Count of how many tabs belongs to the group.
+ * @param onSearchGroupClicked Invoked when the user clicks on a group.
+ */
+@Suppress("LongParameterList")
+@Composable
+private fun RecentSearchGroupItem(
+    searchTerm: String,
+    tabId: String,
+    url: String,
+    thumbnail: Bitmap?,
+    count: Int,
+    onSearchGroupClicked: (String) -> Unit = {}
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(116.dp)
+            .clickable { onSearchGroupClicked(tabId) },
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = FirefoxTheme.colors.surface,
+        elevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            RecentTabImage(
+                url = url,
+                modifier = Modifier.size(116.dp, 84.dp),
+                icon = thumbnail,
+                contentScale = ContentScale.FillWidth,
+                alignment = Alignment.TopCenter
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                RecentTabTitle(title = stringResource(R.string.recent_tabs_search_term, searchTerm))
+
+                Row {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_all_tabs),
+                        contentDescription = null // decorative element
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    RecentTabSubtitle(subtitle = stringResource(R.string.recent_tabs_search_term_count, count))
+                }
             }
         }
     }
@@ -130,6 +231,8 @@ private fun RecentTabItem(
 private fun RecentTabImage(
     url: String,
     modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+    alignment: Alignment = Alignment.Center,
     icon: Bitmap? = null
 ) {
     if (icon != null) {
@@ -137,6 +240,8 @@ private fun RecentTabImage(
             painter = BitmapPainter(icon.asImageBitmap()),
             contentDescription = null,
             modifier = modifier,
+            contentScale = contentScale,
+            alignment = alignment
         )
     } else {
         components.core.icons.Loader(
@@ -157,7 +262,7 @@ private fun RecentTabImage(
                 Image(
                     painter = icon.painter,
                     contentDescription = null,
-                    modifier = modifier,
+                    modifier = modifier
                 )
             }
         }
@@ -183,12 +288,12 @@ private fun RecentTabTitle(title: String) {
 /**
  * A recent tab subtitle.
  *
- * @param url The loaded URL of the tab.
+ * @param subtitle The loaded URL of the tab.
  */
 @Composable
-private fun RecentTabSubtitle(url: String) {
+private fun RecentTabSubtitle(subtitle: String) {
     Text(
-        text = url.getRepresentativeSnippet(),
+        text = subtitle.getRepresentativeSnippet(),
         color = FirefoxTheme.colors.textSecondary,
         fontSize = 12.sp,
         overflow = TextOverflow.Ellipsis,

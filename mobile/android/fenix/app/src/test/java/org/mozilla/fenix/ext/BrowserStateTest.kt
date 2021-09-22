@@ -8,9 +8,11 @@ import io.mockk.mockk
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.mozilla.fenix.home.recenttabs.RecentTab
 
 class BrowserStateTest {
 
@@ -47,7 +49,7 @@ class BrowserStateTest {
         val result = browserState.asRecentTabs()
 
         assertEquals(1, result.size)
-        assertEquals(selectedTab, result[0])
+        assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -66,7 +68,7 @@ class BrowserStateTest {
         val result = browserState.asRecentTabs()
 
         assertEquals(1, result.size)
-        assertEquals(lastAccessedNormalTab, result[0])
+        assertEquals(lastAccessedNormalTab, (result[0] as RecentTab.Tab).state)
     }
 
     @Test
@@ -84,8 +86,8 @@ class BrowserStateTest {
         val result = browserState.asRecentTabs()
 
         assertEquals(2, result.size)
-        assertEquals(selectedTab, result[0])
-        assertEquals(mediaTab, result[1])
+        assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
+        assertEquals(mediaTab, (result[1] as RecentTab.Tab).state)
     }
 
     @Test
@@ -109,8 +111,8 @@ class BrowserStateTest {
         val result = browserState.asRecentTabs()
 
         assertEquals(2, result.size)
-        assertEquals(lastAccessedNormalTab, result[0])
-        assertEquals(mediaTab, result[1])
+        assertEquals(lastAccessedNormalTab, (result[0] as RecentTab.Tab).state)
+        assertEquals(mediaTab, (result[1] as RecentTab.Tab).state)
     }
 
     @Test
@@ -129,7 +131,64 @@ class BrowserStateTest {
         val result = browserState.asRecentTabs()
 
         assertEquals(2, result.size)
-        assertEquals(mediaTab, result[0])
+        assertEquals(mediaTab, (result[0] as RecentTab.Tab).state)
+    }
+
+    @Test
+    fun `GIVEN a tab group exists WHEN recentTabs is called THEN return a tab group`() {
+        val searchGroupTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "1",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val browserState = BrowserState(
+            tabs = listOf(searchGroupTab),
+            selectedTabId = searchGroupTab.id
+        )
+
+        val result = browserState.asRecentTabs()
+
+        assertEquals(2, result.size)
+        assertEquals(searchGroupTab, (result[0] as RecentTab.Tab).state)
+        assert(result[1] is RecentTab.SearchGroup)
+        assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[1] as RecentTab.SearchGroup).searchTerm)
+        assertEquals(searchGroupTab.id, (result[1] as RecentTab.SearchGroup).tabId)
+        assertEquals(searchGroupTab.content.url, (result[1] as RecentTab.SearchGroup).url)
+        assertEquals(searchGroupTab.content.thumbnail, (result[1] as RecentTab.SearchGroup).thumbnail)
+        assertEquals(1, (result[1] as RecentTab.SearchGroup).count)
+    }
+
+    @Test
+    fun `GIVEN the selected tab is a normal tab and tab group exists WHEN asRecentTabs is called THEN return a list of these tabs`() {
+        val selectedTab = createTab(url = "url", id = "3")
+        val searchGroupTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "4",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val browserState = BrowserState(
+            tabs = listOf(mockk(relaxed = true), selectedTab, searchGroupTab),
+            selectedTabId = selectedTab.id
+        )
+
+        val result = browserState.asRecentTabs()
+
+        assertEquals(3, result.size)
+        assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
+        assert(result[2] is RecentTab.SearchGroup)
+        assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[2] as RecentTab.SearchGroup).searchTerm)
+        assertEquals(searchGroupTab.id, (result[2] as RecentTab.SearchGroup).tabId)
+        assertEquals(searchGroupTab.content.url, (result[2] as RecentTab.SearchGroup).url)
+        assertEquals(searchGroupTab.content.thumbnail, (result[2] as RecentTab.SearchGroup).thumbnail)
+        assertEquals(1, (result[2] as RecentTab.SearchGroup).count)
     }
 
     @Test
