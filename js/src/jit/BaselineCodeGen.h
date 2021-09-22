@@ -16,7 +16,15 @@ namespace js {
 
 namespace jit {
 
-enum class ScriptGCThingType { Atom, RegExp, Object, Function, Scope, BigInt };
+enum class ScriptGCThingType {
+  Atom,
+  String,
+  RegExp,
+  Object,
+  Function,
+  Scope,
+  BigInt
+};
 
 // Base class for BaselineCompiler and BaselineInterpreterGenerator. The Handler
 // template is a class storing fields/methods that are interpreter or compiler

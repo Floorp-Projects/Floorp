@@ -977,6 +977,8 @@ static gc::Cell* GetScriptGCThing(JSScript* script, jsbytecode* pc,
   switch (type) {
     case ScriptGCThingType::Atom:
       return script->getAtom(pc);
+    case ScriptGCThingType::String:
+      return script->getString(pc);
     case ScriptGCThingType::RegExp:
       return script->getRegExp(pc);
     case ScriptGCThingType::Object:
@@ -1018,6 +1020,7 @@ void BaselineInterpreterCodeGen::loadScriptGCThing(ScriptGCThingType type,
   // Clear the tag bits.
   switch (type) {
     case ScriptGCThingType::Atom:
+    case ScriptGCThingType::String:
       // Use xorPtr with a 32-bit immediate because it's more efficient than
       // andPtr on 64-bit.
       static_assert(uintptr_t(TraceKind::String) == 2,

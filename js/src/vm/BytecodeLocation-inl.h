@@ -27,6 +27,11 @@ inline JSAtom* BytecodeLocation::getAtom(const JSScript* script) const {
   return script->getAtom(this->rawBytecode_);
 }
 
+inline JSString* BytecodeLocation::getString(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  return script->getString(this->rawBytecode_);
+}
+
 inline PropertyName* BytecodeLocation::getPropertyName(
     const JSScript* script) const {
   MOZ_ASSERT(this->isValid());

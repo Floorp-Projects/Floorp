@@ -1191,10 +1191,6 @@ int32_t js::CompareStrings(const JSLinearString* str1,
   return CompareStringsImpl(str1, str2);
 }
 
-int32_t js::CompareAtoms(JSAtom* atom1, JSAtom* atom2) {
-  return CompareStringsImpl(atom1, atom2);
-}
-
 bool js::StringIsAscii(JSLinearString* str) {
   JS::AutoCheckCannotGC nogc;
   if (str->hasLatin1Chars()) {

@@ -1721,12 +1721,6 @@ extern bool CompareStrings(JSContext* cx, JSString* str1, JSString* str2,
 extern int32_t CompareStrings(const JSLinearString* str1,
                               const JSLinearString* str2);
 
-/*
- * Same as CompareStrings but for atoms.  Don't use this to just test
- * for equality; use this when you need an ordering on atoms.
- */
-extern int32_t CompareAtoms(JSAtom* atom1, JSAtom* atom2);
-
 /**
  * Return true if the string contains only ASCII characters.
  */

@@ -1511,6 +1511,17 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
     }
+    case JOF_STRING: {
+      RootedValue v(cx, StringValue(script->getString(pc)));
+      UniqueChars bytes = ToDisassemblySource(cx, v);
+      if (!bytes) {
+        return 0;
+      }
+      if (!sp->jsprintf(" %s", bytes.get())) {
+        return 0;
+      }
+      break;
+    }
 
     case JOF_DOUBLE: {
       double d = GET_INLINE_VALUE(pc).toDouble();
@@ -1768,6 +1779,7 @@ struct ExpressionDecompiler {
   bool decompilePC(const OffsetAndDefIndex& offsetAndDefIndex);
   JSAtom* getArg(unsigned slot);
   JSAtom* loadAtom(jsbytecode* pc);
+  JSString* loadString(jsbytecode* pc);
   bool quote(JSString* s, char quote);
   bool write(const char* s);
   bool write(JSString* str);
@@ -2254,6 +2266,10 @@ bool ExpressionDecompiler::quote(JSString* s, char quote) {
 
 JSAtom* ExpressionDecompiler::loadAtom(jsbytecode* pc) {
   return script->getAtom(pc);
+}
+
+JSString* ExpressionDecompiler::loadString(jsbytecode* pc) {
+  return script->getString(pc);
 }
 
 JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
