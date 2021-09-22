@@ -174,7 +174,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   enableXfa: {
-    value: false,
+    value: true,
     kind: OptionKind.API + OptionKind.PREFERENCE
   },
   fontExtraProperties: {
@@ -342,7 +342,6 @@ var _toolbar = __webpack_require__(37);
 
 var _view_history = __webpack_require__(38);
 
-const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
 const FORCE_PAGES_LOADED_TIMEOUT = 10000;
 const WHEEL_ZOOM_DISABLED_TIMEOUT = 1000;
@@ -448,6 +447,7 @@ const PDFViewerApplication = {
   isViewerEmbedded: window.parent !== window,
   url: "",
   baseUrl: "",
+  _downloadUrl: "",
   externalServices: DefaultExternalServices,
   _boundEvents: Object.create(null),
   documentInfo: null,
@@ -616,10 +616,20 @@ const PDFViewerApplication = {
   },
 
   async _initializeViewerComponents() {
-    const appConfig = this.appConfig;
-    const eventBus = appConfig.eventBus || new _ui_utils.EventBus({
-      isInAutomation: this.externalServices.isInAutomation
-    });
+    const {
+      appConfig,
+      externalServices
+    } = this;
+    let eventBus;
+
+    if (appConfig.eventBus) {
+      eventBus = appConfig.eventBus;
+    } else if (externalServices.isInAutomation) {
+      eventBus = new _ui_utils.AutomationEventBus();
+    } else {
+      eventBus = new _ui_utils.EventBus();
+    }
+
     this.eventBus = eventBus;
     this.overlayManager = new _overlay_manager.OverlayManager();
     const pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
@@ -632,7 +642,7 @@ const PDFViewerApplication = {
       ignoreDestinationZoom: _app_options.AppOptions.get("ignoreDestinationZoom")
     });
     this.pdfLinkService = pdfLinkService;
-    const downloadManager = this.externalServices.createDownloadManager();
+    const downloadManager = externalServices.createDownloadManager();
     this.downloadManager = downloadManager;
     const findController = new _pdf_find_controller.PDFFindController({
       linkService: pdfLinkService,
@@ -642,7 +652,7 @@ const PDFViewerApplication = {
     const pdfScriptingManager = new _pdf_scripting_manager.PDFScriptingManager({
       eventBus,
       sandboxBundleSrc: null,
-      scriptingFactory: this.externalServices,
+      scriptingFactory: externalServices,
       docPropertiesLookup: this._scriptingDocProperties.bind(this)
     });
     this.pdfScriptingManager = pdfScriptingManager;
@@ -746,36 +756,20 @@ const PDFViewerApplication = {
     return this._initializedCapability.promise;
   },
 
-  zoomIn(ticks) {
+  zoomIn(steps) {
     if (this.pdfViewer.isInPresentationMode) {
       return;
     }
 
-    let newScale = this.pdfViewer.currentScale;
-
-    do {
-      newScale = (newScale * DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.ceil(newScale * 10) / 10;
-      newScale = Math.min(_ui_utils.MAX_SCALE, newScale);
-    } while (--ticks > 0 && newScale < _ui_utils.MAX_SCALE);
-
-    this.pdfViewer.currentScaleValue = newScale;
+    this.pdfViewer.increaseScale(steps);
   },
 
-  zoomOut(ticks) {
+  zoomOut(steps) {
     if (this.pdfViewer.isInPresentationMode) {
       return;
     }
 
-    let newScale = this.pdfViewer.currentScale;
-
-    do {
-      newScale = (newScale / DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.floor(newScale * 10) / 10;
-      newScale = Math.max(_ui_utils.MIN_SCALE, newScale);
-    } while (--ticks > 0 && newScale > _ui_utils.MIN_SCALE);
-
-    this.pdfViewer.currentScaleValue = newScale;
+    this.pdfViewer.decreaseScale(steps);
   },
 
   zoomReset() {
@@ -859,9 +853,14 @@ const PDFViewerApplication = {
     });
   },
 
-  setTitleUsingUrl(url = "") {
+  setTitleUsingUrl(url = "", downloadUrl = null) {
     this.url = url;
     this.baseUrl = url.split("#")[0];
+
+    if (downloadUrl) {
+      this._downloadUrl = downloadUrl === url ? this.baseUrl : downloadUrl.split("#")[0];
+    }
+
     let title = (0, _pdfjsLib.getPdfFilenameFromUrl)(url, "");
 
     if (!title) {
@@ -887,6 +886,15 @@ const PDFViewerApplication = {
     return this._contentDispositionFilename || (0, _pdfjsLib.getPdfFilenameFromUrl)(this.url);
   },
 
+  _hideViewBookmark() {
+    const {
+      toolbar,
+      secondaryToolbar
+    } = this.appConfig;
+    toolbar.viewBookmark.hidden = true;
+    secondaryToolbar.viewBookmarkButton.hidden = true;
+  },
+
   _cancelIdleCallbacks() {
     if (!this._idleCallbacks.size) {
       return;
@@ -901,6 +909,8 @@ const PDFViewerApplication = {
 
   async close() {
     this._unblockDocumentLoadEvent();
+
+    this._hideViewBookmark();
 
     if (!this.pdfLoadingTask) {
       return;
@@ -926,6 +936,7 @@ const PDFViewerApplication = {
     this.downloadComplete = false;
     this.url = "";
     this.baseUrl = "";
+    this._downloadUrl = "";
     this.documentInfo = null;
     this.metadata = null;
     this._contentDispositionFilename = null;
@@ -965,12 +976,12 @@ const PDFViewerApplication = {
     const parameters = Object.create(null);
 
     if (typeof file === "string") {
-      this.setTitleUsingUrl(file);
+      this.setTitleUsingUrl(file, file);
       parameters.url = file;
     } else if (file && "byteLength" in file) {
       parameters.data = file;
     } else if (file.url && file.originalUrl) {
-      this.setTitleUsingUrl(file.originalUrl);
+      this.setTitleUsingUrl(file.originalUrl, file.url);
       parameters.url = file.url;
     }
 
@@ -1047,7 +1058,7 @@ const PDFViewerApplication = {
   async download({
     sourceEventType = "download"
   } = {}) {
-    const url = this.baseUrl,
+    const url = this._downloadUrl,
           filename = this._docFilename;
 
     try {
@@ -1072,7 +1083,7 @@ const PDFViewerApplication = {
 
     this._saveInProgress = true;
     await this.pdfScriptingManager.dispatchWillSave();
-    const url = this.baseUrl,
+    const url = this._downloadUrl,
           filename = this._docFilename;
 
     try {
@@ -2154,7 +2165,7 @@ function webViewerInitialized() {
 }
 
 function webViewerOpenFileViaURL(file) {
-  PDFViewerApplication.setTitleUsingUrl(file);
+  PDFViewerApplication.setTitleUsingUrl(file, file);
   PDFViewerApplication.initPassiveLoading();
 }
 
@@ -2934,7 +2945,7 @@ exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 exports.watchScroll = watchScroll;
-exports.WaitOnType = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.EventBus = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE = exports.CSS_UNITS = exports.AutoPrintRegExp = exports.animationStarted = void 0;
+exports.WaitOnType = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.EventBus = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE_DELTA = exports.DEFAULT_SCALE = exports.CSS_UNITS = exports.AutoPrintRegExp = exports.AutomationEventBus = exports.animationStarted = void 0;
 
 var _pdfjsLib = __webpack_require__(4);
 
@@ -2944,6 +2955,8 @@ const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
 const DEFAULT_SCALE = 1.0;
 exports.DEFAULT_SCALE = DEFAULT_SCALE;
+const DEFAULT_SCALE_DELTA = 1.1;
+exports.DEFAULT_SCALE_DELTA = DEFAULT_SCALE_DELTA;
 const MIN_SCALE = 0.1;
 exports.MIN_SCALE = MIN_SCALE;
 const MAX_SCALE = 10.0;
@@ -3409,36 +3422,9 @@ const animationStarted = new Promise(function (resolve) {
 });
 exports.animationStarted = animationStarted;
 
-function dispatchDOMEvent(eventName, args = null) {
-  const details = Object.create(null);
-
-  if (args?.length > 0) {
-    const obj = args[0];
-
-    for (const key in obj) {
-      const value = obj[key];
-
-      if (key === "source") {
-        if (value === window || value === document) {
-          return;
-        }
-
-        continue;
-      }
-
-      details[key] = value;
-    }
-  }
-
-  const event = document.createEvent("CustomEvent");
-  event.initCustomEvent(eventName, true, true, details);
-  document.dispatchEvent(event);
-}
-
 class EventBus {
-  constructor(options) {
+  constructor() {
     this._listeners = Object.create(null);
-    this._isInAutomation = options?.isInAutomation === true;
   }
 
   on(eventName, listener, options = null) {
@@ -3459,11 +3445,6 @@ class EventBus {
     const eventListeners = this._listeners[eventName];
 
     if (!eventListeners || eventListeners.length === 0) {
-      if (this._isInAutomation) {
-        const args = Array.prototype.slice.call(arguments, 1);
-        dispatchDOMEvent(eventName, args);
-      }
-
       return;
     }
 
@@ -3494,10 +3475,6 @@ class EventBus {
 
       externalListeners = null;
     }
-
-    if (this._isInAutomation) {
-      dispatchDOMEvent(eventName, args);
-    }
   }
 
   _on(eventName, listener, options = null) {
@@ -3527,6 +3504,38 @@ class EventBus {
 }
 
 exports.EventBus = EventBus;
+
+class AutomationEventBus extends EventBus {
+  dispatch(eventName) {
+    super.dispatch(...arguments);
+    const details = Object.create(null);
+
+    if (arguments.length > 1) {
+      const obj = arguments[1];
+
+      for (const key in obj) {
+        const value = obj[key];
+
+        if (key === "source") {
+          if (value === window || value === document) {
+            return;
+          }
+
+          continue;
+        }
+
+        details[key] = value;
+      }
+    }
+
+    const event = document.createEvent("CustomEvent");
+    event.initCustomEvent(eventName, true, true, details);
+    document.dispatchEvent(event);
+  }
+
+}
+
+exports.AutomationEventBus = AutomationEventBus;
 
 function clamp(v, min, max) {
   return Math.min(Math.max(v, min), max);
@@ -8096,6 +8105,49 @@ class PDFScriptingManager {
 
           this._pdfViewer.currentScaleValue = value;
           break;
+
+        case "SaveAs":
+          this._eventBus.dispatch("save", {
+            source: this
+          });
+
+          break;
+
+        case "FirstPage":
+          this._pdfViewer.currentPageNumber = 1;
+          break;
+
+        case "LastPage":
+          this._pdfViewer.currentPageNumber = this._pdfViewer.pagesCount;
+          break;
+
+        case "NextPage":
+          this._pdfViewer.nextPage();
+
+          break;
+
+        case "PrevPage":
+          this._pdfViewer.previousPage();
+
+          break;
+
+        case "ZoomViewIn":
+          if (isInPresentationMode) {
+            return;
+          }
+
+          this._pdfViewer.increaseScale();
+
+          break;
+
+        case "ZoomViewOut":
+          if (isInPresentationMode) {
+            return;
+          }
+
+          this._pdfViewer.decreaseScale();
+
+          break;
       }
 
       return;
@@ -9628,7 +9680,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.11.243';
+    const viewerVersion = '2.11.283';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -10980,6 +11032,30 @@ class BaseViewer {
     const advance = this._getPageAdvance(currentPageNumber, true) || 1;
     this.currentPageNumber = Math.max(currentPageNumber - advance, 1);
     return true;
+  }
+
+  increaseScale(steps = 1) {
+    let newScale = this._currentScale;
+
+    do {
+      newScale = (newScale * _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
+      newScale = Math.ceil(newScale * 10) / 10;
+      newScale = Math.min(_ui_utils.MAX_SCALE, newScale);
+    } while (--steps > 0 && newScale < _ui_utils.MAX_SCALE);
+
+    this.currentScaleValue = newScale;
+  }
+
+  decreaseScale(steps = 1) {
+    let newScale = this._currentScale;
+
+    do {
+      newScale = (newScale / _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
+      newScale = Math.floor(newScale * 10) / 10;
+      newScale = Math.max(_ui_utils.MIN_SCALE, newScale);
+    } while (--steps > 0 && newScale > _ui_utils.MIN_SCALE);
+
+    this.currentScaleValue = newScale;
   }
 
 }
@@ -12521,7 +12597,8 @@ class DefaultTextLayerFactory {
       pageIndex,
       viewport,
       enhanceTextSelection,
-      eventBus
+      eventBus,
+      highlighter
     });
   }
 
@@ -13101,8 +13178,6 @@ exports.Toolbar = void 0;
 var _ui_utils = __webpack_require__(3);
 
 const PAGE_NUMBER_LOADING_INDICATOR = "visiblePageIsLoading";
-const SCALE_SELECT_CONTAINER_WIDTH = 140;
-const SCALE_SELECT_WIDTH = 162;
 
 class Toolbar {
   constructor(options, eventBus, l10n) {
@@ -13140,7 +13215,6 @@ class Toolbar {
     this.items = {
       numPages: options.numPages,
       pageNumber: options.pageNumber,
-      scaleSelectContainer: options.scaleSelectContainer,
       scaleSelect: options.scaleSelect,
       customScaleOption: options.customScaleOption,
       previous: options.previous,
@@ -13322,17 +13396,16 @@ class Toolbar {
       l10n
     } = this;
     const predefinedValuesPromise = Promise.all([l10n.get("page_scale_auto"), l10n.get("page_scale_actual"), l10n.get("page_scale_fit"), l10n.get("page_scale_width")]);
+    const style = getComputedStyle(items.scaleSelect),
+          scaleSelectContainerWidth = parseInt(style.getPropertyValue("--scale-select-container-width"), 10),
+          scaleSelectOverflow = parseInt(style.getPropertyValue("--scale-select-overflow"), 10);
     let canvas = document.createElement("canvas");
     canvas.mozOpaque = true;
     let ctx = canvas.getContext("2d", {
       alpha: false
     });
     await _ui_utils.animationStarted;
-    const {
-      fontSize,
-      fontFamily
-    } = getComputedStyle(items.scaleSelect);
-    ctx.font = `${fontSize} ${fontFamily}`;
+    ctx.font = `${style.fontSize} ${style.fontFamily}`;
     let maxWidth = 0;
 
     for (const predefinedValue of await predefinedValuesPromise) {
@@ -13345,12 +13418,11 @@ class Toolbar {
       }
     }
 
-    const overflow = SCALE_SELECT_WIDTH - SCALE_SELECT_CONTAINER_WIDTH;
-    maxWidth += 2 * overflow;
+    maxWidth += 2 * scaleSelectOverflow;
 
-    if (maxWidth > SCALE_SELECT_CONTAINER_WIDTH) {
-      items.scaleSelect.style.width = `${maxWidth + overflow}px`;
-      items.scaleSelectContainer.style.width = `${maxWidth}px`;
+    if (maxWidth > scaleSelectContainerWidth) {
+      const doc = document.documentElement;
+      doc.style.setProperty("--scale-select-container-width", `${maxWidth}px`);
     }
 
     canvas.width = 0;
@@ -14046,7 +14118,7 @@ class BasePreferences {
         "disableFontFace": false,
         "disableRange": false,
         "disableStream": false,
-        "enableXfa": false
+        "enableXfa": true
       }),
       writable: false,
       enumerable: true,
@@ -14352,8 +14424,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.11.243';
-const pdfjsBuild = '7fb653b19';
+const pdfjsVersion = '2.11.283';
+const pdfjsBuild = '638115885';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -14377,7 +14449,6 @@ function getViewerConfiguration() {
       container: document.getElementById("toolbarViewer"),
       numPages: document.getElementById("numPages"),
       pageNumber: document.getElementById("pageNumber"),
-      scaleSelectContainer: document.getElementById("scaleSelectContainer"),
       scaleSelect: document.getElementById("scaleSelect"),
       customScaleOption: document.getElementById("customScaleOption"),
       previous: document.getElementById("previous"),

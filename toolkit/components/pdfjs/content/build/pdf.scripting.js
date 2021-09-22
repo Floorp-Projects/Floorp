@@ -2435,7 +2435,37 @@ class App extends _pdf_object.PDFObject {
 
   execDialog() {}
 
-  execMenuItem() {}
+  execMenuItem(item) {
+    switch (item) {
+      case "SaveAs":
+      case "FirstPage":
+      case "LastPage":
+      case "NextPage":
+      case "PrevPage":
+      case "ZoomViewIn":
+      case "ZoomViewOut":
+        this._send({
+          command: item
+        });
+
+        break;
+
+      case "FitPage":
+        this._send({
+          command: "zoom",
+          value: "page-fit"
+        });
+
+        break;
+
+      case "Print":
+        this._send({
+          command: "print"
+        });
+
+        break;
+    }
+  }
 
   getNthPlugInName() {}
 
@@ -4902,8 +4932,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.11.243';
-const pdfjsBuild = '7fb653b19';
+const pdfjsVersion = '2.11.283';
+const pdfjsBuild = '638115885';
 })();
 
 /******/ 	return __webpack_exports__;
