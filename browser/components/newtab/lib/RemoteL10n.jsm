@@ -193,6 +193,7 @@ class _RemoteL10n {
       );
       let cfrIndexedFileSource = new L10nFileSource(
         "cfr",
+        "app",
         [appLocale],
         `file://${l10nFluentDir}/`,
         {

@@ -3002,6 +3002,7 @@ class Langpack extends ExtensionData {
       const [sourceName, basePath] = entry;
       return new L10nFileSource(
         `${sourceName}-${langpackId}`,
+        langpackId,
         this.startupData.languages,
         `resource://${langpackId}/${basePath}localization/{locale}/`
       );

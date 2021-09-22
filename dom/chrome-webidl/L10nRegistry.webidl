@@ -32,6 +32,17 @@ dictionary FileSourceOptions {
  Exposed=Window]
 interface L10nFileSource {
   /**
+   * The `name` is the name of the `L10nFileSource`.
+   *
+   * The `metaSource` is the name of the package that contains the
+   * `L10nFileSource`, e.g. `app` for sources packaged with the browser, or
+   * `langpack` for sources packaged in an addon.
+   *
+   * The `locales` is a list of locales for which resources are contained in
+   * the `L10nFileSource`.
+   *
+   * The `prePath` is the path prefix for files contained in the `L10nFileSource`.
+   *
    * Optional argument `index` can be used to provide a list
    * of files available in the source.
    *
@@ -41,7 +52,7 @@ interface L10nFileSource {
    * files not available in the source.
    */
   [Throws]
-  constructor(UTF8String name, sequence<UTF8String> locales, UTF8String prePath, optional FileSourceOptions options = {}, optional sequence<UTF8String> index);
+  constructor(UTF8String name, UTF8String metaSource, sequence<UTF8String> locales, UTF8String prePath, optional FileSourceOptions options = {}, optional sequence<UTF8String> index);
 
   /**
    * Tests may want to introduce custom file sources and
@@ -57,7 +68,7 @@ interface L10nFileSource {
    *     "source": "key = Hello World!",
    *   }
    * ];
-   * let mockSource = L10nFileSource.createMock("mock", ["en-US"], "/localization/{locale}/", fs);
+   * let mockSource = L10nFileSource.createMock("mock", "app", ["en-US"], "/localization/{locale}/", fs);
    *
    * let reg = new L10nRegistry();
    * reg.registerSources([mockSource]);
@@ -68,9 +79,10 @@ interface L10nFileSource {
    * ```
    */
   [Throws]
-  static L10nFileSource createMock(UTF8String name, sequence<UTF8String> locales, UTF8String prePath, sequence<L10nFileSourceMockFile> fs);
+  static L10nFileSource createMock(UTF8String name, UTF8String metasource, sequence<UTF8String> locales, UTF8String prePath, sequence<L10nFileSourceMockFile> fs);
 
   readonly attribute UTF8String name;
+  readonly attribute UTF8String metaSource;
   [Pure, Cached, Frozen]
   readonly attribute sequence<UTF8String> locales;
   /**
