@@ -25,7 +25,7 @@ key-attr =
   ];
   const originalRequested = Services.locale.requestedLocales;
 
-  const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["de", "en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   const l10n = new Localization([
@@ -100,7 +100,7 @@ key = { PLATFORM() ->
     }` },
   ];
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   const l10n = new Localization([
@@ -121,7 +121,7 @@ add_task(async function test_add_remove_resourceIds() {
   ];
 
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   const l10n = new Localization(["/browser/menu.ftl"], false, l10nReg, ["en-US"]);
@@ -164,7 +164,7 @@ add_task(async function test_switch_to_async() {
     { path: "/localization/en-US/toolkit/menu.ftl", source: "key2 = Value2" },
   ];
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   const l10n = new Localization(["/browser/menu.ftl"], true, l10nReg, ["en-US"]);

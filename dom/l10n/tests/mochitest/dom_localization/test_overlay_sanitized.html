@@ -17,7 +17,7 @@ key2 =
     .href = https://pl.wikipedia.org
 ` },
   ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   async function test() {

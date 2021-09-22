@@ -346,9 +346,13 @@ function initL10n(pairs) {
     .join("\n");
   let registry = new L10nRegistry();
   registry.registerSources([
-    L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", [
-      { source, path: "/localization/en-US/test.ftl" },
-    ]),
+    L10nFileSource.createMock(
+      "test",
+      "app",
+      ["en-US"],
+      "/localization/{locale}",
+      [{ source, path: "/localization/en-US/test.ftl" }]
+    ),
   ]);
   return new Localization(["/test.ftl"], true, registry, ["en-US"]);
 }

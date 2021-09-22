@@ -22,6 +22,7 @@ region-name-ru = Russia
 let locales = Services.locale.packagedLocales;
 const mockSource = L10nFileSource.createMock(
   "mock",
+  "app",
   locales,
   "resource://mock_source",
   fs

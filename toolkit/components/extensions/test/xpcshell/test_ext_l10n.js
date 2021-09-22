@@ -28,6 +28,7 @@ add_task(async function setup() {
 
   const source = new L10nFileSource(
     "test",
+    "app",
     Services.locale.requestedLocales,
     "resource://l10ntest/"
   );

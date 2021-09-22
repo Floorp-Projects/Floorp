@@ -16,7 +16,7 @@ key3 = Key 3
 key4 = Key 4
 ` },
   ];
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   document.domLoc = new DOMLocalization(
