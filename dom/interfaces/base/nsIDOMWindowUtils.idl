@@ -1915,18 +1915,6 @@ interface nsIDOMWindowUtils : nsISupports {
                        [optional] in AString aPseudoElement);
 
   /*
-   * Returns the value of the transform on the compositor, in layer pixels.
-   * Unlike the above getOMTAStyle, the transform value returned by this
-   * includes both of animating and APZ values.
-   * Note: This function doesn't work on WebRender at all.  Also this function
-   * does work only for transform layer and opacity layer with animations.
-   * NOTE: Same as above getOMTAStyle, do not use this function for elements
-   * that there was another animation running on the compositor before.
-   */
-  AString getOMTCTransform(in Element aElement,
-                           [optional] in AString aPseudoElement);
-
-  /*
    * Returns true if the given animation is being tracked by the pending
    * animation tracker for the current document.
    */

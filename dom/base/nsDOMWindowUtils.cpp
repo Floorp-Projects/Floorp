@@ -3960,39 +3960,6 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement, const nsAString& aProperty,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
-                                   const nsAString& aPseudoElement,
-                                   nsAString& aResult) {
-  if (!aElement) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (GetWebRenderBridge()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  auto frameOrError = GetTargetFrame(aElement, aPseudoElement);
-  if (frameOrError.isErr()) {
-    return frameOrError.unwrapErr();
-  }
-
-  nsIFrame* frame = frameOrError.unwrap();
-  aResult.Truncate();
-  if (!frame) {
-    return NS_OK;
-  }
-
-  DisplayItemType itemType = DisplayItemType::TYPE_TRANSFORM;
-  if (nsLayoutUtils::HasEffectiveAnimation(
-          frame, nsCSSPropertyIDSet::OpacityProperties()) &&
-      !frame->IsTransformed()) {
-    itemType = DisplayItemType::TYPE_OPACITY;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::IsAnimationInPendingTracker(dom::Animation* aAnimation,
                                               bool* aRetVal) {
   MOZ_ASSERT(aRetVal);
