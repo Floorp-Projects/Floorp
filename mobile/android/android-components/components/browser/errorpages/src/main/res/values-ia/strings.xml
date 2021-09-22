@@ -38,9 +38,9 @@
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avantiate…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
-        <label>Qualcuno pote tentar de finger se le sito e tu non deberea continuar.</label>
+        <label>Es possibile que alcuno tenta usurpar le identitate del sito. Tu non deberea continuar.</label>
         <br><br>
-        <label>Sitos web prova lor identitate via certificatos. %1$s non es digne de fide <b>%2$s</b> perque su emissor de certificato es incognite, le certificato es auto-firmate o le servitor non invia le correcte certificatos intermedie.</label>
+        <label>Sitos web prova lor identitate via certificatos. %1$s non es digne de fide <b>%2$s</b> perque su emissor de certificatos es incognite, le certificato es auto-signate o le servitor non invia le correcte certificatos intermedie.</label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Retroceder (Recommendate)</string>
@@ -52,10 +52,10 @@
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-      <p>Le navigator ha connectite con successo, ma le connexion ha essite interrumpite durante le transferimento de informationes. Retenta.</p>
+      <p>Le navigator se ha connectite con successo, ma le connexion ha essite interrumpite durante le transferimento de informationes. Per favor tenta lo de novo.</p>
       <ul>
-        <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retentar in alcun momentos.</li>
-        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+        <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta in alcun momentos.</li>
+        <li>Si tu non succede a cargar alcun pagina, verifica le connexion de datos o Wi-Fi de tu apparato.</li>
       </ul>
     ]]></string>
 
@@ -66,10 +66,10 @@
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       <p>Le sito requestate non ha respondite a un requesta de connexion e le navigator ha cessate de attender un responsa.</p>
       <ul>
-        <li>Poterea le servitor patir alte carga o un interruption temporari? Retenta plus tarde.</li>
-        <li>An tu non pote navigar altere sitos? Verifica le connexion de rete del apparato.</li>
-        <li>Es tu apparato o rete protegite per un firewall o proxy? Parametros non correcte pote interferer con le navigation del Web.</li>
-        <li>Ancora ha tu difficultates? Consulta tu administrator de rete o fornitor de Internet pro assistentia.</li>
+        <li>Poterea le servitor esser in supercarga o temporarimente foras de servicio? Retenta plus tarde.</li>
+        <li>Impossibile acceder a altere sitos? Verifica le connexion de rete del apparato.</li>
+        <li>Es tu apparato o rete protegite per un firewall o proxy? Configurationes incorrecte pote interferer con le navigation del web.</li>
+        <li>Ancora difficultates? Consulta tu administrator de rete o fornitor de Internet pro assistentia.</li>
       </ul>
     ]]></string>
 
@@ -80,7 +80,7 @@
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
         <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta in alcun momentos.</li>
-        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+        <li>Si tu non pote cargar alcun pagina, verifica le connexion de datos o Wi-Fi de tu apparato.</li>
       </ul>
     ]]></string>
 
@@ -97,10 +97,10 @@
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Le navigator ha cessate de tentar recuperar le elemento requiurite. Le sito redirige le requesta in un maniera que jammais se completara.</p>
+      <p>Le navigator ha cessate de tentar recuperar le elemento requestate. Le sito redirige le requesta in un maniera que non se completara jammais.</p>
       <ul>
         <li>Ha tu disactivate o blocate cookies necessari pro iste sito?</li>
-        <li>Si acceptar le cookies del sito non resolve le problema, il ha probabilemente un problema de configuration del servitor e non de tu apparato.</li>
+        <li>Si acceptar le cookies del sito non resolve le problema, se tracta probabilemente de un problema de configuration del servitor e non de tu apparato.</li>
       </ul>
     ]]></string>
 
@@ -109,10 +109,10 @@
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-      <p>Le navigator opera in su modo sin connexion e non pote connecter se al elemento requirite.</p>
+      <p>Le navigator opera in su modo sin connexion e non pote connecter se al elemento requestate.</p>
       <ul>
         <li>Es le apparato connectite a un rete active?</li>
-        <li>Pulsa “Retentar” pro passar al modo online e recargar le pagina.</li>
+        <li>Pulsa “Retentar” pro passar al modo in linea e recargar le pagina.</li>
       </ul>
     ]]></string>
 
@@ -121,18 +121,18 @@
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
-· <p>Le adresse requirite specificava un porta (e.g., <q>mozilla.org:80</q> pro porta 80 sur mozilla.org) normalmente usate pro propositos <em>differente</em> que le navigation del Web. Le navigator ha cancellate le requesta pro tu protection e securitate.</p>
+· <p>Le adresse requestate specificava un porta (p.ex. <q>mozilla.org:80</q> pro porta 80 sur mozilla.org) normalmente usate pro <em>altere</em> scopos que le navigation del web. Le navigator ha cancellate le requesta pro tu protection e securitate.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
-    <string name="mozac_browser_errorpages_net_reset_title">Le connexion ha essite remontate</string>
+    <string name="mozac_browser_errorpages_net_reset_title">Le connexion ha essite interrumpite</string>
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
-      <p>Le ligamine de rete ha essite interrumpite negotiante un connexion. Retenta.</p>
+      <p>Le ligation al rete ha essite interrumpite durante le negotiation de un connexion. Per favor tenta lo de novo.</p>
       <ul>
         <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta post alcun momentos.</li>
-        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+        <li>Si tu non pote cargar alcun pagina, verifica le connexion de datos o Wi-Fi de tu apparato.</li>
       </ul>
     ]]></string>
 
@@ -151,7 +151,7 @@
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
-      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite disvelate.</p>
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
         <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
@@ -160,7 +160,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Contento collabite</string>
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
-      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite disvelate.</p>
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
         <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
@@ -170,7 +170,7 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Error de codification del contento</string>
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
-      <p>Le pagina que tu tenta vider non pote esser monstrate perque illo usa un modulo de compression non valide o non supportate.</p>
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque illo usa un forma de compression non valide o non supportate.</p>
       <ul>
         <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
@@ -181,12 +181,12 @@
 
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
-      <p>Le navigator non pote trovar le servitor hoste al adresse fornite.</p>
+      <p>Le navigator non pote trovar le servitor hospite al adresse fornite.</p>
       <ul>
         <li>Verifica le adresse pro errores de scriptura como
-          <strong>ww</strong>.example.com in vice de
+          <strong>ww</strong>.example.com in loco de
           <strong>www</strong>.example.com.</li>
-        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o le wi-fi de tu apparato.</li>
+        <li>Si tu non pote cargar alcun pagina, verifica le connexion de datos o Wi-Fi de tu apparato.</li>
       </ul>
     ]]></string>
 
@@ -200,7 +200,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Adresse non valide</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
-      <p>Le adresse fornite non es in un formato recognoscite. Verifica le barra del adresses pro errores e retenta.</p>
+      <p>Le adresse fornite non es in un formato recognoscite. Verifica si il ha errores in le barra de adresse e tenta lo de novo.</p>
     ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Le adresse non es valide</string>
@@ -208,8 +208,8 @@
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
       <ul>
-        <li>Web adresses es usualmente scribite como<strong>http://www.example.com/</strong></li>
-        <li>Verifica que tu usa barras oblique directe (i.e. <strong>/</strong>).</li>
+        <li>Adresses web se scribe normalmente in forma <strong>http://www.example.com/</strong></li>
+        <li>Assecura te de usar barras oblique non inverse (i.e. <strong>/</strong>).</li>
       </ul>
     ]]></string>
 
@@ -217,10 +217,10 @@
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollo incognite</string>
 
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-      <p>Le adresse specifica un protocollo (e.g., <q>wxyz://</q>) que le navigator non recognosce, assi le navigator non pote connecter te correctemente al sito.</p>
+      <p>Le adresse specifica un protocollo (p.ex. <q>wxyz://</q>) que le navigator non recognosce, dunque le navigator non pote connecter te correctemente al sito.</p>
       <ul>
-        <li>Tenta tu acceder files multimedial o altere servicios non textual? Verifica le sito pro altere requisitos.</li>
-        <li>Alcun protocollos pote requirer software de tertie-parte o plugins ante que le navigator pote recognoscer los.</li>
+        <li>Tenta tu acceder a files multimedial o altere servicios non textual? Verifica si le sito ha requisitos additional.</li>
+        <li>Alcun protocollos pote requirer software o plug-ins de tertios ante que le navigator pote recognoscer los.</li>
       </ul>
     ]]></string>
 
