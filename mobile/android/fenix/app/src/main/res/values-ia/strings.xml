@@ -51,7 +51,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Salvate recentemente</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Salvate recentemente</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Marcapaginas recente</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Marcapaginas recentemente salvate</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -401,7 +403,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Revenir hic</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">Salvate recentemente</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Salvate recentemente</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Marcapaginas recente</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitate recentemente</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -473,7 +477,7 @@
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Protection contra le traciamento</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Bloca contento e scripts que te tracia online</string>
+    <string name="preferences_tracking_protection_description">Bloca contento e scripts que te tracia in linea</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Exceptiones</string>
 
@@ -1356,7 +1360,7 @@
     <string name="onboarding_privacy_notice_header">Tu confidentialitate</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Nos ha designate %s pro te dar controlo super lo que tu comparti online e con nos.</string>
+    <string name="onboarding_privacy_notice_description2">Nos ha concipite %s pro dar te le controlo de lo que tu comparti in linea e lo que tu comparti con nos.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lege nostre aviso de confidentialitate</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1815,7 +1819,7 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Benvenite in un %s tote nove</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Un navigator completemente redesignate te attende, con prestation e functionalitates meliorate pro te adjutar a facer plus online.\n\nAttende durante que nos actualisa %s con tu:</string>
+    <string name="migration_description">Un navigator completemente reconcipite te attende, con prestation e functionalitate meliorate pro adjutar te a facer plus cosas in linea.\n\nAttende durante que nos actualisa %s con tu datos:</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Actualisation de %s...</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1903,7 +1907,9 @@
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">Un adresse web debe continer \“https://\“ o \“http://\“</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Un adresse web debe continer \“https://\“ o \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Un adresse web debe continer &quot;https://&quot; o &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Un nomine valide de servitor es requirite</string>
 

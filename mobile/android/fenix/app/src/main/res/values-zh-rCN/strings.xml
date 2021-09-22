@@ -1030,7 +1030,7 @@
     <string name="create_collection_select_collection">选择收藏集</string>
 
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">给收藏集起名</string>
+    <string name="create_collection_name_collection">命名收藏集</string>
 
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">新建收藏集</string>
