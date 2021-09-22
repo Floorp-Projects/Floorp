@@ -90,6 +90,7 @@ struct nsCallbackEventRequest;
 namespace mozilla {
 class nsDisplayList;
 class nsDisplayListBuilder;
+class FallbackRenderer;
 
 class AccessibleCaretEventHub;
 class EventStates;
@@ -1265,8 +1266,21 @@ class PresShell final : public nsStubDocumentObserver,
 
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
+  /**
+   * Does any painting work required to update retained paint state, and pushes
+   * it the compositor (if any). Requests a composite, either by scheduling a
+   * remote composite, or invalidating the widget so that we get a call to
+   * SyncPaintFallback from the widget paint event.
+   */
   MOZ_CAN_RUN_SCRIPT
-  void Paint(nsView* aViewToPaint, PaintFlags aFlags);
+  void PaintAndRequestComposite(nsView* aView, PaintFlags aFlags);
+
+  /**
+   * Does an immediate paint+composite using the FallbackRenderer (which must
+   * be the current WindowRenderer for the root frame's widget).
+   */
+  MOZ_CAN_RUN_SCRIPT
+  void SyncPaintFallback(nsView* aView);
 
   /**
    * Notify that we're going to call Paint with PaintFlags::PaintLayers
@@ -1698,6 +1712,9 @@ class PresShell final : public nsStubDocumentObserver,
 
   void SetIsActive(bool aIsActive);
   bool ShouldBeActive() const;
+
+  MOZ_CAN_RUN_SCRIPT
+  void PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags);
 
   /**
    * Refresh observer management.
