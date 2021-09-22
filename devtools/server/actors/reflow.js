@@ -499,7 +499,10 @@ class WindowResizeObserver extends Observable {
   }
 
   destroy() {
-    this.targetActor.off("navigate", this.onNavigate);
+    if (this.targetActor) {
+      this.targetActor.off("navigate", this.onNavigate);
+    }
+    super.destroy();
   }
 
   get listenerTarget() {
