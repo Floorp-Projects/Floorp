@@ -322,18 +322,19 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
 }
 
 static const char* gExactCallbackPrefs[] = {
-    "browser.underline_anchors",
-    "browser.anchor_color",
     "browser.active_color",
+    "browser.anchor_color",
+    "browser.underline_anchors",
     "browser.visited_color",
-    "image.animation_mode",
-    "dom.send_after_paint_to_content",
-    "layout.css.dpi",
-    "layout.css.devPixelsPerPx",
-    "nglayout.debug.paint_flashing",
-    "nglayout.debug.paint_flashing_chrome",
-    "intl.accept_languages",
     "dom.meta-viewport.enabled",
+    "dom.send_after_paint_to_content",
+    "image.animation_mode",
+    "intl.accept_languages",
+    "layout.css.devPixelsPerPx",
+    "layout.css.dpi",
+    "nglayout.debug.paint_flashing_chrome",
+    "nglayout.debug.paint_flashing",
+    "privacy.resistFingerprinting",
     nullptr,
 };
 
@@ -619,8 +620,10 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   auto restyleHint = RestyleHint{0};
   // Changing any of these potentially changes the value of @media
   // (prefers-contrast).
-  if (prefName.EqualsLiteral("layout.css.prefers-contrast.enabled") ||
-      prefName.EqualsLiteral("browser.display.document_color_use") ||
+  // The layout.css.prefers-contrast.enabled pref itself is not handled here,
+  // because that pref doesn't just affect the "live" value of the media query;
+  // it affects whether it is parsed at all.
+  if (prefName.EqualsLiteral("browser.display.document_color_use") ||
       prefName.EqualsLiteral("privacy.resistFingerprinting") ||
       prefName.EqualsLiteral("browser.display.foreground_color") ||
       prefName.EqualsLiteral("browser.display.background_color")) {
