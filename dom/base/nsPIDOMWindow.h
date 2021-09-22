@@ -911,6 +911,13 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual void EnsureSizeAndPositionUpToDate() = 0;
 
   /**
+   * Suppresses/unsuppresses user initiated event handling in window's document
+   * and all in-process descendant documents.
+   */
+  virtual void SuppressEventHandling() = 0;
+  virtual void UnsuppressEventHandling() = 0;
+
+  /**
    * Callback for notifying a window about a modal dialog being
    * opened/closed with the window as a parent.
    *
@@ -1123,6 +1130,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   uint32_t mModalStateDepth;
+
+  uint32_t mSuppressEventHandlingDepth;
 
   // Tracks whether our docshell is active.  If it is, mIsBackground
   // is false.  Too bad we have so many different concepts of
