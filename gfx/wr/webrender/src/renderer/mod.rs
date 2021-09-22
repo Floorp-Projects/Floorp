@@ -46,11 +46,11 @@ use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
-use api::channel::{unbounded_channel, Receiver};
+use api::channel::{unbounded_channel, Sender, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
 
-use crate::render_api::{RenderApiSender, DebugCommand, FrameMsg, MemoryReport};
+use crate::render_api::{RenderApiSender, DebugCommand, FrameMsg, ApiMsg, MemoryReport};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -757,6 +757,7 @@ impl BufferDamageTracker {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
+    api_tx: Sender<ApiMsg>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     /// True if there are any TextureCacheUpdate pending.
@@ -879,6 +880,10 @@ pub struct Renderer {
 
     max_primitive_instance_count: usize,
     enable_instancing: bool,
+
+    /// Count consecutive oom frames to detectif we are stuck unable to render
+    /// in a loop.
+    consecutive_oom_frames: u32,
 }
 
 #[derive(Debug)]
@@ -888,6 +893,7 @@ pub enum RendererError {
     Resource(ResourceCacheError),
     MaxTextureSize,
     SoftwareRasterizer,
+    OutOfMemory,
 }
 
 impl From<ShaderError> for RendererError {
@@ -1335,6 +1341,7 @@ impl Renderer {
 
         let mut renderer = Renderer {
             result_rx,
+            api_tx: api_tx.clone(),
             device,
             active_documents: FastHashMap::default(),
             pending_texture_updates: Vec::new(),
@@ -1396,6 +1403,7 @@ impl Renderer {
             buffer_damage_tracker: BufferDamageTracker::default(),
             max_primitive_instance_count,
             enable_instancing: options.enable_instancing,
+            consecutive_oom_frames: 0,
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -1727,6 +1735,25 @@ impl Renderer {
             |n| { n.when() == Checkpoint::FrameRendered },
             |n| { n.notify(); },
         );
+
+        let mut oom = false;
+        if let Err(ref errors) = result {
+            for error in errors {
+                if matches!(error, &RendererError::OutOfMemory) {
+                    oom = true;
+                    break;
+                }
+            }
+        }
+
+        if oom {
+            let _ = self.api_tx.send(ApiMsg::MemoryPressure);
+            // Ensure we don't get stuck in a loop.
+            self.consecutive_oom_frames += 1;
+            assert!(self.consecutive_oom_frames < 5, "Renderer out of memory");
+        } else {
+            self.consecutive_oom_frames = 0;
+        }
 
         // This is the end of the rendering pipeline. If some notifications are is still there,
         // just clear them and they will autimatically fire the Checkpoint::TransactionDropped
@@ -2128,6 +2155,8 @@ impl Renderer {
         self.documents_seen.clear();
         self.shared_texture_cache_cleared = false;
 
+        self.check_gl_errors();
+
         if self.renderer_errors.is_empty() {
             Ok(results)
         } else {
@@ -2306,6 +2335,8 @@ impl Renderer {
             }
 
             upload_to_texture_cache(self, update_list.updates);
+
+            self.check_gl_errors();
         }
 
         if create_cache_texture_time > 0 {
@@ -2329,6 +2360,15 @@ impl Renderer {
             |n| { n.when() == Checkpoint::FrameTexturesUpdated },
             |n| { n.notify(); },
         );
+    }
+
+    fn check_gl_errors(&mut self) {
+        let err = self.device.gl().get_error();
+        if err == gl::OUT_OF_MEMORY {
+            self.renderer_errors.push(RendererError::OutOfMemory);
+        }
+
+        // Probably should check for other errors?
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
