@@ -975,6 +975,16 @@ class ContextMenuChild extends JSWindowActorChild {
         context.onCompletedImage = true;
       }
 
+      // The URL of the image before redirects is the currentURI.  This is
+      // intended to be used for "Copy Image Link".
+      context.originalMediaURL = (() => {
+        let currentURI = context.target.currentURI?.spec;
+        if (currentURI && this._isMediaURLReusable(currentURI)) {
+          return currentURI;
+        }
+        return "";
+      })();
+
       // The actual URL the image was loaded from (after redirects) is the
       // currentRequestFinalURI.  We should use that as the URL for purposes of
       // deciding on the filename, if it is present. It might not be present
