@@ -3429,7 +3429,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(Double) { PUSH_COPY(GET_INLINE_VALUE(REGS.pc)); }
     END_CASE(Double)
 
-    CASE(String) { PUSH_STRING(script->getAtom(REGS.pc)); }
+    CASE(String) { PUSH_STRING(script->getString(REGS.pc)); }
     END_CASE(String)
 
     CASE(ToString) {

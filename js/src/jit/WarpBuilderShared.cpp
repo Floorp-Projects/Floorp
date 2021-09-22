@@ -38,7 +38,7 @@ bool WarpBuilderShared::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
 }
 
 MConstant* WarpBuilderShared::constant(const Value& v) {
-  MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
+  MOZ_ASSERT_IF(v.isString(), v.toString()->isLinear());
   MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
 
   MConstant* cst = MConstant::New(alloc(), v);

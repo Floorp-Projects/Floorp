@@ -963,7 +963,8 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
       payload_.d = vp.toDouble();
       break;
     case MIRType::String:
-      MOZ_ASSERT(vp.toString()->isAtom());
+      MOZ_ASSERT(!IsInsideNursery(vp.toString()));
+      MOZ_ASSERT(vp.toString()->isLinear());
       payload_.str = vp.toString();
       break;
     case MIRType::Symbol:
