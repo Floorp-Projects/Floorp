@@ -99,9 +99,8 @@ bool AsyncReadbackBufferD3D11::MapAndCopyInto(DataSourceSurface* aSurface,
   return result;
 }
 
-CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent,
-                                 widget::CompositorWidget* aWidget)
-    : Compositor(aWidget, aParent),
+CompositorD3D11::CompositorD3D11(widget::CompositorWidget* aWidget)
+    : Compositor(aWidget),
       mWindowRTCopy(nullptr),
       mAttachments(nullptr),
       mHwnd(nullptr),
@@ -121,10 +120,6 @@ void CompositorD3D11::SetVertexBuffer(ID3D11Buffer* aBuffer) {
   UINT size = sizeof(VertexType);
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &aBuffer, &size, &offset);
-}
-
-bool CompositorD3D11::SupportsLayerGeometry() const {
-  return StaticPrefs::layers_geometry_d3d11_enabled();
 }
 
 bool CompositorD3D11::UpdateDynamicVertexBuffer(
@@ -332,20 +327,6 @@ already_AddRefed<DataTextureSource> CompositorD3D11::CreateDataTextureSource(
   return result.forget();
 }
 
-TextureFactoryIdentifier CompositorD3D11::GetTextureFactoryIdentifier() {
-  TextureFactoryIdentifier ident;
-  ident.mMaxTextureSize = GetMaxTextureSize();
-  ident.mParentProcessType = XRE_GetProcessType();
-  ident.mParentBackend = LayersBackend::LAYERS_D3D11;
-  if (mWidget) {
-    ident.mUseCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
-  }
-  if (mAttachments->mSyncObject) {
-    ident.mSyncHandle = mAttachments->mSyncObject->GetSyncHandle();
-  }
-  return ident;
-}
-
 int32_t CompositorD3D11::GetMaxTextureSize() const {
   return GetMaxTextureSizeForFeatureLevel(mFeatureLevel);
 }
@@ -436,22 +417,6 @@ RefPtr<ID3D11Texture2D> CompositorD3D11::CreateTexture(
   }
 
   return texture;
-}
-
-already_AddRefed<CompositingRenderTarget>
-CompositorD3D11::CreateRenderTargetFromSource(
-    const gfx::IntRect& aRect, const CompositingRenderTarget* aSource,
-    const gfx::IntPoint& aSourcePoint) {
-  RefPtr<ID3D11Texture2D> texture = CreateTexture(aRect, aSource, aSourcePoint);
-  if (!texture) {
-    return nullptr;
-  }
-
-  RefPtr<CompositingRenderTargetD3D11> rt =
-      new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
-  rt->SetSize(aRect.Size());
-
-  return rt.forget();
 }
 
 bool CompositorD3D11::ShouldAllowFrameRecording() const {
@@ -722,15 +687,6 @@ void CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
                                const gfx::Matrix4x4& aTransform,
                                const gfx::Rect& aVisibleRect) {
   DrawGeometry(aRect, aRect, aClipRect, aEffectChain, aOpacity, aTransform,
-               aVisibleRect);
-}
-
-void CompositorD3D11::DrawTriangles(
-    const nsTArray<gfx::TexturedTriangle>& aTriangles, const gfx::Rect& aRect,
-    const gfx::IntRect& aClipRect, const EffectChain& aEffectChain,
-    gfx::Float aOpacity, const gfx::Matrix4x4& aTransform,
-    const gfx::Rect& aVisibleRect) {
-  DrawGeometry(aTriangles, aRect, aClipRect, aEffectChain, aOpacity, aTransform,
                aVisibleRect);
 }
 
@@ -1104,36 +1060,6 @@ Maybe<IntRect> CompositorD3D11::BeginFrameForWindow(
   return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
 }
 
-Maybe<IntRect> CompositorD3D11::BeginFrameForTarget(
-    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
-    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    DrawTarget* aTarget, const IntRect& aTargetBounds) {
-  MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
-  mTarget = aTarget;  // Will be cleared in EndFrame().
-  mTargetBounds = aTargetBounds;
-  Maybe<IntRect> result =
-      BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
-  if (!result) {
-    // Composition has been aborted. Reset mTarget.
-    mTarget = nullptr;
-  }
-  return result;
-}
-
-void CompositorD3D11::BeginFrameForNativeLayers() {
-  MOZ_CRASH("Native layers are not implemented on Windows.");
-}
-
-Maybe<gfx::IntRect> CompositorD3D11::BeginRenderingToNativeLayer(
-    const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
-    const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) {
-  MOZ_CRASH("Native layers are not implemented on Windows.");
-}
-
-void CompositorD3D11::EndRenderingToNativeLayer() {
-  MOZ_CRASH("Native layers are not implemented on Windows.");
-}
-
 Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                                            const Maybe<IntRect>& aClipRect,
                                            const IntRect& aRenderBounds,
@@ -1243,8 +1169,6 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   return Some(rect);
 }
 
-void CompositorD3D11::NormalDrawingDone() { mDiagnostics->End(); }
-
 void CompositorD3D11::EndFrame() {
   if (!profiler_feature_active(ProfilerFeature::Screenshots) && mWindowRTCopy) {
     mWindowRTCopy = nullptr;
@@ -1305,10 +1229,6 @@ void CompositorD3D11::EndFrame() {
   Compositor::EndFrame();
   mTarget = nullptr;
   mCurrentRT = nullptr;
-}
-
-void CompositorD3D11::GetFrameStats(GPUStats* aStats) {
-  mDiagnostics->Query(aStats);
 }
 
 void CompositorD3D11::Present() {
@@ -1420,24 +1340,6 @@ void CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize) {
   projection._33 = 0.0f;
 
   PrepareViewport(aSize, projection, 0.0f, 1.0f);
-}
-
-void CompositorD3D11::ForcePresent() {
-  LayoutDeviceIntSize size = mWidget->GetClientSize();
-
-  DXGI_SWAP_CHAIN_DESC desc;
-  mSwapChain->GetDesc(&desc);
-
-  if (desc.BufferDesc.Width == size.width &&
-      desc.BufferDesc.Height == size.height && size == mBufferSize) {
-    mSwapChain->Present(0, 0);
-    if (mIsDoubleBuffered) {
-      // Make sure we present what was the front buffer before that we know is
-      // completely valid. This non v-synced present should be pretty much
-      // 'free' for a flip chain.
-      mSwapChain->Present(0, 0);
-    }
-  }
 }
 
 void CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,

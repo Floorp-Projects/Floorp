@@ -60,7 +60,7 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
 
   nsCString log;
   RefPtr<CompositorOGL> compositorOGL;
-  compositorOGL = new CompositorOGL(nullptr, aWidget, /* aSurfaceWidth */ -1,
+  compositorOGL = new CompositorOGL(aWidget, /* aSurfaceWidth */ -1,
                                     /* aSurfaceHeight */ -1,
                                     /* aUseExternalSurfaceSize */ true);
   if (!compositorOGL->Initialize(context, programs, &log)) {
@@ -72,7 +72,7 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
 #elif defined(MOZ_WIDGET_GTK)
   nsCString log;
   RefPtr<CompositorOGL> compositorOGL;
-  compositorOGL = new CompositorOGL(nullptr, aWidget);
+  compositorOGL = new CompositorOGL(aWidget);
   if (!compositorOGL->Initialize(&log)) {
     gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
                     << log.get();
