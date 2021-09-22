@@ -389,18 +389,19 @@ toolbarpaletteitem {
 }
 
 %ifdef XP_MACOSX
-/**
- * On macOS, the window caption buttons are on the left side of the window titlebar,
- * even when using the RTL UI direction. These next rules enforce that ordering.
- */
-#titlebar-secondary-buttonbox:-moz-locale-dir(ltr) {
-  -moz-box-ordinal-group: 1000;
+
+@media not (-moz-mac-rtl) {
+  .titlebar-buttonbox-container:-moz-locale-dir(ltr) {
+    -moz-box-ordinal-group: 0;
+  }
 }
 
-#titlebar-secondary-buttonbox:-moz-locale-dir(rtl),
-.titlebar-buttonbox-container:-moz-locale-dir(ltr) {
-  -moz-box-ordinal-group: 0;
+@media (-moz-mac-rtl) {
+  .titlebar-buttonbox-container:-moz-locale-dir(rtl) {
+    -moz-box-ordinal-group: 0;
+  }
 }
+
 %endif
 
 :root[inDOMFullscreen] #navigator-toolbox,

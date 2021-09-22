@@ -85,23 +85,12 @@
 
       <hbox class="titlebar-spacer" type="post-tabs"/>
 
-#ifndef XP_MACOSX
       <button class="accessibility-indicator" data-l10n-id="navbar-accessibility-indicator"
               aria-live="polite"/>
       <hbox class="private-browsing-indicator"/>
-#endif
 
 #include titlebar-items.inc.xhtml
 
-#ifdef XP_MACOSX
-      <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
-           buttonbox from reversing order in RTL by forcing an LTR direction. -->
-      <hbox id="titlebar-secondary-buttonbox" dir="ltr">
-        <button class="accessibility-indicator" data-l10n-id="navbar-accessibility-indicator" aria-live="polite"/>
-        <hbox class="private-browsing-indicator"/>
-        <hbox id="titlebar-fullscreen-button"/>
-      </hbox>
-#endif
     </toolbar>
 
   </vbox>
