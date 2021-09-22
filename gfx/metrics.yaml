@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+paint:
+  build_displaylist_time:
+    type: timing_distribution
+    description: >
+      The time to build a Gecko display list.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1728423
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1728423
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - mwoodrow@mozilla.com
+    expires: never
+    telemetry_mirror: PAINT_BUILD_DISPLAYLIST_TIME
