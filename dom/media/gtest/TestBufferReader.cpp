@@ -36,3 +36,18 @@ TEST(BufferReader, ReaderCursor)
   EXPECT_EQ(head, HEAD);
   EXPECT_EQ(tail, TAIL);
 }
+
+TEST(BufferReader, UnalignedRead)
+{
+  // Allocate a buffer and create a BufferReader.
+  const size_t BUFFER_SIZE = 5;
+  uint8_t buffer[BUFFER_SIZE] = {0};
+
+  const uint8_t* const HEAD = reinterpret_cast<uint8_t*>(buffer);
+
+  BufferReader reader(HEAD, BUFFER_SIZE);
+  // adjust the offset so that it's unaligned
+  reader.Read(1);
+  // read an int which needs 4 byte alignment
+  reader.ReadType<uint32_t>();
+}
