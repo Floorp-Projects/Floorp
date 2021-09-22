@@ -3,13 +3,15 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-
 # 94.0.0 (In Development)
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v93.0.0...main)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/141?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+* **BrowserAction**, **TabListReducer**, **TabsUseCases**:
+  * 🌟️ Adds MoveTabs (reordering) Action and UseCase
 
 * **feature-contextmenu**:
   * 🚒 Bug fixed [issue #10982](https://github.com/mozilla-mobile/android-components/issues/10982) - Add ScrollView as a main container in mozac_feature_context_dialog in order to see the entire image context menu on small screens

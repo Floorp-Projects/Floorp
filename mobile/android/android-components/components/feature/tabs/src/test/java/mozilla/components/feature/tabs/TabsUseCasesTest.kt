@@ -512,4 +512,22 @@ class TabsUseCasesTest {
         assertEquals("work", store.state.tabs[0].contextId)
         assertEquals("work", store.state.tabs[1].contextId)
     }
+
+    @Test
+    fun `MoveTabsUseCase will move a tab`() {
+        val tab = createTab("https://mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        val tab2 = createTab("https://firefox.com", private = true)
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("https://mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://firefox.com", store.state.tabs[1].content.url)
+
+        val tab1Id = store.state.tabs[0].id
+        val tab2Id = store.state.tabs[1].id
+        tabsUseCases.moveTabs(listOf(tab1Id), tab2Id, true)
+        store.waitUntilIdle()
+        assertEquals("https://firefox.com", store.state.tabs[0].content.url)
+        assertEquals("https://mozilla.org", store.state.tabs[1].content.url)
+    }
 }

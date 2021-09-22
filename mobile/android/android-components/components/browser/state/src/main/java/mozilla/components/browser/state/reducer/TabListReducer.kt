@@ -63,6 +63,25 @@ internal object TabListReducer {
                 )
             }
 
+            is TabListAction.MoveTabsAction -> {
+                val tabTarget = state.findTab(action.targetTabId)
+                if (tabTarget == null) {
+                    state
+                } else {
+                    val targetPosition = state.tabs.indexOf(tabTarget) + (if (action.placeAfter) 1 else 0)
+                    val positionOffset = state.tabs.filterIndexed { index, tab ->
+                        (index < targetPosition && tab.id in action.tabIds)
+                    }.count()
+                    val finalPos = targetPosition - positionOffset
+                    val (movedTabs, unmovedTabs) = state.tabs.partition { it.id in action.tabIds }
+                    val updatedTabList = unmovedTabs.subList(0, finalPos) +
+                        movedTabs +
+                        unmovedTabs.subList(finalPos, unmovedTabs.size)
+
+                    state.copy(tabs = updatedTabList)
+                }
+            }
+
             is TabListAction.SelectTabAction -> {
                 state.copy(selectedTabId = action.tabId)
             }

@@ -75,7 +75,7 @@ class TabsTrayPresenter(
      * those changes.
      */
     private fun calculateDiffAndUpdateTabsTray(currentTabs: Tabs, updatedTabs: Tabs) {
-        val result = DiffUtil.calculateDiff(DiffCallback(currentTabs, updatedTabs), false)
+        val result = DiffUtil.calculateDiff(DiffCallback(currentTabs, updatedTabs), true)
 
         this.tabs = updatedTabs
 
