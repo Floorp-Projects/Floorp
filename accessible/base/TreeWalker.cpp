@@ -148,7 +148,7 @@ bool TreeWalker::Seek(nsIContent* aChildNode) {
     }
   } while (true);
 
-  return false;
+  MOZ_ASSERT_UNREACHABLE("because the do-while loop never breaks");
 }
 
 LocalAccessible* TreeWalker::Next() {
