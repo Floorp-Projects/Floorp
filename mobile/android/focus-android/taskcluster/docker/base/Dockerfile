@@ -18,7 +18,7 @@ RUN mkdir /builds && \
 
 WORKDIR /builds/worker/
 
-# -- System -----------------------------------------------------------------------------
+# -- System ----------------------------------------------------------------------------
 
 ENV CURL='curl --location --retry 5' \
     GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
