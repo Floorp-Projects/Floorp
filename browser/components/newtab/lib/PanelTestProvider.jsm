@@ -243,6 +243,9 @@ const MESSAGES = () => [
           label: {
             string_id: "spotlight-public-wifi-vpn-link",
           },
+          action: {
+            type: "CANCEL",
+          },
         },
       },
     },
