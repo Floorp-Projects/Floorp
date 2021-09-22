@@ -488,6 +488,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::MacBigSurTheme:
       aResult = nsCocoaFeatures::OnBigSurOrLater();
       break;
+    case IntID::MacRTL:
+      aResult = IsSystemOrientationRTL();
+      break;
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
       break;
@@ -568,6 +571,17 @@ bool nsLookAndFeel::SystemWantsDarkTheme() {
     return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
   }
   return false;
+}
+
+/*static*/
+bool nsLookAndFeel::IsSystemOrientationRTL() {
+  NSWindow* window = [[NSWindow alloc] initWithContentRect:NSZeroRect
+                                                 styleMask:NSWindowStyleMaskBorderless
+                                                   backing:NSBackingStoreBuffered
+                                                     defer:NO];
+  auto direction = window.windowTitlebarLayoutDirection;
+  [window release];
+  return direction == NSUserInterfaceLayoutDirectionRightToLeft;
 }
 
 bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {

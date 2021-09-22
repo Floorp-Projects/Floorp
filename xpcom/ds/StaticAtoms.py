@@ -2212,6 +2212,7 @@ STATIC_ATOMS = [
     Atom("_moz_windows_default_theme", "-moz-windows-default-theme"),
     Atom("_moz_mac_graphite_theme", "-moz-mac-graphite-theme"),
     Atom("_moz_mac_big_sur_theme", "-moz-mac-big-sur-theme"),
+    Atom("_moz_mac_rtl", "-moz-mac-rtl"),
     Atom("_moz_windows_compositor", "-moz-windows-compositor"),
     Atom("_moz_windows_classic", "-moz-windows-classic"),
     Atom("_moz_windows_glass", "-moz-windows-glass"),

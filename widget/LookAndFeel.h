@@ -145,21 +145,19 @@ class LookAndFeel {
     /*
      * A Boolean value to determine whether the Mac graphite theme is
      * being used.
-     *
-     * The value of this metric is not used on other platforms. These platforms
-     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
      */
     MacGraphiteTheme,
 
     /*
      * A Boolean value to determine whether the macOS Big Sur-specific
      * theming should be used.
-     *
-     * The value of this metric is not used on non-Mac platforms. These
-     * platforms should return NS_ERROR_NOT_IMPLEMENTED when queried for this
-     * metric.
      */
     MacBigSurTheme,
+
+    /*
+     * A Boolean value to determine whether macOS is in RTL mode or not.
+     */
+    MacRTL,
 
     /*
      * AlertNotificationOrigin indicates from which corner of the
