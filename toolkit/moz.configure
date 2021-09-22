@@ -2533,7 +2533,6 @@ def want_wine(target, host):
 wine = check_prog(
     "WINE",
     ["wine64", "wine"],
-    allow_missing=True,
     when=want_wine,
     bootstrap="wine/bin",
 )
