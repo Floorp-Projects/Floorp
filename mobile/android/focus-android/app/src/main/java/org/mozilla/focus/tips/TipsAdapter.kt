@@ -4,12 +4,9 @@
 package org.mozilla.focus.tips
 
 import android.text.SpannableString
-import android.text.TextPaint
 import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -43,34 +40,22 @@ class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback
             if (tip.deepLink == null) {
                 tipView.text = tipText
             } else {
-                // Only make the second line clickable if applicable
-                val linkStartIndex = if (tipText.contains("\n")) tipText.indexOf("\n") + 2 else 0
                 tipView.movementMethod = LinkMovementMethod()
                 tipView.setText(tipText, TextView.BufferType.SPANNABLE)
+                tipView.setOnClickListener { tip.deepLink.invoke() }
 
-                val deepLinkAction = object : ClickableSpan() {
-                    override fun onClick(p0: View) {
-                        tip.deepLink.invoke()
-                    }
-
-                    override fun updateDrawState(ds: TextPaint) {
-                        super.updateDrawState(ds)
-                        ds.isUnderlineText = false
-                    }
-                }
-                val textWithDeepLink = SpannableString(tipText).apply {
-                    setSpan(deepLinkAction, linkStartIndex, tipText.length, 0)
-
+                val spanStartIndex = if (tipText.contains("\n")) tipText.indexOf("\n") + 2 else 0
+                val spannedText = SpannableString(tipText).apply {
                     val colorSpan = ForegroundColorSpan(
                         ContextCompat.getColor(
                             tipView.context,
                             R.color.tip_deeplink_color
                         )
                     )
-                    setSpan(colorSpan, linkStartIndex, tipText.length, 0)
+                    setSpan(colorSpan, spanStartIndex, tipText.length, 0)
                 }
 
-                tipView.text = textWithDeepLink
+                tipView.text = spannedText
             }
         }
     }
