@@ -243,6 +243,7 @@ void L10nRegistry::GetParentProcessFileSourceDescriptors(
   for (const auto& source : sources) {
     auto descriptor = aRetVal.AppendElement();
     descriptor->name() = source.name;
+    descriptor->metasource() = source.metasource;
     descriptor->locales().AppendElements(std::move(source.locales));
     descriptor->prePath() = source.pre_path;
     descriptor->index().AppendElements(std::move(source.index));
@@ -265,6 +266,7 @@ void L10nRegistry::RegisterFileSourcesFromParentProcess(
   for (const auto& desc : aDescriptors) {
     auto source = sources.AppendElement();
     source->name = desc.name();
+    source->metasource = desc.metasource();
     source->locales.AppendElements(desc.locales());
     source->pre_path = desc.prePath();
     source->index.AppendElements(desc.index());
