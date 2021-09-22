@@ -443,11 +443,11 @@ bool env_has_memory(const CraneliftModuleEnvironment* env) {
 }
 
 size_t env_num_types(const CraneliftModuleEnvironment* env) {
-  return env->env->types.length();
+  return env->env->types->length();
 }
 const FuncType* env_type(const CraneliftModuleEnvironment* env,
                          size_t typeIndex) {
-  return &env->env->types[typeIndex].funcType();
+  return &(*env->env->types)[typeIndex].funcType();
 }
 
 size_t env_num_funcs(const CraneliftModuleEnvironment* env) {
@@ -482,7 +482,7 @@ bool env_func_is_import(const CraneliftModuleEnvironment* env,
 
 const FuncType* env_signature(const CraneliftModuleEnvironment* env,
                               size_t funcTypeIndex) {
-  return &env->env->types[funcTypeIndex].funcType();
+  return &(*env->env->types)[funcTypeIndex].funcType();
 }
 
 const TypeIdDesc* env_signature_id(const CraneliftModuleEnvironment* env,
