@@ -50,8 +50,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private val args by navArgs<AddonsManagementFragmentArgs>()
 
-    private var _binding: FragmentAddOnsManagementBinding? = null
-    private val binding get() = _binding!!
+    private var binding: FragmentAddOnsManagementBinding? = null
 
     /**
      * Whether or not an add-on installation is in progress.
@@ -70,7 +69,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentAddOnsManagementBinding.bind(view)
+        binding = FragmentAddOnsManagementBinding.bind(view)
         bindRecyclerView()
     }
 
@@ -90,7 +89,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         super.onDestroyView()
         // letting go of the resources to avoid memory leak.
         adapter = null
-        _binding = null
+        binding = null
     }
 
     private fun bindRecyclerView() {
@@ -99,8 +98,8 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             showPermissionDialog = ::showPermissionDialog
         )
 
-        val recyclerView = binding.addOnsList
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        val recyclerView = binding?.addOnsList
+        recyclerView?.layoutManager = LinearLayoutManager(requireContext())
         val shouldRefresh = adapter != null
 
         // If the fragment was launched to install an "external" add-on from AMO, we deactivate
@@ -129,10 +128,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                             )
                         }
                         isInstallationInProgress = false
-                        binding.addOnsProgressBar.isVisible = false
-                        binding.addOnsEmptyMessage.isVisible = false
+                        binding?.addOnsProgressBar?.isVisible = false
+                        binding?.addOnsEmptyMessage?.isVisible = false
 
-                        recyclerView.adapter = adapter
+                        recyclerView?.adapter = adapter
                         if (shouldRefresh) {
                             adapter?.updateAddons(addons)
                         }
@@ -147,13 +146,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             } catch (e: AddonManagerException) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
-                        showSnackBar(
-                            binding.root,
-                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
-                        )
+                        binding?.let {
+                            showSnackBar(it.root, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                        }
                         isInstallationInProgress = false
-                        binding.addOnsProgressBar.isVisible = false
-                        binding.addOnsEmptyMessage.isVisible = true
+                        binding?.addOnsProgressBar?.isVisible = false
+                        binding?.addOnsEmptyMessage?.isVisible = true
                     }
                 }
             }
@@ -280,10 +278,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     }
 
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
-        binding.addonProgressOverlay.overlayCardView.visibility = View.VISIBLE
+        binding?.addonProgressOverlay?.overlayCardView?.visibility = View.VISIBLE
 
         if (requireContext().settings().accessibilityServicesEnabled) {
-            announceForAccessibility(binding.addonProgressOverlay.addOnsOverlayText.text)
+            binding?.let { announceForAccessibility(it.addonProgressOverlay.addOnsOverlayText.text) }
         }
 
         isInstallationInProgress = true
@@ -294,7 +292,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 runIfFragmentIsAttached {
                     isInstallationInProgress = false
                     adapter?.updateAddon(it)
-                    binding.addonProgressOverlay.overlayCardView.visibility = View.GONE
+                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                     showInstallationDialog(it)
                 }
             },
@@ -313,17 +311,18 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                             )
                         }
                     }
-                    binding.addonProgressOverlay.overlayCardView.visibility = View.GONE
+                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
             }
         )
 
-        binding.addonProgressOverlay.cancelButton.setOnClickListener {
+        binding?.addonProgressOverlay?.cancelButton?.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
+                val safeBinding = binding
                 // Hide the installation progress overlay once cancellation is successful.
                 if (installOperation.cancel().await()) {
-                    binding.addonProgressOverlay.overlayCardView.visibility = View.GONE
+                    safeBinding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                 }
             }
         }
@@ -334,11 +333,11 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             AccessibilityEvent.TYPE_ANNOUNCEMENT
         )
 
-        binding.addonProgressOverlay.overlayCardView.onInitializeAccessibilityEvent(event)
+        binding?.addonProgressOverlay?.overlayCardView?.onInitializeAccessibilityEvent(event)
         event.text.add(announcementText)
         event.contentDescription = null
-        binding.addonProgressOverlay.overlayCardView.parent.requestSendAccessibilityEvent(
-            binding.addonProgressOverlay.overlayCardView,
+        binding?.addonProgressOverlay?.overlayCardView?.parent?.requestSendAccessibilityEvent(
+            binding?.addonProgressOverlay?.overlayCardView,
             event
         )
     }
