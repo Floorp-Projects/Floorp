@@ -181,6 +181,49 @@ TEST(IntlString, NormalizeNFKD)
   ASSERT_EQ(buf.get_string_view(), u"1⁄2");
 }
 
+TEST(IntlString, ComposePairNFC)
+{
+  // Pair of base characters do not compose
+  ASSERT_EQ(String::ComposePairNFC(U'a', U'b'), 0);
+  // Base letter + accent
+  ASSERT_EQ(String::ComposePairNFC(U'a', U'\u0308'), U'ä');
+  // Accented letter + a further accent
+  ASSERT_EQ(String::ComposePairNFC(U'ä', U'\u0304'), U'ǟ');
+  // Accented letter + a further accent, but doubly-accented form is not available
+  ASSERT_EQ(String::ComposePairNFC(U'ä', U'\u0301'), 0);
+  // These do not compose because although U+0344 has the decomposition <0308, 0301>
+  // (see below), it also has the Full_Composition_Exclusion property.
+  ASSERT_EQ(String::ComposePairNFC(U'\u0308', U'\u0301'), 0);
+  // Supplementary-plane letter + accent
+  ASSERT_EQ(String::ComposePairNFC(U'\U00011099', U'\U000110BA'), U'\U0001109A');
+}
+
+TEST(IntlString, DecomposeRawNFD)
+{
+  char32_t buf[2];
+  // Non-decomposable character
+  ASSERT_EQ(String::DecomposeRawNFD(U'a', buf), 0);
+  // Singleton decomposition
+  ASSERT_EQ(String::DecomposeRawNFD(U'\u212A', buf), 1);
+  ASSERT_EQ(buf[0], U'K');
+  // Simple accented letter
+  ASSERT_EQ(String::DecomposeRawNFD(U'ä', buf), 2);
+  ASSERT_EQ(buf[0], U'a');
+  ASSERT_EQ(buf[1], U'\u0308');
+  // Double-accented letter decomposes by only one level
+  ASSERT_EQ(String::DecomposeRawNFD(U'ǟ', buf), 2);
+  ASSERT_EQ(buf[0], U'ä');
+  ASSERT_EQ(buf[1], U'\u0304');
+  // Non-starter can decompose, but will not recompose (see above)
+  ASSERT_EQ(String::DecomposeRawNFD(U'\u0344', buf), 2);
+  ASSERT_EQ(buf[0], U'\u0308');
+  ASSERT_EQ(buf[1], U'\u0301');
+  // Supplementary-plane letter with decomposition
+  ASSERT_EQ(String::DecomposeRawNFD(U'\U0001109A', buf), 2);
+  ASSERT_EQ(buf[0], U'\U00011099');
+  ASSERT_EQ(buf[1], U'\U000110BA');
+}
+
 TEST(IntlString, IsCased)
 {
   ASSERT_TRUE(String::IsCased(U'a'));
