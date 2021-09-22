@@ -4167,18 +4167,18 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
   nsCOMPtr<nsITimedChannel> oldTimedChannel(
       do_QueryInterface(static_cast<nsIHttpChannel*>(this)));
   if (oldTimedChannel) {
-    config.timedChannel = Some(dom::TimedChannelInfo());
-    config.timedChannel->timingEnabled() = LoadTimingEnabled();
-    config.timedChannel->redirectCount() = mRedirectCount;
-    config.timedChannel->internalRedirectCount() = mInternalRedirectCount;
-    config.timedChannel->asyncOpen() = mAsyncOpenTime;
-    config.timedChannel->channelCreation() = mChannelCreationTimestamp;
-    config.timedChannel->redirectStart() = mRedirectStartTimeStamp;
-    config.timedChannel->redirectEnd() = mRedirectEndTimeStamp;
-    config.timedChannel->initiatorType() = mInitiatorType;
-    config.timedChannel->allRedirectsSameOrigin() =
+    config.timedChannelInfo = Some(dom::TimedChannelInfo());
+    config.timedChannelInfo->timingEnabled() = LoadTimingEnabled();
+    config.timedChannelInfo->redirectCount() = mRedirectCount;
+    config.timedChannelInfo->internalRedirectCount() = mInternalRedirectCount;
+    config.timedChannelInfo->asyncOpen() = mAsyncOpenTime;
+    config.timedChannelInfo->channelCreation() = mChannelCreationTimestamp;
+    config.timedChannelInfo->redirectStart() = mRedirectStartTimeStamp;
+    config.timedChannelInfo->redirectEnd() = mRedirectEndTimeStamp;
+    config.timedChannelInfo->initiatorType() = mInitiatorType;
+    config.timedChannelInfo->allRedirectsSameOrigin() =
         LoadAllRedirectsSameOrigin();
-    config.timedChannel->allRedirectsPassTimingAllowCheck() =
+    config.timedChannelInfo->allRedirectsPassTimingAllowCheck() =
         LoadAllRedirectsPassTimingAllowCheck();
     // Execute the timing allow check to determine whether
     // to report the redirect timing info
@@ -4188,20 +4188,23 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     if (loadInfo->GetExternalContentPolicyType() !=
         ExtContentPolicy::TYPE_DOCUMENT) {
       nsCOMPtr<nsIPrincipal> principal = loadInfo->GetLoadingPrincipal();
-      config.timedChannel->timingAllowCheckForPrincipal() =
+      config.timedChannelInfo->timingAllowCheckForPrincipal() =
           Some(oldTimedChannel->TimingAllowCheck(principal));
     }
 
-    config.timedChannel->allRedirectsPassTimingAllowCheck() =
+    config.timedChannelInfo->allRedirectsPassTimingAllowCheck() =
         LoadAllRedirectsPassTimingAllowCheck();
-    config.timedChannel->launchServiceWorkerStart() = mLaunchServiceWorkerStart;
-    config.timedChannel->launchServiceWorkerEnd() = mLaunchServiceWorkerEnd;
-    config.timedChannel->dispatchFetchEventStart() = mDispatchFetchEventStart;
-    config.timedChannel->dispatchFetchEventEnd() = mDispatchFetchEventEnd;
-    config.timedChannel->handleFetchEventStart() = mHandleFetchEventStart;
-    config.timedChannel->handleFetchEventEnd() = mHandleFetchEventEnd;
-    config.timedChannel->responseStart() = mTransactionTimings.responseStart;
-    config.timedChannel->responseEnd() = mTransactionTimings.responseEnd;
+    config.timedChannelInfo->launchServiceWorkerStart() =
+        mLaunchServiceWorkerStart;
+    config.timedChannelInfo->launchServiceWorkerEnd() = mLaunchServiceWorkerEnd;
+    config.timedChannelInfo->dispatchFetchEventStart() =
+        mDispatchFetchEventStart;
+    config.timedChannelInfo->dispatchFetchEventEnd() = mDispatchFetchEventEnd;
+    config.timedChannelInfo->handleFetchEventStart() = mHandleFetchEventStart;
+    config.timedChannelInfo->handleFetchEventEnd() = mHandleFetchEventEnd;
+    config.timedChannelInfo->responseStart() =
+        mTransactionTimings.responseStart;
+    config.timedChannelInfo->responseEnd() = mTransactionTimings.responseEnd;
   }
 
   if (aPreserveMethod) {
@@ -4260,46 +4263,50 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
 
   // Transfer the timing data (if we are dealing with an nsITimedChannel).
   nsCOMPtr<nsITimedChannel> newTimedChannel(do_QueryInterface(newChannel));
-  if (config.timedChannel && newTimedChannel) {
-    newTimedChannel->SetTimingEnabled(config.timedChannel->timingEnabled());
+  if (config.timedChannelInfo && newTimedChannel) {
+    newTimedChannel->SetTimingEnabled(config.timedChannelInfo->timingEnabled());
 
     // If we're an internal redirect, or a document channel replacement,
     // then we shouldn't record any new timing for this and just copy
     // over the existing values.
     bool shouldHideTiming = aReason != ReplacementReason::Redirect;
     if (shouldHideTiming) {
-      newTimedChannel->SetRedirectCount(config.timedChannel->redirectCount());
-      int8_t newCount = config.timedChannel->internalRedirectCount() + 1;
-      newTimedChannel->SetInternalRedirectCount(
-          std::max(newCount, config.timedChannel->internalRedirectCount()));
-    } else {
-      int8_t newCount = config.timedChannel->redirectCount() + 1;
       newTimedChannel->SetRedirectCount(
-          std::max(newCount, config.timedChannel->redirectCount()));
+          config.timedChannelInfo->redirectCount());
+      int32_t newCount = config.timedChannelInfo->internalRedirectCount() + 1;
+      newTimedChannel->SetInternalRedirectCount(std::max(
+          newCount, static_cast<int32_t>(
+                        config.timedChannelInfo->internalRedirectCount())));
+    } else {
+      int32_t newCount = config.timedChannelInfo->redirectCount() + 1;
+      newTimedChannel->SetRedirectCount(std::max(
+          newCount,
+          static_cast<int32_t>(config.timedChannelInfo->redirectCount())));
       newTimedChannel->SetInternalRedirectCount(
-          config.timedChannel->internalRedirectCount());
+          config.timedChannelInfo->internalRedirectCount());
     }
 
     if (shouldHideTiming) {
-      if (!config.timedChannel->channelCreation().IsNull()) {
+      if (!config.timedChannelInfo->channelCreation().IsNull()) {
         newTimedChannel->SetChannelCreation(
-            config.timedChannel->channelCreation());
+            config.timedChannelInfo->channelCreation());
       }
 
-      if (!config.timedChannel->asyncOpen().IsNull()) {
-        newTimedChannel->SetAsyncOpen(config.timedChannel->asyncOpen());
+      if (!config.timedChannelInfo->asyncOpen().IsNull()) {
+        newTimedChannel->SetAsyncOpen(config.timedChannelInfo->asyncOpen());
       }
     }
 
     // If the RedirectStart is null, we will use the AsyncOpen value of the
     // previous channel (this is the first redirect in the redirects chain).
-    if (config.timedChannel->redirectStart().IsNull()) {
+    if (config.timedChannelInfo->redirectStart().IsNull()) {
       // Only do this for real redirects.  Internal redirects should be hidden.
       if (!shouldHideTiming) {
-        newTimedChannel->SetRedirectStart(config.timedChannel->asyncOpen());
+        newTimedChannel->SetRedirectStart(config.timedChannelInfo->asyncOpen());
       }
     } else {
-      newTimedChannel->SetRedirectStart(config.timedChannel->redirectStart());
+      newTimedChannel->SetRedirectStart(
+          config.timedChannelInfo->redirectStart());
     }
 
     // For internal redirects just propagate the last redirect end time
@@ -4307,41 +4314,41 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     // end time.
     TimeStamp newRedirectEnd;
     if (shouldHideTiming) {
-      newRedirectEnd = config.timedChannel->redirectEnd();
+      newRedirectEnd = config.timedChannelInfo->redirectEnd();
     } else {
-      newRedirectEnd = config.timedChannel->responseEnd();
+      newRedirectEnd = config.timedChannelInfo->responseEnd();
     }
     newTimedChannel->SetRedirectEnd(newRedirectEnd);
 
-    newTimedChannel->SetInitiatorType(config.timedChannel->initiatorType());
+    newTimedChannel->SetInitiatorType(config.timedChannelInfo->initiatorType());
 
     nsCOMPtr<nsILoadInfo> loadInfo = newChannel->LoadInfo();
     MOZ_ASSERT(loadInfo);
 
     newTimedChannel->SetAllRedirectsSameOrigin(
-        config.timedChannel->allRedirectsSameOrigin());
+        config.timedChannelInfo->allRedirectsSameOrigin());
 
-    if (config.timedChannel->timingAllowCheckForPrincipal()) {
+    if (config.timedChannelInfo->timingAllowCheckForPrincipal()) {
       newTimedChannel->SetAllRedirectsPassTimingAllowCheck(
-          config.timedChannel->allRedirectsPassTimingAllowCheck() &&
-          *config.timedChannel->timingAllowCheckForPrincipal());
+          config.timedChannelInfo->allRedirectsPassTimingAllowCheck() &&
+          *config.timedChannelInfo->timingAllowCheckForPrincipal());
     }
 
     // Propagate service worker measurements across redirects.  The
     // PeformanceResourceTiming.workerStart API expects to see the
     // worker start time after a redirect.
     newTimedChannel->SetLaunchServiceWorkerStart(
-        config.timedChannel->launchServiceWorkerStart());
+        config.timedChannelInfo->launchServiceWorkerStart());
     newTimedChannel->SetLaunchServiceWorkerEnd(
-        config.timedChannel->launchServiceWorkerEnd());
+        config.timedChannelInfo->launchServiceWorkerEnd());
     newTimedChannel->SetDispatchFetchEventStart(
-        config.timedChannel->dispatchFetchEventStart());
+        config.timedChannelInfo->dispatchFetchEventStart());
     newTimedChannel->SetDispatchFetchEventEnd(
-        config.timedChannel->dispatchFetchEventEnd());
+        config.timedChannelInfo->dispatchFetchEventEnd());
     newTimedChannel->SetHandleFetchEventStart(
-        config.timedChannel->handleFetchEventStart());
+        config.timedChannelInfo->handleFetchEventStart());
     newTimedChannel->SetHandleFetchEventEnd(
-        config.timedChannel->handleFetchEventEnd());
+        config.timedChannelInfo->handleFetchEventEnd());
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
@@ -4408,7 +4415,7 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   privateBrowsing = aInit.privateBrowsing();
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
-  timedChannel = aInit.timedChannel();
+  timedChannelInfo = aInit.timedChannelInfo();
   if (RemoteLazyInputStreamChild* actor =
           static_cast<RemoteLazyInputStreamChild*>(aInit.uploadStreamChild())) {
     uploadStreamLength = actor->Size();
@@ -4432,7 +4439,7 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize(
   config.privateBrowsing() = privateBrowsing;
   config.method() = method;
   config.referrerInfo() = referrerInfo;
-  config.timedChannel() = timedChannel;
+  config.timedChannelInfo() = timedChannelInfo;
   if (uploadStream) {
     RemoteLazyStream ipdlStream;
     RemoteLazyInputStreamUtils::SerializeInputStream(
@@ -4503,9 +4510,9 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   // Check whether or not this was a cross-domain redirect.
   nsCOMPtr<nsITimedChannel> newTimedChannel(do_QueryInterface(newChannel));
   bool sameOriginWithOriginalUri = SameOriginWithOriginalUri(newURI);
-  if (config.timedChannel && newTimedChannel) {
+  if (config.timedChannelInfo && newTimedChannel) {
     newTimedChannel->SetAllRedirectsSameOrigin(
-        config.timedChannel->allRedirectsSameOrigin() &&
+        config.timedChannelInfo->allRedirectsSameOrigin() &&
         sameOriginWithOriginalUri);
   }
 
