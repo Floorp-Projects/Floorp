@@ -2798,21 +2798,19 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
     // the presShell's resolution. All the other frames are 1.0.
     resolution = presShell->GetResolution();
   }
-  // Note: unlike in ComputeFrameMetrics(), we don't know the full cumulative
-  // resolution including FrameMetrics::mExtraResolution, because layout hasn't
-  // chosen a resolution to paint at yet. However, the display port calculation
-  // divides out mExtraResolution anyways, so we get the correct result by
-  // setting the mCumulativeResolution to everything except the extra resolution
-  // and leaving mExtraResolution at 1.
   LayoutDeviceToLayerScale2D cumulativeResolution(
-      presShell->GetCumulativeResolution() *
-      nsLayoutUtils::GetTransformToAncestorScale(frame));
+      LayoutDeviceToLayerScale(presShell->GetCumulativeResolution()));
 
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetDevPixelsPerCSSPixel(deviceScale);
   metrics.SetPresShellResolution(resolution);
   metrics.SetCumulativeResolution(cumulativeResolution);
   metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
+  LayoutDeviceToScreenScale2D resolutionToScreen(
+      presShell->GetCumulativeResolution() *
+      nsLayoutUtils::GetTransformToAncestorScale(frame));
+  metrics.SetExtraResolution(metrics.GetCumulativeResolution() /
+                             resolutionToScreen);
 
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
