@@ -2850,15 +2850,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(FunctionThis)
 
     CASE(GlobalThis) {
-      if (script->hasNonSyntacticScope()) {
-        PUSH_NULL();
-        GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(),
-                                  REGS.stackHandleAt(-1));
-      } else {
-        PUSH_OBJECT(*cx->global()->lexicalEnvironment().thisObject());
-      }
+      MOZ_ASSERT(!script->hasNonSyntacticScope());
+      PUSH_OBJECT(*cx->global()->lexicalEnvironment().thisObject());
     }
     END_CASE(GlobalThis)
+
+    CASE(NonSyntacticGlobalThis) {
+      PUSH_NULL();
+      GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(),
+                                REGS.stackHandleAt(-1));
+    }
+    END_CASE(NonSyntacticGlobalThis)
 
     CASE(CheckIsObj) {
       if (!REGS.sp[-1].isObject()) {
