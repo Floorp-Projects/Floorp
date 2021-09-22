@@ -350,7 +350,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
-                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))
+                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_HTTPS_ONLY))
                 return null
             }
         })
@@ -420,7 +420,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
-                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))
+                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_HTTPS_ONLY))
                 return null
             }
         })
@@ -452,6 +452,171 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
     }
 
+    // Due to Bug 1692578 we currently cannot test bypassing of the error
+    // the URI loading process takes the desktop path for iframes
+    @Test fun loadHTTPSOnlyInSubframe() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY)
+
+        val uri = "http://example.org/tests/junit/iframe_http_only.html"
+        val httpsUri = "https://example.org/tests/junit/iframe_http_only.html"
+        val iFrameUri = "http://expired.example.com/"
+        val iFrameHttpsUri = "https://expired.example.com/"
+
+        val testLoader = TestLoader().uri(uri)
+
+        sessionRule.delegateDuringNextWait(
+                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                    @AssertCalled(count = 2)
+                    override fun onLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                            GeckoResult<AllowOrDeny>? {
+                        assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
+                        return null
+                    }
+
+                    @AssertCalled(count = 1)
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + uri, url,
+                                equalTo(uri))
+                    }
+
+                    @AssertCalled(count = 1)
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should fail", success, equalTo(true))
+                    }
+
+                    @AssertCalled(count = 2)
+                    override fun onSubframeLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                        assertThat("URI should not be null", request.uri, notNullValue())
+                        assertThat("URI should match", request.uri, equalTo(forEachCall(iFrameUri, iFrameHttpsUri)))
+                        return GeckoResult.allow()
+                    }
+                })
+
+        sessionRule.session.load(testLoader)
+        sessionRule.waitForPageStop()
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
+    }
+
+    @Test fun bypassHTTPSOnlyError() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY)
+
+        val host = if (sessionRule.env.isAutomation) {
+            "expired.example.com"
+        } else {
+            "expired.badssl.com"
+        }
+
+        val uri = "http://$host/"
+        val httpsUri = "https://$host/"
+
+        val testLoader = TestLoader().uri(uri)
+
+        // The two loads below follow testLoadExpectError(TestLoader, Int, Int) flow
+
+        sessionRule.delegateDuringNextWait(
+                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                    @AssertCalled(count = 2)
+                    override fun onLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                            GeckoResult<AllowOrDeny>? {
+                        assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
+                        return null
+                    }
+
+                    @AssertCalled(count = 1)
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + uri, url,
+                                equalTo(uri))
+                    }
+
+                    @AssertCalled(count = 1)
+                    override fun onLoadError(session: GeckoSession, uri: String?,
+                                             error: WebRequestError): GeckoResult<String>? {
+                        assertThat("Error code should match", error.code,
+                                equalTo(WebRequestError.ERROR_HTTPS_ONLY))
+                        return GeckoResult.fromValue(createTestUrl(HELLO_HTML_PATH))
+                    }
+
+                    @AssertCalled(count = 1)
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should fail", success, equalTo(false))
+                    }
+                })
+
+        sessionRule.session.load(testLoader)
+        sessionRule.waitForPageStop()
+
+        sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("URL should match", url, equalTo(httpsUri))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+            }
+        })
+
+        sessionRule.delegateDuringNextWait(
+                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                    @AssertCalled(count = 2, order = [1, 3])
+                    override fun onLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                            GeckoResult<AllowOrDeny>? {
+                        assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
+                        return null
+                    }
+
+                    @AssertCalled(count = 1, order = [4])
+                    override fun onLoadError(session: GeckoSession, uri: String?,
+                                             error: WebRequestError): GeckoResult<String>? {
+                        assertThat("Error code should match", error.code,
+                                equalTo(WebRequestError.ERROR_HTTPS_ONLY))
+                        return GeckoResult.fromValue(null)
+                    }
+
+                    @AssertCalled(count = 1, order = [5])
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should fail", success, equalTo(false))
+                    }
+                })
+
+        sessionRule.session.load(testLoader)
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(
+                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                    @AssertCalled(count = 1)
+                    override fun onLoadRequest(session: GeckoSession,
+                                               request: LoadRequest):
+                            GeckoResult<AllowOrDeny>? {
+                        // We set http scheme only in case it's not iFrame
+                        assertThat("The URLs must match", request.uri, equalTo(uri))
+                        return null
+                    }
+
+                    @AssertCalled(count = 0)
+                    override fun onLoadError(session: GeckoSession, uri: String?,
+                                             error: WebRequestError): GeckoResult<String>? {
+                        return null
+                    }
+                })
+
+        mainSession.waitForJS("document.reloadWithHttpsOnlyException()")
+        mainSession.waitForPageStop()
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
+    }
+
     @Ignore // Disabled for bug 1619344.
     @Test fun loadUnknownProtocol() {
         testLoadEarlyError(UNKNOWN_PROTOCOL_URI,
@@ -459,6 +624,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                 WebRequestError.ERROR_UNKNOWN_PROTOCOL)
     }
 
+    // Due to Bug 1692578 we currently cannot test displaying the error
+    // the URI loading process takes the desktop path for iframes
     @Test fun loadUnknownProtocolIframe() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
