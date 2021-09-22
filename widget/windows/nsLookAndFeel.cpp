@@ -453,11 +453,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = int32_t(GetOperatingSystemVersion());
       break;
     }
-
-    case IntID::MacGraphiteTheme:
-      aResult = 0;
-      res = NS_ERROR_NOT_IMPLEMENTED;
-      break;
     case IntID::DWMCompositor:
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;
