@@ -25,11 +25,6 @@ class L10nFileSource : public nsWrapperCache {
   explicit L10nFileSource(RefPtr<const ffi::FileSource> aRaw,
                           nsIGlobalObject* aGlobal = nullptr);
 
-  static already_AddRefed<L10nFileSource> Create(
-      const nsACString& aName, const nsTArray<nsCString>& aLocales,
-      const nsACString& aPrePath, const dom::FileSourceOptions& aOptions,
-      ErrorResult& aRv);
-
   static already_AddRefed<L10nFileSource> Constructor(
       const dom::GlobalObject& aGlobal, const nsACString& aName,
       const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,

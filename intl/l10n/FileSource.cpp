@@ -21,25 +21,6 @@ L10nFileSource::L10nFileSource(RefPtr<const ffi::FileSource> aRaw,
     : mGlobal(aGlobal), mRaw(std::move(aRaw)) {}
 
 /* static */
-already_AddRefed<L10nFileSource> L10nFileSource::Create(
-    const nsACString& aName, const nsTArray<nsCString>& aLocales,
-    const nsACString& aPrePath, const FileSourceOptions& aOptions,
-    ErrorResult& aRv) {
-  ffi::L10nFileSourceStatus status;
-
-  bool allowOverrides = aOptions.mAddResourceOptions.mAllowOverrides;
-
-  RefPtr<const ffi::FileSource> raw(dont_AddRef(ffi::l10nfilesource_new(
-      &aName, &aLocales, &aPrePath, allowOverrides, &status)));
-
-  if (PopulateError(aRv, status)) {
-    return nullptr;
-  }
-
-  return MakeAndAddRef<L10nFileSource>(std::move(raw));
-}
-
-/* static */
 already_AddRefed<L10nFileSource> L10nFileSource::Constructor(
     const GlobalObject& aGlobal, const nsACString& aName,
     const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,
