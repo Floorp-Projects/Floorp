@@ -6233,36 +6233,6 @@ class nsAutoNotifyDidPaint {
   PaintFlags mFlags;
 };
 
-bool PresShell::Composite(nsView* aViewToPaint) {
-  nsCString url;
-  nsIURI* uri = mDocument->GetDocumentURI();
-  Document* contentRoot = GetPrimaryContentDocument();
-  if (contentRoot) {
-    uri = contentRoot->GetDocumentURI();
-  }
-  url = uri ? uri->GetSpecOrDefault() : "N/A"_ns;
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("PresShell::Composite", GRAPHICS, url);
-
-  nsIFrame* frame = aViewToPaint->GetFrame();
-  WindowRenderer* renderer = aViewToPaint->GetWidget()->GetWindowRenderer();
-  NS_ASSERTION(renderer, "Must be in paint event");
-
-  if (!renderer->BeginTransaction(url)) {
-    // If we can't begin a transaction and paint, then there's not
-    // much the caller can do.
-    return true;
-  }
-
-  if (frame) {
-    if (renderer->EndEmptyTransaction()) {
-      GetPresContext()->NotifyDidPaintForSubtree();
-      return true;
-    }
-    NS_WARNING("Must complete empty transaction when compositing!");
-  }
-  return false;
-}
-
 void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   nsCString url;
   nsIURI* uri = mDocument->GetDocumentURI();

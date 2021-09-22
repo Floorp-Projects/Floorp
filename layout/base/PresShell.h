@@ -1268,8 +1268,6 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_CAN_RUN_SCRIPT
   void Paint(nsView* aViewToPaint, PaintFlags aFlags);
 
-  bool Composite(nsView* aViewToPaint);
-
   /**
    * Notify that we're going to call Paint with PaintFlags::PaintLayers
    * on the pres shell for a widget (which might not be this one, since
