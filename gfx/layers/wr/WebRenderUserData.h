@@ -241,6 +241,7 @@ class WebRenderFallbackData : public WebRenderUserData {
   nsRect mBounds;
   nsRect mBuildingRect;
   gfx::Size mScale;
+  float mOpacity;
 
  protected:
   void ClearImageKey();
