@@ -7,6 +7,7 @@ const l10nReg = new L10nRegistry();
 
 add_task(function test_methods_presence() {
   equal(typeof l10nReg.generateBundles, "function");
+  equal(typeof l10nReg.generateBundlesSync, "function");
   equal(typeof l10nReg.getAvailableLocales, "function");
   equal(typeof l10nReg.registerSources, "function");
   equal(typeof l10nReg.removeSources, "function");
@@ -353,6 +354,51 @@ add_task(function test_remove_source_mid_iter_cycle() {
   l10nReg.removeSources(["app"]);
 
   equal((bundles.next()).done, true);
+
+  // cleanup
+  l10nReg.clearSources();
+});
+
+add_task(async function test_metasources() {
+  let fs = [
+    { path: "/localization/en-US/browser/menu1.ftl", source: "key1 = Value" },
+    { path: "/localization/en-US/browser/menu2.ftl", source: "key2 = Value" },
+    { path: "/localization/en-US/browser/menu3.ftl", source: "key3 = Value" },
+    { path: "/localization/en-US/browser/menu4.ftl", source: "key4 = Value" },
+    { path: "/localization/en-US/browser/menu5.ftl", source: "key5 = Value" },
+    { path: "/localization/en-US/browser/menu6.ftl", source: "key6 = Value" },
+    { path: "/localization/en-US/browser/menu7.ftl", source: "key7 = Value" },
+    { path: "/localization/en-US/browser/menu8.ftl", source: "key8 = Value" },
+  ];
+
+  const browser = L10nFileSource.createMock("browser", "app", ["en-US"], "/localization/{locale}", fs);
+  const toolkit = L10nFileSource.createMock("toolkit", "app", ["en-US"], "/localization/{locale}", fs);
+  const browser2 = L10nFileSource.createMock("browser2", "langpack", ["en-US"], "/localization/{locale}", fs);
+  const toolkit2 = L10nFileSource.createMock("toolkit2", "langpack", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([toolkit, browser, toolkit2, browser2]);
+
+  let res = [
+    "/browser/menu1.ftl",
+    "/browser/menu2.ftl",
+    "/browser/menu3.ftl",
+    "/browser/menu4.ftl",
+    "/browser/menu5.ftl",
+    "/browser/menu6.ftl",
+    "/browser/menu7.ftl",
+    "/browser/menu8.ftl"
+  ];
+
+  const bundles = l10nReg.generateBundlesSync(["en-US"], res);
+
+  let nbundles = 0;
+  while (!bundles.next().done) {
+    nbundles += 1;
+  }
+
+  // If metasources are working properly, we'll generate 2^8 = 256 bundles for
+  // each metasource giving 512 bundles in total. Otherwise, we generate
+  // 4^8 = 65536 bundles.
+  equal(nbundles, 512);
 
   // cleanup
   l10nReg.clearSources();
