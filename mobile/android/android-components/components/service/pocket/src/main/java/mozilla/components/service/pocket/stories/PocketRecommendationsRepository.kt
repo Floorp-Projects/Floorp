@@ -5,83 +5,42 @@
 package mozilla.components.service.pocket.stories
 
 import android.content.Context
-import android.util.AtomicFile
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
-import mozilla.components.service.pocket.logger
-import mozilla.components.support.ktx.android.org.json.mapNotNull
-import mozilla.components.support.ktx.util.readAndDeserialize
-import mozilla.components.support.ktx.util.writeString
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
-import java.io.File
-
-@VisibleForTesting internal const val STORIES_FILE_NAME = "pocket_recommended.stories"
-@VisibleForTesting internal const val JSON_KEY_ARRAY_STORIES = "recommendations"
+import mozilla.components.service.pocket.api.PocketApiStory
+import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase
+import mozilla.components.service.pocket.stories.ext.toPartialTimeShownUpdate
+import mozilla.components.service.pocket.stories.ext.toPocketLocalStory
+import mozilla.components.service.pocket.stories.ext.toPocketRecommendedStory
 
 /**
  * Wrapper over our local database.
  * Allows for easy CRUD operations.
  */
-internal class PocketRecommendationsRepository(private val context: Context) {
-    private val diskCacheLock = Any()
+internal class PocketRecommendationsRepository(context: Context) {
+    private val database: Lazy<PocketRecommendationsDatabase> = lazy { PocketRecommendationsDatabase.get(context) }
+    @VisibleForTesting
+    internal val pocketRecommendationsDao by lazy { database.value.pocketRecommendationsDao() }
 
     /**
-     * Returns the current locally persisted list of Pocket recommended stories.
+     * Get the current locally persisted list of Pocket recommended articles.
      */
     suspend fun getPocketRecommendedStories(): List<PocketRecommendedStory> {
-        synchronized(diskCacheLock) {
-            return getAtomicStoriesFile().readAndDeserialize {
-                JSONObject(it).toPocketRecommendedStories()
-            } ?: emptyList()
-        }
+        return pocketRecommendationsDao.getPocketStories().map { it.toPocketRecommendedStory() }
+    }
+
+    suspend fun updateShownPocketRecommendedStories(updatedStories: List<PocketRecommendedStory>) {
+        return pocketRecommendationsDao.updateTimesShown(
+            updatedStories.map { it.toPartialTimeShownUpdate() }
+        )
     }
 
     /**
-     * Replaces the current list of locally persisted Pocket recommended stories.
+     * Replace the current list of locally persisted Pocket recommended articles.
      *
-     * @param stories A String representation of a JSONObject with Pocket recommended stories to persist locally.
+     * @param stories The list of Pocket recommended articles to persist locally.
      */
-    suspend fun addAllPocketPocketRecommendedStories(
-        stories: String
-    ) = synchronized(diskCacheLock) {
-        getAtomicStoriesFile().writeString { stories }
+    suspend fun addAllPocketApiStories(stories: List<PocketApiStory>) {
+        pocketRecommendationsDao.cleanOldAndInsertNewPocketStories(stories.map { it.toPocketLocalStory() })
     }
-
-    @VisibleForTesting
-    internal fun getAtomicStoriesFile() = AtomicFile(getStoriesFile())
-
-    @VisibleForTesting
-    internal fun getStoriesFile() = File(context.cacheDir, STORIES_FILE_NAME)
-}
-
-/**
- * Returns a list of Pocket stories inferred from this JSON object.
- * Assumes the JSON object follows the structure from "https://getpocket.cdn.mozilla.net/v3/firefox"
- * Invalid entries will be dropped, as such the returned list may be empty.
- */
-@VisibleForTesting
-internal fun JSONObject.toPocketRecommendedStories(): List<PocketRecommendedStory> {
-    val storiesJSON = getJSONArray(JSON_KEY_ARRAY_STORIES)
-    return storiesJSON.mapNotNull(JSONArray::getJSONObject) { it.toPocketRecommendedStory() }
-}
-
-/**
- * Do a 1-1 mapping of a JSON object representing a Pocket story to a PocketRecommendedStory.
- * The result may be null if the JSON object doest not respect the expected structure.
- */
-@VisibleForTesting
-internal fun JSONObject.toPocketRecommendedStory(): PocketRecommendedStory? = try {
-    PocketRecommendedStory(
-        title = getString("title"),
-        publisher = getString("publisher"),
-        url = getString("url"),
-        imageUrl = getString("imageUrl"),
-        timeToRead = getInt("timeToRead"),
-        category = getString("category")
-    )
-} catch (e: JSONException) {
-    logger.error("Error while parsing persisted JSON story", e)
-    null
 }

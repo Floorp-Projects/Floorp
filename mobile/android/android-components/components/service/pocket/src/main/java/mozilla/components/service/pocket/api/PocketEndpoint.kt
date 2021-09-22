@@ -15,7 +15,8 @@ import mozilla.components.service.pocket.api.PocketEndpoint.Companion.newInstanc
  * @see [newInstance] to retrieve an instance.
  */
 internal class PocketEndpoint internal constructor(
-    @VisibleForTesting internal val rawEndpoint: PocketEndpointRaw
+    @VisibleForTesting internal val rawEndpoint: PocketEndpointRaw,
+    private val jsonParser: PocketJSONParser
 ) {
 
     /**
@@ -28,9 +29,10 @@ internal class PocketEndpoint internal constructor(
      * or, on error, a [PocketResponse.Failure].
      */
     @WorkerThread
-    fun getTopStories(): PocketResponse<String> {
+    fun getRecommendedStories(): PocketResponse<List<PocketApiStory>> {
         val response = rawEndpoint.getRecommendedStories()
-        return PocketResponse.wrap(response)
+        val stories = response?.let { jsonParser.jsonToPocketApiStories(it) }
+        return PocketResponse.wrap(stories)
     }
 
     companion object {
@@ -41,7 +43,7 @@ internal class PocketEndpoint internal constructor(
          */
         fun newInstance(client: Client): PocketEndpoint {
             val rawEndpoint = PocketEndpointRaw.newInstance(client)
-            return PocketEndpoint(rawEndpoint)
+            return PocketEndpoint(rawEndpoint, PocketJSONParser())
         }
     }
 }

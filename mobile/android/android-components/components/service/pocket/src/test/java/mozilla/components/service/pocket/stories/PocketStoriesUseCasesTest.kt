@@ -10,12 +10,11 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.api.PocketEndpoint
 import mozilla.components.service.pocket.api.PocketResponse
-import mozilla.components.service.pocket.helpers.PocketTestResource
+import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -96,59 +95,56 @@ class PocketStoriesUseCasesTest {
     }
 
     @Test
-    fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN it should download stories from API and return early if unsuccessful response`() {
+    fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN download stories from API and return early if unsuccessful response`() {
         PocketStoriesUseCases.initialize(mock())
         val refreshUsecase = spy(
             usecases.RefreshPocketStories(testContext)
         )
         val successfulResponse = getSuccessfulPocketStories()
-
-        doReturn(successfulResponse).`when`(pocketEndoint).getTopStories()
+        doReturn(successfulResponse).`when`(pocketEndoint).getRecommendedStories()
 
         val result = runBlocking {
             refreshUsecase.invoke()
         }
 
         assertTrue(result)
-        verify(pocketEndoint).getTopStories()
+        verify(pocketEndoint).getRecommendedStories()
         runBlocking {
-            verify(pocketRepo).addAllPocketPocketRecommendedStories((successfulResponse as PocketResponse.Success).data)
+            verify(pocketRepo).addAllPocketApiStories((successfulResponse as PocketResponse.Success).data)
         }
     }
 
     @Test
-    fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN it should download stories from API and save a successful response locally`() {
+    fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN download stories from API and save a successful response locally`() {
         PocketStoriesUseCases.initialize(mock())
         val refreshUsecase = spy(usecases.RefreshPocketStories(testContext))
         val successfulResponse = getFailedPocketStories()
 
-        doReturn(successfulResponse).`when`(pocketEndoint).getTopStories()
+        doReturn(successfulResponse).`when`(pocketEndoint).getRecommendedStories()
 
         val result = runBlocking {
             refreshUsecase.invoke()
         }
 
         assertFalse(result)
-        verify(pocketEndoint).getTopStories()
+        verify(pocketEndoint).getRecommendedStories()
         runBlocking {
-            verify(pocketRepo, never()).addAllPocketPocketRecommendedStories(any())
+            verify(pocketRepo, never()).addAllPocketApiStories(any())
         }
     }
 
     @Test
-    fun `GIVEN PocketStoriesUseCases WHEN GetPocketStories is called THEN it should delegate the repository to return locally stored stories`() =
+    fun `GIVEN PocketStoriesUseCases WHEN GetPocketStories is called THEN delegate the repository to return locally stored stories`() =
         runBlocking {
             val getStoriesUsecase = spy(usecases.GetPocketStories(testContext))
 
-            doReturn(emptyList<PocketRecommendedStory>())
-                .`when`(pocketRepo).getPocketRecommendedStories()
+            doReturn(emptyList<PocketRecommendedStory>()).`when`(pocketRepo)
+                .getPocketRecommendedStories()
             var result = getStoriesUsecase.invoke()
             verify(pocketRepo).getPocketRecommendedStories()
             assertTrue(result.isEmpty())
 
-            val stories = JSONObject(
-                PocketTestResource.FIVE_POCKET_STORIES_RECOMMENDATIONS_POCKET_RESPONSE.get()
-            ).toPocketRecommendedStories()
+            val stories = listOf(PocketTestResources.clientExpectedPocketStory)
             doReturn(stories).`when`(pocketRepo).getPocketRecommendedStories()
             result = getStoriesUsecase.invoke()
             // getPocketRecommendedStories() should've been called 2 times. Once in the above check, once now.
@@ -156,8 +152,18 @@ class PocketStoriesUseCasesTest {
             assertEquals(result, stories)
         }
 
+    @Test
+    fun `GIVEN PocketStoriesUseCases WHEN UpdateStoriesTimesShown is called THEN delegate the repository to update the stories shown`() = runBlocking {
+        val updateStoriesTimesShown = usecases.UpdateStoriesTimesShown(testContext)
+        val updatedStories: List<PocketRecommendedStory> = mock()
+
+        updateStoriesTimesShown.invoke(updatedStories)
+
+        verify(pocketRepo).updateShownPocketRecommendedStories(updatedStories)
+    }
+
     private fun getSuccessfulPocketStories() =
-        PocketResponse.wrap(PocketTestResource.FIVE_POCKET_STORIES_RECOMMENDATIONS_POCKET_RESPONSE.get())
+        PocketResponse.wrap(PocketTestResources.apiExpectedPocketStoriesRecommendations)
 
     private fun getFailedPocketStories() = PocketResponse.wrap(null)
 }

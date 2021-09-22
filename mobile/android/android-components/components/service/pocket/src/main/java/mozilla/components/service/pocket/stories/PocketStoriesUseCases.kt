@@ -37,11 +37,11 @@ class PocketStoriesUseCases {
             }
 
             val pocket = getPocketEndpoint(client)
-            val response = pocket.getTopStories()
+            val response = pocket.getRecommendedStories()
 
             if (response is PocketResponse.Success) {
                 getPocketRepository(context)
-                    .addAllPocketPocketRecommendedStories(response.data)
+                    .addAllPocketApiStories(response.data)
                 return true
             }
 
@@ -59,6 +59,21 @@ class PocketStoriesUseCases {
         suspend operator fun invoke(): List<PocketRecommendedStory> {
             return getPocketRepository(context)
                 .getPocketRecommendedStories()
+        }
+    }
+
+    /**
+     * Allows for atomically updating the [PocketRecommendedStory.timesShown] property of some recommended stories.
+     */
+    internal inner class UpdateStoriesTimesShown(private val context: Context) {
+        /**
+         * Update how many times certain stories were shown to the user.
+         */
+        suspend operator fun invoke(storiesShown: List<PocketRecommendedStory>) {
+            if (storiesShown.isNotEmpty()) {
+                getPocketRepository(context)
+                    .updateShownPocketRecommendedStories(storiesShown)
+            }
         }
     }
 

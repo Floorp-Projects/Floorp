@@ -6,118 +6,68 @@ package mozilla.components.service.pocket.stories
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.service.pocket.PocketRecommendedStory
-import mozilla.components.service.pocket.helpers.PocketTestResource
+import mozilla.components.service.pocket.helpers.PocketTestResources
+import mozilla.components.service.pocket.stories.db.PocketRecommendationsDao
+import mozilla.components.service.pocket.stories.ext.toPartialTimeShownUpdate
+import mozilla.components.service.pocket.stories.ext.toPocketLocalStory
+import mozilla.components.service.pocket.stories.ext.toPocketRecommendedStory
 import mozilla.components.support.test.robolectric.testContext
-import org.json.JSONObject
-import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class PocketRecommendationsRepositoryTest {
 
-    @After
-    fun cleanup() {
-        PocketRecommendationsRepository(testContext).getStoriesFile().deleteRecursively()
+    private val pocketRepo = spy(PocketRecommendationsRepository(testContext))
+    private lateinit var dao: PocketRecommendationsDao
+
+    @Before
+    fun setUp() {
+        dao = mock(PocketRecommendationsDao::class.java)
+        `when`(pocketRepo.pocketRecommendationsDao).thenReturn(dao)
     }
 
     @Test
-    fun `GIVEN PocketRecommendationsRepository WHEN getStoriesFile is called THEN a specific File is returned`() {
-        val result = PocketRecommendationsRepository(testContext).getStoriesFile()
+    fun `GIVEN PocketRecommendationsRepository WHEN getPocketRecommendedStories is called THEN return db entities mapped to domain type`() {
+        runBlocking {
+            val dbStory = PocketTestResources.dbExpectedPocketStory
+            `when`(dao.getPocketStories()).thenReturn(listOf(dbStory))
 
-        assertEquals(STORIES_FILE_NAME, result.name)
-        assertEquals(testContext.cacheDir.toString() + "/$STORIES_FILE_NAME", result.path)
-    }
+            val result = pocketRepo.getPocketRecommendedStories()
 
-    @Test
-    fun `GIVEN PocketRecommendationsRepository WHEN getAtomicStoriesFile is called THEN an AtomicFile wrapping getStoriesFile is returned`() {
-        val repository = spy(PocketRecommendationsRepository(testContext))
-        val result = repository.getAtomicStoriesFile()
-
-        verify(repository).getStoriesFile()
-        assertEquals(repository.getStoriesFile(), result.baseFile)
-    }
-
-    @Test
-    fun `GIVEN stories exist locally WHEN getPocketRecommendedStories is called THEN it returns a list of stories from the cached file`() {
-        val repository = spy(PocketRecommendationsRepository(testContext))
-        val jsonStringStory = PocketTestResource.ONE_POCKET_STORY_RECOMMENDATION_POCKET_RESPONSE.get()
-
-        val result = runBlocking {
-            repository.getStoriesFile().writeText(jsonStringStory)
-
-            repository.getPocketRecommendedStories()
+            verify(dao).getPocketStories()
+            assertEquals(1, result.size)
+            assertEquals(dbStory.toPocketRecommendedStory(), result[0])
         }
-
-        verify(repository).getAtomicStoriesFile()
-        assertEquals(1, result.size)
-        assertEquals(JSONObject(jsonStringStory).toPocketRecommendedStories(), result)
     }
 
     @Test
-    fun `GIVEN no locally persisted stories WHEN getPocketRecommendedStories is called THEN it returns an empty list`() {
-        val repository = spy(PocketRecommendationsRepository(testContext))
-        val jsonStringStory = "invalid json"
+    fun `GIVEN PocketRecommendationsRepository WHEN addAllPocketApiStories is called THEN persist the received story to db`() {
+        runBlocking {
+            val apiStories = PocketTestResources.apiExpectedPocketStoriesRecommendations
+            val apiStoriesMappedForDb = apiStories.map { it.toPocketLocalStory() }
 
-        val result = runBlocking {
-            repository.getStoriesFile().writeText(jsonStringStory)
+            pocketRepo.addAllPocketApiStories(apiStories)
 
-            repository.getPocketRecommendedStories()
+            verify(dao).cleanOldAndInsertNewPocketStories(apiStoriesMappedForDb)
         }
-
-        verify(repository).getAtomicStoriesFile()
-        assertEquals(0, result.size)
-        assertEquals(emptyList<PocketRecommendedStory>(), result)
     }
 
     @Test
-    fun `WHEN addAllPocketPocketRecommendedStories is called THEN the received String is written to a local file`() {
-        val repository = spy(PocketRecommendationsRepository(testContext))
-        val jsonStringStory = PocketTestResource.ONE_POCKET_STORY_RECOMMENDATION_POCKET_RESPONSE.get()
+    fun `GIVEN PocketRecommendationsRepository WHEN updateShownPocketRecommendedStories should persist the received story to db`() {
+        runBlocking {
+            val clientStories = listOf(PocketTestResources.clientExpectedPocketStory)
+            val clientStoriesPartialUpdate = clientStories.map { it.toPartialTimeShownUpdate() }
 
-        val persistedStories = runBlocking {
-            repository.addAllPocketPocketRecommendedStories(PocketTestResource.ONE_POCKET_STORY_RECOMMENDATION_POCKET_RESPONSE.get())
+            pocketRepo.updateShownPocketRecommendedStories(clientStories)
 
-            repository.getPocketRecommendedStories()
+            verify(dao).updateTimesShown(clientStoriesPartialUpdate)
         }
-
-        assertEquals(1, persistedStories.size)
-        assertEquals(JSONObject(jsonStringStory).toPocketRecommendedStories(), persistedStories)
-        // getAtomicStoriesFile should be called twice, once for writing, once for reading
-        verify(repository, times(2)).getAtomicStoriesFile()
-    }
-
-    @Test
-    fun `GIVEN a JSONObject representing Pocket stories response WHEN toPocketRecommendedStories is called THEN a list of PocketRecommendedStory is returned`() {
-        val pocketJSONResponse = JSONObject(PocketTestResource.FIVE_POCKET_STORIES_RECOMMENDATIONS_POCKET_RESPONSE.get())
-
-        val result = pocketJSONResponse.toPocketRecommendedStories()
-
-        assertEquals(5, result.size)
-    }
-
-    @Test
-    fun `GIVEN a JSONObject representing one Pocket story response WHEN toPocketRecommendedStory is called THEN a new PocketRecommendedStory is returned`() {
-        val storyJson = JSONObject(PocketTestResource.POCKET_STORY_JSON.get())
-
-        val result = storyJson.toPocketRecommendedStory()
-
-        assertNotNull(result)
-    }
-
-    @Test
-    fun `GIVEN an invalid JSONObject WHEN toPocketRecommendedStory is called THEN null is returned`() {
-        val invalidJson = JSONObject("{}")
-
-        val result = invalidJson.toPocketRecommendedStory()
-
-        assertNull(result)
     }
 }

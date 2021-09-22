@@ -15,7 +15,7 @@ class PocketRecommendedStoryTest {
 
     // This is the domain data type we expose to clients. Needs to be public.
     @Test
-    fun `GIVEN a PocketRecommendedStory THEN its visibility is internal`() {
+    fun `GIVEN a PocketRecommendedStory THEN its visibility is public`() {
         assertClassVisibility(PocketRecommendedStory::class, KVisibility.PUBLIC)
     }
 }
