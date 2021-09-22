@@ -425,7 +425,13 @@ class alignas(alignof(uint32_t)) ParserAtom {
 
   bool isUsedByStencil() const { return flags_ & UsedByStencilFlag; }
 
+ private:
   bool isMarkedAtomize() const { return flags_ & AtomizeFlag; }
+
+  static constexpr uint32_t MinimumLengthForNonAtom = 8;
+
+ public:
+  bool isInstantiatedAsJSAtom() const;
 
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;

@@ -20,11 +20,18 @@ BEGIN_TEST(testIntString_bug515273) {
   CHECK(JS_StringHasBeenPinned(cx, str));
   CHECK(JS_LinearStringEqualsLiteral(JS_ASSERT_STRING_IS_LINEAR(str), "42"));
 
-  // Long string literal shouldn't use atom, but just linear string.
+  // Short string literal should use atom.
   EVAL("'111';", &v);
   str = v.toString();
-  CHECK(!JS_StringHasBeenPinned(cx, str));
+  CHECK(JS_StringHasBeenPinned(cx, str));
   CHECK(JS_LinearStringEqualsLiteral(JS_ASSERT_STRING_IS_LINEAR(str), "111"));
+
+  // Long string literal shouldn't use atom, but just linear string.
+  EVAL("'111222333';", &v);
+  str = v.toString();
+  CHECK(!JS_StringHasBeenPinned(cx, str));
+  CHECK(JS_LinearStringEqualsLiteral(JS_ASSERT_STRING_IS_LINEAR(str),
+                                     "111222333"));
 
   /* Test other types of static strings. */
   EVAL("'a';", &v);
