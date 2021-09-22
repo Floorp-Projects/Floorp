@@ -24,6 +24,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
+#include "nsITlsHandshakeListener.h"
 
 class nsISocketTransport;
 class nsISSLSocketControl;
@@ -56,6 +57,7 @@ class nsHttpConnection final : public HttpConnectionBase,
                                public nsIOutputStreamCallback,
                                public nsITransportEventSink,
                                public nsIInterfaceRequestor,
+                               public nsITlsHandshakeCallbackListener,
                                public NudgeTunnelCallback {
  private:
   virtual ~nsHttpConnection();
@@ -70,6 +72,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSITLSHANDSHAKECALLBACKLISTENER
   NS_DECL_NUDGETUNNELCALLBACK
 
   nsHttpConnection();
