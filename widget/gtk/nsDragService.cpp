@@ -114,7 +114,8 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
 nsDragService::nsDragService()
     : mScheduledTask(eDragTaskNone),
       mTaskSource(0),
-      mScheduledTaskIsRunning(false)
+      mScheduledTaskIsRunning(false),
+      mCachedDragContext()
 #ifdef MOZ_WAYLAND
       ,
       mPendingWaylandDataOffer(nullptr),
@@ -485,6 +486,7 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 #endif
   mTargetWindow = nullptr;
   mPendingWindow = nullptr;
+  mCachedDragContext = 0;
 
   return nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
 }
@@ -1038,6 +1040,14 @@ void nsDragService::ReplyToDragMotion(RefPtr<DataOffer> aDragContext) {
 }
 #endif
 
+void nsDragService::EnsureCachedDataValidForContext(
+    GdkDragContext* aDragContext) {
+  if (mCachedDragContext != (uintptr_t)aDragContext) {
+    mCachedData.Clear();
+    mCachedDragContext = (uintptr_t)aDragContext;
+  }
+}
+
 void nsDragService::TargetDataReceived(GtkWidget* aWidget,
                                        GdkDragContext* aContext, gint aX,
                                        gint aY,
@@ -1045,6 +1055,8 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
                                        guint aInfo, guint32 aTime) {
   LOGDRAGSERVICE(("nsDragService::TargetDataReceived"));
   TargetResetData();
+
+  EnsureCachedDataValidForContext(aContext);
 
   mTargetDragDataReceived = true;
   gint len = gtk_selection_data_get_length(aSelectionData);
@@ -1146,6 +1158,7 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor,
     // as mTargetDragContext.
     // Especially with multiple items the same data is requested
     // very often.
+    EnsureCachedDataValidForContext(mTargetDragContext);
     if (auto cached = mCachedData.Lookup(flavor)) {
       mTargetDragDataLen = cached->Length();
       LOGDRAGSERVICE(("Using cached data for %s, length is %d", flavor.get(),
@@ -2017,8 +2030,6 @@ gboolean nsDragService::RunScheduledTask() {
 #endif
   mTargetTime = mPendingTime;
 
-  mCachedData.Clear();
-
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
   // (as at 27 December 2010) indicates that a "drop" event should only be
   // fired (at the current target element) if the current drag operation is
@@ -2079,10 +2090,6 @@ gboolean nsDragService::RunScheduledTask() {
       gtk_drag_finish(mTargetDragContext, success,
                       /* del = */ FALSE, mTargetTime);
     }
-
-    // This drag is over, so clear out our reference to the previous
-    // window.
-    mTargetWindow = nullptr;
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
     EndDragSession(true, GetCurrentModifiers());
@@ -2095,8 +2102,6 @@ gboolean nsDragService::RunScheduledTask() {
 #ifdef MOZ_WAYLAND
   mTargetWaylandDataOffer = nullptr;
 #endif
-
-  mCachedData.Clear();
 
   // If we got another drag signal while running the sheduled task, that
   // must have happened while running a nested event loop.  Leave the task
