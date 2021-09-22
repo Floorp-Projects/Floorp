@@ -20,7 +20,7 @@
 }
 
 :root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
-:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadiBlockedBadge,
+:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadBlockedBadge,
 :root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Malware"] .downloadsPanel-blockedSubview-image,
 :root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadBlockedBadge {
   fill: #FF9AA2;
