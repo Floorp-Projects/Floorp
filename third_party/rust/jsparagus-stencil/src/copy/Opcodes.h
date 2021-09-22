@@ -1787,13 +1787,6 @@
      * The result is always `undefined` except when the name refers to a
      * binding in a non-syntactic `with` environment.
      *
-     * Note: The frontend has to emit `JSOp::GImplicitThis` (and not
-     * `JSOp::Undefined`) for global unqualified function calls, even when
-     * `CompileOptions::nonSyntacticScope == false`, because later
-     * `js::CloneGlobalScript` can be called with `ScopeKind::NonSyntactic` to
-     * clone the script into a non-syntactic environment, with the bytecode
-     * reused, unchanged.
-     *
      *   Category: Functions
      *   Type: Calls
      *   Operands: uint32_t nameIndex
