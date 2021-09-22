@@ -85,6 +85,7 @@ impl<V> GeckoReportError<V, L10nRegistrySetupError> for Result<V, L10nRegistrySe
 #[repr(C)]
 pub struct L10nFileSourceDescriptor {
     name: nsCString,
+    metasource: nsCString,
     locales: ThinVec<nsCString>,
     pre_path: nsCString,
     index: ThinVec<nsCString>,
@@ -201,6 +202,7 @@ pub unsafe extern "C" fn l10nregistry_get_parent_process_sources(
         let source = reg.get_source(&name).unwrap().unwrap();
         let descriptor = L10nFileSourceDescriptor {
             name: source.name.as_str().into(),
+            metasource: source.metasource.as_str().into(),
             locales: source
                 .locales()
                 .iter()
