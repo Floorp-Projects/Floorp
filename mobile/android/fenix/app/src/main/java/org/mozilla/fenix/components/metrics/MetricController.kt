@@ -158,7 +158,7 @@ internal class ReleaseMetricController(
     }
 
     @Suppress("LongMethod")
-    private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
+    private fun Fact.toEvent(): Event? = when {
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.DISPLAY -> Event.LoginDialogPromptDisplayed
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.CANCEL -> Event.LoginDialogPromptCancelled
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.NEVER_SAVE -> Event.LoginDialogPromptNeverSave
