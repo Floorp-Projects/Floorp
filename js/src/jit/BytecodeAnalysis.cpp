@@ -276,13 +276,6 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
         result.usesEnvironmentChain = true;
         break;
 
-      case JSOp::SetGName:
-      case JSOp::StrictSetGName:
-        if (script->hasNonSyntacticScope()) {
-          result.usesEnvironmentChain = true;
-        }
-        break;
-
       case JSOp::Finally:
         result.hasTryFinally = true;
         break;

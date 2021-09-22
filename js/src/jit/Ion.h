@@ -78,14 +78,15 @@ void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame);
 
 inline bool IsIonInlinableGetterOrSetterOp(JSOp op) {
-  // GETPROP, CALLPROP, LENGTH, GETELEM, and JSOp::CallElem. (Inlined Getters)
-  // SETPROP, SETNAME, SETGNAME (Inlined Setters)
+  // JSOp::GetProp, JSOp::CallProp, JSOp::Length, JSOp::GetElem,
+  // and JSOp::CallElem. (Inlined Getters)
+  // JSOp::SetProp, JSOp::SetName, JSOp::SetGName (Inlined Setters)
   return IsGetPropOp(op) || IsGetElemOp(op) || IsSetPropOp(op);
 }
 
 inline bool IsIonInlinableOp(JSOp op) {
-  // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (Normal Callsites)
-  // or an inlinable getter or setter.
+  // JSOp::Call, JSOp::FunCall, JSOp::FunApply, JSOp::Eval,
+  // JSOp::New (Normal Callsites) or an inlinable getter or setter.
   return (IsInvokeOp(op) && !IsSpreadOp(op)) ||
          IsIonInlinableGetterOrSetterOp(op);
 }
