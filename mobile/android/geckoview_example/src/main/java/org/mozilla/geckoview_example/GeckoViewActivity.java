@@ -2019,8 +2019,6 @@ public class GeckoViewActivity
                     return "ERROR_UNSAFE_CONTENT_TYPE";
                 case WebRequestError.ERROR_CORRUPTED_CONTENT:
                     return "ERROR_CORRUPTED_CONTENT";
-                case WebRequestError.ERROR_HTTPS_ONLY:
-                    return "ERROR_HTTPS_ONLY";
                 default:
                     return "UNKNOWN";
             }

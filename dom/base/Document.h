@@ -2243,13 +2243,6 @@ class Document : public nsINode,
   static bool CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject);
 
   /**
-   * This function checks if the document that is trying to access
-   * ReloadWithHttpsOnlyException is a trusted HTTPS only error page.
-   */
-  static bool CallerIsTrustedAboutHttpsOnlyError(JSContext* aCx,
-                                                 JSObject* aObject);
-
-  /**
    * Get security info like error code for a failed channel. This
    * property is only exposed to about:neterror documents.
    */
@@ -4004,8 +3997,6 @@ class Document : public nsINode,
       nsIPrincipal* aPrincipal);
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
-
-  void ReloadWithHttpsOnlyException();
 
   // Subframes need to be static cloned after the main document has been
   // embedded within a script global. A `PendingFrameStaticClone` is a static
