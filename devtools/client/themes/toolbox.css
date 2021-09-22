@@ -439,13 +439,12 @@
   fill-opacity: 0.25;
 }
 
-#command-button-fission-prefs::before {
-  content: "FIS";
-  width: auto;
-  font-weight: 600;
+#command-button-experimental-prefs::before {
+  background-image: url("chrome://browser/skin/preferences/category-experiments.svg");
+  background-size: cover;
 }
 
-.fission-pref-icon::before {
+.experimental-pref-icon::before {
   content: "";
   background-image: url("chrome://devtools/skin/images/help.svg");
   -moz-context-properties: fill;

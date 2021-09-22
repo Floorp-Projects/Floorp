@@ -49,36 +49,35 @@ const PREFERENCES = [
 
 /**
  * Temporary module to show a Tooltip with the currently enabled preferences
- * relevant for DevTools Fission (& associated experiment efforts).
+ * relevant for DevTools ongoing architectural work (e.g. Fission, EFT, …).
  *
- * This module should be deleted once the experimental Fission prefs are
- * preffed on in Nightly.
+ * This module should be deleted once all experimental prefs are preffed on in Nightly.
  */
 function showTooltip(toolbox) {
-  if (!toolbox._fissionPrefsTooltip) {
-    toolbox._fissionPrefsTooltip = new HTMLTooltip(toolbox.doc, {
+  if (!toolbox._experimentalPrefsTooltip) {
+    toolbox._experimentalPrefsTooltip = new HTMLTooltip(toolbox.doc, {
       type: "doorhanger",
       useXulWrapper: true,
     });
-    toolbox.once("destroy", () => toolbox._fissionPrefsTooltip.destroy());
+    toolbox.once("destroy", () => toolbox._experimentalPrefsTooltip.destroy());
   }
 
   // Terrible hack to allow to toggle using the command button.
-  if (toolbox._fissionPrefsTooltip.preventShow) {
+  if (toolbox._experimentalPrefsTooltip.preventShow) {
     return;
   }
 
   updateTooltipContent(toolbox);
 
-  const commandId = "command-button-fission-prefs";
-  toolbox._fissionPrefsTooltip.show(toolbox.doc.getElementById(commandId));
+  const commandId = "command-button-experimental-prefs";
+  toolbox._experimentalPrefsTooltip.show(toolbox.doc.getElementById(commandId));
 
   // Follows a hack to be able to close the tooltip when clicking on the
   // command button. Otherwise it will flicker and reopen.
-  toolbox._fissionPrefsTooltip.preventShow = true;
-  toolbox._fissionPrefsTooltip.once("hidden", () => {
+  toolbox._experimentalPrefsTooltip.preventShow = true;
+  toolbox._experimentalPrefsTooltip.once("hidden", () => {
     toolbox.win.setTimeout(
-      () => (toolbox._fissionPrefsTooltip.preventShow = false),
+      () => (toolbox._experimentalPrefsTooltip.preventShow = false),
       250
     );
   });
@@ -135,7 +134,7 @@ function updateTooltipContent(toolbox) {
     padding: "0",
   });
 
-  header.textContent = "DevTools Fission preferences";
+  header.textContent = "DevTools Experimental preferences";
 
   const resetButton = toolbox.doc.createElement("button");
   resetButton.addEventListener("click", () => {
@@ -168,11 +167,11 @@ function updateTooltipContent(toolbox) {
 
   container.append(headerContainer, prefList);
 
-  toolbox._fissionPrefsTooltip.panel.innerHTML = "";
+  toolbox._experimentalPrefsTooltip.panel.innerHTML = "";
   // There is a hardcoded 320px max width for doorhanger tooltips,
   // see Bug 1654020.
-  toolbox._fissionPrefsTooltip.panel.style.maxWidth = "unset";
-  toolbox._fissionPrefsTooltip.panel.appendChild(container);
+  toolbox._experimentalPrefsTooltip.panel.style.maxWidth = "unset";
+  toolbox._experimentalPrefsTooltip.panel.appendChild(container);
 }
 
 function createPreferenceListItem(toolbox, name, desc) {
@@ -208,7 +207,7 @@ function createPreferenceListItem(toolbox, name, desc) {
     height: "12px",
   });
 
-  prefInfo.classList.add("fission-pref-icon");
+  prefInfo.classList.add("experimental-pref-icon");
 
   // Preference name
   const prefTitle = toolbox.doc.createElement("span");

@@ -2180,7 +2180,7 @@ pref("devtools.command-button-measure.enabled", false);
 pref("devtools.command-button-noautohide.enabled", false);
 pref("devtools.command-button-errorcount.enabled", true);
 #ifndef MOZILLA_OFFICIAL
-  pref("devtools.command-button-fission-prefs.enabled", true);
+  pref("devtools.command-button-experimental-prefs.enabled", true);
 #endif
 
 // Inspector preferences
