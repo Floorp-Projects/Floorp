@@ -450,10 +450,10 @@ class BrowserRobot {
     fun swipeNavBarRight(tabUrl: String) {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
-            navURLBar().swipeRight(3)
+            navURLBar().swipeRight(2)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         } catch (e: AssertionError) {
-            navURLBar().swipeRight(3)
+            navURLBar().swipeRight(2)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         }
     }
@@ -461,10 +461,10 @@ class BrowserRobot {
     fun swipeNavBarLeft(tabUrl: String) {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
-            navURLBar().swipeRight(3)
+            navURLBar().swipeLeft(2)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         } catch (e: AssertionError) {
-            navURLBar().swipeRight(3)
+            navURLBar().swipeLeft(2)
             assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
         }
     }

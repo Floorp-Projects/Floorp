@@ -584,7 +584,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Will need to check other solutions to properly swipe")
     @Test
     // Swipes the nav bar left/right to switch between tabs
     fun swipeToSwitchTabTest() {
