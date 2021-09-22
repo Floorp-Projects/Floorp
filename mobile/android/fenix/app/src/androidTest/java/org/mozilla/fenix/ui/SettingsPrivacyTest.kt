@@ -190,7 +190,6 @@ class SettingsPrivacyTest {
         }
     }
 
-    @Ignore("Disabled for failing with new Compose Awesomebar")
     @Test
     fun saveLoginFromPromptTest() {
         val saveLoginTest =
@@ -201,9 +200,8 @@ class SettingsPrivacyTest {
             verifySaveLoginPromptIsShown()
             // Click save to save the login
             saveLoginFromPrompt("Save")
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismissSearchBar {
+        }
+        browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
             TestHelper.scrollToElementByText("Logins and passwords")
