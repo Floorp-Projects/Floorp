@@ -37,6 +37,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/StencilXdr.h"  // frontend::StencilXdr::SharedData, CanCopyDataToDisk
+#include "gc/AllocKind.h"  // gc::InitialHeap
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRHealth.h"
