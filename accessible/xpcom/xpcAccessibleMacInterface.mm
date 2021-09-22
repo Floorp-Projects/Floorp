@@ -173,8 +173,6 @@ xpcAccessibleMacInterface::GetParameterizedAttributeValue(const nsAString& aAttr
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
   return NSObjectToJsValue(
       [mNativeObject accessibilityAttributeValue:attribName forParameter:paramObj], aCx, aResult);
-
-  return NS_OK;
 }
 
 bool xpcAccessibleMacInterface::SupportsSelector(SEL aSelector) {
