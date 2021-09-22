@@ -132,7 +132,7 @@ assertEq(nByteSize("123456789.123456789.123456789.123"),              s(Nursery(
 // Inline char16_t atoms.
 // "Impassionate gods have never seen the red that is the Tatsuta River."
 //   - Ariwara no Narihira
-assertEq(tByteSize("千"),						s(TA, TA));
+assertEq(tByteSize("千"),						s(TN, TN));
 assertEq(tByteSize("千早"),						s(TN, TN));
 assertEq(tByteSize("千早ぶ"),						s(TN, TN));
 assertEq(tByteSize("千早ぶる"),						s(TN, TN));
@@ -151,7 +151,7 @@ assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐ�
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くく"),		s(XN+64, XN+64));
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くくるとは"),	s(XN+64, XN+64));
 
-assertEq(nByteSize("千"),						s(TA, TA));
+assertEq(nByteSize("千"),						s(TN, TN));
 assertEq(nByteSize("千早"),						s(Nursery(TN), Nursery(TN)));
 assertEq(nByteSize("千早ぶ"),						s(Nursery(TN), Nursery(TN)));
 assertEq(nByteSize("千早ぶる"),						s(Nursery(TN), Nursery(TN)));

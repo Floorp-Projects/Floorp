@@ -431,8 +431,10 @@ class alignas(alignof(uint32_t)) ParserAtom {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
   // Convert NotInstantiated and usedByStencil entry to a js-atom.
-  JSAtom* instantiate(JSContext* cx, ParserAtomIndex index,
-                      CompilationAtomCache& atomCache) const;
+  JSString* instantiateString(JSContext* cx, ParserAtomIndex index,
+                              CompilationAtomCache& atomCache) const;
+  JSAtom* instantiateAtom(JSContext* cx, ParserAtomIndex index,
+                          CompilationAtomCache& atomCache) const;
 
  private:
   void markUsedByStencil(Atomize atomize) {
@@ -697,6 +699,11 @@ class ParserAtomsTable {
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
   JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
+
+ private:
+  JSAtom* toWellKnownJSAtom(JSContext* cx, TaggedParserAtomIndex index) const;
+
+ public:
   bool appendTo(StringBuffer& buffer, TaggedParserAtomIndex index) const;
 
  public:
