@@ -3199,9 +3199,6 @@ class nsDisplayList {
    * layer manager has already had BeginTransaction() called on it and
    * we should not call it again.
    *
-   * If PAINT_COMPRESSED is set, the FrameLayerBuilder should be set to
-   * compressed mode to avoid short cut optimizations.
-   *
    * This must only be called on the root display list of the display list
    * tree.
    *
@@ -3212,8 +3209,7 @@ class nsDisplayList {
     PAINT_DEFAULT = 0,
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_EXISTING_TRANSACTION = 0x04,
-    PAINT_COMPRESSED = 0x08,
-    PAINT_IDENTICAL_DISPLAY_LIST = 0x10
+    PAINT_IDENTICAL_DISPLAY_LIST = 0x08
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                  uint32_t aFlags, Maybe<double> aDisplayListBuildTime);
