@@ -6344,9 +6344,7 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
   PaintFrameFlags flags =
       PaintFrameFlags::WidgetLayers | PaintFrameFlags::ExistingTransaction;
-  if (!(aFlags & PaintFlags::PaintComposite)) {
-    flags |= PaintFrameFlags::NoComposite;
-  }
+
   // We force sync-decode for printing / print-preview (printing already does
   // this from nsPageSequenceFrame::PrintNextSheet).
   if (aFlags & PaintFlags::PaintSyncDecodeImages ||
