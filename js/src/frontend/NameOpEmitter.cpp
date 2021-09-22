@@ -180,10 +180,19 @@ bool NameOpEmitter::prepareForRhs() {
       if (!bce_->makeAtomIndex(name_, ParserAtom::Atomize::Yes, &atomIndex_)) {
         return false;
       }
+      MOZ_ASSERT(bce_->outermostScope().hasNonSyntacticScopeOnChain() ==
+                 bce_->sc->hasNonSyntacticScope());
+
       if (loc_.isLexical() && isInitialize()) {
         // InitGLexical always gets the global lexical scope. It doesn't
-        // need a BindGName.
+        // need a BindName/BindGName.
         MOZ_ASSERT(bce_->innermostScope().is<GlobalScope>());
+      } else if (bce_->sc->hasNonSyntacticScope()) {
+        if (!bce_->emitAtomOp(JSOp::BindName, atomIndex_)) {
+          //        [stack] ENV
+          return false;
+        }
+        emittedBindOp_ = true;
       } else {
         if (!bce_->emitAtomOp(JSOp::BindGName, atomIndex_)) {
           //        [stack] ENV

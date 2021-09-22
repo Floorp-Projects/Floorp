@@ -2492,9 +2492,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(BindName) {
       JSOp op = JSOp(*REGS.pc);
       ReservedRooted<JSObject*> envChain(&rootObject0);
-      if (op == JSOp::BindName || script->hasNonSyntacticScope()) {
+      if (op == JSOp::BindName) {
         envChain.set(REGS.fp()->environmentChain());
       } else {
+        MOZ_ASSERT(!script->hasNonSyntacticScope());
         envChain.set(&REGS.fp()->global().lexicalEnvironment());
       }
       ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));

@@ -907,6 +907,7 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
 
 template <>
 void BaselineCompilerCodeGen::loadGlobalLexicalEnvironment(Register dest) {
+  MOZ_ASSERT(!handler.script()->hasNonSyntacticScope());
   masm.movePtr(ImmGCPtr(&cx->global()->lexicalEnvironment()), dest);
 }
 
@@ -3326,9 +3327,7 @@ bool BaselineCodeGen<Handler>::emit_GetGName() {
 template <>
 bool BaselineCompilerCodeGen::tryOptimizeBindGlobalName() {
   JSScript* script = handler.script();
-  if (script->hasNonSyntacticScope()) {
-    return false;
-  }
+  MOZ_ASSERT(!script->hasNonSyntacticScope());
 
   RootedGlobalObject global(cx, &script->global());
   RootedPropertyName name(cx, script->getName(handler.pc()));
@@ -3341,7 +3340,7 @@ bool BaselineCompilerCodeGen::tryOptimizeBindGlobalName() {
 
 template <>
 bool BaselineInterpreterCodeGen::tryOptimizeBindGlobalName() {
-  // Interpreter doesn't optimize simple BINDGNAMEs.
+  // Interpreter doesn't optimize simple BindGNames.
   return false;
 }
 
@@ -3350,7 +3349,18 @@ bool BaselineCodeGen<Handler>::emit_BindGName() {
   if (tryOptimizeBindGlobalName()) {
     return true;
   }
-  return emitBindName(JSOp::BindGName);
+
+  frame.syncStack(0);
+  loadGlobalLexicalEnvironment(R0.scratchReg());
+
+  // Call IC.
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  // Mark R0 as pushed stack value.
+  frame.push(R0);
+  return true;
 }
 
 template <typename Handler>
@@ -3777,32 +3787,9 @@ bool BaselineCodeGen<Handler>::emit_GetName() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emitBindName(JSOp op) {
-  // If we have a BindGName without a non-syntactic scope, we pass the global
-  // lexical environment to the IC instead of the frame's environment.
-
+bool BaselineCodeGen<Handler>::emit_BindName() {
   frame.syncStack(0);
-
-  auto loadGlobalLexical = [this]() {
-    loadGlobalLexicalEnvironment(R0.scratchReg());
-    return true;
-  };
-  auto loadFrameEnv = [this]() {
-    masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
-    return true;
-  };
-
-  if (op == JSOp::BindName) {
-    if (!loadFrameEnv()) {
-      return false;
-    }
-  } else {
-    MOZ_ASSERT(op == JSOp::BindGName);
-    if (!emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
-                            loadFrameEnv, loadGlobalLexical, R2.scratchReg())) {
-      return false;
-    }
-  }
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
 
   // Call IC.
   if (!emitNextIC()) {
@@ -3812,11 +3799,6 @@ bool BaselineCodeGen<Handler>::emitBindName(JSOp op) {
   // Mark R0 as pushed stack value.
   frame.push(R0);
   return true;
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_BindName() {
-  return emitBindName(JSOp::BindName);
 }
 
 template <typename Handler>
