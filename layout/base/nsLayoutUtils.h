@@ -1140,10 +1140,9 @@ class nsLayoutUtils {
     HideCaret = 0x20,
     ToWindow = 0x40,
     ExistingTransaction = 0x80,
-    Compressed = 0x100,
-    ForWebRender = 0x200,
-    UseHighQualityScaling = 0x400,
-    ResetViewportScrolling = 0x800,
+    ForWebRender = 0x100,
+    UseHighQualityScaling = 0x200,
+    ResetViewportScrolling = 0x400,
   };
 
   /**

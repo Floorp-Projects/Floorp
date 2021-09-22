@@ -3425,9 +3425,6 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   if (aFlags & PaintFrameFlags::ExistingTransaction) {
     flags |= nsDisplayList::PAINT_EXISTING_TRANSACTION;
   }
-  if (aFlags & PaintFrameFlags::Compressed) {
-    flags |= nsDisplayList::PAINT_COMPRESSED;
-  }
   if (updateState == PartialUpdateResult::NoChange && !aRenderingContext) {
     flags |= nsDisplayList::PAINT_IDENTICAL_DISPLAY_LIST;
   }

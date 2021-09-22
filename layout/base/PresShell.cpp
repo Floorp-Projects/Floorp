@@ -835,7 +835,6 @@ PresShell::PresShell(Document* aDocument)
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
       mApproximateFrameVisibilityVisited(false),
-      mNextPaintCompressed(false),
       mHasCSSBackgroundColor(true),
       mIsLastChromeOnlyEscapeKeyConsumed(false),
       mHasReceivedPaintMessage(false),
@@ -3689,30 +3688,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
   return didScroll;
 }
 
-void PresShell::ScheduleViewManagerFlush(PaintType aType) {
+void PresShell::ScheduleViewManagerFlush() {
   if (MOZ_UNLIKELY(mIsDestroying)) {
-    return;
-  }
-
-  if (aType == PaintType::DelayedCompress) {
-    // Delay paint for 1 second.
-    static const uint32_t kPaintDelayPeriod = 1000;
-    if (!mDelayedPaintTimer) {
-      nsTimerCallbackFunc PaintTimerCallBack = [](nsITimer* aTimer,
-                                                  void* aClosure) {
-        // The passed-in PresShell is always alive here. Because if PresShell
-        // died, mDelayedPaintTimer->Cancel() would be called during the
-        // destruction and this callback would never be invoked.
-        auto self = static_cast<PresShell*>(aClosure);
-        self->SetNextPaintCompressed();
-        self->ScheduleViewManagerFlush();
-      };
-
-      NS_NewTimerWithFuncCallback(
-          getter_AddRefs(mDelayedPaintTimer), PaintTimerCallBack, this,
-          kPaintDelayPeriod, nsITimer::TYPE_ONE_SHOT, "PaintTimerCallBack",
-          mDocument->EventTargetFor(TaskCategory::Other));
-    }
     return;
   }
 
@@ -6318,8 +6295,7 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
 
   if (frame) {
     if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
-        !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE) &&
-        !mNextPaintCompressed) {
+        !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager) {
         layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
       }
@@ -6350,10 +6326,6 @@ void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   if (aFlags & PaintFlags::PaintSyncDecodeImages ||
       mDocument->IsStaticDocument()) {
     flags |= PaintFrameFlags::SyncDecodeImages;
-  }
-  if (mNextPaintCompressed) {
-    flags |= PaintFrameFlags::Compressed;
-    mNextPaintCompressed = false;
   }
   if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     flags |= PaintFrameFlags::ForWebRender;

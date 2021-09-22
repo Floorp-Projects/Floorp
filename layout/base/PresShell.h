@@ -1280,12 +1280,8 @@ class PresShell final : public nsStubDocumentObserver,
   /**
    * Ensures that the refresh driver is running, and schedules a view
    * manager flush on the next tick.
-   *
-   * @param aType PaintType::DelayedCompress : Schedule a paint to be executed
-   * after a delay, and put FrameLayerBuilder in 'compressed' mode that avoids
-   * short cut optimizations.
    */
-  void ScheduleViewManagerFlush(PaintType aType = PaintType::Default);
+  void ScheduleViewManagerFlush();
 
   // caret handling
   NS_IMETHOD SetCaretEnabled(bool aInEnable) override;
@@ -1537,8 +1533,6 @@ class PresShell final : public nsStubDocumentObserver,
           AddCanvasBackgroundColorFlags::None);
 
   size_t SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const;
-
-  void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
   static PresShell* GetShellForEventTarget(nsIFrame* aFrame,
                                            nsIContent* aContent);
@@ -3095,8 +3089,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool mNoDelayedKeyEvents : 1;
 
   bool mApproximateFrameVisibilityVisited : 1;
-
-  bool mNextPaintCompressed : 1;
 
   bool mHasCSSBackgroundColor : 1;
 
