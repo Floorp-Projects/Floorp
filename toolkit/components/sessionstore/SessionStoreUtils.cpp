@@ -1567,8 +1567,7 @@ void SessionStoreUtils::RestoreSessionStorageFromParent(
     SSCacheCopy& cacheInit = *cacheInitList.AppendElement();
 
     cacheInit.originKey() = originKey;
-    storagePrincipal->OriginAttributesRef().CreateSuffix(
-        cacheInit.originAttributes());
+    PrincipalToPrincipalInfo(storagePrincipal, &cacheInit.principalInfo());
 
     for (const auto& entry : originEntry.mValue.Entries()) {
       SSSetItemInfo& setItemInfo = *cacheInit.data().AppendElement();
@@ -1680,39 +1679,9 @@ nsresult SessionStoreUtils::ConstructSessionStorageValues(
     return NS_ERROR_FAILURE;
   }
 
-  // We wish to remove this step of mapping originAttributes+originKey
-  // to a storage principal in Bug 1711886 by consolidating the
-  // storage format in SessionStorageManagerBase and Session Store.
-  nsTHashMap<nsCStringHashKey, nsIPrincipal*> storagePrincipalList;
-  aBrowsingContext->PreOrderWalk([&storagePrincipalList](
-                                     BrowsingContext* aContext) {
-    WindowGlobalParent* windowParent =
-        aContext->Canonical()->GetCurrentWindowGlobal();
-    if (!windowParent) {
-      return;
-    }
-
-    nsIPrincipal* storagePrincipal = windowParent->DocumentStoragePrincipal();
-    if (!storagePrincipal) {
-      return;
-    }
-
-    const OriginAttributes& originAttributes =
-        storagePrincipal->OriginAttributesRef();
-    nsAutoCString originAttributesSuffix;
-    originAttributes.CreateSuffix(originAttributesSuffix);
-
-    nsAutoCString originKey;
-    storagePrincipal->GetStorageOriginKey(originKey);
-
-    storagePrincipalList.InsertOrUpdate(originAttributesSuffix + originKey,
-                                        storagePrincipal);
-  });
-
   for (const auto& value : aValues) {
-    nsIPrincipal* storagePrincipal =
-        storagePrincipalList.Get(value.originAttributes() + value.originKey());
-    if (!storagePrincipal) {
+    auto storagePrincipal = PrincipalInfoToPrincipal(value.principalInfo());
+    if (storagePrincipal.isErr()) {
       continue;
     }
 
@@ -1722,7 +1691,7 @@ nsresult SessionStoreUtils::ConstructSessionStorageValues(
       return NS_ERROR_FAILURE;
     }
 
-    if (NS_FAILED(storagePrincipal->GetOrigin(entry->mKey))) {
+    if (NS_FAILED(storagePrincipal.inspect()->GetOrigin(entry->mKey))) {
       return NS_ERROR_FAILURE;
     }
 
