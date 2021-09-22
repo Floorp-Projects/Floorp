@@ -219,6 +219,7 @@ add_task(async function test_setup() {
   L10nRegistry.getInstance().registerSources([
     L10nFileSource.createMock(
       "mock",
+      "app",
       ["it-IT", "fr-FR"],
       "resource://fake/locales/{locale}",
       []

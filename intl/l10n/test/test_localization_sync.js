@@ -19,7 +19,7 @@ key-attr =
 ` },
   ];
 
-  const source = L10nFileSource.createMock("test", ["de", "en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["de", "en-US"], "/localization/{locale}", fs);
   l10nReg.registerSources([source]);
 
   const l10n = new Localization([
@@ -94,7 +94,7 @@ key = { PLATFORM() ->
     }` },
   ];
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   const l10nReg = new L10nRegistry();
   l10nReg.registerSources([source]);
 
@@ -115,7 +115,7 @@ add_task(function test_add_remove_resourceIds() {
   ];
   const originalRequested = Services.locale.requestedLocales;
 
-  const source = L10nFileSource.createMock("test", ["en-US"], "/localization/{locale}", fs);
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
   const l10nReg = new L10nRegistry();
   l10nReg.registerSources([source]);
 
