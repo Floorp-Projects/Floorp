@@ -514,7 +514,7 @@ It may look like this:
 .. code-block:: javascript
 
     let source = L10nFileSource.createMock(
-      "mock-source",
+      "mock-source", "app",
       ["ko-KR", "ar"],
       "resource://mock-addon/localization/{locale}",
       [

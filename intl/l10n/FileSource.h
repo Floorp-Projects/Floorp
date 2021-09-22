@@ -27,13 +27,14 @@ class L10nFileSource : public nsWrapperCache {
 
   static already_AddRefed<L10nFileSource> Constructor(
       const dom::GlobalObject& aGlobal, const nsACString& aName,
-      const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,
-      const dom::FileSourceOptions& aOptions,
+      const nsACString& aMetaSource, const nsTArray<nsCString>& aLocales,
+      const nsACString& aPrePath, const dom::FileSourceOptions& aOptions,
       const dom::Optional<dom::Sequence<nsCString>>& aIndex, ErrorResult& aRv);
 
   static already_AddRefed<L10nFileSource> CreateMock(
       const dom::GlobalObject& aGlobal, const nsACString& aName,
-      const nsTArray<nsCString>& aLocales, const nsACString& aPrePath,
+      const nsACString& aMetaSource, const nsTArray<nsCString>& aLocales,
+      const nsACString& aPrePath,
       const nsTArray<dom::L10nFileSourceMockFile>& aFS, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
@@ -42,6 +43,7 @@ class L10nFileSource : public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   void GetName(nsCString& aRetVal);
+  void GetMetaSource(nsCString& aRetVal);
   void GetLocales(nsTArray<nsCString>& aRetVal);
   void GetPrePath(nsCString& aRetVal);
   void GetIndex(dom::Nullable<nsTArray<nsCString>>& aRetVal);
