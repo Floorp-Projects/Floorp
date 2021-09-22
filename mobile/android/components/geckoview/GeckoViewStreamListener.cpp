@@ -5,6 +5,7 @@
 
 #include "GeckoViewStreamListener.h"
 
+#include "mozilla/fallible.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannel.h"
@@ -161,7 +162,10 @@ nsresult GeckoViewStreamListener::WriteSegment(
 
   jni::ByteArray::LocalRef buffer = jni::ByteArray::New(
       reinterpret_cast<signed char*>(const_cast<char*>(aFromSegment)),
-      *aWriteCount);
+      *aWriteCount, fallible);
+  if (!buffer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (NS_FAILED(self->mStream->AppendBuffer(buffer))) {
     // The stream was closed or something, abort reading this channel.
