@@ -4010,7 +4010,6 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
         name = script->getName(loc.toRawBytecode());
         break;
 
-      case JSOp::GetGName:
       case JSOp::SetGName:
       case JSOp::StrictSetGName:
         if (script->hasNonSyntacticScope()) {

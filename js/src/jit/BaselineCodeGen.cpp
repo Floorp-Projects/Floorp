@@ -3300,28 +3300,22 @@ bool BaselineInterpreterCodeGen::tryOptimizeGetGlobalName() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetGName() {
-  auto getName = [this]() { return emit_GetName(); };
-
-  auto getGlobalName = [this]() {
-    if (tryOptimizeGetGlobalName()) {
-      return true;
-    }
-
-    frame.syncStack(0);
-
-    loadGlobalLexicalEnvironment(R0.scratchReg());
-
-    // Call IC.
-    if (!emitNextIC()) {
-      return false;
-    }
-
-    // Mark R0 as pushed stack value.
-    frame.push(R0);
+  if (tryOptimizeGetGlobalName()) {
     return true;
-  };
-  return emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
-                            getName, getGlobalName, R2.scratchReg());
+  }
+
+  frame.syncStack(0);
+
+  loadGlobalLexicalEnvironment(R0.scratchReg());
+
+  // Call IC.
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  // Mark R0 as pushed stack value.
+  frame.push(R0);
+  return true;
 }
 
 template <>
