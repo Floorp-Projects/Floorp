@@ -23,44 +23,54 @@ pub type FluentResourceSet = Vec<Rc<FluentResource>>;
 
 #[derive(Default)]
 struct Shared<P, B> {
-    sources: RefCell<Vec<FileSource>>,
+    sources: RefCell<Vec<Vec<FileSource>>>,
     provider: P,
     bundle_adapter: Option<B>,
 }
 
 pub struct L10nRegistryLocked<'a, B> {
-    lock: Ref<'a, Vec<FileSource>>,
+    lock: Ref<'a, Vec<Vec<FileSource>>>,
     bundle_adapter: Option<&'a B>,
 }
 
 impl<'a, B> L10nRegistryLocked<'a, B> {
-    pub fn iter(&self) -> impl Iterator<Item = &FileSource> {
-        self.lock.iter()
+    pub fn iter(&self, metasource: usize) -> impl Iterator<Item = &FileSource> {
+        self.lock
+            .get(metasource)
+            .expect("Index out-of-range")
+            .iter()
     }
 
-    pub fn len(&self) -> usize {
+    pub fn number_of_metasources(&self) -> usize {
         self.lock.len()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
+    pub fn metasource_len(&self, metasource: usize) -> usize {
+        self.lock.get(metasource).expect("Index out-of-range").len()
     }
 
-    pub fn source_idx(&self, index: usize) -> &FileSource {
-        let source_idx = self.len() - 1 - index;
-        self.lock.get(source_idx).expect("Index out-of-range")
+    pub fn source_idx(&self, metasource: usize, index: usize) -> &FileSource {
+        let source_idx = self.metasource_len(metasource) - 1 - index;
+        self.lock[metasource]
+            .get(source_idx)
+            .expect("Index out-of-range")
     }
 
-    pub fn get_source(&self, name: &str) -> Option<&FileSource> {
-        self.lock.iter().find(|&source| source.name == name)
+    pub fn get_source(&self, metasource: usize, name: &str) -> Option<&FileSource> {
+        self.lock
+            .get(metasource)
+            .expect("Index out-of-range")
+            .iter()
+            .find(|&source| source.name == name)
     }
 
     pub fn generate_sources_for_file<'l>(
         &'l self,
+        metasource: usize,
         langid: &'l LanguageIdentifier,
         res_id: &'l str,
     ) -> impl Iterator<Item = &FileSource> {
-        self.iter()
+        self.iter(metasource)
             .filter(move |source| source.has_file(langid, res_id) != Some(false))
     }
 }
@@ -112,12 +122,14 @@ impl<P, B> L10nRegistry<P, B> {
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
 
         for new_source in new_sources {
-            if sources.iter().any(|source| source == &new_source) {
-                return Err(L10nRegistrySetupError::DuplicatedSource {
-                    name: new_source.name,
-                });
+            if let Some(metasource) = sources
+                .iter_mut()
+                .find(|source| source[0].metasource == new_source.metasource)
+            {
+                metasource.push(new_source);
+            } else {
+                sources.push(vec![new_source]);
             }
-            sources.push(new_source);
         }
         Ok(())
     }
@@ -133,12 +145,17 @@ impl<P, B> L10nRegistry<P, B> {
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
 
         for upd_source in upd_sources {
-            if let Some(idx) = sources.iter().position(|source| *source == upd_source) {
-                *sources.get_mut(idx).unwrap() = upd_source;
-            } else {
-                return Err(L10nRegistrySetupError::MissingSource {
-                    name: upd_source.name,
-                });
+            if let Some(metasource) = sources
+                .iter_mut()
+                .find(|source| source[0].metasource == upd_source.metasource)
+            {
+                if let Some(idx) = metasource.iter().position(|source| *source == upd_source) {
+                    *metasource.get_mut(idx).unwrap() = upd_source;
+                } else {
+                    return Err(L10nRegistrySetupError::MissingSource {
+                        name: upd_source.name,
+                    });
+                }
             }
         }
         Ok(())
@@ -155,7 +172,12 @@ impl<P, B> L10nRegistry<P, B> {
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         let del_sources: Vec<String> = del_sources.into_iter().map(|s| s.to_string()).collect();
 
-        sources.retain(|source| !del_sources.contains(&source.name));
+        for metasource in sources.iter_mut() {
+            metasource.retain(|source| !del_sources.contains(&source.name));
+        }
+
+        sources.retain(|metasource| !metasource.is_empty());
+
         Ok(())
     }
 
@@ -175,7 +197,7 @@ impl<P, B> L10nRegistry<P, B> {
             .sources
             .try_borrow_mut()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
-        Ok(sources.iter().map(|s| s.name.clone()).collect())
+        Ok(sources.iter().flatten().map(|s| s.name.clone()).collect())
     }
 
     pub fn has_source(&self, name: &str) -> Result<bool, L10nRegistrySetupError> {
@@ -184,7 +206,7 @@ impl<P, B> L10nRegistry<P, B> {
             .sources
             .try_borrow_mut()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
-        Ok(sources.iter().any(|source| source.name == name))
+        Ok(sources.iter().flatten().any(|source| source.name == name))
     }
 
     pub fn get_source(&self, name: &str) -> Result<Option<FileSource>, L10nRegistrySetupError> {
@@ -193,9 +215,12 @@ impl<P, B> L10nRegistry<P, B> {
             .sources
             .try_borrow_mut()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
-        Ok(sources.iter().find(|source| source.name == name).cloned())
+        Ok(sources
+            .iter()
+            .flatten()
+            .find(|source| source.name == name)
+            .cloned())
     }
-
     pub fn get_available_locales(&self) -> Result<Vec<LanguageIdentifier>, L10nRegistrySetupError> {
         let sources = self
             .shared
@@ -203,7 +228,7 @@ impl<P, B> L10nRegistry<P, B> {
             .try_borrow_mut()
             .map_err(|_| L10nRegistrySetupError::RegistryLocked)?;
         let mut result = HashSet::new();
-        for source in sources.iter() {
+        for source in sources.iter().flatten() {
             for locale in source.locales() {
                 result.insert(locale);
             }
