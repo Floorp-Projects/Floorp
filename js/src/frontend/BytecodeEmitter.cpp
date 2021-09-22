@@ -6187,6 +6187,14 @@ bool BytecodeEmitter::emitThisLiteral(ThisLiteral* pn) {
   }
 
   MOZ_ASSERT(sc->thisBinding() == ThisBinding::Global);
+
+  MOZ_ASSERT(outermostScope().hasNonSyntacticScopeOnChain() ==
+             sc->hasNonSyntacticScope());
+  if (sc->hasNonSyntacticScope()) {
+    return emit1(JSOp::NonSyntacticGlobalThis);
+    //                [stack] THIS
+  }
+
   return emit1(JSOp::GlobalThis);
   //                [stack] THIS
 }

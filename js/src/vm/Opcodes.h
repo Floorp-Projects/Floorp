@@ -761,6 +761,19 @@
      */ \
     MACRO(GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE) \
     /*
+     * Push the global `this` value for non-syntactic scope. Not to be confused
+     * with the `globalThis` property on the global.
+     *
+     * This must be used only in scopes where `this` refers to the global
+     * `this`.
+     *
+     *   Category: Expressions
+     *   Type: Other expressions
+     *   Operands:
+     *   Stack: => this
+     */ \
+    MACRO(NonSyntacticGlobalThis, non_syntactic_global_this, NULL, 1, 0, 1, JOF_BYTE) \
+    /*
      * Push the value of `new.target`.
      *
      * The result is a constructor or `undefined`.
@@ -3500,7 +3513,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(227)                                   \
   MACRO(228)                                   \
   MACRO(229)                                   \
   MACRO(230)                                   \

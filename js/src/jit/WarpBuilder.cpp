@@ -1895,8 +1895,7 @@ bool WarpBuilder::build_FunctionThis(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_GlobalThis(BytecodeLocation loc) {
-  MOZ_ASSERT(!script_->hasNonSyntacticScope(),
-             "WarpOracle should have aborted compilation");
+  MOZ_ASSERT(!script_->hasNonSyntacticScope());
   JSObject* obj = snapshot().globalLexicalEnvThis();
   pushConstant(ObjectValue(*obj));
   return true;

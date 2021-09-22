@@ -2348,28 +2348,27 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GlobalThis() {
   frame.syncStack(0);
 
-  auto getNonSyntacticThis = [this]() {
-    prepareVMCall();
+  loadGlobalThisValue(R0);
+  frame.push(R0);
+  return true;
+}
 
-    masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
-    pushArg(R0.scratchReg());
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_NonSyntacticGlobalThis() {
+  frame.syncStack(0);
 
-    using Fn = void (*)(JSContext*, HandleObject, MutableHandleValue);
-    if (!callVM<Fn, GetNonSyntacticGlobalThis>()) {
-      return false;
-    }
+  prepareVMCall();
 
-    frame.push(R0);
-    return true;
-  };
-  auto getGlobalThis = [this]() {
-    loadGlobalThisValue(R0);
-    frame.push(R0);
-    return true;
-  };
-  return emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
-                            getNonSyntacticThis, getGlobalThis,
-                            R2.scratchReg());
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
+  pushArg(R0.scratchReg());
+
+  using Fn = void (*)(JSContext*, HandleObject, MutableHandleValue);
+  if (!callVM<Fn, GetNonSyntacticGlobalThis>()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
 }
 
 template <typename Handler>

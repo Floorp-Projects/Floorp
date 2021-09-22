@@ -359,12 +359,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
 
       case JSOp::GlobalThis:
-        if (script_->hasNonSyntacticScope()) {
-          // We don't compile global scripts with a non-syntactic scope, but
-          // we can end up here when we're compiling an arrow function.
-          return abort(AbortReason::Disable,
-                       "JSOp::GlobalThis with non-syntactic scope");
-        }
+        MOZ_ASSERT(!script_->hasNonSyntacticScope());
         break;
 
       case JSOp::BuiltinObject: {
