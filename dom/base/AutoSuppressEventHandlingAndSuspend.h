@@ -15,6 +15,28 @@
 #include "nsTArray.h"
 
 namespace mozilla::dom {
+
+/**
+ * Suppresses event handling and suspends for all in-process documents in a
+ * BrowsingContext subtree.
+ */
+class MOZ_RAII AutoSuppressEventHandling : public AutoWalkBrowsingContextGroup {
+ public:
+  AutoSuppressEventHandling() = default;
+
+  explicit AutoSuppressEventHandling(BrowsingContext* aContext) {
+    if (aContext) {
+      SuppressBrowsingContext(aContext);
+    }
+  }
+
+  ~AutoSuppressEventHandling();
+
+ protected:
+  virtual void SuppressDocument(Document* aDocument) override;
+  void UnsuppressDocument(Document* aDocument) override;
+};
+
 /**
  * Suppresses event handling and suspends the active inner window for all
  * in-process documents in a BrowsingContextGroup. This should be used while
@@ -22,9 +44,8 @@ namespace mozilla::dom {
  * which affects operations in any other window in the same BrowsingContext
  * group.
  */
-
 class MOZ_RAII AutoSuppressEventHandlingAndSuspend
-    : private AutoWalkBrowsingContextGroup {
+    : private AutoSuppressEventHandling {
  public:
   explicit AutoSuppressEventHandlingAndSuspend(BrowsingContextGroup* aGroup) {
     if (aGroup) {
@@ -36,7 +57,6 @@ class MOZ_RAII AutoSuppressEventHandlingAndSuspend
 
  protected:
   void SuppressDocument(Document* aDocument) override;
-  void UnsuppressDocument(Document* aDocument) override;
 
  private:
   AutoTArray<nsCOMPtr<nsPIDOMWindowInner>, 16> mWindows;
