@@ -182,9 +182,10 @@
       "secondary_url": "https://www.expedia.com/Activities"
     },
     {
-      "login": true,
+      "login": false,
       "name": "facebook",
-      "test_url": "https://www.facebook.com"
+      "test_url": "https://www.facebook.com",
+      "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark"
     },
     {
       "login": false,
