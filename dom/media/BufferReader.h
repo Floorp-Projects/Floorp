@@ -5,6 +5,7 @@
 #ifndef BUFFER_READER_H_
 #define BUFFER_READER_H_
 
+#include <string.h>
 #include "mozilla/EndianUtils.h"
 #include "nscore.h"
 #include "nsTArray.h"
@@ -270,7 +271,10 @@ class MOZ_RAII BufferReader {
               ("%s: failure", __func__));
       return 0;
     }
-    return *reinterpret_cast<const T*>(ptr);
+    // handle unaligned accesses by memcpying
+    T ret;
+    memcpy(&ret, ptr, sizeof(T));
+    return ret;
   }
 
   template <typename T>
