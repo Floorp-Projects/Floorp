@@ -1997,7 +1997,7 @@ class JSScript : public js::BaseScript {
 
   JSString* getString(jsbytecode* pc) const {
     MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
-    MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
+    MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_STRING);
     return getString(GET_GCTHING_INDEX(pc));
   }
 
