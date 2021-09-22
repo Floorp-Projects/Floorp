@@ -32,7 +32,11 @@ runTest(async () => {
   // nothing is output because the tab is muted.
   DISABLE_LOOPBACK_TONE = true;
 
-  const stream = await getUserMedia({audio: true});
+  const stream = await getUserMedia({audio: {
+      noiseSuppression: false,
+      echoCancellation: false,
+      autoGainControl: false,
+  }});
   try {
     const ac = new AudioContext();
     const osc = new OscillatorNode(ac);
