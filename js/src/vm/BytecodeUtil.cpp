@@ -2091,7 +2091,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         MOZ_ASSERT(defIndex == 1);
         return write("PC");
 
-      case JSOp::GImplicitThis:
       case JSOp::FunctionThis:
       case JSOp::ImplicitThis:
         return write("THIS");
