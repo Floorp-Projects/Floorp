@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Video element visibility in iframe</title>
+</head>
+<body>
+<div style="width: 100%; height: calc(100vh - 100px);"></div>
+<div style="height: 100px; overflow: scroll;">
+  <!-- 2x height of the scroll port to make this test pass with/without Fission -->
+  <div style="width: 100%; height: 200px;"></div>
+  <iframe id="iframe" style="height: 100px; border: none;"></iframe>
+</div>
+<script>
+const add_task = window.opener.add_task;
+const SimpleTest = window.opener.SimpleTest;
+const original_finish = window.opener.SimpleTest.finish;
+
+// add_task calls SimpleTest.finish() when it finished, we want to close this
+// window before SimpleTest.finish() gets called.
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+
+add_task(async () => {
+  const iframe = document.getElementById("iframe");
+  await new Promise(resolve => {
+    iframe.addEventListener("load", () => { resolve(); }, { once: true });
+    iframe.src = "http://example.org/tests/layout/generic/test/frame_visibility_in_iframe_child.html";
+  });
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    // With layout.visibility.min-recompute-interval-ms=0 value, flushing layout
+    // and waiting two frames would be sufficient to make sure at least one
+    // RebuildApproximateFrameVisibility call was done. This would avoid the
+    // situation we consider the video element is invisible without doing any
+    // frame visibility tracking stuff.
+    content.document.documentElement.getBoundingClientRect();
+    await new Promise(resolve => content.window.requestAnimationFrame(resolve));
+    await new Promise(resolve => content.window.requestAnimationFrame(resolve));
+  });
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    const video = content.document.querySelector("video");
+    Assert.ok(!SpecialPowers.wrap(video).isInViewPort,
+              "The video element should not be in the viewport");
+  });
+});
+</script>
+</body>
+</html>

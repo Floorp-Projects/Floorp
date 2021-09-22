@@ -4497,6 +4497,17 @@ bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
   bool usingDisplayport = DisplayPortUtils::GetDisplayPort(
       mOuter->GetContent(), &displayPort,
       DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
+
+  if (mIsRoot && !usingDisplayport &&
+      mOuter->PresContext()->IsRootContentDocumentInProcess() &&
+      !mOuter->PresContext()->IsRootContentDocumentCrossProcess()) {
+    // In the case of the root scroller of OOP iframes, there are cases where
+    // any display port value isn't set, e.g. the iframe element is out of view
+    // in the parent document. In such cases we'd consider the iframe is not
+    // visible.
+    return false;
+  }
+
   return aRect.Intersects(
       ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }
