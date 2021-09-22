@@ -827,6 +827,8 @@ class OriginInfo final {
 
   OriginMetadata FlattenToOriginMetadata() const;
 
+  FullOriginMetadata LockedFlattenToFullOriginMetadata() const;
+
   nsresult LockedBindToStatement(mozIStorageStatement* aStatement) const;
 
  private:
@@ -1523,6 +1525,21 @@ class InitializeTemporaryOriginOp final : public InitializeOriginRequestBase {
  private:
   ~InitializeTemporaryOriginOp() = default;
 
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class GetFullOriginMetadataOp : public QuotaRequestBase {
+  const OriginMetadata mOriginMetadata;
+  Maybe<FullOriginMetadata> mMaybeFullOriginMetadata;
+
+ public:
+  explicit GetFullOriginMetadataOp(const GetFullOriginMetadataParams& aParams);
+
+  void Init(Quota& aQuota) override;
+
+ private:
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   void GetResponse(RequestResponse& aResponse) override;
@@ -6512,6 +6529,23 @@ uint64_t QuotaManager::GetOriginUsage(
   return usage;
 }
 
+Maybe<FullOriginMetadata> QuotaManager::GetFullOriginMetadata(
+    const OriginMetadata& aOriginMetadata) {
+  AssertIsOnIOThread();
+  MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
+  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
+
+  MutexAutoLock lock(mQuotaMutex);
+
+  RefPtr<OriginInfo> originInfo =
+      LockedGetOriginInfo(aOriginMetadata.mPersistenceType, aOriginMetadata);
+  if (originInfo) {
+    return Some(originInfo->LockedFlattenToFullOriginMetadata());
+  }
+
+  return Nothing();
+}
+
 void QuotaManager::NotifyStoragePressure(uint64_t aUsage) {
   mQuotaMutex.AssertNotCurrentThreadOwns();
 
@@ -7340,6 +7374,12 @@ OriginMetadata OriginInfo::FlattenToOriginMetadata() const {
           mGroupInfo->mPersistenceType};
 }
 
+FullOriginMetadata OriginInfo::LockedFlattenToFullOriginMetadata() const {
+  AssertCurrentThreadOwnsQuotaMutex();
+
+  return {FlattenToOriginMetadata(), mPersisted, mAccessTime};
+}
+
 nsresult OriginInfo::LockedBindToStatement(
     mozIStorageStatement* aStatement) const {
   AssertCurrentThreadOwnsQuotaMutex();
@@ -8018,6 +8058,23 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
+    case RequestParams::TGetFullOriginMetadataParams: {
+      const GetFullOriginMetadataParams& params =
+          aParams.get_GetFullOriginMetadataParams();
+      if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
     case RequestParams::TClearOriginParams: {
       const ClearResetOriginParams& params =
           aParams.get_ClearOriginParams().commonParams();
@@ -8247,6 +8304,10 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
       case RequestParams::TInitializeTemporaryOriginParams:
         return MakeRefPtr<InitializeTemporaryOriginOp>(aParams);
+
+      case RequestParams::TGetFullOriginMetadataParams:
+        return MakeRefPtr<GetFullOriginMetadataOp>(
+            aParams.get_GetFullOriginMetadataParams());
 
       case RequestParams::TClearOriginParams:
         return MakeRefPtr<ClearOriginOp>(aParams);
@@ -9057,6 +9118,49 @@ void InitializeTemporaryOriginOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = InitializeTemporaryOriginResponse(mCreated);
+}
+
+GetFullOriginMetadataOp::GetFullOriginMetadataOp(
+    const GetFullOriginMetadataParams& aParams)
+    : QuotaRequestBase(/* aExclusive */ false),
+      mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
+                          aParams.principalInfo()),
+                      aParams.persistenceType()) {
+  AssertIsOnOwningThread();
+}
+
+void GetFullOriginMetadataOp::Init(Quota& aQuota) {
+  AssertIsOnOwningThread();
+
+  QuotaRequestBase::Init(aQuota);
+
+  mNeedsDirectoryLocking = false;
+}
+
+nsresult GetFullOriginMetadataOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("GetFullOriginMetadataOp::DoDirectoryWork", OTHER);
+
+  // Ensure temporary storage is initialized. If temporary storage hasn't
+  // been initialized yet, the method will initialize it by traversing the
+  // repositories for temporary and default storage (including our origin).
+  QM_TRY(aQuotaManager.EnsureTemporaryStorageIsInitialized());
+
+  // Get metadata cached in memory (the method doesn't have to stat any
+  // files).
+  mMaybeFullOriginMetadata =
+      aQuotaManager.GetFullOriginMetadata(mOriginMetadata);
+
+  return NS_OK;
+}
+
+void GetFullOriginMetadataOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = GetFullOriginMetadataResponse();
+  aResponse.get_GetFullOriginMetadataResponse().maybeFullOriginMetadata() =
+      std::move(mMaybeFullOriginMetadata);
 }
 
 ResetOrClearOp::ResetOrClearOp(bool aClear)
