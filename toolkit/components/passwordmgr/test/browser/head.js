@@ -246,7 +246,7 @@ function testSubmittingLoginForm(
       );
       ok(true, "form submission loaded");
       if (aTaskFn) {
-        await aTaskFn(fieldValues);
+        await aTaskFn(fieldValues, browser);
       }
       return fieldValues;
     }
