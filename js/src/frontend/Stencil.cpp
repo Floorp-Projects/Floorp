@@ -1553,7 +1553,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   bool isInitialParse = stencil.isInitialStencil();
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
-  // Phase 1: Instantiate JSAtoms.
+  // Phase 1: Instantiate JSAtom/JSStrings.
   if (!InstantiateAtoms(cx, input.atomCache, stencil)) {
     return false;
   }
@@ -3380,15 +3380,16 @@ void CompilationStencil::dumpAtom(TaggedParserAtomIndex index) const {
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
-JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {
+JSString* CompilationAtomCache::getExistingStringAt(
+    ParserAtomIndex index) const {
   return atoms_[index];
 }
 
-JSAtom* CompilationAtomCache::getExistingAtomAt(
+JSString* CompilationAtomCache::getExistingStringAt(
     JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
   if (taggedIndex.isParserAtomIndex()) {
     auto index = taggedIndex.toParserAtomIndex();
-    return getExistingAtomAt(index);
+    return getExistingStringAt(index);
   }
 
   if (taggedIndex.isWellKnownAtomId()) {
@@ -3406,11 +3407,30 @@ JSAtom* CompilationAtomCache::getExistingAtomAt(
   return cx->staticStrings().getLength2FromIndex(size_t(index));
 }
 
-JSAtom* CompilationAtomCache::getAtomAt(ParserAtomIndex index) const {
+JSString* CompilationAtomCache::getStringAt(ParserAtomIndex index) const {
   if (size_t(index) >= atoms_.length()) {
     return nullptr;
   }
   return atoms_[index];
+}
+
+JSAtom* CompilationAtomCache::getExistingAtomAt(ParserAtomIndex index) const {
+  return &getExistingStringAt(index)->asAtom();
+}
+
+JSAtom* CompilationAtomCache::getExistingAtomAt(
+    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
+  return &getExistingStringAt(cx, taggedIndex)->asAtom();
+}
+
+JSAtom* CompilationAtomCache::getAtomAt(ParserAtomIndex index) const {
+  if (size_t(index) >= atoms_.length()) {
+    return nullptr;
+  }
+  if (!atoms_[index]) {
+    return nullptr;
+  }
+  return &atoms_[index]->asAtom();
 }
 
 bool CompilationAtomCache::hasAtomAt(ParserAtomIndex index) const {
@@ -3421,7 +3441,7 @@ bool CompilationAtomCache::hasAtomAt(ParserAtomIndex index) const {
 }
 
 bool CompilationAtomCache::setAtomAt(JSContext* cx, ParserAtomIndex index,
-                                     JSAtom* atom) {
+                                     JSString* atom) {
   if (size_t(index) < atoms_.length()) {
     atoms_[index] = atom;
     return true;

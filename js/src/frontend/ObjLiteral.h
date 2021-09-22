@@ -124,7 +124,7 @@ enum class ObjLiteralOpcode : uint8_t {
   INVALID = 0,
 
   ConstValue = 1,  // numeric types only.
-  ConstAtom = 2,
+  ConstString = 2,
   Null = 3,
   Undefined = 4,
   True = 5,
@@ -197,7 +197,7 @@ inline bool ObjLiteralOpcodeHasValueArg(ObjLiteralOpcode op) {
 }
 
 inline bool ObjLiteralOpcodeHasAtomArg(ObjLiteralOpcode op) {
-  return op == ObjLiteralOpcode::ConstAtom;
+  return op == ObjLiteralOpcode::ConstString;
 }
 
 struct ObjLiteralReaderBase;
@@ -411,7 +411,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     parserAtoms.markUsedByStencil(value, frontend::ParserAtom::Atomize::No);
-    return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
+    return pushOpAndName(cx, ObjLiteralOpcode::ConstString, nextKey_) &&
            pushAtomArg(cx, value);
   }
   [[nodiscard]] bool propWithNullValue(JSContext* cx) {
