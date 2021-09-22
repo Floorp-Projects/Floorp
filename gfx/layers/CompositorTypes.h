@@ -117,16 +117,9 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticTypes)
  * See gfx/layers/Effects.h
  */
 enum class EffectTypes : uint8_t {
-  MASK,
-  BLEND_MODE,
-  COLOR_MATRIX,
-  MAX_SECONDARY,  // sentinel for the count of secondary effect types
   RGB,
   YCBCR,
   NV12,
-  COMPONENT_ALPHA,
-  SOLID_COLOR,
-  RENDER_TARGET,
   MAX  // sentinel for the count of all effect types
 };
 

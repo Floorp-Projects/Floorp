@@ -107,14 +107,6 @@ class ShaderProgramOGL {
     SetMatrixUniform(KnownUniform::LayerTransformInverse, aMatrix);
   }
 
-  void SetMaskLayerTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(KnownUniform::MaskTransform, aMatrix);
-  }
-
-  void SetBackdropTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(KnownUniform::BackdropTransform, aMatrix);
-  }
-
   void SetDEAAEdges(const gfx::Point3D* aEdges) {
     SetArrayUniform(KnownUniform::SSEdges, 4, aEdges);
   }
@@ -194,31 +186,6 @@ class ShaderProgramOGL {
     SetUniform(KnownUniform::CbTexture, aCbCrUnit);
   }
 
-  void SetBlackTextureUnit(GLint aUnit) {
-    SetUniform(KnownUniform::BlackTexture, aUnit);
-  }
-
-  void SetWhiteTextureUnit(GLint aUnit) {
-    SetUniform(KnownUniform::WhiteTexture, aUnit);
-  }
-
-  void SetMaskTextureUnit(GLint aUnit) {
-    SetUniform(KnownUniform::MaskTexture, aUnit);
-  }
-
-  void SetBackdropTextureUnit(GLint aUnit) {
-    SetUniform(KnownUniform::BackdropTexture, aUnit);
-  }
-
-  void SetRenderColor(const gfx::DeviceColor& aColor) {
-    SetUniform(KnownUniform::RenderColor, aColor);
-  }
-
-  void SetColorMatrix(const gfx::Matrix5x4& aColorMatrix) {
-    SetMatrixUniform(KnownUniform::ColorMatrix, &aColorMatrix._11);
-    SetUniform(KnownUniform::ColorMatrixVector, 4, &aColorMatrix._51);
-  }
-
   void SetTexCoordMultiplier(float aWidth, float aHeight) {
     float f[] = {aWidth, aHeight};
     SetUniform(KnownUniform::TexCoordMultiplier, 2, f);
@@ -229,30 +196,7 @@ class ShaderProgramOGL {
     SetUniform(KnownUniform::CbCrTexCoordMultiplier, 2, f);
   }
 
-  void SetMaskCoordMultiplier(float aWidth, float aHeight) {
-    float f[] = {aWidth, aHeight};
-    SetUniform(KnownUniform::MaskCoordMultiplier, 2, f);
-  }
-
   void SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace);
-
-  // Set whether we want the component alpha shader to return the color
-  // vector (pass 1, false) or the alpha vector (pass2, true). With support
-  // for multiple render targets we wouldn't need two passes here.
-  void SetTexturePass2(bool aFlag) {
-    SetUniform(KnownUniform::TexturePass2, aFlag ? 1 : 0);
-  }
-
-  void SetBlurRadius(float aRX, float aRY);
-
-  void SetBlurAlpha(float aAlpha) {
-    SetUniform(KnownUniform::BlurAlpha, aAlpha);
-  }
-
-  void SetBlurOffset(float aOffsetX, float aOffsetY) {
-    float f[] = {aOffsetX, aOffsetY};
-    SetUniform(KnownUniform::BlurOffset, 2, f);
-  }
 
   size_t GetTextureCount() const { return mProfile.mTextureCount; }
 

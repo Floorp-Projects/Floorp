@@ -26,41 +26,23 @@ class DeviceAttachmentsD3D11 final {
  public:
   static RefPtr<DeviceAttachmentsD3D11> Create(ID3D11Device* aDevice);
 
-  bool InitBlendShaders();
-  bool EnsureTriangleBuffer(size_t aNumTriangles);
-
   bool IsValid() const { return mInitialized; }
   const nsCString& GetFailureId() const {
     MOZ_ASSERT(!IsValid());
     return mInitFailureId;
   }
 
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes,
-                          RefPtr<ID3D11VertexShader>>
-      VertexShaderArray;
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes,
-                          RefPtr<ID3D11PixelShader>>
-      PixelShaderArray;
-
   RefPtr<ID3D11InputLayout> mInputLayout;
-  RefPtr<ID3D11InputLayout> mDynamicInputLayout;
 
   RefPtr<ID3D11Buffer> mVertexBuffer;
-  RefPtr<ID3D11Buffer> mDynamicVertexBuffer;
 
-  VertexShaderArray mVSQuadShader;
-  VertexShaderArray mVSQuadBlendShader;
+  RefPtr<ID3D11VertexShader> mVSQuadShader;
 
-  VertexShaderArray mVSDynamicShader;
-  VertexShaderArray mVSDynamicBlendShader;
-
-  PixelShaderArray mSolidColorShader;
-  PixelShaderArray mRGBAShader;
-  PixelShaderArray mRGBShader;
-  PixelShaderArray mYCbCrShader;
-  PixelShaderArray mNV12Shader;
-  PixelShaderArray mComponentAlphaShader;
-  PixelShaderArray mBlendShader;
+  RefPtr<ID3D11PixelShader> mSolidColorShader;
+  RefPtr<ID3D11PixelShader> mRGBAShader;
+  RefPtr<ID3D11PixelShader> mRGBShader;
+  RefPtr<ID3D11PixelShader> mYCbCrShader;
+  RefPtr<ID3D11PixelShader> mNV12Shader;
   RefPtr<ID3D11Buffer> mPSConstantBuffer;
   RefPtr<ID3D11Buffer> mVSConstantBuffer;
   RefPtr<ID3D11RasterizerState> mRasterizerState;
@@ -70,7 +52,6 @@ class DeviceAttachmentsD3D11 final {
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mPremulCopyState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
-  RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
 
   RefPtr<SyncObjectHost> mSyncObject;
@@ -86,13 +67,13 @@ class DeviceAttachmentsD3D11 final {
   bool CreateShaders();
   bool InitSyncObject();
 
-  void InitVertexShader(const ShaderBytes& aShader, VertexShaderArray& aArray,
-                        MaskType aMaskType) {
-    InitVertexShader(aShader, getter_AddRefs(aArray[aMaskType]));
+  void InitVertexShader(const ShaderBytes& aShader,
+                        RefPtr<ID3D11VertexShader>& aDest) {
+    InitVertexShader(aShader, getter_AddRefs(aDest));
   }
-  void InitPixelShader(const ShaderBytes& aShader, PixelShaderArray& aArray,
-                       MaskType aMaskType) {
-    InitPixelShader(aShader, getter_AddRefs(aArray[aMaskType]));
+  void InitPixelShader(const ShaderBytes& aShader,
+                       RefPtr<ID3D11PixelShader>& aDest) {
+    InitPixelShader(aShader, getter_AddRefs(aDest));
   }
 
   void InitVertexShader(const ShaderBytes& aShader, ID3D11VertexShader** aOut);
@@ -101,8 +82,6 @@ class DeviceAttachmentsD3D11 final {
   bool Failed(HRESULT hr, const char* aContext);
 
  private:
-  size_t mMaximumTriangles;
-
   // Only used during initialization.
   RefPtr<ID3D11Device> mDevice;
   bool mContinueInit;
