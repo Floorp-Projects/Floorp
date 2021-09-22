@@ -163,7 +163,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Create a release pipeline (build, sign, publish) on taskcluster.')
 
-    parser.add_argument('--channel', dest="channel", action="store", choices=['internal', 'alpha', 'nightly'], help="", required=True)
+    parser.add_argument('--channel', dest="channel", action="store", choices=['release', 'nightly', 'beta'], help="", required=True)
     parser.add_argument('--commit', dest="commit", action="store_true", help="commit the google play transaction")
     parser.add_argument('--tag', dest="tag", action="store", help="git tag to build from")
     parser.add_argument('--apk', dest="apks", metavar="path", action="append", help="Path to APKs to sign and upload", required=True)

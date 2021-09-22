@@ -139,7 +139,7 @@ tasks:
                               && git checkout ${event.release.tag_name}
                               && python tools/taskcluster/release.py \
                                 --tag ${event.release.tag_name} \
-                                --channel alpha \
+                                --channel release \
                                 --commit \
                                 --output /opt/focus-android/app/build/outputs/apk \
                                 --apk focus/release/app-focus-armeabi-v7a-release-unsigned.apk \
