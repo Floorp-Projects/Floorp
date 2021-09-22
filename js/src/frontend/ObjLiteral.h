@@ -12,7 +12,7 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Span.h"
 
-#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex, ParserAtom
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -381,7 +381,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
       const frontend::TaggedParserAtomIndex propName) {
     MOZ_ASSERT(kind_ == ObjLiteralKind::Object ||
                kind_ == ObjLiteralKind::Shape);
-    parserAtoms.markUsedByStencil(propName);
+    parserAtoms.markUsedByStencil(propName, frontend::ParserAtom::Atomize::Yes);
     nextKey_ = ObjLiteralKey::fromPropName(propName);
   }
   void setPropIndex(uint32_t propIndex) {
@@ -410,7 +410,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
       const frontend::TaggedParserAtomIndex value) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
-    parserAtoms.markUsedByStencil(value);
+    parserAtoms.markUsedByStencil(value, frontend::ParserAtom::Atomize::No);
     return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
            pushAtomArg(cx, value);
   }

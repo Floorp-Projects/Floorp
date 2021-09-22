@@ -315,11 +315,26 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
   // Check for existing atom.
   auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->value();
+    auto index = addPtr->value();
+
+    // Copy UsedByStencilFlag and AtomizeFlag.
+    MOZ_ASSERT(entries_[index.toParserAtomIndex()]->hasTwoByteChars() ==
+               atom->hasTwoByteChars());
+    entries_[index.toParserAtomIndex()]->flags_ |= atom->flags_;
+    return index;
   }
 
-  return internChar16Seq<AtomCharT>(cx, addPtr, atom->hash(), seq,
-                                    atom->length());
+  auto index =
+      internChar16Seq<AtomCharT>(cx, addPtr, atom->hash(), seq, atom->length());
+  if (!index) {
+    return TaggedParserAtomIndex::null();
+  }
+
+  // Copy UsedByStencilFlag and AtomizeFlag.
+  MOZ_ASSERT(entries_[index.toParserAtomIndex()]->hasTwoByteChars() ==
+             atom->hasTwoByteChars());
+  entries_[index.toParserAtomIndex()]->flags_ |= atom->flags_;
+  return index;
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtom(
@@ -472,12 +487,22 @@ ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
   return entries_[index];
 }
 
-void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
+void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index,
+                                         ParserAtom::Atomize atomize) const {
   if (!index.isParserAtomIndex()) {
     return;
   }
 
-  getParserAtom(index.toParserAtomIndex())->markUsedByStencil();
+  getParserAtom(index.toParserAtomIndex())->markUsedByStencil(atomize);
+}
+
+void ParserAtomsTable::markAtomize(TaggedParserAtomIndex index,
+                                   ParserAtom::Atomize atomize) const {
+  if (!index.isParserAtomIndex()) {
+    return;
+  }
+
+  getParserAtom(index.toParserAtomIndex())->markAtomize(atomize);
 }
 
 bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
@@ -645,6 +670,17 @@ bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
     return true;
   }
   return false;
+}
+
+bool ParserAtomsTable::isInstantiatedAsJSAtom(
+    TaggedParserAtomIndex index) const {
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    return atom->isMarkedAtomize();
+  }
+
+  // Everything else are always JSAtom.
+  return true;
 }
 
 uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {

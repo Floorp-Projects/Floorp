@@ -70,7 +70,10 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
     if (!atom) {
       return false;
     }
-    compilationState.parserAtoms.markUsedByStencil(atom);
+    // We don't collect atomization information in smoosh yet.
+    // Assume it needs to be atomized.
+    compilationState.parserAtoms.markUsedByStencil(atom,
+                                                   ParserAtom::Atomize::Yes);
     allAtoms.infallibleAppend(atom);
   }
 
@@ -328,7 +331,9 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    compilationState.parserAtoms.markUsedByStencil(atom);
+    // RegExp patterm must be atomized.
+    compilationState.parserAtoms.markUsedByStencil(atom,
+                                                   ParserAtom::Atomize::Yes);
     compilationState.regExpData.infallibleEmplaceBack(atom,
                                                       JS::RegExpFlags(flags));
   }
