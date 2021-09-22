@@ -700,10 +700,6 @@ bool nsLayoutUtils::AllowZoomingForDocument(
           nsLayoutUtils::ShouldHandleMetaViewport(aDocument));
 }
 
-float nsLayoutUtils::GetCurrentAPZResolutionScale(PresShell* aPresShell) {
-  return aPresShell ? aPresShell->GetCumulativeResolution() : 1.0;
-}
-
 static bool HasVisibleAnonymousContents(Document* aDoc) {
   for (RefPtr<AnonymousContent>& ac : aDoc->GetAnonymousContents()) {
     // We check to see if the anonymous content node has a frame. If it doesn't,
