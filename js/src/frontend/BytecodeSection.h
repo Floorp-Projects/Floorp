@@ -24,7 +24,7 @@
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"       // ObjLiteralStencil
 #include "frontend/ParseNode.h"        // BigIntLiteral
-#include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex, ParserAtom
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "frontend/Stencil.h"      // Stencils
 #include "gc/Rooting.h"            // JS::Rooted
@@ -59,9 +59,10 @@ struct MOZ_STACK_CLASS GCThingList {
   explicit GCThingList(JSContext* cx, CompilationState& compilationState)
       : compilationState(compilationState), vector(cx) {}
 
-  [[nodiscard]] bool append(TaggedParserAtomIndex atom, GCThingIndex* index) {
+  [[nodiscard]] bool append(TaggedParserAtomIndex atom,
+                            ParserAtom::Atomize atomize, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    compilationState.parserAtoms.markUsedByStencil(atom);
+    compilationState.parserAtoms.markUsedByStencil(atom, atomize);
     if (!vector.emplaceBack(atom)) {
       return false;
     }
@@ -121,6 +122,8 @@ struct MOZ_STACK_CLASS GCThingList {
   // Index of scope within CompilationStencil or Nothing is the scope is
   // EmptyGlobalScopeType.
   mozilla::Maybe<ScopeIndex> getScopeIndex(size_t index) const;
+
+  TaggedParserAtomIndex getAtom(size_t index) const;
 
   AbstractScopePtr firstScope() const {
     MOZ_ASSERT(firstScopeIndex.isSome());

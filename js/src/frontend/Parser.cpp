@@ -43,6 +43,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVerify.h"
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable, ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
@@ -2208,7 +2209,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   for (auto binding : pc_->closedOverBindingsForLazy()) {
     void* raw = &(*cursor++);
     if (binding) {
-      this->parserAtoms().markUsedByStencil(binding);
+      this->parserAtoms().markUsedByStencil(binding, ParserAtom::Atomize::Yes);
       new (raw) TaggedScriptThingIndex(binding);
     } else {
       new (raw) TaggedScriptThingIndex();
@@ -10915,7 +10916,8 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   if (!atom) {
     return nullptr;
   }
-  this->parserAtoms().markUsedByStencil(atom);
+  // RegExp patterm must be atomized.
+  this->parserAtoms().markUsedByStencil(atom, ParserAtom::Atomize::Yes);
 
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {

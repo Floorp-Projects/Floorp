@@ -34,7 +34,7 @@
 #include "frontend/NameCollections.h"      // AtomIndexMap
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
-#include "frontend/ParserAtom.h"           // TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"           // TaggedParserAtomIndex, ParserAtom
 #include "frontend/PrivateOpEmitter.h"     // PrivateOpEmitter
 #include "frontend/ScriptIndex.h"          // ScriptIndex
 #include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
@@ -395,17 +395,19 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   AbstractScopePtr innermostScope() const;
   ScopeIndex innermostScopeIndex() const;
 
-  [[nodiscard]] MOZ_ALWAYS_INLINE bool makeAtomIndex(TaggedParserAtomIndex atom,
-                                                     GCThingIndex* indexp) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool makeAtomIndex(
+      TaggedParserAtomIndex atom, ParserAtom::Atomize atomize,
+      GCThingIndex* indexp) {
     MOZ_ASSERT(perScriptData().atomIndices());
     AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
     if (p) {
+      compilationState.parserAtoms.markAtomize(atom, atomize);
       *indexp = GCThingIndex(p->value());
       return true;
     }
 
     GCThingIndex index;
-    if (!perScriptData().gcThingList().append(atom, &index)) {
+    if (!perScriptData().gcThingList().append(atom, atomize, &index)) {
       return false;
     }
 
@@ -607,6 +609,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitAtomOp(JSOp op, TaggedParserAtomIndex atom);
   [[nodiscard]] bool emitAtomOp(JSOp op, GCThingIndex atomIndex);
+
+  [[nodiscard]] bool emitStringOp(JSOp op, TaggedParserAtomIndex atom);
+  [[nodiscard]] bool emitStringOp(JSOp op, GCThingIndex atomIndex);
 
   [[nodiscard]] bool emitArrayLiteral(ListNode* array);
   [[nodiscard]] bool emitArray(ParseNode* arrayHead, uint32_t count);

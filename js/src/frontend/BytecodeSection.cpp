@@ -49,6 +49,11 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
   return mozilla::Some(vector[index].toScope());
 }
 
+TaggedParserAtomIndex GCThingList::getAtom(size_t index) const {
+  const TaggedScriptThingIndex& elem = vector[index];
+  return elem.toAtom();
+}
+
 bool js::frontend::EmitScriptThingsVector(
     JSContext* cx, const CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
