@@ -6263,8 +6263,7 @@ bool PresShell::Composite(nsView* aViewToPaint) {
   return false;
 }
 
-void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-                      PaintFlags aFlags) {
+void PresShell::Paint(nsView* aViewToPaint, PaintFlags aFlags) {
   nsCString url;
   nsIURI* uri = mDocument->GetDocumentURI();
   Document* contentRoot = GetPrimaryContentDocument();
@@ -6394,7 +6393,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 
   if (frame) {
     // We can paint directly into the widget using its layer manager.
-    nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
+    nsLayoutUtils::PaintFrame(nullptr, frame, nsRegion(), bgcolor,
                               nsDisplayListBuilderMode::Painting, flags);
     return;
   }

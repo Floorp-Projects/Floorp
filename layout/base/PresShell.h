@@ -1266,8 +1266,7 @@ class PresShell final : public nsStubDocumentObserver,
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
   MOZ_CAN_RUN_SCRIPT
-  void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-             PaintFlags aFlags);
+  void Paint(nsView* aViewToPaint, PaintFlags aFlags);
 
   bool Composite(nsView* aViewToPaint);
 
