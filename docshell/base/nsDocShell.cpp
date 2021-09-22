@@ -3679,17 +3679,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
 
   // If the HTTPS-Only Mode upgraded this request and the upgrade might have
   // caused this error, we replace the error-page with about:httpsonlyerror
-  bool isHttpsOnlyError =
-      nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError);
-  if (isHttpsOnlyError) {
+  if (nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(aFailedChannel, aError)) {
     errorPage.AssignLiteral("httpsonlyerror");
   }
 
   if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
     nsCOMPtr<nsIURI> errorPageURI;
-    rv = loadURIDelegate->HandleLoadError(
-        aURI, (isHttpsOnlyError ? NS_ERROR_HTTPS_ONLY : aError),
-        NS_ERROR_GET_MODULE(aError), getter_AddRefs(errorPageURI));
+    rv = loadURIDelegate->HandleLoadError(aURI, aError,
+                                          NS_ERROR_GET_MODULE(aError),
+                                          getter_AddRefs(errorPageURI));
     // If the docshell is going away there's no point in showing an error page.
     if (NS_FAILED(rv) || mIsBeingDestroyed) {
       *aDisplayedErrorPage = false;

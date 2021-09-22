@@ -100,7 +100,9 @@ function openSecureWWWButtonClick() {
 }
 
 function onOpenInsecureButtonClick() {
-  document.reloadWithHttpsOnlyException();
+  RPMSendAsyncMessage("openInsecure", {
+    inFrame: window.top != window,
+  });
 }
 
 function onReturnButtonClick() {

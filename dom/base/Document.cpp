@@ -1511,18 +1511,6 @@ bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
 #endif
 }
 
-bool Document::CallerIsTrustedAboutHttpsOnlyError(JSContext* aCx,
-                                                  JSObject* aObject) {
-  nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
-#ifdef ANDROID
-  // GeckoView uses data URLs for error pages, so for now just check for any
-  // error page
-  return win && win->GetDocument() && win->GetDocument()->IsErrorPage();
-#else
-  return win && IsAboutErrorPage(win, "httpsonlyerror");
-#endif
-}
-
 already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     bool aIsTemporary) {
   nsIGlobalObject* global = GetScopeObject();
@@ -1662,12 +1650,6 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
 
   promise->MaybeReject(NS_ERROR_FAILURE);
   return promise.forget();
-}
-
-void Document::ReloadWithHttpsOnlyException() {
-  if (WindowGlobalChild* wgc = GetWindowGlobalChild()) {
-    wgc->SendReloadWithHttpsOnlyException();
-  }
 }
 
 void Document::GetNetErrorInfo(NetErrorInfo& aInfo, ErrorResult& aRv) {
