@@ -19,6 +19,7 @@ pub struct RegistrySetup {
 
 pub struct FileSource {
     pub name: String,
+    pub metasource: String,
     pub locales: Vec<LanguageIdentifier>,
     pub path_scheme: String,
 }
@@ -31,12 +32,23 @@ impl BundleAdapter for MockBundleAdapter {
 }
 
 impl FileSource {
-    pub fn new<S>(name: S, locales: Vec<LanguageIdentifier>, path_scheme: S) -> Self
+    pub fn new<S>(
+        name: S,
+        metasource: Option<S>,
+        locales: Vec<LanguageIdentifier>,
+        path_scheme: S,
+    ) -> Self
     where
         S: ToString,
     {
+        let metasource = match metasource {
+            Some(s) => s.to_string(),
+            None => String::default(),
+        };
+
         Self {
             name: name.to_string(),
+            metasource,
             locales,
             path_scheme: path_scheme.to_string(),
         }
@@ -67,6 +79,7 @@ impl From<fluent_testing::scenarios::structs::Scenario> for RegistrySetup {
                 .map(|source| {
                     FileSource::new(
                         source.name,
+                        None,
                         source
                             .locales
                             .into_iter()
@@ -95,6 +108,7 @@ impl From<&fluent_testing::scenarios::structs::Scenario> for RegistrySetup {
                 .map(|source| {
                     FileSource::new(
                         source.name.clone(),
+                        None,
                         source.locales.iter().map(|l| l.parse().unwrap()).collect(),
                         source.path_scheme.clone(),
                     )
@@ -125,11 +139,13 @@ impl TestFileFetcher {
     pub fn get_test_file_source(
         &self,
         name: &str,
+        metasource: Option<String>,
         locales: Vec<LanguageIdentifier>,
         path: &str,
     ) -> crate::source::FileSource {
         crate::source::FileSource::new(
             name.to_string(),
+            metasource,
             locales,
             path.to_string(),
             Default::default(),
@@ -140,12 +156,14 @@ impl TestFileFetcher {
     pub fn get_test_file_source_with_index(
         &self,
         name: &str,
+        metasource: Option<String>,
         locales: Vec<LanguageIdentifier>,
         path: &str,
         index: Vec<&str>,
     ) -> crate::source::FileSource {
         crate::source::FileSource::new_with_index(
             name.to_string(),
+            metasource,
             locales,
             path.to_string(),
             Default::default(),
@@ -179,8 +197,12 @@ impl TestFileFetcher {
             .file_sources
             .into_iter()
             .map(|source| {
-                let mut s =
-                    self.get_test_file_source(&source.name, source.locales, &source.path_scheme);
+                let mut s = self.get_test_file_source(
+                    &source.name,
+                    Some(source.metasource),
+                    source.locales,
+                    &source.path_scheme,
+                );
                 s.set_reporter(provider.clone());
                 s
             })
@@ -206,8 +228,12 @@ impl TestFileFetcher {
             .file_sources
             .into_iter()
             .map(|source| {
-                let mut s =
-                    self.get_test_file_source(&source.name, source.locales, &source.path_scheme);
+                let mut s = self.get_test_file_source(
+                    &source.name,
+                    None,
+                    source.locales,
+                    &source.path_scheme,
+                );
                 s.set_reporter(provider.clone());
                 s
             })

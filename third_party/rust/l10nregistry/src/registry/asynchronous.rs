@@ -88,6 +88,7 @@ impl<P, B> State<P, B> {
 pub struct GenerateBundles<P, B> {
     reg: L10nRegistry<P, B>,
     locales: std::vec::IntoIter<LanguageIdentifier>,
+    current_metasource: usize,
     res_ids: Vec<String>,
     state: State<P, B>,
 }
@@ -101,6 +102,7 @@ impl<P, B> GenerateBundles<P, B> {
         Self {
             reg,
             locales,
+            current_metasource: 0,
             res_ids,
             state: State::Empty,
         }
@@ -133,7 +135,8 @@ impl<'l, P, B> AsyncTester for GenerateBundles<P, B> {
             .iter()
             .map(|(res_idx, source_idx)| {
                 let res = &self.res_ids[*res_idx];
-                lock.source_idx(*source_idx).fetch_file(locale, res)
+                lock.source_idx(self.current_metasource, *source_idx)
+                    .fetch_file(locale, res)
             })
             .collect::<FuturesOrdered<_>>();
         TestResult(stream.collect())
@@ -145,6 +148,23 @@ impl<P, B> BundleStream for GenerateBundles<P, B> {
     async fn prefetch_async(&mut self) {
         todo!();
     }
+}
+
+macro_rules! try_next_metasource {
+    ( $self:ident ) => {{
+        if $self.current_metasource > 0 {
+            $self.current_metasource -= 1;
+            let solver = ParallelProblemSolver::new(
+                $self.res_ids.len(),
+                $self.reg.lock().metasource_len($self.current_metasource),
+            );
+            $self.state = State::Solver {
+                locale: $self.state.get_locale().clone(),
+                solver,
+            };
+            continue;
+        }
+    }};
 }
 
 impl<P, B> Stream for GenerateBundles<P, B>
@@ -164,6 +184,7 @@ where
                         Ok(Some(order)) => {
                             let locale = self.state.get_locale();
                             let bundle = self.reg.lock().bundle_from_order(
+                                self.current_metasource,
                                 locale.clone(),
                                 &order,
                                 &self.res_ids,
@@ -177,10 +198,14 @@ where
                             }
                         }
                         Ok(None) => {
+                            try_next_metasource!(self);
                             self.state = State::Empty;
                             continue;
                         }
                         Err(idx) => {
+                            try_next_metasource!(self);
+                            // Only signal an error if we run out of metasources
+                            // to try.
                             self.reg.shared.provider.report_errors(vec![
                                 L10nRegistryError::MissingResource {
                                     locale: self.state.get_locale().clone(),
@@ -197,7 +222,15 @@ where
                     }
                 }
             } else if let Some(locale) = self.locales.next() {
-                let solver = ParallelProblemSolver::new(self.res_ids.len(), self.reg.lock().len());
+                if self.reg.lock().number_of_metasources() == 0 {
+                    return None.into();
+                }
+                let number_of_metasources = self.reg.lock().number_of_metasources() - 1;
+                self.current_metasource = number_of_metasources;
+                let solver = ParallelProblemSolver::new(
+                    self.res_ids.len(),
+                    self.reg.lock().metasource_len(self.current_metasource),
+                );
                 self.state = State::Solver { locale, solver };
             } else {
                 return None.into();

@@ -1,6 +1,6 @@
 [package]
 name = "l10nregistry"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
 license = "Apache-2.0/MIT"
 edition = "2018"
@@ -29,18 +29,27 @@ tokio-io = ["tokio"]
 [[bench]]
 name = "preferences"
 harness = false
+required-features = ["tokio", "fluent-testing"]
 
 [[bench]]
 name = "localization"
 harness = false
+required-features = ["tokio", "fluent-testing"]
 
 [[bench]]
 name = "source"
 harness = false
+required-features = ["tokio", "fluent-testing"]
 
 [[bench]]
 name = "solver"
 harness = false
+required-features = ["tokio", "fluent-testing"]
+
+[[bench]]
+name = "registry"
+harness = false
+required-features = ["tokio", "fluent-testing"]
 
 [[test]]
 name = "source"
