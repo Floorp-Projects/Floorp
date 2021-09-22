@@ -1253,15 +1253,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * Return a NodeListActor with all nodes that match the given selector in all
-   * frames of the current content page.
-   * @param {String} selector
-   */
-  multiFrameQuerySelectorAll: function(selector) {
-    return new NodeListActor(this, this._multiFrameQuerySelectorAll(selector));
-  },
-
-  /**
    * Get a list of nodes that match the given XPath in all known frames of
    * the current content page.
    * @param {String} xPath.
