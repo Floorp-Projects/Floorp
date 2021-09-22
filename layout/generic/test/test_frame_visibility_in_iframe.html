@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script>
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    // Set layout.visibility.min-recompute-interval-ms to 0ms so that
+    // ScheduleApproximateFrameVisibilityUpdateNow gets called on every frame
+    // we flush layout.
+    set: [ ["layout.visibility.min-recompute-interval-ms", 0] ],
+  },
+  () =>
+  {
+    window.open("frame_visibility_in_iframe.html", "_blank");
+  }
+);
+</script>
+</body>
+</html>
