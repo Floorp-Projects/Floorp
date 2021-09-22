@@ -9714,40 +9714,32 @@ ComputedStyle* nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart) {
   return style.get();
 }
 
-enum class FramePosition : uint8_t {
-  Unknown,
-  InView,
-  OutOfView,
-};
-
-// NOTE: Returns a pair of Nothing() and `FramePosition::Unknown` if |aFrame|
-// is not in out-of-process or if we haven't received enough information from
-// APZ.
-static std::pair<Maybe<ScreenRect>, FramePosition> GetFrameVisibleRectOnScreen(
-    const nsIFrame* aFrame) {
+// NOTE: Returns Nothing() if |aFrame| is not in out-of-process or if we haven't
+// received enough information from APZ.
+static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
   // We actually want the in-process top prescontext here.
   nsPresContext* topContextInProcess =
       aFrame->PresContext()->GetInProcessRootContentDocumentPresContext();
   if (!topContextInProcess) {
     // We are in chrome process.
-    return std::make_pair(Nothing(), FramePosition::Unknown);
+    return Nothing();
   }
 
   if (topContextInProcess->Document()->IsTopLevelContentDocument()) {
     // We are in the top of content document.
-    return std::make_pair(Nothing(), FramePosition::Unknown);
+    return Nothing();
   }
 
   nsIDocShell* docShell = topContextInProcess->GetDocShell();
   BrowserChild* browserChild = BrowserChild::GetFrom(docShell);
   if (!browserChild) {
     // We are not in out-of-process iframe.
-    return std::make_pair(Nothing(), FramePosition::Unknown);
+    return Nothing();
   }
 
   if (!browserChild->GetEffectsInfo().IsVisible()) {
     // There is no visible rect on this iframe at all.
-    return std::make_pair(Some(ScreenRect()), FramePosition::Unknown);
+    return Some(ScreenRect());
   }
 
   Maybe<ScreenRect> visibleRect =
@@ -9755,7 +9747,7 @@ static std::pair<Maybe<ScreenRect>, FramePosition> GetFrameVisibleRectOnScreen(
   if (!visibleRect) {
     // We are unsure if we haven't received the transformed rectangle of the
     // iframe's visible area.
-    return std::make_pair(Nothing(), FramePosition::Unknown);
+    return Nothing();
   }
 
   nsIFrame* rootFrame = topContextInProcess->PresShell()->GetRootFrame();
@@ -9770,41 +9762,24 @@ static std::pair<Maybe<ScreenRect>, FramePosition> GetFrameVisibleRectOnScreen(
           rectInLayoutDevicePixel),
       PixelCastJustification::ContentProcessIsLayerInUiProcess);
 
-  FramePosition position = FramePosition::Unknown;
-  // we need to check whether the transformed rect is outside the iframe
-  // visible rect or not because in some cases the rect size is (0x0), thus
-  // the intersection between the transformed rect and the iframe visible rect
-  // would also be (0x0), then we can't tell whether the given nsIFrame is
-  // inside the iframe visible rect or not by calling BaseRect::IsEmpty for the
-  // intersection.
-  if (transformedToRoot.x > visibleRect->XMost() ||
-      transformedToRoot.y > visibleRect->YMost() ||
-      visibleRect->x > transformedToRoot.XMost() ||
-      visibleRect->y > transformedToRoot.YMost()) {
-    position = FramePosition::OutOfView;
-  } else {
-    position = FramePosition::InView;
-  }
-
-  return std::make_pair(Some(visibleRect->Intersect(transformedToRoot)),
-                        position);
+  return Some(visibleRect->Intersect(transformedToRoot));
 }
 
 // static
 bool nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(
     const nsIFrame* aFrame) {
-  auto [visibleRect, framePosition] = GetFrameVisibleRectOnScreen(aFrame);
+  Maybe<ScreenRect> visibleRect = GetFrameVisibleRectOnScreen(aFrame);
   if (visibleRect.isNothing()) {
     return false;
   }
 
-  return visibleRect->IsEmpty() && framePosition != FramePosition::InView;
+  return visibleRect->IsEmpty();
 }
 
 // static
 bool nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
     const nsIFrame* aFrame, nscoord aMargin) {
-  auto [visibleRect, framePosition] = GetFrameVisibleRectOnScreen(aFrame);
+  Maybe<ScreenRect> visibleRect = GetFrameVisibleRectOnScreen(aFrame);
   if (visibleRect.isNothing()) {
     return false;
   }
