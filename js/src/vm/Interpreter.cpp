@@ -2955,7 +2955,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       static_assert(JSOpLength_SetName == JSOpLength_StrictSetName,
                     "setname and strictsetname must be the same size");
       static_assert(JSOpLength_SetGName == JSOpLength_StrictSetGName,
-                    "setganem adn strictsetgname must be the same size");
+                    "setgname and strictsetgname must be the same size");
       static_assert(JSOpLength_SetName == JSOpLength_SetGName,
                     "We're sharing the END_CASE so the lengths better match");
 

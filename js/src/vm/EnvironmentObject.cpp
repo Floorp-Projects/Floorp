@@ -4010,15 +4010,6 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
         name = script->getName(loc.toRawBytecode());
         break;
 
-      case JSOp::SetGName:
-      case JSOp::StrictSetGName:
-        if (script->hasNonSyntacticScope()) {
-          name = script->getName(loc.toRawBytecode());
-        } else {
-          name = nullptr;
-        }
-        break;
-
       case JSOp::GetAliasedVar:
       case JSOp::SetAliasedVar:
         name = EnvironmentCoordinateNameSlow(script, loc.toRawBytecode());

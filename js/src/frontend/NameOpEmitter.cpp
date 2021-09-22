@@ -278,7 +278,13 @@ bool NameOpEmitter::emitAssignment() {
     case NameLocation::Kind::Global: {
       JSOp op;
       if (emittedBindOp_) {
-        op = bce_->strictifySetNameOp(JSOp::SetGName);
+        MOZ_ASSERT(bce_->outermostScope().hasNonSyntacticScopeOnChain() ==
+                   bce_->sc->hasNonSyntacticScope());
+        if (bce_->sc->hasNonSyntacticScope()) {
+          op = bce_->strictifySetNameOp(JSOp::SetName);
+        } else {
+          op = bce_->strictifySetNameOp(JSOp::SetGName);
+        }
       } else {
         op = JSOp::InitGLexical;
       }
