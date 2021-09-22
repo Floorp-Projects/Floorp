@@ -44,5 +44,5 @@ var PdfJsDefaultPreferences = Object.freeze({
  "disableFontFace": false,
  "disableRange": false,
  "disableStream": false,
- "enableXfa": false
+ "enableXfa": true
 });
