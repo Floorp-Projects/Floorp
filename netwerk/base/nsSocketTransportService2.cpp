@@ -1605,7 +1605,6 @@ nsSocketTransportService::Observe(nsISupports* subject, const char* topic,
     ShutdownThread();
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     mLastNetworkLinkChangeTime = PR_IntervalNow();
-    mNotTrustedMitmDetected = false;
   }
 
   return NS_OK;
