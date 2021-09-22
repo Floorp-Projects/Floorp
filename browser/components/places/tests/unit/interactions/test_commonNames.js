@@ -40,9 +40,11 @@ add_task(async function fromMetadata() {
   PageDataService.pageDataDiscovered(TEST_URL1, [
     {
       type: PageDataCollector.DATA_TYPE.GENERAL,
-      data: {
-        site_name: "Test Example",
-      },
+      data: [
+        {
+          site_name: "Test Example",
+        },
+      ],
     },
   ]);
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL1], () =>
@@ -88,9 +90,11 @@ add_task(async function customName_withMetadata() {
   PageDataService.pageDataDiscovered(TEST_URL3, [
     {
       type: PageDataCollector.DATA_TYPE.GENERAL,
-      data: {
-        site_name: "Test Example 2",
-      },
+      data: [
+        {
+          site_name: "Test Example 2",
+        },
+      ],
     },
   ]);
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL3], () =>
