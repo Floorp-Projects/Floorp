@@ -188,6 +188,7 @@ class nsContextMenu {
     this.imageDescURL = context.imageDescURL;
     this.imageInfo = context.imageInfo;
     this.mediaURL = context.mediaURL || context.bgImageURL;
+    this.originalMediaURL = context.originalMediaURL || this.mediaURL;
     this.webExtBrowserType = context.webExtBrowserType;
 
     this.canSpellCheck = context.canSpellCheck;
@@ -2098,7 +2099,7 @@ class nsContextMenu {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
       Ci.nsIClipboardHelper
     );
-    clipboard.copyString(this.mediaURL);
+    clipboard.copyString(this.originalMediaURL);
   }
 
   drmLearnMore(aEvent) {
@@ -2112,13 +2113,6 @@ class nsContextMenu {
       dest = "tab";
     }
     openTrustedLinkIn(drmInfoURL, dest);
-  }
-
-  get imageURL() {
-    if (this.onImage) {
-      return this.mediaURL;
-    }
-    return "";
   }
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
