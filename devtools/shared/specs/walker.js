@@ -147,14 +147,6 @@ const walkerSpec = generateActorSpec({
         list: RetVal("domnodelist"),
       },
     },
-    multiFrameQuerySelectorAll: {
-      request: {
-        selector: Arg(0),
-      },
-      response: {
-        list: RetVal("domnodelist"),
-      },
-    },
     search: {
       request: {
         query: Arg(0),
