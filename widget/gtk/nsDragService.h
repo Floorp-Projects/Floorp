@@ -138,6 +138,11 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // We cache all data for the current drag context,
   // because waiting for the data in GetTargetDragData can be very slow.
   nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
+  // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
+  // ref counted and may be already deleted on Gtk side.
+  // We used it for mCachedData invalidation only and can't be used for
+  // any D&D operation.
+  uintptr_t mCachedDragContext;
 
 #ifdef MOZ_WAYLAND
   RefPtr<DataOffer> mPendingWaylandDataOffer;
@@ -186,6 +191,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors);
   // this will reset all of the target vars
   void TargetResetData(void);
+  // Ensure our data cache belongs to aDragContext and clear the cache if
+  // aDragContext is different than mCachedDragContext.
+  void EnsureCachedDataValidForContext(GdkDragContext* aDragContext);
 
   // source side vars
 
