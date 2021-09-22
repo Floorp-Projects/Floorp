@@ -2165,60 +2165,6 @@ waitForAllPaints(() => {
 
     await ensureElementRemoval(div);
   });
-
-  add_task_if_omta_enabled(async function transform_animation_on_collapsed_element() {
-    const iframe = document.createElement('iframe');
-    document.body.appendChild(iframe);
-
-    // Load a cross origin iframe.
-    const targetURL = SimpleTest.getTestFileURL("empty.html")
-      .replace(window.location.origin, "http://example.com/");
-    iframe.src = targetURL;
-    await new Promise(resolve => {
-      iframe.onload = resolve;
-    });
-
-    await SpecialPowers.spawn(iframe, [MS_PER_SEC], async (MS_PER_SEC) => {
-      // Create a flex item with "preserve-3d" having an abs-pos child inside
-      // a grid container.
-      // These styles make the the flex item size (0x0).
-      const gridContainer = content.document.createElement("div");
-      gridContainer.style.display = "grid";
-      gridContainer.style.placeItems = "center";
-
-      const target = content.document.createElement("div");
-      target.style.display = "flex";
-      target.style.transformStyle = "preserve-3d";
-      gridContainer.appendChild(target);
-
-      const child = content.document.createElement("div");
-      child.style.position = "absolute";
-      child.style.transform = "rotateY(0deg)";
-      child.style.width = "100px";
-      child.style.height = "100px";
-      child.style.backgroundColor = "green";
-      target.appendChild(child);
-
-      content.document.body.appendChild(gridContainer);
-
-      const animation =
-        target.animate({ transform: [ "rotateY(0deg)", "rotateY(360deg)" ] },
-                    { duration: 100 * MS_PER_SEC,
-                      id: "test",
-                      easing: 'step-end' });
-      await content.wrappedJSObject.waitForAnimationReadyToRestyle(animation);
-      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
-         'transform animation on a collapsed element should run on the ' +
-         'compositor');
-
-      const markers = await content.wrappedJSObject.observeStyling(5);
-      is(markers.length, 0,
-         'transform animation on a collapsed element animation should not ' +
-         'update styles on the main thread');
-    });
-
-    await ensureElementRemoval(iframe);
-  });
 });
 
 </script>
