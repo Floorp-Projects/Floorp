@@ -9,6 +9,9 @@
 
 #include <stdint.h>
 
+#include "nsDirection.h"
+#include "nsIAccessibleText.h"
+
 namespace mozilla::a11y {
 class Accessible;
 
@@ -49,6 +52,30 @@ class TextLeafPoint final {
    * evaluates to false.
    */
   explicit operator bool() const { return !!mAcc; }
+
+  /**
+   * Find a boundary (word start, line start, etc.) in a specific direction.
+   * If no boundary is found, the start/end of the document is returned
+   * (depending on the direction).
+   * If aIncludeorigin is true and this is at a boundary, this will be
+   * returned unchanged.
+   */
+  TextLeafPoint FindBoundary(AccessibleTextBoundary aBoundaryType,
+                             nsDirection aDirection,
+                             bool aIncludeOrigin = false) const;
+
+  /**
+   * These two functions find a line start boundary within the same
+   * LocalAccessible as this. That is, they do not cross Accessibles. If no
+   * boundary is found, an invalid TextLeafPoint is returned.
+   * These are used by FindBoundary. Most callers will want FindBoundary
+   * instead.
+   */
+  TextLeafPoint FindPrevLineStartSameLocalAcc(bool aIncludeOrigin) const;
+  TextLeafPoint FindNextLineStartSameLocalAcc(bool aIncludeOrigin) const;
+
+ private:
+  bool IsEmptyLastLine() const;
 };
 
 /**
