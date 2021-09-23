@@ -20,17 +20,17 @@ extern const JSClass IntlClass;
  * properties:
  *
  *   firstDayOfWeek
- *     an integer in the range 1=Sunday to 7=Saturday indicating the day
- *     considered the first day of the week in calendars, e.g. 1 for en-US,
- *     2 for en-GB, 1 for bn-IN
+ *     an integer in the range 1=Monday to 7=Sunday indicating the day
+ *     considered the first day of the week in calendars, e.g. 7 for en-US,
+ *     1 for en-GB, 7 for bn-IN
  *   minDays
  *     an integer in the range of 1 to 7 indicating the minimum number
  *     of days required in the first week of the year, e.g. 1 for en-US,
  *     4 for de
  *   weekend
- *     an array with values in the range 1=Sunday to 7=Saturday indicating the
- *     days of the week considered as part of the weekend, e.g. [1, 7] for en-US
- *     and en-GB, [1] for bn-IN (note that "weekend" is *not* necessarily two
+ *     an array with values in the range 1=Monday to 7=Sunday indicating the
+ *     days of the week considered as part of the weekend, e.g. [6, 7] for en-US
+ *     and en-GB, [7] for bn-IN (note that "weekend" is *not* necessarily two
  *     days)
  *
  * NOTE: "calendar" and "locale" properties are *not* added to the object.
