@@ -11,6 +11,7 @@
 #include <iosfwd>
 
 #include "Units.h"                  // for CSSRect, CSSPixel, etc
+#include "UnitTransforms.h"         // for ViewAs
 #include "mozilla/DefineEnum.h"     // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"  // for HashGeneric
 #include "mozilla/Maybe.h"
@@ -157,7 +158,16 @@ struct FrameMetrics {
     // this repaint request is processed, LayersPixelsPerCSSPixel() does not yet
     // include the async zoom, but it will when the displayport is interpreted
     // for the repaint.
-    return mZoom * ParentLayerToLayerScale(1.0f) / mExtraResolution;
+    // Note 2: we include the transform to ancestor scale because this function
+    // (as the name implies) is used only in various displayport calculation
+    // related places, and those calculations want the transform to ancestor
+    // scale to be included becaese they want to reason about pixels which are
+    // the same size as screen pixels (so displayport sizes are e.g. limited to
+    // a multiple of the screen size). Whereas mZoom and mCumulativeResolution
+    // do not include it because of expectations of the code where they are
+    // used.
+    return mZoom * ParentLayerToLayerScale(1.0f) *
+           ViewAs<LayerToScreenScale2D>(mTransformToAncestorScale);
   }
 
   CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
