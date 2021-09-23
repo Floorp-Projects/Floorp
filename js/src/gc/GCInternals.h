@@ -270,50 +270,22 @@ void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);
 #endif
 
-struct MovingTracer final : public GenericTracer {
-  explicit MovingTracer(JSRuntime* rt)
-      : GenericTracer(rt, JS::TracerKind::Moving,
-                      JS::WeakMapTraceAction::TraceKeysAndValues) {}
-
-  JSObject* onObjectEdge(JSObject* obj) override;
-  Shape* onShapeEdge(Shape* shape) override;
-  JSString* onStringEdge(JSString* string) override;
-  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
-  BaseShape* onBaseShapeEdge(BaseShape* base) override;
-  GetterSetter* onGetterSetterEdge(GetterSetter* gs) override;
-  PropMap* onPropMapEdge(PropMap* map) override;
-  Scope* onScopeEdge(Scope* scope) override;
-  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
-  BigInt* onBigIntEdge(BigInt* bi) override;
-  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
-  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
+struct MovingTracer final : public GenericTracerImpl<MovingTracer> {
+  explicit MovingTracer(JSRuntime* rt);
 
  private:
   template <typename T>
   T* onEdge(T* thingp);
+  friend class GenericTracerImpl<MovingTracer>;
 };
 
-struct SweepingTracer final : public GenericTracer {
-  explicit SweepingTracer(JSRuntime* rt)
-      : GenericTracer(rt, JS::TracerKind::Sweeping,
-                      JS::WeakMapTraceAction::TraceKeysAndValues) {}
-
-  JSObject* onObjectEdge(JSObject* obj) override;
-  Shape* onShapeEdge(Shape* shape) override;
-  JSString* onStringEdge(JSString* string) override;
-  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
-  BaseShape* onBaseShapeEdge(BaseShape* base) override;
-  GetterSetter* onGetterSetterEdge(js::GetterSetter* gs) override;
-  PropMap* onPropMapEdge(PropMap* map) override;
-  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
-  Scope* onScopeEdge(Scope* scope) override;
-  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
-  BigInt* onBigIntEdge(BigInt* bi) override;
-  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
+struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
+  explicit SweepingTracer(JSRuntime* rt);
 
  private:
   template <typename T>
   T* onEdge(T* thingp);
+  friend class GenericTracerImpl<SweepingTracer>;
 };
 
 extern void DelayCrossCompartmentGrayMarking(JSObject* src);
