@@ -40,11 +40,8 @@ function Intl_supportedValuesOf(key) {
  *   minDays:
  *     The minimum number of days in a week for the resolved locale.
  *
- *   weekendStart:
- *     The day considered the beginning of a weekend for the resolved locale.
- *
- *   weekendEnd:
- *     The day considered the end of a weekend for the resolved locale.
+ *   weekend:
+ *     The days of the week considered as the weekend for the resolved locale.
  *
  * Days are encoded as integers in the range 1=Sunday to 7=Saturday.
  */

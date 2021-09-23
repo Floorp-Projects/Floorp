@@ -11,8 +11,7 @@ function checkCalendarInfo(info, expected)
 
   assertEq(info.firstDayOfWeek, expected.firstDayOfWeek);
   assertEq(info.minDays, expected.minDays);
-  assertEq(info.weekendStart, expected.weekendStart);
-  assertEq(info.weekendEnd, expected.weekendEnd);
+  assertDeepEq(info.weekend, expected.weekend);
   assertEq(info.calendar, expected.calendar);
   assertEq(info.locale, expected.locale);
 }
@@ -26,8 +25,7 @@ assertEq(gCI.length, 1);
 checkCalendarInfo(gCI('en-US'), {
   firstDayOfWeek: 1,
   minDays: 1,
-  weekendStart: 7,
-  weekendEnd: 1,
+  weekend: [1, 7],
   calendar: "gregory",
   locale: "en-US"
 });
@@ -35,8 +33,7 @@ checkCalendarInfo(gCI('en-US'), {
 checkCalendarInfo(gCI('en-IL'), {
   firstDayOfWeek: 1,
   minDays: 1,
-  weekendStart: 6,
-  weekendEnd: 7,
+  weekend: [6, 7],
   calendar: "gregory",
   locale: "en-IL"
 });
@@ -45,8 +42,7 @@ checkCalendarInfo(gCI('en-IL'), {
 checkCalendarInfo(gCI('en-GB'), {
   firstDayOfWeek: 2,
   minDays: 4,
-  weekendStart: 7,
-  weekendEnd: 1,
+  weekend: [1, 7],
   calendar: "gregory",
   locale: "en-GB"
 });
@@ -55,8 +51,7 @@ checkCalendarInfo(gCI('en-GB'), {
 checkCalendarInfo(gCI('pl'), {
   firstDayOfWeek: 2,
   minDays: 4,
-  weekendStart: 7,
-  weekendEnd: 1,
+  weekend: [1, 7],
   calendar: "gregory",
   locale: "pl"
 });
@@ -64,8 +59,7 @@ checkCalendarInfo(gCI('pl'), {
 checkCalendarInfo(gCI('ar-IQ'), {
   firstDayOfWeek: 7,
   minDays: 1,
-  weekendStart: 6,
-  weekendEnd: 7,
+  weekend: [6, 7],
   calendar: "gregory",
   locale: "ar-IQ"
 });
@@ -73,8 +67,7 @@ checkCalendarInfo(gCI('ar-IQ'), {
 checkCalendarInfo(gCI('fa-IR'), {
   firstDayOfWeek: 7,
   minDays: 1,
-  weekendStart: 6,
-  weekendEnd: 6,
+  weekend: [6],
   calendar: "persian",
   locale: "fa-IR"
 });
