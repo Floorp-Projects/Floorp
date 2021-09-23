@@ -24,6 +24,7 @@ if (!("mediaDevices" in navigator)) {
         ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
         ['media.peerconnection.nat_simulator.block_udp', true],
         ['media.peerconnection.nat_simulator.block_tcp', false],
+        ['media.peerconnection.nat_simulator.block_tls', true],
         ['media.peerconnection.ice.loopback', true],
         ['media.getusermedia.insecure.enabled', true]);
     options.expectedLocalCandidateType = "relay-tcp";
