@@ -770,7 +770,7 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
         return nullptr;
       }
 
-      timeZone = canonicalTimeZone.toString();
+      timeZone = canonicalTimeZone.toString(cx);
       if (!timeZone) {
         return nullptr;
       }

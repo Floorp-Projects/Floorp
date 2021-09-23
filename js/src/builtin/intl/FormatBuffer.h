@@ -25,7 +25,8 @@ namespace js::intl {
 /**
  * A buffer for formatting unified intl data.
  */
-template <typename CharT, size_t MinInlineCapacity = 0>
+template <typename CharT, size_t MinInlineCapacity = 0,
+          class AllocPolicy = TempAllocPolicy>
 class FormatBuffer {
  public:
   using CharType = CharT;
@@ -35,9 +36,8 @@ class FormatBuffer {
   FormatBuffer(FormatBuffer&& other) noexcept = default;
   FormatBuffer& operator=(FormatBuffer&& other) noexcept = default;
 
-  explicit FormatBuffer(JSContext* cx) : cx_(cx), buffer_(cx) {
-    MOZ_ASSERT(cx);
-  }
+  explicit FormatBuffer(AllocPolicy aP = AllocPolicy())
+      : buffer_(std::move(aP)) {}
 
   // Implicitly convert to a Span.
   operator mozilla::Span<CharType>() { return buffer_; }
@@ -82,24 +82,23 @@ class FormatBuffer {
    * errors. In this case it returns a nullptr that must be checked, but it may
    * not be obvious.
    */
-  JSLinearString* toString() const {
+  JSLinearString* toString(JSContext* cx) const {
     if constexpr (std::is_same_v<CharT, uint8_t> ||
                   std::is_same_v<CharT, unsigned char> ||
                   std::is_same_v<CharT, char>) {
       // Handle the UTF-8 encoding case.
       return NewStringCopyUTF8N<CanGC>(
-          cx_, mozilla::Range(reinterpret_cast<unsigned char>(buffer_.begin()),
-                              buffer_.length()));
+          cx, mozilla::Range(reinterpret_cast<unsigned char>(buffer_.begin()),
+                             buffer_.length()));
     } else {
       // Handle the UTF-16 encoding case.
       static_assert(std::is_same_v<CharT, char16_t>);
-      return NewStringCopyN<CanGC>(cx_, buffer_.begin(), buffer_.length());
+      return NewStringCopyN<CanGC>(cx, buffer_.begin(), buffer_.length());
     }
   }
 
  private:
-  JSContext* cx_;
-  js::Vector<CharT, MinInlineCapacity> buffer_;
+  js::Vector<CharT, MinInlineCapacity, AllocPolicy> buffer_;
 };
 
 }  // namespace js::intl
