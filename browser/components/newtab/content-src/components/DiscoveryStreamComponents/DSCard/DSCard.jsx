@@ -296,6 +296,35 @@ export class _DSCard extends React.PureComponent {
         <div className="ds-card placeholder" ref={this.setPlaceholderRef} />
       );
     }
+
+    if (this.props.lastCard) {
+      return (
+        <div className="ds-card last-card-message">
+          <div className="img-wrapper">
+            <picture className="ds-image img loaded">
+              <img
+                data-l10n-id="newtab-pocket-last-card-image"
+                className="last-card-message-image"
+                src="chrome://activity-stream/content/data/content/assets/caught-up-illustration.svg"
+                alt="You’re all caught up"
+              />
+            </picture>
+          </div>
+          <div className="meta">
+            <div className="info-wrap">
+              <header
+                className="title clamp"
+                data-l10n-id="newtab-pocket-last-card-title"
+              />
+              <p
+                className="ds-last-card-desc"
+                data-l10n-id="newtab-pocket-last-card-desc"
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
     const isButtonCTA = this.props.cta_variant === "button";
     const includeDescriptions = this.props.include_descriptions;
     const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
@@ -400,3 +429,4 @@ export const DSCard = connect(state => ({
 }))(_DSCard);
 
 export const PlaceholderDSCard = props => <DSCard placeholder={true} />;
+export const LastCardMessage = props => <DSCard lastCard={true} />;
