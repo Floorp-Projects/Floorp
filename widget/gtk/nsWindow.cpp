@@ -8141,16 +8141,8 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
   LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({retx, rety});
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext,
-                                        aDataOffer, point, aTime)) {
-    return FALSE;
-  }
-  // We need to reply to drag_motion event on Wayland immediately,
-  // see Bug 1730203.
-  if (GdkIsWaylandDisplay()) {
-    dragService->ReplyToDragMotion();
-  }
-  return TRUE;
+  return dragService->ScheduleMotionEvent(innerMostWindow, aDragContext,
+                                          aDataOffer, point, aTime);
 }
 
 static gboolean drag_motion_event_cb(GtkWidget* aWidget,
