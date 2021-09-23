@@ -254,7 +254,7 @@ IndexedDatabaseManager* IndexedDatabaseManager::GetOrCreate() {
 
     RefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
-    QM_TRY(instance->Init(), nullptr);
+    QM_TRY(MOZ_TO_RESULT(instance->Init()), nullptr);
 
     if (gInitialized.exchange(true)) {
       NS_ERROR("Initialized more than once?!");

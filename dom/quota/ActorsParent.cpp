@@ -590,7 +590,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateWebAppsStoreConnection(
   if (connection) {
     // Don't propagate an error, leave a non-updateable webappsstore database as
     // it is.
-    QM_TRY(StorageDBUpdater::Update(connection),
+    QM_TRY(MOZ_TO_RESULT(StorageDBUpdater::Update(connection)),
            nsCOMPtr<mozIStorageConnection>{});
   }
 
@@ -1842,8 +1842,8 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
            Err(NS_ERROR_FAILURE));
 
     RefPtr<MozURL> url;
-    QM_TRY(MozURL::Init(getter_AddRefs(url), originNoSuffix), QM_PROPAGATE,
-           [&originNoSuffix](const nsresult) {
+    QM_TRY(MOZ_TO_RESULT(MozURL::Init(getter_AddRefs(url), originNoSuffix)),
+           QM_PROPAGATE, [&originNoSuffix](const nsresult) {
              QM_WARNING("A URL %s is not recognized by MozURL",
                         originNoSuffix.get());
            });
@@ -2718,7 +2718,7 @@ void InitializeQuotaManager() {
     QM_WARNONLY_TRY(OkIf(ss));
   }
 
-  QM_WARNONLY_TRY(QuotaManager::Initialize());
+  QM_WARNONLY_TRY(QM_TO_RESULT(QuotaManager::Initialize()));
 
 #ifdef DEBUG
   gQuotaManagerInitialized = true;
@@ -3889,7 +3889,7 @@ void QuotaManager::Shutdown() {
   }
 
   // Cancel the timer regardless of whether it actually fired.
-  QM_WARNONLY_TRY((*mShutdownTimer)->Cancel());
+  QM_WARNONLY_TRY(QM_TO_RESULT((*mShutdownTimer)->Cancel()));
 
   // NB: It's very important that runnable is destroyed on this thread
   // (i.e. after we join the IO thread) because we can't release the
@@ -3901,10 +3901,11 @@ void QuotaManager::Shutdown() {
   MOZ_ASSERT(runnable);
 
   // Give clients a chance to cleanup IO thread only objects.
-  QM_WARNONLY_TRY((*mIOThread)->Dispatch(runnable, NS_DISPATCH_NORMAL));
+  QM_WARNONLY_TRY(
+      QM_TO_RESULT((*mIOThread)->Dispatch(runnable, NS_DISPATCH_NORMAL)));
 
   // Make sure to join with our IO thread.
-  QM_WARNONLY_TRY((*mIOThread)->Shutdown());
+  QM_WARNONLY_TRY(QM_TO_RESULT((*mIOThread)->Shutdown()));
 
   for (RefPtr<DirectoryLockImpl>& lock : mPendingDirectoryLocks) {
     lock->Invalidate();
@@ -4332,7 +4333,7 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       QM_TRY(([&]() -> Result<Ok, nsresult> {
-        QM_TRY(([this, type, &MaybeCollectUnaccessedOrigin] {
+        QM_TRY(MOZ_TO_RESULT(([this, type, &MaybeCollectUnaccessedOrigin] {
                  const auto innerFunc = [&](const auto&) -> nsresult {
                    return InitializeRepository(type,
                                                MaybeCollectUnaccessedOrigin);
@@ -4343,7 +4344,7 @@ nsresult QuotaManager::LoadQuota() {
                          ? Initialization::DefaultRepository
                          : Initialization::TemporaryRepository,
                      innerFunc);
-               }()),
+               }())),
                OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
 
         return Ok{};
@@ -4382,9 +4383,10 @@ void QuotaManager::UnloadQuota() {
   mozStorageTransaction transaction(
       mStorageConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  QM_TRY(transaction.Start(), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(transaction.Start()), QM_VOID);
 
-  QM_TRY(mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns),
+  QM_TRY(MOZ_TO_RESULT(
+             mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns)),
          QM_VOID);
 
   nsCOMPtr<mozIStorageStatement> insertStmt;
@@ -4428,9 +4430,10 @@ void QuotaManager::UnloadQuota() {
                 QM_VOID);
           }
 
-          QM_TRY(originInfo->LockedBindToStatement(insertStmt), QM_VOID);
+          QM_TRY(MOZ_TO_RESULT(originInfo->LockedBindToStatement(insertStmt)),
+                 QM_VOID);
 
-          QM_TRY(insertStmt->Execute(), QM_VOID);
+          QM_TRY(MOZ_TO_RESULT(insertStmt->Execute()), QM_VOID);
         }
 
         groupInfo->LockedRemoveOriginInfos();
@@ -4447,10 +4450,11 @@ void QuotaManager::UnloadQuota() {
           "UPDATE cache SET valid = :valid, build_id = :buildId;"_ns),
       QM_VOID);
 
-  QM_TRY(stmt->BindInt32ByName("valid"_ns, 1), QM_VOID);
-  QM_TRY(stmt->BindUTF8StringByName("buildId"_ns, *gBuildId), QM_VOID);
-  QM_TRY(stmt->Execute(), QM_VOID);
-  QM_TRY(transaction.Commit(), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->BindInt32ByName("valid"_ns, 1)), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->BindUTF8StringByName("buildId"_ns, *gBuildId)),
+         QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->Execute()), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(transaction.Commit()), QM_VOID);
 }
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
@@ -4481,7 +4485,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     QM_TRY(OkIf(Client::TypeToText(aClientType, clientType, fallible)),
            nullptr);
 
-    QM_TRY(directory->Append(clientType), nullptr);
+    QM_TRY(MOZ_TO_RESULT(directory->Append(clientType)), nullptr);
 
     QM_TRY_INSPECT(const auto& directoryPath,
                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, directory, GetPath),
@@ -5862,7 +5866,8 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
   // If we see major.minor of 3.0, downgrade it to be 2.1.
   if (storageVersion == kHackyPreDowngradeStorageVersion) {
     storageVersion = kHackyPostDowngradeStorageVersion;
-    QM_TRY(aConnection.SetSchemaVersion(storageVersion), QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(aConnection.SetSchemaVersion(storageVersion)),
+           QM_PROPAGATE,
            [](const auto&) { MOZ_ASSERT(false, "Downgrade didn't take."); });
   }
 
@@ -7670,7 +7675,8 @@ nsresult OriginOperationBase::DirectoryOpen() {
   // Must set this before dispatching otherwise we will race with the IO thread.
   AdvanceState();
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -7805,7 +7811,8 @@ void NormalOriginOperationBase::Open() {
 
     directoryLock->Acquire(this);
   } else {
-    QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) { Finish(rv); });
+    QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
+           [this](const nsresult rv) { Finish(rv); });
   }
 }
 
@@ -7832,7 +7839,8 @@ void NormalOriginOperationBase::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   mDirectoryLock = aLock;
 
-  QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) { Finish(rv); });
+  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
+         [this](const nsresult rv) { Finish(rv); });
 }
 
 void NormalOriginOperationBase::DirectoryLockFailed() {
@@ -9206,7 +9214,8 @@ void ResetOrClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
   QM_TRY_INSPECT(const auto& storageFile,
                  QM_NewLocalFile(aQuotaManager.GetBasePath()), QM_VOID);
 
-  QM_TRY(storageFile->Append(aQuotaManager.GetStorageName() + kSQLiteSuffix),
+  QM_TRY(MOZ_TO_RESULT(storageFile->Append(aQuotaManager.GetStorageName() +
+                                           kSQLiteSuffix)),
          QM_VOID);
 
   const nsresult rv = storageFile->Remove(true);
@@ -9251,9 +9260,9 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
                                    PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  QM_TRY(aQuotaManager.AboutToClearOrigins(
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.AboutToClearOrigins(
              Nullable<PersistenceType>(aPersistenceType), mOriginScope,
-             mClientType),
+             mClientType)),
          QM_VOID);
 
   QM_TRY_INSPECT(
@@ -9265,109 +9274,111 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
   aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
       "ClearRequestBase: Starting deleting files"_ns);
 
-  QM_TRY(CollectEachFile(
-             *directory,
-             [originScope =
-                  [this] {
-                    OriginScope originScope = mOriginScope.Clone();
-                    if (originScope.IsOrigin()) {
-                      originScope.SetOrigin(
-                          MakeSanitizedOriginCString(originScope.GetOrigin()));
-                    } else if (originScope.IsPrefix()) {
-                      originScope.SetOriginNoSuffix(MakeSanitizedOriginCString(
-                          originScope.GetOriginNoSuffix()));
-                    }
-                    return originScope;
-                  }(),
-              aPersistenceType, &aQuotaManager, &directoriesForRemovalRetry,
-              this](nsCOMPtr<nsIFile>&& file) -> mozilla::Result<Ok, nsresult> {
-               QM_TRY_INSPECT(
-                   const auto& leafName,
-                   MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
-
-               QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
-
-               switch (dirEntryKind) {
-                 case nsIFileKind::ExistsAsDirectory: {
-                   // Skip the origin directory if it doesn't match the pattern.
-                   if (!originScope.Matches(OriginScope::FromOrigin(
-                           NS_ConvertUTF16toUTF8(leafName)))) {
-                     break;
-                   }
-
-                   QM_TRY_INSPECT(
-                       const auto& metadata,
-                       aQuotaManager.LoadFullOriginMetadataWithRestore(file));
-
-                   MOZ_ASSERT(metadata.mPersistenceType == aPersistenceType);
-
-                   if (!mClientType.IsNull()) {
-                     nsAutoString clientDirectoryName;
-                     QM_TRY(OkIf(Client::TypeToText(mClientType.Value(),
-                                                    clientDirectoryName,
-                                                    fallible)),
-                            Err(NS_ERROR_FAILURE));
-
-                     QM_TRY(file->Append(clientDirectoryName));
-
-                     QM_TRY_INSPECT(const bool& exists,
-                                    MOZ_TO_RESULT_INVOKE(file, Exists));
-
-                     if (!exists) {
-                       break;
-                     }
-                   }
-
-                   // We can't guarantee that this will always succeed on
-                   // Windows...
-                   QM_WARNONLY_TRY(file->Remove(true), [&](const auto&) {
-                     directoriesForRemovalRetry.AppendElement(std::move(file));
-                   });
-
-                   const bool initialized =
-                       aPersistenceType == PERSISTENCE_TYPE_PERSISTENT
-                           ? aQuotaManager.IsOriginInitialized(metadata.mOrigin)
-                           : aQuotaManager.IsTemporaryStorageInitialized();
-
-                   // If it hasn't been initialized, we don't need to update the
-                   // quota and notify the removing client.
-                   if (!initialized) {
-                     break;
-                   }
-
-                   if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
-                     if (mClientType.IsNull()) {
-                       aQuotaManager.RemoveQuotaForOrigin(aPersistenceType,
-                                                          metadata);
-                     } else {
-                       aQuotaManager.ResetUsageForClient(
-                           ClientMetadata{metadata, mClientType.Value()});
-                     }
-                   }
-
-                   aQuotaManager.OriginClearCompleted(
-                       aPersistenceType, metadata.mOrigin, mClientType);
-
-                   break;
+  QM_TRY(
+      CollectEachFile(
+          *directory,
+          [originScope =
+               [this] {
+                 OriginScope originScope = mOriginScope.Clone();
+                 if (originScope.IsOrigin()) {
+                   originScope.SetOrigin(
+                       MakeSanitizedOriginCString(originScope.GetOrigin()));
+                 } else if (originScope.IsPrefix()) {
+                   originScope.SetOriginNoSuffix(MakeSanitizedOriginCString(
+                       originScope.GetOriginNoSuffix()));
                  }
+                 return originScope;
+               }(),
+           aPersistenceType, &aQuotaManager, &directoriesForRemovalRetry,
+           this](nsCOMPtr<nsIFile>&& file) -> mozilla::Result<Ok, nsresult> {
+            QM_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
 
-                 case nsIFileKind::ExistsAsFile:
-                   // Unknown files during clearing are allowed. Just warn if we
-                   // find them.
-                   if (!IsOSMetadata(leafName)) {
-                     UNKNOWN_FILE_WARNING(leafName);
-                   }
+            QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-                   break;
+            switch (dirEntryKind) {
+              case nsIFileKind::ExistsAsDirectory: {
+                // Skip the origin directory if it doesn't match the pattern.
+                if (!originScope.Matches(OriginScope::FromOrigin(
+                        NS_ConvertUTF16toUTF8(leafName)))) {
+                  break;
+                }
 
-                 case nsIFileKind::DoesNotExist:
-                   // Ignore files that got removed externally while iterating.
-                   break;
-               }
+                QM_TRY_INSPECT(
+                    const auto& metadata,
+                    aQuotaManager.LoadFullOriginMetadataWithRestore(file));
 
-               return Ok{};
-             }),
-         QM_VOID);
+                MOZ_ASSERT(metadata.mPersistenceType == aPersistenceType);
+
+                if (!mClientType.IsNull()) {
+                  nsAutoString clientDirectoryName;
+                  QM_TRY(
+                      OkIf(Client::TypeToText(mClientType.Value(),
+                                              clientDirectoryName, fallible)),
+                      Err(NS_ERROR_FAILURE));
+
+                  QM_TRY(file->Append(clientDirectoryName));
+
+                  QM_TRY_INSPECT(const bool& exists,
+                                 MOZ_TO_RESULT_INVOKE(file, Exists));
+
+                  if (!exists) {
+                    break;
+                  }
+                }
+
+                // We can't guarantee that this will always succeed on
+                // Windows...
+                QM_WARNONLY_TRY(
+                    QM_TO_RESULT(file->Remove(true)), [&](const auto&) {
+                      directoriesForRemovalRetry.AppendElement(std::move(file));
+                    });
+
+                const bool initialized =
+                    aPersistenceType == PERSISTENCE_TYPE_PERSISTENT
+                        ? aQuotaManager.IsOriginInitialized(metadata.mOrigin)
+                        : aQuotaManager.IsTemporaryStorageInitialized();
+
+                // If it hasn't been initialized, we don't need to update the
+                // quota and notify the removing client.
+                if (!initialized) {
+                  break;
+                }
+
+                if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
+                  if (mClientType.IsNull()) {
+                    aQuotaManager.RemoveQuotaForOrigin(aPersistenceType,
+                                                       metadata);
+                  } else {
+                    aQuotaManager.ResetUsageForClient(
+                        ClientMetadata{metadata, mClientType.Value()});
+                  }
+                }
+
+                aQuotaManager.OriginClearCompleted(
+                    aPersistenceType, metadata.mOrigin, mClientType);
+
+                break;
+              }
+
+              case nsIFileKind::ExistsAsFile:
+                // Unknown files during clearing are allowed. Just warn if we
+                // find them.
+                if (!IsOSMetadata(leafName)) {
+                  UNKNOWN_FILE_WARNING(leafName);
+                }
+
+                break;
+
+              case nsIFileKind::DoesNotExist:
+                // Ignore files that got removed externally while iterating.
+                break;
+            }
+
+            return Ok{};
+          }),
+      QM_VOID);
 
   // Retry removing any directories that failed to be removed earlier now.
   //
@@ -10060,9 +10071,11 @@ Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
   QM_TRY(CallWithDelayedRetriesIfAccessDenied(
       [&exists, &aOriginProps, &newLeafName] {
         if (exists) {
-          QM_TRY_RETURN(aOriginProps.mDirectory->Remove(/* recursive */ true));
+          QM_TRY_RETURN(MOZ_TO_RESULT(
+              aOriginProps.mDirectory->Remove(/* recursive */ true)));
         }
-        QM_TRY_RETURN(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+        QM_TRY_RETURN(MOZ_TO_RESULT(
+            aOriginProps.mDirectory->RenameTo(nullptr, newLeafName)));
       },
       StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_maxRetries(),
       StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_delayMs()));

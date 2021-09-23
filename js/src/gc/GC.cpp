@@ -4761,63 +4761,23 @@ extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(
 #endif
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
-    : GenericTracer(rt, JS::TracerKind::ClearEdges,
-                    JS::WeakMapTraceAction::TraceKeysAndValues) {}
+    : GenericTracerImpl(rt, JS::TracerKind::ClearEdges,
+                        JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 js::gc::ClearEdgesTracer::ClearEdgesTracer()
     : ClearEdgesTracer(TlsContext.get()->runtime()) {}
 
-template <typename S>
-inline S* js::gc::ClearEdgesTracer::onEdge(S* thing) {
+template <typename T>
+T* js::gc::ClearEdgesTracer::onEdge(T* thing) {
   // We don't handle removing pointers to nursery edges from the store buffer
   // with this tracer. Check that this doesn't happen.
   MOZ_ASSERT(!IsInsideNursery(thing));
 
   // Fire the pre-barrier since we're removing an edge from the graph.
-  InternalBarrierMethods<S*>::preBarrier(thing);
+  InternalBarrierMethods<T*>::preBarrier(thing);
 
   // Return nullptr to clear the edge.
   return nullptr;
-}
-
-JSObject* js::gc::ClearEdgesTracer::onObjectEdge(JSObject* obj) {
-  return onEdge(obj);
-}
-JSString* js::gc::ClearEdgesTracer::onStringEdge(JSString* str) {
-  return onEdge(str);
-}
-JS::Symbol* js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol* sym) {
-  return onEdge(sym);
-}
-JS::BigInt* js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt* bi) {
-  return onEdge(bi);
-}
-js::BaseScript* js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript* script) {
-  return onEdge(script);
-}
-js::Shape* js::gc::ClearEdgesTracer::onShapeEdge(js::Shape* shape) {
-  return onEdge(shape);
-}
-js::BaseShape* js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape* base) {
-  return onEdge(base);
-}
-js::GetterSetter* js::gc::ClearEdgesTracer::onGetterSetterEdge(
-    js::GetterSetter* gs) {
-  return onEdge(gs);
-}
-js::PropMap* js::gc::ClearEdgesTracer::onPropMapEdge(js::PropMap* map) {
-  return onEdge(map);
-}
-js::jit::JitCode* js::gc::ClearEdgesTracer::onJitCodeEdge(
-    js::jit::JitCode* code) {
-  return onEdge(code);
-}
-js::Scope* js::gc::ClearEdgesTracer::onScopeEdge(js::Scope* scope) {
-  return onEdge(scope);
-}
-js::RegExpShared* js::gc::ClearEdgesTracer::onRegExpSharedEdge(
-    js::RegExpShared* shared) {
-  return onEdge(shared);
 }
 
 void GCRuntime::setPerformanceHint(PerformanceHint hint) {

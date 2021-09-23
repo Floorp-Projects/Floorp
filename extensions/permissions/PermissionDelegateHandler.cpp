@@ -187,7 +187,7 @@ bool PermissionDelegateHandler::HasFeaturePolicyAllowed(
 }
 
 bool PermissionDelegateHandler::HasPermissionDelegated(
-    const nsACString& aType) {
+    const nsACString& aType) const {
   MOZ_ASSERT(mDocument);
 
   // System principal should have right to make permission request

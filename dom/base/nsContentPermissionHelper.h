@@ -123,10 +123,10 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   };
   nsresult ShowPrompt(PromptResult& aResult);
 
-  PromptResult CheckPromptPrefs();
+  PromptResult CheckPromptPrefs() const;
 
   // Check if the permission has an opportunity to request.
-  bool CheckPermissionDelegate();
+  bool CheckPermissionDelegate() const;
 
   enum class DelayedTaskType {
     Allow,
@@ -136,6 +136,8 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   void RequestDelayedTask(nsIEventTarget* aTarget, DelayedTaskType aType);
 
  protected:
+  // @param aPrefName see `mPrefName`.
+  // @param aType see `mType`.
   ContentPermissionRequestBase(nsIPrincipal* aPrincipal,
                                nsPIDOMWindowInner* aWindow,
                                const nsACString& aPrefName,
@@ -146,8 +148,18 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PermissionDelegateHandler> mPermissionHandler;
-  nsCString mPrefName;
-  nsCString mType;
+
+  // The prefix of a pref which allows tests to bypass showing the prompt.
+  // Tests will have to set both of
+  // ${mPrefName}.prompt.testing and
+  // ${mPrefName}.prompt.testing.allow
+  // to either true or false. If no such testing is required, mPrefName may be
+  // empty.
+  const nsCString mPrefName;
+
+  // The type of the request, such as "autoplay-media-audible".
+  const nsCString mType;
+
   bool mIsHandlingUserInput;
   bool mMaybeUnsafePermissionDelegate;
 };

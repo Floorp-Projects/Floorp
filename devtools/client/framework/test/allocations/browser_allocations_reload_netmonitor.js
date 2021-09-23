@@ -37,7 +37,7 @@ async function testScript(toolbox) {
 add_task(async function() {
   const tab = await addTab(TEST_URL);
   const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "inspector",
+    toolId: "netmonitor",
   });
 
   // Run the test scenario first before recording in order to load all the
@@ -56,7 +56,7 @@ add_task(async function() {
     await testScript(toolbox);
   }
 
-  await stopRecordingAllocations("reload", {
+  await stopRecordingAllocations("reload-netmonitor", {
     alsoRecordContentProcess: true,
   });
 

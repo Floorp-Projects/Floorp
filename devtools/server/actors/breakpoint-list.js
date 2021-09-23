@@ -10,7 +10,7 @@ const {
   WatchedDataHelpers,
 } = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
 const { SUPPORTED_DATA } = WatchedDataHelpers;
-const { BREAKPOINTS, XHR_BREAKPOINTS } = SUPPORTED_DATA;
+const { BREAKPOINTS, XHR_BREAKPOINTS, EVENT_BREAKPOINTS } = SUPPORTED_DATA;
 
 /**
  * This actor manages the breakpoints list.
@@ -66,6 +66,28 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
     return this.watcherActor.removeDataEntry(XHR_BREAKPOINTS, [
       { path, method },
     ]);
+  },
+
+  /**
+   * Set the active breakpoints
+   *
+   * @param {Array<String>} ids
+   *                        An array of eventlistener breakpoint ids. These
+   *                        are unique identifiers for event breakpoints.
+   *                        See devtools/server/actors/utils/event-breakpoints.js
+   *                        for details.
+   */
+  setActiveEventBreakpoints(ids) {
+    const existingIds = this.watcherActor.getWatchedData(EVENT_BREAKPOINTS);
+    const addIds = ids.filter(id => !existingIds.includes(id));
+    const removeIds = existingIds.filter(id => !ids.includes(id));
+
+    if (addIds.length) {
+      this.watcherActor.addDataEntry(EVENT_BREAKPOINTS, addIds);
+    }
+    if (removeIds.length) {
+      this.watcherActor.removeDataEntry(EVENT_BREAKPOINTS, removeIds);
+    }
   },
 });
 

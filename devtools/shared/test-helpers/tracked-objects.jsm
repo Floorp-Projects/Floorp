@@ -14,8 +14,6 @@
 
 var EXPORTED_SYMBOLS = ["track", "getAllNodeIds", "clear"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const objects = [];
 
 /**
@@ -23,9 +21,6 @@ const objects = [];
  * later on, when retrieving all the watched object via getAllNodeIds.
  */
 function track(obj) {
-  if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-    throw new Error("For now, this API only works from the parent process");
-  }
   // We store a weak reference, so that we do force keeping the object in memory!!
   objects.push(Cu.getWeakReference(obj));
 }

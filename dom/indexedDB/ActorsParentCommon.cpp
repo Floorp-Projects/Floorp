@@ -159,7 +159,9 @@ class SandboxHolder final {
           NullPrincipal::CreateWithoutOriginAttributes();
 
       JS::Rooted<JSObject*> sandbox(aCx);
-      QM_TRY(xpc->CreateSandbox(aCx, principal, sandbox.address()), nullptr);
+      QM_TRY(
+          MOZ_TO_RESULT(xpc->CreateSandbox(aCx, principal, sandbox.address())),
+          nullptr);
 
       mSandbox = new JSObjectHolder(aCx, sandbox);
     }

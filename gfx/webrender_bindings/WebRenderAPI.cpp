@@ -565,12 +565,12 @@ void WebRenderAPI::EnableNativeCompositor(bool aEnable) {
   wr_api_enable_native_compositor(mDocHandle, aEnable);
 }
 
-void WebRenderAPI::EnableMultithreading(bool aEnable) {
-  wr_api_enable_multithreading(mDocHandle, aEnable);
-}
-
 void WebRenderAPI::SetBatchingLookback(uint32_t aCount) {
   wr_api_set_batching_lookback(mDocHandle, aCount);
+}
+
+void WebRenderAPI::SetBool(wr::BoolParameter aKey, bool aValue) {
+  wr_api_set_bool(mDocHandle, aKey, aValue);
 }
 
 void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {

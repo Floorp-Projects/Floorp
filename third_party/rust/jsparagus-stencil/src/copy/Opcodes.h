@@ -355,7 +355,7 @@
      *   Operands: uint32_t atomIndex
      *   Stack: => string
      */ \
-    MACRO(String, string, NULL, 5, 0, 1, JOF_ATOM) \
+    MACRO(String, string, NULL, 5, 0, 1, JOF_STRING) \
     /*
      * Push a well-known symbol.
      *
@@ -760,6 +760,19 @@
      *   Stack: => this
      */ \
     MACRO(GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE) \
+    /*
+     * Push the global `this` value for non-syntactic scope. Not to be confused
+     * with the `globalThis` property on the global.
+     *
+     * This must be used only in scopes where `this` refers to the global
+     * `this`.
+     *
+     *   Category: Expressions
+     *   Type: Other expressions
+     *   Operands:
+     *   Stack: => this
+     */ \
+    MACRO(NonSyntacticGlobalThis, non_syntactic_global_this, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Push the value of `new.target`.
      *
@@ -1764,9 +1777,8 @@
      * implicit `this` passed to `getFullYear` is `date`, not `undefined`.
      *
      * This walks the run-time environment chain looking for the environment
-     * record that contains the function. If the function call is not inside a
-     * `with` statement, use `JSOp::GImplicitThis` instead. If the function call
-     * definitely refers to a local binding, use `JSOp::Undefined`.
+     * record that contains the function. If the function call definitely
+     * refers to a local binding, use `JSOp::Undefined`.
      *
      * Implements: [EvaluateCall][1] step 1.b. But not entirely correctly.
      * See [bug 1166408][2].
@@ -1780,19 +1792,6 @@
      *   Stack: => this
      */ \
     MACRO(ImplicitThis, implicit_this, "", 5, 0, 1, JOF_ATOM) \
-    /*
-     * Like `JSOp::ImplicitThis`, but the name must not be bound in any local
-     * environments.
-     *
-     * The result is always `undefined` except when the name refers to a
-     * binding in a non-syntactic `with` environment.
-     *
-     *   Category: Functions
-     *   Type: Calls
-     *   Operands: uint32_t nameIndex
-     *   Stack: => this
-     */ \
-    MACRO(GImplicitThis, g_implicit_this, "", 5, 0, 1, JOF_ATOM) \
     /*
      * Push the call site object for a tagged template call.
      *
@@ -2749,10 +2748,9 @@
      */ \
     MACRO(CheckThis, check_this, NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Push the global environment onto the stack, unless the script has a
-     * non-syntactic global scope. In that case, this acts like JSOp::BindName.
-     *
-     * `nameIndex` is only used when acting like JSOp::BindName.
+     * Look up a name on the global lexical environment's chain and push the
+     * environment which contains a binding for that name. If no such binding
+     * exists, push the global lexical environment.
      *
      *   Category: Variables and scopes
      *   Type: Looking up bindings
@@ -2804,8 +2802,8 @@
      * This is an optimized version of `JSOp::GetName` that skips all local
      * scopes, for use when the name doesn't refer to any local binding.
      * `NonSyntacticVariablesObject`s break this optimization, so if the
-     * current script has a non-syntactic global scope, this acts like
-     * `JSOp::GetName`.
+     * current script has a non-syntactic global scope, use `JSOp::GetName`
+     * instead.
      *
      * Like `JSOp::GetName`, this throws a ReferenceError if no such binding is
      * found (unless the next instruction is `JSOp::Typeof`) or if the binding

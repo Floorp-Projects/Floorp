@@ -13,8 +13,14 @@
     function doTest() {
       testTextAtOffset("line_test_1", BOUNDARY_LINE_START,
                        [[0, 6, "Line 1 ", 0, 7],
-                        [7, 7, "", 7, 7],
+                        // See the todo test below.
+                        // [7, 7, kEmbedChar, 7, 8],
                         [8, 15, "Line 3 ", 8, 15]]);
+      testTextAtOffset(/* aOffset */ 7, BOUNDARY_LINE_START,
+        kEmbedChar, /* aStartOffset */ 7, /* aEndOffset */ 8,
+        "line_test_1",
+        /* returned text */ kTodo,
+        /* returned start offset */ kOk, /* returned end offset */ kTodo);
 
       // ////////////////////////////////////////////////////////////////////////
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__

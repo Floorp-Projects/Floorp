@@ -684,31 +684,6 @@ static bool ValidateSVGFrame(nsIFrame* aFrame) {
   return true;
 }
 
-bool SVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame) {
-  nsIFrame* firstFrame =
-      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsTArray<SVGMaskFrame*> maskFrames;
-  // XXX check return value?
-  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
-
-  const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
-
-  for (uint32_t i = 0; i < maskFrames.Length(); i++) {
-    // Refers to a valid SVG mask.
-    if (maskFrames[i]) {
-      continue;
-    }
-
-    // Refers to an external resource, which is not ready yet.
-    if (!svgReset->mMask.mLayers[i].mImage.IsComplete()) {
-      return false;
-    }
-  }
-
-  // Either all mask resources are ready, or no mask resource is needed.
-  return true;
-}
-
 class AutoPopGroup {
  public:
   AutoPopGroup() : mContext(nullptr) {}

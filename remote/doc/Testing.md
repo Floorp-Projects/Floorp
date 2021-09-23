@@ -1,12 +1,13 @@
 Testing
 =======
 
-The Remote Agent has unit- and functional tests located under different folders:
+The Remote Protocol has unit- and functional tests located under different folders:
 
-  - Shared Modules: `remote/shared/test/xpcshell`
-  - CDP: `remote/cdp/test/{xpcshell,browser}`.
+  - Shared Modules: `remote/shared/`
+  - CDP: `remote/cdp`.
+  - WebDriver BiDi: `remote/webdriver-bidi`
 
-You may run all the tests under a particular subfolder like this:
+You may want to run all the tests under a particular subfolder locally like this:
 
 	% ./mach test remote
 
@@ -129,14 +130,25 @@ You can also run them against Chrome as:
 `--subset` disables a check for missing or skipped tests in our log parsing.
 This check is typically not relevant when running against Chrome.
 
-To schedule the tests on try, look for `source-test-remote-puppeteer` in
-`./mach try fuzzy`. On try they appear under the `remote(pup)` symbol.
-
 Test expectation metadata is collected in _remote/test/puppeteer-expected.json_
 via log parsing and a custom Mocha reporter under
 _remote/test/puppeteer/json-mocha-reporter.js_
+
+
+Testing on Try
+--------------
+
+To schedule all the Remote Protocol tests on try, you can use the
+`remote-protocol` [try preset]:
+
+	mach try --preset remote-protocol
+
+But you can also schedule tests by selecting relevant jobs yourself:
+
+  mach try fuzzy
 
 [Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
 [track progress]: https://puppeteer.github.io/ispuppeteerfirefoxready/
 [Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
 [Mocha]: https://mochajs.org/
+[try preset]: https://firefox-source-docs.mozilla.org/tools/try/presets.html

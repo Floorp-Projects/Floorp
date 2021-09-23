@@ -282,7 +282,7 @@
  *
  * Barriers for use outside of the JS engine call into the same barrier
  * implementations at InternalBarrierMethods<T>::post via an indirect call to
- * Heap(.+)WriteBarriers.
+ * Heap(.+)PostWriteBarrier.
  *
  * These clases are designed to be used to wrap GC thing pointers or values that
  * act like them (i.e. JS::Value and jsid).  It is possible to use them for

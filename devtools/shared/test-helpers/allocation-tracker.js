@@ -438,11 +438,33 @@ exports.allocationTracker = function({
       }
     },
 
-    traceObjects(objects) {
+    /**
+     * Return the absolute file path to a memory snapshot.
+     * This is used to compute dominator trees in `traceObjects`.
+     */
+    getSnapshotFile() {
+      return ChromeUtils.saveHeapSnapshot({ debugger: dbg });
+    },
+
+    /**
+     * Print information about why a list of objects are being held in memory.
+     *
+     * @param Array<NodeId> objects
+     *        List of NodeId's of objects to debug. NodeIds can be retrieved
+     *        via ChromeUtils.getObjectNodeId.
+     * @param String snapshotFile
+     *        Absolute path to a Heap snapshot file retrieved via this.getSnapshotFile.
+     *        This is used to trace content process objects. We have to record the snapshot
+     *        from the content process, but can only read it from the parent process because
+     *        of I/O restrictions in content processes.
+     */
+    traceObjects(objects, snapshotFile) {
       // There is no API to get the heap snapshot at runtime,
       // the only way is to save it to disk and then load it from disk
-      const filePath = ChromeUtils.saveHeapSnapshot({ debugger: dbg });
-      const snapshot = ChromeUtils.readHeapSnapshot(filePath);
+      if (!snapshotFile) {
+        snapshotFile = this.getSnapshotFile();
+      }
+      const snapshot = ChromeUtils.readHeapSnapshot(snapshotFile);
 
       function getObjectClass(id) {
         if (!id) {
@@ -479,6 +501,9 @@ exports.allocationTracker = function({
             )[0][0] + (stack ? "@" + stack + ":" + line : "")
           );
         } catch (e) {
+          if (e.name == "NS_ERROR_ILLEGAL_VALUE") {
+            return "<not-in-memory-snapshot:is-from-untracked-global?>";
+          }
           return "<invalid:" + id + ":" + e + ">";
         }
       }

@@ -36,18 +36,11 @@ using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kThisIconURIImplementationCID,
                      NS_THIS_ICONURI_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kIconURICID, NS_ICONURI_CID);
 
-// helper function for parsing out attributes like size, and contentType
-// from the icon url.
-static void extractAttributeValue(const char* aSearchString,
-                                  const char* aAttributeName,
-                                  nsCString& aResult);
+static const char* const kSizeStrings[] = {"button", "toolbar", "toolbarsmall",
+                                           "menu",   "dnd",     "dialog"};
 
-static const char* kSizeStrings[] = {"button", "toolbar", "toolbarsmall",
-                                     "menu",   "dnd",     "dialog"};
-
-static const char* kStateStrings[] = {"normal", "disabled"};
+static const char* const kStateStrings[] = {"normal", "disabled"};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -164,14 +157,15 @@ nsMozIconURI::Mutate(nsIURIMutator** aMutator) {
   return NS_OK;
 }
 
+// helper function for parsing out attributes like size, and contentType
+// from the icon url.
 // takes a string like ?size=32&contentType=text/html and returns a new string
 // containing just the attribute value. i.e you could pass in this string with
 // an attribute name of 'size=', this will return 32
 // Assumption: attribute pairs in the string are separated by '&'.
-void extractAttributeValue(const char* aSearchString,
-                           const char* aAttributeName, nsCString& aResult) {
-  // NS_ENSURE_ARG_POINTER(extractAttributeValue);
-
+static void extractAttributeValue(const char* aSearchString,
+                                  const char* aAttributeName,
+                                  nsCString& aResult) {
   aResult.Truncate();
 
   if (aSearchString && aAttributeName) {

@@ -21,7 +21,7 @@ macro_rules! using_opcode_database {
                 (Uint24, uint24, NULL, 4, 0, 1, JOF_UINT24),
                 (Double, double_, NULL, 9, 0, 1, JOF_DOUBLE),
                 (BigInt, big_int, NULL, 5, 0, 1, JOF_BIGINT),
-                (String, string, NULL, 5, 0, 1, JOF_ATOM),
+                (String, string, NULL, 5, 0, 1, JOF_STRING),
                 (Symbol, symbol, NULL, 2, 0, 1, JOF_UINT8),
                 (Void, void_, NULL, 1, 1, 1, JOF_BYTE),
                 (Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_IC),
@@ -58,6 +58,7 @@ macro_rules! using_opcode_database {
                 (ToNumeric, to_numeric, NULL, 1, 1, 1, JOF_BYTE|JOF_IC),
                 (ToString, to_string, NULL, 1, 1, 1, JOF_BYTE),
                 (GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE),
+                (NonSyntacticGlobalThis, non_syntactic_global_this, NULL, 1, 0, 1, JOF_BYTE),
                 (NewTarget, new_target, NULL, 1, 0, 1, JOF_BYTE),
                 (DynamicImport, dynamic_import, NULL, 1, 1, 1, JOF_BYTE),
                 (ImportMeta, import_meta, NULL, 1, 0, 1, JOF_BYTE),
@@ -131,7 +132,6 @@ macro_rules! using_opcode_database {
                 (StrictEval, strict_eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CHECKSTRICT|JOF_IC),
                 (StrictSpreadEval, strict_spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_CHECKSTRICT|JOF_IC),
                 (ImplicitThis, implicit_this, "", 5, 0, 1, JOF_ATOM),
-                (GImplicitThis, g_implicit_this, "", 5, 0, 1, JOF_ATOM),
                 (CallSiteObj, call_site_obj, NULL, 5, 0, 1, JOF_OBJECT),
                 (IsConstructing, is_constructing, NULL, 1, 0, 1, JOF_BYTE),
                 (New, new_, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_IC),
@@ -349,6 +349,9 @@ const JOF_DEBUGCOORD: u32 = 24;
 
 /// uint32_t shape index
 const JOF_SHAPE: u32 = 25;
+
+/// uint32_t constant index
+const JOF_STRING: u32 = 26;
 
 /// mask for above immediate types
 const JOF_TYPEMASK: u32 = 0xFF;

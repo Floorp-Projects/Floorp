@@ -501,6 +501,30 @@ impl DynamicProperties {
 /// a dependency from WebRender.
 pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
 
+/// A configuration option that can be changed at runtime.
+///
+/// # Adding a new configuration option
+///
+///  - Add a new enum variant here.
+///  - Add the entry in WR_BOOL_PARAMETER_LIST in gfxPlatform.cpp.
+///  - React to the parameter change anywhere in WebRender where a SetParam message is received.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Parameter {
+    Bool(BoolParameter, bool),
+}
+
+
+/// Boolean configuration option.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum BoolParameter {
+    PboUploads = 0,
+    Multithreading = 1,
+    BatchedUploads = 2,
+    DrawCallsForTextureCopy = 3,
+}
+
+
 bitflags! {
     /// Flags to enable/disable various builtin debugging tools.
     #[repr(C)]
@@ -569,8 +593,6 @@ bitflags! {
         const PROFILER_CAPTURE = (1 as u32) << 25; // need "as u32" until we have cbindgen#556
         /// Invalidate picture tiles every frames (useful when inspecting GPU work in external tools).
         const FORCE_PICTURE_INVALIDATION = (1 as u32) << 26;
-        const USE_BATCHED_TEXTURE_UPLOADS = (1 as u32) << 27;
-        const USE_DRAW_CALLS_FOR_TEXTURE_COPY = (1 as u32) << 28;
     }
 }
 

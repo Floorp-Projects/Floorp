@@ -240,19 +240,6 @@ class LayerManager : public WindowRenderer {
   bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; }
 
   /**
-   * Returns true if the underlying platform can properly support layers with
-   * SurfaceMode::SURFACE_COMPONENT_ALPHA.
-   */
-  static bool LayersComponentAlphaEnabled();
-
-  /**
-   * Returns true if this LayerManager can properly support layers with
-   * SurfaceMode::SURFACE_COMPONENT_ALPHA. LayerManagers that can't will use
-   * transparent surfaces (and lose subpixel-AA for text).
-   */
-  virtual bool AreComponentAlphaLayersEnabled();
-
-  /**
    * Returns true if this LayerManager always requires an intermediate surface
    * to render blend operations.
    */

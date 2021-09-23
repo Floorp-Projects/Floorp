@@ -614,14 +614,14 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void UpdateDebugFlags();
 
   /**
-   * Notify the compositor the debug flags have been updated.
+   * Notify the compositor some webrender parameters have been updated.
    */
-  static void UpdateWebRenderMultithreading();
+  static void UpdateWebRenderParameters();
 
   /**
    * Notify the compositor some webrender parameters have been updated.
    */
-  static void UpdateWebRenderParameters();
+  static void UpdateWebRenderBoolParameters();
 
   /**
    * Notify the compositor webrender profiler UI string has been updated.

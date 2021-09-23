@@ -271,25 +271,17 @@ var DateTimePickerPanel = class {
   getCalendarInfo(locale) {
     const calendarInfo = Services.intl.getCalendarInfo(locale);
 
-    // Day of week from calendarInfo starts from 1 as Sunday to 7 as Saturday,
+    // Day of week from calendarInfo starts from 1 as Monday to 7 as Sunday,
     // so they need to be mapped to JavaScript convention with 0 as Sunday
     // and 6 as Saturday
-    let firstDayOfWeek = calendarInfo.firstDayOfWeek - 1,
-      weekendStart = calendarInfo.weekendStart - 1,
-      weekendEnd = calendarInfo.weekendEnd - 1;
-
-    let weekends = [];
-
-    // Make sure weekendEnd is greater than weekendStart
-    if (weekendEnd < weekendStart) {
-      weekendEnd += 7;
+    function toDateWeekday(day) {
+      return day === 7 ? 0 : day;
     }
 
-    // We get the weekends by incrementing weekendStart up to weekendEnd.
-    // If the start and end is the same day, then weekends only has one day.
-    for (let day = weekendStart; day <= weekendEnd; day++) {
-      weekends.push(day % 7);
-    }
+    let firstDayOfWeek = toDateWeekday(calendarInfo.firstDayOfWeek),
+      weekend = calendarInfo.weekend;
+
+    let weekends = weekend.map(toDateWeekday);
 
     return {
       firstDayOfWeek,

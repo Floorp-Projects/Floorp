@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
+#include "nsIConsoleService.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ServoStyleSet.h"
@@ -335,12 +336,13 @@ static const char* gExactCallbackPrefs[] = {
     "nglayout.debug.paint_flashing_chrome",
     "nglayout.debug.paint_flashing",
     "privacy.resistFingerprinting",
+    "privacy.trackingprotection.enabled",
     nullptr,
 };
 
 static const char* gPrefixCallbackPrefs[] = {
-    "font.", "browser.display.",    "browser.viewport.",
-    "bidi.", "gfx.font_rendering.", "layout.css.font-visibility.",
+    "bidi.", "browser.display.",    "browser.viewport.",
+    "font.", "gfx.font_rendering.", "layout.css.font-visibility.",
     nullptr,
 };
 
@@ -800,15 +802,61 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 
 bool nsPresContext::UpdateFontVisibility() {
   FontVisibility oldValue = mFontVisibility;
-  if (StaticPrefs::privacy_resistFingerprinting()) {
-    mFontVisibility = FontVisibility::Base;
-  } else {
-    mFontVisibility = FontVisibility(
-        std::min(int32_t(FontVisibility::User),
-                 std::max(int32_t(FontVisibility::Base),
-                          StaticPrefs::layout_css_font_visibility_level())));
+
+  // Is this a private browsing context?
+  bool isPrivate = false;
+  if (nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext()) {
+    isPrivate = loadContext->UsePrivateBrowsing();
   }
+
+  // Read the relevant pref depending on RFP/trackingProtection state
+  // to determine the visibility level to use.
+  int32_t level;
+  if (StaticPrefs::privacy_resistFingerprinting()) {
+    level = StaticPrefs::layout_css_font_visibility_resistFingerprinting();
+  } else if (StaticPrefs::privacy_trackingprotection_enabled() ||
+             (isPrivate &&
+              StaticPrefs::privacy_trackingprotection_pbmode_enabled())) {
+    level = StaticPrefs::layout_css_font_visibility_trackingprotection();
+  } else {
+    level = StaticPrefs::layout_css_font_visibility_standard();
+  }
+
+  // For private browsing contexts, apply the private-mode limit.
+  if (isPrivate) {
+    int32_t priv = StaticPrefs::layout_css_font_visibility_private();
+    level = std::max(std::min(level, priv), int32_t(FontVisibility::Base));
+  }
+
+  // Clamp result to the valid range of levels.
+  level = std::max(std::min(level, int32_t(FontVisibility::User)),
+                   int32_t(FontVisibility::Base));
+
+  mFontVisibility = FontVisibility(level);
   return mFontVisibility != oldValue;
+}
+
+void nsPresContext::ReportBlockedFontFamilyName(const nsCString& aFamily,
+                                                FontVisibility aVisibility) {
+  if (!mBlockedFonts.EnsureInserted(aFamily)) {
+    return;
+  }
+  nsAutoString msg;
+  msg.AppendPrintf(
+      "Request for font \"%s\" blocked at visibility level %d (requires %d)\n",
+      aFamily.get(), int(GetFontVisibility()), int(aVisibility));
+  nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::warningFlag,
+                                              "Security"_ns, mDocument);
+}
+
+void nsPresContext::ReportBlockedFontFamily(const fontlist::Family& aFamily) {
+  auto* fontList = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  const nsCString& name = aFamily.DisplayName().AsString(fontList);
+  ReportBlockedFontFamilyName(name, aFamily.Visibility());
+}
+
+void nsPresContext::ReportBlockedFontFamily(const gfxFontFamily& aFamily) {
+  ReportBlockedFontFamilyName(aFamily.Name(), aFamily.Visibility());
 }
 
 void nsPresContext::InitFontCache() {
