@@ -6,8 +6,12 @@
 
 requestLongerTimeout(2);
 
-// Restoring default should reset theme and show an "undo" option which undoes the restoring operation.
+// Restoring default should reset density and show an "undo" option which undoes
+// the restoring operation.
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.compactmode.show", true]],
+  });
   let stopReloadButtonId = "stop-reload-button";
   CustomizableUI.removeWidgetFromArea(stopReloadButtonId);
   await startCustomizing();
@@ -22,40 +26,50 @@ add_task(async function() {
   );
   is(undoResetButton.hidden, true, "The undo button is hidden before reset");
 
-  let themesButton = document.getElementById("customization-lwtheme-button");
-  let popup = document.getElementById("customization-lwtheme-menu");
+  let densityButton = document.getElementById("customization-uidensity-button");
+  let popup = document.getElementById("customization-uidensity-menu");
   let popupShownPromise = popupShown(popup);
-  EventUtils.synthesizeMouseAtCenter(themesButton, {});
-  info("Clicked on themes button");
+  EventUtils.synthesizeMouseAtCenter(densityButton, {});
+  info("Clicked on density button");
   await popupShownPromise;
 
-  let header = document.getElementById("customization-lwtheme-menu-header");
-  let firstLWTheme = header.nextElementSibling.nextElementSibling;
-  let firstLWThemeId = firstLWTheme.theme.id;
-  let themeChangedPromise = promiseObserverNotified(
-    "lightweight-theme-styling-update"
+  let compactModeItem = document.getElementById(
+    "customization-uidensity-menuitem-compact"
   );
-  firstLWTheme.doCommand();
-  info("Clicked on first theme");
-  await themeChangedPromise;
+  let win = document.getElementById("main-window");
+  let densityChangedPromise = new Promise(resolve => {
+    let observer = new MutationObserver(() => {
+      if (win.getAttribute("uidensity") == "compact") {
+        resolve();
+        observer.disconnect();
+      }
+    });
+    observer.observe(win, {
+      attributes: true,
+      attributeFilter: ["uidensity"],
+    });
+  });
 
-  let theme = await AddonManager.getAddonByID(firstLWThemeId);
-  is(theme.isActive, true, "Theme changed to first option");
+  compactModeItem.doCommand();
+  info("Clicked on compact density");
+  await densityChangedPromise;
 
   await gCustomizeMode.reset();
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
-  theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
-  is(theme.isActive, true, "Theme reset to default");
+  is(
+    win.hasAttribute("uidensity"),
+    false,
+    "The window has been restored to normal density."
+  );
 
   await gCustomizeMode.undoReset();
 
-  theme = await AddonManager.getAddonByID(firstLWThemeId);
   is(
-    theme.isActive,
-    true,
-    "Theme has been reset from default to original choice"
+    win.getAttribute("uidensity"),
+    "compact",
+    "Density has been reset to compact."
   );
   ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");
   is(
@@ -70,6 +84,7 @@ add_task(async function() {
   );
 
   await gCustomizeMode.reset();
+  await SpecialPowers.popPrefEnv();
 });
 
 // Performing an action after a reset will hide the undo button.
