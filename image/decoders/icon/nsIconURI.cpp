@@ -36,7 +36,6 @@ using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kThisIconURIImplementationCID,
                      NS_THIS_ICONURI_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kIconURICID, NS_ICONURI_CID);
 
 // helper function for parsing out attributes like size, and contentType
 // from the icon url.
