@@ -215,6 +215,15 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
  private:
+  Result CheckCRLiteStash(
+      const nsTArray<uint8_t>& issuerSubjectPublicKeyInfoBytes,
+      const nsTArray<uint8_t>& serialNumberBytes);
+  Result CheckCRLite(const nsTArray<uint8_t>& issuerBytes,
+                     const nsTArray<uint8_t>& issuerSubjectPublicKeyInfoBytes,
+                     const nsTArray<uint8_t>& serialNumberBytes,
+                     uint64_t earliestSCTTimestamp,
+                     bool& filterCoversCertificate);
+
   enum EncodedResponseSource {
     ResponseIsFromNetwork = 1,
     ResponseWasStapled = 2
@@ -228,8 +237,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   Result SynchronousCheckRevocationWithServer(
       const mozilla::pkix::CertID& certID, const nsCString& aiaLocation,
       mozilla::pkix::Time time, uint16_t maxOCSPLifetimeInDays,
-      const Result cachedResponseResult,
-      const Result stapledOCSPResponseResult);
+      const Result cachedResponseResult, const Result stapledOCSPResponseResult,
+      const bool crliteFilterCoversCertificate, const Result crliteResult);
   Result HandleOCSPFailure(const Result cachedResponseResult,
                            const Result stapledOCSPResponseResult,
                            const Result error);
