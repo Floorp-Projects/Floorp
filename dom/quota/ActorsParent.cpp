@@ -1842,8 +1842,8 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
            Err(NS_ERROR_FAILURE));
 
     RefPtr<MozURL> url;
-    QM_TRY(MozURL::Init(getter_AddRefs(url), originNoSuffix), QM_PROPAGATE,
-           [&originNoSuffix](const nsresult) {
+    QM_TRY(MOZ_TO_RESULT(MozURL::Init(getter_AddRefs(url), originNoSuffix)),
+           QM_PROPAGATE, [&originNoSuffix](const nsresult) {
              QM_WARNING("A URL %s is not recognized by MozURL",
                         originNoSuffix.get());
            });
@@ -4333,7 +4333,7 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       QM_TRY(([&]() -> Result<Ok, nsresult> {
-        QM_TRY(([this, type, &MaybeCollectUnaccessedOrigin] {
+        QM_TRY(MOZ_TO_RESULT(([this, type, &MaybeCollectUnaccessedOrigin] {
                  const auto innerFunc = [&](const auto&) -> nsresult {
                    return InitializeRepository(type,
                                                MaybeCollectUnaccessedOrigin);
@@ -4344,7 +4344,7 @@ nsresult QuotaManager::LoadQuota() {
                          ? Initialization::DefaultRepository
                          : Initialization::TemporaryRepository,
                      innerFunc);
-               }()),
+               }())),
                OK_IN_NIGHTLY_PROPAGATE_IN_OTHERS, statusKeeperFunc);
 
         return Ok{};
@@ -5863,7 +5863,8 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
   // If we see major.minor of 3.0, downgrade it to be 2.1.
   if (storageVersion == kHackyPreDowngradeStorageVersion) {
     storageVersion = kHackyPostDowngradeStorageVersion;
-    QM_TRY(aConnection.SetSchemaVersion(storageVersion), QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(aConnection.SetSchemaVersion(storageVersion)),
+           QM_PROPAGATE,
            [](const auto&) { MOZ_ASSERT(false, "Downgrade didn't take."); });
   }
 
@@ -7806,7 +7807,8 @@ void NormalOriginOperationBase::Open() {
 
     directoryLock->Acquire(this);
   } else {
-    QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) { Finish(rv); });
+    QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
+           [this](const nsresult rv) { Finish(rv); });
   }
 }
 
@@ -7833,7 +7835,8 @@ void NormalOriginOperationBase::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   mDirectoryLock = aLock;
 
-  QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) { Finish(rv); });
+  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
+         [this](const nsresult rv) { Finish(rv); });
 }
 
 void NormalOriginOperationBase::DirectoryLockFailed() {

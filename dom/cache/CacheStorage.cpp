@@ -142,8 +142,8 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnMainThread(
   MOZ_ASSERT(NS_IsMainThread());
 
   PrincipalInfo principalInfo;
-  QM_TRY(PrincipalToPrincipalInfo(aPrincipal, &principalInfo), nullptr,
-         [&aRv](const nsresult rv) { aRv.Throw(rv); });
+  QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(aPrincipal, &principalInfo)),
+         nullptr, [&aRv](const nsresult rv) { aRv.Throw(rv); });
 
   QM_TRY(OkIf(QuotaManager::IsPrincipalInfoValid(principalInfo)),
          RefPtr{new CacheStorage(NS_ERROR_DOM_SECURITY_ERR)}.forget(),
