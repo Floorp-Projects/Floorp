@@ -132,10 +132,14 @@ class DefaultPagedHistoryProvider(
         // item.
         result.addAll(history.filter { item -> historyMetadata.find { it.url == item.url } == null })
 
-        // Filter history metadata items with no view time.
+        // Filter history metadata items with no view time and dedupe by url.
+        // Note that distinctBy is sufficient here as it keeps the order of the source
+        // collection, and we're only sorting by visitedAt (=updatedAt) currently.
+        // If we needed the view time we'd have to aggregate it for entries with the same
+        // url, but we don't have a use case for this currently in the history view.
         result.addAll(
             historyGroupsInOffset.map { group ->
-                group.copy(items = group.items.filter { it.totalViewTime > 0 })
+                group.copy(items = group.items.filter { it.totalViewTime > 0 }.distinctBy { it.url })
             }
         )
 

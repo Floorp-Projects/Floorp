@@ -73,8 +73,20 @@ class PagedHistoryProviderTest {
             previewImageUrl = null
         )
 
+        // Adding a third entry with same url to test deduping
+        val historyMetadataKey3 = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
+        val historyEntry3 = HistoryMetadata(
+            key = historyMetadataKey3,
+            title = "firefox",
+            createdAt = 3,
+            updatedAt = 3,
+            totalViewTime = 30,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
         coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1, visitInfo2, visitInfo3)
-        coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2)
+        coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3)
 
         var actualResults: List<History>? = null
         provider.getHistory(10L, 5) {
