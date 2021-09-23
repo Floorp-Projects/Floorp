@@ -1198,8 +1198,9 @@ extern JS_PUBLIC_API void SetHostCleanupFinalizationRegistryCallback(
  */
 extern JS_PUBLIC_API void ClearKeptObjects(JSContext* cx);
 
-inline JS_PUBLIC_API bool ZoneIsGrayMarking(Zone* zone) {
-  return shadow::Zone::from(zone)->isGCMarkingBlackAndGray();
+inline JS_PUBLIC_API bool NeedGrayRootsForZone(Zone* zoneArg) {
+  shadow::Zone* zone = shadow::Zone::from(zoneArg);
+  return zone->isGCMarkingBlackAndGray() || zone->isGCCompacting();
 }
 
 extern JS_PUBLIC_API bool AtomsZoneIsCollecting(JSRuntime* runtime);
