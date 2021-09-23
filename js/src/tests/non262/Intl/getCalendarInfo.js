@@ -23,51 +23,51 @@ let gCI = Intl.getCalendarInfo;
 assertEq(gCI.length, 1);
 
 checkCalendarInfo(gCI('en-US'), {
-  firstDayOfWeek: 1,
+  firstDayOfWeek: 7,
   minDays: 1,
-  weekend: [1, 7],
+  weekend: [6, 7],
   calendar: "gregory",
   locale: "en-US"
 });
 
 checkCalendarInfo(gCI('en-IL'), {
-  firstDayOfWeek: 1,
+  firstDayOfWeek: 7,
   minDays: 1,
-  weekend: [6, 7],
+  weekend: [5, 6],
   calendar: "gregory",
   locale: "en-IL"
 });
 
 
 checkCalendarInfo(gCI('en-GB'), {
-  firstDayOfWeek: 2,
+  firstDayOfWeek: 1,
   minDays: 4,
-  weekend: [1, 7],
+  weekend: [6, 7],
   calendar: "gregory",
   locale: "en-GB"
 });
 
 
 checkCalendarInfo(gCI('pl'), {
-  firstDayOfWeek: 2,
+  firstDayOfWeek: 1,
   minDays: 4,
-  weekend: [1, 7],
+  weekend: [6, 7],
   calendar: "gregory",
   locale: "pl"
 });
 
 checkCalendarInfo(gCI('ar-IQ'), {
-  firstDayOfWeek: 7,
+  firstDayOfWeek: 6,
   minDays: 1,
-  weekend: [6, 7],
+  weekend: [5, 6],
   calendar: "gregory",
   locale: "ar-IQ"
 });
 
 checkCalendarInfo(gCI('fa-IR'), {
-  firstDayOfWeek: 7,
+  firstDayOfWeek: 6,
   minDays: 1,
-  weekend: [6],
+  weekend: [5],
   calendar: "persian",
   locale: "fa-IR"
 });

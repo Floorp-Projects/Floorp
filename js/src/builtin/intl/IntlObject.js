@@ -43,7 +43,7 @@ function Intl_supportedValuesOf(key) {
  *   weekend:
  *     The days of the week considered as the weekend for the resolved locale.
  *
- * Days are encoded as integers in the range 1=Sunday to 7=Saturday.
+ * Days are encoded as integers in the range 1=Monday to 7=Sunday.
  */
 function Intl_getCalendarInfo(locales) {
     // 1. Let requestLocales be ? CanonicalizeLocaleList(locales).
