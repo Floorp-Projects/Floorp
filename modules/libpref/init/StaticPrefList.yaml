@@ -6332,20 +6332,6 @@
   value: true
   mirror: always
 
-- name: layers.componentalpha.enabled
-  type: bool
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  # Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
-  # pref was always false. But we go to the effort of setting it to false so
-  # that telemetry's reporting of the pref value is more likely to reflect what
-  # the code is doing.
-  value: false
-#else
-  value: true
-#endif
-  mirror: once
-  do_not_use_directly: true
-
 - name: layers.d3d11.force-warp
   type: bool
   value: false
