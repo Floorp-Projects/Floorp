@@ -376,6 +376,26 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1731825",
+    platform: "desktop",
+    domain: "Office 365 email handling prompt",
+    bug: "1731825",
+    contentScripts: {
+      matches: [
+        "*://*.live.com/*",
+        "*://*.office.com/*",
+        "*://*.sharepoint.com/*",
+      ],
+      js: [
+        {
+          file:
+            "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
     id: "bug1707795",
     platform: "desktop",
     domain: "Office Excel spreadsheets",
