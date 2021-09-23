@@ -12,11 +12,13 @@ import sys
 from six import iteritems
 
 from mozbuild.base import (
+    MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
 )
 
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
 
@@ -466,181 +468,177 @@ def create_parser_testpaths():
     return parser
 
 
-def setup(command_context):
-    command_context.activate_virtualenv()
+@CommandProvider
+class MachCommands(MachCommandBase):
+    @staticmethod
+    def setup(command_context):
+        command_context.activate_virtualenv()
 
-
-@Command(
-    "web-platform-tests",
-    category="testing",
-    conditions=[conditions.is_firefox_or_android],
-    description="Run web-platform-tests.",
-    parser=create_parser_wpt,
-)
-def run_web_platform_tests(command_context, **params):
-    setup(command_context)
-    if params["product"] is None:
-        if conditions.is_android(command_context):
-            params["product"] = "firefox_android"
-        else:
-            params["product"] = "firefox"
-    if "test_objects" in params:
-        include = []
-        test_types = set()
-        for item in params["test_objects"]:
-            include.append(item["name"])
-            test_types.add(item.get("subsuite"))
-        if None not in test_types:
-            params["test_types"] = list(test_types)
-        params["include"] = include
-        del params["test_objects"]
-    if params.get("debugger", None):
-        import mozdebug
-
-        if not mozdebug.get_debugger_info(params.get("debugger")):
-            sys.exit(1)
-
-    wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
-    wpt_setup._mach_context = command_context._mach_context
-    wpt_runner = WebPlatformTestsRunner(wpt_setup)
-
-    logger = wpt_runner.setup_logging(**params)
-
-    if (
-        conditions.is_android(command_context)
-        and params["product"] != "firefox_android"
-    ):
-        logger.warning("Must specify --product=firefox_android in Android environment.")
-
-    return wpt_runner.run(logger, **params)
-
-
-@Command(
-    "wpt",
-    category="testing",
-    conditions=[conditions.is_firefox_or_android],
-    description="Run web-platform-tests.",
-    parser=create_parser_wpt,
-)
-def run_wpt(command_context, **params):
-    return run_web_platform_tests(command_context, **params)
-
-
-@Command(
-    "web-platform-tests-update",
-    category="testing",
-    description="Update web-platform-test metadata.",
-    parser=create_parser_update,
-)
-def update_web_platform_tests(command_context, **params):
-    setup(command_context)
-    command_context.virtualenv_manager.install_pip_package("html5lib==1.0.1")
-    command_context.virtualenv_manager.install_pip_package("ujson")
-    command_context.virtualenv_manager.install_pip_package("requests")
-
-    wpt_updater = command_context._spawn(WebPlatformTestsUpdater)
-    logger = wpt_updater.setup_logging(**params)
-    return wpt_updater.run_update(logger, **params)
-
-
-@Command(
-    "wpt-update",
-    category="testing",
-    description="Update web-platform-test metadata.",
-    parser=create_parser_update,
-)
-def update_wpt(command_context, **params):
-    return update_web_platform_tests(command_context, **params)
-
-
-@Command(
-    "wpt-manifest-update",
-    category="testing",
-    description="Update web-platform-test manifests.",
-    parser=create_parser_manifest_update,
-)
-def wpt_manifest_update(command_context, **params):
-    setup(command_context)
-    wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
-    wpt_runner = WebPlatformTestsRunner(wpt_setup)
-    logger = wpt_runner.setup_logging(**params)
-    logger.warning(
-        "The wpt manifest is now automatically updated, "
-        "so running this command is usually unnecessary"
+    @Command(
+        "web-platform-tests",
+        category="testing",
+        conditions=[conditions.is_firefox_or_android],
+        description="Run web-platform-tests.",
+        parser=create_parser_wpt,
     )
-    return 0 if wpt_runner.update_manifest(logger, **params) else 1
+    def run_web_platform_tests(self, command_context, **params):
+        self.setup(command_context)
+        if params["product"] is None:
+            if conditions.is_android(command_context):
+                params["product"] = "firefox_android"
+            else:
+                params["product"] = "firefox"
+        if "test_objects" in params:
+            include = []
+            test_types = set()
+            for item in params["test_objects"]:
+                include.append(item["name"])
+                test_types.add(item.get("subsuite"))
+            if None not in test_types:
+                params["test_types"] = list(test_types)
+            params["include"] = include
+            del params["test_objects"]
+        if params.get("debugger", None):
+            import mozdebug
 
+            if not mozdebug.get_debugger_info(params.get("debugger")):
+                sys.exit(1)
 
-@Command(
-    "wpt-serve",
-    category="testing",
-    description="Run the wpt server",
-    parser=create_parser_serve,
-)
-def wpt_serve(command_context, **params):
-    setup(command_context)
-    import logging
+        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
+        wpt_setup._mach_context = command_context._mach_context
+        wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
-    logger = logging.getLogger("web-platform-tests")
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    wpt_serve = command_context._spawn(WebPlatformTestsServeRunner)
-    return wpt_serve.run(**params)
+        logger = wpt_runner.setup_logging(**params)
 
+        if (
+            conditions.is_android(command_context)
+            and params["product"] != "firefox_android"
+        ):
+            logger.warning(
+                "Must specify --product=firefox_android in Android environment."
+            )
 
-@Command(
-    "wpt-metadata-summary",
-    category="testing",
-    description="Create a json summary of the wpt metadata",
-    parser=create_parser_metadata_summary,
-)
-def wpt_summary(command_context, **params):
-    import metasummary
+        return wpt_runner.run(logger, **params)
 
-    wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
-    return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
+    @Command(
+        "wpt",
+        category="testing",
+        conditions=[conditions.is_firefox_or_android],
+        description="Run web-platform-tests.",
+        parser=create_parser_wpt,
+    )
+    def run_wpt(self, command_context, **params):
+        return self.run_web_platform_tests(command_context, **params)
 
+    @Command(
+        "web-platform-tests-update",
+        category="testing",
+        description="Update web-platform-test metadata.",
+        parser=create_parser_update,
+    )
+    def update_web_platform_tests(self, command_context, **params):
+        self.setup(command_context)
+        command_context.virtualenv_manager.install_pip_package("html5lib==1.0.1")
+        command_context.virtualenv_manager.install_pip_package("ujson")
+        command_context.virtualenv_manager.install_pip_package("requests")
 
-@Command("wpt-metadata-merge", category="testing", parser=create_parser_metadata_merge)
-def wpt_meta_merge(command_context, **params):
-    import metamerge
+        wpt_updater = command_context._spawn(WebPlatformTestsUpdater)
+        logger = wpt_updater.setup_logging(**params)
+        return wpt_updater.run_update(logger, **params)
 
-    if params["dest"] is None:
-        params["dest"] = params["current"]
-    return metamerge.run(**params)
+    @Command(
+        "wpt-update",
+        category="testing",
+        description="Update web-platform-test metadata.",
+        parser=create_parser_update,
+    )
+    def update_wpt(self, command_context, **params):
+        return self.update_web_platform_tests(command_context, **params)
 
+    @Command(
+        "wpt-manifest-update",
+        category="testing",
+        description="Update web-platform-test manifests.",
+        parser=create_parser_manifest_update,
+    )
+    def wpt_manifest_update(self, command_context, **params):
+        self.setup(command_context)
+        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
+        wpt_runner = WebPlatformTestsRunner(wpt_setup)
+        logger = wpt_runner.setup_logging(**params)
+        logger.warning(
+            "The wpt manifest is now automatically updated, "
+            "so running this command is usually unnecessary"
+        )
+        return 0 if wpt_runner.update_manifest(logger, **params) else 1
 
-@Command(
-    "wpt-unittest",
-    category="testing",
-    description="Run the wpt tools and wptrunner unit tests",
-    parser=create_parser_unittest,
-)
-def wpt_unittest(command_context, **params):
-    setup(command_context)
-    command_context.virtualenv_manager.install_pip_package("tox")
-    runner = command_context._spawn(WebPlatformTestsUnittestRunner)
-    return 0 if runner.run(**params) else 1
+    @Command(
+        "wpt-serve",
+        category="testing",
+        description="Run the wpt server",
+        parser=create_parser_serve,
+    )
+    def wpt_serve(self, command_context, **params):
+        self.setup(command_context)
+        import logging
 
+        logger = logging.getLogger("web-platform-tests")
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        wpt_serve = command_context._spawn(WebPlatformTestsServeRunner)
+        return wpt_serve.run(**params)
 
-@Command(
-    "wpt-test-paths",
-    category="testing",
-    description="Get a mapping from test ids to files",
-    parser=create_parser_testpaths,
-)
-def wpt_test_paths(command_context, **params):
-    runner = command_context._spawn(WebPlatformTestsTestPathsRunner)
-    runner.run(**params)
-    return 0
+    @Command(
+        "wpt-metadata-summary",
+        category="testing",
+        description="Create a json summary of the wpt metadata",
+        parser=create_parser_metadata_summary,
+    )
+    def wpt_summary(self, command_context, **params):
+        import metasummary
 
+        wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
+        return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
 
-@Command(
-    "wpt-fission-regressions",
-    category="testing",
-    description="Dump a list of fission-specific regressions",
-    parser=create_parser_fission_regressions,
-)
-def wpt_fission_regressions(command_context, **params):
-    runner = command_context._spawn(WebPlatformTestsFissionRegressionsRunner)
-    runner.run(**params)
-    return 0
+    @Command(
+        "wpt-metadata-merge", category="testing", parser=create_parser_metadata_merge
+    )
+    def wpt_meta_merge(self, command_context, **params):
+        import metamerge
+
+        if params["dest"] is None:
+            params["dest"] = params["current"]
+        return metamerge.run(**params)
+
+    @Command(
+        "wpt-unittest",
+        category="testing",
+        description="Run the wpt tools and wptrunner unit tests",
+        parser=create_parser_unittest,
+    )
+    def wpt_unittest(self, command_context, **params):
+        self.setup(command_context)
+        command_context.virtualenv_manager.install_pip_package("tox")
+        runner = command_context._spawn(WebPlatformTestsUnittestRunner)
+        return 0 if runner.run(**params) else 1
+
+    @Command(
+        "wpt-test-paths",
+        category="testing",
+        description="Get a mapping from test ids to files",
+        parser=create_parser_testpaths,
+    )
+    def wpt_test_paths(self, command_context, **params):
+        runner = command_context._spawn(WebPlatformTestsTestPathsRunner)
+        runner.run(**params)
+        return 0
+
+    @Command(
+        "wpt-fission-regressions",
+        category="testing",
+        description="Dump a list of fission-specific regressions",
+        parser=create_parser_fission_regressions,
+    )
+    def wpt_fission_regressions(self, command_context, **params):
+        runner = command_context._spawn(WebPlatformTestsFissionRegressionsRunner)
+        runner.run(**params)
+        return 0

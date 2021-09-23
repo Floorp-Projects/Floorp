@@ -9,22 +9,26 @@ Mach commands are defined via Python decorators.
 All the relevant decorators are defined in the *mach.decorators* module.
 The important decorators are as follows:
 
+:py:func:`CommandProvider <mach.decorators.CommandProvider>`
+  A class decorator that denotes that a class contains mach
+  commands. The decorator takes no arguments.
+
 :py:func:`Command <mach.decorators.Command>`
-  A function decorator that denotes that the function should be called when
+  A method decorator that denotes that the method should be called when
   the specified command is requested. The decorator takes a command name
   as its first argument and a number of additional arguments to
-  configure the behavior of the command. The decorated function must take a
-  ``command_context`` argument as its first.
+  configure the behavior of the command. The decorated method must take a
+  ``command_context`` argument as its first (after ``self``).
   ``command_context`` is a properly configured instance of a ``MozbuildObject``
   subclass, meaning it can be used for accessing things like the current config
   and running processes.
 
 :py:func:`CommandArgument <mach.decorators.CommandArgument>`
-  A function decorator that defines an argument to the command. Its
+  A method decorator that defines an argument to the command. Its
   arguments are essentially proxied to ArgumentParser.add_argument()
 
 :py:func:`SubCommand <mach.decorators.SubCommand>`
-  A function decorator that denotes that the function should be a
+  A method decorator that denotes that the method should be a
   sub-command to an existing ``@Command``. The decorator takes the
   parent command name as its first argument and the sub-command name
   as its second argument.
@@ -32,6 +36,8 @@ The important decorators are as follows:
   ``@CommandArgument`` can be used on ``@SubCommand`` instances just
   like they can on ``@Command`` instances.
 
+Classes with the ``@CommandProvider`` decorator **must** subclass
+``MachCommandBase`` and have a compatible ``__init__`` method.
 
 Here is a complete example:
 
@@ -39,14 +45,18 @@ Here is a complete example:
 
    from mach.decorators import (
        CommandArgument,
+       CommandProvider,
        Command,
    )
+   from mozbuild.base import MachCommandBase
 
-    @Command('doit', help='Do ALL OF THE THINGS.')
-    @CommandArgument('--force', '-f', action='store_true',
-        help='Force doing it.')
-    def doit(command_context, force=False):
-        # Do stuff here.
+   @CommandProvider
+   class MyClass(MachCommandBase):
+       @Command('doit', help='Do ALL OF THE THINGS.')
+       @CommandArgument('--force', '-f', action='store_true',
+           help='Force doing it.')
+       def doit(self, command_context, force=False):
+           # Do stuff here.
 
 When the module is loaded, the decorators tell mach about all handlers.
 When mach runs, it takes the assembled metadata from these handlers and
@@ -69,7 +79,7 @@ define a series of conditions on the
 :py:func:`Command <mach.decorators.Command>` decorator.
 
 A condition is simply a function that takes an instance of the
-:py:func:`mozbuild.base.MachCommandBase` class as an argument, and
+:py:func:`mach.decorators.CommandProvider` class as an argument, and
 returns ``True`` or ``False``. If any of the conditions defined on a
 command return ``False``, the command will not be runnable. The
 docstring of a condition function is used in error messages, to explain
@@ -80,6 +90,7 @@ Here is an example:
 .. code-block:: python
 
    from mach.decorators import (
+       CommandProvider,
        Command,
    )
 
@@ -87,9 +98,18 @@ Here is an example:
        """The build needs to be available."""
        return cls.build_path is not None
 
-   @Command('run_tests', conditions=[build_available])
-   def run_tests(command_context):
-       # Do stuff here.
+   @CommandProvider
+   class MyClass(MachCommandBase):
+       def __init__(self, *args, **kwargs):
+           super(MyClass, self).__init__(*args, **kwargs)
+           self.build_path = ...
+
+       @Command('run_tests', conditions=[build_available])
+       def run_tests(self, command_context):
+           # Do stuff here.
+
+It is important to make sure that any state needed by the condition is
+available to instances of the command provider.
 
 By default all commands without any conditions applied will be runnable,
 but it is possible to change this behaviour by setting
