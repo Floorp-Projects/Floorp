@@ -158,7 +158,16 @@ enum class RedirectSource {
     PERMANENT,
 }
 
-data class PageObservation(val title: String?)
+/**
+ * Metadata information observed in a page to record.
+ *
+ * @property title The title of the page.
+ * @property previewImageUrl The preview image of the page (e.g. the hero image), if available.
+ */
+data class PageObservation(
+    val title: String? = null,
+    val previewImageUrl: String? = null
+)
 
 /**
  * Information about a top frecent site. This represents a most frequently visited site.
@@ -189,12 +198,14 @@ enum class FrecencyThresholdOption {
  * @property title The title of the page that was visited, if known.
  * @property visitTime The time the page was visited in integer milliseconds since the unix epoch.
  * @property visitType What the transition type of the visit is, expressed as [VisitType].
+ * @property previewImageUrl The preview image of the page (e.g. the hero image), if available.
  */
 data class VisitInfo(
     val url: String,
     val title: String?,
     val visitTime: Long,
-    val visitType: VisitType
+    val visitType: VisitType,
+    val previewImageUrl: String?
 )
 
 /**

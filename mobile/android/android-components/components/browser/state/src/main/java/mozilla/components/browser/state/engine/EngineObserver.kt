@@ -81,6 +81,10 @@ internal class EngineObserver(
         store.dispatch(ContentAction.UpdateTitleAction(tabId, title))
     }
 
+    override fun onPreviewImageChange(previewImageUrl: String) {
+        store.dispatch(ContentAction.UpdatePreviewImageAction(tabId, previewImageUrl))
+    }
+
     override fun onProgress(progress: Int) {
         store.dispatch(ContentAction.UpdateProgressAction(tabId, progress))
     }

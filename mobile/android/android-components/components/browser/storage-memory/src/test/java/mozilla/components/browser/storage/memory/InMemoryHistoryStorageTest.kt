@@ -53,7 +53,10 @@ class InMemoryHistoryStorageTest {
 
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE))
-        history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+        history.recordObservation(
+            "http://www.mozilla.org",
+            PageObservation("Mozilla", "https://test.com/og-image-url")
+        )
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
 
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.REDIRECT_TEMPORARY, RedirectSource.NOT_A_SOURCE))
@@ -62,10 +65,12 @@ class InMemoryHistoryStorageTest {
         assertEquals(3, visits.size)
         assertEquals("http://www.mozilla.org", visits[0].url)
         assertEquals("Mozilla", visits[0].title)
+        assertEquals("https://test.com/og-image-url", visits[0].previewImageUrl)
         assertEquals(VisitType.LINK, visits[0].visitType)
 
         assertEquals("http://www.mozilla.org", visits[1].url)
         assertEquals("Mozilla", visits[1].title)
+        assertEquals("https://test.com/og-image-url", visits[1].previewImageUrl)
         assertEquals(VisitType.RELOAD, visits[1].visitType)
 
         assertEquals("http://www.firefox.com", visits[2].url)
@@ -131,24 +136,36 @@ class InMemoryHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to track page meta information - title changes`() = runBlocking {
+    fun `store can be used to track page meta information - title and previewImageUrl changes`() = runBlocking {
         val history = InMemoryHistoryStorage()
         assertEquals(0, history.pageMeta.size)
 
-        // Title changes are recorded.
-        history.recordObservation("https://www.wikipedia.org", PageObservation("Wikipedia"))
+        // Title and previewImageUrl changes are recorded.
+        history.recordObservation(
+            "https://www.wikipedia.org",
+            PageObservation("Wikipedia", "https://test.com/og-image-url")
+        )
         assertEquals(1, history.pageMeta.size)
-        assertEquals(PageObservation("Wikipedia"), history.pageMeta["https://www.wikipedia.org"])
+        assertEquals(
+            PageObservation("Wikipedia", "https://test.com/og-image-url"),
+            history.pageMeta["https://www.wikipedia.org"]
+        )
 
         history.recordObservation("https://www.wikipedia.org", PageObservation("Википедия"))
         assertEquals(1, history.pageMeta.size)
-        assertEquals(PageObservation("Википедия"), history.pageMeta["https://www.wikipedia.org"])
+        assertEquals(
+            PageObservation("Википедия", "https://test.com/og-image-url"),
+            history.pageMeta["https://www.wikipedia.org"]
+        )
 
         // Titles for different pages are recorded.
         history.recordObservation("https://www.firefox.com", PageObservation("Firefox"))
         history.recordObservation("https://www.mozilla.org", PageObservation("Мозилла"))
         assertEquals(3, history.pageMeta.size)
-        assertEquals(PageObservation("Википедия"), history.pageMeta["https://www.wikipedia.org"])
+        assertEquals(
+            PageObservation("Википедия", "https://test.com/og-image-url"),
+            history.pageMeta["https://www.wikipedia.org"]
+        )
         assertEquals(PageObservation("Firefox"), history.pageMeta["https://www.firefox.com"])
         assertEquals(PageObservation("Мозилла"), history.pageMeta["https://www.mozilla.org"])
     }

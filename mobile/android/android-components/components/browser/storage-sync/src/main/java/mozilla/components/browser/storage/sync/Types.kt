@@ -82,7 +82,8 @@ internal fun mozilla.appservices.places.VisitInfo.into(): VisitInfo {
         url = this.url,
         title = this.title,
         visitTime = this.visitTime,
-        visitType = this.visitType.into()
+        visitType = this.visitType.into(),
+        previewImageUrl = this.previewImageUrl
     )
 }
 

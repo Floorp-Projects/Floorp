@@ -350,6 +350,10 @@ class SystemEngineViewTest {
                 fail()
             }
 
+            override suspend fun onPreviewImageChange(uri: String, previewImageUrl: String) {
+                fail()
+            }
+
             override suspend fun getVisited(uris: List<String>): List<Boolean> {
                 fail()
                 return emptyList()

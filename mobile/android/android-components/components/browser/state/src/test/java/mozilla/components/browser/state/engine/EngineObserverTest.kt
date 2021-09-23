@@ -307,6 +307,66 @@ class EngineObserverTest {
     }
 
     @Test
+    fun `EngineObserver clears previewImageUrl if new page starts loading`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab(
+                        url = "https://www.mozilla.org",
+                        id = "mozilla",
+                        title = "Hello World"
+                    )
+                )
+            )
+        )
+        val previewImageUrl = "https://test.com/og-image-url"
+
+        val observer = EngineObserver("mozilla", store)
+        observer.onPreviewImageChange(previewImageUrl)
+        store.waitUntilIdle()
+
+        assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
+
+        observer.onLocationChange("https://getpocket.com")
+        store.waitUntilIdle()
+
+        assertNull(store.state.tabs[0].content.previewImageUrl)
+    }
+
+    @Test
+    fun `EngineObserver does not clear previewImageUrl if the URL did not change`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab(
+                        url = "https://www.mozilla.org",
+                        id = "mozilla",
+                        title = "Hello World"
+                    )
+                )
+            )
+        )
+        val previewImageUrl = "https://test.com/og-image-url"
+
+        val observer = EngineObserver("mozilla", store)
+
+        observer.onPreviewImageChange(previewImageUrl)
+        store.waitUntilIdle()
+
+        assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
+
+        observer.onLocationChange("https://www.mozilla.org")
+        store.waitUntilIdle()
+
+        assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
+
+        observer.onLocationChange("https://www.mozilla.org/#something")
+        store.waitUntilIdle()
+
+        assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
+    }
+
+    @Test
     fun engineObserverClearsBlockedTrackersIfNewPageStartsLoading() {
         val store = BrowserStore(
             initialState = BrowserState(

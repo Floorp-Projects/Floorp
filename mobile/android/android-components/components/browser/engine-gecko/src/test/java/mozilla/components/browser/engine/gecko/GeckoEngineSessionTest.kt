@@ -830,6 +830,73 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
+    fun `notifies configured history delegate of preview image URL changes`() = runBlockingTest {
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        val engineSession = GeckoEngineSession(
+            runtime, geckoSessionProvider = geckoSessionProvider,
+            context = coroutineContext
+        )
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+        val geckoResult = GeckoResult<Boolean?>()
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        captureDelegates()
+        geckoResult.complete(true)
+
+        val previewImageUrl = "https://test.com/og-image-url"
+
+        // Nothing breaks if history delegate isn't configured.
+        contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
+        verify(historyTrackingDelegate, never()).onPreviewImageChange(anyString(), anyString())
+
+        // This sets the currentUrl.
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList())
+
+        contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
+        verify(historyTrackingDelegate).onPreviewImageChange(eq("https://www.mozilla.com"), eq(previewImageUrl))
+    }
+
+    @Test
+    fun `does not notify configured history delegate of preview image URL changes for private sessions`() = runBlockingTest {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            context = coroutineContext,
+            privateMode = true
+        )
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        captureDelegates()
+
+        // Nothing breaks if history delegate isn't configured.
+        contentDelegate.value.onPreviewImage(geckoSession, "https://test.com/og-image-url")
+
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        contentDelegate.value.onPreviewImage(geckoSession, "https://test.com/og-image-url")
+        verify(historyTrackingDelegate, never()).onPreviewImageChange(anyString(), anyString())
+        verify(observer).onPreviewImageChange("https://test.com/og-image-url")
+
+        // This sets the currentUrl.
+        progressDelegate.value.onPageStart(geckoSession, "https://www.mozilla.com")
+
+        contentDelegate.value.onPreviewImage(geckoSession, "https://test.com/og-image.jpg")
+        verify(historyTrackingDelegate, never()).onPreviewImageChange(anyString(), anyString())
+        verify(observer).onPreviewImageChange("https://test.com/og-image.jpg")
+    }
+
+    @Test
     fun `does not notify configured history delegate for redirects`() = runBlockingTest {
         val engineSession = GeckoEngineSession(
             mock(),
@@ -1122,6 +1189,24 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
 
         verify(observer).onTitleChange("Hello World!")
+    }
+
+    @Test
+    fun `WHEN preview image URL changes THEN notify observers`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider
+        )
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        captureDelegates()
+
+        val previewImageURL = "https://test.com/og-image-url"
+        contentDelegate.value.onPreviewImage(geckoSession, previewImageURL)
+
+        verify(observer).onPreviewImageChange(previewImageURL)
     }
 
     @Test

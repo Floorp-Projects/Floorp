@@ -51,7 +51,19 @@ class InMemoryHistoryStorage : HistoryStorage {
     }
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) = synchronized(pageMeta) {
-        pageMeta[uri] = observation
+        val existingPageObservation = pageMeta[uri]
+
+        if (existingPageObservation == null ||
+            (!observation.title.isNullOrEmpty() && !observation.previewImageUrl.isNullOrEmpty())
+        ) {
+            pageMeta[uri] = observation
+        } else if (!observation.title.isNullOrEmpty()) {
+            // Carryover the existing observed previewImageUrl
+            pageMeta[uri] = observation.copy(previewImageUrl = existingPageObservation.previewImageUrl)
+        } else {
+            // Carryover the existing observed title
+            pageMeta[uri] = observation.copy(title = existingPageObservation.title)
+        }
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> = synchronized(pages) {
@@ -80,13 +92,14 @@ class InMemoryHistoryStorage : HistoryStorage {
 
         pages.forEach {
             it.value.forEach { visit ->
-                if (visit.timestamp >= start && visit.timestamp <= end && !excludeTypes.contains(visit.type)) {
+                if (visit.timestamp in start..end && !excludeTypes.contains(visit.type)) {
                     visits.add(
                         VisitInfo(
                             url = it.key,
                             title = pageMeta[it.key]?.title,
                             visitTime = visit.timestamp,
-                            visitType = visit.type
+                            visitType = visit.type,
+                            previewImageUrl = pageMeta[it.key]?.previewImageUrl
                         )
                     )
                 }

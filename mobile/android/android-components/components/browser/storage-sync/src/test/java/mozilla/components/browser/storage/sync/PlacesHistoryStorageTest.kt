@@ -146,9 +146,17 @@ class PlacesHistoryStorageTest {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         history.recordObservation("http://www.mozilla.org", PageObservation(title = "Mozilla"))
 
-        val recordedVisits = history.getDetailedVisits(0)
+        var recordedVisits = history.getDetailedVisits(0)
         assertEquals(1, recordedVisits.size)
         assertEquals("Mozilla", recordedVisits[0].title)
+        assertNull(recordedVisits[0].previewImageUrl)
+
+        history.recordObservation("http://www.mozilla.org", PageObservation(previewImageUrl = "https://test.com/og-image-url"))
+
+        recordedVisits = history.getDetailedVisits(0)
+        assertEquals(1, recordedVisits.size)
+        assertEquals("Mozilla", recordedVisits[0].title)
+        assertEquals("https://test.com/og-image-url", recordedVisits[0].previewImageUrl)
     }
 
     @Test
@@ -219,7 +227,10 @@ class PlacesHistoryStorageTest {
     fun `store can be used to query detailed visit information`() = runBlocking {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE))
-        history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+        history.recordObservation(
+            "http://www.mozilla.org",
+            PageObservation("Mozilla", "https://test.com/og-image-url")
+        )
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
 
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.REDIRECT_TEMPORARY, RedirectSource.NOT_A_SOURCE))
@@ -228,6 +239,7 @@ class PlacesHistoryStorageTest {
         assertEquals(3, visits.size)
         assertEquals("http://www.mozilla.org/", visits[0].url)
         assertEquals("Mozilla", visits[0].title)
+        assertEquals("https://test.com/og-image-url", visits[0].previewImageUrl)
         assertEquals(VisitType.LINK, visits[0].visitType)
 
         assertEquals("http://www.mozilla.org/", visits[1].url)
@@ -293,18 +305,23 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to track page meta information - title changes`() = runBlocking {
-        // Title changes are recorded.
+    fun `store can be used to track page meta information - title and previewImageUrl changes`() = runBlocking {
+        // Title and previewImageUrl changes are recorded.
         history.recordVisit("https://www.wikipedia.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        history.recordObservation("https://www.wikipedia.org", PageObservation("Wikipedia"))
+        history.recordObservation(
+            "https://www.wikipedia.org",
+            PageObservation("Wikipedia", "https://test.com/og-image-url")
+        )
         var recorded = history.getDetailedVisits(0)
         assertEquals(1, recorded.size)
         assertEquals("Wikipedia", recorded[0].title)
+        assertEquals("https://test.com/og-image-url", recorded[0].previewImageUrl)
 
         history.recordObservation("https://www.wikipedia.org", PageObservation("Википедия"))
         recorded = history.getDetailedVisits(0)
         assertEquals(1, recorded.size)
         assertEquals("Википедия", recorded[0].title)
+        assertEquals("https://test.com/og-image-url", recorded[0].previewImageUrl)
 
         // Titles for different pages are recorded.
         history.recordVisit("https://www.firefox.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
@@ -314,8 +331,11 @@ class PlacesHistoryStorageTest {
         recorded = history.getDetailedVisits(0)
         assertEquals(3, recorded.size)
         assertEquals("Википедия", recorded[0].title)
+        assertEquals("https://test.com/og-image-url", recorded[0].previewImageUrl)
         assertEquals("Firefox", recorded[1].title)
+        assertNull(recorded[1].previewImageUrl)
         assertEquals("Мозилла", recorded[2].title)
+        assertNull(recorded[2].previewImageUrl)
     }
 
     @Test

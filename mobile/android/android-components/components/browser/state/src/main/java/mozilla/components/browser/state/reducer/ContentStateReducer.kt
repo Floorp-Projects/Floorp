@@ -45,6 +45,11 @@ internal object ContentStateReducer {
                     } else {
                         it.title
                     },
+                    previewImageUrl = if (!isUrlSame(it.url, action.url)) {
+                        null
+                    } else {
+                        it.previewImageUrl
+                    },
                     webAppManifest = if (!isInScope(it.webAppManifest, action.url)) {
                         null
                     } else {
@@ -62,6 +67,9 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateTitleAction -> updateContentState(state, action.sessionId) {
                 it.copy(title = action.title)
+            }
+            is ContentAction.UpdatePreviewImageAction -> updateContentState(state, action.sessionId) {
+                it.copy(previewImageUrl = action.previewImageUrl)
             }
             is ContentAction.UpdateLoadingStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(loading = action.loading)

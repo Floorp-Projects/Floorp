@@ -29,6 +29,15 @@ class HistoryDelegate(private val historyStorage: Lazy<HistoryStorage>) : Histor
         }
     }
 
+    override suspend fun onPreviewImageChange(uri: String, previewImageUrl: String) {
+        if (shouldStoreUri(uri)) {
+            historyStorage.value.recordObservation(
+                uri,
+                PageObservation(previewImageUrl = previewImageUrl)
+            )
+        }
+    }
+
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
         return historyStorage.value.getVisited(uris)
     }

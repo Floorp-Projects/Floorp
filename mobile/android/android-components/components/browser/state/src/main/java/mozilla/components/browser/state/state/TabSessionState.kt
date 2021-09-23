@@ -95,7 +95,8 @@ fun createTab(
     historyMetadata: HistoryMetadataKey? = null,
     webAppManifest: WebAppManifest? = null,
     searchTerms: String = "",
-    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+    initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+    previewImageUrl: String? = null
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -105,7 +106,8 @@ fun createTab(
             title = title,
             thumbnail = thumbnail,
             webAppManifest = webAppManifest,
-            searchTerms = searchTerms
+            searchTerms = searchTerms,
+            previewImageUrl = previewImageUrl
         ),
         parentId = parentId ?: parent?.id,
         extensionState = extensions,

@@ -60,6 +60,25 @@ class HistoryDelegateTest {
     }
 
     @Test
+    fun `history delegate passes through onPreviewImageChange calls`() = runBlocking {
+        val storage = mock<HistoryStorage>()
+        val delegate = HistoryDelegate(lazy { storage })
+
+        val previewImageUrl = "https://test.com/og-image-url"
+        delegate.onPreviewImageChange("http://www.mozilla.org", previewImageUrl)
+        verify(storage).recordObservation(
+            "http://www.mozilla.org",
+            PageObservation(previewImageUrl = previewImageUrl)
+        )
+
+        delegate.onPreviewImageChange("about:blank", previewImageUrl)
+        verify(storage, never()).recordObservation(
+            "about:blank",
+            PageObservation(previewImageUrl = previewImageUrl)
+        )
+    }
+
+    @Test
     fun `history delegate passes through getVisited calls`() = runBlocking {
         class TestHistoryStorage : HistoryStorage {
             var getVisitedListCalled = false

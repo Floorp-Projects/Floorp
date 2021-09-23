@@ -867,6 +867,19 @@ class GeckoEngineSession(
             notifyObservers { onTitleChange(title ?: "") }
         }
 
+        override fun onPreviewImage(session: GeckoSession, previewImageUrl: String) {
+            if (!privateMode) {
+                currentUrl?.let { url ->
+                    settings.historyTrackingDelegate?.let { delegate ->
+                        launch(coroutineContext) {
+                            delegate.onPreviewImageChange(url, previewImageUrl)
+                        }
+                    }
+                }
+            }
+            notifyObservers { onPreviewImageChange(previewImageUrl) }
+        }
+
         override fun onFocusRequest(session: GeckoSession) = Unit
 
         override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {

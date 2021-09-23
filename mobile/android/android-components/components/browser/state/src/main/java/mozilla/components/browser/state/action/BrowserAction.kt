@@ -427,6 +427,12 @@ sealed class ContentAction : BrowserAction() {
     data class UpdateTitleAction(val sessionId: String, val title: String) : ContentAction()
 
     /**
+     * Updates the preview image URL of the [ContentState] with the given [sessionId].
+     */
+    data class UpdatePreviewImageAction(val sessionId: String, val previewImageUrl: String) :
+        ContentAction()
+
+    /**
      * Updates the loading state of the [ContentState] with the given [sessionId].
      */
     data class UpdateLoadingStateAction(val sessionId: String, val loading: Boolean) :

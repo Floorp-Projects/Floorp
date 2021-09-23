@@ -826,6 +826,7 @@ class EngineSessionTest {
 
         defaultObserver.onTitleChange("")
         defaultObserver.onLocationChange("")
+        defaultObserver.onPreviewImageChange("")
         defaultObserver.onLongPress(HitResult.UNKNOWN(""))
         defaultObserver.onExternalResource("", "")
         defaultObserver.onDesktopModeChange(true)

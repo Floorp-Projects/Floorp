@@ -77,7 +77,8 @@ open class PlacesHistoryStorage(
                     VisitObservation(
                         url = uri,
                         visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
-                        title = observation.title
+                        title = observation.title,
+                        previewImageUrl = observation.previewImageUrl
                     )
                 )
             }

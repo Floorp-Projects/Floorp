@@ -200,6 +200,21 @@ class ContentActionTest {
     }
 
     @Test
+    fun `UpdatePreviewImageAction updates previewImageUrl state`() {
+        val newPreviewImageUrl = "https://test.com/og-image-url"
+
+        assertNotEquals(newPreviewImageUrl, tab.content.previewImageUrl)
+        assertNotEquals(newPreviewImageUrl, otherTab.content.previewImageUrl)
+
+        store.dispatch(
+            ContentAction.UpdatePreviewImageAction(tab.id, newPreviewImageUrl)
+        ).joinBlocking()
+
+        assertEquals(newPreviewImageUrl, tab.content.previewImageUrl)
+        assertNotEquals(newPreviewImageUrl, otherTab.content.previewImageUrl)
+    }
+
+    @Test
     fun `UpdateProgressAction updates progress`() {
         assertEquals(0, tab.content.progress)
         assertEquals(0, otherTab.content.progress)

@@ -28,7 +28,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
  */
 @Suppress("TooManyFunctions")
 abstract class EngineSession(
-    private val delegate: Observable<EngineSession.Observer> = ObserverRegistry()
+    private val delegate: Observable<Observer> = ObserverRegistry()
 ) : Observable<EngineSession.Observer> by delegate, DataCleanable {
     /**
      * Interface to be implemented by classes that want to observe this engine session.
@@ -36,6 +36,14 @@ abstract class EngineSession(
     interface Observer {
         fun onLocationChange(url: String) = Unit
         fun onTitleChange(title: String) = Unit
+
+        /**
+         * Event to indicate a preview image URL was discovered in the content after the content loaded.
+         *
+         * @param previewImageUrl The preview image URL sent from the content.
+         */
+        fun onPreviewImageChange(previewImageUrl: String) = Unit
+
         fun onProgress(progress: Int) = Unit
         fun onLoadingStateChange(loading: Boolean) = Unit
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit

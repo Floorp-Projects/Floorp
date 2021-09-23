@@ -25,6 +25,11 @@ interface HistoryTrackingDelegate {
     suspend fun onTitleChanged(uri: String, title: String)
 
     /**
+     * Preview image changed for a given URI.
+     */
+    suspend fun onPreviewImageChange(uri: String, previewImageUrl: String)
+
+    /**
      * An engine needs to know "visited" (true/false) status for provided URIs.
      */
     suspend fun getVisited(uris: List<String>): List<Boolean>
