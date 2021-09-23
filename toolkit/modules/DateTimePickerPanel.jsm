@@ -275,21 +275,9 @@ var DateTimePickerPanel = class {
     // so they need to be mapped to JavaScript convention with 0 as Sunday
     // and 6 as Saturday
     let firstDayOfWeek = calendarInfo.firstDayOfWeek - 1,
-      weekendStart = calendarInfo.weekendStart - 1,
-      weekendEnd = calendarInfo.weekendEnd - 1;
+      weekend = calendarInfo.weekend;
 
-    let weekends = [];
-
-    // Make sure weekendEnd is greater than weekendStart
-    if (weekendEnd < weekendStart) {
-      weekendEnd += 7;
-    }
-
-    // We get the weekends by incrementing weekendStart up to weekendEnd.
-    // If the start and end is the same day, then weekends only has one day.
-    for (let day = weekendStart; day <= weekendEnd; day++) {
-      weekends.push(day % 7);
-    }
+    let weekends = weekend.map(day => day - 1);
 
     return {
       firstDayOfWeek,

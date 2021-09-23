@@ -98,14 +98,10 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  UCalendarWeekdayType prevDayType =
-      ucal_getDayOfWeekType(cal, UCAL_SATURDAY, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  RootedArrayObject weekendArray(cx, NewDenseEmptyArray(cx));
+  if (!weekendArray) {
     return false;
   }
-
-  RootedValue weekendStart(cx), weekendEnd(cx);
 
   for (int i = UCAL_SUNDAY; i <= UCAL_SATURDAY; i++) {
     UCalendarDaysOfWeek dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
@@ -115,40 +111,28 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (prevDayType != type) {
-      switch (type) {
-        case UCAL_WEEKDAY:
-          // If the first Weekday after Weekend is Sunday (1),
-          // then the last Weekend day is Saturday (7).
-          // Otherwise we'll just take the previous days number.
-          weekendEnd.setInt32(i == 1 ? 7 : i - 1);
-          break;
-        case UCAL_WEEKEND:
-          weekendStart.setInt32(i);
-          break;
-        case UCAL_WEEKEND_ONSET:
-        case UCAL_WEEKEND_CEASE:
-          // At the time this code was added, ICU apparently never behaves this
-          // way, so just throw, so that users will report a bug and we can
-          // decide what to do.
-          intl::ReportInternalError(cx);
+    switch (type) {
+      case UCAL_WEEKDAY:
+        break;
+      case UCAL_WEEKEND:
+        if (!NewbornArrayPush(cx, weekendArray, Int32Value(i))) {
           return false;
-        default:
-          break;
-      }
+        }
+        break;
+      case UCAL_WEEKEND_ONSET:
+      case UCAL_WEEKEND_CEASE:
+        // At the time this code was added, ICU apparently never behaves this
+        // way, so just throw, so that users will report a bug and we can
+        // decide what to do.
+        intl::ReportInternalError(cx);
+        return false;
+      default:
+        break;
     }
-
-    prevDayType = type;
   }
 
-  MOZ_ASSERT(weekendStart.isInt32());
-  MOZ_ASSERT(weekendEnd.isInt32());
-
-  if (!DefineDataProperty(cx, info, cx->names().weekendStart, weekendStart)) {
-    return false;
-  }
-
-  if (!DefineDataProperty(cx, info, cx->names().weekendEnd, weekendEnd)) {
+  v.setObject(*weekendArray);
+  if (!DefineDataProperty(cx, info, cx->names().weekend, v)) {
     return false;
   }
 
