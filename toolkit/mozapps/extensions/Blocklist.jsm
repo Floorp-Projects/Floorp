@@ -168,8 +168,7 @@ const BlocklistTelemetry = {
    * to retrieve a valid timestamp).
    *
    * @param {string} blocklistType
-   *        The blocklist type that has been updated (one of "addons" or "plugins",
-   *        or "addons_mlbf";
+   *        The blocklist type that has been updated ("addons" or "addons_mlbf");
    *        the "gfx" blocklist is not covered by this telemetry).
    * @param {RemoteSettingsClient} remoteSettingsClient
    *        The RemoteSettings client to retrieve the lastModified timestamp from.
