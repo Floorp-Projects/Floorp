@@ -10205,6 +10205,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Enable the clearing of cache data using the clear-site-data header. If enabled,
+# header values of "cache" and "*" will clear cached data from the site
+- name: privacy.clearsitedata.cache.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # First Party Isolation (double keying), disabled by default.
 - name: privacy.firstparty.isolate
   type: RelaxedAtomicBool
