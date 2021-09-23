@@ -8,10 +8,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.TabListAction.RestoreAction.RestoreLocation.BEGINNING
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.ext.joinBlocking
@@ -286,6 +288,31 @@ class LastAccessMiddlewareTest {
         assertNotNull(selectedTab)
         assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is invoked for all tabs from RestoreAction`() {
+        val recentTime = System.currentTimeMillis()
+        val lastAccess = 3735928559
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab(url = "https://firefox.com", id = "123", private = true)
+                )
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+        val recoverableTabs = listOf(
+            RecoverableTab(url = "https://mozilla.org", id = "456", lastAccess = lastAccess)
+        )
+
+        store.dispatch(TabListAction.RestoreAction(recoverableTabs, null, BEGINNING)).joinBlocking()
+
+        val restoredTab = store.state.findTab("456")!!
+
+        assertTrue(store.state.tabs.size == 2)
+        assertTrue(restoredTab.lastAccess > lastAccess)
+        assertTrue(restoredTab.lastAccess > recentTime)
     }
 
     @Test
