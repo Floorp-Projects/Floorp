@@ -229,7 +229,7 @@ static bool FormatList(JSContext* cx, mozilla::intl::ListFormat* lf,
     return false;
   }
 
-  JSString* str = formatBuffer.toString();
+  JSString* str = formatBuffer.toString(cx);
   if (!str) {
     return false;
   }
