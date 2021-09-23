@@ -31,17 +31,113 @@ Result<UniquePtr<TimeZone>, ICUError> TimeZone::TryCreate(
     return Err(ToICUError(status));
   }
 
+  // https://tc39.es/ecma262/#sec-time-values-and-time-range
+  //
+  // A time value supports a slightly smaller range of -8,640,000,000,000,000 to
+  // 8,640,000,000,000,000 milliseconds.
+  constexpr double StartOfTime = -8.64e15;
+
+  // Ensure all computations are performed in the proleptic Gregorian calendar.
+  ucal_setGregorianChange(calendar, StartOfTime, &status);
+
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
   return MakeUnique<TimeZone>(calendar);
 }
 
 Result<int32_t, ICUError> TimeZone::GetRawOffsetMs() {
+  // Reset the time in case the calendar has been modified.
   UErrorCode status = U_ZERO_ERROR;
+  ucal_setMillis(mCalendar, ucal_getNow(), &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
   int32_t offset = ucal_get(mCalendar, UCAL_ZONE_OFFSET, &status);
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));
   }
 
   return offset;
+}
+
+Result<int32_t, ICUError> TimeZone::GetDSTOffsetMs(int64_t aUTCMilliseconds) {
+  UDate date = UDate(aUTCMilliseconds);
+
+  UErrorCode status = U_ZERO_ERROR;
+  ucal_setMillis(mCalendar, date, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  int32_t dstOffset = ucal_get(mCalendar, UCAL_DST_OFFSET, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return dstOffset;
+}
+
+Result<int32_t, ICUError> TimeZone::GetOffsetMs(int64_t aUTCMilliseconds) {
+  UDate date = UDate(aUTCMilliseconds);
+
+  UErrorCode status = U_ZERO_ERROR;
+  ucal_setMillis(mCalendar, date, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  int32_t rawOffset = ucal_get(mCalendar, UCAL_ZONE_OFFSET, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  int32_t dstOffset = ucal_get(mCalendar, UCAL_DST_OFFSET, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return rawOffset + dstOffset;
+}
+
+Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
+  // https://tc39.es/ecma262/#sec-local-time-zone-adjustment
+  //
+  // LocalTZA ( t, isUTC )
+  //
+  // When t_local represents local time repeating multiple times at a negative
+  // time zone transition (e.g. when the daylight saving time ends or the time
+  // zone offset is decreased due to a time zone rule change) or skipped local
+  // time at a positive time zone transitions (e.g. when the daylight saving
+  // time starts or the time zone offset is increased due to a time zone rule
+  // change), t_local must be interpreted using the time zone offset before the
+  // transition.
+#ifndef U_HIDE_DRAFT_API
+  constexpr UTimeZoneLocalOption skippedTime = UCAL_TZ_LOCAL_FORMER;
+  constexpr UTimeZoneLocalOption repeatedTime = UCAL_TZ_LOCAL_FORMER;
+#else
+  constexpr UTimeZoneLocalOption skippedTime = UTimeZoneLocalOption(0x4);
+  constexpr UTimeZoneLocalOption repeatedTime = UTimeZoneLocalOption(0x4);
+#endif
+
+  UDate date = UDate(aLocalMilliseconds);
+
+  UErrorCode status = U_ZERO_ERROR;
+  ucal_setMillis(mCalendar, date, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  int32_t rawOffset, dstOffset;
+  ucal_getTimeZoneOffsetFromLocal(mCalendar, skippedTime, repeatedTime,
+                                  &rawOffset, &dstOffset, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return rawOffset + dstOffset;
 }
 
 Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
