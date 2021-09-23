@@ -724,7 +724,8 @@ Result<int64_t, nsresult> DirectoryPaddingRestore(nsIFile& aBaseDir,
   QM_TRY_INSPECT(const int64_t& paddingSize, db::FindOverallPaddingSize(aConn));
   MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
 
-  QM_TRY(DirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize),
+  QM_TRY(MOZ_TO_RESULT(DirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE,
+                                             paddingSize)),
          (aMustRestore ? Err(tryTempError)
                        : Result<int64_t, nsresult>{paddingSize}));
 

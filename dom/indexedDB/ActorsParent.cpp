@@ -12319,7 +12319,9 @@ nsCOMPtr<nsIFile> DatabaseFileManager::EnsureJournalDirectory() {
 
     QM_TRY(OkIf(isDirectory), nullptr);
   } else {
-    QM_TRY(journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755), nullptr);
+    QM_TRY(
+        MOZ_TO_RESULT(journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+        nullptr);
   }
 
   return journalDirectory;
@@ -12847,7 +12849,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                        // If there is an unexpected directory in the idb
                        // directory, trying to delete at first instead of
                        // breaking the whole initialization.
-                       QM_TRY(DeleteFilesNoQuota(directory, subdirName),
+                       QM_TRY(MOZ_TO_RESULT(
+                                  DeleteFilesNoQuota(directory, subdirName)),
                               Err(NS_ERROR_UNEXPECTED));
 
                        return Ok{};
@@ -12857,9 +12860,9 @@ nsresult QuotaClient::GetUsageForOriginInternal(
           if (obsoleteFilenames.Contains(subdirNameBase)) {
             // If this fails, it probably means we are in a serious situation.
             // e.g. Filesystem corruption. Will handle this in bug 1521541.
-            QM_TRY(RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
-                                                   nullptr, aPersistenceType,
-                                                   aOriginMetadata, u""_ns),
+            QM_TRY(MOZ_TO_RESULT(RemoveDatabaseFilesAndDirectory(
+                       *directory, subdirNameBase, nullptr, aPersistenceType,
+                       aOriginMetadata, u""_ns)),
                    Err(NS_ERROR_UNEXPECTED));
 
             databaseFilenames.Remove(subdirNameBase);
@@ -12883,7 +12886,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                 // XXX It seems if we really got here, we can fail the
                 // MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
                 // assertion in DeleteFilesNoQuota.
-                QM_TRY(DeleteFilesNoQuota(directory, subdirName),
+                QM_TRY(MOZ_TO_RESULT(DeleteFilesNoQuota(directory, subdirName)),
                        Err(NS_ERROR_UNEXPECTED));
 
                 return Ok{};
@@ -13527,7 +13530,8 @@ nsresult Maintenance::DirectoryOpen() {
 
   mState = State::DirectoryWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -13562,7 +13566,8 @@ nsresult Maintenance::DirectoryWork() {
   // repository can still
   // be processed.
   const bool initTemporaryStorageFailed = [&quotaManager] {
-    QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized(), true);
+    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()),
+           true);
     return false;
   }();
 
@@ -19781,10 +19786,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
               QM_PROPAGATE,
               ([this, &file = *file, &journalFile = *journalFile](const auto) {
                 // Try to remove the file if the copy failed.
-                QM_TRY(
-                    Transaction().GetDatabase().GetFileManager().SyncDeleteFile(
-                        file, journalFile),
-                    QM_VOID);
+                QM_TRY(MOZ_TO_RESULT(Transaction()
+                                         .GetDatabase()
+                                         .GetFileManager()
+                                         .SyncDeleteFile(file, journalFile)),
+                       QM_VOID);
               }));
 
           storedFileInfo.NotifyWriteSucceeded();

@@ -418,7 +418,7 @@ class Manager::Factory {
                                      State aState = Open) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
-    QM_TRY(MaybeCreateInstance(), nullptr);
+    QM_TRY(MOZ_TO_RESULT(MaybeCreateInstance()), nullptr);
 
     // Iterate in reverse to find the most recent, matching Manager.  This
     // is important when looking for a Closing Manager.  If a new Manager
@@ -838,7 +838,7 @@ class Manager::CachePutAllAction final : public DBAction {
     mozStorageTransaction trans(mConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start(), QM_VOID);
+    QM_TRY(MOZ_TO_RESULT(trans.Start()), QM_VOID);
 
     const nsresult rv = [this, &trans]() -> nsresult {
       QM_TRY(CollectEachInRange(mList, [this](Entry& e) -> nsresult {
