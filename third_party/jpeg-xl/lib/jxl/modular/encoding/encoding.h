@@ -11,6 +11,10 @@
 
 #include <vector>
 
+#include "lib/jxl/aux_out_fwd.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
@@ -27,7 +31,7 @@ constexpr int32_t kPropRangeFast = 512;
 struct GroupHeader : public Fields {
   GroupHeader();
 
-  JXL_FIELDS_NAME(GroupHeader)
+  const char *Name() const override { return "GroupHeader"; }
 
   Status VisitFields(Visitor *JXL_RESTRICT visitor) override {
     JXL_QUIET_RETURN_IF_ERROR(visitor->Bool(false, &use_global_tree));
@@ -118,9 +122,6 @@ bool TreeToLookupTable(const FlatTree &tree,
   return true;
 }
 // TODO(veluca): make cleaner interfaces.
-
-Status ValidateChannelDimensions(const Image &image,
-                                 const ModularOptions &options);
 
 // undo_transforms == N > 0: undo all transforms except the first N
 //                           (e.g. to represent YCbCr420 losslessly)

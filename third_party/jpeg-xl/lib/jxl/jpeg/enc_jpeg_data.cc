@@ -167,6 +167,22 @@ Status ParseChunkedMarker(const jpeg::JPEGData& src, uint8_t marker_type,
   return true;
 }
 
+Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
+                                    ColorEncoding* color_encoding) {
+  PaddedBytes icc_profile;
+  if (!ParseChunkedMarker(jpg, kApp2, ByteSpan(kIccProfileTag), &icc_profile)) {
+    JXL_WARNING("ReJPEG: corrupted ICC profile\n");
+    icc_profile.clear();
+  }
+
+  if (icc_profile.empty()) {
+    bool is_gray = (jpg.components.size() == 1);
+    *color_encoding = ColorEncoding::SRGB(is_gray);
+    return true;
+  }
+
+  return color_encoding->SetICC(std::move(icc_profile));
+}
 Status SetBlobsFromJpegData(const jpeg::JPEGData& jpeg_data, Blobs* blobs) {
   for (size_t i = 0; i < jpeg_data.app_data.size(); i++) {
     auto& marker = jpeg_data.app_data[i];
@@ -207,23 +223,6 @@ Status SetBlobsFromJpegData(const jpeg::JPEGData& jpeg_data, Blobs* blobs) {
 }
 
 }  // namespace
-
-Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
-                                    ColorEncoding* color_encoding) {
-  PaddedBytes icc_profile;
-  if (!ParseChunkedMarker(jpg, kApp2, ByteSpan(kIccProfileTag), &icc_profile)) {
-    JXL_WARNING("ReJPEG: corrupted ICC profile\n");
-    icc_profile.clear();
-  }
-
-  if (icc_profile.empty()) {
-    bool is_gray = (jpg.components.size() == 1);
-    *color_encoding = ColorEncoding::SRGB(is_gray);
-    return true;
-  }
-
-  return color_encoding->SetICC(std::move(icc_profile));
-}
 
 Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes) {
   jpeg_data.app_marker_type.resize(jpeg_data.app_data.size(),
@@ -355,7 +354,7 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
 
   io->Main().chroma_subsampling = cs;
   io->Main().color_transform =
-      (!is_rgb || nbcomp == 1) ? ColorTransform::kYCbCr : ColorTransform::kNone;
+      !is_rgb ? ColorTransform::kYCbCr : ColorTransform::kNone;
 
   io->metadata.m.SetIntensityTarget(
       io->target_nits != 0 ? io->target_nits : kDefaultIntensityTarget);

@@ -19,7 +19,7 @@ if(POLICY CMP0083)
   cmake_policy(SET CMP0083 NEW)
 endif()
 
-project(hwy VERSION 0.12.2)  # Keep in sync with highway.h version
+project(hwy VERSION 0.12.1)  # Keep in sync with highway.h version
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -307,11 +307,8 @@ foreach (TESTFILE IN LISTS HWY_TEST_FILES)
   get_filename_component(TESTNAME ${TESTFILE} NAME_WE)
   add_executable(${TESTNAME} ${TESTFILE})
   target_compile_options(${TESTNAME} PRIVATE ${HWY_FLAGS})
-  # Test all targets, not just the best/baseline. This changes the default
-  # policy to all-attainable; note that setting -DHWY_COMPILE_* directly can
-  # cause compile errors because only one may be set, and other CMakeLists.txt
-  # that include us may set them.
-  target_compile_options(${TESTNAME} PRIVATE -DHWY_IS_TEST=1)
+  # Test all targets, not just the best/baseline.
+  target_compile_options(${TESTNAME} PRIVATE -DHWY_COMPILE_ALL_ATTAINABLE=1)
 
   if(HWY_SYSTEM_GTEST)
     target_link_libraries(${TESTNAME} hwy hwy_contrib GTest::GTest GTest::Main)

@@ -105,8 +105,7 @@ std::vector<uint16_t> CreateTableCurve(uint32_t N, const Func& func) {
   return table;
 }
 
-void ICCComputeMD5(const PaddedBytes& data, uint8_t sum[16])
-    JXL_NO_SANITIZE("unsigned-integer-overflow") {
+void ICCComputeMD5(const PaddedBytes& data, uint8_t sum[16]) {
   PaddedBytes data64 = data;
   data64.push_back(128);
   // Add bytes such that ((size + 8) & 63) == 0.

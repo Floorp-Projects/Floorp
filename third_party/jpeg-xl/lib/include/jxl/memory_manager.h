@@ -4,9 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
- * @{
- * @file memory_manager.h
+/** @file memory_manager.h
  * @brief Abstraction functions used by JPEG XL to allocate memory.
  */
 
@@ -67,5 +65,3 @@ typedef struct JxlMemoryManagerStruct {
 #endif
 
 #endif /* JXL_MEMORY_MANAGER_H_ */
-
-/** @}*/

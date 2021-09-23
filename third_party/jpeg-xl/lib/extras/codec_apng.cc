@@ -39,6 +39,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif  // NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -55,43 +63,24 @@
 #include "png.h" /* original (unpatched) libpng is ok */
 
 namespace jxl {
-namespace extras {
 
 namespace {
-
-constexpr bool isAbc(char c) {
-  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
 #define notabc(c) ((c) < 65 || (c) > 122 || ((c) > 90 && (c) < 97))
 
-constexpr uint32_t kId_IHDR = 0x52444849;
-constexpr uint32_t kId_acTL = 0x4C546361;
-constexpr uint32_t kId_fcTL = 0x4C546366;
-constexpr uint32_t kId_IDAT = 0x54414449;
-constexpr uint32_t kId_fdAT = 0x54416466;
-constexpr uint32_t kId_IEND = 0x444E4549;
+#define id_IHDR 0x52444849
+#define id_acTL 0x4C546361
+#define id_fcTL 0x4C546366
+#define id_IDAT 0x54414449
+#define id_fdAT 0x54416466
+#define id_IEND 0x444E4549
 
 struct CHUNK {
   unsigned char* p;
   unsigned int size;
 };
-
 struct APNGFrame {
   unsigned char *p, **rows;
   unsigned int w, h, delay_num, delay_den;
-};
-
-struct Reader {
-  const uint8_t* next;
-  const uint8_t* last;
-  bool Read(void* data, size_t len) {
-    size_t cap = last - next;
-    size_t to_copy = std::min(cap, len);
-    memcpy(data, next, to_copy);
-    next += to_copy;
-    return (len == to_copy);
-  }
-  bool Eof() { return next == last; }
 };
 
 const unsigned long cMaxPNGSize = 1000000UL;
@@ -113,11 +102,11 @@ void row_fn(png_structp png_ptr, png_bytep new_row, png_uint_32 row_num,
   png_progressive_combine_row(png_ptr, frame->rows[row_num], new_row);
 }
 
-inline unsigned int read_chunk(Reader* r, CHUNK* pChunk) {
+inline unsigned int read_chunk(FILE* f, CHUNK* pChunk) {
   unsigned char len[4];
   pChunk->size = 0;
   pChunk->p = 0;
-  if (r->Read(&len, 4)) {
+  if (fread(&len, 4, 1, f) == 1) {
     const auto size = png_get_uint_32(len);
     // Check first, to avoid overflow.
     if (size > kMaxPNGChunkSize) {
@@ -127,9 +116,8 @@ inline unsigned int read_chunk(Reader* r, CHUNK* pChunk) {
     pChunk->size = size + 12;
     pChunk->p = new unsigned char[pChunk->size];
     memcpy(pChunk->p, len, 4);
-    if (r->Read(pChunk->p + 4, pChunk->size - 4)) {
+    if (fread(pChunk->p + 4, pChunk->size - 4, 1, f) == 1)
       return *(unsigned int*)(pChunk->p + 4);
-    }
   }
   return 0;
 }
@@ -191,11 +179,29 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr) {
   return 0;
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+FILE* fmemopen(void* buf, size_t size, const char* mode) {
+  char temp[999];
+  if (!GetTempPath(sizeof(temp), temp)) return nullptr;
+
+  char pathname[999];
+  if (!GetTempFileName(temp, "jpegxl", 0, pathname)) return nullptr;
+
+  FILE* f = fopen(pathname, "wb");
+  if (f == nullptr) return nullptr;
+  fwrite(buf, 1, size, f);
+  JXL_CHECK(fclose(f) == 0);
+
+  return fopen(pathname, mode);
+}
+
+#endif
+
 }  // namespace
 
-Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                       ThreadPool* pool, CodecInOut* io) {
-  Reader r;
+Status DecodeImageAPNG(Span<const uint8_t> bytes, ThreadPool* pool,
+                       CodecInOut* io) {
+  FILE* f;
   unsigned int id, i, j, w, h, w0, h0, x0, y0;
   unsigned int delay_num, delay_den, dop, bop, rowbytes, imagesize;
   unsigned char sig[8];
@@ -210,13 +216,16 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
   bool all_dispose_bg = true;
   APNGFrame frameRaw = {};
 
-  r = {bytes.data(), bytes.data() + bytes.size()};
+  if (!(f = fmemopen((void*)bytes.data(), bytes.size(), "rb"))) {
+    return JXL_FAILURE("Failed to fmemopen");
+  }
   // Not an aPNG => not an error
   unsigned char png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-  if (!r.Read(sig, 8) || memcmp(sig, png_signature, 8) != 0) {
+  if (fread(sig, 1, 8, f) != 8 || memcmp(sig, png_signature, 8) != 0) {
+    fclose(f);
     return false;
   }
-  id = read_chunk(&r, &chunkIHDR);
+  id = read_chunk(f, &chunkIHDR);
 
   io->frames.clear();
   io->dec_pixels = 0;
@@ -224,15 +233,19 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
   io->metadata.m.SetAlphaBits(8);
   io->metadata.m.color_encoding =
       ColorEncoding::SRGB();  // todo: get data from png metadata
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, /*color_already_set=*/true,
-                                      /*is_gray=*/false, io));
+  (void)io->dec_hints.Foreach(
+      [](const std::string& key, const std::string& /*value*/) {
+        JXL_WARNING("APNG decoder ignoring %s hint", key.c_str());
+        return true;
+      });
 
   bool errorstate = true;
-  if (id == kId_IHDR && chunkIHDR.size == 25) {
+  if (id == id_IHDR && chunkIHDR.size == 25) {
     w0 = w = png_get_uint_32(chunkIHDR.p + 8);
     h0 = h = png_get_uint_32(chunkIHDR.p + 12);
 
     if (w > cMaxPNGSize || h > cMaxPNGSize) {
+      fclose(f);
       return false;
     }
 
@@ -252,18 +265,18 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
     if (!processing_start(png_ptr, info_ptr, (void*)&frameRaw, hasInfo,
                           chunkIHDR, chunksInfo)) {
       bool last_base_was_none = true;
-      while (!r.Eof()) {
-        id = read_chunk(&r, &chunk);
+      while (!feof(f)) {
+        id = read_chunk(f, &chunk);
         if (!id) break;
         JXL_ASSERT(chunk.p != nullptr);
 
-        if (id == kId_acTL && !hasInfo && !isAnimated) {
+        if (id == id_acTL && !hasInfo && !isAnimated) {
           isAnimated = true;
           skipFirst = true;
           io->metadata.m.have_animation = true;
           io->metadata.m.animation.tps_numerator = 1000;
-        } else if (id == kId_IEND ||
-                   (id == kId_fcTL && (!hasInfo || isAnimated))) {
+        } else if (id == id_IEND ||
+                   (id == id_fcTL && (!hasInfo || isAnimated))) {
           if (hasInfo) {
             if (!processing_finish(png_ptr, info_ptr)) {
               ImageBundle bundle(&io->metadata.m);
@@ -326,7 +339,7 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
             }
           }
 
-          if (id == kId_IEND) {
+          if (id == id_IEND) {
             errorstate = false;
             break;
           }
@@ -339,8 +352,6 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
           delay_den = png_get_uint_16(chunk.p + 30);
           dop = chunk.p[32];
           bop = chunk.p[33];
-
-          if (!delay_den) delay_den = 100;
 
           if (w0 > cMaxPNGSize || h0 > cMaxPNGSize || x0 > cMaxPNGSize ||
               y0 > cMaxPNGSize || x0 + w0 > w || y0 + h0 > h || dop > 2 ||
@@ -363,21 +374,21 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
             bop = 0;
             if (dop == 2) dop = 1;
           }
-        } else if (id == kId_IDAT) {
+        } else if (id == id_IDAT) {
           hasInfo = true;
           if (processing_data(png_ptr, info_ptr, chunk.p, chunk.size)) {
             delete[] chunk.p;
             break;
           }
-        } else if (id == kId_fdAT && isAnimated) {
+        } else if (id == id_fdAT && isAnimated) {
           png_save_uint_32(chunk.p + 4, chunk.size - 16);
           memcpy(chunk.p + 8, "IDAT", 4);
           if (processing_data(png_ptr, info_ptr, chunk.p + 4, chunk.size - 4)) {
             delete[] chunk.p;
             break;
           }
-        } else if (!isAbc(chunk.p[4]) || !isAbc(chunk.p[5]) ||
-                   !isAbc(chunk.p[6]) || !isAbc(chunk.p[7])) {
+        } else if (notabc(chunk.p[4]) || notabc(chunk.p[5]) ||
+                   notabc(chunk.p[6]) || notabc(chunk.p[7])) {
           delete[] chunk.p;
           break;
         } else if (!hasInfo) {
@@ -400,10 +411,11 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
   chunksInfo.clear();
   delete[] chunkIHDR.p;
 
+  fclose(f);
+
   if (errorstate) return false;
   SetIntensityTarget(io);
   return true;
 }
 
-}  // namespace extras
 }  // namespace jxl

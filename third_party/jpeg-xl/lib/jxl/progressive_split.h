@@ -104,7 +104,6 @@ class ProgressiveSplitter {
     passes->num_passes = static_cast<uint32_t>(GetNumPasses());
     passes->num_downsample = 0;
     JXL_ASSERT(passes->num_passes != 0);
-    passes->shift[passes->num_passes - 1] = 0;
     if (passes->num_passes == 1) return;  // Done, arrays are empty
 
     for (uint32_t i = 0; i < mode_.num_passes - 1; ++i) {

@@ -60,7 +60,7 @@ void TestLosslessGroups(size_t group_size_shift) {
   io.ShrinkTo(io.xsize() / 4, io.ysize() / 4);
 
   compressed_size = Roundtrip(&io, cparams, dparams, pool, &io_out);
-  EXPECT_LE(compressed_size, 280000u);
+  EXPECT_LE(compressed_size, 280000);
   EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             0.0);
@@ -74,34 +74,6 @@ TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups512)) {
 
 TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups1024)) {
   TestLosslessGroups(3);
-}
-
-TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
-  ThreadPool* pool = nullptr;
-  const PaddedBytes orig =
-      ReadTestData("wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CompressParams cparams;
-  cparams.modular_mode = true;
-  // 9 = permute to GBR, to test the special case of permutation-only
-  cparams.colorspace = 9;
-  // slowest speed so different WP modes are tried
-  cparams.speed_tier = SpeedTier::kTortoise;
-  cparams.options.predictor = {Predictor::Weighted};
-  cparams.color_transform = jxl::ColorTransform::kNone;
-  DecompressParams dparams;
-
-  CodecInOut io_out;
-  size_t compressed_size;
-
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  io.ShrinkTo(100, 100);
-
-  compressed_size = Roundtrip(&io, cparams, dparams, pool, &io_out);
-  EXPECT_LE(compressed_size, 10250u);
-  EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            0.0);
 }
 
 TEST(ModularTest, RoundtripLossy) {
@@ -120,7 +92,7 @@ TEST(ModularTest, RoundtripLossy) {
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
   compressed_size = Roundtrip(&io, cparams, dparams, pool, &io_out);
-  EXPECT_LE(compressed_size, 40000u);
+  EXPECT_LE(compressed_size, 40000);
   cparams.ba_params.intensity_target = 80.0f;
   EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
@@ -145,7 +117,7 @@ TEST(ModularTest, RoundtripLossy16) {
   io.metadata.m.color_encoding = ColorEncoding::SRGB();
 
   compressed_size = Roundtrip(&io, cparams, dparams, pool, &io_out);
-  EXPECT_LE(compressed_size, 400u);
+  EXPECT_LE(compressed_size, 400);
   cparams.ba_params.intensity_target = 80.0f;
   EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
@@ -154,7 +126,7 @@ TEST(ModularTest, RoundtripLossy16) {
 
 TEST(ModularTest, RoundtripExtraProperties) {
   constexpr size_t kSize = 250;
-  Image image(kSize, kSize, /*bitdepth=*/8, 3);
+  Image image(kSize, kSize, /*maxval=*/255, 3);
   ModularOptions options;
   options.max_properties = 4;
   options.predictor = Predictor::Zero;
@@ -170,7 +142,7 @@ TEST(ModularTest, RoundtripExtraProperties) {
   BitWriter writer;
   ASSERT_TRUE(ModularGenericCompress(image, options, &writer));
   writer.ZeroPadToByte();
-  Image decoded(kSize, kSize, /*bitdepth=*/8, image.channel.size());
+  Image decoded(kSize, kSize, /*maxval=*/255, image.channel.size());
   for (size_t i = 0; i < image.channel.size(); i++) {
     const Channel& ch = image.channel[i];
     decoded.channel[i] = Channel(ch.w, ch.h, ch.hshift, ch.vshift);

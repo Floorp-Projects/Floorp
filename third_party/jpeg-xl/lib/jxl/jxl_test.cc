@@ -21,7 +21,6 @@
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/codec_in_out.h"
-#include "lib/jxl/codec_y4m_testonly.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/dec_file.h"
@@ -67,7 +66,7 @@ TEST(JxlTest, HeaderSize) {
     CodecInOut io2;
     AuxOut aux_out;
     Roundtrip(&io, cparams, dparams, pool, &io2, &aux_out);
-    EXPECT_LE(aux_out.layers[kLayerHeader].total_bits, 34u);
+    EXPECT_LE(aux_out.layers[kLayerHeader].total_bits, 34);
   }
 
   {
@@ -78,7 +77,7 @@ TEST(JxlTest, HeaderSize) {
     io.Main().SetAlpha(std::move(alpha), /*alpha_is_premultiplied=*/false);
     AuxOut aux_out;
     Roundtrip(&io, cparams, dparams, pool, &io2, &aux_out);
-    EXPECT_LE(aux_out.layers[kLayerHeader].total_bits, 57u);
+    EXPECT_LE(aux_out.layers[kLayerHeader].total_bits, 57);
   }
 }
 
@@ -153,7 +152,7 @@ TEST(JxlTest, RoundtripSmallD1) {
     io.ShrinkTo(io.xsize() / 8, io.ysize() / 8);
 
     compressed_size = Roundtrip(&io, cparams, dparams, pool, &io_out);
-    EXPECT_LE(compressed_size, 1000u);
+    EXPECT_LE(compressed_size, 1000);
     EXPECT_LE(ButteraugliDistance(io, io_out, cparams.ba_params,
                                   /*distmap=*/nullptr, pool),
               1.5);
@@ -193,7 +192,7 @@ TEST(JxlTest, RoundtripOtherTransforms) {
   std::unique_ptr<CodecInOut> io2 = jxl::make_unique<CodecInOut>();
   const size_t compressed_size =
       Roundtrip(io.get(), cparams, dparams, pool, io2.get());
-  EXPECT_LE(compressed_size, 23000u);
+  EXPECT_LE(compressed_size, 23000);
   EXPECT_LE(ButteraugliDistance(*io, *io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             6);
@@ -202,7 +201,7 @@ TEST(JxlTest, RoundtripOtherTransforms) {
   std::unique_ptr<CodecInOut> io3 = jxl::make_unique<CodecInOut>();
   const size_t compressed_size2 =
       Roundtrip(io.get(), cparams, dparams, pool, io3.get());
-  EXPECT_LE(compressed_size2, 23000u);
+  EXPECT_LE(compressed_size2, 23000);
   EXPECT_LE(ButteraugliDistance(*io, *io3, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             6);
@@ -219,32 +218,10 @@ TEST(JxlTest, RoundtripResample2) {
   cparams.resampling = 2;
   DecompressParams dparams;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 17000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 15777);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
-            12);
-}
-TEST(JxlTest, RoundtripResample2MT) {
-  ThreadPoolInternal pool(4);
-  const PaddedBytes orig =
-      ReadTestData("imagecompression.info/flower_foveon.png");
-  // image has to be large enough to have multiple groups after downsampling
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
-  CompressParams cparams;
-  cparams.resampling = 2;
-  DecompressParams dparams;
-  CodecInOut io2;
-  // TODO(veluca): Figure out why msan and release produce different
-  // file size.
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 64500u);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, &pool),
-#if JXL_HIGH_PRECISION
-            5.5);
-#else
             13.5);
-#endif
 }
 
 TEST(JxlTest, RoundtripResample4) {
@@ -258,7 +235,7 @@ TEST(JxlTest, RoundtripResample4) {
   cparams.resampling = 4;
   DecompressParams dparams;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 6000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 6000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             28);
@@ -275,7 +252,7 @@ TEST(JxlTest, RoundtripResample8) {
   cparams.resampling = 8;
   DecompressParams dparams;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2100u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2100);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             80);
@@ -294,7 +271,7 @@ TEST(JxlTest, RoundtripUnalignedD2) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 700u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 700);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             3.2);
@@ -323,7 +300,7 @@ TEST(JxlTest, RoundtripMultiGroupNL) {
 
   cparams.butteraugli_distance = 2.0f;
   CodecInOut io3;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io3), 80000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io3), 80000);
   EXPECT_LE(ButteraugliDistance(io, io3, cparams.ba_params,
                                 /*distmap=*/nullptr, &pool),
             1.5f);
@@ -345,14 +322,14 @@ TEST(JxlTest, RoundtripMultiGroup) {
   cparams.butteraugli_distance = 1.0f;
   cparams.speed_tier = SpeedTier::kKitten;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 40000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 40000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, &pool),
             1.99f);
 
   cparams.butteraugli_distance = 2.0f;
   CodecInOut io3;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io3), 22100u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io3), 22100);
   EXPECT_LE(ButteraugliDistance(io, io3, cparams.ba_params,
                                 /*distmap=*/nullptr, &pool),
             3.0f);
@@ -370,7 +347,7 @@ TEST(JxlTest, RoundtripLargeFast) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 265000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 265000);
 }
 
 TEST(JxlTest, RoundtripDotsForceEpf) {
@@ -387,7 +364,7 @@ TEST(JxlTest, RoundtripDotsForceEpf) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 265000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 265000);
 }
 
 // Checks for differing size/distance in two consecutive runs of distance 2,
@@ -473,7 +450,7 @@ TEST(JxlTest, RoundtripSmallNL) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 1500u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 1500);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             1.7);
@@ -495,7 +472,7 @@ TEST(JxlTest, RoundtripNoGaborishNoAR) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 40000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 40000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             2.5);
@@ -515,7 +492,7 @@ TEST(JxlTest, RoundtripSmallNoGaborish) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 900u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 900);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             1.7);
@@ -547,7 +524,7 @@ TEST(JxlTest, RoundtripSmallPatchesAlpha) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             0.5f);
@@ -575,7 +552,7 @@ TEST(JxlTest, RoundtripSmallPatches) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 2000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             0.5f);
@@ -610,8 +587,8 @@ TEST(JxlTest, RoundtripImageBundleOriginalBits) {
 
     EXPECT_EQ(bit_depth, io2.metadata.m.bit_depth.bits_per_sample);
     EXPECT_FALSE(io2.metadata.m.bit_depth.floating_point_sample);
-    EXPECT_EQ(0u, io2.metadata.m.bit_depth.exponent_bits_per_sample);
-    EXPECT_EQ(0u, io2.metadata.m.GetAlphaBits());
+    EXPECT_EQ(0, io2.metadata.m.bit_depth.exponent_bits_per_sample);
+    EXPECT_EQ(0, io2.metadata.m.GetAlphaBits());
   }
 
   // Test various existing and non-existing floating point formats
@@ -649,7 +626,7 @@ TEST(JxlTest, RoundtripImageBundleOriginalBits) {
     EXPECT_TRUE(io2.metadata.m.bit_depth.floating_point_sample);
     EXPECT_EQ(exponent_bit_depth,
               io2.metadata.m.bit_depth.exponent_bits_per_sample);
-    EXPECT_EQ(0u, io2.metadata.m.GetAlphaBits());
+    EXPECT_EQ(0, io2.metadata.m.GetAlphaBits());
   }
 }
 
@@ -659,12 +636,12 @@ TEST(JxlTest, RoundtripGrayscale) {
       ReadTestData("wesaturate/500px/cvo9xd_keong_macan_grayscale.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   io.ShrinkTo(128, 128);
   EXPECT_TRUE(io.Main().IsGray());
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   EXPECT_TRUE(io.metadata.m.color_encoding.tf.IsSRGB());
 
   PassesEncoderState enc_state;
@@ -682,7 +659,7 @@ TEST(JxlTest, RoundtripGrayscale) {
     EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
     EXPECT_TRUE(io2.Main().IsGray());
 
-    EXPECT_LE(compressed.size(), 7000u);
+    EXPECT_LE(compressed.size(), 7000);
     EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                   /*distmap=*/nullptr, pool),
               1.7777777);
@@ -702,7 +679,7 @@ TEST(JxlTest, RoundtripGrayscale) {
     EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
     EXPECT_TRUE(io2.Main().IsGray());
 
-    EXPECT_LE(compressed.size(), 1300u);
+    EXPECT_LE(compressed.size(), 1300);
     EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                   /*distmap=*/nullptr, pool),
               9.0);
@@ -716,18 +693,18 @@ TEST(JxlTest, RoundtripAlpha) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   ASSERT_TRUE(io.metadata.m.HasAlpha());
   ASSERT_TRUE(io.Main().HasAlpha());
-  io.ShrinkTo(300, 300);
+  io.ShrinkTo(128, 128);
 
   CompressParams cparams;
   cparams.butteraugli_distance = 1.0;
   DecompressParams dparams;
 
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   EXPECT_TRUE(io.metadata.m.color_encoding.tf.IsSRGB());
   PassesEncoderState enc_state;
   AuxOut* aux_out = nullptr;
@@ -736,49 +713,15 @@ TEST(JxlTest, RoundtripAlpha) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 10077u);
+  EXPECT_LE(compressed.size(), 5500);
 
+  // TODO(robryk): Fix the following line in presence of different alpha_bits in
+  // the two contexts.
+  // EXPECT_TRUE(SamePixels(io.Main().alpha(), io2.Main().alpha()));
+  // TODO(robryk): Fix the distance estimate used in the encoder.
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
-            1.4);
-}
-
-TEST(JxlTest, RoundtripAlphaPremultiplied) {
-  ThreadPool* pool = nullptr;
-  const PaddedBytes orig =
-      ReadTestData("wesaturate/500px/tmshre_riaphotographs_alpha.png");
-  CodecInOut io, io_nopremul;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io_nopremul, pool));
-
-  ASSERT_NE(io.xsize(), 0u);
-  ASSERT_TRUE(io.metadata.m.HasAlpha());
-  ASSERT_TRUE(io.Main().HasAlpha());
-  io.ShrinkTo(300, 300);
-  io_nopremul.ShrinkTo(300, 300);
-
-  CompressParams cparams;
-  cparams.butteraugli_distance = 1.0;
-  DecompressParams dparams;
-
-  io.PremultiplyAlpha();
-  EXPECT_TRUE(io.Main().AlphaIsPremultiplied());
-  PassesEncoderState enc_state;
-  AuxOut* aux_out = nullptr;
-  PaddedBytes compressed;
-  EXPECT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, aux_out, pool));
-  CodecInOut io2;
-  EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
-
-  EXPECT_LE(compressed.size(), 10000u);
-
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            1.4);
-  io2.Main().UnpremultiplyAlpha();
-  EXPECT_LE(ButteraugliDistance(io_nopremul, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            1.8);
+            6.3);
 }
 
 TEST(JxlTest, RoundtripAlphaResampling) {
@@ -788,7 +731,7 @@ TEST(JxlTest, RoundtripAlphaResampling) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   ASSERT_TRUE(io.metadata.m.HasAlpha());
   ASSERT_TRUE(io.Main().HasAlpha());
 
@@ -805,7 +748,7 @@ TEST(JxlTest, RoundtripAlphaResampling) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 15000u);
+  EXPECT_LE(compressed.size(), 15000);
 
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
@@ -819,7 +762,7 @@ TEST(JxlTest, RoundtripAlphaResamplingOnlyAlpha) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   ASSERT_TRUE(io.metadata.m.HasAlpha());
   ASSERT_TRUE(io.Main().HasAlpha());
 
@@ -835,11 +778,11 @@ TEST(JxlTest, RoundtripAlphaResamplingOnlyAlpha) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 31000u);
+  EXPECT_LE(compressed.size(), 26000);
 
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
-            1.5);
+            3.0);
 }
 
 TEST(JxlTest, RoundtripAlphaNonMultipleOf8) {
@@ -849,7 +792,7 @@ TEST(JxlTest, RoundtripAlphaNonMultipleOf8) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   ASSERT_TRUE(io.metadata.m.HasAlpha());
   ASSERT_TRUE(io.Main().HasAlpha());
   io.ShrinkTo(12, 12);
@@ -858,9 +801,9 @@ TEST(JxlTest, RoundtripAlphaNonMultipleOf8) {
   cparams.butteraugli_distance = 1.0;
   DecompressParams dparams;
 
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   EXPECT_TRUE(io.metadata.m.color_encoding.tf.IsSRGB());
   PassesEncoderState enc_state;
   AuxOut* aux_out = nullptr;
@@ -869,7 +812,7 @@ TEST(JxlTest, RoundtripAlphaNonMultipleOf8) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 200u);
+  EXPECT_LE(compressed.size(), 200);
 
   // TODO(robryk): Fix the following line in presence of different alpha_bits in
   // the two contexts.
@@ -906,7 +849,7 @@ TEST(JxlTest, RoundtripAlpha16) {
 
   // The image is wider than 512 pixels to ensure multiple groups are tested.
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
   ASSERT_TRUE(io.metadata.m.HasAlpha());
   ASSERT_TRUE(io.Main().HasAlpha());
 
@@ -951,7 +894,7 @@ TEST(JxlTest, JXL_SLOW_TEST(RoundtripLossless8)) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000);
   // If this test fails with a very close to 0.0 but not exactly 0.0 butteraugli
   // distance, then there is likely a floating point issue, that could be
   // happening either in io or io2. The values of io are generated by
@@ -969,7 +912,7 @@ TEST(JxlTest, JXL_SLOW_TEST(RoundtripLossless8)) {
                                      /*distmap=*/nullptr, &pool));
 }
 
-TEST(JxlTest, JXL_SLOW_TEST(RoundtripLosslessNoEncoderFastPathWP)) {
+TEST(JxlTest, JXL_SLOW_TEST(RoundtripLosslessNoEncoderFastPath)) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("wesaturate/500px/tmshre_riaphotographs_srgb8.png");
@@ -977,55 +920,12 @@ TEST(JxlTest, JXL_SLOW_TEST(RoundtripLosslessNoEncoderFastPathWP)) {
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
 
   CompressParams cparams = CParamsForLossless();
-  cparams.speed_tier = SpeedTier::kFalcon;
   cparams.options.skip_encoder_fast_path = true;
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000);
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
-                                     /*distmap=*/nullptr, &pool));
-}
-
-TEST(JxlTest, JXL_SLOW_TEST(RoundtripLosslessNoEncoderFastPathGradient)) {
-  ThreadPoolInternal pool(8);
-  const PaddedBytes orig =
-      ReadTestData("wesaturate/500px/tmshre_riaphotographs_srgb8.png");
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
-
-  CompressParams cparams = CParamsForLossless();
-  cparams.speed_tier = SpeedTier::kThunder;
-  cparams.options.skip_encoder_fast_path = true;
-  cparams.options.predictor = {Predictor::Gradient};
-  DecompressParams dparams;
-
-  CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000u);
-  EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
-                                     /*distmap=*/nullptr, &pool));
-}
-
-TEST(JxlTest, JXL_SLOW_TEST(RoundtripLosslessNoEncoderVeryFastPathGradient)) {
-  ThreadPoolInternal pool(8);
-  const PaddedBytes orig =
-      ReadTestData("wesaturate/500px/tmshre_riaphotographs_srgb8.png");
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
-
-  CompressParams cparams = CParamsForLossless();
-  cparams.speed_tier = SpeedTier::kLightning;
-  cparams.options.skip_encoder_fast_path = true;
-  cparams.options.predictor = {Predictor::Gradient};
-  DecompressParams dparams;
-
-  CodecInOut io2, io3;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000u);
-  EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
-                                     /*distmap=*/nullptr, &pool));
-  cparams.options.skip_encoder_fast_path = false;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io3), 3500000u);
-  EXPECT_EQ(0.0, ButteraugliDistance(io, io3, cparams.ba_params,
                                      /*distmap=*/nullptr, &pool));
 }
 
@@ -1041,7 +941,7 @@ TEST(JxlTest, JXL_SLOW_TEST(RoundtripLossless8Falcon)) {
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 3500000);
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
                                      /*distmap=*/nullptr, &pool));
 }
@@ -1052,24 +952,24 @@ TEST(JxlTest, RoundtripLossless8Alpha) {
       ReadTestData("wesaturate/500px/tmshre_riaphotographs_alpha.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  EXPECT_EQ(8u, io.metadata.m.GetAlphaBits());
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.GetAlphaBits());
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
 
   CompressParams cparams = CParamsForLossless();
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 350000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 350000);
   // If fails, see note about floating point in RoundtripLossless8.
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
                                      /*distmap=*/nullptr, pool));
   EXPECT_TRUE(SamePixels(*io.Main().alpha(), *io2.Main().alpha()));
-  EXPECT_EQ(8u, io2.metadata.m.GetAlphaBits());
-  EXPECT_EQ(8u, io2.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io2.metadata.m.GetAlphaBits());
+  EXPECT_EQ(8, io2.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io2.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io2.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io2.metadata.m.bit_depth.exponent_bits_per_sample);
 }
 
 TEST(JxlTest, RoundtripLossless16Alpha) {
@@ -1096,16 +996,16 @@ TEST(JxlTest, RoundtripLossless16Alpha) {
   io.SetFromImage(std::move(color), io.metadata.m.color_encoding);
   io.Main().SetAlpha(std::move(alpha), /*alpha_is_premultiplied=*/false);
 
-  EXPECT_EQ(16u, io.metadata.m.GetAlphaBits());
-  EXPECT_EQ(16u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(16, io.metadata.m.GetAlphaBits());
+  EXPECT_EQ(16, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
 
   CompressParams cparams = CParamsForLossless();
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 7100u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 7100);
   // If this test fails with a very close to 0.0 but not exactly 0.0 butteraugli
   // distance, then there is likely a floating point issue, that could be
   // happening either in io or io2. The values of io are generated by
@@ -1121,10 +1021,10 @@ TEST(JxlTest, RoundtripLossless16Alpha) {
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
                                      /*distmap=*/nullptr, pool));
   EXPECT_TRUE(SamePixels(*io.Main().alpha(), *io2.Main().alpha()));
-  EXPECT_EQ(16u, io2.metadata.m.GetAlphaBits());
-  EXPECT_EQ(16u, io2.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(16, io2.metadata.m.GetAlphaBits());
+  EXPECT_EQ(16, io2.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io2.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io2.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io2.metadata.m.bit_depth.exponent_bits_per_sample);
 }
 
 TEST(JxlTest, RoundtripLossless16AlphaNotMisdetectedAs8Bit) {
@@ -1153,55 +1053,24 @@ TEST(JxlTest, RoundtripLossless16AlphaNotMisdetectedAs8Bit) {
   io.SetFromImage(std::move(color), io.metadata.m.color_encoding);
   io.Main().SetAlpha(std::move(alpha), /*alpha_is_premultiplied=*/false);
 
-  EXPECT_EQ(16u, io.metadata.m.GetAlphaBits());
-  EXPECT_EQ(16u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(16, io.metadata.m.GetAlphaBits());
+  EXPECT_EQ(16, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
 
   CompressParams cparams = CParamsForLossless();
   DecompressParams dparams;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 3100u);
-  EXPECT_EQ(16u, io2.metadata.m.GetAlphaBits());
-  EXPECT_EQ(16u, io2.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 3100);
+  EXPECT_EQ(16, io2.metadata.m.GetAlphaBits());
+  EXPECT_EQ(16, io2.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io2.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io2.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io2.metadata.m.bit_depth.exponent_bits_per_sample);
   // If fails, see note about floating point in RoundtripLossless8.
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
                                      /*distmap=*/nullptr, pool));
   EXPECT_TRUE(SamePixels(*io.Main().alpha(), *io2.Main().alpha()));
-}
-
-TEST(JxlTest, RoundtripYCbCr420) {
-  ThreadPool* pool = nullptr;
-  const PaddedBytes orig =
-      ReadTestData("imagecompression.info/flower_foveon.png");
-  CodecInOut io;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  const PaddedBytes yuv420 =
-      ReadTestData("imagecompression.info/flower_foveon.png.ffmpeg.y4m");
-  CodecInOut io2;
-  ASSERT_TRUE(test::DecodeImageY4M(Span<const uint8_t>(yuv420), &io2));
-
-  CompressParams cparams = CParamsForLossless();
-  cparams.speed_tier = SpeedTier::kThunder;
-  DecompressParams dparams;
-
-  PassesEncoderState enc_state;
-  AuxOut* aux_out = nullptr;
-  PaddedBytes compressed;
-  EXPECT_TRUE(
-      EncodeFile(cparams, &io2, &enc_state, &compressed, aux_out, pool));
-  CodecInOut io3;
-  EXPECT_TRUE(DecodeFile(dparams, compressed, &io3, pool));
-
-  EXPECT_LE(compressed.size(), 1320000u);
-
-  // we're comparing an original PNG with a YCbCr 4:2:0 version
-  EXPECT_LE(ButteraugliDistance(io, io3, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            2.8);
 }
 
 TEST(JxlTest, RoundtripDots) {
@@ -1211,7 +1080,7 @@ TEST(JxlTest, RoundtripDots) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
 
   CompressParams cparams;
   cparams.dots = Override::kOn;
@@ -1219,8 +1088,8 @@ TEST(JxlTest, RoundtripDots) {
   cparams.speed_tier = SpeedTier::kSquirrel;
   DecompressParams dparams;
 
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
   EXPECT_TRUE(io.metadata.m.color_encoding.tf.IsSRGB());
   PassesEncoderState enc_state;
@@ -1230,7 +1099,7 @@ TEST(JxlTest, RoundtripDots) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 400000u);
+  EXPECT_LE(compressed.size(), 400000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             2.2);
@@ -1243,15 +1112,15 @@ TEST(JxlTest, RoundtripNoise) {
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
-  ASSERT_NE(io.xsize(), 0u);
+  ASSERT_NE(io.xsize(), 0);
 
   CompressParams cparams;
   cparams.noise = Override::kOn;
   cparams.speed_tier = SpeedTier::kSquirrel;
   DecompressParams dparams;
 
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
   EXPECT_TRUE(io.metadata.m.color_encoding.tf.IsSRGB());
   PassesEncoderState enc_state;
@@ -1261,7 +1130,7 @@ TEST(JxlTest, RoundtripNoise) {
   CodecInOut io2;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
 
-  EXPECT_LE(compressed.size(), 40000u);
+  EXPECT_LE(compressed.size(), 40000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             2.2);
@@ -1278,18 +1147,18 @@ TEST(JxlTest, RoundtripLossless8Gray) {
   DecompressParams dparams;
 
   EXPECT_TRUE(io.Main().IsGray());
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 130000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 130000);
   // If fails, see note about floating point in RoundtripLossless8.
   EXPECT_EQ(0.0, ButteraugliDistance(io, io2, cparams.ba_params,
                                      /*distmap=*/nullptr, pool));
   EXPECT_TRUE(io2.Main().IsGray());
-  EXPECT_EQ(8u, io2.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io2.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io2.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io2.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io2.metadata.m.bit_depth.exponent_bits_per_sample);
 }
 
 #if JPEGXL_ENABLE_GIF
@@ -1299,12 +1168,12 @@ TEST(JxlTest, RoundtripAnimation) {
   const PaddedBytes orig = ReadTestData("jxl/traffic_light.gif");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  ASSERT_EQ(4u, io.frames.size());
+  ASSERT_EQ(4, io.frames.size());
 
   CompressParams cparams;
   DecompressParams dparams;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 3000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 3000);
 
   EXPECT_EQ(io2.frames.size(), io.frames.size());
   test::CoalesceGIFAnimationWithAlpha(&io);
@@ -1322,12 +1191,12 @@ TEST(JxlTest, RoundtripLosslessAnimation) {
   const PaddedBytes orig = ReadTestData("jxl/traffic_light.gif");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  ASSERT_EQ(4u, io.frames.size());
+  ASSERT_EQ(4, io.frames.size());
 
   CompressParams cparams = CParamsForLossless();
   DecompressParams dparams;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 1200u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 1200);
 
   EXPECT_EQ(io2.frames.size(), io.frames.size());
   test::CoalesceGIFAnimationWithAlpha(&io);
@@ -1360,7 +1229,9 @@ jxl::Status DecompressJxlToJPEGForTest(
     return JXL_FAILURE("Failed to decode JXL to JPEG");
   }
   io.jpeg_quality = 95;
-  if (!extras::EncodeImageJPGCoefficients(&io, output)) {
+  if (!EncodeImageJPG(&io, jxl::JpegEncoder::kLibJpeg, io.jpeg_quality,
+                      jxl::YCbCrChromaSubsampling(), pool, output,
+                      jxl::DecodeTarget::kQuantizedCoeffs)) {
     return JXL_FAILURE("Failed to generate JPEG");
   }
   return true;
@@ -1409,15 +1280,15 @@ size_t RoundtripJpeg(const PaddedBytes& jpeg_in, ThreadPool* pool) {
   return compressed.size();
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression444)) {
+TEST(JxlTest, RoundtripJpegRecompression444) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_444.jpg");
   // JPEG size is 326'916 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 256000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 256000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels)) {
+TEST(JxlTest, RoundtripJpegRecompressionToPixels) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_444.jpg");
@@ -1442,7 +1313,7 @@ TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels)) {
                                      /*distmap=*/nullptr, &pool));
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420)) {
+TEST(JxlTest, RoundtripJpegRecompressionToPixels420) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_420.jpg");
@@ -1465,32 +1336,7 @@ TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420)) {
                                      /*distmap=*/nullptr, &pool));
 }
 
-TEST(JxlTest,
-     JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420Mul16)) {
-  ThreadPoolInternal pool(8);
-  const PaddedBytes orig =
-      ReadTestData("imagecompression.info/flower_foveon_cropped.jpg");
-  CodecInOut io;
-  io.dec_target = jxl::DecodeTarget::kQuantizedCoeffs;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
-
-  CodecInOut io2;
-  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io2, &pool));
-
-  CompressParams cparams;
-  cparams.color_transform = jxl::ColorTransform::kYCbCr;
-
-  DecompressParams dparams;
-
-  CodecInOut io3;
-  Roundtrip(&io, cparams, dparams, &pool, &io3);
-
-  EXPECT_GE(1.5, ButteraugliDistance(io2, io3, cparams.ba_params,
-                                     /*distmap=*/nullptr, &pool));
-}
-
-TEST(JxlTest,
-     JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels_asymmetric)) {
+TEST(JxlTest, RoundtripJpegRecompressionToPixels_asymmetric) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig = ReadTestData(
       "imagecompression.info/flower_foveon.png.im_q85_asymmetric.jpg");
@@ -1513,71 +1359,70 @@ TEST(JxlTest,
                                      /*distmap=*/nullptr, &pool));
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionGray)) {
+TEST(JxlTest, RoundtripJpegRecompressionGray) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_gray.jpg");
   // JPEG size is 167'025 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 140000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 140000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression420)) {
+TEST(JxlTest, RoundtripJpegRecompression420) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_420.jpg");
   // JPEG size is 226'018 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 181050u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 181050);
 }
 
-TEST(JxlTest,
-     JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression_luma_subsample)) {
+TEST(JxlTest, RoundtripJpegRecompression_luma_subsample) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig = ReadTestData(
       "imagecompression.info/flower_foveon.png.im_q85_luma_subsample.jpg");
   // JPEG size is 216'069 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 181000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 181000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression444_12)) {
+TEST(JxlTest, RoundtripJpegRecompression444_12) {
   // 444 JPEG that has an interesting sampling-factor (1x2, 1x2, 1x2).
   ThreadPoolInternal pool(8);
   const PaddedBytes orig = ReadTestData(
       "imagecompression.info/flower_foveon.png.im_q85_444_1x2.jpg");
   // JPEG size is 329'942 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 256000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 256000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression422)) {
+TEST(JxlTest, RoundtripJpegRecompression422) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_422.jpg");
   // JPEG size is 265'590 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression440)) {
+TEST(JxlTest, RoundtripJpegRecompression440) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig =
       ReadTestData("imagecompression.info/flower_foveon.png.im_q85_440.jpg");
   // JPEG size is 262'249 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression_asymmetric)) {
+TEST(JxlTest, RoundtripJpegRecompression_asymmetric) {
   // 2x vertical downsample of one chroma channel, 2x horizontal downsample of
   // the other.
   ThreadPoolInternal pool(8);
   const PaddedBytes orig = ReadTestData(
       "imagecompression.info/flower_foveon.png.im_q85_asymmetric.jpg");
   // JPEG size is 262'249 bytes.
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 209000);
 }
 
-TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression420Progr)) {
+TEST(JxlTest, RoundtripJpegRecompression420Progr) {
   ThreadPoolInternal pool(8);
   const PaddedBytes orig = ReadTestData(
       "imagecompression.info/flower_foveon.png.im_q85_420_progr.jpg");
-  EXPECT_LE(RoundtripJpeg(orig, &pool), 181000u);
+  EXPECT_LE(RoundtripJpeg(orig, &pool), 181000);
 }
 
 #endif  // JPEGXL_ENABLE_JPEG
@@ -1598,7 +1443,7 @@ TEST(JxlTest, RoundtripProgressive) {
   cparams.responsive = true;
   cparams.progressive_mode = true;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 40000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, &pool, &io2), 40000);
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, &pool),
             4.0f);
@@ -1609,14 +1454,14 @@ TEST(JxlTest, RoundtripAnimationPatches) {
   const PaddedBytes orig = ReadTestData("jxl/animation_patches.gif");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
-  ASSERT_EQ(2u, io.frames.size());
+  ASSERT_EQ(2, io.frames.size());
 
   CompressParams cparams;
   cparams.patches = Override::kOn;
   DecompressParams dparams;
   CodecInOut io2;
   // 40k with no patches, 27k with patch frames encoded multiple times.
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 24000u);
+  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 24000);
 
   EXPECT_EQ(io2.frames.size(), io.frames.size());
   // >10 with broken patches

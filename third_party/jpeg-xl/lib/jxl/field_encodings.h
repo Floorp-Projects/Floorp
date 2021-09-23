@@ -19,22 +19,11 @@
 
 namespace jxl {
 
-// Macro to define the Fields' derived class Name when compiling with debug
-// names.
-#if JXL_IS_DEBUG_BUILD
-#define JXL_FIELDS_NAME(X) \
-  const char* Name() const override { return #X; }
-#else
-#define JXL_FIELDS_NAME(X)
-#endif  // JXL_IS_DEBUG_BUILD
-
 class Visitor;
 class Fields {
  public:
   virtual ~Fields() = default;
-#if JXL_IS_DEBUG_BUILD
   virtual const char* Name() const = 0;
-#endif  // JXL_IS_DEBUG_BUILD
   virtual Status VisitFields(Visitor* JXL_RESTRICT visitor) = 0;
 };
 

@@ -13,12 +13,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "jxl/codestream_header.h"
-#include "jxl/encode.h"
 #include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/dec_file.h"
 #include "lib/jxl/dec_params.h"
 #include "lib/jxl/enc_external_image.h"
@@ -30,12 +28,6 @@
 #else
 #define JXL_SLOW_TEST(X) X
 #endif  // JXL_DISABLE_SLOW_TESTS
-
-#if JPEGXL_ENABLE_TRANSCODE_JPEG
-#define JXL_TRANSCODE_JPEG_TEST(X) X
-#else
-#define JXL_TRANSCODE_JPEG_TEST(X) DISABLED_##X
-#endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
 #ifdef THREAD_SANITIZER
 #define JXL_TSAN_SLOW_TEST(X) DISABLED_##X
@@ -56,7 +48,6 @@ namespace test {
 
 void JxlBasicInfoSetFromPixelFormat(JxlBasicInfo* basic_info,
                                     const JxlPixelFormat* pixel_format) {
-  JxlEncoderInitBasicInfo(basic_info);
   switch (pixel_format->data_type) {
     case JXL_TYPE_FLOAT:
       basic_info->bits_per_sample = 32;
@@ -275,37 +266,8 @@ std::vector<ColorEncodingDescriptor> AllEncodings() {
 std::vector<uint8_t> GetSomeTestImage(size_t xsize, size_t ysize,
                                       size_t num_channels, uint16_t seed) {
   // Cause more significant image difference for successive seeds.
-  std::mt19937 std_rng(seed);
-  std::uniform_int_distribution<uint16_t> std_distr(0, 65535);
-
-  // Returns random integer in interval (0, max_value - 1)
-  auto rng = [&std_rng, &std_distr](size_t max_value) -> size_t {
-    return static_cast<size_t>(std_distr(std_rng) / 65536.0f * max_value);
-  };
-
-  // Dark background gradient color
-  uint16_t r0 = rng(32768);
-  uint16_t g0 = rng(32768);
-  uint16_t b0 = rng(32768);
-  uint16_t a0 = rng(32768);
-  uint16_t r1 = rng(32768);
-  uint16_t g1 = rng(32768);
-  uint16_t b1 = rng(32768);
-  uint16_t a1 = rng(32768);
-
-  // Circle with different color
-  size_t circle_x = rng(xsize);
-  size_t circle_y = rng(ysize);
-  size_t circle_r = rng(std::min(xsize, ysize));
-
-  // Rectangle with random noise
-  size_t rect_x0 = rng(xsize);
-  size_t rect_y0 = rng(ysize);
-  size_t rect_x1 = rng(xsize);
-  size_t rect_y1 = rng(ysize);
-  if (rect_x1 < rect_x0) std::swap(rect_x0, rect_y1);
-  if (rect_y1 < rect_y0) std::swap(rect_y0, rect_y1);
-
+  std::mt19937 rng(seed);
+  std::uniform_int_distribution<uint16_t> dark(0, 32767);
   size_t num_pixels = xsize * ysize;
   // 16 bits per channel, big endian, 4 channels
   std::vector<uint8_t> pixels(num_pixels * num_channels * 2);
@@ -313,22 +275,16 @@ std::vector<uint8_t> GetSomeTestImage(size_t xsize, size_t ysize,
   // can be compared after roundtrip.
   for (size_t y = 0; y < ysize; y++) {
     for (size_t x = 0; x < xsize; x++) {
-      uint16_t r = r0 * (ysize - y - 1) / ysize + r1 * y / ysize;
-      uint16_t g = g0 * (ysize - y - 1) / ysize + g1 * y / ysize;
-      uint16_t b = b0 * (ysize - y - 1) / ysize + b1 * y / ysize;
-      uint16_t a = a0 * (ysize - y - 1) / ysize + a1 * y / ysize;
+      uint16_t r = dark(rng);
+      uint16_t g = dark(rng);
+      uint16_t b = dark(rng);
+      uint16_t a = dark(rng);
       // put some shape in there for visual debugging
-      if ((x - circle_x) * (x - circle_x) + (y - circle_y) * (y - circle_y) <
-          circle_r * circle_r) {
+      if (x * x + y * y < 1000) {
         r = (65535 - x * y) ^ seed;
         g = (x << 8) + y + seed;
         b = (y << 8) + x * seed;
         a = 32768 + x * 256 - y;
-      } else if (x > rect_x0 && x < rect_x1 && y > rect_y0 && y < rect_y1) {
-        r = rng(65536);
-        g = rng(65536);
-        b = rng(65536);
-        a = rng(65536);
       }
       size_t i = (y * xsize + x) * 2 * num_channels;
       pixels[i + 0] = (r >> 8);
@@ -369,7 +325,7 @@ jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
       /*has_alpha=*/num_channels == 2 || num_channels == 4,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/16, JXL_BIG_ENDIAN,
       /*flipped_y=*/false, /*pool=*/nullptr,
-      /*ib=*/&io.Main(), /*float_in=*/false));
+      /*ib=*/&io.Main()));
   return io;
 }
 

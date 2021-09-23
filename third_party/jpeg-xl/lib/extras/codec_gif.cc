@@ -21,10 +21,12 @@
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/luminance.h"
-#include "lib/jxl/sanitizers.h"
+
+#ifdef MEMORY_SANITIZER
+#include "sanitizer/msan_interface.h"
+#endif
 
 namespace jxl {
-namespace extras {
 
 namespace {
 
@@ -53,8 +55,8 @@ bool AllOpaque(const ImageF& alpha) {
 
 }  // namespace
 
-Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      ThreadPool* pool, CodecInOut* io) {
+Status DecodeImageGIF(Span<const uint8_t> bytes, ThreadPool* pool,
+                      CodecInOut* io) {
   int error = GIF_OK;
   ReadState state = {bytes};
   const auto ReadFromSpan = [](GifFileType* const gif, GifByteType* const bytes,
@@ -82,15 +84,16 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
     return JXL_FAILURE("Failed to read GIF: %s", GifErrorString(gif->Error));
   }
 
-  msan::UnpoisonMemory(gif.get(), sizeof(*gif));
+#ifdef MEMORY_SANITIZER
+  __msan_unpoison(gif.get(), sizeof(*gif));
   if (gif->SColorMap) {
-    msan::UnpoisonMemory(gif->SColorMap, sizeof(*gif->SColorMap));
-    msan::UnpoisonMemory(
-        gif->SColorMap->Colors,
-        sizeof(*gif->SColorMap->Colors) * gif->SColorMap->ColorCount);
+    __msan_unpoison(gif->SColorMap, sizeof(*gif->SColorMap));
+    __msan_unpoison(gif->SColorMap->Colors, sizeof(*gif->SColorMap->Colors) *
+                                                gif->SColorMap->ColorCount);
   }
-  msan::UnpoisonMemory(gif->SavedImages,
-                       sizeof(*gif->SavedImages) * gif->ImageCount);
+  __msan_unpoison(gif->SavedImages,
+                  sizeof(*gif->SavedImages) * gif->ImageCount);
+#endif
 
   const SizeConstraints* constraints = &io->constraints;
 
@@ -132,18 +135,24 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
   io->dec_pixels = 0;
 
   io->metadata.m.SetUintSamples(8);
+  io->metadata.m.color_encoding = ColorEncoding::SRGB();
   io->metadata.m.SetAlphaBits(0);
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, /*color_already_set=*/false,
-                                      /*is_gray=*/false, io));
+  (void)io->dec_hints.Foreach(
+      [](const std::string& key, const std::string& /*value*/) {
+        JXL_WARNING("GIF decoder ignoring %s hint", key.c_str());
+        return true;
+      });
 
   Image3F canvas(gif->SWidth, gif->SHeight);
   io->SetSize(gif->SWidth, gif->SHeight);
   ImageF alpha(gif->SWidth, gif->SHeight);
   GifColorType background_color;
-  if (gif->SColorMap == nullptr ||
-      gif->SBackGroundColor >= gif->SColorMap->ColorCount) {
+  if (gif->SColorMap == nullptr) {
     background_color = {0, 0, 0};
   } else {
+    if (gif->SBackGroundColor >= gif->SColorMap->ColorCount) {
+      return JXL_FAILURE("GIF specifies out-of-bounds background color");
+    }
     background_color = gif->SColorMap->Colors[gif->SBackGroundColor];
   }
   FillPlane<float>(background_color.Red, &canvas.Plane(0));
@@ -158,9 +167,11 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
   bool last_base_was_none = true;
   for (int i = 0; i < gif->ImageCount; ++i) {
     const SavedImage& image = gif->SavedImages[i];
-    msan::UnpoisonMemory(image.RasterBits, sizeof(*image.RasterBits) *
-                                               image.ImageDesc.Width *
-                                               image.ImageDesc.Height);
+#ifdef MEMORY_SANITIZER
+    __msan_unpoison(image.RasterBits, sizeof(*image.RasterBits) *
+                                          image.ImageDesc.Width *
+                                          image.ImageDesc.Height);
+#endif
     const Rect image_rect(image.ImageDesc.Left, image.ImageDesc.Top,
                           image.ImageDesc.Width, image.ImageDesc.Height);
     io->dec_pixels += image_rect.xsize() * image_rect.ysize();
@@ -192,12 +203,16 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
     const ColorMapObject* const color_map =
         image.ImageDesc.ColorMap ? image.ImageDesc.ColorMap : gif->SColorMap;
     JXL_CHECK(color_map);
-    msan::UnpoisonMemory(color_map, sizeof(*color_map));
-    msan::UnpoisonMemory(color_map->Colors,
-                         sizeof(*color_map->Colors) * color_map->ColorCount);
+#ifdef MEMORY_SANITIZER
+    __msan_unpoison(color_map, sizeof(*color_map));
+    __msan_unpoison(color_map->Colors,
+                    sizeof(*color_map->Colors) * color_map->ColorCount);
+#endif
     GraphicsControlBlock gcb;
     DGifSavedExtensionToGCB(gif.get(), i, &gcb);
-    msan::UnpoisonMemory(&gcb, sizeof(gcb));
+#ifdef MEMORY_SANITIZER
+    __msan_unpoison(&gcb, sizeof(gcb));
+#endif
 
     ImageBundle bundle(&io->metadata.m);
     if (io->metadata.m.have_animation) {
@@ -335,5 +350,4 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
   return true;
 }
 
-}  // namespace extras
 }  // namespace jxl

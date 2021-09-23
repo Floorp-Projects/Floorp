@@ -11,65 +11,92 @@
 
 namespace jxl {
 
+void Channel::compute_minmax(pixel_type *min, pixel_type *max) const {
+  pixel_type realmin = std::numeric_limits<pixel_type>::max();
+  pixel_type realmax = std::numeric_limits<pixel_type>::min();
+  for (size_t y = 0; y < h; y++) {
+    const pixel_type *JXL_RESTRICT p = plane.Row(y);
+    for (size_t x = 0; x < w; x++) {
+      if (p[x] < realmin) realmin = p[x];
+      if (p[x] > realmax) realmax = p[x];
+    }
+  }
+
+  if (min) *min = realmin;
+  if (max) *max = realmax;
+}
+
 void Image::undo_transforms(const weighted::Header &wp_header, int keep,
                             jxl::ThreadPool *pool) {
   if (keep == -2) return;
   while ((int)transform.size() > keep && transform.size() > 0) {
     Transform t = transform.back();
-    JXL_DEBUG_V(4, "Undoing transform");
+    JXL_DEBUG_V(4, "Undoing transform %s", t.Name());
     Status result = t.Inverse(*this, wp_header, pool);
     if (result == false) {
-      JXL_NOTIFY_ERROR("Error while undoing transform.");
+      JXL_NOTIFY_ERROR("Error while undoing transform %s.", t.Name());
       error = true;
       return;
     }
-    JXL_DEBUG_V(8, "Undoing transform: done");
+    JXL_DEBUG_V(8, "Undoing transform %s: done", t.Name());
     transform.pop_back();
   }
-  if (!keep && bitdepth < 32) {
-    // clamp the values to the valid range (lossy compression can produce values
-    // outside the range)
-    pixel_type maxval = (1u << bitdepth) - 1;
+  if (!keep) {  // clamp the values to the valid range (lossy
+                // compression can produce values outside the range)
     for (size_t i = 0; i < channel.size(); i++) {
       for (size_t y = 0; y < channel[i].h; y++) {
         pixel_type *JXL_RESTRICT p = channel[i].plane.Row(y);
         for (size_t x = 0; x < channel[i].w; x++, p++) {
-          *p = Clamp1(*p, 0, maxval);
+          *p = Clamp1(*p, minval, maxval);
         }
       }
     }
   }
 }
 
-Image::Image(size_t iw, size_t ih, int bd, int nb_chans)
-    : w(iw), h(ih), bitdepth(bd), nb_meta_channels(0), error(false) {
-  for (int i = 0; i < nb_chans; i++) channel.emplace_back(Channel(iw, ih));
+bool Image::do_transform(const Transform &tr,
+                         const weighted::Header &wp_header) {
+  Transform t = tr;
+  bool did_it = t.Forward(*this, wp_header);
+  if (did_it) transform.push_back(t);
+  return did_it;
 }
 
-Image::Image() : w(0), h(0), bitdepth(8), nb_meta_channels(0), error(true) {}
+Image::Image(size_t iw, size_t ih, int maxval, int nb_chans)
+    : w(iw),
+      h(ih),
+      minval(0),
+      maxval(maxval),
+      nb_channels(nb_chans),
+      real_nb_channels(nb_chans),
+      nb_meta_channels(0),
+      error(false) {
+  for (int i = 0; i < nb_chans; i++) channel.emplace_back(Channel(iw, ih));
+}
+Image::Image()
+    : w(0),
+      h(0),
+      minval(0),
+      maxval(255),
+      nb_channels(0),
+      real_nb_channels(0),
+      nb_meta_channels(0),
+      error(true) {}
+
+Image::~Image() = default;
 
 Image &Image::operator=(Image &&other) noexcept {
   w = other.w;
   h = other.h;
-  bitdepth = other.bitdepth;
+  minval = other.minval;
+  maxval = other.maxval;
+  nb_channels = other.nb_channels;
+  real_nb_channels = other.real_nb_channels;
   nb_meta_channels = other.nb_meta_channels;
   error = other.error;
   channel = std::move(other.channel);
   transform = std::move(other.transform);
   return *this;
-}
-
-Image Image::clone() {
-  Image c(w, h, bitdepth, 0);
-  c.nb_meta_channels = nb_meta_channels;
-  c.error = error;
-  c.transform = transform;
-  for (Channel &ch : channel) {
-    Channel a(ch.w, ch.h, ch.hshift, ch.vshift);
-    CopyImageTo(ch.plane, &a.plane);
-    c.channel.push_back(std::move(a));
-  }
-  return c;
 }
 
 }  // namespace jxl

@@ -39,7 +39,6 @@
 #include "lib/jxl/dec_reconstruct.h"
 #include "lib/jxl/dec_upsample.h"
 #include "lib/jxl/dec_xyb.h"
-#include "lib/jxl/epf.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/filters.h"
 #include "lib/jxl/frame_header.h"
@@ -52,7 +51,6 @@
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer.h"
-#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/splines.h"
 #include "lib/jxl/toc.h"
 
@@ -288,7 +286,7 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
   }
   JXL_RETURN_IF_ERROR(
       InitializePassesSharedState(frame_header_, &dec_state_->shared_storage));
-  JXL_RETURN_IF_ERROR(dec_state_->Init());
+  dec_state_->Init();
   modular_frame_decoder_.Init(frame_dim_);
 
   if (decoded->IsJPEG()) {
@@ -296,28 +294,37 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
       return JXL_FAILURE("Cannot output JPEG from Modular");
     }
     jpeg::JPEGData* jpeg_data = decoded->jpeg_data.get();
-    size_t num_components = jpeg_data->components.size();
-    if (num_components != 1 && num_components != 3) {
+    if (jpeg_data->components.size() != 1 &&
+        jpeg_data->components.size() != 3) {
       return JXL_FAILURE("Invalid number of components");
     }
     if (frame_header_.nonserialized_metadata->m.xyb_encoded) {
       return JXL_FAILURE("Cannot decode to JPEG an XYB image");
     }
-    auto jpeg_c_map = JpegOrder(ColorTransform::kYCbCr, num_components == 1);
     decoded->jpeg_data->width = frame_dim_.xsize;
     decoded->jpeg_data->height = frame_dim_.ysize;
-    for (size_t c = 0; c < num_components; c++) {
-      auto& component = jpeg_data->components[jpeg_c_map[c]];
-      component.width_in_blocks =
-          frame_dim_.xsize_blocks >> frame_header_.chroma_subsampling.HShift(c);
-      component.height_in_blocks =
-          frame_dim_.ysize_blocks >> frame_header_.chroma_subsampling.VShift(c);
-      component.h_samp_factor =
-          1 << frame_header_.chroma_subsampling.RawHShift(c);
-      component.v_samp_factor =
-          1 << frame_header_.chroma_subsampling.RawVShift(c);
-      component.coeffs.resize(component.width_in_blocks *
-                              component.height_in_blocks * jxl::kDCTBlockSize);
+    if (jpeg_data->components.size() == 1) {
+      jpeg_data->components[0].width_in_blocks = frame_dim_.xsize_blocks;
+      jpeg_data->components[0].height_in_blocks = frame_dim_.ysize_blocks;
+    } else {
+      for (size_t c = 0; c < 3; c++) {
+        jpeg_data->components[c < 2 ? c ^ 1 : c].width_in_blocks =
+            frame_dim_.xsize_blocks >>
+            frame_header_.chroma_subsampling.HShift(c);
+        jpeg_data->components[c < 2 ? c ^ 1 : c].height_in_blocks =
+            frame_dim_.ysize_blocks >>
+            frame_header_.chroma_subsampling.VShift(c);
+      }
+    }
+    for (size_t c = 0; c < jpeg_data->components.size(); c++) {
+      jpeg_data->components[c].h_samp_factor =
+          1 << frame_header_.chroma_subsampling.RawHShift(c < 2 ? c ^ 1 : c);
+      jpeg_data->components[c].v_samp_factor =
+          1 << frame_header_.chroma_subsampling.RawVShift(c < 2 ? c ^ 1 : c);
+    }
+    for (auto& v : jpeg_data->components) {
+      v.coeffs.resize(v.width_in_blocks * v.height_in_blocks *
+                      jxl::kDCTBlockSize);
     }
   }
 
@@ -358,7 +365,6 @@ Status FrameDecoder::ProcessDCGlobal(BitReader* br) {
   } else {
     shared.image_features.patches.Clear();
   }
-  shared.image_features.splines.Clear();
   if (shared.frame_header.flags & FrameHeader::kSplines) {
     JXL_RETURN_IF_ERROR(shared.image_features.splines.Decode(
         br, frame_dim_.xsize * frame_dim_.ysize));
@@ -371,11 +377,6 @@ Status FrameDecoder::ProcessDCGlobal(BitReader* br) {
   if (frame_header_.encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(
         jxl::DecodeGlobalDCInfo(br, decoded_->IsJPEG(), dec_state_, pool_));
-  }
-  // Splines' draw cache uses the color correlation map.
-  if (shared.frame_header.flags & FrameHeader::kSplines) {
-    JXL_RETURN_IF_ERROR(shared.image_features.splines.InitializeDrawCache(
-        frame_dim_.xsize, frame_dim_.ysize, dec_state_->shared->cmap));
   }
   Status dec_status = modular_frame_decoder_.DecodeGlobalInfo(
       br, frame_header_, allow_partial_dc_global_);
@@ -390,7 +391,6 @@ Status FrameDecoder::ProcessDCGroup(size_t dc_group_id, BitReader* br) {
   PROFILER_FUNC;
   const size_t gx = dc_group_id % frame_dim_.xsize_dc_groups;
   const size_t gy = dc_group_id / frame_dim_.xsize_dc_groups;
-  const LoopFilter& lf = dec_state_->shared->frame_header.loop_filter;
   if (frame_header_.encoding == FrameEncoding::kVarDCT &&
       !(frame_header_.flags & FrameHeader::kUseDcFrame)) {
     JXL_RETURN_IF_ERROR(
@@ -400,13 +400,10 @@ Status FrameDecoder::ProcessDCGroup(size_t dc_group_id, BitReader* br) {
                    frame_dim_.dc_group_dim, frame_dim_.dc_group_dim);
   JXL_RETURN_IF_ERROR(modular_frame_decoder_.DecodeGroup(
       mrect, br, 3, 1000, ModularStreamId::ModularDC(dc_group_id),
-      /*zerofill=*/false, nullptr, nullptr));
+      /*zerofill=*/false));
   if (frame_header_.encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(
         modular_frame_decoder_.DecodeAcMetadata(dc_group_id, br, dec_state_));
-  } else if (lf.epf_iters > 0) {
-    FillImage(kInvSigmaNum / lf.epf_sigma_for_modular,
-              &dec_state_->filter_weights.sigma);
   }
   decoded_dc_groups_[dc_group_id] = true;
   return true;
@@ -428,7 +425,6 @@ void FrameDecoder::FinalizeDC() {
 void FrameDecoder::AllocateOutput() {
   const CodecMetadata& metadata = *frame_header_.nonserialized_metadata;
   if (dec_state_->rgb_output == nullptr && !dec_state_->pixel_callback) {
-    modular_frame_decoder_.MaybeDropFullImage();
     decoded_->SetFromImage(Image3F(frame_dim_.xsize_upsampled_padded,
                                    frame_dim_.ysize_upsampled_padded),
                            dec_state_->output_encoding_info.color_encoding);
@@ -440,19 +436,13 @@ void FrameDecoder::AllocateOutput() {
       dec_state_->extra_channels.emplace_back(
           DivCeil(frame_dim_.xsize_upsampled_padded, ecups),
           DivCeil(frame_dim_.ysize_upsampled_padded, ecups));
-#if JXL_MEMORY_SANITIZER
+#if MEMORY_SANITIZER
       // Avoid errors due to loading vectors on the outermost padding.
-      // Upsample of extra channels requires this padding to be initialized.
-      // TODO(deymo): Remove this and use rects up to {x,y}size_upsampled
-      // instead of the padded one.
       for (size_t y = 0; y < DivCeil(frame_dim_.ysize_upsampled_padded, ecups);
            y++) {
-        for (size_t x = (y < DivCeil(frame_dim_.ysize_upsampled, ecups)
-                             ? DivCeil(frame_dim_.xsize_upsampled, ecups)
-                             : 0);
+        for (size_t x = DivCeil(frame_dim_.xsize_upsampled, ecups);
              x < DivCeil(frame_dim_.xsize_upsampled_padded, ecups); x++) {
-          dec_state_->extra_channels.back().Row(y)[x] =
-              msan::kSanitizerSentinel;
+          dec_state_->extra_channels.back().Row(y)[x] = 0;
         }
       }
 #endif
@@ -529,19 +519,19 @@ Status FrameDecoder::ProcessACGlobal(BitReader* br) {
       return JXL_FAILURE(
           "Quantization table is not a JPEG quantization table.");
     }
-    jpeg::JPEGData* jpeg_data = decoded_->jpeg_data.get();
-    size_t num_components = jpeg_data->components.size();
-    bool is_gray = (num_components == 1);
-    auto jpeg_c_map = JpegOrder(frame_header_.color_transform, is_gray);
-    for (size_t c = 0; c < num_components; c++) {
-      // TODO(eustas): why 1-st quant table for gray?
-      size_t quant_c = is_gray ? 1 : c;
-      size_t qpos = jpeg_data->components[jpeg_c_map[c]].quant_idx;
-      JXL_CHECK(qpos != jpeg_data->quant.size());
+    auto jpeg_c_map = JpegOrder(frame_header_.color_transform,
+                                decoded_->jpeg_data->components.size() == 1);
+    for (size_t c = 0; c < 3; c++) {
+      if (c != 1 && decoded_->jpeg_data->components.size() == 1) {
+        continue;
+      }
+      size_t jpeg_channel = jpeg_c_map[c];
+      size_t qpos = decoded_->jpeg_data->components[jpeg_channel].quant_idx;
+      JXL_CHECK(qpos != decoded_->jpeg_data->quant.size());
       for (size_t x = 0; x < 8; x++) {
         for (size_t y = 0; y < 8; y++) {
-          jpeg_data->quant[qpos].values[x * 8 + y] =
-              (*qe[0].qraw.qtable)[quant_c * 64 + y * 8 + x];
+          decoded_->jpeg_data->quant[qpos].values[x * 8 + y] =
+              (*qe[0].qraw.qtable)[c * 64 + y * 8 + x];
         }
       }
     }
@@ -589,13 +579,12 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
       JXL_RETURN_IF_ERROR(modular_frame_decoder_.DecodeGroup(
           mrect, br[i - decoded_passes_per_ac_group_[ac_group_id]], minShift,
           maxShift, ModularStreamId::ModularAC(ac_group_id, i),
-          /*zerofill=*/false, dec_state_, decoded_));
+          /*zerofill=*/false));
     } else if (i >= decoded_passes_per_ac_group_[ac_group_id] + num_passes &&
                force_draw) {
       JXL_RETURN_IF_ERROR(modular_frame_decoder_.DecodeGroup(
           mrect, nullptr, minShift, maxShift,
-          ModularStreamId::ModularAC(ac_group_id, i), /*zerofill=*/true,
-          dec_state_, decoded_));
+          ModularStreamId::ModularAC(ac_group_id, i), /*zerofill=*/true));
     }
   }
   decoded_passes_per_ac_group_[ac_group_id] += num_passes;
@@ -708,7 +697,7 @@ Status FrameDecoder::ProcessSections(const SectionInfo* sections, size_t num,
   if (decoded_ac_global_) {
     // The decoded image requires padding for filtering. ProcessACGlobal added
     // the padding, however when Flush is used, the image is shrunk to the
-    // output size. Add the padding back here. This is a cheap operation
+    // output size. Add the padding back here. This is a cheap opeartion
     // since the image has the original allocated size. The memory and original
     // size are already there, but for safety we require the indicated xsize and
     // ysize dimensions match the working area, see PlaneRowBoundsCheck.
@@ -822,71 +811,15 @@ Status FrameDecoder::Flush() {
   // support for per-group decoding.
 
   // undo global modular transforms and copy int pixel buffers to float ones
-  JXL_RETURN_IF_ERROR(modular_frame_decoder_.FinalizeDecoding(
-      dec_state_, pool_, decoded_, is_finalized_));
+  JXL_RETURN_IF_ERROR(
+      modular_frame_decoder_.FinalizeDecoding(dec_state_, pool_, decoded_));
+
   JXL_RETURN_IF_ERROR(FinalizeFrameDecoding(decoded_, dec_state_, pool_,
                                             /*force_fir=*/false,
                                             /*skip_blending=*/false));
 
   num_renders_++;
   return true;
-}
-
-int FrameDecoder::SavedAs(const FrameHeader& header) {
-  if (header.frame_type == FrameType::kDCFrame) {
-    // bits 16, 32, 64, 128 for DC level
-    return 16 << (header.dc_level - 1);
-  } else if (header.CanBeReferenced()) {
-    // bits 1, 2, 4 and 8 for the references
-    return 1 << header.save_as_reference;
-  }
-
-  return 0;
-}
-
-int FrameDecoder::References() const {
-  if (is_finalized_) {
-    return 0;
-  }
-  if ((!decoded_dc_global_ || !decoded_ac_global_ ||
-       *std::min_element(decoded_dc_groups_.begin(),
-                         decoded_dc_groups_.end()) != 1 ||
-       *std::min_element(decoded_passes_per_ac_group_.begin(),
-                         decoded_passes_per_ac_group_.end()) < max_passes_)) {
-    return 0;
-  }
-
-  int result = 0;
-
-  // Blending
-  if (frame_header_.frame_type == FrameType::kRegularFrame ||
-      frame_header_.frame_type == FrameType::kSkipProgressive) {
-    bool cropped = frame_header_.custom_size_or_origin;
-    if (cropped || frame_header_.blending_info.mode != BlendMode::kReplace) {
-      result |= (1 << frame_header_.blending_info.source);
-    }
-    const auto& extra = frame_header_.extra_channel_blending_info;
-    for (size_t i = 0; i < extra.size(); ++i) {
-      if (cropped || extra[i].mode != BlendMode::kReplace) {
-        result |= (1 << extra[i].source);
-      }
-    }
-  }
-
-  // Patches
-  if (frame_header_.flags & FrameHeader::kPatches) {
-    result |= dec_state_->shared->image_features.patches.GetReferences();
-  }
-
-  // DC Level
-  if (frame_header_.flags & FrameHeader::kUseDcFrame) {
-    // Reads from the next dc level
-    int dc_level = frame_header_.dc_level + 1;
-    // bits 16, 32, 64, 128 for DC level
-    result |= (16 << (dc_level - 1));
-  }
-
-  return result;
 }
 
 Status FrameDecoder::FinalizeFrame() {
@@ -913,22 +846,17 @@ Status FrameDecoder::FinalizeFrame() {
         "FinalizeFrame called before the frame was fully decoded");
   }
 
-  if (!finalized_dc_) {
-    JXL_ASSERT(allow_partial_frames_);
-    AllocateOutput();
-    dec_state_->InitForAC(nullptr);
-  }
-
   JXL_RETURN_IF_ERROR(Flush());
 
   if (dec_state_->shared->frame_header.CanBeReferenced()) {
     size_t id = dec_state_->shared->frame_header.save_as_reference;
-    auto& reference_frame = dec_state_->shared_storage.reference_frames[id];
     if (dec_state_->pre_color_transform_frame.xsize() == 0) {
-      reference_frame.storage = decoded_->Copy();
+      dec_state_->shared_storage.reference_frames[id].storage =
+          decoded_->Copy();
     } else {
-      reference_frame.storage = ImageBundle(decoded_->metadata());
-      reference_frame.storage.SetFromImage(
+      dec_state_->shared_storage.reference_frames[id].storage =
+          ImageBundle(decoded_->metadata());
+      dec_state_->shared_storage.reference_frames[id].storage.SetFromImage(
           std::move(dec_state_->pre_color_transform_frame),
           decoded_->c_current());
       if (decoded_->HasExtraChannels()) {
@@ -938,25 +866,20 @@ Status FrameDecoder::FinalizeFrame() {
         for (const auto& ec : *ecs) {
           extra_channels.push_back(CopyImage(ec));
         }
-        reference_frame.storage.SetExtraChannels(std::move(extra_channels));
+        dec_state_->shared_storage.reference_frames[id]
+            .storage.SetExtraChannels(std::move(extra_channels));
       }
     }
-    reference_frame.frame = &reference_frame.storage;
-    reference_frame.ib_is_in_xyb =
+    dec_state_->shared_storage.reference_frames[id].frame =
+        &dec_state_->shared_storage.reference_frames[id].storage;
+    dec_state_->shared_storage.reference_frames[id].ib_is_in_xyb =
         dec_state_->shared->frame_header.save_before_color_transform;
-    if (!dec_state_->shared->frame_header.save_before_color_transform) {
-      const CodecMetadata* metadata =
-          dec_state_->shared->frame_header.nonserialized_metadata;
-      if (reference_frame.frame->xsize() < metadata->xsize() ||
-          reference_frame.frame->ysize() < metadata->ysize()) {
-        return JXL_FAILURE(
-            "trying to save a reference frame that is too small: %zux%zu "
-            "instead of %zux%zu",
-            reference_frame.frame->xsize(), reference_frame.frame->ysize(),
-            metadata->xsize(), metadata->ysize());
-      }
-      reference_frame.storage.ShrinkTo(metadata->xsize(), metadata->ysize());
-    }
+  }
+  if (dec_state_->shared->frame_header.dc_level != 0) {
+    dec_state_->shared_storage
+        .dc_frames[dec_state_->shared->frame_header.dc_level - 1] =
+        std::move(*decoded_->color());
+    decoded_->RemoveColor();
   }
   if (frame_header_.nonserialized_is_preview) {
     // Fix possible larger image size (multiple of kBlockDim)
@@ -1009,12 +932,6 @@ Status FrameDecoder::FinalizeFrame() {
         }
       }
     }
-  }
-  if (dec_state_->shared->frame_header.dc_level != 0) {
-    dec_state_->shared_storage
-        .dc_frames[dec_state_->shared->frame_header.dc_level - 1] =
-        std::move(*decoded_->color());
-    decoded_->RemoveColor();
   }
   return true;
 }

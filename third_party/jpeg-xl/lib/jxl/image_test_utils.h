@@ -41,7 +41,7 @@ template <typename T>
 bool SamePixels(const Plane<T>& image1, const Plane<T>& image2,
                 const Rect rect) {
   if (!rect.IsInside(image1) || !rect.IsInside(image2)) {
-    ADD_FAILURE() << "requested rectangle is not fully inside the image";
+    ADD_FAILURE() << "requsted rectangle is not fully inside the image";
     return false;
   }
   size_t mismatches = 0;

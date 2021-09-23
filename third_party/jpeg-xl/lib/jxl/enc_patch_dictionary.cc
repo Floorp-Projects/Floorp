@@ -602,6 +602,9 @@ std::vector<PatchInfo> FindTextLikePatches(
 void FindBestPatchDictionary(const Image3F& opsin,
                              PassesEncoderState* JXL_RESTRICT state,
                              ThreadPool* pool, AuxOut* aux_out, bool is_xyb) {
+  state->shared.image_features.patches = PatchDictionary();
+  state->shared.image_features.patches.SetPassesSharedState(&state->shared);
+
   std::vector<PatchInfo> info =
       FindTextLikePatches(opsin, state, pool, aux_out, is_xyb);
 
@@ -749,31 +752,10 @@ void FindBestPatchDictionary(const Image3F& opsin,
   }
 
   CompressParams cparams = state->cparams;
-  // Recursive application of patches could create very weird issues.
-  cparams.patches = Override::kOff;
-  // TODO(veluca): possibly change heuristics here.
-  if (!cparams.modular_mode) {
-    cparams.quality_pair.first = cparams.quality_pair.second =
-        90.f - cparams.butteraugli_distance * 5.f;
-  }
-
-  RoundtripPatchFrame(&reference_frame, state, 0, cparams, pool, true);
-
-  // TODO(veluca): this assumes that applying patches is commutative, which is
-  // not true for all blending modes. This code only produces kAdd patches, so
-  // this works out.
-  std::sort(positions.begin(), positions.end());
-  PatchDictionaryEncoder::SetPositions(&state->shared.image_features.patches,
-                                       std::move(positions));
-}
-
-void RoundtripPatchFrame(Image3F* reference_frame,
-                         PassesEncoderState* JXL_RESTRICT state, int idx,
-                         CompressParams& cparams, ThreadPool* pool,
-                         bool subtract) {
-  FrameInfo patch_frame_info;
   cparams.resampling = 1;
   cparams.ec_resampling = 1;
+  // Recursive application of patches could create very weird issues.
+  cparams.patches = Override::kOff;
   cparams.dots = Override::kOff;
   cparams.noise = Override::kOff;
   cparams.modular_mode = true;
@@ -783,19 +765,31 @@ void RoundtripPatchFrame(Image3F* reference_frame,
   cparams.qprogressive_mode = false;
   // Use gradient predictor and not Predictor::Best.
   cparams.options.predictor = Predictor::Gradient;
-  patch_frame_info.save_as_reference = idx;  // always saved.
+  // TODO(veluca): possibly change heuristics here.
+  if (!cparams.modular_mode) {
+    cparams.quality_pair.first = cparams.quality_pair.second =
+        80 - cparams.butteraugli_distance * 12;
+  } else {
+    cparams.quality_pair.first = (100 + 3 * cparams.quality_pair.first) * 0.25f;
+    cparams.quality_pair.second =
+        (100 + 3 * cparams.quality_pair.second) * 0.25f;
+  }
+  FrameInfo patch_frame_info;
+  patch_frame_info.save_as_reference = 0;  // always saved.
   patch_frame_info.frame_type = FrameType::kReferenceOnly;
   patch_frame_info.save_before_color_transform = true;
+
   ImageBundle ib(&state->shared.metadata->m);
   // TODO(veluca): metadata.color_encoding is a lie: ib is in XYB, but there is
   // no simple way to express that yet.
   patch_frame_info.ib_needs_color_transform = false;
-  ib.SetFromImage(std::move(*reference_frame),
+  patch_frame_info.save_as_reference = 0;
+  ib.SetFromImage(std::move(reference_frame),
                   state->shared.metadata->m.color_encoding);
   if (!ib.metadata()->extra_channel_info.empty()) {
-    // Add dummy extra channels to the patch image: patch encoding does not yet
-    // support extra channels, but the codec expects that the amount of extra
-    // channels in frames matches that in the metadata of the codestream.
+    // Add dummy extra channels to the patch image: patches do not yet support
+    // extra channels, but the codec expects that the amount of extra channels
+    // in frames matches that in the metadata of the codestream.
     std::vector<ImageF> extra_channels;
     extra_channels.reserve(ib.metadata()->extra_channel_info.size());
     for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
@@ -803,40 +797,37 @@ void RoundtripPatchFrame(Image3F* reference_frame,
       // Must initialize the image with data to not affect blending with
       // uninitialized memory.
       // TODO(lode): patches must copy and use the real extra channels instead.
-      ZeroFillImage(&extra_channels.back());
+      FillImage(1.0f, &extra_channels.back());
     }
     ib.SetExtraChannels(std::move(extra_channels));
   }
+
   PassesEncoderState roundtrip_state;
   auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
   JXL_CHECK(EncodeFrame(cparams, patch_frame_info, state->shared.metadata, ib,
                         &roundtrip_state, pool, special_frame.get(), nullptr));
   const Span<const uint8_t> encoded = special_frame->GetSpan();
   state->special_frames.emplace_back(std::move(special_frame));
-  if (subtract) {
+  if (cparams.butteraugli_distance < kMinButteraugliToSubtractOriginalPatches) {
     BitReader br(encoded);
     ImageBundle decoded(&state->shared.metadata->m);
     PassesDecoderState dec_state;
-    JXL_CHECK(dec_state.output_encoding_info.Set(
-        *state->shared.metadata,
-        ColorEncoding::LinearSRGB(
-            state->shared.metadata->m.color_encoding.IsGray())));
+    JXL_CHECK(dec_state.output_encoding_info.Set(state->shared.metadata->m));
     JXL_CHECK(DecodeFrame({}, &dec_state, pool, &br, &decoded,
                           *state->shared.metadata, /*constraints=*/nullptr));
-    // if the frame itself uses patches, we need to decode another frame
-    if (!dec_state.shared_storage.reference_frames[idx]
-             .storage.color()
-             ->xsize())
-      JXL_CHECK(DecodeFrame({}, &dec_state, pool, &br, &decoded,
-                            *state->shared.metadata, /*constraints=*/nullptr));
     JXL_CHECK(br.Close());
-    state->shared.reference_frames[idx] =
-        std::move(dec_state.shared_storage.reference_frames[idx]);
+    state->shared.reference_frames[0] =
+        std::move(dec_state.shared_storage.reference_frames[0]);
   } else {
-    state->shared.reference_frames[idx].storage = std::move(ib);
+    state->shared.reference_frames[0].storage = std::move(ib);
   }
-  state->shared.reference_frames[idx].frame =
-      &state->shared.reference_frames[idx].storage;
+  state->shared.reference_frames[0].frame =
+      &state->shared.reference_frames[0].storage;
+  // TODO(veluca): this assumes that applying patches is commutative, which is
+  // not true for all blending modes. This code only produces kAdd patches, so
+  // this works out.
+  std::sort(positions.begin(), positions.end());
+  PatchDictionaryEncoder::SetPositions(&state->shared.image_features.patches,
+                                       std::move(positions));
 }
-
 }  // namespace jxl

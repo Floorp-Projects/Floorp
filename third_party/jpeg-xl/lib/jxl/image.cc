@@ -15,7 +15,6 @@
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_ops.h"
-#include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -115,10 +114,9 @@ void PlaneBase::InitializePadding(const size_t sizeof_t, Padding padding) {
     // There's a bug in msan in clang-6 when handling AVX2 operations. This
     // workaround allows tests to pass on msan, although it is slower and
     // prevents msan warnings from uninitialized images.
-    std::fill(row, msan::kSanitizerSentinelByte, initialize_size);
+    memset(row, 0, initialize_size);
 #else
-    memset(row + valid_size, msan::kSanitizerSentinelByte,
-           initialize_size - valid_size);
+    memset(row + valid_size, 0, initialize_size - valid_size);
 #endif  // clang6
   }
 #endif  // MEMORY_SANITIZER

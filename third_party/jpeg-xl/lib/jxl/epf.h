@@ -30,21 +30,19 @@ void ComputeSigma(const Rect& block_rect, PassesDecoderState* state);
 // select the sigma values). Input pixels are taken from `input:input_rect`, and
 // the filtering result is written to `out:output_rect`. `dec_state->sigma` must
 // be padded with `kMaxFilterPadding/kBlockDim` values along the x axis.
-// All rects must have the same alignment module
-// GroupBorderAssigner::kPaddingXRound pixels.
+// All rects must be aligned to a multiple of `kBlockDim` pixels.
 // `input_rect`, `output_rect` and `image_rect` must all have the same size.
-// At least `lf.Padding()` pixels must be accessible and contain valid values
-// outside of `image_rect` in `input`. Also, depending on the implementation,
-// more pixels in the input up to a vector size boundary should be accessible
-// but may contain uninitialized data.
-//
-// This function only prepares and returns the pipeline, to perform the
-// filtering process it must be called on all row from -lf.Padding() to
-// image_rect.ysize() + lf.Padding() .
-//
-// Note: if the output_rect x0 or x1 are not a multiple of kPaddingXRound more
-// pixels with potentially uninitialized data will be written to the output left
-// and right of the requested rect up to a multiple of kPaddingXRound pixels.
+// At least `lf.Padding()` pixels must be accessible (and contain valid values)
+// outside of `image_rect` in `input`.
+// This function should only ever be called on full images. To do partial
+// processing, use PrepareFilterPipeline directly.
+void ApplyFilters(PassesDecoderState* dec_state, const Rect& image_rect,
+                  const Image3F& input, const Rect& input_rect, size_t thread,
+                  Image3F* JXL_RESTRICT out, const Rect& output_rect);
+
+// Same as ApplyFilters, but only prepares the pipeline (which is returned and
+// must be run by the caller on -lf.Padding() to image_rect.ysize() +
+// lf.Padding()).
 FilterPipeline* PrepareFilterPipeline(
     PassesDecoderState* dec_state, const Rect& image_rect, const Image3F& input,
     const Rect& input_rect, size_t image_ysize, size_t thread,

@@ -60,12 +60,6 @@ namespace jxl {
 #define JXL_DEBUG_V_LEVEL 0
 #endif  // JXL_DEBUG_V_LEVEL
 
-// Pass -DJXL_DEBUG_ON_ABORT=0 to disable the debug messages on JXL_ASSERT,
-// JXL_CHECK and JXL_ABORT.
-#ifndef JXL_DEBUG_ON_ABORT
-#define JXL_DEBUG_ON_ABORT 1
-#endif  // JXL_DEBUG_ON_ABORT
-
 // Print a debug message on standard error. You should use the JXL_DEBUG macro
 // instead of calling Debug directly. This function returns false, so it can be
 // used as a return value in JXL_FAILURE.
@@ -116,19 +110,19 @@ bool Debug(const char* format, ...);
 JXL_NORETURN bool Abort();
 
 // Exits the program after printing file/line plus a formatted string.
-#define JXL_ABORT(format, ...)                                              \
-  ((JXL_DEBUG_ON_ABORT) && ::jxl::Debug(("%s:%d: JXL_ABORT: " format "\n"), \
-                                        __FILE__, __LINE__, ##__VA_ARGS__), \
+#define JXL_ABORT(format, ...)                                          \
+  (::jxl::Debug(("%s:%d: JXL_ABORT: " format "\n"), __FILE__, __LINE__, \
+                ##__VA_ARGS__),                                         \
    ::jxl::Abort())
 
 // Does not guarantee running the code, use only for debug mode checks.
 #if JXL_ENABLE_ASSERT
-#define JXL_ASSERT(condition)                                      \
-  do {                                                             \
-    if (!(condition)) {                                            \
-      JXL_DEBUG(JXL_DEBUG_ON_ABORT, "JXL_ASSERT: %s", #condition); \
-      ::jxl::Abort();                                              \
-    }                                                              \
+#define JXL_ASSERT(condition)                        \
+  do {                                               \
+    if (!(condition)) {                              \
+      JXL_DEBUG(true, "JXL_ASSERT: %s", #condition); \
+      ::jxl::Abort();                                \
+    }                                                \
   } while (0)
 #else
 #define JXL_ASSERT(condition) \
@@ -138,7 +132,6 @@ JXL_NORETURN bool Abort();
 
 // Define JXL_IS_DEBUG_BUILD that denotes asan, msan and other debug builds,
 // but not opt or release.
-#ifndef JXL_IS_DEBUG_BUILD
 #if !defined(NDEBUG) || defined(ADDRESS_SANITIZER) ||         \
     defined(MEMORY_SANITIZER) || defined(THREAD_SANITIZER) || \
     defined(__clang_analyzer__)
@@ -146,19 +139,18 @@ JXL_NORETURN bool Abort();
 #else
 #define JXL_IS_DEBUG_BUILD 0
 #endif
-#endif  //  JXL_IS_DEBUG_BUILD
 
 // Same as above, but only runs in debug builds (builds where NDEBUG is not
 // defined). This is useful for slower asserts that we want to run more rarely
 // than usual. These will run on asan, msan and other debug builds, but not in
 // opt or release.
 #if JXL_IS_DEBUG_BUILD
-#define JXL_DASSERT(condition)                                      \
-  do {                                                              \
-    if (!(condition)) {                                             \
-      JXL_DEBUG(JXL_DEBUG_ON_ABORT, "JXL_DASSERT: %s", #condition); \
-      ::jxl::Abort();                                               \
-    }                                                               \
+#define JXL_DASSERT(condition)                        \
+  do {                                                \
+    if (!(condition)) {                               \
+      JXL_DEBUG(true, "JXL_DASSERT: %s", #condition); \
+      ::jxl::Abort();                                 \
+    }                                                 \
   } while (0)
 #else
 #define JXL_DASSERT(condition) \
@@ -168,12 +160,12 @@ JXL_NORETURN bool Abort();
 
 // Always runs the condition, so can be used for non-debug calls.
 #if JXL_ENABLE_CHECK
-#define JXL_CHECK(condition)                                      \
-  do {                                                            \
-    if (!(condition)) {                                           \
-      JXL_DEBUG(JXL_DEBUG_ON_ABORT, "JXL_CHECK: %s", #condition); \
-      ::jxl::Abort();                                             \
-    }                                                             \
+#define JXL_CHECK(condition)                        \
+  do {                                              \
+    if (!(condition)) {                             \
+      JXL_DEBUG(true, "JXL_CHECK: %s", #condition); \
+      ::jxl::Abort();                               \
+    }                                               \
   } while (0)
 #else
 #define JXL_CHECK(condition) \

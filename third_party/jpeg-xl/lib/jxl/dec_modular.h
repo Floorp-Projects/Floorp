@@ -88,10 +88,10 @@ class ModularFrameDecoder {
  public:
   void Init(const FrameDimensions& frame_dim) { this->frame_dim = frame_dim; }
   Status DecodeGlobalInfo(BitReader* reader, const FrameHeader& frame_header,
-                          bool allow_truncated_group);
+                          bool allow_truncated_group = false);
   Status DecodeGroup(const Rect& rect, BitReader* reader, int minShift,
-                     int maxShift, const ModularStreamId& stream, bool zerofill,
-                     PassesDecoderState* dec_state, ImageBundle* output);
+                     int maxShift, const ModularStreamId& stream,
+                     bool zerofill);
   // Decodes a VarDCT DC group (`group_id`) from the given `reader`.
   Status DecodeVarDCTDC(size_t group_id, BitReader* reader,
                         PassesDecoderState* dec_state);
@@ -105,26 +105,15 @@ class ModularFrameDecoder {
                                  BitReader* br, QuantEncoding* encoding,
                                  size_t idx,
                                  ModularFrameDecoder* modular_frame_decoder);
-  // if inplace is true, this can only be called once
-  // if it is false, it can be called multiple times (e.g. for progressive
-  // steps)
   Status FinalizeDecoding(PassesDecoderState* dec_state, jxl::ThreadPool* pool,
-                          ImageBundle* output, bool inplace);
+                          ImageBundle* output);
   bool have_dc() const { return have_something; }
-  void MaybeDropFullImage();
 
  private:
-  Status ModularImageToDecodedRect(Image& gi, PassesDecoderState* dec_state,
-                                   jxl::ThreadPool* pool, ImageBundle* output,
-                                   Rect rect);
-
   Image full_image;
-  std::vector<Transform> global_transform;
   FrameDimensions frame_dim;
   bool do_color;
   bool have_something;
-  bool use_full_image = true;
-  bool all_same_shift;
   Tree tree;
   ANSCode code;
   std::vector<uint8_t> context_map;
