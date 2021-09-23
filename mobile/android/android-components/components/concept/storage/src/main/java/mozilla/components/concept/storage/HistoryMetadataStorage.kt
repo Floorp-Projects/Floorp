@@ -76,6 +76,38 @@ data class HistoryMetadata(
 )
 
 /**
+ * Represents a history highlight, a URL of interest.
+ * The highlights are produced via [HistoryMetadataStorage.getHistoryHighlights].
+ *
+ * @param score A relative score of this highlight. Useful to compare against other highlights.
+ * @param placeId An ID of the history entry ("page") represented by this highlight.
+ * @param url A url of the page.
+ * @param title A title of the page, if available.
+ * @param previewImageUrl A preview image of the page (a.k.a. the hero image), if available.
+ */
+data class HistoryHighlight(
+    val score: Double,
+    val placeId: Int,
+    val url: String,
+    val title: String?,
+    val previewImageUrl: String?
+)
+
+/**
+ * Weights of factors that contribute to ranking [HistoryHighlight].
+ * An input to [HistoryMetadataStorage.getHistoryHighlights].
+ * For example, (1.0, 1.0) for equal weights. Equal weights represent equal importance of these
+ * factors during ranking.
+ *
+ * @param viewTime A weight specifying importance of cumulative view time of a page.
+ * @param frequency A weight specifying importance of frequency of visits to a page.
+ */
+data class HistoryHighlightWeights(
+    val viewTime: Double,
+    val frequency: Double
+)
+
+/**
  * An interface for interacting with a storage that manages [HistoryMetadata].
  */
 interface HistoryMetadataStorage {
@@ -116,6 +148,16 @@ interface HistoryMetadataStorage {
      * Empty if nothing is found.
      */
     suspend fun queryHistoryMetadata(query: String, limit: Int): List<HistoryMetadata>
+
+    /**
+     * Returns a list of [HistoryHighlight] objects, ranked relative to each other according to [weights].
+     *
+     * @param weights A set of weights used by the ranking algorithm.
+     * @param limit A maximum number of records to return.
+     * @return A `List` of [HistoryHighlight], ordered by [HistoryHighlight.score] DESC.
+     * Empty if nothing is found.
+     */
+    suspend fun getHistoryHighlights(weights: HistoryHighlightWeights, limit: Int): List<HistoryHighlight>
 
     /**
      * Records the provided [HistoryMetadataObservation] and updates the record identified by the

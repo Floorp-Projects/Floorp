@@ -12,6 +12,8 @@ import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
+import mozilla.components.concept.storage.HistoryHighlight
+import mozilla.components.concept.storage.HistoryHighlightWeights
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataObservation
@@ -265,6 +267,13 @@ open class PlacesHistoryStorage(
         return handlePlacesExceptions("queryHistoryMetadata", default = emptyList()) {
             places.reader().queryHistoryMetadata(query, limit).into()
         }
+    }
+
+    override suspend fun getHistoryHighlights(
+        weights: HistoryHighlightWeights,
+        limit: Int
+    ): List<HistoryHighlight> {
+        return places.reader().getHighlights(weights.into(), limit).intoHighlights()
     }
 
     override suspend fun noteHistoryMetadataObservation(
