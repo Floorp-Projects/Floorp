@@ -12,6 +12,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/component/browser.ini",
     "test/browser/dom/browser.ini",
     "test/browser/emulation/browser.ini",
+    "test/browser/fetch/browser.ini",
     "test/browser/input/browser.ini",
     "test/browser/io/browser.ini",
     "test/browser/log/browser.ini",
