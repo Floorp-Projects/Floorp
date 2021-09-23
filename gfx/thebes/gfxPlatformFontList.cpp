@@ -471,22 +471,17 @@ bool gfxPlatformFontList::InitFontList() {
 
     gfxPlatform::PurgeSkiaFontCache();
 
+    // There's no need to broadcast this reflow request to child processes, as
+    // ContentParent::NotifyUpdatedFonts deals with it by re-entering into this
+    // function on child processes.
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      if (obs) {
-        // Notify any current presContexts that fonts are being updated, so
-        // existing caches will no longer be valid.
-        obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
-      }
+      gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes,
+                                     gfxPlatform::BroadcastToChildren::No);
     } else {
       NS_DispatchToMainThread(
           NS_NewRunnableFunction("font-info-updated notification callback", [] {
-            nsCOMPtr<nsIObserverService> obs =
-                mozilla::services::GetObserverService();
-            if (obs) {
-              obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
-            }
+            gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes,
+                                           gfxPlatform::BroadcastToChildren::No);
           }));
     }
 
