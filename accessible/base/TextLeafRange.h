@@ -74,6 +74,16 @@ class TextLeafPoint final {
   TextLeafPoint FindPrevLineStartSameLocalAcc(bool aIncludeOrigin) const;
   TextLeafPoint FindNextLineStartSameLocalAcc(bool aIncludeOrigin) const;
 
+  /**
+   * These two functions find a word start boundary within the same
+   * Accessible as this. That is, they do not cross Accessibles. If no
+   * boundary is found, an invalid TextLeafPoint is returned.
+   * These are used by FindBoundary. Most callers will want FindBoundary
+   * instead.
+   */
+  TextLeafPoint FindPrevWordStartSameAcc(bool aIncludeOrigin) const;
+  TextLeafPoint FindNextWordStartSameAcc(bool aIncludeOrigin) const;
+
  private:
   bool IsEmptyLastLine() const;
 };
