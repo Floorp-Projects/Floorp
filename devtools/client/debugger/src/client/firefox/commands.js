@@ -334,10 +334,18 @@ async function setSkipPausing(shouldSkip) {
 }
 
 async function setEventListenerBreakpoints(ids) {
-  return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
+  // @backward-compat { version 94 } The `event-breakpoints` trait check is no longer needed, but
+  // keep the check for target watcher support to fallback for unsupported targets (e.g webextensions)
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
+    "event-breakpoints"
+  );
+  if (!hasWatcherSupport) {
+    return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
+  }
+  const breakpointListFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  await breakpointListFront.setActiveEventBreakpoints(ids);
 }
 
-// eslint-disable-next-line
 async function getEventListenerBreakpointTypes() {
   let categories;
   try {
