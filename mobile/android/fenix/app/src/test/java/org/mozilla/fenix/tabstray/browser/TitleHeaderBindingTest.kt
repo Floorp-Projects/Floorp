@@ -31,9 +31,9 @@ class TitleHeaderBindingTest {
         val store = BrowserStore()
         val binding = TitleHeaderBinding(store) { result = it }
 
-        store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org"))).joinBlocking()
-
         binding.start()
+
+        store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org"))).joinBlocking()
 
         store.waitUntilIdle()
 
@@ -46,6 +46,8 @@ class TitleHeaderBindingTest {
         val store = BrowserStore()
         val binding = TitleHeaderBinding(store) { result = it }
 
+        binding.start()
+
         store.dispatch(
             TabListAction.AddTabAction(
                 createTab(
@@ -57,8 +59,6 @@ class TitleHeaderBindingTest {
                 )
             )
         ).joinBlocking()
-
-        binding.start()
 
         store.waitUntilIdle()
 
@@ -75,9 +75,9 @@ class TitleHeaderBindingTest {
         )
         val binding = TitleHeaderBinding(store) { result = it }
 
-        store.dispatch(TabListAction.RemoveTabAction("123")).joinBlocking()
-
         binding.start()
+
+        store.dispatch(TabListAction.RemoveTabAction("123")).joinBlocking()
 
         store.waitUntilIdle()
 
