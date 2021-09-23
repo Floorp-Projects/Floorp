@@ -3108,6 +3108,17 @@
     "description": "ms elapsed time scanning for client certificates",
     "bug_numbers": [1711154]
   },
+  "CRLITE_VS_OCSP_RESULT": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "dkeeler@mozilla.com"],
+    "bug_numbers": [1675655],
+    "expires_in_version": "101",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "description": "Does CRLite and OCSP fetching agree when a certificate is revoked?",
+    "labels": ["CRLiteOkOCSPFail", "CRLiteRevOCSPFail", "CRLiteOkOCSPOk", "CRLiteOkOCSPRev", "CRLiteRevOCSPOk", "CRLiteRevOCSPRev", "CRLiteOkOCSPUnk", "CRLiteRevOCSPUnk", "CRLiteOkOCSPSoft", "CRLiteRevOCSPSoft" ]
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
