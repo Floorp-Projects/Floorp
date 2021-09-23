@@ -14,6 +14,9 @@ namespace jxl {
 namespace jpeg {
 Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes);
 
+Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
+                                    ColorEncoding* color_encoding);
+
 /**
  * Decodes bytes containing JPEG codestream into a CodecInOut as coefficients
  * only, for lossless JPEG transcoding.

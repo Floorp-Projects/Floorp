@@ -3,13 +3,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <glib/gi18n.h>
-#include <libgimp/gimp.h>
-#include <libgimp/gimpui.h>
 #include <string.h>
 
 #include <string>
 
+#include "plugins/gimp/common.h"
 #include "plugins/gimp/file-jxl-load.h"
 #include "plugins/gimp/file-jxl-save.h"
 
@@ -48,9 +46,10 @@ void Query() {
         /*n_return_vals=*/G_N_ELEMENTS(load_return_vals), /*params=*/load_args,
         /*return_vals=*/load_return_vals);
     gimp_register_file_handler_mime(kLoadProc, "image/jxl");
-    gimp_register_magic_load_handler(kLoadProc, "jxl", "",
-                                     "0,string,\x0A\x04\x42\xD2\xD5\x4E\x12,0,"
-                                     "string,\xFF\x0A,0,string,\xFF\x58");
+    gimp_register_magic_load_handler(
+        kLoadProc, "jxl", "",
+        "0,string,\xFF\x0A,"
+        "0,string,\\000\\000\\000\x0CJXL\\040\\015\\012\x87\\012");
   }
 
   {
@@ -116,18 +115,6 @@ void Run(const gchar* const name, const gint nparams,
     values[1].type = GIMP_PDB_IMAGE;
     values[1].data.d_image = image_id;
   } else if (strcmp(name, kSaveProc) == 0) {
-#if !JPEGXL_ENABLE_GIMP_SAVING
-    *nreturn_vals = 2;
-    values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
-    values[1].type = GIMP_PDB_STRING;
-    static gchar compatibility_message[] =
-        "Saving is disabled in this build of the JPEG XL plugin. Rebuild it "
-        "with -DJPEGXL_ENABLE_GIMP_SAVING=1 to enable the functionality, but "
-        "be aware that files created in this fashion may not work in future "
-        "versions of the decoder.";
-    values[1].data.d_string = compatibility_message;
-    return;
-#endif
     if (nparams != 5) {
       values[0].data.d_status = GIMP_PDB_CALLING_ERROR;
       return;
@@ -140,6 +127,7 @@ void Run(const gchar* const name, const gint nparams,
     const GimpExportReturn export_result = gimp_export_image(
         &image_id, &drawable_id, "JPEG XL",
         static_cast<GimpExportCapabilities>(GIMP_EXPORT_CAN_HANDLE_RGB |
+                                            GIMP_EXPORT_CAN_HANDLE_GRAY |
                                             GIMP_EXPORT_CAN_HANDLE_ALPHA));
     switch (export_result) {
       case GIMP_EXPORT_CANCEL:
@@ -150,7 +138,6 @@ void Run(const gchar* const name, const gint nparams,
       case GIMP_EXPORT_EXPORT:
         break;
     }
-    gimp_progress_init_printf(_("Saving JPEG XL file \"%s\""), filename);
     if (!SaveJpegXlImage(image_id, drawable_id, orig_image_id, filename)) {
       return;
     }

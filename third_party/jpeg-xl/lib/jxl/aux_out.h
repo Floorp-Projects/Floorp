@@ -148,8 +148,7 @@ struct AuxOut {
       layers[i].Assimilate(victim.layers[i]);
     }
     num_blocks += victim.num_blocks;
-    num_dct2_blocks += victim.num_dct2_blocks;
-    num_dct4_blocks += victim.num_dct4_blocks;
+    num_small_blocks += victim.num_small_blocks;
     num_dct4x8_blocks += victim.num_dct4x8_blocks;
     num_afv_blocks += victim.num_afv_blocks;
     num_dct8_blocks += victim.num_dct8_blocks;
@@ -158,6 +157,8 @@ struct AuxOut {
     num_dct16_blocks += victim.num_dct16_blocks;
     num_dct16x32_blocks += victim.num_dct16x32_blocks;
     num_dct32_blocks += victim.num_dct32_blocks;
+    num_dct32x64_blocks += victim.num_dct32x64_blocks;
+    num_dct64_blocks += victim.num_dct64_blocks;
     num_butteraugli_iters += victim.num_butteraugli_iters;
     for (size_t i = 0; i < dc_pred_usage.size(); ++i) {
       dc_pred_usage[i] += victim.dc_pred_usage[i];
@@ -270,8 +271,7 @@ struct AuxOut {
   size_t num_blocks = 0;
 
   // Number of blocks that use larger DCT (set by ac_strategy).
-  size_t num_dct2_blocks = 0;
-  size_t num_dct4_blocks = 0;
+  size_t num_small_blocks = 0;
   size_t num_dct4x8_blocks = 0;
   size_t num_afv_blocks = 0;
   size_t num_dct8_blocks = 0;
@@ -280,9 +280,11 @@ struct AuxOut {
   size_t num_dct16_blocks = 0;
   size_t num_dct16x32_blocks = 0;
   size_t num_dct32_blocks = 0;
+  size_t num_dct32x64_blocks = 0;
+  size_t num_dct64_blocks = 0;
 
-  std::array<uint32_t, 8> dc_pred_usage = {0};
-  std::array<uint32_t, 8> dc_pred_usage_xb = {0};
+  std::array<uint32_t, 8> dc_pred_usage = {{0}};
+  std::array<uint32_t, 8> dc_pred_usage_xb = {{0}};
 
   int num_butteraugli_iters = 0;
 

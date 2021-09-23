@@ -10,22 +10,22 @@ bugzilla:
 origin:
 
   # Short name of the package/library
-  name: jpeg-xl
+  name: libjxl
 
   description: JPEG XL image format reference implementation
 
   # Full URL for the package's homepage/etc
   # Usually different from repository url
-  url: https://gitlab.com/wg1/jpeg-xl
+  url: https://github.com/libjxl/libjxl
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit bdde644b94c125a15e532b2572b96306371a7d4e (2021-05-25T19:02:18.000+02:00).
+  release: commit 165c6f385bb0c8bb8104710e6b4397436d3d1991 (2021-09-22T14:47:56Z).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
   # NOTE(krosylight): Update highway together when updating this!
-  revision: bdde644b94c125a15e532b2572b96306371a7d4e
+  revision: 165c6f385bb0c8bb8104710e6b4397436d3d1991
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -44,8 +44,8 @@ updatebot:
         frequency: 3 weeks
 
 vendoring:
-  url: https://gitlab.com/wg1/jpeg-xl.git
-  source-hosting: gitlab
+  url: https://github.com/libjxl/libjxl.git
+  source-hosting: github
   vendor-directory: third_party/jpeg-xl
 
   exclude:

@@ -40,7 +40,9 @@ class GroupBorderAssigner {
 #endif
 
   // Returns the necessary amount of padding for the X axis.
-  size_t PaddingX(size_t padding) { return RoundUpTo(padding, kPaddingXRound); }
+  static size_t PaddingX(size_t padding) {
+    return RoundUpTo(padding, kPaddingXRound);
+  }
 
  private:
   FrameDimensions frame_dim_;

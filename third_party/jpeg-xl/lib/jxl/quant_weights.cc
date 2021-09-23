@@ -103,6 +103,7 @@ Status GetQuantWeights(
     }
     float bands[DctQuantWeightParams::kMaxDistanceBands] = {
         distance_bands[c][0]};
+    if (bands[0] < kAlmostZero) return JXL_FAILURE("Invalid distance bands");
     for (size_t i = 1; i < num_bands; i++) {
       bands[i] = bands[i - 1] * Mult(distance_bands[c][i]);
       if (bands[i] < kAlmostZero) return JXL_FAILURE("Invalid distance bands");
@@ -365,10 +366,10 @@ Status ComputeQuantTable(const QuantEncoding& encoding,
       for (size_t c = 0; c < 3; c++) {
         float bands[4];
         bands[0] = encoding.afv_weights[c][5];
-        if (bands[0] < 0) return JXL_FAILURE("Invalid AFV bands");
+        if (bands[0] < kAlmostZero) return JXL_FAILURE("Invalid AFV bands");
         for (size_t i = 1; i < 4; i++) {
           bands[i] = bands[i - 1] * Mult(encoding.afv_weights[c][i + 5]);
-          if (bands[i] < 0) return JXL_FAILURE("Invalid AFV bands");
+          if (bands[i] < kAlmostZero) return JXL_FAILURE("Invalid AFV bands");
         }
         size_t start = c * 64;
         auto set_weight = [&start, &weights](size_t x, size_t y, float val) {
@@ -486,120 +487,120 @@ namespace {
 struct DequantMatricesLibraryDef {
   // DCT8
   static constexpr const QuantEncodingInternal DCT() {
-    return QuantEncodingInternal::DCT(DctQuantWeightParams({{{
+    return QuantEncodingInternal::DCT(DctQuantWeightParams({{{{
                                                                  V(3150.0),
                                                                  V(0.0),
                                                                  V(-0.4),
                                                                  V(-0.4),
                                                                  V(-0.4),
                                                                  V(-2.0),
-                                                             },
-                                                             {
+                                                             }},
+                                                             {{
                                                                  V(560.0),
                                                                  V(0.0),
                                                                  V(-0.3),
                                                                  V(-0.3),
                                                                  V(-0.3),
                                                                  V(-0.3),
-                                                             },
-                                                             {
+                                                             }},
+                                                             {{
                                                                  V(512.0),
                                                                  V(-2.0),
                                                                  V(-1.0),
                                                                  V(0.0),
                                                                  V(-1.0),
                                                                  V(-2.0),
-                                                             }}},
+                                                             }}}},
                                                            6));
   }
 
   // Identity
   static constexpr const QuantEncodingInternal IDENTITY() {
-    return QuantEncodingInternal::Identity({{{
+    return QuantEncodingInternal::Identity({{{{
                                                  V(280.0),
                                                  V(3160.0),
                                                  V(3160.0),
-                                             },
-                                             {
+                                             }},
+                                             {{
                                                  V(60.0),
                                                  V(864.0),
                                                  V(864.0),
-                                             },
-                                             {
+                                             }},
+                                             {{
                                                  V(18.0),
                                                  V(200.0),
                                                  V(200.0),
-                                             }}});
+                                             }}}});
   }
 
   // DCT2
   static constexpr const QuantEncodingInternal DCT2X2() {
-    return QuantEncodingInternal::DCT2({{{
+    return QuantEncodingInternal::DCT2({{{{
                                              V(3840.0),
                                              V(2560.0),
                                              V(1280.0),
                                              V(640.0),
                                              V(480.0),
                                              V(300.0),
-                                         },
-                                         {
+                                         }},
+                                         {{
                                              V(960.0),
                                              V(640.0),
                                              V(320.0),
                                              V(180.0),
                                              V(140.0),
                                              V(120.0),
-                                         },
-                                         {
+                                         }},
+                                         {{
                                              V(640.0),
                                              V(320.0),
                                              V(128.0),
                                              V(64.0),
                                              V(32.0),
                                              V(16.0),
-                                         }}});
+                                         }}}});
   }
 
   // DCT4 (quant_kind 3)
   static constexpr const QuantEncodingInternal DCT4X4() {
-    return QuantEncodingInternal::DCT4(DctQuantWeightParams({{{
+    return QuantEncodingInternal::DCT4(DctQuantWeightParams({{{{
                                                                   V(2200.0),
                                                                   V(0.0),
                                                                   V(0.0),
                                                                   V(0.0),
-                                                              },
-                                                              {
+                                                              }},
+                                                              {{
                                                                   V(392.0),
                                                                   V(0.0),
                                                                   V(0.0),
                                                                   V(0.0),
-                                                              },
-                                                              {
+                                                              }},
+                                                              {{
                                                                   V(112.0),
                                                                   V(-0.25),
                                                                   V(-0.25),
                                                                   V(-0.5),
-                                                              }}},
+                                                              }}}},
                                                             4),
                                        /* kMul */
-                                       {{{
+                                       {{{{
                                              V(1.0),
                                              V(1.0),
-                                         },
-                                         {
+                                         }},
+                                         {{
                                              V(1.0),
                                              V(1.0),
-                                         },
-                                         {
+                                         }},
+                                         {{
                                              V(1.0),
                                              V(1.0),
-                                         }}});
+                                         }}}});
   }
 
   // DCT16
   static constexpr const QuantEncodingInternal DCT16X16() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(8996.8725711814115328),
                                    V(-1.3000777393353804),
                                    V(-0.49424529824571225),
@@ -607,8 +608,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.6350101832695744),
                                    V(-0.90177264050827612),
                                    V(-1.6162099239887414),
-                               },
-                               {
+                               }},
+                               {{
                                    V(3191.48366296844234752),
                                    V(-0.67424582104194355),
                                    V(-0.80745813428471001),
@@ -616,8 +617,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.35865440981033403),
                                    V(-0.31322389111877305),
                                    V(-0.37615025315725483),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1157.50408145487200256),
                                    V(-2.0531423165804414),
                                    V(-1.4),
@@ -625,14 +626,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.42708730624733904),
                                    V(-1.4856834539296244),
                                    V(-4.9209142884401604),
-                               }}},
+                               }}}},
                              7));
   }
 
   // DCT32
   static constexpr const QuantEncodingInternal DCT32X32() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(15718.40830982518931456),
                                    V(-1.025),
                                    V(-0.98),
@@ -641,8 +642,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.48819395464),
                                    V(-0.421064),
                                    V(-0.27),
-                               },
-                               {
+                               }},
+                               {{
                                    V(7305.7636810695983104),
                                    V(-0.8041958212306401),
                                    V(-0.7633036457487539),
@@ -651,8 +652,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.43699592683512467),
                                    V(-0.40180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(3803.53173721215041536),
                                    V(-3.060733579805728),
                                    V(-2.0413270132490346),
@@ -661,14 +662,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.4),
                                    V(-0.4),
                                    V(-0.3),
-                               }}},
+                               }}}},
                              8));
   }
 
   // DCT16X8
   static constexpr const QuantEncodingInternal DCT8X16() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(7240.7734393502),
                                    V(-0.7),
                                    V(-0.7),
@@ -676,8 +677,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.2),
                                    V(-0.2),
                                    V(-0.5),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1448.15468787004),
                                    V(-0.5),
                                    V(-0.5),
@@ -685,8 +686,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.2),
                                    V(-0.2),
                                    V(-0.2),
-                               },
-                               {
+                               }},
+                               {{
                                    V(506.854140754517),
                                    V(-1.4),
                                    V(-0.2),
@@ -694,14 +695,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.5),
                                    V(-1.5),
                                    V(-3.6),
-                               }}},
+                               }}}},
                              7));
   }
 
   // DCT32X8
   static constexpr const QuantEncodingInternal DCT8X32() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(16283.2494710648897),
                                    V(-1.7812845336559429),
                                    V(-1.6309059012653515),
@@ -710,8 +711,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.9),
                                    V(-1.2360638576849587),
-                               },
-                               {
+                               }},
+                               {{
                                    V(5089.15750884921511936),
                                    V(-0.320049391452786891),
                                    V(-0.35362849922161446),
@@ -720,8 +721,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.5),
                                    V(-0.5),
                                    V(-0.6),
-                               },
-                               {
+                               }},
+                               {{
                                    V(3397.77603275308720128),
                                    V(-0.321327362693153371),
                                    V(-0.34507619223117997),
@@ -730,14 +731,14 @@ struct DequantMatricesLibraryDef {
                                    V(-1.0),
                                    V(-1.0),
                                    V(-1.1754605576265209),
-                               }}},
+                               }}}},
                              8));
   }
 
   // DCT32X16
   static constexpr const QuantEncodingInternal DCT16X32() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(13844.97076442300573),
                                    V(-0.97113799999999995),
                                    V(-0.658),
@@ -746,8 +747,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.2206),
                                    V(-0.226),
                                    V(-0.6),
-                               },
-                               {
+                               }},
+                               {{
                                    V(4798.964084220744293),
                                    V(-0.61125308982767057),
                                    V(-0.83770786552491361),
@@ -756,8 +757,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.38272769465388551),
                                    V(-0.22924222653091453),
                                    V(-0.20719098826199578),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1807.236946760964614),
                                    V(-1.2),
                                    V(-1.2),
@@ -766,7 +767,7 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
 
@@ -774,24 +775,24 @@ struct DequantMatricesLibraryDef {
   static constexpr const QuantEncodingInternal DCT4X8() {
     return QuantEncodingInternal::DCT4X8(
         DctQuantWeightParams({{
-                                 {
+                                 {{
                                      V(2198.050556016380522),
                                      V(-0.96269623020744692),
                                      V(-0.76194253026666783),
                                      V(-0.6551140670773547),
-                                 },
-                                 {
+                                 }},
+                                 {{
                                      V(764.3655248643528689),
                                      V(-0.92630200888366945),
                                      V(-0.9675229603596517),
                                      V(-0.27845290869168118),
-                                 },
-                                 {
+                                 }},
+                                 {{
                                      V(527.107573587542228),
                                      V(-1.4594385811273854),
                                      V(-1.450082094097871593),
                                      V(-1.5843722511996204),
-                                 },
+                                 }},
                              }},
                              4),
         /* kMuls */
@@ -804,7 +805,7 @@ struct DequantMatricesLibraryDef {
   // AFV
   static const QuantEncodingInternal AFV0() {
     return QuantEncodingInternal::AFV(DCT4X8().dct_params, DCT4X4().dct_params,
-                                      {{{
+                                      {{{{
                                             // 4x4/4x8 DC tendency.
                                             V(3072.0),
                                             V(3072.0),
@@ -817,8 +818,8 @@ struct DequantMatricesLibraryDef {
                                             V(0.0),
                                             V(0.0),
                                             V(0.0),
-                                        },
-                                        {
+                                        }},
+                                        {{
                                             // 4x4/4x8 DC tendency.
                                             V(1024.0),
                                             V(1024.0),
@@ -831,8 +832,8 @@ struct DequantMatricesLibraryDef {
                                             V(0.0),
                                             V(0.0),
                                             V(0.0),
-                                        },
-                                        {
+                                        }},
+                                        {{
                                             // 4x4/4x8 DC tendency.
                                             V(384.0),
                                             V(384.0),
@@ -845,13 +846,13 @@ struct DequantMatricesLibraryDef {
                                             V(-0.25),
                                             V(-0.25),
                                             V(-0.25),
-                                        }}});
+                                        }}}});
   }
 
   // DCT64
   static const QuantEncodingInternal DCT64X64() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(0.9 * 26629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -860,8 +861,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(0.9 * 9311.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -870,8 +871,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(0.9 * 4992.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -880,14 +881,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
 
   // DCT64X32
   static const QuantEncodingInternal DCT32X64() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(0.65 * 23629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -896,8 +897,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(0.65 * 8611.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -906,8 +907,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(0.65 * 4492.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -916,13 +917,13 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
   // DCT128X128
   static const QuantEncodingInternal DCT128X128() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(1.8 * 26629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -931,8 +932,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1.8 * 9311.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -941,8 +942,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1.8 * 4992.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -951,14 +952,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
 
   // DCT128X64
   static const QuantEncodingInternal DCT64X128() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(1.3 * 23629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -967,8 +968,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1.3 * 8611.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -977,8 +978,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(1.3 * 4492.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -987,13 +988,13 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
   // DCT256X256
   static const QuantEncodingInternal DCT256X256() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(3.6 * 26629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -1002,8 +1003,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(3.6 * 9311.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -1012,8 +1013,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(3.6 * 4992.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -1022,14 +1023,14 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
 
   // DCT256X128
   static const QuantEncodingInternal DCT128X256() {
     return QuantEncodingInternal::DCT(
-        DctQuantWeightParams({{{
+        DctQuantWeightParams({{{{
                                    V(2.6 * 23629.073922049845),
                                    V(-1.025),
                                    V(-0.78),
@@ -1038,8 +1039,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.20819395464),
                                    V(-0.421064),
                                    V(-0.32733845535848671),
-                               },
-                               {
+                               }},
+                               {{
                                    V(2.6 * 8611.3238710010046),
                                    V(-0.3041958212306401),
                                    V(-0.3633036457487539),
@@ -1048,8 +1049,8 @@ struct DequantMatricesLibraryDef {
                                    V(-0.33699592683512467),
                                    V(-0.30180866526242109),
                                    V(-0.27321683125358037),
-                               },
-                               {
+                               }},
+                               {{
                                    V(2.6 * 4492.2486445538634),
                                    V(-1.2),
                                    V(-1.2),
@@ -1058,7 +1059,7 @@ struct DequantMatricesLibraryDef {
                                    V(-0.7),
                                    V(-0.4),
                                    V(-0.5),
-                               }}},
+                               }}}},
                              8));
   }
 };
@@ -1089,7 +1090,7 @@ const DequantMatrices::DequantLibraryInternal DequantMatrices::LibraryInit() {
   static_assert(14 == DCT64X128, "Update the DequantLibrary array below.");
   static_assert(15 == DCT256X256, "Update the DequantLibrary array below.");
   static_assert(16 == DCT128X256, "Update the DequantLibrary array below.");
-  return DequantMatrices::DequantLibraryInternal{
+  return DequantMatrices::DequantLibraryInternal{{
       DequantMatricesLibraryDef::DCT(),
       DequantMatricesLibraryDef::IDENTITY(),
       DequantMatricesLibraryDef::DCT2X2(),
@@ -1108,7 +1109,7 @@ const DequantMatrices::DequantLibraryInternal DequantMatrices::LibraryInit() {
       DequantMatricesLibraryDef::DCT64X128(),
       DequantMatricesLibraryDef::DCT256X256(),
       DequantMatricesLibraryDef::DCT128X256(),
-  };
+  }};
 }
 
 const QuantEncoding* DequantMatrices::Library() {

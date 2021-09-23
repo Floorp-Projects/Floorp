@@ -71,7 +71,9 @@ class VisitorBase : public Visitor {
   Status Visit(Fields* fields, const char* visitor_name) override {
     fputs(visitor_name, stdout);  // No newline; no effect if empty
     if (print_bundles_) {
+#if JXL_IS_DEBUG_BUILD
       Trace("%s\n", print_bundles_ ? fields->Name() : "");
+#endif  // JXL_IS_DEBUG_BUILD
     }
 
     depth_ += 1;
