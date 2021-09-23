@@ -18,6 +18,7 @@
 #include "Role.h"
 #include "States.h"
 #include "TextAttrs.h"
+#include "TextLeafRange.h"
 #include "TextRange.h"
 #include "TreeWalker.h"
 
@@ -41,6 +42,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -1048,6 +1050,52 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
   if (adjustedOffset == std::numeric_limits<uint32_t>::max()) {
     NS_ERROR("Wrong given offset!");
     return;
+  }
+
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // This isn't strictly related to caching, but this new text implementation
+    // is being developed to make caching feasible. We put it behind this pref
+    // to make it easy to test while it's still under development.
+    switch (aBoundaryType) {
+      case nsIAccessibleText::BOUNDARY_WORD_START:
+      case nsIAccessibleText::BOUNDARY_LINE_START:
+        TextLeafPoint origStart =
+            ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+        TextLeafPoint end;
+        LocalAccessible* childAcc = GetChildAtOffset(adjustedOffset);
+        if (childAcc && childAcc->IsHyperText()) {
+          // We're searching for boundaries enclosing an embedded object.
+          // An embedded object might contain several boundaries itself.
+          // Thus, we must ensure we search for the end boundary from the last
+          // text in the subtree, not just the first.
+          // For example, if the embedded object is a link and it contains two
+          // words, but the second word expands beyond the link, we want to
+          // include the part of the second word which is outside of the link.
+          end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
+                                /* aDescendToEnd */ true);
+        } else {
+          end = origStart;
+        }
+        TextLeafPoint start = origStart.FindBoundary(
+            aBoundaryType, eDirPrevious, /* aIncludeOrigin */ true);
+        *aStartOffset = static_cast<int32_t>(
+            TransformOffset(start.mAcc->AsLocal(), start.mOffset,
+                            /* aIsEndOffset */ false));
+        if (*aStartOffset == static_cast<int32_t>(CharacterCount()) &&
+            (*aStartOffset > static_cast<int32_t>(adjustedOffset) ||
+             start != origStart)) {
+          // start is before this HyperTextAccessible. In that case,
+          // Transformoffset will return CharacterCount(), but we want to
+          // clip to the start of this HyperTextAccessible, not the end.
+          *aStartOffset = 0;
+        }
+        end = end.FindBoundary(aBoundaryType, eDirNext);
+        *aEndOffset = static_cast<int32_t>(
+            TransformOffset(end.mAcc->AsLocal(), end.mOffset,
+                            /* aIsEndOffset */ true));
+        TextSubstring(*aStartOffset, *aEndOffset, aText);
+        return;
+    }
   }
 
   switch (aBoundaryType) {
@@ -2084,6 +2132,24 @@ void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
     int32_t offset = ht->GetChildOffset(child);
     aRange.Set(mDoc, ht, offset, ht, offset);
   }
+}
+
+TextLeafPoint HyperTextAccessible::ToTextLeafPoint(int32_t aOffset,
+                                                   bool aDescendToEnd) {
+  if (!HasChildren()) {
+    return TextLeafPoint(this, 0);
+  }
+  LocalAccessible* child = GetChildAtOffset(aOffset);
+  if (!child) {
+    return TextLeafPoint();
+  }
+  if (HyperTextAccessible* childHt = child->AsHyperText()) {
+    return childHt->ToTextLeafPoint(
+        aDescendToEnd ? static_cast<int32_t>(childHt->CharacterCount()) : 0,
+        aDescendToEnd);
+  }
+  int32_t offset = aOffset - GetChildOffset(child);
+  return TextLeafPoint(child, offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

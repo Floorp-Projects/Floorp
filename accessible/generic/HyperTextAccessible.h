@@ -27,6 +27,7 @@ class Selection;
 
 namespace a11y {
 
+class TextLeafPoint;
 class TextRange;
 
 struct DOMPoint {
@@ -383,6 +384,14 @@ class HyperTextAccessible : public AccessibleWrap {
    * Return a range containing an accessible at the given point.
    */
   void RangeAtPoint(int32_t aX, int32_t aY, TextRange& aRange) const;
+
+  /**
+   * Get a TextLeafPoint for a given offset in this HyperTextAccessible.
+   * If the offset points to an embedded object and aDescendToEnd is true,
+   * the point right at the end of this subtree will be returned instead of the
+   * start.
+   */
+  TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
 
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
