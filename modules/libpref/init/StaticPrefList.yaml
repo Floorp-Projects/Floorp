@@ -6320,13 +6320,6 @@
   mirror: once
   do_not_use_directly: true
 
-# Preference that when switched at runtime will run a series of benchmarks
-# and output the result to stderr.
-- name: layers.bench.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.child-process-shutdown
   type: RelaxedAtomicBool
   value: true
