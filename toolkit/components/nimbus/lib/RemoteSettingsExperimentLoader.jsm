@@ -255,7 +255,7 @@ class _RemoteSettingsExperimentLoader {
     log.debug("Testing targeting expression:", jexlString);
     const targetingContext = new TargetingContext(context);
 
-    let result = false;
+    let result = null;
     try {
       result = await targetingContext.evalWithDefault(jexlString);
     } catch (e) {
