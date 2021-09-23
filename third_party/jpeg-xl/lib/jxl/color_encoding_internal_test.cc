@@ -33,7 +33,24 @@ TEST(ColorEncodingTest, RoundTripAll) {
       EXPECT_TRUE(c.tf.SetGamma(c_original.tf.GetGamma()));
       EXPECT_TRUE(c_original.tf.IsSame(c.tf));
     }
+
+    // Verify ParseDescription(Description) yields the same ColorEncoding
+    {
+      const std::string description = Description(c_original);
+      printf("%s\n", description.c_str());
+      ColorEncoding c;
+      EXPECT_TRUE(ParseDescription(description, &c));
+      EXPECT_TRUE(c_original.SameColorEncoding(c));
+    }
   }
+}
+
+// Verify Set(Get) for specific custom values
+
+TEST(ColorEncodingTest, NanGamma) {
+  const std::string description = "Gra_2_Per_gnan";
+  ColorEncoding c;
+  EXPECT_FALSE(ParseDescription(description, &c));
 }
 
 TEST(ColorEncodingTest, CustomWhitePoint) {

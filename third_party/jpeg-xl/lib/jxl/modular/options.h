@@ -75,24 +75,24 @@ inline const char* PredictorName(Predictor p) {
 inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
   switch (p) {
     case Predictor::Zero:
-      return {{0, 0, 0}};
+      return {0, 0, 0};
     case Predictor::Left:
-      return {{255, 0, 0}};
+      return {255, 0, 0};
     case Predictor::Top:
-      return {{0, 255, 0}};
+      return {0, 255, 0};
     case Predictor::Average0:
-      return {{0, 0, 255}};
+      return {0, 0, 255};
     case Predictor::Average4:
-      return {{192, 128, 128}};
+      return {192, 128, 128};
     case Predictor::Select:
-      return {{255, 255, 0}};
+      return {255, 255, 0};
     case Predictor::Gradient:
-      return {{255, 0, 255}};
+      return {255, 0, 255};
     case Predictor::Weighted:
-      return {{0, 255, 255}};
+      return {0, 255, 255};
       // TODO
     default:
-      return {{255, 255, 255}};
+      return {255, 255, 255};
   };
 }
 
@@ -114,9 +114,6 @@ struct ModularOptions {
   // Stop encoding/decoding when reaching a (non-meta) channel that has a
   // dimension bigger than max_chan_size.
   size_t max_chan_size = 0xFFFFFF;
-
-  // Used during decoding for validation of transforms (sqeeezing) scheme.
-  size_t group_dim = 0x1FFFFFFF;
 
   /// Encode options:
   // Fraction of pixels to look at to learn a MA tree

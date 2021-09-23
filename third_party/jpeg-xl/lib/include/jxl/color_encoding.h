@@ -4,9 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
- * @{
- * @file color_encoding.h
+/** @file color_encoding.h
  * @brief Color Encoding definitions used by JPEG XL.
  * All CIE units are for the standard 1931 2 degree observer.
  */
@@ -129,7 +127,7 @@ typedef struct {
   /** Numerical blue primary values in CIE xy space. */
   double primaries_blue_xy[2];
 
-  /** Transfer function if have_gamma is 0 */
+  /** Transfer function is have_gamma is 0 */
   JxlTransferFunction transfer_function;
 
   /** Gamma value used when transfer_function is JXL_TRANSFER_FUNCTION_GAMMA
@@ -140,10 +138,27 @@ typedef struct {
   JxlRenderingIntent rendering_intent;
 } JxlColorEncoding;
 
+/** Color transform used for the XYB encoding. This affects how the internal
+ * XYB color format is converted, and is not needed unless XYB color is used.
+ */
+typedef struct {
+  /** Inverse opsin matrix.
+   */
+  float opsin_inv_matrix[3][3];
+
+  /** Opsin bias for opsin matrix. This affects how the internal XYB color
+   * format is converted, and is not needed unless XYB color is used.
+   */
+  float opsin_biases[3];
+
+  /** Quantization bias for opsin matrix. This affects how the internal XYB
+   * color format is converted, and is not needed unless XYB color is used.
+   */
+  float quant_biases[3];
+} JxlInverseOpsinMatrix;
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif
 
 #endif /* JXL_COLOR_ENCODING_H_ */
-
-/** @}*/

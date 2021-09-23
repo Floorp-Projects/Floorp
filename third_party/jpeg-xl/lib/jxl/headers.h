@@ -34,7 +34,7 @@ class SizeHeader : public Fields {
   static constexpr size_t kMaxBits = 78;
 
   SizeHeader();
-  JXL_FIELDS_NAME(SizeHeader)
+  const char* Name() const override { return "SizeHeader"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -60,7 +60,7 @@ class SizeHeader : public Fields {
 class PreviewHeader : public Fields {
  public:
   PreviewHeader();
-  JXL_FIELDS_NAME(PreviewHeader)
+  const char* Name() const override { return "PreviewHeader"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -82,7 +82,7 @@ class PreviewHeader : public Fields {
 
 struct AnimationHeader : public Fields {
   AnimationHeader();
-  JXL_FIELDS_NAME(AnimationHeader)
+  const char* Name() const override { return "AnimationHeader"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 

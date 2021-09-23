@@ -569,10 +569,10 @@ Status TreeSamples::SetProperties(const std::vector<uint32_t> &properties,
                                   ModularOptions::TreeMode wp_tree_mode) {
   props_to_use = properties;
   if (wp_tree_mode == ModularOptions::TreeMode::kWPOnly) {
-    props_to_use = {static_cast<uint32_t>(kWPProp)};
+    props_to_use = {kWPProp};
   }
   if (wp_tree_mode == ModularOptions::TreeMode::kGradientOnly) {
-    props_to_use = {static_cast<uint32_t>(kGradientProp)};
+    props_to_use = {kGradientProp};
   }
   if (wp_tree_mode == ModularOptions::TreeMode::kNoWP) {
     auto it = std::find(props_to_use.begin(), props_to_use.end(), kWPProp);
@@ -943,7 +943,6 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
                          std::vector<uint32_t> &channel_pixel_count,
                          std::vector<pixel_type> &pixel_samples,
                          std::vector<pixel_type> &diff_samples) {
-  if (options.nb_repeats == 0) return;
   if (group_pixel_count.size() <= group_id) {
     group_pixel_count.resize(group_id + 1);
   }

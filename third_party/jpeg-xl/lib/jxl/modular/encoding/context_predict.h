@@ -22,7 +22,7 @@ constexpr static int64_t kPredictionRound = ((1 << kPredExtraBits) >> 1) - 1;
 constexpr static size_t kNumProperties = 1;
 
 struct Header : public Fields {
-  JXL_FIELDS_NAME(WeightedPredictorHeader)
+  const char *Name() const override { return "WeightedPredictorHeader"; }
   // TODO(janwas): move to cc file, avoid including fields.h.
   Header() { Bundle::Init(this); }
 
@@ -86,7 +86,7 @@ struct State {
 
   // Approximates 4+(maxweight<<24)/(x+1), avoiding division
   JXL_INLINE uint32_t ErrorWeight(uint64_t x, uint32_t maxweight) const {
-    int shift = static_cast<int>(FloorLog2Nonzero(x + 1)) - 5;
+    int shift = FloorLog2Nonzero(x + 1) - 5;
     if (shift < 0) shift = 0;
     return 4 + ((maxweight * divlookup[x >> shift]) >> shift);
   }
@@ -182,7 +182,7 @@ struct State {
     size_t cur_row = y & 1 ? 0 : (xsize + 2);
     size_t prev_row = y & 1 ? (xsize + 2) : 0;
     val = AddBits(val);
-    error[cur_row + x] = pred - val;
+    error[cur_row + x] = ClampToRange<pixel_type>(pred - val);
     for (size_t i = 0; i < kNumPredictors; i++) {
       pixel_type_w err =
           (std::abs(prediction[i] - val) + kPredictionRound) >> kPredExtraBits;

@@ -3,9 +3,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/// @addtogroup libjxl_decoder
-/// @{
-///
 /// @file decode_cxx.h
 /// @brief C++ header-only helper for @ref decode.h.
 ///
@@ -53,5 +50,3 @@ static inline JxlDecoderPtr JxlDecoderMake(
 }
 
 #endif  // JXL_DECODE_CXX_H_
-
-/// @}

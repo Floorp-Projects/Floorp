@@ -64,8 +64,7 @@ Status DecodePreview(const DecompressParams& dparams,
 
   // Else: default or kOn => decode preview.
   PassesDecoderState dec_state;
-  JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(
-      metadata, ColorEncoding::LinearSRGB(metadata.m.color_encoding.IsGray())));
+  JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(metadata.m));
   JXL_RETURN_IF_ERROR(DecodeFrame(dparams, &dec_state, pool, reader, preview,
                                   metadata, constraints,
                                   /*is_preview=*/true));
@@ -135,9 +134,7 @@ Status DecodeFile(const DecompressParams& dparams,
     }
 
     PassesDecoderState dec_state;
-    JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(
-        io->metadata,
-        ColorEncoding::LinearSRGB(io->metadata.m.color_encoding.IsGray())));
+    JXL_RETURN_IF_ERROR(dec_state.output_encoding_info.Set(io->metadata.m));
 
     io->frames.clear();
     Status dec_ok(false);
@@ -174,7 +171,7 @@ Status DecodeFile(const DecompressParams& dparams,
     }
     // Suppress errors when decoding partial files with DC frames.
     if (!reader.AllReadsWithinBounds() && dparams.allow_partial_files) {
-      reader_closer.CloseAndSuppressError();
+      (void)reader.Close();
     }
 
     io->CheckMetadata();

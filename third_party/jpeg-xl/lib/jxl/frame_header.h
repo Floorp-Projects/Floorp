@@ -64,19 +64,19 @@ enum class ColorTransform : uint32_t {
 
 inline std::array<int, 3> JpegOrder(ColorTransform ct, bool is_gray) {
   if (is_gray) {
-    return {{0, 0, 0}};
+    return {0, 0, 0};
   }
   JXL_ASSERT(ct != ColorTransform::kXYB);
   if (ct == ColorTransform::kYCbCr) {
-    return {{1, 0, 2}};
+    return {1, 0, 2};
   } else {
-    return {{0, 1, 2}};
+    return {0, 1, 2};
   }
 }
 
 struct YCbCrChromaSubsampling : public Fields {
   YCbCrChromaSubsampling();
-  JXL_FIELDS_NAME(YCbCrChromaSubsampling)
+  const char* Name() const override { return "YCbCrChromaSubsampling"; }
   size_t HShift(size_t c) const { return maxhs_ - kHShift[channel_mode_[c]]; }
   size_t VShift(size_t c) const { return maxvs_ - kVShift[channel_mode_[c]]; }
 
@@ -208,7 +208,7 @@ enum class BlendMode {
 
 struct BlendingInfo : public Fields {
   BlendingInfo();
-  JXL_FIELDS_NAME(BlendingInfo)
+  const char* Name() const override { return "BlendingInfo"; }
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
   BlendMode mode;
   // Which extra channel to use as alpha channel for blending, only encoded
@@ -238,7 +238,7 @@ struct FrameSize {
 // AnimationFrame defines duration of animation frames.
 struct AnimationFrame : public Fields {
   explicit AnimationFrame(const CodecMetadata* metadata);
-  JXL_FIELDS_NAME(AnimationFrame)
+  const char* Name() const override { return "AnimationFrame"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -256,7 +256,7 @@ struct AnimationFrame : public Fields {
 // For decoding to lower resolutions. Only used for kRegular frames.
 struct Passes : public Fields {
   Passes();
-  JXL_FIELDS_NAME(Passes)
+  const char* Name() const override { return "Passes"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -338,7 +338,7 @@ struct FrameHeader : public Fields {
   };
 
   explicit FrameHeader(const CodecMetadata* metadata);
-  JXL_FIELDS_NAME(FrameHeader)
+  const char* Name() const override { return "FrameHeader"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 

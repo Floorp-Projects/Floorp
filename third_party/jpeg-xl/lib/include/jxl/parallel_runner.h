@@ -4,9 +4,6 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
- *  @{
- */
 /**
  * @file parallel_runner.h
  */
@@ -152,5 +149,3 @@ typedef JxlParallelRetCode (*JxlParallelRunner)(
 #endif
 
 #endif /* JXL_PARALLEL_RUNNER_H_ */
-
-/** @}*/

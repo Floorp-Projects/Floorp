@@ -87,6 +87,7 @@ void ClusterGroups(PassesEncoderState* enc_state) {
   params.ans_histogram_strategy =
       HistogramParams::ANSHistogramStrategy::kApproximate;
   size_t max = 0;
+  float total_cost = 0;
   auto token_cost = [&](std::vector<std::vector<Token>>& tokens, size_t num_ctx,
                         bool estimate = true) {
     // TODO(veluca): not estimating is very expensive.
@@ -107,6 +108,7 @@ void ClusterGroups(PassesEncoderState* enc_state) {
     if (costs[i] > costs[max]) {
       max = i;
     }
+    total_cost += costs[i];
   }
   auto dist = [&](int i, int j) {
     std::vector<std::vector<Token>> tokens{ac[i], ac[j]};
@@ -213,8 +215,7 @@ uint64_t FrameFlagsFromParams(const CompressParams& cparams) {
   // We don't add noise at low butteraugli distances because the original
   // noise is stored within the compressed image and adding noise makes things
   // worse.
-  if (ApplyOverride(cparams.noise, dist >= kMinButteraugliForNoise) ||
-      cparams.photon_noise_iso > 0) {
+  if (ApplyOverride(cparams.noise, dist >= kMinButteraugliForNoise)) {
     flags |= FrameHeader::kNoise;
   }
 
@@ -285,20 +286,20 @@ Status MakeFrameHeader(const CompressParams& cparams,
     frame_header->group_size_shift = cparams.modular_group_size_shift;
   }
 
-  frame_header->chroma_subsampling = ib.chroma_subsampling;
   if (ib.IsJPEG()) {
     // we are transcoding a JPEG, so we don't get to choose
     frame_header->encoding = FrameEncoding::kVarDCT;
     frame_header->color_transform = ib.color_transform;
+    frame_header->chroma_subsampling = ib.chroma_subsampling;
   } else {
     frame_header->color_transform = cparams.color_transform;
-    if (!cparams.modular_mode &&
-        (frame_header->chroma_subsampling.MaxHShift() != 0 ||
-         frame_header->chroma_subsampling.MaxVShift() != 0)) {
+    if (cparams.chroma_subsampling.MaxHShift() != 0 ||
+        cparams.chroma_subsampling.MaxVShift() != 0) {
+      // TODO(veluca): properly pad the input image to support this.
       return JXL_FAILURE(
-          "Chroma subsampling is not supported in VarDCT mode when not "
-          "recompressing JPEGs");
+          "Chroma subsampling is not supported when not recompressing JPEGs");
     }
+    frame_header->chroma_subsampling = cparams.chroma_subsampling;
   }
 
   frame_header->flags = FrameFlagsFromParams(cparams);
@@ -398,7 +399,7 @@ Status MakeFrameHeader(const CompressParams& cparams,
 // edge duplication but not more. It would probably be better to smear in all
 // directions. That requires an alpha-weighed convolution with a large enough
 // kernel though, which might be overkill...
-void SimplifyInvisible(Image3F* image, const ImageF& alpha, bool lossless) {
+void SimplifyInvisible(Image3F* image, const ImageF& alpha) {
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < image->ysize(); ++y) {
       float* JXL_RESTRICT row = image->PlaneRow(c, y);
@@ -412,10 +413,6 @@ void SimplifyInvisible(Image3F* image, const ImageF& alpha, bool lossless) {
           (y + 1 < image->ysize() ? alpha.Row(y + 1) : nullptr);
       for (size_t x = 0; x < image->xsize(); ++x) {
         if (a[x] == 0) {
-          if (lossless) {
-            row[x] = 0;
-            continue;
-          }
           float d = 0.f;
           row[x] = 0;
           if (x > 0) {
@@ -968,8 +965,8 @@ class LossyFrameEncoder {
         enc_state_->progressive_splitter.GetNumPasses());
     for (size_t i = 0; i < enc_state_->progressive_splitter.GetNumPasses();
          i++) {
-      // No coefficient reordering in Falcon or faster.
-      if (enc_state_->cparams.speed_tier < SpeedTier::kFalcon) {
+      // No coefficient reordering in Falcon mode.
+      if (enc_state_->cparams.speed_tier != SpeedTier::kFalcon) {
         enc_state_->used_orders[i] = ComputeUsedOrders(
             enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
             Rect(enc_state_->shared.raw_quant_field));
@@ -1015,7 +1012,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   passes_enc_state->special_frames.clear();
 
   CompressParams cparams = cparams_orig;
-
   if (cparams.progressive_dc < 0) {
     if (cparams.progressive_dc != -1) {
       return JXL_FAILURE("Invalid progressive DC setting value (%d)",
@@ -1031,7 +1027,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   if (cparams.ec_resampling < cparams.resampling) {
     cparams.ec_resampling = cparams.resampling;
   }
-  if (cparams.resampling > 1) cparams.progressive_dc = 0;
 
   if (frame_info.dc_level + cparams.progressive_dc > 4) {
     return JXL_FAILURE("Too many levels of progressive DC");
@@ -1131,10 +1126,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
 
   const std::vector<ImageF>* extra_channels = &ib.extra_channels();
   std::vector<ImageF> extra_channels_storage;
-  // Clear patches
-  passes_enc_state->shared.image_features.patches = PatchDictionary();
-  passes_enc_state->shared.image_features.patches.SetPassesSharedState(
-      &passes_enc_state->shared);
 
   if (ib.IsJPEG()) {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeJPEGTranscodingData(
@@ -1165,17 +1156,16 @@ Status EncodeFrame(const CompressParams& cparams_orig,
               // input is already in XYB.
       CopyImageTo(ib.color(), &opsin);
     }
-    bool lossless = (frame_header->encoding == FrameEncoding::kModular &&
-                     cparams.quality_pair.first == 100);
     if (ib.HasAlpha() && !ib.AlphaIsPremultiplied() &&
-        frame_header->frame_type == FrameType::kRegularFrame &&
-        !ApplyOverride(cparams.keep_invisible, lossless) &&
+        (frame_header->encoding == FrameEncoding::kVarDCT ||
+         cparams.quality_pair.first < 100) &&
+        !cparams.keep_invisible &&
         cparams.ec_resampling == cparams.resampling) {
-      // simplify invisible pixels
-      SimplifyInvisible(&opsin, ib.alpha(), lossless);
+      // if lossy, simplify invisible pixels
+      SimplifyInvisible(&opsin, ib.alpha());
       if (want_linear) {
         SimplifyInvisible(const_cast<Image3F*>(&ib_or_linear->color()),
-                          ib.alpha(), lossless);
+                          ib.alpha());
       }
     }
     if (aux_out != nullptr) {
@@ -1338,57 +1328,24 @@ Status EncodeFrame(const CompressParams& cparams_orig,
 
   std::vector<coeff_order_t>* permutation_ptr = nullptr;
   std::vector<coeff_order_t> permutation;
-  if (cparams.centerfirst && !(num_passes == 1 && num_groups == 1)) {
+  if (cparams.middleout && !(num_passes == 1 && num_groups == 1)) {
     permutation_ptr = &permutation;
     // Don't permute global DC/AC or DC.
     permutation.resize(global_ac_index + 1);
     std::iota(permutation.begin(), permutation.end(), 0);
     std::vector<coeff_order_t> ac_group_order(num_groups);
     std::iota(ac_group_order.begin(), ac_group_order.end(), 0);
-    size_t group_dim = frame_dim.group_dim;
-
-    // The center of the image is either given by parameters or chosen
-    // to be the middle of the image by default if center_x, center_y resp.
-    // are not provided.
-
-    int64_t imag_cx;
-    if (cparams.center_x != static_cast<size_t>(-1)) {
-      JXL_RETURN_IF_ERROR(cparams.center_x < ib.xsize());
-      imag_cx = cparams.center_x;
-    } else {
-      imag_cx = ib.xsize() / 2;
-    }
-
-    int64_t imag_cy;
-    if (cparams.center_y != static_cast<size_t>(-1)) {
-      JXL_RETURN_IF_ERROR(cparams.center_y < ib.ysize());
-      imag_cy = cparams.center_y;
-    } else {
-      imag_cy = ib.ysize() / 2;
-    }
-
-    // The center of the group containing the center of the image.
-    int64_t cx = (imag_cx / group_dim) * group_dim + group_dim / 2;
-    int64_t cy = (imag_cy / group_dim) * group_dim + group_dim / 2;
-    // This identifies in what area of the central group the center of the image
-    // lies in.
-    double direction = -std::atan2(imag_cy - cy, imag_cx - cx);
-    // This identifies the side of the central group the center of the image
-    // lies closest to. This can take values 0, 1, 2, 3 corresponding to left,
-    // bottom, right, top.
-    int64_t side = std::fmod((direction + 5 * kPi / 4), 2 * kPi) * 2 / kPi;
+    int64_t cx = ib.xsize() / 2;
+    int64_t cy = ib.ysize() / 2;
     auto get_distance_from_center = [&](size_t gid) {
       Rect r = passes_enc_state->shared.GroupRect(gid);
-      int64_t gcx = r.x0() + group_dim / 2;
-      int64_t gcy = r.y0() + group_dim / 2;
+      int64_t gcx = r.x0() + r.xsize() / 2;
+      int64_t gcy = r.y0() + r.ysize() / 2;
       int64_t dx = gcx - cx;
       int64_t dy = gcy - cy;
-      // The angle is determined by taking atan2 and adding an appropriate
-      // starting point depending on the side we want to start on.
-      double angle = std::remainder(
-          std::atan2(dy, dx) + kPi / 4 + side * (kPi / 2), 2 * kPi);
-      // Concentric squares in clockwise order.
-      return std::make_pair(std::max(std::abs(dx), std::abs(dy)), angle);
+      // Concentric squares in counterclockwise order.
+      return std::make_pair(std::max(std::abs(dx), std::abs(dy)),
+                            std::atan2(dy, dx));
     };
     std::sort(ac_group_order.begin(), ac_group_order.end(),
               [&](coeff_order_t a, coeff_order_t b) {

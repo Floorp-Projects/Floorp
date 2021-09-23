@@ -166,21 +166,15 @@ struct TestFirstN {
     const size_t N = Lanes(d);
     auto mask_lanes = AllocateAligned<T>(N);
 
-    // GCC workaround: we previously used zero to indicate true because we can
-    // safely compare with that value. However, that hits an ICE for u64x1 on
-    // GCC 8.3 but not 8.4, even if the implementation of operator== is
-    // simplified to return zero. Using MaskFromVec avoids this, and requires
-    // FF..FF and 0 constants.
-    T on;
-    memset(&on, 0xFF, sizeof(on));
-    const T off = 0;
+    // NOTE: reverse polarity (mask is true iff mask_lanes[i] == 0) because we
+    // cannot reliably compare against all bits set (NaN for float types).
+    const T off = 1;
 
     for (size_t len = 0; len <= N; ++len) {
       for (size_t i = 0; i < N; ++i) {
-        mask_lanes[i] = i < len ? on : off;
+        mask_lanes[i] = i < len ? T(0) : off;
       }
-      const auto mask_vals = Load(d, mask_lanes.get());
-      const auto mask = MaskFromVec(mask_vals);
+      const auto mask = Eq(Load(d, mask_lanes.get()), Zero(d));
       HWY_ASSERT_MASK_EQ(d, mask, FirstN(d, len));
     }
   }

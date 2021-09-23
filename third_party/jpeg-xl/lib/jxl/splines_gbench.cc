@@ -37,9 +37,8 @@ void BM_Splines(benchmark::State& state) {
   ZeroFillImage(&drawing_area);
   for (auto _ : state) {
     for (size_t i = 0; i < n; ++i) {
-      JXL_CHECK(splines.InitializeDrawCache(drawing_area.xsize(),
-                                            drawing_area.ysize(), *cmap));
-      splines.AddTo(&drawing_area, Rect(drawing_area), Rect(drawing_area));
+      JXL_CHECK(splines.AddTo(&drawing_area, Rect(drawing_area),
+                              Rect(drawing_area), *cmap));
     }
   }
 

@@ -11,7 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "lib/extras/color_hints.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
@@ -19,11 +18,9 @@
 #include "lib/jxl/color_encoding_internal.h"
 
 namespace jxl {
-namespace extras {
 
 // Decodes `bytes` into `io`.
-Status DecodeImagePSD(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
+Status DecodeImagePSD(const Span<const uint8_t> bytes, ThreadPool* pool,
                       CodecInOut* io);
 
 // Not implemented yet
@@ -31,7 +28,6 @@ Status EncodeImagePSD(const CodecInOut* io, const ColorEncoding& c_desired,
                       size_t bits_per_sample, ThreadPool* pool,
                       PaddedBytes* bytes);
 
-}  // namespace extras
 }  // namespace jxl
 
 #endif  // LIB_EXTRAS_CODEC_PSD_H_

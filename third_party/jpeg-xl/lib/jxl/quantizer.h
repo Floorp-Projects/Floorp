@@ -165,7 +165,7 @@ class Quantizer {
 
 struct QuantizerParams : public Fields {
   QuantizerParams() { Bundle::Init(this); }
-  JXL_FIELDS_NAME(QuantizerParams)
+  const char* Name() const override { return "QuantizerParams"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 

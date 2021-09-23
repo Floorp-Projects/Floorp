@@ -171,10 +171,10 @@ TEST(PassesTest, AllDownsampleFeasible) {
   PassesEncoderState enc_state;
   ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, &aux, &pool));
 
-  EXPECT_LE(compressed.size(), 240000u);
+  EXPECT_LE(compressed.size(), 240000);
   float target_butteraugli[9] = {};
   target_butteraugli[1] = 2.5f;
-  target_butteraugli[2] = 16.0f;
+  target_butteraugli[2] = 14.5f;
   target_butteraugli[4] = 20.0f;
   target_butteraugli[8] = 80.0f;
 
@@ -216,7 +216,7 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
   PassesEncoderState enc_state;
   ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, &aux, &pool));
 
-  EXPECT_LE(compressed.size(), 220000u);
+  EXPECT_LE(compressed.size(), 220000);
 
   float target_butteraugli[9] = {};
   target_butteraugli[1] = 3.0f;
@@ -271,7 +271,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
   PassesEncoderState enc_state;
   ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, &aux, &pool));
 
-  EXPECT_LE(compressed.size(), 10000u);
+  EXPECT_LE(compressed.size(), 10000);
 
   DecompressParams dparams;
   dparams.max_downsampling = 1;
@@ -287,7 +287,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
       ButteraugliDistance(output, output_d2, cparams.ba_params,
                           /*distmap=*/nullptr, nullptr);
 
-  EXPECT_LE(butteraugli_distance_down2_full, 3.2f);
+  EXPECT_LE(butteraugli_distance_down2_full, 3.0f);
   EXPECT_GE(butteraugli_distance_down2_full, 1.0f);
 }
 
@@ -317,7 +317,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
   PassesEncoderState enc_state;
   ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, &aux, &pool));
 
-  EXPECT_LE(compressed.size(), 220000u);
+  EXPECT_LE(compressed.size(), 220000);
 
   DecompressParams dparams;
   dparams.max_downsampling = 1;

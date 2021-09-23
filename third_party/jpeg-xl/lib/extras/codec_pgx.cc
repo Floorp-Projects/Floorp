@@ -27,7 +27,6 @@
 #include "lib/jxl/luminance.h"
 
 namespace jxl {
-namespace extras {
 namespace {
 
 struct HeaderPGX {
@@ -172,10 +171,46 @@ Status EncodeHeader(const ImageBundle& ib, const size_t bits_per_sample,
   }
 
   // Use ML (Big Endian), LM may not be well supported by all decoders.
-  *chars_written = snprintf(header, kMaxHeaderSize, "PG ML + %zu %zu %zu\n",
-                            bits_per_sample, ib.xsize(), ib.ysize());
-  JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
-                      kMaxHeaderSize);
+  snprintf(header, kMaxHeaderSize, "PG ML + %zu %zu %zu\n%n", bits_per_sample,
+           ib.xsize(), ib.ysize(), chars_written);
+  return true;
+}
+
+Status ApplyHints(CodecInOut* io) {
+  bool got_color_space = false;
+
+  JXL_RETURN_IF_ERROR(io->dec_hints.Foreach(
+      [io, &got_color_space](const std::string& key,
+                             const std::string& value) -> Status {
+        ColorEncoding* c_original = &io->metadata.m.color_encoding;
+        if (key == "color_space") {
+          if (!ParseDescription(value, c_original) ||
+              !c_original->CreateICC()) {
+            return JXL_FAILURE("PGX: Failed to apply color_space");
+          }
+
+          if (!io->metadata.m.color_encoding.IsGray()) {
+            return JXL_FAILURE("PGX: color_space hint must be grayscale");
+          }
+
+          got_color_space = true;
+        } else if (key == "icc_pathname") {
+          PaddedBytes icc;
+          JXL_RETURN_IF_ERROR(ReadFile(value, &icc));
+          JXL_RETURN_IF_ERROR(c_original->SetICC(std::move(icc)));
+          got_color_space = true;
+        } else {
+          JXL_WARNING("PGX decoder ignoring %s hint", key.c_str());
+        }
+        return true;
+      }));
+
+  if (!got_color_space) {
+    JXL_WARNING("PGX: no color_space/icc_pathname given, assuming sRGB");
+    JXL_RETURN_IF_ERROR(
+        io->metadata.m.color_encoding.SetSRGB(ColorSpace::kGray));
+  }
+
   return true;
 }
 
@@ -191,8 +226,7 @@ Span<const uint8_t> MakeSpan(const char* str) {
 
 }  // namespace
 
-Status DecodeImagePGX(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
+Status DecodeImagePGX(const Span<const uint8_t> bytes, ThreadPool* pool,
                       CodecInOut* io) {
   Parser parser(bytes);
   HeaderPGX header = {};
@@ -204,8 +238,7 @@ Status DecodeImagePGX(const Span<const uint8_t> bytes,
     return JXL_FAILURE("PGX: bits_per_sample invalid");
   }
 
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, /*color_already_set=*/false,
-                                      /*is_gray=*/true, io));
+  JXL_RETURN_IF_ERROR(ApplyHints(io));
   io->metadata.m.SetUintSamples(header.bits_per_sample);
   io->metadata.m.SetAlphaBits(0);
   io->dec_pixels = header.xsize * header.ysize;
@@ -223,7 +256,7 @@ Status DecodeImagePGX(const Span<const uint8_t> bytes,
       /*alpha_is_premultiplied=*/false,
       io->metadata.m.bit_depth.bits_per_sample,
       header.big_endian ? JXL_BIG_ENDIAN : JXL_LITTLE_ENDIAN, flipped_y, pool,
-      &ib, /*float_in=*/false));
+      &ib));
   io->frames.push_back(std::move(ib));
   SetIntensityTarget(io);
   return true;
@@ -269,5 +302,57 @@ Status EncodeImagePGX(const CodecInOut* io, const ColorEncoding& c_desired,
   return true;
 }
 
-}  // namespace extras
+void TestCodecPGX() {
+  {
+    std::string pgx = "PG ML + 8 2 3\npixels";
+
+    CodecInOut io;
+    ThreadPool* pool = nullptr;
+
+    Status ok = DecodeImagePGX(MakeSpan(pgx.c_str()), pool, &io);
+    JXL_CHECK(ok == true);
+
+    ScaleImage(255.f, io.Main().color());
+
+    JXL_CHECK(!io.metadata.m.bit_depth.floating_point_sample);
+    JXL_CHECK(io.metadata.m.bit_depth.bits_per_sample == 8);
+    JXL_CHECK(io.metadata.m.color_encoding.IsGray());
+    JXL_CHECK(io.xsize() == 2);
+    JXL_CHECK(io.ysize() == 3);
+    float eps = 1e-5;
+    ExpectNear<float>('p', io.Main().color()->Plane(0).Row(0)[0], eps);
+    ExpectNear<float>('i', io.Main().color()->Plane(0).Row(0)[1], eps);
+    ExpectNear<float>('x', io.Main().color()->Plane(0).Row(1)[0], eps);
+    ExpectNear<float>('e', io.Main().color()->Plane(0).Row(1)[1], eps);
+    ExpectNear<float>('l', io.Main().color()->Plane(0).Row(2)[0], eps);
+    ExpectNear<float>('s', io.Main().color()->Plane(0).Row(2)[1], eps);
+  }
+
+  {
+    std::string pgx = "PG ML + 16 2 3\np_i_x_e_l_s_";
+
+    CodecInOut io;
+    ThreadPool* pool = nullptr;
+
+    Status ok = DecodeImagePGX(MakeSpan(pgx.c_str()), pool, &io);
+    JXL_CHECK(ok == true);
+
+    ScaleImage(255.f, io.Main().color());
+
+    JXL_CHECK(!io.metadata.m.bit_depth.floating_point_sample);
+    JXL_CHECK(io.metadata.m.bit_depth.bits_per_sample == 16);
+    JXL_CHECK(io.metadata.m.color_encoding.IsGray());
+    JXL_CHECK(io.xsize() == 2);
+    JXL_CHECK(io.ysize() == 3);
+    float eps = 1e-7;
+    const auto& plane = io.Main().color()->Plane(0);
+    ExpectNear(256.0f * 'p' + '_', plane.Row(0)[0] * 257, eps);
+    ExpectNear(256.0f * 'i' + '_', plane.Row(0)[1] * 257, eps);
+    ExpectNear(256.0f * 'x' + '_', plane.Row(1)[0] * 257, eps);
+    ExpectNear(256.0f * 'e' + '_', plane.Row(1)[1] * 257, eps);
+    ExpectNear(256.0f * 'l' + '_', plane.Row(2)[0] * 257, eps);
+    ExpectNear(256.0f * 's' + '_', plane.Row(2)[1] * 257, eps);
+  }
+}
+
 }  // namespace jxl
