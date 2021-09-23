@@ -3703,10 +3703,14 @@ mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDiscardBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aDoDiscard,
     DiscardBrowsingContextResolver&& aResolve) {
-  if (!aContext.IsNullOrDiscarded()) {
-    aContext.get()->Detach(/* aFromIPC */ true);
+  if (BrowsingContext* context = aContext.GetMaybeDiscarded()) {
+    if (aDoDiscard && !context->IsDiscarded()) {
+      context->Detach(/* aFromIPC */ true);
+    }
+    context->AddDiscardListener(aResolve);
+    return IPC_OK();
   }
 
   // Immediately resolve the promise, as we've received the message. This will

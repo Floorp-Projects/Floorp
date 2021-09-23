@@ -872,6 +872,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void RequestForPageAwake();
   void RevokeForPageAwake();
 
+  void AddDiscardListener(std::function<void(uint64_t)>&& aListener);
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -1262,6 +1264,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   RefPtr<SessionStorageManager> mSessionStorageManager;
   RefPtr<ChildSHistory> mChildSessionHistory;
+
+  nsTArray<std::function<void(uint64_t)>> mDiscardListeners;
 
   // Counter and time span for rate limiting Location and History API calls.
   // Used by CheckLocationChangeRateLimit. Do not apply cross-process.

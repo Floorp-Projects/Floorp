@@ -6663,15 +6663,19 @@ bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvDiscardBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aDoDiscard,
     DiscardBrowsingContextResolver&& aResolve) {
-  if (!aContext.IsNullOrDiscarded()) {
-    RefPtr<CanonicalBrowsingContext> context = aContext.get_canonical();
-    if (!CheckBrowsingContextEmbedder(context, "discard")) {
-      return IPC_FAIL(this, "Illegal Discard attempt");
-    }
+  if (CanonicalBrowsingContext* context =
+          CanonicalBrowsingContext::Cast(aContext.GetMaybeDiscarded())) {
+    if (aDoDiscard && !context->IsDiscarded()) {
+      if (!CheckBrowsingContextEmbedder(context, "discard")) {
+        return IPC_FAIL(this, "Illegal Discard attempt");
+      }
 
-    context->Detach(/* aFromIPC */ true);
+      context->Detach(/* aFromIPC */ true);
+    }
+    context->AddFinalDiscardListener(aResolve);
+    return IPC_OK();
   }
 
   // Resolve the promise, as we've received and handled the message. This will
