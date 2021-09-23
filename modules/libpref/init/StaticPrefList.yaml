@@ -6396,24 +6396,6 @@
   value: true
   mirror: always
 
-# Whether to enable arbitrary layer geometry for OpenGL compositor.
-- name: layers.geometry.opengl.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Whether to enable arbitrary layer geometry for Basic compositor.
-- name: layers.geometry.basic.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
- # Whether to enable arbitrary layer geometry for DirectX compositor.
-- name: layers.geometry.d3d11.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: layers.gpu-process.allow-software
   type: bool
 #if defined(XP_WIN)
