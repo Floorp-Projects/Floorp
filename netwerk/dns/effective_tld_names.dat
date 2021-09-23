@@ -6206,29 +6206,22 @@ gov.tm
 mil.tm
 edu.tm
 
-// tn : https://en.wikipedia.org/wiki/.tn
-// http://whois.ati.tn/
+// tn : http://www.registre.tn/fr/
+// https://whois.ati.tn/
 tn
 com.tn
 ens.tn
 fin.tn
 gov.tn
 ind.tn
+info.tn
 intl.tn
+mincom.tn
 nat.tn
 net.tn
 org.tn
-info.tn
 perso.tn
 tourism.tn
-edunet.tn
-rnrt.tn
-rns.tn
-rnu.tn
-mincom.tn
-agrinet.tn
-defense.tn
-turen.tn
 
 // to : https://en.wikipedia.org/wiki/.to
 // Submitted by registry <egullich@colo.to>
@@ -11618,6 +11611,10 @@ definima.io
 // DigitalOcean : https://digitalocean.com/
 // Submitted by Braxton Huggins <bhuggins@digitalocean.com>
 ondigitalocean.app
+
+// DigitalOcean Spaces : https://www.digitalocean.com/products/spaces/
+// Submitted by Robin H. Johnson <psl-maintainers@digitalocean.com>
+*.digitaloceanspaces.com
 
 // dnstrace.pro : https://dnstrace.pro/
 // Submitted by Chris Partridge <chris@partridge.tech>
