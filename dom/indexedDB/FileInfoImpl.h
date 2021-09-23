@@ -9,6 +9,8 @@
 
 #include "FileInfo.h"
 
+#include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/Mutex.h"
 #include "nsIFile.h"
@@ -89,7 +91,7 @@ void FileInfo<FileManager>::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
 
   if (needsCleanup) {
     if (aSyncDeleteFile) {
-      QM_WARNONLY_TRY(mFileManager->SyncDeleteFile(Id()));
+      QM_WARNONLY_TRY(QM_TO_RESULT(mFileManager->SyncDeleteFile(Id())));
     } else {
       Cleanup();
     }
@@ -128,7 +130,7 @@ bool FileInfo<FileManager>::LockedClearDBRefs(
 
 template <typename FileManager>
 void FileInfo<FileManager>::Cleanup() {
-  QM_WARNONLY_TRY(mFileManager->AsyncDeleteFile(Id()));
+  QM_WARNONLY_TRY(QM_TO_RESULT(mFileManager->AsyncDeleteFile(Id())));
 }
 
 template <typename FileManager>

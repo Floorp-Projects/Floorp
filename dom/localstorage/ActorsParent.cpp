@@ -67,6 +67,7 @@
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestParent.h"
 #include "mozilla/dom/PBackgroundLSSnapshotParent.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/SnappyUtils.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageUtils.h"
@@ -3134,7 +3135,7 @@ void InitializeLocalStorage() {
     QM_WARNONLY_TRY(OkIf(ss));
   }
 
-  QM_WARNONLY_TRY(QuotaClient::Initialize());
+  QM_WARNONLY_TRY(QM_TO_RESULT(QuotaClient::Initialize()));
 
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);
@@ -8811,10 +8812,10 @@ AutoWriteTransaction::~AutoWriteTransaction() {
   MOZ_COUNT_DTOR(mozilla::dom::AutoWriteTransaction);
 
   if (mConnection) {
-    QM_WARNONLY_TRY(mConnection->RollbackWriteTransaction());
+    QM_WARNONLY_TRY(QM_TO_RESULT(mConnection->RollbackWriteTransaction()));
 
     if (mShadowWrites) {
-      QM_WARNONLY_TRY(DetachShadowDatabaseAndUnlock());
+      QM_WARNONLY_TRY(QM_TO_RESULT(DetachShadowDatabaseAndUnlock()));
     }
   }
 }
