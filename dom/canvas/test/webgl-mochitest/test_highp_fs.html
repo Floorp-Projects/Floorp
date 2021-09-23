@@ -26,17 +26,11 @@ void main(void) {
 
 // Give ourselves a scope to return early from:
 (function() {
-  var gl = WebGLUtil.getWebGL('c');
+  var gl = c.getContext('webgl');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
   }
-
-  // Catch actual WebGLUtil errors, not GL errors.
-  function errorFunc(str) {
-    ok(false, 'Error: ' + str);
-  }
-  WebGLUtil.setErrorFunc(errorFunc);
 
   function checkGLError(func, info) {
     var error = gl.getError();
@@ -47,7 +41,7 @@ void main(void) {
   var format = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
   var prog = WebGLUtil.createProgramByIds(gl, 'shader-vs', 'shader-fs');
   checkGLError(ok);
-  
+
   if (format) {
     ok(prog, 'Frag shader with unconditional `precision highp float` should ' +
              'link if `getShaderPrecisionFormat` gives a format for it.');

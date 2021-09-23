@@ -40,16 +40,12 @@ runNetworkTest(async () => {
   canvas.style.display = 'none';
   document.getElementById('content').appendChild(canvas);
 
-  var gl = WebGLUtil.getWebGL(canvas.id, false);
+  var gl = canvas.getContext('webgl');
   if (!gl) {
     todo(false, "WebGL unavailable.");
     networkTestFinished();
     return;
   }
-
-  var errorFunc = str => ok(false, 'Error: ' + str);
-  WebGLUtil.setErrorFunc(errorFunc);
-  WebGLUtil.setWarningFunc(errorFunc);
 
   test.setMediaConstraints([{video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
