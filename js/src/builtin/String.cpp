@@ -961,7 +961,7 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* result = buffer.toString();
+  JSString* result = buffer.toString(cx);
   if (!result) {
     return false;
   }
@@ -1367,7 +1367,7 @@ bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* result = buffer.toString();
+  JSString* result = buffer.toString(cx);
   if (!result) {
     return false;
   }
@@ -1547,7 +1547,7 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  JSString* ns = buffer.toString();
+  JSString* ns = buffer.toString(cx);
   if (!ns) {
     return false;
   }

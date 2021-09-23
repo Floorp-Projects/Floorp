@@ -396,7 +396,7 @@ bool js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = canonicalTimeZone.toString();
+  JSString* str = canonicalTimeZone.toString(cx);
   if (!str) {
     return false;
   }
@@ -421,7 +421,7 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = timeZone.toString();
+  JSString* str = timeZone.toString(cx);
   if (!str) {
     return false;
   }
@@ -1118,7 +1118,7 @@ static bool intl_FormatDateTime(JSContext* cx,
     return false;
   }
 
-  JSString* str = buffer.toString();
+  JSString* str = buffer.toString(cx);
   if (!str) {
     return false;
   }
