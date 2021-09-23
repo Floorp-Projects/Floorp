@@ -302,7 +302,8 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    */
   FrameCursorData* SetupRowCursor();
 
-  virtual nsILineIterator* GetLineIterator() override { return this; }
+  bool CanProvideLineIterator() const final { return true; }
+  nsILineIterator* GetLineIterator() final { return this; }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
