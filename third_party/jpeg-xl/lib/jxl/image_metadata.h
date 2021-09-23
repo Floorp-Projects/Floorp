@@ -71,7 +71,7 @@ static inline constexpr uint64_t EnumBits(ExtraChannel /*unused*/) {
 // Used in ImageMetadata and ExtraChannelInfo.
 struct BitDepth : public Fields {
   BitDepth();
-  const char* Name() const override { return "BitDepth"; }
+  JXL_FIELDS_NAME(BitDepth)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -99,7 +99,7 @@ struct BitDepth : public Fields {
 // Describes one extra channel.
 struct ExtraChannelInfo : public Fields {
   ExtraChannelInfo();
-  const char* Name() const override { return "ExtraChannelInfo"; }
+  JXL_FIELDS_NAME(ExtraChannelInfo)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -119,7 +119,7 @@ struct ExtraChannelInfo : public Fields {
 
 struct OpsinInverseMatrix : public Fields {
   OpsinInverseMatrix();
-  const char* Name() const override { return "OpsinInverseMatrix"; }
+  JXL_FIELDS_NAME(OpsinInverseMatrix)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -133,7 +133,7 @@ struct OpsinInverseMatrix : public Fields {
 // Information useful for mapping HDR images to lower dynamic range displays.
 struct ToneMapping : public Fields {
   ToneMapping();
-  const char* Name() const override { return "ToneMapping"; }
+  JXL_FIELDS_NAME(ToneMapping)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -163,7 +163,7 @@ struct ToneMapping : public Fields {
 // upsampling.
 struct CustomTransformData : public Fields {
   CustomTransformData();
-  const char* Name() const override { return "CustomTransformData"; }
+  JXL_FIELDS_NAME(CustomTransformData)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -185,7 +185,7 @@ struct CustomTransformData : public Fields {
 // re-create an equivalent image without user input.
 struct ImageMetadata : public Fields {
   ImageMetadata();
-  const char* Name() const override { return "ImageMetadata"; }
+  JXL_FIELDS_NAME(ImageMetadata)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -218,6 +218,12 @@ struct ImageMetadata : public Fields {
     bit_depth.bits_per_sample = bits;
     bit_depth.exponent_bits_per_sample = 0;
     bit_depth.floating_point_sample = false;
+    // RCT / Squeeze may add one bit each, and this is about int16_t,
+    // so uint13 should still be OK but limiting it to 12 seems safer.
+    // TODO(jon): figure out a better way to set this header field.
+    // (in particular, if modular mode is not used it doesn't matter,
+    // and if transforms are restricted, up to 15-bit could be done)
+    if (bits > 12) modular_16_bit_buffer_sufficient = false;
   }
   // Sets the original bit depth fields to indicate single precision floating
   // point.
@@ -226,12 +232,14 @@ struct ImageMetadata : public Fields {
     bit_depth.bits_per_sample = 32;
     bit_depth.exponent_bits_per_sample = 8;
     bit_depth.floating_point_sample = true;
+    modular_16_bit_buffer_sufficient = false;
   }
 
   void SetFloat16Samples() {
     bit_depth.bits_per_sample = 16;
     bit_depth.exponent_bits_per_sample = 5;
     bit_depth.floating_point_sample = true;
+    modular_16_bit_buffer_sufficient = false;
   }
 
   void SetIntensityTarget(float intensity_target) {
@@ -332,8 +340,6 @@ struct ImageMetadata : public Fields {
   uint32_t num_extra_channels;
   std::vector<ExtraChannelInfo> extra_channel_info;
 
-  CustomTransformData transform_data;  // often default
-
   // Only present if m.have_preview.
   PreviewHeader preview_size;
   // Only present if m.have_animation.
@@ -369,6 +375,34 @@ struct CodecMetadata {
 
   size_t xsize() const { return size.xsize(); }
   size_t ysize() const { return size.ysize(); }
+  size_t oriented_xsize(bool keep_orientation) const {
+    if (static_cast<uint32_t>(m.GetOrientation()) > 4 && !keep_orientation) {
+      return ysize();
+    } else {
+      return xsize();
+    }
+  }
+  size_t oriented_preview_xsize(bool keep_orientation) const {
+    if (static_cast<uint32_t>(m.GetOrientation()) > 4 && !keep_orientation) {
+      return m.preview_size.ysize();
+    } else {
+      return m.preview_size.xsize();
+    }
+  }
+  size_t oriented_ysize(bool keep_orientation) const {
+    if (static_cast<uint32_t>(m.GetOrientation()) > 4 && !keep_orientation) {
+      return xsize();
+    } else {
+      return ysize();
+    }
+  }
+  size_t oriented_preview_ysize(bool keep_orientation) const {
+    if (static_cast<uint32_t>(m.GetOrientation()) > 4 && !keep_orientation) {
+      return m.preview_size.xsize();
+    } else {
+      return m.preview_size.ysize();
+    }
+  }
 };
 
 }  // namespace jxl

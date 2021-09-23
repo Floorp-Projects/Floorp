@@ -236,6 +236,10 @@ class Rect {
                 std::min(y0_ + ysize_, other.y0_ + other.ysize_));
   }
 
+  JXL_MUST_USE_RESULT Rect Translate(int64_t x_offset, int64_t y_offset) const {
+    return Rect(x0_ + x_offset, y0_ + y_offset, xsize_, ysize_);
+  }
+
   template <typename T>
   T* Row(Plane<T>* image, size_t y) const {
     return image->Row(y + y0_) + x0_;

@@ -31,16 +31,13 @@ typedef struct JxlEncoderQueuedFrame {
   jxl::ImageBundle frame;
 } JxlEncoderQueuedFrame;
 
-Status ConvertExternalToInternalColorEncoding(const JxlColorEncoding& external,
-                                              jxl::ColorEncoding* internal);
-
 typedef std::array<uint8_t, 4> BoxType;
 
 // Utility function that makes a BoxType from a null terminated string literal.
 constexpr BoxType MakeBoxType(const char (&type)[5]) {
-  return BoxType({static_cast<uint8_t>(type[0]), static_cast<uint8_t>(type[1]),
-                  static_cast<uint8_t>(type[2]),
-                  static_cast<uint8_t>(type[3])});
+  return BoxType(
+      {{static_cast<uint8_t>(type[0]), static_cast<uint8_t>(type[1]),
+        static_cast<uint8_t>(type[2]), static_cast<uint8_t>(type[3])}});
 }
 
 constexpr unsigned char kContainerHeader[] = {

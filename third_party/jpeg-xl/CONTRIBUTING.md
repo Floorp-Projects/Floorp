@@ -42,6 +42,19 @@ to accept your pull requests.
 ***NOTE***: Only original source code from you and other people that have signed
 the CLA can be accepted into the main repository.
 
+### License
+
+Contributions are licensed under the project's [LICENSE](LICENSE). Each new
+file must include the following header when possible, with comment style adapted
+to the language as needed:
+
+```
+// Copyright (c) the JPEG XL Project Authors. All rights reserved.
+//
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+```
+
 ### Code Reviews
 
 All submissions, including submissions by project members, require review. We
@@ -91,6 +104,10 @@ information on using pull requests.
   typos. Reviewers can click on the "force-pushed" automatic comment on a Pull
   Request to see the changes between versions. We use "Rebase and merge" policy
   to keep a linear git history which is easier to reason about.
+
+  * Your change must pass the build and test workflows. There's a `ci.sh` script
+  to help building and testing these configurations. See [building and
+  testing](doc/building_and_testing.md) for more details.
 
 ### Contributing checklist.
 

@@ -26,8 +26,8 @@ int PrintBasicInfo(FILE* file) {
   JxlDecoderSetKeepOrientation(dec, 1);
 
   if (JXL_DEC_SUCCESS !=
-      JxlDecoderSubscribeEvents(dec,
-                                JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING)) {
+      JxlDecoderSubscribeEvents(
+          dec, JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FRAME)) {
     fprintf(stderr, "JxlDecoderSubscribeEvents failed\n");
     JxlDecoderDestroy(dec);
     return 0;
@@ -35,6 +35,7 @@ int PrintBasicInfo(FILE* file) {
 
   JxlBasicInfo info;
   int seen_basic_info = 0;
+  JxlFrameHeader frame_header;
 
   for (;;) {
     // The first time, this will output JXL_DEC_NEED_MORE_INPUT because no
@@ -75,16 +76,21 @@ int PrintBasicInfo(FILE* file) {
 
       seen_basic_info = 1;
 
-      printf("xsize: %u\n", info.xsize);
-      printf("ysize:  %u\n", info.ysize);
+      printf("dimensions: %ux%u\n", info.xsize, info.ysize);
       printf("have_container: %d\n", info.have_container);
       printf("uses_original_profile: %d\n", info.uses_original_profile);
       printf("bits_per_sample: %d\n", info.bits_per_sample);
-      printf("exponent_bits_per_sample: %d\n", info.exponent_bits_per_sample);
-      printf("intensity_target: %f\n", info.intensity_target);
-      printf("min_nits: %f\n", info.min_nits);
-      printf("relative_to_max_display: %d\n", info.relative_to_max_display);
-      printf("linear_below: %f\n", info.linear_below);
+      if (info.exponent_bits_per_sample)
+        printf("float, with exponent_bits_per_sample: %d\n",
+               info.exponent_bits_per_sample);
+      if (info.intensity_target != 255.f || info.min_nits != 0.f ||
+          info.relative_to_max_display != 0 ||
+          info.relative_to_max_display != 0.f) {
+        printf("intensity_target: %f\n", info.intensity_target);
+        printf("min_nits: %f\n", info.min_nits);
+        printf("relative_to_max_display: %d\n", info.relative_to_max_display);
+        printf("linear_below: %f\n", info.linear_below);
+      }
       printf("have_preview: %d\n", info.have_preview);
       if (info.have_preview) {
         printf("preview xsize: %u\n", info.preview.xsize);
@@ -97,25 +103,45 @@ int PrintBasicInfo(FILE* file) {
         printf("num_loops: %u\n", info.animation.num_loops);
         printf("have_timecodes: %d\n", info.animation.have_timecodes);
       }
-      printf("orientation: %d\n", info.orientation);
+      const char* const orientation_string[8] = {
+          "Normal",          "Flipped horizontally",
+          "Upside down",     "Flipped vertically",
+          "Transposed",      "90 degrees clockwise",
+          "Anti-Transposed", "90 degrees counter-clockwise"};
+      if (info.orientation > 0 && info.orientation < 9) {
+        printf("orientation: %d (%s)\n", info.orientation,
+               orientation_string[info.orientation - 1]);
+      } else {
+        fprintf(stderr, "Invalid orientation\n");
+      }
+      printf("num_color_channels: %d\n", info.num_color_channels);
       printf("num_extra_channels: %d\n", info.num_extra_channels);
-      printf("alpha_bits: %d\n", info.alpha_bits);
-      printf("alpha_exponent_bits: %d\n", info.alpha_exponent_bits);
-      printf("alpha_premultiplied: %d\n", info.alpha_premultiplied);
 
+      const char* const ec_type_names[7] = {"Alpha",       "Depth",
+                                            "Spot color",  "Selection mask",
+                                            "K (of CMYK)", "CFA (Bayer data)",
+                                            "Thermal"};
       for (uint32_t i = 0; i < info.num_extra_channels; i++) {
         JxlExtraChannelInfo extra;
         if (JXL_DEC_SUCCESS != JxlDecoderGetExtraChannelInfo(dec, i, &extra)) {
           fprintf(stderr, "JxlDecoderGetExtraChannelInfo failed\n");
           break;
         }
-        printf("extra channel: %u info:\n", i);
-        printf("  type: %d\n", extra.type);
+        printf("extra channel %u:\n", i);
+        printf("  type: %s\n",
+               (extra.type < 7 ? ec_type_names[extra.type]
+                               : (extra.type == JXL_CHANNEL_OPTIONAL
+                                      ? "Unknown but can be ignored"
+                                      : "Unknown, please update your libjxl")));
         printf("  bits_per_sample: %u\n", extra.bits_per_sample);
-        printf("  exponent_bits_per_sample: %u\n",
-               extra.exponent_bits_per_sample);
-        printf("  dim_shift: %u\n", extra.dim_shift);
-        printf("  name_length: %u\n", extra.name_length);
+        if (extra.exponent_bits_per_sample > 0) {
+          printf("  float, with exponent_bits_per_sample: %u\n",
+                 extra.exponent_bits_per_sample);
+        }
+        if (extra.dim_shift > 0) {
+          printf("  dim_shift: %u (upsampled %ux)\n", extra.dim_shift,
+                 1 << extra.dim_shift);
+        }
         if (extra.name_length) {
           char* name = malloc(extra.name_length + 1);
           if (JXL_DEC_SUCCESS != JxlDecoderGetExtraChannelName(
@@ -127,37 +153,52 @@ int PrintBasicInfo(FILE* file) {
           free(name);
           printf("  name: %s\n", name);
         }
-        printf("  alpha_associated: %d\n", extra.alpha_associated);
-        printf("  spot_color: %f %f %f %f\n", extra.spot_color[0],
-               extra.spot_color[1], extra.spot_color[2], extra.spot_color[3]);
-        printf("  cfa_channel: %u\n", extra.cfa_channel);
+        if (extra.type == JXL_CHANNEL_ALPHA)
+          printf("  alpha_premultiplied: %d (%s)\n", extra.alpha_premultiplied,
+                 extra.alpha_premultiplied ? "Premultiplied"
+                                           : "Non-premultiplied");
+        if (extra.type == JXL_CHANNEL_SPOT_COLOR) {
+          printf("  spot_color: (%f, %f, %f) with opacity %f\n",
+                 extra.spot_color[0], extra.spot_color[1], extra.spot_color[2],
+                 extra.spot_color[3]);
+        }
+        if (extra.type == JXL_CHANNEL_CFA)
+          printf("  cfa_channel: %u\n", extra.cfa_channel);
       }
     } else if (status == JXL_DEC_COLOR_ENCODING) {
       JxlPixelFormat format = {4, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
-      JxlColorProfileTarget targets[2] = {JXL_COLOR_PROFILE_TARGET_ORIGINAL,
-                                          JXL_COLOR_PROFILE_TARGET_DATA};
-      for (size_t i = 0; i < 2; i++) {
-        JxlColorProfileTarget target = targets[i];
-        if (info.uses_original_profile) {
-          if (target != JXL_COLOR_PROFILE_TARGET_ORIGINAL) continue;
-          printf("color profile:\n");
-        } else {
-          printf(target == JXL_COLOR_PROFILE_TARGET_ORIGINAL
-                     ? "original color profile:\n"
-                     : "data color profile:\n");
-        }
+      printf("color profile:\n");
 
-        JxlColorEncoding color_encoding;
-        if (JXL_DEC_SUCCESS == JxlDecoderGetColorAsEncodedProfile(
-                                   dec, &format, target, &color_encoding)) {
-          printf("  format: JPEG XL encoded color profile\n");
-          printf("  color_space: %d\n", color_encoding.color_space);
-          printf("  white_point: %d\n", color_encoding.white_point);
+      JxlColorEncoding color_encoding;
+      if (JXL_DEC_SUCCESS ==
+          JxlDecoderGetColorAsEncodedProfile(dec, &format,
+                                             JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                                             &color_encoding)) {
+        printf("  format: JPEG XL encoded color profile\n");
+        const char* const cs_string[4] = {"RGB color", "Grayscale", "XYB",
+                                          "Unknown"};
+        const char* const wp_string[12] = {"", "D65", "Custom", "", "",  "",
+                                           "", "",    "",       "", "E", "P3"};
+        const char* const pr_string[12] = {
+            "", "sRGB", "Custom", "", "", "", "", "", "", "Rec.2100", "", "P3"};
+        const char* const tf_string[19] = {
+            "", "709", "Unknown", "",     "", "", "",   "",    "Linear", "",
+            "", "",    "",        "sRGB", "", "", "PQ", "DCI", "HLG"};
+        const char* const ri_string[4] = {"Perceptual", "Relative",
+                                          "Saturation", "Absolute"};
+        printf("  color_space: %d (%s)\n", color_encoding.color_space,
+               cs_string[color_encoding.color_space]);
+        printf("  white_point: %d (%s)\n", color_encoding.white_point,
+               wp_string[color_encoding.white_point]);
+        if (color_encoding.white_point == JXL_WHITE_POINT_CUSTOM) {
           printf("  white_point XY: %f %f\n", color_encoding.white_point_xy[0],
                  color_encoding.white_point_xy[1]);
-          if (color_encoding.color_space == JXL_COLOR_SPACE_RGB ||
-              color_encoding.color_space == JXL_COLOR_SPACE_UNKNOWN) {
-            printf("  primaries: %d\n", color_encoding.primaries);
+        }
+        if (color_encoding.color_space == JXL_COLOR_SPACE_RGB ||
+            color_encoding.color_space == JXL_COLOR_SPACE_UNKNOWN) {
+          printf("  primaries: %d (%s)\n", color_encoding.primaries,
+                 pr_string[color_encoding.primaries]);
+          if (color_encoding.primaries == JXL_PRIMARIES_CUSTOM) {
             printf("  red primaries XY: %f %f\n",
                    color_encoding.primaries_red_xy[0],
                    color_encoding.primaries_red_xy[1]);
@@ -168,40 +209,78 @@ int PrintBasicInfo(FILE* file) {
                    color_encoding.primaries_blue_xy[0],
                    color_encoding.primaries_blue_xy[1]);
           }
-          printf("  transfer_function: %d\n", color_encoding.transfer_function);
-          if (color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_GAMMA) {
-            printf("  transfer_function gamma: %f\n", color_encoding.gamma);
-          }
-          printf("  rendering_intent: %d\n", color_encoding.rendering_intent);
+        }
+        if (color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_GAMMA) {
+          printf("  transfer_function: gamma: %f\n", color_encoding.gamma);
         } else {
-          // The profile is not in JPEG XL encoded form, get as ICC profile
-          // instead.
-          printf("  format: ICC profile\n");
-          size_t profile_size;
-          if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(
-                                     dec, &format, target, &profile_size)) {
-            fprintf(stderr, "JxlDecoderGetICCProfileSize failed\n");
-            continue;
-          }
-          printf("  ICC profile size: %zu\n", profile_size);
-          if (profile_size < 132) {
-            fprintf(stderr, "ICC profile too small\n");
-            continue;
-          }
-          uint8_t* profile = (uint8_t*)malloc(profile_size);
-          if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(dec, &format,
-                                                                target, profile,
-                                                                profile_size)) {
-            fprintf(stderr, "JxlDecoderGetColorAsICCProfile failed\n");
-            free(profile);
-            continue;
-          }
-          printf("  CMM type: \"%.4s\"\n", profile + 4);
-          printf("  color space: \"%.4s\"\n", profile + 16);
-          printf("  rendering intent: %d\n", (int)profile[67]);
+          printf("  transfer_function: %d (%s)\n",
+                 color_encoding.transfer_function,
+                 tf_string[color_encoding.transfer_function]);
+        }
+        printf("  rendering_intent: %d (%s)\n", color_encoding.rendering_intent,
+               ri_string[color_encoding.rendering_intent]);
+
+      } else {
+        // The profile is not in JPEG XL encoded form, get as ICC profile
+        // instead.
+        printf("  format: ICC profile\n");
+        size_t profile_size;
+        if (JXL_DEC_SUCCESS !=
+            JxlDecoderGetICCProfileSize(dec, &format,
+                                        JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                                        &profile_size)) {
+          fprintf(stderr, "JxlDecoderGetICCProfileSize failed\n");
+          continue;
+        }
+        printf("  ICC profile size: %zu\n", profile_size);
+        if (profile_size < 132) {
+          fprintf(stderr, "ICC profile too small\n");
+          continue;
+        }
+        uint8_t* profile = (uint8_t*)malloc(profile_size);
+        if (JXL_DEC_SUCCESS !=
+            JxlDecoderGetColorAsICCProfile(dec, &format,
+                                           JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                                           profile, profile_size)) {
+          fprintf(stderr, "JxlDecoderGetColorAsICCProfile failed\n");
           free(profile);
+          continue;
+        }
+        printf("  CMM type: \"%.4s\"\n", profile + 4);
+        printf("  color space: \"%.4s\"\n", profile + 16);
+        printf("  rendering intent: %d\n", (int)profile[67]);
+        free(profile);
+      }
+
+    } else if (status == JXL_DEC_FRAME) {
+      if (JXL_DEC_SUCCESS != JxlDecoderGetFrameHeader(dec, &frame_header)) {
+        fprintf(stderr, "JxlDecoderGetFrameHeader failed\n");
+        break;
+      }
+      printf("frame:\n");
+      if (frame_header.name_length) {
+        char* name = malloc(frame_header.name_length + 1);
+        if (JXL_DEC_SUCCESS !=
+            JxlDecoderGetFrameName(dec, name, frame_header.name_length + 1)) {
+          fprintf(stderr, "JxlDecoderGetFrameName failed\n");
+          free(name);
+          break;
+        }
+        free(name);
+        printf("  name: %s\n", name);
+      }
+      float ms = frame_header.duration * 1000.f *
+                 info.animation.tps_denominator / info.animation.tps_numerator;
+      if (info.have_animation) {
+        printf("  duration: %u ticks (%f ms)\n", frame_header.duration, ms);
+        if (info.animation.have_timecodes) {
+          printf("  time code: %X\n", frame_header.timecode);
         }
       }
+      if (!frame_header.name_length && !info.have_animation) {
+        printf("  still frame, unnamed\n");
+      }
+
       // This is the last expected event, no need to read the rest of the file.
     } else {
       fprintf(stderr, "Unexpected decoder status\n");

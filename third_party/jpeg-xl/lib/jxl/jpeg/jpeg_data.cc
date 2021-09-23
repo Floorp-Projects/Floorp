@@ -10,6 +10,8 @@
 namespace jxl {
 namespace jpeg {
 
+#if JPEGXL_ENABLE_TRANSCODE_JPEG
+
 namespace {
 enum JPEGComponentType : uint32_t {
   kGray = 0,
@@ -393,6 +395,8 @@ Status JPEGData::VisitFields(Visitor* visitor) {
   return true;
 }
 
+#endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
+
 void JPEGData::CalculateMcuSize(const JPEGScanInfo& scan, int* MCUs_per_row,
                                 int* MCU_rows) const {
   const bool is_interleaved = (scan.num_components > 1);
@@ -413,6 +417,8 @@ void JPEGData::CalculateMcuSize(const JPEGScanInfo& scan, int* MCUs_per_row,
   *MCUs_per_row = DivCeil(width * h_group, 8 * max_h_samp_factor);
   *MCU_rows = DivCeil(height * v_group, 8 * max_v_samp_factor);
 }
+
+#if JPEGXL_ENABLE_TRANSCODE_JPEG
 
 Status SetJPEGDataFromICC(const PaddedBytes& icc, jpeg::JPEGData* jpeg_data) {
   size_t icc_pos = 0;
@@ -435,6 +441,8 @@ Status SetJPEGDataFromICC(const PaddedBytes& icc, jpeg::JPEGData* jpeg_data) {
   }
   return true;
 }
+
+#endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
 }  // namespace jpeg
 }  // namespace jxl

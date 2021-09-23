@@ -99,7 +99,7 @@ struct HybridUintConfig {
 
 struct LZ77Params : public Fields {
   LZ77Params();
-  const char* Name() const override { return "LZ77Params"; }
+  JXL_FIELDS_NAME(LZ77Params)
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
   bool enabled;
 

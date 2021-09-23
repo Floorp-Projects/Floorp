@@ -8,6 +8,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "lib/extras/codec.h"
+#include "lib/jxl/dec_file.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/image_test_utils.h"
@@ -266,7 +267,8 @@ TEST(SplinesTest, DuplicatePoints) {
 
   Image3F image(320, 320);
   ZeroFillImage(&image);
-  EXPECT_FALSE(splines.AddTo(&image, Rect(image), Rect(image), *cmap));
+  EXPECT_FALSE(
+      splines.InitializeDrawCache(image.xsize(), image.ysize(), *cmap));
 }
 
 TEST(SplinesTest, Drawing) {
@@ -295,7 +297,8 @@ TEST(SplinesTest, Drawing) {
 
   Image3F image(320, 320);
   ZeroFillImage(&image);
-  ASSERT_TRUE(splines.AddTo(&image, Rect(image), Rect(image), *cmap));
+  ASSERT_TRUE(splines.InitializeDrawCache(image.xsize(), image.ysize(), *cmap));
+  splines.AddTo(&image, Rect(image), Rect(image));
 
   OpsinParams opsin_params{};
   opsin_params.Init(kDefaultIntensityTarget);
@@ -305,6 +308,30 @@ TEST(SplinesTest, Drawing) {
   io_actual.SetFromImage(CopyImage(image), ColorEncoding::LinearSRGB());
   ASSERT_TRUE(io_actual.TransformTo(io_expected.Main().c_current()));
 
+  VerifyRelativeError(*io_expected.Main().color(), *io_actual.Main().color(),
+                      1e-2f, 1e-1f);
+}
+
+TEST(SplinesTest, ClearedEveryFrame) {
+  CodecInOut io_expected;
+  const PaddedBytes bytes_expected =
+      ReadTestData("jxl/spline_on_first_frame.png");
+  ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(bytes_expected), &io_expected,
+                           /*pool=*/nullptr));
+  CodecInOut io_actual;
+  const PaddedBytes bytes_actual =
+      ReadTestData("jxl/spline_on_first_frame.jxl");
+  ASSERT_TRUE(DecodeFile(DecompressParams(), bytes_actual, &io_actual,
+                         /*pool=*/nullptr));
+  ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB()));
+  for (size_t c = 0; c < 3; ++c) {
+    for (size_t y = 0; y < io_actual.ysize(); ++y) {
+      float* const JXL_RESTRICT row = io_actual.Main().color()->PlaneRow(c, y);
+      for (size_t x = 0; x < io_actual.xsize(); ++x) {
+        row[x] = Clamp1(row[x], 0.f, 1.f);
+      }
+    }
+  }
   VerifyRelativeError(*io_expected.Main().color(), *io_actual.Main().color(),
                       1e-2f, 1e-1f);
 }

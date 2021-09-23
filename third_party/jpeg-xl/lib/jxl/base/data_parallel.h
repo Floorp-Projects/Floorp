@@ -104,24 +104,18 @@ class ThreadPool {
   void* const runner_opaque_;
 };
 
-void TraceRunBegin(const char* caller, double* t0);
-void TraceRunEnd(const char* caller, double t0);
-
 // TODO(deymo): Convert the return value to a Status when not using SkipInit.
 template <class InitFunc, class DataFunc>
 bool RunOnPool(ThreadPool* pool, const uint32_t begin, const uint32_t end,
                const InitFunc& init_func, const DataFunc& data_func,
                const char* caller) {
   Status ret = true;
-  double t0;
-  TraceRunBegin(caller, &t0);
   if (pool == nullptr) {
     ThreadPool default_pool(nullptr, nullptr);
     ret = default_pool.Run(begin, end, init_func, data_func, caller);
   } else {
     ret = pool->Run(begin, end, init_func, data_func, caller);
   }
-  TraceRunEnd(caller, t0);
   return ret;
 }
 

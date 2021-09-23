@@ -49,7 +49,6 @@ TEST(BlendingTest, Offset) {
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(foreground_bytes), &foreground));
 
   ImageBlender blender;
-  ImageBundle output;
   CodecMetadata nonserialized_metadata;
   ASSERT_TRUE(
       nonserialized_metadata.size.Set(background.xsize(), background.ysize()));
@@ -62,9 +61,14 @@ TEST(BlendingTest, Offset) {
   PassesDecoderState dec_state;
   dec_state.shared = &state;
   const FrameOrigin foreground_origin = {-50, -50};
-  ASSERT_TRUE(blender.PrepareBlending(&dec_state, foreground_origin,
-                                      foreground.xsize(), foreground.ysize(),
-                                      background.Main().c_current(), &output));
+  ImageBundle output(&background.metadata.m);
+  output.SetFromImage(Image3F(background.xsize(), background.ysize()),
+                      background.Main().c_current());
+  ASSERT_TRUE(blender.PrepareBlending(
+      &dec_state, foreground_origin, foreground.xsize(), foreground.ysize(),
+      &nonserialized_metadata.m.extra_channel_info,
+      background.Main().c_current(), Rect(background), output.color(),
+      Rect(*output.color()), {}, {}));
 
   static constexpr int kStep = 20;
   for (size_t x0 = 0; x0 < foreground.xsize(); x0 += kStep) {

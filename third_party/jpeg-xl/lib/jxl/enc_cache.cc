@@ -90,7 +90,7 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
     JXL_ASSERT(cparams.progressive_dc > 0);
     cparams.progressive_dc--;
     // The DC frame will have alpha=0. Don't erase its contents.
-    cparams.keep_invisible = true;
+    cparams.keep_invisible = Override::kOn;
     // No EPF or Gaborish in DC frames.
     cparams.epf = 0;
     cparams.gaborish = Override::kOff;
@@ -144,7 +144,9 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
     ImageBundle decoded(&shared.metadata->m);
     std::unique_ptr<PassesDecoderState> dec_state =
         jxl::make_unique<PassesDecoderState>();
-    JXL_CHECK(dec_state->output_encoding_info.Set(shared.metadata->m));
+    JXL_CHECK(dec_state->output_encoding_info.Set(
+        *shared.metadata,
+        ColorEncoding::LinearSRGB(shared.metadata->m.color_encoding.IsGray())));
     JXL_CHECK(DecodeFrame({}, dec_state.get(), pool, &br, &decoded,
                           *shared.metadata, /*constraints=*/nullptr));
     // TODO(lode): shared.frame_header.dc_level should be equal to
@@ -162,7 +164,7 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
       modular_frame_encoder->AddVarDCTDC(
           dc, group_index,
           enc_state->cparams.butteraugli_distance >= 2.0f &&
-              enc_state->cparams.speed_tier != SpeedTier::kFalcon,
+              enc_state->cparams.speed_tier < SpeedTier::kFalcon,
           enc_state);
     };
     RunOnPool(pool, 0, shared.frame_dim.num_dc_groups, ThreadPool::SkipInit(),
