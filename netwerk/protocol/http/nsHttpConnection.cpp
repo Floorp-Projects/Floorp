@@ -1722,7 +1722,7 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   // IsAlive() calls drive the handshake and that may cause nss and necko
   // to be out of sync.
   if (EarlyDataAvailable() && !CheckCanWrite0RTTData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mTlsHandshakeComplitionPending);
+    MOZ_DIAGNOSTIC_ASSERT(mTlsHandshakeComplitionPending);
     LOG(
         ("nsHttpConnection::OnReadSegment Do not write any data, wait"
          " for EnsureNPNComplete to be called [this=%p]",
