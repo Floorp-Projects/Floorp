@@ -17,6 +17,7 @@ const {
   TARGET_CONFIGURATION,
   THREAD_CONFIGURATION,
   XHR_BREAKPOINTS,
+  EVENT_BREAKPOINTS,
 } = WatchedDataHelpers.SUPPORTED_DATA;
 
 loader.lazyRequireGetter(
@@ -45,6 +46,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      *        Set to true if this function is called just after a new document (and its
      *        associated target) is created.
      */
+    // eslint-disable-next-line complexity
     async addWatcherDataEntry(type, entries, isDocumentCreation = false) {
       if (type == RESOURCES) {
         await this._watchTargetResources(entries);
@@ -126,6 +128,20 @@ module.exports = function(targetType, targetActorSpec, implementation) {
             this.threadActor.setXHRBreakpoint(path, method)
           )
         );
+      } else if (type == EVENT_BREAKPOINTS) {
+        // Same as comments for XHR breakpoints. See lines 109-112
+        if (typeof this.attach == "function") {
+          this.attach();
+        }
+
+        // Same as comments for XHR breakpoints. See lines 117-118
+        if (
+          this.threadActor.state == THREAD_STATES.DETACHED &&
+          !this.targetType.endsWith("worker")
+        ) {
+          this.threadActor.attach();
+        }
+        await this.threadActor.setActiveEventBreakpoints(entries);
       }
     },
 
