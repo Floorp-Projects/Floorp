@@ -144,6 +144,17 @@ class TimeZone final {
   }
 
   /**
+   * Fill the buffer with the host system's default IANA time zone identifier,
+   * e.g. "America/Chicago".
+   *
+   * NOTE: This function is not thread-safe.
+   */
+  template <typename B>
+  static ICUResult GetHostTimeZone(B& aBuffer) {
+    return FillBufferWithICUCall(aBuffer, ucal_getHostTimeZone);
+  }
+
+  /**
    * Set the default time zone.
    */
   static Result<bool, ICUError> SetDefaultTimeZone(Span<const char> aTimeZone);
