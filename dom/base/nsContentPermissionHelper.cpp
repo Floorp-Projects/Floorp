@@ -492,7 +492,7 @@ ContentPermissionRequestBase::CheckPromptPrefs() const {
   return PromptResult::Pending;
 }
 
-bool ContentPermissionRequestBase::CheckPermissionDelegate() {
+bool ContentPermissionRequestBase::CheckPermissionDelegate() const {
   // There is case that ContentPermissionRequestBase is constructed without
   // window, then mPermissionHandler will be null. So we only check permission
   // delegate if we have non-null mPermissionHandler
