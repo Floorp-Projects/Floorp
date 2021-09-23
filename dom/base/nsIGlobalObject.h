@@ -33,7 +33,6 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 class DOMEventTargetHelper;
-enum class StorageAccess;
 namespace dom {
 class VoidFunction;
 class DebuggerNotificationManager;
@@ -183,14 +182,6 @@ class nsIGlobalObject : public nsISupports,
   virtual RefPtr<mozilla::dom::ServiceWorkerRegistration>
   GetOrCreateServiceWorkerRegistration(
       const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor);
-
-  /**
-   * Returns the storage access of this global.
-   *
-   * If you have a global that needs storage access, you should be overriding
-   * this method in your subclass of this class!
-   */
-  virtual mozilla::StorageAccess GetStorageAccess();
 
   // Returns a pointer to this object as an inner window if this is one or
   // nullptr otherwise.
