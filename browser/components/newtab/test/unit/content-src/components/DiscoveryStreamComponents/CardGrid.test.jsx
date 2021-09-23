@@ -1,5 +1,9 @@
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
-import { DSCard } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {
+  DSCard,
+  LastCardMessage,
+} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -54,5 +58,32 @@ describe("<CardGrid>", () => {
     });
 
     assert.ok(wrapper.find(".ds-card-grid-include-descriptions").exists());
+  });
+
+  it("should show last card and more loaded state", () => {
+    const dispatch = sinon.stub();
+    wrapper.setProps({
+      dispatch,
+      compact: true,
+      loadMoreEnabled: true,
+      lastCardMessageEnabled: true,
+      data: { recommendations: [{}, {}] },
+    });
+
+    const loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
+    assert.ok(loadMoreButton.exists());
+
+    loadMoreButton.simulate("click", { preventDefault: () => {} });
+    assert.calledOnce(dispatch);
+    assert.calledWith(
+      dispatch,
+      ac.UserEvent({
+        event: "CLICK",
+        source: "DS_LOAD_MORE_BUTTON",
+      })
+    );
+
+    const lastCard = wrapper.find(LastCardMessage);
+    assert.ok(lastCard.exists());
   });
 });

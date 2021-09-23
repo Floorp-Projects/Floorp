@@ -3289,6 +3289,8 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_13___default.a
           items: component.properties.items,
           compact: component.properties.compact,
           include_descriptions: !component.properties.compact,
+          loadMoreEnabled: component.loadMoreEnabled,
+          lastCardMessageEnabled: component.lastCardMessageEnabled,
           cta_variant: component.cta_variant,
           display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
         });
@@ -3465,8 +3467,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(18);
 /* harmony import */ var _DSEmptyState_DSEmptyState_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(31);
 /* harmony import */ var _FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(30);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3474,16 +3477,52 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-class CardGrid extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent {
+
+class CardGrid extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      moreLoaded: false
+    };
+    this.loadMoreClicked = this.loadMoreClicked.bind(this);
+  }
+
+  loadMoreClicked() {
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_3__["actionCreators"].UserEvent({
+      event: "CLICK",
+      source: "DS_LOAD_MORE_BUTTON"
+    }));
+    this.setState({
+      moreLoaded: true
+    });
+  }
+
   renderCards() {
-    const recs = this.props.data.recommendations.slice(0, this.props.items);
+    let {
+      items
+    } = this.props;
+    const {
+      loadMoreEnabled
+    } = this.props;
+    const {
+      lastCardMessageEnabled
+    } = this.props;
+    let showLastCardMessage = lastCardMessageEnabled;
+
+    if (loadMoreEnabled && !this.state.moreLoaded) {
+      items = 12; // We don't want to show this until after load more has been clicked.
+
+      showLastCardMessage = false;
+    }
+
+    const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
 
-    for (let index = 0; index < this.props.items; index++) {
+    for (let index = 0; index < items; index++) {
       const rec = recs[index];
-      cards.push(!rec || rec.placeholder ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__["PlaceholderDSCard"], {
+      cards.push(!rec || rec.placeholder ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__["PlaceholderDSCard"], {
         key: `dscard-${index}`
-      }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__["DSCard"], {
+      }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__["DSCard"], {
         key: `dscard-${rec.id}`,
         pos: rec.pos,
         flightId: rec.flight_id,
@@ -3514,13 +3553,20 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponen
         is_video: this.props.enable_video_playheads && rec.is_video,
         is_collection: this.props.is_collection
       }));
+    } // Replace last card with "you are all caught up card"
+
+
+    if (showLastCardMessage) {
+      cards.splice(cards.length - 1, 1, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSCard_DSCard_jsx__WEBPACK_IMPORTED_MODULE_0__["LastCardMessage"], {
+        key: `dscard-last-${cards.length - 1}`
+      }));
     } // Used for CSS overrides to default styling (eg: "hero")
 
 
     const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
     const compactClass = this.props.compact ? `ds-card-grid-compact-variant` : ``;
     const includeDescriptions = this.props.include_descriptions ? `ds-card-grid-include-descriptions` : ``;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptions}`
     }, cards);
   }
@@ -3536,21 +3582,28 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponen
 
 
     const isEmpty = data.recommendations.length === 0;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, this.props.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    const {
+      loadMoreEnabled
+    } = this.props;
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, this.props.title && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "ds-header"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "title"
-    }, this.props.title), this.props.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__["FluentOrText"], {
+    }, this.props.title), this.props.context && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_FluentOrText_FluentOrText_jsx__WEBPACK_IMPORTED_MODULE_2__["FluentOrText"], {
       message: this.props.context
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "ds-context"
-    }))), isEmpty ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }))), isEmpty ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "ds-card-grid empty"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_DSEmptyState_DSEmptyState_jsx__WEBPACK_IMPORTED_MODULE_1__["DSEmptyState"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSEmptyState_DSEmptyState_jsx__WEBPACK_IMPORTED_MODULE_1__["DSEmptyState"], {
       status: data.status,
       dispatch: this.props.dispatch,
       feed: this.props.feed
-    })) : this.renderCards());
+    })) : this.renderCards(), loadMoreEnabled && !this.state.moreLoaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "ASRouterButton primary ds-card-grid-load-more-button",
+      onClick: this.loadMoreClicked,
+      "data-l10n-id": "newtab-pocket-load-more-stories-button"
+    }));
   }
 
 }
@@ -3558,7 +3611,8 @@ CardGrid.defaultProps = {
   border: `border`,
   items: 4,
   // Number of stories to display
-  enable_video_playheads: false
+  enable_video_playheads: false,
+  lastCardMessageEnabled: false
 };
 
 /***/ }),
@@ -3574,6 +3628,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_DSCard", function() { return _DSCard; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSCard", function() { return DSCard; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PlaceholderDSCard", function() { return PlaceholderDSCard; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LastCardMessage", function() { return LastCardMessage; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var _DSImage_DSImage_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(19);
 /* harmony import */ var _DSLinkMenu_DSLinkMenu__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(20);
@@ -3852,6 +3907,31 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       });
     }
 
+    if (this.props.lastCard) {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+        className: "ds-card last-card-message"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+        className: "img-wrapper"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("picture", {
+        className: "ds-image img loaded"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("img", {
+        "data-l10n-id": "newtab-pocket-last-card-image",
+        className: "last-card-message-image",
+        src: "chrome://activity-stream/content/data/content/assets/caught-up-illustration.svg",
+        alt: "You\u2019re all caught up"
+      }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+        className: "meta"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+        className: "info-wrap"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("header", {
+        className: "title clamp",
+        "data-l10n-id": "newtab-pocket-last-card-title"
+      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
+        className: "ds-last-card-desc",
+        "data-l10n-id": "newtab-pocket-last-card-desc"
+      }))));
+    }
+
     const isButtonCTA = this.props.cta_variant === "button";
     const includeDescriptions = this.props.include_descriptions;
     const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
@@ -3937,6 +4017,9 @@ const DSCard = Object(react_redux__WEBPACK_IMPORTED_MODULE_8__["connect"])(state
 }))(_DSCard);
 const PlaceholderDSCard = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DSCard, {
   placeholder: true
+});
+const LastCardMessage = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DSCard, {
+  lastCard: true
 });
 
 /***/ }),
