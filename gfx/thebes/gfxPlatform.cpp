@@ -2215,7 +2215,8 @@ void gfxPlatform::FlushFontAndWordCaches() {
 }
 
 /* static */
-void gfxPlatform::ForceGlobalReflow(NeedsReframe aNeedsReframe) {
+void gfxPlatform::ForceGlobalReflow(NeedsReframe aNeedsReframe,
+                                    BroadcastToChildren aBroadcastToChildren) {
   MOZ_ASSERT(NS_IsMainThread());
   const bool reframe = aNeedsReframe == NeedsReframe::Yes;
   // Send a notification that will be observed by PresShells in this process
@@ -2224,7 +2225,8 @@ void gfxPlatform::ForceGlobalReflow(NeedsReframe aNeedsReframe) {
     char16_t needsReframe[] = {char16_t(reframe), 0};
     obs->NotifyObservers(nullptr, "font-info-updated", needsReframe);
   }
-  if (XRE_IsParentProcess()) {
+  if (XRE_IsParentProcess() &&
+      aBroadcastToChildren == BroadcastToChildren::Yes) {
     // Propagate the change to child processes.
     for (auto* process :
          dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
