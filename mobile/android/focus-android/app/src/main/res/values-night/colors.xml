@@ -45,7 +45,7 @@
     <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorSecondary">#342F6D</color>
     <color name="menuBackground">@color/colorSecondary</color>
-    <color name="toolbarUrlDarkBackground">#1D1133</color>
+    <color name="toolbarUrlDarkBackground">@color/photonInk05</color>
     <color name="toolbarUrlLightBackground">#FBFBFE</color>
     <color name="headerGradientStart">#2B2154</color>
     <color name="headerGradientMiddle">#281D4C</color>

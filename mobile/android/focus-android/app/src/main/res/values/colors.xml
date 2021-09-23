@@ -146,7 +146,7 @@
 
     <!-- Custom tab toolbar background
      Temporary resources used by UI tests -->
-    <color name="toolbarUrlDarkBackground">#1D1133</color>
+    <color name="toolbarUrlDarkBackground">@color/photonInk05</color>
     <color name="toolbarUrlLightBackground">#FBFBFE</color>
 
     <!-- Home Tips -->
