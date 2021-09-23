@@ -4,10 +4,30 @@
 #ifndef intl_components_TimeZone_h_
 #define intl_components_TimeZone_h_
 
+// ICU doesn't provide a separate C API for time zone functions, but instead
+// requires to use UCalendar. This adds a measurable overhead when compared to
+// using ICU's C++ TimeZone API, therefore we prefer to use the C++ API when
+// possible. Due to the lack of a stable ABI in C++, it's only possible to use
+// the C++ API when we use our in-tree ICU copy.
+#if !MOZ_SYSTEM_ICU
+#  define MOZ_INTL_USE_ICU_CPP_TIMEZONE 1
+#else
+#  define MOZ_INTL_USE_ICU_CPP_TIMEZONE 0
+#endif
+
+#include <stdint.h>
+#include <utility>
+
 #include "unicode/ucal.h"
 #include "unicode/utypes.h"
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+#  include "unicode/locid.h"
+#  include "unicode/timezone.h"
+#  include "unicode/unistr.h"
+#endif
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/Maybe.h"
@@ -24,9 +44,16 @@ namespace mozilla::intl {
  */
 class TimeZone final {
  public:
-  explicit TimeZone(UCalendar* aCalendar) : mCalendar(aCalendar) {
-    MOZ_ASSERT(aCalendar);
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  explicit TimeZone(UniquePtr<icu::TimeZone> aTimeZone)
+      : mTimeZone(std::move(aTimeZone)) {
+    MOZ_ASSERT(mTimeZone);
   }
+#else
+  explicit TimeZone(UCalendar* aCalendar) : mCalendar(aCalendar) {
+    MOZ_ASSERT(mCalendar);
+  }
+#endif
 
   // Do not allow copy as this class owns the ICU resource. Move is not
   // currently implemented, but a custom move operator could be created if
@@ -34,7 +61,11 @@ class TimeZone final {
   TimeZone(const TimeZone&) = delete;
   TimeZone& operator=(const TimeZone&) = delete;
 
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  ~TimeZone() = default;
+#else
   ~TimeZone();
+#endif
 
   /**
    * Create a TimeZone.
@@ -70,6 +101,29 @@ class TimeZone final {
   template <typename B>
   ICUResult GetDisplayName(const char* aLocale,
                            DaylightSavings aDaylightSavings, B& aBuffer) {
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+    icu::UnicodeString displayName;
+    mTimeZone->getDisplayName(static_cast<bool>(aDaylightSavings),
+                              icu::TimeZone::LONG, icu::Locale(aLocale),
+                              displayName);
+
+    int32_t length = displayName.length();
+    if (!aBuffer.reserve(AssertedCast<size_t>(length))) {
+      return Err(ICUError::OutOfMemory);
+    }
+
+    // Copy the display name.
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t written = displayName.extract(aBuffer.data(), length, status);
+    if (!ICUSuccessForStringSpan(status)) {
+      return Err(ToICUError(status));
+    }
+    MOZ_ASSERT(written == length);
+
+    aBuffer.written(written);
+
+    return Ok{};
+#else
     return FillBufferWithICUCall(
         aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
           UCalendarDisplayNameType type =
@@ -77,6 +131,7 @@ class TimeZone final {
           return ucal_getTimeZoneDisplayName(mCalendar, type, aLocale, target,
                                              length, status);
         });
+#endif
   }
 
   /**
@@ -129,7 +184,11 @@ class TimeZone final {
       const char* aRegion);
 
  private:
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  UniquePtr<icu::TimeZone> mTimeZone = nullptr;
+#else
   UCalendar* mCalendar = nullptr;
+#endif
 };
 
 }  // namespace mozilla::intl
