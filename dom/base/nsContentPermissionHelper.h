@@ -123,7 +123,7 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   };
   nsresult ShowPrompt(PromptResult& aResult);
 
-  PromptResult CheckPromptPrefs();
+  PromptResult CheckPromptPrefs() const;
 
   // Check if the permission has an opportunity to request.
   bool CheckPermissionDelegate();
@@ -146,8 +146,8 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PermissionDelegateHandler> mPermissionHandler;
-  nsCString mPrefName;
-  nsCString mType;
+  const nsCString mPrefName;
+  const nsCString mType;
   bool mIsHandlingUserInput;
   bool mMaybeUnsafePermissionDelegate;
 };
