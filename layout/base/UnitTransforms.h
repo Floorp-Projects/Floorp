@@ -66,6 +66,10 @@ enum class PixelCastJustification : uint8_t {
   // type of their top-level event coordinate space even if technically
   // inaccurate.
   ContentProcessIsLayerInUiProcess,
+  // TransformToAncestorScale is stored untyped on FrameMetrics/RepaintRequest
+  // but it is used as LayerToScreenScale2D to get coords to work out even
+  // though that's not really it's type.
+  TransformToAncestorScaleIsStoredUntyped,
 };
 
 template <class TargetUnits, class SourceUnits>

@@ -17,6 +17,7 @@
 #include "mozilla/gfx/ScaleFactor.h"  // for ScaleFactor
 #include "mozilla/TimeStamp.h"        // for TimeStamp
 #include "Units.h"                    // for CSSRect, CSSPixel, etc
+#include "UnitTransforms.h"           // for ViewAs
 
 namespace IPC {
 template <typename T>
@@ -116,14 +117,9 @@ struct RepaintRequest {
                                   const RepaintRequest& aRequest);
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
-    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer
-    // scale instead of LayersPixelsPerCSSPixel(), because displayport
-    // calculations are done in the context of a repaint request, where we ask
-    // Layout to repaint at a new resolution that includes any async zoom. Until
-    // this repaint request is processed, LayersPixelsPerCSSPixel() does not yet
-    // include the async zoom, but it will when the displayport is interpreted
-    // for the repaint.
-    return mZoom * ParentLayerToLayerScale(1.0f) / mExtraResolution;
+    // Refer to FrameMetrics::DisplayportPixelsPerCSSPixel() for explanation.
+    return mZoom * ParentLayerToLayerScale(1.0f) *
+           ViewAs<LayerToScreenScale2D>(mTransformToAncestorScale);
   }
 
   CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
