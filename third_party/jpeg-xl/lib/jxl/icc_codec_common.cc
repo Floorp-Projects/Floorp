@@ -68,8 +68,8 @@ void AppendUint32(uint32_t value, PaddedBytes* data) {
 typedef std::array<uint8_t, 4> Tag;
 
 Tag DecodeKeyword(const uint8_t* data, size_t size, size_t pos) {
-  if (pos + 4 > size) return {' ', ' ', ' ', ' '};
-  return {data[pos], data[pos + 1], data[pos + 2], data[pos + 3]};
+  if (pos + 4 > size) return {{' ', ' ', ' ', ' '}};
+  return {{data[pos], data[pos + 1], data[pos + 2], data[pos + 3]}};
 }
 
 void EncodeKeyword(const Tag& keyword, uint8_t* data, size_t size, size_t pos) {

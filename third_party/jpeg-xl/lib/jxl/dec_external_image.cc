@@ -24,6 +24,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/common.h"
+#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -32,59 +33,66 @@ namespace HWY_NAMESPACE {
 
 void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
                 size_t bits_per_sample) {
-  const HWY_FULL(float) d;
-  const hwy::HWY_NAMESPACE::Rebind<uint32_t, decltype(d)> du;
-  size_t vec_num = num;
+  // TODO(eustas): investigate 24..31 bpp cases.
   if (bits_per_sample == 32) {
     // Conversion to real 32-bit *unsigned* integers requires more intermediate
     // precision that what is given by the usual f32 -> i32 conversion
     // instructions, so we run the non-SIMD path for those.
-    vec_num = 0;
+    const uint32_t cap = (1ull << bits_per_sample) - 1;
+    for (size_t x = 0; x < num; x++) {
+      float v = in[x];
+      if (v >= 1.0f) {
+        out[x] = cap;
+      } else if (v >= 0.0f) {  // Inverted condition => NaN -> 0.
+        out[x] = static_cast<uint32_t>(v * mul + 0.5f);
+      } else {
+        out[x] = 0;
+      }
+    }
+    return;
   }
-#if JXL_IS_DEBUG_BUILD
-  // Avoid accessing partially-uninitialized vectors with memory sanitizer.
-  vec_num &= ~(Lanes(d) - 1);
-#endif  // JXL_IS_DEBUG_BUILD
+
+  // General SIMD case for less than 32 bits output.
+  const HWY_FULL(float) d;
+  const hwy::HWY_NAMESPACE::Rebind<uint32_t, decltype(d)> du;
+
+  // Unpoison accessing partially-uninitialized vectors with memory sanitizer.
+  // This is because we run NearestInt() on the vector, which triggers msan even
+  // it it safe to do so since the values are not mixed between lanes.
+  const size_t num_round_up = RoundUpTo(num, Lanes(d));
+  msan::UnpoisonMemory(in + num, sizeof(in[0]) * (num_round_up - num));
 
   const auto one = Set(d, 1.0f);
   const auto scale = Set(d, mul);
-  for (size_t x = 0; x < vec_num; x += Lanes(d)) {
+  for (size_t x = 0; x < num; x += Lanes(d)) {
     auto v = Load(d, in + x);
     // Clamp turns NaN to 'min'.
     v = Clamp(v, Zero(d), one);
     auto i = NearestInt(v * scale);
     Store(BitCast(du, i), du, out + x);
   }
-  for (size_t x = vec_num; x < num; x++) {
-    float v = in[x];
-    // Inverted condition grants that NaN is mapped to 0.0f.
-    v = (v >= 0.0f) ? (v > 1.0f ? mul : (v * mul)) : 0.0f;
-    out[x] = static_cast<uint32_t>(v + 0.5f);
-  }
+
+  // Poison back the output.
+  msan::PoisonMemory(out + num, sizeof(out[0]) * (num_round_up - num));
 }
 
 void FloatToF16(const float* in, hwy::float16_t* out, size_t num) {
   const HWY_FULL(float) d;
   const hwy::HWY_NAMESPACE::Rebind<hwy::float16_t, decltype(d)> du;
-  size_t vec_num = num;
-#if JXL_IS_DEBUG_BUILD
-  // Avoid accessing partially-uninitialized vectors with memory sanitizer.
-  vec_num &= ~(Lanes(d) - 1);
-#endif  // JXL_IS_DEBUG_BUILD
-  for (size_t x = 0; x < vec_num; x += Lanes(d)) {
+
+  // Unpoison accessing partially-uninitialized vectors with memory sanitizer.
+  // This is because we run DemoteTo() on the vector which triggers msan.
+  const size_t num_round_up = RoundUpTo(num, Lanes(d));
+  msan::UnpoisonMemory(in + num, sizeof(in[0]) * (num_round_up - num));
+
+  for (size_t x = 0; x < num; x += Lanes(d)) {
     auto v = Load(d, in + x);
     auto v16 = DemoteTo(du, v);
     Store(v16, du, out + x);
   }
-  if (num != vec_num) {
-    const HWY_CAPPED(float, 1) d1;
-    const hwy::HWY_NAMESPACE::Rebind<hwy::float16_t, HWY_CAPPED(float, 1)> du1;
-    for (size_t x = vec_num; x < num; x++) {
-      auto v = Load(d1, in + x);
-      auto v16 = DemoteTo(du1, v);
-      Store(v16, du1, out + x);
-    }
-  }
+
+  // Poison back the output.
+  msan::PoisonMemory(out + num, sizeof(out[0]) * (num_round_up - num));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -240,14 +248,29 @@ void StoreFloatRow(const float* JXL_RESTRICT* rows_in, size_t num_channels,
 
 void JXL_INLINE Store8(uint32_t value, uint8_t* dest) { *dest = value & 0xff; }
 
-}  // namespace
+// Maximum number of channels for the ConvertChannelsToExternal function.
+const size_t kConvertMaxChannels = 4;
 
-Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
-                         bool float_out, size_t num_channels,
-                         JxlEndianness endianness, size_t stride,
-                         jxl::ThreadPool* pool, void* out_image,
-                         size_t out_size, JxlImageOutCallback out_callback,
-                         void* out_opaque, jxl::Orientation undo_orientation) {
+// Converts a list of channels to an interleaved image, applying transformations
+// when needed.
+// The input channels are given as a (non-const!) array of channel pointers and
+// interleaved in that order.
+//
+// Note: if a pointer in channels[] is nullptr, a 1.0 value will be used
+// instead. This is useful for handling when a user requests an alpha channel
+// from an image that doesn't have one. The first channel in the list may not
+// be nullptr, since it is used to determine the image size.
+Status ConvertChannelsToExternal(const ImageF* channels[], size_t num_channels,
+                                 size_t bits_per_sample, bool float_out,
+                                 JxlEndianness endianness, size_t stride,
+                                 jxl::ThreadPool* pool, void* out_image,
+                                 size_t out_size,
+                                 JxlImageOutCallback out_callback,
+                                 void* out_opaque,
+                                 jxl::Orientation undo_orientation) {
+  JXL_DASSERT(num_channels != 0 && num_channels <= kConvertMaxChannels);
+  JXL_DASSERT(channels[0] != nullptr);
+
   if (bits_per_sample < 1 || bits_per_sample > 32) {
     return JXL_FAILURE("Invalid bits_per_sample value.");
   }
@@ -259,20 +282,10 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
   if (bits_per_sample == 1) {
     return JXL_FAILURE("packed 1-bit per sample is not yet supported");
   }
-  size_t xsize = ib.xsize();
-  size_t ysize = ib.ysize();
-
-  bool want_alpha = num_channels == 2 || num_channels == 4;
-  size_t color_channels = num_channels <= 2 ? 1 : 3;
 
   // bytes_per_channel and is only valid for bits_per_sample > 1.
   const size_t bytes_per_channel = DivCeil(bits_per_sample, jxl::kBitsPerByte);
   const size_t bytes_per_pixel = num_channels * bytes_per_channel;
-
-  const Image3F* color = &ib.color();
-  Image3F temp_color;
-  const ImageF* alpha = ib.HasAlpha() ? &ib.alpha() : nullptr;
-  ImageF temp_alpha;
 
   std::vector<std::vector<uint8_t>> row_out_callback;
   auto InitOutCallback = [&](size_t num_threads) {
@@ -284,22 +297,20 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
     }
   };
 
+  // Channels used to store the transformed original channels if needed.
+  ImageF temp_channels[kConvertMaxChannels];
   if (undo_orientation != Orientation::kIdentity) {
-    Image3F transformed;
-    for (size_t c = 0; c < color_channels; ++c) {
-      UndoOrientation(undo_orientation, color->Plane(c), transformed.Plane(c),
-                      pool);
+    for (size_t c = 0; c < num_channels; ++c) {
+      if (channels[c]) {
+        UndoOrientation(undo_orientation, *channels[c], temp_channels[c], pool);
+        channels[c] = &(temp_channels[c]);
+      }
     }
-    transformed.Swap(temp_color);
-    color = &temp_color;
-    if (ib.HasAlpha()) {
-      UndoOrientation(undo_orientation, *alpha, temp_alpha, pool);
-      alpha = &temp_alpha;
-    }
-
-    xsize = color->xsize();
-    ysize = color->ysize();
   }
+
+  // First channel may not be nullptr.
+  size_t xsize = channels[0]->xsize();
+  size_t ysize = channels[0]->ysize();
 
   if (stride < bytes_per_pixel * xsize) {
     return JXL_FAILURE(
@@ -311,10 +322,15 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
       endianness == JXL_LITTLE_ENDIAN ||
       (endianness == JXL_NATIVE_ENDIAN && IsLittleEndian());
 
+  // Handle the case where a channel is nullptr by creating a single row with
+  // ones to use instead.
   ImageF ones;
-  if (want_alpha && !ib.HasAlpha()) {
-    ones = ImageF(xsize, 1);
-    FillImage(1.0f, &ones);
+  for (size_t c = 0; c < num_channels; ++c) {
+    if (!channels[c]) {
+      ones = ImageF(xsize, 1);
+      FillImage(1.0f, &ones);
+      break;
+    }
   }
 
   if (float_out) {
@@ -331,20 +347,15 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
           },
           [&](const int task, int thread) {
             const int64_t y = task;
-            const float* JXL_RESTRICT row_in[4];
-            size_t c = 0;
-            for (; c < color_channels; c++) {
-              row_in[c] = color->PlaneRow(c, y);
+            const float* JXL_RESTRICT row_in[kConvertMaxChannels];
+            for (size_t c = 0; c < num_channels; c++) {
+              row_in[c] = channels[c] ? channels[c]->Row(y) : ones.Row(0);
             }
-            if (want_alpha) {
-              row_in[c++] = ib.HasAlpha() ? alpha->Row(y) : ones.Row(0);
-            }
-            JXL_ASSERT(c == num_channels);
-            hwy::float16_t* JXL_RESTRICT row_f16[4];
-            for (size_t r = 0; r < c; r++) {
-              row_f16[r] = f16_cache.Row(r + thread * num_channels);
+            hwy::float16_t* JXL_RESTRICT row_f16[kConvertMaxChannels];
+            for (size_t c = 0; c < num_channels; c++) {
+              row_f16[c] = f16_cache.Row(c + thread * num_channels);
               HWY_DYNAMIC_DISPATCH(FloatToF16)
-              (row_in[r], row_f16[r], xsize);
+              (row_in[c], row_f16[c], xsize);
             }
             uint8_t* row_out =
                 out_callback
@@ -354,8 +365,8 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
             hwy::float16_t* row_f16_out =
                 reinterpret_cast<hwy::float16_t*>(row_out);
             for (size_t x = 0; x < xsize; x++) {
-              for (size_t r = 0; r < c; r++) {
-                row_f16_out[x * num_channels + r] = row_f16[r][x];
+              for (size_t c = 0; c < num_channels; c++) {
+                row_f16_out[x * num_channels + c] = row_f16[c][x];
               }
             }
             if (swap_endianness) {
@@ -382,19 +393,14 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
                 out_callback
                     ? row_out_callback[thread].data()
                     : &(reinterpret_cast<uint8_t*>(out_image))[stride * y];
-            const float* JXL_RESTRICT row_in[4];
-            size_t c = 0;
-            for (; c < color_channels; c++) {
-              row_in[c] = color->PlaneRow(c, y);
+            const float* JXL_RESTRICT row_in[kConvertMaxChannels];
+            for (size_t c = 0; c < num_channels; c++) {
+              row_in[c] = channels[c] ? channels[c]->Row(y) : ones.Row(0);
             }
-            if (want_alpha) {
-              row_in[c++] = ib.HasAlpha() ? alpha->Row(y) : ones.Row(0);
-            }
-            JXL_ASSERT(c == num_channels);
             if (little_endian) {
-              StoreFloatRow<StoreLEFloat>(row_in, c, xsize, row_out);
+              StoreFloatRow<StoreLEFloat>(row_in, num_channels, xsize, row_out);
             } else {
-              StoreFloatRow<StoreBEFloat>(row_in, c, xsize, row_out);
+              StoreFloatRow<StoreBEFloat>(row_in, num_channels, xsize, row_out);
             }
             if (out_callback) {
               (*out_callback)(out_opaque, 0, y, xsize, row_out);
@@ -422,41 +428,39 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
               out_callback
                   ? row_out_callback[thread].data()
                   : &(reinterpret_cast<uint8_t*>(out_image))[stride * y];
-          const float* JXL_RESTRICT row_in[4];
-          size_t c = 0;
-          for (; c < color_channels; c++) {
-            row_in[c] = color->PlaneRow(c, y);
+          const float* JXL_RESTRICT row_in[kConvertMaxChannels];
+          for (size_t c = 0; c < num_channels; c++) {
+            row_in[c] = channels[c] ? channels[c]->Row(y) : ones.Row(0);
           }
-          if (want_alpha) {
-            row_in[c++] = ib.HasAlpha() ? alpha->Row(y) : ones.Row(0);
-          }
-          JXL_ASSERT(c == num_channels);
-          uint32_t* JXL_RESTRICT row_u32[4];
-          for (size_t r = 0; r < c; r++) {
-            row_u32[r] = u32_cache.Row(r + thread * num_channels);
+          uint32_t* JXL_RESTRICT row_u32[kConvertMaxChannels];
+          for (size_t c = 0; c < num_channels; c++) {
+            row_u32[c] = u32_cache.Row(c + thread * num_channels);
+            // row_u32[] is a per-thread temporary row storage, this isn't
+            // intended to be initialized on a previous run.
+            msan::PoisonMemory(row_u32[c], xsize * sizeof(row_u32[c][0]));
             HWY_DYNAMIC_DISPATCH(FloatToU32)
-            (row_in[r], row_u32[r], xsize, mul, bits_per_sample);
+            (row_in[c], row_u32[c], xsize, mul, bits_per_sample);
           }
           // TODO(deymo): add bits_per_sample == 1 case here.
           if (bits_per_sample <= 8) {
-            StoreUintRow<Store8>(row_u32, c, xsize, 1, row_out);
+            StoreUintRow<Store8>(row_u32, num_channels, xsize, 1, row_out);
           } else if (bits_per_sample <= 16) {
             if (little_endian) {
-              StoreUintRow<StoreLE16>(row_u32, c, xsize, 2, row_out);
+              StoreUintRow<StoreLE16>(row_u32, num_channels, xsize, 2, row_out);
             } else {
-              StoreUintRow<StoreBE16>(row_u32, c, xsize, 2, row_out);
+              StoreUintRow<StoreBE16>(row_u32, num_channels, xsize, 2, row_out);
             }
           } else if (bits_per_sample <= 24) {
             if (little_endian) {
-              StoreUintRow<StoreLE24>(row_u32, c, xsize, 3, row_out);
+              StoreUintRow<StoreLE24>(row_u32, num_channels, xsize, 3, row_out);
             } else {
-              StoreUintRow<StoreBE24>(row_u32, c, xsize, 3, row_out);
+              StoreUintRow<StoreBE24>(row_u32, num_channels, xsize, 3, row_out);
             }
           } else {
             if (little_endian) {
-              StoreUintRow<StoreLE32>(row_u32, c, xsize, 4, row_out);
+              StoreUintRow<StoreLE32>(row_u32, num_channels, xsize, 4, row_out);
             } else {
-              StoreUintRow<StoreBE32>(row_u32, c, xsize, 4, row_out);
+              StoreUintRow<StoreBE32>(row_u32, num_channels, xsize, 4, row_out);
             }
           }
           if (out_callback) {
@@ -465,8 +469,59 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
         },
         "ConvertUint");
   }
-
   return true;
+}
+
+}  // namespace
+
+Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
+                         bool float_out, size_t num_channels,
+                         JxlEndianness endianness, size_t stride,
+                         jxl::ThreadPool* pool, void* out_image,
+                         size_t out_size, JxlImageOutCallback out_callback,
+                         void* out_opaque, jxl::Orientation undo_orientation) {
+  bool want_alpha = num_channels == 2 || num_channels == 4;
+  size_t color_channels = num_channels <= 2 ? 1 : 3;
+
+  const Image3F* color = &ib.color();
+  // Undo premultiplied alpha.
+  Image3F unpremul;
+  if (ib.AlphaIsPremultiplied() && ib.HasAlpha()) {
+    unpremul = Image3F(color->xsize(), color->ysize());
+    CopyImageTo(*color, &unpremul);
+    for (size_t y = 0; y < unpremul.ysize(); y++) {
+      UnpremultiplyAlpha(unpremul.PlaneRow(0, y), unpremul.PlaneRow(1, y),
+                         unpremul.PlaneRow(2, y), ib.alpha().Row(y),
+                         unpremul.xsize());
+    }
+    color = &unpremul;
+  }
+
+  const ImageF* channels[kConvertMaxChannels];
+  size_t c = 0;
+  for (; c < color_channels; c++) {
+    channels[c] = &color->Plane(c);
+  }
+  if (want_alpha) {
+    channels[c++] = ib.HasAlpha() ? &ib.alpha() : nullptr;
+  }
+  JXL_ASSERT(num_channels == c);
+
+  return ConvertChannelsToExternal(
+      channels, num_channels, bits_per_sample, float_out, endianness, stride,
+      pool, out_image, out_size, out_callback, out_opaque, undo_orientation);
+}
+
+Status ConvertToExternal(const jxl::ImageF& channel, size_t bits_per_sample,
+                         bool float_out, JxlEndianness endianness,
+                         size_t stride, jxl::ThreadPool* pool, void* out_image,
+                         size_t out_size, JxlImageOutCallback out_callback,
+                         void* out_opaque, jxl::Orientation undo_orientation) {
+  const ImageF* channels[1];
+  channels[0] = &channel;
+  return ConvertChannelsToExternal(
+      channels, 1, bits_per_sample, float_out, endianness, stride, pool,
+      out_image, out_size, out_callback, out_opaque, undo_orientation);
 }
 
 }  // namespace jxl

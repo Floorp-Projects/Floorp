@@ -15,6 +15,10 @@
 #include <hwy/base.h>
 #include <hwy/cache_control.h>  // LoadFence
 
+#if HWY_COMPILER_MSVC
+#include <chrono>
+#endif  // HWY_COMPILER_MSVC
+
 namespace profiler {
 
 // TicksBefore/After return absolute timestamps and must be placed immediately
@@ -91,6 +95,12 @@ static HWY_INLINE HWY_MAYBE_UNUSED uint64_t TicksBefore() {
       // "memory" avoids reordering. rdx = TSC >> 32.
       // "cc" = flags modified by SHL.
       : "rdx", "memory", "cc");
+#elif HWY_COMPILER_MSVC
+  // Use std::chrono in MSVC 32-bit.
+  t = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+          std::chrono::steady_clock::now())
+          .time_since_epoch()
+          .count();
 #else
   // Fall back to OS - unsure how to reliably query cntvct_el0 frequency.
   timespec ts;

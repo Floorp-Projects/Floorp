@@ -4,10 +4,10 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-EMSDK_URL="https://github.com/emscripten-core/emsdk/archive/master.tar.gz"
+EMSDK_URL="https://github.com/emscripten-core/emsdk/archive/main.tar.gz"
 EMSDK_DIR="/opt/emsdk"
 
-EMSDK_RELEASE="2.0.4"
+EMSDK_RELEASE="2.0.23"
 
 set -eu -x
 

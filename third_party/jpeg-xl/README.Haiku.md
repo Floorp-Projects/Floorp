@@ -10,7 +10,7 @@ instructions see "[README](README.md)" and
 ## Dependencies
 
 ```shell
-pkgman install llvm9_clang ninja cmake doxygen libjpeg_turbo_devel
+pkgman install llvm9_clang ninja cmake doxygen libjpeg_turbo_devel giflib_devel
 ```
 
 ## Building

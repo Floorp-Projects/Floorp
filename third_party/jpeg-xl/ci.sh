@@ -89,7 +89,7 @@ if [[ ! -z "${HWY_BASELINE_TARGETS}" ]]; then
 fi
 
 # Version inferred from the CI variables.
-CI_COMMIT_SHA=${CI_COMMIT_SHA:-}
+CI_COMMIT_SHA=${CI_COMMIT_SHA:-${GITHUB_SHA:-}}
 JPEGXL_VERSION=${JPEGXL_VERSION:-${CI_COMMIT_SHA:0:8}}
 
 # Benchmark parameters
@@ -226,8 +226,13 @@ merge_request_commits() {
   { set +x; } 2>/dev/null
   # GITHUB_SHA is the current reference being build in GitHub Actions.
   if [[ -n "${GITHUB_SHA:-}" ]]; then
-    git -C "${MYDIR}" fetch -q origin "${GITHUB_SHA}"
-    MR_HEAD_SHA="${GITHUB_SHA}"
+    # GitHub normally does a checkout of a merge commit on a shallow repository
+    # by default. We want to get a bit more of the history to be able to diff
+    # changes on the Pull Request if needed. This fetches 10 more commits which
+    # should be enough given that PR normally should have 1 commit.
+    git -C "${MYDIR}" fetch -q origin "${GITHUB_SHA}" --depth 10
+    MR_HEAD_SHA="$(git rev-parse "FETCH_HEAD^2" 2>/dev/null ||
+                   echo "${GITHUB_SHA}")"
   else
     # CI_BUILD_REF is the reference currently being build in the CI workflow.
     MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse -q "${CI_BUILD_REF:-HEAD}")
@@ -355,6 +360,8 @@ cmake_configure() {
     -DJPEGXL_ENABLE_VIEWERS=ON
     -DJPEGXL_ENABLE_PLUGINS=ON
     -DJPEGXL_ENABLE_DEVTOOLS=ON
+    # We always use libfuzzer in the ci.sh wrapper.
+    -DJPEGXL_FUZZER_LINK_FLAGS="-fsanitize=fuzzer"
   )
   if [[ "${BUILD_TARGET}" != *mingw32 ]]; then
     args+=(
@@ -587,6 +594,27 @@ cmd_gbench() {
   )
 }
 
+cmd_asanfuzz() {
+  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link"
+  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link"
+  cmd_asan -DJPEGXL_ENABLE_FUZZERS=ON "$@"
+}
+
+cmd_msanfuzz() {
+  # Install msan if needed before changing the flags.
+  detect_clang_version
+  local msan_prefix="${HOME}/.msan/${CLANG_VERSION}"
+  if [[ ! -d "${msan_prefix}" || -e "${msan_prefix}/lib/libc++abi.a" ]]; then
+    # Install msan libraries for this version if needed or if an older version
+    # with libc++abi was installed.
+    cmd_msan_install
+  fi
+
+  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link"
+  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link"
+  cmd_msan -DJPEGXL_ENABLE_FUZZERS=ON "$@"
+}
+
 cmd_asan() {
   SANITIZER="asan"
   CMAKE_C_FLAGS+=" -DJXL_ENABLE_ASSERT=1 -g -DADDRESS_SANITIZER \
@@ -722,6 +750,75 @@ cmd_msan_install() {
   done
 }
 
+# Internal build step shared between all cmd_ossfuzz_* commands.
+_cmd_ossfuzz() {
+  local sanitizer="$1"
+  shift
+  mkdir -p "${BUILD_DIR}"
+  local real_build_dir=$(realpath "${BUILD_DIR}")
+
+  # oss-fuzz defines three directories:
+  # * /work, with the working directory to do re-builds
+  # * /src, with the source code to build
+  # * /out, with the output directory where to copy over the built files.
+  # We use $BUILD_DIR as the /work and the script directory as the /src. The
+  # /out directory is ignored as developers are used to look for the fuzzers in
+  # $BUILD_DIR/tools/ directly.
+
+  if [[ "${sanitizer}" = "memory" && ! -d "${BUILD_DIR}/msan" ]]; then
+    sudo docker run --rm -i \
+      --user $(id -u):$(id -g) \
+      -v "${real_build_dir}":/work \
+      gcr.io/oss-fuzz-base/msan-libs-builder \
+      bash -c "cp -r /msan /work"
+  fi
+
+  # Args passed to ninja. These will be evaluated as a string separated by
+  # spaces.
+  local jpegxl_extra_args="$@"
+
+  sudo docker run --rm -i \
+    -e JPEGXL_UID=$(id -u) \
+    -e JPEGXL_GID=$(id -g) \
+    -e FUZZING_ENGINE="${FUZZING_ENGINE:-libfuzzer}" \
+    -e SANITIZER="${sanitizer}" \
+    -e ARCHITECTURE=x86_64 \
+    -e FUZZING_LANGUAGE=c++ \
+    -e MSAN_LIBS_PATH="/work/msan" \
+    -e JPEGXL_EXTRA_ARGS="${jpegxl_extra_args}" \
+    -v "${MYDIR}":/src/libjxl \
+    -v "${MYDIR}/tools/ossfuzz-build.sh":/src/build.sh \
+    -v "${real_build_dir}":/work \
+    gcr.io/oss-fuzz/libjxl
+}
+
+cmd_ossfuzz_asan() {
+  _cmd_ossfuzz address "$@"
+}
+cmd_ossfuzz_msan() {
+  _cmd_ossfuzz memory "$@"
+}
+cmd_ossfuzz_ubsan() {
+  _cmd_ossfuzz undefined "$@"
+}
+
+cmd_ossfuzz_ninja() {
+  [[ -e "${BUILD_DIR}/build.ninja" ]]
+  local real_build_dir=$(realpath "${BUILD_DIR}")
+
+  if [[ -e "${BUILD_DIR}/msan" ]]; then
+    echo "ossfuzz_ninja doesn't work with msan builds. Use ossfuzz_msan." >&2
+    exit 1
+  fi
+
+  sudo docker run --rm -i \
+    --user $(id -u):$(id -g) \
+    -v "${MYDIR}":/src/libjxl \
+    -v "${real_build_dir}":/work \
+    gcr.io/oss-fuzz/libjxl \
+    ninja -C /work "$@"
+}
+
 cmd_fast_benchmark() {
   local small_corpus_tar="${BENCHMARK_CORPORA}/jyrki-full.tar"
   mkdir -p "${BENCHMARK_CORPORA}"
@@ -802,7 +899,7 @@ run_benchmark() {
 
   local benchmark_args=(
     --input "${src_img_dir}/*.png"
-    --codec=jpeg:yuv420:q85,webp:q80,jxl:fast:d1,jxl:fast:d1:downsampling=8,jxl:fast:d4,jxl:fast:d4:downsampling=8,jxl:m:cheetah:nl,jxl:cheetah:m,jxl:m:cheetah:P6,jxl:m:falcon:q80
+    --codec=jpeg:yuv420:q85,webp:q80,jxl:fast:d1,jxl:fast:d1:downsampling=8,jxl:fast:d4,jxl:fast:d4:downsampling=8,jxl:cheetah:m,jxl:m:cheetah:P6,jxl:m:falcon:q80
     --output_dir "${output_dir}"
     --noprofiler --show_progress
     --num_threads="${num_threads}"
@@ -833,7 +930,7 @@ $(cat "${output_dir}/results.txt")
 # Helper function to wait for the CPU temperature to cool down on ARM.
 wait_for_temp() {
   { set +x; } 2>/dev/null
-  local temp_limit=${1:-37000}
+  local temp_limit=${1:-38000}
   if [[ -z "${THERMAL_FILE:-}" ]]; then
     echo "Must define the THERMAL_FILE with the thermal_zoneX/temp file" \
       "to read the temperature from. This is normally set in the runner." >&2
@@ -844,9 +941,15 @@ wait_for_temp() {
     echo -n "Waiting for temp to get down from ${org_temp}... "
   fi
   local temp="${org_temp}"
+  local secs=0
   while [[ "${temp}" -ge "${temp_limit}" ]]; do
     sleep 1
     temp=$(cat "${THERMAL_FILE}")
+    echo -n "${temp} "
+    secs=$((secs + 1))
+    if [[ ${secs} -ge 5 ]]; then
+      break
+    fi
   done
   if [[ "${org_temp}" -ge "${temp_limit}" ]]; then
     echo "Done, temp=${temp}"
@@ -901,7 +1004,6 @@ cmd_arm_benchmark() {
     "--modular --responsive=1"
     # Near-lossless options:
     "--epf=0 --distance=0.3 --speed=fast"
-    "--modular -N 3 -I 0"
     "--modular -Q 97"
   )
 
@@ -1085,7 +1187,7 @@ cmd_fuzz() {
 cmd_lint() {
   merge_request_commits
   { set +x; } 2>/dev/null
-  local versions=(${1:-6.0 7 8 9})
+  local versions=(${1:-6.0 7 8 9 10 11})
   local clang_format_bins=("${versions[@]/#/clang-format-}" clang-format)
   local tmpdir=$(mktemp -d)
   CLEANUP_FILES+=("${tmpdir}")
@@ -1108,7 +1210,7 @@ cmd_lint() {
     fi
     installed+=("${clang_format}")
     local tmppatch="${tmpdir}/${clang_format}.patch"
-    # We include in this linter all the changes including the uncommited changes
+    # We include in this linter all the changes including the uncommitted changes
     # to avoid printing changes already applied.
     set -x
     git -C "${MYDIR}" "${clang_format}" --binary "${clang_format}" \
@@ -1258,6 +1360,70 @@ cmd_debian_build() {
   esac
 }
 
+get_version() {
+  local varname=$1
+  local line=$(grep -F "set(${varname} " lib/CMakeLists.txt | head -n 1)
+  [[ -n "${line}" ]]
+  line="${line#set(${varname} }"
+  line="${line%)}"
+  echo "${line}"
+}
+
+cmd_bump_version() {
+  local newver="${1:-}"
+
+  if ! which dch >/dev/null; then
+    echo "Run:\n  sudo apt install debhelper"
+    exit 1
+  fi
+
+  if [[ -z "${newver}" ]]; then
+    local major=$(get_version JPEGXL_MAJOR_VERSION)
+    local minor=$(get_version JPEGXL_MINOR_VERSION)
+    local patch=0
+    minor=$(( ${minor}  + 1))
+  else
+    local major="${newver%%.*}"
+    newver="${newver#*.}"
+    local minor="${newver%%.*}"
+    newver="${newver#${minor}}"
+    local patch="${newver#.}"
+    if [[ -z "${patch}" ]]; then
+      patch=0
+    fi
+  fi
+
+  newver="${major}.${minor}"
+  if [[ "${patch}" != "0" ]]; then
+    newver="${newver}.${patch}"
+  fi
+  echo "Bumping version to ${newver} (${major}.${minor}.${patch})"
+  sed -E \
+    -e "s/(set\\(JPEGXL_MAJOR_VERSION) [0-9]+\\)/\\1 ${major})/" \
+    -e "s/(set\\(JPEGXL_MINOR_VERSION) [0-9]+\\)/\\1 ${minor})/" \
+    -e "s/(set\\(JPEGXL_PATCH_VERSION) [0-9]+\\)/\\1 ${patch})/" \
+    -i lib/CMakeLists.txt
+
+  # Update lib.gni
+  tools/build_cleaner.py --update
+
+  # Mark the previous version as "unstable".
+  DEBCHANGE_RELEASE_HEURISTIC=log dch -M --distribution unstable --release ''
+  DEBCHANGE_RELEASE_HEURISTIC=log dch -M \
+    --newversion "${newver}" \
+    "Bump JPEG XL version to ${newver}."
+}
+
+# Check that the AUTHORS file contains the email of the committer.
+cmd_authors() {
+  merge_request_commits
+  # TODO(deymo): Handle multiple commits and check that they are all the same
+  # author.
+  local email=$(git log --format='%ae' "${MR_HEAD_SHA}^!")
+  local name=$(git log --format='%an' "${MR_HEAD_SHA}^!")
+  "${MYDIR}"/tools/check_author.py "${email}" "${name}"
+}
+
 main() {
   local cmd="${1:-}"
   if [[ -z "${cmd}" ]]; then
@@ -1272,6 +1438,8 @@ Where cmd is one of:
  msan      Build and test an MSan (MemorySanitizer) build. Needs to have msan
            c++ libs installed with msan_install first.
  tsan      Build and test a TSan (ThreadSanitizer) build.
+ asanfuzz  Build and test an ASan (AddressSanitizer) build for fuzzing.
+ msanfuzz  Build and test an MSan (MemorySanitizer) build for fuzzing.
  test      Run the tests build by opt, debug, release, asan or msan. Useful when
            building with SKIP_TEST=1.
  gbench    Run the Google benchmark tests.
@@ -1287,12 +1455,22 @@ Where cmd is one of:
 
  lint      Run the linter checks on the current commit or merge request.
  tidy      Run clang-tidy on the current commit or merge request.
+ authors   Check that the last commit's author is listed in the AUTHORS file.
 
  msan_install Install the libc++ libraries required to build in msan mode. This
               needs to be done once.
 
  debian_build <srcpkg> Build the given source package.
  debian_stats  Print stats about the built packages.
+
+oss-fuzz commands:
+ ossfuzz_asan   Build the local source inside oss-fuzz docker with asan.
+ ossfuzz_msan   Build the local source inside oss-fuzz docker with msan.
+ ossfuzz_ubsan  Build the local source inside oss-fuzz docker with ubsan.
+ ossfuzz_ninja  Run ninja on the BUILD_DIR inside the oss-fuzz docker. Extra
+                parameters are passed to ninja, for example "djxl_fuzzer" will
+                only build that ninja target. Use for faster build iteration
+                after one of the ossfuzz_*san commands.
 
 You can pass some optional environment variables as well:
  - BUILD_DIR: The output build directory (by default "$$repo/build")

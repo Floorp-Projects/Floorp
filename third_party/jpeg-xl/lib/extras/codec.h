@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "lib/extras/color_hints.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
@@ -58,13 +59,21 @@ Codec CodecFromExtension(const std::string& extension,
                          size_t* JXL_RESTRICT bits_per_sample);
 
 // Decodes "bytes" and sets io->metadata.m.
-// dec_hints may specify the "color_space" (otherwise, defaults to sRGB).
-Status SetFromBytes(const Span<const uint8_t> bytes, CodecInOut* io,
-                    ThreadPool* pool = nullptr, Codec* orig_codec = nullptr);
+// color_space_hint may specify the color space, otherwise, defaults to sRGB.
+Status SetFromBytes(const Span<const uint8_t> bytes,
+                    const ColorHints& color_hints, CodecInOut* io,
+                    ThreadPool* pool, Codec* orig_codec);
+// Helper function to use no color_space_hint.
+JXL_INLINE Status SetFromBytes(const Span<const uint8_t> bytes, CodecInOut* io,
+                               ThreadPool* pool = nullptr,
+                               Codec* orig_codec = nullptr) {
+  return SetFromBytes(bytes, ColorHints(), io, pool, orig_codec);
+}
 
 // Reads from file and calls SetFromBytes.
-Status SetFromFile(const std::string& pathname, CodecInOut* io,
-                   ThreadPool* pool = nullptr, Codec* orig_codec = nullptr);
+Status SetFromFile(const std::string& pathname, const ColorHints& color_hints,
+                   CodecInOut* io, ThreadPool* pool = nullptr,
+                   Codec* orig_codec = nullptr);
 
 // Replaces "bytes" with an encoding of pixels transformed from c_current
 // color space to c_desired.

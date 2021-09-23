@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file.
 
 set(JPEGXL_MAJOR_VERSION 0)
-set(JPEGXL_MINOR_VERSION 3)
-set(JPEGXL_PATCH_VERSION 7)
+set(JPEGXL_MINOR_VERSION 7)
+set(JPEGXL_PATCH_VERSION 0)
 set(JPEGXL_LIBRARY_VERSION
     "${JPEGXL_MAJOR_VERSION}.${JPEGXL_MINOR_VERSION}.${JPEGXL_PATCH_VERSION}")
 
@@ -43,7 +43,6 @@ set(JPEGXL_INTERNAL_FLAGS
 # Warning flags supported by clang.
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
   list(APPEND JPEGXL_INTERNAL_FLAGS
-    -Wc++2a-extensions
     -Wdeprecated-increment-bool
     # TODO(deymo): Add -Wextra-semi once we update third_party/highway.
     # -Wextra-semi
@@ -64,6 +63,9 @@ if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     -Wunreachable-code
     -Wunused-comparison
   )
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0)
+    list(APPEND HWY_FLAGS -Wc++2a-extensions)
+  endif()
 endif()  # Clang
 
 if (WIN32)

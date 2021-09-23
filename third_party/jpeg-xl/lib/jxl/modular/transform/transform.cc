@@ -7,17 +7,11 @@
 
 #include "lib/jxl/fields.h"
 #include "lib/jxl/modular/modular_image.h"
-#include "lib/jxl/modular/transform/near-lossless.h"
 #include "lib/jxl/modular/transform/palette.h"
+#include "lib/jxl/modular/transform/rct.h"
 #include "lib/jxl/modular/transform/squeeze.h"
-#include "lib/jxl/modular/transform/subtractgreen.h"
 
 namespace jxl {
-
-namespace {
-const char *transform_name[static_cast<uint32_t>(TransformId::kNumTransforms)] =
-    {"RCT", "Palette", "Squeeze", "Invalid", "Near-Lossless"};
-}  // namespace
 
 SqueezeParams::SqueezeParams() { Bundle::Init(this); }
 Transform::Transform(TransformId id) {
@@ -25,34 +19,13 @@ Transform::Transform(TransformId id) {
   this->id = id;
 }
 
-const char *Transform::TransformName() const {
-  return transform_name[static_cast<uint32_t>(id)];
-}
-
-Status Transform::Forward(Image &input, const weighted::Header &wp_header,
-                          ThreadPool *pool) {
-  switch (id) {
-    case TransformId::kRCT:
-      return FwdSubtractGreen(input, begin_c, rct_type);
-    case TransformId::kSqueeze:
-      return FwdSqueeze(input, squeezes, pool);
-    case TransformId::kPalette:
-      return FwdPalette(input, begin_c, begin_c + num_c - 1, nb_colors,
-                        ordered_palette, lossy_palette, predictor, wp_header);
-    case TransformId::kNearLossless:
-      return FwdNearLossless(input, begin_c, begin_c + num_c - 1,
-                             max_delta_error, predictor);
-    default:
-      return JXL_FAILURE("Unknown transformation (ID=%u)",
-                         static_cast<unsigned int>(id));
-  }
-}
-
 Status Transform::Inverse(Image &input, const weighted::Header &wp_header,
                           ThreadPool *pool) {
+  JXL_DEBUG_V(6, "Input channels (%zu, %zu meta): ", input.channel.size(),
+              input.nb_meta_channels);
   switch (id) {
     case TransformId::kRCT:
-      return InvSubtractGreen(input, begin_c, rct_type);
+      return InvRCT(input, begin_c, rct_type, pool);
     case TransformId::kSqueeze:
       return InvSqueeze(input, squeezes, pool);
     case TransformId::kPalette:
@@ -65,19 +38,27 @@ Status Transform::Inverse(Image &input, const weighted::Header &wp_header,
 }
 
 Status Transform::MetaApply(Image &input) {
+  JXL_DEBUG_V(6, "Input channels (%zu, %zu meta): ", input.channel.size(),
+              input.nb_meta_channels);
   switch (id) {
     case TransformId::kRCT:
       JXL_DEBUG_V(2, "Transform: kRCT, rct_type=%" PRIu32, rct_type);
-      return true;
+      return CheckEqualChannels(input, begin_c, begin_c + 2);
     case TransformId::kSqueeze:
       JXL_DEBUG_V(2, "Transform: kSqueeze:");
 #if JXL_DEBUG_V_LEVEL >= 2
-      for (const auto &params : squeezes) {
-        JXL_DEBUG_V(
-            2,
-            "  squeeze params: horizontal=%d, in_place=%d, begin_c=%" PRIu32
-            ", num_c=%" PRIu32,
-            params.horizontal, params.in_place, params.begin_c, params.num_c);
+      {
+        auto squeezes_copy = squeezes;
+        if (squeezes_copy.empty()) {
+          DefaultSqueezeParameters(&squeezes_copy, input);
+        }
+        for (const auto &params : squeezes_copy) {
+          JXL_DEBUG_V(
+              2,
+              "  squeeze params: horizontal=%d, in_place=%d, begin_c=%" PRIu32
+              ", num_c=%" PRIu32,
+              params.horizontal, params.in_place, params.begin_c, params.num_c);
+        }
       }
 #endif
       return MetaSqueeze(input, &squeezes);
@@ -92,6 +73,26 @@ Status Transform::MetaApply(Image &input) {
       return JXL_FAILURE("Unknown transformation (ID=%u)",
                          static_cast<unsigned int>(id));
   }
+}
+
+Status CheckEqualChannels(const Image &image, uint32_t c1, uint32_t c2) {
+  if (c1 > image.channel.size() || c2 >= image.channel.size() || c2 < c1) {
+    return JXL_FAILURE(
+        "Invalid channel range: %u..%u (there are only %zu channels)", c1, c2,
+        image.channel.size());
+  }
+  if (c1 < image.nb_meta_channels && c2 >= image.nb_meta_channels) {
+    return JXL_FAILURE("Invalid: transforming mix of meta and nonmeta");
+  }
+  const auto &ch1 = image.channel[c1];
+  for (size_t c = c1 + 1; c <= c2; c++) {
+    const auto &ch2 = image.channel[c];
+    if (ch1.w != ch2.w || ch1.h != ch2.h || ch1.hshift != ch2.hshift ||
+        ch1.vshift != ch2.vshift) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace jxl

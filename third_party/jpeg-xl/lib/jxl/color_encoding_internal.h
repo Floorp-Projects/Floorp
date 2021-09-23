@@ -140,7 +140,7 @@ struct PrimariesCIExy {
 // Serializable form of CIExy.
 struct Customxy : public Fields {
   Customxy();
-  const char* Name() const override { return "Customxy"; }
+  JXL_FIELDS_NAME(Customxy)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
@@ -154,7 +154,7 @@ struct Customxy : public Fields {
 
 struct CustomTransferFunction : public Fields {
   CustomTransferFunction();
-  const char* Name() const override { return "CustomTransferFunction"; }
+  JXL_FIELDS_NAME(CustomTransferFunction)
 
   // Sets fields and returns true if nonserialized_color_space has an implicit
   // transfer function, otherwise leaves fields unchanged and returns false.
@@ -229,7 +229,7 @@ struct CustomTransferFunction : public Fields {
 // known color space. Stored in Metadata. Thread-compatible.
 struct ColorEncoding : public Fields {
   ColorEncoding();
-  const char* Name() const override { return "ColorEncoding"; }
+  JXL_FIELDS_NAME(ColorEncoding)
 
   // Returns ready-to-use color encodings (initialized on-demand).
   static const ColorEncoding& SRGB(bool is_gray = false);
@@ -439,9 +439,6 @@ static inline bool ApproxEq(const double a, const double b,
 // Returns a representation of the ColorEncoding fields (not icc).
 // Example description: "RGB_D65_SRG_Rel_Lin"
 std::string Description(const ColorEncoding& c);
-Status ParseDescription(const std::string& description,
-                        ColorEncoding* JXL_RESTRICT c);
-
 static inline std::ostream& operator<<(std::ostream& os,
                                        const ColorEncoding& c) {
   return os << Description(c);
@@ -449,6 +446,9 @@ static inline std::ostream& operator<<(std::ostream& os,
 
 void ConvertInternalToExternalColorEncoding(const jxl::ColorEncoding& internal,
                                             JxlColorEncoding* external);
+
+Status ConvertExternalToInternalColorEncoding(const JxlColorEncoding& external,
+                                              jxl::ColorEncoding* internal);
 
 Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
                          float by, float wx, float wy, float matrix[9]);
