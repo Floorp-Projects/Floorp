@@ -517,9 +517,7 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     # Suppress warnings in third-party code.
     CXXFLAGS += ["-Wno-maybe-uninitialized"]
 
-UNIFIED_SOURCES += [
-    "composite/PaintCounter.cpp",
-]
+UNIFIED_SOURCES += []
 
 if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["ipc/fuzztest"]
