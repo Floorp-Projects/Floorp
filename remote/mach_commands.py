@@ -24,10 +24,12 @@ from six import iteritems
 from mach.decorators import (
     Command,
     CommandArgument,
+    CommandProvider,
     SubCommand,
 )
 
 from mozbuild.base import (
+    MachCommandBase,
     MozbuildObject,
     BinaryNotFoundException,
 )
@@ -50,112 +52,116 @@ def setup():
     os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
 
 
-def remotedir(command_context):
-    return os.path.join(command_context.topsrcdir, "remote")
+@CommandProvider
+class RemoteCommands(MachCommandBase):
+    def remotedir(self, command_context):
+        return os.path.join(command_context.topsrcdir, "remote")
 
-
-@Command("remote", category="misc", description="Remote protocol related operations.")
-def remote(command_context):
-    """The remote subcommands all relate to the remote protocol."""
-    command_context._sub_mach(["help", "remote"])
-    return 1
-
-
-@SubCommand(
-    "remote", "vendor-puppeteer", "Pull in latest changes of the Puppeteer client."
-)
-@CommandArgument(
-    "--repository",
-    metavar="REPO",
-    required=True,
-    help="The (possibly remote) repository to clone from.",
-)
-@CommandArgument(
-    "--commitish",
-    metavar="COMMITISH",
-    required=True,
-    help="The commit or tag object name to check out.",
-)
-@CommandArgument(
-    "--no-install",
-    dest="install",
-    action="store_false",
-    default=True,
-    help="Do not install the just-pulled Puppeteer package,",
-)
-def vendor_puppeteer(command_context, repository, commitish, install):
-    puppeteer_dir = os.path.join(remotedir(command_context), "test", "puppeteer")
-
-    # Preserve our custom mocha reporter
-    shutil.move(
-        os.path.join(puppeteer_dir, "json-mocha-reporter.js"),
-        remotedir(command_context),
+    @Command(
+        "remote", category="misc", description="Remote protocol related operations."
     )
-    shutil.rmtree(puppeteer_dir, ignore_errors=True)
-    os.makedirs(puppeteer_dir)
-    with TemporaryDirectory() as tmpdir:
-        git("clone", "-q", repository, tmpdir)
-        git("checkout", commitish, worktree=tmpdir)
-        git(
-            "checkout-index",
-            "-a",
-            "-f",
-            "--prefix",
-            "{}/".format(puppeteer_dir),
-            worktree=tmpdir,
-        )
+    def remote(self, command_context):
+        """The remote subcommands all relate to the remote protocol."""
+        command_context._sub_mach(["help", "remote"])
+        return 1
 
-    # remove files which may interfere with git checkout of central
-    try:
-        os.remove(os.path.join(puppeteer_dir, ".gitattributes"))
-        os.remove(os.path.join(puppeteer_dir, ".gitignore"))
-    except OSError:
-        pass
-
-    unwanted_dirs = ["experimental", "docs"]
-
-    for dir in unwanted_dirs:
-        dir_path = os.path.join(puppeteer_dir, dir)
-        if os.path.isdir(dir_path):
-            shutil.rmtree(dir_path)
-
-    shutil.move(
-        os.path.join(remotedir(command_context), "json-mocha-reporter.js"),
-        puppeteer_dir,
+    @SubCommand(
+        "remote", "vendor-puppeteer", "Pull in latest changes of the Puppeteer client."
     )
-
-    import yaml
-
-    annotation = {
-        "schema": 1,
-        "bugzilla": {
-            "product": "Remote Protocol",
-            "component": "Agent",
-        },
-        "origin": {
-            "name": "puppeteer",
-            "description": "Headless Chrome Node API",
-            "url": repository,
-            "license": "Apache-2.0",
-            "release": commitish,
-        },
-    }
-    with open(os.path.join(puppeteer_dir, "moz.yaml"), "w") as fh:
-        yaml.safe_dump(
-            annotation,
-            fh,
-            default_flow_style=False,
-            encoding="utf-8",
-            allow_unicode=True,
+    @CommandArgument(
+        "--repository",
+        metavar="REPO",
+        required=True,
+        help="The (possibly remote) repository to clone from.",
+    )
+    @CommandArgument(
+        "--commitish",
+        metavar="COMMITISH",
+        required=True,
+        help="The commit or tag object name to check out.",
+    )
+    @CommandArgument(
+        "--no-install",
+        dest="install",
+        action="store_false",
+        default=True,
+        help="Do not install the just-pulled Puppeteer package,",
+    )
+    def vendor_puppeteer(self, command_context, repository, commitish, install):
+        puppeteer_dir = os.path.join(
+            self.remotedir(command_context), "test", "puppeteer"
         )
 
-    if install:
-        env = {"PUPPETEER_SKIP_DOWNLOAD": "1"}
-        npm(
-            "install",
-            cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
-            env=env,
+        # Preserve our custom mocha reporter
+        shutil.move(
+            os.path.join(puppeteer_dir, "json-mocha-reporter.js"),
+            self.remotedir(command_context),
         )
+        shutil.rmtree(puppeteer_dir, ignore_errors=True)
+        os.makedirs(puppeteer_dir)
+        with TemporaryDirectory() as tmpdir:
+            git("clone", "-q", repository, tmpdir)
+            git("checkout", commitish, worktree=tmpdir)
+            git(
+                "checkout-index",
+                "-a",
+                "-f",
+                "--prefix",
+                "{}/".format(puppeteer_dir),
+                worktree=tmpdir,
+            )
+
+        # remove files which may interfere with git checkout of central
+        try:
+            os.remove(os.path.join(puppeteer_dir, ".gitattributes"))
+            os.remove(os.path.join(puppeteer_dir, ".gitignore"))
+        except OSError:
+            pass
+
+        unwanted_dirs = ["experimental", "docs"]
+
+        for dir in unwanted_dirs:
+            dir_path = os.path.join(puppeteer_dir, dir)
+            if os.path.isdir(dir_path):
+                shutil.rmtree(dir_path)
+
+        shutil.move(
+            os.path.join(self.remotedir(command_context), "json-mocha-reporter.js"),
+            puppeteer_dir,
+        )
+
+        import yaml
+
+        annotation = {
+            "schema": 1,
+            "bugzilla": {
+                "product": "Remote Protocol",
+                "component": "Agent",
+            },
+            "origin": {
+                "name": "puppeteer",
+                "description": "Headless Chrome Node API",
+                "url": repository,
+                "license": "Apache-2.0",
+                "release": commitish,
+            },
+        }
+        with open(os.path.join(puppeteer_dir, "moz.yaml"), "w") as fh:
+            yaml.safe_dump(
+                annotation,
+                fh,
+                default_flow_style=False,
+                encoding="utf-8",
+                allow_unicode=True,
+            )
+
+        if install:
+            env = {"PUPPETEER_SKIP_DOWNLOAD": "1"}
+            npm(
+                "install",
+                cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
+                env=env,
+            )
 
 
 def git(*args, **kwargs):
@@ -578,118 +584,122 @@ def create_parser_puppeteer():
     return p
 
 
-@Command(
-    "puppeteer-test",
-    category="testing",
-    description="Run Puppeteer unit tests.",
-    parser=create_parser_puppeteer,
-)
-def puppeteer_test(
-    command_context,
-    binary=None,
-    ci=False,
-    enable_fission=False,
-    enable_webrender=False,
-    headless=False,
-    extra_prefs=None,
-    extra_options=None,
-    verbosity=0,
-    tests=None,
-    product="firefox",
-    write_results=None,
-    subset=False,
-    **kwargs
-):
-
-    logger = mozlog.commandline.setup_logging(
-        "puppeteer-test", kwargs, {"mach": sys.stdout}
+@CommandProvider
+class PuppeteerTest(MachCommandBase):
+    @Command(
+        "puppeteer-test",
+        category="testing",
+        description="Run Puppeteer unit tests.",
+        parser=create_parser_puppeteer,
     )
+    def puppeteer_test(
+        self,
+        command_context,
+        binary=None,
+        ci=False,
+        enable_fission=False,
+        enable_webrender=False,
+        headless=False,
+        extra_prefs=None,
+        extra_options=None,
+        verbosity=0,
+        tests=None,
+        product="firefox",
+        write_results=None,
+        subset=False,
+        **kwargs
+    ):
 
-    # moztest calls this programmatically with test objects or manifests
-    if "test_objects" in kwargs and tests is not None:
-        logger.error("Expected either 'test_objects' or 'tests'")
-        exit(1)
+        logger = mozlog.commandline.setup_logging(
+            "puppeteer-test", kwargs, {"mach": sys.stdout}
+        )
 
-    if product != "firefox" and extra_prefs is not None:
-        logger.error("User preferences are not recognized by %s" % product)
-        exit(1)
+        # moztest calls this programmatically with test objects or manifests
+        if "test_objects" in kwargs and tests is not None:
+            logger.error("Expected either 'test_objects' or 'tests'")
+            exit(1)
 
-    if "test_objects" in kwargs:
-        tests = []
-        for test in kwargs["test_objects"]:
-            tests.append(test["path"])
+        if product != "firefox" and extra_prefs is not None:
+            logger.error("User preferences are not recognized by %s" % product)
+            exit(1)
 
-    prefs = {}
-    for s in extra_prefs or []:
-        kv = s.split("=")
-        if len(kv) != 2:
-            logger.error("syntax error in --setpref={}".format(s))
-            exit(EX_USAGE)
-        prefs[kv[0]] = kv[1].strip()
+        if "test_objects" in kwargs:
+            tests = []
+            for test in kwargs["test_objects"]:
+                tests.append(test["path"])
 
-    options = {}
-    for s in extra_options or []:
-        kv = s.split("=")
-        if len(kv) != 2:
-            logger.error("syntax error in --setopt={}".format(s))
-            exit(EX_USAGE)
-        options[kv[0]] = kv[1].strip()
+        prefs = {}
+        for s in extra_prefs or []:
+            kv = s.split("=")
+            if len(kv) != 2:
+                logger.error("syntax error in --setpref={}".format(s))
+                exit(EX_USAGE)
+            prefs[kv[0]] = kv[1].strip()
 
-    if enable_fission:
-        prefs.update({"fission.autostart": True})
+        options = {}
+        for s in extra_options or []:
+            kv = s.split("=")
+            if len(kv) != 2:
+                logger.error("syntax error in --setopt={}".format(s))
+                exit(EX_USAGE)
+            options[kv[0]] = kv[1].strip()
 
-    if verbosity == 1:
-        prefs["remote.log.level"] = "Debug"
-    elif verbosity > 1:
-        prefs["remote.log.level"] = "Trace"
-    if verbosity > 2:
-        prefs["remote.log.truncate"] = False
+        if enable_fission:
+            prefs.update({"fission.autostart": True})
 
-    install_puppeteer(command_context, product, ci)
+        if verbosity == 1:
+            prefs["remote.log.level"] = "Debug"
+        elif verbosity > 1:
+            prefs["remote.log.level"] = "Trace"
+        if verbosity > 2:
+            prefs["remote.log.truncate"] = False
 
-    params = {
-        "binary": binary,
-        "headless": headless,
-        "enable_webrender": enable_webrender,
-        "extra_prefs": prefs,
-        "product": product,
-        "extra_launcher_options": options,
-        "write_results": write_results,
-        "subset": subset,
-    }
-    puppeteer = command_context._spawn(PuppeteerRunner)
-    try:
-        return puppeteer.run_test(logger, *tests, **params)
-    except BinaryNotFoundException as e:
-        logger.error(e)
-        logger.info(e.help())
-        exit(1)
-    except Exception as e:
-        exit(EX_SOFTWARE, e)
+        self.install_puppeteer(command_context, product, ci)
 
+        params = {
+            "binary": binary,
+            "headless": headless,
+            "enable_webrender": enable_webrender,
+            "extra_prefs": prefs,
+            "product": product,
+            "extra_launcher_options": options,
+            "write_results": write_results,
+            "subset": subset,
+        }
+        puppeteer = command_context._spawn(PuppeteerRunner)
+        try:
+            return puppeteer.run_test(logger, *tests, **params)
+        except BinaryNotFoundException as e:
+            logger.error(e)
+            logger.info(e.help())
+            exit(1)
+        except Exception as e:
+            exit(EX_SOFTWARE, e)
 
-def install_puppeteer(command_context, product, ci):
-    setup()
-    env = {}
-    from mozversioncontrol import get_repository_object
+    def install_puppeteer(self, command_context, product, ci):
+        setup()
+        env = {}
+        from mozversioncontrol import get_repository_object
 
-    repo = get_repository_object(command_context.topsrcdir)
-    puppeteer_dir = os.path.join("remote", "test", "puppeteer")
-    changed_files = False
-    for f in repo.get_changed_files():
-        if f.startswith(puppeteer_dir) and f.endswith(".ts"):
-            changed_files = True
-            break
+        repo = get_repository_object(command_context.topsrcdir)
+        puppeteer_dir = os.path.join("remote", "test", "puppeteer")
+        changed_files = False
+        for f in repo.get_changed_files():
+            if f.startswith(puppeteer_dir) and f.endswith(".ts"):
+                changed_files = True
+                break
 
-    if product != "chrome":
-        env["PUPPETEER_SKIP_DOWNLOAD"] = "1"
-    lib_dir = os.path.join(command_context.topsrcdir, puppeteer_dir, "lib")
-    if changed_files and os.path.isdir(lib_dir):
-        # clobber lib to force `tsc compile` step
-        shutil.rmtree(lib_dir)
+        if product != "chrome":
+            env["PUPPETEER_SKIP_DOWNLOAD"] = "1"
+        lib_dir = os.path.join(command_context.topsrcdir, puppeteer_dir, "lib")
+        if changed_files and os.path.isdir(lib_dir):
+            # clobber lib to force `tsc compile` step
+            shutil.rmtree(lib_dir)
 
-    command = "ci" if ci else "install"
-    npm(command, cwd=os.path.join(command_context.topsrcdir, puppeteer_dir), env=env)
+        command = "ci" if ci else "install"
+        npm(
+            command, cwd=os.path.join(command_context.topsrcdir, puppeteer_dir), env=env
+        )
 
 
 def exit(code, error=None):

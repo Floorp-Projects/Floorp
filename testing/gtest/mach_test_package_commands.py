@@ -9,8 +9,10 @@ import sys
 from argparse import Namespace
 
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
+from mozbuild.base import MachCommandBase
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None
@@ -117,13 +119,15 @@ def setup_argument_parser():
     return parser
 
 
-@Command(
-    "gtest",
-    category="testing",
-    description="Run the gtest harness.",
-    parser=setup_argument_parser,
-)
-def gtest(command_context, **kwargs):
-    command_context._mach_context.activate_mozharness_venv()
-    result = run_gtest(command_context._mach_context, **kwargs)
-    return 0 if result else 1
+@CommandProvider
+class GtestCommands(MachCommandBase):
+    @Command(
+        "gtest",
+        category="testing",
+        description="Run the gtest harness.",
+        parser=setup_argument_parser,
+    )
+    def gtest(self, command_context, **kwargs):
+        command_context._mach_context.activate_mozharness_venv()
+        result = run_gtest(command_context._mach_context, **kwargs)
+        return 0 if result else 1

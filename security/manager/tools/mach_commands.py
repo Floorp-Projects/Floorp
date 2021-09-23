@@ -6,12 +6,14 @@ import os
 import sys
 
 from mach.util import UserError
+from mozbuild.base import MachCommandBase
 from mozpack.files import FileFinder
 from mozpack.path import basedir
 
 
 from mach.decorators import (
     CommandArgument,
+    CommandProvider,
     Command,
 )
 
@@ -62,55 +64,56 @@ def is_excluded_directory(directory, exclusions):
     return False
 
 
-@Command(
-    "generate-test-certs",
-    category="devenv",
-    description="Generate test certificates and keys from specifications.",
-)
-@CommandArgument(
-    "specifications",
-    nargs="*",
-    help="Specification files for test certs. If omitted, all certs are regenerated.",
-)
-def generate_test_certs(command_context, specifications):
-    """Generate test certificates and keys from specifications."""
+@CommandProvider
+class MachCommands(MachCommandBase):
+    @Command(
+        "generate-test-certs",
+        category="devenv",
+        description="Generate test certificates and keys from specifications.",
+    )
+    @CommandArgument(
+        "specifications",
+        nargs="*",
+        help="Specification files for test certs. If omitted, all certs are regenerated.",
+    )
+    def generate_test_certs(self, command_context, specifications):
+        """Generate test certificates and keys from specifications."""
 
-    command_context.activate_virtualenv()
-    import pycert
-    import pykey
+        command_context.activate_virtualenv()
+        import pycert
+        import pykey
 
-    if not specifications:
-        specifications = find_all_specifications(command_context)
+        if not specifications:
+            specifications = self.find_all_specifications(command_context)
 
-    for specification in specifications:
-        if is_certspec_file(specification):
-            module = pycert
-        elif is_keyspec_file(specification):
-            module = pykey
-        else:
-            raise UserError(
-                "'{}' is not a .certspec or .keyspec file".format(specification)
-            )
-        run_module_main_on(module, os.path.abspath(specification))
-    return 0
+        for specification in specifications:
+            if is_certspec_file(specification):
+                module = pycert
+            elif is_keyspec_file(specification):
+                module = pykey
+            else:
+                raise UserError(
+                    "'{}' is not a .certspec or .keyspec file".format(specification)
+                )
+            run_module_main_on(module, os.path.abspath(specification))
+        return 0
 
-
-def find_all_specifications(command_context):
-    """Searches the source tree for all specification files
-    and returns them as a list."""
-    specifications = []
-    inclusions = [
-        "netwerk/test/unit",
-        "security/manager/ssl/tests",
-        "services/settings/test/unit/test_remote_settings_signatures",
-        "testing/xpcshell/moz-http2",
-    ]
-    exclusions = ["security/manager/ssl/tests/unit/test_signed_apps"]
-    finder = FileFinder(command_context.topsrcdir)
-    for inclusion_path in inclusions:
-        for f, _ in finder.find(inclusion_path):
-            if basedir(f, exclusions):
-                continue
-            if is_specification_file(f):
-                specifications.append(os.path.join(command_context.topsrcdir, f))
-    return specifications
+    def find_all_specifications(self, command_context):
+        """Searches the source tree for all specification files
+        and returns them as a list."""
+        specifications = []
+        inclusions = [
+            "netwerk/test/unit",
+            "security/manager/ssl/tests",
+            "services/settings/test/unit/test_remote_settings_signatures",
+            "testing/xpcshell/moz-http2",
+        ]
+        exclusions = ["security/manager/ssl/tests/unit/test_signed_apps"]
+        finder = FileFinder(command_context.topsrcdir)
+        for inclusion_path in inclusions:
+            for f, _ in finder.find(inclusion_path):
+                if basedir(f, exclusions):
+                    continue
+                if is_specification_file(f):
+                    specifications.append(os.path.join(command_context.topsrcdir, f))
+        return specifications
