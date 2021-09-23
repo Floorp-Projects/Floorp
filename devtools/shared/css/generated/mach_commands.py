@@ -19,9 +19,11 @@ import subprocess
 from mozbuild import shellutil
 from mozbuild.base import (
     MozbuildObject,
+    MachCommandBase,
     BinaryNotFoundException,
 )
 from mach.decorators import (
+    CommandProvider,
     Command,
 )
 
@@ -36,87 +38,87 @@ def stringify(obj):
     return json.dumps(obj, sort_keys=True, indent=2, separators=(",", ": "))
 
 
-@Command(
-    "devtools-css-db",
-    category="post-build",
-    description="Rebuild the devtool's static css properties database.",
-)
-def generate_css_db(command_context):
-    """Generate the static css properties database for devtools and write it to file."""
-
-    print("Re-generating the css properties database...")
-    db = get_properties_db_from_xpcshell(command_context)
-    if not db:
-        return 1
-
-    output_template(
-        command_context,
-        {
-            "preferences": stringify(db["preferences"]),
-            "cssProperties": stringify(db["cssProperties"]),
-            "pseudoElements": stringify(db["pseudoElements"]),
-        },
+@CommandProvider
+class MachCommands(MachCommandBase):
+    @Command(
+        "devtools-css-db",
+        category="post-build",
+        description="Rebuild the devtool's static css properties database.",
     )
+    def generate_css_db(self, command_context):
+        """Generate the static css properties database for devtools and write it to file."""
 
+        print("Re-generating the css properties database...")
+        db = self.get_properties_db_from_xpcshell(command_context)
+        if not db:
+            return 1
 
-def get_properties_db_from_xpcshell(command_context):
-    """Generate the static css properties db for devtools from an xpcshell script."""
-    build = MozbuildObject.from_environment()
-
-    # Get the paths
-    script_path = resolve_path(
-        command_context.topsrcdir,
-        "devtools/shared/css/generated/generate-properties-db.js",
-    )
-    gre_path = resolve_path(command_context.topobjdir, "dist/bin")
-    browser_path = resolve_path(command_context.topobjdir, "dist/bin/browser")
-    try:
-        xpcshell_path = build.get_binary_path(what="xpcshell")
-    except BinaryNotFoundException as e:
-        command_context.log(
-            logging.ERROR, "devtools-css-db", {"error": str(e)}, "ERROR: {error}"
+        self.output_template(
+            command_context,
+            {
+                "preferences": stringify(db["preferences"]),
+                "cssProperties": stringify(db["cssProperties"]),
+                "pseudoElements": stringify(db["pseudoElements"]),
+            },
         )
-        command_context.log(
-            logging.INFO, "devtools-css-db", {"help": e.help()}, "{help}"
+
+    def get_properties_db_from_xpcshell(self, command_context):
+        """Generate the static css properties db for devtools from an xpcshell script."""
+        build = MozbuildObject.from_environment()
+
+        # Get the paths
+        script_path = resolve_path(
+            command_context.topsrcdir,
+            "devtools/shared/css/generated/generate-properties-db.js",
         )
-        return None
+        gre_path = resolve_path(command_context.topobjdir, "dist/bin")
+        browser_path = resolve_path(command_context.topobjdir, "dist/bin/browser")
+        try:
+            xpcshell_path = build.get_binary_path(what="xpcshell")
+        except BinaryNotFoundException as e:
+            command_context.log(
+                logging.ERROR, "devtools-css-db", {"error": str(e)}, "ERROR: {error}"
+            )
+            command_context.log(
+                logging.INFO, "devtools-css-db", {"help": e.help()}, "{help}"
+            )
+            return None
 
-    print(browser_path)
+        print(browser_path)
 
-    sub_env = dict(os.environ)
-    if sys.platform.startswith("linux"):
-        sub_env["LD_LIBRARY_PATH"] = gre_path
+        sub_env = dict(os.environ)
+        if sys.platform.startswith("linux"):
+            sub_env["LD_LIBRARY_PATH"] = gre_path
 
-    # Run the xcpshell script, and set the appdir flag to the browser path so that
-    # we have the proper dependencies for requiring the loader.
-    contents = subprocess.check_output(
-        [xpcshell_path, "-g", gre_path, "-a", browser_path, script_path],
-        env=sub_env,
-    )
-    # Extract just the output between the delimiters as the xpcshell output can
-    # have extra output that we don't want.
-    contents = contents.decode().split("DEVTOOLS_CSS_DB_DELIMITER")[1]
+        # Run the xcpshell script, and set the appdir flag to the browser path so that
+        # we have the proper dependencies for requiring the loader.
+        contents = subprocess.check_output(
+            [xpcshell_path, "-g", gre_path, "-a", browser_path, script_path],
+            env=sub_env,
+        )
+        # Extract just the output between the delimiters as the xpcshell output can
+        # have extra output that we don't want.
+        contents = contents.decode().split("DEVTOOLS_CSS_DB_DELIMITER")[1]
 
-    return json.loads(contents)
+        return json.loads(contents)
 
+    def output_template(self, command_context, substitutions):
+        """Output a the properties-db.js from a template."""
+        js_template_path = resolve_path(
+            command_context.topsrcdir,
+            "devtools/shared/css/generated/properties-db.js.in",
+        )
+        destination_path = resolve_path(
+            command_context.topsrcdir, "devtools/shared/css/generated/properties-db.js"
+        )
 
-def output_template(command_context, substitutions):
-    """Output a the properties-db.js from a template."""
-    js_template_path = resolve_path(
-        command_context.topsrcdir,
-        "devtools/shared/css/generated/properties-db.js.in",
-    )
-    destination_path = resolve_path(
-        command_context.topsrcdir, "devtools/shared/css/generated/properties-db.js"
-    )
+        with open(js_template_path, "rb") as handle:
+            js_template = handle.read().decode()
 
-    with open(js_template_path, "rb") as handle:
-        js_template = handle.read().decode()
+        preamble = "/* THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT */\n\n"
+        contents = string.Template(js_template).substitute(substitutions)
 
-    preamble = "/* THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT */\n\n"
-    contents = string.Template(js_template).substitute(substitutions)
+        with open(destination_path, "wb") as destination:
+            destination.write(preamble.encode() + contents.encode())
 
-    with open(destination_path, "wb") as destination:
-        destination.write(preamble.encode() + contents.encode())
-
-    print("The database was successfully generated at " + destination_path)
+        print("The database was successfully generated at " + destination_path)
