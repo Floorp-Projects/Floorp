@@ -5,6 +5,7 @@
 package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
@@ -14,9 +15,11 @@ import android.view.WindowManager.LayoutParams.MATCH_PARENT
 import android.view.WindowManager.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requirePreference
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -24,22 +27,28 @@ import org.mozilla.focus.widget.DefaultBrowserPreference
 import org.mozilla.focus.widget.LocaleListPreference
 import java.util.Locale
 
+@Suppress("TooManyFunctions") // code is split into multiple functions with their own purpose.
 class GeneralSettingsFragment :
     BaseSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var localeUpdated: Boolean = false
 
+    private lateinit var radioLightTheme: RadioButtonPreference
+    private lateinit var radioDarkTheme: RadioButtonPreference
+    private lateinit var radioDefaultTheme: RadioButtonPreference
+
+    private lateinit var defaultBrowserPreference: DefaultBrowserPreference
+
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.general_settings)
+        setupPreferences()
     }
 
     override fun onResume() {
         super.onResume()
 
-        val preference =
-            findPreference(getString(R.string.pref_key_default_browser)) as? DefaultBrowserPreference
-        preference?.update()
+        defaultBrowserPreference.update()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -80,6 +89,76 @@ class GeneralSettingsFragment :
             localeManager.updateConfiguration(activity, locale)
 
             requireActivity().recreate()
+        }
+    }
+
+    private fun setupPreferences() {
+        setupDefaultBrowserPreference()
+
+        bindLightTheme()
+        bindDarkTheme()
+        bindDefaultTheme()
+
+        setupRadioGroups()
+    }
+
+    private fun setupDefaultBrowserPreference() {
+        defaultBrowserPreference = requirePreference(R.string.pref_key_default_browser)
+    }
+
+    private fun bindLightTheme() {
+        radioLightTheme = requirePreference(R.string.pref_key_light_theme)
+        radioLightTheme.onClickListener {
+            setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+    }
+
+    private fun bindDarkTheme() {
+        radioDarkTheme = requirePreference(R.string.pref_key_dark_theme)
+        radioDarkTheme.onClickListener {
+            setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
+        }
+    }
+
+    private fun bindDefaultTheme() {
+        radioDefaultTheme = requirePreference(R.string.pref_key_default_theme)
+        val defaultThemeTitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            context?.getString(R.string.preference_follow_device_theme)
+        } else {
+            context?.getString(R.string.preference_auto_battery_theme)
+        }
+
+        radioDefaultTheme.apply {
+            title = defaultThemeTitle
+            onClickListener {
+                setDefaultTheme()
+            }
+        }
+    }
+
+    private fun setupRadioGroups() {
+        addToRadioGroup(
+            radioLightTheme,
+            radioDarkTheme,
+            radioDefaultTheme
+        )
+    }
+
+    private fun setNewTheme(mode: Int) {
+        if (AppCompatDelegate.getDefaultNightMode() == mode) return
+        AppCompatDelegate.setDefaultNightMode(mode)
+        activity?.recreate()
+    }
+
+    private fun setDefaultTheme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            )
+        } else {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+            )
         }
     }
 

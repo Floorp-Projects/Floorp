@@ -31,4 +31,9 @@
         <attr name="switchIcon" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="RadioButtonPreference">
+        <attr format="string|boolean|integer|reference|float" name="defaultValue"/>
+        <attr name="android:defaultValue"/>
+    </declare-styleable>
+
 </resources>

@@ -261,6 +261,21 @@ class Settings private constructor(
         true
     )
 
+    var lightThemeSelected = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_light_theme),
+        false
+    )
+
+    var darkThemeSelected = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_dark_theme),
+        false
+    )
+
+    var useDefaultThemeSelected = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_default_theme),
+        false
+    )
+
     private fun getPreferenceKey(resourceId: Int): String =
         resources.getString(resourceId)
 }

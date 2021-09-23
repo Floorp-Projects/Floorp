@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.ext
 
+import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import org.mozilla.focus.Components
 
@@ -20,3 +21,9 @@ val Fragment.components: Components?
  */
 val Fragment.requireComponents: Components
     get() = requireContext().components
+
+/**
+ * Get the preference key.
+ * @param preferenceId Resource ID from preference_keys
+ */
+fun Fragment.getPreferenceKey(@StringRes preferenceId: Int): String = getString(preferenceId)

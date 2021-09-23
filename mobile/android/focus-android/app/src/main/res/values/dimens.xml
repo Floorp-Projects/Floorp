@@ -77,4 +77,11 @@
     <!-- Override the default menu width values from AC. -->
     <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">112dp</dimen>
     <dimen name="mozac_browser_menu_width_max" tools:ignore="UnusedResources">314dp</dimen>
+
+    <!-- Preferences. -->
+    <dimen name="radio_button_preference_height">48dp</dimen>
+    <dimen name="radio_button_preference_width">48dp</dimen>
+    <dimen name="radio_button_preference_start_margin">18dp</dimen>
+    <dimen name="radio_button_preference_title_margins">16dp</dimen>
+
 </resources>

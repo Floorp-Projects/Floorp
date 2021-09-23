@@ -5,7 +5,10 @@
 
 package org.mozilla.focus
 
+import android.content.Context
+import android.os.Build
 import android.os.StrictMode
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +28,7 @@ import org.mozilla.focus.telemetry.ProfilerMarkerFactProcessor
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
+import org.mozilla.focus.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
@@ -49,6 +53,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         if (isMainProcess()) {
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
+            setTheme(this)
             components.engine.warmUp()
 
             TelemetryWrapper.init(this)
@@ -68,6 +73,45 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             initializeWebExtensionSupport()
 
             ProcessLifecycleOwner.get().lifecycle.addObserver(lockObserver)
+        }
+    }
+
+    private fun setTheme(context: Context) {
+        val settings = Settings.getInstance(context)
+        when {
+            settings.lightThemeSelected -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_NO
+                )
+            }
+
+            settings.darkThemeSelected -> {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_YES
+                )
+            }
+
+            settings.useDefaultThemeSelected -> {
+                setDefaultTheme()
+            }
+
+            // No theme setting selected, select the default value, follow device theme.
+            else -> {
+                setDefaultTheme()
+                settings.useDefaultThemeSelected = true
+            }
+        }
+    }
+
+    private fun setDefaultTheme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            )
+        } else {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+            )
         }
     }
 

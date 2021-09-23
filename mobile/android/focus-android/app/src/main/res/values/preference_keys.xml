@@ -62,4 +62,9 @@
     <string name="pref_key_screen_exceptions" translatable="false">
         <xliff:g id="preference_key">pref_screen_exceptions</xliff:g>
     </string>
+
+    <!-- Theme Settings -->
+    <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>
+    <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>
+    <string name="pref_key_default_theme" translatable="false">pref_key_default_theme</string>
 </resources>
