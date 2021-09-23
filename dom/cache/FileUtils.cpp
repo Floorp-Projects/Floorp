@@ -8,6 +8,7 @@
 
 #include "DBSchema.h"
 #include "mozilla/dom/InternalResponse.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
@@ -171,7 +172,8 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
 }
 
 void BodyCancelWrite(nsISupports& aCopyContext) {
-  QM_WARNONLY_TRY(NS_CancelAsyncCopy(&aCopyContext, NS_ERROR_ABORT));
+  QM_WARNONLY_TRY(
+      QM_TO_RESULT(NS_CancelAsyncCopy(&aCopyContext, NS_ERROR_ABORT)));
 
   // TODO The partially written file must be cleaned up after the async copy
   // makes its callback.
@@ -722,7 +724,8 @@ Result<int64_t, nsresult> DirectoryPaddingRestore(nsIFile& aBaseDir,
   QM_TRY_INSPECT(const int64_t& paddingSize, db::FindOverallPaddingSize(aConn));
   MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
 
-  QM_TRY(DirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize),
+  QM_TRY(MOZ_TO_RESULT(DirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE,
+                                             paddingSize)),
          (aMustRestore ? Err(tryTempError)
                        : Result<int64_t, nsresult>{paddingSize}));
 

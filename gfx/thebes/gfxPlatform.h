@@ -607,13 +607,19 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   int32_t GetBidiNumeralOption();
 
   /**
-   * This is a bit ugly, but useful... force all presContexts to reflow,
-   * by toggling a preference that they observe. This is used when
-   * something about platform settings changes that might have an effect
-   * on layout, such as font rendering settings that influence metrics.
+   * Force all presContexts to reflow (and reframe if needed).
+   *
+   * This is used when something about platform settings changes that might have
+   * an effect on layout, such as font rendering settings that influence
+   * metrics, or installed fonts.
+   *
+   * By default it also broadcast it to child processes, but some callers might
+   * not need it if they implement their own notification.
    */
   enum class NeedsReframe : bool { No, Yes };
-  static void ForceGlobalReflow(NeedsReframe);
+  enum class BroadcastToChildren : bool { No, Yes };
+  static void ForceGlobalReflow(NeedsReframe,
+                                BroadcastToChildren = BroadcastToChildren::Yes);
 
   static void FlushFontAndWordCaches();
 

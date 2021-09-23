@@ -11,6 +11,7 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalResponse.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/cache/CacheCommon.h"
@@ -433,7 +434,8 @@ class MOZ_RAII AutoDisableForeignKeyChecking {
 
   ~AutoDisableForeignKeyChecking() {
     if (mForeignKeyCheckingDisabled) {
-      QM_WARNONLY_TRY(mConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns));
+      QM_WARNONLY_TRY(QM_TO_RESULT(
+          mConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
     }
   }
 
@@ -521,10 +523,10 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
     // if a new migration is incorrect by fast failing on the corruption.
     // Unfortunately, this must be performed outside of the transaction.
 
-    QM_TRY(aConn.ExecuteSimpleSQL("VACUUM"_ns), QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL("VACUUM"_ns)), QM_PROPAGATE,
            ([&aConn](const nsresult rv) {
              if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
-               QM_WARNONLY_TRY(IntegrityCheck(aConn));
+               QM_WARNONLY_TRY(QM_TO_RESULT(IntegrityCheck(aConn)));
              }
            }));
   }

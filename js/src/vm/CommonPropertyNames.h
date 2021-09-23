@@ -536,8 +536,7 @@
   MACRO_(WeakSet_add, WeakSet_add, "WeakSet_add")                              \
   MACRO_(week, week, "week")                                                   \
   MACRO_(weekday, weekday, "weekday")                                          \
-  MACRO_(weekendEnd, weekendEnd, "weekendEnd")                                 \
-  MACRO_(weekendStart, weekendStart, "weekendStart")                           \
+  MACRO_(weekend, weekend, "weekend")                                          \
   MACRO_(while, while_, "while")                                               \
   MACRO_(with, with, "with")                                                   \
   MACRO_(writable, writable, "writable")                                       \

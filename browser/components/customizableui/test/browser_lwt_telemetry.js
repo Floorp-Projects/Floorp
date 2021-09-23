@@ -15,23 +15,14 @@ add_task(async function testCustomize() {
   await startCustomizing();
 
   // Find the footer buttons to test.
-  let footerRow = document.getElementById("customization-lwtheme-menu-footer");
-  let [manageButton, getMoreButton] = footerRow.childNodes;
+  let manageLink = document.querySelector("#customization-lwtheme-link");
 
-  // Check the manage button, it should open about:addons.
+  // Check the manage themes button, it should open about:addons.
   let waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
-  manageButton.click();
+  manageLink.click();
   let addonsTab = await waitForNewTab;
 
   is(gBrowser.currentURI.spec, "about:addons", "Manage opened about:addons");
-  BrowserTestUtils.removeTab(addonsTab);
-
-  // Check the get more button, we mocked it to open getMoreURL.
-  waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser, getMoreURL);
-  getMoreButton.click();
-  addonsTab = await waitForNewTab;
-
-  is(gBrowser.currentURI.spec, getMoreURL, "Get more opened AMO");
   BrowserTestUtils.removeTab(addonsTab);
 
   let snapshot = Services.telemetry.snapshotEvents(
@@ -56,10 +47,7 @@ add_task(async function testCustomize() {
   // Events are now [method, object, value, extra] as expected.
   Assert.deepEqual(
     relatedEvents,
-    [
-      ["link", "customize", "manageThemes"],
-      ["link", "customize", "getThemes"],
-    ],
+    [["link", "customize", "manageThemes"]],
     "The events are recorded correctly"
   );
 

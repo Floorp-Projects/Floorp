@@ -5220,11 +5220,6 @@
   value: 64
   mirror: always
 
-- name: gfx.webrender.enable-multithreading
-  type: bool
-  value: true
-  mirror: always
-
 - name: gfx.webrender.batching.lookback
   type: uint32_t
   value: 10
@@ -6320,31 +6315,10 @@
   mirror: once
   do_not_use_directly: true
 
-# Preference that when switched at runtime will run a series of benchmarks
-# and output the result to stderr.
-- name: layers.bench.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.child-process-shutdown
   type: RelaxedAtomicBool
   value: true
   mirror: always
-
-- name: layers.componentalpha.enabled
-  type: bool
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  # Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
-  # pref was always false. But we go to the effort of setting it to false so
-  # that telemetry's reporting of the pref value is more likely to reflect what
-  # the code is doing.
-  value: false
-#else
-  value: true
-#endif
-  mirror: once
-  do_not_use_directly: true
 
 - name: layers.d3d11.force-warp
   type: bool
@@ -6392,24 +6366,6 @@
   mirror: always
 
 - name: layers.force-synchronous-resize
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Whether to enable arbitrary layer geometry for OpenGL compositor.
-- name: layers.geometry.opengl.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Whether to enable arbitrary layer geometry for Basic compositor.
-- name: layers.geometry.basic.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
- # Whether to enable arbitrary layer geometry for DirectX compositor.
-- name: layers.geometry.d3d11.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
@@ -6987,8 +6943,29 @@
 #   1 - only base system fonts
 #   2 - also fonts from optional language packs
 #   3 - also user-installed fonts
-- name: layout.css.font-visibility.level
-  type: RelaxedAtomicInt32
+- name: layout.css.font-visibility.standard
+  type: int32_t
+  value: 3
+  mirror: always
+
+# font-visibility setting when Tracking Protection is enabled
+- name: layout.css.font-visibility.trackingprotection
+  type: int32_t
+  value: 3
+  mirror: always
+
+# font-visibility setting when Resist Fingerprinting is enabled
+- name: layout.css.font-visibility.resistFingerprinting
+  type: int32_t
+  value: 1
+  mirror: always
+
+# Max font-visibility setting for Private Browsing contexts
+# (The actual value used in a private-browsing context will be the lesser of
+# the appropriate standard/trackingprotection/RFP value from above, and the
+# private-browsing level specified by this pref.)
+- name: layout.css.font-visibility.private
+  type: int32_t
   value: 3
   mirror: always
 
@@ -7772,6 +7749,16 @@
   value: true
 #else
   value: false
+#endif
+
+# Size of the AudioIPC shmems
+- name: media.audioipc.shm_area_size
+  type: uint32_t
+  mirror: always
+#if defined(XP_WIN) && !defined(_WIN64)
+  value: 128 * 4096
+#else
+  value: 512 * 4096
 #endif
 
 # Whether or not to pass AUDCLNT_STREAMOPTIONS_RAW when initializing audio
@@ -10221,6 +10208,13 @@
 - name: privacy.annotate_channels.strict_list.enabled
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
+# Enable the clearing of cache data using the clear-site-data header. If enabled,
+# header values of "cache" and "*" will clear cached data from the site
+- name: privacy.clearsitedata.cache.enabled
+  type: bool
+  value: false
   mirror: always
 
 # First Party Isolation (double keying), disabled by default.

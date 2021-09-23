@@ -2853,6 +2853,10 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thingp) {
   return dying;
 }
 
+SweepingTracer::SweepingTracer(JSRuntime* rt)
+    : GenericTracerImpl(rt, JS::TracerKind::Sweeping,
+                        JS::WeakMapTraceAction::TraceKeysAndValues) {}
+
 template <typename T>
 inline T* SweepingTracer::onEdge(T* thing) {
   CheckIsMarkedThing(thing);
@@ -2873,33 +2877,6 @@ inline T* SweepingTracer::onEdge(T* thing) {
   }
 
   return thing;
-}
-
-JSObject* SweepingTracer::onObjectEdge(JSObject* obj) { return onEdge(obj); }
-Shape* SweepingTracer::onShapeEdge(Shape* shape) { return onEdge(shape); }
-JSString* SweepingTracer::onStringEdge(JSString* string) {
-  return onEdge(string);
-}
-js::BaseScript* SweepingTracer::onScriptEdge(js::BaseScript* script) {
-  return onEdge(script);
-}
-BaseShape* SweepingTracer::onBaseShapeEdge(BaseShape* base) {
-  return onEdge(base);
-}
-GetterSetter* SweepingTracer::onGetterSetterEdge(GetterSetter* gs) {
-  return onEdge(gs);
-}
-PropMap* SweepingTracer::onPropMapEdge(PropMap* map) { return onEdge(map); }
-jit::JitCode* SweepingTracer::onJitCodeEdge(jit::JitCode* jit) {
-  return onEdge(jit);
-}
-Scope* SweepingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
-RegExpShared* SweepingTracer::onRegExpSharedEdge(RegExpShared* shared) {
-  return onEdge(shared);
-}
-BigInt* SweepingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
-JS::Symbol* SweepingTracer::onSymbolEdge(JS::Symbol* sym) {
-  return onEdge(sym);
 }
 
 namespace js {
@@ -3168,56 +3145,14 @@ BarrierTracer* BarrierTracer::fromTracer(JSTracer* trc) {
 }
 
 BarrierTracer::BarrierTracer(JSRuntime* rt)
-    : GenericTracer(rt, JS::TracerKind::Barrier, JS::WeakEdgeTraceAction::Skip),
+    : GenericTracerImpl(rt, JS::TracerKind::Barrier,
+                        JS::WeakEdgeTraceAction::Skip),
       marker(rt->gc.marker) {}
 
-JSObject* BarrierTracer::onObjectEdge(JSObject* obj) {
-  PreWriteBarrier(obj);
-  return obj;
-}
-Shape* BarrierTracer::onShapeEdge(Shape* shape) {
-  PreWriteBarrier(shape);
-  return shape;
-}
-JSString* BarrierTracer::onStringEdge(JSString* string) {
-  PreWriteBarrier(string);
-  return string;
-}
-js::BaseScript* BarrierTracer::onScriptEdge(js::BaseScript* script) {
-  PreWriteBarrier(script);
-  return script;
-}
-BaseShape* BarrierTracer::onBaseShapeEdge(BaseShape* base) {
-  PreWriteBarrier(base);
-  return base;
-}
-GetterSetter* BarrierTracer::onGetterSetterEdge(GetterSetter* gs) {
-  PreWriteBarrier(gs);
-  return gs;
-}
-PropMap* BarrierTracer::onPropMapEdge(PropMap* map) {
-  PreWriteBarrier(map);
-  return map;
-}
-Scope* BarrierTracer::onScopeEdge(Scope* scope) {
-  PreWriteBarrier(scope);
-  return scope;
-}
-RegExpShared* BarrierTracer::onRegExpSharedEdge(RegExpShared* shared) {
-  PreWriteBarrier(shared);
-  return shared;
-}
-BigInt* BarrierTracer::onBigIntEdge(BigInt* bi) {
-  PreWriteBarrier(bi);
-  return bi;
-}
-JS::Symbol* BarrierTracer::onSymbolEdge(JS::Symbol* sym) {
-  PreWriteBarrier(sym);
-  return sym;
-}
-jit::JitCode* BarrierTracer::onJitCodeEdge(jit::JitCode* jit) {
-  PreWriteBarrier(jit);
-  return jit;
+template <typename T>
+T* BarrierTracer::onEdge(T* thing) {
+  PreWriteBarrier(thing);
+  return thing;
 }
 
 // If the barrier buffer grows too large, trace all barriered things at that

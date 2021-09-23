@@ -497,7 +497,7 @@ class NotNull;
 // Handles the three arguments case when a custom return value needs to be
 // returned
 #define QM_TRY_CUSTOM_RET_VAL(tryResult, expr, customRetVal)             \
-  auto tryResult = ::mozilla::ToResult(expr);                            \
+  auto tryResult = (expr);                                               \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();          \
@@ -510,7 +510,7 @@ class NotNull;
 // before a custom return value is returned
 #define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(tryResult, expr, customRetVal, \
                                            cleanup)                       \
-  auto tryResult = ::mozilla::ToResult(expr);                             \
+  auto tryResult = (expr);                                                \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);  \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                  \
     auto tryTempError = tryResult.unwrapErr();                            \
@@ -639,7 +639,7 @@ class NotNull;
 // through unwrap/unwrapErr/propagateErr, so that this does not prevent NRVO or
 // tail call optimizations when possible.
 #define QM_TRY_RETURN_PROPAGATE_ERR(tryResult, expr)                         \
-  auto tryResult = ::mozilla::ToResult(expr);                                \
+  auto tryResult = (expr);                                                   \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                     \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                    \
         expr, tryResult.inspectErr(), mozilla::dom::quota::Severity::Error); \
@@ -649,7 +649,7 @@ class NotNull;
 // Handles the three arguments case when a custom return value needs to be
 // returned
 #define QM_TRY_RETURN_CUSTOM_RET_VAL(tryResult, expr, customRetVal)          \
-  auto tryResult = ::mozilla::ToResult(expr);                                \
+  auto tryResult = (expr);                                                   \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                     \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();              \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                    \
@@ -662,7 +662,7 @@ class NotNull;
 // before a custom return value is returned
 #define QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP(tryResult, expr,       \
                                                   customRetVal, cleanup) \
-  auto tryResult = ::mozilla::ToResult(expr);                            \
+  auto tryResult = (expr);                                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
     auto tryTempError = tryResult.unwrapErr();                           \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                \
@@ -735,7 +735,7 @@ class NotNull;
 
 // Handles the three arguments case when only a warning/info is reported.
 #define QM_REPORTONLY_TRY(tryResult, severity, expr)                           \
-  auto tryResult = ::mozilla::ToResult(expr);                                  \
+  auto tryResult = (expr);                                                     \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);       \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                       \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                      \
@@ -744,7 +744,7 @@ class NotNull;
 
 // Handles the four arguments case when a cleanup function needs to be called
 #define QM_REPORTONLY_TRY_WITH_CLEANUP(tryResult, severity, expr, cleanup) \
-  auto tryResult = ::mozilla::ToResult(expr);                              \
+  auto tryResult = (expr);                                                 \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);   \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                   \
     auto tryTempError = tryResult.unwrapErr();                             \

@@ -140,10 +140,10 @@ class SetupAction final : public SyncDBAction {
       // failure, but if we entered it and RestorePaddingFile succeeded, we
       // would have returned NS_OK. Now, we will never propagate a
       // MaybeUpdatePaddingFile failure.
-      QM_WARNONLY_TRY(
+      QM_WARNONLY_TRY(QM_TO_RESULT(
           MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
                                  overallDeletedPaddingSize.value(),
-                                 [&trans]() { return trans.Commit(); }));
+                                 [&trans]() { return trans.Commit(); })));
     }
 
     if (DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::TMP_FILE) ||
@@ -185,8 +185,9 @@ class DeleteOrphanedBodyAction final : public Action {
                    CloneFileAndAppend(*aQuotaInfo.mDir, u"cache"_ns), QM_VOID,
                    resolve);
 
-    QM_TRY(BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList), QM_VOID,
-           resolve);
+    QM_TRY(
+        MOZ_TO_RESULT(BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList)),
+        QM_VOID, resolve);
 
     aResolver->Resolve(NS_OK);
   }
@@ -383,17 +384,6 @@ class Manager::Factory {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
     if (!sFactory) {
-      // Be clear about what we are locking.  sFactory is bg thread only, so
-      // we don't need to lock it here.  Just protect sFactoryShutdown and
-      // sBackgroundThread.
-      {
-        StaticMutexAutoLock lock(sMutex);
-
-        if (sFactoryShutdown) {
-          return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-        }
-      }
-
       // We cannot use ClearOnShutdown() here because we're not on the main
       // thread.  Instead, we delete sFactory in Factory::Remove() after the
       // last manager is removed.  ShutdownObserver ensures this happens
@@ -428,7 +418,7 @@ class Manager::Factory {
                                      State aState = Open) {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
-    QM_TRY(MaybeCreateInstance(), nullptr);
+    QM_TRY(MOZ_TO_RESULT(MaybeCreateInstance()), nullptr);
 
     // Iterate in reverse to find the most recent, matching Manager.  This
     // is important when looking for a Closing Manager.  If a new Manager
@@ -478,13 +468,6 @@ class Manager::Factory {
   // PBackground thread only.
   static StaticAutoPtr<Factory> sFactory;
 
-  // protects following static attribute
-  static StaticMutex sMutex;
-
-  // Indicate if shutdown has occurred to block re-creation of sFactory.
-  // Must hold sMutex to access.
-  static bool sFactoryShutdown;
-
   // Weak references as we don't want to keep Manager objects alive forever.
   // When a Manager is destroyed it calls Factory::Remove() to clear itself.
   // PBackground thread only.
@@ -498,12 +481,6 @@ class Manager::Factory {
 
 // static
 StaticAutoPtr<Manager::Factory> Manager::Factory::sFactory;
-
-// static
-StaticMutex Manager::Factory::sMutex;
-
-// static
-bool Manager::Factory::sFactoryShutdown = false;
 
 // ----------------------------------------------------------------------------
 
@@ -861,7 +838,7 @@ class Manager::CachePutAllAction final : public DBAction {
     mozStorageTransaction trans(mConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start(), QM_VOID);
+    QM_TRY(MOZ_TO_RESULT(trans.Start()), QM_VOID);
 
     const nsresult rv = [this, &trans]() -> nsresult {
       QM_TRY(CollectEachInRange(mList, [this](Entry& e) -> nsresult {
@@ -1132,11 +1109,11 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
       mDeletionInfo = std::move(maybeDeletionInfo.ref());
     }
 
-    QM_TRY(
-        MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
-                               mDeletionInfo.mDeletedPaddingSize,
-                               [&trans]() mutable { return trans.Commit(); }),
-        QM_PROPAGATE, [this](const nsresult) { mSuccess = false; });
+    QM_TRY(MOZ_TO_RESULT(MaybeUpdatePaddingFile(
+               aDBDir, aConn, /* aIncreaceSize */ 0,
+               mDeletionInfo.mDeletedPaddingSize,
+               [&trans]() mutable { return trans.Commit(); })),
+           QM_PROPAGATE, [this](const nsresult) { mSuccess = false; });
 
     return NS_OK;
   }

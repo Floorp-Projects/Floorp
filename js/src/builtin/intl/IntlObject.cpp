@@ -31,7 +31,6 @@
 #include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "ds/Sort.h"
 #include "js/CharacterEncoding.h"
@@ -42,8 +41,6 @@
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"
-#include "unicode/ucal.h"
-#include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -68,16 +65,12 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  const UChar* uTimeZone = nullptr;
-  int32_t uTimeZoneLength = 0;
-  UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.get(),
-                             UCAL_DEFAULT, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto result = mozilla::intl::Calendar::TryCreate(locale.get());
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
-  ScopedICUObject<UCalendar, ucal_close> toClose(cal);
+  auto calendar = result.unwrap();
 
   RootedObject info(cx, NewPlainObject(cx));
   if (!info) {
@@ -85,70 +78,37 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedValue v(cx);
-  int32_t firstDayOfWeek = ucal_getAttribute(cal, UCAL_FIRST_DAY_OF_WEEK);
-  v.setInt32(firstDayOfWeek);
 
+  v.setInt32(static_cast<int32_t>(calendar->GetFirstDayOfWeek()));
   if (!DefineDataProperty(cx, info, cx->names().firstDayOfWeek, v)) {
     return false;
   }
 
-  int32_t minDays = ucal_getAttribute(cal, UCAL_MINIMAL_DAYS_IN_FIRST_WEEK);
-  v.setInt32(minDays);
+  v.setInt32(calendar->GetMinimalDaysInFirstWeek());
   if (!DefineDataProperty(cx, info, cx->names().minDays, v)) {
     return false;
   }
 
-  UCalendarWeekdayType prevDayType =
-      ucal_getDayOfWeekType(cal, UCAL_SATURDAY, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  RootedArrayObject weekendArray(cx, NewDenseEmptyArray(cx));
+  if (!weekendArray) {
     return false;
   }
 
-  RootedValue weekendStart(cx), weekendEnd(cx);
+  auto weekend = calendar->GetWeekend();
+  if (weekend.isErr()) {
+    intl::ReportInternalError(cx, weekend.unwrapErr());
+    return false;
+  }
 
-  for (int i = UCAL_SUNDAY; i <= UCAL_SATURDAY; i++) {
-    UCalendarDaysOfWeek dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
-    UCalendarWeekdayType type = ucal_getDayOfWeekType(cal, dayOfWeek, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
+  for (auto day : weekend.unwrap()) {
+    if (!NewbornArrayPush(cx, weekendArray,
+                          Int32Value(static_cast<int32_t>(day)))) {
       return false;
     }
-
-    if (prevDayType != type) {
-      switch (type) {
-        case UCAL_WEEKDAY:
-          // If the first Weekday after Weekend is Sunday (1),
-          // then the last Weekend day is Saturday (7).
-          // Otherwise we'll just take the previous days number.
-          weekendEnd.setInt32(i == 1 ? 7 : i - 1);
-          break;
-        case UCAL_WEEKEND:
-          weekendStart.setInt32(i);
-          break;
-        case UCAL_WEEKEND_ONSET:
-        case UCAL_WEEKEND_CEASE:
-          // At the time this code was added, ICU apparently never behaves this
-          // way, so just throw, so that users will report a bug and we can
-          // decide what to do.
-          intl::ReportInternalError(cx);
-          return false;
-        default:
-          break;
-      }
-    }
-
-    prevDayType = type;
   }
 
-  MOZ_ASSERT(weekendStart.isInt32());
-  MOZ_ASSERT(weekendEnd.isInt32());
-
-  if (!DefineDataProperty(cx, info, cx->names().weekendStart, weekendStart)) {
-    return false;
-  }
-
-  if (!DefineDataProperty(cx, info, cx->names().weekendEnd, weekendEnd)) {
+  v.setObject(*weekendArray);
+  if (!DefineDataProperty(cx, info, cx->names().weekend, v)) {
     return false;
   }
 
@@ -810,7 +770,7 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
         return nullptr;
       }
 
-      timeZone = canonicalTimeZone.toString();
+      timeZone = canonicalTimeZone.toString(cx);
       if (!timeZone) {
         return nullptr;
       }

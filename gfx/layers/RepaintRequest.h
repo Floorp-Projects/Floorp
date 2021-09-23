@@ -17,6 +17,7 @@
 #include "mozilla/gfx/ScaleFactor.h"  // for ScaleFactor
 #include "mozilla/TimeStamp.h"        // for TimeStamp
 #include "Units.h"                    // for CSSRect, CSSPixel, etc
+#include "UnitTransforms.h"           // for ViewAs
 
 namespace IPC {
 template <typename T>
@@ -54,6 +55,7 @@ struct RepaintRequest {
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
+        mTransformToAncestorScale(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
         mIsRootContent(false),
@@ -76,6 +78,7 @@ struct RepaintRequest {
         mPresShellId(aOther.GetPresShellId()),
         mLayoutViewport(aOther.GetLayoutViewport()),
         mExtraResolution(aOther.GetExtraResolution()),
+        mTransformToAncestorScale(aOther.GetTransformToAncestorScale()),
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
         mIsRootContent(aOther.IsRootContent()),
@@ -98,6 +101,7 @@ struct RepaintRequest {
            mPresShellId == aOther.mPresShellId &&
            mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
+           mTransformToAncestorScale == aOther.mTransformToAncestorScale &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
@@ -113,14 +117,9 @@ struct RepaintRequest {
                                   const RepaintRequest& aRequest);
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
-    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer
-    // scale instead of LayersPixelsPerCSSPixel(), because displayport
-    // calculations are done in the context of a repaint request, where we ask
-    // Layout to repaint at a new resolution that includes any async zoom. Until
-    // this repaint request is processed, LayersPixelsPerCSSPixel() does not yet
-    // include the async zoom, but it will when the displayport is interpreted
-    // for the repaint.
-    return mZoom * ParentLayerToLayerScale(1.0f) / mExtraResolution;
+    // Refer to FrameMetrics::DisplayportPixelsPerCSSPixel() for explanation.
+    return mZoom * ParentLayerToLayerScale(1.0f) *
+           ViewAs<LayerToScreenScale2D>(mTransformToAncestorScale);
   }
 
   CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
@@ -185,6 +184,10 @@ struct RepaintRequest {
 
   const ScreenToLayerScale2D& GetExtraResolution() const {
     return mExtraResolution;
+  }
+
+  const Scale2D& GetTransformToAncestorScale() const {
+    return mTransformToAncestorScale;
   }
 
   const TimeStamp& GetPaintRequestTime() const { return mPaintRequestTime; }
@@ -286,6 +289,9 @@ struct RepaintRequest {
   // The extra resolution at which content in this scroll frame is drawn beyond
   // that necessary to draw one Layer pixel per Screen pixel.
   ScreenToLayerScale2D mExtraResolution;
+
+  // The scale on this scroll frame induced by enclosing CSS transforms.
+  Scale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;

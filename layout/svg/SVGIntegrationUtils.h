@@ -194,11 +194,6 @@ class SVGIntegrationUtils final {
                         bool& aOutIsMaskComplete);
 
   /**
-   * Return true if all the mask resource of aFrame are ready.
-   */
-  static bool IsMaskResourceReady(nsIFrame* aFrame);
-
-  /**
    * Paint the frame contents.
    * SVG frames will have had matrix propagation set to false already.
    * Non-SVG frames have to do their own thing.

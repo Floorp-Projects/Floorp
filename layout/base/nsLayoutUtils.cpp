@@ -2804,6 +2804,8 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetDevPixelsPerCSSPixel(deviceScale);
   metrics.SetPresShellResolution(resolution);
+  metrics.SetTransformToAncestorScale(
+      Scale2D(nsLayoutUtils::GetTransformToAncestorScale(frame)));
   metrics.SetCumulativeResolution(cumulativeResolution);
   metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
   LayoutDeviceToScreenScale2D resolutionToScreen(
@@ -8766,12 +8768,15 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(
       LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
 
+  gfxSize transformToAncestorScale = nsLayoutUtils::GetTransformToAncestorScale(
+      aScrollFrame ? aScrollFrame : aForFrame);
+
   LayoutDeviceToScreenScale2D resolutionToScreen(
-      presShell->GetCumulativeResolution() *
-      nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame
-                                                              : aForFrame));
+      presShell->GetCumulativeResolution() * transformToAncestorScale);
   metrics.SetExtraResolution(metrics.GetCumulativeResolution() /
                              resolutionToScreen);
+
+  metrics.SetTransformToAncestorScale(Scale2D(transformToAncestorScale));
 
   metrics.SetDevPixelsPerCSSPixel(presContext->CSSToDevPixelScale());
 

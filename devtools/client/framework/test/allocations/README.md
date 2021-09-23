@@ -165,8 +165,6 @@ This is always enabled.
 Also, it requires to know which particular object is being leaked and also require to hack
 the codebase in order to pass a reference of the suspicious object to the test helper.
 
-/!\ For now, this API only works from the parent process.
-
 You can instruct the test helper to track a given object by doing this:
 ```
  1: // Let's say it is some code running from "my-module.js"

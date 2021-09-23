@@ -11,18 +11,46 @@
 
 var EXPORTED_SYMBOLS = ["WatchedDataHelpers"];
 
-// Allow this JSM to also be loaded as a CommonJS module
-// Because this module is used from the worker thread,
-// (via target-actor-mixin), and workers can't load JSMs via ChromeUtils.import.
-const { validateBreakpointLocation } =
-  typeof module == "object"
-    ? require("devtools/shared/validate-breakpoint.jsm")
-    : ChromeUtils.import("resource://devtools/shared/validate-breakpoint.jsm");
+if (typeof module == "object") {
+  // Allow this JSM to also be loaded as a CommonJS module
+  // Because this module is used from the worker thread,
+  // (via target-actor-mixin), and workers can't load JSMs via ChromeUtils.import.
+  loader.lazyRequireGetter(
+    this,
+    "validateBreakpointLocation",
+    "devtools/shared/validate-breakpoint.jsm",
+    true
+  );
+
+  loader.lazyRequireGetter(
+    this,
+    "validateEventBreakpoint",
+    "devtools/server/actors/utils/event-breakpoints",
+    true
+  );
+} else {
+  const { XPCOMUtils } = ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm"
+  );
+  XPCOMUtils.defineLazyGetter(this, "validateBreakpointLocation", () => {
+    return ChromeUtils.import(
+      "resource://devtools/shared/validate-breakpoint.jsm"
+    ).validateBreakpointLocation;
+  });
+  XPCOMUtils.defineLazyGetter(this, "validateEventBreakpoint", () => {
+    const { loader } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    return loader.require("devtools/server/actors/utils/event-breakpoints")
+      .validateEventBreakpoint;
+  });
+}
 
 // List of all arrays stored in `watchedData`, which are replicated across processes and threads
 const SUPPORTED_DATA = {
   BREAKPOINTS: "breakpoints",
   XHR_BREAKPOINTS: "xhr-breakpoints",
+  EVENT_BREAKPOINTS: "event-breakpoints",
   RESOURCES: "resources",
   TARGET_CONFIGURATION: "target-configuration",
   THREAD_CONFIGURATION: "thread-configuration",
@@ -58,6 +86,19 @@ const DATA_KEY_FUNCTION = {
       );
     }
     return `${path}:${method}`;
+  },
+  [SUPPORTED_DATA.EVENT_BREAKPOINTS]: function(id) {
+    if (typeof id != "string") {
+      throw new Error(
+        `Event Breakpoints expect the id to be a string , got ${typeof id} instead.`
+      );
+    }
+    if (!validateEventBreakpoint(id)) {
+      throw new Error(
+        `The id string should be a valid event breakpoint id, ${id} is not.`
+      );
+    }
+    return id;
   },
 };
 

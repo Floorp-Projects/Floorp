@@ -471,22 +471,17 @@ bool gfxPlatformFontList::InitFontList() {
 
     gfxPlatform::PurgeSkiaFontCache();
 
+    // There's no need to broadcast this reflow request to child processes, as
+    // ContentParent::NotifyUpdatedFonts deals with it by re-entering into this
+    // function on child processes.
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      if (obs) {
-        // Notify any current presContexts that fonts are being updated, so
-        // existing caches will no longer be valid.
-        obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
-      }
+      gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes,
+                                     gfxPlatform::BroadcastToChildren::No);
     } else {
       NS_DispatchToMainThread(
           NS_NewRunnableFunction("font-info-updated notification callback", [] {
-            nsCOMPtr<nsIObserverService> obs =
-                mozilla::services::GetObserverService();
-            if (obs) {
-              obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
-            }
+            gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes,
+                                           gfxPlatform::BroadcastToChildren::No);
           }));
     }
 
@@ -792,6 +787,9 @@ gfxFontEntry* gfxPlatformFontList::LookupInSharedFaceNameList(
   FontVisibility level =
       aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
   if (!IsVisibleToCSS(*family, level)) {
+    if (aPresContext) {
+      aPresContext->ReportBlockedFontFamily(*family);
+    }
     return nullptr;
   }
   gfxFontEntry* fe = CreateFontEntry(face, family);
@@ -1427,10 +1425,15 @@ bool gfxPlatformFontList::FindAndAddFamilies(
     }
     // Check whether the family we found is actually allowed to be looked up,
     // according to current font-visibility prefs.
-    if (family && (IsVisibleToCSS(*family, visibilityLevel) ||
-                   (allowHidden && family->IsHidden()))) {
-      aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
-      return true;
+    if (family) {
+      bool visible = IsVisibleToCSS(*family, visibilityLevel);
+      if (visible || (allowHidden && family->IsHidden())) {
+        aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
+        return true;
+      }
+      if (aPresContext) {
+        aPresContext->ReportBlockedFontFamily(*family);
+      }
     }
     return false;
   }
@@ -1438,20 +1441,33 @@ bool gfxPlatformFontList::FindAndAddFamilies(
   NS_ASSERTION(mFontFamilies.Count() != 0,
                "system font list was not initialized correctly");
 
+  auto isBlockedByVisibilityLevel = [=](gfxFontFamily* aFamily) -> bool {
+    bool visible = IsVisibleToCSS(*aFamily, visibilityLevel);
+    if (visible || (allowHidden && aFamily->IsHidden())) {
+      return false;
+    }
+    if (aPresContext) {
+      aPresContext->ReportBlockedFontFamily(*aFamily);
+    }
+    return true;
+  };
+
   // lookup in canonical (i.e. English) family name list
   gfxFontFamily* familyEntry = mFontFamilies.GetWeak(key);
-  if (familyEntry && !IsVisibleToCSS(*familyEntry, visibilityLevel) &&
-      !(allowHidden && familyEntry->IsHidden())) {
-    return false;
+  if (familyEntry) {
+    if (isBlockedByVisibilityLevel(familyEntry)) {
+      return false;
+    }
   }
 
   // if not found, lookup in other family names list (mostly localized names)
   if (!familyEntry) {
     familyEntry = mOtherFamilyNames.GetWeak(key);
   }
-  if (familyEntry && !IsVisibleToCSS(*familyEntry, visibilityLevel) &&
-      !(allowHidden && familyEntry->IsHidden())) {
-    return false;
+  if (familyEntry) {
+    if (isBlockedByVisibilityLevel(familyEntry)) {
+      return false;
+    }
   }
 
   // if still not found and other family names not yet fully initialized,
@@ -1472,9 +1488,10 @@ bool gfxPlatformFontList::FindAndAddFamilies(
       }
       mOtherNamesMissed->Insert(key);
     }
-    if (familyEntry && !IsVisibleToCSS(*familyEntry, visibilityLevel) &&
-        !(allowHidden && familyEntry->IsHidden())) {
-      return false;
+    if (familyEntry) {
+      if (isBlockedByVisibilityLevel(familyEntry)) {
+        return false;
+      }
     }
   }
 
@@ -1505,9 +1522,10 @@ bool gfxPlatformFontList::FindAndAddFamilies(
       if (base && base->CheckForLegacyFamilyNames(this)) {
         familyEntry = mOtherFamilyNames.GetWeak(key);
       }
-      if (familyEntry && !IsVisibleToCSS(*familyEntry, visibilityLevel) &&
-          !(allowHidden && familyEntry->IsHidden())) {
-        return false;
+      if (familyEntry) {
+        if (isBlockedByVisibilityLevel(familyEntry)) {
+          return false;
+        }
       }
     }
   }

@@ -66,6 +66,10 @@ enum class PixelCastJustification : uint8_t {
   // type of their top-level event coordinate space even if technically
   // inaccurate.
   ContentProcessIsLayerInUiProcess,
+  // TransformToAncestorScale is stored untyped on FrameMetrics/RepaintRequest
+  // but it is used as LayerToScreenScale2D to get coords to work out even
+  // though that's not really it's type.
+  TransformToAncestorScaleIsStoredUntyped,
 };
 
 template <class TargetUnits, class SourceUnits>
@@ -214,7 +218,7 @@ gfx::IntRegionTyped<TargetUnits> ViewAs(const nsIntRegion& aRegion) {
   return gfx::IntRegionTyped<TargetUnits>::FromUnknownRegion(aRegion);
 }
 // Unlike the other functions in this category, this function takes the
-// target matrix type, rather than its source and target unit types, as
+// target matrix/scale type, rather than its source and target unit types, as
 // the template argument, so an example invocation is:
 //    ViewAs<ScreenToLayerMatrix4x4>(untypedMatrix)
 // The reason is that if it took the source and target unit types as two
@@ -223,6 +227,10 @@ gfx::IntRegionTyped<TargetUnits> ViewAs(const nsIntRegion& aRegion) {
 template <class TypedMatrix>
 TypedMatrix ViewAs(const gfx::Matrix4x4& aMatrix) {
   return TypedMatrix::FromUnknownMatrix(aMatrix);
+}
+template <class TypedScaleFactors2D>
+TypedScaleFactors2D ViewAs(const Scale2D& aScale2D) {
+  return TypedScaleFactors2D::FromUnknownScaleFactors2D(aScale2D);
 }
 
 // Convenience functions for transforming an entity from one strongly-typed

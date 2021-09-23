@@ -380,7 +380,7 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = buffer.toString();
+  JSString* str = buffer.toString(cx);
   if (!str) {
     return false;
   }

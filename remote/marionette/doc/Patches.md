@@ -12,19 +12,19 @@ sponsor you in [becoming a Mozilla committer].  When you have been
 granted commit access level 1 you will have permission to use the
 [Firefox CI] to trigger your own “try runs” to test your changes.
 
-This is a good try syntax to use when testing Marionette changes:
+You can use the `remote-protocol` [try preset]:
 
-	-b do -p linux,linux64,macosx64,win64,android-arm -u marionette,marionette-headless,xpcshell,web-platform-tests,firefox-ui-functional -t none
+	mach try --preset remote-protocol
 
-You can also use the `marionette` [try preset]:
+This preset will schedule tests related to the Remote Protocol component on
+various platforms. You can reduce the number of tasks by filtering on platforms
+(e.g. linux) or build type (e.g. opt):
 
-	mach try --preset marionette
+	mach try --preset remote-protocol -xq "'linux 'opt"
 
-This preset will schedule Marionette-related tests on various platforms. You can
-reduce the number of tasks by filtering on platforms (e.g. linux) or build type
-(e.g. opt):
+But you can also schedule tests by selecting relevant jobs yourself:
 
-	mach try --preset marionette -xq "'linux 'opt"
+    mach try fuzzy
 
 [Phabricator]: https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html
 [commit creation guidelines]: https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html?highlight=phabricator#submitting-patches-for-review
