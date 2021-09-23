@@ -15,6 +15,7 @@ import { Highlights } from "content-src/components/DiscoveryStreamComponents/Hig
 import { HorizontalRule } from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import { List } from "content-src/components/DiscoveryStreamComponents/List/List";
 import { Navigation } from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
+import { PrivacyLink } from "content-src/components/DiscoveryStreamComponents/PrivacyLink/PrivacyLink";
 import React from "react";
 import { SectionTitle } from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
 import { selectLayoutRender } from "content-src/lib/selectLayoutRender";
@@ -168,11 +169,13 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           <Navigation
             dispatch={this.props.dispatch}
             links={component.properties.links}
+            extraLinks={component.properties.extraLinks}
             alignment={component.properties.alignment}
             display_variant={component.properties.display_variant}
             explore_topics={component.properties.explore_topics}
             header={component.header}
             locale={this.props.App.locale}
+            newFooterSection={component.newFooterSection}
             privacyNoticeURL={component.properties.privacyNoticeURL}
           />
         );
@@ -244,6 +247,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             header={component.header}
           />
         );
+      case "PrivacyLink":
+        return <PrivacyLink properties={component.properties} />;
       default:
         return <div>{component.type}</div>;
     }
@@ -305,6 +310,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         title: topStories.title,
       },
     };
+    const privacyLinkComponent = extractComponent("PrivacyLink");
 
     // Render a DS-style TopSites then the rest if any in a collapsible section
     return (
@@ -353,6 +359,13 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             components: [{ type: "Highlights" }],
           },
         ])}
+        {privacyLinkComponent &&
+          this.renderLayout([
+            {
+              width: 12,
+              components: [privacyLinkComponent],
+            },
+          ])}
       </React.Fragment>
     );
   }

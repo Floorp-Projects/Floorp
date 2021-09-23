@@ -60,4 +60,102 @@
       text-decoration: underline;
     }
   }
+
+  &.ds-navigation-new-topics {
+    display: block;
+    padding-top: 32px;
+
+    .ds-navigation-header {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 700;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .ds-navigation-family {
+      text-align: center;
+      font-size: 14px;
+      line-height: 20px;
+      margin: 16px auto 28px;
+
+      span {
+        margin: 0 6px;
+      }
+
+      .firefox-logo,
+      .pocket-logo {
+        height: 20px;
+        width: 20px;
+        background-size: cover;
+      }
+
+      .firefox-logo {
+        background-image: url('chrome://activity-stream/content/data/content/assets/firefox.svg');
+      }
+
+      .pocket-logo {
+        background-image: url('chrome://global/skin/icons/pocket.svg');
+        fill: $pocket-icon-fill;
+      }
+
+      .ds-navigation-family-message {
+        font-weight: 400;
+        display: block;
+
+        @media (min-width: $break-point-medium) {
+          display: inline;
+        }
+      }
+
+      @media (min-width: $break-point-medium) {
+        margin-top: 43px;
+      }
+    }
+
+    ul {
+      display: grid;
+      grid-gap: 0 24px;
+      grid-auto-flow: column;
+      grid-template: repeat(8, 1fr) / repeat(1, 1fr);
+
+      li {
+        border-top: $border-primary;
+        border-bottom: $border-primary;
+        margin-bottom: -1px;
+        line-height: 24px;
+        font-size: 13px;
+        font-weight: 500;
+
+        &::after {
+          content: '';
+          padding: 0;
+        }
+
+        &:nth-last-child(2),
+        &:nth-last-child(3) {
+          display: none;
+        }
+      }
+
+      @media (min-width: $break-point-medium) {
+        grid-template: repeat(3, 1fr) / repeat(2, 1fr);
+      }
+
+      @media (min-width: $break-point-large) {
+        grid-template: repeat(2, 1fr) / repeat(3, 1fr);
+      }
+
+      @media (min-width: $break-point-widest) {
+        grid-template: repeat(2, 1fr) / repeat(4, 1fr);
+
+        li {
+          &:nth-last-child(2),
+          &:nth-last-child(3) {
+            display: block;
+          }
+        }
+      }
+    }
+  }
 }

@@ -172,6 +172,12 @@ const FeatureManifest = {
         description:
           "The last card in the Pocket section is a message that they are currently at the end of the list of stories.",
       },
+      newFooterSection: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled",
+        description: "Enable an updated Pocket section topics footer",
+      },
     },
   },
   "password-autocomplete": {
