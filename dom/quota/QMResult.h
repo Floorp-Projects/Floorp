@@ -49,8 +49,6 @@ class QMResult {
     return QMResult{mStackId, mFrameId + 1, mNSResult};
   }
 
-  operator nsresult() const { return mNSResult; }
-
  private:
   QMResult(uint64_t aStackId, uint32_t aFrameId, nsresult aNSResult)
       : mStackId(aStackId), mFrameId(aFrameId), mNSResult(aNSResult) {}
