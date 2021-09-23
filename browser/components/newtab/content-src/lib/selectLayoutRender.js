@@ -60,6 +60,7 @@ export const selectLayoutRender = ({ state = {}, prefs = {}, locale = "" }) => {
     "Hero",
     "HorizontalRule",
     "List",
+    "PrivacyLink",
   ];
 
   const filterArray = [];

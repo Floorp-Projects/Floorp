@@ -229,10 +229,12 @@ newtab-discovery-empty-section-topstories-timed-out = Oops! We almost loaded thi
 
 # This is shown at the bottom of the trending stories section and precedes a list of links to popular topics.
 newtab-pocket-read-more = Popular Topics:
+newtab-pocket-new-topics-title = Want even more stories? See these popular topics from { -pocket-brand-name }
 newtab-pocket-more-recommendations = More Recommendations
 newtab-pocket-learn-more = Learn more
 newtab-pocket-cta-button = Get { -pocket-brand-name }
 newtab-pocket-cta-text = Save the stories you love in { -pocket-brand-name }, and fuel your mind with fascinating reads.
+newtab-pocket-pocket-firefox-family = { -pocket-brand-name } is part of the { -brand-product-name } family
 
 # This is a button shown at the bottom of the Pocket section that loads more stories when clicked.
 newtab-pocket-load-more-stories-button = Load more stories

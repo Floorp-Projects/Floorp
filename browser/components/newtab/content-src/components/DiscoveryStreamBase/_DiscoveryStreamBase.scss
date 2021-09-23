@@ -56,7 +56,7 @@ $ds-width: 936px;
   .section-top-bar {
     .learn-more-link a {
       color: var(--newtab-primary-action-background);
-      font-weight: normal;
+      font-weight: 500;
 
       &:is(:focus, :hover) {
         text-decoration: underline;
