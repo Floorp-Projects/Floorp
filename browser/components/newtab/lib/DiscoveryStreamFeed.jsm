@@ -459,6 +459,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         .getState()
         .Prefs.values?.pocketConfig?.spocPositions?.split(`,`);
 
+      const loadMoreEnabled = this.store.getState().Prefs.values?.pocketConfig
+        ?.loadMore;
+
+      const lastCardMessageEnabled = this.store.getState().Prefs.values
+        ?.pocketConfig?.lastCardMessageEnabled;
+
       const sponsoredCollectionsEnabled = this.store.getState().Prefs.values[
         PREF_COLLECTIONS_ENABLED
       ];
@@ -477,6 +483,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         spocPositions: this.parseSpocPositions(spocPositions),
         sponsoredCollectionsEnabled,
         compactLayout,
+        loadMoreEnabled,
+        lastCardMessageEnabled,
       });
     }
 
@@ -1852,11 +1860,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 //   `spocPositions` Changes the position of spoc cards.
 //   `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
 //   `compactLayout` Changes cards to smaller more compact cards.
+//   `lastCardMessageEnabled` Shows a message card at the end of the feed.
 getHardcodedLayout = ({
   items = 21,
   spocPositions = [2, 4, 11, 20],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
+  loadMoreEnabled = false,
+  lastCardMessageEnabled = false,
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -1932,6 +1943,8 @@ getHardcodedLayout = ({
             items,
             compact: compactLayout,
           },
+          loadMoreEnabled,
+          lastCardMessageEnabled,
           cta_variant: "link",
           header: {
             title: "",
