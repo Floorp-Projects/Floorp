@@ -154,9 +154,7 @@ nsDragService::nsDragService()
 
   // set up our logging module
   LOGDRAGSERVICE(("nsDragService::nsDragService"));
-  // We begin with enabled drop on Wayland due to different
-  // Wayland D&D architecture (Bug 1730203).
-  mCanDrop = widget::GdkIsWaylandDisplay();
+  mCanDrop = false;
   mTargetDragDataReceived = false;
   mTargetDragData = 0;
   mTargetDragDataLen = 0;
@@ -592,15 +590,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     mSourceDataItems->GetLength(aNumItems);
   } else {
     GdkAtom gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-    if (!gdkFlavor) {
-      *aNumItems = 0;
-      return NS_OK;
-    }
-
-    nsTArray<nsCString> dragFlavors;
-    GetDragFlavors(dragFlavors);
-    GetTargetDragData(gdkFlavor, dragFlavors);
-
+    GetTargetDragData(gdkFlavor);
     if (mTargetDragData) {
       const char* data = reinterpret_cast<char*>(mTargetDragData);
       *aNumItems = CountTextUriListItems(data, mTargetDragDataLen);
@@ -611,26 +601,12 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
   return NS_OK;
 }
 
-void nsDragService::GetDragFlavors(nsTArray<nsCString>& aFlavors) {
-  for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
-       tmp = tmp->next) {
-    GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    gchar* name = gdk_atom_name(atom);
-    if (!name) {
-      continue;
-    }
-    aFlavors.AppendElement(nsCString(name));
-  }
-}
-
 NS_IMETHODIMP
 nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
-  LOGDRAGSERVICE(("nsDragService::GetData(), index %d", aItemIndex));
+  LOGDRAGSERVICE(("nsDragService::GetData, index %d", aItemIndex));
 
   // make sure that we have a transferable
-  if (!aTransferable) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  if (!aTransferable) return NS_ERROR_INVALID_ARG;
 
   if (!mTargetWidget) {
     LOGDRAGSERVICE(
@@ -679,9 +655,6 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<nsCString> dragFlavors;
-  GetDragFlavors(dragFlavors);
-
   // Now walk down the list of flavors. When we find one that is
   // actually present, copy out the data into the transferable in that
   // format. SetTransferData() implicitly handles conversions.
@@ -692,7 +665,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
                     flavorStr.get(), gdkFlavor));
     bool dataFound = false;
     if (gdkFlavor) {
-      GetTargetDragData(gdkFlavor, dragFlavors);
+      GetTargetDragData(gdkFlavor);
     }
     if (mTargetDragData) {
       LOGDRAGSERVICE(("dataFound = true\n"));
@@ -704,10 +677,10 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // to parse the source text as a nsIFile URL.
       if (flavorStr.EqualsLiteral(kFileMime)) {
         gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor);
         if (!mTargetDragData) {
           gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
+          GetTargetDragData(gdkFlavor);
         }
         if (mTargetDragData) {
           const char* text = static_cast<char*>(mTargetDragData);
@@ -753,7 +726,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
             ("we were looking for text/unicode... \
              trying with text/plain;charset=utf-8\n"));
         gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor);
         if (mTargetDragData) {
           LOGDRAGSERVICE(("Got textplain data\n"));
           const char* castedText = reinterpret_cast<char*>(mTargetDragData);
@@ -773,7 +746,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
               ("we were looking for text/unicode... \
                            trying again with text/plain\n"));
           gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
+          GetTargetDragData(gdkFlavor);
           if (mTargetDragData) {
             LOGDRAGSERVICE(("Got textplain data\n"));
             const char* castedText = reinterpret_cast<char*>(mTargetDragData);
@@ -802,7 +775,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
             ("we were looking for text/x-moz-url...\
                        trying again with text/uri-list\n"));
         gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor);
         if (mTargetDragData) {
           LOGDRAGSERVICE(("Got text/uri-list data\n"));
           const char* data = reinterpret_cast<char*>(mTargetDragData);
@@ -829,7 +802,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
               ("we were looking for text/x-moz-url...\
                            trying again with _NETSCAP_URL\n"));
           gdkFlavor = gdk_atom_intern(gMozUrlType, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
+          GetTargetDragData(gdkFlavor);
           if (mTargetDragData) {
             LOGDRAGSERVICE(("Got _NETSCAPE_URL data\n"));
             const char* castedText = reinterpret_cast<char*>(mTargetDragData);
@@ -990,7 +963,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 }
 
 void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
-  LOGDRAGSERVICE(("nsDragService::ReplyToDragMotion can drop %d", mCanDrop));
+  LOGDRAGSERVICE(("nsDragService::ReplyToDragMotion %d", mCanDrop));
 
   GdkDragAction action = (GdkDragAction)0;
   if (mCanDrop) {
@@ -1138,24 +1111,18 @@ bool nsDragService::IsTargetContextList(void) {
 // Maximum time to wait for a "drag_received" arrived, in microseconds
 #define NS_DND_TIMEOUT 1000000
 
-void nsDragService::GetTargetDragData(GdkAtom aFlavor,
-                                      nsTArray<nsCString>& aDropFlavors) {
-  LOGDRAGSERVICE(
-      ("nsDragService::GetTargetDragData '%s'\n", gdk_atom_name(aFlavor)));
-
+void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
+  LOGDRAGSERVICE(("getting data flavor %s\n", gdk_atom_name(aFlavor)));
+  LOGDRAGSERVICE(("mLastWidget is %p and mLastContext is %p\n",
+                  mTargetWidget.get(), mTargetDragContext.get()));
   // reset our target data areas
   TargetResetData();
 
-  char* name = gdk_atom_name(aFlavor);
-  nsCString flavor(name);
-  g_free(name);
-
-  // Return early when requested MIME is not offered by D&D.
-  if (!aDropFlavors.Contains(flavor)) {
-    return;
-  }
-
   if (mTargetDragContext) {
+    char* name = gdk_atom_name(aFlavor);
+    nsCString flavor(name);
+    g_free(name);
+
     // We keep a copy of the requested data with the same life-time
     // as mTargetDragContext.
     // Especially with multiple items the same data is requested
@@ -2068,7 +2035,14 @@ gboolean nsDragService::RunScheduledTask() {
       } else {
         // Reply to tell the source whether we can drop and what
         // action would be taken.
-        ReplyToDragMotion();
+        if (mTargetDragContext) {
+          ReplyToDragMotion(mTargetDragContext);
+        }
+#ifdef MOZ_WAYLAND
+        else if (mTargetWaylandDataOffer) {
+          ReplyToDragMotion(mTargetWaylandDataOffer);
+        }
+#endif
       }
     }
   }
@@ -2127,10 +2101,7 @@ void nsDragService::UpdateDragAction() {
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
   GdkDragAction gdkAction = GDK_ACTION_DEFAULT;
   if (mTargetDragContext) {
-    gdkAction = gdk_drag_context_get_suggested_action(mTargetDragContext);
-    if (gdkAction == GDK_ACTION_ASK) {
-      gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
-    }
+    gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
   }
 #ifdef MOZ_WAYLAND
   else if (mTargetWaylandDataOffer) {
@@ -2175,23 +2146,12 @@ nsDragService::UpdateDragEffect() {
   return NS_OK;
 }
 
-void nsDragService::ReplyToDragMotion() {
-  if (mTargetDragContext) {
-    ReplyToDragMotion(mTargetDragContext);
-  }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOffer) {
-    ReplyToDragMotion(mTargetWaylandDataOffer);
-  }
-#endif
-}
-
 void nsDragService::DispatchMotionEvents() {
+  mCanDrop = false;
+
   FireDragEventAtSource(eDrag, GetCurrentModifiers());
-  if (mTargetWindow) {
-    mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
-                                     mTargetTime);
-  }
+
+  mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint, mTargetTime);
 }
 
 // Returns true if the drop was successful
@@ -2199,9 +2159,7 @@ gboolean nsDragService::DispatchDropEvent() {
   // We need to check IsDestroyed here because the nsRefPtr
   // only protects this from being deleted, it does NOT protect
   // against nsView::~nsView() calling Destroy() on it, bug 378273.
-  if (!mTargetWindow || mTargetWindow->IsDestroyed()) {
-    return FALSE;
-  }
+  if (mTargetWindow->IsDestroyed()) return FALSE;
 
   EventMessage msg = mCanDrop ? eDrop : eDragExit;
 
