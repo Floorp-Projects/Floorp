@@ -491,8 +491,8 @@ inline void JSHolderMap::ForEach(F&& f, WhichHolders aWhich) {
   ForEach(mAnyZoneJSHolders, f, nullptr);
 
   for (auto i = mPerZoneJSHolders.modIter(); !i.done(); i.next()) {
-    if (aWhich == HoldersInGrayMarkingZones &&
-        !JS::ZoneIsGrayMarking(i.get().key())) {
+    if (aWhich == HoldersRequiredForGrayMarking &&
+        !JS::NeedGrayRootsForZone(i.get().key())) {
       continue;
     }
 
@@ -972,7 +972,7 @@ void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
 
   // Mark these roots as gray so the CC can walk them later.
 
-  JSHolderMap::WhichHolders which = JSHolderMap::HoldersInGrayMarkingZones;
+  JSHolderMap::WhichHolders which = JSHolderMap::HoldersRequiredForGrayMarking;
   if (JS::AtomsZoneIsCollecting(self->Runtime())) {
     // Any holder may point into the atoms zone.
     which = JSHolderMap::AllHolders;
