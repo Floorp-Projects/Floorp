@@ -6,6 +6,7 @@
 
 #include "nsIGlobalObject.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/Report.h"
@@ -241,6 +242,10 @@ nsIGlobalObject::GetOrCreateServiceWorkerRegistration(
   MOZ_DIAGNOSTIC_ASSERT(
       false, "this global should not have any service worker registrations");
   return nullptr;
+}
+
+mozilla::StorageAccess nsIGlobalObject::GetStorageAccess() {
+  return mozilla::StorageAccess::eDeny;
 }
 
 nsPIDOMWindowInner* nsIGlobalObject::AsInnerWindow() {

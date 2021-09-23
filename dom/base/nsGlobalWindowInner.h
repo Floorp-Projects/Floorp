@@ -352,6 +352,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor)
       override;
 
+  mozilla::StorageAccess GetStorageAccess() final;
+
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   void NoteDOMContentLoaded();
