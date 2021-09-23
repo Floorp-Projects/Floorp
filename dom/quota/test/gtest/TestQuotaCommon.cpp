@@ -819,7 +819,7 @@ TEST(QuotaCommon_TryReturn, Success_nsresult)
   bool tryReturnDidNotReturn = false;
 
   auto res = [&tryReturnDidNotReturn] {
-    QM_TRY_RETURN(NS_OK);
+    QM_TRY_RETURN(MOZ_TO_RESULT(NS_OK));
 
     tryReturnDidNotReturn = true;
   }();
@@ -885,7 +885,7 @@ TEST(QuotaCommon_TryReturn, Failure_PropagateErr_nsresult)
   bool tryReturnDidNotReturn = false;
 
   auto res = [&tryReturnDidNotReturn] {
-    QM_TRY_RETURN(NS_ERROR_FAILURE);
+    QM_TRY_RETURN(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
     tryReturnDidNotReturn = true;
   }();
