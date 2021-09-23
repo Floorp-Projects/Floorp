@@ -9,12 +9,15 @@
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/LocalAccessible.h"
+#include "mozilla/intl/WordBreaker.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsAccUtils.h"
 #include "nsContentUtils.h"
 #include "nsIAccessiblePivot.h"
 #include "nsILineIterator.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
+#include "nsUnicodeProperties.h"
 #include "Pivot.h"
 
 namespace mozilla::a11y {
@@ -168,6 +171,156 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
   // if the blocks and line numbers are different, that means there's nothing
   // before us on the same line, so we're at the start.
   return thisLineNum != prevLineNum;
+}
+
+/**
+ * There are many kinds of word break, but we only need to treat punctuation and
+ * space specially.
+ */
+enum WordBreakClass { eWbcSpace = 0, eWbcPunct, eWbcOther };
+
+/**
+ * Words can cross Accessibles. To work out whether we're at the start of a
+ * word, we might have to check the previous leaf. This class handles querying
+ * the previous WordBreakClass, crossing Accessibles if necessary.
+ */
+class PrevWordBreakClassWalker {
+ public:
+  PrevWordBreakClassWalker(Accessible* aAcc, const nsAString& aText,
+                           int32_t aOffset)
+      : mAcc(aAcc), mText(aText), mOffset(aOffset) {
+    mClass = GetClass(mText.CharAt(mOffset));
+  }
+
+  WordBreakClass CurClass() { return mClass; }
+
+  Maybe<WordBreakClass> PrevClass() {
+    for (;;) {
+      if (!PrevChar()) {
+        return Nothing();
+      }
+      WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+      if (curClass != mClass) {
+        mClass = curClass;
+        return Some(curClass);
+      }
+    }
+    MOZ_ASSERT_UNREACHABLE();
+    return Nothing();
+  }
+
+  bool IsStartOfGroup() {
+    PrevChar();
+    WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+    // We wanted to peek at the previous character, not really move to it.
+    ++mOffset;
+    return curClass != mClass;
+  }
+
+ private:
+  bool PrevChar() {
+    if (mOffset > 0) {
+      --mOffset;
+      return true;
+    }
+    mAcc = PrevLeaf(mAcc);
+    if (!mAcc) {
+      return false;
+    }
+    mText.Truncate();
+    mAcc->AsLocal()->AppendTextTo(mText);
+    mOffset = static_cast<int32_t>(mText.Length()) - 1;
+    return true;
+  }
+
+  WordBreakClass GetClass(char16_t aChar) {
+    // Based on IsSelectionInlineWhitespace and IsSelectionNewline in
+    // layout/generic/nsTextFrame.cpp.
+    const char16_t kCharNbsp = 0xA0;
+    switch (aChar) {
+      case ' ':
+      case kCharNbsp:
+      case '\t':
+      case '\f':
+      case '\n':
+      case '\r':
+        return eWbcSpace;
+      default:
+        break;
+    }
+    // Based on ClusterIterator::IsPunctuation in
+    // layout/generic/nsTextFrame.cpp.
+    uint8_t cat = unicode::GetGeneralCategory(aChar);
+    switch (cat) {
+      case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+        if (aChar == '_' &&
+            !StaticPrefs::layout_word_select_stop_at_underscore()) {
+          return eWbcOther;
+        }
+        [[fallthrough]];
+      case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+      case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+      case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+      case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+      case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+      case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+      case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+      case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
+      case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
+        return eWbcPunct;
+      default:
+        break;
+    }
+    return eWbcOther;
+  }
+
+  Accessible* mAcc;
+  nsAutoString mText;
+  int32_t mOffset;
+  WordBreakClass mClass;
+};
+
+/**
+ * WordBreaker breaks at all space, punctuation, etc. We want to emulate
+ * layout, so that's not what we want. This function determines whether this
+ * is acceptable as the start of a word for our purposes.
+ */
+static bool IsAcceptableWordStart(intl::WordBreaker* aBreaker, Accessible* aAcc,
+                                  const nsAutoString& aText, int32_t aOffset) {
+  PrevWordBreakClassWalker walker(aAcc, aText, aOffset);
+  if (!walker.IsStartOfGroup()) {
+    // If we're not at the start of a WordBreaker group, this can't be the
+    // start of a word.
+    return false;
+  }
+  WordBreakClass curClass = walker.CurClass();
+  if (curClass == eWbcSpace) {
+    // Space isn't the start of a word.
+    return false;
+  }
+  Maybe<WordBreakClass> prevClass = walker.PrevClass();
+  if (curClass == eWbcPunct && (!prevClass || prevClass.value() != eWbcSpace)) {
+    // Punctuation isn't the start of a word (unless it is after space).
+    return false;
+  }
+  if (!prevClass || prevClass.value() != eWbcPunct) {
+    // If there's nothing before this or the group before this isn't
+    // punctuation, this is the start of a word.
+    return true;
+  }
+  // At this point, we know the group before this is punctuation.
+  if (!StaticPrefs::layout_word_select_stop_at_punctuation()) {
+    // When layout.word_select.stop_at_punctuation is false (defaults to true),
+    // if there is punctuation before this, this is not the start of a word.
+    return false;
+  }
+  Maybe<WordBreakClass> prevPrevClass = walker.PrevClass();
+  if (!prevPrevClass || prevPrevClass.value() == eWbcSpace) {
+    // If there is punctuation before this and space (or nothing) before the
+    // punctuation, this is not the start of a word.
+    return false;
+  }
+  return true;
 }
 
 /*** TextLeafPoint ***/
@@ -334,6 +487,121 @@ TextLeafPoint TextLeafPoint::FindNextLineStartSameLocalAcc(
   return TextLeafPoint(acc, lineStart);
 }
 
+TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
+    bool aIncludeOrigin) const {
+  if (mOffset == 0 && !aIncludeOrigin) {
+    // We can't go back any further and the caller doesn't want the origin
+    // included, so there's nothing more to do.
+    return TextLeafPoint();
+  }
+  nsAutoString text;
+  MOZ_ASSERT(mAcc->IsLocal());
+  mAcc->AsLocal()->AppendTextTo(text);
+  intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
+  TextLeafPoint lineStart = *this;
+  // A word never starts with a line feed character. If there are multiple
+  // consecutive line feed characters and we're after the first of them, the
+  // previous line start will be a line feed character. Skip this and any prior
+  // consecutive line feed first.
+  for (; lineStart.mOffset >= 0 && text.CharAt(lineStart.mOffset) == '\n';
+       --lineStart.mOffset) {
+  }
+  if (lineStart.mOffset < 0) {
+    // There's no line start for our purposes.
+    lineStart = TextLeafPoint();
+  } else {
+    lineStart = lineStart.FindPrevLineStartSameLocalAcc(aIncludeOrigin);
+  }
+  // Keep walking backward until we find an acceptable word start.
+  intl::WordRange word;
+  if (mOffset == 0) {
+    word.mBegin = 0;
+  } else if (mOffset == static_cast<int32_t>(text.Length())) {
+    word = breaker->FindWord(text.get(), text.Length(), mOffset - 1);
+  } else {
+    word = breaker->FindWord(text.get(), text.Length(), mOffset);
+  }
+  for (;;
+       word = breaker->FindWord(text.get(), text.Length(), word.mBegin - 1)) {
+    if (!aIncludeOrigin && static_cast<int32_t>(word.mBegin) == mOffset) {
+      // A word possibly starts at the origin, but the caller doesn't want this
+      // included.
+      MOZ_ASSERT(word.mBegin != 0);
+      continue;
+    }
+    if (lineStart && static_cast<int32_t>(word.mBegin) < lineStart.mOffset) {
+      // A line start always starts a new word.
+      return lineStart;
+    }
+    if (IsAcceptableWordStart(breaker, mAcc, text,
+                              static_cast<int32_t>(word.mBegin))) {
+      break;
+    }
+    if (word.mBegin == 0) {
+      // We can't go back any further.
+      if (lineStart) {
+        // A line start always starts a new word.
+        return lineStart;
+      }
+      return TextLeafPoint();
+    }
+  }
+  return TextLeafPoint(mAcc, static_cast<int32_t>(word.mBegin));
+}
+
+TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
+    bool aIncludeOrigin) const {
+  nsAutoString text;
+  MOZ_ASSERT(mAcc->IsLocal());
+  mAcc->AsLocal()->AppendTextTo(text);
+  int32_t wordStart = mOffset;
+  intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
+  if (aIncludeOrigin) {
+    if (wordStart == 0) {
+      if (IsAcceptableWordStart(breaker, mAcc, text, 0)) {
+        return *this;
+      }
+    } else {
+      // The origin might start a word, so search from just before it.
+      --wordStart;
+    }
+  }
+  TextLeafPoint lineStart = FindNextLineStartSameLocalAcc(aIncludeOrigin);
+  if (lineStart) {
+    // A word never starts with a line feed character. If there are multiple
+    // consecutive line feed characters, lineStart will point at the second of
+    // them. Skip this and any subsequent consecutive line feed.
+    for (; lineStart.mOffset < static_cast<int32_t>(text.Length()) &&
+           text.CharAt(lineStart.mOffset) == '\n';
+         ++lineStart.mOffset) {
+    }
+    if (lineStart.mOffset == static_cast<int32_t>(text.Length())) {
+      // There's no line start for our purposes.
+      lineStart = TextLeafPoint();
+    }
+  }
+  // Keep walking forward until we find an acceptable word start.
+  for (;;) {
+    wordStart = breaker->Next(text.get(), text.Length(), wordStart);
+    if (wordStart == NS_WORDBREAKER_NEED_MORE_TEXT ||
+        wordStart == static_cast<int32_t>(text.Length())) {
+      if (lineStart) {
+        // A line start always starts a new word.
+        return lineStart;
+      }
+      return TextLeafPoint();
+    }
+    if (lineStart && wordStart > lineStart.mOffset) {
+      // A line start always starts a new word.
+      return lineStart;
+    }
+    if (IsAcceptableWordStart(breaker, mAcc, text, wordStart)) {
+      break;
+    }
+  }
+  return TextLeafPoint(mAcc, wordStart);
+}
+
 TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           nsDirection aDirection,
                                           bool aIncludeOrigin) const {
@@ -351,6 +619,13 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
     TextLeafPoint boundary;
     // Search for the boundary within the current Accessible.
     switch (aBoundaryType) {
+      case nsIAccessibleText::BOUNDARY_WORD_START:
+        if (aDirection == eDirPrevious) {
+          boundary = searchFrom.FindPrevWordStartSameAcc(includeOrigin);
+        } else {
+          boundary = searchFrom.FindNextWordStartSameAcc(includeOrigin);
+        }
+        break;
       case nsIAccessibleText::BOUNDARY_LINE_START:
         if (aDirection == eDirPrevious) {
           boundary = searchFrom.FindPrevLineStartSameLocalAcc(includeOrigin);
