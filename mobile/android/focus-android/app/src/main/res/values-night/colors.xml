@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="snackbarBackground">#2E255D</color>
+    <color name="snackbarBackground">@color/photonInk05</color>
     <color name="colorPoweredBy">#271948</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent_old">@color/focusContrastPink</color>
@@ -43,7 +43,7 @@
     <color name="primaryTextColor">#FBFBFE</color>
 
     <color name="colorPrimary">@color/photonInk60</color>
-    <color name="colorSecondary">#342F6D</color>
+    <color name="colorSecondary">@color/photonInk05</color>
     <color name="menuBackground">@color/colorSecondary</color>
     <color name="toolbarUrlDarkBackground">@color/photonInk05</color>
     <color name="toolbarUrlLightBackground">#FBFBFE</color>
