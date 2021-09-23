@@ -203,6 +203,8 @@ parent:
   async SetDocumentDomain(nsIURI aDomain);
 
   async Destroy();
+
+  async ReloadWithHttpsOnlyException();
 };
 
 } // namespace dom

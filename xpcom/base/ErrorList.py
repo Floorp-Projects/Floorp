@@ -338,6 +338,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_HTTP3_PROTOCOL_ERROR"] = FAILURE(84)
     # A timeout error code that can be used to cancel requests.
     errors["NS_ERROR_NET_TIMEOUT_EXTERNAL"] = FAILURE(85)
+    # An error related to HTTPS-only mode
+    errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??

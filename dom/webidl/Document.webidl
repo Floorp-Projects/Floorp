@@ -322,6 +322,9 @@ partial interface Document {
   [Func="Document::CallerIsTrustedAboutCertError"]
   Promise<any> addCertException(boolean isTemporary);
 
+  [Func="Document::CallerIsTrustedAboutHttpsOnlyError"]
+  void reloadWithHttpsOnlyException();
+
   [Func="Document::CallerIsTrustedAboutCertError", Throws]
   FailedCertSecurityInfo getFailedCertSecurityInfo();
 
