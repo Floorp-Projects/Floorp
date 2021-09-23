@@ -613,12 +613,32 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
     // is positioned on an empty line at the end of a textarea.
     return *this;
   }
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR && aIncludeOrigin) {
+    return *this;
+  }
   TextLeafPoint searchFrom = *this;
   bool includeOrigin = aIncludeOrigin;
   for (;;) {
     TextLeafPoint boundary;
     // Search for the boundary within the current Accessible.
     switch (aBoundaryType) {
+      case nsIAccessibleText::BOUNDARY_CHAR:
+        if (aDirection == eDirPrevious && searchFrom.mOffset > 0) {
+          boundary.mAcc = searchFrom.mAcc;
+          boundary.mOffset = searchFrom.mOffset - 1;
+        } else if (aDirection == eDirNext) {
+          if (includeOrigin) {
+            // We've moved to the next leaf. That means we've set the offset
+            // to 0, so we're already at the next character.
+            boundary = searchFrom;
+          } else if (searchFrom.mOffset <
+                     static_cast<int32_t>(
+                         nsAccUtils::TextLength(searchFrom.mAcc->AsLocal()))) {
+            boundary.mAcc = searchFrom.mAcc;
+            boundary.mOffset = searchFrom.mOffset + 1;
+          }
+        }
+        break;
       case nsIAccessibleText::BOUNDARY_WORD_START:
         if (aDirection == eDirPrevious) {
           boundary = searchFrom.FindPrevWordStartSameAcc(includeOrigin);
