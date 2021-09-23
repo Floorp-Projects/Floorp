@@ -137,6 +137,7 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
 
  protected:
   // @param aPrefName see `mPrefName`.
+  // @param aType see `mType`.
   ContentPermissionRequestBase(nsIPrincipal* aPrincipal,
                                nsPIDOMWindowInner* aWindow,
                                const nsACString& aPrefName,
@@ -155,7 +156,10 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   // to either true or false. If no such testing is required, mPrefName may be
   // empty.
   const nsCString mPrefName;
+
+  // The type of the request, such as "autoplay-media-audible".
   const nsCString mType;
+
   bool mIsHandlingUserInput;
   bool mMaybeUnsafePermissionDelegate;
 };
