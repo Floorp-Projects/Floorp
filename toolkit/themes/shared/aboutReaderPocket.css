@@ -10,11 +10,8 @@
   position: relative;
 }
 
-#pocket-cta-only {
-  display: none;
-}
-
-.pocket-cta-container-cta-only #pocket-cta-only {
+.pocket-cta-container-cta-only #pocket-cta-only,
+.pocket-cta-container-cta-and-recs #pocket-cta-and-recs {
   display: block;
 }
 
@@ -26,6 +23,7 @@
 .pocket-cta-inner {
   width: 936px;
   margin: auto;
+  display: none;
 }
 
 .pocket-cta-header {
@@ -40,6 +38,7 @@
   font-size: 16px;
   line-height: 24px;
   padding: 8px 24px;
+  text-decoration: none;
 }
 
 .pocket-dismiss-cta {
@@ -54,6 +53,93 @@
   background: no-repeat center/contain url("chrome://global/skin/icons/close.svg");
 }
 
+.pocket-btn-add {
+  background: no-repeat left center url("chrome://pocket/content/panels/img/glyph.svg");
+  background-size: 16px;
+  border: 0;
+  padding-inline-start: 20px;
+  font-size: 16px;
+  color: #5B5B66;
+  cursor: pointer;
+}
+
+.pocket-btn-add.saved {
+  background-image: url("chrome://global/skin/icons/pocket.svg");
+}
+
+.pocket-collapse-recs {
+  cursor: pointer;
+  background: no-repeat center/contain url("chrome://global/skin/icons/arrow-down.svg");
+  padding: 0;
+  margin: 0;
+  border: 0;
+  width: 18px;
+  height: 30px;
+}
+
+.pocket-collapse-recs.closed {
+  transform: rotate(-90deg);
+}
+
+.pocket-recs-top {
+  display: flex;
+}
+
+.pocket-recs-top .col:nth-child(2) {
+  padding-inline-start: 68px;
+}
+
+.pocket-recs {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pocket-recs.closed {
+  display: none;
+}
+
+.pocket-recs p {
+  text-align: start;
+}
+
+.pocket-rec {
+  padding: 30px 0;
+  width: 31%;
+}
+
+.pocket-rec-top {
+  display: flex;
+  text-decoration: none;
+}
+
+.pocket-sign-up {
+  text-align: center;
+}
+
+.pocket-rec .pocket-rec-title {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 24px;
+  color: #000000;
+}
+
+.pocket-rec .pocket-rec-thumb {
+  width: 66px;
+  height: 66px;
+  filter: drop-shadow(0px 2px 6px rgba(58, 57, 68, 0.2));
+  border-radius: 4px;
+  margin-inline-start: 16px;
+}
+
+.pocket-rec .pocket-rec-meta {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+  color: #5B5B66;
+}
+
 /* Medium breakpoint */
 @media (max-width: 1128px) {
   .pocket-cta-inner {
@@ -62,6 +148,14 @@
 
   .pocket-dismiss-cta {
     inset-inline-end: 40px;
+  }
+
+  .pocket-rec {
+    width: 48%;
+  }
+
+  .pocket-rec:nth-child(2) {
+    display: none;
   }
 }
 
@@ -73,7 +167,9 @@
   }
 
   .pocket-cta-header,
-  .pocket-cta-subhead {
+  .pocket-cta-subhead,
+  .pocket-rec-bottom,
+  .pocket-rec-title {
     text-align: start;
   }
 
@@ -89,5 +185,17 @@
   .pocket-dismiss-cta {
     inset-inline-end: 20px;
     top: 20px;
+  }
+
+  .pocket-recs {
+    display: block;
+  }
+
+  .pocket-rec {
+    width: 100%;
+  }
+
+  .pocket-rec:nth-child(2) {
+    display: block;
   }
 }
