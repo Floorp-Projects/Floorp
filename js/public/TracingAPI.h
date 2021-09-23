@@ -257,15 +257,62 @@ class GenericTracer : public JSTracer {
   virtual js::Scope* onScopeEdge(js::Scope* scope) = 0;
 };
 
+// A helper class that implements a GenericTracer by calling template method
+// on a derived type for each edge kind.
+template <typename T>
+class GenericTracerImpl : public GenericTracer {
+ public:
+  GenericTracerImpl(JSRuntime* rt, JS::TracerKind kind,
+                    JS::TraceOptions options)
+      : GenericTracer(rt, kind, options) {}
+
+ private:
+  T* derived() { return static_cast<T*>(this); }
+
+  JSObject* onObjectEdge(JSObject* obj) override {
+    return derived()->onEdge(obj);
+  }
+  Shape* onShapeEdge(Shape* shape) override { return derived()->onEdge(shape); }
+  JSString* onStringEdge(JSString* string) override {
+    return derived()->onEdge(string);
+  }
+  BaseScript* onScriptEdge(BaseScript* script) override {
+    return derived()->onEdge(script);
+  }
+  BaseShape* onBaseShapeEdge(BaseShape* base) override {
+    return derived()->onEdge(base);
+  }
+  GetterSetter* onGetterSetterEdge(GetterSetter* gs) override {
+    return derived()->onEdge(gs);
+  }
+  PropMap* onPropMapEdge(PropMap* map) override {
+    return derived()->onEdge(map);
+  }
+  Scope* onScopeEdge(Scope* scope) override { return derived()->onEdge(scope); }
+  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override {
+    return derived()->onEdge(shared);
+  }
+  JS::BigInt* onBigIntEdge(JS::BigInt* bi) override {
+    return derived()->onEdge(bi);
+  }
+  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override {
+    return derived()->onEdge(sym);
+  }
+  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override {
+    return derived()->onEdge(jit);
+  }
+};
+
 }  // namespace js
 
 namespace JS {
 
-class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
+class JS_PUBLIC_API CallbackTracer
+    : public js::GenericTracerImpl<CallbackTracer> {
  public:
   CallbackTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Callback,
                  JS::TraceOptions options = JS::TraceOptions())
-      : GenericTracer(rt, kind, options) {
+      : GenericTracerImpl(rt, kind, options) {
     MOZ_ASSERT(isCallbackTracer());
   }
   CallbackTracer(JSContext* cx, JS::TracerKind kind = JS::TracerKind::Callback,
@@ -276,55 +323,12 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
   virtual void onChild(const JS::GCCellPtr& thing) = 0;
 
  private:
-  // This class implements the GenericTracer interface to dispatches to onChild.
-  virtual JSObject* onObjectEdge(JSObject* obj) {
-    onChild(JS::GCCellPtr(obj));
-    return obj;
+  template <typename T>
+  T* onEdge(T* thing) {
+    onChild(JS::GCCellPtr(thing));
+    return thing;
   }
-  virtual JSString* onStringEdge(JSString* str) {
-    onChild(JS::GCCellPtr(str));
-    return str;
-  }
-  virtual JS::Symbol* onSymbolEdge(JS::Symbol* sym) {
-    onChild(JS::GCCellPtr(sym));
-    return sym;
-  }
-  virtual JS::BigInt* onBigIntEdge(JS::BigInt* bi) {
-    onChild(JS::GCCellPtr(bi));
-    return bi;
-  }
-  virtual js::BaseScript* onScriptEdge(js::BaseScript* script) {
-    onChild(JS::GCCellPtr(script));
-    return script;
-  }
-  virtual js::Shape* onShapeEdge(js::Shape* shape) {
-    onChild(JS::GCCellPtr(shape, JS::TraceKind::Shape));
-    return shape;
-  }
-  virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) {
-    onChild(JS::GCCellPtr(base, JS::TraceKind::BaseShape));
-    return base;
-  }
-  virtual js::GetterSetter* onGetterSetterEdge(js::GetterSetter* gs) {
-    onChild(JS::GCCellPtr(gs, JS::TraceKind::GetterSetter));
-    return gs;
-  }
-  virtual js::PropMap* onPropMapEdge(js::PropMap* map) {
-    onChild(JS::GCCellPtr(map, JS::TraceKind::PropMap));
-    return map;
-  }
-  virtual js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) {
-    onChild(JS::GCCellPtr(code, JS::TraceKind::JitCode));
-    return code;
-  }
-  virtual js::Scope* onScopeEdge(js::Scope* scope) {
-    onChild(JS::GCCellPtr(scope, JS::TraceKind::Scope));
-    return scope;
-  }
-  virtual js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) {
-    onChild(JS::GCCellPtr(shared, JS::TraceKind::RegExpShared));
-    return shared;
-  }
+  friend class js::GenericTracerImpl<CallbackTracer>;
 };
 
 // Set the name portion of the tracer's context for the current edge.
