@@ -11,11 +11,15 @@
 "use strict";
 /*
  * Description of the test:
- * We perform each test with 4 different settings.
+ * We perform each test with 8 different settings.
  * The first is a same origin request from an http site to an https site.
  * The second is a same origin request from an https -> https.
  * The third is a cross-origin request from an http -> https.
- * The last is a cross-origin request from an https -> https.
+ * The fourth is a cross-origin request from an https -> https.
+ * The fifth is a same origin request from an http -> http site.
+ * The sixth is a same origin request from an https -> http.
+ * The seventh is a cross-origin request from an http -> http.
+ * The last is a cross-origin request from an https -> http.
  */
 
 SimpleTest.waitForExplicitFinish();
@@ -38,59 +42,91 @@ const CROSS_ORIGIN_HTTPS = CROSS_ORIGIN.replace("http", "https");
 const testCases = [
   {
     query: "no-referrer",
-    expectedResultSameOriginDown: "",
-    expectedResultSameOriginUp: "",
-    expectedResultCrossOriginDown:"",
-    expectedResultCrossOriginUp:""
+    expectedResultSameOriginDownUp: "",
+    expectedResultSameOriginUpUp: "",
+    expectedResultCrossOriginDownUp:"",
+    expectedResultCrossOriginUpUp:"",
+    expectedResultSameOriginDownDown: "",
+    expectedResultSameOriginUpDown: "",
+    expectedResultCrossOriginDownDown:"",
+    expectedResultCrossOriginUpDown: "",
   },
   {
     query: "no-referrer-when-downgrade",
-    expectedResultSameOriginDown: SAME_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=0",
-    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=1",
-    expectedResultCrossOriginDown: CROSS_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=0",
-    expectedResultCrossOriginUp: CROSS_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=1"
+    expectedResultSameOriginDownUp: SAME_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=http-https",
+    expectedResultSameOriginUpUp: SAME_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=https-https",
+    expectedResultCrossOriginDownUp: CROSS_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=http-https",
+    expectedResultCrossOriginUpUp: CROSS_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=https-https",
+    expectedResultSameOriginDownDown: SAME_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=http-http",
+    expectedResultSameOriginUpDown: "",
+    expectedResultCrossOriginDownDown: CROSS_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=http-http",
+    expectedResultCrossOriginUpDown:"",
   },
   {
     query: "origin",
-    expectedResultSameOriginDown: "http://example.com/",
-    expectedResultSameOriginUp: "https://example.com/",
-    expectedResultCrossOriginDown:"http://example.org/",
-    expectedResultCrossOriginUp:"https://example.org/"
+    expectedResultSameOriginDownUp: "http://example.com/",
+    expectedResultSameOriginUpUp: "https://example.com/",
+    expectedResultCrossOriginDownUp:"http://example.org/",
+    expectedResultCrossOriginUpUp:"https://example.org/",
+    expectedResultSameOriginDownDown: "http://example.com/",
+    expectedResultSameOriginUpDown: "https://example.com/",
+    expectedResultCrossOriginDownDown:"http://example.org/",
+    expectedResultCrossOriginUpDown:"https://example.org/",
   },
   {
     query: "origin-when-cross-origin",
-    expectedResultSameOriginDown: "http://example.com/",
-    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=origin-when-cross-origin&upgrade=1",
-    expectedResultCrossOriginDown:"http://example.org/",
-    expectedResultCrossOriginUp:"https://example.org/"
+    expectedResultSameOriginDownUp: "http://example.com/",
+    expectedResultSameOriginUpUp: SAME_ORIGIN_HTTPS + "rp=origin-when-cross-origin&upgrade=https-https",
+    expectedResultCrossOriginDownUp:"http://example.org/",
+    expectedResultCrossOriginUpUp:"https://example.org/",
+    expectedResultSameOriginDownDown: SAME_ORIGIN + "rp=origin-when-cross-origin&upgrade=http-http",
+    expectedResultSameOriginUpDown: "https://example.com/",
+    expectedResultCrossOriginDownDown:"http://example.org/",
+    expectedResultCrossOriginUpDown:"https://example.org/",
   },
   {
     query: "same-origin",
-    expectedResultSameOriginDown: "",
-    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=same-origin&upgrade=1",
-    expectedResultCrossOriginDown:"",
-    expectedResultCrossOriginUp:""
+    expectedResultSameOriginDownUp: "",
+    expectedResultSameOriginUpUp: SAME_ORIGIN_HTTPS + "rp=same-origin&upgrade=https-https",
+    expectedResultCrossOriginDownUp:"",
+    expectedResultCrossOriginUpUp:"",
+    expectedResultSameOriginDownDown: SAME_ORIGIN + "rp=same-origin&upgrade=http-http",
+    expectedResultSameOriginUpDown: "",
+    expectedResultCrossOriginDownDown: "",
+    expectedResultCrossOriginUpDown:"",
   },
   {
     query: "strict-origin",
-    expectedResultSameOriginDown: "http://example.com/",
-    expectedResultSameOriginUp: "https://example.com/",
-    expectedResultCrossOriginDown:"http://example.org/",
-    expectedResultCrossOriginUp:"https://example.org/"
+    expectedResultSameOriginDownUp: "http://example.com/",
+    expectedResultSameOriginUpUp: "https://example.com/",
+    expectedResultCrossOriginDownUp:"http://example.org/",
+    expectedResultCrossOriginUpUp:"https://example.org/",
+    expectedResultSameOriginDownDown: "http://example.com/",
+    expectedResultSameOriginUpDown: "",
+    expectedResultCrossOriginDownDown:"http://example.org/",
+    expectedResultCrossOriginUpDown:"",
   },
   {
     query: "strict-origin-when-cross-origin",
-    expectedResultSameOriginDown: "http://example.com/",
-    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=strict-origin-when-cross-origin&upgrade=1",
-    expectedResultCrossOriginDown:"http://example.org/",
-    expectedResultCrossOriginUp:"https://example.org/"
+    expectedResultSameOriginDownUp: "http://example.com/",
+    expectedResultSameOriginUpUp: SAME_ORIGIN_HTTPS + "rp=strict-origin-when-cross-origin&upgrade=https-https",
+    expectedResultCrossOriginDownUp:"http://example.org/",
+    expectedResultCrossOriginUpUp:"https://example.org/",
+    expectedResultSameOriginDownDown: SAME_ORIGIN + "rp=strict-origin-when-cross-origin&upgrade=http-http",
+    expectedResultSameOriginUpDown: "",
+    expectedResultCrossOriginDownDown:"http://example.org/",
+    expectedResultCrossOriginUpDown:"",
   },
   {
     query: "unsafe-url",
-    expectedResultSameOriginDown: SAME_ORIGIN + "rp=unsafe-url&upgrade=0",
-    expectedResultSameOriginUp:  SAME_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=1",
-    expectedResultCrossOriginDown: CROSS_ORIGIN + "rp=unsafe-url&upgrade=0",
-    expectedResultCrossOriginUp: CROSS_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=1"
+    expectedResultSameOriginDownUp: SAME_ORIGIN + "rp=unsafe-url&upgrade=http-https",
+    expectedResultSameOriginUpUp:  SAME_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=https-https",
+    expectedResultCrossOriginDownUp: CROSS_ORIGIN + "rp=unsafe-url&upgrade=http-https",
+    expectedResultCrossOriginUpUp: CROSS_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=https-https",
+    expectedResultSameOriginDownDown: SAME_ORIGIN + "rp=unsafe-url&upgrade=http-http",
+    expectedResultSameOriginUpDown: SAME_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=https-http",
+    expectedResultCrossOriginDownDown:CROSS_ORIGIN + "rp=unsafe-url&upgrade=http-http",
+    expectedResultCrossOriginUpDown:CROSS_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=https-http",
   },
 ];
 
@@ -101,34 +137,55 @@ let testWin;
 let currentQuery;
 window.addEventListener("message", receiveMessage);
 let currentRun = 0;
-// All combinations, downgraded: HTTP -> HTTPS, upgraded: HTTPS -> HTTPS
-const ALL_COMB = ["downgraded", "upgraded"]
+// All combinations, HTTP -> HTTPS, HTTPS -> HTTPS, HTTP -> HTTP, HTTPS -> HTTP
+const ALL_COMB = ["http-https", "https-https" ,"http-http", "https-http"];
 
 // Receive message and verify that we receive the expected referrer header
 async function receiveMessage(event) {
   let data = event.data;
   currentQuery = testCases[currentTest].query;
+  let currentComb = ALL_COMB[currentRun];
   // if request was http -> https
-  if (currentRun === 0) {
+  if (currentComb === "http-https") {
     if (sameOriginRequest){
-      is(data.result, testCases[currentTest].expectedResultSameOriginDown ,
+      is(data.result, testCases[currentTest].expectedResultSameOriginDownUp ,
       "We received for the downgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
-      is(data.location, SAME_ORIGIN_HTTPS + "sendMe");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe","Opened correct location");
     } else {
-      is(data.result, testCases[currentTest].expectedResultCrossOriginDown ,
+      is(data.result, testCases[currentTest].expectedResultCrossOriginDownUp ,
       "We received for the downgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
       is(data.location, SAME_ORIGIN_HTTPS + "sendMe", "Opened correct location");
     }
   // if request was https -> https
-  } else if (currentRun === 1) {
+  } else if (currentComb === "https-https") {
     if (sameOriginRequest){
-      is(data.result, testCases[currentTest].expectedResultSameOriginUp ,
+      is(data.result, testCases[currentTest].expectedResultSameOriginUpUp ,
       "We received for the upgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
-      is(data.location, SAME_ORIGIN_HTTPS + "sendMe");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe", "Opened correct location");
     } else {
-      is(data.result, testCases[currentTest].expectedResultCrossOriginUp ,
+      is(data.result, testCases[currentTest].expectedResultCrossOriginUpUp,
       "We received for the upgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
       is(data.location, SAME_ORIGIN_HTTPS + "sendMe", "Opened correct location");
+    }
+  } else if (currentComb === "http-http") {
+    if (sameOriginRequest){
+      is(data.result, testCases[currentTest].expectedResultSameOriginDownDown ,
+      "We received for the upgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN + "sendMe2","Opened correct location for" + currentQuery + currentComb);
+    } else {
+      is(data.result, testCases[currentTest].expectedResultCrossOriginDownDown,
+      "We received for the upgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN + "sendMe2", "Opened correct location " + currentQuery + currentComb);
+    }
+  } else if (currentComb === "https-http") {
+    if (sameOriginRequest){
+      is(data.result, testCases[currentTest].expectedResultSameOriginUpDown ,
+      "We received for the upgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN + "sendMe2","Opened correct location " + currentQuery + currentComb);
+    } else {
+      is(data.result, testCases[currentTest].expectedResultCrossOriginUpDown,
+      "We received for the upgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN + "sendMe2", "Opened correct location " + currentQuery + currentComb);
     }
   }
   testWin.close();
@@ -146,13 +203,13 @@ async function runTest() {
   // send same origin request
   if (sameOriginRequest && currentRun < ALL_COMB.length) {
     // if upgrade = 0 downgrade request, else upgrade
-    testWin = window.open(SAME_ORIGIN + "rp=" +currentQuery + "&upgrade=" + currentRun, "_blank");
+    testWin = window.open(SAME_ORIGIN + "rp=" +currentQuery + "&upgrade=" + ALL_COMB[currentRun], "_blank");
   } else {
     // if same origin isn't set, check if we need to send cross origin requests
     // eslint-disable-next-line no-lonely-if
     if (!sameOriginRequest && currentRun < ALL_COMB.length ) {
     // if upgrade = 0 downgrade request, else upgrade
-    testWin = window.open(CROSS_ORIGIN + "rp=" +currentQuery + "&upgrade=" + currentRun, "_blank");
+    testWin = window.open(CROSS_ORIGIN + "rp=" +currentQuery + "&upgrade=" + ALL_COMB[currentRun], "_blank");
     } // else we completed all test case of the current query for the current origin. Prepare and call next test
     else {
       // reset currentRun and go to next query
