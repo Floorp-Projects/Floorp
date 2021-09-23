@@ -54,13 +54,14 @@ class DefaultPagedHistoryProvider(
                 if (historyGroups == null || offset == 0L) {
 
                     historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
+                        .sortedByDescending { it.createdAt }
                         .filter { it.key.searchTerm != null }
                         .groupBy { it.key.searchTerm!! }
                         .map { (searchTerm, items) ->
                             History.Group(
                                 id = items.first().createdAt.toInt(),
                                 title = searchTerm,
-                                visitedAt = items.first().updatedAt,
+                                visitedAt = items.first().createdAt,
                                 items = items.map { it.toHistoryMetadata() }
                             )
                         }
