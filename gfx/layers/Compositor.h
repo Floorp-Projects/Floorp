@@ -266,17 +266,6 @@ class Compositor : public TextureSourceProvider {
                         const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect) = 0;
 
-  /**
-   * Overload of DrawQuad, with aVisibleRect defaulted to the value of aRect.
-   * Use this when you are drawing a single quad that is not part of a tiled
-   * layer.
-   */
-  void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
-                const EffectChain& aEffectChain, gfx::Float aOpacity,
-                const gfx::Matrix4x4& aTransform) {
-    DrawQuad(aRect, aClipRect, aEffectChain, aOpacity, aTransform, aRect);
-  }
-
   void SetClearColor(const gfx::DeviceColor& aColor) { mClearColor = aColor; }
 
   /**
