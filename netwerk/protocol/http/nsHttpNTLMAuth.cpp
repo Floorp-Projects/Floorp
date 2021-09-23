@@ -301,6 +301,8 @@ nsHttpNTLMAuth::GenerateCredentials(
     rv = module->Init(serviceName, reqFlags, domain, user, pass);
     if (NS_FAILED(rv)) return rv;
 
+    inBufLen = 0;
+    inBuf = nullptr;
 // This update enables updated Windows machines (Win7 or patched previous
 // versions) and Linux machines running Samba (updated for Channel
 // Binding), to perform Channel Binding when authenticating using NTLMv2
@@ -308,6 +310,7 @@ nsHttpNTLMAuth::GenerateCredentials(
 //
 // Currently only implemented for Windows, linux support will be landing in
 // a separate patch, update this #ifdef accordingly then.
+// Extended protection update is just for Linux and Windows machines.
 #if defined(XP_WIN) /* || defined (LINUX) */
     // We should retrieve the server certificate and compute the CBT,
     // but only when we are using the native NTLM implementation and
@@ -330,22 +333,19 @@ nsHttpNTLMAuth::GenerateCredentials(
       rv = secInfo->GetServerCert(getter_AddRefs(cert));
       if (NS_FAILED(rv)) return rv;
 
-      certArray.emplace();
-      rv = cert->GetRawDER(*certArray);
-      if (NS_FAILED(rv)) return rv;
+      if (cert) {
+        certArray.emplace();
+        rv = cert->GetRawDER(*certArray);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
 
-      // If there is a server certificate, we pass it along the
-      // first time we call GetNextToken().
-      inBufLen = certArray->Length();
-      inBuf = certArray->Elements();
-    } else {
-      // If there is no server certificate, we don't pass anything.
-      inBufLen = 0;
-      inBuf = nullptr;
+        // If there is a server certificate, we pass it along the
+        // first time we call GetNextToken().
+        inBufLen = certArray->Length();
+        inBuf = certArray->Elements();
+      }
     }
-#else  // Extended protection update is just for Linux and Windows machines.
-    inBufLen = 0;
-    inBuf = nullptr;
 #endif
   } else {
     // decode challenge; skip past "NTLM " to the start of the base64
