@@ -450,7 +450,7 @@ static NSDictionary* StringAttributesFromAttributes(AccAttributes* aAttributes,
       }
     } else if (iter.Name() == nsGkAtoms::invalid) {
       // XXX: There is currently no attribute for grammar
-      if (Maybe<nsAtom*> value = iter.Value<nsAtom*>()) {
+      if (auto value = iter.Value<RefPtr<nsAtom>>()) {
         if (*value == nsGkAtoms::spelling) {
           [attrDict setObject:@YES
                        forKey:NSAccessibilityMarkedMisspelledTextAttribute];
