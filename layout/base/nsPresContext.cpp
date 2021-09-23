@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
+#include "nsIConsoleService.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ServoStyleSet.h"
@@ -833,6 +834,29 @@ bool nsPresContext::UpdateFontVisibility() {
 
   mFontVisibility = FontVisibility(level);
   return mFontVisibility != oldValue;
+}
+
+void nsPresContext::ReportBlockedFontFamilyName(const nsCString& aFamily,
+                                                FontVisibility aVisibility) {
+  if (!mBlockedFonts.EnsureInserted(aFamily)) {
+    return;
+  }
+  nsAutoString msg;
+  msg.AppendPrintf(
+      "Request for font \"%s\" blocked at visibility level %d (requires %d)\n",
+      aFamily.get(), int(GetFontVisibility()), int(aVisibility));
+  nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::warningFlag,
+                                              "Security"_ns, mDocument);
+}
+
+void nsPresContext::ReportBlockedFontFamily(const fontlist::Family& aFamily) {
+  auto* fontList = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  const nsCString& name = aFamily.DisplayName().AsString(fontList);
+  ReportBlockedFontFamilyName(name, aFamily.Visibility());
+}
+
+void nsPresContext::ReportBlockedFontFamily(const gfxFontFamily& aFamily) {
+  ReportBlockedFontFamilyName(aFamily.Name(), aFamily.Visibility());
 }
 
 void nsPresContext::InitFontCache() {
