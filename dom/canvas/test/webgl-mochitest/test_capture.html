@@ -154,18 +154,12 @@ function beginTest() {
   vmanual = h.createAndAppendElement('video', 'vmanual');
   vrate = h.createAndAppendElement('video', 'vrate');
 
-  gl = WebGLUtil.getWebGL('c', false);
+  gl = c.getContext('webgl');
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     finish();
     return;
   }
-
-  function errorFunc(str) {
-    ok(false, 'Error: ' + str);
-  }
-  WebGLUtil.setErrorFunc(errorFunc);
-  WebGLUtil.setWarningFunc(errorFunc);
 
   gl.disable(gl.DEPTH_TEST);
 

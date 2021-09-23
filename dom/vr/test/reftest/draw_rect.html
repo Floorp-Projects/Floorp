@@ -93,7 +93,7 @@ If this fails, something is seriously wrong. -->
 
     function runTest() {
       webglCanvas = document.getElementById('canvas');
-      gl = WebGLUtil.getWebGL('canvas');
+      gl = webglCanvas.getContext('webgl');
       if (!gl) {
         setStatus('WebGL context creation failed.');
         return;
