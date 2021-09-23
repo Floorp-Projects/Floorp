@@ -71,6 +71,9 @@ inline OkOrErr ToResult(QMResult&& aValue);
 
 }  // namespace mozilla
 
+// TODO: Maybe move this to mfbt/ResultExtensions.h
+#define MOZ_TO_RESULT(expr) ToResult(expr)
+
 #define QM_TO_RESULT(expr) ToResult(ToQMResult(expr))
 
 #endif
