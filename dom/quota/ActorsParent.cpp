@@ -590,7 +590,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateWebAppsStoreConnection(
   if (connection) {
     // Don't propagate an error, leave a non-updateable webappsstore database as
     // it is.
-    QM_TRY(StorageDBUpdater::Update(connection),
+    QM_TRY(MOZ_TO_RESULT(StorageDBUpdater::Update(connection)),
            nsCOMPtr<mozIStorageConnection>{});
   }
 
@@ -4383,9 +4383,10 @@ void QuotaManager::UnloadQuota() {
   mozStorageTransaction transaction(
       mStorageConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  QM_TRY(transaction.Start(), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(transaction.Start()), QM_VOID);
 
-  QM_TRY(mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns),
+  QM_TRY(MOZ_TO_RESULT(
+             mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns)),
          QM_VOID);
 
   nsCOMPtr<mozIStorageStatement> insertStmt;
@@ -4429,9 +4430,10 @@ void QuotaManager::UnloadQuota() {
                 QM_VOID);
           }
 
-          QM_TRY(originInfo->LockedBindToStatement(insertStmt), QM_VOID);
+          QM_TRY(MOZ_TO_RESULT(originInfo->LockedBindToStatement(insertStmt)),
+                 QM_VOID);
 
-          QM_TRY(insertStmt->Execute(), QM_VOID);
+          QM_TRY(MOZ_TO_RESULT(insertStmt->Execute()), QM_VOID);
         }
 
         groupInfo->LockedRemoveOriginInfos();
@@ -4448,10 +4450,11 @@ void QuotaManager::UnloadQuota() {
           "UPDATE cache SET valid = :valid, build_id = :buildId;"_ns),
       QM_VOID);
 
-  QM_TRY(stmt->BindInt32ByName("valid"_ns, 1), QM_VOID);
-  QM_TRY(stmt->BindUTF8StringByName("buildId"_ns, *gBuildId), QM_VOID);
-  QM_TRY(stmt->Execute(), QM_VOID);
-  QM_TRY(transaction.Commit(), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->BindInt32ByName("valid"_ns, 1)), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->BindUTF8StringByName("buildId"_ns, *gBuildId)),
+         QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(stmt->Execute()), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(transaction.Commit()), QM_VOID);
 }
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
@@ -4482,7 +4485,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     QM_TRY(OkIf(Client::TypeToText(aClientType, clientType, fallible)),
            nullptr);
 
-    QM_TRY(directory->Append(clientType), nullptr);
+    QM_TRY(MOZ_TO_RESULT(directory->Append(clientType)), nullptr);
 
     QM_TRY_INSPECT(const auto& directoryPath,
                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, directory, GetPath),
@@ -7672,7 +7675,8 @@ nsresult OriginOperationBase::DirectoryOpen() {
   // Must set this before dispatching otherwise we will race with the IO thread.
   AdvanceState();
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -9210,7 +9214,8 @@ void ResetOrClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
   QM_TRY_INSPECT(const auto& storageFile,
                  QM_NewLocalFile(aQuotaManager.GetBasePath()), QM_VOID);
 
-  QM_TRY(storageFile->Append(aQuotaManager.GetStorageName() + kSQLiteSuffix),
+  QM_TRY(MOZ_TO_RESULT(storageFile->Append(aQuotaManager.GetStorageName() +
+                                           kSQLiteSuffix)),
          QM_VOID);
 
   const nsresult rv = storageFile->Remove(true);
@@ -9255,9 +9260,9 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
                                    PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  QM_TRY(aQuotaManager.AboutToClearOrigins(
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.AboutToClearOrigins(
              Nullable<PersistenceType>(aPersistenceType), mOriginScope,
-             mClientType),
+             mClientType)),
          QM_VOID);
 
   QM_TRY_INSPECT(

@@ -106,10 +106,10 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   int32_t schemeLen;
   uint32_t authPos;
   int32_t authLen;
-  QM_TRY(
-      urlParser->ParseURL(url, flatURL.Length(), &schemePos, &schemeLen,
-                          &authPos, &authLen, nullptr, nullptr),  // ignore path
-      false);
+  QM_TRY(MOZ_TO_RESULT(urlParser->ParseURL(url, flatURL.Length(), &schemePos,
+                                           &schemeLen, &authPos, &authLen,
+                                           nullptr, nullptr)),  // ignore path
+         false);
 
   const nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
   if (scheme.LowerCaseEqualsLiteral("https") ||
@@ -120,11 +120,12 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
 
   uint32_t hostPos;
   int32_t hostLen;
-  QM_TRY(urlParser->ParseAuthority(url + authPos, authLen, nullptr,
-                                   nullptr,           // ignore username
-                                   nullptr, nullptr,  // ignore password
-                                   &hostPos, &hostLen,
-                                   nullptr),  // ignore port
+  QM_TRY(MOZ_TO_RESULT(
+             urlParser->ParseAuthority(url + authPos, authLen, nullptr,
+                                       nullptr,           // ignore username
+                                       nullptr, nullptr,  // ignore password
+                                       &hostPos, &hostLen,
+                                       nullptr)),  // ignore port
          false);
 
   return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(

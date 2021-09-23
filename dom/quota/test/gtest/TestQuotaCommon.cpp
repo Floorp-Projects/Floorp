@@ -63,7 +63,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_ASSERT_UNREACHABLE);
 
     tryDidNotReturn = true;
 
@@ -79,7 +79,7 @@ TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_ASSERT_UNREACHABLE_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -98,7 +98,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_DIAGNOSTIC_ASSERT_UNREACHABLE);
 
     tryDidNotReturn = true;
 
@@ -114,7 +114,7 @@ TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -168,7 +168,7 @@ TEST(QuotaCommon_Try, Failure_CustomErr)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE, NS_ERROR_UNEXPECTED);
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), NS_ERROR_UNEXPECTED);
 
     tryDidNotReturn = true;
 
@@ -184,7 +184,7 @@ TEST(QuotaCommon_Try, Failure_NoErr)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_ERROR_FAILURE, QM_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -245,7 +245,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
 TEST(QuotaCommon_Try, SameLine)
 {
   // clang-format off
-  QM_TRY(NS_OK, QM_VOID); QM_TRY(NS_OK, QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(NS_OK), QM_VOID); QM_TRY(MOZ_TO_RESULT(NS_OK), QM_VOID);
   // clang-format on
 }
 
