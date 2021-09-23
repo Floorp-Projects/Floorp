@@ -10060,9 +10060,11 @@ Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
   QM_TRY(CallWithDelayedRetriesIfAccessDenied(
       [&exists, &aOriginProps, &newLeafName] {
         if (exists) {
-          QM_TRY_RETURN(aOriginProps.mDirectory->Remove(/* recursive */ true));
+          QM_TRY_RETURN(MOZ_TO_RESULT(
+              aOriginProps.mDirectory->Remove(/* recursive */ true)));
         }
-        QM_TRY_RETURN(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+        QM_TRY_RETURN(MOZ_TO_RESULT(
+            aOriginProps.mDirectory->RenameTo(nullptr, newLeafName)));
       },
       StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_maxRetries(),
       StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_delayMs()));

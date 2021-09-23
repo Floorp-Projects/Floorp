@@ -5920,12 +5920,13 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
           nsIFile& file, const bool isDirectory) -> Result<Ok, nsresult> {
         if (isDirectory) {
           // The journal directory doesn't count towards quota.
-          QM_TRY_RETURN(DeleteFilesNoQuota(file));
+          QM_TRY_RETURN(MOZ_TO_RESULT(DeleteFilesNoQuota(file)));
         }
 
         // Stored files do count towards quota.
-        QM_TRY_RETURN(DeleteFile(file, aQuotaManager, aPersistenceType,
-                                 aOriginMetadata, Idempotency::Yes));
+        QM_TRY_RETURN(
+            MOZ_TO_RESULT(DeleteFile(file, aQuotaManager, aPersistenceType,
+                                     aOriginMetadata, Idempotency::Yes)));
       },
       // UnknownDirEntryOp
       [aPersistenceType, &aOriginMetadata](
@@ -5933,12 +5934,12 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
         // Unknown files and directories don't count towards quota.
 
         if (isDirectory) {
-          QM_TRY_RETURN(DeleteFilesNoQuota(file));
+          QM_TRY_RETURN(MOZ_TO_RESULT(DeleteFilesNoQuota(file)));
         }
 
-        QM_TRY_RETURN(DeleteFile(file, /* doesn't count */ nullptr,
-                                 aPersistenceType, aOriginMetadata,
-                                 Idempotency::Yes));
+        QM_TRY_RETURN(MOZ_TO_RESULT(
+            DeleteFile(file, /* doesn't count */ nullptr, aPersistenceType,
+                       aOriginMetadata, Idempotency::Yes)));
       }));
 
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, false));
