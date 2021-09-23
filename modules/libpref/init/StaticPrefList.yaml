@@ -1146,7 +1146,7 @@
 # Whether pressing Esc will exit fullscreen.
 - name: browser.fullscreen.exit_on_escape
   type: bool
-  value: false
+  value: true
   mirror: always
 #endif
 
