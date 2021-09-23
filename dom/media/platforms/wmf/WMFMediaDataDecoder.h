@@ -166,10 +166,6 @@ class WMFMediaDataDecoder
     DRAINING,
   };
   DrainStatus mDrainStatus = DrainStatus::DRAINED;
-
-  // For telemetry
-  bool mHasSuccessfulOutput = false;
-  bool mRecordedError = false;
 };
 
 }  // namespace mozilla
