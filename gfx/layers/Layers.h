@@ -152,12 +152,6 @@ class Layer {
     CONTENT_COMPONENT_ALPHA = 0x02,
 
     /**
-     * If this is set then one of the descendant layers of this one has
-     * CONTENT_COMPONENT_ALPHA set.
-     */
-    CONTENT_COMPONENT_ALPHA_DESCENDANT = 0x04,
-
-    /**
      * If this is set then this layer is part of a preserve-3d group, and should
      * be sorted with sibling layers that are also part of the same group.
      */
@@ -1482,20 +1476,6 @@ class ContainerLayer : public Layer {
    */
   bool HasMultipleChildren();
 
-  /**
-   * Returns true if this container supports children with component alpha.
-   * Should only be called while painting a child of this layer.
-   */
-  bool SupportsComponentAlphaChildren() {
-    return mSupportsComponentAlphaChildren;
-  }
-
-  /**
-   * Returns true if aLayer or any layer in its parent chain has the opaque
-   * content flag set.
-   */
-  static bool HasOpaqueAncestorLayer(Layer* aLayer);
-
   void SetChildrenChanged(bool aVal) { mChildrenChanged = aVal; }
 
   // If |aRect| is null, the entire layer should be considered invalid for
@@ -1548,17 +1528,6 @@ class ContainerLayer : public Layer {
       const gfx::Matrix4x4& aTransformToSurface);
 
   /**
-   * A default implementation to compute and set the value for
-   * SupportsComponentAlphaChildren().
-   *
-   * If aNeedsSurfaceCopy is provided, then it is set to true if the caller
-   * needs to copy the background up into the intermediate surface created,
-   * false otherwise.
-   */
-  void DefaultComputeSupportsComponentAlphaChildren(
-      bool* aNeedsSurfaceCopy = nullptr);
-
-  /**
    * Loops over the children calling ComputeEffectiveTransforms on them.
    */
   void ComputeEffectiveTransformsForChildren(
@@ -1585,7 +1554,6 @@ class ContainerLayer : public Layer {
   // associated pres shell; for other layers, 1.0.
   float mPresShellResolution;
   bool mUseIntermediateSurface;
-  bool mSupportsComponentAlphaChildren;
   bool mMayHaveReadbackChild;
   // This is updated by ComputeDifferences. This will be true if we need to
   // invalidate the intermediate surface.

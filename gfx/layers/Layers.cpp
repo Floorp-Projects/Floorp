@@ -540,7 +540,6 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
       mInheritedYScale(1.0f),
       mPresShellResolution(1.0f),
       mUseIntermediateSurface(false),
-      mSupportsComponentAlphaChildren(false),
       mMayHaveReadbackChild(false),
       mChildrenChanged(false) {}
 
@@ -993,58 +992,11 @@ void ContainerLayer::DefaultComputeEffectiveTransforms(
   ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
-void ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(
-    bool* aNeedsSurfaceCopy) {
-  if (!(GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT) ||
-      !Manager()->AreComponentAlphaLayersEnabled()) {
-    mSupportsComponentAlphaChildren = false;
-    if (aNeedsSurfaceCopy) {
-      *aNeedsSurfaceCopy = false;
-    }
-    return;
-  }
-
-  mSupportsComponentAlphaChildren = false;
-  bool needsSurfaceCopy = false;
-  CompositionOp blendMode = GetEffectiveMixBlendMode();
-  if (UseIntermediateSurface()) {
-    if (GetLocalVisibleRegion().GetNumRects() == 1 &&
-        (GetContentFlags() & Layer::CONTENT_OPAQUE)) {
-      mSupportsComponentAlphaChildren = true;
-    } else {
-      gfx::Matrix transform;
-      if (HasOpaqueAncestorLayer(this) &&
-          GetEffectiveTransform().Is2D(&transform) &&
-          !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
-          blendMode == gfx::CompositionOp::OP_OVER) {
-        mSupportsComponentAlphaChildren = true;
-        needsSurfaceCopy = true;
-      }
-    }
-  } else if (blendMode == gfx::CompositionOp::OP_OVER) {
-    mSupportsComponentAlphaChildren =
-        (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
-        (GetParent() && GetParent()->SupportsComponentAlphaChildren());
-  }
-
-  if (aNeedsSurfaceCopy) {
-    *aNeedsSurfaceCopy = mSupportsComponentAlphaChildren && needsSurfaceCopy;
-  }
-}
-
 void ContainerLayer::ComputeEffectiveTransformsForChildren(
     const Matrix4x4& aTransformToSurface) {
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
     l->ComputeEffectiveTransforms(aTransformToSurface);
   }
-}
-
-/* static */
-bool ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer) {
-  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
-    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE) return true;
-  }
-  return false;
 }
 
 // Note that ContainerLayer::RemoveAllChildren contains an optimized
