@@ -1790,13 +1790,15 @@ both:
     async CreateBrowsingContext(uint64_t aGroupId, BrowsingContextInitializer aInit);
 
     /**
-     * Discards the passed-in BrowsingContext. If the BrowsingContext has
-     * already been discarded, this message does nothing.
-     * The response promise is fulfilled when the process has flagged the
-     * BrowsingContext as discarded.
+     * If aDoDiscard is true, discards the passed-in BrowsingContext. If the
+     * BrowsingContext has already been discarded, this message does nothing.
+     * If the receiver is the parent process, resolves when all content
+     * processes have flagged the BrowsingContext as discarded, and if the
+     * receiver is a child process, resolves when that child process has flagged
+     * the BrowsingContext as discarded.
      */
-    async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext)
-            returns (bool unused);
+    async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext, bool aDoDiscard)
+            returns (uint64_t unused);
 
     async AdjustWindowFocus(MaybeDiscardedBrowsingContext aContext,
                             bool aIsVisible, uint64_t aActionId);

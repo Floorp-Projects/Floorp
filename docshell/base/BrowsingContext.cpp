@@ -814,6 +814,13 @@ void BrowsingContext::Detach(bool aFromIPC) {
   MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
+  auto callListeners =
+      MakeScopeExit([listeners = std::move(mDiscardListeners), id = Id()] {
+        for (const auto& listener : listeners) {
+          listener(id);
+        }
+      });
+
   nsCOMPtr<nsIRequestContextService> rcsvc =
       net::RequestContextService::GetOrCreate();
   if (rcsvc) {
@@ -823,6 +830,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
   // This will only ever be null if the cycle-collector has unlinked us. Don't
   // try to detach ourselves in that case.
   if (NS_WARN_IF(!mGroup)) {
+    MOZ_ASSERT_UNREACHABLE();
     return;
   }
 
@@ -833,6 +841,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
   }
 
   if (XRE_IsParentProcess()) {
+    RefPtr<CanonicalBrowsingContext> self{Canonical()};
     Group()->EachParent([&](ContentParent* aParent) {
       // Only the embedder process is allowed to initiate a BrowsingContext
       // detach, so if we've gotten here, the host process already knows we've
@@ -841,30 +850,32 @@ void BrowsingContext::Detach(bool aFromIPC) {
       // If the owner process is not the same as the embedder process, its
       // BrowsingContext will be detached when its nsWebBrowser instance is
       // destroyed.
-      if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
-          !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
-        // Hold a strong reference to ourself, and keep our BrowsingContextGroup
-        // alive, until the responses comes back to ensure we don't die while
-        // messages relating to this context are in-flight.
-        //
-        // When the callback is called, the keepalive on our group will be
-        // destroyed, and the reference to the BrowsingContext will be dropped,
-        // which may cause it to be fully destroyed.
-        mGroup->AddKeepAlive();
-        auto callback = [self = RefPtr{this}](auto) {
-          self->mGroup->RemoveKeepAlive();
-        };
+      bool doDiscard = !Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
+                       !Canonical()->IsOwnedByProcess(aParent->ChildID());
 
-        aParent->SendDiscardBrowsingContext(this, callback, callback);
-      }
+      // Hold a strong reference to ourself, and keep our BrowsingContextGroup
+      // alive, until the responses comes back to ensure we don't die while
+      // messages relating to this context are in-flight.
+      //
+      // When the callback is called, the keepalive on our group will be
+      // destroyed, and the reference to the BrowsingContext will be dropped,
+      // which may cause it to be fully destroyed.
+      mGroup->AddKeepAlive();
+      self->AddPendingDiscard();
+      auto callback = [self](auto) {
+        self->mGroup->RemoveKeepAlive();
+        self->RemovePendingDiscard();
+      };
+
+      aParent->SendDiscardBrowsingContext(this, doDiscard, callback, callback);
     });
-  } else if (!aFromIPC) {
+  } else {
     // Hold a strong reference to ourself until the responses come back to
     // ensure the BrowsingContext isn't cleaned up before the parent process
     // acknowledges the discard request.
     auto callback = [self = RefPtr{this}](auto) {};
-    ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
-                                                             callback);
+    ContentChild::GetSingleton()->SendDiscardBrowsingContext(
+        this, !aFromIPC, callback, callback);
   }
 
   mGroup->Unregister(this);
@@ -905,6 +916,15 @@ void BrowsingContext::Detach(bool aFromIPC) {
   if (XRE_IsParentProcess()) {
     Canonical()->CanonicalDiscard();
   }
+}
+
+void BrowsingContext::AddDiscardListener(
+    std::function<void(uint64_t)>&& aListener) {
+  if (mIsDiscarded) {
+    aListener(Id());
+    return;
+  }
+  mDiscardListeners.AppendElement(std::move(aListener));
 }
 
 void BrowsingContext::PrepareForProcessChange() {

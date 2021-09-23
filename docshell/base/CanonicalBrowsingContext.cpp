@@ -1152,6 +1152,31 @@ void CanonicalBrowsingContext::CanonicalAttach() {
   }
 }
 
+void CanonicalBrowsingContext::AddPendingDiscard() {
+  MOZ_ASSERT(!mFullyDiscarded);
+  mPendingDiscards++;
+}
+
+void CanonicalBrowsingContext::RemovePendingDiscard() {
+  mPendingDiscards--;
+  if (!mPendingDiscards) {
+    mFullyDiscarded = true;
+    auto listeners = std::move(mFullyDiscardedListeners);
+    for (const auto& listener : listeners) {
+      listener(Id());
+    }
+  }
+}
+
+void CanonicalBrowsingContext::AddFinalDiscardListener(
+    std::function<void(uint64_t)>&& aListener) {
+  if (mFullyDiscarded) {
+    aListener(Id());
+    return;
+  }
+  mFullyDiscardedListeners.AppendElement(std::move(aListener));
+}
+
 void CanonicalBrowsingContext::AdjustPrivateBrowsingCount(
     bool aPrivateBrowsing) {
   if (IsDiscarded() || !EverAttached() || IsChrome()) {
