@@ -39,12 +39,7 @@ class PatchDictionaryEncoder {
 
   static void SetPositions(PatchDictionary* pdic,
                            std::vector<PatchPosition> positions) {
-    if (pdic->positions_.empty()) {
-      pdic->positions_ = std::move(positions);
-    } else {
-      pdic->positions_.insert(pdic->positions_.end(), positions.begin(),
-                              positions.end());
-    }
+    pdic->positions_ = std::move(positions);
     pdic->ComputePatchCache();
   }
 
@@ -55,11 +50,6 @@ void FindBestPatchDictionary(const Image3F& opsin,
                              PassesEncoderState* JXL_RESTRICT state,
                              ThreadPool* pool, AuxOut* aux_out,
                              bool is_xyb = true);
-
-void RoundtripPatchFrame(Image3F* reference_frame,
-                         PassesEncoderState* JXL_RESTRICT state, int idx,
-                         CompressParams& cparams, ThreadPool* pool,
-                         bool subtract);
 
 }  // namespace jxl
 

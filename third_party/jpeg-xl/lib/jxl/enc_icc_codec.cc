@@ -241,7 +241,7 @@ Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result) {
 
     // This means the loop brought the position beyond the tag end.
     if (pos > tagstart + tagsize) {
-      tag = {{0, 0, 0, 0}};  // nonsensical value
+      tag = {0, 0, 0, 0};  // nonsensical value
     }
 
     if (commands_add.empty() && data_add.empty() && tagmap.count(pos) &&

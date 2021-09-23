@@ -114,7 +114,7 @@ struct QuantizedPatch {
   }
 };
 
-// Pair (patch, vector of occurrences).
+// Pair (patch, vector of occurences).
 using PatchInfo =
     std::pair<QuantizedPatch, std::vector<std::pair<uint32_t, uint32_t>>>;
 
@@ -170,17 +170,13 @@ class PatchDictionary {
   Status AddTo(Image3F* opsin, const Rect& opsin_rect,
                float* const* extra_channels, const Rect& image_rect) const;
 
-  // Returns dependencies of this patch dictionary on reference frame ids as a
-  // bit mask: bits 0-3 indicate reference frame 0-3.
-  int GetReferences() const;
-
  private:
   friend class PatchDictionaryEncoder;
 
   const PassesSharedState* shared_;
   std::vector<PatchPosition> positions_;
 
-  // Patch occurrences sorted by y.
+  // Patch occurences sorted by y.
   std::vector<size_t> sorted_patches_;
   // Index of the first patch for each y value.
   std::vector<size_t> patch_starts_;

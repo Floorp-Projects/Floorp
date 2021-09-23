@@ -21,7 +21,6 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/quantizer.h"
-#include "lib/jxl/sanitizers.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
@@ -32,7 +31,6 @@ using hwy::HWY_NAMESPACE::Broadcast;
 void OpsinToLinearInplace(Image3F* JXL_RESTRICT inout, ThreadPool* pool,
                           const OpsinParams& opsin_params) {
   PROFILER_FUNC;
-  JXL_CHECK_IMAGE_INITIALIZED(*inout, Rect(*inout));
 
   const size_t xsize = inout->xsize();  // not padded
   RunOnPool(
@@ -73,7 +71,6 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
   PROFILER_FUNC;
 
   JXL_ASSERT(SameSize(rect, *linear));
-  JXL_CHECK_IMAGE_INITIALIZED(opsin, rect);
 
   RunOnPool(
       pool, 0, static_cast<int>(rect.ysize()), ThreadPool::SkipInit(),
@@ -107,13 +104,11 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
         }
       },
       "OpsinToLinear(Rect)");
-  JXL_CHECK_IMAGE_INITIALIZED(*linear, rect);
 }
 
 // Transform YCbCr to RGB.
 // Could be performed in-place (i.e. Y, Cb and Cr could alias R, B and B).
 void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect) {
-  JXL_CHECK_IMAGE_INITIALIZED(ycbcr, rect);
   const HWY_CAPPED(float, GroupBorderAssigner::kPaddingXRound) df;
   const size_t S = Lanes(df);  // Step.
 
@@ -148,7 +143,130 @@ void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect) {
       Store(b_vec, df, b_row + x);
     }
   }
-  JXL_CHECK_IMAGE_INITIALIZED(*rgb, rect);
+}
+
+/* Vertical upsampling:
+ *  input:
+ *   (a, b, c) := |a1 a2 a3 a4|
+ *                |b1 b2 b3 b4| <- current line
+ *                |c1 c2 c3 c4|
+ *  intermediate:
+ *   u := a + 3 * b
+ *   d := c + 3 * b
+ *  output:
+ *  |u1 u2 u3 u4| =: (u, d)
+ *  |d1 d2 d3 d4|
+ */
+ImageF UpsampleV2(const ImageF& src, ThreadPool* pool) {
+  const HWY_FULL(float) df;
+  const size_t S = Lanes(df);
+  const auto c14 = Set(df, 0.25f);
+  const auto c34 = Set(df, 0.75f);
+
+  const size_t xsize = src.xsize();
+  const size_t ysize = src.ysize();
+  JXL_ASSERT(xsize != 0);
+  JXL_ASSERT(ysize != 0);
+  ImageF dst(xsize, ysize * 2);
+  if (ysize == 1) {
+    memcpy(dst.Row(0), src.Row(0), xsize * sizeof(*src.Row(0)));
+    memcpy(dst.Row(1), src.Row(0), xsize * sizeof(*src.Row(0)));
+  } else {
+    constexpr size_t kGroupArea = kGroupDim * kGroupDim;
+    const size_t lines_per_group = DivCeil(kGroupArea, xsize);
+    const size_t num_stripes = DivCeil(ysize, lines_per_group);
+    const auto upsample = [&](int idx, int /* thread*/) {
+      const size_t y0 = idx * lines_per_group;
+      const size_t y1 = std::min<size_t>(y0 + lines_per_group, ysize);
+      for (size_t y = y0; y < y1; ++y) {
+        const float* JXL_RESTRICT prev_row = src.ConstRow(y == 0 ? 1 : y - 1);
+        const float* JXL_RESTRICT current_row = src.ConstRow(y);
+        const float* JXL_RESTRICT next_row =
+            src.ConstRow(y == ysize - 1 ? ysize - 2 : y + 1);
+        float* JXL_RESTRICT dst1_row = dst.Row(2 * y);
+        float* JXL_RESTRICT dst2_row = dst.Row(2 * y + 1);
+        for (size_t x = 0; x < xsize; x += S) {
+          const auto current34 = Load(df, current_row + x) * c34;
+          const auto prev = Load(df, prev_row + x);
+          const auto next = Load(df, next_row + x);
+          Store(MulAdd(prev, c14, current34), df, dst1_row + x);
+          Store(MulAdd(next, c14, current34), df, dst2_row + x);
+        }
+      }
+    };
+    RunOnPool(pool, 0, static_cast<int>(num_stripes), ThreadPool::SkipInit(),
+              upsample, "UpsampleV2");
+  }
+  return dst;
+}
+
+/* Horizontal upsampling:
+ *  input:
+ *   (a, b, c) := |a1 a2 a3 a4 b1 b2 b3 b4 c1 c2 c3 c4|
+ *                             ^^^^^^^^^^^
+ *                            current block
+ *  intermediate:
+ *   l := (a << 3) {0001} (b >> 1) = [a4 b1 b2 b3]
+ *   r := (c >> 3) {1000} (b << 1) = [b2 b3 b4 c1]
+ *   o := 3 * b + l
+ *   e := 3 * b + r
+ *  output:
+ *   |o1 e1 o2 e2 o3 e3 o4 e4| =: (o, e)
+ */
+ImageF UpsampleH2(const ImageF& src, size_t output_xsize, ThreadPool* pool) {
+  const size_t xsize = src.xsize();
+  const size_t ysize = src.ysize();
+  JXL_ASSERT(xsize != 0);
+  JXL_ASSERT(ysize != 0);
+  JXL_ASSERT(DivCeil(output_xsize, 2) == xsize);
+  // Extra pixel in output might cause the whole extra vector overhead; thus
+  // we request specific output size. Should be safe, because the last 2 values
+  // are processed in non-vectorized form, and the "Plane" row padding concerns
+  // only about the case when unaligned vector store is applied at last pixel.
+  ImageF dst(output_xsize, ysize);
+
+  constexpr size_t kGroupArea = kGroupDim * kGroupDim;
+  const size_t lines_per_group = DivCeil(kGroupArea, xsize);
+  const size_t num_stripes = DivCeil(ysize, lines_per_group);
+
+  HWY_CAPPED(float, 4) d;  // necessary for interleaving.
+
+  const auto upsample = [&](int idx, int /* thread*/) {
+    const size_t y0 = idx * lines_per_group;
+    const size_t y1 = std::min<size_t>(y0 + lines_per_group, ysize);
+    for (size_t y = y0; y < y1; ++y) {
+      const float* JXL_RESTRICT current_row = src.ConstRow(y);
+      float* JXL_RESTRICT dst_row = dst.Row(y);
+      const auto c34 = Set(d, 0.75f);
+      const auto c14 = Set(d, 0.25f);
+      for (size_t x = 1; x < xsize - 1; x += Lanes(d)) {
+        auto current = LoadU(d, current_row + x) * c34;
+        auto prev = LoadU(d, current_row + x - 1);
+        auto next = LoadU(d, current_row + x + 1);
+        auto left = MulAdd(c14, prev, current);
+        auto right = MulAdd(c14, next, current);
+#if HWY_TARGET == HWY_SCALAR
+        StoreU(left, d, dst_row + x * 2);
+        StoreU(right, d, dst_row + x * 2 + 1);
+#else
+        StoreU(InterleaveLower(left, right), d, dst_row + x * 2);
+        StoreU(InterleaveUpper(left, right), d, dst_row + x * 2 + Lanes(d));
+#endif
+      }
+      if (xsize == 1) {
+        dst_row[0] = dst_row[1] = current_row[0];
+      } else {
+        const float leftmost = current_row[0] * 0.75f + current_row[1] * 0.25f;
+        dst_row[0] = dst_row[1] = leftmost;
+        const float rightmost =
+            current_row[xsize - 1] * 0.75f + current_row[xsize - 2] * 0.25f;
+        dst_row[xsize * 2 - 2] = dst_row[xsize * 2 - 1] = rightmost;
+      }
+    }
+  };
+  RunOnPool(pool, 0, static_cast<int>(num_stripes), ThreadPool::SkipInit(),
+            upsample, "UpsampleH2");
+  return dst;
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -178,6 +296,16 @@ void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect) {
   return HWY_DYNAMIC_DISPATCH(YcbcrToRgb)(ycbcr, rgb, rect);
 }
 
+HWY_EXPORT(UpsampleV2);
+ImageF UpsampleV2(const ImageF& src, ThreadPool* pool) {
+  return HWY_DYNAMIC_DISPATCH(UpsampleV2)(src, pool);
+}
+
+HWY_EXPORT(UpsampleH2);
+ImageF UpsampleH2(const ImageF& src, size_t output_xsize, ThreadPool* pool) {
+  return HWY_DYNAMIC_DISPATCH(UpsampleH2)(src, output_xsize, pool);
+}
+
 HWY_EXPORT(HasFastXYBTosRGB8);
 bool HasFastXYBTosRGB8() { return HWY_DYNAMIC_DISPATCH(HasFastXYBTosRGB8)(); }
 
@@ -203,15 +331,14 @@ void OpsinParams::Init(float intensity_target) {
   }
 }
 
-Status OutputEncodingInfo::Set(const CodecMetadata& metadata,
-                               const ColorEncoding& default_enc) {
+Status OutputEncodingInfo::Set(const ImageMetadata& metadata) {
   const auto& im = metadata.transform_data.opsin_inverse_matrix;
   float inverse_matrix[9];
   memcpy(inverse_matrix, im.inverse_matrix, sizeof(inverse_matrix));
-  float intensity_target = metadata.m.IntensityTarget();
-  if (metadata.m.xyb_encoded) {
-    const auto& orig_color_encoding = metadata.m.color_encoding;
-    color_encoding = default_enc;
+  float intensity_target = metadata.IntensityTarget();
+  if (metadata.xyb_encoded) {
+    const auto& orig_color_encoding = metadata.color_encoding;
+    color_encoding = ColorEncoding::LinearSRGB(orig_color_encoding.IsGray());
     // Figure out if we can output to this color encoding.
     do {
       if (!orig_color_encoding.HaveFields()) break;
@@ -268,7 +395,7 @@ Status OutputEncodingInfo::Set(const CodecMetadata& metadata,
       }
     } while (false);
   } else {
-    color_encoding = metadata.m.color_encoding;
+    color_encoding = metadata.color_encoding;
   }
   if (std::abs(intensity_target - 255.0) > 0.1f || !im.all_default) {
     all_default_opsin = false;

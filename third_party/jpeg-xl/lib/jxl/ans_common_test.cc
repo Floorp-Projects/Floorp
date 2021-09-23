@@ -25,7 +25,7 @@ void VerifyAliasDistribution(const std::vector<int>& distribution,
     offsets[s.value].push_back(s.offset);
   }
   for (uint32_t i = 0; i < distribution.size(); i++) {
-    ASSERT_EQ(static_cast<size_t>(distribution[i]), offsets[i].size());
+    ASSERT_EQ(distribution[i], offsets[i].size());
     std::sort(offsets[i].begin(), offsets[i].end());
     for (uint32_t j = 0; j < offsets[i].size(); j++) {
       ASSERT_EQ(offsets[i][j], j);

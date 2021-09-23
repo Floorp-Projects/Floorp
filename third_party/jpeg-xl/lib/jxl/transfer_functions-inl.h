@@ -41,12 +41,15 @@ class TF_HLG {
  public:
   // EOTF. e = encoded.
   JXL_INLINE double DisplayFromEncoded(const double e) const {
-    return OOTF(InvOETF(e));
+    const double lifted = e * (1.0 - kBeta) + kBeta;
+    return OOTF(InvOETF(lifted));
   }
 
   // Inverse EOTF. d = display.
   JXL_INLINE double EncodedFromDisplay(const double d) const {
-    return OETF(InvOOTF(d));
+    const double lifted = OETF(InvOOTF(d));
+    const double e = (lifted - kBeta) * (1.0 / (1.0 - kBeta));
+    return e;
   }
 
   // Maximum error 5e-7.
@@ -61,7 +64,10 @@ class TF_HLG {
         MulAdd(Set(d, kA * 0.693147181f),
                FastLog2f(d, MulAdd(Set(d, 12), x, Set(d, -kB))), Set(d, kC));
     const V magnitude = IfThenElse(x <= Set(d, kDiv12), below_div12, e);
-    return Or(AndNot(kSign, magnitude), original_sign);
+    const V lifted = Or(AndNot(kSign, magnitude), original_sign);
+    const V kMul = Set(d, 1.0f / (1.0f - kBeta));
+    const V kAdd = Set(d, -kBeta / (1.0f - kBeta));
+    return MulAdd(kMul, lifted, kAdd);
   }
 
  private:
@@ -105,6 +111,9 @@ class TF_HLG {
   JXL_INLINE double InvOOTF(const double d) const {
     return d;  // see OOTF().
   }
+
+  // Assume 1000:1 contrast @ 200 nits => gamma 0.9
+  static constexpr double kBeta = 0.04;  // = sqrt(3 * contrast^(1/gamma))
 
   static constexpr double kA = 0.17883277;
   static constexpr double kRA = 1.0 / kA;

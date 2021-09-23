@@ -347,7 +347,7 @@ void TestNotZero() {
                  num_zero += static_cast<size_t>(lane == 0);
                }
              }
-             EXPECT_LE(num_zero, 1u);
+             EXPECT_LE(num_zero, 1);
            });
 }
 

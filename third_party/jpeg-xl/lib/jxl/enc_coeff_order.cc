@@ -34,7 +34,7 @@ uint32_t ComputeUsedOrders(const SpeedTier speed,
   if (ac_strategy.xsize() < 5 && ac_strategy.ysize() < 5) return 0;
 
   // Only uses DCT8 = 0, so bitfield = 1.
-  if (speed >= SpeedTier::kFalcon) return 1;
+  if (speed == SpeedTier::kFalcon) return 1;
 
   uint32_t ret = 0;
   size_t xsize_blocks = rect.xsize();

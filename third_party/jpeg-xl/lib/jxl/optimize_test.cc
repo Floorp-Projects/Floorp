@@ -96,7 +96,7 @@ TEST(OptimizeTest, SimplexOptTest) {
     return 2.0 + t1 * t1 + t2 * t2;
   };
   auto opt = RunSimplex(2, 0.01, 100, f);
-  EXPECT_EQ(opt.size(), 3u);
+  EXPECT_EQ(opt.size(), 3);
 
   static const double kPrecision = 0.01;
   EXPECT_NEAR(opt[0], 2.0, kPrecision);

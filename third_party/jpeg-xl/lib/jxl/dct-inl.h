@@ -221,7 +221,7 @@ void DCT1DWrapper(const FromBlock& from, const ToBlock& to, size_t Mp) {
   constexpr size_t SZ = MaxLanes(FV<M_or_0>());
   HWY_ALIGN float tmp[N * SZ];
   for (size_t i = 0; i < M; i += Lanes(FV<M_or_0>())) {
-    // TODO(veluca): consider removing the temporary memory here (as is done in
+    // TODO(veluca): consider removing the temprorary memory here (as is done in
     // IDCT), if it turns out that some compilers don't optimize away the loads
     // and this is performance-critical.
     CoeffBundle<N, SZ>::LoadFromBlock(from, i, tmp);

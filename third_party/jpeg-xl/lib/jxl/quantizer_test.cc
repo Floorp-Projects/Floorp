@@ -28,8 +28,8 @@ TEST(QuantizerTest, QuantizerParams) {
     p.global_scale = i;
     size_t extension_bits = 0, total_bits = 0;
     EXPECT_TRUE(Bundle::CanEncode(p, &extension_bits, &total_bits));
-    EXPECT_EQ(0u, extension_bits);
-    EXPECT_GE(total_bits, 4u);
+    EXPECT_EQ(0, extension_bits);
+    EXPECT_GE(total_bits, 4);
   }
 }
 

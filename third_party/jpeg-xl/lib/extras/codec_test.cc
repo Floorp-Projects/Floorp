@@ -25,7 +25,6 @@
 #include "lib/jxl/testdata.h"
 
 namespace jxl {
-namespace extras {
 namespace {
 
 CodecInOut CreateTestImage(const size_t xsize, const size_t ysize,
@@ -105,14 +104,12 @@ void TestRoundTrip(Codec codec, const size_t xsize, const size_t ysize,
   JXL_CHECK(Encode(io, codec, c_external, bits_per_sample, &encoded, pool));
 
   CodecInOut io2;
-  ColorHints color_hints;
   io2.target_nits = io.metadata.m.IntensityTarget();
   // Only for PNM because PNG will warn about ignoring them.
   if (codec == Codec::kPNM) {
-    color_hints.Add("color_space", Description(c_external));
+    io2.dec_hints.Add("color_space", Description(c_external));
   }
-  JXL_CHECK(SetFromBytes(Span<const uint8_t>(encoded), color_hints, &io2, pool,
-                         nullptr));
+  JXL_CHECK(SetFromBytes(Span<const uint8_t>(encoded), &io2, pool));
   ImageBundle& ib2 = io2.Main();
 
   EXPECT_EQ(Description(c_external),
@@ -186,11 +183,11 @@ TEST(CodecTest, TestRoundTrip) {
 
 CodecInOut DecodeRoundtrip(const std::string& pathname, Codec expected_codec,
                            ThreadPool* pool,
-                           const ColorHints& color_hints = ColorHints()) {
+                           const DecoderHints& dec_hints = DecoderHints()) {
   CodecInOut io;
+  io.dec_hints = dec_hints;
   const PaddedBytes orig = ReadTestData(pathname);
-  JXL_CHECK(
-      SetFromBytes(Span<const uint8_t>(orig), color_hints, &io, pool, nullptr));
+  JXL_CHECK(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
   const ImageBundle& ib1 = io.Main();
 
   // Encode/Decode again to make sure Encode carries through all metadata.
@@ -199,8 +196,8 @@ CodecInOut DecodeRoundtrip(const std::string& pathname, Codec expected_codec,
                    io.metadata.m.bit_depth.bits_per_sample, &encoded, pool));
 
   CodecInOut io2;
-  JXL_CHECK(SetFromBytes(Span<const uint8_t>(encoded), color_hints, &io2, pool,
-                         nullptr));
+  io2.dec_hints = dec_hints;
+  JXL_CHECK(SetFromBytes(Span<const uint8_t>(encoded), &io2, pool));
   const ImageBundle& ib2 = io2.Main();
   EXPECT_EQ(Description(ib1.metadata()->color_encoding),
             Description(ib2.metadata()->color_encoding));
@@ -347,9 +344,9 @@ void VerifyWideGamutMetadata(const std::string& relative_pathname,
                              const Primaries primaries, ThreadPool* pool) {
   const CodecInOut io = DecodeRoundtrip(relative_pathname, Codec::kPNG, pool);
 
-  EXPECT_EQ(8u, io.metadata.m.bit_depth.bits_per_sample);
+  EXPECT_EQ(8, io.metadata.m.bit_depth.bits_per_sample);
   EXPECT_FALSE(io.metadata.m.bit_depth.floating_point_sample);
-  EXPECT_EQ(0u, io.metadata.m.bit_depth.exponent_bits_per_sample);
+  EXPECT_EQ(0, io.metadata.m.bit_depth.exponent_bits_per_sample);
 
   const ColorEncoding& c_original = io.metadata.m.color_encoding;
   EXPECT_FALSE(c_original.ICC().empty());
@@ -372,7 +369,7 @@ TEST(CodecTest, TestWideGamut) {
 }
 
 TEST(CodecTest, TestPNM) { TestCodecPNM(); }
+TEST(CodecTest, TestPGX) { TestCodecPGX(); }
 
 }  // namespace
-}  // namespace extras
 }  // namespace jxl

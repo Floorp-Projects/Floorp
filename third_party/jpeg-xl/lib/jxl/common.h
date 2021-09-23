@@ -22,11 +22,6 @@
 #define JXL_HIGH_PRECISION 1
 #endif
 
-// Macro that defines whether support for decoding JXL files to JPEG is enabled.
-#ifndef JPEGXL_ENABLE_TRANSCODE_JPEG
-#define JPEGXL_ENABLE_TRANSCODE_JPEG 1
-#endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
-
 namespace jxl {
 // Some enums and typedefs used by more than one header file.
 
@@ -161,18 +156,30 @@ JXL_INLINE T Clamp1(T val, T low, T hi) {
   return val < low ? low : val > hi ? hi : val;
 }
 
+template <typename T>
+JXL_INLINE T ClampToRange(int64_t val) {
+  return Clamp1<int64_t>(val, std::numeric_limits<T>::min(),
+                         std::numeric_limits<T>::max());
+}
+
+template <typename T>
+JXL_INLINE T SaturatingMul(int64_t a, int64_t b) {
+  return ClampToRange<T>(a * b);
+}
+
+template <typename T>
+JXL_INLINE T SaturatingAdd(int64_t a, int64_t b) {
+  return ClampToRange<T>(a + b);
+}
+
 // Encodes non-negative (X) into (2 * X), negative (-X) into (2 * X - 1)
-constexpr uint32_t PackSigned(int32_t value)
-    JXL_NO_SANITIZE("unsigned-integer-overflow") {
+constexpr uint32_t PackSigned(int32_t value) {
   return (static_cast<uint32_t>(value) << 1) ^
          ((static_cast<uint32_t>(~value) >> 31) - 1);
 }
 
 // Reverse to PackSigned, i.e. UnpackSigned(PackSigned(X)) == X.
-// (((~value) & 1) - 1) is either 0 or 0xFF...FF and it will have an expected
-// unsigned-integer-overflow.
-constexpr intptr_t UnpackSigned(size_t value)
-    JXL_NO_SANITIZE("unsigned-integer-overflow") {
+constexpr intptr_t UnpackSigned(size_t value) {
   return static_cast<intptr_t>((value >> 1) ^ (((~value) & 1) - 1));
 }
 

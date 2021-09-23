@@ -59,7 +59,7 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
                                 /*distmap=*/nullptr, pool),
             2.5);
-  EXPECT_EQ(0u, io2.preview_frame.xsize());
+  EXPECT_EQ(0, io2.preview_frame.xsize());
 
   dparams.preview = Override::kOn;
 

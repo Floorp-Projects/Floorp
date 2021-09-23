@@ -207,7 +207,7 @@ TEST(FieldsTest, TestRoundtripSize) {
 
     size_t extension_bits = 999, total_bits = 999;  // Initialize as garbage.
     ASSERT_TRUE(Bundle::CanEncode(size, &extension_bits, &total_bits));
-    EXPECT_EQ(0u, extension_bits);
+    EXPECT_EQ(0, extension_bits);
 
     BitWriter writer;
     ASSERT_TRUE(WriteSizeHeader(size, &writer, 0, nullptr));
@@ -237,8 +237,8 @@ TEST(FieldsTest, TestCropRect) {
     f.frame_size.ysize = 1000 + i;
     size_t extension_bits = 0, total_bits = 0;
     ASSERT_TRUE(Bundle::CanEncode(f, &extension_bits, &total_bits));
-    EXPECT_EQ(0u, extension_bits);
-    EXPECT_GE(total_bits, 9u);
+    EXPECT_EQ(0, extension_bits);
+    EXPECT_GE(total_bits, 9);
   }
 }
 TEST(FieldsTest, TestPreview) {
@@ -248,8 +248,8 @@ TEST(FieldsTest, TestPreview) {
     ASSERT_TRUE(p.Set(i, i));
     size_t extension_bits = 0, total_bits = 0;
     ASSERT_TRUE(Bundle::CanEncode(p, &extension_bits, &total_bits));
-    EXPECT_EQ(0u, extension_bits);
-    EXPECT_GE(total_bits, 6u);
+    EXPECT_EQ(0, extension_bits);
+    EXPECT_GE(total_bits, 6);
   }
 }
 
@@ -261,7 +261,7 @@ TEST(FieldsTest, TestRoundtripFrame) {
 
   size_t extension_bits = 999, total_bits = 999;  // Initialize as garbage.
   ASSERT_TRUE(Bundle::CanEncode(h, &extension_bits, &total_bits));
-  EXPECT_EQ(0u, extension_bits);
+  EXPECT_EQ(0, extension_bits);
   BitWriter writer;
   ASSERT_TRUE(WriteFrameHeader(h, &writer, nullptr));
   EXPECT_EQ(total_bits, writer.BitsWritten());
@@ -289,7 +289,7 @@ TEST(FieldsTest, TestOutOfRange) {
 
 struct OldBundle : public Fields {
   OldBundle() { Bundle::Init(this); }
-  JXL_FIELDS_NAME(OldBundle)
+  const char* Name() const override { return "OldBundle"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override {
     JXL_QUIET_RETURN_IF_ERROR(
@@ -310,7 +310,7 @@ struct OldBundle : public Fields {
 
 struct NewBundle : public Fields {
   NewBundle() { Bundle::Init(this); }
-  JXL_FIELDS_NAME(NewBundle)
+  const char* Name() const override { return "NewBundle"; }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override {
     JXL_QUIET_RETURN_IF_ERROR(
@@ -357,7 +357,7 @@ TEST(FieldsTest, TestNewDecoderOldData) {
   size_t extension_bits = 12345, total_bits = 12345;
   ASSERT_TRUE(Bundle::CanEncode(old_bundle, &extension_bits, &total_bits));
   ASSERT_LE(total_bits, kMaxOutBytes * kBitsPerByte);
-  EXPECT_EQ(0u, extension_bits);
+  EXPECT_EQ(0, extension_bits);
   AuxOut aux_out;
   ASSERT_TRUE(Bundle::Write(old_bundle, &writer, kLayerHeader, &aux_out));
 
@@ -373,7 +373,7 @@ TEST(FieldsTest, TestNewDecoderOldData) {
   ASSERT_TRUE(Bundle::Read(&reader, &new_bundle));
   EXPECT_EQ(reader.TotalBitsConsumed(),
             aux_out.layers[kLayerHeader].total_bits);
-  EXPECT_EQ(reader.ReadBits(20), 0xA55Au);
+  EXPECT_EQ(reader.ReadBits(20), 0xA55A);
   EXPECT_TRUE(reader.Close());
 
   // Old fields are the same in both
@@ -382,9 +382,9 @@ TEST(FieldsTest, TestNewDecoderOldData) {
   EXPECT_EQ(old_bundle.old_f, new_bundle.old_f);
   EXPECT_EQ(old_bundle.old_large, new_bundle.old_large);
   // New fields match their defaults
-  EXPECT_EQ(2u, new_bundle.new_small);
+  EXPECT_EQ(2, new_bundle.new_small);
   EXPECT_EQ(-2.0f, new_bundle.new_f);
-  EXPECT_EQ(0u, new_bundle.new_large);
+  EXPECT_EQ(0, new_bundle.new_large);
 }
 
 TEST(FieldsTest, TestOldDecoderNewData) {
@@ -400,7 +400,7 @@ TEST(FieldsTest, TestOldDecoderNewData) {
   // Make sure values are initialized by code under test.
   size_t extension_bits = 12345, total_bits = 12345;
   ASSERT_TRUE(Bundle::CanEncode(new_bundle, &extension_bits, &total_bits));
-  EXPECT_NE(0u, extension_bits);
+  EXPECT_NE(0, extension_bits);
   AuxOut aux_out;
   ASSERT_TRUE(Bundle::Write(new_bundle, &writer, kLayerHeader, &aux_out));
   ASSERT_LE(aux_out.layers[kLayerHeader].total_bits,
@@ -419,7 +419,7 @@ TEST(FieldsTest, TestOldDecoderNewData) {
   ASSERT_TRUE(Bundle::Read(&reader, &old_bundle));
   EXPECT_EQ(reader.TotalBitsConsumed(),
             aux_out.layers[kLayerHeader].total_bits);
-  EXPECT_EQ(reader.ReadBits(20), 0xA55Au);
+  EXPECT_EQ(reader.ReadBits(20), 0xA55A);
   EXPECT_TRUE(reader.Close());
 
   // Old fields are the same in both

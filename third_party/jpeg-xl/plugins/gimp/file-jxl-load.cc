@@ -5,373 +5,168 @@
 
 #include "plugins/gimp/file-jxl-load.h"
 
-#define _PROFILE_ORIGIN_ JXL_COLOR_PROFILE_TARGET_ORIGINAL
-#define _PROFILE_TARGET_ JXL_COLOR_PROFILE_TARGET_DATA
-#define LOAD_PROC "file-jxl-load"
+// Defined by both FUIF and glib.
+#undef MAX
+#undef MIN
+#undef CLAMP
+
+#include "lib/jxl/alpha.h"
+#include "lib/jxl/base/file_io.h"
+#include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/dec_file.h"
+#include "plugins/gimp/common.h"
 
 namespace jxl {
 
-bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
-  std::vector<uint8_t> icc_profile;
-  GimpColorProfile *profile_icc = nullptr;
-  GimpColorProfile *profile_int = nullptr;
-  bool is_linear = false;
+namespace {
 
-  gint32 layer;
+template <GimpPrecision precision, bool has_alpha, size_t num_channels>
+void FillBuffer(
+    const CodecInOut& io,
+    std::vector<typename BufferFormat<precision>::Sample>* const pixel_data) {
+  pixel_data->reserve(io.xsize() * io.ysize() * (num_channels + has_alpha));
+  for (size_t y = 0; y < io.ysize(); ++y) {
+    const float* rows[num_channels];
+    for (size_t c = 0; c < num_channels; ++c) {
+      rows[c] = io.Main().color().ConstPlaneRow(c, y);
+    }
+    const float* const alpha_row =
+        has_alpha ? io.Main().alpha().ConstRow(y) : nullptr;
+    for (size_t x = 0; x < io.xsize(); ++x) {
+      const float alpha = has_alpha ? alpha_row[x] : 1.f;
+      const float alpha_multiplier =
+          has_alpha && io.Main().AlphaIsPremultiplied()
+              ? 1.f / std::max(kSmallAlpha, alpha)
+              : 1.f;
+      for (const float* const row : rows) {
+        pixel_data->push_back(BufferFormat<precision>::FromFloat(
+            std::max(0.f, std::min(1.f, alpha_multiplier * row[x]))));
+      }
+      if (has_alpha) {
+        pixel_data->push_back(
+            BufferFormat<precision>::FromFloat(255.f * alpha));
+      }
+    }
+  }
+}
 
-  gpointer pixels_buffer_1;
-  gpointer pixels_buffer_2;
-  size_t buffer_size;
+template <GimpPrecision precision>
+Status FillGimpLayer(const gint32 layer, const CodecInOut& io,
+                     GimpImageType layer_type) {
+  std::vector<typename BufferFormat<precision>::Sample> pixel_data;
+  switch (layer_type) {
+    case GIMP_GRAY_IMAGE:
+      FillBuffer<precision, /*has_alpha=*/false, /*num_channels=*/1>(
+          io, &pixel_data);
+      break;
+    case GIMP_GRAYA_IMAGE:
+      FillBuffer<precision, /*has_alpha=*/true, /*num_channels=*/1>(
+          io, &pixel_data);
+      break;
+    case GIMP_RGB_IMAGE:
+      FillBuffer<precision, /*has_alpha=*/false, /*num_channels=*/3>(
+          io, &pixel_data);
+      break;
+    case GIMP_RGBA_IMAGE:
+      FillBuffer<precision, /*has_alpha=*/true, /*num_channels=*/3>(
+          io, &pixel_data);
+      break;
+    default:
+      return false;
+  }
+
+  GeglBuffer* buffer = gimp_drawable_get_buffer(layer);
+  gegl_buffer_set(buffer, GEGL_RECTANGLE(0, 0, io.xsize(), io.ysize()), 0,
+                  nullptr, pixel_data.data(), GEGL_AUTO_ROWSTRIDE);
+  g_clear_object(&buffer);
+  return true;
+}
+
+}  // namespace
+
+Status LoadJpegXlImage(const gchar* const filename, gint32* const image_id) {
+  PaddedBytes compressed;
+  JXL_RETURN_IF_ERROR(ReadFile(filename, &compressed));
+
+  // TODO(deymo): Use C API instead of the ThreadPoolInternal.
+  ThreadPoolInternal pool;
+  DecompressParams dparams;
+  CodecInOut io;
+  JXL_RETURN_IF_ERROR(DecodeFile(dparams, compressed, &io, &pool));
+
+  const ColorEncoding& color_encoding = io.metadata.m.color_encoding;
+  JXL_RETURN_IF_ERROR(io.TransformTo(color_encoding, &pool));
+
+  GimpColorProfile* profile = nullptr;
+  if (color_encoding.IsSRGB()) {
+    profile = gimp_color_profile_new_rgb_srgb();
+  } else if (color_encoding.IsLinearSRGB()) {
+    profile = gimp_color_profile_new_rgb_srgb_linear();
+  } else {
+    profile = gimp_color_profile_new_from_icc_profile(
+        color_encoding.ICC().data(), color_encoding.ICC().size(),
+        /*error=*/nullptr);
+  }
+  if (profile == nullptr) {
+    return JXL_FAILURE(
+        "Failed to create GIMP color profile from %zu bytes of ICC data",
+        color_encoding.ICC().size());
+  }
 
   GimpImageBaseType image_type;
-  GimpImageType layer_type = GIMP_RGB_IMAGE;
-  GimpPrecision precision = GIMP_PRECISION_U16_GAMMA;
-  JxlBasicInfo info = {};
-  JxlPixelFormat format = {};
+  GimpImageType layer_type;
 
-  format.num_channels = 4;
-  format.data_type = JXL_TYPE_FLOAT;
-  format.endianness = JXL_NATIVE_ENDIAN;
-  format.align = 0;
-
-  bool is_gray = false;
-
-  JpegXlGimpProgress gimp_load_progress(
-      ("Opening JPEG XL file:" + std::string(filename)).c_str());
-  gimp_load_progress.update();
-
-  // read file
-  std::ifstream instream(filename, std::ios::in | std::ios::binary);
-  std::vector<uint8_t> compressed((std::istreambuf_iterator<char>(instream)),
-                                  std::istreambuf_iterator<char>());
-  instream.close();
-
-  gimp_load_progress.update();
-
-  // multi-threaded parallel runner.
-  auto runner = JxlResizableParallelRunnerMake(nullptr);
-
-  auto dec = JxlDecoderMake(nullptr);
-  if (JXL_DEC_SUCCESS !=
-      JxlDecoderSubscribeEvents(dec.get(), JXL_DEC_BASIC_INFO |
-                                               JXL_DEC_COLOR_ENCODING |
-                                               JXL_DEC_FULL_IMAGE)) {
-    g_printerr(LOAD_PROC " Error: JxlDecoderSubscribeEvents failed\n");
-    return false;
-  }
-
-  if (JXL_DEC_SUCCESS != JxlDecoderSetParallelRunner(dec.get(),
-                                                     JxlResizableParallelRunner,
-                                                     runner.get())) {
-    g_printerr(LOAD_PROC " Error: JxlDecoderSetParallelRunner failed\n");
-    return false;
-  }
-
-  // grand decode loop...
-  JxlDecoderSetInput(dec.get(), compressed.data(), compressed.size());
-
-  while (true) {
-    gimp_load_progress.update();
-
-    JxlDecoderStatus status = JxlDecoderProcessInput(dec.get());
-
-    if (status == JXL_DEC_BASIC_INFO) {
-      if (JXL_DEC_SUCCESS != JxlDecoderGetBasicInfo(dec.get(), &info)) {
-        g_printerr(LOAD_PROC " Error: JxlDecoderGetBasicInfo failed\n");
-        return false;
-      }
-
-      JxlResizableParallelRunnerSetThreads(
-          runner.get(),
-          JxlResizableParallelRunnerSuggestThreads(info.xsize, info.ysize));
-    } else if (status == JXL_DEC_COLOR_ENCODING) {
-      // check for ICC profile
-      size_t icc_size = 0;
-      JxlColorEncoding color_encoding;
-      if (JXL_DEC_SUCCESS !=
-          JxlDecoderGetColorAsEncodedProfile(
-              dec.get(), &format, _PROFILE_ORIGIN_, &color_encoding)) {
-        // Attempt to load ICC profile when no internal color encoding
-        if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(dec.get(), &format,
-                                                           _PROFILE_ORIGIN_,
-                                                           &icc_size)) {
-          g_printerr(LOAD_PROC
-                     " Warning: JxlDecoderGetICCProfileSize failed\n");
-        }
-
-        if (icc_size > 0) {
-          icc_profile.resize(icc_size);
-          if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(
-                                     dec.get(), &format, _PROFILE_ORIGIN_,
-                                     icc_profile.data(), icc_profile.size())) {
-            g_printerr(LOAD_PROC
-                       " Warning: JxlDecoderGetColorAsICCProfile failed\n");
-          }
-
-          profile_icc = gimp_color_profile_new_from_icc_profile(
-              icc_profile.data(), icc_profile.size(), nullptr);
-
-          if (profile_icc) {
-            is_linear = gimp_color_profile_is_linear(profile_icc);
-            g_printerr(LOAD_PROC " Info: Color profile is_linear = %d\n",
-                       is_linear);
-          } else {
-            g_printerr(LOAD_PROC " Warning: Failed to read ICC profile.\n");
-          }
-        } else {
-          g_printerr(LOAD_PROC " Warning: Empty ICC data.\n");
-        }
-      }
-
-      // Internal color profile detection...
-      if (JXL_DEC_SUCCESS ==
-          JxlDecoderGetColorAsEncodedProfile(
-              dec.get(), &format, _PROFILE_TARGET_, &color_encoding)) {
-        g_printerr(LOAD_PROC " Info: Internal color encoding detected.\n");
-
-        // figure out linearity of internal profile
-        switch (color_encoding.transfer_function) {
-          case JXL_TRANSFER_FUNCTION_LINEAR:
-            is_linear = true;
-            break;
-
-          case JXL_TRANSFER_FUNCTION_709:
-          case JXL_TRANSFER_FUNCTION_PQ:
-          case JXL_TRANSFER_FUNCTION_HLG:
-          case JXL_TRANSFER_FUNCTION_GAMMA:
-          case JXL_TRANSFER_FUNCTION_DCI:
-          case JXL_TRANSFER_FUNCTION_SRGB:
-            is_linear = false;
-            break;
-
-          case JXL_TRANSFER_FUNCTION_UNKNOWN:
-          default:
-            if (profile_icc) {
-              g_printerr(LOAD_PROC
-                         " Info: Unknown transfer function.  "
-                         "ICC profile is present.");
-            } else {
-              g_printerr(LOAD_PROC
-                         " Info: Unknown transfer function.  "
-                         "No ICC profile present.");
-            }
-            break;
-        }
-
-        switch (color_encoding.color_space) {
-          case JXL_COLOR_SPACE_RGB:
-            if (color_encoding.white_point == JXL_WHITE_POINT_D65 &&
-                color_encoding.primaries == JXL_PRIMARIES_SRGB) {
-              if (is_linear) {
-                profile_int = gimp_color_profile_new_rgb_srgb_linear();
-              } else {
-                profile_int = gimp_color_profile_new_rgb_srgb();
-              }
-            } else if (!is_linear &&
-                       color_encoding.white_point == JXL_WHITE_POINT_D65 &&
-                       (color_encoding.primaries_green_xy[0] == 0.2100 ||
-                        color_encoding.primaries_green_xy[1] == 0.7100)) {
-              // Probably Adobe RGB
-              profile_int = gimp_color_profile_new_rgb_adobe();
-            } else if (profile_icc) {
-              g_printerr(LOAD_PROC
-                         " Info: Unknown RGB colorspace.  "
-                         "Using ICC profile.\n");
-            } else {
-              g_printerr(LOAD_PROC
-                         " Info: Unknown RGB colorspace.  "
-                         "Treating as sRGB.\n");
-              if (is_linear) {
-                profile_int = gimp_color_profile_new_rgb_srgb_linear();
-              } else {
-                profile_int = gimp_color_profile_new_rgb_srgb();
-              }
-            }
-            break;
-
-          case JXL_COLOR_SPACE_GRAY:
-            is_gray = true;
-            if (!profile_icc ||
-                color_encoding.white_point == JXL_WHITE_POINT_D65) {
-              if (is_linear) {
-                profile_int = gimp_color_profile_new_d65_gray_linear();
-              } else {
-                profile_int = gimp_color_profile_new_d65_gray_srgb_trc();
-              }
-            }
-            break;
-          case JXL_COLOR_SPACE_XYB:
-          case JXL_COLOR_SPACE_UNKNOWN:
-          default:
-            if (profile_icc) {
-              g_printerr(LOAD_PROC
-                         " Info: Unknown colorspace.  Using ICC profile.\n");
-            } else {
-              g_error(
-                  LOAD_PROC
-                  " Warning: Unknown colorspace. Treating as sRGB profile.\n");
-
-              if (is_linear) {
-                profile_int = gimp_color_profile_new_rgb_srgb_linear();
-              } else {
-                profile_int = gimp_color_profile_new_rgb_srgb();
-              }
-            }
-            break;
-        }
-      }
-
-      // set pixel format
-      if (info.num_color_channels > 1) {
-        if (info.alpha_bits == 0) {
-          image_type = GIMP_RGB;
-          layer_type = GIMP_RGB_IMAGE;
-          format.num_channels = info.num_color_channels;
-        } else {
-          image_type = GIMP_RGB;
-          layer_type = GIMP_RGBA_IMAGE;
-          format.num_channels = info.num_color_channels + 1;
-        }
-      } else if (info.num_color_channels == 1) {
-        if (info.alpha_bits == 0) {
-          image_type = GIMP_GRAY;
-          layer_type = GIMP_GRAY_IMAGE;
-          format.num_channels = info.num_color_channels;
-        } else {
-          image_type = GIMP_GRAY;
-          layer_type = GIMP_GRAYA_IMAGE;
-          format.num_channels = info.num_color_channels + 1;
-        }
-      }
-
-      // Set image bit depth and linearity
-      if (info.bits_per_sample <= 8) {
-        if (is_linear) {
-          precision = GIMP_PRECISION_U8_LINEAR;
-        } else {
-          precision = GIMP_PRECISION_U8_GAMMA;
-        }
-      } else if (info.bits_per_sample <= 16) {
-        if (info.exponent_bits_per_sample > 0) {
-          if (is_linear) {
-            precision = GIMP_PRECISION_HALF_LINEAR;
-          } else {
-            precision = GIMP_PRECISION_HALF_GAMMA;
-          }
-        } else if (is_linear) {
-          precision = GIMP_PRECISION_U16_LINEAR;
-        } else {
-          precision = GIMP_PRECISION_U16_GAMMA;
-        }
-      } else {
-        if (info.exponent_bits_per_sample > 0) {
-          if (is_linear) {
-            precision = GIMP_PRECISION_FLOAT_LINEAR;
-          } else {
-            precision = GIMP_PRECISION_FLOAT_GAMMA;
-          }
-        } else if (is_linear) {
-          precision = GIMP_PRECISION_U32_LINEAR;
-        } else {
-          precision = GIMP_PRECISION_U32_GAMMA;
-        }
-      }
-
-      // create new image
-      if (is_linear) {
-        *image_id = gimp_image_new_with_precision(
-            info.xsize, info.ysize, image_type, GIMP_PRECISION_FLOAT_LINEAR);
-      } else {
-        *image_id = gimp_image_new_with_precision(
-            info.xsize, info.ysize, image_type, GIMP_PRECISION_FLOAT_GAMMA);
-      }
-
-      if (profile_int) {
-        gimp_image_set_color_profile(*image_id, profile_int);
-      } else if (!profile_icc) {
-        g_printerr(LOAD_PROC " Warning: No color profile.\n");
-      }
-    } else if (status == JXL_DEC_NEED_IMAGE_OUT_BUFFER) {
-      // get image from decoder in FLOAT
-      format.data_type = JXL_TYPE_FLOAT;
-      if (JXL_DEC_SUCCESS !=
-          JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size)) {
-        g_printerr(LOAD_PROC " Error: JxlDecoderImageOutBufferSize failed\n");
-        return false;
-      }
-      pixels_buffer_1 = g_malloc(buffer_size);
-      if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec.get(), &format,
-                                                         pixels_buffer_1,
-                                                         buffer_size)) {
-        g_printerr(LOAD_PROC " Error: JxlDecoderSetImageOutBuffer failed\n");
-        return false;
-      }
-    } else if (status == JXL_DEC_FULL_IMAGE || status == JXL_DEC_FRAME) {
-      // create and insert layer
-      layer = gimp_layer_new(*image_id, "Background", info.xsize, info.ysize,
-                             layer_type, /*opacity=*/100,
-                             gimp_image_get_default_new_layer_mode(*image_id));
-
-      gimp_image_insert_layer(*image_id, layer, /*parent_id=*/-1,
-                              /*position=*/0);
-
-      pixels_buffer_2 = g_malloc(buffer_size);
-      GeglBuffer *buffer = gimp_drawable_get_buffer(layer);
-      const Babl *destination_format = gegl_buffer_set_format(buffer, nullptr);
-
-      std::string babl_format_str = "";
-      if (is_gray) {
-        babl_format_str += "Y'";
-      } else {
-        babl_format_str += "R'G'B'";
-      }
-      if (info.alpha_bits > 0) {
-        babl_format_str += "A";
-      }
-      babl_format_str += " float";
-
-      const Babl *source_format = babl_format(babl_format_str.c_str());
-
-      babl_process(babl_fish(source_format, destination_format),
-                   pixels_buffer_1, pixels_buffer_2, info.xsize * info.ysize);
-
-      gegl_buffer_set(buffer, GEGL_RECTANGLE(0, 0, info.xsize, info.ysize), 0,
-                      nullptr, pixels_buffer_2, GEGL_AUTO_ROWSTRIDE);
-
-      g_clear_object(&buffer);
-    } else if (status == JXL_DEC_SUCCESS) {
-      // All decoding successfully finished.
-      // It's not required to call JxlDecoderReleaseInput(dec.get())
-      // since the decoder will be destroyed.
-      break;
-    } else if (status == JXL_DEC_NEED_MORE_INPUT) {
-      g_printerr(LOAD_PROC " Error: Already provided all input\n");
-      return false;
-    } else if (status == JXL_DEC_ERROR) {
-      g_printerr(LOAD_PROC " Error: Decoder error\n");
-      return false;
+  if (io.Main().IsGray()) {
+    image_type = GIMP_GRAY;
+    if (io.Main().HasAlpha()) {
+      layer_type = GIMP_GRAYA_IMAGE;
     } else {
-      g_printerr(LOAD_PROC " Error: Unknown decoder status\n");
-      return false;
+      layer_type = GIMP_GRAY_IMAGE;
     }
-  }  // end grand decode loop
-
-  gimp_load_progress.update();
-
-  if (profile_icc) {
-    gimp_image_set_color_profile(*image_id, profile_icc);
+  } else {
+    image_type = GIMP_RGB;
+    if (io.Main().HasAlpha()) {
+      layer_type = GIMP_RGBA_IMAGE;
+    } else {
+      layer_type = GIMP_RGB_IMAGE;
+    }
   }
 
-  gimp_load_progress.update();
-
-  // TODO(xiota): Add option to keep image as float
-  if (info.bits_per_sample < 32) {
-    gimp_image_convert_precision(*image_id, precision);
+  GimpPrecision precision;
+  Status (*fill_layer)(gint32 layer, const CodecInOut& io, GimpImageType);
+  if (io.metadata.m.bit_depth.floating_point_sample) {
+    if (io.metadata.m.bit_depth.bits_per_sample <= 16) {
+      precision = GIMP_PRECISION_HALF_GAMMA;
+      fill_layer = &FillGimpLayer<GIMP_PRECISION_HALF_GAMMA>;
+    } else {
+      precision = GIMP_PRECISION_FLOAT_GAMMA;
+      fill_layer = &FillGimpLayer<GIMP_PRECISION_FLOAT_GAMMA>;
+    }
+  } else {
+    if (io.metadata.m.bit_depth.bits_per_sample <= 8) {
+      precision = GIMP_PRECISION_U8_GAMMA;
+      fill_layer = &FillGimpLayer<GIMP_PRECISION_U8_GAMMA>;
+    } else if (io.metadata.m.bit_depth.bits_per_sample <= 16) {
+      precision = GIMP_PRECISION_U16_GAMMA;
+      fill_layer = &FillGimpLayer<GIMP_PRECISION_U16_GAMMA>;
+    } else {
+      precision = GIMP_PRECISION_U32_GAMMA;
+      fill_layer = &FillGimpLayer<GIMP_PRECISION_U32_GAMMA>;
+    }
   }
 
+  *image_id = gimp_image_new_with_precision(io.xsize(), io.ysize(), image_type,
+                                            precision);
+  gimp_image_set_color_profile(*image_id, profile);
+  g_clear_object(&profile);
+  const gint32 layer = gimp_layer_new(
+      *image_id, "image", io.xsize(), io.ysize(), layer_type, /*opacity=*/100,
+      gimp_image_get_default_new_layer_mode(*image_id));
   gimp_image_set_filename(*image_id, filename);
+  gimp_image_insert_layer(*image_id, layer, /*parent_id=*/-1, /*position=*/0);
 
-  gimp_load_progress.finished();
+  JXL_RETURN_IF_ERROR(fill_layer(layer, io, layer_type));
+
   return true;
 }
 

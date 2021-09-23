@@ -1,1 +1,1 @@
-usr/lib/*/libjxl*.so.*
+debian/tmp/usr/lib/*/libjxl*.so.*

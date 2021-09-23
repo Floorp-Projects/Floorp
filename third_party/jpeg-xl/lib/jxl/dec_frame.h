@@ -104,20 +104,6 @@ class FrameDecoder {
   // Must be called exactly once per frame, after all calls to ProcessSections.
   Status FinalizeFrame();
 
-  // Returns dependencies of this frame on reference ids as a bit mask: bits 0-3
-  // indicate reference frame 0-3 for patches and blending, bits 4-7 indicate DC
-  // frames this frame depends on. Only returns a valid result after all calls
-  // to ProcessSections are finished and before FinalizeFrame.
-  int References() const;
-
-  // Returns reference id of storage location where this frame is stored as a
-  // bit flag, or 0 if not stored.
-  // Matches the bit mask used for GetReferences: bits 0-3 indicate it is stored
-  // for patching or blending, bits 4-7 indicate DC frame.
-  // Unlike References, can be ran at any time as
-  // soon as the frame header is known.
-  static int SavedAs(const FrameHeader& header);
-
   // Returns offset of this section after the end of the TOC. The end of the TOC
   // is the byte position of the bit reader after InitFrame was called.
   const std::vector<uint64_t>& SectionOffsets() const {
@@ -132,22 +118,30 @@ class FrameDecoder {
 
   // Returns whether a DC image has been decoded, accessible at low resolution
   // at passes.shared_storage.dc_storage
-  bool HasDecodedDC() const { return finalized_dc_; }
+  bool HasDecodedDC() const {
+    return frame_header_.encoding == FrameEncoding::kVarDCT && finalized_dc_;
+  }
 
-  // Sets the buffer to which uint8 sRGB pixels will be decoded. This is not
-  // supported for all images. If it succeeds, HasRGBBuffer() will return true.
-  // If it does not succeed, the image is decoded to the ImageBundle passed to
-  // InitFrame instead.
-  // If an output callback is set, this function *may not* be called.
-  //
-  // @param undo_orientation: if true, indicates the frame decoder should apply
-  // the exif orientation to bring the image to the intended display
-  // orientation. Performing this operation is not yet supported, so this
-  // results in not setting the buffer if the image has a non-identity EXIF
-  // orientation. When outputting to the ImageBundle, no orientation is undone.
+  // If the image has default exif orientation and no
+  // blending, the current frame cannot be referenced by future frames, sets the
+  // buffer to which uint8 sRGB pixels will be decoded to.
+  // TODO(veluca): reduce this set of restrictions.
+  // If an output callback is set, this function *must not* be called.
   void MaybeSetRGB8OutputBuffer(uint8_t* rgb_output, size_t stride,
-                                bool is_rgba, bool undo_orientation) const {
-    if (!CanDoLowMemoryPath(undo_orientation)) return;
+                                bool is_rgba) const {
+    if (decoded_->metadata()->GetOrientation() != Orientation::kIdentity) {
+      return;
+    }
+    if (ImageBlender::NeedsBlending(dec_state_)) {
+      return;
+    }
+    if (frame_header_.CanBeReferenced()) {
+      return;
+    }
+    if (render_spotcolors_ &&
+        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
+      return;
+    }
     dec_state_->rgb_output = rgb_output;
     dec_state_->rgb_output_is_rgba = is_rgba;
     dec_state_->rgb_stride = stride;
@@ -162,22 +156,26 @@ class FrameDecoder {
 #endif
   }
 
-  // Same as MaybeSetRGB8OutputBuffer, but with a float callback. This is not
-  // supported for all images. If it succeeds, HasRGBBuffer() will return true.
-  // If it does not succeed, the image is decoded to the ImageBundle passed to
-  // InitFrame instead.
-  // If a RGB8 output buffer is set, this function *may not* be called.
-  //
-  // @param undo_orientation: if true, indicates the frame decoder should apply
-  // the exif orientation to bring the image to the intended display
-  // orientation. Performing this operation is not yet supported, so this
-  // results in not setting the buffer if the image has a non-identity EXIF
-  // orientation. When outputting to the ImageBundle, no orientation is undone.
+  // Same as MaybeSetRGB8OutputBuffer, but with a float callback.
+  // If a RGB8 output buffer is set, this function *must not* be called.
   void MaybeSetFloatCallback(
       const std::function<void(const float* pixels, size_t x, size_t y,
                                size_t num_pixels)>& cb,
-      bool is_rgba, bool undo_orientation) const {
-    if (!CanDoLowMemoryPath(undo_orientation)) return;
+      bool is_rgba) const {
+    if (decoded_->metadata()->GetOrientation() != Orientation::kIdentity) {
+      return;
+    }
+    if (frame_header_.blending_info.mode != BlendMode::kReplace ||
+        frame_header_.custom_size_or_origin) {
+      return;
+    }
+    if (frame_header_.CanBeReferenced()) {
+      return;
+    }
+    if (render_spotcolors_ &&
+        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
+      return;
+    }
     dec_state_->pixel_callback = cb;
     dec_state_->rgb_output_is_rgba = is_rgba;
     JXL_ASSERT(dec_state_->rgb_output == nullptr);
@@ -218,27 +216,6 @@ class FrameDecoder {
   size_t GetStorageLocation(size_t thread, size_t task) {
     if (use_task_id_) return task;
     return thread;
-  }
-
-  // If the image has default exif orientation (or has an orientation but should
-  // not be undone) and no blending, the current frame cannot be referenced by
-  // future frames, there are no spot colors to be rendered, and alpha is not
-  // premultiplied, then low memory options can be used
-  // (uint8 output buffer or float pixel callback).
-  // TODO(veluca): reduce this set of restrictions.
-  bool CanDoLowMemoryPath(bool undo_orientation) const {
-    if (undo_orientation &&
-        decoded_->metadata()->GetOrientation() != Orientation::kIdentity) {
-      return false;
-    }
-    if (ImageBlender::NeedsBlending(dec_state_)) return false;
-    if (frame_header_.CanBeReferenced()) return false;
-    if (render_spotcolors_ &&
-        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
-      return false;
-    }
-    if (decoded_->AlphaIsPremultiplied()) return false;
-    return true;
   }
 
   PassesDecoderState* dec_state_;

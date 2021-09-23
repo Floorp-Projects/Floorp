@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef LIB_EXTRAS_TIME_H_
-#define LIB_EXTRAS_TIME_H_
+#ifndef LIB_JXL_BASE_TIME_H_
+#define LIB_JXL_BASE_TIME_H_
 
 // OS-specific function for timing.
 
@@ -16,4 +16,4 @@ double Now();
 
 }  // namespace jxl
 
-#endif  // LIB_EXTRAS_TIME_H_
+#endif  // LIB_JXL_BASE_TIME_H_

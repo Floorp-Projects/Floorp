@@ -68,7 +68,7 @@ void Roundtrip(size_t num_entries, bool permute, std::mt19937* rng) {
   for (size_t i = 0; i < num_entries; ++i) {
     EXPECT_EQ(prefix_sum, group_offsets[inv_permutation[i]]);
 
-    EXPECT_EQ(0u, group_codes[i].BitsWritten() % kBitsPerByte);
+    EXPECT_EQ(0, group_codes[i].BitsWritten() % kBitsPerByte);
     prefix_sum += group_codes[i].BitsWritten() / kBitsPerByte;
 
     if (i + 1 < num_entries) {

@@ -111,7 +111,7 @@ void RoundtripRandomUnbalancedStream(int alphabet_size) {
   constexpr int kNumHistograms = 3;
   constexpr int kPrecision = 1 << 10;
   std::mt19937_64 rng;
-  for (size_t i = 0; i < kReps; i++) {
+  for (int i = 0; i < 100; i++) {
     std::vector<int> distributions[kNumHistograms];
     for (int j = 0; j < kNumHistograms; j++) {
       distributions[j].resize(kPrecision);

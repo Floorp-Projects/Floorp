@@ -28,7 +28,6 @@
 #include "lib/jxl/luminance.h"
 
 namespace jxl {
-namespace extras {
 namespace {
 
 uint64_t get_be_int(int bytes, const uint8_t*& pos, const uint8_t* maxpos) {
@@ -188,8 +187,7 @@ Status decode_layer(const uint8_t*& pos, const uint8_t* maxpos,
 
 }  // namespace
 
-Status DecodeImagePSD(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
+Status DecodeImagePSD(const Span<const uint8_t> bytes, ThreadPool* pool,
                       CodecInOut* io) {
   const uint8_t* pos = bytes.data();
   const uint8_t* maxpos = bytes.data() + bytes.size();
@@ -231,7 +229,6 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
   bool hasmergeddata = true;
   bool have_alpha = false;
   bool merged_has_alpha = false;
-  bool color_already_set = false;
   size_t metalength = get_be_int(4, pos, maxpos);
   const uint8_t* metaoffset = pos;
   while (pos < metaoffset + metalength) {
@@ -260,7 +257,6 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
       if (!io->metadata.m.color_encoding.SetICC(std::move(icc))) {
         return JXL_FAILURE("PSD: Invalid color profile");
       }
-      color_already_set = true;
     } else if (id == 1057) {  // compatibility mode or not?
       if (get_be_int(4, pos, maxpos) != 1) {
         return JXL_FAILURE("PSD: expected version=1 in id=1057 resource block");
@@ -314,9 +310,6 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
     if (blocklength & 1) pos++;  // padding again
   }
 
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, color_already_set,
-                                      /*is_gray=*/false, io));
-
   size_t layerlength = get_be_int(4 * version, pos, maxpos);
   const uint8_t* after_layers_pos = pos + layerlength;
   if (after_layers_pos < pos) return JXL_FAILURE("PSD: invalid layer length");
@@ -356,7 +349,6 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
             return JXL_FAILURE("PSD: Invalid layer count");
           }
           JXL_DEBUG_V(PSD_VERBOSITY, "Real layer count: %i", layercount);
-          if (layercount > 1) have_alpha = true;
           break;
         }
         if (!safe_strncmp(tpos, maxpos, "Mtrn", 4) ||
@@ -364,6 +356,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
             !safe_strncmp(tpos, maxpos, "Mt32", 4)) {
           JXL_DEBUG_V(PSD_VERBOSITY, "Merged layer has transparency channel");
           if (nb_channels > real_nb_channels) {
+            real_nb_channels++;
             have_alpha = true;
             merged_has_alpha = true;
           }
@@ -373,12 +366,14 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
     } else if (layercount < 0) {
       // negative layer count indicates merged has alpha and it is to be shown
       if (nb_channels > real_nb_channels) {
+        real_nb_channels++;
         have_alpha = true;
         merged_has_alpha = true;
       }
       layercount = -layercount;
     } else {
       // multiple layers implies there is alpha
+      real_nb_channels++;
       have_alpha = true;
     }
 
@@ -392,7 +387,6 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
     }
     if (have_alpha) {
       JXL_DEBUG_V(PSD_VERBOSITY, "Have alpha");
-      real_nb_channels++;
       info.type = ExtraChannel::kAlpha;
       info.alpha_associated =
           false;  // true? PSD is not consistent with this, need to check
@@ -533,11 +527,9 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
       JXL_DEBUG_V(PSD_VERBOSITY, "At position %i (%zu)",
                   (int)(pos - bytes.data()), (size_t)pos);
       ImageBundle& layer = io->frames[il++];
-      std::vector<int>& chan_id = layer_chan_id[l];
-      if (chan_id.size() > invert.size()) invert.resize(chan_id.size(), false);
-      JXL_RETURN_IF_ERROR(decode_layer(pos, maxpos, layer, chan_id, invert,
-                                       layer.xsize(), layer.ysize(), version,
-                                       colormodel, true, bitdepth));
+      JXL_RETURN_IF_ERROR(decode_layer(pos, maxpos, layer, layer_chan_id[l],
+                                       invert, layer.xsize(), layer.ysize(),
+                                       version, colormodel, true, bitdepth));
     }
   } else
     return JXL_FAILURE("PSD: no layer data found");
@@ -581,7 +573,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
       return JXL_FAILURE("Inconsistent layer configuration");
     }
     if (!merged_has_alpha) {
-      if (colormodel >= real_nb_channels) {
+      if (colormodel <= real_nb_channels) {
         return JXL_FAILURE("Inconsistent layer configuration");
       }
       chan_id.erase(chan_id.begin() + colormodel);
@@ -613,5 +605,4 @@ Status EncodeImagePSD(const CodecInOut* io, const ColorEncoding& c_desired,
   return JXL_FAILURE("PSD encoding not yet implemented");
 }
 
-}  // namespace extras
 }  // namespace jxl

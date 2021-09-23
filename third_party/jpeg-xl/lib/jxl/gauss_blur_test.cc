@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "lib/extras/time.h"
 #include "lib/jxl/base/robust_statistics.h"
+#include "lib/jxl/base/time.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
