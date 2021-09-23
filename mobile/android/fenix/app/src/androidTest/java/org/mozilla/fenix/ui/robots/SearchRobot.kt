@@ -169,6 +169,7 @@ class SearchRobot {
 
         fun dismissSearchBar(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             mDevice.waitForIdle()
+            closeSoftKeyboard()
             mDevice.pressBack()
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
