@@ -133,7 +133,7 @@ struct ParamTraits<mozilla::a11y::AccAttributes*> {
       if (!ReadParam(aMsg, aIter, &val)) {
         return false;
       }
-      (*aResult)->mData.InsertOrUpdate(key, val);
+      (*aResult)->mData.InsertOrUpdate(key, std::move(val));
     }
     return true;
   }
