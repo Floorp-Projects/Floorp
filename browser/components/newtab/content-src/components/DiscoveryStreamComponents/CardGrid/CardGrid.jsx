@@ -2,17 +2,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
+import {
+  DSCard,
+  PlaceholderDSCard,
+  LastCardMessage,
+} from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
+import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 
 export class CardGrid extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = { moreLoaded: false };
+    this.loadMoreClicked = this.loadMoreClicked.bind(this);
+  }
+
+  loadMoreClicked() {
+    this.props.dispatch(
+      ac.UserEvent({
+        event: "CLICK",
+        source: "DS_LOAD_MORE_BUTTON",
+      })
+    );
+    this.setState({ moreLoaded: true });
+  }
+
   renderCards() {
-    const recs = this.props.data.recommendations.slice(0, this.props.items);
+    let { items } = this.props;
+    const { loadMoreEnabled } = this.props;
+    const { lastCardMessageEnabled } = this.props;
+    let showLastCardMessage = lastCardMessageEnabled;
+    if (loadMoreEnabled && !this.state.moreLoaded) {
+      items = 12;
+      // We don't want to show this until after load more has been clicked.
+      showLastCardMessage = false;
+    }
+
+    const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
 
-    for (let index = 0; index < this.props.items; index++) {
+    for (let index = 0; index < items; index++) {
       const rec = recs[index];
       cards.push(
         !rec || rec.placeholder ? (
@@ -53,6 +84,15 @@ export class CardGrid extends React.PureComponent {
       );
     }
 
+    // Replace last card with "you are all caught up card"
+    if (showLastCardMessage) {
+      cards.splice(
+        cards.length - 1,
+        1,
+        <LastCardMessage key={`dscard-last-${cards.length - 1}`} />
+      );
+    }
+
     // Used for CSS overrides to default styling (eg: "hero")
     const variantClass = this.props.display_variant
       ? `ds-card-grid-${this.props.display_variant}`
@@ -85,6 +125,7 @@ export class CardGrid extends React.PureComponent {
 
     // Handle the case where a user has dismissed all recommendations
     const isEmpty = data.recommendations.length === 0;
+    const { loadMoreEnabled } = this.props;
 
     return (
       <div>
@@ -109,6 +150,13 @@ export class CardGrid extends React.PureComponent {
         ) : (
           this.renderCards()
         )}
+        {loadMoreEnabled && !this.state.moreLoaded && (
+          <button
+            className="ASRouterButton primary ds-card-grid-load-more-button"
+            onClick={this.loadMoreClicked}
+            data-l10n-id="newtab-pocket-load-more-stories-button"
+          />
+        )}
       </div>
     );
   }
@@ -118,4 +166,5 @@ CardGrid.defaultProps = {
   border: `border`,
   items: 4, // Number of stories to display
   enable_video_playheads: false,
+  lastCardMessageEnabled: false,
 };
