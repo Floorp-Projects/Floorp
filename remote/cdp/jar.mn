@@ -28,6 +28,7 @@ remote.jar:
   content/cdp/domains/content/Security.jsm (domains/content/Security.jsm)
   content/cdp/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
   content/cdp/domains/parent/Emulation.jsm (domains/parent/Emulation.jsm)
+  content/cdp/domains/parent/Fetch.jsm (domains/parent/Fetch.jsm)
   content/cdp/domains/parent/Input.jsm (domains/parent/Input.jsm)
   content/cdp/domains/parent/IO.jsm (domains/parent/IO.jsm)
   content/cdp/domains/parent/Network.jsm (domains/parent/Network.jsm)
