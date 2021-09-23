@@ -134,7 +134,7 @@ TEST(QuotaCommon_Try, Success_WithCleanup)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_PROPAGATE,
            [&tryCleanupRan](const auto&) { tryCleanupRan = true; });
 
     tryDidNotReturn = true;
@@ -198,7 +198,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_PROPAGATE,
            [&tryCleanupRan](const auto& result) {
              EXPECT_EQ(result, NS_ERROR_FAILURE);
 
@@ -223,7 +223,8 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
   nsresult rv;
 
   [&tryCleanupRan, &tryDidNotReturn](nsresult& aRv) -> void {
-    QM_TRY(NS_ERROR_FAILURE, QM_VOID, ([&tryCleanupRan, &aRv](auto& result) {
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_VOID,
+           ([&tryCleanupRan, &aRv](auto& result) {
              EXPECT_EQ(result, NS_ERROR_FAILURE);
 
              aRv = result;

@@ -185,8 +185,9 @@ class DeleteOrphanedBodyAction final : public Action {
                    CloneFileAndAppend(*aQuotaInfo.mDir, u"cache"_ns), QM_VOID,
                    resolve);
 
-    QM_TRY(BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList), QM_VOID,
-           resolve);
+    QM_TRY(
+        MOZ_TO_RESULT(BodyDeleteFiles(aQuotaInfo, *dbDir, mDeletedBodyIdList)),
+        QM_VOID, resolve);
 
     aResolver->Resolve(NS_OK);
   }
@@ -1108,11 +1109,11 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
       mDeletionInfo = std::move(maybeDeletionInfo.ref());
     }
 
-    QM_TRY(
-        MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
-                               mDeletionInfo.mDeletedPaddingSize,
-                               [&trans]() mutable { return trans.Commit(); }),
-        QM_PROPAGATE, [this](const nsresult) { mSuccess = false; });
+    QM_TRY(MOZ_TO_RESULT(MaybeUpdatePaddingFile(
+               aDBDir, aConn, /* aIncreaceSize */ 0,
+               mDeletionInfo.mDeletedPaddingSize,
+               [&trans]() mutable { return trans.Commit(); })),
+           QM_PROPAGATE, [this](const nsresult) { mSuccess = false; });
 
     return NS_OK;
   }

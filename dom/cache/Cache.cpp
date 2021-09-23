@@ -148,8 +148,8 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
       JS::Rooted<JSObject*> responseObj(aCx, &value.toObject());
 
       RefPtr<Response> response;
-      QM_TRY((UNWRAP_OBJECT(Response, responseObj, response)), QM_VOID,
-             failOnErr);
+      QM_TRY(MOZ_TO_RESULT(UNWRAP_OBJECT(Response, responseObj, response)),
+             QM_VOID, failOnErr);
 
       QM_TRY(OkIf(response->Type() != ResponseType::Error), QM_VOID, failOnErr);
 

@@ -510,7 +510,7 @@ class NotNull;
 // before a custom return value is returned
 #define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(tryResult, expr, customRetVal, \
                                            cleanup)                       \
-  auto tryResult = ::mozilla::ToResult(expr);                             \
+  auto tryResult = (expr);                                                \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);  \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                  \
     auto tryTempError = tryResult.unwrapErr();                            \

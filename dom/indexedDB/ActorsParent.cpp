@@ -5653,7 +5653,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             IPCBlob ipcBlob;
 
             // This can only fail if the child has crashed.
-            QM_TRY(IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob),
+            QM_TRY(MOZ_TO_RESULT(IPCBlobUtils::Serialize(impl, aBackgroundActor,
+                                                         ipcBlob)),
                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
@@ -6696,7 +6697,7 @@ class DeserializeIndexValueHelper final : public Runnable {
     const JSAutoRealm ar(cx, global);
 
     JS::Rooted<JS::Value> value(cx);
-    QM_TRY(DeserializeIndexValue(cx, &value), NS_OK,
+    QM_TRY(MOZ_TO_RESULT(DeserializeIndexValue(cx, &value)), NS_OK,
            [this](const nsresult rv) { OperationCompleted(rv); });
 
     ErrorResult errorResult;
@@ -7294,7 +7295,8 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
 
                if (freedSomePages) {
                  // Commit the write transaction.
-                 QM_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
+                 QM_TRY(MOZ_TO_RESULT(commitStmt.Borrow()->Execute()),
+                        QM_PROPAGATE,
                         [](const auto&) { NS_WARNING("Failed to commit!"); });
 
                  mInWriteTransaction = false;
@@ -13368,8 +13370,9 @@ void DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   // Must set this before dispatching otherwise we will race with the IO thread
   mState = State_DatabaseWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL), QM_VOID,
-         [this](const nsresult) { Finish(); });
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
+         QM_VOID, [this](const nsresult) { Finish(); });
 }
 
 void DeleteFilesRunnable::DirectoryLockFailed() {
@@ -13916,23 +13919,23 @@ Maintenance::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(Start(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(Start()), NS_OK, handleError);
       break;
 
     case State::CreateIndexedDatabaseManager:
-      QM_TRY(CreateIndexedDatabaseManager(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(CreateIndexedDatabaseManager()), NS_OK, handleError);
       break;
 
     case State::IndexedDatabaseManagerOpen:
-      QM_TRY(OpenDirectory(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(OpenDirectory()), NS_OK, handleError);
       break;
 
     case State::DirectoryWorkOpen:
-      QM_TRY(DirectoryWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DirectoryWork()), NS_OK, handleError);
       break;
 
     case State::BeginDatabaseMaintenance:
-      QM_TRY(BeginDatabaseMaintenance(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(BeginDatabaseMaintenance()), NS_OK, handleError);
       break;
 
     case State::Finishing:
@@ -15510,7 +15513,8 @@ nsresult FactoryOp::SendToIOThread() {
   // Must set this before dispatching otherwise we will race with the IO thread.
   mState = State::DatabaseWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   return NS_OK;
@@ -15858,39 +15862,39 @@ FactoryOp::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(Open(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(Open()), NS_OK, handleError);
       break;
 
     case State::PermissionChallenge:
-      QM_TRY(ChallengePermission(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(ChallengePermission()), NS_OK, handleError);
       break;
 
     case State::PermissionRetry:
-      QM_TRY(RetryCheckPermission(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(RetryCheckPermission()), NS_OK, handleError);
       break;
 
     case State::FinishOpen:
-      QM_TRY(FinishOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(FinishOpen()), NS_OK, handleError);
       break;
 
     case State::QuotaManagerPending:
-      QM_TRY(QuotaManagerOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(QuotaManagerOpen()), NS_OK, handleError);
       break;
 
     case State::DatabaseOpenPending:
-      QM_TRY(DatabaseOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DatabaseOpen()), NS_OK, handleError);
       break;
 
     case State::DatabaseWorkOpen:
-      QM_TRY(DoDatabaseWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
       break;
 
     case State::BeginVersionChange:
-      QM_TRY(BeginVersionChange(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(BeginVersionChange()), NS_OK, handleError);
       break;
 
     case State::WaitingForTransactionsToComplete:
-      QM_TRY(DispatchToWorkThread(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DispatchToWorkThread()), NS_OK, handleError);
       break;
 
     case State::SendingResults:
@@ -15915,7 +15919,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
   mDirectoryLockId = mDirectoryLock->Id();
 
-  QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) {
+  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID, [this](const nsresult rv) {
     SetFailureCodeIfUnset(rv);
 
     // The caller holds a strong reference to us, no need for a self reference
@@ -18074,11 +18078,11 @@ DatabaseOp::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(SendToIOThread(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(SendToIOThread()), NS_OK, handleError);
       break;
 
     case State::DatabaseWork:
-      QM_TRY(DoDatabaseWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
       break;
 
     case State::SendingResults:
@@ -18294,7 +18298,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18381,7 +18385,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18492,7 +18496,7 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18658,7 +18662,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18989,7 +18993,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   AUTO_PROFILER_LABEL("DeleteIndexOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19207,7 +19211,7 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19573,7 +19577,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreAddOrPutRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19746,7 +19750,8 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         if (inputStream) {
           if (fileHelper.isNothing()) {
             fileHelper.emplace(Transaction().GetDatabase().GetFileManagerPtr());
-            QM_TRY(fileHelper->Init(), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+            QM_TRY(MOZ_TO_RESULT(fileHelper->Init()),
+                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
           }
 
@@ -19796,7 +19801,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       QM_TRY(stmt->BindNullByName(kStmtParamNameFileIds));
     }
 
-    QM_TRY(stmt->Execute(), QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(stmt->Execute()), QM_PROPAGATE,
            [keyUnset = DebugOnly{keyUnset}](const nsresult rv) {
              if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
                MOZ_ASSERT(!keyUnset, "Generated key had a collision!");
@@ -20193,7 +20198,7 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreDeleteRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -20253,7 +20258,7 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreClearRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
