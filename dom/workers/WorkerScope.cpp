@@ -242,6 +242,11 @@ bool WorkerGlobalScopeBase::IsSharedMemoryAllowed() const {
   return mWorkerPrivate->IsSharedMemoryAllowed();
 }
 
+StorageAccess WorkerGlobalScopeBase::GetStorageAccess() {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  return mWorkerPrivate->StorageAccess();
+}
+
 Maybe<ClientInfo> WorkerGlobalScopeBase::GetClientInfo() const {
   return Some(mClientSource->Info());
 }
