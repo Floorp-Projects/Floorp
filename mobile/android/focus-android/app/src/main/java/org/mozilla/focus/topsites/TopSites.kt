@@ -160,7 +160,7 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
     Card(
         modifier = Modifier.size(60.dp),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = PhotonColors.Ink30
+        backgroundColor = PhotonColors.Ink05
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
