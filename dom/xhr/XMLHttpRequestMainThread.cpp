@@ -2239,17 +2239,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
 
     mErrorLoad = ErrorType::eUnreachable;
     mResponseXML = nullptr;
-
-    // Handle network errors specifically per spec.
-    if (NS_ERROR_GET_MODULE(status) == NS_ERROR_MODULE_NETWORK) {
-      IgnoredErrorResult rv;
-      RequestErrorSteps(ProgressEventType::error, NS_ERROR_DOM_NETWORK_ERR, rv);
-      // RequestErrorSteps sets state to DONE, but because we are throwing an
-      // error, a progress event is never fired. Calling ChangeStateToDone
-      // ensures that.
-      ChangeStateToDone(wasSync);
-      return NS_OK;
-    }
   }
 
   // If we're uninitialized at this point, we encountered an error
