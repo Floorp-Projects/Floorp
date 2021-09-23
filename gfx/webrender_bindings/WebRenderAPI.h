@@ -263,8 +263,8 @@ class WebRenderAPI final {
 
   void ClearAllCaches();
   void EnableNativeCompositor(bool aEnable);
-  void EnableMultithreading(bool aEnable);
   void SetBatchingLookback(uint32_t aCount);
+  void SetBool(wr::BoolParameter, bool value);
 
   void SetClearColor(const gfx::DeviceColor& aColor);
   void SetProfilerUI(const nsCString& aUIString);

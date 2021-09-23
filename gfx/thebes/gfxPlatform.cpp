@@ -488,6 +488,44 @@ static void WebRendeProfilerUIPrefChangeCallback(const char* aPrefName, void*) {
   }
 }
 
+// List of boolean dynamic parameter for WebRender.
+//
+// The parameters in this list are:
+//  - The pref name.
+//  - The BoolParameter enum variant (see webrender_api/src/lib.rs)
+//  - A default value.
+#define WR_BOOL_PARAMETER_LIST(_)                                     \
+  _("gfx.webrender.batched-texture-uploads",                          \
+    wr::BoolParameter::BatchedUploads, true)                          \
+  _("gfx.webrender.draw-calls-for-texture-copy",                      \
+    wr::BoolParameter::DrawCallsForTextureCopy, true)                 \
+  _("gfx.webrender.pbo-uploads", wr::BoolParameter::PboUploads, true) \
+  _("gfx.webrender.multithreading", wr::BoolParameter::Multithreading, true)
+
+static void WebRenderBoolParameterChangeCallback(const char*, void*) {
+  uint32_t bits = 0;
+
+#define WR_BOOL_PARAMETER(name, key, default_val) \
+  if (Preferences::GetBool(name, default_val)) {  \
+    bits |= 1 << (uint32_t)key;                   \
+  }
+
+  WR_BOOL_PARAMETER_LIST(WR_BOOL_PARAMETER)
+#undef WR_BOOL_PARAMETER
+
+  gfx::gfxVars::SetWebRenderBoolParameters(bits);
+}
+
+static void RegisterWebRenderBoolParamCallback() {
+#define WR_BOOL_PARAMETER(name, _key, _default_val) \
+  Preferences::RegisterCallback(WebRenderBoolParameterChangeCallback, name);
+
+  WR_BOOL_PARAMETER_LIST(WR_BOOL_PARAMETER)
+#undef WR_BOOL_PARAMETER
+
+  WebRenderBoolParameterChangeCallback(nullptr, nullptr);
+}
+
 static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   wr::DebugFlags flags{0};
 #define GFX_WEBRENDER_DEBUG(suffix, bit)                   \
@@ -528,10 +566,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags::OBSCURE_IMAGES)
   GFX_WEBRENDER_DEBUG(".glyph-flashing", wr::DebugFlags::GLYPH_FLASHING)
   GFX_WEBRENDER_DEBUG(".capture-profiler", wr::DebugFlags::PROFILER_CAPTURE)
-  GFX_WEBRENDER_DEBUG(".batched-texture-uploads",
-                      wr::DebugFlags::USE_BATCHED_TEXTURE_UPLOADS)
-  GFX_WEBRENDER_DEBUG(".draw-calls-for-texture-copy",
-                      wr::DebugFlags::USE_DRAW_CALLS_FOR_TEXTURE_COPY)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
@@ -539,14 +573,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
 
 static void WebRenderQualityPrefChangeCallback(const char* aPref, void*) {
   gfxPlatform::GetPlatform()->UpdateForceSubpixelAAWherePossible();
-}
-
-static void WebRenderMultithreadingPrefChangeCallback(const char* aPrefName,
-                                                      void*) {
-  bool enable = Preferences::GetBool(
-      StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading(), true);
-
-  gfx::gfxVars::SetUseWebRenderMultithreading(enable);
 }
 
 static void WebRenderBatchingPrefChangeCallback(const char* aPrefName, void*) {
@@ -2578,6 +2604,9 @@ void gfxPlatform::InitWebRenderConfig() {
 
     Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
                                                WR_DEBUG_PREF);
+
+    RegisterWebRenderBoolParamCallback();
+
     Preferences::RegisterPrefixCallbackAndCall(
         WebRendeProfilerUIPrefChangeCallback,
         "gfx.webrender.debug.profiler-ui");
@@ -2586,10 +2615,6 @@ void gfxPlatform::InitWebRenderConfig() {
         nsDependentCString(
             StaticPrefs::
                 GetPrefName_gfx_webrender_quality_force_subpixel_aa_where_possible()));
-    Preferences::RegisterCallback(
-        WebRenderMultithreadingPrefChangeCallback,
-        nsDependentCString(
-            StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading()));
 
     Preferences::RegisterCallback(
         WebRenderBatchingPrefChangeCallback,

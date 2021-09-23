@@ -5220,11 +5220,6 @@
   value: 64
   mirror: always
 
-- name: gfx.webrender.enable-multithreading
-  type: bool
-  value: true
-  mirror: always
-
 - name: gfx.webrender.batching.lookback
   type: uint32_t
   value: 10

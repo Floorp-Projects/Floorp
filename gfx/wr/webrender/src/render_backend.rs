@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{DebugFlags, BlobImageHandler};
+use api::{DebugFlags, BlobImageHandler, Parameter, BoolParameter};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
@@ -1138,10 +1138,6 @@ impl RenderBackend {
                         // We don't want to forward this message to the renderer.
                         return RenderBackendStatus::Continue;
                     }
-                    DebugCommand::EnableMultithreading(enable) => {
-                        self.resource_cache.enable_multithreading(enable);
-                        return RenderBackendStatus::Continue;
-                    }
                     DebugCommand::SetBatchingLookback(count) => {
                         self.frame_config.batch_lookback_count = count as usize;
                         self.update_frame_builder_config();
@@ -1276,6 +1272,12 @@ impl RenderBackend {
             }
             SceneBuilderResult::DeleteDocument(document_id) => {
                 self.documents.remove(&document_id);
+            }
+            SceneBuilderResult::SetParameter(param) => {
+                if let Parameter::Bool(BoolParameter::Multithreading, enabled) = param {
+                    self.resource_cache.enable_multithreading(enabled);
+                }
+                let _ = self.result_tx.send(ResultMsg::SetParameter(param));
             }
             SceneBuilderResult::StopRenderBackend => {
                 return RenderBackendStatus::StopRenderBackend;
