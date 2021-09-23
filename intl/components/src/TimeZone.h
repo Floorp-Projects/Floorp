@@ -48,6 +48,38 @@ class TimeZone final {
   Result<int32_t, ICUError> GetRawOffsetMs();
 
   /**
+   * Return the daylight saving offset in milliseconds at the given UTC time.
+   */
+  Result<int32_t, ICUError> GetDSTOffsetMs(int64_t aUTCMilliseconds);
+
+  /**
+   * Return the local offset in milliseconds at the given UTC time.
+   */
+  Result<int32_t, ICUError> GetOffsetMs(int64_t aUTCMilliseconds);
+
+  /**
+   * Return the UTC offset in milliseconds at the given local time.
+   */
+  Result<int32_t, ICUError> GetUTCOffsetMs(int64_t aLocalMilliseconds);
+
+  enum class DaylightSavings : bool { No, Yes };
+
+  /**
+   * Return the display name for this time zone.
+   */
+  template <typename B>
+  ICUResult GetDisplayName(const char* aLocale,
+                           DaylightSavings aDaylightSavings, B& aBuffer) {
+    return FillBufferWithICUCall(
+        aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
+          UCalendarDisplayNameType type =
+              static_cast<bool>(aDaylightSavings) ? UCAL_DST : UCAL_STANDARD;
+          return ucal_getTimeZoneDisplayName(mCalendar, type, aLocale, target,
+                                             length, status);
+        });
+  }
+
+  /**
    * Fill the buffer with the system's default IANA time zone identifier, e.g.
    * "America/Chicago".
    */
