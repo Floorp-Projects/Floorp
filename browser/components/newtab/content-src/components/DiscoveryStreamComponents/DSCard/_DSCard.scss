@@ -95,6 +95,24 @@ $excerpt-line-height: 20;
     margin-top: 4px;
   }
 
+  &.last-card-message {
+    .ds-last-card-desc {
+      font-size: 13px;
+      color: var(--newtab-text-secondary-color);
+    }
+
+    .ds-last-card-desc,
+    .title {
+      text-align: center;
+    }
+
+    .last-card-message-image {
+      object-fit: contain;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
   .meta {
     display: flex;
     flex-direction: column;

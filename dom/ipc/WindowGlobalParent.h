@@ -301,6 +301,8 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvSetDocumentDomain(nsIURI* aDomain);
 
+  mozilla::ipc::IPCResult RecvReloadWithHttpsOnlyException();
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,

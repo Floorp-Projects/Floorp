@@ -158,6 +158,20 @@ const FeatureManifest = {
           "browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled",
         description: "Enable compact cards on newtab grid",
       },
+      loadMore: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.discoverystream.loadMore.enabled",
+        description:
+          "A button to load more stories at the bottom of the Pocket section.",
+      },
+      lastCardMessageEnabled: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.discoverystream.lastCardMessage.enabled",
+        description:
+          "The last card in the Pocket section is a message that they are currently at the end of the list of stories.",
+      },
     },
   },
   "password-autocomplete": {
