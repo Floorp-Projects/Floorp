@@ -503,6 +503,10 @@ impl InstructionWriter {
         self.emit_op(Opcode::GlobalThis);
     }
 
+    pub fn non_syntactic_global_this(&mut self) {
+        self.emit_op(Opcode::NonSyntacticGlobalThis);
+    }
+
     pub fn new_target(&mut self) {
         self.emit_op(Opcode::NewTarget);
     }
@@ -829,11 +833,6 @@ impl InstructionWriter {
 
     pub fn implicit_this(&mut self, name_index: GCThingIndex) {
         self.emit_op(Opcode::ImplicitThis);
-        self.write_g_c_thing_index(name_index);
-    }
-
-    pub fn g_implicit_this(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::GImplicitThis);
         self.write_g_c_thing_index(name_index);
     }
 

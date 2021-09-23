@@ -343,14 +343,22 @@ impl NameReferenceEmitter {
                 emitter.emit.get_g_name(name_index);
                 //      [stack] CALLEE
 
-                emitter.emit.g_implicit_this(name_index);
+                // NOTE: We don't support non-syntactic scope.
+                //       See NameOpEmitter::emitGet in SpiderMonkey for omitted
+                //       cases.
+
+                emitter.emit.undefined();
                 //      [stack] CALLEE THIS
             }
             NameLocation::Dynamic => {
                 emitter.emit.get_name(name_index);
                 //      [stack] CALLEE
 
-                emitter.emit.g_implicit_this(name_index);
+                // NOTE: We don't support non-syntactic scope or with statement.
+                //       See NameOpEmitter::emitGet in SpiderMonkey for omitted
+                //       cases.
+
+                emitter.emit.undefined();
                 //      [stack] CALLEE THIS
             }
             NameLocation::FrameSlot(slot, kind) => {
