@@ -87,25 +87,6 @@ geckodriver:
         - "'platform 'wdspec 'debug !fis"
         - "'browsertime 'amazon 'vismet 'shippable 'firefox !fis"
 
-marionette:
-    selector: fuzzy
-    description: >-
-        Runs the tests relevant to the Marionette protocol, which underpins
-        many test harnesses as well as our WebDriver implementation.
-        This preset can be filtered down further to limit it to a specific
-        platform or to opt/debug tasks only. For example:
-        |mach try --preset marionette -xq "'linux 'opt"|
-    query:
-        - "'marionette !asan !shippable !gpu !headless"
-        - "'awsy-base"
-        - "'firefox-ui !asan"
-        - "'platform 'wdspec !qr | fis"
-        - "'xpcshell !asan !qr !spi !tsan"
-        - "'platform 'reftest 'debug !qr | fis -1$"
-        - "'platform !reftest !wdspec 'debug -1$"
-        - "'mochitest-browser 'debug !spi -1$"
-        - "'reftest 'debug !platform !gpu !no-accel !qr -1$"
-
 perf:
     selector: fuzzy
     description: >-
@@ -127,6 +108,27 @@ perf-chrome:
         - "opt-talos- 'chrome | 'svg | 'session | 'tabswitch | 'other | 'g5"
     rebuild: 6
     selector: fuzzy
+
+remote-protocol:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Remote protocol, which underpins
+        many test harnesses as well as our CDP and WebDriver implementations.
+        This preset can be filtered down further to limit it to a specific
+        platform or to opt/debug tasks only. For example:
+        |mach try --preset remote-protocol -xq "'linux 'opt"|
+    query:
+        - "'awsy-base"
+        - "'firefox-ui"
+        - "'marionette !swr | harness"
+        - "'mochitest-browser !spi !swr 'fis -1$"
+        - "'mochitest-remote !spi !swr"
+        - "'platform 'reftest !swr 'fis | 'android !-lite -1$"
+        - "'platform 'wdspec !swr"
+        - "'platform !reftest !wdspec !swr 'fis | 'android !-lite -1$"
+        - "'puppeteer"
+        - "'reftest !platform !gpu !swr !no-accel 'fis | 'android !-lite -1$"
+        - "'xpcshell !spi !tsan !-lite"
 
 sample-suites:
     selector: fuzzy
