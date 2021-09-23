@@ -17,6 +17,7 @@
 #include "gc/Allocator.h"
 #include "js/AllocPolicy.h"
 #include "js/TypeDecls.h"
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/StringType.h"
 
@@ -95,6 +96,22 @@ class FormatBuffer {
       static_assert(std::is_same_v<CharT, char16_t>);
       return NewStringCopyN<CanGC>(cx, buffer_.begin(), buffer_.length());
     }
+  }
+
+  /**
+   * Extract this buffer's content as a null-terminated string.
+   */
+  UniquePtr<CharType[], JS::FreePolicy> extractStringZ() {
+    // Adding the NUL character on an already null-terminated string is likely
+    // an error. If there's ever a valid use case which triggers this assertion,
+    // we should change the below code to only conditionally add '\0'.
+    MOZ_ASSERT_IF(!buffer_.empty(), buffer_.end()[-1] != '\0');
+
+    if (!buffer_.append('\0')) {
+      return nullptr;
+    }
+    return UniquePtr<CharType[], JS::FreePolicy>(
+        buffer_.extractOrCopyRawBuffer());
   }
 
  private:
