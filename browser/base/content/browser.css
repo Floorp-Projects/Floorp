@@ -1236,6 +1236,7 @@ toolbarpaletteitem[dragover] {
 
 #customization-footer {
   display: flex;
+  align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
 }

@@ -143,6 +143,11 @@
 }
 %endif /* defined(XP_MACOSX) || defined(XP_WIN) */
 
+#customization-lwtheme-link {
+  display: flex;
+  align-items: center;
+}
+
 #widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
 toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;

@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["CustomizeMode", "_defaultImportantThemes"];
+var EXPORTED_SYMBOLS = ["CustomizeMode"];
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
@@ -83,18 +83,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   };
   return new scope.ConsoleAPI(consoleOptions);
 });
-
-const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
-const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-const ALPENGLOW_THEME_ID = "firefox-alpenglow@mozilla.org";
-
-const _defaultImportantThemes = [
-  DEFAULT_THEME_ID,
-  LIGHT_THEME_ID,
-  DARK_THEME_ID,
-  ALPENGLOW_THEME_ID,
-];
 
 var gDraggingInToolbars;
 
@@ -1411,8 +1399,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  openAddonsManagerThemes(aEvent) {
-    aEvent.target.parentNode.parentNode.hidePopup();
+  openAddonsManagerThemes() {
     AMTelemetry.recordLinkEvent({ object: "customize", value: "manageThemes" });
     this.window.BrowserOpenAddonsMgr("addons://list/theme");
   },
@@ -1540,100 +1527,6 @@ CustomizeMode.prototype = {
     // change because of this.
     this.onUIDensityMenuShowing();
     this._onUIChange();
-  },
-
-  async onThemesMenuShowing(aEvent) {
-    const MAX_THEME_COUNT = 6;
-
-    this._clearThemesMenu(aEvent.target);
-
-    let onThemeSelected = panel => {
-      // This causes us to call _onUIChange when the LWT actually changes,
-      // so the restore defaults / undo reset button is updated correctly.
-      this._nextThemeChangeUserTriggered = true;
-      panel.hidePopup();
-    };
-
-    let doc = this.document;
-
-    function buildToolbarButton(aTheme) {
-      let tbb = doc.createXULElement("toolbarbutton");
-      tbb.theme = aTheme;
-      tbb.setAttribute("label", aTheme.name);
-      tbb.setAttribute(
-        "image",
-        aTheme.iconURL || "chrome://mozapps/skin/extensions/themeGeneric.svg"
-      );
-      if (aTheme.description) {
-        tbb.setAttribute("tooltiptext", aTheme.description);
-      }
-      tbb.setAttribute("tabindex", "0");
-      tbb.classList.add("customization-lwtheme-menu-theme");
-      let isActive = aTheme.isActive;
-      tbb.setAttribute("aria-checked", isActive);
-      tbb.setAttribute("role", "menuitemradio");
-      if (isActive) {
-        tbb.setAttribute("active", "true");
-      }
-
-      return tbb;
-    }
-
-    let themes = await AddonManager.getAddonsByTypes(["theme"]);
-    let currentTheme = themes.find(theme => theme.isActive);
-
-    // Move the current theme (if any) and the default themes to the start:
-    let importantThemes = new Set(_defaultImportantThemes);
-    if (currentTheme) {
-      importantThemes.add(currentTheme.id);
-    }
-    let importantList = [];
-    for (let importantTheme of importantThemes) {
-      importantList.push(
-        ...themes.splice(
-          themes.findIndex(theme => theme.id == importantTheme),
-          1
-        )
-      );
-    }
-
-    // Sort the remainder alphabetically:
-    themes.sort((a, b) => a.name.localeCompare(b.name));
-    themes = importantList.concat(themes);
-
-    if (themes.length > MAX_THEME_COUNT) {
-      themes.length = MAX_THEME_COUNT;
-    }
-
-    let footer = doc.getElementById("customization-lwtheme-menu-footer");
-    let panel = footer.parentNode;
-    for (let theme of themes) {
-      let button = buildToolbarButton(theme);
-      button.addEventListener("command", async () => {
-        onThemeSelected(panel);
-        await button.theme.enable();
-        AMTelemetry.recordActionEvent({
-          object: "customize",
-          action: "enable",
-          extra: { type: "theme", addonId: theme.id },
-        });
-      });
-      panel.insertBefore(button, footer);
-    }
-  },
-
-  _clearThemesMenu(panel) {
-    let footer = this.$("customization-lwtheme-menu-footer");
-    let element = footer;
-    while (
-      element.previousElementSibling &&
-      element.previousElementSibling.localName == "toolbarbutton"
-    ) {
-      element.previousElementSibling.remove();
-    }
-
-    // Workaround for bug 1059934
-    panel.removeAttribute("height");
   },
 
   _onUIChange() {
