@@ -126,7 +126,7 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   PromptResult CheckPromptPrefs() const;
 
   // Check if the permission has an opportunity to request.
-  bool CheckPermissionDelegate();
+  bool CheckPermissionDelegate() const;
 
   enum class DelayedTaskType {
     Allow,
