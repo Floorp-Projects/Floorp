@@ -383,17 +383,6 @@ class Manager::Factory {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
     if (!sFactory) {
-      // Be clear about what we are locking.  sFactory is bg thread only, so
-      // we don't need to lock it here.  Just protect sFactoryShutdown and
-      // sBackgroundThread.
-      {
-        StaticMutexAutoLock lock(sMutex);
-
-        if (sFactoryShutdown) {
-          return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-        }
-      }
-
       // We cannot use ClearOnShutdown() here because we're not on the main
       // thread.  Instead, we delete sFactory in Factory::Remove() after the
       // last manager is removed.  ShutdownObserver ensures this happens
@@ -478,13 +467,6 @@ class Manager::Factory {
   // PBackground thread only.
   static StaticAutoPtr<Factory> sFactory;
 
-  // protects following static attribute
-  static StaticMutex sMutex;
-
-  // Indicate if shutdown has occurred to block re-creation of sFactory.
-  // Must hold sMutex to access.
-  static bool sFactoryShutdown;
-
   // Weak references as we don't want to keep Manager objects alive forever.
   // When a Manager is destroyed it calls Factory::Remove() to clear itself.
   // PBackground thread only.
@@ -498,12 +480,6 @@ class Manager::Factory {
 
 // static
 StaticAutoPtr<Manager::Factory> Manager::Factory::sFactory;
-
-// static
-StaticMutex Manager::Factory::sMutex;
-
-// static
-bool Manager::Factory::sFactoryShutdown = false;
 
 // ----------------------------------------------------------------------------
 
