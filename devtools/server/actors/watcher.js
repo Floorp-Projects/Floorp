@@ -173,6 +173,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         saveRequestAndResponseBodies: true,
         // @backward-compat { version 93 } The network parent actor started exposing setPersist method.
         "network-persist": true,
+        // @backward-compat { version 94 } Full support for event breakpoints via the watcher actor
+        "event-breakpoints": true,
       },
     };
   },

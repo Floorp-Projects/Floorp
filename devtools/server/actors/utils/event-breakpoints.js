@@ -473,3 +473,7 @@ function getAvailableEventBreakpoints() {
   }
   return available;
 }
+exports.validateEventBreakpoint = validateEventBreakpoint;
+function validateEventBreakpoint(id) {
+  return !!EVENTS_BY_ID[id];
+}
