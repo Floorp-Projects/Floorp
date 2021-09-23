@@ -31,7 +31,6 @@
 #include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "ds/Sort.h"
 #include "js/CharacterEncoding.h"
@@ -42,8 +41,6 @@
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"
-#include "unicode/ucal.h"
-#include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -68,16 +65,12 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  const UChar* uTimeZone = nullptr;
-  int32_t uTimeZoneLength = 0;
-  UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.get(),
-                             UCAL_DEFAULT, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto result = mozilla::intl::Calendar::TryCreate(locale.get());
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
-  ScopedICUObject<UCalendar, ucal_close> toClose(cal);
+  auto calendar = result.unwrap();
 
   RootedObject info(cx, NewPlainObject(cx));
   if (!info) {
@@ -85,15 +78,13 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedValue v(cx);
-  int32_t firstDayOfWeek = ucal_getAttribute(cal, UCAL_FIRST_DAY_OF_WEEK);
-  v.setInt32(firstDayOfWeek);
 
+  v.setInt32(static_cast<int32_t>(calendar->GetFirstDayOfWeek()));
   if (!DefineDataProperty(cx, info, cx->names().firstDayOfWeek, v)) {
     return false;
   }
 
-  int32_t minDays = ucal_getAttribute(cal, UCAL_MINIMAL_DAYS_IN_FIRST_WEEK);
-  v.setInt32(minDays);
+  v.setInt32(calendar->GetMinimalDaysInFirstWeek());
   if (!DefineDataProperty(cx, info, cx->names().minDays, v)) {
     return false;
   }
@@ -103,31 +94,16 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  for (int i = UCAL_SUNDAY; i <= UCAL_SATURDAY; i++) {
-    UCalendarDaysOfWeek dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
-    UCalendarWeekdayType type = ucal_getDayOfWeekType(cal, dayOfWeek, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
+  auto weekend = calendar->GetWeekend();
+  if (weekend.isErr()) {
+    intl::ReportInternalError(cx, weekend.unwrapErr());
+    return false;
+  }
 
-    switch (type) {
-      case UCAL_WEEKDAY:
-        break;
-      case UCAL_WEEKEND:
-        if (!NewbornArrayPush(cx, weekendArray, Int32Value(i))) {
-          return false;
-        }
-        break;
-      case UCAL_WEEKEND_ONSET:
-      case UCAL_WEEKEND_CEASE:
-        // At the time this code was added, ICU apparently never behaves this
-        // way, so just throw, so that users will report a bug and we can
-        // decide what to do.
-        intl::ReportInternalError(cx);
-        return false;
-      default:
-        break;
+  for (auto day : weekend.unwrap()) {
+    if (!NewbornArrayPush(cx, weekendArray,
+                          Int32Value(static_cast<int32_t>(day)))) {
+      return false;
     }
   }
 

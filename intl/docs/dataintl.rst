@@ -141,16 +141,16 @@ mozIntl.getCalendarInfo(locale)
 The API will return the following calendar information for a given locale code:
 
 * firstDayOfWeek
-    an integer in the range 1=Sunday to 7=Saturday indicating the day
-    considered the first day of the week in calendars, e.g. 1 for en-US,
-    2 for en-GB, 1 for bn-IN
+    an integer in the range 1=Monday to 7=Sunday indicating the day
+    considered the first day of the week in calendars, e.g. 7 for en-US,
+    1 for en-GB, 7 for bn-IN
 * minDays
     an integer in the range of 1 to 7 indicating the minimum number
     of days required in the first week of the year, e.g. 1 for en-US, 4 for de
 * weekend
-    an array with values in the range 1=Sunday to 7=Saturday indicating the days
-    of the week considered as part of the weekend, e.g. [1, 7] for en-US and en-GB,
-    [1] for bn-IN (note that "weekend" is *not* necessarily two days)
+    an array with values in the range 1=Monday to 7=Sunday indicating the days
+    of the week considered as part of the weekend, e.g. [6, 7] for en-US and en-GB,
+    [7] for bn-IN (note that "weekend" is *not* necessarily two days)
 
 Those bits of information should be especially useful for any UI that works
 with calendar data.
@@ -162,9 +162,9 @@ Example:
     // omitting the `locale` argument will make the API return data for the
     // current Gecko application UI locale.
     let {
-      firstDayOfWeek,  // 2
+      firstDayOfWeek,  // 1
       minDays,         // 4
-      weekend,         // [1, 7]
+      weekend,         // [6, 7]
       calendar,        // "gregory"
       locale,          // "pl"
     } = Services.intl.getCalendarInfo();
