@@ -1697,13 +1697,6 @@ void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
   bool succeeded = autoSyncLoop->Run();
   mStateData->mFlagSend = false;
 
-  // If the XHR failed, throw a network error.
-  if (mProxy->mXHR->ErrorCode() !=
-      static_cast<uint16_t>(XMLHttpRequestMainThread::ErrorType::eOK)) {
-    aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
-    return;
-  }
-
   // Don't clobber an existing exception that we may have thrown on aRv
   // already... though can there really be one?  In any case, it seems to me
   // that this autoSyncLoop->Run() can never fail, since the StopSyncLoop call

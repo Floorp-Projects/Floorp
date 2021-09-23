@@ -1,5 +1,5 @@
 // This will transmit two chunks TEST_CHUNK and then garbage, which should result in an error.
-const url = "/fetch/api/resources/bad-chunk-encoding.py?ms=100&count=2";
+const url = "/fetch/api/resources/bad-chunk-encoding.py?ms=1&count=2";
 
 test(() => {
   client = new XMLHttpRequest();
