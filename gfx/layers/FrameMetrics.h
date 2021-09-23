@@ -96,6 +96,7 @@ struct FrameMetrics {
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
+        mTransformToAncestorScale(),
         mPaintRequestTime(),
         mVisualDestination(0, 0),
         mVisualScrollUpdateType(eNone),
@@ -126,6 +127,7 @@ struct FrameMetrics {
            mPresShellId == aOther.mPresShellId &&
            mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
+           mTransformToAncestorScale == aOther.mTransformToAncestorScale &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mVisualDestination == aOther.mVisualDestination &&
            mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
@@ -397,6 +399,14 @@ struct FrameMetrics {
     return mExtraResolution;
   }
 
+  void SetTransformToAncestorScale(const Scale2D& aTransformToAncestorScale) {
+    mTransformToAncestorScale = aTransformToAncestorScale;
+  }
+
+  const Scale2D& GetTransformToAncestorScale() const {
+    return mTransformToAncestorScale;
+  }
+
   const CSSRect& GetScrollableRect() const { return mScrollableRect; }
 
   void SetScrollableRect(const CSSRect& aScrollableRect) {
@@ -628,6 +638,9 @@ struct FrameMetrics {
   // The extra resolution at which content in this scroll frame is drawn beyond
   // that necessary to draw one Layer pixel per Screen pixel.
   ScreenToLayerScale2D mExtraResolution;
+
+  // The scale on this scroll frame induced by enclosing CSS transforms.
+  Scale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;
