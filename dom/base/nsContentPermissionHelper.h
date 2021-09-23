@@ -136,6 +136,7 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   void RequestDelayedTask(nsIEventTarget* aTarget, DelayedTaskType aType);
 
  protected:
+  // @param aPrefName see `mPrefName`.
   ContentPermissionRequestBase(nsIPrincipal* aPrincipal,
                                nsPIDOMWindowInner* aWindow,
                                const nsACString& aPrefName,
@@ -146,6 +147,13 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PermissionDelegateHandler> mPermissionHandler;
+
+  // The prefix of a pref which allows tests to bypass showing the prompt.
+  // Tests will have to set both of
+  // ${mPrefName}.prompt.testing and
+  // ${mPrefName}.prompt.testing.allow
+  // to either true or false. If no such testing is required, mPrefName may be
+  // empty.
   const nsCString mPrefName;
   const nsCString mType;
   bool mIsHandlingUserInput;
