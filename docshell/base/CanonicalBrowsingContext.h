@@ -348,6 +348,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
+  void AddFinalDiscardListener(std::function<void(uint64_t)>&& aListener);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -453,6 +455,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void CancelSessionStoreUpdate();
 
+  void AddPendingDiscard();
+
+  void RemovePendingDiscard();
+
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
@@ -517,6 +523,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<GenericNonExclusivePromise> mClonePromise;
 
   JS::Heap<JS::Value> mPermanentKey;
+
+  uint32_t mPendingDiscards = 0;
+
+  bool mFullyDiscarded = false;
+
+  nsTArray<std::function<void(uint64_t)>> mFullyDiscardedListeners;
 };
 
 }  // namespace dom
