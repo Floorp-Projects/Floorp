@@ -660,7 +660,7 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
     r.mMutatedFrontSurface = true;
     r.mMutatedDisplayRect = true;
     r.mMutatedSize = true;
-    r.mMutatedSpecializeVideo = changedSpecializeVideo;
+    r.mMutatedSpecializeVideo |= changedSpecializeVideo;
   });
 }
 
@@ -1107,6 +1107,8 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
 }
 
 bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
+  MOZ_ASSERT([mContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]);
+
   // Convert the IOSurfaceRef into a CMSampleBuffer, so we can enqueue it in mContentCALayer
   CVPixelBufferRef pixelBuffer = nullptr;
   CVReturn cvValue =
