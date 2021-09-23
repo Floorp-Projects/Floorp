@@ -650,19 +650,6 @@ NS_IMETHODIMP CacheStorageService::PinningCacheStorage(
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheStorageService::SynthesizedCacheStorage(
-    nsILoadContextInfo* aLoadContextInfo, nsICacheStorage** _retval) {
-  NS_ENSURE_ARG(aLoadContextInfo);
-  NS_ENSURE_ARG(_retval);
-
-  nsCOMPtr<nsICacheStorage> storage =
-      new CacheStorage(aLoadContextInfo, false,
-                       true /* skip size checks for synthesized cache */,
-                       false /* no pinning */);
-  storage.forget(_retval);
-  return NS_OK;
-}
-
 NS_IMETHODIMP CacheStorageService::Clear() {
   nsresult rv;
 
