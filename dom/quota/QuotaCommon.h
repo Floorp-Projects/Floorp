@@ -497,7 +497,7 @@ class NotNull;
 // Handles the three arguments case when a custom return value needs to be
 // returned
 #define QM_TRY_CUSTOM_RET_VAL(tryResult, expr, customRetVal)             \
-  auto tryResult = ::mozilla::ToResult(expr);                            \
+  auto tryResult = (expr);                                               \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();          \
