@@ -475,7 +475,7 @@ ContentPermissionRequestBase::GetTypes(nsIArray** aTypes) {
 }
 
 ContentPermissionRequestBase::PromptResult
-ContentPermissionRequestBase::CheckPromptPrefs() {
+ContentPermissionRequestBase::CheckPromptPrefs() const {
   MOZ_ASSERT(!mPrefName.IsEmpty(),
              "This derived class must support checking pref types");
 
