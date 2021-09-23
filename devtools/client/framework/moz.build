@@ -5,10 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/allocations/browser_allocations_browser_console.ini",
-    "test/allocations/browser_allocations_reload.ini",
-    "test/allocations/browser_allocations_target.ini",
-    "test/allocations/browser_allocations_toolbox.ini",
     "test/browser-enable-popup-devtools-user.ini",
     "test/browser-enable-popup-new-user.ini",
     "test/browser-telemetry-startup.ini",
@@ -26,6 +22,7 @@ DIRS += [
     "browser-toolbox",
     "components",
     "reducers",
+    "test/allocations",
 ]
 
 DevToolsModules(
