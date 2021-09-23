@@ -111,7 +111,7 @@ function setupUnitQuad() {
 }
 
 function runTest() {
-    gl = WebGLUtil.getWebGL("canvas", false, {antialias: false});
+    gl = canvas.getContext('webgl', {antialias: false});
     if (!gl) {
         ok(false, "WebGL context does not exist");
     } else {
