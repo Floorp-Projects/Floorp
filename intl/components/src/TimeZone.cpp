@@ -5,18 +5,15 @@
 #include "mozilla/intl/TimeZone.h"
 
 #include "unicode/uenum.h"
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+#  include "unicode/basictz.h"
+#endif
 
 namespace mozilla::intl {
 
 /* static */
 Result<UniquePtr<TimeZone>, ICUError> TimeZone::TryCreate(
     Maybe<Span<const char16_t>> aTimeZoneOverride) {
-  // An empty string is used for the root locale. This is regarded as the base
-  // locale of all locales, and is used as the language/country neutral locale
-  // for locale sensitive operations.
-  const char* rootLocale = "";
-
-  UErrorCode status = U_ZERO_ERROR;
   const UChar* zoneID = nullptr;
   int32_t zoneIDLen = 0;
   if (aTimeZoneOverride) {
@@ -24,6 +21,28 @@ Result<UniquePtr<TimeZone>, ICUError> TimeZone::TryCreate(
     zoneID = aTimeZoneOverride->Elements();
   }
 
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  UniquePtr<icu::TimeZone> tz;
+  if (zoneID) {
+    tz.reset(
+        icu::TimeZone::createTimeZone(icu::UnicodeString(zoneID, zoneIDLen)));
+  } else {
+    tz.reset(icu::TimeZone::createDefault());
+  }
+  MOZ_ASSERT(tz);
+
+  if (*tz == icu::TimeZone::getUnknown()) {
+    return Err(ICUError::InternalError);
+  }
+
+  return MakeUnique<TimeZone>(std::move(tz));
+#else
+  // An empty string is used for the root locale. This is regarded as the base
+  // locale of all locales, and is used as the language/country neutral locale
+  // for locale sensitive operations.
+  const char* rootLocale = "";
+
+  UErrorCode status = U_ZERO_ERROR;
   UCalendar* calendar =
       ucal_open(zoneID, zoneIDLen, rootLocale, UCAL_DEFAULT, &status);
 
@@ -45,9 +64,13 @@ Result<UniquePtr<TimeZone>, ICUError> TimeZone::TryCreate(
   }
 
   return MakeUnique<TimeZone>(calendar);
+#endif
 }
 
 Result<int32_t, ICUError> TimeZone::GetRawOffsetMs() {
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  return mTimeZone->getRawOffset();
+#else
   // Reset the time in case the calendar has been modified.
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, ucal_getNow(), &status);
@@ -61,11 +84,24 @@ Result<int32_t, ICUError> TimeZone::GetRawOffsetMs() {
   }
 
   return offset;
+#endif
 }
 
 Result<int32_t, ICUError> TimeZone::GetDSTOffsetMs(int64_t aUTCMilliseconds) {
   UDate date = UDate(aUTCMilliseconds);
 
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  constexpr bool dateIsLocalTime = false;
+  int32_t rawOffset, dstOffset;
+  UErrorCode status = U_ZERO_ERROR;
+
+  mTimeZone->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return dstOffset;
+#else
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, date, &status);
   if (U_FAILURE(status)) {
@@ -78,11 +114,24 @@ Result<int32_t, ICUError> TimeZone::GetDSTOffsetMs(int64_t aUTCMilliseconds) {
   }
 
   return dstOffset;
+#endif
 }
 
 Result<int32_t, ICUError> TimeZone::GetOffsetMs(int64_t aUTCMilliseconds) {
   UDate date = UDate(aUTCMilliseconds);
 
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  constexpr bool dateIsLocalTime = false;
+  int32_t rawOffset, dstOffset;
+  UErrorCode status = U_ZERO_ERROR;
+
+  mTimeZone->getOffset(date, dateIsLocalTime, rawOffset, dstOffset, status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return rawOffset + dstOffset;
+#else
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, date, &status);
   if (U_FAILURE(status)) {
@@ -100,6 +149,7 @@ Result<int32_t, ICUError> TimeZone::GetOffsetMs(int64_t aUTCMilliseconds) {
   }
 
   return rawOffset + dstOffset;
+#endif
 }
 
 Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
@@ -124,6 +174,23 @@ Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
 
   UDate date = UDate(aLocalMilliseconds);
 
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  int32_t rawOffset, dstOffset;
+  UErrorCode status = U_ZERO_ERROR;
+
+  // All ICU TimeZone classes derive from BasicTimeZone, so we can safely
+  // perform the static_cast.
+  // Once <https://unicode-org.atlassian.net/browse/ICU-13705> is fixed we
+  // can remove this extra cast.
+  auto* basicTz = static_cast<icu::BasicTimeZone*>(mTimeZone.get());
+  basicTz->getOffsetFromLocal(date, skippedTime, repeatedTime, rawOffset,
+                              dstOffset, status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return rawOffset + dstOffset;
+#else
   UErrorCode status = U_ZERO_ERROR;
   ucal_setMillis(mCalendar, date, &status);
   if (U_FAILURE(status)) {
@@ -138,6 +205,7 @@ Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
   }
 
   return rawOffset + dstOffset;
+#endif
 }
 
 Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
@@ -156,9 +224,11 @@ Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
   return SpanEnumeration<char>(enumeration);
 }
 
+#if !MOZ_INTL_USE_ICU_CPP_TIMEZONE
 TimeZone::~TimeZone() {
   MOZ_ASSERT(mCalendar);
   ucal_close(mCalendar);
 }
+#endif
 
 }  // namespace mozilla::intl
