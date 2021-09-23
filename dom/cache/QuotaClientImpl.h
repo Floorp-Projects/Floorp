@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_cache_QuotaClientImpl_h
 #define mozilla_dom_cache_QuotaClientImpl_h
 
+#include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/cache/FileUtils.h"
 
@@ -94,8 +96,8 @@ class CacheQuotaClient final : public quota::Client {
     QM_WARNONLY_TRY(ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
                     ([&aBaseDir](const nsresult) {
                       // Force restore file next time.
-                      QM_WARNONLY_TRY(DirectoryPaddingDeleteFile(
-                          aBaseDir, DirPaddingFile::FILE));
+                      QM_WARNONLY_TRY(QM_TO_RESULT(DirectoryPaddingDeleteFile(
+                          aBaseDir, DirPaddingFile::FILE)));
 
                       // Ensure that we are able to force the padding file to
                       // be restored.

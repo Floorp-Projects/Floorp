@@ -102,6 +102,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PBackgroundMutableFileParent.h"
 #include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/filehandle/ActorsParent.h"
 #include "mozilla/dom/indexedDB/IDBResult.h"
@@ -6831,7 +6832,7 @@ bool RecvFlushPendingFileDeletions() {
   AssertIsOnBackgroundThread();
 
   if (QuotaClient* quotaClient = QuotaClient::GetInstance()) {
-    QM_WARNONLY_TRY(quotaClient->FlushPendingFileDeletions());
+    QM_WARNONLY_TRY(QM_TO_RESULT(quotaClient->FlushPendingFileDeletions()));
   }
 
   return true;
@@ -7185,7 +7186,7 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   // Truncate the WAL if we were asked to or if we managed to free some space.
   if (aNeedsCheckpoint || freedSomePages) {
-    QM_WARNONLY_TRY(CheckpointInternal(CheckpointMode::Truncate));
+    QM_WARNONLY_TRY(QM_TO_RESULT(CheckpointInternal(CheckpointMode::Truncate)));
   }
 
   // Finally try to restart the read transaction if we rolled it back earlier.
@@ -7437,7 +7438,7 @@ DatabaseConnection::AutoSavepoint::~AutoSavepoint() {
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::VersionChange);
 
-    QM_WARNONLY_TRY(mConnection->RollbackSavepoint());
+    QM_WARNONLY_TRY(QM_TO_RESULT(mConnection->RollbackSavepoint()));
   }
 }
 
@@ -7595,7 +7596,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
     entry->MaybeUpdateDBRefs();
   }
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterCommit));
+  QM_WARNONLY_TRY(QM_TO_RESULT(RemoveJournals(mJournalsToRemoveAfterCommit)));
 }
 
 void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
@@ -7605,7 +7606,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::DidAbort",
                       DOM);
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterAbort));
+  QM_WARNONLY_TRY(QM_TO_RESULT(RemoveJournals(mJournalsToRemoveAfterAbort)));
 }
 
 void DatabaseConnection::UpdateRefcountFunction::StartSavepoint() {
@@ -7752,7 +7753,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
         DatabaseFileManager::GetFileForId(journalDirectory, journal);
     QM_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-    QM_WARNONLY_TRY(file->Remove(false));
+    QM_WARNONLY_TRY(QM_TO_RESULT(file->Remove(false)));
   }
 
   return NS_OK;
