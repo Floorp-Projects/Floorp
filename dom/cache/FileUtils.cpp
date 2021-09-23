@@ -8,6 +8,7 @@
 
 #include "DBSchema.h"
 #include "mozilla/dom/InternalResponse.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
@@ -171,7 +172,8 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
 }
 
 void BodyCancelWrite(nsISupports& aCopyContext) {
-  QM_WARNONLY_TRY(NS_CancelAsyncCopy(&aCopyContext, NS_ERROR_ABORT));
+  QM_WARNONLY_TRY(
+      QM_TO_RESULT(NS_CancelAsyncCopy(&aCopyContext, NS_ERROR_ABORT)));
 
   // TODO The partially written file must be cleaned up after the async copy
   // makes its callback.

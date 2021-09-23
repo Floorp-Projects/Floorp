@@ -735,7 +735,7 @@ class NotNull;
 
 // Handles the three arguments case when only a warning/info is reported.
 #define QM_REPORTONLY_TRY(tryResult, severity, expr)                           \
-  auto tryResult = ::mozilla::ToResult(expr);                                  \
+  auto tryResult = (expr);                                                     \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);       \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                       \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                      \
@@ -744,7 +744,7 @@ class NotNull;
 
 // Handles the four arguments case when a cleanup function needs to be called
 #define QM_REPORTONLY_TRY_WITH_CLEANUP(tryResult, severity, expr, cleanup) \
-  auto tryResult = ::mozilla::ToResult(expr);                              \
+  auto tryResult = (expr);                                                 \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);   \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                   \
     auto tryTempError = tryResult.unwrapErr();                             \
