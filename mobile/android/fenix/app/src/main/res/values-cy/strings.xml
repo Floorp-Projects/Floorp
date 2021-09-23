@@ -51,7 +51,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Cadwyd yn ddiweddar</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Cadwyd yn ddiweddar</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Wedi gosod nod tudalen yn ddiweddar</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Nodau tudalen wedi’u cadw’n ddiweddar</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -397,7 +399,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Mynd nôl i</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">Cadwyd yn ddiweddar</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Cadwyd yn ddiweddar</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Wedi gosod nod tudalen yn ddiweddar</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Ymwelwyd yn ddiweddar</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -1847,7 +1851,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">Rhaid i’r cyfeiriad gwe gynnwys \“https://\“ neu \“http://\“</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Rhaid i’r cyfeiriad gwe gynnwys \“https://\“ neu \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Rhaid i’r cyfeiriad gwe gynnwys &quot;https://&quot; neu &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Mae angen enw gwesteiwr dilys</string>
 

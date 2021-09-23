@@ -52,7 +52,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Oñeñongaturamóva</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Oñeñongaturamóva</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Oñembokurusu ramóva</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Techaukaha oñeñongaturamóva</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -401,7 +403,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Eho tapykuépe</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">Oñeñongaturamóva</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Oñeñongaturamóva</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Oñembokurusu ramóva</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Ojeikeramohague</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -1884,7 +1888,9 @@
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">Ñanduti kundaharape orekova’erã \“https://\“ térã \“http://\“</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Ñanduti kundaharape orekova’erã \“https://\“ térã \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Ñanduti kundaharape orekova’erã &quot;https://&quot; térã &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Mohendahavusu réra oikóva jerurepyre</string>
 

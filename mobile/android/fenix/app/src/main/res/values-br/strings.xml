@@ -48,7 +48,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Enrollet nevez ’zo</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Enrollet nevez ’zo</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Merket evel sined nevez ’zo</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Sinedoù enrollet nevez ’zo</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -393,8 +395,10 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Distreiñ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">Enrollet nevez ’zo</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Enrollet nevez ’zo</string>
 
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Merket evel sined nevez ’zo</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Gweladennet nevez ’zo</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -1540,6 +1544,11 @@
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Leuniañ emgefreek en arloadoù all</string>
 
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Leuniañ anvioù-implijer ha gerioù-tremen en arloadoù-all war ho trevnad.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Ouzhpennañ titouroù kennaskañ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Goubredañ an titouroù kennaskañ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1603,6 +1612,8 @@
     <string name="saved_login_copy_username">Eilañ an anv arveriad</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Skarzhañ an anv arveriad</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Skarzhañ anv an ostiz</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Eilañ al lec’hienn</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1770,6 +1781,10 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Gweredekait <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Kennask suraet</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">N’eo ket diarvar ar c’hennask</string>
+    <!-- Label that indicates a site is using a secure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Kennask diogel</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Kennask arvarus</string>
@@ -1812,14 +1827,29 @@
     <string name="discard_changes">Dilezel ar c’hemmoù</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Embann</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Ouzhpennañ titouroù kennaskañ nevez</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Ger-tremen azgoulennet</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Anv-implijer rekis</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Anv an ostiz rekis</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Klask dre vouezh</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Komzit bremañ</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Un titour kennaskañ gant an anv arveriad-mañ a zo dioutañ endeo.</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Ar chomlec’h web a rank kaout &quot;https://&quot; pe &quot;http://&quot; enni</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Ar chomlec’h web a rank kaout &quot;https://&quot; pe &quot;http://&quot; enni</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Un anv ostiz reizh a zo rekis</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1847,6 +1877,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Mat, komprenet am eus</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Diskouez al lec’hiennoù gweladennet ar muiañ</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Diskouez al lec’hiennoù gweladennet ar muiañ</string>
 
@@ -1858,6 +1890,16 @@
 	<string name="top_sites_rename_dialog_ok">Mat eo</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Nullañ</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Ivinelloù dioberiant</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">An ivinelloù a zo hegerz amañ e-pad %s. Goude e vo serret an ivinelloù ent emgefreek.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 devezh</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 sizhun</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Digeriñ liammoù al lec’hiennoù, posteloù ha kemennadennoù e Firefox en un doare emgefreek.</string>

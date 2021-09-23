@@ -54,7 +54,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Onlangs opgeslagen</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Onlangs opgeslagen</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Recent aangemaakte bladwijzers</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Recent opgeslagen bladwijzers</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -401,7 +403,9 @@
     <string name="toast_customize_addon_collection_done">Add-oncollectie aangepast. Toepassing wordt afgesloten om wijzigingen toe te passen…</string>
 
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">Onlangs opgeslagen</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Onlangs opgeslagen</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Recent aangemaakte bladwijzers</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Onlangs bezocht</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -1854,7 +1858,9 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">Het webadres moet \‘https://\’ of \‘http://\’ bevatten</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Het webadres moet \‘https://\’ of \‘http://\’ bevatten</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Het webadres moet ‘https://’ of ‘http://’ bevatten</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Geldige hostnaam vereist</string>
 
