@@ -662,15 +662,15 @@ pref("gfx.webrender.debug.glyph-flashing", false);
 pref("gfx.webrender.debug.capture-profiler", false);
 pref("gfx.webrender.debug.profiler-ui", "Default");
 
-// Temporarily use the debug pref to configure the upload startegy on windows.
-// If this doesn't cause breakage it will be selected directly in WebRender's
-// initialization code.
+pref("gfx.webrender.multithreading", true);
 #ifdef XP_WIN
-pref("gfx.webrender.debug.batched-texture-uploads", true);
-pref("gfx.webrender.debug.draw-calls-for-texture-copy", true);
+pref("gfx.webrender.pbo-uploads", false);
+pref("gfx.webrender.batched-texture-uploads", true);
+pref("gfx.webrender.draw-calls-for-texture-copy", true);
 #else
-pref("gfx.webrender.debug.batched-texture-uploads", false);
-pref("gfx.webrender.debug.draw-calls-for-texture-copy", false);
+pref("gfx.webrender.pbo-uploads", true);
+pref("gfx.webrender.batched-texture-uploads", false);
+pref("gfx.webrender.draw-calls-for-texture-copy", false);
 #endif
 
 

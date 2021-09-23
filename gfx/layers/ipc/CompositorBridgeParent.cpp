@@ -1338,8 +1338,7 @@ void CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport) {
 void CompositorBridgeParent::InitializeStatics() {
   gfxVars::SetForceSubpixelAAWherePossibleListener(&UpdateQualitySettings);
   gfxVars::SetWebRenderDebugFlagsListener(&UpdateDebugFlags);
-  gfxVars::SetUseWebRenderMultithreadingListener(
-      &UpdateWebRenderMultithreading);
+  gfxVars::SetWebRenderBoolParametersListener(&UpdateWebRenderBoolParameters);
   gfxVars::SetWebRenderBatchingLookbackListener(&UpdateWebRenderParameters);
   gfxVars::SetWebRenderBlobTileSizeListener(&UpdateWebRenderParameters);
 
@@ -1387,12 +1386,12 @@ void CompositorBridgeParent::UpdateDebugFlags() {
 }
 
 /*static*/
-void CompositorBridgeParent::UpdateWebRenderMultithreading() {
+void CompositorBridgeParent::UpdateWebRenderBoolParameters() {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
     if (CompositorThread()) {
       CompositorThread()->Dispatch(NewRunnableFunction(
-          "CompositorBridgeParent::UpdateWebRenderMultithreading",
-          &CompositorBridgeParent::UpdateWebRenderMultithreading));
+          "CompositorBridgeParent::UpdateWebRenderBoolParameters",
+          &CompositorBridgeParent::UpdateWebRenderBoolParameters));
     }
 
     return;
@@ -1400,7 +1399,7 @@ void CompositorBridgeParent::UpdateWebRenderMultithreading() {
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachWebRenderBridgeParent([&](WebRenderBridgeParent* wrBridge) -> void {
-    wrBridge->UpdateMultithreading();
+    wrBridge->UpdateBoolParameters();
   });
 }
 
