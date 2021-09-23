@@ -1695,11 +1695,6 @@ void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
   autoUnpin.Clear();
 
   bool succeeded = autoSyncLoop->Run();
-  // If the XHR failed, throw a network error.
-  if (mProxy->mXHR->ErrorCode() !=
-      static_cast<uint16_t>(XMLHttpRequestMainThread::ErrorType::eOK)) {
-    aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
-  }
   mStateData->mFlagSend = false;
 
   // Don't clobber an existing exception that we may have thrown on aRv
