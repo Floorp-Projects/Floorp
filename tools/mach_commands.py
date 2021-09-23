@@ -12,11 +12,12 @@ import sys
 
 from mach.decorators import (
     CommandArgument,
+    CommandProvider,
     Command,
     SubCommand,
 )
 
-from mozbuild.base import MozbuildObject
+from mozbuild.base import MachCommandBase, MozbuildObject
 
 
 def _get_busted_bugs(payload):
@@ -30,88 +31,89 @@ def _get_busted_bugs(payload):
     return response.json().get("bugs", [])
 
 
-@Command(
-    "busted",
-    category="misc",
-    description="Query known bugs in our tooling, and file new ones.",
-)
-def busted_default(command_context):
-    unresolved = _get_busted_bugs({"resolution": "---"})
-    creation_time = datetime.now() - timedelta(days=15)
-    creation_time = creation_time.strftime("%Y-%m-%dT%H-%M-%SZ")
-    resolved = _get_busted_bugs({"creation_time": creation_time})
-    resolved = [bug for bug in resolved if bug["resolution"]]
-    all_bugs = sorted(
-        unresolved + resolved, key=itemgetter("last_change_time"), reverse=True
+@CommandProvider
+class BustedProvider(MachCommandBase):
+    @Command(
+        "busted",
+        category="misc",
+        description="Query known bugs in our tooling, and file new ones.",
     )
-    if all_bugs:
-        for bug in all_bugs:
-            print(
-                "[%s] Bug %s - %s"
-                % (
-                    "UNRESOLVED"
-                    if not bug["resolution"]
-                    else "RESOLVED - %s" % bug["resolution"],
-                    bug["id"],
-                    bug["summary"],
+    def busted_default(self, command_context):
+        unresolved = _get_busted_bugs({"resolution": "---"})
+        creation_time = datetime.now() - timedelta(days=15)
+        creation_time = creation_time.strftime("%Y-%m-%dT%H-%M-%SZ")
+        resolved = _get_busted_bugs({"creation_time": creation_time})
+        resolved = [bug for bug in resolved if bug["resolution"]]
+        all_bugs = sorted(
+            unresolved + resolved, key=itemgetter("last_change_time"), reverse=True
+        )
+        if all_bugs:
+            for bug in all_bugs:
+                print(
+                    "[%s] Bug %s - %s"
+                    % (
+                        "UNRESOLVED"
+                        if not bug["resolution"]
+                        else "RESOLVED - %s" % bug["resolution"],
+                        bug["id"],
+                        bug["summary"],
+                    )
                 )
+        else:
+            print("No known tooling issues found.")
+
+    @SubCommand("busted", "file", description="File a bug for busted tooling.")
+    @CommandArgument(
+        "against",
+        help=(
+            "The specific mach command that is busted (i.e. if you encountered "
+            "an error with `mach build`, run `mach busted file build`). If "
+            "the issue is not connected to any particular mach command, you "
+            "can also run `mach busted file general`."
+        ),
+    )
+    def busted_file(self, command_context, against):
+        import webbrowser
+
+        if (
+            against != "general"
+            and against not in command_context._mach_context.commands.command_handlers
+        ):
+            print(
+                "%s is not a valid value for `against`. `against` must be "
+                "the name of a `mach` command, or else the string "
+                '"general".' % against
             )
-    else:
-        print("No known tooling issues found.")
+            return 1
 
-
-@SubCommand("busted", "file", description="File a bug for busted tooling.")
-@CommandArgument(
-    "against",
-    help=(
-        "The specific mach command that is busted (i.e. if you encountered "
-        "an error with `mach build`, run `mach busted file build`). If "
-        "the issue is not connected to any particular mach command, you "
-        "can also run `mach busted file general`."
-    ),
-)
-def busted_file(command_context, against):
-    import webbrowser
-
-    if (
-        against != "general"
-        and against not in command_context._mach_context.commands.command_handlers
-    ):
-        print(
-            "%s is not a valid value for `against`. `against` must be "
-            "the name of a `mach` command, or else the string "
-            '"general".' % against
-        )
-        return 1
-
-    if against == "general":
-        product = "Firefox Build System"
-        component = "General"
-    else:
-        import inspect
-        import mozpack.path as mozpath
-
-        # Look up the file implementing that command, then cross-refernce
-        # moz.build files to get the product/component.
-        handler = command_context._mach_context.commands.command_handlers[against]
-        method = getattr(handler.cls, handler.method)
-        sourcefile = mozpath.relpath(
-            inspect.getsourcefile(method), command_context.topsrcdir
-        )
-        reader = command_context.mozbuild_reader(config_mode="empty")
-        try:
-            res = reader.files_info([sourcefile])[sourcefile]["BUG_COMPONENT"]
-            product, component = res.product, res.component
-        except TypeError:
-            # The file might not have a bug set.
+        if against == "general":
             product = "Firefox Build System"
             component = "General"
+        else:
+            import inspect
+            import mozpack.path as mozpath
 
-    uri = (
-        "https://bugzilla.mozilla.org/enter_bug.cgi?"
-        "product=%s&component=%s&blocked=1543241" % (product, component)
-    )
-    webbrowser.open_new_tab(uri)
+            # Look up the file implementing that command, then cross-refernce
+            # moz.build files to get the product/component.
+            handler = command_context._mach_context.commands.command_handlers[against]
+            method = getattr(handler.cls, handler.method)
+            sourcefile = mozpath.relpath(
+                inspect.getsourcefile(method), command_context.topsrcdir
+            )
+            reader = command_context.mozbuild_reader(config_mode="empty")
+            try:
+                res = reader.files_info([sourcefile])[sourcefile]["BUG_COMPONENT"]
+                product, component = res.product, res.component
+            except TypeError:
+                # The file might not have a bug set.
+                product = "Firefox Build System"
+                component = "General"
+
+        uri = (
+            "https://bugzilla.mozilla.org/enter_bug.cgi?"
+            "product=%s&component=%s&blocked=1543241" % (product, component)
+        )
+        webbrowser.open_new_tab(uri)
 
 
 MACH_PASTEBIN_DURATIONS = {
@@ -234,122 +236,126 @@ appropriate highlighter.
 """
 
 
-@Command("pastebin", category="misc", description=MACH_PASTEBIN_DESCRIPTION)
-@CommandArgument(
-    "--list-highlighters",
-    action="store_true",
-    help="List known highlighters and exit",
-)
-@CommandArgument(
-    "--highlighter", default=None, help="Syntax highlighting to use for paste"
-)
-@CommandArgument(
-    "--expires",
-    default="week",
-    choices=sorted(MACH_PASTEBIN_DURATIONS.keys()),
-    help="Expire paste after given time duration (default: %(default)s)",
-)
-@CommandArgument(
-    "--verbose",
-    action="store_true",
-    help="Print extra info such as selected syntax highlighter",
-)
-@CommandArgument(
-    "path",
-    nargs="?",
-    default=None,
-    help="Path to file for upload to paste.mozilla.org",
-)
-def pastebin(command_context, list_highlighters, highlighter, expires, verbose, path):
-    import requests
+@CommandProvider
+class PastebinProvider(MachCommandBase):
+    @Command("pastebin", category="misc", description=MACH_PASTEBIN_DESCRIPTION)
+    @CommandArgument(
+        "--list-highlighters",
+        action="store_true",
+        help="List known highlighters and exit",
+    )
+    @CommandArgument(
+        "--highlighter", default=None, help="Syntax highlighting to use for paste"
+    )
+    @CommandArgument(
+        "--expires",
+        default="week",
+        choices=sorted(MACH_PASTEBIN_DURATIONS.keys()),
+        help="Expire paste after given time duration (default: %(default)s)",
+    )
+    @CommandArgument(
+        "--verbose",
+        action="store_true",
+        help="Print extra info such as selected syntax highlighter",
+    )
+    @CommandArgument(
+        "path",
+        nargs="?",
+        default=None,
+        help="Path to file for upload to paste.mozilla.org",
+    )
+    def pastebin(
+        self, command_context, list_highlighters, highlighter, expires, verbose, path
+    ):
+        import requests
 
-    def verbose_print(*args, **kwargs):
-        """Print a string if `--verbose` flag is set"""
-        if verbose:
-            print(*args, **kwargs)
+        def verbose_print(*args, **kwargs):
+            """Print a string if `--verbose` flag is set"""
+            if verbose:
+                print(*args, **kwargs)
 
-    # Show known highlighters and exit.
-    if list_highlighters:
-        lexers = set(EXTENSION_TO_HIGHLIGHTER.values())
-        print("Available lexers:\n    - %s" % "\n    - ".join(sorted(lexers)))
-        return 0
+        # Show known highlighters and exit.
+        if list_highlighters:
+            lexers = set(EXTENSION_TO_HIGHLIGHTER.values())
+            print("Available lexers:\n" "    - %s" % "\n    - ".join(sorted(lexers)))
+            return 0
 
-    # Get a correct expiry value.
-    try:
-        verbose_print("Setting expiry from %s" % expires)
-        expires = MACH_PASTEBIN_DURATIONS[expires]
-        verbose_print("Using %s as expiry" % expires)
-    except KeyError:
-        print(
-            "%s is not a valid duration.\n"
-            "(hint: try one of %s)"
-            % (expires, ", ".join(MACH_PASTEBIN_DURATIONS.keys()))
-        )
-        return 1
-
-    data = {
-        "format": "json",
-        "expires": expires,
-    }
-
-    # Get content to be pasted.
-    if path:
-        verbose_print("Reading content from %s" % path)
+        # Get a correct expiry value.
         try:
-            with open(path, "r") as f:
-                content = f.read()
-        except IOError:
-            print("ERROR. No such file %s" % path)
+            verbose_print("Setting expiry from %s" % expires)
+            expires = MACH_PASTEBIN_DURATIONS[expires]
+            verbose_print("Using %s as expiry" % expires)
+        except KeyError:
+            print(
+                "%s is not a valid duration.\n"
+                "(hint: try one of %s)"
+                % (expires, ", ".join(MACH_PASTEBIN_DURATIONS.keys()))
+            )
             return 1
 
-        lexer = guess_highlighter_from_path(path)
-        if lexer:
-            data["lexer"] = lexer
-    else:
-        verbose_print("Reading content from stdin")
-        content = sys.stdin.read()
+        data = {
+            "format": "json",
+            "expires": expires,
+        }
 
-    # Assert the length of content to be posted does not exceed the maximum.
-    content_length = len(content)
-    verbose_print("Checking size of content is okay (%d)" % content_length)
-    if content_length > PASTEMO_MAX_CONTENT_LENGTH:
-        print(
-            "Paste content is too large (%d, maximum %d)"
-            % (content_length, PASTEMO_MAX_CONTENT_LENGTH)
-        )
+        # Get content to be pasted.
+        if path:
+            verbose_print("Reading content from %s" % path)
+            try:
+                with open(path, "r") as f:
+                    content = f.read()
+            except IOError:
+                print("ERROR. No such file %s" % path)
+                return 1
+
+            lexer = guess_highlighter_from_path(path)
+            if lexer:
+                data["lexer"] = lexer
+        else:
+            verbose_print("Reading content from stdin")
+            content = sys.stdin.read()
+
+        # Assert the length of content to be posted does not exceed the maximum.
+        content_length = len(content)
+        verbose_print("Checking size of content is okay (%d)" % content_length)
+        if content_length > PASTEMO_MAX_CONTENT_LENGTH:
+            print(
+                "Paste content is too large (%d, maximum %d)"
+                % (content_length, PASTEMO_MAX_CONTENT_LENGTH)
+            )
+            return 1
+
+        data["content"] = content
+
+        # Highlight as specified language, overwriting value set from filename.
+        if highlighter:
+            verbose_print("Setting %s as highlighter" % highlighter)
+            data["lexer"] = highlighter
+
+        try:
+            verbose_print("Sending request to %s" % PASTEMO_URL)
+            resp = requests.post(PASTEMO_URL, data=data)
+
+            # Error code should always be 400.
+            # Response content will include a helpful error message,
+            # so print it here (for example, if an invalid highlighter is
+            # provided, it will return a list of valid highlighters).
+            if resp.status_code >= 400:
+                print("Error code %d: %s" % (resp.status_code, resp.content))
+                return 1
+
+            verbose_print("Pasted successfully")
+
+            response_json = resp.json()
+
+            verbose_print("Paste highlighted as %s" % response_json["lexer"])
+            print(response_json["url"])
+
+            return 0
+        except Exception as e:
+            print("ERROR. Paste failed.")
+            print("%s" % e)
         return 1
-
-    data["content"] = content
-
-    # Highlight as specified language, overwriting value set from filename.
-    if highlighter:
-        verbose_print("Setting %s as highlighter" % highlighter)
-        data["lexer"] = highlighter
-
-    try:
-        verbose_print("Sending request to %s" % PASTEMO_URL)
-        resp = requests.post(PASTEMO_URL, data=data)
-
-        # Error code should always be 400.
-        # Response content will include a helpful error message,
-        # so print it here (for example, if an invalid highlighter is
-        # provided, it will return a list of valid highlighters).
-        if resp.status_code >= 400:
-            print("Error code %d: %s" % (resp.status_code, resp.content))
-            return 1
-
-        verbose_print("Pasted successfully")
-
-        response_json = resp.json()
-
-        verbose_print("Paste highlighted as %s" % response_json["lexer"])
-        print(response_json["url"])
-
-        return 0
-    except Exception as e:
-        print("ERROR. Paste failed.")
-        print("%s" % e)
-    return 1
 
 
 class PypiBasedTool:
@@ -426,70 +432,73 @@ def mozregression_create_parser():
     return loader.create_parser()
 
 
-@Command(
-    "mozregression",
-    category="misc",
-    description=("Regression range finder for nightly and inbound builds."),
-    parser=mozregression_create_parser,
-)
-def run(command_context, **options):
-    command_context.activate_virtualenv()
-    mozregression = PypiBasedTool("mozregression")
-    mozregression.run(**options)
-
-
-@Command(
-    "node",
-    category="devenv",
-    description="Run the NodeJS interpreter used for building.",
-)
-@CommandArgument("args", nargs=argparse.REMAINDER)
-def node(command_context, args):
-    from mozbuild.nodeutil import find_node_executable
-
-    # Avoid logging the command
-    command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
-
-    node_path, _ = find_node_executable()
-
-    return command_context.run_process(
-        [node_path] + args,
-        pass_thru=True,  # Allow user to run Node interactively.
-        ensure_exit_code=False,  # Don't throw on non-zero exit code.
+@CommandProvider
+class MozregressionCommand(MachCommandBase):
+    @Command(
+        "mozregression",
+        category="misc",
+        description=("Regression range finder for nightly" " and inbound builds."),
+        parser=mozregression_create_parser,
     )
+    def run(self, command_context, **options):
+        command_context.activate_virtualenv()
+        mozregression = PypiBasedTool("mozregression")
+        mozregression.run(**options)
 
 
-@Command(
-    "npm",
-    category="devenv",
-    description="Run the npm executable from the NodeJS used for building.",
-)
-@CommandArgument("args", nargs=argparse.REMAINDER)
-def npm(command_context, args):
-    from mozbuild.nodeutil import find_npm_executable
-
-    # Avoid logging the command
-    command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
-
-    import os
-
-    # Add node and npm from mozbuild to front of system path
-    #
-    # This isn't pretty, but npm currently executes itself with
-    # `#!/usr/bin/env node`, which means it just uses the node in the
-    # current PATH. As a result, stuff gets built wrong and installed
-    # in the wrong places and probably other badness too without this:
-    npm_path, _ = find_npm_executable()
-    if not npm_path:
-        exit(-1, "could not find npm executable")
-    path = os.path.abspath(os.path.dirname(npm_path))
-    os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
-
-    return command_context.run_process(
-        [npm_path, "--scripts-prepend-node-path=auto"] + args,
-        pass_thru=True,  # Avoid eating npm output/error messages
-        ensure_exit_code=False,  # Don't throw on non-zero exit code.
+@CommandProvider
+class NodeCommands(MachCommandBase):
+    @Command(
+        "node",
+        category="devenv",
+        description="Run the NodeJS interpreter used for building.",
     )
+    @CommandArgument("args", nargs=argparse.REMAINDER)
+    def node(self, command_context, args):
+        from mozbuild.nodeutil import find_node_executable
+
+        # Avoid logging the command
+        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+
+        node_path, _ = find_node_executable()
+
+        return command_context.run_process(
+            [node_path] + args,
+            pass_thru=True,  # Allow user to run Node interactively.
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
+        )
+
+    @Command(
+        "npm",
+        category="devenv",
+        description="Run the npm executable from the NodeJS used for building.",
+    )
+    @CommandArgument("args", nargs=argparse.REMAINDER)
+    def npm(self, command_context, args):
+        from mozbuild.nodeutil import find_npm_executable
+
+        # Avoid logging the command
+        command_context.log_manager.terminal_handler.setLevel(logging.CRITICAL)
+
+        import os
+
+        # Add node and npm from mozbuild to front of system path
+        #
+        # This isn't pretty, but npm currently executes itself with
+        # `#!/usr/bin/env node`, which means it just uses the node in the
+        # current PATH. As a result, stuff gets built wrong and installed
+        # in the wrong places and probably other badness too without this:
+        npm_path, _ = find_npm_executable()
+        if not npm_path:
+            exit(-1, "could not find npm executable")
+        path = os.path.abspath(os.path.dirname(npm_path))
+        os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
+
+        return command_context.run_process(
+            [npm_path, "--scripts-prepend-node-path=auto"] + args,
+            pass_thru=True,  # Avoid eating npm output/error messages
+            ensure_exit_code=False,  # Don't throw on non-zero exit code.
+        )
 
 
 def logspam_create_parser(subcommand):
@@ -503,31 +512,30 @@ def logspam_create_parser(subcommand):
 from functools import partial
 
 
-@Command(
-    "logspam",
-    category="misc",
-    description=("Warning categorizer for treeherder test runs."),
-)
-def logspam(command_context):
-    pass
+@CommandProvider
+class LogspamCommand(MachCommandBase):
+    @Command(
+        "logspam",
+        category="misc",
+        description=("Warning categorizer for treeherder test runs."),
+    )
+    def logspam(self, command_context):
+        pass
 
+    @SubCommand("logspam", "report", parser=partial(logspam_create_parser, "report"))
+    def report(self, command_context, **options):
+        command_context.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="report", **options)
 
-@SubCommand("logspam", "report", parser=partial(logspam_create_parser, "report"))
-def report(command_context, **options):
-    command_context.activate_virtualenv()
-    logspam = PypiBasedTool("logspam")
-    logspam.run(command="report", **options)
+    @SubCommand("logspam", "bisect", parser=partial(logspam_create_parser, "bisect"))
+    def bisect(self, command_context, **options):
+        command_context.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="bisect", **options)
 
-
-@SubCommand("logspam", "bisect", parser=partial(logspam_create_parser, "bisect"))
-def bisect(command_context, **options):
-    command_context.activate_virtualenv()
-    logspam = PypiBasedTool("logspam")
-    logspam.run(command="bisect", **options)
-
-
-@SubCommand("logspam", "file", parser=partial(logspam_create_parser, "file"))
-def create(command_context, **options):
-    command_context.activate_virtualenv()
-    logspam = PypiBasedTool("logspam")
-    logspam.run(command="file", **options)
+    @SubCommand("logspam", "file", parser=partial(logspam_create_parser, "file"))
+    def create(self, command_context, **options):
+        command_context.activate_virtualenv()
+        logspam = PypiBasedTool("logspam")
+        logspam.run(command="file", **options)
