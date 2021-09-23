@@ -39,6 +39,11 @@ const breakpointListSpec = generateActorSpec({
         method: Arg(1, "string"),
       },
     },
+    setActiveEventBreakpoints: {
+      request: {
+        ids: Arg(0, "array:string"),
+      },
+    },
   },
 });
 

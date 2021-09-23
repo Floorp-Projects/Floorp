@@ -185,9 +185,11 @@ void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
   int32_t cleanFlags = 0;
   RefPtr<PendingCleanupHolder> holder = new PendingCleanupHolder(aChannel);
 
-  if (flags & eCache) {
-    LogOpToConsole(aChannel, uri, eCache);
-    cleanFlags |= nsIClearDataService::CLEAR_ALL_CACHES;
+  if (StaticPrefs::privacy_clearsitedata_cache_enabled()) {
+    if (flags & eCache) {
+      LogOpToConsole(aChannel, uri, eCache);
+      cleanFlags |= nsIClearDataService::CLEAR_ALL_CACHES;
+    }
   }
 
   if (flags & eCookies) {
@@ -235,9 +237,11 @@ uint32_t ClearSiteData::ParseHeader(nsIHttpChannel* aChannel,
     // around tokens.
     value.StripTaggedASCII(mozilla::ASCIIMask::MaskWhitespace());
 
-    if (value.EqualsLiteral("\"cache\"")) {
-      flags |= eCache;
-      continue;
+    if (StaticPrefs::privacy_clearsitedata_cache_enabled()) {
+      if (value.EqualsLiteral("\"cache\"")) {
+        flags |= eCache;
+        continue;
+      }
     }
 
     if (value.EqualsLiteral("\"cookies\"")) {
@@ -251,7 +255,10 @@ uint32_t ClearSiteData::ParseHeader(nsIHttpChannel* aChannel,
     }
 
     if (value.EqualsLiteral("\"*\"")) {
-      flags = eCache | eCookies | eStorage;
+      flags = eCookies | eStorage;
+      if (StaticPrefs::privacy_clearsitedata_cache_enabled()) {
+        flags |= eCache;
+      }
       break;
     }
 

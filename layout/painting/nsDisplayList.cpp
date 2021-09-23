@@ -7920,28 +7920,6 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
           imgParams.result == ImgDrawResult::WRONG_SIZE);
 }
 
-bool nsDisplayMasksAndClipPaths::CanPaintOnMaskLayer(LayerManager* aManager) {
-  if (!aManager->IsWidgetLayerManager()) {
-    return false;
-  }
-
-  if (!SVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
-    return false;
-  }
-
-  if (StaticPrefs::layers_draw_mask_debug()) {
-    return false;
-  }
-
-  // We don't currently support this item creating a mask
-  // for both the clip-path, and rounded rect clipping.
-  if (GetClip().GetRoundedRectCount() != 0) {
-    return false;
-  }
-
-  return true;
-}
-
 void nsDisplayMasksAndClipPaths::ComputeInvalidationRegion(
     nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
     nsRegion* aInvalidRegion) const {

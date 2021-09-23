@@ -435,6 +435,10 @@ bool GCRuntime::relocateArenas(Zone* zone, JS::GCReason reason,
   return true;
 }
 
+MovingTracer::MovingTracer(JSRuntime* rt)
+    : GenericTracerImpl(rt, JS::TracerKind::Moving,
+                        JS::WeakMapTraceAction::TraceKeysAndValues) {}
+
 template <typename T>
 inline T* MovingTracer::onEdge(T* thing) {
   if (thing->runtimeFromAnyThread() == runtime() && IsForwarded(thing)) {
@@ -442,35 +446,6 @@ inline T* MovingTracer::onEdge(T* thing) {
   }
 
   return thing;
-}
-
-JSObject* MovingTracer::onObjectEdge(JSObject* obj) { return onEdge(obj); }
-Shape* MovingTracer::onShapeEdge(Shape* shape) { return onEdge(shape); }
-JSString* MovingTracer::onStringEdge(JSString* string) {
-  return onEdge(string);
-}
-js::BaseScript* MovingTracer::onScriptEdge(js::BaseScript* script) {
-  return onEdge(script);
-}
-BaseShape* MovingTracer::onBaseShapeEdge(BaseShape* base) {
-  return onEdge(base);
-}
-GetterSetter* MovingTracer::onGetterSetterEdge(GetterSetter* gs) {
-  return onEdge(gs);
-}
-PropMap* MovingTracer::onPropMapEdge(js::PropMap* map) { return onEdge(map); }
-Scope* MovingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
-RegExpShared* MovingTracer::onRegExpSharedEdge(RegExpShared* shared) {
-  return onEdge(shared);
-}
-BigInt* MovingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
-JS::Symbol* MovingTracer::onSymbolEdge(JS::Symbol* sym) {
-  MOZ_ASSERT(!sym->isForwarded());
-  return sym;
-}
-jit::JitCode* MovingTracer::onJitCodeEdge(jit::JitCode* jit) {
-  MOZ_ASSERT(!jit->isForwarded());
-  return jit;
 }
 
 void Zone::prepareForCompacting() {

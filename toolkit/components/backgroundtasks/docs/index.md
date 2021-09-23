@@ -24,6 +24,7 @@ EXTRA_JS_MODULES.backgroundtasks += [
 In `BackgroundTask_TASKNAME.jsm`, define a function `runBackgroundTask` that returns a `Promise`.  `runBackgroundTask` will be awaited and the integer value it resolves to will be used as the exit code of the `--backgroundtask TASKNAME` invocation.  Optionally, `runBackgroundTask` can take an [`nsICommandLine` instance](https://searchfox.org/mozilla-central/source/toolkit/components/commandlines/nsICommandLine.idl) as a parameter.  For example:
 
 ```javascript
+var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 async function runBackgroundTask(commandLine) {
     return Number.parseInt(commandLine.getArgument(0), 10);
 }

@@ -67,7 +67,7 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
   /*
    * Indicates if we has the right to make permission request with aType
    */
-  bool HasPermissionDelegated(const nsACString& aType);
+  bool HasPermissionDelegated(const nsACString& aType) const;
 
   /*
    * Get permission state, which applied permission delegate policy.

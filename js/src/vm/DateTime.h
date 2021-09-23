@@ -15,13 +15,11 @@
 #include "js/Utility.h"
 #include "threading/ExclusiveData.h"
 
-#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
-#  include "unicode/uversion.h"
-
-U_NAMESPACE_BEGIN
+#if JS_HAS_INTL_API
+namespace mozilla::intl {
 class TimeZone;
-U_NAMESPACE_END
-#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
+}
+#endif
 
 namespace js {
 
@@ -164,7 +162,7 @@ class DateTimeInfo {
     return guard->utcToLocalStandardOffsetSeconds_;
   }
 
-#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API
   enum class TimeZoneOffset { UTC, Local };
 
   /**
@@ -197,7 +195,7 @@ class DateTimeInfo {
   static int32_t localTZA() {
     return utcToLocalStandardOffsetSeconds() * msPerSecond;
   }
-#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API */
 
  private:
   // The two methods below should only be called via js::ResetTimeZoneInternal()
@@ -263,22 +261,17 @@ class DateTimeInfo {
    * <https://unicode-org.atlassian.net/browse/ICU-13845>.
    *
    * When ICU is exclusively used for time zone computations, that means when
-   * |JS_HAS_INTL_API && !MOZ_SYSTEM_ICU| is true, this field is only used to
-   * detect system default time zone changes. It must not be used to convert
-   * between local and UTC time, because, as outlined above, this could lead to
-   * different results when compared to ICU.
+   * |JS_HAS_INTL_API| is true, this field is only used to detect system default
+   * time zone changes. It must not be used to convert between local and UTC
+   * time, because, as outlined above, this could lead to different results when
+   * compared to ICU.
    */
   int32_t utcToLocalStandardOffsetSeconds_;
 
   RangeCache dstRange_;  // UTC-based ranges
 
-#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
-  // ICU's TimeZone class is currently only available through the C++ API,
-  // see <https://unicode-org.atlassian.net/browse/ICU-13706>. Due to the
-  // lack of a stable ABI in C++, we therefore need to restrict this class
-  // to only use ICU when we use our in-tree ICU copy.
-
-  // Use the full date-time range when we can use ICU's TimeZone support.
+#if JS_HAS_INTL_API
+  // Use the full date-time range when we can use mozilla::intl::TimeZone.
   static constexpr int64_t MinTimeT =
       static_cast<int64_t>(StartOfTime / msPerSecond);
   static constexpr int64_t MaxTimeT =
@@ -288,10 +281,10 @@ class DateTimeInfo {
   RangeCache localRange_;  // UTC-based ranges
 
   /**
-   * The current ICU time zone. Lazily constructed to avoid potential I/O
-   * access when initializing this class.
+   * The current time zone. Lazily constructed to avoid potential I/O access
+   * when initializing this class.
    */
-  mozilla::UniquePtr<icu::TimeZone> timeZone_;
+  mozilla::UniquePtr<mozilla::intl::TimeZone> timeZone_;
 
   /**
    * Cached names of the standard and daylight savings display names of the
@@ -309,7 +302,7 @@ class DateTimeInfo {
   // underlying operating system.
   static constexpr int64_t MinTimeT = 0;          /* time_t 01/01/1970 */
   static constexpr int64_t MaxTimeT = 2145830400; /* time_t 12/31/2037 */
-#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API */
 
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
@@ -338,7 +331,7 @@ class DateTimeInfo {
 
   int32_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
 
-#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API
   /**
    * Compute the UTC offset in milliseconds for the given local time. Called
    * by internalGetOffsetMilliseconds on a cache miss.
@@ -357,8 +350,8 @@ class DateTimeInfo {
   bool internalTimeZoneDisplayName(char16_t* buf, size_t buflen,
                                    int64_t utcMilliseconds, const char* locale);
 
-  icu::TimeZone* timeZone();
-#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
+  mozilla::intl::TimeZone* timeZone();
+#endif /* JS_HAS_INTL_API */
 };
 
 } /* namespace js */

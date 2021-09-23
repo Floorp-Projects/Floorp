@@ -63,7 +63,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_AssertUnreachable)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_ASSERT_UNREACHABLE);
 
     tryDidNotReturn = true;
 
@@ -79,7 +79,7 @@ TEST(QuotaCommon_Try, Success_NoErr_AssertUnreachable)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_OK, QM_ASSERT_UNREACHABLE_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_ASSERT_UNREACHABLE_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -98,7 +98,7 @@ TEST(QuotaCommon_Try, Success_CustomErr_DiagnosticAssertUnreachable)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_DIAGNOSTIC_ASSERT_UNREACHABLE);
 
     tryDidNotReturn = true;
 
@@ -114,7 +114,7 @@ TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_OK, QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_DIAGNOSTIC_ASSERT_UNREACHABLE_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -134,7 +134,7 @@ TEST(QuotaCommon_Try, Success_WithCleanup)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(NS_OK), QM_PROPAGATE,
            [&tryCleanupRan](const auto&) { tryCleanupRan = true; });
 
     tryDidNotReturn = true;
@@ -168,7 +168,7 @@ TEST(QuotaCommon_Try, Failure_CustomErr)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE, NS_ERROR_UNEXPECTED);
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), NS_ERROR_UNEXPECTED);
 
     tryDidNotReturn = true;
 
@@ -184,7 +184,7 @@ TEST(QuotaCommon_Try, Failure_NoErr)
   bool tryDidNotReturn = false;
 
   [&tryDidNotReturn]() -> void {
-    QM_TRY(NS_ERROR_FAILURE, QM_VOID);
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_VOID);
 
     tryDidNotReturn = true;
   }();
@@ -198,7 +198,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_PROPAGATE,
            [&tryCleanupRan](const auto& result) {
              EXPECT_EQ(result, NS_ERROR_FAILURE);
 
@@ -223,7 +223,8 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
   nsresult rv;
 
   [&tryCleanupRan, &tryDidNotReturn](nsresult& aRv) -> void {
-    QM_TRY(NS_ERROR_FAILURE, QM_VOID, ([&tryCleanupRan, &aRv](auto& result) {
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_VOID,
+           ([&tryCleanupRan, &aRv](auto& result) {
              EXPECT_EQ(result, NS_ERROR_FAILURE);
 
              aRv = result;
@@ -244,7 +245,7 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
 TEST(QuotaCommon_Try, SameLine)
 {
   // clang-format off
-  QM_TRY(NS_OK, QM_VOID); QM_TRY(NS_OK, QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(NS_OK), QM_VOID); QM_TRY(MOZ_TO_RESULT(NS_OK), QM_VOID);
   // clang-format on
 }
 
@@ -819,7 +820,7 @@ TEST(QuotaCommon_TryReturn, Success_nsresult)
   bool tryReturnDidNotReturn = false;
 
   auto res = [&tryReturnDidNotReturn] {
-    QM_TRY_RETURN(NS_OK);
+    QM_TRY_RETURN(MOZ_TO_RESULT(NS_OK));
 
     tryReturnDidNotReturn = true;
   }();
@@ -885,7 +886,7 @@ TEST(QuotaCommon_TryReturn, Failure_PropagateErr_nsresult)
   bool tryReturnDidNotReturn = false;
 
   auto res = [&tryReturnDidNotReturn] {
-    QM_TRY_RETURN(NS_ERROR_FAILURE);
+    QM_TRY_RETURN(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
     tryReturnDidNotReturn = true;
   }();

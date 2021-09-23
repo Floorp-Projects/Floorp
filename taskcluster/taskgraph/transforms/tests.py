@@ -1164,6 +1164,8 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-91",
                 "linux64-chromedriver-92",
                 "linux64-chromedriver-93",
+                "linux64-chromedriver-94",
+                "linux64-chromedriver-95",
             ],
             "linux.*": [
                 "linux64-chromedriver-87",
@@ -1172,6 +1174,8 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-91",
                 "linux64-chromedriver-92",
                 "linux64-chromedriver-93",
+                "linux64-chromedriver-94",
+                "linux64-chromedriver-95",
             ],
             "macosx.*": [
                 "mac64-chromedriver-87",
@@ -1180,6 +1184,8 @@ def setup_browsertime(config, tasks):
                 "mac64-chromedriver-91",
                 "mac64-chromedriver-92",
                 "mac64-chromedriver-93",
+                "mac64-chromedriver-94",
+                "mac64-chromedriver-95",
             ],
             "windows.*aarch64.*": [
                 "win32-chromedriver-87",
@@ -1188,6 +1194,8 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-91",
                 "win32-chromedriver-92",
                 "win32-chromedriver-93",
+                "win32-chromedriver-94",
+                "win32-chromedriver-95",
             ],
             "windows.*-32.*": [
                 "win32-chromedriver-87",
@@ -1196,6 +1204,8 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-91",
                 "win32-chromedriver-92",
                 "win32-chromedriver-93",
+                "win32-chromedriver-94",
+                "win32-chromedriver-95",
             ],
             "windows.*-64.*": [
                 "win32-chromedriver-87",
@@ -1204,6 +1214,8 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-91",
                 "win32-chromedriver-92",
                 "win32-chromedriver-93",
+                "win32-chromedriver-94",
+                "win32-chromedriver-95",
             ],
         }
 

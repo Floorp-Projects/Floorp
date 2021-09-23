@@ -71,6 +71,9 @@ module.exports = async function(context, commands) {
         });
       }
       ret = true;
+    } else {
+      context.log.error("No data collected from benchmark.");
+      ret = false;
     }
   }
   context.log.info("Browsertime benchmark ended.");

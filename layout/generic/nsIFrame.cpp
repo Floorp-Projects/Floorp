@@ -9031,14 +9031,12 @@ nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-Result<int32_t, nsresult> nsIFrame::GetLineNumber(bool aLockScroll,
-                                                  nsIFrame** aContainingBlock) {
-  MOZ_ASSERT(aContainingBlock);
-
-  nsIFrame* parentFrame = this;
-  nsIFrame* frame;
-  nsAutoLineIterator it;
-  while (!it && parentFrame) {
+nsIFrame* nsIFrame::GetContainingBlockForLine(bool aLockScroll,
+                                              nsIFrame*& aLineFrame) const {
+  aLineFrame = nullptr;
+  const nsIFrame* parentFrame = this;
+  const nsIFrame* frame;
+  while (parentFrame) {
     frame = parentFrame;
     if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
       // if we are searching for a frame that is not in flow we will not find
@@ -9049,18 +9047,37 @@ Result<int32_t, nsresult> nsIFrame::GetLineNumber(bool aLockScroll,
       }
       frame = frame->GetPlaceholderFrame();
       if (!frame) {
-        return Err(NS_ERROR_FAILURE);
+        return nullptr;
       }
     }
     parentFrame = frame->GetParent();
     if (parentFrame) {
       if (aLockScroll && parentFrame->IsScrollFrame()) {
-        return Err(NS_ERROR_FAILURE);
+        return nullptr;
       }
-      it = parentFrame->GetLineIterator();
+      if (parentFrame->CanProvideLineIterator()) {
+        aLineFrame = const_cast<nsIFrame*>(frame);
+        return const_cast<nsIFrame*>(parentFrame);
+      }
     }
   }
-  if (!parentFrame || !it) {
+  return nullptr;
+}
+
+Result<int32_t, nsresult> nsIFrame::GetLineNumber(bool aLockScroll,
+                                                  nsIFrame** aContainingBlock) {
+  MOZ_ASSERT(aContainingBlock);
+
+  nsIFrame* frame = nullptr;
+  nsIFrame* parentFrame = GetContainingBlockForLine(aLockScroll, frame);
+  if (!parentFrame) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  nsAutoLineIterator it = parentFrame->GetLineIterator();
+  if (!it) {
+    MOZ_ASSERT_UNREACHABLE(
+        "CanProvideLineIterator returned true but GetLineIterator returned "
+        "null?");
     return Err(NS_ERROR_FAILURE);
   }
 

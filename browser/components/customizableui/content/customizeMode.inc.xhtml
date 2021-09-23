@@ -32,26 +32,6 @@
 <button id="customization-toolbar-visibility-button" class="customizationmode-button" type="menu" data-l10n-id="customize-mode-toolbars">
   <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
 </button>
-<button id="customization-lwtheme-button" data-l10n-id="customize-mode-lwthemes" class="customizationmode-button" type="menu">
-  <panel type="arrow" id="customization-lwtheme-menu"
-         orient="vertical"
-         onpopupshowing="gCustomizeMode.onThemesMenuShowing(event);"
-         position="topleft bottomleft"
-         flip="none"
-         role="menu">
-    <label id="customization-lwtheme-menu-header" data-l10n-id="customize-mode-lwthemes-my-themes"/>
-    <hbox id="customization-lwtheme-menu-footer">
-      <toolbarbutton class="customization-lwtheme-menu-footeritem"
-                     data-l10n-id="customize-mode-lwthemes-menu-manage"
-                     tabindex="0"
-                     oncommand="gCustomizeMode.openAddonsManagerThemes(event);"/>
-      <toolbarbutton class="customization-lwtheme-menu-footeritem"
-                     data-l10n-id="customize-mode-lwthemes-menu-get-more"
-                     tabindex="0"
-                     oncommand="gCustomizeMode.getMoreThemes(event);"/>
-    </hbox>
-  </panel>
-</button>
 <button id="customization-uidensity-button"
         data-l10n-id="customize-mode-uidensity"
         class="customizationmode-button"
@@ -103,6 +83,10 @@
 #endif
   </panel>
 </button>
+<label is="text-link"
+       id="customization-lwtheme-link"
+       data-l10n-id="customize-mode-lwthemes-link"
+       onclick="gCustomizeMode.openAddonsManagerThemes();" />
 
 <button id="whimsy-button"
         type="checkbox"

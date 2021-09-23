@@ -5808,10 +5808,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
-  // According to mask property and the capability of aManager, determine
-  // whether we can paint the mask onto a dedicate mask layer.
-  bool CanPaintOnMaskLayer(LayerManager* aManager);
-
   nsTArray<nsRect> mDestRects;
 };
 

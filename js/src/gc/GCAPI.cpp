@@ -432,13 +432,7 @@ JS_PUBLIC_API bool JS::IsIncrementalBarrierNeeded(JSContext* cx) {
 }
 
 JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
-  if (!obj || js::gc::IsInsideNursery(obj)) {
-    return;
-  }
-
-  auto* zone = JS::shadow::Zone::from(
-      js::gc::detail::GetTenuredGCThingZone(reinterpret_cast<uintptr_t>(obj)));
-  if (!zone->needsIncrementalBarrier()) {
+  if (!obj) {
     return;
   }
 
@@ -449,12 +443,7 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
 }
 
 JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
-  if (!thing || js::gc::IsInsideNursery(thing.asCell())) {
-    return;
-  }
-
-  auto* zone = JS::shadow::Zone::from(JS::GetTenuredGCThingZone(thing));
-  if (!zone->needsIncrementalBarrier()) {
+  if (!thing) {
     return;
   }
 

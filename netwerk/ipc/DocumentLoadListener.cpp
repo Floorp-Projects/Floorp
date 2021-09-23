@@ -2084,6 +2084,41 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
     loadState->SetIsExemptFromHTTPSOnlyMode(true);
   }
 
+  // Ensure to set referrer information in the fallback channel equally to the
+  // not-upgraded original referrer info.
+  //
+  // A simply copy of the referrer info from the upgraded one leads to problems.
+  // For example:
+  // 1. https://some-site.com redirects to http://other-site.com with referrer
+  // policy
+  //   "no-referrer-when-downgrade".
+  // 2. https-first upgrades the redirection, so redirects to
+  // https://other-site.com,
+  //    according to referrer policy the referrer will be send (https-> https)
+  // 3. Assume other-site.com is not supporting https, https-first performs
+  // fall-
+  //    back.
+  // If the referrer info from the upgraded channel gets copied into the
+  // http fallback channel, the referrer info would contain the referrer
+  // (https://some-site.com). That would violate the policy
+  // "no-referrer-when-downgrade". A recreation of the original referrer info
+  // would ensure us that the referrer is set according to the referrer policy.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    if (referrerInfo) {
+      ReferrerPolicy referrerPolicy = referrerInfo->ReferrerPolicy();
+      nsCOMPtr<nsIURI> originalReferrer = referrerInfo->GetOriginalReferrer();
+      if (originalReferrer) {
+        // Create new ReferrerInfo with the original referrer and the referrer
+        // policy.
+        nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
+            new ReferrerInfo(originalReferrer, referrerPolicy);
+        loadState->SetReferrerInfo(newReferrerInfo);
+      }
+    }
+  }
+
   bc->LoadURI(loadState, false);
   return true;
 }

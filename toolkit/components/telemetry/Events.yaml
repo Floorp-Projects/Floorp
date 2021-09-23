@@ -2447,13 +2447,13 @@ pictureinpicture:
       - mconley@mozilla.com
     products:
       - "firefox"
-      - "fennec"
     record_in_processes:
       - main
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "95"
+      - 1730039
+    expiry_version: "never"
     release_channel_collection: opt-out
   resize:
     objects: ["player"]
@@ -2466,13 +2466,13 @@ pictureinpicture:
       - mconley@mozilla.com
     products:
       - "firefox"
-      - "fennec"
     record_in_processes:
       - main
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "95"
+      - 1730039
+    expiry_version: "never"
     release_channel_collection: opt-out
   move:
     objects: ["player"]
@@ -2485,13 +2485,13 @@ pictureinpicture:
       - mconley@mozilla.com
     products:
       - "firefox"
-      - "fennec"
     record_in_processes:
       - main
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "95"
+      - 1730039
+    expiry_version: "never"
     release_channel_collection: opt-out
 
 doh:

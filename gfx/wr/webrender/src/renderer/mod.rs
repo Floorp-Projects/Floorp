@@ -1624,6 +1624,9 @@ impl Renderer {
                 ResultMsg::RefreshShader(path) => {
                     self.pending_shader_updates.push(path);
                 }
+                ResultMsg::SetParameter(ref param) => {
+                    self.device.set_parameter(param);
+                }
                 ResultMsg::DebugOutput(output) => match output {
                     #[cfg(feature = "capture")]
                     DebugOutput::SaveCapture(config, deferred) => {
@@ -1657,8 +1660,7 @@ impl Renderer {
             DebugCommand::ClearCaches(_)
             | DebugCommand::SimulateLongSceneBuild(_)
             | DebugCommand::EnableNativeCompositor(_)
-            | DebugCommand::SetBatchingLookback(_)
-            | DebugCommand::EnableMultithreading(_) => {}
+            | DebugCommand::SetBatchingLookback(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 self.gpu_cache_texture.invalidate();
             }
@@ -4842,9 +4844,6 @@ impl Renderer {
                 self.gpu_profiler.disable_samplers();
             }
         }
-
-        self.device.set_use_batched_texture_uploads(flags.contains(DebugFlags::USE_BATCHED_TEXTURE_UPLOADS));
-        self.device.set_use_draw_calls_for_texture_copy(flags.contains(DebugFlags::USE_DRAW_CALLS_FOR_TEXTURE_COPY));
 
         self.debug_flags = flags;
     }

@@ -48,10 +48,8 @@ const PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
     is(haveRelayProtocol["srflx-undefined"], undefined, "relayProtocol not set for server reflexive candidates");
     ok(haveRelayProtocol["relay-udp"], "Has UDP relay candidate");
     ok(haveRelayProtocol["relay-tcp"], "Has TCP relay candidate");
-    // TURN/TLS does not work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1323439
-    // With TURN/TLS working, we should have exactly five entries in haveRelayProtocol.
-    todo(haveRelayProtocol["relay-tls"], "Has TLS relay candidate. See https://bugzilla.mozilla.org/show_bug.cgi?id=1323439");
-    is(Object.keys(haveRelayProtocol).length, 4, "All candidate types are accounted for");
+    ok(haveRelayProtocol["relay-tls"], "Has TLS relay candidate");
+    is(Object.keys(haveRelayProtocol).length, 5, "All candidate types are accounted for");
   });
 }
 </script>

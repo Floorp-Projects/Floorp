@@ -118,13 +118,14 @@ PermissionRequestBase::PromptIfNeeded() {
     mOwnerElement = std::move(element);
     mPrincipal = std::move(principal);
 
-    QM_TRY(obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
-                                   kPermissionPromptTopic, nullptr),
-           QM_PROPAGATE, [this](const auto&) {
-             // Finally release if we failed the prompt.
-             mOwnerElement = nullptr;
-             mPrincipal = nullptr;
-           });
+    QM_TRY(
+        MOZ_TO_RESULT(obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
+                                              kPermissionPromptTopic, nullptr)),
+        QM_PROPAGATE, [this](const auto&) {
+          // Finally release if we failed the prompt.
+          mOwnerElement = nullptr;
+          mPrincipal = nullptr;
+        });
   }
 
   return currentValue;

@@ -102,6 +102,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PBackgroundMutableFileParent.h"
 #include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/filehandle/ActorsParent.h"
 #include "mozilla/dom/indexedDB/IDBResult.h"
@@ -5652,7 +5653,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             IPCBlob ipcBlob;
 
             // This can only fail if the child has crashed.
-            QM_TRY(IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob),
+            QM_TRY(MOZ_TO_RESULT(IPCBlobUtils::Serialize(impl, aBackgroundActor,
+                                                         ipcBlob)),
                    Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
@@ -5920,12 +5922,13 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
           nsIFile& file, const bool isDirectory) -> Result<Ok, nsresult> {
         if (isDirectory) {
           // The journal directory doesn't count towards quota.
-          QM_TRY_RETURN(DeleteFilesNoQuota(file));
+          QM_TRY_RETURN(MOZ_TO_RESULT(DeleteFilesNoQuota(file)));
         }
 
         // Stored files do count towards quota.
-        QM_TRY_RETURN(DeleteFile(file, aQuotaManager, aPersistenceType,
-                                 aOriginMetadata, Idempotency::Yes));
+        QM_TRY_RETURN(
+            MOZ_TO_RESULT(DeleteFile(file, aQuotaManager, aPersistenceType,
+                                     aOriginMetadata, Idempotency::Yes)));
       },
       // UnknownDirEntryOp
       [aPersistenceType, &aOriginMetadata](
@@ -5933,12 +5936,12 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
         // Unknown files and directories don't count towards quota.
 
         if (isDirectory) {
-          QM_TRY_RETURN(DeleteFilesNoQuota(file));
+          QM_TRY_RETURN(MOZ_TO_RESULT(DeleteFilesNoQuota(file)));
         }
 
-        QM_TRY_RETURN(DeleteFile(file, /* doesn't count */ nullptr,
-                                 aPersistenceType, aOriginMetadata,
-                                 Idempotency::Yes));
+        QM_TRY_RETURN(MOZ_TO_RESULT(
+            DeleteFile(file, /* doesn't count */ nullptr, aPersistenceType,
+                       aOriginMetadata, Idempotency::Yes)));
       }));
 
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, false));
@@ -6694,7 +6697,7 @@ class DeserializeIndexValueHelper final : public Runnable {
     const JSAutoRealm ar(cx, global);
 
     JS::Rooted<JS::Value> value(cx);
-    QM_TRY(DeserializeIndexValue(cx, &value), NS_OK,
+    QM_TRY(MOZ_TO_RESULT(DeserializeIndexValue(cx, &value)), NS_OK,
            [this](const nsresult rv) { OperationCompleted(rv); });
 
     ErrorResult errorResult;
@@ -6830,7 +6833,7 @@ bool RecvFlushPendingFileDeletions() {
   AssertIsOnBackgroundThread();
 
   if (QuotaClient* quotaClient = QuotaClient::GetInstance()) {
-    QM_WARNONLY_TRY(quotaClient->FlushPendingFileDeletions());
+    QM_WARNONLY_TRY(QM_TO_RESULT(quotaClient->FlushPendingFileDeletions()));
   }
 
   return true;
@@ -7184,7 +7187,7 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   // Truncate the WAL if we were asked to or if we managed to free some space.
   if (aNeedsCheckpoint || freedSomePages) {
-    QM_WARNONLY_TRY(CheckpointInternal(CheckpointMode::Truncate));
+    QM_WARNONLY_TRY(QM_TO_RESULT(CheckpointInternal(CheckpointMode::Truncate)));
   }
 
   // Finally try to restart the read transaction if we rolled it back earlier.
@@ -7292,7 +7295,8 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
 
                if (freedSomePages) {
                  // Commit the write transaction.
-                 QM_TRY(commitStmt.Borrow()->Execute(), QM_PROPAGATE,
+                 QM_TRY(MOZ_TO_RESULT(commitStmt.Borrow()->Execute()),
+                        QM_PROPAGATE,
                         [](const auto&) { NS_WARNING("Failed to commit!"); });
 
                  mInWriteTransaction = false;
@@ -7436,7 +7440,7 @@ DatabaseConnection::AutoSavepoint::~AutoSavepoint() {
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::VersionChange);
 
-    QM_WARNONLY_TRY(mConnection->RollbackSavepoint());
+    QM_WARNONLY_TRY(QM_TO_RESULT(mConnection->RollbackSavepoint()));
   }
 }
 
@@ -7594,7 +7598,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
     entry->MaybeUpdateDBRefs();
   }
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterCommit));
+  QM_WARNONLY_TRY(QM_TO_RESULT(RemoveJournals(mJournalsToRemoveAfterCommit)));
 }
 
 void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
@@ -7604,7 +7608,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::DidAbort",
                       DOM);
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterAbort));
+  QM_WARNONLY_TRY(QM_TO_RESULT(RemoveJournals(mJournalsToRemoveAfterAbort)));
 }
 
 void DatabaseConnection::UpdateRefcountFunction::StartSavepoint() {
@@ -7751,7 +7755,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
         DatabaseFileManager::GetFileForId(journalDirectory, journal);
     QM_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-    QM_WARNONLY_TRY(file->Remove(false));
+    QM_WARNONLY_TRY(QM_TO_RESULT(file->Remove(false)));
   }
 
   return NS_OK;
@@ -12315,7 +12319,9 @@ nsCOMPtr<nsIFile> DatabaseFileManager::EnsureJournalDirectory() {
 
     QM_TRY(OkIf(isDirectory), nullptr);
   } else {
-    QM_TRY(journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755), nullptr);
+    QM_TRY(
+        MOZ_TO_RESULT(journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)),
+        nullptr);
   }
 
   return journalDirectory;
@@ -12843,7 +12849,8 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                        // If there is an unexpected directory in the idb
                        // directory, trying to delete at first instead of
                        // breaking the whole initialization.
-                       QM_TRY(DeleteFilesNoQuota(directory, subdirName),
+                       QM_TRY(MOZ_TO_RESULT(
+                                  DeleteFilesNoQuota(directory, subdirName)),
                               Err(NS_ERROR_UNEXPECTED));
 
                        return Ok{};
@@ -12853,9 +12860,9 @@ nsresult QuotaClient::GetUsageForOriginInternal(
           if (obsoleteFilenames.Contains(subdirNameBase)) {
             // If this fails, it probably means we are in a serious situation.
             // e.g. Filesystem corruption. Will handle this in bug 1521541.
-            QM_TRY(RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
-                                                   nullptr, aPersistenceType,
-                                                   aOriginMetadata, u""_ns),
+            QM_TRY(MOZ_TO_RESULT(RemoveDatabaseFilesAndDirectory(
+                       *directory, subdirNameBase, nullptr, aPersistenceType,
+                       aOriginMetadata, u""_ns)),
                    Err(NS_ERROR_UNEXPECTED));
 
             databaseFilenames.Remove(subdirNameBase);
@@ -12879,7 +12886,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                 // XXX It seems if we really got here, we can fail the
                 // MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
                 // assertion in DeleteFilesNoQuota.
-                QM_TRY(DeleteFilesNoQuota(directory, subdirName),
+                QM_TRY(MOZ_TO_RESULT(DeleteFilesNoQuota(directory, subdirName)),
                        Err(NS_ERROR_UNEXPECTED));
 
                 return Ok{};
@@ -13366,8 +13373,9 @@ void DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   // Must set this before dispatching otherwise we will race with the IO thread
   mState = State_DatabaseWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL), QM_VOID,
-         [this](const nsresult) { Finish(); });
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
+         QM_VOID, [this](const nsresult) { Finish(); });
 }
 
 void DeleteFilesRunnable::DirectoryLockFailed() {
@@ -13522,7 +13530,8 @@ nsresult Maintenance::DirectoryOpen() {
 
   mState = State::DirectoryWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -13557,7 +13566,8 @@ nsresult Maintenance::DirectoryWork() {
   // repository can still
   // be processed.
   const bool initTemporaryStorageFailed = [&quotaManager] {
-    QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized(), true);
+    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()),
+           true);
     return false;
   }();
 
@@ -13914,23 +13924,23 @@ Maintenance::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(Start(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(Start()), NS_OK, handleError);
       break;
 
     case State::CreateIndexedDatabaseManager:
-      QM_TRY(CreateIndexedDatabaseManager(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(CreateIndexedDatabaseManager()), NS_OK, handleError);
       break;
 
     case State::IndexedDatabaseManagerOpen:
-      QM_TRY(OpenDirectory(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(OpenDirectory()), NS_OK, handleError);
       break;
 
     case State::DirectoryWorkOpen:
-      QM_TRY(DirectoryWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DirectoryWork()), NS_OK, handleError);
       break;
 
     case State::BeginDatabaseMaintenance:
-      QM_TRY(BeginDatabaseMaintenance(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(BeginDatabaseMaintenance()), NS_OK, handleError);
       break;
 
     case State::Finishing:
@@ -15508,7 +15518,8 @@ nsresult FactoryOp::SendToIOThread() {
   // Must set this before dispatching otherwise we will race with the IO thread.
   mState = State::DatabaseWorkOpen;
 
-  QM_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
          NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   return NS_OK;
@@ -15856,39 +15867,39 @@ FactoryOp::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(Open(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(Open()), NS_OK, handleError);
       break;
 
     case State::PermissionChallenge:
-      QM_TRY(ChallengePermission(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(ChallengePermission()), NS_OK, handleError);
       break;
 
     case State::PermissionRetry:
-      QM_TRY(RetryCheckPermission(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(RetryCheckPermission()), NS_OK, handleError);
       break;
 
     case State::FinishOpen:
-      QM_TRY(FinishOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(FinishOpen()), NS_OK, handleError);
       break;
 
     case State::QuotaManagerPending:
-      QM_TRY(QuotaManagerOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(QuotaManagerOpen()), NS_OK, handleError);
       break;
 
     case State::DatabaseOpenPending:
-      QM_TRY(DatabaseOpen(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DatabaseOpen()), NS_OK, handleError);
       break;
 
     case State::DatabaseWorkOpen:
-      QM_TRY(DoDatabaseWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
       break;
 
     case State::BeginVersionChange:
-      QM_TRY(BeginVersionChange(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(BeginVersionChange()), NS_OK, handleError);
       break;
 
     case State::WaitingForTransactionsToComplete:
-      QM_TRY(DispatchToWorkThread(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DispatchToWorkThread()), NS_OK, handleError);
       break;
 
     case State::SendingResults:
@@ -15913,7 +15924,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
   mDirectoryLockId = mDirectoryLock->Id();
 
-  QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) {
+  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID, [this](const nsresult rv) {
     SetFailureCodeIfUnset(rv);
 
     // The caller holds a strong reference to us, no need for a self reference
@@ -18072,11 +18083,11 @@ DatabaseOp::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(SendToIOThread(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(SendToIOThread()), NS_OK, handleError);
       break;
 
     case State::DatabaseWork:
-      QM_TRY(DoDatabaseWork(), NS_OK, handleError);
+      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
       break;
 
     case State::SendingResults:
@@ -18292,7 +18303,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18379,7 +18390,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18490,7 +18501,7 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18656,7 +18667,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -18987,7 +18998,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   AUTO_PROFILER_LABEL("DeleteIndexOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19205,7 +19216,7 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19571,7 +19582,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreAddOrPutRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -19744,7 +19755,8 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         if (inputStream) {
           if (fileHelper.isNothing()) {
             fileHelper.emplace(Transaction().GetDatabase().GetFileManagerPtr());
-            QM_TRY(fileHelper->Init(), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+            QM_TRY(MOZ_TO_RESULT(fileHelper->Init()),
+                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
           }
 
@@ -19774,10 +19786,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
               QM_PROPAGATE,
               ([this, &file = *file, &journalFile = *journalFile](const auto) {
                 // Try to remove the file if the copy failed.
-                QM_TRY(
-                    Transaction().GetDatabase().GetFileManager().SyncDeleteFile(
-                        file, journalFile),
-                    QM_VOID);
+                QM_TRY(MOZ_TO_RESULT(Transaction()
+                                         .GetDatabase()
+                                         .GetFileManager()
+                                         .SyncDeleteFile(file, journalFile)),
+                       QM_VOID);
               }));
 
           storedFileInfo.NotifyWriteSucceeded();
@@ -19794,7 +19807,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       QM_TRY(stmt->BindNullByName(kStmtParamNameFileIds));
     }
 
-    QM_TRY(stmt->Execute(), QM_PROPAGATE,
+    QM_TRY(MOZ_TO_RESULT(stmt->Execute()), QM_PROPAGATE,
            [keyUnset = DebugOnly{keyUnset}](const nsresult rv) {
              if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
                MOZ_ASSERT(!keyUnset, "Generated key had a collision!");
@@ -20191,7 +20204,7 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreDeleteRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
@@ -20251,7 +20264,7 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreClearRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  QM_TRY(autoSave.Start(Transaction())
+  QM_TRY(MOZ_TO_RESULT(autoSave.Start(Transaction()))
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
              ,
          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
