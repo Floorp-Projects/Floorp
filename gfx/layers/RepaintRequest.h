@@ -54,7 +54,6 @@ struct RepaintRequest {
         mDisplayPortMargins(0, 0, 0, 0),
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
-        mExtraResolution(),
         mTransformToAncestorScale(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
@@ -77,7 +76,6 @@ struct RepaintRequest {
         mDisplayPortMargins(aDisplayportMargins),
         mPresShellId(aOther.GetPresShellId()),
         mLayoutViewport(aOther.GetLayoutViewport()),
-        mExtraResolution(aOther.GetExtraResolution()),
         mTransformToAncestorScale(aOther.GetTransformToAncestorScale()),
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
@@ -100,7 +98,6 @@ struct RepaintRequest {
            mDisplayPortMargins == aOther.mDisplayPortMargins &&
            mPresShellId == aOther.mPresShellId &&
            mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
-           mExtraResolution == aOther.mExtraResolution &&
            mTransformToAncestorScale == aOther.mTransformToAncestorScale &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
@@ -181,10 +178,6 @@ struct RepaintRequest {
   uint32_t GetPresShellId() const { return mPresShellId; }
 
   const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
-
-  const ScreenToLayerScale2D& GetExtraResolution() const {
-    return mExtraResolution;
-  }
 
   const Scale2D& GetTransformToAncestorScale() const {
     return mTransformToAncestorScale;
@@ -285,10 +278,6 @@ struct RepaintRequest {
   // For a scroll frame that is not an RSF, this metric is meaningless and
   // invalid.
   CSSRect mLayoutViewport;
-
-  // The extra resolution at which content in this scroll frame is drawn beyond
-  // that necessary to draw one Layer pixel per Screen pixel.
-  ScreenToLayerScale2D mExtraResolution;
 
   // The scale on this scroll frame induced by enclosing CSS transforms.
   Scale2D mTransformToAncestorScale;

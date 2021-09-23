@@ -36,8 +36,7 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
                  .get()
           << " cr=" << aMetrics.GetCumulativeResolution()
           << " z=" << aMetrics.GetZoom()
-          << " t=" << aMetrics.GetTransformToAncestorScale()
-          << " er=" << aMetrics.GetExtraResolution() << " )] [u=("
+          << " t=" << aMetrics.GetTransformToAncestorScale() << " )] [u=("
           << (int)aMetrics.GetVisualScrollUpdateType() << " "
           << aMetrics.GetScrollGeneration()
           << ")] scrollId=" << aMetrics.GetScrollId();
