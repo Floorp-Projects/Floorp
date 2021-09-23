@@ -144,6 +144,28 @@ class TimeZone final {
   }
 
   /**
+   * Set the default time zone.
+   */
+  static Result<bool, ICUError> SetDefaultTimeZone(Span<const char> aTimeZone);
+
+  /**
+   * Set the default time zone using the host system's time zone.
+   *
+   * NOTE: This function is not thread-safe.
+   */
+  static ICUResult SetDefaultTimeZoneFromHostTimeZone();
+
+  /**
+   * Constant for the typical maximal length of a time zone identifier.
+   *
+   * At the time of this writing 32 characters fits every supported time zone:
+   *
+   * Intl.supportedValuesOf("timeZone")
+   *     .reduce((acc, v) => Math.max(acc, v.length), 0)
+   */
+  static constexpr size_t TimeZoneIdentifierLength = 32;
+
+  /**
    * Returns the canonical system time zone ID or the normalized custom time
    * zone ID for the given time zone ID.
    */
@@ -157,11 +179,7 @@ class TimeZone final {
       // ucal_getCanonicalTimeZoneID differs from other API calls and fails when
       // passed a nullptr or 0 length result. Reserve some space initially so
       // that a real pointer will be used in the API.
-      //
-      // At the time of this writing 32 characters fits every time zone listed
-      // in: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-      // https://gist.github.com/gregtatum/f926de157a44e5965864da866fe71e63
-      if (!aBuffer.reserve(32)) {
+      if (!aBuffer.reserve(TimeZoneIdentifierLength)) {
         return Err(ICUError::OutOfMemory);
       }
     }
