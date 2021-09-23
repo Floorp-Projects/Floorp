@@ -13,7 +13,7 @@ use std::u32;
 use time::precise_time_ns;
 //use crate::api::peek_poke::PeekPoke;
 use crate::api::channel::{Sender, single_msg_channel, unbounded_channel};
-use crate::api::{ColorF, BuiltDisplayList, IdNamespace, ExternalScrollId};
+use crate::api::{ColorF, BuiltDisplayList, IdNamespace, ExternalScrollId, Parameter, BoolParameter};
 use crate::api::{SharedFontInstanceMap, FontKey, FontInstanceKey, NativeFontHandle};
 use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey, Epoch, QualitySettings};
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
@@ -904,8 +904,6 @@ pub enum DebugCommand {
     ClearCaches(ClearCache),
     /// Enable/disable native compositor usage
     EnableNativeCompositor(bool),
-    /// Enable/disable parallel job execution with rayon.
-    EnableMultithreading(bool),
     /// Sets the maximum amount of existing batches to visit before creating a new one.
     SetBatchingLookback(u32),
     /// Invalidate GPU cache, forcing the update from the CPU mirror.
@@ -1357,13 +1355,20 @@ impl RenderApi {
     }
 
     /// Update the state of builtin debugging facilities.
-    pub fn send_debug_cmd(&mut self, cmd: DebugCommand) {
-        if let DebugCommand::EnableMultithreading(enable) = cmd {
-            // TODO(nical) we should enable it for all RenderApis.
-            self.resources.enable_multithreading(enable);
-        }
+    pub fn send_debug_cmd(&self, cmd: DebugCommand) {
         let msg = ApiMsg::DebugCommand(cmd);
         self.send_message(msg);
+    }
+
+    /// Update a instance-global parameter.
+    pub fn set_parameter(&mut self, parameter: Parameter) {
+        if let Parameter::Bool(BoolParameter::Multithreading, enabled) = parameter {
+            self.resources.enable_multithreading(enabled);
+        }
+
+        let _ = self.low_priority_scene_sender.send(
+            SceneBuilderRequest::SetParameter(parameter)
+        );
     }
 }
 

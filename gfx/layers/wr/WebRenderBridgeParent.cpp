@@ -17,6 +17,7 @@
 #include "Layers.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/Range.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -358,6 +359,10 @@ WebRenderBridgeParent::WebRenderBridgeParent(
   UpdateQualitySettings();
   UpdateProfilerUI();
   UpdateParameters();
+  // Start with the cached bool parameter bits inverted so that we update
+  // them all.
+  mBoolParameterBits = ~gfxVars::WebRenderBoolParameters();
+  UpdateBoolParameters();
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
@@ -1652,15 +1657,25 @@ void WebRenderBridgeParent::UpdateProfilerUI() {
   mApi->SetProfilerUI(uiString);
 }
 
-void WebRenderBridgeParent::UpdateMultithreading() {
-  mApi->EnableMultithreading(gfxVars::UseWebRenderMultithreading());
-}
-
 void WebRenderBridgeParent::UpdateParameters() {
   uint32_t count = gfxVars::WebRenderBatchingLookback();
   mApi->SetBatchingLookback(count);
 
   mBlobTileSize = gfxVars::WebRenderBlobTileSize();
+}
+
+void WebRenderBridgeParent::UpdateBoolParameters() {
+  uint32_t bits = gfxVars::WebRenderBoolParameters();
+  uint32_t changedBits = mBoolParameterBits ^ bits;
+
+  for (auto paramName : MakeEnumeratedRange(wr::BoolParameter::Sentinel)) {
+    uint32_t i = (uint32_t)paramName;
+    if (changedBits & (1 << i)) {
+      bool value = (bits & (1 << i)) != 0;
+      mApi->SetBool(paramName, value);
+    }
+  }
+  mBoolParameterBits = bits;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)

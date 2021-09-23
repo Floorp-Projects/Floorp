@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
-use api::{ColorF, ImageDescriptor, ImageFormat};
+use api::{ColorF, ImageDescriptor, ImageFormat, Parameter, BoolParameter};
 use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
 use api::{CrashAnnotator, CrashAnnotation, CrashAnnotatorGuard};
 use api::units::*;
@@ -1138,6 +1138,9 @@ pub struct Device {
     /// binding to GL_TEXTURE_2D, to work around an android emulator bug.
     requires_texture_external_unbind: bool,
 
+    ///
+    is_software_webrender: bool,
+
     // GL extensions
     extensions: Vec<String>,
 
@@ -1814,6 +1817,7 @@ impl Device {
             texture_storage_usage,
             requires_null_terminated_shader_source,
             requires_texture_external_unbind,
+            is_software_webrender,
             required_pbo_stride,
             dump_shader_source,
             surface_origin_is_top_left,
@@ -1829,6 +1833,29 @@ impl Device {
 
     pub fn rc_gl(&self) -> &Rc<dyn gl::Gl> {
         &self.gl
+    }
+
+    pub fn set_parameter(&mut self, param: &Parameter) {
+        match param {
+            Parameter::Bool(BoolParameter::PboUploads, enabled) => {
+                if !self.is_software_webrender {
+                    self.upload_method = if *enabled {
+                        UploadMethod::PixelBuffer(crate::ONE_TIME_USAGE_HINT)
+                    } else {
+                        UploadMethod::Immediate
+                    };
+                }
+            }
+            Parameter::Bool(BoolParameter::BatchedUploads, enabled) => {
+                self.use_batched_texture_uploads = *enabled;
+            }
+            Parameter::Bool(BoolParameter::DrawCallsForTextureCopy, enabled) => {
+                if self.capabilities.requires_batched_texture_uploads.is_none() {
+                    self.use_draw_calls_for_texture_copy = *enabled;
+                }
+            }
+            _ => {}
+        }
     }
 
     /// Ensures that the maximum texture size is less than or equal to the
@@ -1899,17 +1926,6 @@ impl Device {
 
     pub fn use_draw_calls_for_texture_copy(&self) -> bool {
         self.use_draw_calls_for_texture_copy
-    }
-
-    pub fn set_use_batched_texture_uploads(&mut self, enabled: bool) {
-        if self.capabilities.requires_batched_texture_uploads.is_some() {
-            return;
-        }
-        self.use_batched_texture_uploads = enabled;
-    }
-
-    pub fn set_use_draw_calls_for_texture_copy(&mut self, enabled: bool) {
-        self.use_draw_calls_for_texture_copy = enabled;
     }
 
     pub fn reset_state(&mut self) {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AsyncBlobImageRasterizer, BlobImageResult};
+use api::{AsyncBlobImageRasterizer, BlobImageResult, Parameter};
 use api::{DocumentId, PipelineId, ExternalEvent, BlobImageRequest};
 use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
 use api::{PrimitiveKeyKind, SharedFontInstanceMap};
@@ -96,6 +96,7 @@ pub enum SceneBuilderRequest {
     ShutDown(Option<Sender<()>>),
     Flush(Sender<()>),
     SetFrameBuilderConfig(FrameBuilderConfig),
+    SetParameter(Parameter),
     ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
@@ -116,6 +117,7 @@ pub enum SceneBuilderResult {
     ClearNamespace(IdNamespace),
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
+    SetParameter(Parameter),
     StopRenderBackend,
     ShutDown(Option<Sender<()>>),
 
@@ -351,6 +353,9 @@ impl SceneBuilderThread {
                 }
                 Ok(SceneBuilderRequest::SetFrameBuilderConfig(cfg)) => {
                     self.config = cfg;
+                }
+                Ok(SceneBuilderRequest::SetParameter(prop)) => {
+                    self.send(SceneBuilderResult::SetParameter(prop));
                 }
                 #[cfg(feature = "replay")]
                 Ok(SceneBuilderRequest::LoadScenes(msg)) => {
