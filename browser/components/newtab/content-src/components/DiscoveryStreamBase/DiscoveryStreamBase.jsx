@@ -209,6 +209,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             items={component.properties.items}
             compact={component.properties.compact}
             include_descriptions={!component.properties.compact}
+            loadMoreEnabled={component.loadMoreEnabled}
+            lastCardMessageEnabled={component.lastCardMessageEnabled}
             cta_variant={component.cta_variant}
             display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
           />
