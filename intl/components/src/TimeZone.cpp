@@ -4,6 +4,11 @@
 
 #include "mozilla/intl/TimeZone.h"
 
+#include "mozilla/Vector.h"
+
+#include <algorithm>
+#include <string_view>
+
 #include "unicode/uenum.h"
 #if MOZ_INTL_USE_ICU_CPP_TIMEZONE
 #  include "unicode/basictz.h"
@@ -206,6 +211,97 @@ Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
 
   return rawOffset + dstOffset;
 #endif
+}
+
+using TimeZoneIdentifierVector =
+    Vector<char16_t, TimeZone::TimeZoneIdentifierLength>;
+
+#if !MOZ_INTL_USE_ICU_CPP_TIMEZONE
+static bool IsUnknownTimeZone(const TimeZoneIdentifierVector& timeZone) {
+  constexpr std::string_view unknownTimeZone = UCAL_UNKNOWN_ZONE_ID;
+
+  return timeZone.length() == unknownTimeZone.length() &&
+         std::equal(timeZone.begin(), timeZone.end(), unknownTimeZone.begin(),
+                    unknownTimeZone.end());
+}
+
+static ICUResult SetDefaultTimeZone(TimeZoneIdentifierVector& timeZone) {
+  // The string mustn't already be null-terminated.
+  MOZ_ASSERT_IF(!timeZone.empty(), timeZone.end()[-1] != '\0');
+
+  // The time zone identifier must be a null-terminated string.
+  if (!timeZone.append('\0')) {
+    return Err(ICUError::OutOfMemory);
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  ucal_setDefaultTimeZone(timeZone.begin(), &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return Ok{};
+}
+#endif
+
+Result<bool, ICUError> TimeZone::SetDefaultTimeZone(
+    Span<const char> aTimeZone) {
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  icu::UnicodeString tzid(aTimeZone.data(), aTimeZone.size(), US_INV);
+  if (tzid.isBogus()) {
+    return Err(ICUError::OutOfMemory);
+  }
+
+  UniquePtr<icu::TimeZone> newTimeZone(icu::TimeZone::createTimeZone(tzid));
+  MOZ_ASSERT(newTimeZone);
+
+  if (*newTimeZone != icu::TimeZone::getUnknown()) {
+    // adoptDefault() takes ownership of the time zone.
+    icu::TimeZone::adoptDefault(newTimeZone.release());
+    return true;
+  }
+#else
+  TimeZoneIdentifierVector tzid;
+  if (!tzid.append(aTimeZone.data(), aTimeZone.size())) {
+    return Err(ICUError::OutOfMemory);
+  }
+
+  // Retrieve the current default time zone in case we need to restore it.
+  TimeZoneIdentifierVector defaultTimeZone;
+  MOZ_TRY(FillVectorWithICUCall(defaultTimeZone, ucal_getDefaultTimeZone));
+
+  // Try to set the new time zone.
+  MOZ_TRY(mozilla::intl::SetDefaultTimeZone(tzid));
+
+  // Check if the time zone was actually applied.
+  TimeZoneIdentifierVector newTimeZone;
+  MOZ_TRY(FillVectorWithICUCall(newTimeZone, ucal_getDefaultTimeZone));
+
+  // Return if the new time zone was successfully applied.
+  if (!IsUnknownTimeZone(newTimeZone)) {
+    return true;
+  }
+
+  // Otherwise restore the original time zone.
+  MOZ_TRY(mozilla::intl::SetDefaultTimeZone(defaultTimeZone));
+#endif
+
+  return false;
+}
+
+ICUResult TimeZone::SetDefaultTimeZoneFromHostTimeZone() {
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  if (icu::TimeZone* defaultZone = icu::TimeZone::detectHostTimeZone()) {
+    icu::TimeZone::adoptDefault(defaultZone);
+  }
+#else
+  TimeZoneIdentifierVector hostTimeZone;
+  MOZ_TRY(FillVectorWithICUCall(hostTimeZone, ucal_getHostTimeZone));
+
+  MOZ_TRY(mozilla::intl::SetDefaultTimeZone(hostTimeZone));
+#endif
+
+  return Ok{};
 }
 
 Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
