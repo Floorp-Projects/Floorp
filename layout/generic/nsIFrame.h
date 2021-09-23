@@ -3889,6 +3889,16 @@ class nsIFrame : public nsQueryFrame {
 
   SelectablePeekReport GetFrameFromDirection(const nsPeekOffsetStruct& aPos);
 
+  /**
+   * Return the containing block frame for a line; i.e. the frame which
+   * supports a line iterator.
+   * @param aLockScroll true to avoid breaking outside scrollframes.
+   * @param aLineFrame the frame to use to get a line number, which will be a
+   * a direct child of the returned containing block.
+   */
+  nsIFrame* GetContainingBlockForLine(bool aLockScroll,
+                                      nsIFrame*& aLineFrame) const;
+
  private:
   Result<bool, nsresult> IsVisuallyAtLineEdge(nsILineIterator* aLineIterator,
                                               int32_t aLine,
@@ -3897,8 +3907,7 @@ class nsIFrame : public nsQueryFrame {
                                                int32_t aLine,
                                                nsDirection aDirection);
 
-  // Return the line number of the aFrame, and (optionally) the containing block
-  // frame.
+  // Return the line number of the aFrame, and the containing block frame.
   // If aScrollLock is true, don't break outside scrollframes when looking for a
   // containing block frame.
   Result<int32_t, nsresult> GetLineNumber(
@@ -4455,6 +4464,12 @@ class nsIFrame : public nsQueryFrame {
    *         are encountered rummaging through the frame.
    */
   CaretPosition GetExtremeCaretPosition(bool aStart);
+
+  /**
+   * Query whether this frame supports getting a line iterator.
+   * @return true if a line iterator is supported.
+   */
+  virtual bool CanProvideLineIterator() const { return false; }
 
   /**
    * Get a line iterator for this frame, if supported.

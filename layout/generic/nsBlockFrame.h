@@ -853,7 +853,8 @@ class nsBlockFrame : public nsContainerFrame {
 
   //----------------------------------------
 
-  virtual nsILineIterator* GetLineIterator() override;
+  bool CanProvideLineIterator() const final { return true; }
+  nsILineIterator* GetLineIterator() final;
 
  public:
   bool HasOverflowLines() const {
