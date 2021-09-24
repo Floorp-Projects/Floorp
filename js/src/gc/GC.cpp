@@ -3657,7 +3657,8 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   ScheduleZones(this);
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(),
-                           options.valueOr(gcOptions), budget, reason);
+                           options.valueOr(gcOptions), budget, reason,
+                           budgetWasIncreased);
 
   IncrementalResult result =
       budgetIncrementalGC(nonincrementalByAPI, reason, budget);
