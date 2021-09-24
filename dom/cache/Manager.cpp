@@ -61,8 +61,8 @@ nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  QM_TRY(cacheQuotaClient->MaybeUpdatePaddingFileInternal(
-      *aBaseDir, *aConn, aIncreaseSize, aDecreaseSize, aCommitHook));
+  QM_TRY(MOZ_TO_RESULT(cacheQuotaClient->MaybeUpdatePaddingFileInternal(
+      *aBaseDir, *aConn, aIncreaseSize, aDecreaseSize, aCommitHook)));
 
   return NS_OK;
 }
@@ -79,10 +79,10 @@ class SetupAction final : public SyncDBAction {
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    QM_TRY(BodyCreateDir(*aDBDir));
+    QM_TRY(MOZ_TO_RESULT(BodyCreateDir(*aDBDir)));
 
     // executes in its own transaction
-    QM_TRY(db::CreateOrMigrateSchema(*aConn));
+    QM_TRY(MOZ_TO_RESULT(db::CreateOrMigrateSchema(*aConn)));
 
     // If the Context marker file exists, then the last session was
     // not cleanly shutdown.  In these cases sqlite will ensure that
@@ -99,7 +99,7 @@ class SetupAction final : public SyncDBAction {
       mozStorageTransaction trans(aConn, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-      QM_TRY(trans.Start());
+      QM_TRY(MOZ_TO_RESULT(trans.Start()));
 
       // Clean up orphaned Cache objects
       QM_TRY_INSPECT(const auto& orphanedCacheIdList,
@@ -115,8 +115,8 @@ class SetupAction final : public SyncDBAction {
                 QM_TRY_INSPECT(const auto& deletionInfo,
                                db::DeleteCacheId(*aConn, *element));
 
-                QM_TRY(BodyDeleteFiles(aQuotaInfo, *aDBDir,
-                                       deletionInfo.mDeletedBodyIdList));
+                QM_TRY(MOZ_TO_RESULT(BodyDeleteFiles(
+                    aQuotaInfo, *aDBDir, deletionInfo.mDeletedBodyIdList)));
 
                 if (deletionInfo.mDeletedPaddingSize > 0) {
                   DecreaseUsageForQuotaInfo(aQuotaInfo,
@@ -129,7 +129,8 @@ class SetupAction final : public SyncDBAction {
       // Clean up orphaned body objects
       QM_TRY_INSPECT(const auto& knownBodyIdList, db::GetKnownBodyIds(*aConn));
 
-      QM_TRY(BodyDeleteOrphanedFiles(aQuotaInfo, *aDBDir, knownBodyIdList));
+      QM_TRY(MOZ_TO_RESULT(
+          BodyDeleteOrphanedFiles(aQuotaInfo, *aDBDir, knownBodyIdList)));
 
       // Commit() explicitly here, because we want to ensure the padding file
       // has the correct content.
@@ -148,7 +149,7 @@ class SetupAction final : public SyncDBAction {
 
     if (DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::TMP_FILE) ||
         !DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::FILE)) {
-      QM_TRY(RestorePaddingFile(aDBDir, aConn));
+      QM_TRY(MOZ_TO_RESULT(RestorePaddingFile(aDBDir, aConn)));
     }
 
     return NS_OK;
@@ -246,7 +247,7 @@ class Manager::Factory {
 
     // Ensure there is a factory instance.  This forces the Acquire() call
     // below to use the same factory.
-    QM_TRY(MaybeCreateInstance());
+    QM_TRY(MOZ_TO_RESULT(MaybeCreateInstance()));
 
     SafeRefPtr<Manager> ref = Acquire(*aManagerId);
     if (!ref) {
@@ -530,13 +531,13 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start());
+    QM_TRY(MOZ_TO_RESULT(trans.Start()));
 
     QM_TRY_UNWRAP(mDeletionInfo, db::DeleteCacheId(*aConn, mCacheId));
 
-    QM_TRY(MaybeUpdatePaddingFile(
+    QM_TRY(MOZ_TO_RESULT(MaybeUpdatePaddingFile(
         aDBDir, aConn, /* aIncreaceSize */ 0, mDeletionInfo.mDeletedPaddingSize,
-        [&trans]() mutable { return trans.Commit(); }));
+        [&trans]() mutable { return trans.Commit(); })));
 
     return NS_OK;
   }
@@ -759,11 +760,13 @@ class Manager::CachePutAllAction final : public DBAction {
     const nsresult rv = [this, &aQuotaInfo]() -> nsresult {
       QM_TRY(CollectEachInRange(
           mList, [this, &aQuotaInfo](auto& entry) -> nsresult {
-            QM_TRY(StartStreamCopy(aQuotaInfo, entry, RequestStream,
-                                   &mExpectedAsyncCopyCompletions));
+            QM_TRY(
+                MOZ_TO_RESULT(StartStreamCopy(aQuotaInfo, entry, RequestStream,
+                                              &mExpectedAsyncCopyCompletions)));
 
-            QM_TRY(StartStreamCopy(aQuotaInfo, entry, ResponseStream,
-                                   &mExpectedAsyncCopyCompletions));
+            QM_TRY(
+                MOZ_TO_RESULT(StartStreamCopy(aQuotaInfo, entry, ResponseStream,
+                                              &mExpectedAsyncCopyCompletions)));
 
             return NS_OK;
           }));
@@ -843,22 +846,22 @@ class Manager::CachePutAllAction final : public DBAction {
     const nsresult rv = [this, &trans]() -> nsresult {
       QM_TRY(CollectEachInRange(mList, [this](Entry& e) -> nsresult {
         if (e.mRequestStream) {
-          QM_TRY(BodyFinalizeWrite(*mDBDir, e.mRequestBodyId));
+          QM_TRY(MOZ_TO_RESULT(BodyFinalizeWrite(*mDBDir, e.mRequestBodyId)));
         }
         if (e.mResponseStream) {
           // Gerenate padding size for opaque response if needed.
           if (e.mResponse.type() == ResponseType::Opaque) {
             // It'll generate padding if we've not set it yet.
-            QM_TRY(BodyMaybeUpdatePaddingSize(
+            QM_TRY(MOZ_TO_RESULT(BodyMaybeUpdatePaddingSize(
                 mQuotaInfo.ref(), *mDBDir, e.mResponseBodyId,
-                e.mResponse.paddingInfo(), &e.mResponse.paddingSize()));
+                e.mResponse.paddingInfo(), &e.mResponse.paddingSize())));
 
             MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - e.mResponse.paddingSize() >=
                                   mUpdatedPaddingSize);
             mUpdatedPaddingSize += e.mResponse.paddingSize();
           }
 
-          QM_TRY(BodyFinalizeWrite(*mDBDir, e.mResponseBodyId));
+          QM_TRY(MOZ_TO_RESULT(BodyFinalizeWrite(*mDBDir, e.mResponseBodyId)));
         }
 
         QM_TRY_UNWRAP(
@@ -879,9 +882,9 @@ class Manager::CachePutAllAction final : public DBAction {
       }));
 
       // Update padding file when it's necessary
-      QM_TRY(MaybeUpdatePaddingFile(
+      QM_TRY(MOZ_TO_RESULT(MaybeUpdatePaddingFile(
           mDBDir, mConn, mUpdatedPaddingSize, mDeletedPaddingSize,
-          [&trans]() mutable { return trans.Commit(); }));
+          [&trans]() mutable { return trans.Commit(); })));
 
       return NS_OK;
     }();
@@ -1098,7 +1101,7 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start());
+    QM_TRY(MOZ_TO_RESULT(trans.Start()));
 
     QM_TRY_UNWRAP(
         auto maybeDeletionInfo,
@@ -1321,7 +1324,7 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start());
+    QM_TRY(MOZ_TO_RESULT(trans.Start()));
 
     // Look for existing cache
     QM_TRY_INSPECT(const auto& maybeCacheId,
@@ -1335,9 +1338,10 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
 
     QM_TRY_UNWRAP(mCacheId, db::CreateCacheId(*aConn));
 
-    QM_TRY(db::StoragePutCache(*aConn, mNamespace, mArgs.key(), mCacheId));
+    QM_TRY(MOZ_TO_RESULT(
+        db::StoragePutCache(*aConn, mNamespace, mArgs.key(), mCacheId)));
 
-    QM_TRY(trans.Commit());
+    QM_TRY(MOZ_TO_RESULT(trans.Commit()));
 
     MOZ_DIAGNOSTIC_ASSERT(mCacheId != INVALID_CACHE_ID);
     return NS_OK;
@@ -1374,7 +1378,7 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(trans.Start());
+    QM_TRY(MOZ_TO_RESULT(trans.Start()));
 
     QM_TRY_INSPECT(const auto& maybeCacheId,
                    db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
@@ -1387,9 +1391,10 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
 
     // Don't delete the removing padding size here, we'll delete it on
     // DeleteOrphanedCacheAction.
-    QM_TRY(db::StorageForgetCache(*aConn, mNamespace, mArgs.key()));
+    QM_TRY(
+        MOZ_TO_RESULT(db::StorageForgetCache(*aConn, mNamespace, mArgs.key())));
 
-    QM_TRY(trans.Commit());
+    QM_TRY(MOZ_TO_RESULT(trans.Commit()));
 
     mCacheDeleted = true;
     return NS_OK;

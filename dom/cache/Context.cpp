@@ -411,9 +411,10 @@ Context::QuotaInitRunnable::Run() {
         QuotaManager* quotaManager = QuotaManager::Get();
         MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
-        QM_TRY(quotaManager->EnsureStorageIsInitialized());
+        QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
 
-        QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+        QM_TRY(
+            MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
 
         QM_TRY_UNWRAP(mQuotaInfo.mDir,
                       quotaManager

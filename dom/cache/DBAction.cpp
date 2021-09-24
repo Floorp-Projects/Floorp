@@ -36,15 +36,15 @@ nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile& aDBFile) {
   QM_TRY_INSPECT(const auto& dbDir, MOZ_TO_RESULT_INVOKE_TYPED(
                                         nsCOMPtr<nsIFile>, aDBFile, GetParent));
 
-  QM_TRY(RemoveNsIFile(aQuotaInfo, aDBFile));
+  QM_TRY(MOZ_TO_RESULT(RemoveNsIFile(aQuotaInfo, aDBFile)));
 
   // Note, the -wal journal file will be automatically deleted by sqlite when
   // the new database is created.  No need to explicitly delete it here.
 
   // Delete the morgue as well.
-  QM_TRY(BodyDeleteDir(aQuotaInfo, *dbDir));
+  QM_TRY(MOZ_TO_RESULT(BodyDeleteDir(aQuotaInfo, *dbDir)));
 
-  QM_TRY(WipePaddingFile(aQuotaInfo, dbDir));
+  QM_TRY(MOZ_TO_RESULT(WipePaddingFile(aQuotaInfo, dbDir)));
 
   return NS_OK;
 }
@@ -111,7 +111,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> DBAction::OpenConnection(
 
   if (!exists) {
     QM_TRY(OkIf(mMode == Create), Err(NS_ERROR_FILE_NOT_FOUND));
-    QM_TRY(aDBDir.Create(nsIFile::DIRECTORY_TYPE, 0755));
+    QM_TRY(MOZ_TO_RESULT(aDBDir.Create(nsIFile::DIRECTORY_TYPE, 0755)));
   }
 
   QM_TRY_INSPECT(const auto& dbFile,
@@ -147,7 +147,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
   // handler.  If such a custom handler used javascript, then we would have a
   // bad time running off the main thread here.
   auto handler = MakeRefPtr<nsFileProtocolHandler>();
-  QM_TRY(handler->Init());
+  QM_TRY(MOZ_TO_RESULT(handler->Init()));
 
   QM_TRY_INSPECT(const auto& mutator,
                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIURIMutator>, handler,
@@ -159,9 +159,9 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
           : EmptyCString();
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  QM_TRY(NS_MutateURI(mutator)
-             .SetQuery("cache=private"_ns + directoryLockIdClause)
-             .Finalize(dbFileUrl));
+  QM_TRY(MOZ_TO_RESULT(NS_MutateURI(mutator)
+                           .SetQuery("cache=private"_ns + directoryLockIdClause)
+                           .Finalize(dbFileUrl)));
 
   QM_TRY_INSPECT(
       const auto& storageService,
@@ -186,7 +186,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
 
             // There is nothing else we can do to recover.  Also, this data
             // can be deleted by QuotaManager at any time anyways.
-            QM_TRY(WipeDatabase(aQuotaInfo, aDBFile));
+            QM_TRY(MOZ_TO_RESULT(WipeDatabase(aQuotaInfo, aDBFile)));
 
             QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
                 nsCOMPtr<mozIStorageConnection>, storageService,
@@ -200,14 +200,14 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
     // Close existing connection before wiping database.
     conn = nullptr;
 
-    QM_TRY(WipeDatabase(aQuotaInfo, aDBFile));
+    QM_TRY(MOZ_TO_RESULT(WipeDatabase(aQuotaInfo, aDBFile)));
 
     QM_TRY_UNWRAP(conn, MOZ_TO_RESULT_INVOKE_TYPED(
                             nsCOMPtr<mozIStorageConnection>, storageService,
                             OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
   }
 
-  QM_TRY(db::InitializeConnection(*conn));
+  QM_TRY(MOZ_TO_RESULT(db::InitializeConnection(*conn)));
 
   return conn;
 }
