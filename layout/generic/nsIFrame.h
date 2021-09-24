@@ -3907,12 +3907,6 @@ class nsIFrame : public nsQueryFrame {
                                                int32_t aLine,
                                                nsDirection aDirection);
 
-  // Return the line number of the aFrame, and the containing block frame.
-  // If aScrollLock is true, don't break outside scrollframes when looking for a
-  // containing block frame.
-  Result<int32_t, nsresult> GetLineNumber(
-      bool aLockScroll, nsIFrame** aContainingBlock = nullptr);
-
  public:
   /**
    * Called to see if the children of the frame are visible from indexstart to
