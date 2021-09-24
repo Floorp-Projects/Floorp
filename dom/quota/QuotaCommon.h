@@ -486,7 +486,7 @@ class NotNull;
 
 // Handles the two arguments case when the error is propagated.
 #define QM_TRY_PROPAGATE_ERR(tryResult, expr)                                \
-  auto tryResult = ::mozilla::ToResult(expr);                                \
+  auto tryResult = (expr);                                                   \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);     \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                     \
     mozilla::dom::quota::QM_HANDLE_ERROR(                                    \
