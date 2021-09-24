@@ -177,4 +177,35 @@ TEST(IntlTimeZone, GetAvailableTimeZones)
   ASSERT_TRUE(hasEuropeBusingen);
 }
 
+TEST(IntlTimeZone, GetAvailableTimeZonesNoRegion)
+{
+  constexpr auto AmericaNewYork = MakeStringSpan("America/New_York");
+  constexpr auto AsiaTokyo = MakeStringSpan("Asia/Tokyo");
+  constexpr auto EuropeParis = MakeStringSpan("Europe/Paris");
+
+  auto timeZones = TimeZone::GetAvailableTimeZones().unwrap();
+
+  bool hasAmericaNewYork = false;
+  bool hasAsiaTokyo = false;
+  bool hasEuropeParis = false;
+
+  for (auto timeZone : timeZones) {
+    auto span = timeZone.unwrap();
+    if (span == AmericaNewYork) {
+      ASSERT_FALSE(hasAmericaNewYork);
+      hasAmericaNewYork = true;
+    } else if (span == AsiaTokyo) {
+      ASSERT_FALSE(hasAsiaTokyo);
+      hasAsiaTokyo = true;
+    } else if (span == EuropeParis) {
+      ASSERT_FALSE(hasEuropeParis);
+      hasEuropeParis = true;
+    }
+  }
+
+  ASSERT_TRUE(hasAmericaNewYork);
+  ASSERT_TRUE(hasAsiaTokyo);
+  ASSERT_TRUE(hasEuropeParis);
+}
+
 }  // namespace mozilla::intl
