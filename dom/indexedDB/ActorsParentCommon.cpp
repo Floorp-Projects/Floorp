@@ -325,13 +325,14 @@ nsresult ReadCompressedIndexDataValuesFromSource(
       // we also can't use QM_TRY_UNWRAP/QM_TRY_INSPECT here.
       const uint8_t* blobData;
       uint32_t blobDataLength;
-      QM_TRY(aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData));
+      QM_TRY(MOZ_TO_RESULT(
+          aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData)));
 
       QM_TRY(OkIf(blobDataLength), NS_ERROR_FILE_CORRUPTED,
              IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-      QM_TRY(ReadCompressedIndexDataValuesFromBlob(
-          Span(blobData, blobDataLength), aOutIndexValues));
+      QM_TRY(MOZ_TO_RESULT(ReadCompressedIndexDataValuesFromBlob(
+          Span(blobData, blobDataLength), aOutIndexValues)));
 
       return NS_OK;
     }
@@ -436,7 +437,8 @@ GetStructuredCloneReadInfoFromExternalBlob(
               return fileInputStream;
             }));
 
-    QM_TRY(SnappyUncompressStructuredCloneData(*fileInputStream, data));
+    QM_TRY(MOZ_TO_RESULT(
+        SnappyUncompressStructuredCloneData(*fileInputStream, data)));
   }
 
   return StructuredCloneReadInfoParent{std::move(data), std::move(files),
@@ -480,7 +482,8 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
     case mozIStorageStatement::VALUE_TYPE_BLOB: {
       const uint8_t* blobData;
       uint32_t blobDataLength;
-      QM_TRY(aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData));
+      QM_TRY(MOZ_TO_RESULT(
+          aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData)));
 
       return GetStructuredCloneReadInfoFromBlob(
           blobData, blobDataLength, aFileManager, fileIds, aMaybeKey);
@@ -721,7 +724,7 @@ nsresult ExecuteSimpleSQLSequence(mozIStorageConnection& aConnection,
     const auto extraInfo = quota::ScopedLogExtraInfo{
         quota::ScopedLogExtraInfo::kTagQuery, aSQLCommand};
 
-    QM_TRY(aConnection.ExecuteSimpleSQL(aSQLCommand));
+    QM_TRY(MOZ_TO_RESULT(aConnection.ExecuteSimpleSQL(aSQLCommand)));
   }
 
   return NS_OK;

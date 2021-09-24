@@ -251,7 +251,7 @@ nsresult GetJSValFromKeyPathString(
 
   // TODO: It would be nicer to do the cleanup using a RAII class or something.
   //       This last QM_TRY could be removed then.
-  QM_TRY(rv);
+  QM_TRY(MOZ_TO_RESULT(rv));
   return NS_OK;
 }
 
