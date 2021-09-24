@@ -218,11 +218,6 @@ textarea::-moz-text-control-editing-root {
   opacity: 0.54;
 }
 
-textarea::placeholder,
-textarea::-moz-text-control-preview {
-  white-space: pre-wrap !important;
-}
-
 input:read-write,
 textarea:read-write {
   -moz-user-modify: read-write !important;
