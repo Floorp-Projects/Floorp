@@ -618,7 +618,7 @@ QuotaManagerService::GetFullOriginMetadata(const nsACString& aPersistenceType,
          NS_ERROR_INVALID_ARG);
 
   PrincipalInfo principalInfo;
-  QM_TRY(PrincipalToPrincipalInfo(aPrincipal, &principalInfo));
+  QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(aPrincipal, &principalInfo)));
   QM_TRY(OkIf(QuotaManager::IsPrincipalInfoValid(principalInfo)),
          NS_ERROR_INVALID_ARG);
 
@@ -631,7 +631,7 @@ QuotaManagerService::GetFullOriginMetadata(const nsACString& aPersistenceType,
 
   RequestInfo info(request, params);
 
-  QM_TRY(InitiateRequest(info));
+  QM_TRY(MOZ_TO_RESULT(InitiateRequest(info)));
 
   request.forget(_retval);
   return NS_OK;
