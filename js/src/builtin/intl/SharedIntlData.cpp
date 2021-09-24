@@ -11,7 +11,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/intl/Collator.h"
+#include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
+#include "mozilla/intl/Locale.h"
+#include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
@@ -30,11 +33,6 @@
 #include "builtin/String.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "unicode/ucol.h"
-#include "unicode/udat.h"
-#include "unicode/uloc.h"
-#include "unicode/unum.h"
-#include "unicode/utypes.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -327,9 +325,10 @@ bool js::intl::SharedIntlData::LocaleHasher::match(Locale key,
   return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
 }
 
+template <class AvailableLocales>
 bool js::intl::SharedIntlData::getAvailableLocales(
-    JSContext* cx, LocaleSet& locales, CountAvailable countAvailable,
-    GetAvailable getAvailable) {
+    JSContext* cx, LocaleSet& locales,
+    const AvailableLocales& availableLocales) {
   auto addLocale = [cx, &locales](const char* locale, size_t length) {
     JSAtom* atom = Atomize(cx, locale, length);
     if (!atom) {
@@ -351,9 +350,7 @@ bool js::intl::SharedIntlData::getAvailableLocales(
 
   js::Vector<char, 16> lang(cx);
 
-  int32_t count = countAvailable();
-  for (int32_t i = 0; i < count; i++) {
-    const char* locale = getAvailable(i);
+  for (const char* locale : availableLocales) {
     size_t length = strlen(locale);
 
     lang.clear();
@@ -468,21 +465,15 @@ bool js::intl::SharedIntlData::getAvailableLocales(
 }
 
 #ifdef DEBUG
-template <typename CountAvailable, typename GetAvailable>
-static bool IsSameAvailableLocales(CountAvailable countAvailable1,
-                                   GetAvailable getAvailable1,
-                                   CountAvailable countAvailable2,
-                                   GetAvailable getAvailable2) {
-  int32_t count = countAvailable1();
-  if (count != countAvailable2()) {
-    return false;
-  }
-  for (int32_t i = 0; i < count; i++) {
-    if (getAvailable1(i) != getAvailable2(i)) {
-      return false;
-    }
-  }
-  return true;
+template <class AvailableLocales1, class AvailableLocales2>
+static bool IsSameAvailableLocales(const AvailableLocales1& availableLocales1,
+                                   const AvailableLocales2& availableLocales2) {
+  return std::equal(std::begin(availableLocales1), std::end(availableLocales1),
+                    std::begin(availableLocales2), std::end(availableLocales2),
+                    [](const char* a, const char* b) {
+                      // Intentionally comparing pointer equivalence.
+                      return a == b;
+                    });
 }
 #endif
 
@@ -496,20 +487,22 @@ bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
   supportedLocales.clearAndCompact();
   collatorSupportedLocales.clearAndCompact();
 
-  if (!getAvailableLocales(cx, supportedLocales, uloc_countAvailable,
-                           uloc_getAvailable)) {
+  if (!getAvailableLocales(cx, supportedLocales,
+                           mozilla::intl::Locale::GetAvailableLocales())) {
     return false;
   }
-  if (!getAvailableLocales(cx, collatorSupportedLocales, ucol_countAvailable,
-                           ucol_getAvailable)) {
+  if (!getAvailableLocales(cx, collatorSupportedLocales,
+                           mozilla::intl::Collator::GetAvailableLocales())) {
     return false;
   }
 
-  MOZ_ASSERT(IsSameAvailableLocales(uloc_countAvailable, uloc_getAvailable,
-                                    udat_countAvailable, udat_getAvailable));
+  MOZ_ASSERT(IsSameAvailableLocales(
+      mozilla::intl::Locale::GetAvailableLocales(),
+      mozilla::intl::DateTimeFormat::GetAvailableLocales()));
 
-  MOZ_ASSERT(IsSameAvailableLocales(uloc_countAvailable, uloc_getAvailable,
-                                    unum_countAvailable, unum_getAvailable));
+  MOZ_ASSERT(IsSameAvailableLocales(
+      mozilla::intl::Locale::GetAvailableLocales(),
+      mozilla::intl::NumberFormat::GetAvailableLocales()));
 
   MOZ_ASSERT(!supportedLocalesInitialized,
              "ensureSupportedLocales is neither reentrant nor thread-safe");
