@@ -456,6 +456,19 @@ class DateTimeFormat final {
   static Result<HourCyclesVector, ICUError> GetAllowedHourCycles(
       Span<const char> aLanguage, Maybe<Span<const char>> aRegion);
 
+  /**
+   * Returns an iterator over all supported date-time formatter locales.
+   *
+   * The returned strings are ICU locale identifiers and NOT BCP 47 language
+   * tags.
+   *
+   * Also see <https://unicode-org.github.io/icu/userguide/locale>.
+   */
+  static auto GetAvailableLocales() {
+    return AvailableLocalesEnumeration<udat_countAvailable,
+                                       udat_getAvailable>();
+  }
+
  private:
   explicit DateTimeFormat(UDateFormat* aDateFormat);
 

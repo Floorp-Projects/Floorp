@@ -6,6 +6,8 @@
 #include "mozilla/intl/NumberFormat.h"
 #include "TestBuffer.h"
 
+#include <string_view>
+
 namespace mozilla {
 namespace intl {
 
@@ -202,6 +204,32 @@ TEST(IntlNumberFormat, FormatToParts)
             (NumberPart{NumberPartType::Decimal, NumberPartSource::Shared, 8}));
   ASSERT_EQ(parts[4], (NumberPart{NumberPartType::Fraction,
                                   NumberPartSource::Shared, 11}));
+}
+
+TEST(IntlNumberFormat, GetAvailableLocales)
+{
+  using namespace std::literals;
+
+  int32_t english = 0;
+  int32_t german = 0;
+  int32_t chinese = 0;
+
+  // Since this list is dependent on ICU, and may change between upgrades, only
+  // test a subset of the available locales.
+  for (const char* locale : NumberFormat::GetAvailableLocales()) {
+    if (locale == "en"sv) {
+      english++;
+    } else if (locale == "de"sv) {
+      german++;
+    } else if (locale == "zh"sv) {
+      chinese++;
+    }
+  }
+
+  // Each locale should be found exactly once.
+  ASSERT_EQ(english, 1);
+  ASSERT_EQ(german, 1);
+  ASSERT_EQ(chinese, 1);
 }
 
 }  // namespace intl
