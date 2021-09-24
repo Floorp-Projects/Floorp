@@ -154,7 +154,9 @@ nsDragService::nsDragService()
 
   // set up our logging module
   LOGDRAGSERVICE(("nsDragService::nsDragService"));
-  mCanDrop = false;
+  // We begin with enabled drop on Wayland due to different
+  // Wayland D&D architecture (Bug 1730203).
+  mCanDrop = widget::GdkIsWaylandDisplay();
   mTargetDragDataReceived = false;
   mTargetDragData = 0;
   mTargetDragDataLen = 0;
@@ -2066,14 +2068,7 @@ gboolean nsDragService::RunScheduledTask() {
       } else {
         // Reply to tell the source whether we can drop and what
         // action would be taken.
-        if (mTargetDragContext) {
-          ReplyToDragMotion(mTargetDragContext);
-        }
-#ifdef MOZ_WAYLAND
-        else if (mTargetWaylandDataOffer) {
-          ReplyToDragMotion(mTargetWaylandDataOffer);
-        }
-#endif
+        ReplyToDragMotion();
       }
     }
   }
@@ -2180,11 +2175,19 @@ nsDragService::UpdateDragEffect() {
   return NS_OK;
 }
 
+void nsDragService::ReplyToDragMotion() {
+  if (mTargetDragContext) {
+    ReplyToDragMotion(mTargetDragContext);
+  }
+#ifdef MOZ_WAYLAND
+  else if (mTargetWaylandDataOffer) {
+    ReplyToDragMotion(mTargetWaylandDataOffer);
+  }
+#endif
+}
+
 void nsDragService::DispatchMotionEvents() {
-  mCanDrop = false;
-
   FireDragEventAtSource(eDrag, GetCurrentModifiers());
-
   if (mTargetWindow) {
     mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
                                      mTargetTime);
