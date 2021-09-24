@@ -25,7 +25,7 @@ val defaultSettings = DefaultSettings().apply {
 }
 
 // Create an engine instance to be used by other components.
-val engine = SystemEngine(defaultSettings)
+val engine = SystemEngine(context, defaultSettings)
 ```
 
 ### Integration
