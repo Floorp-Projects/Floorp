@@ -560,9 +560,9 @@ extensions.data:
       the value of this event is the addon id.
   storageLocalError:
     objects: ["get", "set", "remove", "clear"]
-    bug_numbers: [1606903, 1649948, 1689255]
+    bug_numbers: [1606903, 1649948, 1689255, 1730038]
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "95"
+    expiry_version: "102"
     products:
       - "firefox"
     record_in_processes: ["main", "content"]
