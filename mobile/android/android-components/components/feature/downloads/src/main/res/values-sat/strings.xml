@@ -34,7 +34,7 @@
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">ᱡᱷᱚᱡ ᱢᱮ</string>
+    <string name="mozac_feature_downloads_button_open">ᱡᱷᱚᱡᱽ ᱢᱮ</string>
     <!-- Button that restarts the download after a failed attempt -->
     <string name="mozac_feature_downloads_button_try_again">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</string>
 
