@@ -52,7 +52,6 @@ class SearchTest {
         }
     }
 
-    @Ignore("Currently failing at assertSearchEngineResults, will need a re-check")
     @Test
     fun shortcutButtonTest() {
         homeScreen {
@@ -63,7 +62,7 @@ class SearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
-//            verifySearchWithText()
+            verifySearchBarEmpty()
             clickSearchEngineButton(activityTestRule, "DuckDuckGo")
             typeSearch("mozilla")
             verifySearchEngineResults(activityTestRule, "DuckDuckGo", 4)

@@ -45,6 +45,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitForAwesomeBarContent
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
@@ -98,9 +99,18 @@ class SearchRobot {
 
     fun typeSearch(searchTerm: String) {
         browserToolbarEditView().setText(searchTerm)
+        mDevice.waitForIdle()
     }
 
     fun clickSearchEngineButton(rule: ComposeTestRule, searchEngineName: String) {
+        rule.waitForIdle()
+
+        mDevice.waitForAwesomeBarContent(
+            mDevice.findObject(
+                UiSelector().textContains(searchEngineName)
+            )
+        )
+
         rule.onNodeWithText(searchEngineName)
             .assertExists()
             .assertHasClickAction()
@@ -242,6 +252,14 @@ private fun assertSearchEngineURL(searchEngineName: String) {
 }
 
 private fun assertSearchEngineResults(rule: ComposeTestRule, searchEngineName: String, count: Int) {
+    rule.waitForIdle()
+
+    mDevice.waitForAwesomeBarContent(
+        mDevice.findObject(
+            UiSelector().textContains(searchEngineName)
+        )
+    )
+
     rule.onAllNodesWithText(searchEngineName)
         .assertCountEquals(count)
 }
