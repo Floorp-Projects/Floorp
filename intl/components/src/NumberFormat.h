@@ -366,6 +366,19 @@ class NumberFormat final {
                                             int32_t keywordSize,
                                             UPluralRules* pluralRules) const;
 
+  /**
+   * Returns an iterator over all supported number formatter locales.
+   *
+   * The returned strings are ICU locale identifiers and NOT BCP 47 language
+   * tags.
+   *
+   * Also see <https://unicode-org.github.io/icu/userguide/locale>.
+   */
+  static auto GetAvailableLocales() {
+    return AvailableLocalesEnumeration<unum_countAvailable,
+                                       unum_getAvailable>();
+  }
+
  private:
   UNumberFormatter* mNumberFormatter = nullptr;
   UFormattedNumber* mFormattedNumber = nullptr;
