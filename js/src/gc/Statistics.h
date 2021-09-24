@@ -177,7 +177,8 @@ struct Statistics {
   void resumePhases();
 
   void beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
-                  const SliceBudget& budget, JS::GCReason reason);
+                  const SliceBudget& budget, JS::GCReason reason,
+                  bool budgetWasIncreased);
   void endSlice();
 
   [[nodiscard]] bool startTimingMutator();
@@ -481,9 +482,9 @@ struct Statistics {
 struct MOZ_RAII AutoGCSlice {
   AutoGCSlice(Statistics& stats, const ZoneGCStats& zoneStats,
               JS::GCOptions options, const SliceBudget& budget,
-              JS::GCReason reason)
+              JS::GCReason reason, bool budgetWasIncreased)
       : stats(stats) {
-    stats.beginSlice(zoneStats, options, budget, reason);
+    stats.beginSlice(zoneStats, options, budget, reason, budgetWasIncreased);
   }
   ~AutoGCSlice() { stats.endSlice(); }
 
