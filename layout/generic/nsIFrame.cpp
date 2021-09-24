@@ -8724,16 +8724,19 @@ nsresult nsIFrame::PeekOffsetForWord(nsPeekOffsetStruct* aPos,
 }
 
 nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
-  nsAutoLineIterator iter;
   nsIFrame* blockFrame = this;
   nsresult result = NS_ERROR_FAILURE;
 
   while (NS_FAILED(result)) {
-    int32_t thisLine;
-    MOZ_TRY_VAR(thisLine,
-                blockFrame->GetLineNumber(aPos->mScrollViewStop, &blockFrame));
-    iter = blockFrame->GetLineIterator();
-    MOZ_ASSERT(iter, "GetLineNumber() succeeded but no block frame?");
+    nsIFrame* lineFrame;
+    blockFrame =
+        blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop, lineFrame);
+    if (!blockFrame) {
+      return NS_ERROR_FAILURE;
+    }
+    nsAutoLineIterator iter = blockFrame->GetLineIterator();
+    int32_t thisLine = iter->FindLineContaining(lineFrame);
+    MOZ_ASSERT(thisLine >= 0, "Failed to find line!");
 
     int edgeCase = 0;  // no edge case. this should look at thisLine
 
@@ -8780,8 +8783,7 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
           // got the table frame now
           // ok time to drill down to find iterator
           while (frame) {
-            iter = frame->GetLineIterator();
-            if (iter) {
+            if (frame->CanProvideLineIterator()) {
               aPos->mResultFrame = frame;
               searchTableBool = true;
               result = NS_OK;
@@ -8793,12 +8795,13 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
         }
 
         if (!searchTableBool) {
-          iter = aPos->mResultFrame->GetLineIterator();
-          result = iter ? NS_OK : NS_ERROR_FAILURE;
+          result = aPos->mResultFrame->CanProvideLineIterator()
+                       ? NS_OK
+                       : NS_ERROR_FAILURE;
         }
 
         // we've struck another block element!
-        if (NS_SUCCEEDED(result) && iter) {
+        if (NS_SUCCEEDED(result)) {
           doneLooping = false;
           if (aPos->mDirection == eDirPrevious) {
             edgeCase = 1;  // far edge, search from end backwards
@@ -9067,31 +9070,6 @@ nsIFrame* nsIFrame::GetContainingBlockForLine(bool aLockScroll,
     }
   }
   return nullptr;
-}
-
-Result<int32_t, nsresult> nsIFrame::GetLineNumber(bool aLockScroll,
-                                                  nsIFrame** aContainingBlock) {
-  MOZ_ASSERT(aContainingBlock);
-
-  nsIFrame* frame = nullptr;
-  nsIFrame* parentFrame = GetContainingBlockForLine(aLockScroll, frame);
-  if (!parentFrame) {
-    return Err(NS_ERROR_FAILURE);
-  }
-  nsAutoLineIterator it = parentFrame->GetLineIterator();
-  if (!it) {
-    MOZ_ASSERT_UNREACHABLE(
-        "CanProvideLineIterator returned true but GetLineIterator returned "
-        "null?");
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  *aContainingBlock = parentFrame;
-  int32_t line = it->FindLineContaining(frame);
-  if (line < 0) {
-    return Err(NS_ERROR_FAILURE);
-  }
-  return line;
 }
 
 Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
