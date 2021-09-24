@@ -161,8 +161,15 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 #ifdef MOZ_WAYLAND
   RefPtr<DataOffer> mTargetWaylandDataOffer;
 #endif
-  // mTargetDragContextForRemote is set while waiting for a reply from
-  // a child process.
+
+  // When we route D'n'D request to child process
+  // (by EventStateManager::DispatchCrossProcessEvent)
+  // we save GdkDragContext to mTargetDragContextForRemote.
+  // When we get a reply from child process we use
+  // the stored GdkDragContext to send reply to OS.
+  //
+  // We need to store GdkDragContext because mTargetDragContext is cleared
+  // after every D'n'D event.
   RefPtr<GdkDragContext> mTargetDragContextForRemote;
 #ifdef MOZ_WAYLAND
   RefPtr<DataOffer> mTargetWaylandDataOfferForRemote;
@@ -181,7 +188,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool IsTargetContextList(void);
   // this will get the native data from the last target given a
   // specific flavor
-  void GetTargetDragData(GdkAtom aFlavor);
+  void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors);
   // this will reset all of the target vars
   void TargetResetData(void);
   // Ensure our data cache belongs to aDragContext and clear the cache if
@@ -221,6 +228,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 #ifdef MOZ_LOGGING
   const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif
+  void GetDragFlavors(nsTArray<nsCString>& aFlavors);
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 };
