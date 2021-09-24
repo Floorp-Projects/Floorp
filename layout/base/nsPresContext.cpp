@@ -1859,6 +1859,12 @@ void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
 }
 
 bool nsPresContext::EnsureVisible() {
+  BrowsingContext* browsingContext =
+      mDocument ? mDocument->GetBrowsingContext() : nullptr;
+  if (!browsingContext || browsingContext->IsInBFCache()) {
+    return false;
+  }
+
   nsCOMPtr<nsIDocShell> docShell(GetDocShell());
   if (!docShell) {
     return false;
