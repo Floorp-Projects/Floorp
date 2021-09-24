@@ -1239,7 +1239,7 @@ nsresult OpenOp::DatabaseWork() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY(quotaManager->EnsureStorageIsInitialized());
+  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
 
   QM_TRY_INSPECT(
       const auto& dbDirectory,
@@ -1251,7 +1251,8 @@ nsresult OpenOp::DatabaseWork() {
               mOriginMetadata));
         }
 
-        QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+        QM_TRY(
+            MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
         QM_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
             persistenceType, mOriginMetadata));
       }()
@@ -1758,7 +1759,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
         }
 
         nsString leafName;
-        QM_TRY(file->GetLeafName(leafName));
+        QM_TRY(MOZ_TO_RESULT(file->GetLeafName(leafName)));
 
         if (StringEndsWith(leafName, kSDBSuffix)) {
           QM_TRY_INSPECT(const int64_t& fileSize,
