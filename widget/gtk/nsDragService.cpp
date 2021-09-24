@@ -2127,10 +2127,7 @@ void nsDragService::UpdateDragAction() {
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
   GdkDragAction gdkAction = GDK_ACTION_DEFAULT;
   if (mTargetDragContext) {
-    gdkAction = gdk_drag_context_get_suggested_action(mTargetDragContext);
-    if (gdkAction == GDK_ACTION_ASK) {
-      gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
-    }
+    gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
   }
 #ifdef MOZ_WAYLAND
   else if (mTargetWaylandDataOffer) {
