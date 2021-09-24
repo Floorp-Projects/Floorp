@@ -145,7 +145,7 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
   // from it. We have to do this because GetPaddingSizeFromDB is called
   // by InitOrigin. And it means that SetupAction::RunSyncWithDBOnTarget hasn't
   // checked the schema for the given origin yet).
-  QM_TRY(db::CreateOrMigrateSchema(*conn));
+  QM_TRY(MOZ_TO_RESULT(db::CreateOrMigrateSchema(*conn)));
 
   QM_TRY_RETURN(DirectoryPaddingRestore(aDir, *conn,
                                         /* aMustRestore */ false));
@@ -182,7 +182,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
       const auto& dir,
       qm->GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin));
 
-  QM_TRY(dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME)));
+  QM_TRY(MOZ_TO_RESULT(
+      dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME))));
 
   QM_TRY_INSPECT(
       const auto& cachesSQLiteFile,
@@ -205,19 +206,19 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
           // XXX Long term, we might even think about removing entire origin
           // directory because missing caches.sqlite while other files exist can
           // be interpreted as database corruption.
-          QM_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
-              *dir, DirPaddingFile::TMP_FILE));
+          QM_TRY(MOZ_TO_RESULT(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+              *dir, DirPaddingFile::TMP_FILE)));
 
-          QM_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
-              *dir, DirPaddingFile::FILE));
+          QM_TRY(MOZ_TO_RESULT(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+              *dir, DirPaddingFile::FILE)));
 
           QM_TRY_INSPECT(const auto& morgueDir,
                          CloneFileAndAppend(*dir, kMorgueDirectoryFilename));
 
           QuotaInfo dummy;
-          QM_TRY(mozilla::dom::cache::RemoveNsIFileRecursively(
+          QM_TRY(MOZ_TO_RESULT(mozilla::dom::cache::RemoveNsIFileRecursively(
               dummy, *morgueDir,
-              /* aTrackQuota */ false));
+              /* aTrackQuota */ false)));
 
           return nsCOMPtr<nsIFile>{nullptr};
         }
@@ -414,7 +415,7 @@ nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(aDirectory);
 
-  QM_TRY(DirectoryPaddingInit(*aDirectory));
+  QM_TRY(MOZ_TO_RESULT(DirectoryPaddingInit(*aDirectory)));
 
   return NS_OK;
 }
@@ -470,12 +471,14 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
     DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
   }
 
-  QM_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
+  QM_TRY(MOZ_TO_RESULT(
+      DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE)));
 
   // Remove temporary file if we have one.
-  QM_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
+  QM_TRY(MOZ_TO_RESULT(
+      DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE)));
 
-  QM_TRY(DirectoryPaddingInit(*aBaseDir));
+  QM_TRY(MOZ_TO_RESULT(DirectoryPaddingInit(*aBaseDir)));
 
   return NS_OK;
 }
@@ -507,7 +510,8 @@ nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  QM_TRY(cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn));
+  QM_TRY(MOZ_TO_RESULT(
+      cacheQuotaClient->RestorePaddingFileInternal(aBaseDir, aConn)));
 
   return NS_OK;
 }
@@ -520,7 +524,8 @@ nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
-  QM_TRY(cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir));
+  QM_TRY(MOZ_TO_RESULT(
+      cacheQuotaClient->WipePaddingFileInternal(aQuotaInfo, aBaseDir)));
 
   return NS_OK;
 }
