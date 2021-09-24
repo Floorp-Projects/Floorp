@@ -93,7 +93,7 @@ class CachingDatabaseConnection {
                                   BindFunctor&& aBindFunctor) {
     QM_TRY_INSPECT(const auto& stmt, BorrowCachedStatement(aQuery));
     QM_TRY(std::forward<BindFunctor>(aBindFunctor)(*stmt));
-    QM_TRY(stmt->Execute());
+    QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
 
     return NS_OK;
   }

@@ -162,7 +162,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
   QM_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
                                                             aDirectory, Clone));
 
-  QM_TRY(resultFile->Append(aPathElement));
+  QM_TRY(MOZ_TO_RESULT(resultFile->Append(aPathElement)));
 
   return resultFile;
 }

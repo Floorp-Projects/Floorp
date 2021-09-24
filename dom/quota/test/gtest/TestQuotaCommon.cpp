@@ -46,7 +46,7 @@ TEST(QuotaCommon_Try, Success)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK);
+    QM_TRY(MOZ_TO_RESULT(NS_OK));
 
     tryDidNotReturn = true;
 
@@ -152,7 +152,7 @@ TEST(QuotaCommon_Try, Failure_PropagateErr)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE);
+    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
     tryDidNotReturn = true;
 
@@ -256,7 +256,7 @@ TEST(QuotaCommon_Try, NestingMadness_Success)
 
   nsresult rv = [&nestedTryDidNotReturn, &tryDidNotReturn]() -> nsresult {
     QM_TRY(([&nestedTryDidNotReturn]() -> Result<Ok, nsresult> {
-      QM_TRY(NS_OK);
+      QM_TRY(MOZ_TO_RESULT(NS_OK));
 
       nestedTryDidNotReturn = true;
 
@@ -280,7 +280,7 @@ TEST(QuotaCommon_Try, NestingMadness_Failure)
 
   nsresult rv = [&nestedTryDidNotReturn, &tryDidNotReturn]() -> nsresult {
     QM_TRY(([&nestedTryDidNotReturn]() -> Result<Ok, nsresult> {
-      QM_TRY(NS_ERROR_FAILURE);
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
       nestedTryDidNotReturn = true;
 
@@ -307,11 +307,11 @@ TEST(QuotaCommon_Try, NestingMadness_Multiple_Success)
                  &tryDidNotReturn]() -> nsresult {
     QM_TRY(([&nestedTry1DidNotReturn,
              &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
-      QM_TRY(NS_OK);
+      QM_TRY(MOZ_TO_RESULT(NS_OK));
 
       nestedTry1DidNotReturn = true;
 
-      QM_TRY(NS_OK);
+      QM_TRY(MOZ_TO_RESULT(NS_OK));
 
       nestedTry2DidNotReturn = true;
 
@@ -339,11 +339,11 @@ TEST(QuotaCommon_Try, NestingMadness_Multiple_Failure1)
                  &tryDidNotReturn]() -> nsresult {
     QM_TRY(([&nestedTry1DidNotReturn,
              &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
-      QM_TRY(NS_ERROR_FAILURE);
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
       nestedTry1DidNotReturn = true;
 
-      QM_TRY(NS_OK);
+      QM_TRY(MOZ_TO_RESULT(NS_OK));
 
       nestedTry2DidNotReturn = true;
 
@@ -371,11 +371,11 @@ TEST(QuotaCommon_Try, NestingMadness_Multiple_Failure2)
                  &tryDidNotReturn]() -> nsresult {
     QM_TRY(([&nestedTry1DidNotReturn,
              &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
-      QM_TRY(NS_OK);
+      QM_TRY(MOZ_TO_RESULT(NS_OK));
 
       nestedTry1DidNotReturn = true;
 
-      QM_TRY(NS_ERROR_FAILURE);
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE));
 
       nestedTry2DidNotReturn = true;
 
