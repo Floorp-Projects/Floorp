@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.11.283';
+    const workerVersion = '2.11.298';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -517,20 +517,20 @@ class WorkerMessageHandler {
         }
 
         const xfa = acroForm instanceof _primitives.Dict && acroForm.get("XFA") || null;
-        let xfaDatasets = null;
-        let hasDatasets = false;
+        let xfaDatasetsRef = null;
+        let hasXfaDatasetsEntry = false;
 
         if (Array.isArray(xfa)) {
           for (let i = 0, ii = xfa.length; i < ii; i += 2) {
             if (xfa[i] === "datasets") {
-              xfaDatasets = xfa[i + 1];
+              xfaDatasetsRef = xfa[i + 1];
               acroFormRef = null;
-              hasDatasets = true;
+              hasXfaDatasetsEntry = true;
             }
           }
 
-          if (xfaDatasets === null) {
-            xfaDatasets = xref.getNewRef();
+          if (xfaDatasetsRef === null) {
+            xfaDatasetsRef = xref.getNewRef();
           }
         } else if (xfa) {
           acroFormRef = null;
@@ -569,8 +569,9 @@ class WorkerMessageHandler {
           xrefInfo: newXrefInfo,
           newRefs,
           xref,
-          datasetsRef: xfaDatasets,
-          hasDatasets,
+          hasXfa: !!xfa,
+          xfaDatasetsRef,
+          hasXfaDatasetsEntry,
           acroFormRef,
           acroForm,
           xfaData
@@ -43696,8 +43697,8 @@ function writeXFADataForAcroform(str, newRefs) {
 
 function updateXFA({
   xfaData,
-  datasetsRef,
-  hasDatasets,
+  xfaDatasetsRef,
+  hasXfaDatasetsEntry,
   acroFormRef,
   acroForm,
   newRefs,
@@ -43708,7 +43709,7 @@ function updateXFA({
     return;
   }
 
-  if (!hasDatasets) {
+  if (!hasXfaDatasetsEntry) {
     if (!acroFormRef) {
       (0, _util.warn)("XFA - Cannot save it");
       return;
@@ -43717,7 +43718,7 @@ function updateXFA({
     const oldXfa = acroForm.get("XFA");
     const newXfa = oldXfa.slice();
     newXfa.splice(2, 0, "datasets");
-    newXfa.splice(3, 0, datasetsRef);
+    newXfa.splice(3, 0, xfaDatasetsRef);
     acroForm.set("XFA", newXfa);
     const encrypt = xref.encrypt;
     let transform = null;
@@ -43737,20 +43738,20 @@ function updateXFA({
   }
 
   if (xfaData === null) {
-    const datasets = xref.fetchIfRef(datasetsRef);
+    const datasets = xref.fetchIfRef(xfaDatasetsRef);
     xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
   }
 
   const encrypt = xref.encrypt;
 
   if (encrypt) {
-    const transform = encrypt.createCipherTransform(datasetsRef.num, datasetsRef.gen);
+    const transform = encrypt.createCipherTransform(xfaDatasetsRef.num, xfaDatasetsRef.gen);
     xfaData = transform.encryptString(xfaData);
   }
 
-  const data = `${datasetsRef.num} ${datasetsRef.gen} obj\n` + `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` + xfaData + "\nendstream\nendobj\n";
+  const data = `${xfaDatasetsRef.num} ${xfaDatasetsRef.gen} obj\n` + `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` + xfaData + "\nendstream\nendobj\n";
   newRefs.push({
-    ref: datasetsRef,
+    ref: xfaDatasetsRef,
     data
   });
 }
@@ -43760,22 +43761,26 @@ function incrementalUpdate({
   xrefInfo,
   newRefs,
   xref = null,
-  datasetsRef = null,
-  hasDatasets = false,
+  hasXfa = false,
+  xfaDatasetsRef = null,
+  hasXfaDatasetsEntry = false,
   acroFormRef = null,
   acroForm = null,
   xfaData = null
 }) {
-  updateXFA({
-    xfaData,
-    datasetsRef,
-    hasDatasets,
-    acroFormRef,
-    acroForm,
-    newRefs,
-    xref,
-    xrefInfo
-  });
+  if (hasXfa) {
+    updateXFA({
+      xfaData,
+      xfaDatasetsRef,
+      hasXfaDatasetsEntry,
+      acroFormRef,
+      acroForm,
+      newRefs,
+      xref,
+      xrefInfo
+    });
+  }
+
   const newXref = new _primitives.Dict(null);
   const refForXrefTable = xrefInfo.newRef;
   let buffer, baseOffset;
@@ -60758,8 +60763,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.11.283';
-const pdfjsBuild = '638115885';
+const pdfjsVersion = '2.11.298';
+const pdfjsBuild = 'd370a281c';
 })();
 
 /******/ 	return __webpack_exports__;
