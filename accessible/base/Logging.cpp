@@ -90,14 +90,23 @@ static void EnableLogging(const char* aModulesStr) {
 }
 
 static void LogDocURI(dom::Document* aDocumentNode) {
-  printf("uri: %s", aDocumentNode->GetDocumentURI()->GetSpecOrDefault().get());
+  nsIURI* uri = aDocumentNode->GetDocumentURI();
+  if (uri) {
+    printf("uri: %s", uri->GetSpecOrDefault().get());
+  } else {
+    printf("uri: null");
+  }
 }
 
 static void LogDocShellState(dom::Document* aDocumentNode) {
   printf("docshell busy: ");
+  nsCOMPtr<nsIDocShell> docShell = aDocumentNode->GetDocShell();
+  if (!docShell) {
+    printf("null docshell");
+    return;
+  }
 
   nsAutoCString docShellBusy;
-  nsCOMPtr<nsIDocShell> docShell = aDocumentNode->GetDocShell();
   nsIDocShell::BusyFlags busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
   docShell->GetBusyFlags(&busyFlags);
   if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE) {
@@ -126,6 +135,10 @@ static void LogDocType(dom::Document* aDocumentNode) {
 static void LogDocShellTree(dom::Document* aDocumentNode) {
   if (aDocumentNode->IsActive()) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
+    if (!treeItem) {
+      printf("in-process docshell hierarchy, null docshell;");
+      return;
+    }
     nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
     treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
     nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
