@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/intl/Collator.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/TextUtils.h"
 
@@ -608,47 +609,25 @@ bool js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx) {
   // complete due to OOM, clear all data and start from scratch.
   upperCaseFirstLocales.clearAndCompact();
 
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* available = ucol_openAvailableLocales(&status);
-  if (U_FAILURE(status)) {
-    ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UEnumeration, uenum_close> toClose(available);
-
   RootedAtom locale(cx);
-  while (true) {
-    int32_t size;
-    const char* rawLocale = uenum_next(available, &size, &status);
-    if (U_FAILURE(status)) {
-      ReportInternalError(cx);
+  for (const char* rawLocale : mozilla::intl::Collator::GetAvailableLocales()) {
+    auto collator = mozilla::intl::Collator::TryCreate(rawLocale);
+    if (collator.isErr()) {
+      ReportInternalError(cx, collator.unwrapErr());
       return false;
     }
 
-    if (rawLocale == nullptr) {
-      break;
-    }
-
-    UCollator* collator = ucol_open(rawLocale, &status);
-    if (U_FAILURE(status)) {
-      ReportInternalError(cx);
-      return false;
-    }
-    ScopedICUObject<UCollator, ucol_close> toCloseCollator(collator);
-
-    UColAttributeValue caseFirst =
-        ucol_getAttribute(collator, UCOL_CASE_FIRST, &status);
-    if (U_FAILURE(status)) {
-      ReportInternalError(cx);
+    auto caseFirst = collator.unwrap()->GetCaseFirst();
+    if (caseFirst.isErr()) {
+      ReportInternalError(cx, caseFirst.unwrapErr());
       return false;
     }
 
-    if (caseFirst != UCOL_UPPER_FIRST) {
+    if (caseFirst.unwrap() != mozilla::intl::Collator::CaseFirst::Upper) {
       continue;
     }
 
-    MOZ_ASSERT(size >= 0);
-    locale = Atomize(cx, rawLocale, size_t(size));
+    locale = Atomize(cx, rawLocale, strlen(rawLocale));
     if (!locale) {
       return false;
     }
