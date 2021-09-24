@@ -8225,8 +8225,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
     if (resultFrame) {
       // check to see if this is ANOTHER blockframe inside the other one if so
       // then call into its lines
-      nsAutoLineIterator newIt = resultFrame->GetLineIterator();
-      if (newIt) {
+      if (resultFrame->CanProvideLineIterator()) {
         aPos->mResultFrame = resultFrame;
         return NS_OK;
       }
