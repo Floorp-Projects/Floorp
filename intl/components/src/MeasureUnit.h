@@ -53,6 +53,7 @@ class MeasureUnit final {
                 UniqueUResourceBundle aUnits);
 
     class Iterator {
+     public:
       // std::iterator traits.
       using iterator_category = std::input_iterator_tag;
       using value_type = SpanResult<char>;
@@ -60,6 +61,7 @@ class MeasureUnit final {
       using pointer = value_type*;
       using reference = value_type&;
 
+     private:
       const Enumeration& mEnumeration;
 
       // Resource bundle to a measurement type within the "units" table.

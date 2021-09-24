@@ -14,6 +14,10 @@
 #include "mozilla/Vector.h"
 #include "mozilla/intl/ICUError.h"
 
+#include <iterator>
+#include <stddef.h>
+#include <stdint.h>
+
 namespace mozilla::intl {
 
 static inline const char* IcuLocale(const char* aLocale) {
@@ -371,6 +375,66 @@ using SpanResult = Result<Span<const CharType>, InternalError>;
 
 template <typename CharType>
 using SpanEnumeration = Enumeration<CharType, SpanResult<CharType>, SpanMapper>;
+
+/**
+ * An iterable class that wraps calls to ICU's available locales API.
+ */
+template <int32_t(CountAvailable)(), const char*(GetAvailable)(int32_t)>
+class AvailableLocalesEnumeration final {
+  // The overall count of available locales.
+  int32_t mLocalesCount = 0;
+
+ public:
+  AvailableLocalesEnumeration() { mLocalesCount = CountAvailable(); }
+
+  class Iterator {
+   public:
+    // std::iterator traits.
+    using iterator_category = std::input_iterator_tag;
+    using value_type = const char*;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+   private:
+    // The current position in the list of available locales.
+    int32_t mLocalesPos = 0;
+
+   public:
+    explicit Iterator(int32_t aLocalesPos) : mLocalesPos(aLocalesPos) {}
+
+    Iterator& operator++() {
+      mLocalesPos++;
+      return *this;
+    }
+
+    Iterator operator++(int) {
+      Iterator result = *this;
+      ++(*this);
+      return result;
+    }
+
+    bool operator==(const Iterator& aOther) const {
+      return mLocalesPos == aOther.mLocalesPos;
+    }
+
+    bool operator!=(const Iterator& aOther) const { return !(*this == aOther); }
+
+    value_type operator*() const { return GetAvailable(mLocalesPos); }
+  };
+
+  // std::iterator begin() and end() methods.
+
+  /**
+   * Return an iterator pointing to the first available locale.
+   */
+  Iterator begin() const { return Iterator(0); }
+
+  /**
+   * Return an iterator pointing to one past the last available locale.
+   */
+  Iterator end() const { return Iterator(mLocalesCount); }
+};
 
 }  // namespace mozilla::intl
 

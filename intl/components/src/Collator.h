@@ -180,6 +180,19 @@ class Collator final {
    */
   static Result<Bcp47ExtEnumeration, ICUError> GetBcp47KeywordValues();
 
+  /**
+   * Returns an iterator over all supported collator locales.
+   *
+   * The returned strings are ICU locale identifiers and NOT BCP 47 language
+   * tags.
+   *
+   * Also see <https://unicode-org.github.io/icu/userguide/locale>.
+   */
+  static auto GetAvailableLocales() {
+    return AvailableLocalesEnumeration<ucol_countAvailable,
+                                       ucol_getAvailable>();
+  }
+
  private:
   /**
    * Toggle features, or use the default setting.
