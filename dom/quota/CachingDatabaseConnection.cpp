@@ -79,7 +79,8 @@ CachingDatabaseConnection::BorrowCachedStatement(const nsACString& aQuery) {
 
 nsresult CachingDatabaseConnection::ExecuteCachedStatement(
     const nsACString& aQuery) {
-  return ExecuteCachedStatement(aQuery, [](auto&) { return NS_OK; });
+  return ExecuteCachedStatement(
+      aQuery, [](auto&) -> Result<Ok, nsresult> { return Ok{}; });
 }
 
 void CachingDatabaseConnection::Close() {
