@@ -27,6 +27,8 @@ class JS_PUBLIC_API JSObject;
   _(JS_TELEMETRY_GC_IS_ZONE_GC)             \
   _(JS_TELEMETRY_GC_MS)                     \
   _(JS_TELEMETRY_GC_BUDGET_MS_2)            \
+  _(JS_TELEMETRY_GC_BUDGET_WAS_INCREASED)   \
+  _(JS_TELEMETRY_GC_SLICE_WAS_LONG)         \
   _(JS_TELEMETRY_GC_BUDGET_OVERRUN)         \
   _(JS_TELEMETRY_GC_ANIMATION_MS)           \
   _(JS_TELEMETRY_GC_MAX_PAUSE_MS_2)         \

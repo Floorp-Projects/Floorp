@@ -1174,7 +1174,10 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
                                 size_t sitesPretenured) {
   JSRuntime* rt = runtime();
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
-  if (totalTime.ToMilliseconds() > 1.0) {
+
+  // Long minor GCs are those that take more than 1ms.
+  bool wasLongMinorGC = totalTime.ToMilliseconds() > 1.0;
+  if (wasLongMinorGC) {
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
   }
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
