@@ -10,6 +10,14 @@
 
 namespace mozilla::intl {
 
+// These tests are dependent on the machine that this test is being run on.
+TEST(IntlLocale, SystemDependentTests)
+{
+  // e.g. "en_US"
+  const char* locale = Locale::GetDefaultLocale();
+  ASSERT_TRUE(locale != nullptr);
+}
+
 TEST(IntlLocale, GetAvailableLocales)
 {
   using namespace std::literals;
