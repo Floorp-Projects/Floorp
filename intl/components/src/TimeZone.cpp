@@ -320,6 +320,16 @@ Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
   return SpanEnumeration<char>(enumeration);
 }
 
+Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones() {
+  UErrorCode status = U_ZERO_ERROR;
+  UEnumeration* enumeration = ucal_openTimeZones(&status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return SpanEnumeration<char>(enumeration);
+}
+
 #if !MOZ_INTL_USE_ICU_CPP_TIMEZONE
 TimeZone::~TimeZone() {
   MOZ_ASSERT(mCalendar);
