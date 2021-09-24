@@ -13,11 +13,6 @@
 #include <stack>
 #include <queue>
 
-const int PERFORMANCE_TREE_DEPTH = 20;
-const int PERFORMANCE_TREE_CHILD_COUNT = 2;
-const int PERFORMANCE_TREE_LEAF_COUNT = 1048576;  // 2 ** 20
-const int PERFORMANCE_REGION_XWRAP = 1024;
-
 using namespace mozilla::layers;
 using namespace mozilla;
 

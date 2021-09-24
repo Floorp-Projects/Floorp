@@ -1015,10 +1015,9 @@ static CompositionOp ToBlendOp(BlendMode aOp) {
       return CompositionOp::OP_COLOR;
     case BLEND_MODE_LUMINOSITY:
       return CompositionOp::OP_LUMINOSITY;
-    default:
-      return CompositionOp::OP_OVER;
   }
 
+  MOZ_ASSERT_UNREACHABLE("Unexpected BlendMode");
   return CompositionOp::OP_OVER;
 }
 
