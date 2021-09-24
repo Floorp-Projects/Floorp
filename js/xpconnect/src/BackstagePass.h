@@ -7,6 +7,7 @@
 #ifndef BackstagePass_h__
 #define BackstagePass_h__
 
+#include "mozilla/StorageAccess.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
 #include "nsIGlobalObject.h"
@@ -39,6 +40,11 @@ class BackstagePass : public nsIGlobalObject,
 
   JSObject* GetGlobalJSObject() override;
   JSObject* GetGlobalJSObjectPreserveColor() const override;
+
+  mozilla::StorageAccess GetStorageAccess() final {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mozilla::StorageAccess::eAllow;
+  }
 
   void ForgetGlobalObject() { mWrapper = nullptr; }
 
