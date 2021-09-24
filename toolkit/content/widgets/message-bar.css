@@ -216,11 +216,6 @@
   vertical-align: middle;
 }
 
-/* Align inline icon images in the message content */
-.container.infobar > .notification-content > .notification-message img.inline-icon {
-  vertical-align: bottom;
-}
-
 .close {
   margin: 4px 8px;
   background-size: 16px;
