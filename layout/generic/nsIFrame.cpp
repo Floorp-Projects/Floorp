@@ -9162,13 +9162,18 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   bool selectable = false;
   nsIFrame* traversedFrame = this;
   while (!selectable) {
-    nsIFrame* blockFrame;
-
-    int32_t thisLine;
-    MOZ_TRY_VAR(thisLine,
-                traversedFrame->GetLineNumber(aScrollViewStop, &blockFrame));
+    nsIFrame* lineFrame;
+    nsIFrame* blockFrame =
+        traversedFrame->GetContainingBlockForLine(aScrollViewStop, lineFrame);
+    if (!blockFrame) {
+      return result;
+    }
 
     nsAutoLineIterator it = blockFrame->GetLineIterator();
+    int32_t thisLine = it->FindLineContaining(lineFrame);
+    if (thisLine < 0) {
+      return result;
+    }
 
     bool atLineEdge;
     MOZ_TRY_VAR(
