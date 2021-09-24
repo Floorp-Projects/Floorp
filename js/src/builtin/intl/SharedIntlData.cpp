@@ -12,27 +12,26 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/intl/Collator.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
+#include "mozilla/intl/TimeZone.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
 #include <stdint.h>
 #include <string>
 #include <string.h>
+#include <string_view>
 #include <utility>
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "builtin/String.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "unicode/ucal.h"
 #include "unicode/ucol.h"
 #include "unicode/udat.h"
-#include "unicode/udatpg.h"
-#include "unicode/uenum.h"
 #include "unicode/uloc.h"
 #include "unicode/unum.h"
 #include "unicode/utypes.h"
@@ -115,9 +114,10 @@ bool js::intl::SharedIntlData::TimeZoneHasher::match(TimeZoneName key,
                                    lookup.length);
 }
 
-static bool IsLegacyICUTimeZone(const char* timeZone) {
+static bool IsLegacyICUTimeZone(mozilla::Span<const char> timeZone) {
+  std::string_view timeZoneView(timeZone.data(), timeZone.size());
   for (const auto& legacyTimeZone : js::timezone::legacyICUTimeZones) {
-    if (StringsAreEqual(timeZone, legacyTimeZone)) {
+    if (timeZoneView == legacyTimeZone) {
       return true;
     }
   }
@@ -133,34 +133,26 @@ bool js::intl::SharedIntlData::ensureTimeZones(JSContext* cx) {
   // OOM, clear all sets/maps and start from scratch.
   availableTimeZones.clearAndCompact();
 
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values = ucal_openTimeZones(&status);
-  if (U_FAILURE(status)) {
-    ReportInternalError(cx);
+  auto timeZones = mozilla::intl::TimeZone::GetAvailableTimeZones();
+  if (timeZones.isErr()) {
+    ReportInternalError(cx, timeZones.unwrapErr());
     return false;
   }
-  ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
   RootedAtom timeZone(cx);
-  while (true) {
-    int32_t size;
-    const char* rawTimeZone = uenum_next(values, &size, &status);
-    if (U_FAILURE(status)) {
+  for (auto timeZoneName : timeZones.unwrap()) {
+    if (timeZoneName.isErr()) {
       ReportInternalError(cx);
       return false;
     }
-
-    if (rawTimeZone == nullptr) {
-      break;
-    }
+    auto timeZoneSpan = timeZoneName.unwrap();
 
     // Skip legacy ICU time zone names.
-    if (IsLegacyICUTimeZone(rawTimeZone)) {
+    if (IsLegacyICUTimeZone(timeZoneSpan)) {
       continue;
     }
 
-    MOZ_ASSERT(size >= 0);
-    timeZone = Atomize(cx, rawTimeZone, size_t(size));
+    timeZone = Atomize(cx, timeZoneSpan.data(), timeZoneSpan.size());
     if (!timeZone) {
       return false;
     }
