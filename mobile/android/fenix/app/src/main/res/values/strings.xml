@@ -247,6 +247,22 @@
     <string name="search_engine_suggestions_title">Search %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Search directly from the address bar</string>
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title">What’s new in Firefox!</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description">It’s now easier to pick up where you left off so you can stay in the flow.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title">Personalized Firefox home</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description">Access your open tabs, bookmarks, and history directly from your home screen.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title">Cleaner tab tray</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description">Firefox helps you to manage your tabs and quickly find what you’re looking for.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title">Useful history</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description">Get a better overview of your browsing history.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->

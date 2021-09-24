@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import androidx.recyclerview.widget.RecyclerView
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -15,15 +17,122 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SessionControlViewTest {
+
+    @Test
+    fun `GIVEN recent Bookmarks WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
+        val recentBookmarks =
+            listOf(BookmarkNode(BookmarkNodeType.ITEM, "guid", null, null, null, null, 0, null))
+        val settings: Settings = mockk()
+
+        every { settings.hasShownHomeOnboardingDialog } returns false
+
+        val state = HomeFragmentState(recentBookmarks = recentBookmarks)
+
+        assertTrue(state.shouldShowHomeOnboardingDialog(settings))
+    }
+
+    @Test
+    fun `GIVEN recentTabs WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
+        val recentTabs = listOf<TabSessionState>(mockk())
+        val settings: Settings = mockk()
+
+        every { settings.hasShownHomeOnboardingDialog } returns false
+
+        val state = HomeFragmentState(recentTabs = recentTabs)
+
+        assertTrue(state.shouldShowHomeOnboardingDialog(settings))
+    }
+
+    @Test
+    fun `GIVEN historyMetadata WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
+        val historyMetadata = listOf(HistoryMetadataGroup("title", emptyList()))
+        val settings: Settings = mockk()
+
+        every { settings.hasShownHomeOnboardingDialog } returns false
+
+        val state = HomeFragmentState(historyMetadata = historyMetadata)
+
+        assertTrue(state.shouldShowHomeOnboardingDialog(settings))
+    }
+
+    @Test
+    fun `GIVEN pocketArticles WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
+        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", 0, ""))
+        val settings: Settings = mockk()
+
+        every { settings.hasShownHomeOnboardingDialog } returns false
+
+        val state = HomeFragmentState(pocketStories = pocketArticles)
+
+        assertTrue(state.shouldShowHomeOnboardingDialog(settings))
+    }
+
+    @Test
+    fun `GIVEN the home onboading dialog has been shown before WHEN calling shouldShowHomeOnboardingDialog THEN DO NOT showthe dialog `() {
+        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", 0, ""))
+        val settings: Settings = mockk()
+
+        every { settings.hasShownHomeOnboardingDialog } returns true
+
+        val state = HomeFragmentState(pocketStories = pocketArticles)
+
+        assertFalse(state.shouldShowHomeOnboardingDialog(settings))
+    }
+
+    @Test
+    fun `GIVENs updates WHEN sections recentTabs, recentBookmarks, historyMetadata or pocketArticles are available THEN show the dialog`() {
+        val interactor = mockk<SessionControlInteractor>(relaxed = true)
+        val view = RecyclerView(testContext)
+        val controller = SessionControlView(
+            mockk(relaxed = true),
+            view,
+            mockk(relaxed = true),
+            interactor,
+            mockk(relaxed = true)
+        )
+        val recentTabs = listOf<TabSessionState>(mockk(relaxed = true))
+
+        val state = HomeFragmentState(recentTabs = recentTabs)
+
+        controller.update(state)
+
+        verify {
+            interactor.showOnboardingDialog()
+        }
+    }
+
+    @Test
+    fun `GIVENs updates WHEN sections recentTabs, recentBookmarks, historyMetadata or pocketArticles are NOT available THEN DO NOT show the dialog`() {
+        val interactor = mockk<SessionControlInteractor>(relaxed = true)
+        val view = RecyclerView(testContext)
+        val controller = SessionControlView(
+            mockk(relaxed = true),
+            view,
+            mockk(relaxed = true),
+            interactor,
+            mockk(relaxed = true)
+        )
+
+        val state = HomeFragmentState()
+
+        controller.update(state)
+
+        verify(exactly = 0) {
+            interactor.showOnboardingDialog()
+        }
+    }
+
     @Test
     fun `GIVEN recent Bookmarks WHEN normalModeAdapterItems is called THEN add a customize home button`() {
         val topSites = emptyList<TopSite>()

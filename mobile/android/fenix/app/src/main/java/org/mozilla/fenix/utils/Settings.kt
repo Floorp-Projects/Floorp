@@ -757,6 +757,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    /**
+     * Indicates if the home onboarding dialog has already shown before.
+     */
+    var hasShownHomeOnboardingDialog by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_has_shown_home_onboarding),
+        default = false
+    )
+
     fun incrementVisitedInstallableCount() = pwaInstallableVisitCount.increment()
 
     @VisibleForTesting(otherwise = PRIVATE)

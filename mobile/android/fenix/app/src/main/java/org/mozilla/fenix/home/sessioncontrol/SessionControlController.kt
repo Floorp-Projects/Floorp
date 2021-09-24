@@ -182,6 +182,11 @@ interface SessionControlController {
      * @see [CustomizeHomeIteractor.openCustomizeHomePage]
      */
     fun handleCustomizeHomeTapped()
+
+    /**
+     * @see [OnboardingInteractor.showOnboardingDialog]
+     */
+    fun handleShowOnboardingDialog()
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -446,6 +451,13 @@ class DefaultSessionControlController(
         val directions = HomeFragmentDirections.actionGlobalCustomizationFragment()
         navController.nav(R.id.homeFragment, directions)
         metrics.track(Event.HomeScreenCustomizedHomeClicked)
+    }
+
+    override fun handleShowOnboardingDialog() {
+        navController.nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
+        )
     }
 
     override fun handleReadPrivacyNoticeClicked() {

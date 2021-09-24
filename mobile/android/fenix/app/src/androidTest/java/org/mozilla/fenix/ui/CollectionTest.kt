@@ -11,6 +11,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -52,6 +53,8 @@ class CollectionTest {
     @Test
     // open a webpage, and add currently opened tab to existing collection
     fun mainMenuSaveToExistingCollection() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -78,6 +81,8 @@ class CollectionTest {
 
     @Test
     fun verifyAddTabButtonOfCollectionMenu() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -104,6 +109,8 @@ class CollectionTest {
 
     @Test
     fun renameCollectionTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val webPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -125,6 +132,8 @@ class CollectionTest {
 
     @Test
     fun createSecondCollectionTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val webPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -204,6 +213,8 @@ class CollectionTest {
 
     @Test
     fun selectTabOnLongTapTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 

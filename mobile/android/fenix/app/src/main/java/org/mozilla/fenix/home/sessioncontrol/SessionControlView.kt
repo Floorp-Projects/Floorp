@@ -25,6 +25,7 @@ import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
+import org.mozilla.fenix.utils.Settings
 
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
@@ -167,6 +168,13 @@ private fun HomeFragmentState.toAdapterList(context: Context): List<AdapterItem>
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }
 
+@VisibleForTesting
+internal fun HomeFragmentState.shouldShowHomeOnboardingDialog(settings: Settings): Boolean {
+    val isAnySectionsVisible = recentTabs.isNotEmpty() || recentBookmarks.isNotEmpty() ||
+        historyMetadata.isNotEmpty() || pocketStories.isNotEmpty()
+    return isAnySectionsVisible && !settings.hasShownHomeOnboardingDialog
+}
+
 private fun collectionTabItems(collection: TabCollection) =
     collection.tabs.mapIndexed { index, tab ->
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
@@ -176,7 +184,7 @@ class SessionControlView(
     store: HomeFragmentStore,
     val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
-    interactor: SessionControlInteractor,
+    internal val interactor: SessionControlInteractor,
     private var homeScreenViewModel: HomeScreenViewModel
 ) {
 
@@ -204,6 +212,10 @@ class SessionControlView(
     }
 
     fun update(state: HomeFragmentState) {
+        if (state.shouldShowHomeOnboardingDialog(view.context.settings())) {
+            interactor.showOnboardingDialog()
+        }
+
         val stateAdapterList = state.toAdapterList(view.context)
         if (homeScreenViewModel.shouldScrollToTopSites) {
             sessionControlAdapter.submitList(stateAdapterList) {

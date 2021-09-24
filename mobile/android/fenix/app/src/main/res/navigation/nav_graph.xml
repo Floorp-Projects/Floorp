@@ -24,6 +24,11 @@
         app:popUpToInclusive="false" />
 
     <action
+        android:id="@+id/action_global_home_onboarding_dialog"
+        app:destination="@id/homeOnboardingDialogFragment"
+        app:popUpTo="@id/homeFragment" />
+
+    <action
         android:id="@+id/action_global_search_dialog"
         app:destination="@id/searchDialogFragment"
         app:popUpTo="@id/searchDialogFragment"
@@ -160,6 +165,10 @@
             android:defaultValue="-1L"
             app:argType="long" />
     </fragment>
+    <dialog
+        android:id="@+id/homeOnboardingDialogFragment"
+        android:name="org.mozilla.fenix.onboarding.HomeOnboardingDialogFragment"
+        tools:layout="@layout/fragment_onboarding_home_dialog"/>
 
     <dialog
         android:id="@+id/searchDialogFragment"

@@ -12,6 +12,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -218,6 +219,8 @@ class SettingsPrivacyTest {
     @Test
     fun neverSaveLoginFromPromptTest() {
         val saveLoginTest = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        val settings = activityTestRule.activity.settings()
+        settings.hasShownHomeOnboardingDialog = true
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
@@ -327,6 +330,8 @@ class SettingsPrivacyTest {
 
     @Test
     fun launchLinksInPrivateToggleOffStateDoesntChangeTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         setOpenLinksInPrivateOn()

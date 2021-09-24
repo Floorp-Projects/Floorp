@@ -312,6 +312,9 @@ class SmokeTest {
     @Test
     // Verifies the Add to top sites option in a tab's 3 dot menu
     fun openMainMenuAddTopSiteTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
+
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -837,6 +840,8 @@ class SmokeTest {
 
     @Test
     fun createFirstCollectionTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
@@ -868,6 +873,8 @@ class SmokeTest {
 
     @Test
     fun verifyExpandedCollectionItemsTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -920,6 +927,9 @@ class SmokeTest {
 
     @Test
     fun shareCollectionTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
+
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -943,6 +953,8 @@ class SmokeTest {
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     fun deleteCollectionTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -1360,6 +1372,8 @@ class SmokeTest {
 
     @Test
     fun goToHomeScreenBottomToolbarTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -1372,6 +1386,9 @@ class SmokeTest {
 
     @Test
     fun goToHomeScreenTopToolbarTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
+
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -1439,6 +1456,8 @@ class SmokeTest {
 
     @Test
     fun alwaysStartOnHomeTest() {
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

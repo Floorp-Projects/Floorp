@@ -12,6 +12,7 @@ import org.junit.Rule
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.robots.clickRateButtonGooglePlay
@@ -75,6 +76,8 @@ class SettingsAboutTest {
 
     @Test
     fun verifyAboutFirefoxPreview() {
+        val settings = activityIntentTestRule.activity.settings()
+        settings.hasShownHomeOnboardingDialog = true
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

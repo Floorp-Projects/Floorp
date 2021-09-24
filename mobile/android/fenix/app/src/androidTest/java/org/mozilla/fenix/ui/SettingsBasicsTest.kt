@@ -14,6 +14,7 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -155,6 +156,8 @@ class SettingsBasicsTest {
         // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
         val webpage = getLoremIpsumAsset(mockWebServer).url
+        val settings = fenixApp.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
 
         // This value will represent the text size percentage the webpage will scale to. The default value is 100%.
         val textSizePercentage = 180
