@@ -500,16 +500,9 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 /* virtual */
 nsILineIterator* nsBlockFrame::GetLineIterator() {
-  nsLineIterator* it = new nsLineIterator;
-  if (!it) return nullptr;
-
   const nsStyleVisibility* visibility = StyleVisibility();
-  nsresult rv = it->Init(mLines, visibility->mDirection == StyleDirection::Rtl);
-  if (NS_FAILED(rv)) {
-    delete it;
-    return nullptr;
-  }
-  return it;
+  return new nsLineIterator(mLines,
+                            visibility->mDirection == StyleDirection::Rtl);
 }
 
 NS_QUERYFRAME_HEAD(nsBlockFrame)
