@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html>
   <style>
-    :-moz-any(input, textarea)::placeholder {
+    :is(input, textarea)::placeholder {
       visibility: hidden;
       padding: 20px;
       float: right;
       overflow: visible;
-      white-space: pre;
 
       /*
        * This list could be endless given that all non-whitelisted properties
