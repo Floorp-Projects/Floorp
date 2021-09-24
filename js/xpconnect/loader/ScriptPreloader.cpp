@@ -879,9 +879,8 @@ void ScriptPreloader::FillCompileOptionsForCachedStencil(
   options.setSourceIsLazy(true);
 
   // ScriptPreloader's XDR buffer is alive during the entire browser lifetime.
-  // The decoded stencil's data and the bytecode can be borrowed from it.
+  // The decoded stencil can borrow from it.
   options.borrowBuffer = true;
-  options.usePinnedBytecode = true;
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
