@@ -16,6 +16,14 @@ class Locale final {
   Locale() = delete;
 
   /**
+   * Returns the default locale as an ICU locale identifier. The returned string
+   * is NOT a valid BCP 47 language tag!
+   *
+   * Also see <https://unicode-org.github.io/icu/userguide/locale>.
+   */
+  static const char* GetDefaultLocale() { return uloc_getDefault(); }
+
+  /**
    * Returns an iterator over all supported locales.
    *
    * The returned strings are ICU locale identifiers and NOT BCP 47 language
