@@ -8826,11 +8826,17 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
   Element* editingHost = blockFrame->GetContent()->GetEditingHost();
 
-  int32_t thisLine;
-  MOZ_TRY_VAR(thisLine,
-              blockFrame->GetLineNumber(aPos->mScrollViewStop, &blockFrame));
+  nsIFrame* lineFrame;
+  blockFrame =
+      blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop, lineFrame);
+  if (!blockFrame) {
+    return NS_ERROR_FAILURE;
+  }
   nsAutoLineIterator it = blockFrame->GetLineIterator();
-  MOZ_ASSERT(it, "GetLineNumber() succeeded but no block frame?");
+  int32_t thisLine = it->FindLineContaining(lineFrame);
+  if (thisLine < 0) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* baseFrame = nullptr;
   bool endOfLine = (eSelectEndLine == aPos->mAmount);
