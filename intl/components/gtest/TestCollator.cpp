@@ -320,4 +320,28 @@ TEST(IntlCollator, GetAvailableLocales)
   ASSERT_EQ(chinese, 1);
 }
 
+TEST(IntlCollator, GetCaseFirst)
+{
+  auto result = Collator::TryCreate("en-US");
+  ASSERT_TRUE(result.isOk());
+  auto collator = result.unwrap();
+
+  auto caseFirst = collator->GetCaseFirst();
+  ASSERT_TRUE(caseFirst.isOk());
+  ASSERT_EQ(caseFirst.unwrap(), Collator::CaseFirst::False);
+
+  for (auto kf : {Collator::CaseFirst::Upper, Collator::CaseFirst::Lower,
+                  Collator::CaseFirst::False}) {
+    Collator::Options options{};
+    options.caseFirst = kf;
+
+    auto optResult = collator->SetOptions(options);
+    ASSERT_TRUE(optResult.isOk());
+
+    auto caseFirst = collator->GetCaseFirst();
+    ASSERT_TRUE(caseFirst.isOk());
+    ASSERT_EQ(caseFirst.unwrap(), kf);
+  }
+}
+
 }  // namespace mozilla::intl

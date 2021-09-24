@@ -136,6 +136,11 @@ class Collator final {
                        const Maybe<Options&> aPrevOptions = Nothing());
 
   /**
+   * Return the case first option of this collator.
+   */
+  Result<CaseFirst, ICUError> GetCaseFirst() const;
+
+  /**
    * Map keywords to their BCP 47 equivalents.
    */
   static SpanResult<char> KeywordValueToBcp47Extension(const char* aKeyword,

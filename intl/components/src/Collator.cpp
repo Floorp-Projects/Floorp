@@ -247,6 +247,24 @@ ICUResult Collator::SetOptions(const Options& aOptions,
 
 #undef FEATURE_TO_ICU
 
+Result<Collator::CaseFirst, ICUError> Collator::GetCaseFirst() const {
+  UErrorCode status = U_ZERO_ERROR;
+  UColAttributeValue caseFirst =
+      ucol_getAttribute(mCollator.GetConst(), UCOL_CASE_FIRST, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  if (caseFirst == UCOL_OFF) {
+    return CaseFirst::False;
+  }
+  if (caseFirst == UCOL_UPPER_FIRST) {
+    return CaseFirst::Upper;
+  }
+  MOZ_ASSERT(caseFirst == UCOL_LOWER_FIRST);
+  return CaseFirst::Lower;
+}
+
 /* static */
 Result<Collator::Bcp47ExtEnumeration, ICUError>
 Collator::GetBcp47KeywordValuesForLocale(const char* aLocale,
