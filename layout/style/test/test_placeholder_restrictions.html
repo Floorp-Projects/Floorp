@@ -41,8 +41,7 @@ for (let prop in gCSSProperties) {
     #test::placeholder { ${prop}: ${info.other_values[0]}; ${prereqs} }
   `;
   // line-height does apply to ::placeholder, but only on <textarea>. We could
-  // switch the test to use a <textarea> but then we'd need the same special-case
-  // for white-space.
+  // switch the test to use a <textarea>.
   if (info.applies_to_placeholder && prop != "line-height") {
     isnot(get_computed_value(test, prop),
           get_computed_value(control, prop),
