@@ -139,7 +139,7 @@
     <string name="preference_privacy_and_security_header">Salindungan &amp; Kaamanan</string>
 
     <!-- Preference summary for settings related to privacy and security -->
-    <string name="preference_privacy_and_security_summary">Palacakan, kuki, pilihan data</string>
+    <string name="preference_privacy_and_security_summary">Palacakan, réréméh, pilihan data</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
@@ -228,7 +228,7 @@
     <string name="add_custom_autocomplete_label">Tambahkeun tutumbu kana autokumplit</string>
 
     <!-- Preference category for settings about cookies and site data -->
-    <string name="preference_category_cookies">Data Kuki jeung Loka</string>
+    <string name="preference_category_cookies">Data Réréméh jeung Loka</string>
 
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">Pilihan Data</string>
@@ -280,13 +280,13 @@
     <string name="preference_privacy_block_social_summary">Naplok dina loka pikeun ngalacak anjangan anjeun sarta pikeun némbongkeun fungsionalitas sarupaning tumbul babagi</string>
     <string name="preference_privacy_block_content">Peungpeuk palacak kontén séjén</string>
     <string name="preference_privacy_block_content_summary2">Ngahurungkeun bisa ngabalukarkeun sababaraha kaca jadi ngaco</string>
-    <string name="preference_privacy_category_cookies">Peungpeuk kuki</string>
+    <string name="preference_privacy_category_cookies">Peungpeuk réréméh</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Moal, nuhun</string>
-    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Peungpeuk kuki palacak pihak ka-3 hungkul</string>
-    <string name="preference_privacy_should_block_cookies_third_party_only_option">Peungpeuk kuki pihak katilu hungkul</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Peungpeuk réréméh palacak pihak ka-3 hungkul</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Peungpeuk réréméh pihak katilu hungkul</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Mangga</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
