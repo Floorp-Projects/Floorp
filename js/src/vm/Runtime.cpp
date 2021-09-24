@@ -8,6 +8,9 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#if JS_HAS_INTL_API
+#  include "mozilla/intl/Locale.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
@@ -38,9 +41,6 @@
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
-#if JS_HAS_INTL_API
-#  include "unicode/uloc.h"
-#endif
 #include "util/WindowsWrapper.h"
 #include "vm/DateTime.h"
 #include "vm/JSAtom.h"
@@ -539,7 +539,7 @@ const char* JSRuntime::getDefaultLocale() {
   // Use ICU if available to retrieve the default locale, this ensures ICU's
   // default locale matches our default locale.
 #if JS_HAS_INTL_API
-  const char* locale = uloc_getDefault();
+  const char* locale = mozilla::intl::Locale::GetDefaultLocale();
 #else
   const char* locale = setlocale(LC_ALL, nullptr);
 #endif

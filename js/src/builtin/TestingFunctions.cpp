@@ -10,6 +10,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #ifdef JS_HAS_INTL_API
+#  include "mozilla/intl/Locale.h"
 #  include "mozilla/intl/TimeZone.h"
 #endif
 #include "mozilla/Maybe.h"
@@ -104,7 +105,6 @@
 #ifdef JS_HAS_INTL_API
 #  include "unicode/ucal.h"
 #  include "unicode/uchar.h"
-#  include "unicode/uloc.h"
 #  include "unicode/utypes.h"
 #  include "unicode/uversion.h"
 #endif
@@ -7273,7 +7273,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  str = NewStringCopyZ<CanGC>(cx, uloc_getDefault());
+  str = NewStringCopyZ<CanGC>(cx, mozilla::intl::Locale::GetDefaultLocale());
   if (!str || !JS_DefineProperty(cx, info, "locale", str, JSPROP_ENUMERATE)) {
     return false;
   }
