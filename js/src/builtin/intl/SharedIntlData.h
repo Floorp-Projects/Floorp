@@ -227,9 +227,9 @@ class SharedIntlData {
   using CountAvailable = int32_t (*)();
   using GetAvailable = const char* (*)(int32_t localeIndex);
 
+  template <class AvailableLocales>
   static bool getAvailableLocales(JSContext* cx, LocaleSet& locales,
-                                  CountAvailable countAvailable,
-                                  GetAvailable getAvailable);
+                                  const AvailableLocales& availableLocales);
 
   /**
    * Precomputes the available locales sets.
