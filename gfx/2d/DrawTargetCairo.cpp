@@ -1954,6 +1954,7 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateShadowDrawTarget(
   return nullptr;
 }
 
+#ifdef CAIRO_HAS_XLIB_SURFACE
 static inline bool GfxMatrixToPixmanTransform(const Matrix4x4& aMatrix,
                                               pixman_transform* aResult) {
   pixman_f_transform fTransform = {{{aMatrix._11, aMatrix._21, aMatrix._41},
@@ -1962,7 +1963,6 @@ static inline bool GfxMatrixToPixmanTransform(const Matrix4x4& aMatrix,
   return pixman_transform_from_pixman_f_transform(aResult, &fTransform);
 }
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
 static bool gXRenderInitialized = false;
 static bool gXRenderHasTransform = false;
 

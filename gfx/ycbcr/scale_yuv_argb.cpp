@@ -31,10 +31,10 @@ extern "C" {
 //
 // libyuv already has ScaleYUVToARGBBilinearUp(), but its implementation is not
 // completed yet. Implementations of the functions are based on it.
-// At first, ScaleYUVToARGBBilinearUp() was implemented by modidying the
+// At first, ScaleYUVToARGBBilinearUp() was implemented by modifying the
 // libyuv's one. Then all another functions were implemented similarly.
 //
-// Function relationship between yuv_convert.cpp abd scale_argb.cc are like
+// Function relationship between yuv_convert.cpp and scale_argb.cc are like
 // the followings
 //  - ScaleYUVToARGBDown2()      <-- ScaleARGBDown2()
 //  - ScaleYUVToARGBDownEven()   <-- ScaleARGBDownEven()
@@ -57,10 +57,6 @@ extern "C" {
 //      use YUVBuferIter.
 // -[4] Color conversion function selections in YUVBuferIter were borrowed from
 //      I444ToARGBMatrix(), I422ToARGBMatrix() and I420ToARGBMatrix()
-
-static __inline int Abs(int v) {
-  return v >= 0 ? v : -v;
-}
 
 typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
 
