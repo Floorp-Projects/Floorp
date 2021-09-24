@@ -12,6 +12,7 @@ EXPORTS.mozilla.intl = [
     "src/ICU4CGlue.h",
     "src/ICUError.h",
     "src/ListFormat.h",
+    "src/Locale.h",
     "src/LocaleCanonicalizer.h",
     "src/MeasureUnit.h",
     "src/NumberFormat.h",
