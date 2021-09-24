@@ -8195,8 +8195,8 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
     lastFrame = firstFrame = line.mFirstFrameOnLine;
     for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
          lineFrameCount--) {
-      result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
-      if (NS_FAILED(result) || !lastFrame) {
+      lastFrame = lastFrame->GetNextSibling();
+      if (!lastFrame) {
         NS_ERROR("GetLine promised more frames than could be found");
         return NS_ERROR_FAILURE;
       }
@@ -9111,7 +9111,7 @@ Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
   nsIFrame* lastFrame = line.mFirstFrameOnLine;
   for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
        lineFrameCount--) {
-    MOZ_TRY(aLineIterator->GetNextSiblingOnLine(lastFrame, aLine));
+    lastFrame = lastFrame->GetNextSibling();
     if (!lastFrame) {
       NS_ERROR("should not be reached nsIFrame");
       return Err(NS_ERROR_FAILURE);

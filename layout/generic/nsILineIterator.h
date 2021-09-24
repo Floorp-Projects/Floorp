@@ -82,11 +82,6 @@ class nsILineIterator {
                          nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
                          bool* aPosIsAfterLastFrame) const = 0;
 
-  // Give the line iterator implementor a chance todo something more complicated
-  // than nsIFrame::GetNextSibling()
-  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame,
-                                  int32_t aLineNumber) const = 0;
-
   // Check whether visual and logical order of frames within a line are
   // identical.
   //  If not, return the first and last visual frames
