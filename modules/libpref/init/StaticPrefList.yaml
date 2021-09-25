@@ -4971,17 +4971,6 @@
   value: true
   mirror: always
 
-#  Whether to enable LayerScope tool and default listening port.
-- name: gfx.layerscope.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: gfx.layerscope.port
-  type: RelaxedAtomicInt32
-  value: 23456
-  mirror: always
-
 # The level of logging:
 # - 0: no logging;
 # - 1: adds errors;
