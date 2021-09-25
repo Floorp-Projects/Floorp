@@ -8728,12 +8728,12 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
   nsresult result = NS_ERROR_FAILURE;
 
   while (NS_FAILED(result)) {
-    nsIFrame* lineFrame;
-    blockFrame =
-        blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop, lineFrame);
-    if (!blockFrame) {
+    auto [newBlock, lineFrame] =
+        blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop);
+    if (!newBlock) {
       return NS_ERROR_FAILURE;
     }
+    blockFrame = newBlock;
     nsAutoLineIterator iter = blockFrame->GetLineIterator();
     int32_t thisLine = iter->FindLineContaining(lineFrame);
     MOZ_ASSERT(thisLine >= 0, "Failed to find line!");
@@ -8826,12 +8826,11 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
 
 nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   // Adjusted so that the caret can't get confused when content changes
-  nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-  Element* editingHost = blockFrame->GetContent()->GetEditingHost();
+  nsIFrame* frame = AdjustFrameForSelectionStyles(this);
+  Element* editingHost = frame->GetContent()->GetEditingHost();
 
-  nsIFrame* lineFrame;
-  blockFrame =
-      blockFrame->GetContainingBlockForLine(aPos->mScrollViewStop, lineFrame);
+  auto [blockFrame, lineFrame] =
+      frame->GetContainingBlockForLine(aPos->mScrollViewStop);
   if (!blockFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -9039,9 +9038,8 @@ nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIFrame* nsIFrame::GetContainingBlockForLine(bool aLockScroll,
-                                              nsIFrame*& aLineFrame) const {
-  aLineFrame = nullptr;
+std::pair<nsIFrame*, nsIFrame*> nsIFrame::GetContainingBlockForLine(
+    bool aLockScroll) const {
   const nsIFrame* parentFrame = this;
   const nsIFrame* frame;
   while (parentFrame) {
@@ -9055,21 +9053,21 @@ nsIFrame* nsIFrame::GetContainingBlockForLine(bool aLockScroll,
       }
       frame = frame->GetPlaceholderFrame();
       if (!frame) {
-        return nullptr;
+        return std::pair(nullptr, nullptr);
       }
     }
     parentFrame = frame->GetParent();
     if (parentFrame) {
       if (aLockScroll && parentFrame->IsScrollFrame()) {
-        return nullptr;
+        return std::pair(nullptr, nullptr);
       }
       if (parentFrame->CanProvideLineIterator()) {
-        aLineFrame = const_cast<nsIFrame*>(frame);
-        return const_cast<nsIFrame*>(parentFrame);
+        return std::pair(const_cast<nsIFrame*>(parentFrame),
+                         const_cast<nsIFrame*>(frame));
       }
     }
   }
-  return nullptr;
+  return std::pair(nullptr, nullptr);
 }
 
 Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
@@ -9140,9 +9138,8 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   bool selectable = false;
   nsIFrame* traversedFrame = this;
   while (!selectable) {
-    nsIFrame* lineFrame;
-    nsIFrame* blockFrame =
-        traversedFrame->GetContainingBlockForLine(aScrollViewStop, lineFrame);
+    auto [blockFrame, lineFrame] =
+        traversedFrame->GetContainingBlockForLine(aScrollViewStop);
     if (!blockFrame) {
       return result;
     }

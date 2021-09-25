@@ -141,17 +141,15 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     return false;
   }
   nsIFrame::GetLastLeaf(&prevFrame);
-  nsIFrame* thisLineFrame = nullptr;
-  nsIFrame* thisBlock = thisFrame->GetContainingBlockForLine(
-      /* aLockScroll */ false, thisLineFrame);
+  auto [thisBlock, thisLineFrame] = thisFrame->GetContainingBlockForLine(
+      /* aLockScroll */ false);
   if (!thisBlock) {
     // We couldn't get the containing block for this frame. In that case, we
     // play it safe and assume this is the beginning of a new line.
     return true;
   }
-  nsIFrame* prevLineFrame = nullptr;
-  nsIFrame* prevBlock = prevFrame->GetContainingBlockForLine(
-      /* aLockScroll */ false, prevLineFrame);
+  auto [prevBlock, prevLineFrame] = prevFrame->GetContainingBlockForLine(
+      /* aLockScroll */ false);
   if (thisBlock != prevBlock) {
     // If the blocks are different, that means there's nothing before us on the
     // same line, so we're at the start.
