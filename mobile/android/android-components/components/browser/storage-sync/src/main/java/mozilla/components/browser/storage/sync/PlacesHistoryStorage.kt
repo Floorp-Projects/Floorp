@@ -244,19 +244,27 @@ open class PlacesHistoryStorage(
     }
 
     override suspend fun getLatestHistoryMetadataForUrl(url: String): HistoryMetadata? {
-        return places.reader().getLatestHistoryMetadataForUrl(url)?.into()
+        return handlePlacesExceptions("getLatestHistoryMetadataForUrl", default = null) {
+            places.reader().getLatestHistoryMetadataForUrl(url)?.into()
+        }
     }
 
     override suspend fun getHistoryMetadataSince(since: Long): List<HistoryMetadata> {
-        return places.reader().getHistoryMetadataSince(since).into()
+        return handlePlacesExceptions("getHistoryMetadataSince", default = emptyList()) {
+            places.reader().getHistoryMetadataSince(since).into()
+        }
     }
 
     override suspend fun getHistoryMetadataBetween(start: Long, end: Long): List<HistoryMetadata> {
-        return places.reader().getHistoryMetadataBetween(start, end).into()
+        return handlePlacesExceptions("getHistoryMetadataBetween", default = emptyList()) {
+            places.reader().getHistoryMetadataBetween(start, end).into()
+        }
     }
 
     override suspend fun queryHistoryMetadata(query: String, limit: Int): List<HistoryMetadata> {
-        return places.reader().queryHistoryMetadata(query, limit).into()
+        return handlePlacesExceptions("queryHistoryMetadata", default = emptyList()) {
+            places.reader().queryHistoryMetadata(query, limit).into()
+        }
     }
 
     override suspend fun noteHistoryMetadataObservation(

@@ -1158,6 +1158,14 @@ class PlacesHistoryStorageTest {
         }
     }
 
+    @Test
+    fun `safe read from places`() = runBlocking {
+        val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
+            throw PlacesException("test")
+        }
+        assertEquals(emptyList<HistoryMetadata>(), result)
+    }
+
     private fun assertHistoryMetadataRecord(
         expectedKey: HistoryMetadataKey,
         expectedTotalViewTime: Int,

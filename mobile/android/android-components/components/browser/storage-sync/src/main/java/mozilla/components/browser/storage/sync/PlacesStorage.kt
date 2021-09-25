@@ -78,7 +78,10 @@ abstract class PlacesStorage(
     }
 
     /**
-     * Runs [block] described by [operation], ignoring non-fatal exceptions.
+     * Runs [block] described by [operation], ignoring and logging non-fatal exceptions.
+     *
+     * @param operation the name of the operation to run.
+     * @param block the operation to run.
      */
     protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
@@ -88,6 +91,31 @@ abstract class PlacesStorage(
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while running $operation", e)
+        }
+    }
+
+    /**
+     * Runs [block] described by [operation] to return a result of type [T], ignoring and
+     * logging non-fatal exceptions. In case of a non-fatal exception, the provided
+     * [default] value is returned.
+     *
+     * @param operation the name of the operation to run.
+     * @param block the operation to run.
+     * @param default the default value to return in case of errors.
+     */
+    inline fun <T> handlePlacesExceptions(
+        operation: String,
+        default: T,
+        block: () -> T
+    ): T {
+        return try {
+            block()
+        } catch (e: InternalPanic) {
+            throw e
+        } catch (e: PlacesException) {
+            crashReporter?.submitCaughtException(e)
+            logger.warn("Ignoring PlacesException while running $operation", e)
+            default
         }
     }
 
