@@ -124,7 +124,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Nội dung khám phá trước đây</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Nội dung khám phá trước đây</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Đã xem gần đây</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Xóa</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -590,6 +597,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Đóng</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d trang web</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d trang web</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Các thẻ đã đóng gần đây</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -776,15 +790,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Xóa</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Sao chép</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Sao chép</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Chia sẻ</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Chia sẻ</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Mở trong thẻ mới</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Mở trong thẻ mới</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Mở trong thẻ riêng tư</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Mở trong thẻ riêng tư</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Xóa</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Xóa</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d đã chọn</string>
@@ -1253,12 +1267,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Đã có một tài khoản?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Xem có gì mới</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Xem có gì mới</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Có câu hỏi nào về %s được thiết kế lại không? Bạn muốn biết những gì đã thay đổi?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Có câu hỏi nào về %s được thiết kế lại không? Bạn muốn biết những gì đã thay đổi?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Nhận câu trả lời tại đây</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Nhận câu trả lời tại đây</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Đồng bộ hóa Firefox giữa các thiết bị</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1298,14 +1312,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Đặt thanh công cụ trong tầm với. Giữ nó ở dưới cùng hoặc di chuyển nó lên trên cùng.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Duyệt web riêng tư hơn</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Duyệt web riêng tư hơn</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Mở thẻ riêng tư chỉ một lần nhấp: Chạm vào biểu tượng %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Mở thẻ riêng tư chỉ một lần nhấp: Chạm vào biểu tượng %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Mở các thẻ riêng tư mỗi lần: Cập nhật cài đặt duyệt web riêng tư của bạn.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Mở các thẻ riêng tư mỗi lần: Cập nhật cài đặt duyệt web riêng tư của bạn.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Mở cài đặt</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Mở cài đặt</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Quyền riêng tư của bạn</string>
     <!-- text for the privacy notice onboarding card description

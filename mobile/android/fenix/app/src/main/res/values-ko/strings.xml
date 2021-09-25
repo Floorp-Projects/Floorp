@@ -131,7 +131,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">이전 탐색</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">이전 탐색</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">최근에 방문함</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">삭제</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -606,6 +613,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">닫기</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d개 사이트</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d개 사이트</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">최근에 닫은 탭</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -796,15 +810,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">지우기</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">복사</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">복사</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">공유</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">공유</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">새 탭에 열기</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">새 탭에 열기</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">사생활 보호 탭에 열기</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">사생활 보호 탭에 열기</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">삭제</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">삭제</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d개 선택됨</string>
@@ -1306,12 +1320,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">계정이 이미 있으신가요?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">새 기능 살펴보기</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">새 기능 살펴보기</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">새롭게 디자인된 %s에 대해 궁금한 점이 있습니까? 변경된 사항을 알고 싶으십니까?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">새롭게 디자인된 %s에 대해 궁금한 점이 있습니까? 변경된 사항을 알고 싶으십니까?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">여기서 답을 얻으세요</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">여기서 답을 얻으세요</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">기기 간에 Firefox 동기화</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1352,14 +1366,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">도구 모음을 쉽게 접근할 수 있는 곳에 놓으세요. 하단에 두거나 상단으로 옮기세요.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">사생활 보호 모드</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">사생활 보호 모드</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">사생활 보호 탭을 한 번 열기: %s 아이콘을 누릅니다.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">사생활 보호 탭을 한 번 열기: %s 아이콘을 누릅니다.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">매번 사생활 보호 탭으로 열기: 사생활 보호 모드 설정을 변경하세요.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">매번 사생활 보호 탭으로 열기: 사생활 보호 모드 설정을 변경하세요.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">설정 열기</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">설정 열기</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">개인 정보 보호</string>
     <!-- text for the privacy notice onboarding card description

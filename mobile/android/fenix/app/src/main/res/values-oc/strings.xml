@@ -51,7 +51,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Salvats recentament</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Salvats recentament</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Marcats recentament</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Marcats recentament</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -122,7 +124,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Exploracions passadas</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Exploracions passadas</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Visitats fa res</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Suprimir</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -199,6 +208,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Modificar</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Personalizar l’acuèlh</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Ecran d’acuèlh</string>
@@ -393,6 +404,15 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Colleccion de moduls complementaris modificada. Tampadura de l’aplicacion per aplicar las modificacions…</string>
 
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Salvats recentament</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Marcats recentament</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Visitats fa res</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Lo modul complementari es pas pres en carga</string>
@@ -581,6 +601,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Tampar</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d site</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d sites</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Onglets tampats recentament</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -754,6 +781,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Enregistrar</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">Autres</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Escafar l’istoric</string>
@@ -766,15 +796,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Escafar</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Copiar</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Copiar</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Partejar</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Partejar</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Dobrir dins un onglet novèl</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Dobrir dins un onglet novèl</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Dobrir en navigacion privada</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Dobrir en navigacion privada</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Suprimir</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Suprimir</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d seleccionats</string>
@@ -1260,12 +1290,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Avètz ja un compte ?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Descobrissètz las novetats</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Descobrissètz las novetats</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Avètz de question tocant lo nòu %s ? Volètz saber çò que cambièt ?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Avètz de question tocant lo nòu %s ? Volètz saber çò que cambièt ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Trobatz de responsas aquí</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Trobatz de responsas aquí</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sincronizar Firefox entre vòstres aparelhs</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1305,14 +1335,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Plaçatz la barra d’aisinas a portada de man. Daissatz-la enbàs o ennaut.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Navegatz d’un biais privat</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Navegatz d’un biais privat</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Dobrir un sol onglet privat : tocatz l’icòna %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Dobrir un sol onglet privat : tocatz l’icòna %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Dobrir d’onglets privats cada còp : definissètz vòstres paramètres de navigacion privada.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Dobrir d’onglets privats cada còp : definissètz vòstres paramètres de navigacion privada.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Dobrir los paramètres</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Dobrir los paramètres</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vòstra vida privada</string>
     <!-- text for the privacy notice onboarding card description
@@ -1480,6 +1510,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Escafa los cookies definits per redireccion cap als sites web coneguts per far seguiment</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">D’unes traçadors marcats cai-jos son estats parcialament desblocats per aquesta pagina pr’amor qu’avètz interagit amb eles *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Ne saber mai</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Assisténcia</string>
 
@@ -1552,6 +1588,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Emplena los noms d’utilizaires e los senhals d’autres aplicacions sus vòstre periferic.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Apondre un identificant</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizar los identificants</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1614,6 +1653,8 @@
     <string name="saved_login_copy_username">Copiar lo nom d’utilizaire</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Escafar identificant</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Escafar lo nom d’òste</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar lo site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1785,9 +1826,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Bascular <b>%1$s</b> sus ACTIVAT]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Connexion segura</string>
+    <string name="quick_settings_sheet_secure_connection_2">La connexion es segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Connexion pas segura</string>
+    <string name="quick_settings_sheet_insecure_connection_2">La connexion es pas segura</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Connexion segura</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Connexion pas segura</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Volètz vertadièrament suprimir totas las autorizacions per totes los sites ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1828,8 +1873,14 @@
     <string name="discard_changes">Anullar las modificacions</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Modificar</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Apondre un identificant novèl</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Senhal requesit</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Lo nom d’utilizaire es obligatòri</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Lo nom d’òste es obligatòri</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Recèrca a la votz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1837,6 +1888,9 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Un identificant amb aqueste nom d’utilizaire existís ja</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.exemple.com</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1864,7 +1918,7 @@
     <string name="top_sites_max_limit_confirmation_button">Òc, plan comprés</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Mostrar los sites mai visitats</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Mostrar los sites mai visitats</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nom</string>

@@ -124,7 +124,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Zajźone wuslěźenja</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Zajźone wuslěźenja</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Pśed krotkim woglědane</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Wótwónoźeś</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -591,6 +598,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zacyniś</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d sedło</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d sedłow</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Rowno zacynjone rejtariki</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -778,15 +792,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Wuprozniś</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Kopěrowaś</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Kopěrowaś</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Źěliś</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Źěliś</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">W nowem rejtariku wócyniś</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">W nowem rejtariku wócyniś</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">W nowem priwatnem rejtariku wócyniś</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">W nowem priwatnem rejtariku wócyniś</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Lašowaś</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Lašowaś</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">Wubrane: %1$d</string>
@@ -1259,12 +1273,12 @@
     <string name="onboarding_fxa_section_header">Maśo južo konto?</string>
 
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Cytajśo, což jo nowe</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Cytajśo, což jo nowe</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Maśo pšašanja wó nowo wugótowanem %s? Cośo wěźeś, což jo se změniło?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Maśo pšašanja wó nowo wugótowanem %s? Cośo wěźeś, což jo se změniło?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">How dostanjośo wótegrona</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">How dostanjośo wótegrona</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Firefox mjazy rědami synchronizěrowaś</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1304,15 +1318,15 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Pozicioněrujśo symbolowu rědku w swójej bliskosći. Wobchowajśo ju dołojce abo pśesuńśo ju górjej.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Priwatnje pśeglědowaś</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Priwatnje pśeglědowaś</string>
 
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Wócyńśo priwatny rejtarik jaden raz: Pótusniśo symbol %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Wócyńśo priwatny rejtarik jaden raz: Pótusniśo symbol %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Wócyńśo priwatne rejtariki kuždy raz: Aktualizěrujśo nastajenja priwatnego modusa.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Wócyńśo priwatne rejtariki kuždy raz: Aktualizěrujśo nastajenja priwatnego modusa.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Nastajenja wócyniś</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Nastajenja wócyniś</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Waša priwatnosć</string>
     <!-- text for the privacy notice onboarding card description

@@ -50,7 +50,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">บันทึกไว้ล่าสุด</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">บันทึกไว้ล่าสุด</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">ที่คั่นหน้าที่เพิ่มล่าสุด</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ที่คั่นหน้าที่บันทึกไว้ล่าสุด</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -121,7 +123,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">การสำรวจที่ผ่านมา</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">การสำรวจที่ผ่านมา</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">เยี่ยมชมล่าสุด</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">ลบ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -397,7 +406,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">กลับเข้าไป</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">บันทึกไว้ล่าสุด</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">บันทึกไว้ล่าสุด</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">ที่คั่นหน้าที่เพิ่มล่าสุด</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">เยี่ยมชมล่าสุด</string>
     <!-- Title for the customize home screen section with Pocket. -->
@@ -587,6 +598,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ปิด</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d เว็บไซต์</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d เว็บไซต์</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">แท็บที่ปิดล่าสุด</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -759,6 +777,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">บันทึก</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">อื่น ๆ</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ลบประวัติ</string>
@@ -771,15 +792,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">ล้าง</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">คัดลอก</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">คัดลอก</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">แบ่งปัน</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">แบ่งปัน</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">เปิดในแท็บใหม่</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">เปิดในแท็บใหม่</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">เปิดในแท็บส่วนตัว</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">เปิดในแท็บส่วนตัว</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">ลบ</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">ลบ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">เลือกอยู่ %1$d</string>
@@ -1250,12 +1271,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">มีบัญชีอยู่แล้ว?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">ดูว่ามีอะไรใหม่</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">ดูว่ามีอะไรใหม่</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">มีคำถามเกี่ยวกับ %s ที่ออกแบบใหม่หรือไม่? ต้องการรู้ว่ามีอะไรเปลี่ยนไปบ้างหรือไม่?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">มีคำถามเกี่ยวกับ %s ที่ออกแบบใหม่หรือไม่? ต้องการรู้ว่ามีอะไรเปลี่ยนไปบ้างหรือไม่?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">พบคำตอบได้ที่นี่</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">พบคำตอบได้ที่นี่</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1295,14 +1316,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">วางแถบเครื่องมือไว้ใกล้ ๆ เก็บไว้ที่ด้านล่างหรือย้ายไปด้านบน</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">เรียกดูอย่างเป็นส่วนตัว</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">เรียกดูอย่างเป็นส่วนตัว</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">เปิดแท็บส่วนตัวหนึ่งครั้ง: แตะที่ไอคอน %s</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">เปิดแท็บส่วนตัวหนึ่งครั้ง: แตะที่ไอคอน %s</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">เปิดแท็บส่วนตัวทุกครั้ง: อัปเดตการตั้งค่าการเรียกดูแบบส่วนตัวของคุณ</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">เปิดแท็บส่วนตัวทุกครั้ง: อัปเดตการตั้งค่าการเรียกดูแบบส่วนตัวของคุณ</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">เปิดการตั้งค่า</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">เปิดการตั้งค่า</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ความเป็นส่วนตัวของคุณ</string>
     <!-- text for the privacy notice onboarding card description
@@ -1841,7 +1862,9 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">ที่อยู่เว็บต้องมี \“https://\“ หรือ \“http://\“</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">ที่อยู่เว็บต้องมี \“https://\“ หรือ \“http://\“</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">ที่อยู่เว็บต้องมี &quot;https://&quot; หรือ &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">ต้องการชื่อโฮสต์ที่ถูกต้อง</string>
 

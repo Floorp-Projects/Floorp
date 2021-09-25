@@ -47,8 +47,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ᱱᱮᱛᱚᱜ ᱜᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -122,7 +124,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">ᱢᱟᱲᱟᱝ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">ᱢᱟᱲᱟᱝ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -199,6 +208,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ᱥᱟᱯᱲᱟᱣ</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">ᱚᱲᱟᱜ ᱠᱚᱥᱴᱚᱢᱟᱭᱮᱡᱽ ᱢᱮ</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ</string>
@@ -390,6 +401,18 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">ᱦᱮᱡ ᱨᱩᱟᱹᱲᱚᱜ ᱢᱮ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ᱱᱤᱛᱜᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱᱟ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">ᱯᱚᱠᱮᱴ</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">ᱮᱰᱼᱚᱱ ᱫᱚ ᱵᱟᱭ ᱟᱠᱟᱱᱟ</string>
@@ -577,6 +600,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d ᱥᱟᱭᱤᱴ</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d ᱥᱟᱭᱤᱴ ᱠᱚ</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -749,6 +779,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">ᱥᱟᱺᱪᱟᱣ</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">ᱮᱴᱟᱜᱽ-ᱟᱜ</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ᱱᱟᱜᱟᱢ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
@@ -761,15 +794,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">ᱯᱷᱟᱨᱪᱟ</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">ᱱᱚᱠᱚᱞ ᱢᱮ</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">ᱱᱚᱠᱚᱞ ᱢᱮ</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">ᱱᱟᱶᱟ ᱴᱮᱵᱽ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱴᱮᱵᱽ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
@@ -808,11 +841,11 @@
 
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">ᱠᱷᱩᱞᱟᱹ</string>
+    <string name="download_menu_open">ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
 
     <!-- Text for the button to remove a single download item -->
-    <string name="download_delete_item_1">ᱚᱪᱚᱜ</string>
+    <string name="download_delete_item_1">ᱚᱪᱚᱜᱽ</string>
 
 
     <!-- Crashes -->
@@ -1247,12 +1280,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ᱞᱟᱦᱟ ᱠᱷᱚᱱ ᱠᱷᱟᱛᱟ ᱢᱮᱱᱟᱜ ᱛᱟᱢᱟ?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">ᱧᱮᱞ ᱢᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">ᱧᱮᱞ ᱢᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">ᱨᱤᱰᱤᱡᱟᱭᱤᱱ %s ᱵᱟᱵᱚᱛ ᱠᱩᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ? ᱵᱚᱫᱚᱞ ᱠᱚ ᱵᱟᱰᱟᱭ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">ᱨᱤᱰᱤᱡᱟᱭᱤᱱ %s ᱵᱟᱵᱚᱛ ᱠᱩᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ? ᱵᱚᱫᱚᱞ ᱠᱚ ᱵᱟᱰᱟᱭ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">ᱱᱚᱰᱮ ᱛᱮᱞᱟ ᱠᱚ ᱧᱟᱢ ᱟᱢ</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">ᱱᱚᱰᱮ ᱛᱮᱞᱟ ᱠᱚ ᱧᱟᱢ ᱟᱢ</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱸᱠ ᱢᱮ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1292,14 +1325,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">ᱴᱩᱞᱵᱟᱨ ᱫᱚ ᱥᱮᱴᱮᱨᱚᱜ ᱴᱷᱮᱱ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱟᱨ ᱵᱟᱝ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">ᱱᱤᱡᱮᱨᱟᱜ ᱨᱮ ᱵᱨᱟᱩᱡ ᱢᱮ</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">ᱱᱤᱡᱮᱨᱟᱜ ᱨᱮ ᱵᱨᱟᱩᱡ ᱢᱮ</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">ᱢᱤᱫ ᱡᱮᱠᱷᱟ ᱯᱨᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ: %s ᱟᱭᱠᱚᱱ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">ᱢᱤᱫ ᱡᱮᱠᱷᱟ ᱯᱨᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ: %s ᱟᱭᱠᱚᱱ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">ᱡᱷᱚᱛᱚ ᱵᱮᱲᱟ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽᱠᱚ ᱠᱷᱩᱞᱟ ᱠᱟᱜᱼᱢᱮ: ᱱᱤᱡᱚᱴᱨᱟᱜ ᱵᱨᱟᱣᱡᱤᱝ ᱥᱟᱡᱟᱣ ᱠᱚ ᱟᱹᱯᱰᱮᱴ ᱢᱮ ᱾</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱵᱮᱲᱟ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽᱠᱚ ᱠᱷᱩᱞᱟ ᱠᱟᱜᱼᱢᱮ: ᱱᱤᱡᱚᱴᱨᱟᱜ ᱵᱨᱟᱣᱡᱤᱝ ᱥᱟᱡᱟᱣ ᱠᱚ ᱟᱹᱯᱰᱮᱴ ᱢᱮ ᱾</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">ᱥᱟᱡᱟᱣ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">ᱥᱟᱡᱟᱣ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ᱟᱢᱟᱜ ᱱᱤᱥᱚᱱ</string>
@@ -1463,6 +1496,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">ᱠᱩᱩᱠᱤ ᱠᱚ ᱥᱟᱯᱷᱟᱭ ᱟ ᱚᱠᱟ ᱫᱚ ᱵᱟᱰᱟᱭᱠᱟᱱ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱨᱤᱰᱟᱭᱨᱮᱠᱴ ᱟ ᱾</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ᱞᱟᱛᱟᱨ ᱨᱮ ᱪᱤᱱᱦᱟᱹ ᱞᱟᱱ ᱛᱤᱱᱟᱹᱝ ᱜᱟᱱ ᱴᱨᱟᱠᱚᱨ ᱠᱚ ᱫᱚ ᱠᱷᱟᱴᱚ ᱥᱟᱹᱦᱤᱡ ᱠᱚ ᱟᱹᱱᱵᱞᱚᱠ ᱠᱟᱱᱟ ᱠᱚ ᱪᱮᱫᱟᱜ ᱥᱮ ᱟᱢ ᱫᱚ ᱩᱱᱠᱩ ᱥᱟᱞᱟᱜ ᱠᱟᱹᱢᱤ ᱠᱟᱫᱟᱢ * ᱾</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">ᱜᱚᱲᱚ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1531,6 +1570,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱯᱩᱨᱟᱹᱣ ᱢᱮ ᱾</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">ᱵᱚᱞᱚ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱭᱸᱠ ᱢᱮ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1593,6 +1635,8 @@
     <string name="saved_login_copy_username">ᱵᱮᱵᱷᱟᱨᱤᱡ ᱧᱩᱛᱩᱢ ᱱᱚᱠᱚᱞ ᱢᱮ</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">ᱵᱮᱵᱷᱟᱨᱤᱡ ᱧᱩᱛᱩᱢ ᱯᱷᱟᱨᱪᱟᱭ ᱢᱮ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">ᱥᱟᱭᱤᱴ ᱱᱚᱠᱚᱞ ᱢᱮ</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1760,9 +1804,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[᱓. <b>%1$s</b> ᱪᱚᱞᱩᱤ ᱢᱮ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">ᱡᱟᱯᱛᱤ ᱡᱚᱱᱚᱲᱟᱣ</string>
+    <string name="quick_settings_sheet_secure_connection_2">ᱡᱩᱲᱟᱹᱣ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱜᱮᱭᱟ</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">ᱱᱤᱼᱡᱟᱯᱛᱤ ᱡᱚᱱᱚᱲᱟᱣ</string>
+    <string name="quick_settings_sheet_insecure_connection_2">ᱡᱩᱲᱟᱹᱣ ᱫᱚ ᱵᱟᱭ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱜᱮᱭᱟ</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">ᱡᱟᱯᱛᱤ ᱡᱚᱱᱚᱲᱟᱣ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">ᱱᱤᱼᱡᱟᱯᱛᱤ ᱡᱚᱱᱚᱲᱟᱣ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱡᱷᱚᱛᱚ ᱚᱱᱩᱢᱚᱛᱤ ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱢᱮᱴᱟᱣ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1802,8 +1850,14 @@
     <string name="discard_changes">ᱵᱚᱫᱚᱞ ᱩᱰᱩᱜ ᱜᱤᱰᱤ ᱢᱮ</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">ᱥᱟᱯᱲᱟᱣ</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">ᱱᱟᱶᱟ ᱵᱚᱞᱚ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱨᱮᱭᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ᱨᱚᱲ ᱥᱮᱸᱫᱽᱨᱟ</string>
 
@@ -1812,6 +1866,15 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">ᱢᱤᱫᱴᱟᱹᱝ ᱵᱚᱞᱚ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱢᱟᱲᱟᱝ ᱠᱷᱣᱱ ᱢᱮᱱᱟᱭᱟ ᱾</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">ᱴᱷᱤᱠᱬᱟᱹ ᱨᱮ &quot;https://&quot; ᱟᱨ ᱵᱟᱝ &quot;http://&quot; ᱱᱤᱦᱟᱹᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">ᱴᱷᱤᱠᱬᱟᱹ ᱨᱮ &quot;https://&quot; ᱟᱨ ᱵᱟᱝ &quot;http://&quot; ᱱᱤᱦᱟᱹᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">ᱴᱷᱤᱠ ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1836,8 +1899,10 @@
     <string name="top_sites_max_limit_content_2">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ᱧᱩᱛᱩᱢ</string>

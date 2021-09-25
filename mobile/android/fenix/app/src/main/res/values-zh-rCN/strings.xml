@@ -128,7 +128,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">过去探索内容</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">过去探索内容</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">最近访问</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">移除</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -610,6 +617,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">关闭</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d 个网站</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d 个网站</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">最近关闭的标签页</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -798,15 +812,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">清除</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">复制</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">复制</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">分享</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">分享</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">新建标签页打开</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">新建标签页打开</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">新建隐私标签页打开</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">新建隐私标签页打开</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">删除</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">删除</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">已选择 %1$d 条书签</string>
@@ -1304,12 +1318,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">已有账户？</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">了解新动向</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">了解新动向</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">对重新设计的 %s 有好奇的地方吗？想知道哪里变得不一样了？</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">对重新设计的 %s 有好奇的地方吗？想知道哪里变得不一样了？</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">在此寻找答案</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">在此寻找答案</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">在设备之间同步 Firefox</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1349,14 +1363,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">将工具栏放在顺手的位置。可以留在底部，或移到顶部。</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">上网冲浪也私密</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">上网冲浪也私密</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">临时开启隐私浏览：点击 %s 图标。</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">临时开启隐私浏览：点击 %s 图标。</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">始终使用隐私浏览：请调整您的隐私浏览设置。</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">始终使用隐私浏览：请调整您的隐私浏览设置。</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">打开设置</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">打开设置</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">您的隐私权</string>
     <!-- text for the privacy notice onboarding card description

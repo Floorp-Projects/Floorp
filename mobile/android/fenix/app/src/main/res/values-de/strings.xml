@@ -128,7 +128,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Früher gesuchte Themen</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Früher gesuchte Themen</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Kürzlich besucht</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Entfernen</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -602,6 +609,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Schließen</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d Website</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d Websites</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Kürzlich geschlossene Tabs</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -792,15 +806,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Leeren</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Kopieren</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Kopieren</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Teilen</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Teilen</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">In neuem Tab öffnen</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">In neuem Tab öffnen</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">In privatem Tab öffnen</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">In privatem Tab öffnen</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Löschen</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Löschen</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d ausgewählt</string>
@@ -1296,12 +1310,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Haben Sie schon ein Konto?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Sehen Sie sich an, was es Neues gibt</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Sehen Sie sich an, was es Neues gibt</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Haben Sie Fragen zu den neu gestalteten %s? Möchten Sie wissen, was sich geändert hat?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Haben Sie Fragen zu den neu gestalteten %s? Möchten Sie wissen, was sich geändert hat?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Hier erhalten Sie Antworten</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Hier erhalten Sie Antworten</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Synchronisieren Sie Firefox zwischen Geräten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1341,14 +1355,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Platzieren Sie die Symbolleiste in Reichweite. Behalten Sie sie unten oder verschieben Sie sie nach oben.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Privat surfen</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Privat surfen</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Einmalig einen privaten Tab öffnen: Tippen Sie auf das %s-Symbol.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Einmalig einen privaten Tab öffnen: Tippen Sie auf das %s-Symbol.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Jedes Mal private Tabs öffnen: Aktualisieren Sie Ihre Einstellungen für das private Surfen.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Jedes Mal private Tabs öffnen: Aktualisieren Sie Ihre Einstellungen für das private Surfen.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Einstellungen öffnen</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Einstellungen öffnen</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ihre Privatsphäre</string>
     <!-- text for the privacy notice onboarding card description
