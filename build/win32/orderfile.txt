@@ -12572,7 +12572,6 @@ skcms_TransferFunction_invert
 ?Release@?$AtomicRefCountedWithFinalize@VTextureHost@layers@mozilla@@@mozilla@@AAEXXZ
 ?SetCompositorAnimations@Layer@layers@mozilla@@QAEXABULayersId@23@ABVCompositorAnimations@23@@Z
 ?SetCompositorAnimations@AnimationInfo@layers@mozilla@@QAEXABULayersId@23@ABVCompositorAnimations@23@@Z
-?ContentChanged@LayerScope@layers@mozilla@@SAXPAVTextureHost@23@@Z
 ?AddBlendModeEffect@LayerComposite@layers@mozilla@@QAEXAAUEffectChain@23@@Z
 ?SendPendingAsyncMessages@HostIPCAllocator@layers@mozilla@@UAEXXZ
 ?OnMessageReceived@PCompositorBridgeParent@layers@mozilla@@UAE?AW4Result@HasResultCodes@ipc@3@ABVMessage@IPC@@AAPAV78@@Z
@@ -12603,8 +12602,6 @@ skcms_TransferFunction_invert
 ?GetFullyRenderedRegion@LayerComposite@layers@mozilla@@UAE?AV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@XZ
 ??0CanvasLayerComposite@layers@mozilla@@QAE@PAVLayerManagerComposite@12@@Z
 ?RequestAllowFrameRecording@Compositor@layers@mozilla@@UAEX_N@Z
-?BeginFrame@LayerScopeAutoFrame@layers@mozilla@@CAX_J@Z
-?CheckSendable@LayerScope@layers@mozilla@@SA_NXZ
 ??$DrawGeometry@U?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@mozilla@@@BasicCompositor@layers@mozilla@@AAEXABU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@2@0ABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@42@ABUEffectChain@12@MABV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@42@0_N@Z
 ?profiler_feature_active@@YA_NI@Z
 ?StartRemoteDrawingInRegion@CompositorWidget@widget@mozilla@@UAE?AU?$already_AddRefed@VDrawTarget@gfx@mozilla@@@@AAV?$IntRegionTyped@ULayoutDevicePixel@mozilla@@@gfx@3@PAW4BufferMode@layers@3@@Z
@@ -12748,7 +12745,6 @@ _cairo_traps_fini
 ??1TextureSource@layers@mozilla@@UAE@XZ
 ?MaybeProcessQueue@ScreenshotGrabber@layers@mozilla@@QAEXXZ
 ?RecordCompositionPayloadsPresented@layers@mozilla@@YAXABV?$nsTArray@UCompositionPayload@layers@mozilla@@@@@Z
-?EndFrame@LayerScopeAutoFrame@layers@mozilla@@CAXXZ
 ?FlushPendingNotifyNotUsed@TextureSourceProvider@layers@mozilla@@QAEXXZ
 ?AlwaysScheduleComposite@LayerManagerComposite@layers@mozilla@@UBE_NXZ
 ?Reply_FlushRendering@PCompositorBridge@layers@mozilla@@YAPAVMessage@IPC@@H@Z

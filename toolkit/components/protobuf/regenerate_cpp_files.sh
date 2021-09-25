@@ -22,7 +22,6 @@ regenerate() {
 cd $(dirname $0)
 cd ../../.. # Top level.
 
-regenerate gfx/layers/protobuf/ LayerScopePacket.proto
 regenerate devtools/shared/heapsnapshot/ CoreDump.proto
 regenerate toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/ csd.proto
 regenerate toolkit/components/url-classifier/chromium/ safebrowsing.proto

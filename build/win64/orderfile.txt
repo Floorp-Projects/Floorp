@@ -12294,7 +12294,6 @@ skcms_TransferFunction_invert
 ?ClearInvalidRegion@PaintedLayer@layers@mozilla@@UEAAXXZ
 ?NotifySubDocInvalidation@nsPresContext@@SAXPEAVContainerLayer@layers@mozilla@@PEBV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@4@@Z
 ?GetLastTransactionId@ClientLayerManager@layers@mozilla@@UEAA?AU?$BaseTransactionId@VTransactionIdType@layers@mozilla@@@23@XZ
-?EndFrame@LayerScopeAutoFrame@layers@mozilla@@CAXXZ
 ??$TransformAndClipBounds@M@?$Matrix4x4TypedFlagged@UUnknownUnits@gfx@mozilla@@U123@@gfx@mozilla@@QEBA?AU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@12@AEBU312@0@Z
 ??_GColorLayerProperties@layers@mozilla@@UEAAPEAXI@Z
 ?NotifyInvalidation@nsPresContext@@QEAAXU?$BaseTransactionId@VTransactionIdType@layers@mozilla@@@layers@mozilla@@AEBU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@4@@Z
@@ -12399,7 +12398,6 @@ skcms_TransferFunction_invert
 ?Init@JSWindowActorChild@dom@mozilla@@QEAAXAEBV?$nsTSubstring@D@@PEAVWindowGlobalChild@23@@Z
 ??0MozJSActorCallbacks@dom@mozilla@@QEAA@XZ
 ?Init@MozJSActorCallbacks@dom@mozilla@@QEAA_NAEAVBindingCallContext@23@V?$Handle@VValue@JS@@@JS@@PEBD_N@Z
-?ContentChanged@LayerScope@layers@mozilla@@SAXPEAVTextureHost@23@@Z
 ?SetRoot@BasicLayerManager@layers@mozilla@@UEAAXPEAVLayer@23@@Z
 ?AddBlendModeEffect@LayerComposite@layers@mozilla@@QEAAXAEAUEffectChain@23@@Z
 ?Name@EffectNV12@layers@mozilla@@UEAAPEBDXZ
@@ -12634,8 +12632,6 @@ encoding_is_ascii_compatible
 ?GetFullyRenderedRegion@LayerComposite@layers@mozilla@@UEAA?AV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@XZ
 ??0CanvasLayerComposite@layers@mozilla@@QEAA@PEAVLayerManagerComposite@12@@Z
 ?RequestAllowFrameRecording@Compositor@layers@mozilla@@UEAAX_N@Z
-?BeginFrame@LayerScopeAutoFrame@layers@mozilla@@CAX_J@Z
-?CheckSendable@LayerScope@layers@mozilla@@SA_NXZ
 ??$DrawGeometry@U?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@mozilla@@@BasicCompositor@layers@mozilla@@AEAAXAEBU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@gfx@2@0AEBU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@42@AEBUEffectChain@12@MAEBV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@42@0_N@Z
 ?profiler_feature_active@@YA_NI@Z
 ?GetSrcTileRect@TextureImage@gl@mozilla@@MEAA?AU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@XZ
