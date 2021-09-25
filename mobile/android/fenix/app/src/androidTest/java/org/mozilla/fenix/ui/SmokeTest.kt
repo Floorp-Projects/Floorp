@@ -948,6 +948,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24508")
     @Test
     fun addPrivateBrowsingShortcutTest() {
         homeScreen {

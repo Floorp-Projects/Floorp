@@ -4,36 +4,122 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
-import android.text.method.LinkMovementMethod
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleOwner
+import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.PrivateBrowsingDescriptionBinding
-import org.mozilla.fenix.ext.addUnderline
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
+import org.mozilla.fenix.theme.FirefoxTheme
 
+/**
+ * View holder for a private browsing description.
+ *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
+ * @param interactor [TabSessionInteractor] which will have delegated to all user interactions.
+ */
 class PrivateBrowsingDescriptionViewHolder(
-    view: View,
-    private val interactor: TabSessionInteractor
-) : RecyclerView.ViewHolder(view) {
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
+    val interactor: TabSessionInteractor,
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        val resources = view.resources
-        val appName = resources.getString(R.string.app_name)
-        val binding = PrivateBrowsingDescriptionBinding.bind(view)
-        binding.privateSessionDescription.text = resources.getString(
-            R.string.private_browsing_placeholder_description_2, appName
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
+    @Composable
+    override fun Content() {
+        PrivateBrowsingDescription(
+            onLearnMoreClick = interactor::onPrivateBrowsingLearnMoreClicked
         )
-        with(binding.privateSessionCommonMyths) {
-            movementMethod = LinkMovementMethod.getInstance()
-            addUnderline()
-            setOnClickListener {
-                interactor.onPrivateBrowsingLearnMoreClicked()
-            }
-        }
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.private_browsing_description
+        val LAYOUT_ID = View.generateViewId()
+    }
+}
+
+/**
+ * Private browsing mode description.
+ *
+ * @param onLearnMoreClick Invoked when the user clicks on the learn more link.
+ */
+@Composable
+fun PrivateBrowsingDescription(
+    onLearnMoreClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val color = PhotonColors.LightGrey05 // Equivalent to fx_mobile_private_text_color_primary.
+
+    Column(
+        modifier = Modifier.padding(horizontal = 4.dp)
+    ) {
+        Text(
+            text = stringResource(
+                R.string.private_browsing_placeholder_description_2,
+                stringResource(R.string.app_name)
+            ),
+            modifier = Modifier.padding(top = 4.dp),
+            color = color,
+            fontSize = 14.sp,
+            lineHeight = 20.sp
+        )
+
+        // The text is wrapped in a box to increase the tap area.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClickLabel = stringResource(R.string.link_text_view_type_announcement),
+                    onClick = onLearnMoreClick,
+                )
+        ) {
+            Text(
+                text = stringResource(R.string.private_browsing_common_myths),
+                modifier = Modifier.padding(top = 10.dp),
+                style = TextStyle(
+                    color = color,
+                    fontSize = 14.sp,
+                    textDecoration = TextDecoration.Underline,
+                    textDirection = TextDirection.Content
+                )
+            )
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PrivateBrowsingDescriptionPreview() {
+    FirefoxTheme {
+        PrivateBrowsingDescription(
+            onLearnMoreClick = {}
+        )
     }
 }

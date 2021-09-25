@@ -375,7 +375,7 @@ class HomeScreenRobot {
         }
 
         fun openCommonMythsLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            onView(withId(R.id.private_session_common_myths))
+            onView(withText(R.string.private_browsing_common_myths))
                 .perform(click())
 
             BrowserRobot().interact()
@@ -629,7 +629,7 @@ private fun assertTakePlacementBottomRadioButton() {
 }
 
 private fun assertPrivateSessionMessage() =
-    onView(withId(R.id.private_session_description))
+    onView(withText(R.string.private_browsing_common_myths))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun collectionTitle(title: String) =
