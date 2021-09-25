@@ -2473,12 +2473,6 @@ void gfxPlatform::InitGPUProcessPrefs() {
                          "FEATURE_FAILURE_SAFE_MODE"_ns);
     return;
   }
-  if (StaticPrefs::gfx_layerscope_enabled()) {
-    gpuProc.ForceDisable(FeatureStatus::Blocked,
-                         "LayerScope does not work in the GPU process",
-                         "FEATURE_FAILURE_LAYERSCOPE"_ns);
-    return;
-  }
 
   InitPlatformGPUProcessPrefs();
 }
