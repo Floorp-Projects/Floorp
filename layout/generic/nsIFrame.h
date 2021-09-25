@@ -3890,14 +3890,15 @@ class nsIFrame : public nsQueryFrame {
   SelectablePeekReport GetFrameFromDirection(const nsPeekOffsetStruct& aPos);
 
   /**
-   * Return the containing block frame for a line; i.e. the frame which
-   * supports a line iterator.
+   * Return:
+   * (1) the containing block frame for a line; i.e. the frame which
+   * supports a line iterator, or null if none can be found; and
+   * (2) the frame to use to get a line number, which will be direct child of
+   * the returned containing block.
    * @param aLockScroll true to avoid breaking outside scrollframes.
-   * @param aLineFrame the frame to use to get a line number, which will be a
-   * a direct child of the returned containing block.
    */
-  nsIFrame* GetContainingBlockForLine(bool aLockScroll,
-                                      nsIFrame*& aLineFrame) const;
+  std::pair<nsIFrame*, nsIFrame*> GetContainingBlockForLine(
+      bool aLockScroll) const;
 
  private:
   Result<bool, nsresult> IsVisuallyAtLineEdge(nsILineIterator* aLineIterator,
