@@ -696,14 +696,22 @@
         }
 
         let popup = this.textbox.popup;
-        if (!popup.popupOpen) {
-          return false;
+        if (popup.popupOpen) {
+          let suggestionsHidden =
+            popup.richlistbox.getAttribute("collapsed") == "true";
+          let numItems = suggestionsHidden ? 0 : popup.matchCount;
+          return popup.oneOffButtons.handleKeyDown(aEvent, numItems, true);
+        } else if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+          let undoCount = this.textbox.editor.transactionManager
+            .numberOfUndoItems;
+          if (undoCount) {
+            this.textbox.editor.undo(undoCount);
+          } else {
+            this.textbox.select();
+          }
+          return true;
         }
-
-        let suggestionsHidden =
-          popup.richlistbox.getAttribute("collapsed") == "true";
-        let numItems = suggestionsHidden ? 0 : popup.matchCount;
-        return popup.oneOffButtons.handleKeyDown(aEvent, numItems, true);
+        return false;
       };
 
       // This method overrides the autocomplete binding's openPopup (essentially
@@ -783,6 +791,8 @@
 
       // override |onTextEntered| in autocomplete.xml
       this.textbox.onTextEntered = event => {
+        this.textbox.editor.transactionManager.clearUndoStack();
+
         let engine;
         let oneOff = this.textbox.selectedButton;
         if (oneOff) {
