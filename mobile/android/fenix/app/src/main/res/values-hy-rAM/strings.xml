@@ -1492,6 +1492,9 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Վերաուղղորդմամբ կայված՝ մաքրում է թխուկները հայտնի հետագծիչ կայքերից:</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Ստորև նշված որոշ հետագծիչներ մասնակի ապակողպվել են, քանի որ դուք առնչվել եք դրանց հետ *:</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Իմանալ ավելին</string>
 
