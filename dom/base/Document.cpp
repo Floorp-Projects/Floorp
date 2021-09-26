@@ -102,7 +102,6 @@
 #include "mozilla/SMILTimeContainer.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Components.h"
-#include "mozilla/ServoCSSPropList.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoTypes.h"
