@@ -35,7 +35,7 @@ rev = "4ee3b283182926f9a8bb31d603219ff2db70d2fd"
 [source."https://github.com/mozilla/audioipc-2"]
 git = "https://github.com/mozilla/audioipc-2"
 replace-with = "vendored-sources"
-rev = "fce878ff15f4e1dba1e5b54f82460af605fb4d14"
+rev = "7537bfadad2e981577eb75e4f13662fc517e1a09"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
