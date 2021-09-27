@@ -4,16 +4,16 @@
 "use strict";
 
 const {
-  browsingContextTargetSpec,
-} = require("devtools/shared/specs/targets/browsing-context");
+  windowGlobalTargetSpec,
+} = require("devtools/shared/specs/targets/window-global");
 const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
 const { TargetMixin } = require("devtools/client/fronts/targets/target-mixin");
 
-class BrowsingContextTargetFront extends TargetMixin(
-  FrontClassWithSpec(browsingContextTargetSpec)
+class WindowGlobalTargetFront extends TargetMixin(
+  FrontClassWithSpec(windowGlobalTargetSpec)
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
@@ -42,7 +42,7 @@ class BrowsingContextTargetFront extends TargetMixin(
     this.outerWindowID = json.outerWindowID;
     this.favicon = json.favicon;
 
-    // Initial value for the page title and url. Since the BrowsingContextTargetActor can
+    // Initial value for the page title and url. Since the WindowGlobalTargetActor can
     // be created very early, those might not represent the actual value we'd want to
     // display for the user (e.g. the <title> might not have been parsed yet, and the
     // url could still be about:blank, which is what the platform uses at the very start
@@ -126,7 +126,7 @@ class BrowsingContextTargetFront extends TargetMixin(
       this.traits = response.traits || {};
 
       // xpcshell tests from devtools/server/tests/xpcshell/ are implementing
-      // fake BrowsingContextTargetActor which do not expose any console actor.
+      // fake WindowGlobalTargetActor which do not expose any console actor.
       if (this.targetForm.consoleActor) {
         await this.attachConsole();
       }
@@ -177,5 +177,5 @@ class BrowsingContextTargetFront extends TargetMixin(
   }
 }
 
-exports.BrowsingContextTargetFront = BrowsingContextTargetFront;
-registerFront(exports.BrowsingContextTargetFront);
+exports.WindowGlobalTargetFront = WindowGlobalTargetFront;
+registerFront(exports.WindowGlobalTargetFront);

@@ -8,14 +8,14 @@
  * Target actor for a frame / docShell in the content process (where the actual
  * content lives).
  *
- * This actor extends BrowsingContextTargetActor.
+ * This actor extends WindowGlobalTargetActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
 const {
-  browsingContextTargetPrototype,
-} = require("devtools/server/actors/targets/browsing-context");
+  windowGlobalTargetPrototype,
+} = require("devtools/server/actors/targets/window-global");
 
 const { extend } = require("devtools/shared/extend");
 const { frameTargetSpec } = require("devtools/shared/specs/targets/frame");
@@ -25,11 +25,11 @@ const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mi
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
  * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of BrowsingContextTargetActor.prototype
+ * maintain the properties of WindowGlobalTargetActor.prototype
  *
  * Target actor for a frame / docShell in the content process.
  */
-const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
+const frameTargetPrototype = extend({}, windowGlobalTargetPrototype);
 
 Object.defineProperty(frameTargetPrototype, "title", {
   get: function() {

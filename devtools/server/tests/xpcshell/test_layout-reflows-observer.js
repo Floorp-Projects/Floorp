@@ -108,7 +108,7 @@ function run_test() {
 function instancesOfObserversAreSharedBetweenWindows() {
   info(
     "Checking that when requesting twice an instances of the observer " +
-      "for the same BrowsingContextTargetActor, the instance is shared"
+      "for the same WindowGlobalTargetActor, the instance is shared"
   );
 
   info("Checking 2 instances of the observer for the targetActor 1");

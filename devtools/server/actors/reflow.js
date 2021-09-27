@@ -85,7 +85,7 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
 /**
  * Base class for all sorts of observers that need to listen to events on the
  * targetActor's windows.
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  * @param {Function} callback Executed everytime the observer observes something
  */
 function Observable(targetActor, callback) {
@@ -218,7 +218,7 @@ exports.setIgnoreLayoutChanges = function(ignore, syncReflowNode) {
  * - "reflows", with an array of all the reflows that occured,
  * - "resizes", with an array of all the resizes that occured,
  *
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  */
 function LayoutChangesObserver(targetActor) {
   this.targetActor = targetActor;
@@ -378,7 +378,7 @@ LayoutChangesObserver.prototype = {
 /**
  * Get a LayoutChangesObserver instance for a given window. This function makes
  * sure there is only one instance per window.
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  * @return {LayoutChangesObserver}
  */
 var observedWindows = new Map();
@@ -405,7 +405,7 @@ exports.getLayoutChangesObserver = getLayoutChangesObserver;
  * Release a LayoutChangesObserver instance that was retrieved by
  * getLayoutChangesObserver. This is required to ensure the targetActor reference
  * is removed and the observer is eventually stopped and destroyed.
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  */
 function releaseLayoutChangesObserver(targetActor) {
   const observerData = observedWindows.get(targetActor);
@@ -424,7 +424,7 @@ exports.releaseLayoutChangesObserver = releaseLayoutChangesObserver;
 /**
  * Reports any reflow that occurs in the targetActor's docshells.
  * @extends Observable
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  * @param {Function} callback Executed everytime a reflow occurs
  */
 class ReflowObserver extends Observable {
@@ -466,7 +466,7 @@ ReflowObserver.prototype.QueryInterface = ChromeUtils.generateQI([
 /**
  * Reports window resize events on the targetActor's windows.
  * @extends Observable
- * @param {BrowsingContextTargetActor} targetActor
+ * @param {WindowGlobalTargetActor} targetActor
  * @param {Function} callback Executed everytime a resize occurs
  */
 class WindowResizeObserver extends Observable {

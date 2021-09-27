@@ -543,7 +543,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
         actor.destroy();
       }
       if (this._tabDescriptorActorPool) {
-        // Iterate over BrowsingContextTargetActor instances to also remove target-scoped
+        // Iterate over WindowGlobalTargetActor instances to also remove target-scoped
         // actors created during listTabs for each document.
         for (const tab in this._tabDescriptorActorPool.poolChildren()) {
           tab.removeActorByName(name);

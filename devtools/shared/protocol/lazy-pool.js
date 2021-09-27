@@ -8,7 +8,7 @@ const { extend } = require("devtools/shared/extend");
 const { Pool } = require("devtools/shared/protocol");
 
 /**
- * A Special Pool for RootActor and BrowsingContextTargetActor, which allows lazy loaded
+ * A Special Pool for RootActor and WindowGlobalTargetActor, which allows lazy loaded
  * actors to be added to the pool.
  *
  * Like the Pool, this is a protocol object that can manage the lifetime of other protocol

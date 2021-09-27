@@ -33,7 +33,7 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
 async function createTargets(watcher) {
   // Go over all existing BrowsingContext in order to:
   // - Force the instantiation of a DevToolsFrameChild
-  // - Have the DevToolsFrameChild to spawn the BrowsingContextTargetActor
+  // - Have the DevToolsFrameChild to spawn the WindowGlobalTargetActor
 
   // If we have a browserElement, set the watchedByDevTools flag on its related browsing context
   // TODO: We should also set the flag for the "parent process" browsing context when we're

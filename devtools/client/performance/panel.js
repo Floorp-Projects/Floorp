@@ -113,7 +113,7 @@ PerformancePanel.prototype = {
    *
    * @param {TargetFront} - targetFront
    *        As we are watching only FRAME type for this panel,
-   *        the target should be a instance of BrowsingContextTarget.
+   *        the target should be a instance of WindowGlobalTarget.
    */
   async _handleTargetAvailable({ targetFront }) {
     if (targetFront.isTopLevel) {

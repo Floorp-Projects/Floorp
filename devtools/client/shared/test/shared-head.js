@@ -761,7 +761,7 @@ async function watchForTargetSwitching(commands, browser) {
  *
  * @param {XULTab} tab
  *        The tab for which a target should be created.
- * @return {BrowsingContextTargetFront} The attached target front.
+ * @return {WindowGlobalTargetFront} The attached target front.
  */
 async function createAndAttachTargetForTab(tab) {
   info("Creating and attaching to a local tab target");

@@ -30,7 +30,7 @@ loader.lazyRequireGetter(
  * - close: The target window has been closed. All tools attached to this
  *          target should close. This event is not currently cancelable.
  *
- * Optional events only dispatched by BrowsingContextTarget:
+ * Optional events only dispatched by WindowGlobalTarget:
  * - will-navigate: The target window will navigate to a different URL
  * - navigate: The target window has navigated to a different URL
  */
@@ -208,7 +208,7 @@ function TargetMixin(parentClass) {
         if (watcherFront.traits.frame) {
           // Retrieve the Watcher, which manage all the targets and should already have a reference to
           // to the parent target.
-          return watcherFront.getParentBrowsingContextTarget(
+          return watcherFront.getParentWindowGlobalTarget(
             this.browsingContextID
           );
         }
@@ -229,14 +229,14 @@ function TargetMixin(parentClass) {
      *
      * @return {TargetMixin} the requested target.
      */
-    async getBrowsingContextTarget(browsingContextID) {
+    async getWindowGlobalTarget(browsingContextID) {
       // Tab and Process Descriptors expose a Watcher, which is creating the
       // targets and should be used to fetch any.
       const watcherFront = await this.getWatcherFront();
       if (watcherFront) {
         // Safety check, in theory all watcher should support frames.
         if (watcherFront.traits.frame) {
-          return watcherFront.getBrowsingContextTarget(browsingContextID);
+          return watcherFront.getWindowGlobalTarget(browsingContextID);
         }
         return null;
       }
@@ -246,7 +246,7 @@ function TargetMixin(parentClass) {
       // removed in FF77.
       // Support for watcher in WebExtension descriptors is Bug 1644341.
       throw new Error(
-        `Unable to call getBrowsingContextTarget for ${this.actorID}`
+        `Unable to call getWindowGlobalTarget for ${this.actorID}`
       );
     }
 
@@ -369,11 +369,15 @@ function TargetMixin(parentClass) {
       this._forceChrome = true;
     }
 
-    // Tells us if the related actor implements BrowsingContextTargetActor
+    // Tells us if the related actor implements WindowGlobalTargetActor
     // interface and requires to call `attach` request before being used and
     // `detach` during cleanup.
     get isBrowsingContext() {
-      return this.typeName === "browsingContextTarget";
+      // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
+      return (
+        this.typeName === "windowGlobalTarget" ||
+        this.typeName == "browsingContextTarget"
+      );
     }
 
     get name() {

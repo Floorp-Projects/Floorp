@@ -301,7 +301,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   _getTargetActorInParentProcess() {
     if (this.browserElement) {
-      // Note: if any, the BrowsingContextTargetActor returned here is created for a parent process
+      // Note: if any, the WindowGlobalTargetActor returned here is created for a parent process
       // page and lives in the parent process.
       return TargetActorRegistry.getTargetActor(this.browserId);
     }
@@ -370,7 +370,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
      * Since all BrowsingContext target actors register themselves to the TargetActorRegistry,
      * we use it here in order to reach those missing targets, which are running in the
      * parent process (where this WatcherActor lives as well):
-     *  - the parent process target (which inherits from BrowsingContextTargetActor)
+     *  - the parent process target (which inherits from WindowGlobalTargetActor)
      *  - top level tab target for documents loaded in the parent process (e.g. about:robots).
      *    When the tab loads document in the content process, the FrameTargetHelper will
      *    reach it via the JSWindowActor API. Even if it uses MessageManager for anything

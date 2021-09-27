@@ -55,7 +55,7 @@ async function testParentProcess() {
   is(
     targetFront.targetType,
     targetCommand.TYPES.FRAME,
-    "the parent process target is of frame type, because it inherits from BrowsingContextTargetActor"
+    "the parent process target is of frame type, because it inherits from WindowGlobalTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
@@ -191,7 +191,7 @@ async function testWebExtension() {
   is(
     targetFront.targetType,
     targetCommand.TYPES.FRAME,
-    "the web extension target is of frame type, because it inherits from BrowsingContextTargetActor"
+    "the web extension target is of frame type, because it inherits from WindowGlobalTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 

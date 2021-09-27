@@ -178,9 +178,9 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
  * The HighlighterEnvironment is an object that holds all the required data for
  * highlighters to work: the window, docShell, event listener target, ...
  * It also emits "will-navigate", "navigate" and "window-ready" events,
- * similarly to the BrowsingContextTargetActor.
+ * similarly to the WindowGlobalTargetActor.
  *
- * It can be initialized either from a BrowsingContextTargetActor (which is the
+ * It can be initialized either from a WindowGlobalTargetActor (which is the
  * most frequent way of using it, since highlighters are initialized by
  * CustomHighlighterActor, which has a targetActor reference).
  * It can also be initialized just with a window object (which is
@@ -298,7 +298,7 @@ HighlighterEnvironment.prototype = {
 
   /**
    * Get the right target for listening to events on the page.
-   * - If the environment was initialized from a BrowsingContextTargetActor
+   * - If the environment was initialized from a WindowGlobalTargetActor
    *   *and* if we're in the Browser Toolbox (to inspect Firefox Desktop): the
    *   targetActor is the RootActor, in which case, the window property can be
    *   used to listen to events.

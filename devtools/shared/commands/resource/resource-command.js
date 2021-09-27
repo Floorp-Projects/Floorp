@@ -389,7 +389,7 @@ class ResourceCommand {
    * @param {Front} targetFront
    *        The Front of the target that is available.
    *        This Front inherits from TargetMixin and is typically
-   *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
+   *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
     // We put the resourceCommand on the targetFront so it can be retrieved in the
@@ -838,7 +838,7 @@ class ResourceCommand {
       );
       return null;
     }
-    return this.watcherFront.getBrowsingContextTarget(browsingContextID);
+    return this.watcherFront.getWindowGlobalTarget(browsingContextID);
   }
 
   _onWillNavigate(targetFront) {

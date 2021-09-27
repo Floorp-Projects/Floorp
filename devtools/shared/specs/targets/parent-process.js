@@ -6,11 +6,11 @@
 const { generateActorSpec } = require("devtools/shared/protocol");
 const { extend } = require("devtools/shared/extend");
 const {
-  browsingContextTargetSpecPrototype,
-} = require("devtools/shared/specs/targets/browsing-context");
+  windowGlobalTargetSpecPrototype,
+} = require("devtools/shared/specs/targets/window-global");
 
 const parentProcessTargetSpecPrototype = extend(
-  browsingContextTargetSpecPrototype,
+  windowGlobalTargetSpecPrototype,
   {
     typeName: "parentProcessTarget",
   }
