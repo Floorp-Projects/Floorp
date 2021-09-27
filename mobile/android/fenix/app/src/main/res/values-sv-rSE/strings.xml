@@ -53,7 +53,7 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Nyligen sparade</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_bookmarked">Senaste bokmärken</string>
+    <string name="recently_bookmarked">Nyligen bokmärkt</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Nyligen sparade bokmärken</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -414,7 +414,7 @@
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Nyligen sparade</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_bookmarked">Senaste bokmärken</string>
+    <string name="customize_toggle_recently_bookmarked">Nyligen bokmärkt</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nyligen besökta</string>
     <!-- Title for the customize home screen section with Pocket. -->
