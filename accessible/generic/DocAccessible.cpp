@@ -366,12 +366,27 @@ void DocAccessible::Init() {
   // Initialize notification controller.
   mNotificationController = new NotificationController(this, mPresShell);
 
-  // Mark the document accessible as loaded if its DOM document was loaded at
-  // this point (this can happen because a11y is started late or DOM document
-  // having no container was loaded.
+  // Mark the DocAccessible as loaded if its DOM document is already loaded at
+  // this point. This can happen for one of three reasons:
+  // 1. A11y was started late.
+  // 2. DOM loading for a document (probably an in-process iframe) completed
+  // before its Accessible container was created.
+  // 3. The PresShell for the document was created after DOM loading completed.
+  // In that case, we tried to create the DocAccessible when DOM loading
+  // completed, but we can't create a DocAccessible without a PresShell, so
+  // this failed. The DocAccessible was subsequently created due to a layout
+  // notification.
   if (mDocumentNode->GetReadyStateEnum() ==
       dom::Document::READYSTATE_COMPLETE) {
     mLoadState |= eDOMLoaded;
+    // If this happened due to reasons 1 or 2, it isn't *necessary* to fire a
+    // doc load complete event. If it happened due to reason 3, we need to fire
+    // doc load complete because clients (especially tests) might be waiting
+    // for the document to load using this event. We can't distinguish why this
+    // happened at this point, so just fire it regardless. It won't do any
+    // harm even if it isn't necessary. We set mLoadEventType here and it will
+    // be fired in ProcessLoad as usual.
+    mLoadEventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
   }
 
   AddEventListeners();
