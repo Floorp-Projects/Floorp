@@ -43,9 +43,9 @@ Services.scriptloader.loadSubScript(
 );
 
 const EXAMPLE_URL =
-  "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/";
+  "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/";
 
 // This URL is remote compared to EXAMPLE_URL, as one uses .com and the other uses .org
 // Note that this depends on initDebugger to always use EXAMPLE_URL
 const EXAMPLE_REMOTE_URL =
-  "https://example.org/browser/devtools/client/debugger/test/mochitest/examples/";
+  "http://example.net/browser/devtools/client/debugger/test/mochitest/examples/";
