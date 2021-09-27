@@ -2,18 +2,6 @@
 
 The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [MDN](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor) to learn all the features and how to use the tool.
 
-## Prerequisite
-
-If you want to build the Network Monitor inside of the DevTools toolbox (Firefox Devtools Panels), follow the [simple Firefox build](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build) document in MDN. Start your compiled firefox and open the Firefox developer tool, you can see the Network Monitor inside.
-
-### Run inside of the DevTools toolbox
-
-Files used to run the Network Monitor inside of the DevTools toolbox.
-
-* `panel.js` called by devtools toolbox to launch the Network Monitor panel.
-* `index.html` panel UI and launch scripts.
-* `src/connector/` wrap function call for Browser specific API. Current support Firefox and Chrome(experimental).
-
 ### UI
 
 The Network Monitor UI is built using [React](http://searchfox.org/mozilla-central/source/devtools/docs/frontend/react.md) components (in `src/components/`).
