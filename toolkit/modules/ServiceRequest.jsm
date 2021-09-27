@@ -37,16 +37,17 @@ class ServiceRequest extends XMLHttpRequest {
    *
    * @param {String} method - HTTP method to use, e.g. "GET".
    * @param {String} url - URL to open.
-   * @param {Object} options - Additional options (reserved for future use).
+   * @param {Object} options - Additional options { bypassProxy: bool }.
    */
   open(method, url, options) {
     super.open(method, url, true);
 
-    // Disable cutting edge features, like TLS 1.3, where middleboxes might brick us
     if (super.channel instanceof Ci.nsIHttpChannelInternal) {
-      super.channel.QueryInterface(
-        Ci.nsIHttpChannelInternal
-      ).beConservative = true;
+      let internal = super.channel.QueryInterface(Ci.nsIHttpChannelInternal);
+      // Disable cutting edge features, like TLS 1.3, where middleboxes might brick us
+      internal.beConservative = true;
+      // Disable use of proxy for this request if necessary.
+      internal.bypassProxy = options?.bypassProxy;
     }
   }
 }

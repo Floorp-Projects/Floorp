@@ -272,6 +272,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetAllowAltSvc(bool aAllowAltSvc) override;
   NS_IMETHOD GetBeConservative(bool* aBeConservative) override;
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
+  NS_IMETHOD GetBypassProxy(bool* aBypassProxy) override;
+  NS_IMETHOD SetBypassProxy(bool aBypassProxy) override;
   NS_IMETHOD GetIsTRRServiceChannel(bool* aTRR) override;
   NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
   NS_IMETHOD GetIsResolvedByTRR(bool* aResolvedByTRR) override;
@@ -843,7 +845,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
     (uint32_t, TaintedOriginFlag, 1),
 
     // If the channel is being used to check OCSP
-    (uint32_t, IsOCSP, 1)
+    (uint32_t, IsOCSP, 1),
+
+    // Used by system requests such as remote settings and updates to
+    // retry requests without proxies.
+    (uint32_t, BypassProxy, 1)
   ))
   // clang-format on
 
