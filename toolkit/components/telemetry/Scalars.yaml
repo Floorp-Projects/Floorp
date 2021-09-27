@@ -5708,12 +5708,11 @@ startup:
           user.
         Unknown:
           An unknown error occurred - this generally should not happen.
-    expires: "95"
+    expires: "98"
     keyed: false
     kind: string
     notification_emails:
       - dothayer@mozilla.com
-      - emalysz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
