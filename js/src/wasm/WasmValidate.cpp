@@ -1017,6 +1017,15 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(
                 iter.readTernary(ValType::V128, &nothing, &nothing, &nothing));
           }
+          case uint32_t(SimdOp::F32x4RelaxedMin):
+          case uint32_t(SimdOp::F32x4RelaxedMax):
+          case uint32_t(SimdOp::F64x2RelaxedMin):
+          case uint32_t(SimdOp::F64x2RelaxedMax): {
+            if (!env.v128RelaxedEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
+          }
 #  endif
 
           default:

@@ -683,7 +683,7 @@ enum class SimdOp {
   I32x4Sub = 0xb1,
   // SubSatS = 0xb2
   // SubSatU = 0xb3
-  // Dot = 0xb4
+  F32x4RelaxedMin = 0xb4,
   I32x4Mul = 0xb5,
   I32x4MinS = 0xb6,
   I32x4MinU = 0xb7,
@@ -715,7 +715,7 @@ enum class SimdOp {
   I64x2Sub = 0xd1,
   // Unused = 0xd2
   // Unused = 0xd3
-  // Dot = 0xd4
+  F64x2RelaxedMin = 0xd4,
   I64x2Mul = 0xd5,
   I64x2Eq = 0xd6,
   I64x2Ne = 0xd7,
@@ -729,7 +729,7 @@ enum class SimdOp {
   I64x2ExtMulHighUI32x4 = 0xdf,
   F32x4Abs = 0xe0,
   F32x4Neg = 0xe1,
-  // Round = 0xe2
+  F32x4RelaxedMax = 0xe2,
   F32x4Sqrt = 0xe3,
   F32x4Add = 0xe4,
   F32x4Sub = 0xe5,
@@ -741,7 +741,7 @@ enum class SimdOp {
   F32x4PMax = 0xeb,
   F64x2Abs = 0xec,
   F64x2Neg = 0xed,
-  // Round = 0xee
+  F64x2RelaxedMax = 0xee,
   F64x2Sqrt = 0xef,
   F64x2Add = 0xf0,
   F64x2Sub = 0xf1,

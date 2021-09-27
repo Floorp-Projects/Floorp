@@ -137,6 +137,10 @@ const F32x4RelaxedFmaCode = 0xaf;
 const F32x4RelaxedFmsCode = 0xb0;
 const F64x2RelaxedFmaCode = 0xcf;
 const F64x2RelaxedFmsCode = 0xd0;
+const F32x4RelaxedMin = 0xb4;
+const F32x4RelaxedMax = 0xe2;
+const F64x2RelaxedMin = 0xd4;
+const F64x2RelaxedMax = 0xee;
 
 // SIMD wormhole opcodes.
 const WORMHOLE_SELFTEST = 0;
