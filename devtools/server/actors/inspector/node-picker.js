@@ -294,6 +294,10 @@ class NodePicker {
     }
   }
 
+  resetHoveredNodeReference() {
+    this._hoveredNode = null;
+  }
+
   destroy() {
     this.cancelPick();
 
