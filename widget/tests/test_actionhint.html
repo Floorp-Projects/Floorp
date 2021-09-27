@@ -29,7 +29,10 @@
   <input id="l5" enterkeyhint="Previous">
   <input id="l6" enterkeyhint="search">
   <textarea id="l7" enterkeyhint="send"></textarea>
-  <input id="l8" enterkeyhint="NONE">
+  <input id="l8" type="number" enterkeyhint="previous">
+  <input id="l9" type="date" enterkeyhint="done">
+  <input id="l10" type="time" enterkeyhint="done">
+  <input id="l11" enterkeyhint="NONE">
 </form>
 </div>
 <pre id="test">
@@ -57,8 +60,13 @@ add_task(async function basic() {
     { id: "l5", hint: "previous", desc: "enterkeyhint=Previous" },
     { id: "l6", hint: "search", desc: "enterkeyhint=search" },
     { id: "l7", hint: "send", desc: "enterkeyhint=send" },
+    { id: "l8", hint: "previous", desc: "type=number enterkeyhint=previous" },
+    // type=date is readonly content
+    { id: "l9", hint: "", desc: "type=date enterkeyhint=done" },
+    // type=time is readonly content
+    { id: "l10", hint: "", desc: "type=time enterkeyhint=done" },
     // Since enterkeyhint is invalid, we infer action hint. So feel free to change this.
-    { id: "l8", hint: "go", desc: "enterkeyhint is invalid" },
+    { id: "l11", hint: "go", desc: "enterkeyhint is invalid" },
   ];
 
   const todo_tests = [

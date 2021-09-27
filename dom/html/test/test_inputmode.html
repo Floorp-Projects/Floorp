@@ -19,6 +19,9 @@
 <input id="a7" inputmode="decimal">
 <input id="a8" inputmode="search">
 <input id="a9">
+<input id="a10" type="number" inputmode="numeric">
+<input id="a11" type="date" inputmode="numeric">
+<input id="a12" type="time" inputmode="numeric">
 <textarea id="b1" inputmode="none"></textarea>
 <textarea id="b2" inputmode="text"></textarea>
 <textarea id="b3" inputmode="tel"></textarea>
@@ -56,6 +59,9 @@ add_task(async function basic() {
     { id: "a7", inputmode: "decimal", desc: "inputmode of input element is decimal" },
     { id: "a8", inputmode: "search", desc: "inputmode of input element is search" },
     { id: "a9", inputmode: "", desc: "no inputmode of input element" },
+    { id: "a10", inputmode: "numeric", desc: "inputmode of input type=number is numeric" },
+    { id: "a11", inputmode: "", desc: "no inputmode due to type=date" },
+    { id: "a12", inputmode: "", desc: "no inputmode due to type=time" },
     { id: "b1", inputmode: "none", desc: "inputmode of textarea element is none" },
     { id: "b2", inputmode: "text", desc: "inputmode of textarea element is text" },
     { id: "b3", inputmode: "tel", desc: "inputmode of textarea element is tel" },
