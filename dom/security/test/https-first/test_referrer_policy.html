@@ -23,7 +23,9 @@
  */
 
 SimpleTest.waitForExplicitFinish();
-
+// This test performs a lot of requests and checks (64 requests).
+// So to prevent to get a timeout before executing all test request longer timeout.
+SimpleTest.requestLongerTimeout(2);
 const SAME_ORIGIN =
   "http://example.com/tests/dom/security/test/https-first/file_referrer_policy.sjs?";
 // SAME ORIGIN with "https" instead of "http"
