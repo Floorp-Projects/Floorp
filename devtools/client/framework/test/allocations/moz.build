@@ -9,6 +9,7 @@ BROWSER_CHROME_MANIFESTS += [
     "browser_allocations_reload_debugger.ini",
     "browser_allocations_reload_inspector.ini",
     "browser_allocations_reload_netmonitor.ini",
+    "browser_allocations_reload_no_devtools.ini",
     "browser_allocations_reload_webconsole.ini",
     "browser_allocations_target.ini",
     "browser_allocations_toolbox.ini",
