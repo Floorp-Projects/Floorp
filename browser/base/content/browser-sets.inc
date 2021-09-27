@@ -91,6 +91,8 @@
     <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>
+    <command id="Browser:Screenshot" oncommand="ScreenshotsUtils.notify(window, 'shortcut')"/>
+    
 #ifdef NIGHTLY_BUILD
     <command id="Tools:FissionWindow"
       oncommand="OpenBrowserWindow({fission: true, private: !!window?.browsingContext?.usePrivateBrowsing});"
@@ -303,6 +305,7 @@
 
     <key id="key_privatebrowsing" command="Tools:PrivateBrowsing" data-l10n-id="private-browsing-shortcut"
          modifiers="accel,shift" reserved="true"/>
+    <key id="key_screenshot" data-l10n-id="screenshot-shortcut" command="Browser:Screenshot" modifiers="accel,shift"/>
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
 #ifdef XP_MACOSX
     <key id="key_sanitize_mac" command="Tools:Sanitize" keycode="VK_BACK" modifiers="accel,shift"/>
