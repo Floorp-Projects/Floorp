@@ -32,7 +32,7 @@ let FormAutofillPrompter = {
   _createMessage(creditCards) {
     let hint = CreditCardStorageHint.NONE;
     return {
-      // Sync with PromptController
+      // Sync with GeckoSession.handlePromptEvent.
       type: "Autocomplete:Save:CreditCard",
       hint,
       creditCards,
