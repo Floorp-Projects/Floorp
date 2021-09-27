@@ -22,6 +22,7 @@
 #include "vm/BigIntType.h"
 #include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jit/BaselineFrame-inl.h"
@@ -265,7 +266,8 @@ namespace jit {
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
   _(ToBigInt, js::ToBigInt)                                                    \
-  _(ToStringSlow, js::ToStringSlow<CanGC>)
+  _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
+  _(ValueToIterator, js::ValueToIterator)
 
 // The list below is for tail calls. The third argument specifies the number of
 // non-argument Values the VM wrapper should pop from the stack. This is used

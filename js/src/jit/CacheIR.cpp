@@ -4772,11 +4772,12 @@ AttachDecision GetIteratorIRGenerator::tryAttachStub() {
 
   AutoAssertNoPendingException aanpe(cx_);
 
+  ValOperandId valId(writer.setInputOperandId(0));
+
   if (mode_ == ICState::Mode::Megamorphic) {
+    TRY_ATTACH(tryAttachMegamorphic(valId));
     return AttachDecision::NoAction;
   }
-
-  ValOperandId valId(writer.setInputOperandId(0));
 
   TRY_ATTACH(tryAttachNativeIterator(valId));
   TRY_ATTACH(tryAttachNullOrUndefined(valId));
@@ -4818,6 +4819,17 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
   writer.returnFromIC();
 
   trackAttached("NativeIterator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetIteratorIRGenerator::tryAttachMegamorphic(
+    ValOperandId valId) {
+  MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
+
+  writer.valueToIteratorResult(valId);
+  writer.returnFromIC();
+
+  trackAttached("Megamorphic");
   return AttachDecision::Attach;
 }
 

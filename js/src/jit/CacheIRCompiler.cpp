@@ -4216,6 +4216,22 @@ bool CacheIRCompiler::emitFinishBoundFunctionInitResult(
   return true;
 }
 
+bool CacheIRCompiler::emitValueToIteratorResult(ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  callvm.prepare();
+
+  masm.Push(val);
+
+  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  callvm.call<Fn, ValueToIterator>();
+  return true;
+}
+
 bool CacheIRCompiler::emitNewArrayIteratorResult(
     uint32_t templateObjectOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
