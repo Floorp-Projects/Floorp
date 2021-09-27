@@ -13,7 +13,6 @@
 
 add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
   let extension = ExtensionTestUtils.loadExtension({
-    androidBrowserTest: true,
     manifest: {
       content_scripts: [{
         matches: ["http://mochi.test/*/file_sample.html?tabs.sendMessage"],
@@ -89,7 +88,6 @@ add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
 
 add_task(async function test_tabs_sendMessage_using_frameId() {
   let extension = ExtensionTestUtils.loadExtension({
-    androidBrowserTest: true,
     manifest: {
       content_scripts: [
         {
