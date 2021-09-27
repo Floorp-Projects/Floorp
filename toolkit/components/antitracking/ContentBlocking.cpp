@@ -941,6 +941,11 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return false;
   }
 
+  // The document has been allowlisted. We can return from here directly.
+  if (document->HasStorageAccessPermissionGrantedByAllowList()) {
+    return true;
+  }
+
   MOZ_ASSERT(
       CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
@@ -1127,6 +1132,12 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
+  // The channel has been allowlisted. We can return from here.
+  if (loadInfo->GetStoragePermission() ==
+      nsILoadInfo::StoragePermissionAllowListed) {
+    return true;
+  }
+
   MOZ_ASSERT(
       CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
@@ -1190,20 +1201,6 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   }
 
   // Let's see if we have to grant the access for this particular channel.
-
-  nsCOMPtr<nsIURI> trackingURI;
-  rv = aChannel->GetURI(getter_AddRefs(trackingURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Failed to get the channel URI"));
-    return true;
-  }
-
-  nsAutoCString trackingOrigin;
-  rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG_SPEC(("Failed to compute the origin from %s", _spec), trackingURI);
-    return false;
-  }
 
   // HasStorageAccessPermissionGranted only applies to channels that load
   // documents, for sub-resources loads, just returns the result from loadInfo.
