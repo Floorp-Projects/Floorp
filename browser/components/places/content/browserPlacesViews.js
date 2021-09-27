@@ -1347,7 +1347,7 @@ PlacesToolbar.prototype = {
           if (icon) {
             child.setAttribute("image", icon);
           }
-          child.style.removeProperty("visibility");
+          child.style.visibility = "visible";
         }
       }
 
