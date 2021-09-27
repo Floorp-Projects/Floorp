@@ -1162,6 +1162,15 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 
   DetectJsHacks();
 
+  if (MOZ_UNLIKELY(!sJSHacksChecked)) {
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing a javascript load of %s because "
+         "we have not yet been able to determine if JS hacks may be present",
+         aFilename));
+    return true;
+  }
+
   if (MOZ_UNLIKELY(sJSHacksPresent)) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing a javascript load of %s because "
@@ -1215,7 +1224,9 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
       u"data:,new function() {\n  Components.utils.import(\"chrome://aboutsync/content/AboutSyncRedirector.js\");\n  AboutSyncRedirector.register();\n}"_ns,
       // Until 371900 is fixed, we need to do something about about:downloads
       // and this is the most reasonable. See 1727770
-      u"about:downloads"_ns};
+      u"about:downloads"_ns,
+      // We think this is the same problem as about:downloads
+      u"about:preferences"_ns};
   for (auto allowedFilename : kAllowedFilenames) {
     if (filenameU == allowedFilename) {
       return true;
