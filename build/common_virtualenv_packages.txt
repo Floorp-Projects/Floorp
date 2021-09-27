@@ -88,6 +88,7 @@ vendored:third_party/python/mohawk
 vendored:third_party/python/more_itertools
 vendored:third_party/python/mozilla_version
 vendored:third_party/python/multidict
+vendored:third_party/python/packaging
 vendored:third_party/python/pathspec
 vendored:third_party/python/pip_tools
 vendored:third_party/python/pluggy
@@ -96,6 +97,7 @@ vendored:third_party/python/py
 vendored:third_party/python/pyasn1
 vendored:third_party/python/pyasn1_modules
 vendored:third_party/python/pylru
+vendored:third_party/python/pyparsing
 vendored:third_party/python/pyrsistent
 vendored:third_party/python/pystache
 vendored:third_party/python/pytest
