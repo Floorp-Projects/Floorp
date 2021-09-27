@@ -16,6 +16,7 @@ define(function(require, exports, module) {
   const AUTO_EXPAND_MAX_LEVEL = 7;
 
   let prettyURL;
+  let theApp;
 
   // Application state object.
   const input = {
@@ -151,8 +152,9 @@ define(function(require, exports, module) {
         document.addEventListener("DOMContentLoaded", resolve, { once: true });
       })
         .then(parseJSON)
-        .then(() => {
+        .then(async () => {
           // Now update the state and switch to the JSON tab.
+          await appIsReady;
           theApp.setState({
             activeTab: 0,
             json: input.json,
@@ -181,16 +183,21 @@ define(function(require, exports, module) {
     return undefined;
   })();
 
-  const theApp = render(MainTabbedArea(input), content);
+  const appIsReady = new Promise(resolve => {
+    render(MainTabbedArea(input), content, function() {
+      theApp = this;
+      resolve();
 
-  // Send readyState change notification event to the window. Can be useful for
-  // tests as well as extensions.
-  JSONView.readyState = "interactive";
-  window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
+      // Send readyState change notification event to the window. Can be useful for
+      // tests as well as extensions.
+      JSONView.readyState = "interactive";
+      window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
 
-  promise.then(() => {
-    // Another readyState change notification event.
-    JSONView.readyState = "complete";
-    window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
+      promise.then(() => {
+        // Another readyState change notification event.
+        JSONView.readyState = "complete";
+        window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
+      });
+    });
   });
 });
