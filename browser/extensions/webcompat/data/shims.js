@@ -444,6 +444,21 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "StackBlitz",
+    platform: "all",
+    name: "StackBlitz",
+    bug: "1668408",
+    onlyIfDFPIActive: true,
+    contentScripts: [
+      {
+        js: "stackblitz.js",
+        matches: ["*://*.stackblitz.com/*", "*://*.stackblitz.io/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+  },
+  {
     id: "Vidible",
     branch: ["nightly"],
     platform: "all",
