@@ -48,6 +48,7 @@
 #include "gfxPlatform.h"
 #include "ScreenHelperGTK.h"
 #include "nsArrayUtils.h"
+#include "nsStringStream.h"
 #ifdef MOZ_WAYLAND
 #  include "nsClipboardWayland.h"
 #  include "gfxPlatformGtk.h"
@@ -856,6 +857,22 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     }  // else we try one last ditch effort to find our data
 
     if (dataFound) {
+      if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
+          flavorStr.EqualsLiteral(kJPGImageMime) ||
+          flavorStr.EqualsLiteral(kPNGImageMime) ||
+          flavorStr.EqualsLiteral(kGIFImageMime)) {
+        LOGDRAGSERVICE(
+            ("Converting dragged image data for %s to nsIInputStream\n",
+             flavorStr.get()));
+
+        nsCOMPtr<nsIInputStream> byteStream;
+        NS_NewByteInputStream(getter_AddRefs(byteStream),
+                              Span((char*)mTargetDragData, mTargetDragDataLen),
+                              NS_ASSIGNMENT_COPY);
+        aTransferable->SetTransferData(flavorStr.get(), byteStream);
+        continue;
+      }
+
       if (!flavorStr.EqualsLiteral(kCustomTypesMime)) {
         // the DOM only wants LF, so convert from MacOS line endings
         // to DOM line endings.
