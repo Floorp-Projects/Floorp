@@ -7882,16 +7882,6 @@
   value: false
 #endif
 
-# Size of the AudioIPC shmems
-- name: media.audioipc.shm_area_size
-  type: uint32_t
-  mirror: always
-#if defined(XP_WIN) && !defined(_WIN64)
-  value: 128 * 4096
-#else
-  value: 512 * 4096
-#endif
-
 # Whether or not to pass AUDCLNT_STREAMOPTIONS_RAW when initializing audio
 # streams when using WASAPI.
 # 0 - don't use RAW streams
