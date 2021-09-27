@@ -97,5 +97,6 @@ add_task(async function test() {
     mm.sendAsyncMessage("test:ipcClonedMessage", message);
   }
 
+  await done;
   await page.close();
 });
