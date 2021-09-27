@@ -233,18 +233,17 @@ class VirtualenvManager(VirtualenvHelper):
             installed_packages = {
                 package["name"]: package["version"] for package in installed_packages
             }
-            for requirement in env_requirements.pypi_requirements:
-                if (
-                    installed_packages.get(requirement.package_name, None)
-                    != requirement.version
+            for pkg in env_requirements.pypi_requirements:
+                if not pkg.requirement.specifier.contains(
+                    installed_packages.get(pkg.requirement.name, None)
                 ):
                     return False
 
-            for requirement in env_requirements.pypi_optional_requirements:
-                installed_version = installed_packages.get(
-                    requirement.package_name, None
-                )
-                if installed_version and installed_version != requirement.version:
+            for pkg in env_requirements.pypi_optional_requirements:
+                installed_version = installed_packages.get(pkg.requirement.name, None)
+                if installed_version and not pkg.requirement.specifier.contains(
+                    installed_packages.get(pkg.requirement.name, None)
+                ):
                     return False
 
         return True
@@ -326,7 +325,10 @@ class VirtualenvManager(VirtualenvHelper):
             os.listdir(thunderbird_dir)
         )
         return MachEnvRequirements.from_requirements_definition(
-            self.topsrcdir, is_thunderbird, self._manifest_path
+            self.topsrcdir,
+            is_thunderbird,
+            self._virtualenv_name in ("mach", "build"),
+            self._manifest_path,
         )
 
     def populate(self):
@@ -370,14 +372,14 @@ class VirtualenvManager(VirtualenvHelper):
                         f.write("{}\n".format(os.path.relpath(path, python_lib)))
 
             for pypi_requirement in env_requirements.pypi_requirements:
-                self.install_pip_package(pypi_requirement.full_specifier)
+                self.install_pip_package(str(pypi_requirement.requirement))
 
             for requirement in env_requirements.pypi_optional_requirements:
                 try:
-                    self.install_pip_package(requirement.full_specifier)
+                    self.install_pip_package(str(requirement.requirement))
                 except subprocess.CalledProcessError:
                     print(
-                        f"Could not install {requirement.package_name}, so "
+                        f"Could not install {requirement.requirement.name}, so "
                         f"{requirement.repercussion}. Continuing."
                     )
 
@@ -603,6 +605,9 @@ if __name__ == "__main__":
 
     # We want to be able to import the "mach.requirements" module.
     sys.path.append(os.path.join(opts.topsrcdir, "python", "mach"))
+    # Virtualenv logic needs access to the vendored "packaging" library.
+    sys.path.append(os.path.join(opts.topsrcdir, "third_party", "python", "pyparsing"))
+    sys.path.append(os.path.join(opts.topsrcdir, "third_party", "python", "packaging"))
 
     manager = VirtualenvManager(
         opts.topsrcdir,

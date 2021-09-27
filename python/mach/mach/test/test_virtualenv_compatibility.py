@@ -26,18 +26,18 @@ def _resolve_command_virtualenv_names():
     return virtualenv_names
 
 
-def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_env):
+def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_build_env):
     """Convert from parsed requirements object to pip-consumable format"""
     path = Path(topsrcdir) / "build" / f"{virtualenv_name}_virtualenv_packages.txt"
     requirements = MachEnvRequirements.from_requirements_definition(
-        topsrcdir, False, path
+        topsrcdir, False, is_mach_or_build_env, path
     )
 
     lines = []
     for pypi in (
         requirements.pypi_requirements + requirements.pypi_optional_requirements
     ):
-        lines.append(pypi.full_specifier)
+        lines.append(str(pypi.requirement))
 
     for vendored in requirements.vendored_requirements:
         lines.append(cache.package_for_vendor_dir(Path(vendored.path)))
@@ -111,7 +111,9 @@ def test_virtualenvs_compatible(tmpdir):
 
     for name in command_virtualenv_names:
         print(f'Checking compatibility of "{name}" virtualenv')
-        command_requirements = _requirement_definition_to_pip_format(name, cache, False)
+        command_requirements = _requirement_definition_to_pip_format(
+            name, cache, name == "build"
+        )
         with open(work_dir / "requirements.txt", "w") as requirements_txt:
             requirements_txt.write(mach_requirements)
             requirements_txt.write("\n")
