@@ -65,13 +65,7 @@ add_task(async function test_inject_srcdoc() {
       });
 
       // Now try to start the screenshot flow:
-      CustomizableUI.addWidgetToArea(
-        "screenshot-button",
-        CustomizableUI.AREA_NAVBAR
-      );
-
-      let screenshotBtn = document.getElementById("screenshot-button");
-      screenshotBtn.click();
+      document.querySelector("keyset[id*=screenshot] > key").doCommand();
       await Promise.race([errorPromise, responsePromise]);
       ok(error, "Should get the relevant error: " + error?.message);
       ok(!response, "Should not get a response from the webpage.");
