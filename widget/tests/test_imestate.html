@@ -438,15 +438,18 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
     { id: "date",
       description: "input[type=date]",
       focusable: !aInDesignMode,
-      expectedEnabled: kEnabledStateOnReadonlyField },
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "date" },
     { id: "datetime-local",
       description: "input[type=datetime-local]",
       focusable: !aInDesignMode,
-      expectedEnabled: kEnabledStateOnReadonlyField },
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "datetime-local" },
     { id: "time",
       description: "input[type=time]",
       focusable: !aInDesignMode,
-      expectedEnabled: kEnabledStateOnReadonlyField },
+      expectedEnabled: kEnabledStateOnReadonlyField,
+      expectedType: "time" },
     // TODO(bug 1283382, bug 1283382): month and week
 
     // form controls

@@ -1236,16 +1236,16 @@ void IMEStateManager::SetInputContextForChildProcess(
   SetInputContext(widget, aInputContext, aAction);
 }
 
-static bool IsNextFocusableElementTextControl(Element* aInputContent) {
+static bool IsNextFocusableElementTextControl(const Element* aInputContent) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return false;
   }
   nsCOMPtr<nsIContent> nextContent;
   nsresult rv = fm->DetermineElementToMoveFocus(
-      aInputContent->OwnerDoc()->GetWindow(), aInputContent,
-      nsIFocusManager::MOVEFOCUS_FORWARD, true, false,
-      getter_AddRefs(nextContent));
+      aInputContent->OwnerDoc()->GetWindow(),
+      const_cast<Element*>(aInputContent), nsIFocusManager::MOVEFOCUS_FORWARD,
+      true, false, getter_AddRefs(nextContent));
   if (NS_WARN_IF(NS_FAILED(rv)) || !nextContent) {
     return false;
   }
@@ -1325,8 +1325,8 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
 
   // Get the input content corresponding to the focused node,
   // which may be an anonymous child of the input content.
-  HTMLInputElement* inputElement = HTMLInputElement::FromNode(
-      aContent.FindFirstNonChromeOnlyAccessContent());
+  MOZ_ASSERT(&aContent == aContent.FindFirstNonChromeOnlyAccessContent());
+  const HTMLInputElement* inputElement = HTMLInputElement::FromNode(aContent);
   if (!inputElement) {
     return;
   }
@@ -1440,11 +1440,15 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       aPresContext &&
       nsContentUtils::IsInPrivateBrowsing(aPresContext->Document());
 
-  if (aContent && aContent->IsHTMLElement()) {
-    GetInputType(aState, *aContent, context.mHTMLInputType);
-    GetActionHint(aState, *aContent, context.mActionHint);
-    GetInputmode(aState, *aContent, context.mHTMLInputInputmode);
-    GetAutocapitalize(aState, *aContent, context, context.mAutocapitalize);
+  nsIContent* focusedContent =
+      aContent ? aContent->FindFirstNonChromeOnlyAccessContent() : nullptr;
+
+  if (focusedContent && focusedContent->IsHTMLElement()) {
+    GetInputType(aState, *focusedContent, context.mHTMLInputType);
+    GetActionHint(aState, *focusedContent, context.mActionHint);
+    GetInputmode(aState, *focusedContent, context.mHTMLInputInputmode);
+    GetAutocapitalize(aState, *focusedContent, context,
+                      context.mAutocapitalize);
   }
 
   if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
