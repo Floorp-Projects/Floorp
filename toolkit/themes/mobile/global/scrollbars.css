@@ -2,78 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.w3.org/1999/xhtml");
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+scrollbar, resizer, scrollcorner {
+  pointer-events: none;
+}
+
+scrollbar {
+  appearance: auto;
+  -moz-default-appearance: scrollbar-horizontal;
+}
 
 /* Style the scrollbars */
-xul|scrollbar[root="true"] {
+scrollbar[root="true"] {
   position: relative;
   z-index: 2147483647;
 }
 
-xul|scrollbar {
-  appearance: none;
-  pointer-events: none;
-  display: block;
+scrollbar[orient="vertical"] {
+  -moz-default-appearance: scrollbar-vertical;
 }
 
-/* We don't show resizers on android, so they may as well have
- * pointer-events: none to simplify scrollbar caching */
-xul|resizer,
-xul|scrollcorner {
-  pointer-events: none;
+thumb {
+  appearance: auto;
+  -moz-default-appearance: scrollbarthumb-horizontal;
 }
 
-xul|scrollbar[orient="vertical"] {
-  min-width: 6px;
-  max-width: 6px;
+thumb[orient="vertical"] {
+  -moz-default-appearance: scrollbarthumb-vertical;
 }
 
-xul|scrollbar[orient="vertical"] xul|thumb {
-  appearance: none;
-  max-width: 2px;
-  min-width: 2px;
-}
-
-xul|scrollbar[orient="horizontal"] {
-  min-height: 6px;
-  max-height: 6px;
-}
-
-xul|scrollbar[orient="horizontal"] xul|thumb {
-  appearance: none;
-  max-height: 2px;
-  min-height: 2px;
-}
-
-xul|scrollbar:not([active="true"]),
-xul|scrollbar[disabled] {
+scrollbar:not([active="true"]),
+scrollbar[disabled] {
   /* Mac and Windows with overlay scrollbars use visibility: hidden here, but
    * that breaks the scrollbar style caching, see bug 1620866. */
   opacity: 0;
-}
-
-xul|scrollbarbutton {
-  appearance: none;
-  min-height: 6px;
-  min-width: 6px;
-  visibility: hidden;
-}
-
-xul|scrollbarbutton[sbattr="scrollbar-up-top"] {
-  display: none;
-}
-
-xul|scrollbar xul|thumb {
-  background-color: rgba(119, 119, 119, 0.4);
-  border-radius: 4px;
-}
-
-select:not([size], [multiple]) > xul|scrollbar,
-select[size="1"] > xul|scrollbar,
-select:not([size], [multiple]) > xul|scrollbar > xul|scrollbarbutton,
-select[size="1"] > xul|scrollbar > xul|scrollbarbutton {
-  display: block;
-  margin-left: 0;
-  min-width: 16px;
 }
