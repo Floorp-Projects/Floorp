@@ -17,10 +17,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-sync="true">
 
-  <linkset>
-    <html:link rel="localization" href="browser/appmenu.ftl"/>
-  </linkset>
-
 #include macWindow.inc.xhtml
 
 <!-- Dock menu -->
@@ -31,9 +27,9 @@
   <menupopup id="menu_mac_dockmenu" aria-hidden="true">
     <!-- The command cannot be cmd_newNavigator because we need to activate
          the application. -->
-    <menuitem data-l10n-id="appmenuitem-new-window" oncommand="OpenBrowserWindowFromDockMenu();"
+    <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
               id="macDockMenuNewWindow" />
-    <menuitem data-l10n-id="appmenuitem-new-private-window" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
               id="macDockMenuNewPrivateWindow" />
   </menupopup>
 </popupset>
