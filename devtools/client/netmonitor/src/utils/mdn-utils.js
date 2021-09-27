@@ -181,6 +181,38 @@ function getTrackingProtectionURL() {
   return `${MDN_URL}Mozilla/Firefox/Privacy/Tracking_Protection${getGAParams()}`;
 }
 
+/**
+ * Get the MDN URL for CORS error reason, falls back to generic cors error page
+ * if reason is not understood.
+ *
+ * @param {int} reason: Blocked Reason message from `netmonitor/src/constants.js`
+ *
+ * @returns {string} the MDN URL for the documentation of CORS errors
+ */
+function getCORSErrorURL(reason) {
+  // Map from blocked reasons from netmonitor/src/constants.js to the correct
+  // URL fragment to append to MDN_URL
+  const reasonMap = new Map([
+    [1001, "CORSDisabled"],
+    [1002, "CORSDidNotSucceed"],
+    [1003, "CORSRequestNotHttp"],
+    [1004, "CORSMultipleAllowOriginNotAllowed"],
+    [1005, "CORSMissingAllowOrigin"],
+    [1006, "CORSNotSupportingCredentials"],
+    [1007, "CORSAllowOriginNotMatchingOrigin"],
+    [1008, "CORSMIssingAllowCredentials"],
+    [1009, "CORSOriginHeaderNotAdded"],
+    [1010, "CORSExternalRedirectNotAllowed"],
+    [1011, "CORSPreflightDidNotSucceed"],
+    [1012, "CORSInvalidAllowMethod"],
+    [1013, "CORSMethodNotFound"],
+    [1014, "CORSInvalidAllowHeader"],
+    [1015, "CORSMissingAllowHeaderFromPreflight"],
+  ]);
+  const urlFrag = reasonMap.get(reason) || "";
+  return `${MDN_URL}Web/HTTP/CORS/Errors/${urlFrag}`;
+}
+
 module.exports = {
   getHeadersURL,
   getHTTPStatusCodeURL,
@@ -188,4 +220,5 @@ module.exports = {
   getPerformanceAnalysisURL,
   getFilterBoxURL,
   getTrackingProtectionURL,
+  getCORSErrorURL,
 };
