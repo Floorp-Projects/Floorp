@@ -498,34 +498,36 @@ void JSHolderMap::EntryVectorIter::Settle() {
   }
 }
 
-JSHolderMap::JSHolderMap() : mJSHolderMap(256) {}
-
-template <typename F>
-inline void JSHolderMap::ForEach(F&& f, WhichHolders aWhich) {
-  // Multi-zone JS holders must always be considered.
-  for (EntryVectorIter entry(*this, mAnyZoneJSHolders); !entry.Done();
-       entry.Next()) {
-    f(entry->mHolder, entry->mTracer, nullptr);
+inline JSHolderMap::Iter::Iter(JSHolderMap& aMap, WhichHolders aWhich)
+    : mHolderMap(aMap), mIter(aMap, aMap.mAnyZoneJSHolders) {
+  // Populate vector of zones to iterate after the any-zone holders.
+  for (auto i = aMap.mPerZoneJSHolders.iter(); !i.done(); i.next()) {
+    JS::Zone* zone = i.get().key();
+    if (aWhich == AllHolders || JS::NeedGrayRootsForZone(i.get().key())) {
+      MOZ_ALWAYS_TRUE(mZones.append(zone));
+    }
   }
 
-  for (auto i = mPerZoneJSHolders.modIter(); !i.done(); i.next()) {
-    if (aWhich == HoldersRequiredForGrayMarking &&
-        !JS::NeedGrayRootsForZone(i.get().key())) {
-      continue;
+  Settle();
+}
+
+void JSHolderMap::Iter::Settle() {
+  while (mIter.Done()) {
+    if (mZone && mIter.Vector().IsEmpty()) {
+      mHolderMap.mPerZoneJSHolders.remove(mZone);
     }
 
-    JS::Zone* zone = i.get().key();
-    EntryVector* holders = i.get().value().get();
-    for (EntryVectorIter entry(*this, *holders); !entry.Done(); entry.Next()) {
-      MOZ_ASSERT(entry->mZone == zone);
-      f(entry->mHolder, entry->mTracer, zone);
+    if (mZones.empty()) {
+      break;
     }
 
-    if (holders->IsEmpty()) {
-      i.remove();
-    }
+    mZone = mZones.popCopy();
+    EntryVector& vector = *mHolderMap.mPerZoneJSHolders.lookup(mZone)->value();
+    new (&mIter) EntryVectorIter(mHolderMap, vector);
   }
 }
+
+JSHolderMap::JSHolderMap() : mJSHolderMap(256) {}
 
 bool JSHolderMap::RemoveEntry(EntryVector& aJSHolders, Entry* aEntry) {
   MOZ_ASSERT(aEntry);
@@ -765,8 +767,9 @@ size_t CycleCollectedJSRuntime::SizeOfExcludingThis(
 }
 
 void CycleCollectedJSRuntime::UnmarkSkippableJSHolders() {
-  mJSHolders.ForEach([](void* holder, nsScriptObjectTracer* tracer,
-                        JS::Zone* zone) { tracer->CanSkip(holder, true); });
+  for (JSHolderMap::Iter entry(mJSHolders); !entry.Done(); entry.Next()) {
+    entry->mTracer->CanSkip(entry->mHolder, true);
+  }
 }
 
 void CycleCollectedJSRuntime::DescribeGCThing(
@@ -949,21 +952,23 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
 
-  mJSHolders.ForEach(
-      [&aCb](void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
-        bool noteRoot = false;
-        if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
-          noteRoot = true;
-        } else {
-          tracer->Trace(holder,
-                        TraceCallbackFunc(CheckParticipatesInCycleCollection),
-                        &noteRoot);
-        }
+  for (JSHolderMap::Iter entry(mJSHolders); !entry.Done(); entry.Next()) {
+    void* holder = entry->mHolder;
+    nsScriptObjectTracer* tracer = entry->mTracer;
 
-        if (noteRoot) {
-          aCb.NoteNativeRoot(holder, tracer);
-        }
-      });
+    bool noteRoot = false;
+    if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
+      noteRoot = true;
+    } else {
+      tracer->Trace(holder,
+                    TraceCallbackFunc(CheckParticipatesInCycleCollection),
+                    &noteRoot);
+    }
+
+    if (noteRoot) {
+      aCb.NoteNativeRoot(holder, tracer);
+    }
+  }
 }
 
 /* static */
@@ -1398,19 +1403,21 @@ void CycleCollectedJSRuntime::TraceNativeGrayRoots(
   TraceAdditionalNativeGrayRoots(aTracer);
 
   bool checkSingleZoneHolders = ShouldCheckSingleZoneHolders();
-  mJSHolders.ForEach(
-      [aTracer, checkSingleZoneHolders](
-          void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
+  for (JSHolderMap::Iter entry(mJSHolders, aWhich); !entry.Done();
+       entry.Next()) {
+    void* holder = entry->mHolder;
+    nsScriptObjectTracer* tracer = entry->mTracer;
+
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
-        if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
-          CheckHolderIsSingleZone(holder, tracer, zone);
-        }
+    if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
+      CheckHolderIsSingleZone(holder, tracer, entry.Zone());
+    }
 #else
-        Unused << checkSingleZoneHolders;
+    Unused << checkSingleZoneHolders;
 #endif
-        tracer->Trace(holder, JsGcTracer(), aTracer);
-      },
-      aWhich);
+
+    tracer->Trace(holder, JsGcTracer(), aTracer);
+  }
 }
 
 void CycleCollectedJSRuntime::AddJSHolder(void* aHolder,
