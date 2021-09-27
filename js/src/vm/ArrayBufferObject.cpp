@@ -516,83 +516,100 @@ void ArrayBufferObject::detach(JSContext* cx,
  *
  * Wasm Raw Buf Linear Memory Structure
  *
- * The linear heap in Wasm is an mmaped array buffer. Several
- * constants manage its lifetime:
+ * The linear heap in Wasm is an mmaped array buffer. Several constants manage
+ * its lifetime:
  *
- *  - length - the wasm-visible current length of the buffer in bytes. Accesses
- *    in the range [0, length] succeed. May only increase.
+ *  - byteLength - the wasm-visible current length of the buffer in
+ *    bytes. Accesses in the range [0, byteLength] succeed. May only increase.
  *
- *  - boundsCheckLimit - the size against which we perform bounds checks. It is
- *    always a constant offset smaller than mappedSize. Currently that constant
- *    offset is 64k (wasm::GuardSize).
+ *  - boundsCheckLimit - the size against which we perform bounds checks.  The
+ *    value of this depends on the bounds checking strategy chosen for the array
+ *    buffer and the specific bounds checking semantics.  For asm.js code and
+ *    for wasm code running with explicit bounds checking, it is the always the
+ *    same as the byteLength.  For wasm code using the huge-memory trick, it is
+ *    always wasm::GuardSize smaller than mappedSize.
  *
- *  - sourceMaxSize - the optional declared limit on how much length can grow in
- *    pages. This is the unmodified maximum size from the source module or
+ *    See also "Linear memory addresses and bounds checking" in
+ *    wasm/WasmMemory.cpp.
+ *
+ *    See also WasmMemoryObject::boundsCheckLimit().
+ *
+ *  - sourceMaxSize - the optional declared limit on how far byteLength can grow
+ *    in pages. This is the unmodified maximum size from the source module or
  *    JS-API invocation. This may not be representable in byte lengths, nor
  *    feasible for a module to actually grow to due to implementation limits.
  *    It is used for correct linking checks and js-types reflection.
  *
- *  - clampedMaxSize - the maximum size on how much the length can grow to in
+ *  - clampedMaxSize - the maximum size on how far the byteLength can grow in
  *    pages. This value respects implementation limits and is always
- *    representable as a byte length. Every memory has a clampedMaxSize, even
- *    if no maximum was specified in source. When a memory has no
- *    sourceMaxSize, the clampedMaxSize will be the maximum amount of memory
- *    that can be grown to while still respecting implementation limits.
+ *    representable as a byte length. Every memory has a clampedMaxSize, even if
+ *    no maximum was specified in source. When a memory has no sourceMaxSize,
+ *    the clampedMaxSize will be the maximum amount of memory that can be grown
+ *    to while still respecting implementation limits.
  *
- *  - mappedSize - the actual mmaped size. Access in the range
- *    [0, mappedSize] will either succeed, or be handled by the wasm signal
- *    handlers. If sourceMaxSize is present at initialization, then we attempt
- *    to map the whole clampedMaxSize. Otherwise we only map the region needed
- *    for the initial size.
+ *  - mappedSize - the actual mmapped size. Access in the range [0, mappedSize]
+ *    will either succeed, or be handled by the wasm signal handlers. If
+ *    sourceMaxSize is present at initialization, then we attempt to map the
+ *    whole clampedMaxSize. Otherwise we only map the region needed for the
+ *    initial size.
  *
- * The below diagram shows the layout of the wasm heap. The wasm-visible
- * portion of the heap starts at 0. There is one extra page prior to the
- * start of the wasm heap which contains the WasmArrayRawBuffer struct at
- * its end (i.e. right before the start of the WASM heap).
+ * The below diagram shows the layout of the wasm heap. The wasm-visible portion
+ * of the heap starts at 0. There is one extra page prior to the start of the
+ * wasm heap which contains the WasmArrayRawBuffer struct at its end (i.e. right
+ * before the start of the WASM heap).
  *
  *  WasmArrayRawBuffer
  *      \    ArrayBufferObject::dataPointer()
  *       \  /
  *        \ |
- *  ______|_|___________________________________________________________________
- * |______|_|______________|___________________|___________________|____________|
- *          0          length              clampedMaxSize  boundsCheckLimit mappedSize
+ *  ______|_|______________________________________________________
+ * |______|_|______________|___________________|___________________|
+ *          0          byteLength          clampedMaxSize     mappedSize
  *
  * \_______________________/
  *          COMMITED
- *                          \___________________________________________________/
+ *                          \_____________________________________/
  *                                           SLOP
- * \____________________________________________________________________________/
+ * \______________________________________________________________/
  *                         MAPPED
  *
- * Invariants:
- *  - length only increases
- *  - 0 <= length <= clampedMaxSize <= boundsCheckLimit <= mappedSize
- *  - on ARM boundsCheckLimit must be a valid ARM immediate.
- *  - if sourceMaxSize is not specified, boundsCheckLimit/mappedSize may grow.
- *    They are otherwise constant.
+ * Invariants on byteLength, clampedMaxSize, and mappedSize:
+ *  - byteLength only increases
+ *  - 0 <= byteLength <= clampedMaxSize <= mappedSize
+ *  - if sourceMaxSize is not specified, mappedSize may grow.
+ *    It is otherwise constant.
  *  - initialLength <= clampedMaxSize <= sourceMaxSize (if present)
  *  - clampedMaxSize <= wasm::MaxMemoryPages()
  *
- * NOTE: For asm.js on non-x64 we guarantee that
+ * Invariants on boundsCheckLimit:
+ *  - for wasm code with the huge-memory trick,
+ *      clampedMaxSize <= boundsCheckLimit <= mappedSize
+ *  - for asm.js code or wasm with explicit bounds checking,
+ *      byteLength == boundsCheckLimit <= clampedMaxSize
+ *  - on ARM, boundsCheckLimit must be a valid ARM immediate.
+ *  - if sourceMaxSize is not specified, boundsCheckLimit may grow as
+ *    mappedSize grows. They are otherwise constant.
+
+ * NOTE: For asm.js on 32-bit platforms and on all platforms when running with
+ * explicit bounds checking, we guarantee that
  *
- * length == maxSize == boundsCheckLimit == mappedSize
+ *   byteLength == maxSize == boundsCheckLimit == mappedSize
  *
- * That is, signal handlers will not be invoked, since they cannot emulate
- * asm.js accesses on non-x64 architectures.
+ * That is, signal handlers will not be invoked.
  *
- * The region between length and mappedSize is the SLOP - an area where we use
+ * The region between byteLength and mappedSize is the SLOP - an area where we use
  * signal handlers to catch things that slip by bounds checks. Logically it has
  * two parts:
  *
- *  - from length to boundsCheckLimit - this part of the SLOP serves to catch
+ *  - from byteLength to boundsCheckLimit - this part of the SLOP serves to catch
  *    accesses to memory we have reserved but not yet grown into. This allows us
  *    to grow memory up to max (when present) without having to patch/update the
  *    bounds checks.
  *
  *  - from boundsCheckLimit to mappedSize - this part of the SLOP allows us to
  *    bounds check against base pointers and fold some constant offsets inside
- *    loads. This enables better Bounds Check Elimination.
+ *    loads. This enables better Bounds Check Elimination.  See "Linear memory
+ *    addresses and bounds checking" in wasm/WasmMemory.cpp.
  *
  */
 /* clang-format on */
