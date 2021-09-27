@@ -12379,6 +12379,13 @@ void CodeGenerator::visitCallDeleteElement(LCallDeleteElement* lir) {
   }
 }
 
+void CodeGenerator::visitValueToIterator(LValueToIterator* lir) {
+  pushArg(ToValue(lir, LValueToIterator::ValueIndex));
+
+  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  callVM<Fn, ValueToIterator>(lir);
+}
+
 void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
   Register objReg = ToRegister(ins->object());

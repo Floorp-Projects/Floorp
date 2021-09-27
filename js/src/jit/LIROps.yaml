@@ -1996,6 +1996,13 @@
   call_instruction: true
   mir_op: DeleteElement
 
+- name: ValueToIterator
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  call_instruction: true
+  mir_op: ValueToIterator
+
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
   operands:

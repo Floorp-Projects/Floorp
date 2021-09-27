@@ -4366,6 +4366,12 @@ void LIRGenerator::visitDeleteElement(MDeleteElement* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitValueToIterator(MValueToIterator* ins) {
+  auto* lir = new (alloc()) LValueToIterator(useBoxAtStart(ins->value()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
