@@ -18,6 +18,48 @@ job-defaults:
             signing: signing-debug
             signing-android-test: signing-android-test-debug
     include-pull-request-number: true
+    routes:
+        - notify.slack-channel.G016BC5FUHJ.on-failed
+    scopes:
+        - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+        - notify:slack-channel:G016BC5FUHJ
+    extra:
+        notify:
+            # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+            slackBlocks: |
+                [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "UI Test Failure\nFenix :firefox: ${task.metadata.name} failure :x:\n "
+                    }
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                     "type": "section",
+                     "text": {
+                         "type": "mrkdwn",
+                         "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                    }
+                  },                  
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Owner*: ${task.metadata.owner}"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Source*: <${task.metadata.source}|Github :github:>"
+                    }
+                  }
+                ]
     run:
         commands:
             - [wget, {artifact-reference: '<signing/public/build/x86/target.apk>'}, '-O', app.apk]
