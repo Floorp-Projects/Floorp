@@ -271,7 +271,6 @@ void WinWebAuthnManager::Register(
     // AttestationConveyance
     AttestationConveyancePreference attestation =
         extra.attestationConveyancePreference();
-    DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
     switch (attestation) {
       case AttestationConveyancePreference::Direct:
         winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
@@ -627,7 +626,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
       aInfo.TimeoutMS(),
       {0, NULL},
       {0, NULL},
-      WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY,
+      winAttachment,
       winUserVerificationReq,
       0,  // dwFlags
       winAppIdentifier,
