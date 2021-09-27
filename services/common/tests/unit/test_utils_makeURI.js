@@ -41,6 +41,8 @@ function _test_makeURI() {
   Assert.equal(CommonUtils.makeURI(uric1).spec, uric1);
   let uric2 = "chrome://browser/skin/browser.css";
   Assert.equal(CommonUtils.makeURI(uric2).spec, uric2);
+  let uric3 = "chrome://browser/locale/browser.dtd";
+  Assert.equal(CommonUtils.makeURI(uric3).spec, uric3);
 
   _("Check about uris");
   let uria1 = "about:weave";
