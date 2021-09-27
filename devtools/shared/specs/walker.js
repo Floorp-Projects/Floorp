@@ -360,6 +360,10 @@ const walkerSpec = generateActorSpec({
       request: {},
       response: {},
     },
+    clearPicker: {
+      request: {},
+      oneway: true,
+    },
     watchRootNode: {
       request: {},
       response: {},
