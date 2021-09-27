@@ -9,6 +9,7 @@ import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,7 +28,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -197,9 +197,7 @@ private fun SearchSuggestions(
     val context = LocalContext.current
     val components = components
 
-    val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.mozac_ic_search)
-        ?.toBitmap()
-
+    val icon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap()
     val provider = remember(context) {
         SearchSuggestionProvider(
             context,
