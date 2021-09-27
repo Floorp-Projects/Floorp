@@ -30,6 +30,8 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString referrerPolicy;
   [CEReactions, Throws]
   attribute DOMString text;
+
+  static boolean supports(DOMString type);
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
