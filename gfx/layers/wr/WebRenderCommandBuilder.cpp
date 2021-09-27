@@ -1728,37 +1728,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     DisplayItemType itemType = item->GetType();
 
-    // If this is a new (not retained/reused) item, then we need to disable
-    // the display item cache for descendants, since it's possible that some of
-    // them got cached with a flattened opacity values., which may no longer be
-    // applied.
-    Maybe<AutoDisplayItemCacheSuppressor> cacheSuppressor;
-
-    if (itemType == DisplayItemType::TYPE_OPACITY) {
-      nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*>(item);
-
-      if (!opacity->IsReused()) {
-        cacheSuppressor.emplace(aBuilder.GetDisplayItemCache());
-      }
-
-      if (opacity->CanApplyOpacityToChildren(
-              mManager->GetRenderRootStateManager()->LayerManager(),
-              aDisplayListBuilder, aBuilder.GetInheritedOpacity())) {
-        // If all our children support handling the opacity directly, then push
-        // the opacity and clip onto the builder and skip creating a stacking
-        // context.
-        float oldOpacity = aBuilder.GetInheritedOpacity();
-        aBuilder.SetInheritedOpacity(oldOpacity * opacity->GetOpacity());
-
-        CreateWebRenderCommandsFromDisplayList(opacity->GetChildren(), item,
-                                               aDisplayListBuilder, aSc,
-                                               aBuilder, aResources, false);
-
-        aBuilder.SetInheritedOpacity(oldOpacity);
-        continue;
-      }
-    }
-
     // If this is an unscrolled background color item, in the root display list
     // for the parent process, consider doing opaque checks.
     if (XRE_IsParentProcess() && !aWrappingItem &&
