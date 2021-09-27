@@ -7,7 +7,7 @@ use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, Refe
 use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::spatial_tree::{CoordinateSystem, SpatialNodeIndex, TransformUpdateState};
-use crate::spatial_tree::{CoordinateSystemId, StaticCoordinateSystemId};
+use crate::spatial_tree::{CoordinateSystemId};
 use euclid::{Vector2D, SideOffsets2D};
 use crate::scene::SceneProperties;
 use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, PointHelpers};
@@ -112,10 +112,6 @@ pub struct SpatialNode {
     /// The axis-aligned coordinate system id of this node.
     pub coordinate_system_id: CoordinateSystemId,
 
-    /// Coordinate system statically assigned during scene building (doesn't change regardless of
-    /// the current property binding value during frame building).
-    pub static_coordinate_system_id: StaticCoordinateSystemId,
-
     /// The current transform kind of this node.
     pub transform_kind: TransformedRectKind,
 
@@ -144,6 +140,10 @@ pub struct SpatialNode {
     /// This is calculated in update(). This will be used to decide whether
     /// to override corresponding picture's raster space as an optimisation.
     pub is_ancestor_or_self_zooming: bool,
+
+    /// If true, this spatial node is known to exist in the root coordinate
+    /// system in all cases (it has no animated or complex transforms)
+    pub is_root_coord_system: bool,
 }
 
 /// Snap an offset to be incorporated into a transform, where the local space
@@ -169,14 +169,13 @@ impl SpatialNode {
         pipeline_id: PipelineId,
         parent_index: Option<SpatialNodeIndex>,
         node_type: SpatialNodeType,
-        static_coordinate_system_id: StaticCoordinateSystemId,
+        is_root_coord_system: bool,
     ) -> Self {
         SpatialNode {
             viewport_transform: ScaleOffset::identity(),
             content_transform: ScaleOffset::identity(),
             snapping_transform: None,
             coordinate_system_id: CoordinateSystemId(0),
-            static_coordinate_system_id,
             transform_kind: TransformedRectKind::AxisAligned,
             parent: parent_index,
             children: Vec::new(),
@@ -185,6 +184,7 @@ impl SpatialNode {
             invertible: true,
             is_async_zooming: false,
             is_ancestor_or_self_zooming: false,
+            is_root_coord_system,
         }
     }
 
@@ -197,7 +197,7 @@ impl SpatialNode {
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
-        static_coordinate_system_id: StaticCoordinateSystemId,
+        is_root_coord_system: bool,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
                 *frame_rect,
@@ -216,7 +216,7 @@ impl SpatialNode {
             pipeline_id,
             Some(parent_index),
             node_type,
-            static_coordinate_system_id,
+            is_root_coord_system,
         )
     }
 
@@ -227,7 +227,7 @@ impl SpatialNode {
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
-        static_coordinate_system_id: StaticCoordinateSystemId,
+        is_root_coord_system: bool,
     ) -> Self {
         let info = ReferenceFrameInfo {
             transform_style,
@@ -240,7 +240,7 @@ impl SpatialNode {
             pipeline_id,
             parent_index,
             SpatialNodeType::ReferenceFrame(info),
-            static_coordinate_system_id,
+            is_root_coord_system,
         )
     }
 
@@ -248,13 +248,13 @@ impl SpatialNode {
         parent_index: SpatialNodeIndex,
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
-        static_coordinate_system_id: StaticCoordinateSystemId,
+        is_root_coord_system: bool,
     ) -> Self {
         Self::new(
             pipeline_id,
             Some(parent_index),
             SpatialNodeType::StickyFrame(sticky_frame_info),
-            static_coordinate_system_id,
+            is_root_coord_system,
         )
     }
 
