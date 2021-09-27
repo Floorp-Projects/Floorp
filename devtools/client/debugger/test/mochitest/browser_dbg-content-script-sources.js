@@ -7,6 +7,7 @@
 // Tests that the content scripts are listed in the source tree.
 
 add_task(async function() {
+  await pushPref("dom.security.https_first", false);
   await pushPref("devtools.chrome.enabled", true);
   const extension = await installAndStartExtension();
 
@@ -76,7 +77,7 @@ async function installAndStartExtension() {
       content_scripts: [
         {
           js: ["content_script.js"],
-          matches: ["https://example.com/*"],
+          matches: ["http://example.com/*"],
           run_at: "document_start"
         }
       ]

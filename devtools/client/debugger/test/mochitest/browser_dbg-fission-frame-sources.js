@@ -5,7 +5,7 @@
 "use strict";
 
 const TEST_COM_URI =
-  URL_ROOT_COM_SSL + "examples/doc_dbg-fission-frame-sources.html";
+  URL_ROOT_COM + "examples/doc_dbg-fission-frame-sources.html";
 
 add_task(async function() {
   // Simply load a test page with a remote frame and wait for both sources to

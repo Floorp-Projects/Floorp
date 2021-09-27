@@ -17,6 +17,7 @@ add_task(async function() {
   if (Services.appinfo.sessionHistoryInParent) {
     info("Run test with bfcacheInParent ENABLED");
     await pushPref("fission.bfcacheInParent", true);
+    await pushPref("dom.security.https_first", false);
     await testSourcesOnNavigation();
     await testDebuggerPauseStateOnNavigation();
   }
