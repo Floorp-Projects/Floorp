@@ -77,7 +77,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           );
         }
       } else if (type == TARGET_CONFIGURATION) {
-        // Only BrowsingContextTargetActor implements updateTargetConfiguration,
+        // Only WindowGlobalTargetActor implements updateTargetConfiguration,
         // skip this data entry update for other targets.
         if (typeof this.updateTargetConfiguration == "function") {
           const options = {};

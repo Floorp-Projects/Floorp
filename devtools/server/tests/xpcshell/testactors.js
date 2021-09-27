@@ -19,8 +19,8 @@ const {
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const protocol = require("devtools/shared/protocol");
 const {
-  browsingContextTargetSpec,
-} = require("devtools/shared/specs/targets/browsing-context");
+  windowGlobalTargetSpec,
+} = require("devtools/shared/specs/targets/window-global");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 const Targets = require("devtools/server/actors/targets/index");
 
@@ -146,7 +146,7 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
   },
 });
 
-const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
+const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
   initialize: function(conn, global) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;

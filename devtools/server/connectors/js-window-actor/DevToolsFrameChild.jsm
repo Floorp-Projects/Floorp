@@ -87,7 +87,7 @@ function shouldNotifyWindowGlobal(
   }
 
   // We may process an iframe that runs in the same process as its parent and we don't want
-  // to create targets for them if same origin targets are not enabled. Instead the BrowsingContextTargetActor
+  // to create targets for them if same origin targets are not enabled. Instead the WindowGlobalTargetActor
   // will inspect these children document via docShell tree (typically via `docShells` or `windows` getters).
   // This is quite common when Fission is off as any iframe will run in same process
   // as their parent document. But it can also happen with Fission enabled if iframes have
@@ -174,7 +174,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // including all WindowGlobal's of the top target.
       // For bfcache navigations, we only create new targets when bfcacheInParent is enabled,
       // as this would be the only case where new DocShells will be created. This requires us to spawn a
-      // new BrowsingContextTargetActor as one such actor is bound to a unique DocShell.
+      // new WindowGlobalTargetActor as one such actor is bound to a unique DocShell.
       const acceptTopLevelTarget =
         isServerTargetSwitchingEnabled ||
         (isBFCache && this.isBfcacheInParentEnabled);
@@ -200,7 +200,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
           browsingContextId: this.manager.browsingContext.id,
         });
 
-        // Bail if there is already an existing BrowsingContextTargetActor which wasn't
+        // Bail if there is already an existing WindowGlobalTargetActor which wasn't
         // created from a JSWIndowActor.
         // This means we are reloading or navigating (same-process) a Target
         // which has not been created using the Watcher, but from the client (most likely
@@ -531,7 +531,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * @param {Object} options.browsingContextId: Optional browsing context id to narrow the
    *                 search to a specific browsing context.
    *
-   * @returns {BrowsingContextTargetActor|null}
+   * @returns {WindowGlobalTargetActor|null}
    */
   _findTargetActor({ watcherActorID, browserId, browsingContextId }) {
     // First let's check if a target was created for this watcher actor in this specific
@@ -677,7 +677,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         }
         // Do not do anything if both bfcache in parent and server targets are disabled
         // As history navigations will be handled within the same DocShell and by the
-        // same BrowsingContextTargetActor. The actor will listen to pageshow/pagehide by itself.
+        // same WindowGlobalTargetActor. The actor will listen to pageshow/pagehide by itself.
         // We should not destroy any target.
         if (!this.isBfcacheInParentEnabled && !isServerTargetSwitchingEnabled) {
           allActorsAreDestroyed = false;

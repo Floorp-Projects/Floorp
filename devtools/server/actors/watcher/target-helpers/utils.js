@@ -37,7 +37,7 @@ function shouldNotifyWindowGlobal(
   // and we would start creating a target for all top level browser windows.
   // For now, we expect the ParentProcessTargetActor to debug these.
   // Note that we should probably revisit that, and have each WindowGlobal be debugged
-  // by one dedicated BrowsingContextTargetActor (bug 1685500). This requires some tweaks, at least in console-message
+  // by one dedicated WindowGlobalTargetActor (bug 1685500). This requires some tweaks, at least in console-message
   // resource watcher, which makes the ParentProcessTarget's console message resource watcher watch
   // for all documents messages. It should probably only care about window-less messages and have one target per window global,
   // each target fetching one window global messages.

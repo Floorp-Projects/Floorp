@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "browsing-context.js",
     "content-process.js",
     "target-mixin.js",
+    "window-global.js",
     "worker.js",
 )

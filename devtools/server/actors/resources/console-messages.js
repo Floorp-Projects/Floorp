@@ -61,7 +61,7 @@ class ConsoleMessageWatcher {
       targetActor.targetType === Targets.TYPES.PROCESS;
 
     // Only consider messages from a given window for all FRAME targets (this includes
-    // WebExt and ParentProcess which inherits from BrowsingContextTargetActor)
+    // WebExt and ParentProcess which inherits from WindowGlobalTargetActor)
     // But ParentProcess should be ignored as we want all messages emitted directly from
     // that process (window and window-less).
     // To do that we pass a null window and ConsoleAPIListener will catch everything.

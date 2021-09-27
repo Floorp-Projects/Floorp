@@ -506,7 +506,7 @@ class WebConsoleUI {
    * @param Front targetFront
    *        The Front of the target that is available.
    *        This Front inherits from TargetMixin and is typically
-   *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
+   *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
     const dispatchTargetAvailable = () => {

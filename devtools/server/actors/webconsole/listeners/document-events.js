@@ -38,7 +38,7 @@ exports.WILL_NAVIGATE_TIME_SHIFT = WILL_NAVIGATE_TIME_SHIFT;
  * of when events happened according to window.performance numbers.
  *
  * @constructor
- * @param BrowsingContextTarget targetActor
+ * @param WindowGlobalTarget targetActor
  */
 function DocumentEventsListener(targetActor) {
   this.targetActor = targetActor;

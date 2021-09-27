@@ -3147,7 +3147,7 @@ Toolbox.prototype = {
 
   _listFrames: async function(event) {
     if (!this.target.getTrait("frames")) {
-      // We are not targetting a regular BrowsingContextTargetActor
+      // We are not targetting a regular WindowGlobalTargetActor
       // it can be either an addon or browser toolbox actor
       return promise.resolve();
     }

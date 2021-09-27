@@ -11,7 +11,7 @@
 /* eslint-disable no-throw-literal */
 
 /*
- * BrowsingContextTargetActor is an abstract class used by target actors that hold
+ * WindowGlobalTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
  *
  * This class is extended by FrameTargetActor, ParentProcessTargetActor.
@@ -47,8 +47,8 @@ const {
   createExtraActors,
 } = require("devtools/shared/protocol/lazy-pool");
 const {
-  browsingContextTargetSpec,
-} = require("devtools/shared/specs/targets/browsing-context");
+  windowGlobalTargetSpec,
+} = require("devtools/shared/specs/targets/window-global");
 const Resources = require("devtools/server/actors/resources/index");
 const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
 
@@ -128,17 +128,16 @@ function getInnerId(window) {
   return window.windowGlobalChild.innerWindowId;
 }
 
-const browsingContextTargetPrototype = {
+const windowGlobalTargetPrototype = {
   /**
-   * BrowsingContextTargetActor is an abstract class used by target actors that
-   * hold documents, such as frames, chrome windows, etc.  The term "browsing
-   * context" is defined in the HTML spec as "an environment in which `Document`
-   * objects are presented to the user".  In Gecko, this means a browsing context
-   * is a `docShell`.
+   * WindowGlobalTargetActor is the target actor to debug (HTML) documents.
+   *
+   * WindowGlobal's are the Gecko representation for a given document's window object.
+   * It relates to a given nsGlobalWindowInner instance.
    *
    * The main goal of this class is to expose the target-scoped actors being registered
    * via `ActorRegistry.registerModule` and manage their lifetimes. In addition, this
-   * class also tracks the lifetime of the targeted browsing context.
+   * class also tracks the lifetime of the targeted window global.
    *
    * ### Main requests:
    *
@@ -159,7 +158,7 @@ const browsingContextTargetPrototype = {
    * ### RDP events:
    *
    *  - `tabNavigated`:
-   *    Sent when the browsing context is about to navigate or has just navigated
+   *    Sent when the window global is about to navigate or has just navigated
    *    to a different document.
    *    This event contains the following attributes:
    *     * url (string)
@@ -211,12 +210,12 @@ const browsingContextTargetPrototype = {
    *       this page, so it's now live again and we should resume handling it.
    *     * For each existing document, when an `attach` request is received.
    *       At this point scripts in the page will be already loaded.
-   *     * When `swapFrameLoaders` is used, such as with moving browsing contexts
+   *     * When `swapFrameLoaders` is used, such as with moving window globals
    *       between windows or toggling Responsive Design Mode.
    *  - window-destroyed
    *    This event is fired in two cases:
    *     * When the window object is destroyed, i.e. when the related document
-   *       is garbage collected. This can happen when the browsing context is
+   *       is garbage collected. This can happen when the window global is
    *       closed or the iframe is removed from the DOM.
    *       It is equivalent of `inner-window-destroyed` event.
    *     * When the page goes into the bfcache and gets frozen.
@@ -251,15 +250,14 @@ const browsingContextTargetPrototype = {
    *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
    *          But won't inspect next document loaded in the same BrowsingContext.
    *          The actor will behave more like a WindowGlobalTarget rather than a BrowsingContextTarget.
-   *          We may eventually switch everything to this, i.e. uses only WindowGlobalTarget.
-   *          But for now, we restrict this behavior to remoted iframes.
+   *          Since we enabled devtools.target-switching.server.enabled by default, this is always true.
    *        - isTopLevelTarget Boolean
    *          Should be set to true for all top-level targets. A top level target
    *          is the topmost target of a DevTools "session". For instance for a local
    *          tab toolbox, the FrameTargetActor for the content page is the top level target.
    *          For the Multiprocess Browser Toolbox, the parent process target is the top level
    *          target.
-   *          At the moment this only impacts the BrowsingContextTarget `reconfigure`
+   *          At the moment this only impacts the WindowGlobalTarget `reconfigure`
    *          implementation. But for server-side target switching this flag will be exposed
    *          to the client and should be available for all target actor classes. It will be
    *          used to detect target switching. (Bug 1644397)
@@ -275,7 +273,7 @@ const browsingContextTargetPrototype = {
 
     if (!docShell) {
       throw new Error(
-        "A docShell should be provided as constructor argument of BrowsingContextTargetActor"
+        "A docShell should be provided as constructor argument of WindowGlobalTargetActor"
       );
     }
     this.docShell = docShell;
@@ -379,7 +377,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Getter for the nsIMessageManager associated to the browsing context.
+   * Getter for the nsIMessageManager associated to the window global.
    */
   get messageManager() {
     try {
@@ -392,7 +390,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Getter for the list of all `docShell`s in the browsing context.
+   * Getter for the list of all `docShell`s in the window global.
    * @return {Array}
    */
   get docShells() {
@@ -404,7 +402,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Getter for the browsing context's current DOM window.
+   * Getter for the window global's current DOM window.
    */
   get window() {
     return this.docShell && this.docShell.domWindow;
@@ -431,7 +429,7 @@ const browsingContextTargetPrototype = {
 
   /**
    * Getter for the WebExtensions ContentScript globals related to the
-   * browsing context's current DOM window.
+   * window global's current DOM window.
    */
   get webextensionsContentScriptGlobals() {
     // Only retrieve the content scripts globals if the ExtensionContent JSM module
@@ -445,7 +443,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Getter for the list of all content DOM windows in the browsing context.
+   * Getter for the list of all content DOM windows in the window global.
    * @return {Array}
    */
   get windows() {
@@ -497,21 +495,21 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Getter for the browsing context's document.
+   * Getter for the window global's document.
    */
   get contentDocument() {
     return this.webNavigation.document;
   },
 
   /**
-   * Getter for the browsing context's title.
+   * Getter for the window global's title.
    */
   get title() {
     return this.contentDocument.contentTitle;
   },
 
   /**
-   * Getter for the browsing context's URL.
+   * Getter for the window global's URL.
    */
   get url() {
     if (this.webNavigation.currentURI) {
@@ -577,7 +575,7 @@ const browsingContextTargetPrototype = {
         // Supports the logInPage request.
         logInPage: true,
         // Supports watchpoints in the server. We need to keep this trait because target
-        // actors that don't extend BrowsingContextTargetActor (Worker, ContentProcess, …)
+        // actors that don't extend WindowGlobalTargetActor (Worker, ContentProcess, …)
         // might not support watchpoints.
         watchpoints: true,
         // Supports back and forward navigation
@@ -619,7 +617,7 @@ const browsingContextTargetPrototype = {
     if (this.isDestroyed()) {
       return;
     }
-    // Tell the thread actor that the browsing context is closed, so that it may terminate
+    // Tell the thread actor that the window global is closed, so that it may terminate
     // instead of resuming the debuggee script.
     if (this._attached) {
       // TODO: Bug 997119: Remove this coupling with thread actor
@@ -646,7 +644,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Return true if the given global is associated with this browsing context and should
+   * Return true if the given global is associated with this window global and should
    * be added as a debuggee, false otherwise.
    */
   _shouldAddNewGlobalAsDebuggee(wrappedGlobal) {
@@ -673,7 +671,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Does the actual work of attaching to a browsing context.
+   * Does the actual work of attaching to a window global.
    */
   _attach() {
     if (this._attached) {
@@ -933,7 +931,7 @@ const browsingContextTargetPrototype = {
       return;
     }
 
-    // If the currently targeted browsing context is destroyed, and we aren't on
+    // If the currently targeted window global is destroyed, and we aren't on
     // the top-level document, we have to switch to the top-level one.
     if (
       webProgress.DOMWindow == this.window &&
@@ -1064,7 +1062,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Does the actual work of detaching from a browsing context.
+   * Does the actual work of detaching from a window global.
    *
    * @params {Object} options
    * @params {Boolean} options.isTargetSwitching: Set to true when this is called during
@@ -1154,7 +1152,7 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Bring the browsing context's window to front.
+   * Bring the window global's window to front.
    */
   focus() {
     if (this.window) {
@@ -1175,7 +1173,7 @@ const browsingContextTargetPrototype = {
         }
 
         this.webNavigation.goForward();
-      }, "BrowsingContextTargetActor.prototype.goForward's delayed body")
+      }, "WindowGlobalTargetActor.prototype.goForward's delayed body")
     );
 
     return {};
@@ -1193,14 +1191,14 @@ const browsingContextTargetPrototype = {
         }
 
         this.webNavigation.goBack();
-      }, "BrowsingContextTargetActor.prototype.goBack's delayed body")
+      }, "WindowGlobalTargetActor.prototype.goBack's delayed body")
     );
 
     return {};
   },
 
   /**
-   * Reload the page in this browsing context.
+   * Reload the page in this window global.
    *
    * @backward-compat { legacy }
    *                  reload is preserved for third party tools. See Bug 1717837.
@@ -1223,13 +1221,13 @@ const browsingContextTargetPrototype = {
             ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
             : Ci.nsIWebNavigation.LOAD_FLAGS_NONE
         );
-      }, "BrowsingContextTargetActor.prototype.reload's delayed body")
+      }, "WindowGlobalTargetActor.prototype.reload's delayed body")
     );
     return {};
   },
 
   /**
-   * Navigate this browsing context to a new location
+   * Navigate this window global to a new location
    */
   navigateTo(request) {
     // Wait a tick so that the response packet can be dispatched before the
@@ -1237,7 +1235,7 @@ const browsingContextTargetPrototype = {
     Services.tm.dispatchToMainThread(
       DevToolsUtils.makeInfallible(() => {
         this.window.location = request.url;
-      }, "BrowsingContextTargetActor.prototype.navigateTo's delayed body:" + request.url)
+      }, "WindowGlobalTargetActor.prototype.navigateTo's delayed body:" + request.url)
     );
     return {};
   },
@@ -1299,7 +1297,7 @@ const browsingContextTargetPrototype = {
    */
   updateTargetConfiguration(options = {}, calledFromDocumentCreation = false) {
     if (!this.docShell) {
-      // The browsing context is already closed.
+      // The window global is already closed.
       return;
     }
 
@@ -1336,7 +1334,7 @@ const browsingContextTargetPrototype = {
 
     if (!this.isTopLevelTarget) {
       // Following DevTools target options should only apply to the top target and be
-      // propagated through the browsing context tree via the platform.
+      // propagated through the window global tree via the platform.
       return;
     }
     if (
@@ -1396,7 +1394,7 @@ const browsingContextTargetPrototype = {
    */
   _getPaintFlashing() {
     if (!this.docShell) {
-      // The browsing context is already closed.
+      // The window global is already closed.
       return null;
     }
 
@@ -1440,7 +1438,7 @@ const browsingContextTargetPrototype = {
 
   _setWindow(window) {
     // Here is the very important call where we switch the currently targeted
-    // browsing context (it will indirectly update this.window and many other
+    // window global (it will indirectly update this.window and many other
     // attributes defined from docShell).
     this.docShell = window.docShell;
     this.emit("changed-toplevel-document");
@@ -1514,7 +1512,7 @@ const browsingContextTargetPrototype = {
 
   /**
    * Start notifying server and client about a new document being loaded in the
-   * currently targeted browsing context.
+   * currently targeted window global.
    */
   _willNavigate({
     window,
@@ -1580,7 +1578,7 @@ const browsingContextTargetPrototype = {
 
   /**
    * Notify server and client about a new document done loading in the current
-   * targeted browsing context.
+   * targeted window global.
    */
   _navigate(window, isFrameSwitching = false) {
     const isTopLevel = window == this.window;
@@ -1684,21 +1682,21 @@ const browsingContextTargetPrototype = {
   },
 };
 
-exports.browsingContextTargetPrototype = browsingContextTargetPrototype;
-exports.BrowsingContextTargetActor = TargetActorMixin(
+exports.windowGlobalTargetPrototype = windowGlobalTargetPrototype;
+exports.WindowGlobalTargetActor = TargetActorMixin(
   Targets.TYPES.FRAME,
-  browsingContextTargetSpec,
-  browsingContextTargetPrototype
+  windowGlobalTargetSpec,
+  windowGlobalTargetPrototype
 );
 
 /**
  * The DebuggerProgressListener object is an nsIWebProgressListener which
- * handles onStateChange events for the targeted browsing context. If the user
+ * handles onStateChange events for the targeted window global. If the user
  * tries to navigate away from a paused page, the listener makes sure that the
  * debuggee is resumed before the navigation begins.
  *
- * @param BrowsingContextTargetActor targetActor
- *        The browsing context target actor associated with this listener.
+ * @param WindowGlobalTargetActor targetActor
+ *        The window global target actor associated with this listener.
  */
 function DebuggerProgressListener(targetActor) {
   this._targetActor = targetActor;
@@ -1764,7 +1762,7 @@ DebuggerProgressListener.prototype = {
     //
     // This flag is also set in frame-helper but in the case of the browser toolbox, we
     // don't have the watcher enabled by default yet, and as a result we need to set it
-    // here for the parent process browsing context.
+    // here for the parent process window global.
     // This should be removed as part of Bug 1709529.
     if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = true;
