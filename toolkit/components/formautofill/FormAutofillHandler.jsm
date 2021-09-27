@@ -125,7 +125,7 @@ class FormAutofillSection {
    *
    */
   isRecordCreatable(record) {
-    throw new TypeError("isRecordCreatable method must be overridden");
+    throw new TypeError("isRecordCreatable method must be overrided");
   }
 
   /**
