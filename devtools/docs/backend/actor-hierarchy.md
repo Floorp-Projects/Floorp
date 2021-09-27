@@ -15,30 +15,33 @@ RootActor: First one, automatically instantiated when we start connecting.
    |   Actors exposing features related to the main process, that are not
    |   specific to any particular target (document, tab, add-on, or worker).
    |   These actors are registered with `global: true` in
-   |   devtools/server/main.js.
+   |     devtools/server/actors/utils/actor-registry.js
    |   Examples include:
    |   PreferenceActor (for Firefox prefs)
    |
-   \-- Target actors:
-       Actors that represent the main "thing" being targeted by a given toolbox,
-       such as a tab, frame, worker, add-on, etc. and track its lifetime.
-       Generally, there is a target actor for each thing you can point a
-       toolbox at.
-       Examples include:
-       FrameTargetActor (for a frame, such as a tab)
-       WorkerTargetActor (for various kind of workers)
-       |
-       \-- Target-scoped actors:
-           Actors exposing one particular feature set. They are children of a
-           given target actor and the data they return is filtered to reflect
-           the target.
-           These actors are registered with `target: true` in
-           devtools/server/main.js.
-           Examples include:
-           WebConsoleActor
-           InspectorActor
-           These actors may extend this hierarchy by having their own children,
-           like LongStringActor, WalkerActor, etc.
+   \-- Descriptor Actor's -or- Watcher Actor
+         | 
+         \ -- Target actors:
+              Actors that represent the main "thing" being targeted by a given toolbox,
+              such as a tab, frame, worker, add-on, etc. and track its lifetime.
+              Generally, there is a target actor for each thing you can point a
+              toolbox at.
+              Examples include:
+                WindowGlobalTargetActor (for a WindowGlobal, such as a tab or a remote iframe)
+                ProcessTargetActor
+              WorkerTargetActor (for various kind of workers)
+              |
+              \-- Target-scoped actors:
+                  Actors exposing one particular feature set. They are children of a
+                  given target actor and the data they return is filtered to reflect
+                  the target.
+                  These actors are registered with `target: true` in
+                    devtools/server/actors/utils/actor-registry.js
+                  Examples include:
+                    WebConsoleActor
+                    InspectorActor
+                  These actors may extend this hierarchy by having their own children,
+                  like LongStringActor, WalkerActor, etc.
 ```
 
 ## RootActor
@@ -54,25 +57,14 @@ RootActor (root.js)
    |
    |-- TabDescriptorActor (descriptors/tab.js)
    |   Targets frames (such as a tab) living in the parent or child process.
-   |   Note that this is just a proxy for FrameTargetActor, which is loaded via
-   |   the frame's message manager as a frame script in the process containing
-   |   the frame content. This proxy via message manager is always used, even
-   |   when the content happens to be in the same process.
    |   Returned by "listTabs" or "getTab" requests.
-   |   |
-   |   \-- FrameTargetActor (frame.js)
-   |       The "real" target actor for a frame (such as a tab) which runs in
-   |       whichever process holds the content. FrameTargetActorProxy
-   |       communicates with this via the frame's message manager.
-   |       Extends the abstract class WindowGlobalTargetActor.
-   |       Returned by "connect" server method on FrameTargetActorProxy.
    |
    |-- WorkerTargetActor (worker.js)
    |   Targets a worker (applies to various kinds like web worker, service
    |   worker, etc.).
    |   Returned by "listWorkers" request to the root actor to get all workers.
-   |   Returned by "listWorkers" request to a FrameTargetActorProxy to get
-   |   workers for a specific frame.
+   |   Returned by "listWorkers" request to a WindowGlobalTargetActor to get
+   |   workers for a specific document/WindowGlobal.
    |   Returned by "listWorkers" request to a ContentProcessTargetActor to get
    |   workers for the chrome of the child process.
    |
@@ -104,18 +96,26 @@ RootActor (root.js)
            Extends ParentProcessTargetActor.
            Returned by "connect" request to WebExtensionActor.
 ```
+All these descriptor actors expose a `getTarget()` method which
+returns the target actor for the descriptor's debuggable context
+(tab, worker, process or add-on).
+
+But note that this is now considered as a deprecated codepath.
+Ideally, all targets should be retrieved via the new WatcherActor.
+For now, the WatcherActor only support tabs and entire browser debugging.
+Workers and add-ons still have to go through descriptor's getTarget.
 
 ## Target Actors
 
-Those are the actors exposed by the root actors which are meant to track the
-lifetime of a given target: tab, process, add-on, or worker. It also allows to
-fetch the target-scoped actors connected to this target, which are actors like
-console, inspector, thread (for debugger), style inspector, etc.
+Those are the actors exposed by the watcher actor, or, via descriptor's getTarget methods.
+They are meant to track the lifetime of a given target: document, process, add-on, or worker.
+It also allows to fetch the target-scoped actors connected to this target,
+which are actors like console, inspector, thread (for debugger), style inspector, etc.
 
 Some target actors inherit from WindowGlobalTargetActor (defined in
-browsing-context.js) which is meant for "browsing contexts" which present
+window-global.js) which is meant for "window globals" which present
 documents to the user. It automatically tracks the lifetime of the targeted
-browsing context, but it also tracks its iframes and allows switching the
+window global, but it also tracks its iframes and allows switching the
 target to one of its iframes.
 
 For historical reasons, target actors also handle creating the ThreadActor, used
@@ -164,7 +164,7 @@ Each of these actors focuses on providing one particular feature set. They are
 children of a given target actor.
 
 The data they return is filtered to reflect the target. For example, the
-InspectorActor that you fetch from a FrameTargetActor gives you information
+InspectorActor that you fetch from a WindowGlobalTargetActor gives you information
 about the markup and styles for only that frame.
 
 These actors may extend this hierarchy by having their own children, like

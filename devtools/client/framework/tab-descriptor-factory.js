@@ -34,7 +34,7 @@ exports.TabDescriptorFactory = {
    * - spawn a DevToolsServer in the parent process,
    * - create a DevToolsClient
    * - connect the DevToolsClient to the DevToolsServer
-   * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form
+   * - call RootActor's `getTab` request to retrieve the WindowGlobalTargetActor's form
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new descriptor.

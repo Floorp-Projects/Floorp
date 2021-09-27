@@ -115,7 +115,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // The map is indexed by the Watcher Actor ID.
     // The values are objects containing the following properties:
     // - connection: the DevToolsServerConnection itself
-    // - actor: the FrameTargetActor instance
+    // - actor: the WindowGlobalTargetActor instance
     this._connections = new Map();
 
     this._onConnectionChange = this._onConnectionChange.bind(this);
@@ -318,7 +318,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // before any packet is sent from the content process.
     // As the order of messages is guaranteed to be delivered in the order they
     // were queued, we don't have to wait for anything around this sendAsyncMessage call.
-    // In theory, the FrameTargetActor may emit events in its constructor.
+    // In theory, the WindowGlobalTargetActor may emit events in its constructor.
     // If it does, such RDP packets may be lost.
     // The important point here is to send this message before processing the watchedData,
     // which will start the Watcher and start emitting resources on the target actor.
@@ -370,14 +370,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
       "devtools/server/devtools-server"
     );
 
-    const { FrameTargetActor } = this.loader.require(
-      "devtools/server/actors/targets/frame"
+    const { WindowGlobalTargetActor } = this.loader.require(
+      "devtools/server/actors/targets/window-global"
     );
 
     DevToolsServer.init();
 
     // We want a special server without any root actor and only target-scoped actors.
-    // We are going to spawn a FrameTargetActor instance in the next few lines,
+    // We are going to spawn a WindowGlobalTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
     DevToolsServer.registerActors({ target: true });
     DevToolsServer.on("connectionchange", this._onConnectionChange);
@@ -388,7 +388,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     );
 
     // Create the actual target actor.
-    const targetActor = new FrameTargetActor(connection, {
+    const targetActor = new WindowGlobalTargetActor(connection, {
       docShell: this.docShell,
       // Targets created from the server side, via Watcher actor and DevToolsFrame JSWindow
       // actor pair are following WindowGlobal lifecycle. i.e. will be destroyed on any
