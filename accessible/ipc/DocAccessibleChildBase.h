@@ -57,6 +57,10 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
     mDoc = nullptr;
   }
 
+  virtual mozilla::ipc::IPCResult RecvVerifyCache(
+      const uint64_t& aID, const uint64_t& aCacheDomain,
+      AccAttributes* aFields) override;
+
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);
@@ -77,6 +81,8 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
 
   bool IsConstructedInParentProcess() const { return mIsRemoteConstructed; }
   void SetConstructedInParentProcess() { mIsRemoteConstructed = true; }
+
+  LocalAccessible* IdToAccessible(const uint64_t& aID) const;
 
   DocAccessible* mDoc;
   bool mIsRemoteConstructed;
