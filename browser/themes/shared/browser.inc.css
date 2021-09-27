@@ -50,11 +50,11 @@
   --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 14%, transparent);
 
   --identity-box-margin-inline: 4px;
-  --identity-box-label-opacity: .8;
   --urlbar-box-bgcolor: var(--button-bgcolor);
   --urlbar-box-focus-bgcolor: var(--button-bgcolor);
   --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
   --urlbar-box-active-bgcolor: var(--button-active-bgcolor);
+  --urlbar-box-text-color: inherit;
   --urlbar-min-height: 32px;
   --urlbar-icon-fill-opacity: 0.9;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
