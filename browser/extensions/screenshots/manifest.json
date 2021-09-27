@@ -18,6 +18,14 @@
       "background/startBackground.js"
     ]
   },
+  "commands": {
+    "take-screenshot": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Open the Firefox Screenshots UI"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://screenshots.firefox.com/*"],
