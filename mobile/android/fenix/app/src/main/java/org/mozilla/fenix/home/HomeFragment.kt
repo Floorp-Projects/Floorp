@@ -237,6 +237,11 @@ class HomeFragment : Fragment() {
                     showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard(),
                     recentTabs = emptyList(),
                     historyMetadata = emptyList()
+                ),
+                listOf(
+                    PocketUpdatesMiddleware(
+                        lifecycleScope, requireComponents.core.pocketStoriesService
+                    )
                 )
             )
         }

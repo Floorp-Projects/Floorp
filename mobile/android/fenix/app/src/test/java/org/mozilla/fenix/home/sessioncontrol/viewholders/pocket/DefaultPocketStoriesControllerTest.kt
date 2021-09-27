@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentState
@@ -89,5 +91,16 @@ class DefaultPocketStoriesControllerTest {
 
         verify(exactly = 0) { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
         verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
+    }
+
+    @Test
+    fun `WHEN new stories are shown THEN update the State`() {
+        val store = spyk(HomeFragmentStore())
+        val controller = DefaultPocketStoriesController(store)
+        val storiesShown: List<PocketRecommendedStory> = mockk()
+
+        controller.handleStoriesShown(storiesShown)
+
+        verify { store.dispatch(HomeFragmentAction.PocketStoriesShown(storiesShown)) }
     }
 }

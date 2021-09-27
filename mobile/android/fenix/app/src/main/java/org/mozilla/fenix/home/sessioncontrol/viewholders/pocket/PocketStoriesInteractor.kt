@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
+import mozilla.components.service.pocket.PocketRecommendedStory
+
 /**
  * Contract for all possible user interactions with the Pocket recommended stories feature.
  */
@@ -14,4 +16,11 @@ interface PocketStoriesInteractor {
      * @param categoryClicked the just clicked [PocketRecommendedStoryCategory].
      */
     fun onCategoryClick(categoryClicked: PocketRecommendedStoryCategory)
+
+    /**
+     * Callback for then new stories are shown to the user.
+     *
+     * @param storiesShown the new list of [PocketRecommendedStory]es shown to the user.
+     */
+    fun onStoriesShown(storiesShown: List<PocketRecommendedStory>)
 }

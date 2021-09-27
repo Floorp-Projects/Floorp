@@ -68,7 +68,7 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVEN pocketArticles WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
-        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", 0, ""))
+        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", "", 0, 0))
         val settings: Settings = mockk()
 
         every { settings.hasShownHomeOnboardingDialog } returns false
@@ -80,7 +80,7 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVEN the home onboading dialog has been shown before WHEN calling shouldShowHomeOnboardingDialog THEN DO NOT showthe dialog `() {
-        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", 0, ""))
+        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", "", 0, 0))
         val settings: Settings = mockk()
 
         every { settings.hasShownHomeOnboardingDialog } returns true
@@ -228,7 +228,7 @@ class SessionControlViewTest {
         val recentBookmarks = listOf<BookmarkNode>()
         val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<HistoryMetadataGroup>()
-        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", 0, ""))
+        val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", "", 1, 1))
         val context = spyk(testContext)
 
         val settings: Settings = mockk()

@@ -53,7 +53,9 @@ data class Tab(
  * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property historyMetadata The list of [HistoryMetadataGroup].
- * @property pocketArticles The list of [PocketRecommendedStory].
+ * @property pocketStories Currently shown [PocketRecommendedStory]ies.
+ * @property pocketStoriesCategories All [PocketRecommendedStory] categories.
+ * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
  */
 data class HomeFragmentState(
     val collections: List<TabCollection> = emptyList(),
@@ -95,6 +97,7 @@ sealed class HomeFragmentAction : Action {
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
     data class SelectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
     data class DeselectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
+    data class PocketStoriesShown(val storiesShown: List<PocketRecommendedStory>) : HomeFragmentAction()
     data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : HomeFragmentAction()
     data class PocketStoriesCategoriesChange(val storiesCategories: List<PocketRecommendedStoryCategory>) :
         HomeFragmentAction()
@@ -102,7 +105,7 @@ sealed class HomeFragmentAction : Action {
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
 
-@Suppress("ReturnCount")
+@Suppress("ReturnCount", "LongMethod")
 private fun homeFragmentStateReducer(
     state: HomeFragmentState,
     action: HomeFragmentAction
@@ -174,10 +177,30 @@ private fun homeFragmentStateReducer(
             val updatedCategoriesState = state.copy(pocketStoriesCategories = action.storiesCategories)
             return updatedCategoriesState.copy(
                 pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
-            ).also {
-                println("just updated stories in the state")
-            }
+            )
         }
         is HomeFragmentAction.PocketStoriesChange -> state.copy(pocketStories = action.pocketStories)
+        is HomeFragmentAction.PocketStoriesShown -> {
+            var updatedCategories = state.pocketStoriesCategories
+            action.storiesShown.forEach { shownStory ->
+                updatedCategories = updatedCategories.map { category ->
+                    when (category.name == shownStory.category) {
+                        true -> {
+                            category.copy(
+                                stories = category.stories.map { story ->
+                                    when (story.title == shownStory.title) {
+                                        true -> story.copy(timesShown = story.timesShown.inc())
+                                        false -> story
+                                    }
+                                }
+                            )
+                        }
+                        false -> category
+                    }
+                }
+            }
+
+            state.copy(pocketStoriesCategories = updatedCategories)
+        }
     }
 }

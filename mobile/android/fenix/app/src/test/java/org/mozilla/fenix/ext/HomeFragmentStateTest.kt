@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentState
@@ -275,6 +276,52 @@ class HomeFragmentStateTest {
         assertEquals(3, result[otherStoriesCategory.name])
         assertEquals(2, result[anotherStoriesCategory.name])
     }
+
+    @Test
+    fun `GIVEN two categories selected with more than needed stories WHEN getFilteredStories is called THEN the results are sorted in the order of least shown`() {
+        val firstCategory = PocketRecommendedStoryCategory(
+            "first", getFakePocketStories(3, "first"), true, 222
+        ).run {
+            // Avoid the first item also being the oldest to eliminate a potential bug in code
+            // that would still get the expected result.
+            copy(
+                stories = stories.mapIndexed { index, story ->
+                    when (index) {
+                        0 -> story.copy(timesShown = 333)
+                        1 -> story.copy(timesShown = 0)
+                        else -> story.copy(timesShown = 345)
+                    }
+                }
+            )
+        }
+        val secondCategory = PocketRecommendedStoryCategory(
+            "second", getFakePocketStories(3, "second"), true, 0
+        ).run {
+            // Avoid the first item also being the oldest to eliminate a potential bug in code
+            // that would still get the expected result.
+            copy(
+                stories = stories.mapIndexed { index, story ->
+                    when (index) {
+                        0 -> story.copy(timesShown = 222)
+                        1 -> story.copy(timesShown = 111)
+                        else -> story.copy(timesShown = 11)
+                    }
+                }
+            )
+        }
+
+        val homeState = HomeFragmentState(pocketStoriesCategories = listOf(firstCategory, secondCategory))
+
+        val result = homeState.getFilteredStories(6)
+
+        assertEquals(6, result.size)
+        assertSame(secondCategory.stories[2], result.first())
+        assertSame(secondCategory.stories[1], result[1])
+        assertSame(secondCategory.stories[0], result[2])
+        assertSame(firstCategory.stories[1], result[3])
+        assertSame(firstCategory.stories[0], result[4])
+        assertSame(firstCategory.stories[2], result[5])
+    }
 }
 
 private fun getFakePocketStories(
@@ -292,7 +339,8 @@ private fun getFakePocketStories(
                     url = "https://story$randomNumber.com",
                     imageUrl = "",
                     timeToRead = randomNumber,
-                    category = category
+                    category = category,
+                    timesShown = index.toLong()
                 )
             )
         }

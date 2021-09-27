@@ -30,7 +30,9 @@ fun HomeFragmentState.getFilteredStories(
         return pocketStoriesCategories
             .find {
                 it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME
-            }?.stories?.take(neededStoriesCount) ?: emptyList()
+            }?.stories
+            ?.sortedBy { it.timesShown }
+            ?.take(neededStoriesCount) ?: emptyList()
     }
 
     val oldestSortedCategories = currentlySelectedCategories
@@ -42,12 +44,17 @@ fun HomeFragmentState.getFilteredStories(
 
     // Add general stories at the end of the stories list to show until neededStoriesCount
     val generalStoriesTopup = filteredStoriesCount[POCKET_STORIES_DEFAULT_CATEGORY_NAME]?.let { neededTopups ->
-        pocketStoriesCategories.find { it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME }?.stories?.take(neededTopups)
+        pocketStoriesCategories
+            .find { it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME }
+            ?.stories
+            ?.sortedBy { it.timesShown }
+            ?.take(neededTopups)
     } ?: emptyList()
 
     return oldestSortedCategories
-        .flatMap { it.stories.take(filteredStoriesCount[it.name]!!) }
-        .plus(generalStoriesTopup)
+        .flatMap { category ->
+            category.stories.sortedBy { it.timesShown }.take(filteredStoriesCount[category.name]!!)
+        }.plus(generalStoriesTopup)
         .take(neededStoriesCount)
 }
 

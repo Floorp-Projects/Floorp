@@ -245,7 +245,7 @@ class HomeFragmentStoreTest {
 
     @Test
     fun `Test updating the list of Pocket recommended stories`() = runBlocking {
-        val story1 = PocketRecommendedStory("title1", "publisher", "url", "imageUrl", 1, "category")
+        val story1 = PocketRecommendedStory("title1", "url", "imageUrl", "publisher", "category", 1, 1)
         val story2 = story1.copy("title2")
         homeFragmentStore = HomeFragmentStore(HomeFragmentState())
 

@@ -480,7 +480,8 @@ private fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
                     url = "https://story$randomNumber.com",
                     imageUrl = "",
                     timeToRead = randomNumber,
-                    category = "Category #$randomNumber"
+                    category = "Category #$randomNumber",
+                    timesShown = randomNumber.toLong()
                 )
             )
         }

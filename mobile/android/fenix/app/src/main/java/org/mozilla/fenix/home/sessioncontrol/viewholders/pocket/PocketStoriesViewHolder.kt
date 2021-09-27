@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -45,7 +46,7 @@ class PocketStoriesViewHolder(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
         composeView.setContent {
-            PocketStories(store, client) { interactor.onCategoryClick(it) }
+            PocketStories(store, client, interactor::onStoriesShown, interactor::onCategoryClick)
         }
     }
 
@@ -58,6 +59,7 @@ class PocketStoriesViewHolder(
 fun PocketStories(
     store: HomeFragmentStore,
     client: Client,
+    onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
     onCategoryClick: (PocketRecommendedStoryCategory) -> Unit
 ) {
     val stories = store
@@ -65,6 +67,14 @@ fun PocketStories(
 
     val categories = store
         .observeAsComposableState { state -> state.pocketStoriesCategories }.value
+
+    LaunchedEffect(stories) {
+        // We should report back when a certain story is actually being displayed.
+        // Cannot do it reliably so for now we'll just mass report everything as being displayed.
+        stories?.let {
+            onStoriesShown(it)
+        }
+    }
 
     ExpandableCard(
         Modifier

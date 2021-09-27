@@ -8,6 +8,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
@@ -387,5 +388,9 @@ class SessionControlInteractor(
 
     override fun onCategoryClick(categoryClicked: PocketRecommendedStoryCategory) {
         pocketStoriesController.handleCategoryClick(categoryClicked)
+    }
+
+    override fun onStoriesShown(storiesShown: List<PocketRecommendedStory>) {
+        pocketStoriesController.handleStoriesShown(storiesShown)
     }
 }
