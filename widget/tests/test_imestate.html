@@ -27,6 +27,12 @@
   <input type="search"   id="search"/><br/>
   <input type="tel"      id="tel"/><br/>
   <input type="number"   id="number"/><br/>
+  <input type="date"     id="date"/><br/>
+  <input type="datetime-local" id="datetime-local"/><br/>
+  <input type="time"     id="time"/><br/>
+  <!-- TODO(bug 1283382, bug 1283382): month and week -->
+  <input type="week"     id="week"/><br/>
+  <input type="month"    id="month"/><br/>
 
   <!-- form controls -->
   <button id="button">button</button><br/>
@@ -163,6 +169,14 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
 
   function test(aTest) {
     function moveFocus(aTestInner, aFocusEventHandler) {
+      function getFocusedElement() {
+        let focusedElement = gFM.focusedElement;
+        if (focusedElement?.containingShadowRoot?.isUAWidget()) {
+          focusedElement = focusedElement.containingShadowRoot.host;
+        }
+        return focusedElement;
+      }
+
       if (aInDesignMode) {
         if (document.activeElement) {
           document.activeElement.blur();
@@ -174,7 +188,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       } else {
         document.getElementById("text").focus();
       }
-      var previousFocusedElement = gFM.focusedElement;
+      var previousFocusedElement = getFocusedElement();
       var element = document.getElementById(aTest.id);
       var focusEventTarget = element;
       if (element.contentDocument) {
@@ -190,11 +204,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       focusEventTarget.removeEventListener("focus", aFocusEventHandler, true);
       onIMEFocusBlurHandler = null;
 
-      var focusedElement = gFM.focusedElement;
-      // FIXME(emilio, bug 981248): This is needed just for <input type=number>
-      while (focusedElement && focusedElement.isNativeAnonymous) {
-        focusedElement = focusedElement.parentNode;
-      }
+      let focusedElement = getFocusedElement();
       if (aTest.focusable) {
         is(focusedElement, element,
            aDescription + ": " + aTest.description + ", focus didn't move");
@@ -425,6 +435,19 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       focusable: !aInDesignMode,
       expectedEnabled: gUtils.IME_STATUS_ENABLED,
       expectedType: "number" },
+    { id: "date",
+      description: "input[type=date]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    { id: "datetime-local",
+      description: "input[type=datetime-local]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    { id: "time",
+      description: "input[type=time]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnReadonlyField },
+    // TODO(bug 1283382, bug 1283382): month and week
 
     // form controls
     { id: "button",
@@ -746,6 +769,16 @@ function runTypeChangingTest() {
     { id: "number",
       type: "number",     expected: gUtils.IME_STATUS_ENABLED,
       description: "[type=\"number\"]" },
+    { id: "date",
+      type: "date",     expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"date\"]" },
+    { id: "datetime-local",
+      type: "datetime-local", expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"datetime-local\"]" },
+    { id: "time",
+      type: "time",       expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"time\"]" },
+    // TODO(bug 1283382, bug 1283382): month and week
     { id: "ime_mode_auto",
       type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
       description: "[type=\"text\"][ime-mode: auto;]" },
@@ -875,6 +908,10 @@ function runTypeChangingTest() {
     { type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
     { type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
     { type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "date",     expected: gUtils.IME_STATUS_DISABLED },
+    { type: "datetime-local", expected: gUtils.IME_STATUS_DISABLED },
+    { type: "time",     expected: gUtils.IME_STATUS_DISABLED },
+    // TODO(bug 1283382, bug 1283382): month and week
   ];
 
   function getExpectedIMEEnabled(aNewType, aInputControl) {
