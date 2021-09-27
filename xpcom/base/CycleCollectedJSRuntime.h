@@ -90,11 +90,9 @@ class JSHolderMap {
  public:
   enum WhichHolders { AllHolders, HoldersRequiredForGrayMarking };
 
-  JSHolderMap();
+  class Iter;
 
-  // Call functor |f| for each holder.
-  template <typename F>
-  void ForEach(F&& f, WhichHolders aWhich = AllHolders);
+  JSHolderMap();
 
   bool Has(void* aHolder) const;
   nsScriptObjectTracer* Get(void* aHolder) const;
@@ -170,6 +168,31 @@ class JSHolderMap::EntryVectorIter {
   JSHolderMap& mHolderMap;
   EntryVector& mVector;
   EntryVector::IterImpl mIter;
+};
+
+class JSHolderMap::Iter {
+ public:
+  explicit Iter(JSHolderMap& aMap, WhichHolders aWhich = AllHolders);
+
+  bool Done() const { return mIter.Done(); }
+  const Entry& Get() const { return mIter.Get(); }
+  void Next() {
+    mIter.Next();
+    Settle();
+  }
+
+  operator const Entry*() const { return &Get(); }
+  const Entry* operator->() const { return &Get(); }
+
+  JS::Zone* Zone() const { return mZone; }
+
+ private:
+  void Settle();
+
+  JSHolderMap& mHolderMap;
+  Vector<JS::Zone*, 1, InfallibleAllocPolicy> mZones;
+  JS::Zone* mZone = nullptr;
+  EntryVectorIter mIter;
 };
 
 class CycleCollectedJSRuntime {
