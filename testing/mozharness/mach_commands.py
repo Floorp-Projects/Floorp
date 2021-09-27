@@ -16,11 +16,10 @@ from six.moves.urllib.request import pathname2url
 
 from mach.decorators import (
     CommandArgument,
-    CommandProvider,
     Command,
 )
 
-from mozbuild.base import MachCommandBase, MozbuildObject
+from mozbuild.base import MozbuildObject
 from mozbuild.base import MachCommandConditions as conditions
 from argparse import ArgumentParser
 
@@ -207,15 +206,13 @@ class MozharnessRunner(MozbuildObject):
         return rv
 
 
-@CommandProvider
-class MozharnessCommands(MachCommandBase):
-    @Command(
-        "mozharness",
-        category="testing",
-        description="Run tests using mozharness.",
-        conditions=[conditions.is_firefox_or_android],
-        parser=get_parser,
-    )
-    def mozharness(self, command_context, **kwargs):
-        runner = command_context._spawn(MozharnessRunner)
-        return runner.run_suite(kwargs.pop("suite_name")[0], **kwargs)
+@Command(
+    "mozharness",
+    category="testing",
+    description="Run tests using mozharness.",
+    conditions=[conditions.is_firefox_or_android],
+    parser=get_parser,
+)
+def mozharness(command_context, **kwargs):
+    runner = command_context._spawn(MozharnessRunner)
+    return runner.run_suite(kwargs.pop("suite_name")[0], **kwargs)
