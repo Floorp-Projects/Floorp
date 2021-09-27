@@ -631,10 +631,16 @@ const TargetingGetters = {
   get activeNotifications() {
     let window = BrowserWindowTracker.getTopWindow();
 
+    // Technically this doesn't mean we have active notifications,
+    // but because we use !activeNotifications to check for conflicts, this should return true
+    if (!window) {
+      return true;
+    }
+
     if (
-      window.gURLBar.view.isOpen ||
-      window.gNotificationBox.currentNotification ||
-      window.gBrowser.getNotificationBox().currentNotification
+      window.gURLBar?.view.isOpen ||
+      window.gNotificationBox?.currentNotification ||
+      window.gBrowser.getNotificationBox()?.currentNotification
     ) {
       return true;
     }
