@@ -32,9 +32,7 @@
 <script>
   test(()=> {
     assert_equals(document.getElementById("target").offsetWidth,
-      // `offsetWidth` is not interoperable for block-in-inline.
-      // Use the size of ".inline-block" to avoid this.
-      document.querySelector("#containingBlockOfTarget .inline-block").offsetWidth);
+      document.querySelector("#containingBlockOfTarget").offsetWidth);
   }, "position:absolute should be sized by the right ancestor");
   test(()=> {
     assert_equals(document.getElementById("target-fixed").offsetWidth,
