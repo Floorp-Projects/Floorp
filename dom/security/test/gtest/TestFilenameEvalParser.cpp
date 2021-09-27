@@ -22,8 +22,8 @@ static constexpr auto kResourceURI = "resourceuri"_ns;
 static constexpr auto kBlobUri = "bloburi"_ns;
 static constexpr auto kDataUri = "dataurl"_ns;
 static constexpr auto kSingleString = "singlestring"_ns;
-static constexpr auto kMozillaExtension = "mozillaextension"_ns;
-static constexpr auto kOtherExtension = "otherextension"_ns;
+static constexpr auto kMozillaExtensionFile = "mozillaextension_file"_ns;
+static constexpr auto kOtherExtensionFile = "otherextension_file"_ns;
 static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
 static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
 static constexpr auto kSanitizedWindowsPath = "sanitizedWindowsPath"_ns;
@@ -91,7 +91,7 @@ TEST(FilenameEvalParser, MozExtension)
         "study/api.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-    ASSERT_TRUE(ret.first == kMozillaExtension &&
+    ASSERT_TRUE(ret.first == kMozillaExtensionFile &&
                 ret.second.value() ==
                     u"federated-learning@s!/experiments/study/api.js"_ns);
   }
@@ -104,7 +104,7 @@ TEST(FilenameEvalParser, MozExtension)
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(
-        ret.first == kMozillaExtension &&
+        ret.first == kMozillaExtensionFile &&
         ret.second.value() ==
             nsLiteralString(
                 u"federated-learning@shigeld.m!/experiments/study/api.js"));
@@ -117,7 +117,7 @@ TEST(FilenameEvalParser, MozExtension)
         "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-    ASSERT_TRUE(ret.first == kMozillaExtension &&
+    ASSERT_TRUE(ret.first == kMozillaExtensionFile &&
                 ret.second.value() ==
                     u"federated-learning@shigeld.m!/experiments/"
                     "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"_ns);
