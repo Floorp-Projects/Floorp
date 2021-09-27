@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
     "TestID.cpp",
     "TestIDUtils.cpp",
     "TestInputStreamLengthHelper.cpp",
+    "TestJSHolderMap.cpp",
     "TestLogCommandLineHandler.cpp",
     "TestLogging.cpp",
     "TestMemoryPressure.cpp",

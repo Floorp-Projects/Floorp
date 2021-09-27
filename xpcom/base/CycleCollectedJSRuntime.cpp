@@ -498,7 +498,7 @@ void JSHolderMap::EntryVectorIter::Settle() {
   }
 }
 
-inline JSHolderMap::Iter::Iter(JSHolderMap& aMap, WhichHolders aWhich)
+JSHolderMap::Iter::Iter(JSHolderMap& aMap, WhichHolders aWhich)
     : mHolderMap(aMap), mIter(aMap, aMap.mAnyZoneJSHolders) {
   MOZ_RELEASE_ASSERT(!mHolderMap.mHasIterator);
   mHolderMap.mHasIterator = true;
@@ -557,11 +557,9 @@ bool JSHolderMap::RemoveEntry(EntryVector& aJSHolders, Entry* aEntry) {
   return aEntry != lastEntry;
 }
 
-inline bool JSHolderMap::Has(void* aHolder) const {
-  return mJSHolderMap.has(aHolder);
-}
+bool JSHolderMap::Has(void* aHolder) const { return mJSHolderMap.has(aHolder); }
 
-inline nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
+nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
   auto ptr = mJSHolderMap.lookup(aHolder);
   if (!ptr) {
     return nullptr;
@@ -572,7 +570,7 @@ inline nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
   return entry->mTracer;
 }
 
-inline nsScriptObjectTracer* JSHolderMap::Extract(void* aHolder) {
+nsScriptObjectTracer* JSHolderMap::Extract(void* aHolder) {
   MOZ_ASSERT(aHolder);
 
   auto ptr = mJSHolderMap.lookup(aHolder);
@@ -592,8 +590,8 @@ inline nsScriptObjectTracer* JSHolderMap::Extract(void* aHolder) {
   return tracer;
 }
 
-inline void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer,
-                             JS::Zone* aZone) {
+void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer,
+                      JS::Zone* aZone) {
   MOZ_ASSERT(aHolder);
   MOZ_ASSERT(aTracer);
 
