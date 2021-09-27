@@ -48,10 +48,8 @@ add_task(async function testPluginData() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     background,
     manifest: {
-      applications: { gecko: { id: "remove-plugin@tests.mozilla.org" } },
       permissions: ["tabs", "browsingData"],
     },
   });

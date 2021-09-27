@@ -15,9 +15,7 @@
 
 async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
   const extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      "applications": { "gecko": { "id": "tabs-update-url@tests.mozilla.org" } },
       "permissions": ["tabs"],
     },
 

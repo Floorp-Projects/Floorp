@@ -17,19 +17,12 @@ add_task(async function tabsSendMessageReply() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
-      "applications": {
-        "gecko": {
-          "id": "test_send_message_reply@tests.mozilla.org",
-        },
-      },
       "content_scripts": [{
         "matches": ["http://example.com/"],
         "js": ["content-script.js"],
         "run_at": "document_start",
       }],
     },
-
-    useAddonManager: "permanent",
 
     background: async function() {
       // eslint-disable-next-line prefer-const
@@ -162,19 +155,12 @@ add_task(async function tabsSendHidden() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
-      "applications": {
-        "gecko": {
-          "id": "test_send_hidden@tests.mozilla.org",
-        },
-      },
       "content_scripts": [{
         "matches": ["http://example.com/content*"],
         "js": ["content-script.js"],
         "run_at": "document_start",
       }],
     },
-
-    useAddonManager: "permanent",
 
     background: async function() {
       let resolveContent;
@@ -251,14 +237,7 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
-      "applications": {
-        "gecko": {
-          "id": "test_send_hidden@tests.mozilla.org",
-        },
-      },
     },
-
-    useAddonManager: "permanent",
 
     async background() {
       const url = "http://example.com/mochitest/tests/mobile/android/components/extensions/test/mochitest/file_dummy.html";

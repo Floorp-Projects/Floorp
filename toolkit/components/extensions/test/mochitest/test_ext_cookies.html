@@ -346,11 +346,9 @@ add_task(async function test_cookies() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     incognitoOverride: "spanning",
     background,
     manifest: {
-      applications: { gecko: { id: "cookies@tests.mozilla.org" } },
       permissions: ["cookies", "*://example.org/", "*://[2a03:4000:6:310e:216:3eff:fe53:99b]/", "*://192.168.1.1/", "webNavigation", "browsingData"],
     },
   });

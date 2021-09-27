@@ -39,9 +39,7 @@ add_task(async function test_target_blank_link_no_opener_from_privileged() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "target_blank_link@tests.mozilla.org" } },
       content_scripts: [{
         js: ["content_script.js"],
         matches: ["http://example.com/*"],

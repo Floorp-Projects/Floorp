@@ -93,13 +93,7 @@ add_task(async function testTabEvents() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
-      applications: {
-        gecko: {
-          id: "test_tabs_events@tests.mozilla.org",
-        },
-      },
     },
-    useAddonManager: "permanent",
     background,
   });
 
@@ -146,13 +140,7 @@ add_task(async function testTabRemovalEvent() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
-      applications: {
-        gecko: {
-          id: "test_tabs_removal@tests.mozilla.org",
-        },
-      },
     },
-    useAddonManager: "permanent",
     background,
   });
 

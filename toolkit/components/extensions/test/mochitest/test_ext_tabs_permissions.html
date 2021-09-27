@@ -19,15 +19,8 @@ const URL2 =
 
 const helperExtensionDef = {
   manifest: {
-    applications: {
-      gecko: {
-        id: "helper@tests.mozilla.org",
-      },
-    },
     permissions: ["webNavigation", "<all_urls>"],
   },
-
-  useAddonManager: "permanent",
 
   async background() {
     browser.test.onMessage.addListener(async message => {
@@ -125,15 +118,8 @@ async function test_query(testCases, permissions) {
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
-        gecko: {
-          id: "permissions@tests.mozilla.org",
-        },
-      },
       permissions,
     },
-
-    useAddonManager: "permanent",
 
     async background() {
       // wait for start message
@@ -409,15 +395,8 @@ async function test_restricted_properties(
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
-        gecko: {
-          id: "permissions@tests.mozilla.org",
-        },
-      },
       permissions,
     },
-
-    useAddonManager: "permanent",
 
     async background() {
       // wait for test start signal and data
@@ -566,15 +545,8 @@ async function test_onUpdateFilter(testCases, permissions) {
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
-        gecko: {
-          id: "permissions@tests.mozilla.org",
-        },
-      },
       permissions,
     },
-
-    useAddonManager: "permanent",
 
     async background() {
       let listenerGotCalled = false;

@@ -35,11 +35,7 @@ async function testHasPermission(params) {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      applications: { gecko: { id: "executeScript@tests.mozilla.org" } },
-      ...params.manifest,
-    },
+    manifest: params.manifest,
 
     background: `(${background})(${contentSetup})`,
 

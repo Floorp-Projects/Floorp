@@ -35,18 +35,14 @@ add_task(async function test_drawWindow() {
   };
 
   const first = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "draw_window_first@tests.mozilla.org" } },
       permissions,
       content_scripts
     },
     files
   });
   const second = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "draw_window_second@tests.mozilla.org" } },
       content_scripts
     },
     files
@@ -105,18 +101,14 @@ add_task(async function test_tainted_canvas() {
   };
 
   const first = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "draw_window_first@tests.mozilla.org" } },
       permissions,
       content_scripts
     },
     files
   });
   const second = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "draw_window_second@tests.mozilla.org" } },
       content_scripts
     },
     files

@@ -73,10 +73,8 @@ add_task(async function testServiceWorkers() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     background,
     manifest: {
-      applications: { gecko: { id: "service-workers@tests.mozilla.org" } },
       permissions: ["browsingData", "tabs"],
       content_scripts: [
         {

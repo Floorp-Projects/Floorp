@@ -18,9 +18,7 @@ add_task(async function() {
     set: [["privacy.userContext.enabled", true]],
   });
   const extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      "applications": { "gecko": { "id": "tabs-create@tests.mozilla.org" } },
       "permissions": ["tabs", "cookies"],
 
       "background": {"page": "bg/background.html"},
