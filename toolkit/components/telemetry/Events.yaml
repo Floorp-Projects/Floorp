@@ -2355,11 +2355,13 @@ security:
         resourceuri - resource:// file
         datauri - a data URI
         bloburi - a blob URI
+        abouturi - an about URI
         singlestring - A single file or string with no slashes
         mozillaextension - An extension claiming to be from *mozilla.org (Deprecated)
         otherextension - Another extension not from Mozilla (Deprecated)
         mozillaextension_file - An extension claiming to be from *mozilla.org, loaded from a file://
         otherextension_file - Another extension not from Mozilla, loaded from a file://
+        extension_uri - A URI with the moz-extension:// scheme
         suspectedUserChromeJS - A filepath ending in .uc.js
         sanitizedWindowsPath - A filepath, on Windows, sanitized by WinUtils::PreparePathForTelemetry
                                which is a bare filename or a subpath of %ProgramFiles%, %SystemRoot%,
@@ -2372,8 +2374,9 @@ security:
                           could be any other.
         regexfailure - Our Regex Matching code threw an error
       The fileinfo key may contain additional information about the file that caused the eval()
-      depending on the above value. Resource, Chrome, and SingleString will contain the full value.
-      Extensions will contain the full value; however .xpi! will be shortened to !,
+      depending on the above value. Resource, Chrome, About, and SingleString will contain the full value.
+      (About URIs will remove any querystring values.)
+      Extensions-from-file will contain the full value; however .xpi! will be shortened to !,
       shield.mozilla.org! to s! and mozilla.org! to m!.  Data, Blob, UserChromeJS, Other, and
       Regexfailure should have no value.
     notification_emails:

@@ -126,16 +126,10 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
        "moz-extension://abcdefab-1234-4321-0000-abcdefabcdef/js/assets.js"_ns,
        nsContentPolicyType::TYPE_SCRIPT,
        "web"_ns,
-       {
-#if defined(XP_WIN)
-           "sanitizedWindowsURL"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
-           // the extension-id is made-up, so the extension will report failure
-           "moz-extension://[failed finding addon by host]/js/assets.js"_ns,
-           "https"_ns
-#else
-           "other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns, "https"_ns
-#endif
-       }},
+       {"extension_uri"_ns, "TYPE_SCRIPT"_ns, "web"_ns,
+        // the extension-id is made-up, so the extension will report failure
+        "moz-extension://[failed finding addon by host]/js/assets.js"_ns,
+        "https"_ns}},
       {// test for cases where finalURI is empty
        ""_ns,
        nsContentPolicyType::TYPE_STYLESHEET,
