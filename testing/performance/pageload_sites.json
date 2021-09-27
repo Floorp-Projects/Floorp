@@ -190,8 +190,7 @@
     {
       "login": false,
       "name": "fandom",
-      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase",
-      "secondary_url": "https://www.fandom.com/articles/call-of-duty-black-ops-4-review"
+      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase"
     },
     {
       "login": true,
