@@ -19,6 +19,7 @@ include ProtocolTypes;
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
+include "mozilla/AntiTrackingIPCUtils.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
@@ -29,6 +30,7 @@ using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 [RefCounted] using class nsDOMNavigationTiming from "nsDOMNavigationTiming.h";
 using nsContentPolicyType from "nsIContentPolicy.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
+using nsILoadInfo::StoragePermissionState from "nsILoadInfo.h";
 using class mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 
 namespace mozilla {
@@ -157,7 +159,7 @@ struct LoadInfoArgs
   CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
   CSPInfo?                    cspToInheritInfo;
-  bool                        hasStoragePermission;
+  StoragePermissionState      storagePermission;
   bool                        isMetaRefresh;
   CrossOriginEmbedderPolicy   loadingEmbedderPolicy;
   nsIURI                      unstrippedURI;
@@ -223,7 +225,7 @@ struct ParentLoadInfoForwarderArgs
 
   uint32_t requestBlockingReason;
 
-  bool hasStoragePermission;
+  StoragePermissionState storagePermission;
 
   bool isMetaRefresh;
 

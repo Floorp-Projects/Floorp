@@ -581,7 +581,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(rhs.mIsInDevToolsContext),
       mParserCreatedScript(rhs.mParserCreatedScript),
-      mHasStoragePermission(rhs.mHasStoragePermission),
+      mStoragePermission(rhs.mStoragePermission),
       mIsMetaRefresh(rhs.mIsMetaRefresh),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mIsMediaRequest(rhs.mIsMediaRequest),
@@ -624,7 +624,7 @@ LoadInfo::LoadInfo(
     bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
     bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
     bool aIsInDevToolsContext, bool aParserCreatedScript,
-    bool aHasStoragePermission, bool aIsMetaRefresh,
+    nsILoadInfo::StoragePermissionState aStoragePermission, bool aIsMetaRefresh,
     uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
     nsIURI* aUnstrippedURI)
@@ -690,7 +690,7 @@ LoadInfo::LoadInfo(
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(aIsInDevToolsContext),
       mParserCreatedScript(aParserCreatedScript),
-      mHasStoragePermission(aHasStoragePermission),
+      mStoragePermission(aStoragePermission),
       mIsMetaRefresh(aIsMetaRefresh),
 
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
@@ -999,14 +999,16 @@ LoadInfo::SetCookieJarSettings(nsICookieJarSettings* aCookieJarSettings) {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetHasStoragePermission(bool* aHasStoragePermission) {
-  *aHasStoragePermission = mHasStoragePermission;
+LoadInfo::GetStoragePermission(
+    nsILoadInfo::StoragePermissionState* aStoragePermission) {
+  *aStoragePermission = mStoragePermission;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-LoadInfo::SetHasStoragePermission(bool aHasStoragePermission) {
-  mHasStoragePermission = aHasStoragePermission;
+LoadInfo::SetStoragePermission(
+    nsILoadInfo::StoragePermissionState aStoragePermission) {
+  mStoragePermission = aStoragePermission;
   return NS_OK;
 }
 
