@@ -2107,7 +2107,7 @@ class StaticAnalysis(MachCommandBase):
     def _get_config_environment(self, command_context):
         ran_configure = False
         config = None
-        builder = Build(command_context._mach_context, None)
+        build_commands = Build(command_context._mach_context, None)
 
         try:
             config = command_context.config_environment
@@ -2136,7 +2136,7 @@ class StaticAnalysis(MachCommandBase):
                     return (1, None, None)
                 os.environ["AUTOCLOBBER"] = "1"
 
-            rc = builder.configure(command_context)
+            rc = build_commands.configure(command_context)
             if rc != 0:
                 return (rc, config, ran_configure)
             ran_configure = True
@@ -2171,8 +2171,8 @@ class StaticAnalysis(MachCommandBase):
                 "Looks like a clang compilation database has not been "
                 "created yet, creating it now..."
             )
-            builder = Build(command_context._mach_context, None)
-            rc = builder.build_backend(
+            build_commands = Build(command_context._mach_context, None)
+            rc = build_commands.build_backend(
                 command_context, ["StaticAnalysis"], verbose=verbose
             )
             if rc != 0:
@@ -2184,9 +2184,8 @@ class StaticAnalysis(MachCommandBase):
         def on_line(line):
             command_context.log(logging.INFO, "build_output", {"line": line}, "{line}")
 
-        builder = Build(command_context._mach_context, None)
         # First install what we can through install manifests.
-        rc = builder._run_make(
+        rc = command_context._run_make(
             directory=command_context.topobjdir,
             target="pre-export",
             line_handler=None,
@@ -2198,7 +2197,7 @@ class StaticAnalysis(MachCommandBase):
         # Then build the rest of the build dependencies by running the full
         # export target, because we can't do anything better.
         for target in ("export", "pre-compile"):
-            rc = builder._run_make(
+            rc = command_context._run_make(
                 directory=command_context.topobjdir,
                 target=target,
                 line_handler=None,
