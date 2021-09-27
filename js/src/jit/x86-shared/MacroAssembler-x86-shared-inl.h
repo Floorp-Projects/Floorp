@@ -2872,6 +2872,26 @@ void MacroAssembler::fmsFloat64x2(FloatRegister src1, FloatRegister src2,
   subFloat64x2(scratch, srcDest);
 }
 
+void MacroAssembler::minFloat32x4Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  vminps(Operand(src), srcDest, srcDest);
+}
+
+void MacroAssembler::maxFloat32x4Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  vmaxps(Operand(src), srcDest, srcDest);
+}
+
+void MacroAssembler::minFloat64x2Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  vminpd(Operand(src), srcDest, srcDest);
+}
+
+void MacroAssembler::maxFloat64x2Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  vmaxpd(Operand(src), srcDest, srcDest);
+}
+
 // ========================================================================
 // Truncate floating point.
 

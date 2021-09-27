@@ -2662,6 +2662,18 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I16x8Q15MulrSatS:
       masm.q15MulrSatInt16x8(rhs, lhsDest);
       break;
+    case wasm::SimdOp::F32x4RelaxedMin:
+      masm.minFloat32x4Relaxed(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F32x4RelaxedMax:
+      masm.maxFloat32x4Relaxed(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2RelaxedMin:
+      masm.minFloat64x2Relaxed(rhs, lhsDest);
+      break;
+    case wasm::SimdOp::F64x2RelaxedMax:
+      masm.maxFloat64x2Relaxed(rhs, lhsDest);
+      break;
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
     case wasm::SimdOp::MozWHSELFTEST:
       masm.loadConstantSimd128(wasm::WormholeSignature(), lhsDest);
