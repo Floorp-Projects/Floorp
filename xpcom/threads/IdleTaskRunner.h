@@ -82,8 +82,6 @@ class IdleTaskRunner {
   void CancelTimer();
   void SetTimerInternal(TimeDuration aDelay);
 
-  void ScheduleAfterDelay(TimeDuration aDelay);
-
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mScheduleTimer;
   CallbackType mCallback;
