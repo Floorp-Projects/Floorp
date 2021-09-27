@@ -62,14 +62,14 @@ class MachCommands(MachCommandBase):
                     return 1
 
             # Create the Build environment to configure the tree
-            builder = Build(command_context._mach_context, None)
+            build_commands = Build(command_context._mach_context, None)
 
-            rc = builder.configure(command_context)
+            rc = build_commands.configure(command_context)
             if rc != 0:
                 return rc
 
             # First install what we can through install manifests.
-            rc = builder._run_make(
+            rc = command_context._run_make(
                 directory=command_context.topobjdir,
                 target="pre-export",
                 line_handler=None,
@@ -80,7 +80,7 @@ class MachCommands(MachCommandBase):
             # Then build the rest of the build dependencies by running the full
             # export target, because we can't do anything better.
             for target in ("export", "pre-compile"):
-                rc = builder._run_make(
+                rc = command_context._run_make(
                     directory=command_context.topobjdir,
                     target=target,
                     line_handler=None,
