@@ -21,13 +21,21 @@ static constexpr auto kChromeURI = "chromeuri"_ns;
 static constexpr auto kResourceURI = "resourceuri"_ns;
 static constexpr auto kBlobUri = "bloburi"_ns;
 static constexpr auto kDataUri = "dataurl"_ns;
+static constexpr auto kAboutUri = "abouturi"_ns;
+static constexpr auto kDataUriWebExtCStyle =
+    "dataurl-extension-contentstyle"_ns;
 static constexpr auto kSingleString = "singlestring"_ns;
 static constexpr auto kMozillaExtensionFile = "mozillaextension_file"_ns;
 static constexpr auto kOtherExtensionFile = "otherextension_file"_ns;
+static constexpr auto kExtensionURI = "extension_uri"_ns;
 static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
+#if defined(XP_WIN)
 static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
 static constexpr auto kSanitizedWindowsPath = "sanitizedWindowsPath"_ns;
+#endif
 static constexpr auto kOther = "other"_ns;
+static constexpr auto kOtherWorker = "other-on-worker"_ns;
+static constexpr auto kRegexFailure = "regexfailure"_ns;
 
 #define ASSERT_AND_PRINT(first, second, condition)                      \
   fprintf(stderr, "First: %s\n", first.get());                          \
@@ -281,9 +289,57 @@ TEST(FilenameEvalParser, Other)
   }
 }
 
-#if defined(XP_WIN)
 TEST(FilenameEvalParser, WebExtensionPathParser)
 {
+  {
+    // Set up an Extension and register it so we can test against it.
+    mozilla::dom::AutoJSAPI jsAPI;
+    ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
+    JSContext* cx = jsAPI.cx();
+
+    mozilla::dom::GlobalObject go(cx, xpc::PrivilegedJunkScope());
+    auto* wEI = new mozilla::extensions::WebExtensionInit();
+
+    JS::Rooted<JSObject*> func(
+        cx, (JSObject*)JS_NewFunction(cx, (JSNative)1, 0, 0, "customMethodA"));
+    JS::Rooted<JSObject*> tempGlobalRoot(cx, JS::CurrentGlobalOrNull(cx));
+    wEI->mLocalizeCallback = new mozilla::dom::WebExtensionLocalizeCallback(
+        cx, func, tempGlobalRoot, nullptr);
+
+    wEI->mAllowedOrigins =
+        mozilla::dom::OwningMatchPatternSetOrStringSequence();
+    nsString* slotPtr =
+        wEI->mAllowedOrigins.SetAsStringSequence().AppendElement(
+            mozilla::fallible);
+    ASSERT_TRUE(slotPtr != nullptr);
+    nsString& slot = *slotPtr;
+    slot.Truncate();
+    slot = u"http://example.com"_ns;
+
+    wEI->mName = u"gtest Test Extension"_ns;
+    wEI->mId = u"gtesttestextension@mozilla.org"_ns;
+    wEI->mBaseURL = u"file://foo"_ns;
+    wEI->mMozExtensionHostname = "e37c3c08-beac-a04b-8032-c4f699a1a856"_ns;
+
+    mozilla::ErrorResult eR;
+    RefPtr<mozilla::WebExtensionPolicy> w =
+        mozilla::extensions::WebExtensionPolicy::Constructor(go, *wEI, eR);
+    w->SetActive(true, eR);
+
+    constexpr auto str =
+        u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, true);
+
+    ASSERT_TRUE(ret.first == kExtensionURI &&
+                ret.second.value() ==
+                    u"moz-extension://[gtesttestextension@mozilla.org: "
+                    "gtest Test Extension]P=0/path/to/file.js"_ns);
+
+    w->SetActive(false, eR);
+
+    delete wEI;
+  }
   {
     // Set up an Extension and register it so we can test against it.
     mozilla::dom::AutoJSAPI jsAPI;
@@ -312,6 +368,7 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     wEI->mId = u"gtesttestextension@mozilla.org"_ns;
     wEI->mBaseURL = u"file://foo"_ns;
     wEI->mMozExtensionHostname = "e37c3c08-beac-a04b-8032-c4f699a1a856"_ns;
+    wEI->mIsPrivileged = true;
 
     mozilla::ErrorResult eR;
     RefPtr<mozilla::WebExtensionPolicy> w =
@@ -323,20 +380,21 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
 
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kExtensionURI &&
                 ret.second.value() ==
                     u"moz-extension://[gtesttestextension@mozilla.org: "
-                    "gtest Test Extension]/path/to/file.js"_ns);
+                    "gtest Test Extension]P=1/path/to/file.js"_ns);
 
     w->SetActive(false, eR);
+
+    delete wEI;
   }
   {
     constexpr auto str =
         u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == u"moz-extension"_ns);
+    ASSERT_TRUE(ret.first == kExtensionURI && !ret.second.isSome());
   }
   {
     constexpr auto str =
@@ -344,7 +402,7 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
     ASSERT_TRUE(
-        ret.first == kSanitizedWindowsURL &&
+        ret.first == kExtensionURI &&
         ret.second.value() ==
             nsLiteralString(
                 u"moz-extension://[failed finding addon by host]/file.js"));
@@ -355,13 +413,12 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
         "file.js?querystringx=6"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kExtensionURI &&
                 ret.second.value() ==
                     u"moz-extension://[failed finding addon "
                     "by host]/path/to/file.js"_ns);
   }
 }
-#endif
 
 TEST(FilenameEvalParser, AboutPageParser)
 {
@@ -369,44 +426,28 @@ TEST(FilenameEvalParser, AboutPageParser)
     constexpr auto str = u"about:about"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-#if defined(XP_WIN)
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kAboutUri &&
                 ret.second.value() == u"about:about"_ns);
-#else
-    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
-#endif
   }
   {
     constexpr auto str = u"about:about?hello"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-#if defined(XP_WIN)
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kAboutUri &&
                 ret.second.value() == u"about:about"_ns);
-#else
-    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
-#endif
   }
   {
     constexpr auto str = u"about:about#mom"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-#if defined(XP_WIN)
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kAboutUri &&
                 ret.second.value() == u"about:about"_ns);
-#else
-    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
-#endif
   }
   {
     constexpr auto str = u"about:about?hello=there#mom"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-#if defined(XP_WIN)
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+    ASSERT_TRUE(ret.first == kAboutUri &&
                 ret.second.value() == u"about:about"_ns);
-#else
-    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
-#endif
   }
 }

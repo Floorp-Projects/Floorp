@@ -307,11 +307,13 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   static constexpr auto kResourceURI = "resourceuri"_ns;
   static constexpr auto kBlobUri = "bloburi"_ns;
   static constexpr auto kDataUri = "dataurl"_ns;
+  static constexpr auto kAboutUri = "abouturi"_ns;
   static constexpr auto kDataUriWebExtCStyle =
       "dataurl-extension-contentstyle"_ns;
   static constexpr auto kSingleString = "singlestring"_ns;
   static constexpr auto kMozillaExtensionFile = "mozillaextension_file"_ns;
   static constexpr auto kOtherExtensionFile = "otherextension_file"_ns;
+  static constexpr auto kExtensionURI = "extension_uri"_ns;
   static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
 #if defined(XP_WIN)
   static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
@@ -390,6 +392,74 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     return FilenameTypeAndDetails(kSuspectedUserChromeJS, Nothing());
   }
 
+  // Something loaded via an about:// URI.
+  if (StringBeginsWith(fileName, u"about:"_ns)) {
+    // Remove any querystrings and such
+    long int desired_length = fileName.Length();
+    long int possible_new_length = 0;
+
+    possible_new_length = fileName.FindChar('?');
+    if (possible_new_length != -1 && possible_new_length < desired_length) {
+      desired_length = possible_new_length;
+    }
+
+    possible_new_length = fileName.FindChar('#');
+    if (possible_new_length != -1 && possible_new_length < desired_length) {
+      desired_length = possible_new_length;
+    }
+
+    auto subFileName = Substring(fileName, 0, desired_length);
+
+    return FilenameTypeAndDetails(kAboutUri, Some(subFileName));
+  }
+
+  // Something loaded via a moz-extension:// URI.
+  if (StringBeginsWith(fileName, u"moz-extension://"_ns)) {
+    if (!collectAdditionalExtensionData) {
+      return FilenameTypeAndDetails(kExtensionURI, Nothing());
+    }
+
+    nsAutoString sanitizedPathAndScheme;
+    sanitizedPathAndScheme.Append(u"moz-extension://["_ns);
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), fileName);
+    if (NS_FAILED(rv)) {
+      // Return after adding ://[ so we know we failed here.
+      return FilenameTypeAndDetails(kExtensionURI,
+                                    Some(sanitizedPathAndScheme));
+    }
+
+    mozilla::extensions::URLInfo url(uri);
+    if (NS_IsMainThread()) {
+      // EPS is only usable on main thread
+      auto* policy =
+          ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
+      if (policy) {
+        nsString addOnId;
+        policy->GetId(addOnId);
+
+        sanitizedPathAndScheme.Append(addOnId);
+        sanitizedPathAndScheme.Append(u": "_ns);
+        sanitizedPathAndScheme.Append(policy->Name());
+        sanitizedPathAndScheme.Append(u"]"_ns);
+
+        if (policy->IsPrivileged()) {
+          sanitizedPathAndScheme.Append(u"P=1"_ns);
+        } else {
+          sanitizedPathAndScheme.Append(u"P=0"_ns);
+        }
+      } else {
+        sanitizedPathAndScheme.Append(u"failed finding addon by host]"_ns);
+      }
+    } else {
+      sanitizedPathAndScheme.Append(u"can't get addon off main thread]"_ns);
+    }
+
+    sanitizedPathAndScheme.Append(url.FilePath());
+    return FilenameTypeAndDetails(kExtensionURI, Some(sanitizedPathAndScheme));
+  }
+
 #if defined(XP_WIN)
   auto flags = mozilla::widget::WinUtils::PathTransformFlags::Default |
                mozilla::widget::WinUtils::PathTransformFlags::RequireFilePath;
@@ -403,56 +473,9 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     if (hr == S_OK && cchDecodedUrl) {
       nsAutoString sanitizedPathAndScheme;
       sanitizedPathAndScheme.Append(szOut);
-      if (sanitizedPathAndScheme == u"about"_ns) {
-        int32_t desired_length = fileName.Length();
-        int32_t possible_new_length = 0;
-
-        possible_new_length = fileName.FindChar('?');
-        if (possible_new_length != -1 && possible_new_length < desired_length) {
-          desired_length = possible_new_length;
-        }
-
-        possible_new_length = fileName.FindChar('#');
-        if (possible_new_length != -1 && possible_new_length < desired_length) {
-          desired_length = possible_new_length;
-        }
-
-        sanitizedPathAndScheme = Substring(fileName, 0, desired_length);
-      } else if (sanitizedPathAndScheme == u"file"_ns) {
+      if (sanitizedPathAndScheme == u"file"_ns) {
         sanitizedPathAndScheme.Append(u"://.../"_ns);
         sanitizedPathAndScheme.Append(strSanitizedPath);
-      } else if (sanitizedPathAndScheme == u"moz-extension"_ns &&
-                 collectAdditionalExtensionData) {
-        sanitizedPathAndScheme.Append(u"://["_ns);
-
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = NS_NewURI(getter_AddRefs(uri), fileName);
-        if (NS_FAILED(rv)) {
-          // Return after adding ://[ so we know we failed here.
-          return FilenameTypeAndDetails(kSanitizedWindowsURL,
-                                        Some(sanitizedPathAndScheme));
-        }
-
-        mozilla::extensions::URLInfo url(uri);
-        if (NS_IsMainThread()) {
-          // EPS is only usable on main thread
-          auto* policy =
-              ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
-          if (policy) {
-            nsString addOnId;
-            policy->GetId(addOnId);
-
-            sanitizedPathAndScheme.Append(addOnId);
-            sanitizedPathAndScheme.Append(u": "_ns);
-            sanitizedPathAndScheme.Append(policy->Name());
-          } else {
-            sanitizedPathAndScheme.Append(u"failed finding addon by host"_ns);
-          }
-        } else {
-          sanitizedPathAndScheme.Append(u"can't get addon off main thread"_ns);
-        }
-        sanitizedPathAndScheme.Append(u"]"_ns);
-        sanitizedPathAndScheme.Append(url.FilePath());
       }
       return FilenameTypeAndDetails(kSanitizedWindowsURL,
                                     Some(sanitizedPathAndScheme));
