@@ -1282,12 +1282,27 @@ static bool IsNextFocusableElementTextControl(Element* aInputContent) {
   return !inputElement->ReadOnly();
 }
 
+static void GetInputType(const IMEState& aState, const nsIContent& aContent,
+                         nsAString& aInputType) {
+  if (aContent.IsHTMLElement(nsGkAtoms::input)) {
+    const HTMLInputElement* inputElement =
+        HTMLInputElement::FromNode(&aContent);
+    if (inputElement->HasBeenTypePassword() && aState.IsEditable()) {
+      aInputType.AssignLiteral("password");
+    } else {
+      inputElement->GetType(aInputType);
+    }
+  } else if (aContent.IsHTMLElement(nsGkAtoms::textarea)) {
+    aInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
+  }
+}
+
 static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
                           nsAString& aActionHint) {
   MOZ_ASSERT(aContent.IsHTMLElement());
 
   if (aState.IsEditable() && StaticPrefs::dom_forms_enterkeyhint()) {
-    nsGenericHTMLElement::FromNode(aContent)->GetEnterKeyHint(aActionHint);
+    nsGenericHTMLElement::FromNode(&aContent)->GetEnterKeyHint(aActionHint);
 
     // If enterkeyhint is set, we don't infer action hint.
     if (!aActionHint.IsEmpty()) {
@@ -1363,6 +1378,37 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
   aActionHint.AssignLiteral("go");
 }
 
+static void GetInputmode(const IMEState& aState, const nsIContent& aContent,
+                         nsAString& aInputmode) {
+  if (aState.IsEditable() &&
+      (StaticPrefs::dom_forms_inputmode() ||
+       nsContentUtils::IsChromeDoc(aContent.OwnerDoc()))) {
+    aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
+                                  aInputmode);
+    if (aContent.IsHTMLElement(nsGkAtoms::input) &&
+        aInputmode.EqualsLiteral("mozAwesomebar")) {
+      if (!nsContentUtils::IsChromeDoc(aContent.OwnerDoc())) {
+        // mozAwesomebar should be allowed only in chrome
+        aInputmode.Truncate();
+      }
+    } else {
+      ToLowerCase(aInputmode);
+    }
+  }
+}
+
+static void GetAutocapitalize(const IMEState& aState,
+                              const nsIContent& aContent,
+                              const InputContext& aInputContext,
+                              nsAString& aAutocapitalize) {
+  if (aContent.IsHTMLElement() && aState.IsEditable() &&
+      StaticPrefs::dom_forms_autocapitalize() &&
+      aInputContext.IsAutocapitalizeSupported()) {
+    nsGenericHTMLElement::FromNode(&aContent)->GetAutocapitalize(
+        aAutocapitalize);
+  }
+}
+
 // static
 void IMEStateManager::SetIMEState(const IMEState& aState,
                                   nsPresContext* aPresContext,
@@ -1395,43 +1441,10 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       nsContentUtils::IsInPrivateBrowsing(aPresContext->Document());
 
   if (aContent && aContent->IsHTMLElement()) {
-    if (aContent->IsHTMLElement(nsGkAtoms::input)) {
-      HTMLInputElement* inputElement = HTMLInputElement::FromNode(aContent);
-      if (inputElement->HasBeenTypePassword() && aState.IsEditable()) {
-        context.mHTMLInputType.AssignLiteral("password");
-      } else {
-        inputElement->GetType(context.mHTMLInputType);
-      }
-
-    } else if (aContent->IsHTMLElement(nsGkAtoms::textarea)) {
-      context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
-    }
-
+    GetInputType(aState, *aContent, context.mHTMLInputType);
     GetActionHint(aState, *aContent, context.mActionHint);
-
-    if (aState.IsEditable() &&
-        (StaticPrefs::dom_forms_inputmode() ||
-         nsContentUtils::IsChromeDoc(aContent->OwnerDoc()))) {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
-                                     context.mHTMLInputInputmode);
-      if (aContent->IsHTMLElement(nsGkAtoms::input) &&
-          context.mHTMLInputInputmode.EqualsLiteral("mozAwesomebar")) {
-        if (!nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
-          // mozAwesomebar should be allowed only in chrome
-          context.mHTMLInputInputmode.Truncate();
-        }
-      } else {
-        // Except to mozAwesomebar, inputmode should be lower case.
-        ToLowerCase(context.mHTMLInputInputmode);
-      }
-    }
-
-    if (aContent->IsHTMLElement() && aState.IsEditable() &&
-        StaticPrefs::dom_forms_autocapitalize() &&
-        context.IsAutocapitalizeSupported()) {
-      nsGenericHTMLElement::FromNode(aContent)->GetAutocapitalize(
-          context.mAutocapitalize);
-    }
+    GetInputmode(aState, *aContent, context.mHTMLInputInputmode);
+    GetAutocapitalize(aState, *aContent, context, context.mAutocapitalize);
   }
 
   if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&
