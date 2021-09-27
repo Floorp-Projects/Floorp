@@ -10,6 +10,9 @@
 #include "mozilla/StaticPrefs_accessibility.h"
 
 #include "LocalAccessible-inl.h"
+#ifdef A11Y_LOG
+#  include "Logging.h"
+#endif
 
 namespace mozilla {
 namespace a11y {
@@ -95,6 +98,71 @@ void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
   LocalAccessible* child = aShowEvent->GetAccessible();
   InsertIntoIpcTree(aShowEvent->LocalParent(), child, child->IndexInParent(),
                     false);
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvVerifyCache(
+    const uint64_t& aID, const uint64_t& aCacheDomain, AccAttributes* aFields) {
+#ifdef A11Y_LOG
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return IPC_OK();
+  }
+
+  RefPtr<AccAttributes> localFields =
+      acc->BundleFieldsForCache(aCacheDomain, CacheUpdateType::Update);
+  bool mismatches = false;
+
+  for (auto prop : *localFields) {
+    if (prop.Value<DeleteEntry>()) {
+      if (aFields->HasAttribute(prop.Name())) {
+        if (!mismatches) {
+          logging::MsgBegin("Mismatch!", "Local and remote values differ");
+          logging::AccessibleInfo("", acc);
+          mismatches = true;
+        }
+        nsAutoCString propName;
+        prop.Name()->ToUTF8String(propName);
+        nsAutoString val;
+        aFields->GetAttribute(prop.Name(), val);
+        logging::MsgEntry(
+            "Remote value for %s should be empty, but instead it is '%s'",
+            propName.get(), NS_ConvertUTF16toUTF8(val).get());
+      }
+      continue;
+    }
+
+    nsAutoString localVal;
+    prop.ValueAsString(localVal);
+    nsAutoString remoteVal;
+    aFields->GetAttribute(prop.Name(), remoteVal);
+    if (!localVal.Equals(remoteVal)) {
+      if (!mismatches) {
+        logging::MsgBegin("Mismatch!", "");
+        logging::AccessibleInfo("", acc);
+        mismatches = true;
+      }
+      nsAutoCString propName;
+      prop.Name()->ToUTF8String(propName);
+      logging::MsgEntry("Fields differ: %s '%s' != '%s'", propName.get(),
+                        NS_ConvertUTF16toUTF8(remoteVal).get(),
+                        NS_ConvertUTF16toUTF8(localVal).get());
+    }
+  }
+  if (mismatches) {
+    logging::MsgEnd();
+  }
+#endif  // A11Y_LOG
+
+  return IPC_OK();
+}
+
+LocalAccessible* DocAccessibleChildBase::IdToAccessible(
+    const uint64_t& aID) const {
+  if (!aID) return mDoc;
+
+  if (!mDoc) return nullptr;
+
+  return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
 }
 
 }  // namespace a11y
