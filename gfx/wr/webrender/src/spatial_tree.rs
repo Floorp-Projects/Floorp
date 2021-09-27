@@ -48,7 +48,7 @@ impl CoordinateSystem {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(u32);
@@ -583,37 +583,20 @@ impl SpatialTree {
         let child = self.get_spatial_node(child_index);
         let parent = self.get_spatial_node(parent_index);
 
+        // TODO(gw): We expect this never to fail, but it's possible that it might due to
+        //           either (a) a bug in WR / Gecko, or (b) some obscure real-world content
+        //           that we're unaware of. If we ever hit this, please open a bug with any
+        //           repro steps!
+        assert!(
+            child.coordinate_system_id.0 >= parent.coordinate_system_id.0,
+            "bug: this is an unexpected case - please open a bug and talk to #gfx team!",
+        );
+
         if child.coordinate_system_id == parent.coordinate_system_id {
             let scale_offset = parent.content_transform
                 .inverse()
                 .accumulate(&child.content_transform);
             return CoordinateSpaceMapping::ScaleOffset(scale_offset);
-        }
-
-        if child_index.0 < parent_index.0 {
-            warn!("Unexpected transform queried from {:?} to {:?}, please call the graphics team!", child_index, parent_index);
-            let child_cs = &self.coord_systems[child.coordinate_system_id.0 as usize];
-            let child_transform = child.content_transform
-                .to_transform::<LayoutPixel, LayoutPixel>()
-                .then(&child_cs.world_transform);
-            let parent_cs = &self.coord_systems[parent.coordinate_system_id.0 as usize];
-            let parent_transform = parent.content_transform
-                .to_transform()
-                .then(&parent_cs.world_transform);
-
-            let result = parent_transform
-                .inverse()
-                .unwrap_or_default()
-                .then(&child_transform)
-                .with_source::<LayoutPixel>()
-                .with_destination::<LayoutPixel>();
-
-            if let Some(face) = visible_face {
-                if result.is_backface_visible() {
-                    *face = VisibleFace::Back;
-                }
-            }
-            return CoordinateSpaceMapping::Transform(result);
         }
 
         let mut coordinate_system_id = child.coordinate_system_id;
