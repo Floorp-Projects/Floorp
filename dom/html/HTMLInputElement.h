@@ -614,7 +614,7 @@ class HTMLInputElement final : public TextControlElement,
     SetHTMLAttr(nsGkAtoms::step, aValue, aRv);
   }
 
-  void GetType(nsAString& aValue);
+  void GetType(nsAString& aValue) const;
   void SetType(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
   }
@@ -844,7 +844,7 @@ class HTMLInputElement final : public TextControlElement,
    */
   bool IsRequired() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
 
-  bool HasBeenTypePassword() { return mHasBeenTypePassword; }
+  bool HasBeenTypePassword() const { return mHasBeenTypePassword; }
 
   /**
    * Returns whether the current value is the empty string.  This only makes
