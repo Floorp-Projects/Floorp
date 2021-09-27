@@ -24,24 +24,22 @@
     static get markup() {
       return `
         <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
-        <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
+        <hbox class="searchbar-search-button" data-l10n-id="search-icon">
           <image class="searchbar-search-icon"></image>
           <image class="searchbar-search-icon-overlay"></image>
         </hbox>
-        <html:input class="searchbar-textbox" is="autocomplete-input" type="search" placeholder="&searchInput.placeholder;" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+        <html:input class="searchbar-textbox" is="autocomplete-input" type="search" data-l10n-id="search-input" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
         <menupopup class="textbox-contextmenu"></menupopup>
         <hbox class="search-go-container">
-          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
+          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" data-l10n-id="content-search-submit"></image>
         </hbox>
       `;
     }
 
-    static get entities() {
-      return ["chrome://browser/locale/browser.dtd"];
-    }
-
     constructor() {
       super();
+
+      MozXULElement.insertFTLIfNeeded("browser/search.ftl");
 
       this.destroy = this.destroy.bind(this);
       this._setupEventListeners();
