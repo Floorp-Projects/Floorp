@@ -34,7 +34,7 @@ document.getElementById("eval-button").onmousedown = evalHandler;
 function evalHandler() {
   eval(`
     console.log("eval ran");
-    //# sourceURL=https://example.com/eval-test.js
+    //# sourceURL=http://example.com/eval-test.js
   `);
 }
 
