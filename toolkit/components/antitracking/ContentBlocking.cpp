@@ -1219,7 +1219,8 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     }
   }
 
-  bool allowed = loadInfo->GetHasStoragePermission();
+  bool allowed =
+      loadInfo->GetStoragePermission() != nsILoadInfo::NoStoragePermission;
   if (!allowed) {
     *aRejectedReason = blockedReason;
   }

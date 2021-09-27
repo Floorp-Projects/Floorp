@@ -255,8 +255,9 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   return true;
 }
 
-/* static */ bool AntiTrackingUtils::HasStoragePermissionInParent(
-    nsIChannel* aChannel) {
+/* static */
+nsILoadInfo::StoragePermissionState
+AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
@@ -269,13 +270,13 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   // window should always has 'hasStoragePermission' flag as false. So, we can
   // return here directly.
   if (policyType == ExtContentPolicy::TYPE_DOCUMENT) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   nsresult rv =
       loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   int32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
@@ -286,13 +287,13 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   // update or check the storage permission if the cookie behavior is not
   // belongs to these three.
   if (!net::CookieJarSettings::IsRejectThirdPartyContexts(cookieBehavior)) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   RefPtr<BrowsingContext> bc;
   rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
   if (NS_WARN_IF(NS_FAILED(rv)) || !bc) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   uint64_t targetWindowId = GetTopLevelAntiTrackingWindowId(bc);
@@ -303,7 +304,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
         WindowGlobalParent::GetByInnerWindowId(targetWindowId);
 
     if (NS_WARN_IF(!wgp)) {
-      return false;
+      return nsILoadInfo::NoStoragePermission;
     }
 
     targetPrincipal = wgp->DocumentPrincipal();
@@ -336,24 +337,24 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 
   // Cannot get the target principal, bail out.
   if (NS_WARN_IF(!targetPrincipal)) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   nsAutoCString targetOrigin;
   if (NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin))) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   nsCOMPtr<nsIURI> trackingURI;
   rv = aChannel->GetURI(getter_AddRefs(trackingURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   nsAutoCString trackingOrigin;
   rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return nsILoadInfo::NoStoragePermission;
   }
 
   nsAutoCString type;
@@ -362,12 +363,16 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   uint32_t unusedReason = 0;
 
   if (PartitioningExceptionList::Check(targetOrigin, trackingOrigin)) {
-    return true;
+    return nsILoadInfo::StoragePermissionAllowListed;
   }
 
-  return AntiTrackingUtils::CheckStoragePermission(
-      targetPrincipal, type, NS_UsePrivateBrowsing(aChannel), &unusedReason,
-      unusedReason);
+  if (AntiTrackingUtils::CheckStoragePermission(targetPrincipal, type,
+                                                NS_UsePrivateBrowsing(aChannel),
+                                                &unusedReason, unusedReason)) {
+    return nsILoadInfo::HasStoragePermission;
+  }
+
+  return nsILoadInfo::NoStoragePermission;
 }
 
 uint64_t AntiTrackingUtils::GetTopLevelAntiTrackingWindowId(
@@ -687,8 +692,8 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  Unused << loadInfo->SetHasStoragePermission(
-      AntiTrackingUtils::HasStoragePermissionInParent(aChannel));
+  Unused << loadInfo->SetStoragePermission(
+      AntiTrackingUtils::GetStoragePermissionStateInParent(aChannel));
 
   AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(aChannel);
 
