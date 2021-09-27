@@ -74,6 +74,32 @@ mapping:
             - build-fat-aar
         pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
         checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.asc:
+        <<: *default
+        from: ['build-signing']
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.asc
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.asc
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.md5:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.md5
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.md5
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha1:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha1
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha1
     ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar:
         <<: *default
         from:
