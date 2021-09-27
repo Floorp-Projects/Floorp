@@ -768,6 +768,13 @@
     id: ValId
     hasOwn: BoolImm
 
+- name: ValueToIteratorResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    val: ValId
+
 # See CacheIR.cpp 'DOM proxies' comment.
 - name: LoadDOMExpandoValue
   shared: true
