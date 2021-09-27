@@ -19,6 +19,9 @@ var EXPORTED_SYMBOLS = ["BrowserTestUtils"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -40,9 +43,32 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
 });
 
+const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
+const OUR_PROCESSSELECTOR_CID = Components.ID(
+  "{f9746211-3d53-4465-9aeb-ca0d96de0253}"
+);
+const EXISTING_JSID = Cc[PROCESSSELECTOR_CONTRACTID];
+const DEFAULT_PROCESSSELECTOR_CID = EXISTING_JSID
+  ? Components.ID(EXISTING_JSID.number)
+  : null;
+
 let gListenerId = 0;
 
-const DISABLE_CONTENT_PROCESS_REUSE_PREF = "dom.ipc.disableContentProcessReuse";
+// A process selector that always asks for a new process.
+function NewProcessSelector() {}
+
+NewProcessSelector.prototype = {
+  classID: OUR_PROCESSSELECTOR_CID,
+  QueryInterface: ChromeUtils.generateQI(["nsIContentProcessProvider"]),
+
+  provideProcess() {
+    return Ci.nsIContentProcessProvider.NEW_PROCESS;
+  },
+};
+
+let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+let selectorFactory = ComponentUtils._getFactory(NewProcessSelector);
+registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "", null, selectorFactory);
 
 const kAboutPageRegistrationContentScript =
   "chrome://mochikit/content/tests/BrowserTestUtils/content-about-page-utils.js";
@@ -200,17 +226,19 @@ var BrowserTestUtils = {
     } = options;
 
     let promises, tab;
-    let disableReusePrefValue = Services.prefs.getBoolPref(
-      DISABLE_CONTENT_PROCESS_REUSE_PREF
-    );
     try {
       // If we're asked to force a new process, replace the normal process
       // selector with one that always asks for a new process.
       // If DEFAULT_PROCESSSELECTOR_CID is null, we're in non-e10s mode and we
       // should skip this.
-      if (options.forceNewProcess) {
+      if (options.forceNewProcess && DEFAULT_PROCESSSELECTOR_CID) {
         Services.ppmm.releaseCachedProcesses();
-        Services.prefs.setBoolPref(DISABLE_CONTENT_PROCESS_REUSE_PREF, true);
+        registrar.registerFactory(
+          OUR_PROCESSSELECTOR_CID,
+          "",
+          PROCESSSELECTOR_CONTRACTID,
+          null
+        );
       }
 
       promises = [
@@ -235,10 +263,12 @@ var BrowserTestUtils = {
       }
     } finally {
       // Restore the original process selector, if needed.
-      if (options.forceNewProcess) {
-        Services.prefs.setBoolPref(
-          DISABLE_CONTENT_PROCESS_REUSE_PREF,
-          disableReusePrefValue
+      if (options.forceNewProcess && DEFAULT_PROCESSSELECTOR_CID) {
+        registrar.registerFactory(
+          DEFAULT_PROCESSSELECTOR_CID,
+          "",
+          PROCESSSELECTOR_CONTRACTID,
+          null
         );
       }
     }
