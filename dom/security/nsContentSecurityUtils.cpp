@@ -310,8 +310,8 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   static constexpr auto kDataUriWebExtCStyle =
       "dataurl-extension-contentstyle"_ns;
   static constexpr auto kSingleString = "singlestring"_ns;
-  static constexpr auto kMozillaExtension = "mozillaextension"_ns;
-  static constexpr auto kOtherExtension = "otherextension"_ns;
+  static constexpr auto kMozillaExtensionFile = "mozillaextension_file"_ns;
+  static constexpr auto kOtherExtensionFile = "otherextension_file"_ns;
   static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
 #if defined(XP_WIN)
   static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
@@ -353,7 +353,7 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     return FilenameTypeAndDetails(kOtherWorker, Nothing());
   }
 
-  // Extension
+  // Extension as loaded via a file://
   bool regexMatch;
   nsTArray<nsString> regexResults;
   nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
@@ -363,8 +363,8 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   }
   if (regexMatch) {
     nsCString type = StringEndsWith(regexResults[2], u"mozilla.org.xpi"_ns)
-                         ? kMozillaExtension
-                         : kOtherExtension;
+                         ? kMozillaExtensionFile
+                         : kOtherExtensionFile;
     auto& extensionNameAndPath =
         Substring(regexResults[0], ArrayLength("extensions/") - 1);
     return FilenameTypeAndDetails(type,
