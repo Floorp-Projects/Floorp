@@ -11666,6 +11666,8 @@
   type: uint32_t
 #if defined(MOZ_WIDGET_GTK)
   value: 12
+#elif defined(ANDROID)
+  value: 6
 #else
   value: 17
 #endif
