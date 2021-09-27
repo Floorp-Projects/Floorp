@@ -5,10 +5,13 @@
 package org.mozilla.focus.engine
 
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.focus.activity.CrashListActivity
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
 
@@ -41,6 +44,14 @@ class AppContentInterceptor(
             LocalizedContent.URL_LICENSES -> RequestInterceptor.InterceptionResponse.Content(
                 LocalizedContent.loadLicenses(context), encoding = "base64"
             )
+
+            "about:crashes" -> {
+                val intent = Intent(context, CrashListActivity::class.java)
+                intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+
+                RequestInterceptor.InterceptionResponse.Url("about:blank")
+            }
 
             else -> context.components.appLinksInterceptor.onLoadRequest(
                 engineSession,

@@ -76,6 +76,10 @@
             android:label="@string/app_name">
         </activity>
 
+        <activity
+            android:name=".activity.CrashListActivity"
+            android:exported="false" />
+
         <!--
           This activity alias should be kept as the main launcher if in order to prevent widgets
           and shortcuts on the home screen disappearing.
