@@ -196,31 +196,19 @@ registerCleanupFunction(() => {
  * Spawn an instance of the highlighter test actor for the given toolbox
  *
  * @param {Toolbox} toolbox
- * @param {Object} options
- * @param {Function} options.findTarget: Optional find function that will be used to retrieve
- *        a specific frame target.
  * @returns {HighlighterTestFront}
  */
-async function getHighlighterTestFront(toolbox, { findTarget } = {}) {
+async function getHighlighterTestFront(toolbox) {
   // Loading the Inspector panel in order to overwrite the TestActor getter for the
   // highlighter instance with a method that points to the currently visible
   // Box Model Highlighter managed by the Inspector panel.
   const inspector = await toolbox.loadTool("inspector");
-
-  const target = findTarget
-    ? toolbox.commands.targetCommand
-        .getAllTargets([toolbox.commands.targetCommand.TYPES.FRAME])
-        .find(t => findTarget(t))
-    : toolbox.target;
-
-  const highlighterTestFront = await target.getFront("highlighterTest");
+  const highlighterTestFront = await toolbox.target.getFront("highlighterTest");
   // Override the highligher getter with a method to return the active box model
   // highlighter. Adaptation for multi-process scenarios where there can be multiple
   // highlighters, one per process.
   highlighterTestFront.highlighter = () => {
-    return inspector.highlighters.getActiveHighlighter(
-      inspector.highlighters.TYPES.BOXMODEL
-    );
+    return inspector.highlighters.getActiveHighlighter("BoxModelHighlighter");
   };
   return highlighterTestFront;
 }
