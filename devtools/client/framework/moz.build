@@ -49,3 +49,5 @@ DevToolsModules(
 
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Framework")
+
+SPHINX_TREES["/devtools/tests/memory"] = "test/allocations/docs"
