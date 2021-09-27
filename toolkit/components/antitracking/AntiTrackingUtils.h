@@ -11,6 +11,8 @@
 #include "nsStringFwd.h"
 #include "ContentBlockingNotifier.h"
 
+#include "nsILoadInfo.h"
+
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsIChannel;
@@ -58,12 +60,14 @@ class AntiTrackingUtils final {
                                      uint32_t* aRejectedReason,
                                      uint32_t aBlockedReason);
 
-  // Returns true if the storage permission is granted for the given channel.
-  // And this is meant to be called in the parent process. This only reflects
-  // the fact that whether the channel has the storage permission. It doesn't
-  // take the window hierarchy into account. i.e. this will return true even
-  // for a nested iframe that has storage permission.
-  static bool HasStoragePermissionInParent(nsIChannel* aChannel);
+  // Returns the storage permission state for the given channel. And this is
+  // meant to be called in the parent process. This only reflects the fact that
+  // whether the channel has the storage permission. It doesn't take the window
+  // hierarchy into account. i.e. this will return
+  // nsILoadInfo::HasStoragePermission even for a nested iframe that has storage
+  // permission.
+  static nsILoadInfo::StoragePermissionState GetStoragePermissionStateInParent(
+      nsIChannel* aChannel);
 
   // Returns the toplevel inner window id, returns 0 if this is a toplevel
   // window.

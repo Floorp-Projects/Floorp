@@ -2858,8 +2858,10 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     // worker is supposed to have the same storage permission as the window as
     // well as the hasStoragePermission flag.
     nsCOMPtr<nsILoadInfo> channelLoadInfo = loadInfo.mChannel->LoadInfo();
-    rv = channelLoadInfo->SetHasStoragePermission(
-        loadInfo.mHasStorageAccessPermissionGranted);
+    rv = channelLoadInfo->SetStoragePermission(
+        loadInfo.mHasStorageAccessPermissionGranted
+            ? nsILoadInfo::HasStoragePermission
+            : nsILoadInfo::NoStoragePermission);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = loadInfo.SetPrincipalsAndCSPFromChannel(loadInfo.mChannel);
