@@ -14,8 +14,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "BrowsingContextTargetFront",
-  "devtools/client/fronts/targets/browsing-context",
+  "WindowGlobalTargetFront",
+  "devtools/client/fronts/targets/window-global",
   true
 );
 const {
@@ -184,7 +184,7 @@ class TabDescriptorFront extends DescriptorMixin(
   }
 
   _createTabTarget(form) {
-    const front = new BrowsingContextTargetFront(this._client, null, this);
+    const front = new WindowGlobalTargetFront(this._client, null, this);
 
     // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
     // manually like that:

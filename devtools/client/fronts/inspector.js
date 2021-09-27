@@ -240,7 +240,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     // If the contentDomReference has a different browsing context than the current one,
     // we are either in Fission or in the Multiprocess Browser Toolbox, so we need to
-    // retrieve the walker of the BrowsingContextTarget.
+    // retrieve the walker of the WindowGlobalTarget.
     // Get the target for this remote frame element
     const { descriptorFront } = this.targetFront;
 
@@ -249,7 +249,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     let target;
     if (descriptorFront && descriptorFront.traits.watcher) {
       const watcherFront = await descriptorFront.getWatcher();
-      target = await watcherFront.getBrowsingContextTarget(browsingContextId);
+      target = await watcherFront.getWindowGlobalTarget(browsingContextId);
     } else {
       // For descriptors which don't expose a watcher (e.g. WebExtension)
       // we used to call RootActor::getBrowsingContextDescriptor, but it was

@@ -24,7 +24,7 @@ const { Cu } = require("chrome");
 
 const {
   getChildDocShells,
-} = require("devtools/server/actors/targets/browsing-context");
+} = require("devtools/server/actors/targets/window-global");
 
 // Be aggressive about lazy loading, as this will run on every
 // toolbox startup

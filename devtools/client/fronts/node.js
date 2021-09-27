@@ -540,7 +540,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     }
 
     // Get the target for this remote frame element
-    this._remoteFrameTarget = await this.targetFront.getBrowsingContextTarget(
+    this._remoteFrameTarget = await this.targetFront.getWindowGlobalTarget(
       this._form.browsingContextID
     );
     return this._remoteFrameTarget;

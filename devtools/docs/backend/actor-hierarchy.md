@@ -64,7 +64,7 @@ RootActor (root.js)
    |       The "real" target actor for a frame (such as a tab) which runs in
    |       whichever process holds the content. FrameTargetActorProxy
    |       communicates with this via the frame's message manager.
-   |       Extends the abstract class BrowsingContextTargetActor.
+   |       Extends the abstract class WindowGlobalTargetActor.
    |       Returned by "connect" server method on FrameTargetActorProxy.
    |
    |-- WorkerTargetActor (worker.js)
@@ -79,7 +79,7 @@ RootActor (root.js)
    |-- ParentProcessTargetActor (parent-process.js)
    |   Targets all resources in the parent process of Firefox (chrome documents,
    |   JSMs, JS XPCOM, etc.).
-   |   Extends the abstract class BrowsingContextTargetActor.
+   |   Extends the abstract class WindowGlobalTargetActor.
    |   Extended by WebExtensionTargetActor.
    |   Returned by "getProcess" request without any argument.
    |
@@ -112,7 +112,7 @@ lifetime of a given target: tab, process, add-on, or worker. It also allows to
 fetch the target-scoped actors connected to this target, which are actors like
 console, inspector, thread (for debugger), style inspector, etc.
 
-Some target actors inherit from BrowsingContextTargetActor (defined in
+Some target actors inherit from WindowGlobalTargetActor (defined in
 browsing-context.js) which is meant for "browsing contexts" which present
 documents to the user. It automatically tracks the lifetime of the targeted
 browsing context, but it also tracks its iframes and allows switching the
@@ -120,7 +120,7 @@ target to one of its iframes.
 
 For historical reasons, target actors also handle creating the ThreadActor, used
 to manage breakpoints in the debugger. Actors inheriting from
-BrowsingContextTargetActor expose `attach`/`detach` requests, that allows to
+WindowGlobalTargetActor expose `attach`/`detach` requests, that allows to
 start/stop the ThreadActor.
 
 Target-scoped actors are accessed via the target actor's RDP form which contains
@@ -139,7 +139,7 @@ actor:
    Helper function used to create Debugger object for the target.
    (See actors/utils/make-debugger.js for more info)
 
-In addition to this, the actors inheriting from BrowsingContextTargetActor,
+In addition to this, the actors inheriting from WindowGlobalTargetActor,
 expose many other attributes and events:
  - window:
    Reference to the window global object currently targeted.
@@ -156,7 +156,7 @@ expose many other attributes and events:
    The chrome event handler for the current target. Allows to listen to events
    that can be missing/cancelled on this document itself.
 
-See BrowsingContextTargetActor documentation for more details.
+See WindowGlobalTargetActor documentation for more details.
 
 ## Target-scoped actors
 

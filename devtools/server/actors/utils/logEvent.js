@@ -77,7 +77,7 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
   };
 
   const targetActor = threadActor._parent;
-  // Note that only BrowsingContextTarget actor support resource watcher
+  // Note that only WindowGlobalTarget actor support resource watcher
   // This is still missing for worker and content processes
   const consoleMessageWatcher = getResourceWatcher(
     targetActor,

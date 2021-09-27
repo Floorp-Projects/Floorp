@@ -534,7 +534,11 @@ class TargetCommand extends EventEmitter {
 
   getTargetType(target) {
     const { typeName } = target;
-    if (typeName == "browsingContextTarget") {
+    // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
+    if (
+      typeName == "windowGlobalTarget" ||
+      typeName == "browsingContextTarget"
+    ) {
       return TargetCommand.TYPES.FRAME;
     }
 
@@ -750,7 +754,7 @@ class TargetCommand extends EventEmitter {
    * the tab navigates to a distinct process.
    *
    * @param TargetFront targetFront
-   *        The BrowsingContextTargetFront instance that navigated to another process
+   *        The WindowGlobalTargetFront instance that navigated to another process
    */
   async onLocalTabRemotenessChange(targetFront) {
     if (this.isServerTargetSwitchingEnabled()) {
@@ -784,7 +788,7 @@ class TargetCommand extends EventEmitter {
 
   /**
    * Reload the current top level target.
-   * This only works for targets inheriting from BrowsingContextTarget.
+   * This only works for targets inheriting from WindowGlobalTarget.
    *
    * @param {Boolean} bypassCache
    *        If true, the reload will be forced to bypass any cache.

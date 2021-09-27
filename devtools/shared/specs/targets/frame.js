@@ -6,12 +6,12 @@
 const { generateActorSpec } = require("devtools/shared/protocol");
 const { extend } = require("devtools/shared/extend");
 const {
-  browsingContextTargetSpecPrototype,
-} = require("devtools/shared/specs/targets/browsing-context");
+  windowGlobalTargetSpecPrototype,
+} = require("devtools/shared/specs/targets/window-global");
 
 // Bug 1467560: Update `generateActorSpec` support extension more naturally
 const frameTargetSpec = generateActorSpec(
-  extend(browsingContextTargetSpecPrototype, {
+  extend(windowGlobalTargetSpecPrototype, {
     typeName: "frameTarget",
   })
 );
