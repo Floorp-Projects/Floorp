@@ -228,4 +228,11 @@ bool HTMLScriptElement::HasScriptContent() {
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
+// https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
+/* static */
+bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
+                                 const nsAString& aType) {
+  return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module");
+}
+
 }  // namespace mozilla::dom

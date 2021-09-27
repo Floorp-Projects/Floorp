@@ -130,6 +130,9 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
     GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrerPolicy);
   }
 
+  [[nodiscard]] static bool Supports(const GlobalObject& aGlobal,
+                                     const nsAString& aType);
+
  protected:
   virtual ~HTMLScriptElement();
 
