@@ -541,11 +541,18 @@ interface nsILoadInfo : nsISupports
    */
   attribute nsICookieJarSettings cookieJarSettings;
 
+  cenum StoragePermissionState : 8 {
+    NoStoragePermission = 0,
+    HasStoragePermission = 1,
+    StoragePermissionAllowListed = 2,
+  };
+
   /**
-   * True if the loading document has the storage permission. This value would
-   * be set during opening the channel.
+   * The result of the storage permission check of the loading document. This
+   * value would be set during opening the channel.
    */
-  [infallible] attribute boolean hasStoragePermission;
+  [infallible] attribute nsILoadInfo_StoragePermissionState
+        storagePermission;
 
   /**
    * True if the load was triggered by a meta refresh.
