@@ -828,6 +828,21 @@ function getAbsoluteScrollOffsetsForNode(node) {
 exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;
 
 /**
+ * Check if the provided node is representing a remote <browser> element.
+ *
+ * @param  {DOMNode} node
+ * @return {Boolean}
+ */
+function isRemoteBrowserElement(node) {
+  return (
+    ChromeUtils.getClassName(node) == "XULFrameElement" &&
+    !node.childNodes.length &&
+    node.getAttribute("remote") == "true"
+  );
+}
+exports.isRemoteBrowserElement = isRemoteBrowserElement;
+
+/**
  * Check if the provided node is representing a remote frame.
  *
  * - In the context of the browser toolbox, a remote frame can be the <browser remote>
@@ -843,8 +858,8 @@ function isRemoteFrame(node) {
     return node.frameLoader?.isRemoteFrame;
   }
 
-  if (ChromeUtils.getClassName(node) == "XULFrameElement") {
-    return !node.childNodes.length && node.getAttribute("remote") == "true";
+  if (isRemoteBrowserElement(node)) {
+    return true;
   }
 
   return false;
