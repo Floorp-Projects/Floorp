@@ -3372,6 +3372,18 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I16x8Q15MulrSatS:
       masm.q15MulrSatInt16x8(lhs, rhs, dest);
       break;
+    case wasm::SimdOp::F32x4RelaxedMin:
+      masm.minFloat32x4Relaxed(lhs, rhs, dest);
+      break;
+    case wasm::SimdOp::F32x4RelaxedMax:
+      masm.maxFloat32x4Relaxed(lhs, rhs, dest);
+      break;
+    case wasm::SimdOp::F64x2RelaxedMin:
+      masm.minFloat64x2Relaxed(lhs, rhs, dest);
+      break;
+    case wasm::SimdOp::F64x2RelaxedMax:
+      masm.maxFloat64x2Relaxed(lhs, rhs, dest);
+      break;
     default:
       MOZ_CRASH("Binary SimdOp not implemented");
   }

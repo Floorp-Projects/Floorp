@@ -3849,6 +3849,46 @@ void MacroAssembler::fmsFloat64x2(FloatRegister src1, FloatRegister src2,
   Fmls(Simd2D(srcDest), Simd2D(src1), Simd2D(src2));
 }
 
+void MacroAssembler::minFloat32x4Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  Fmin(Simd4S(srcDest), Simd4S(src), Simd4S(srcDest));
+}
+
+void MacroAssembler::minFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  Fmin(Simd4S(dest), Simd4S(rhs), Simd4S(lhs));
+}
+
+void MacroAssembler::maxFloat32x4Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  Fmax(Simd4S(srcDest), Simd4S(src), Simd4S(srcDest));
+}
+
+void MacroAssembler::maxFloat32x4Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  Fmax(Simd4S(dest), Simd4S(rhs), Simd4S(lhs));
+}
+
+void MacroAssembler::minFloat64x2Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  Fmin(Simd2D(srcDest), Simd2D(src), Simd2D(srcDest));
+}
+
+void MacroAssembler::minFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  Fmin(Simd2D(dest), Simd2D(rhs), Simd2D(lhs));
+}
+
+void MacroAssembler::maxFloat64x2Relaxed(FloatRegister src,
+                                         FloatRegister srcDest) {
+  Fmax(Simd2D(srcDest), Simd2D(src), Simd2D(srcDest));
+}
+
+void MacroAssembler::maxFloat64x2Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                         FloatRegister dest) {
+  Fmax(Simd2D(dest), Simd2D(rhs), Simd2D(lhs));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

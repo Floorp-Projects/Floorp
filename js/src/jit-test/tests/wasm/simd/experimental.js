@@ -10,6 +10,11 @@ function wasmEval(bytes, imports) {
     return new WebAssembly.Instance(new WebAssembly.Module(bytes), imports);
 }
 
+function wasmValidateAndEval(bytes, imports) {
+    assertEq(WebAssembly.validate(bytes), true, "test of WasmValidate.cpp");
+    return wasmEval(bytes, imports);
+}
+
 function get(arr, loc, len) {
     let res = [];
     for ( let i=0; i < len; i++ ) {
@@ -82,7 +87,7 @@ for ( let [opcode, as, xs, ys, operator] of [[F32x4RelaxedFmaCode, fas, fxs, fys
     var k = xs.length;
     var ans = iota(k).map((i) => operator(as[i], xs[i], ys[i]))
 
-    var ins = wasmEval(moduleWithSections([
+    var ins = wasmValidateAndEval(moduleWithSections([
         sigSection([v2vSig]),
         declSection([0]),
         memorySection(1),
@@ -102,4 +107,82 @@ for ( let [opcode, as, xs, ys, operator] of [[F32x4RelaxedFmaCode, fas, fxs, fys
     ins.exports.run();
     var result = get(mem, 0, k);
     assertSame(result, ans);
+
+    assertEq(false, WebAssembly.validate(moduleWithSections([
+        sigSection([v2vSig]),
+        declSection([0]),
+        memorySection(1),
+        exportSection([{funcIndex: 0, name: "run"},
+                       {memIndex: 0, name: "mem"}]),
+        bodySection([
+            funcBody({locals:[],
+                      body: [...V128StoreExpr(0, [...V128Load(0),
+                                                  ...V128Load(0),
+                                                  SimdPrefix, varU32(opcode)])]})])])));    
+}
+
+
+// Relaxed MIN/MAX, https://github.com/WebAssembly/relaxed-simd/issues/33
+
+const Neg0 = -1/Infinity;
+var minMaxTests = [
+    {a: 0, b: 0, min: 0, max: 0, },
+    {a: Neg0, b: Neg0, min: Neg0, max: Neg0, },
+    {a: 1/3, b: 2/3, min: 1/3, max: 2/3, },
+    {a: -1/3, b: -2/3, min: -2/3, max: -1/3, },
+    {a: -1000, b: 1, min: -1000, max: 1, },
+    {a: 10, b: -2, min: -2, max: 10, },
+];
+
+for (let k of [4, 2]) {
+    const minOpcode = k == 4 ? F32x4RelaxedMin : F64x2RelaxedMin;
+    const maxOpcode = k == 4 ? F32x4RelaxedMax : F64x2RelaxedMax;
+
+    var ins = wasmValidateAndEval(moduleWithSections([
+        sigSection([v2vSig]),
+        declSection([0, 0]),
+        memorySection(1),
+        exportSection([{funcIndex: 0, name: "min"},
+                       {funcIndex: 1, name: "max"},
+                       {memIndex: 0, name: "mem"}]),
+        bodySection([
+            funcBody({locals:[],
+                      body: [...V128StoreExpr(0, [...V128Load(16),
+                                                  ...V128Load(32),
+                                                  SimdPrefix, varU32(minOpcode)])]}),
+            funcBody({locals:[],
+                      body: [...V128StoreExpr(0, [...V128Load(16),
+                                                  ...V128Load(32),
+                                                  SimdPrefix, varU32(maxOpcode)])]})])]));
+    for (let i = 0; i < minMaxTests.length; i++) {
+        var Ty = k == 4 ? Float32Array : Float64Array;
+        var mem = new Ty(ins.exports.mem.buffer);
+        var minResult = new Ty(k);
+        var maxResult = new Ty(k);
+        for (let j = 0; j < k; j++) {
+            const {a, b, min, max } = minMaxTests[(j + i) % minMaxTests.length];
+            mem[j + k] = a;
+            mem[j + k * 2] = b;
+            minResult[j] = min;
+            maxResult[j] = max;
+        }
+        ins.exports.min();
+        var result = get(mem, 0, k);
+        assertSame(result, minResult);
+        ins.exports.max();
+        var result = get(mem, 0, k);
+        assertSame(result, maxResult);
+    }
+
+    for (let op of [minOpcode, maxOpcode]) {
+        assertEq(false, WebAssembly.validate(moduleWithSections([
+            sigSection([v2vSig]),
+            declSection([0, 0]),
+            memorySection(1),
+            exportSection([]),
+            bodySection([
+                funcBody({locals:[],
+                          body: [...V128StoreExpr(0, [...V128Load(0),
+                                                      SimdPrefix, varU32(op)])]})])])));
+    }
 }
