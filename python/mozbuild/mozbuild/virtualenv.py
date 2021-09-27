@@ -193,7 +193,9 @@ class VirtualenvManager(VirtualenvHelper):
         if existing_metadata != self._metadata:
             return False
 
-        if env_requirements.pth_requirements and self.populate_local_paths:
+        if (
+            env_requirements.pth_requirements or env_requirements.vendored_requirements
+        ) and self.populate_local_paths:
             try:
                 with open(
                     os.path.join(self._site_packages_dir(), PTH_FILENAME)
@@ -214,6 +216,7 @@ class VirtualenvManager(VirtualenvHelper):
                     os.path.abspath(os.path.join(self.topsrcdir, pth.path))
                 )
                 for pth in env_requirements.pth_requirements
+                + env_requirements.vendored_requirements
             ]
 
             if current_paths != required_paths:
@@ -355,7 +358,10 @@ class VirtualenvManager(VirtualenvHelper):
             if self.populate_local_paths:
                 python_lib = distutils.sysconfig.get_python_lib()
                 with open(os.path.join(python_lib, PTH_FILENAME), "a") as f:
-                    for pth_requirement in env_requirements.pth_requirements:
+                    for pth_requirement in (
+                        env_requirements.pth_requirements
+                        + env_requirements.vendored_requirements
+                    ):
                         path = os.path.join(self.topsrcdir, pth_requirement.path)
                         # This path is relative to the .pth file.  Using a
                         # relative path allows the srcdir/objdir combination
