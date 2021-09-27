@@ -354,6 +354,11 @@ p {
   font-weight: 600;
 }
 
+.promo-cta .button:hover {
+  background-color: var(--in-content-primary-button-background-hover);
+  color: var(--in-content-primary-button-text-color-hover);
+}
+
 .promo.bottom .promo-cta {
   display: unset;
 }
