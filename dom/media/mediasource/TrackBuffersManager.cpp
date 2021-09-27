@@ -2263,6 +2263,7 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
       }
       MOZ_ASSERT(startTime > sample->mTime);
       sample->mDuration = startTime - sample->mTime;
+      MOZ_DIAGNOSTIC_ASSERT(sample->mDuration.IsValid());
       MSE_DEBUGV("partial overwrite of frame [%" PRId64 ",%" PRId64
                  "] with [%" PRId64 ",%" PRId64
                  "] trim to "
@@ -2763,6 +2764,7 @@ already_AddRefed<MediaRawData> TrackBuffersManager::GetSample(
     aResult = MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     return nullptr;
   }
+  MOZ_DIAGNOSTIC_ASSERT(p->HasValidTime());
 
   // Find the previous keyframe to calculate the evictable amount.
   uint32_t i = trackData.mNextGetSampleIndex.ref();
