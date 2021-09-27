@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+from pathlib import Path
 
 
 THUNDERBIRD_PYPI_ERROR = """
@@ -60,6 +61,7 @@ class MachEnvRequirements:
         self.pth_requirements = []
         self.pypi_requirements = []
         self.pypi_optional_requirements = []
+        self.vendored_requirements = []
 
     @classmethod
     def from_requirements_definition(
@@ -75,14 +77,39 @@ class MachEnvRequirements:
 def _parse_mach_env_requirements(
     requirements_output, root_requirements_path, topsrcdir, is_thunderbird
 ):
-    def _parse_requirements_line(line, is_thunderbird_packages_txt):
+    topsrcdir = Path(topsrcdir)
+
+    def _parse_requirements_line(
+        current_requirements_path, line, line_number, is_thunderbird_packages_txt
+    ):
         line = line.strip()
         if not line or line.startswith("#"):
             return
 
         action, params = line.rstrip().split(":", maxsplit=1)
         if action == "pth":
+            path = topsrcdir / params
+            if not path.exists():
+                # In sparse checkouts, not all paths will be populated.
+                return
+
+            for child in path.iterdir():
+                if child.name.endswith(".dist-info"):
+                    raise Exception(
+                        f'The "pth:" pointing to "{path}" has a ".dist-info" file.\n'
+                        f'Perhaps "{current_requirements_path}:{line_number}" '
+                        'should change to start with "vendored:" instead of "pth:".'
+                    )
+                if child.name == "PKG-INFO":
+                    raise Exception(
+                        f'The "pth:" pointing to "{path}" has a "PKG-INFO" file.\n'
+                        f'Perhaps "{current_requirements_path}:{line_number}" '
+                        'should change to start with "vendored:" instead of "pth:".'
+                    )
+
             requirements_output.pth_requirements.append(PthSpecifier(params))
+        elif action == "vendored":
+            requirements_output.vendored_requirements.append(PthSpecifier(params))
         elif action == "packages.txt":
             _parse_requirements_definition_file(
                 os.path.join(topsrcdir, params),
@@ -129,8 +156,10 @@ def _parse_mach_env_requirements(
         with open(requirements_path, "r") as requirements_file:
             lines = [line for line in requirements_file]
 
-        for line in lines:
-            _parse_requirements_line(line, is_thunderbird_packages_txt)
+        for number, line in enumerate(lines, start=1):
+            _parse_requirements_line(
+                requirements_path, line, number, is_thunderbird_packages_txt
+            )
 
     _parse_requirements_definition_file(root_requirements_path, False)
 
