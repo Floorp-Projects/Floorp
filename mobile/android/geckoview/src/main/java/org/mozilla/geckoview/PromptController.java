@@ -9,6 +9,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.Autocomplete.AddressSaveOption;
 import org.mozilla.geckoview.Autocomplete.AddressSelectOption;
 import org.mozilla.geckoview.Autocomplete.CreditCardSelectOption;
+import org.mozilla.geckoview.Autocomplete.CreditCardSaveOption;
 import org.mozilla.geckoview.Autocomplete.LoginSaveOption;
 import org.mozilla.geckoview.Autocomplete.LoginSelectOption;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest;
@@ -451,6 +452,41 @@ import java.util.Map;
         }
     }
 
+    private static final class CreditCardSaveHandler
+            implements PromptHandler<AutocompleteRequest<CreditCardSaveOption>> {
+        @Override
+        public AutocompleteRequest<CreditCardSaveOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
+            final int hint = info.getInt("hint");
+            final GeckoBundle[] creditCardBundles =
+                    info.getBundleArray("creditCards");
+
+            if (creditCardBundles == null) {
+                return null;
+            }
+
+            final Autocomplete.CreditCardSaveOption[] options =
+                    new Autocomplete.CreditCardSaveOption[creditCardBundles.length];
+
+            for (int i = 0; i < options.length; ++i) {
+                options[i] = new Autocomplete.CreditCardSaveOption(
+                        new Autocomplete.CreditCard(creditCardBundles[i]),
+                        hint);
+            }
+
+            return new PromptDelegate.AutocompleteRequest<>(info.getString("id"), options, observer);
+        }
+
+        @Override
+        public GeckoResult<PromptResponse> callDelegate(
+                final AutocompleteRequest<CreditCardSaveOption> prompt,
+                final GeckoSession session,
+                final PromptDelegate delegate) {
+            return delegate.onCreditCardSave(session, prompt);
+        }
+    }
+
     private static final class AddressSaveHandler
             implements PromptHandler<AutocompleteRequest<AddressSaveOption>> {
         @Override
@@ -612,6 +648,7 @@ import java.util.Map;
         sPromptHandlers.register(new RepostHandler(), "repost");
         sPromptHandlers.register(new ShareHandler(), "share");
         sPromptHandlers.register(new LoginSaveHandler(), "Autocomplete:Save:Login");
+        sPromptHandlers.register(new CreditCardSaveHandler(), "Autocomplete:Save:CreditCard");
         sPromptHandlers.register(new AddressSaveHandler(),
                                  "Autocomplete:Save:Address");
         sPromptHandlers.register(new LoginSelectHandler(),
