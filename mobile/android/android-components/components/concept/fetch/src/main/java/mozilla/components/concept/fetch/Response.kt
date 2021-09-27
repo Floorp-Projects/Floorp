@@ -104,7 +104,21 @@ data class Response(
          * the charset provided in the response content-type header will be used. If the header
          * is missing or the charset not supported, UTF-8 will be used.
          */
-        fun string(charset: Charset? = null): String = useBufferedReader(charset) { it.readText() }
+        fun string(charset: Charset? = null): String = use {
+            // We don't use a BufferedReader because it'd unnecessarily allocate more memory: if the
+            // BufferedReader is reading into a buffer whose length >= the BufferedReader's buffer
+            // length, then the BufferedReader reads directly into the other buffer as an optimization
+            // and the BufferedReader's buffer is unused (i.e. you get no benefit from the BufferedReader
+            // and you can just use a Reader). In this case, both the BufferedReader and readText
+            // would allocate a buffer of DEFAULT_BUFFER_SIZE so we removed the unnecessary
+            // BufferedReader and cut memory consumption in half. See
+            // https://github.com/mcomella/android-components/commit/db8488599f9f652b4d5775f70eeb4ab91462cbe6
+            // for code verifying this behavior.
+            //
+            // The allocation can be further optimized by setting the buffer size to Content-Length
+            // header. See https://github.com/mozilla-mobile/android-components/issues/11015
+            stream.reader(charset ?: this.charset).readText()
+        }
 
         /**
          * Closes this [Body] and releases any system resources associated with it.
