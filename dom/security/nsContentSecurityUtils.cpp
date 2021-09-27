@@ -1233,13 +1233,37 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  bool bergamont_disabled =
-      Preferences::GetBool("extensions.translations.disabled", true);
-  if (!bergamont_disabled &&
-      StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
-    // Allow all moz-extensions through if bergamont is enabled; because there
-    // seem to be multiple bergamont extensions with different names.
-    return true;
+  auto kAllowedExtensionScriptFilenames = {
+      u"/experiment-apis/translateUi/TranslationBrowserChromeUi.js"_ns,
+      u"/experiment-apis/translateUi/TranslationBrowserChromeUiManager.js"_ns,
+      u"/experiment-apis/translateUi/content/translation-notification.js"_ns};
+
+  if (StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
+    if (!NS_FAILED(rv) && NS_IsMainThread()) {
+      mozilla::extensions::URLInfo url(uri);
+      auto* policy =
+          ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
+
+      if (policy && policy->IsPrivileged()) {
+        bool matchedAnAllowlist = false;
+        for (auto allowedFilename : kAllowedExtensionScriptFilenames) {
+          if (StringBeginsWith(url.FilePath(), allowedFilename)) {
+            matchedAnAllowlist = true;
+          }
+        }
+
+        if (matchedAnAllowlist) {
+          MOZ_LOG(sCSMLog, LogLevel::Debug,
+                  ("Allowing a javascript load of %s because the web extension "
+                   "it is "
+                   "associated with is privileged.",
+                   aFilename));
+          return true;
+        }
+      }
+    }
   }
 
   auto kAllowedFilenames = {
