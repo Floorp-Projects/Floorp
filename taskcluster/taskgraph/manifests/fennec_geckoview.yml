@@ -48,6 +48,20 @@ mapping:
             - build-fat-aar
         pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
         checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha256:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha256
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha256
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha512:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha512
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha512
     ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom:
         <<: *default
         from:
@@ -74,6 +88,20 @@ mapping:
             - build-fat-aar
         pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
         checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha256:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha256
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha256
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha512:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha512
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha512
     ${artifact_id}-${major_version}.${minor_version}.${build_date}.module:
         <<: *default
         from:
@@ -100,6 +128,20 @@ mapping:
             - build-fat-aar
         pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha1
         checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha256:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha256
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha256
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha512:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha512
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.module.sha512
     ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar:
         <<: *default
         from:
@@ -126,6 +168,20 @@ mapping:
             - build-fat-aar
         pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
         checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha256:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha256
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha256
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha512:
+        <<: *default
+        from:
+            - build
+            - build-fat-aar
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha512
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha512
     ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar:
         <<: *default
         from:
