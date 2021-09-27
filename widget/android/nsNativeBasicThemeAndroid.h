@@ -9,9 +9,89 @@
 
 #include "nsNativeBasicTheme.h"
 
-class nsNativeBasicThemeAndroid : public nsNativeBasicTheme {
+class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeAndroid() = default;
+
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext*, nsIFrame*, StyleAppearance,
+                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  bool* aIsOverridable) override;
+
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                   Overlay) override;
+
+  template <typename PaintBackendData>
+  void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
+                             bool aHorizontal, nsIFrame* aFrame,
+                             const ComputedStyle& aStyle,
+                             const EventStates& aElementState,
+                             const EventStates& aDocumentState, UseSystemColors,
+                             DPIRatio);
+  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aElementState,
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override;
+  bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aElementState,
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override;
+
+  bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override {
+    // There's no visible track on android.
+    return true;
+  }
+  bool PaintScrollbarTrack(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override {
+    // There's no visible track on Android.
+    return true;
+  }
+
+  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
+                      bool aHorizontal, nsIFrame* aFrame,
+                      const ComputedStyle& aStyle,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, UseSystemColors,
+                      DPIRatio) override {
+    // Draw nothing, we only draw the thumb.
+    return true;
+  }
+  bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                      bool aHorizontal, nsIFrame* aFrame,
+                      const ComputedStyle& aStyle,
+                      const EventStates& aElementState,
+                      const EventStates& aDocumentState, UseSystemColors,
+                      DPIRatio) override {
+    // Draw nothing, we only draw the thumb.
+    return true;
+  }
+
+  bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
+                         nsIFrame* aFrame, const ComputedStyle& aStyle,
+                         const EventStates& aDocumentState, UseSystemColors,
+                         DPIRatio aDpiRatio) override {
+    // Draw nothing, we only draw the thumb.
+    return true;
+  }
+  bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                         nsIFrame* aFrame, const ComputedStyle& aStyle,
+                         const EventStates& aDocumentState, UseSystemColors,
+                         DPIRatio aDpiRatio) override {
+    // Draw nothing, we only draw the thumb.
+    return true;
+  }
+
+  bool ThemeSupportsScrollbarButtons() override { return false; }
 
  protected:
   virtual ~nsNativeBasicThemeAndroid() = default;
