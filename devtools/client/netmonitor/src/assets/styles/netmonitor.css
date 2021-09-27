@@ -12,6 +12,7 @@
 @import "chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css";
 @import "chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css";
 @import "chrome://devtools/content/shared/components/MdnLink.css";
+@import "chrome://devtools/content/shared/components/NotificationBox.css";
 
 /* Network panel components & styles */
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
