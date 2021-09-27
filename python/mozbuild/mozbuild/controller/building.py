@@ -1055,7 +1055,7 @@ class BuildDriver(MozbuildObject):
     """Provides a high-level API for build actions."""
 
     def __init__(self, *args, **kwargs):
-        MozbuildObject.__init__(self, *args, **kwargs)
+        MozbuildObject.__init__(self, *args, virtualenv_name="build", **kwargs)
         self.metrics = None
         self.mach_context = None
 
