@@ -23,7 +23,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
-
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -265,7 +265,10 @@ class AutofillDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
+
+    // disable test on debug for frequently failing #Bug 1717506
     @Test fun autofillNavigation() {
+    assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
         sessionRule.waitUntilCalled(object : Autofill.Delegate {
