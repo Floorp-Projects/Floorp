@@ -53,7 +53,6 @@ def test_up_to_date_vendor():
                 existing_vendored,
                 work_vendored,
                 "--exclude=__pycache__",
-                "--exclude=*.egg-info",
             ]
         )
 
