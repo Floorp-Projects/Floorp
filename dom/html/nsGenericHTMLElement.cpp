@@ -2980,7 +2980,7 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
   return MakeAndAddRef<ElementInternals>(this);
 }
 
-void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) {
+void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {
   GetEnumAttr(nsGkAtoms::autocapitalize, nullptr, kDefaultAutocapitalize->tag,
               aValue);
 }
@@ -2992,7 +2992,7 @@ bool nsGenericHTMLFormElement::IsAutocapitalizeInheriting() const {
          type == FormControlType::Select || type == FormControlType::Textarea;
 }
 
-void nsGenericHTMLFormElement::GetAutocapitalize(nsAString& aValue) {
+void nsGenericHTMLFormElement::GetAutocapitalize(nsAString& aValue) const {
   if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
                                       nsGkAtoms::autocapitalize)) {
     nsGenericHTMLElement::GetAutocapitalize(aValue);

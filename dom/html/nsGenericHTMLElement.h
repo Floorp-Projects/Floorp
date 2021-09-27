@@ -179,7 +179,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetInputMode(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::inputmode, aValue, aRv);
   }
-  virtual void GetAutocapitalize(nsAString& aValue);
+  virtual void GetAutocapitalize(nsAString& aValue) const;
   void SetAutocapitalize(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocapitalize, aValue, aRv);
   }
@@ -1048,7 +1048,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   virtual bool IsLabelable() const override;
 
   // autocapitalize attribute support
-  virtual void GetAutocapitalize(nsAString& aValue) override;
+  virtual void GetAutocapitalize(nsAString& aValue) const override;
   bool IsAutocapitalizeInheriting() const;
 
  protected:
