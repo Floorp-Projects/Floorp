@@ -13,6 +13,9 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v94
+- Extended [`Autocomplete`][78.7] API to support credit card saving.
+
 ## v93
 - Removed deprecated ['Autocomplete.LoginStorageDelegate'][78.8].
 - Removed deprecated [`GeckoRuntime.getProfileDir`][90.5].
@@ -1043,4 +1046,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 946ddd60a1f2b617c93f4c403a588c33f2d4fdef
+[api-version]: 1dd93adc7e95d81464cc99db2247be219e43ddcc
