@@ -4195,13 +4195,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   bookmark_suggestions:
     send_in_pings:
       - metrics
@@ -4214,13 +4215,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   search_engine_suggestions:
     send_in_pings:
       - metrics
@@ -4233,13 +4235,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   session_suggestions:
     send_in_pings:
       - metrics
@@ -4252,13 +4255,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   synced_tabs_suggestions:
     send_in_pings:
       - metrics
@@ -4271,13 +4275,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   clipboard_suggestions:
     send_in_pings:
       - metrics
@@ -4290,13 +4295,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
   shortcuts_suggestions:
     send_in_pings:
       - metrics
@@ -4309,13 +4315,14 @@ perf.awesomebar:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10276#pullrequestreview-411101979
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/21315#issuecomment-920848442
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - gkruglov@mozilla.com
-    expires: "2021-11-15"
+    expires: "2022-11-15"
 
 autoplay:
   visited_setting:
