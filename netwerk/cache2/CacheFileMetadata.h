@@ -11,12 +11,17 @@
 #include "CacheObserver.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/NotNull.h"
 #include "nsString.h"
 
 class nsICacheEntryMetaDataVisitor;
 
 namespace mozilla {
 namespace net {
+
+namespace CacheFileUtils {
+class CacheFileLock;
+};
 
 // Flags stored in CacheFileMetadataHeader.mFlags
 
@@ -134,8 +139,10 @@ class CacheFileMetadata final : public CacheFileIOListener,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CacheFileMetadata(CacheFileHandle* aHandle, const nsACString& aKey);
-  CacheFileMetadata(bool aMemoryOnly, bool aPinned, const nsACString& aKey);
+  CacheFileMetadata(CacheFileHandle* aHandle, const nsACString& aKey,
+                    NotNull<CacheFileUtils::CacheFileLock*> aLock);
+  CacheFileMetadata(bool aMemoryOnly, bool aPinned, const nsACString& aKey,
+                    NotNull<CacheFileUtils::CacheFileLock*> aLock);
   CacheFileMetadata();
 
   void SetHandle(CacheFileHandle* aHandle);
@@ -229,6 +236,7 @@ class CacheFileMetadata final : public CacheFileIOListener,
   mozilla::OriginAttributes mOriginAttributes;
   mozilla::TimeStamp mReadStart;
   nsCOMPtr<CacheFileMetadataListener> mListener;
+  RefPtr<CacheFileUtils::CacheFileLock> mLock;
 };
 
 }  // namespace net

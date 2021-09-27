@@ -32,6 +32,8 @@
 
 namespace mozilla::net {
 
+using CacheFileUtils::CacheFileLock;
+
 class NotifyCacheFileListenerEvent : public Runnable {
  public:
   NotifyCacheFileListenerEvent(CacheFileListener* aCallback, nsresult aResult,
@@ -160,12 +162,14 @@ NS_INTERFACE_MAP_BEGIN(CacheFile)
                                    mozilla::net::CacheFileChunkListener)
 NS_INTERFACE_MAP_END
 
-CacheFile::CacheFile() { LOG(("CacheFile::CacheFile() [this=%p]", this)); }
+CacheFile::CacheFile() : mLock(new CacheFileLock()) {
+  LOG(("CacheFile::CacheFile() [this=%p]", this));
+}
 
 CacheFile::~CacheFile() {
   LOG(("CacheFile::~CacheFile() [this=%p]", this));
 
-  MutexAutoLock lock(mLock);
+  MutexAutoLock lock(mLock->Lock());
   if (!mMemoryOnly && mReady && !mKill) {
     // mReady flag indicates we have metadata plus in a valid state.
     WriteMetadataIfNeededLocked(true);
@@ -206,7 +210,8 @@ nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
   if (mMemoryOnly) {
     MOZ_ASSERT(!aCallback);
 
-    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, false, mKey);
+    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, false, mKey,
+                                      WrapNotNull(mLock));
     mReady = true;
     mDataSize = mMetadata->Offset();
     return NS_OK;
@@ -217,7 +222,8 @@ nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
     flags = CacheFileIOManager::CREATE_NEW;
 
     // make sure we can use this entry immediately
-    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
+    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey,
+                                      WrapNotNull(mLock));
     mReady = true;
     mDataSize = mMetadata->Offset();
   } else {
@@ -266,7 +272,8 @@ nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
            this));
 
       mMemoryOnly = true;
-      mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
+      mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey,
+                                        WrapNotNull(mLock));
       mReady = true;
       mDataSize = mMetadata->Offset();
 
@@ -502,7 +509,8 @@ nsresult CacheFile::OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) {
              this));
 
         mMemoryOnly = true;
-        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
+        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey,
+                                          WrapNotNull(mLock));
         mReady = true;
         mDataSize = mMetadata->Offset();
 
@@ -562,7 +570,7 @@ nsresult CacheFile::OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) {
   MOZ_ASSERT(!mMetadata);
   MOZ_ASSERT(mListener);
 
-  mMetadata = new CacheFileMetadata(mHandle, mKey);
+  mMetadata = new CacheFileMetadata(mHandle, mKey, WrapNotNull(mLock));
   mMetadata->ReadMetadata(this);
   return NS_OK;
 }
@@ -1343,17 +1351,19 @@ nsresult CacheFile::OnFetched() {
   return NS_OK;
 }
 
-void CacheFile::Lock() { mLock.Lock(); }
+void CacheFile::Lock() { mLock->Lock().Lock(); }
 
 void CacheFile::Unlock() {
   // move the elements out of mObjsToRelease
   // so that they can be released after we unlock
   nsTArray<RefPtr<nsISupports>> objs = std::move(mObjsToRelease);
 
-  mLock.Unlock();
+  mLock->Lock().Unlock();
 }
 
-void CacheFile::AssertOwnsLock() const { mLock.AssertCurrentThreadOwns(); }
+void CacheFile::AssertOwnsLock() const {
+  mLock->Lock().AssertCurrentThreadOwns();
+}
 
 void CacheFile::ReleaseOutsideLock(RefPtr<nsISupports> aObject) {
   AssertOwnsLock();

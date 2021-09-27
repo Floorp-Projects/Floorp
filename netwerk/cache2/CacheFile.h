@@ -26,6 +26,10 @@ class CacheFileOutputStream;
 class CacheOutputCloseListener;
 class MetadataWriteTimer;
 
+namespace CacheFileUtils {
+class CacheFileLock;
+};
+
 #define CACHEFILELISTENER_IID                        \
   { /* 95e7f284-84ba-48f9-b1fc-3a7336b4c33c */       \
     0x95e7f284, 0x84ba, 0x48f9, {                    \
@@ -189,7 +193,6 @@ class CacheFile final : public CacheFileChunkListener,
 
   nsresult InitIndexEntry();
 
-  mozilla::Mutex mLock{"CacheFile.mLock"};
   bool mOpeningFile{false};
   bool mReady{false};
   bool mMemoryOnly{false};
@@ -235,6 +238,7 @@ class CacheFile final : public CacheFileChunkListener,
   CacheFileOutputStream* mOutput{nullptr};
 
   nsTArray<RefPtr<nsISupports>> mObjsToRelease;
+  RefPtr<CacheFileUtils::CacheFileLock> mLock;
 };
 
 class CacheFileAutoLock {
