@@ -53,13 +53,6 @@
   border-radius: var(--urlbar-icon-border-radius);
 }
 
-#identity-box[pageproxystate="valid"].notSecureText #identity-icon-label,
-#identity-box[pageproxystate="valid"].chromeUI #identity-icon-label,
-#identity-box[pageproxystate="valid"].extensionPage #identity-icon-label,
-.urlbar-label {
-  opacity: var(--identity-box-label-opacity);
-}
-
 #identity-icon-label {
   padding-inline-start: 4px;
 }
@@ -75,15 +68,10 @@
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
 #urlbar-label-box {
+  background-color: var(--urlbar-box-bgcolor);
+  color: var(--urlbar-box-text-color);
   padding-inline: 8px;
   border-radius: var(--urlbar-icon-border-radius);
-}
-
-#identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
-#identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
-#identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
-#urlbar-label-box {
-  background-color: var(--urlbar-box-bgcolor);
 }
 
 #urlbar[focused="true"] #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
