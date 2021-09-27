@@ -1,10 +1,10 @@
 /* import-globals-from antitracking_head.js */
+/* import-globals-from storageAccessAPIHelpers.js */
 
 AntiTracking.runTest(
   "Storage Access API called in a sandboxed iframe",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
     let [threw, rejected] = await callRequestStorageAccess();
     ok(!threw, "requestStorageAccess should not throw");
     ok(rejected, "requestStorageAccess shouldn't be available");
@@ -33,11 +33,53 @@ AntiTracking.runTest(
 );
 
 AntiTracking.runTest(
+  "Exception List can work in a sandboxed iframe",
+  // blocking callback
+  async _ => {
+    await hasStorageAccessInitially();
+
+    try {
+      await navigator.serviceWorker.register("empty.js");
+
+      ok(
+        true,
+        "ServiceWorker can be registered in allowlisted sandboxed iframe!"
+      );
+    } catch (e) {
+      info("Promise rejected: " + e);
+      ok(
+        false,
+        "ServiceWorker should be able to be registered in allowlisted sandboxed iframe"
+      );
+    }
+  },
+
+  null, // non-blocking callback
+  null, // cleanup function
+  [
+    ["dom.storage_access.enabled", true],
+    [
+      "privacy.restrict3rdpartystorage.skip_list",
+      "http://example.net,https://tracking.example.org",
+    ],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ], // extra prefs
+  false, // no window open test
+  false, // no user-interaction test
+  0, // no blocking notifications
+  false, // run in normal window
+  "allow-scripts allow-same-origin allow-popups"
+);
+
+AntiTracking.runTest(
   "Storage Access API called in a sandboxed iframe with" +
     " allow-storage-access-by-user-activation",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
     let [threw, rejected] = await callRequestStorageAccess();
     ok(!threw, "requestStorageAccess should not throw");
     ok(!rejected, "requestStorageAccess should be available");
@@ -57,7 +99,6 @@ AntiTracking.runTest(
   "Verify that sandboxed contexts don't get the saved permission",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
     await noStorageAccessInitially();
 
     try {
@@ -85,7 +126,6 @@ AntiTracking.runTest(
     " saved permission",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
     await hasStorageAccessInitially();
 
     localStorage.foo = 42;
@@ -106,7 +146,6 @@ AntiTracking.runTest(
   "Verify that private browsing contexts don't get the saved permission",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
     await noStorageAccessInitially();
 
     try {
@@ -132,7 +171,6 @@ AntiTracking.runTest(
   "Verify that non-sandboxed contexts get the saved permission",
   // blocking callback
   async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
     await hasStorageAccessInitially();
 
     localStorage.foo = 42;
