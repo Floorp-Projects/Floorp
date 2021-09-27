@@ -256,10 +256,8 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
     },
   });
 
-  await Promise.all([
-    extension.startup(),
-    extension.awaitFinish("tabs.sendMessage"),
-  ]);
+  await extension.startup();
+  await extension.awaitFinish("tabs.sendMessage");
 
   await extension.unload();
 });
