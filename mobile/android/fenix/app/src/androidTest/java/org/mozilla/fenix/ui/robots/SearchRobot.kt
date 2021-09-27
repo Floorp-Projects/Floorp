@@ -44,8 +44,8 @@ import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
-import org.mozilla.fenix.helpers.ext.waitForAwesomeBarContent
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
@@ -59,6 +59,10 @@ class SearchRobot {
     fun verifySearchWithText() = assertSearchWithText()
     fun verifySearchEngineResults(rule: ComposeTestRule, searchEngineName: String, count: Int) =
         assertSearchEngineResults(rule, searchEngineName, count)
+    fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, searchSuggestion: String) =
+        assertSearchEngineSuggestionResults(rule, searchSuggestion)
+    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) =
+        assertNoSuggestionsAreDisplayed(rule, searchSuggestion)
 
     fun verifySearchEngineURL(searchEngineName: String) = assertSearchEngineURL(searchEngineName)
     fun verifySearchSettings() = assertSearchSettings()
@@ -105,7 +109,7 @@ class SearchRobot {
     fun clickSearchEngineButton(rule: ComposeTestRule, searchEngineName: String) {
         rule.waitForIdle()
 
-        mDevice.waitForAwesomeBarContent(
+        mDevice.waitForObjects(
             mDevice.findObject(
                 UiSelector().textContains(searchEngineName)
             )
@@ -254,7 +258,7 @@ private fun assertSearchEngineURL(searchEngineName: String) {
 private fun assertSearchEngineResults(rule: ComposeTestRule, searchEngineName: String, count: Int) {
     rule.waitForIdle()
 
-    mDevice.waitForAwesomeBarContent(
+    mDevice.waitForObjects(
         mDevice.findObject(
             UiSelector().textContains(searchEngineName)
         )
@@ -262,6 +266,26 @@ private fun assertSearchEngineResults(rule: ComposeTestRule, searchEngineName: S
 
     rule.onAllNodesWithText(searchEngineName)
         .assertCountEquals(count)
+}
+
+private fun assertSearchEngineSuggestionResults(rule: ComposeTestRule, searchResult: String) {
+    rule.waitForIdle()
+
+    mDevice.waitForObjects(
+        mDevice.findObject(
+            UiSelector().textContains(searchResult)
+        )
+    )
+
+    rule.onNodeWithText(searchResult)
+        .assertExists()
+}
+
+private fun assertNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchTerm: String) {
+    rule.waitForIdle()
+
+    rule.onNodeWithText(searchTerm)
+        .assertDoesNotExist()
 }
 
 private fun assertSearchView() =

@@ -6,7 +6,6 @@ package org.mozilla.fenix.helpers.ext
 
 import androidx.test.uiautomator.SearchCondition
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiObject
 import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.helpers.TestAssetHelper
 
@@ -19,8 +18,3 @@ fun UiDevice.waitNotNull(
     searchCondition: SearchCondition<*>,
     waitTime: Long = TestAssetHelper.waitingTime
 ) = assertNotNull(wait(searchCondition, waitTime))
-
-fun UiDevice.waitForAwesomeBarContent(obj: UiObject, waitingTime: Long = TestAssetHelper.waitingTime) {
-    this.waitForIdle()
-    assertNotNull(obj.waitForExists(waitingTime))
-}
