@@ -101,10 +101,8 @@ async function do_test_update(background, withPermissions = true) {
   }
   let extension = ExtensionTestUtils.loadExtension({ manifest, background });
 
-  await Promise.all([
-    await extension.startup(),
-    await extension.awaitFinish("finish"),
-  ]);
+  await extension.startup();
+  await extension.awaitFinish("finish");
 
   await extension.unload();
 

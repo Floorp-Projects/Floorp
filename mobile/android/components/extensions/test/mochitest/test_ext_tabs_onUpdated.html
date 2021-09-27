@@ -95,7 +95,7 @@ add_task(async function test_onUpdated() {
   await extension.unload();
 });
 
-function* do_test_update(background, withPermissions = true) {
+async function do_test_update(background, withPermissions = true) {
   const manifest = {};
   if (withPermissions) {
     manifest.permissions = ["tabs", "http://mochi.test/"];
@@ -105,12 +105,10 @@ function* do_test_update(background, withPermissions = true) {
     background,
   });
 
-  yield Promise.all([
-    yield extension.startup(),
-    yield extension.awaitFinish("finish"),
-  ]);
+  await extension.startup();
+  await extension.awaitFinish("finish");
 
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function test_url() {

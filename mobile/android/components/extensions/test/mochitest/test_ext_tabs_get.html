@@ -15,9 +15,6 @@
 
 add_task(async function() {
   const extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["tabs"],
-    },
     async background() {
       const tab1 = await browser.tabs.create({});
       const tab2 = await browser.tabs.create({});

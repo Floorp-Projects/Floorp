@@ -15,10 +15,6 @@
 
 add_task(async function test_query_index() {
   const extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "permissions": ["tabs"],
-    },
-
     background: function() {
       browser.tabs.onCreated.addListener(async function({index, windowId, id}) {
         browser.test.assertThrows(
