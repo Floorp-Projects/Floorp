@@ -48,7 +48,6 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.mozilla.geckoview.AllowOrDeny;
-import org.mozilla.geckoview.Autocomplete;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
@@ -152,15 +151,6 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
         createStandardDialog(builder, prompt, res).show();
         return res;
-    }
-
-    @Nullable
-    @Override
-    public GeckoResult<PromptResponse> onCreditCardSave(
-            @NonNull GeckoSession session,
-            @NonNull AutocompleteRequest<Autocomplete.CreditCardSaveOption> request) {
-        Log.i(LOGTAG, "onCreditCardSave " + request.options[0].value);
-        return null;
     }
 
     @Nullable

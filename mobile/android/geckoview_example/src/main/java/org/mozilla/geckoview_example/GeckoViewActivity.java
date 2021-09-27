@@ -8,7 +8,6 @@ package org.mozilla.geckoview_example;
 import org.json.JSONObject;
 
 import org.mozilla.geckoview.AllowOrDeny;
-import org.mozilla.geckoview.Autocomplete;
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoResult;
@@ -748,7 +747,6 @@ public class GeckoViewActivity
             mTabSessionManager.setTabObserver(sExtensionManager);
 
             sGeckoRuntime.getWebExtensionController().setDebuggerDelegate(sExtensionManager);
-            sGeckoRuntime.setAutocompleteStorageDelegate(new ExampleAutocompleteStorageDelegate());
 
             // `getSystemService` call requires API level 23
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -1530,8 +1528,6 @@ public class GeckoViewActivity
             Log.i(LOGTAG, "History state updated");
         }
     }
-
-    private class ExampleAutocompleteStorageDelegate implements Autocomplete.StorageDelegate {}
 
     private class ExampleContentDelegate implements GeckoSession.ContentDelegate {
         @Override
