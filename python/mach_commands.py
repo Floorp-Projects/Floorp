@@ -73,6 +73,7 @@ def python(
         requirements = MachEnvRequirements.from_requirements_definition(
             command_context.topsrcdir,
             False,
+            True,
             os.path.join(
                 command_context.topsrcdir, "build", "mach_virtualenv_packages.txt"
             ),

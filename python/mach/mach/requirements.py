@@ -5,6 +5,8 @@
 import os
 from pathlib import Path
 
+from packaging.requirements import Requirement
+
 
 THUNDERBIRD_PYPI_ERROR = """
 Thunderbird requirements definitions cannot include PyPI packages.
@@ -17,18 +19,14 @@ class PthSpecifier:
 
 
 class PypiSpecifier:
-    def __init__(self, package_name, version, full_specifier):
-        self.package_name = package_name
-        self.version = version
-        self.full_specifier = full_specifier
+    def __init__(self, requirement):
+        self.requirement = requirement
 
 
-class PypiOptionalSpecifier:
-    def __init__(self, repercussion, package_name, version, full_specifier):
+class PypiOptionalSpecifier(PypiSpecifier):
+    def __init__(self, repercussion, requirement):
+        super().__init__(requirement)
         self.repercussion = repercussion
-        self.package_name = package_name
-        self.version = version
-        self.full_specifier = full_specifier
 
 
 class MachEnvRequirements:
@@ -65,17 +63,29 @@ class MachEnvRequirements:
 
     @classmethod
     def from_requirements_definition(
-        cls, topsrcdir, is_thunderbird, requirements_definition
+        cls,
+        topsrcdir,
+        is_thunderbird,
+        is_mach_or_build_virtualenv,
+        requirements_definition,
     ):
         requirements = cls()
         _parse_mach_env_requirements(
-            requirements, requirements_definition, topsrcdir, is_thunderbird
+            requirements,
+            requirements_definition,
+            topsrcdir,
+            is_thunderbird,
+            is_mach_or_build_virtualenv,
         )
         return requirements
 
 
 def _parse_mach_env_requirements(
-    requirements_output, root_requirements_path, topsrcdir, is_thunderbird
+    requirements_output,
+    root_requirements_path,
+    topsrcdir,
+    is_thunderbird,
+    is_mach_or_build_virtualenv,
 ):
     topsrcdir = Path(topsrcdir)
 
@@ -119,9 +129,10 @@ def _parse_mach_env_requirements(
             if is_thunderbird_packages_txt:
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
 
-            package_name, version = _parse_package_specifier(params)
             requirements_output.pypi_requirements.append(
-                PypiSpecifier(package_name, version, params)
+                PypiSpecifier(
+                    _parse_package_specifier(params, is_mach_or_build_virtualenv)
+                )
             )
         elif action == "pypi-optional":
             if is_thunderbird_packages_txt:
@@ -133,10 +144,14 @@ def _parse_mach_env_requirements(
                     'description in the format "package:fallback explanation", '
                     'found "{}"'.format(params)
                 )
-            package, repercussion = params.split(":")
-            package_name, version = _parse_package_specifier(package)
+            raw_requirement, repercussion = params.split(":")
             requirements_output.pypi_optional_requirements.append(
-                PypiOptionalSpecifier(repercussion, package_name, version, package)
+                PypiOptionalSpecifier(
+                    repercussion,
+                    _parse_package_specifier(
+                        raw_requirement, is_mach_or_build_virtualenv
+                    ),
+                )
             )
         elif action == "thunderbird-packages.txt":
             if is_thunderbird:
@@ -164,10 +179,14 @@ def _parse_mach_env_requirements(
     _parse_requirements_definition_file(root_requirements_path, False)
 
 
-def _parse_package_specifier(specifier):
-    if len(specifier.split("==")) != 2:
+def _parse_package_specifier(raw_requirement, is_mach_or_build_virtualenv):
+    requirement = Requirement(raw_requirement)
+
+    if not is_mach_or_build_virtualenv and [
+        s for s in requirement.specifier if s.operator != "=="
+    ]:
         raise Exception(
-            "Expected pypi package version to be pinned in the "
-            'format "package==version", found "{}"'.format(specifier)
+            'All virtualenvs except for "mach" and "build" must pin pypi package '
+            f'versions in the format "package==version", found "{raw_requirement}"'
         )
-    return specifier.split("==")
+    return requirement
