@@ -292,10 +292,6 @@ multidict==5.1.0 \
     # via
     #   aiohttp
     #   yarl
-packaging==21.0 \
-    --hash=sha256:7dc96269f53a4ccec5c0670940a4281106dd0bb343f47b7471f779df49c2fbe7 \
-    --hash=sha256:c86254f9220d55e31cc94d69bade760f0847da8000def4dfe1c6b872fd14ff14
-    # via -r requirements-mach-vendor-python.in
 pathspec==0.8 \
     --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
     --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061
@@ -332,10 +328,6 @@ pyasn1==0.4.8 \
 pylru==1.0.9 \
     --hash=sha256:71376192671f0ad1690b2a7427d39a29b1df994c8469a9b46b03ed7e28c0172c
     # via -r requirements-mach-vendor-python.in
-pyparsing==2.4.7 \
-    --hash=sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1 \
-    --hash=sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b
-    # via packaging
 pyrsistent==0.16.0 \
     --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3
     # via jsonschema
