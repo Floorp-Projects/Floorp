@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -43,7 +44,7 @@ internal fun Suggestion(
     Row(
         modifier = Modifier
             .clickable { onSuggestionClicked(suggestion) }
-            .height(56.dp)
+            .defaultMinSize(minHeight = 56.dp)
             .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
     ) {
         val icon = suggestion.icon
