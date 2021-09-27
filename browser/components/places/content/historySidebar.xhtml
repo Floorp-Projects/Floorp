@@ -11,6 +11,8 @@
 <!DOCTYPE window [
 <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <window id="history-panel"
@@ -20,7 +22,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistorySidebarInit();"
         onunload="PlacesUIUtils.setMouseoverURL('', window);"
-        data-l10n-id="places-history">
+        aria-label="&historyButton.label;">
 
   <script src="chrome://browser/content/places/historySidebar.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>

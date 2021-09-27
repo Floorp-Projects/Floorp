@@ -55,8 +55,6 @@ places-by-day-and-site =
 
 places-history-search =
   .placeholder = Search history
-places-history =
-  .aria-label = History
 places-bookmarks-search =
   .placeholder = Search bookmarks
 
