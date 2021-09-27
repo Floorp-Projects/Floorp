@@ -498,6 +498,16 @@ ClassifierDummyChannel::SetBeConservative(bool aBeConservative) {
 }
 
 NS_IMETHODIMP
+ClassifierDummyChannel::GetBypassProxy(bool* aBypassProxy) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ClassifierDummyChannel::SetBypassProxy(bool aBypassProxy) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ClassifierDummyChannel::GetIsTRRServiceChannel(bool* aTrr) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

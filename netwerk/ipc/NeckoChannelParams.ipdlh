@@ -298,6 +298,7 @@ struct HttpChannelOpenArgs
   bool                        allowHttp3;
   bool                        allowAltSvc;
   bool                        beConservative;
+  bool                        bypassProxy;
   uint32_t                    tlsFlags;
   LoadInfoArgs?               loadInfo;
   uint32_t                    cacheKey;
@@ -365,6 +366,7 @@ struct HttpConnectionInfoCloneArgs
   bool insecureScheme;
   bool noSpdy;
   bool beConservative;
+  bool bypassProxy;
   bool anonymousAllowClientCert;
   bool fallbackConnection;
   uint32_t tlsFlags;
