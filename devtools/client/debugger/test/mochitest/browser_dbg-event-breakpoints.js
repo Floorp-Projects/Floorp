@@ -46,7 +46,7 @@ add_task(async function() {
 
   invokeInTab("evalHandler");
   await waitForPaused(dbg);
-  assertPauseLocation(dbg, 2, "http://example.com/eval-test.js");
+  assertPauseLocation(dbg, 2, "https://example.com/eval-test.js");
   await resume(dbg);
 
   invokeOnElement("#focus-text", "focus");
