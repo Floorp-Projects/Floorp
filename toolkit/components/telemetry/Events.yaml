@@ -2356,8 +2356,10 @@ security:
         datauri - a data URI
         bloburi - a blob URI
         singlestring - A single file or string with no slashes
-        mozillaextension - An extension claiming to be from *mozilla.org
-        otherextension - Another extension not from Mozilla
+        mozillaextension - An extension claiming to be from *mozilla.org (Deprecated)
+        otherextension - Another extension not from Mozilla (Deprecated)
+        mozillaextension_file - An extension claiming to be from *mozilla.org, loaded from a file://
+        otherextension_file - Another extension not from Mozilla, loaded from a file://
         suspectedUserChromeJS - A filepath ending in .uc.js
         sanitizedWindowsPath - A filepath, on Windows, sanitized by WinUtils::PreparePathForTelemetry
                                which is a bare filename or a subpath of %ProgramFiles%, %SystemRoot%,
