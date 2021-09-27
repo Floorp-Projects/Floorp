@@ -61,6 +61,127 @@ bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
   return true;
 }
 
+/*
+ * [SMDOC] Linear memory addresses and bounds checking
+ *
+ * (Also see "WASM Linear Memory structure" in vm/ArrayBufferObject.cpp)
+ *
+ *
+ * Memory addresses, bounds check avoidance, and the huge memory trick.
+ *
+ * A memory address in an access instruction has three components, the "memory
+ * base", the "pointer", and the "offset".  The "memory base" - the HeapReg on
+ * most platforms and a value loaded from the Tls on x86 - is a native pointer
+ * that points to the start of the linear memory array; we'll ignore the memory
+ * base in the following.  The "pointer" is the i32 or i64 index supplied by the
+ * program as a separate value argument to the access instruction; it is usually
+ * variable but can be constant.  The "offset" is a constant encoded in the
+ * access instruction.
+ *
+ * The "effective address" (EA) is the non-overflowed sum of the pointer and the
+ * offset (if the sum overflows the program traps); the pointer, offset, and EA
+ * all have the same type, i32 or i64.
+ *
+ * An access has an "access size", which is the number of bytes that are
+ * accessed - currently up to 16 (for V128).  The highest-addressed byte to be
+ * accessed by an access is thus the byte at (pointer+offset+access_size-1),
+ * where offset+access_size-1 is compile-time evaluable.
+ *
+ * Bounds checking ensures that the entire access is in bounds, ie, that the
+ * highest-addressed byte is at an offset in the linear memory below that of the
+ * memory's current byteLength.
+ *
+ * To avoid performing an addition with overflow check and a compare-and-branch
+ * bounds check for every memory access, we use some tricks:
+ *
+ * - An access-protected guard region of size R at the end of each memory is
+ *   used to trap accesses to out-of-bounds offsets in the range
+ *   0..R-access_size.  Thus the offset and the access size need not be added
+ *   into the pointer before the bounds check, saving the add and overflow
+ *   check.  The offset is added into the pointer without an overflow check
+ *   either directly before the access or in the access instruction itself
+ *   (depending on the ISA).  The pointer must still be explicitly
+ *   bounds-checked.
+ *
+ * - On 64-bit systems where we determine there is plenty of virtual memory
+ *   space (and ideally we determine that the VM system uses overcommit), a
+ *   32-bit memory is implemented as a 4GB + R reservation, where the memory
+ *   from the current heap length through the end of the reservation is
+ *   access-protected.  The protected area R allows offsets up to R-access_size
+ *   to be encoded in the access instruction.  The pointer need not be bounds
+ *   checked explicitly, since it has only a 4GB range and thus points into the
+ *   4GB part of the reservation.  The offset can be added into the pointer
+ *   (using 64-bit arithmetic) either directly before the access or in the
+ *   access instruction.
+ *
+ * The value of R differs in the two situations; in the first case it tends to
+ * be small, currently 64KB; in the second case it is large, currently 2GB+64KB.
+ * The difference is due to explicit bounds checking tending to be used on
+ * 32-bit systems where memory and address space are scarce, while the implicit
+ * bounds check is used only on 64-bit systems after ensuring that sufficient
+ * address space is available in the process.  (2GB is really overkill, and
+ * there's nothing magic about it; we could use something much smaller.)
+ *
+ * The implicit bounds checking strategy with the large reservation is known
+ * below and elsewhere as the "huge memory trick" or just "huge memory".
+ *
+ * All memories in a process use the same strategy, selected at process startup.
+ * The immediate reason for that is that the machine code embeds the strategy
+ * it's been compiled with, and may later be exposed to memories originating
+ * from different modules or directly from JS.  If the memories did not all use
+ * the same strategy, and the same strategy as the code, linking would fail or
+ * we would have to recompile the code.
+ *
+ *
+ * The boundsCheckLimit.
+ *
+ * The bounds check limit that is stored in the Tls is always valid and is
+ * always a 64-bit datum, and it is always correct to load it and use it as a
+ * 64-bit value.  However, in situations when the 32 upper bits are known to be
+ * zero, it is also correct to load just the low 32 bits from the address of the
+ * limit (which is always little-endian when a JIT is enabled), and use that
+ * value as the limit.
+ *
+ * On x86 and arm32 (and on any other 32-bit platform, should there ever be
+ * one), there is explicit bounds checking and the heap, whether memory32 or
+ * memory64, is limited to 2GB; the bounds check limit can be treated as a
+ * 32-bit quantity.
+ *
+ * On all 64-bit platforms, we may use explicit bounds checking or the huge
+ * memory trick for memory32, but must always use explicit bounds checking for
+ * memory64.  If the heap does not have a known maximum size or the known
+ * maximum is greater than or equal to 4GB, then the bounds check limit must be
+ * treated as a 64-bit quantity; otherwise it can be treated as a 32-bit
+ * quantity.
+ *
+ * On x64 and arm64 with Baseline and Ion, we allow 32-bit memories up to 4GB,
+ * and 64-bit memories can be larger.
+ *
+ * On arm64 with Cranelift, memories limited to 4GB-128K, since new code would
+ * have to be written to deal with the 64-bit limit.
+ *
+ * On mips64, memories are limited to 2GB, for now.
+ *
+ * Asm.js memories are limited to 2GB even on 64-bit platforms, and we can
+ * always assume a 32-bit bounds check limit for asm.js.
+ *
+ *
+ * Constant pointers.
+ *
+ * If the pointer is constant then the EA can be computed at compile time, and
+ * if the EA is below the initial memory size then the bounds check can be
+ * elided.
+ *
+ *
+ * Alignment checks.
+ *
+ * On all platforms, some accesses (currently atomics) require an alignment
+ * check: the EA must be naturally aligned for the datum being accessed.
+ * However, we do not need to compute the EA properly, we care only about the
+ * low bits - a cheap, overflowing add is fine, and if the offset is known
+ * to be aligned, only the pointer need be checked.
+ */
+
 #ifdef JS_64BIT
 #  ifdef ENABLE_WASM_CRANELIFT
 // TODO (large ArrayBuffer): Cranelift needs to be updated to use more than the
@@ -186,10 +307,11 @@ size_t wasm::ComputeMappedSize(wasm::Pages clampedMaxPages) {
   // implementation limits.
   size_t maxSize = clampedMaxPages.byteLength();
 
-  // It is the bounds-check limit, not the mapped size, that gets baked into
-  // code. Thus round up the maxSize to the next valid immediate value
-  // *before* adding in the guard page.
-
+  // It is the bounds-check limit, not the mapped size, that gets used by
+  // code. Thus round up the maxSize to the next valid immediate value *before*
+  // adding in the guard page.
+  //
+  // Also see "Wasm Linear Memory Structure" in vm/ArrayBufferObject.cpp.
   uint64_t boundsCheckLimit = RoundUpToNextValidBoundsCheckImmediate(maxSize);
   MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
 
@@ -220,6 +342,8 @@ uint64_t wasm::RoundUpToNextValidBoundsCheckImmediate(uint64_t i) {
 // memory. To guard against this, extra space is included in the guard region to
 // catch the overflow. MaxMemoryAccessSize is a conservative approximation of
 // the maximum guard space needed to catch all unaligned overflows.
+//
+// Also see "Linear memory addresses and bounds checking" above.
 
 static const unsigned MaxMemoryAccessSize = LitVal::sizeofLargestValue();
 

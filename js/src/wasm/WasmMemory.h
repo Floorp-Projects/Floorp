@@ -137,10 +137,9 @@ extern Pages ClampedMaxPages(Pages initialPages,
                              bool useHugeMemory);
 
 // For a given WebAssembly/asm.js 'clamped' max pages, return the number of
-// bytes to map which will necessarily be a multiple of the system page size
-// and greater than maxPages in bytes. For a returned mappedSize:
-//   boundsCheckLimit = mappedSize - GuardSize
-//   IsValidBoundsCheckImmediate(boundsCheckLimit)
+// bytes to map which will necessarily be a multiple of the system page size and
+// greater than maxPages in bytes.  See "Wasm Linear Memory Structure" in
+// vm/ArrayBufferObject.cpp.
 extern size_t ComputeMappedSize(Pages clampedMaxPages);
 
 extern size_t GetMaxOffsetGuardLimit(bool hugeMemory);
@@ -163,7 +162,8 @@ extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
 // memory unconditionally allocates a huge region of virtual memory of size
 // wasm::HugeMappedSize. This allows all memory resizing to work without
 // reallocation and provides enough guard space for all offsets to be folded
-// into memory accesses.
+// into memory accesses.  See "Linear memory addresses and bounds checking" in
+// wasm/WasmMemory.cpp for more information.
 
 static const uint64_t HugeIndexRange = uint64_t(UINT32_MAX) + 1;
 static const uint64_t HugeOffsetGuardLimit = uint64_t(INT32_MAX) + 1;
