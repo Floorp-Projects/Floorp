@@ -83,7 +83,7 @@ add_task(async function test_filter_tabId_and_windowId() {
     } catch (e) {
       browser.test.fail(`Unexpected test failure: ${e} :: ${e.stack}`);
     }
-    browser.test.sendMessage("testCompleted");
+    browser.runtime.sendMessage("testCompleted");
   }
 
   function background() {
@@ -94,6 +94,13 @@ add_task(async function test_filter_tabId_and_windowId() {
       if (msg === "triggerBackgroundRequest") {
         await fetch("http://example.com/?bg");
       }
+      if (msg === "testCompleted") {
+        await browser.tabs.remove(sender.tab.id);
+        browser.test.sendMessage("testCompleted");
+      }
+    });
+    browser.tabs.create({
+      url: browser.runtime.getURL("tab.html"),
     });
   }
 
@@ -105,7 +112,6 @@ add_task(async function test_filter_tabId_and_windowId() {
         "webRequestBlocking",
         "http://example.com/*",
       ],
-      web_accessible_resources: ["tab.html"],
     },
     background,
     files: {
@@ -114,15 +120,6 @@ add_task(async function test_filter_tabId_and_windowId() {
     },
   });
   await extension.startup();
-
-  // bug 1641735: tabs.create / tabs.remove does not work in GeckoView unless
-  // `useAddonManager: "permanent"` is used, so use window.open() instead.
-  //
-  // Note that somehow window.open() unexpectedly runs null when extensions
-  // run in-process, i.e. extensions.webextensions.remote=false. Fortunately,
-  // extension tabs are automatically closed as part of extension.unload()
-  // below (provided that extension APIs are used in the tab - bug 1399655).
-  window.open(`moz-extension://${extension.uuid}/tab.html`);
 
   await extension.awaitMessage("testCompleted");
   await extension.unload();

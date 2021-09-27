@@ -20,11 +20,7 @@
 
       add_task(async function test_tabs_goBack_goForward() {
         const extension = ExtensionTestUtils.loadExtension({
-          useAddonManager: "permanent",
           manifest: {
-            applications: {
-              gecko: { id: "goBack-goForward@tests.mozilla.org" },
-            },
             permissions: ["tabs"],
           },
 

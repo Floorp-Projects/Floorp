@@ -60,10 +60,8 @@ add_task(async function testIndexedDB() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     background,
     manifest: {
-      applications: { gecko: { id: "indexedDb@tests.mozilla.org" } },
       permissions: ["browsingData", "tabs", "cookies"],
       content_scripts: [
         {

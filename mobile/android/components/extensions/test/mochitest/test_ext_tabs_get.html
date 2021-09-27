@@ -17,13 +17,7 @@ add_task(async function() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],
-      applications: {
-        gecko: {
-          id: "test_ext_tabs_get@tests.mozilla.org",
-        },
-      }
     },
-    useAddonManager: "permanent",
     async background() {
       const tab1 = await browser.tabs.create({});
       const tab2 = await browser.tabs.create({});

@@ -191,10 +191,8 @@ add_task(async function valid_cookieStoreId() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
       permissions: ["tabs", "cookies"],
-      applications: { gecko: { id: "cookiestoreid@tests.mozilla.org" } },
     },
     files: {
       "blank.html": `<html><head><meta charset="utf-8"></head></html>`,

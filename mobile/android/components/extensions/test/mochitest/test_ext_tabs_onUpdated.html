@@ -16,11 +16,6 @@
 add_task(async function test_onUpdated() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "applications": {
-        "gecko": {
-          "id": "test_on_updated@tests.mozilla.org",
-        },
-      },
       "permissions": ["tabs"],
       "content_scripts": [{
         "matches": ["http://mochi.test/*/context_tabs_onUpdated_page.html"],
@@ -29,7 +24,6 @@ add_task(async function test_onUpdated() {
       }],
     },
 
-    useAddonManager: "permanent",
     background: function() {
       const pageURL = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
 
@@ -101,21 +95,14 @@ add_task(async function test_onUpdated() {
   await extension.unload();
 });
 
-function* do_test_update(name, background, withPermissions = true) {
-  const manifest = {
-    applications: {
-      gecko: {
-        id: "test_update_" + name + "@tests.mozilla.org",
-      },
-    },
-  };
+function* do_test_update(background, withPermissions = true) {
+  const manifest = {};
   if (withPermissions) {
     manifest.permissions = ["tabs", "http://mochi.test/"];
   }
   const extension = ExtensionTestUtils.loadExtension({
     manifest,
     background,
-    useAddonManager: "permanent",
   });
 
   yield Promise.all([
@@ -127,7 +114,7 @@ function* do_test_update(name, background, withPermissions = true) {
 }
 
 add_task(async function test_url() {
-  await do_test_update("url", function background() {
+  await do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
@@ -149,7 +136,7 @@ add_task(async function test_url() {
 });
 
 add_task(async function test_title() {
-  await do_test_update("title", async function background() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
 
@@ -169,7 +156,7 @@ add_task(async function test_title() {
 });
 
 add_task(async function test_without_tabs_permission() {
-  await do_test_update("tabs_permission", async function background() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
     let count = 0;

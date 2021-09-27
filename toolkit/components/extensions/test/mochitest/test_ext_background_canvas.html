@@ -30,15 +30,7 @@ add_task(async function test_background_canvas() {
     }
   }
 
-  let extensionData = {
-    useAddonManager: "permanent",
-    manifest: {
-      applications: { gecko: { id: "background_canvas@tests.mozilla.org" } },
-    },
-    background,
-  };
-
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  let extension = ExtensionTestUtils.loadExtension({ background });
 
   await extension.startup();
   await extension.awaitFinish("background-canvas");

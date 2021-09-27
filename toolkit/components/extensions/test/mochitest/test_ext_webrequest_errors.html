@@ -33,9 +33,7 @@ async function test_connection_refused(url, expectedError) {
   }
 
   let extensionData = {
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "connection_refused@tests.mozilla.org" } },
       permissions: ["webRequest", "tabs", "*://badchain.include-subdomains.pinning.example.com/*"],
     },
     background: `(${background})("${url}", "${expectedError}")`,

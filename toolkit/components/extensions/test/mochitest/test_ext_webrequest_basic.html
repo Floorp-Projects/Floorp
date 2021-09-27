@@ -260,9 +260,7 @@ add_task(async function test_webRequest_tabId() {
   }
 
   let tabExt = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "web_request_tab_id@tests.mozilla.org" } },
       permissions: [
         "tabs",
       ],
@@ -318,9 +316,7 @@ add_task(async function test_webRequest_tabId_browser() {
 
   let pageUrl = `${SimpleTest.getTestFileURL("file_sample.html")}?nocache=${Math.random()}`;
   let tabExt = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "tab_id_browser@tests.mozilla.org" } },
       permissions: [
         "tabs",
       ],
