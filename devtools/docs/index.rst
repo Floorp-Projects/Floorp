@@ -42,6 +42,7 @@ Automated tests
    Chrome mochitests <tests/mochitest-chrome.md>
    DevTools mochitests <tests/mochitest-devtools.md>
    Node tests <tests/node-tests.md>
+   Memory Allocation tests </devtools/tests/memory/index.md>
    Writing tests <tests/writing-tests.md>
    Debugging intermittent failures <tests/debugging-intermittents.md>
    Performance tests overview<tests/performance-tests-overview.md>
