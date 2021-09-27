@@ -39,7 +39,7 @@ class LoginStorageDelegate {
       hint |= LoginStorageHint.GENERATED;
     }
     return {
-      // Sync with GeckoSession.handlePromptEvent.
+      // Sync with PromptController
       type: "Autocomplete:Save:Login",
       hint,
       logins: aLogins,
