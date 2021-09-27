@@ -14,7 +14,7 @@
  * WindowGlobalTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
  *
- * This class is extended by FrameTargetActor, ParentProcessTargetActor.
+ * This class is extended by ParentProcessTargetActor, itself being extented by WebExtensionTargetActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  *
@@ -237,7 +237,7 @@ const windowGlobalTargetPrototype = {
    *  - window-ready
    *  - navigate
    *
-   * This class is subclassed by FrameTargetActor and others.
+   * This class is subclassed by ParentProcessTargetActor and others.
    * Subclasses are expected to implement a getter for the docShell property.
    *
    * @param connection DevToolsServerConnection
@@ -254,7 +254,7 @@ const windowGlobalTargetPrototype = {
    *        - isTopLevelTarget Boolean
    *          Should be set to true for all top-level targets. A top level target
    *          is the topmost target of a DevTools "session". For instance for a local
-   *          tab toolbox, the FrameTargetActor for the content page is the top level target.
+   *          tab toolbox, the WindowGlobalTargetActor for the content page is the top level target.
    *          For the Multiprocess Browser Toolbox, the parent process target is the top level
    *          target.
    *          At the moment this only impacts the WindowGlobalTarget `reconfigure`
@@ -505,7 +505,7 @@ const windowGlobalTargetPrototype = {
    * Getter for the window global's title.
    */
   get title() {
-    return this.contentDocument.contentTitle;
+    return this.contentDocument.title;
   },
 
   /**

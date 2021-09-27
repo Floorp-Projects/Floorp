@@ -452,11 +452,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // this throws as the debugger can _not_ be in the same compartment as the debugger.
     // This happens when we toggle fission for content toolbox because we try to reparent
     // the Walker of the tab. This happens because we do not detect in Walker.reparentRemoteFrame
-    // that the target of the tab is the top level. That's because the target is a FrameTargetActor
+    // that the target of the tab is the top level. That's because the target is a WindowGlobalTargetActor
     // which is retrieved via Node.getEmbedderElement and doesn't return the LocalTabTargetActor.
     // We should probably work on TabDescriptor so that the LocalTabTargetActor has a descriptor,
     // and see if we can possibly move the local tab specific out of the TargetActor and have
-    // the TabDescriptor expose a pure FrameTargetActor?? (See bug 1579042)
+    // the TabDescriptor expose a pure WindowGlobalTargetActor?? (See bug 1579042)
     if (Cu.getObjectPrincipal(global) == Cu.getObjectPrincipal(dbg)) {
       return undefined;
     }
