@@ -336,12 +336,6 @@ child:
   [Nested=inside_sync] sync ExtentsInCSSPixels(uint64_t aID)
     returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
   [Nested=inside_sync] sync DOMNodeID(uint64_t aID) returns(nsString aDOMNodeID);
-
-  /*
-   * Verify the cache. Used for testing purposes.
-   */
-  async VerifyCache(uint64_t aID, uint64_t aCacheDomain, AccAttributes aFields);
-
 };
 
 }
