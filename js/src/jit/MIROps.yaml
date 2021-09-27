@@ -1676,6 +1676,11 @@
 - name: GetDOMMember
   gen_boilerplate: false
 
+- name: ValueToIterator
+  operands:
+    value: Value
+  result_type: Object
+
 # Load the private value expando from a DOM proxy. The target is stored in the
 # proxy object's private slot.
 # This is either an UndefinedValue (no expando), ObjectValue (the expando

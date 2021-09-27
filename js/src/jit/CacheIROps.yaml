@@ -770,7 +770,7 @@
 
 - name: ValueToIteratorResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     val: ValId
