@@ -4894,7 +4894,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
       }
 #endif
       lockedThreadData->ReinitializeOnResume();
-      if (lockedThreadData->GetJSContext()) {
+      if (ActivePS::FeatureJS(aLock) && lockedThreadData->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(0);
       }
     }
@@ -5636,6 +5636,10 @@ void profiler_set_js_context(JSContext* aCx) {
         aOnThreadRef.WithLockedRWOnThread(
             [&](ThreadRegistration::LockedRWOnThread& aThreadData) {
               aThreadData.SetJSContext(aCx);
+
+              if (!ActivePS::Exists(lock) || !ActivePS::FeatureJS(lock)) {
+                return;
+              }
 
               // This call is on-thread, so we can call PollJSSampling() to
               // start JS sampling immediately.
