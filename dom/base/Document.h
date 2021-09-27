@@ -1420,6 +1420,10 @@ class Document : public nsINode,
   // Returns whether this document has the storage access permission.
   bool HasStorageAccessPermissionGranted();
 
+  // Returns whether the storage access permission of the document is granted by
+  // the allow list.
+  bool HasStorageAccessPermissionGrantedByAllowList();
+
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }
 
