@@ -17123,7 +17123,7 @@ bool Document::HasStorageAccessPermissionGranted() {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  return loadInfo->GetHasStoragePermission();
+  return loadInfo->GetStoragePermission() != nsILoadInfo::NoStoragePermission;
 }
 
 nsIPrincipal* Document::EffectiveStoragePrincipal() const {
