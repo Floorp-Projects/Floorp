@@ -133,13 +133,11 @@ function makeExtension(id, otherId) {
   let args = `${token}, ${JSON.stringify(id)}, ${JSON.stringify(otherId)}`;
 
   let extensionData = {
-    useAddonManager: "permanent",
     background: `(${backgroundScript})(${args})`,
     manifest: {
       "applications": {"gecko": {id}},
 
       "permissions": ["tabs"],
-
 
       "content_scripts": [{
         "matches": ["http://mochi.test/*/file_sample.html"],

@@ -217,15 +217,9 @@ add_task(async function testExecuteScript() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["http://mochi.test/", "http://example.com/", "webNavigation"],
-      applications: {
-        gecko: {
-          id: "test_execute_script@tests.mozilla.org",
-        },
-      },
     },
 
     background,
-    useAddonManager: "permanent",
 
     files: {
       "script.js": function() {

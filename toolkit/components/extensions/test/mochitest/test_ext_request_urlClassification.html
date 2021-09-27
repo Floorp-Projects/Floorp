@@ -28,9 +28,7 @@ add_task(async function setup() {
 
 add_task(async function test_urlClassification() {
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: {gecko: {id: "classification@mochi.test"}},
       permissions: ["webRequest", "webRequestBlocking", "proxy", "<all_urls>"],
     },
     background() {

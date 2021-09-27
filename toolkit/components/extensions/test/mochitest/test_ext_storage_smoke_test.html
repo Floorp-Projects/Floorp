@@ -92,8 +92,6 @@ add_task(async function test_storage_smoke_test() {
 
       browser.test.sendMessage("done");
     },
-    // Note: when Android supports sync on the java layer we will need to add
-    // useAddonManager: "permanent" here. Bug 1625257
     manifest: {
       permissions: ["storage"],
     },
