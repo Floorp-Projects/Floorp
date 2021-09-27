@@ -6,7 +6,7 @@
 
 /*
  * Descriptor Actor that represents a Tab in the parent process. It
- * launches a FrameTargetActor in the content process to do the real work and tunnels the
+ * launches a WindowGlobalTargetActor in the content process to do the real work and tunnels the
  * data.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
@@ -36,7 +36,7 @@ loader.lazyRequireGetter(
 /**
  * Creates a target actor proxy for handling requests to a single browser frame.
  * Both <xul:browser> and <iframe mozbrowser> are supported.
- * This actor is a shim that connects to a FrameTargetActor in a remote browser process.
+ * This actor is a shim that connects to a WindowGlobalTargetActor in a remote browser process.
  * All RDP packets get forwarded using the message manager.
  *
  * @param connection The main RDP connection.

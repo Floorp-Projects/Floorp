@@ -102,7 +102,7 @@ var DevToolsServer = {
 
   /**
    * We run a special server in child process whose main actor is an instance
-   * of FrameTargetActor, but that isn't a root actor. Instead there is no root
+   * of WindowGlobalTargetActor, but that isn't a root actor. Instead there is no root
    * actor registered on DevToolsServer.
    */
   get rootlessServer() {

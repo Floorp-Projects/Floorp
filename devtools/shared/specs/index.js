@@ -299,11 +299,6 @@ const Types = (exports.__TypesForTests = [
     front: null,
   },
   {
-    types: ["frameTarget"],
-    spec: "devtools/shared/specs/targets/frame",
-    front: null,
-  },
-  {
     types: ["parentProcessTarget"],
     spec: "devtools/shared/specs/targets/parent-process",
     front: null,

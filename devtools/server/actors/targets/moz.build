@@ -6,7 +6,6 @@
 
 DevToolsModules(
     "content-process.js",
-    "frame.js",
     "index.js",
     "parent-process.js",
     "target-actor-mixin.js",
