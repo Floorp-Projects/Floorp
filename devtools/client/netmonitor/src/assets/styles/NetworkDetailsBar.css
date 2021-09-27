@@ -353,6 +353,16 @@
   font-size: 12px;
 }
 
+.network-monitor #response-panel .notificationbox .notification[data-key="CORS-error"].notification[data-type="info"] {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.network-monitor #response-panel .notification[data-key="CORS-error"] .notificationInner .messageText {
+  white-space: normal;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 /* Timings tabpanel */
 
 .network-monitor .timings-container {
