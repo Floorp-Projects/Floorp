@@ -11,7 +11,7 @@ extern crate log;
 
 use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::core;
-use audioipc::framing::framed;
+use audioipc::platformhandle_passing::framed_with_platformhandles;
 use audioipc::rpc;
 use audioipc::{MessageStream, PlatformHandle, PlatformHandleType};
 use futures::sync::oneshot;
@@ -124,14 +124,11 @@ pub unsafe extern "C" fn audioipc_server_start(
 }
 
 #[no_mangle]
-pub extern "C" fn audioipc_server_new_client(
-    p: *mut c_void,
-    shm_area_size: usize,
-) -> PlatformHandleType {
+pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> PlatformHandleType {
     let (wait_tx, wait_rx) = oneshot::channel();
     let wrapper: &ServerWrapper = unsafe { &*(p as *mut _) };
 
-    let callback_thread_handle = wrapper.callback_thread.handle();
+    let core_handle = wrapper.callback_thread.handle();
 
     // We create a connected pair of anonymous IPC endpoints. One side
     // is registered with the reactor core, the other side is returned
@@ -143,13 +140,13 @@ pub extern "C" fn audioipc_server_new_client(
             wrapper
                 .core_thread
                 .handle()
-                .spawn(futures::future::lazy(move || {
+                .spawn(futures::future::lazy(|| {
                     trace!("Incoming connection");
                     let handle = reactor::Handle::default();
                     ipc_server.into_tokio_ipc(&handle)
                     .map(|sock| {
-                        let transport = framed(sock, Default::default());
-                        rpc::bind_server(transport, server::CubebServer::new(callback_thread_handle, shm_area_size));
+                        let transport = framed_with_platformhandles(sock, Default::default());
+                        rpc::bind_server(transport, server::CubebServer::new(core_handle));
                     }).map_err(|_| ())
                     // Notify waiting thread that server has been registered.
                     .and_then(|_| wait_tx.send(()))

@@ -38,7 +38,7 @@ impl MessageStream {
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn from_raw_handle(raw: super::PlatformHandleType) -> MessageStream {
+    pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
         MessageStream::new(miow::pipe::NamedPipe::from_raw_handle(raw))
     }
 
