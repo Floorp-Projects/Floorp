@@ -80,7 +80,6 @@ UNIFIED_SOURCES += [
     "bindings/private/TimingDistribution.cpp",
     "bindings/private/Uuid.cpp",
     "ipc/FOGIPC.cpp",
-    "ipc/Support.cpp",
 ]
 
 SOURCES += [
