@@ -10,10 +10,12 @@ import android.view.View
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.focus.R
 import org.mozilla.focus.browser.DisplayToolbar
 
 class FullScreenIntegration(
@@ -22,7 +24,8 @@ class FullScreenIntegration(
     tabId: String?,
     sessionUseCases: SessionUseCases,
     private val toolbarView: DisplayToolbar,
-    private val statusBar: View
+    private val statusBar: View,
+    private val engineView: EngineView
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature = FullScreenFeature(
         store,
@@ -52,6 +55,13 @@ class FullScreenIntegration(
 
             exitImmersiveModeIfNeeded()
         }
+
+        val maxToolbarHeightInPx = if (enabled) {
+            0
+        } else {
+            activity.resources.getDimension(R.dimen.display_toolbar_height).toInt()
+        }
+        engineView.setDynamicToolbarMaxHeight(maxToolbarHeightInPx)
     }
 
     override fun onBackPressed(): Boolean {

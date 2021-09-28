@@ -173,7 +173,8 @@ class BrowserFragment :
                 tab.id,
                 components.sessionUseCases,
                 toolbarView,
-                statusBar!!
+                statusBar!!,
+                engineView!!
             ),
             this, view
         )
