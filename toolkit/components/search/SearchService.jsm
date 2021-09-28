@@ -24,16 +24,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gExperiment",
-  SearchUtils.BROWSER_SEARCH_PREF + "experiment",
-  false,
-  () => {
-    Services.search.wrappedJSObject._maybeReloadEngines();
-  }
+NimbusFeatures.search.onUpdate(() =>
+  Services.search.wrappedJSObject._maybeReloadEngines()
 );
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
@@ -1064,7 +1059,7 @@ SearchService.prototype = {
       locale,
       region,
       channel,
-      experiment: gExperiment,
+      experiment: NimbusFeatures.search.getVariable("experiment"),
       distroID: SearchUtils.distroID,
     });
 
