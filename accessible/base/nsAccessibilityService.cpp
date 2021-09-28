@@ -1469,15 +1469,14 @@ void nsAccessibilityService::MarkupAttributes(
         continue;
       }
 
-      nsAutoString value;
-
+      nsString value;
       if (aContent->IsElement()) {
         aContent->AsElement()->GetAttr(kNameSpaceID_None, info->DOMAttrName,
                                        value);
       }
 
       if (!value.IsEmpty()) {
-        aAttributes->SetAttribute(info->name, value);
+        aAttributes->SetAttribute(info->name, std::move(value));
       }
 
       continue;

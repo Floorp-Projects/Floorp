@@ -43,10 +43,9 @@ struct DeleteEntry {
 };
 
 class AccAttributes {
-  friend struct IPC::ParamTraits<AccAttributes*>;
   using AttrValueType =
       Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
-              CSSCoord, FontSize, Color, DeleteEntry>;
+              CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
@@ -70,9 +69,14 @@ class AccAttributes {
     mData.InsertOrUpdate(aAttrName, AsVariant(std::forward<T>(aAttrValue)));
   }
 
-  void SetAttribute(nsAtom* aAttrName, const nsAString& aAttrValue) {
-    RefPtr<nsAtom> atomValue = NS_Atomize(aAttrValue);
-    mData.InsertOrUpdate(aAttrName, AsVariant(atomValue));
+  void SetAttribute(nsAtom* aAttrName, nsString&& aAttrValue) {
+    UniquePtr<nsString> value = MakeUnique<nsString>();
+    *value = std::forward<nsString>(aAttrValue);
+    mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
+  }
+
+  void SetAttributeStringCopy(nsAtom* aAttrName, nsString aAttrValue) {
+    SetAttribute(aAttrName, std::move(aAttrValue));
   }
 
   void SetAttribute(nsAtom* aAttrName, nsAtom* aAttrValue) {
@@ -82,9 +86,16 @@ class AccAttributes {
   template <typename T>
   Maybe<const T&> GetAttribute(nsAtom* aAttrName) {
     if (auto value = mData.Lookup(aAttrName)) {
-      if (value->is<T>()) {
-        const T& val = value->as<T>();
-        return SomeRef(val);
+      if constexpr (std::is_same_v<nsString, T>) {
+        if (value->is<UniquePtr<nsString>>()) {
+          const T& val = *(value->as<UniquePtr<nsString>>().get());
+          return SomeRef(val);
+        }
+      } else {
+        if (value->is<T>()) {
+          const T& val = value->as<T>();
+          return SomeRef(val);
+        }
       }
     }
     return Nothing();
@@ -111,9 +122,16 @@ class AccAttributes {
 
     template <typename T>
     Maybe<const T&> Value() {
-      if (mValue->is<T>()) {
-        const T& val = mValue->as<T>();
-        return SomeRef(val);
+      if constexpr (std::is_same_v<nsString, T>) {
+        if (mValue->is<UniquePtr<nsString>>()) {
+          const T& val = *(mValue->as<UniquePtr<nsString>>().get());
+          return SomeRef(val);
+        }
+      } else {
+        if (mValue->is<T>()) {
+          const T& val = mValue->as<T>();
+          return SomeRef(val);
+        }
       }
       return Nothing();
     }
@@ -176,6 +194,8 @@ class AccAttributes {
                                      nsAString& aValueString);
 
   AtomVariantMap mData;
+
+  friend struct IPC::ParamTraits<AccAttributes*>;
 };
 
 }  // namespace a11y

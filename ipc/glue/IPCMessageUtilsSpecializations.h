@@ -29,6 +29,7 @@
 #ifdef XP_WIN
 #  include "mozilla/TimeStamp_windows.h"
 #endif
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
@@ -935,6 +936,38 @@ struct ParamTraits<mozilla::BitSet<N, Word>> {
                    paramType* aResult) {
     for (Word& word : aResult->Storage()) {
       if (!ReadParam(aMsg, aIter, &word)) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template <typename T>
+struct ParamTraits<mozilla::UniquePtr<T>> {
+  typedef mozilla::UniquePtr<T> paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    bool isNull = aParam == nullptr;
+    WriteParam(aMsg, isNull);
+
+    if (!isNull) {
+      WriteParam(aMsg, *aParam.get());
+    }
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    bool isNull = true;
+    if (!ReadParam(aMsg, aIter, &isNull)) {
+      return false;
+    }
+
+    if (isNull) {
+      aResult->reset();
+    } else {
+      *aResult = mozilla::MakeUnique<T>();
+      if (!ReadParam(aMsg, aIter, aResult->get())) {
         return false;
       }
     }

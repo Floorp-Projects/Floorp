@@ -302,7 +302,7 @@ static bool IsEscapedChar(const wchar_t c) {
 static bool ConvertBSTRAttributesToAccAttributes(
     const nsAString& aStr, RefPtr<AccAttributes>& aAttrs) {
   enum { eName = 0, eValue = 1, eNumStates } state;
-  nsAutoString tokens[eNumStates];
+  nsString tokens[eNumStates];
   auto itr = aStr.BeginReading(), end = aStr.EndReading();
 
   state = eName;
@@ -331,9 +331,8 @@ static bool ConvertBSTRAttributesToAccAttributes(
         }
         state = eName;
         RefPtr<nsAtom> nameAtom = NS_Atomize(tokens[eName]);
-        aAttrs->SetAttribute(nameAtom, tokens[eValue]);
+        aAttrs->SetAttribute(nameAtom, std::move(tokens[eValue]));
         tokens[eName].Truncate();
-        tokens[eValue].Truncate();
         ++itr;
         continue;
       }

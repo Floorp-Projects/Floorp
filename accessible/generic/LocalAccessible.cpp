@@ -986,10 +986,10 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   if (!HasOwnContent() || !mContent->IsElement()) return attributes.forget();
 
   // 'xml-roles' attribute coming from ARIA.
-  nsAutoString xmlRoles;
+  nsString xmlRoles;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
                                      xmlRoles)) {
-    attributes->SetAttribute(nsGkAtoms::xmlroles, xmlRoles);
+    attributes->SetAttribute(nsGkAtoms::xmlroles, std::move(xmlRoles));
   } else if (nsAtom* landmark = LandmarkRole()) {
     // 'xml-roles' attribute for landmark.
     attributes->SetAttribute(nsGkAtoms::xmlroles, landmark);
@@ -998,9 +998,9 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   // Expose object attributes from ARIA attributes.
   aria::AttrIterator attribIter(mContent);
   while (attribIter.Next()) {
-    nsAutoString value;
+    nsString value;
     attribIter.AttrValue(value);
-    attributes->SetAttribute(attribIter.AttrName(), value);
+    attributes->SetAttribute(attribIter.AttrName(), std::move(value));
   }
 
   // If there is no aria-live attribute then expose default value of 'live'
@@ -1008,13 +1008,13 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (roleMapEntry) {
     if (roleMapEntry->Is(nsGkAtoms::searchbox)) {
-      attributes->SetAttribute(nsGkAtoms::textInputType, u"search"_ns);
+      attributes->SetAttribute(nsGkAtoms::textInputType, nsGkAtoms::search);
     }
 
     if (!attributes->HasAttribute(nsGkAtoms::aria_live)) {
-      nsAutoString live;
+      nsString live;
       if (nsAccUtils::GetLiveAttrValue(roleMapEntry->liveAttRule, live)) {
-        attributes->SetAttribute(nsGkAtoms::aria_live, live);
+        attributes->SetAttribute(nsGkAtoms::aria_live, std::move(live));
       }
     }
   }
@@ -1030,9 +1030,9 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   // to expose traditional Value() information such as URL's on links and
   // documents, or text in an input.
   if (HasNumericValue()) {
-    nsAutoString valuetext;
+    nsString valuetext;
     Value(valuetext);
-    attributes->SetAttribute(nsGkAtoms::aria_valuetext, valuetext);
+    attributes->SetAttribute(nsGkAtoms::aria_valuetext, std::move(valuetext));
   }
 
   // Expose checkable object attribute if the accessible has checkable state
@@ -1076,16 +1076,16 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
 
   if (!mContent->IsElement()) return attributes.forget();
 
-  nsAutoString id;
+  nsString id;
   if (nsCoreUtils::GetID(mContent, id)) {
-    attributes->SetAttribute(nsGkAtoms::id, id);
+    attributes->SetAttribute(nsGkAtoms::id, std::move(id));
   }
 
   // Expose class because it may have useful microformat information.
-  nsAutoString _class;
+  nsString _class;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                      _class)) {
-    attributes->SetAttribute(nsGkAtoms::_class, _class);
+    attributes->SetAttribute(nsGkAtoms::_class, std::move(_class));
   }
 
   // Expose tag.
@@ -1137,10 +1137,11 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
 
   // Expose data-at-shortcutkeys attribute for web applications and virtual
   // cursors. Currently mostly used by JAWS.
-  nsAutoString atShortcutKeys;
+  nsString atShortcutKeys;
   if (mContent->AsElement()->GetAttr(
           kNameSpaceID_None, nsGkAtoms::dataAtShortcutkeys, atShortcutKeys)) {
-    attributes->SetAttribute(nsGkAtoms::dataAtShortcutkeys, atShortcutKeys);
+    attributes->SetAttribute(nsGkAtoms::dataAtShortcutkeys,
+                             std::move(atShortcutKeys));
   }
 
   return attributes.forget();
@@ -3022,7 +3023,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   RefPtr<AccAttributes> fields = new AccAttributes();
 
   if (aCacheDomain & CacheDomain::NameAndDescription) {
-    nsAutoString name;
+    nsString name;
     int32_t nameFlag = Name(name);
     if (nameFlag != eNameOK) {
       fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
@@ -3031,15 +3032,15 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
 
     if (!name.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::name, name);
+      fields->SetAttribute(nsGkAtoms::name, std::move(name));
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::name, DeleteEntry());
     }
 
-    nsAutoString description;
+    nsString description;
     Description(description);
     if (!description.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::description, description);
+      fields->SetAttribute(nsGkAtoms::description, std::move(description));
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::description, DeleteEntry());
     }
