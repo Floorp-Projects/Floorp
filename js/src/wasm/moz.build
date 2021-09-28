@@ -30,7 +30,6 @@ UNIFIED_SOURCES += [
     "WasmCompile.cpp",
     "WasmDebug.cpp",
     "WasmDebugFrame.cpp",
-    "WasmException.cpp",
     "WasmFrameIter.cpp",
     "WasmGC.cpp",
     "WasmGenerator.cpp",
