@@ -358,7 +358,7 @@ bool MaybeInstallFromDmgAndRelaunch() {
   @autoreleasepool {
     bool isFromDmg = IsAppRunningFromDmg();
 
-    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG, isFromDmg);
+    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_DMG, isFromDmg);
 
     if (!isFromDmg) {
       return false;
