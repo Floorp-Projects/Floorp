@@ -129,6 +129,16 @@
 #define JXL_MUST_USE_RESULT
 #endif
 
+// Disable certain -fsanitize flags for functions that are expected to include
+// things like unsigned integer overflow. For example use in the function
+// declaration JXL_NO_SANITIZE("unsigned-integer-overflow") to silence unsigned
+// integer overflow ubsan messages.
+#if JXL_COMPILER_CLANG && JXL_HAVE_ATTRIBUTE(no_sanitize)
+#define JXL_NO_SANITIZE(X) __attribute__((no_sanitize(X)))
+#else
+#define JXL_NO_SANITIZE(X)
+#endif
+
 #if JXL_HAVE_ATTRIBUTE(__format__)
 #define JXL_FORMAT(idx_fmt, idx_arg) \
   __attribute__((__format__(__printf__, idx_fmt, idx_arg)))

@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Ensure incompabilities with Windows macros (e.g. #define StoreFence) are
+// detected. Must come before Highway headers.
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 

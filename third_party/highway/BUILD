@@ -103,6 +103,11 @@ cc_library(
     ],
     compatible_with = [],
     copts = COPTS,
+    # TODO(janwas): remove once WASM toolchain supports *extend instead of *widen
+    defines = select({
+        "//tools/cc_target_os:wasm": ["HWY_WASM_OLD_NAMES"],
+        "//conditions:default": [],
+    }),
     textual_hdrs = [
         "hwy/foreach_target.h",  # public
         "hwy/ops/arm_neon-inl.h",

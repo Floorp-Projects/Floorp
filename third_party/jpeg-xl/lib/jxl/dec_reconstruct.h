@@ -34,7 +34,7 @@ namespace jxl {
 // those use cases where this is needed.
 Status FinalizeFrameDecoding(ImageBundle* JXL_RESTRICT decoded,
                              PassesDecoderState* dec_state, ThreadPool* pool,
-                             bool force_fir, bool skip_blending);
+                             bool force_fir, bool skip_blending, bool move_ec);
 
 // Renders the `frame_rect` portion of the final image to `output_image`
 // (unless the frame is upsampled - in which case, `frame_rect` is scaled

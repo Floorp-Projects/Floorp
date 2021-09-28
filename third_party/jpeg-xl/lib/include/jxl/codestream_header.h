@@ -4,7 +4,9 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @file codestream_header.h
+/** @addtogroup libjxl_common
+ * @{
+ * @file codestream_header.h
  * @brief Definitions of structs and enums for the metadata from the JPEG XL
  * codestream headers (signature, metadata, preview dimensions, ...), excluding
  * color encoding which is in color_encoding.h.
@@ -92,7 +94,7 @@ typedef struct {
 /** Basic image information. This information is available from the file
  * signature and first part of the codestream header.
  */
-typedef struct JxlBasicInfo {
+typedef struct {
   /* TODO(lode): need additional fields for (transcoded) JPEG? For reusable
    * fields orientation must be read from Exif APP1. For has_icc_profile: must
    * look up where ICC profile is guaranteed to be in a JPEG file to be able to
@@ -203,15 +205,20 @@ typedef struct JxlBasicInfo {
   uint32_t num_extra_channels;
 
   /** Bit depth of the encoded alpha channel, or 0 if there is no alpha channel.
+   * If present, matches the alpha_bits value of the JxlExtraChannelInfo
+   * associated with this alpha channel.
    */
   uint32_t alpha_bits;
 
-  /** Alpha channel floating point exponent bits, or 0 if they are unsigned
-   * integer.
+  /** Alpha channel floating point exponent bits, or 0 if they are unsigned. If
+   * present, matches the alpha_bits value of the JxlExtraChannelInfo associated
+   * with this alpha channel. integer.
    */
   uint32_t alpha_exponent_bits;
 
-  /** Whether the alpha channel is premultiplied
+  /** Whether the alpha channel is premultiplied. Only used if there is a main
+   * alpha channel. Matches the alpha_premultiplied value of the
+   * JxlExtraChannelInfo associated with this alpha channel.
    */
   JXL_BOOL alpha_premultiplied;
 
@@ -224,6 +231,11 @@ typedef struct JxlBasicInfo {
    * used if have_animation is JXL_TRUE.
    */
   JxlAnimationHeader animation;
+
+  /** Padding for forwards-compatibility, in case more fields are exposed
+   * in a future version of the library.
+   */
+  uint8_t padding[108];
 } JxlBasicInfo;
 
 /** Information for a single extra channel.
@@ -257,7 +269,7 @@ typedef struct {
   /** Whether alpha channel uses premultiplied alpha. Only applicable if
    * type is JXL_CHANNEL_ALPHA.
    */
-  JXL_BOOL alpha_associated;
+  JXL_BOOL alpha_premultiplied;
 
   /** Spot color of the current spot channel in linear RGBA. Only applicable if
    * type is JXL_CHANNEL_SPOT_COLOR.
@@ -309,3 +321,5 @@ typedef struct {
 #endif
 
 #endif /* JXL_CODESTREAM_HEADER_H_ */
+
+/** @}*/

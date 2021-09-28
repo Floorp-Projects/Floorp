@@ -7,49 +7,38 @@
 #define PLUGINS_GIMP_COMMON_H_
 
 #include <libgimp/gimp.h>
+#include <libgimp/gimpui.h>
+#include <math.h>
+
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <vector>
+
+#define PLUG_IN_BINARY "file-jxl"
+#define SAVE_PROC "file-jxl-save"
+
+// Defined by both FUIF and glib.
+#undef MAX
+#undef MIN
+#undef CLAMP
+
+#include "jxl/resizable_parallel_runner.h"
+#include "jxl/resizable_parallel_runner_cxx.h"
 
 namespace jxl {
 
-// FromFloat expects a value between 0 and 1, and ToFloat returns such values
-// from GIMP values.
-template <GimpPrecision>
-struct BufferFormat;
-template <>
-struct BufferFormat<GIMP_PRECISION_U8_GAMMA> {
-  using Sample = uint8_t;
-  static Sample FromFloat(const float x) {
-    return static_cast<Sample>(std::round(x * 255.f));
-  }
-  static float ToFloat(const Sample s) { return s; }
-};
-template <>
-struct BufferFormat<GIMP_PRECISION_U16_GAMMA> {
-  using Sample = uint16_t;
-  static Sample FromFloat(const float x) {
-    return static_cast<Sample>(std::round(x * 65535.f));
-  }
-  static float ToFloat(const Sample s) { return s * (1.f / 65535.f); }
-};
-template <>
-struct BufferFormat<GIMP_PRECISION_U32_GAMMA> {
-  using Sample = uint32_t;
-  static Sample FromFloat(const float x) {
-    return static_cast<Sample>(std::round(x * 4294967295.f));
-  }
-  static float ToFloat(const Sample s) { return s * (1.f / 4294967295.f); }
-};
-template <>
-struct BufferFormat<GIMP_PRECISION_HALF_GAMMA> {
-  using Sample = float;
-  static Sample FromFloat(const float x) { return x; }
-  static float ToFloat(const Sample s) { return s; }
-};
-template <>
-struct BufferFormat<GIMP_PRECISION_FLOAT_GAMMA> {
-  using Sample = float;
-  static Sample FromFloat(const float x) { return x; }
-  static float ToFloat(const Sample s) { return s; }
-};
+class JpegXlGimpProgress {
+ public:
+  explicit JpegXlGimpProgress(const char *message);
+  void update();
+  void finished();
+
+ private:
+  int cur_progress;
+  int max_progress;
+
+};  // class JpegXlGimpProgress
 
 }  // namespace jxl
 

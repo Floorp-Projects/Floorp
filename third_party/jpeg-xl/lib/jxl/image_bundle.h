@@ -172,14 +172,12 @@ class ImageBundle {
     const ExtraChannelInfo* eci = metadata_->Find(ExtraChannel::kAlpha);
     return (eci == nullptr) ? false : eci->alpha_associated;
   }
+  // Premultiply alpha (if it isn't already premultiplied)
+  void PremultiplyAlpha();
+  // Unpremultiply alpha (if it isn't already non-premultiplied)
+  void UnpremultiplyAlpha();
   const ImageF& alpha() const;
   ImageF* alpha();
-
-  // -- DEPTH
-  bool HasDepth() const {
-    return metadata_->Find(ExtraChannel::kDepth) != nullptr;
-  }
-  const ImageF& depth() const;
 
   // -- EXTRA CHANNELS
 
@@ -201,7 +199,13 @@ class ImageBundle {
 
   // Returns true if image does or will represent quantized DCT-8 coefficients,
   // stored in 8x8 pixel regions.
-  bool IsJPEG() const { return jpeg_data != nullptr; }
+  bool IsJPEG() const {
+#if JPEGXL_ENABLE_TRANSCODE_JPEG
+    return jpeg_data != nullptr;
+#else   // JPEGXL_ENABLE_TRANSCODE_JPEG
+    return false;
+#endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
+  }
 
   std::unique_ptr<jpeg::JPEGData> jpeg_data;
   // these fields are used to signal the input JPEG color space

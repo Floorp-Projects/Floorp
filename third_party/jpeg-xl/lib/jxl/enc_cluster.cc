@@ -77,38 +77,60 @@ float HistogramDistance(const Histogram& a, const Histogram& b) {
 
 // First step of a k-means clustering with a fancy distance metric.
 void FastClusterHistograms(const std::vector<Histogram>& in,
-                           const size_t num_contexts, size_t max_histograms,
+                           const size_t num_contexts_in, size_t max_histograms,
                            float min_distance, std::vector<Histogram>* out,
                            std::vector<uint32_t>* histogram_symbols) {
   PROFILER_FUNC;
   size_t largest_idx = 0;
-  for (size_t i = 0; i < num_contexts; i++) {
+  std::vector<uint32_t> nonempty_histograms;
+  nonempty_histograms.reserve(in.size());
+  for (size_t i = 0; i < num_contexts_in; i++) {
+    if (in[i].total_count_ == 0) continue;
     HistogramEntropy(in[i]);
     if (in[i].total_count_ > in[largest_idx].total_count_) {
       largest_idx = i;
     }
+    nonempty_histograms.push_back(i);
   }
+  // No symbols.
+  if (nonempty_histograms.empty()) {
+    out->resize(1);
+    histogram_symbols->clear();
+    histogram_symbols->resize(in.size(), 0);
+    return;
+  }
+  largest_idx = std::find(nonempty_histograms.begin(),
+                          nonempty_histograms.end(), largest_idx) -
+                nonempty_histograms.begin();
+  size_t num_contexts = nonempty_histograms.size();
   out->clear();
   out->reserve(max_histograms);
   std::vector<float> dists(num_contexts, std::numeric_limits<float>::max());
   histogram_symbols->clear();
-  histogram_symbols->resize(num_contexts, max_histograms);
+  histogram_symbols->resize(in.size(), max_histograms);
 
   while (out->size() < max_histograms && out->size() < num_contexts) {
-    (*histogram_symbols)[largest_idx] = out->size();
-    out->push_back(in[largest_idx]);
+    (*histogram_symbols)[nonempty_histograms[largest_idx]] = out->size();
+    out->push_back(in[nonempty_histograms[largest_idx]]);
     largest_idx = 0;
     for (size_t i = 0; i < num_contexts; i++) {
-      dists[i] = std::min(HistogramDistance(in[i], out->back()), dists[i]);
+      dists[i] = std::min(
+          HistogramDistance(in[nonempty_histograms[i]], out->back()), dists[i]);
       // Avoid repeating histograms
-      if ((*histogram_symbols)[i] != max_histograms) continue;
+      if ((*histogram_symbols)[nonempty_histograms[i]] != max_histograms) {
+        continue;
+      }
       if (dists[i] > dists[largest_idx]) largest_idx = i;
     }
     if (dists[largest_idx] < min_distance) break;
   }
 
-  for (size_t i = 0; i < num_contexts; i++) {
+  for (size_t i = 0; i < num_contexts_in; i++) {
     if ((*histogram_symbols)[i] != max_histograms) continue;
+    if (in[i].total_count_ == 0) {
+      (*histogram_symbols)[i] = 0;
+      continue;
+    }
     size_t best = 0;
     float best_dist = HistogramDistance(in[i], (*out)[best]);
     for (size_t j = 1; j < out->size(); j++) {

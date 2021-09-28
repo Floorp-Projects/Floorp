@@ -5,14 +5,6 @@
 
 #include "lib/jxl/base/data_parallel.h"
 
-#define DATA_PARALLEL_TRACE 0
-
-#if DATA_PARALLEL_TRACE
-#include <stdlib.h>
-
-#include "lib/jxl/base/time.h"
-#endif  // DATA_PARALLEL_TRACE
-
 namespace jxl {
 
 // static
@@ -27,17 +19,5 @@ JxlParallelRetCode ThreadPool::SequentialRunnerStatic(
   }
   return 0;
 }
-
-#if DATA_PARALLEL_TRACE
-void TraceRunBegin(const char* /*caller*/, double* t0) { *t0 = Now(); }
-
-void TraceRunEnd(const char* caller, double t0) {
-  const double elapsed = Now() - t0;
-  fprintf(stderr, "%27s: %5.1f ms\n", caller, elapsed * 1E3);
-}
-#else
-void TraceRunBegin(const char* /*caller*/, double* /*t0*/) {}
-void TraceRunEnd(const char* /*caller*/, double /*t0*/) {}
-#endif
 
 }  // namespace jxl

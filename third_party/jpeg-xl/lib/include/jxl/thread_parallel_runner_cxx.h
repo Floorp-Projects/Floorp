@@ -3,6 +3,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/// @addtogroup libjxl_threads
+/// @{
+///
 /// @file thread_parallel_runner_cxx.h
 /// @brief C++ header-only helper for @ref thread_parallel_runner.h.
 ///
@@ -57,3 +60,5 @@ static inline JxlThreadParallelRunnerPtr JxlThreadParallelRunnerMake(
 }
 
 #endif  // JXL_THREAD_PARALLEL_RUNNER_CXX_H_
+
+/// @}

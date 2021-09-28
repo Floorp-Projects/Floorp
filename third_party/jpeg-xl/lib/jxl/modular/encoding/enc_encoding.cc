@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "lib/jxl/base/os_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
@@ -26,6 +25,7 @@
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
+#include "lib/jxl/modular/encoding/enc_debug_tree.h"
 #include "lib/jxl/modular/encoding/enc_ma.h"
 #include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/modular/encoding/ma_common.h"
@@ -33,17 +33,37 @@
 #include "lib/jxl/modular/transform/transform.h"
 #include "lib/jxl/toc.h"
 
-#if JXL_OS_IOS
-#define JXL_ENABLE_DOT 0
-#else
-#define JXL_ENABLE_DOT 1  // iOS lacks C89 system()
-#endif
-
 namespace jxl {
 
 namespace {
 // Plot tree (if enabled) and predictor usage map.
 constexpr bool kWantDebug = false;
+constexpr bool kPrintTree = false;
+
+inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
+  switch (p) {
+    case Predictor::Zero:
+      return {{0, 0, 0}};
+    case Predictor::Left:
+      return {{255, 0, 0}};
+    case Predictor::Top:
+      return {{0, 255, 0}};
+    case Predictor::Average0:
+      return {{0, 0, 255}};
+    case Predictor::Average4:
+      return {{192, 128, 128}};
+    case Predictor::Select:
+      return {{255, 255, 0}};
+    case Predictor::Gradient:
+      return {{255, 0, 255}};
+    case Predictor::Weighted:
+      return {{0, 255, 255}};
+      // TODO
+    default:
+      return {{255, 255, 255}};
+  };
+}
+
 }  // namespace
 
 void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
@@ -54,8 +74,8 @@ void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
 
   JXL_DEBUG_V(7, "Learning %zux%zu channel %d", channel.w, channel.h, chan);
 
-  std::array<pixel_type, kNumStaticProperties> static_props = {chan,
-                                                               (int)group_id};
+  std::array<pixel_type, kNumStaticProperties> static_props = {
+      {chan, (int)group_id}};
   Properties properties(kNumNonrefProperties +
                         kExtraPropsPerChannel * options.max_properties);
   double pixel_fraction = std::min(1.0f, options.nb_repeats);
@@ -139,32 +159,6 @@ Tree LearnTree(TreeSamples &&tree_samples, size_t total_pixels,
   return tree;
 }
 
-constexpr bool kPrintTree = false;
-
-void PrintTree(const Tree &tree, const std::string &path) {
-  if (!kPrintTree) return;
-  FILE *f = fopen((path + ".dot").c_str(), "w");
-  fprintf(f, "graph{\n");
-  for (size_t cur = 0; cur < tree.size(); cur++) {
-    if (tree[cur].property < 0) {
-      fprintf(f, "n%05zu [label=\"%s%+" PRId64 " (x%u)\"];\n", cur,
-              PredictorName(tree[cur].predictor), tree[cur].predictor_offset,
-              tree[cur].multiplier);
-    } else {
-      fprintf(f, "n%05zu [label=\"%s>%d\"];\n", cur,
-              PropertyName(tree[cur].property).c_str(), tree[cur].splitval);
-      fprintf(f, "n%05zu -- n%05d;\n", cur, tree[cur].lchild);
-      fprintf(f, "n%05zu -- n%05d;\n", cur, tree[cur].rchild);
-    }
-  }
-  fprintf(f, "}\n");
-  fclose(f);
-#if JXL_ENABLE_DOT
-  JXL_ASSERT(
-      system(("dot " + path + ".dot -T svg -o " + path + ".svg").c_str()) == 0);
-#endif
-}
-
 Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
                                  const weighted::Header &wp_header,
                                  const Tree &global_tree,
@@ -179,12 +173,11 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
 
   JXL_DEBUG_V(6,
               "Encoding %zux%zu channel %d, "
-              "(shift=%i,%i, cshift=%i,%i)",
-              channel.w, channel.h, chan, channel.hshift, channel.vshift,
-              channel.hcshift, channel.vcshift);
+              "(shift=%i,%i)",
+              channel.w, channel.h, chan, channel.hshift, channel.vshift);
 
-  std::array<pixel_type, kNumStaticProperties> static_props = {chan,
-                                                               (int)group_id};
+  std::array<pixel_type, kNumStaticProperties> static_props = {
+      {chan, (int)group_id}};
   bool use_wp, is_wp_only;
   bool is_gradient_only;
   size_t num_props;
@@ -201,6 +194,9 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
   int8_t offsets[2 * kPropRangeFast] = {};
   if (is_wp_only) {
     is_wp_only = TreeToLookupTable(tree, context_lookup, offsets);
+  }
+  if (is_gradient_only) {
+    is_gradient_only = TreeToLookupTable(tree, context_lookup, offsets);
   }
 
   tokens->reserve(tokens->size() + channel.w * channel.h);
@@ -232,6 +228,48 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
         int32_t residual = r[x] - guess - offsets[pos];
         tokens->emplace_back(ctx_id, PackSigned(residual));
         wp_state.UpdateErrors(r[x], x, y, channel.w);
+      }
+    }
+  } else if (tree.size() == 1 && tree[0].predictor == Predictor::Gradient &&
+             tree[0].multiplier == 1 && tree[0].predictor_offset == 0 &&
+             !skip_encoder_fast_path) {
+    for (size_t c = 0; c < 3; c++) {
+      FillImage(static_cast<float>(PredictorColor(Predictor::Gradient)[c]),
+                &predictor_img.Plane(c));
+    }
+    const intptr_t onerow = channel.plane.PixelsPerRow();
+    for (size_t y = 0; y < channel.h; y++) {
+      const pixel_type *JXL_RESTRICT r = channel.Row(y);
+      for (size_t x = 0; x < channel.w; x++) {
+        pixel_type_w left = (x ? r[x - 1] : y ? *(r + x - onerow) : 0);
+        pixel_type_w top = (y ? *(r + x - onerow) : left);
+        pixel_type_w topleft = (x && y ? *(r + x - 1 - onerow) : left);
+        int32_t guess = ClampedGradient(top, left, topleft);
+        int32_t residual = r[x] - guess;
+        tokens->emplace_back(tree[0].childID, PackSigned(residual));
+      }
+    }
+  } else if (is_gradient_only && !skip_encoder_fast_path) {
+    for (size_t c = 0; c < 3; c++) {
+      FillImage(static_cast<float>(PredictorColor(Predictor::Gradient)[c]),
+                &predictor_img.Plane(c));
+    }
+    const intptr_t onerow = channel.plane.PixelsPerRow();
+    for (size_t y = 0; y < channel.h; y++) {
+      const pixel_type *JXL_RESTRICT r = channel.Row(y);
+      for (size_t x = 0; x < channel.w; x++) {
+        pixel_type_w left = (x ? r[x - 1] : y ? *(r + x - onerow) : 0);
+        pixel_type_w top = (y ? *(r + x - onerow) : left);
+        pixel_type_w topleft = (x && y ? *(r + x - 1 - onerow) : left);
+        int32_t guess = ClampedGradient(top, left, topleft);
+        uint32_t pos =
+            kPropRangeFast +
+            std::min<pixel_type_w>(
+                std::max<pixel_type_w>(-kPropRangeFast, top + left - topleft),
+                kPropRangeFast - 1);
+        uint32_t ctx_id = context_lookup[pos];
+        int32_t residual = r[x] - guess - offsets[pos];
+        tokens->emplace_back(ctx_id, PackSigned(residual));
       }
     }
   } else if (tree.size() == 1 && tree[0].predictor == Predictor::Zero &&
@@ -344,13 +382,8 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
                      size_t *width) {
   if (image.error) return JXL_FAILURE("Invalid image");
   size_t nb_channels = image.channel.size();
-  int bit_depth = 1, maxval = 1;
-  while (maxval < image.maxval) {
-    bit_depth++;
-    maxval = maxval * 2 + 1;
-  }
   JXL_DEBUG_V(2, "Encoding %zu-channel, %i-bit, %zux%zu image.", nb_channels,
-              bit_depth, image.w, image.h);
+              image.bitdepth, image.w, image.h);
 
   if (nb_channels < 1) {
     return true;  // is there any use for a zero-channel image?
@@ -431,7 +464,7 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
     JXL_ASSERT(tree->size() == decoded_tree.size());
     tree_storage = std::move(decoded_tree);
 
-    if (kWantDebug && WantDebugOutput(aux_out)) {
+    if (kWantDebug && kPrintTree && WantDebugOutput(aux_out)) {
       PrintTree(*tree, aux_out->debug_prefix + "/tree_" + ToString(group_id));
     }
     // Write tree
@@ -499,8 +532,9 @@ Status ModularGenericCompress(Image &image, const ModularOptions &opts,
   bits = writer ? writer->BitsWritten() - bits : 0;
   if (writer) {
     JXL_DEBUG_V(
-        4, "Modular-encoded a %zux%zu maxval=%i nbchans=%zu image in %zu bytes",
-        image.w, image.h, image.maxval, image.real_nb_channels, bits / 8);
+        4,
+        "Modular-encoded a %zux%zu bitdepth=%i nbchans=%zu image in %zu bytes",
+        image.w, image.h, image.bitdepth, image.channel.size(), bits / 8);
   }
   (void)bits;
   return true;

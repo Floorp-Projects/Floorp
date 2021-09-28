@@ -1,0 +1,17 @@
+# Copyright (c) the JPEG XL Project Authors. All rights reserved.
+#
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+# readthedocs.io configuration file. See:
+#   https://docs.readthedocs.io/en/stable/config-file/v2.html
+
+version: 2
+
+sphinx:
+   configuration: doc/sphinx/conf.py
+
+python:
+   version: "3.7"
+   install:
+   - requirements: doc/sphinx/requirements.txt
