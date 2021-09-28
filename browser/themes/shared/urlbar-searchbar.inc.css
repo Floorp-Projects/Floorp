@@ -344,7 +344,7 @@
 }
 #star-button[starred] {
   fill-opacity: 1;
-  fill: var(--toolbarbutton-icon-fill-attention);
+  fill: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
 }
 
 /* URL bar and page action buttons */
