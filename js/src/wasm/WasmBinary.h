@@ -181,6 +181,7 @@ class Encoder {
         patchByte |= 0x80;
       }
       MOZ_ASSERT(assertByte == bytes_[offset]);
+      (void)assertByte;
       bytes_[offset] = patchByte;
       offset++;
     } while (assertBits != 0);

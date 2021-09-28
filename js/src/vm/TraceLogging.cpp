@@ -1682,8 +1682,6 @@ bool TraceLoggerThread::sortTraceLoggerStats(ScriptMap& map,
 //                  encountered that matches a script event on the top of
 //                  eventStack.
 bool TraceLoggerThread::collectTraceLoggerStats(ScriptMap& map) {
-  uint32_t totalJSTime = 0;
-
   struct eventInfo {
     uint32_t textId;
     uint32_t time;
@@ -1733,7 +1731,6 @@ bool TraceLoggerThread::collectTraceLoggerStats(ScriptMap& map) {
             }
           }
         }
-        totalJSTime += deltaTime;
       }
 
       if (TLTextIdIsScriptEvent(textId)) {
@@ -1780,7 +1777,6 @@ bool TraceLoggerThread::collectTraceLoggerStats(ScriptMap& map) {
           funcStack.popBack();
         }
 
-        totalJSTime += deltaTime;
         startTime = events_[i].time;
       }
     }
