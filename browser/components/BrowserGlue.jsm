@@ -3002,14 +3002,12 @@ BrowserGlue.prototype = {
     // The warning will appear even when only one window/tab is open. For other
     // methods of quitting, the warning only appears when there is more than one
     // window or tab open.
-    if (this._quitSource == "shortcut") {
-      if (!Services.prefs.getBoolPref("browser.warnOnQuitShortcut")) {
-        return;
-      }
-    } else if (
-      pagecount < 2 ||
-      !Services.prefs.getBoolPref("browser.tabs.warnOnClose")
-    ) {
+    let shouldWarnForShortcut =
+      this._quitSource == "shortcut" &&
+      Services.prefs.getBoolPref("browser.warnOnQuitShortcut");
+    let shouldWarnForTabs =
+      pagecount >= 2 && Services.prefs.getBoolPref("browser.tabs.warnOnClose");
+    if (!shouldWarnForTabs && !shouldWarnForShortcut) {
       return;
     }
 
@@ -3037,7 +3035,7 @@ BrowserGlue.prototype = {
       title = gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
       title = PluralForm.get(pagecount, title).replace("#1", pagecount);
 
-      if (this._quitSource == "shortcut") {
+      if (shouldWarnForShortcut) {
         let productName = gBrandBundle.GetStringFromName("brandShorterName");
         title = gTabbrowserBundle.formatStringFromName(
           "tabs.closeTabsWithKeyTitle",
@@ -3059,7 +3057,7 @@ BrowserGlue.prototype = {
     // The checkbox label is different depending on whether the shortcut
     // was used to quit or not.
     let checkboxLabel;
-    if (this._quitSource == "shortcut") {
+    if (shouldWarnForShortcut) {
       let quitKeyElement = win.document.getElementById("key_quitApplication");
       let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
 
@@ -3113,7 +3111,7 @@ BrowserGlue.prototype = {
     // If the user has unticked the box, and has confirmed closing, stop showing
     // the warning.
     if (buttonPressed == 0 && !warnOnClose.value) {
-      if (this._quitSource == "shortcut") {
+      if (shouldWarnForShortcut) {
         Services.prefs.setBoolPref("browser.warnOnQuitShortcut", false);
       } else {
         Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
