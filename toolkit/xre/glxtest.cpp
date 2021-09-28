@@ -36,6 +36,7 @@
 #ifdef MOZ_X11
 #  include "X11/Xlib.h"
 #  include "X11/Xutil.h"
+#  include <X11/extensions/Xrandr.h>
 #endif
 
 #ifdef MOZ_WAYLAND
@@ -59,71 +60,6 @@ typedef XID GLXPbuffer;
 #  define GLX_GREEN_SIZE 9
 #  define GLX_BLUE_SIZE 10
 #  define GLX_DOUBLEBUFFER 5
-
-// xrandr.h
-typedef XID RRMode;
-typedef XID RRProvider;
-typedef unsigned long XRRModeFlags;
-typedef struct _provider provider_t;
-
-typedef struct _XRRModeInfo {
-  RRMode id;
-  unsigned int width;
-  unsigned int height;
-  unsigned long dotClock;
-  unsigned int hSyncStart;
-  unsigned int hSyncEnd;
-  unsigned int hTotal;
-  unsigned int hSkew;
-  unsigned int vSyncStart;
-  unsigned int vSyncEnd;
-  unsigned int vTotal;
-  char* name;
-  unsigned int nameLength;
-  XRRModeFlags modeFlags;
-} XRRModeInfo;
-
-typedef struct _XRRScreenResources {
-  Time timestamp;
-  Time configTimestamp;
-  int ncrtc;
-  void* crtcs;
-  int noutput;
-  void* outputs;
-  int nmode;
-  XRRModeInfo* modes;
-} XRRScreenResources;
-
-typedef struct _XRRProviderInfo {
-  unsigned int capabilities;
-  int ncrtcs;
-  void* crtcs;
-  int noutputs;
-  void* outputs;
-  char* name;
-  int nassociatedproviders;
-  RRProvider* associated_providers;
-  unsigned int* associated_capability;
-  int nameLen;
-} XRRProviderInfo;
-
-typedef struct {
-  unsigned int kind;
-  char* string;
-  XID xid;
-  int index;
-} name_t;
-
-struct _provider {
-  name_t provider;
-  XRRProviderInfo* info;
-};
-
-typedef struct _XRRProviderResources {
-  Time timestamp;
-  int nproviders;
-  RRProvider* providers;
-} XRRProviderResources;
 #endif
 
 // stuff from gl.h
@@ -211,13 +147,11 @@ typedef struct _drmDevice {
 #  define LIBGLES_FILENAME "libGLESv2.so"
 #  define LIBEGL_FILENAME "libEGL.so"
 #  define LIBDRM_FILENAME "libdrm.so"
-#  define LIBXRANDR_FILENAME "libXrandr.so"
 #else
 #  define LIBGL_FILENAME "libGL.so.1"
 #  define LIBGLES_FILENAME "libGLESv2.so.2"
 #  define LIBEGL_FILENAME "libEGL.so.1"
 #  define LIBDRM_FILENAME "libdrm.so.2"
-#  define LIBXRANDR_FILENAME "libXrandr.so.2"
 #endif
 
 #define EXIT_FAILURE_BUFFER_TOO_SMALL 2
@@ -721,32 +655,6 @@ static void get_x11_screen_info(Display* dpy) {
 }
 
 static void get_x11_ddx_info(Display* dpy) {
-  void* libXrandr = dlopen(LIBXRANDR_FILENAME, RTLD_LAZY);
-  if (!libXrandr) {
-    return;
-  }
-
-  typedef XRRProviderResources* (*XRRGETPROVIDERRESOURCES)(Display*, Window);
-  XRRGETPROVIDERRESOURCES XRRGetProviderResources =
-      cast<XRRGETPROVIDERRESOURCES>(
-          dlsym(libXrandr, "XRRGetProviderResources"));
-
-  typedef XRRScreenResources* (*XRRGETSCREENRESOURCESCURRENT)(Display*, Window);
-  XRRGETSCREENRESOURCESCURRENT XRRGetScreenResourcesCurrent =
-      cast<XRRGETSCREENRESOURCESCURRENT>(
-          dlsym(libXrandr, "XRRGetScreenResourcesCurrent"));
-
-  typedef XRRProviderInfo* (*XRRGETPROVIDERINFO)(Display*, XRRScreenResources*,
-                                                 RRProvider);
-  XRRGETPROVIDERINFO XRRGetProviderInfo =
-      cast<XRRGETPROVIDERINFO>(dlsym(libXrandr, "XRRGetProviderInfo"));
-
-  if (!XRRGetProviderResources || !XRRGetScreenResourcesCurrent ||
-      !XRRGetProviderInfo) {
-    dlclose(libXrandr);
-    return;
-  }
-
   Window root = RootWindow(dpy, DefaultScreen(dpy));
   XRRProviderResources* pr = XRRGetProviderResources(dpy, root);
   XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
@@ -759,8 +667,6 @@ static void get_x11_ddx_info(Display* dpy) {
       record_value("%s%s", info->name, i == nProviders - 1 ? ";\n" : ";");
     }
   }
-
-  dlclose(libXrandr);
 }
 
 static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {

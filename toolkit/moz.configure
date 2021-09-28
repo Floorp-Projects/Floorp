@@ -1182,6 +1182,7 @@ def x11_libs(webrtc):
         "xcb-shm",
         "x11-xcb",
         "xext",
+        "xrandr >= 1.4.0",
         "xrender",
     ]
     if webrtc:
