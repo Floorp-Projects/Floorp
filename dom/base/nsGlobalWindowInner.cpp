@@ -7437,11 +7437,10 @@ already_AddRefed<Promise> nsGlobalWindowInner::CreateImageBitmap(
 }
 
 // https://html.spec.whatwg.org/#structured-cloning
-void nsGlobalWindowInner::StructuredClone(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue,
-                                          const PostMessageOptions& aOptions,
-                                          JS::MutableHandle<JS::Value> aRetval,
-                                          ErrorResult& aError) {
+void nsGlobalWindowInner::StructuredClone(
+    JSContext* aCx, JS::Handle<JS::Value> aValue,
+    const StructuredSerializeOptions& aOptions,
+    JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError) {
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
   aError = nsContentUtils::CreateJSValueFromSequenceOfObject(
       aCx, aOptions.mTransfer, &transferArray);

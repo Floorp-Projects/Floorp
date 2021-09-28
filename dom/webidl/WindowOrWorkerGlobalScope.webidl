@@ -53,7 +53,7 @@ interface mixin WindowOrWorkerGlobalScope {
 
   // structured cloning
   [Throws]
-  any structuredClone(any value, optional PostMessageOptions options = {});
+  any structuredClone(any value, optional StructuredSerializeOptions options = {});
 };
 
 // https://fetch.spec.whatwg.org/#fetch-method
