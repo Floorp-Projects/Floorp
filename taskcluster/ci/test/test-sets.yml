@@ -242,17 +242,17 @@ windows10-2004-tests:
 
 windows10-64-ccov-tests:
     - jittest
-    - mochitest-plain
-    - mochitest-browser-chrome
-    - mochitest-devtools-chrome
     - web-platform-tests
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
-    - crashtest
-    - reftest
     - xpcshell
 
 windows10-64-2004-ccov-tests:
+    - crashtest
+    - reftest
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - mochitest-plain
     - gtest
     - marionette
     - test-coverage
