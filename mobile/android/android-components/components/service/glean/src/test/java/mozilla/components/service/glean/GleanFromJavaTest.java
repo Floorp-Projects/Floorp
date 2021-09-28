@@ -19,6 +19,7 @@ import java.util.Map;
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient;
 import mozilla.components.service.glean.config.Configuration;
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader;
+import mozilla.telemetry.glean.BuildInfo;
 
 @RunWith(RobolectricTestRunner.class)
 public class GleanFromJavaTest {
@@ -32,7 +33,8 @@ public class GleanFromJavaTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
         ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
         Configuration config = new Configuration(httpClient);
-        Glean.INSTANCE.initialize(context, true, config);
+        BuildInfo buildInfo = new BuildInfo("test", "test");
+        Glean.INSTANCE.initialize(context, true, config, buildInfo);
     }
 
     @Test
@@ -42,7 +44,8 @@ public class GleanFromJavaTest {
         ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
         Configuration config =
                 new Configuration(httpClient, Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
-        Glean.INSTANCE.initialize(context, true, config);
+        BuildInfo buildInfo = new BuildInfo("test", "test");
+        Glean.INSTANCE.initialize(context, true, config, buildInfo);
     }
 
     @Test

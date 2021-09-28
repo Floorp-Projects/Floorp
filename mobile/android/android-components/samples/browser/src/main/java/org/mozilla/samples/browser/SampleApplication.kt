@@ -13,6 +13,7 @@ import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.glean.BuildInfo
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -26,6 +27,15 @@ import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
 import java.util.concurrent.TimeUnit
+
+internal object GleanBuildInfo {
+    val buildInfo: BuildInfo by lazy {
+        BuildInfo(
+            versionCode = "0.0.1",
+            versionName = "0.0.1",
+        )
+    }
+}
 
 class SampleApplication : Application() {
     private val logger = Logger("SampleApplication")
@@ -52,7 +62,12 @@ class SampleApplication : Application() {
         // IMPORTANT: the following lines initialize the Glean SDK but disable upload
         // of pings. If, for testing purposes, upload is required to be on, change the
         // next line to `uploadEnabled = true`.
-        Glean.initialize(applicationContext, uploadEnabled = false, configuration = config)
+        Glean.initialize(
+            applicationContext,
+            uploadEnabled = false,
+            configuration = config,
+            buildInfo = GleanBuildInfo.buildInfo
+        )
 
         Facts.registerProcessor(LogFactProcessor())
 

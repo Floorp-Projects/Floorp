@@ -19,12 +19,22 @@ import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.glean.BuildInfo
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.util.UUID
+
+internal object GleanBuildInfo {
+    val buildInfo: BuildInfo by lazy {
+        BuildInfo(
+            versionCode = "0.0.1",
+            versionName = "0.0.1",
+        )
+    }
+}
 
 class CrashApplication : Application() {
     internal lateinit var crashReporter: CrashReporter
@@ -55,7 +65,12 @@ class CrashApplication : Application() {
         // Initialize Glean for recording by the GleanCrashReporterService
         val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
         val config = Configuration(httpClient = httpClient)
-        Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
+        Glean.initialize(
+            applicationContext,
+            uploadEnabled = true,
+            configuration = config,
+            buildInfo = GleanBuildInfo.buildInfo
+        )
     }
 
     companion object {

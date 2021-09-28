@@ -54,35 +54,6 @@ object Glean {
     }
 
     /**
-     * Initialize Glean.
-     *
-     * This should only be initialized once by the application, and not by
-     * libraries using Glean. A message is logged to error and no changes are made
-     * to the state if initialize is called a more than once.
-     *
-     * A LifecycleObserver will be added to send pings when the application goes
-     * into the background.
-     *
-     * @param applicationContext [Context] to access application features, such
-     * as shared preferences
-     * @param uploadEnabled A [Boolean] that determines the initial state of the uploader
-     * @param configuration A Glean [Configuration] object with global settings.
-     */
-    @MainThread
-    @Suppress("DEPRECATION")
-    fun initialize(
-        applicationContext: Context,
-        uploadEnabled: Boolean,
-        configuration: Configuration
-    ) {
-        GleanCore.initialize(
-            applicationContext = applicationContext,
-            uploadEnabled = uploadEnabled,
-            configuration = configuration.toWrappedConfiguration()
-        )
-    }
-
-    /**
      * Register the pings generated from `pings.yaml` with Glean.
      *
      * @param pings The `Pings` object generated for your library or application
