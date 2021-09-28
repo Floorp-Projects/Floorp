@@ -1326,7 +1326,6 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
     // and Right Touch Controller will always be at index 1
     VRControllerState& controllerState = aState.controllerState[handIdx];
     if (aInputState.ControllerType & OculusControllerTypes[handIdx]) {
-      bool bNewController = false;
       // Touch Controller detected
       if (controllerState.controllerName[0] == '\0') {
         // Controller has been just enumerated
@@ -1338,7 +1337,6 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
         controllerState.numAxes = kNumOculusAxes;
         controllerState.numHaptics = kNumOculusHaptcs;
         controllerState.type = VRControllerType::OculusTouch;
-        bNewController = true;
       }
     } else {
       // Touch Controller not detected

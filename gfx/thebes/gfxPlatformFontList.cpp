@@ -1059,7 +1059,6 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
                   gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
   FontVisibility level =
       aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
-  FontVisibility rejectedFallbackVisibility = FontVisibility::Unknown;
   if (!useCmaps) {
     // Allow platform-specific fallback code to try and find a usable font
     gfxFontEntry* fe = PlatformGlobalFontFallback(aPresContext, aCh, aRunScript,
@@ -1081,7 +1080,6 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
             RefPtr<gfxFont> autoRefDeref(font);
           }
         }
-        rejectedFallbackVisibility = aMatchedFamily.mShared->Visibility();
       } else {
         if (IsVisibleToCSS(*aMatchedFamily.mUnshared, level)) {
           gfxFont* font = fe->FindOrMakeFont(aMatchStyle);
@@ -1096,7 +1094,6 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
             RefPtr<gfxFont> autoRefDeref(font);
           }
         }
-        rejectedFallbackVisibility = aMatchedFamily.mUnshared->Visibility();
       }
     }
   }
