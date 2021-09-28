@@ -3315,6 +3315,22 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                  FloatRegister temp)
       DEFINED_ON(x86_shared, arm64);
 
+  inline void truncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void unsignedTruncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                        FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void truncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void unsignedTruncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                        FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
   // Floating point narrowing
 
   inline void convertFloat64x2ToFloat32x4(FloatRegister src, FloatRegister dest)
