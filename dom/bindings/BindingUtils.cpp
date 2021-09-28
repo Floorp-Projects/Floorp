@@ -4336,6 +4336,42 @@ bool IsGetterEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
   return false;
 }
 
+already_AddRefed<Promise> CreateRejectedPromiseFromThrownException(
+    JSContext* aCx, ErrorResult& aError) {
+  JS::Rooted<JS::Value> exn(aCx);
+  if (!JS_GetPendingException(aCx, &exn)) {
+    // If there is no pending exception here but we're ending up in this code,
+    // that means the callee threw an uncatchable exception. Just propagate that
+    // out as-is.
+    aError.ThrowUncatchableException();
+    return nullptr;
+  }
+
+  JS_ClearPendingException(aCx);
+
+  JS::Rooted<JSObject*> globalObj(aCx, GetEntryGlobal()->GetGlobalJSObject());
+  JSAutoRealm ar(aCx, globalObj);
+  if (!JS_WrapValue(aCx, &exn)) {
+    aError.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  GlobalObject promiseGlobal(aCx, globalObj);
+  if (promiseGlobal.Failed()) {
+    aError.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(promiseGlobal.GetAsSupports());
+  if (!global) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  return Promise::Reject(global, aCx, exn, aError);
+}
+
 }  // namespace binding_detail
 
 }  // namespace dom

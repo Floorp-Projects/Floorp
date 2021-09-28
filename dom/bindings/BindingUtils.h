@@ -3201,6 +3201,9 @@ class StringIdChars {
 #endif  // DEBUG
 };
 
+already_AddRefed<Promise> CreateRejectedPromiseFromThrownException(
+    JSContext* aCx, ErrorResult& aError);
+
 }  // namespace binding_detail
 
 }  // namespace dom
