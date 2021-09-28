@@ -4047,6 +4047,10 @@ class Document : public nsINode,
 
   bool HasOOPChildrenLoading() { return !mOOPChildrenLoading.IsEmpty(); }
 
+  void SetDidHitCompleteSheetCache() { mDidHitCompleteSheetCache = true; }
+
+  bool DidHitCompleteSheetCache() const { return mDidHitCompleteSheetCache; }
+
  protected:
   // Returns the WindowContext for the document that we will contribute
   // page use counters to.
@@ -4784,6 +4788,9 @@ class Document : public nsINode,
   // DOMContentLoaded. We wait for those to complete, and then update the
   // readystate when they finish.
   bool mSetCompleteAfterDOMContentLoaded : 1;
+
+  // Set the true if a completed cached stylesheet was created for the document.
+  bool mDidHitCompleteSheetCache : 1;
 
   uint8_t mPendingFullscreenRequests;
 

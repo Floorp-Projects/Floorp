@@ -693,6 +693,8 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
+  void TryUnsuppressPaintingSoon();
+
   void UnsuppressPainting();
   void InitPaintSuppressionTimer();
   void CancelPaintSuppressionTimer();
@@ -3140,6 +3142,8 @@ class PresShell final : public nsStubDocumentObserver,
   // Set to true if mMouseLocation is set by a mouse event which is synthesized
   // for tests.
   bool mMouseLocationWasSetBySynthesizedMouseEventForTests : 1;
+
+  bool mHasTriedFastUnsuppress : 1;
 
   struct CapturingContentInfo final {
     CapturingContentInfo()

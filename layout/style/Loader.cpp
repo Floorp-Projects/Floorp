@@ -959,6 +959,7 @@ void Loader::DidHitCompleteSheetCache(const SheetLoadDataHashKey& aKey,
                                       const StyleUseCounters* aCounters) {
   MOZ_ASSERT(mDocument);
   if (mLoadsPerformed.EnsureInserted(aKey)) {
+    mDocument->SetDidHitCompleteSheetCache();
     RecordUseCountersIfNeeded(mDocument, aCounters);
   }
 }
