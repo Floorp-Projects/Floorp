@@ -207,15 +207,12 @@ toolbarseparator + .panel-subview-body,
 }
 
 .panel-info-button@buttonStateHoverOrFocus@ {
-  background-color: var(--arrowpanel-dimmed);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 
-.panel-info-button:not(:hover)[checked] {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
+.panel-info-button:not(:hover)[checked],
 .panel-info-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .panel-info-button > image {
