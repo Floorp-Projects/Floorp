@@ -721,6 +721,8 @@ class BrowserParent final : public PBrowserParent,
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
       nsTArray<ipc::StructuredCloneData>* aJSONRetVal = nullptr);
 
+  virtual mozilla::ipc::IPCResult Recv__delete__() override;
+
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents();
