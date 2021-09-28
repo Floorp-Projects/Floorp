@@ -202,7 +202,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         lines, so part of what this function does is unwrap that so that the
         resulting log is readable by the reftest analyzer."""
 
-        with open(self.logcat_path(), "r") as f:
+        with open(self.logcat_path(), "r", encoding="utf-8") as f:
             self.info("=== scraped logcat output ===")
             tag = "RustAndroidGlueStdouterr: "
             long_line = None
