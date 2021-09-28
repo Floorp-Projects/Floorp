@@ -496,29 +496,31 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
   // dimension has changed.  It might not actually be necessary to do
   // this if the border-box size has changed and the content-box size
   // has not changed, but since we've historically used the flag to mean
-  // border-box size change, continue to do that.  (It's possible for
+  // border-box size change, continue to do that. It's possible for
   // the content-box size to change without a border-box size change or
   // a style change given (1) a fixed width (possibly fixed by max-width
-  // or min-width), (2) box-sizing:border-box or padding-box, and
-  // (3) percentage padding.)
+  // or min-width), box-sizing:border-box, and percentage padding;
+  // (2) box-sizing:content-box, M% width, and calc(Npx - M%) padding.
   //
-  // However, we don't actually have the information at this point to
-  // tell whether the content-box size has changed, since both style
-  // data and the UsedPaddingProperty() have already been updated.  So,
-  // instead, we explicitly check for the case where it's possible for
-  // the content-box size to have changed without either (a) a change in
-  // the border-box size or (b) an nsChangeHint_NeedDirtyReflow change
-  // hint due to change in border or padding.  Thus we test using the
-  // conditions from the previous paragraph, except without testing (1)
-  // since it's complicated to test properly and less likely to help
-  // with optimizing cases away.
+  // However, we don't actually have the information at this point to tell
+  // whether the content-box size has changed, since both style data and the
+  // UsedPaddingProperty() have already been updated in
+  // SizeComputationInput::InitOffsets(). So, we check the HasPaddingChange()
+  // bit for the cases where it's possible for the content-box size to have
+  // changed without either (a) a change in the border-box size or (b) an
+  // nsChangeHint_NeedDirtyReflow change hint due to change in border or
+  // padding.
+  //
+  // We don't clear the HasPaddingChange() bit here, since sometimes we
+  // construct reflow input (e.g. in nsBlockFrame::ReflowBlockFrame to compute
+  // margin collapsing) without reflowing the frame. Instead, we clear it in
+  // nsIFrame::DidReflow().
   bool isIResize =
       // is the border-box resizing?
       mFrame->ISize(wm) !=
           ComputedISize() + ComputedLogicalBorderPadding(wm).IStartEnd(wm) ||
       // or is the content-box resizing?  (see comment above)
-      (mStylePosition->mBoxSizing != StyleBoxSizing::Content &&
-       mStylePadding->IsWidthDependent());
+      mFrame->HasPaddingChange();
 
   if (mFrame->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
@@ -614,9 +616,9 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     SetBResize(true);
     mFlags.mIsBResizeForPercentages = true;
     // We don't clear the HasBSizeChange state here, since sometimes we
-    // construct reflow states (e.g., in
-    // nsBlockReflowContext::ComputeCollapsedBStartMargin) without
-    // reflowing the frame.  Instead, we clear it in nsIFrame::DidReflow.
+    // construct a ReflowInput (e.g. in nsBlockFrame::ReflowBlockFrame to
+    // compute margin collapsing) without reflowing the frame. Instead, we
+    // clear it in nsIFrame::DidReflow.
   } else if (mCBReflowInput &&
              mCBReflowInput->IsBResizeForPercentagesForWM(wm) &&
              (mStylePosition->BSize(wm).HasPercent() ||
@@ -2522,6 +2524,23 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       SetComputedLogicalBorderPadding(wm, LogicalMargin(wm));
     }
   }
+
+  bool hasPaddingChange;
+  if (nsMargin* oldPadding =
+          mFrame->GetProperty(nsIFrame::UsedPaddingProperty())) {
+    // Note: If a padding change is already detectable without resolving the
+    // percentage, e.g. a padding is changing from 50px to 50%,
+    // nsIFrame::DidSetComputedStyle() will cache the old padding in
+    // UsedPaddingProperty().
+    hasPaddingChange = *oldPadding != ComputedPhysicalPadding();
+  } else {
+    // Our padding may have changed, but we can't tell at this point.
+    hasPaddingChange = needPaddingProp;
+  }
+  // Keep mHasPaddingChange bit set until we've done reflow. We'll clear it in
+  // nsIFrame::DidReflow()
+  mFrame->SetHasPaddingChange(mFrame->HasPaddingChange() || hasPaddingChange);
+
   ::UpdateProp(mFrame, nsIFrame::UsedPaddingProperty(), needPaddingProp,
                ComputedPhysicalPadding());
 }
