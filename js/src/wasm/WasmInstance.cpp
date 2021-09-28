@@ -1222,14 +1222,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNullPtr);
 
   JSContext* cx = TlsContext.get();
-  RootedObject exnObj(cx, exn);
-  RootedValue exnVal(cx);
-
-  if (exnObj->is<WasmJSExceptionObject>()) {
-    exnVal.set(exnObj.as<WasmJSExceptionObject>()->value());
-  } else {
-    exnVal.set(ObjectValue(*exnObj));
-  }
+  RootedValue exnVal(cx, UnboxAnyRef(AnyRef::fromJSObject(exn)));
   cx->setPendingException(exnVal, nullptr);
 
   // By always returning a nullptr, we trigger a wasmTrap(Trap::ThrowReported),
