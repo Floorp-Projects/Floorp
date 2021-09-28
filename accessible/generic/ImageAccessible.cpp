@@ -151,9 +151,9 @@ nsIntSize ImageAccessible::Size() { return Bounds().Size(); }
 already_AddRefed<AccAttributes> ImageAccessible::NativeAttributes() {
   RefPtr<AccAttributes> attributes = LinkableAccessible::NativeAttributes();
 
-  nsAutoString src;
+  nsString src;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
-  if (!src.IsEmpty()) attributes->SetAttribute(nsGkAtoms::src, src);
+  if (!src.IsEmpty()) attributes->SetAttribute(nsGkAtoms::src, std::move(src));
 
   return attributes.forget();
 }

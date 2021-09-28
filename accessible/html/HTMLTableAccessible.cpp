@@ -90,7 +90,7 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
 
   // Pick up object attribute from abbr DOM element (a child of the cell) or
   // from abbr DOM attribute.
-  nsAutoString abbrText;
+  nsString abbrText;
   if (ChildCount() == 1) {
     LocalAccessible* abbr = LocalFirstChild();
     if (abbr->IsAbbreviation()) {
@@ -107,19 +107,19 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
   }
 
   if (!abbrText.IsEmpty()) {
-    attributes->SetAttribute(nsGkAtoms::abbr, abbrText);
+    attributes->SetAttribute(nsGkAtoms::abbr, std::move(abbrText));
   }
 
   // axis attribute
-  nsAutoString axisText;
+  nsString axisText;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty()) {
-    attributes->SetAttribute(nsGkAtoms::axis, axisText);
+    attributes->SetAttribute(nsGkAtoms::axis, std::move(axisText));
   }
 
 #ifdef DEBUG
   RefPtr<nsAtom> cppClass = NS_Atomize(u"cppclass"_ns);
-  attributes->SetAttribute(cppClass, u"HTMLTableCellAccessible"_ns);
+  attributes->SetAttributeStringCopy(cppClass, u"HTMLTableCellAccessible"_ns);
 #endif
 
   return attributes.forget();
