@@ -17,7 +17,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
-const promise = require("promise");
 const { extend } = require("devtools/shared/extend");
 const {
   ViewHelpers,
@@ -2896,7 +2895,7 @@ Variable.prototype = extend(Scope.prototype, {
    */
   openNodeInInspector: function(event) {
     if (!this.toolbox) {
-      return promise.reject(new Error("Toolbox not available"));
+      return Promise.reject(new Error("Toolbox not available"));
     }
 
     event && event.stopPropagation();
