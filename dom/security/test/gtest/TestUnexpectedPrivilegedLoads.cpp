@@ -92,9 +92,9 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
       {// test for cases where finalURI is null, due to a broken nested URI
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
-       nsContentPolicyType::TYPE_STYLESHEET,
+       nsContentPolicyType::TYPE_DOCUMENT,
        "web"_ns,
-       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns, ""_ns}},
+       {"other"_ns, "TYPE_DOCUMENT"_ns, "web"_ns, "unknown"_ns, ""_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
