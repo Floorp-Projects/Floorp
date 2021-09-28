@@ -434,9 +434,9 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
     IRGenerator gen(cx, script, pc, stub->state(), std::forward<Args>(args)...);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
-        ICStub* newStub = AttachBaselineCacheIRStub(
+        ICAttachResult result = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), script, icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           attached = true;
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
         }
@@ -794,10 +794,10 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
                            objv, index, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
-        ICStub* newStub =
+        ICAttachResult result =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                       frame->script(), icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           attached = true;
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -861,10 +861,10 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     switch (decision) {
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub =
+        ICAttachResult result =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                       frame->script(), icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           attached = true;
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -1364,10 +1364,10 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub =
+        ICAttachResult result =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                       frame->script(), icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           attached = true;
           JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
         }
@@ -1438,10 +1438,10 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     switch (decision) {
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub =
+        ICAttachResult result =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                       frame->script(), icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           attached = true;
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -1549,9 +1549,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
         break;
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub = AttachBaselineCacheIRStub(
+        ICAttachResult result = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), script, icScript, stub);
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           handled = true;
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
         }
@@ -1638,10 +1638,10 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
         break;
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub = AttachBaselineCacheIRStub(
+        ICAttachResult result = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), script, icScript, stub);
 
-        if (newStub) {
+        if (result == ICAttachResult::Attached) {
           handled = true;
           JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
         }
