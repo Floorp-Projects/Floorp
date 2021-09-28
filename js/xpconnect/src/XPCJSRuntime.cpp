@@ -2501,6 +2501,7 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       "Used regexpshared cells.");
 
   MOZ_ASSERT(gcThingTotal == rtStats.gcHeapGCThings);
+  (void)gcThingTotal;
 
   // Report xpconnect.
 
