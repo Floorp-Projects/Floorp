@@ -13,11 +13,15 @@ add_task(async function() {
   info("Waiting for source to load");
   await waitForSource(dbg, "simple1.js");
 
+  const waitForDevToolsReload = await watchForDevToolsReload(gBrowser.selectedBrowser);
   info("Clicking the disable javascript button in the settings menu");
   await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: false });
 
   info("Waiting for reload triggered by disabling javascript");
   await waitForSourceCount(dbg, 0);
+
+  info("Wait for DevTools to be reloaded");
+  await waitForDevToolsReload();
 
   info("Clicking the disable javascript button in the settings menu to reenable JavaScript");
   await toggleDebbuggerSettingsMenuItem(dbg, { className: menuItemClassName, isChecked: true });
