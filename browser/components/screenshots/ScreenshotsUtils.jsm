@@ -23,7 +23,21 @@ var ScreenshotsUtils = {
 
     return dialogBox.open(
       `chrome://browser/content/screenshots/screenshots.html?browsingContextId=${browser.browsingContext.id}`,
-      { features: "resizable=no", sizeTo: "available" }
+      {
+        features: "resizable=no",
+        sizeTo: "available",
+        allowDuplicateDialogs: false,
+      }
     );
+  },
+  notify(window, type) {
+    if (Services.prefs.getBoolPref("screenshots.browser.component.enabled")) {
+      Services.obs.notifyObservers(
+        window.event.currentTarget.ownerGlobal,
+        "menuitem-screenshot"
+      );
+    } else {
+      Services.obs.notifyObservers(null, "menuitem-screenshot-extension", type);
+    }
   },
 };

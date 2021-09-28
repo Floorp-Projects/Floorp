@@ -6,6 +6,9 @@ screenshot-toolbarbutton =
   .label = Screenshot
   .tooltiptext = Take a screenshot
 
+screenshot-shortcut =
+  .key = S
+
 screenshots-instructions = Drag or click on the page to select a region. Press ESC to cancel.
 screenshots-cancel-button = Cancel
 screenshots-save-visible-button = Save visible
