@@ -25,7 +25,6 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pylru==1.0.9
 pystache==0.5.4
-pytest==3.6.2
 python-hglib==2.4
 pytoml==0.1.10
 pyyaml==5.4.1
