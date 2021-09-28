@@ -170,7 +170,8 @@ static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
 nsDMABufDevice::nsDMABufDevice()
-    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
+    : mUseWebGLDmabufBackend(true),
+      mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
       mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
       mGbmDevice(nullptr),
       mGbmFd(-1),
@@ -286,13 +287,16 @@ bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufWebGLEnabled: EGL %d DMABufEnabled %d  "
+      ("nsDMABufDevice::IsDMABufWebGLEnabled: EGL %d mUseWebGLDmabufBackend %d "
+       "DMABufEnabled %d  "
        "widget_dmabuf_webgl_enabled %d\n",
-       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
+       gfx::gfxVars::UseEGL(), mUseWebGLDmabufBackend, IsDMABufEnabled(),
        StaticPrefs::widget_dmabuf_webgl_enabled()));
-  return gfx::gfxVars::UseDMABuf() && IsDMABufEnabled() &&
-         StaticPrefs::widget_dmabuf_webgl_enabled();
+  return gfx::gfxVars::UseDMABuf() && mUseWebGLDmabufBackend &&
+         IsDMABufEnabled() && StaticPrefs::widget_dmabuf_webgl_enabled();
 }
+
+void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
 
 GbmFormat* nsDMABufDevice::GetGbmFormat(bool aHasAlpha) {
   GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;

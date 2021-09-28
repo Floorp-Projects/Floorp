@@ -60,11 +60,6 @@ class gfxPlatformGtk final : public gfxPlatform {
       override;
 #endif
 
-#ifdef MOZ_WAYLAND
-  bool UseDMABufWebGL() override;
-  void DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
-#endif
-
   bool IsX11Display() { return mIsX11Display; }
   bool IsWaylandDisplay() override {
     return !mIsX11Display && !gfxPlatform::IsHeadless();
@@ -84,9 +79,6 @@ class gfxPlatformGtk final : public gfxPlatform {
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
 
   bool mIsX11Display;
-#ifdef MOZ_WAYLAND
-  bool mUseWebGLDmabufBackend;
-#endif
 };
 
 #endif /* GFX_PLATFORM_GTK_H */

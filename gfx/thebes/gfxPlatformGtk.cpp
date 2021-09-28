@@ -111,10 +111,6 @@ gfxPlatformGtk::gfxPlatformGtk() {
     }
   }
 
-#ifdef MOZ_WAYLAND
-  mUseWebGLDmabufBackend = true;
-#endif
-
   InitBackendPrefs(GetBackendPrefs());
 
   gPlatformFTLibrary = Factory::NewFTLibrary();
@@ -451,15 +447,6 @@ uint32_t gfxPlatformGtk::MaxGenericSubstitions() {
 }
 
 bool gfxPlatformGtk::AccelerateLayersByDefault() { return true; }
-
-#ifdef MOZ_WAYLAND
-bool gfxPlatformGtk::UseDMABufWebGL() {
-  static bool dmabufAvailable = []() {
-    return gfxVars::UseDMABuf() && GetDMABufDevice()->IsDMABufWebGLEnabled();
-  }();
-  return dmabufAvailable && mUseWebGLDmabufBackend;
-}
-#endif
 
 #if defined(MOZ_X11)
 
