@@ -97,6 +97,32 @@ add_task(async function() {
     iframeBodySelector
   );
 
+  info("Scrolling the document up");
+  // scroll up so we can inspect the top level document again
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    content.scrollTo(0, 0)
+  );
+
+  info("Check that hovering iframe padding again does work");
+  // the iframe has 13px of padding, so hovering at [1,1] should be enough.
+  await hoverElement(inspector, "iframe", 1, 1);
+  await isNodeCorrectlyHighlighted(highlighterTestFront, "iframe");
+
+  info("And finally check that hovering the iframe <body> again does work");
+  info("Check that hovering the iframe <body> highlights the expected element");
+  await hoverElement(inspector, iframeBodySelector, 40, 40);
+
+  ok(
+    await iframeHighlighterTestFront.assertHighlightedNode(
+      bodySelectorWithinHighlighterEnv
+    ),
+    "highlighter is shown on the iframe body"
+  );
+  await isNodeCorrectlyHighlighted(
+    iframeHighlighterTestFront,
+    iframeBodySelector
+  );
+
   info("Stop the element picker.");
   await toolbox.nodePicker.stop();
 });
