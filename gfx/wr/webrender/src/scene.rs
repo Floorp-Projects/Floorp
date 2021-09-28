@@ -301,7 +301,7 @@ impl BuiltScene {
             background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(&ClipStoreStats::empty()),
-            spatial_tree: SpatialTree::new(SceneSpatialTree::new()),
+            spatial_tree: SpatialTree::new(&SceneSpatialTree::new()),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
             tile_cache_pictures: Vec::new(),
