@@ -131,7 +131,6 @@ mod api_resources;
 mod image_tiling;
 mod image_source;
 mod rectangle_occlusion;
-mod picture_textures;
 
 ///
 pub mod intern;

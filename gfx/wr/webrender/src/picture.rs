@@ -134,7 +134,7 @@ use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use std::ops::Range;
-use crate::picture_textures::PictureCacheTextureHandle;
+use crate::texture_cache::TextureCacheHandle;
 use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, raster_rect_to_device_pixels, ScaleOffset};
 use crate::filterdata::{FilterDataHandle};
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
@@ -617,7 +617,7 @@ pub enum SurfaceTextureDescriptor {
     /// When using the WR compositor, the tile is drawn into an entry
     /// in the WR texture cache.
     TextureCache {
-        handle: Option<PictureCacheTextureHandle>,
+        handle: TextureCacheHandle
     },
     /// When using an OS compositor, the tile is drawn into a native
     /// surface identified by arbitrary id.
@@ -655,11 +655,11 @@ impl SurfaceTextureDescriptor {
     ) -> ResolvedSurfaceTexture {
         match self {
             SurfaceTextureDescriptor::TextureCache { handle } => {
-                let texture = resource_cache
-                    .picture_textures
-                    .get_texture_source(handle.as_ref().unwrap());
+                let cache_item = resource_cache.texture_cache.get(handle);
 
-                ResolvedSurfaceTexture::TextureCache { texture }
+                ResolvedSurfaceTexture::TextureCache {
+                    texture: cache_item.texture_id,
+                }
             }
             SurfaceTextureDescriptor::Native { id } => {
                 ResolvedSurfaceTexture::Native {
@@ -1295,7 +1295,7 @@ impl Tile {
         //           native compositors that don't support dirty rects.
         if supports_dirty_rects {
             // Only allow splitting for normal content sized tiles
-            if ctx.current_tile_size == state.resource_cache.picture_textures.default_tile_size() {
+            if ctx.current_tile_size == state.resource_cache.texture_cache.default_picture_tile_size() {
                 let max_split_level = 3;
 
                 // Consider splitting / merging dirty regions
@@ -1366,7 +1366,7 @@ impl Tile {
                             // For a texture cache entry, create an invalid handle that
                             // will be allocated when update_picture_cache is called.
                             SurfaceTextureDescriptor::TextureCache {
-                                handle: None,
+                                handle: TextureCacheHandle::invalid(),
                             }
                         }
                         CompositorKind::Native { .. } => {
@@ -2599,7 +2599,7 @@ impl TileCacheInstance {
                             TILE_SIZE_SCROLLBAR_HORIZONTAL
                         }
                     } else {
-                        frame_state.resource_cache.picture_textures.default_tile_size()
+                        frame_state.resource_cache.texture_cache.default_picture_tile_size()
                     }
                 }
             };
@@ -4814,9 +4814,11 @@ impl PicturePrimitive {
                         // This ensures that we retain valid tiles that are off-screen, but still in the
                         // display port of this tile cache instance.
                         if let Some(TileSurface::Texture { descriptor, .. }) = tile.surface.as_ref() {
-                            if let SurfaceTextureDescriptor::TextureCache { handle: Some(handle), .. } = descriptor {
-                                frame_state.resource_cache
-                                    .picture_textures.request(handle, frame_state.gpu_cache);
+                            if let SurfaceTextureDescriptor::TextureCache { ref handle, .. } = descriptor {
+                                frame_state.resource_cache.texture_cache.request(
+                                    handle,
+                                    frame_state.gpu_cache,
+                                );
                             }
                         }
 
@@ -4866,11 +4868,8 @@ impl PicturePrimitive {
                         if let TileSurface::Texture { descriptor, .. } = tile.surface.as_mut().unwrap() {
                             match descriptor {
                                 SurfaceTextureDescriptor::TextureCache { ref handle, .. } => {
-                                    let exists = handle.as_ref().map_or(false,
-                                        |handle| frame_state.resource_cache.picture_textures.entry_exists(handle)
-                                    );
                                     // Invalidate if the backing texture was evicted.
-                                    if exists {
+                                    if frame_state.resource_cache.texture_cache.is_allocated(handle) {
                                         // Request the backing texture so it won't get evicted this frame.
                                         // We specifically want to mark the tile texture as used, even
                                         // if it's detected not visible below and skipped. This is because
@@ -4879,9 +4878,7 @@ impl PicturePrimitive {
                                         // assuming that it's either visible or we want to retain it for
                                         // a while in case it gets scrolled back onto screen soon.
                                         // TODO(gw): Consider switching to manual eviction policy?
-                                        frame_state.resource_cache
-                                            .picture_textures
-                                            .request(handle.as_ref().unwrap(), frame_state.gpu_cache);
+                                        frame_state.resource_cache.texture_cache.request(handle, frame_state.gpu_cache);
                                     } else {
                                         // If the texture was evicted on a previous frame, we need to assume
                                         // that the entire tile rect is dirty.
@@ -4932,14 +4929,13 @@ impl PicturePrimitive {
                             if let TileSurface::Texture { ref mut descriptor } = tile.surface.as_mut().unwrap() {
                                 match descriptor {
                                     SurfaceTextureDescriptor::TextureCache { ref mut handle } => {
-
-                                        frame_state.resource_cache.picture_textures.update(
-                                            tile_cache.current_tile_size,
-                                            handle,
-                                            frame_state.gpu_cache,
-                                            &mut frame_state.resource_cache.texture_cache.next_id,
-                                            &mut frame_state.resource_cache.texture_cache.pending_updates,
-                                        );
+                                        if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                            frame_state.resource_cache.texture_cache.update_picture_cache(
+                                                tile_cache.current_tile_size,
+                                                handle,
+                                                frame_state.gpu_cache,
+                                            );
+                                        }
                                     }
                                     SurfaceTextureDescriptor::Native { id } => {
                                         if id.is_none() {
