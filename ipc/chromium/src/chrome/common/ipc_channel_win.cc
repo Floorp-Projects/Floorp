@@ -130,10 +130,8 @@ HANDLE Channel::ChannelImpl::GetServerPipeHandle() const { return pipe_; }
 void Channel::ChannelImpl::Close() {
   ASSERT_OWNINGTHREAD(ChannelImpl);
 
-  bool waited = false;
   if (input_state_.is_pending || output_state_.is_pending) {
     CancelIo(pipe_);
-    waited = true;
   }
 
   // Closing the handle at this point prevents us from issuing more requests
