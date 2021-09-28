@@ -48,6 +48,7 @@
 
   /* Override common.inc.css properties */
   margin: 0;
+  border: 0;
   border-radius: 0;
   text-align: start;
   min-height: initial;
