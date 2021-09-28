@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://devtools/content/debugger/src/components/variables.css");
+/* Shared imports */
+@import url("chrome://devtools/content/shared/components/AppErrorBoundary.css");
 
+/* Devtools imports */
+@import url("chrome://devtools/content/debugger/src/components/variables.css");
 @import url("chrome://devtools/content/debugger/src/components/A11yIntention.css");
 @import url("chrome://devtools/content/debugger/src/components/App.css");
-
 @import url("chrome://devtools/content/debugger/src/components/shared/AccessibleImage.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/Accordion.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/Badge.css");
@@ -23,7 +25,6 @@
 @import url("chrome://devtools/content/debugger/src/components/shared/ResultList.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/SearchInput.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/SourceIcon.css");
-
 @import url("chrome://devtools/content/debugger/src/components/Editor/Breakpoints.css");
 @import url("chrome://devtools/content/debugger/src/components/Editor/ConditionalPanel.css");
 @import url("chrome://devtools/content/debugger/src/components/Editor/Editor.css");

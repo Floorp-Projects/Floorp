@@ -22,6 +22,7 @@ import {
 
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
+const AppErrorBoundary = require("devtools/client/shared/components/AppErrorBoundary");
 
 import Services from "devtools-services";
 const shortcuts = new KeyShortcuts({ window });
@@ -275,16 +276,21 @@ class App extends Component {
     const { quickOpenEnabled } = this.props;
     return (
       <div className={classnames("debugger")}>
-        <A11yIntention>
-          {this.renderLayout()}
-          {quickOpenEnabled === true && (
-            <QuickOpenModal
-              shortcutsModalEnabled={this.state.shortcutsModalEnabled}
-              toggleShortcutsModal={() => this.toggleShortcutsModal()}
-            />
-          )}
-          {this.renderShortcutsModal()}
-        </A11yIntention>
+        <AppErrorBoundary
+          className="app-error-boundary"
+          panel={L10N.getStr("ToolboxDebugger.label")}
+        >
+          <A11yIntention>
+            {this.renderLayout()}
+            {quickOpenEnabled === true && (
+              <QuickOpenModal
+                shortcutsModalEnabled={this.state.shortcutsModalEnabled}
+                toggleShortcutsModal={() => this.toggleShortcutsModal()}
+              />
+            )}
+            {this.renderShortcutsModal()}
+          </A11yIntention>
+        </AppErrorBoundary>
       </div>
     );
   }
