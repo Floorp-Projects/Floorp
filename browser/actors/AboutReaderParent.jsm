@@ -19,6 +19,11 @@ ChromeUtils.defineModuleGetter(
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "pktApi",
+  "chrome://pocket/content/pktApi.jsm"
+);
 
 const gStringBundle = Services.strings.createBundle(
   "chrome://global/locale/aboutReader.properties"
@@ -108,6 +113,45 @@ class AboutReaderParent extends JSWindowActorParent {
         let cachedArticle = gCachedArticles.get(message.data.url);
         gCachedArticles.delete(message.data.url);
         return cachedArticle;
+      }
+      case "Reader:PocketLoginStatusRequest": {
+        return pktApi.isUserLoggedIn();
+      }
+      case "Reader:PocketGetArticleInfo": {
+        return new Promise(resolve => {
+          pktApi.getArticleInfo(message.data.url, {
+            success: data => {
+              resolve(data);
+            },
+            error: error => {
+              resolve(null);
+            },
+          });
+        });
+      }
+      case "Reader:PocketGetArticleRecs": {
+        return new Promise(resolve => {
+          pktApi.getRecsForItem(message.data.itemID, {
+            success: data => {
+              resolve(data);
+            },
+            error: error => {
+              resolve(null);
+            },
+          });
+        });
+      }
+      case "Reader:PocketSaveArticle": {
+        return new Promise(resolve => {
+          pktApi.addLink(message.data.url, {
+            success: data => {
+              resolve(data);
+            },
+            error: error => {
+              resolve(null);
+            },
+          });
+        });
       }
       case "Reader:FaviconRequest": {
         try {
