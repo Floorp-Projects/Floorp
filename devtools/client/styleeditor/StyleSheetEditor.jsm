@@ -8,7 +8,6 @@ const EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Editor = require("devtools/client/shared/sourceeditor/editor");
-const promise = require("promise");
 const {
   shortSource,
   prettifyCSS,
@@ -458,7 +457,7 @@ StyleSheetEditor.prototype = {
    */
   load: function(inputElement, cssProperties) {
     if (this._isDestroyed) {
-      return promise.reject(
+      return Promise.reject(
         "Won't load source editor as the style sheet has " +
           "already been removed from Style Editor."
       );
