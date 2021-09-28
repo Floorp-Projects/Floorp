@@ -11,7 +11,7 @@ use crate::internal_types::{
     CacheTextureId, TextureUpdateList, Swizzle, TextureCacheAllocInfo, TextureCacheCategory,
     TextureSource,
 };
-use crate::texture_cache::{TextureCacheHandle, CacheEntry, EntryDetails, TargetShader};
+use crate::texture_cache::{CacheEntry, EntryDetails, TargetShader};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::profiler::{self, TransactionProfile};
 use crate::gpu_types::UvRectKind;
@@ -80,8 +80,13 @@ impl PictureTextures {
         }
     }
 
-    pub fn begin_frame(&mut self, stamp: FrameStamp) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp, pending_updates: &mut TextureUpdateList) {
         self.now = stamp;
+
+        // Expire picture cache tiles that haven't been referenced in the last frame.
+        // The picture cache code manually keeps tiles alive by calling `request` on
+        // them if it wants to retain a tile that is currently not visible.
+        self.expire_old_tiles(pending_updates);
     }
 
     pub fn default_tile_size(&self) -> DeviceIntSize {
@@ -91,7 +96,7 @@ impl PictureTextures {
     pub fn update(
         &mut self,
         tile_size: DeviceIntSize,
-        handle: &mut TextureCacheHandle,
+        handle: &mut Option<PictureCacheTextureHandle>,
         gpu_cache: &mut GpuCache,
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
@@ -100,14 +105,11 @@ impl PictureTextures {
         debug_assert!(tile_size.width > 0 && tile_size.height > 0);
 
         let need_alloc = match handle {
-            TextureCacheHandle::Empty => true,
-            TextureCacheHandle::Picture(handle) => {
+            None => true,
+            Some(handle) => {
                 // Check if the entry has been evicted.
                 !self.entry_exists(&handle)
             },
-            TextureCacheHandle::Auto(_) | TextureCacheHandle::Manual(_) => {
-                panic!("Unexpected handle type in update_picture_cache");
-            }
         };
 
         if need_alloc {
@@ -117,10 +119,10 @@ impl PictureTextures {
                 pending_updates,
             );
 
-            *handle = TextureCacheHandle::Picture(new_handle);
+            *handle = Some(new_handle);
         }
 
-        if let TextureCacheHandle::Picture(handle) = handle {
+        if let Some(handle) = handle {
             // Upload the resource rect and texture array layer.
             self.cache_entries
                 .get_opt_mut(handle)
