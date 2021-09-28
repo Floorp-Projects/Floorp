@@ -266,10 +266,10 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
 class DWriteFontFallbackRenderer final : public IDWriteTextRenderer {
  public:
   explicit DWriteFontFallbackRenderer(IDWriteFactory* aFactory) : mRefCount(0) {
-    HRESULT hr = S_OK;
-
-    hr = aFactory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
+    HRESULT hr =
+        aFactory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
     NS_ASSERTION(SUCCEEDED(hr), "GetSystemFontCollection failed!");
+    (void)hr;
   }
 
   ~DWriteFontFallbackRenderer() {}
