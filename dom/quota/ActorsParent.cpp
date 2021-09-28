@@ -9426,15 +9426,21 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
       break;
     }
 
+    nsCString message;
+    message.AppendPrintf(
+        "Failed to remove one or more directories, retry number: %d",
+        index + 1);
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(message);
     PR_Sleep(PR_MillisecondsToInterval(200));
   }
 
   if (!directoriesForRemovalRetry.IsEmpty()) {
-    NS_WARNING("Failed to remove one or more directories, giving up!");
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+        "Failed to remove one or more directories, giving up!"_ns);
+  } else {
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+        "ClearRequestBase: Completed deleting files"_ns);
   }
-
-  aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
-      "ClearRequestBase: Completed deleting files"_ns);
 }
 
 nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
