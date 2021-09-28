@@ -2056,13 +2056,10 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
 
 ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub,
-    bool* attached) {
+    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub) {
   // We shouldn't GC or report OOM (or any other exception) here.
   AutoAssertNoPendingException aanpe(cx);
   JS::AutoCheckCannotGC nogc;
-
-  MOZ_ASSERT(!*attached);
 
   if (writer.failed()) {
     return nullptr;
@@ -2177,7 +2174,6 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
   writer.copyStubData(newStub->stubDataStart());
   newStub->setTypeData(writer.typeData());
   stub->addNewStub(icEntry, newStub);
-  *attached = true;
   return newStub;
 }
 
