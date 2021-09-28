@@ -141,8 +141,6 @@ private fun RecentTabItem(
             ) {
                 RecentTabTitle(title = title)
 
-                RecentTabSubtitle(subtitle = url)
-
                 Row {
                     RecentTabImage(
                         url = url,
