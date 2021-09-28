@@ -43,8 +43,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
     // Map of highlighter types to unsettled promises to create a highlighter of that type
     this._pendingGetHighlighterMap = new Map();
-
-    this.noopStylesheetListener = () => {};
   }
 
   // async initialization
@@ -62,17 +60,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
         resourceCommand.TYPES.STYLESHEET
       )
     ) {
-      // Store `resourceCommand` on the inspector front as we need it later, and we might not be able to retrieve it from
-      // the targetFront as its resourceCommand property is nullified by ResourceCommand.onTargetDestroyed.
-      this.resourceCommand = resourceCommand;
       await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
         // we simply want to start the watcher, we don't have to do anything with those resources.
-        onAvailable: this.noopStylesheetListener,
+        onAvailable: () => {},
       });
-      // Bail out if the inspector is closed while watchResources was pending
-      if (this.isDestroyed()) {
-        return null;
-      }
     }
 
     this.initialized = await Promise.all([
@@ -114,18 +105,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   }
 
   destroy() {
-    if (this.isDestroyed()) {
-      return;
-    }
     this._compatibility = null;
-
-    const { resourceCommand } = this;
-    resourceCommand.unwatchResources([resourceCommand.TYPES.STYLESHEET], {
-      onAvailable: this.noopStylesheetListener,
-    });
-    this.resourceCommand = null;
-    this.walker = null;
-
     // CustomHighlighter fronts are managed by InspectorFront and so will be
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
