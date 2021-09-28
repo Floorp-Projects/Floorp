@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
 const Services = require("Services");
 
 loader.lazyRequireGetter(
@@ -114,7 +113,7 @@ BottomHost.prototype = {
       this._splitter = null;
     }
 
-    return promise.resolve(null);
+    return Promise.resolve(null);
   },
 };
 
@@ -196,7 +195,7 @@ class SidebarHost {
       this._browserPanel.removeChild(this.frame);
     }
 
-    return promise.resolve(null);
+    return Promise.resolve(null);
   }
 }
 
@@ -329,7 +328,7 @@ WindowHost.prototype = {
       this._window.close();
     }
 
-    return promise.resolve(null);
+    return Promise.resolve(null);
   },
 };
 
@@ -371,7 +370,7 @@ BrowserToolboxHost.prototype = {
 
   // Do nothing. The BrowserToolbox is destroyed by quitting the application.
   destroy: function() {
-    return promise.resolve(null);
+    return Promise.resolve(null);
   },
 };
 
@@ -389,7 +388,7 @@ PageHost.prototype = {
   type: "page",
 
   create: function() {
-    return promise.resolve(this.frame);
+    return Promise.resolve(this.frame);
   },
 
   // Do nothing.
@@ -400,7 +399,7 @@ PageHost.prototype = {
 
   // Do nothing.
   destroy: function() {
-    return promise.resolve(null);
+    return Promise.resolve(null);
   },
 };
 
