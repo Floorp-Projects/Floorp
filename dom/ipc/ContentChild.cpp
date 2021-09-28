@@ -1285,6 +1285,10 @@ void ContentChild::InitSharedUASheets(const Maybe<SharedMemoryHandle>& aHandle,
 void ContentChild::InitXPCOM(
     XPCOMInitData&& aXPCOMInit,
     const mozilla::dom::ipc::StructuredCloneData& aInitialData) {
+  // Do this as early as possible to get the parent process to initialize the
+  // background thread since we'll likely need database information very soon.
+  BackgroundChild::Startup();
+
 #ifdef MOZ_WIDGET_GTK
   // LookAndFeel::NativeInit takes a long time to run on Linux, here we schedule
   // it as soon as possible after BackgroundChild::Startup to give
