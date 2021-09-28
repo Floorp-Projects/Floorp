@@ -8,6 +8,11 @@
 #include "MemMoveAnnotation.h"
 #include "Utils.h"
 
+#if CLANG_VERSION_FULL >= 1300
+// Starting with clang-13 Expr::isRValue has been renamed to Expr::isPRValue
+#define isRValue  isPRValue
+#endif
+
 namespace clang {
 namespace ast_matchers {
 
@@ -429,4 +434,5 @@ AST_MATCHER(MemberExpr, hasKnownLiveAnnotation) {
 } // namespace ast_matchers
 } // namespace clang
 
+#undef isRValue
 #endif
