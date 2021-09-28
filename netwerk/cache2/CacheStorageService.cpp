@@ -1517,7 +1517,8 @@ nsresult CacheStorageService::AddStorageEntry(
             .get();
 
     bool entryExists = entries->Get(entryKey, getter_AddRefs(entry));
-    if (!entryExists && aFlags & nsICacheStorage::OPEN_READONLY &&
+    if (!entryExists && (aFlags & nsICacheStorage::OPEN_READONLY) &&
+        (aFlags & nsICacheStorage::OPEN_SECRETLY) &&
         StaticPrefs::network_cache_bug1708673()) {
       return NS_ERROR_CACHE_KEY_NOT_FOUND;
     }
