@@ -200,6 +200,7 @@ struct SigHandlerCoordinator {
     r |= sem_init(&mMessage3, /* pshared */ 0, 0);
     r |= sem_init(&mMessage4, /* pshared */ 0, 0);
     MOZ_ASSERT(r == 0);
+    (void)r;
   }
 
   ~SigHandlerCoordinator() {
@@ -207,6 +208,7 @@ struct SigHandlerCoordinator {
     r |= sem_destroy(&mMessage3);
     r |= sem_destroy(&mMessage4);
     MOZ_ASSERT(r == 0);
+    (void)r;
   }
 
   sem_t mMessage2;       // To sampler: "context is in sSigHandlerCoordinator"
