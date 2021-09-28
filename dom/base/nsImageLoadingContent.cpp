@@ -1163,6 +1163,14 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   aDocument->ForgetImagePreload(aNewURI);
 
   if (NS_SUCCEEDED(rv)) {
+    // Based on performance testing unsuppressing painting soon after the page
+    // has gotten an image may improve visual metrics.
+    if (Document* doc = element->GetComposedDoc()) {
+      if (PresShell* shell = doc->GetPresShell()) {
+        shell->TryUnsuppressPaintingSoon();
+      }
+    }
+
     CloneScriptedRequests(req);
     TrackImage(req);
     ResetAnimationIfNeeded();

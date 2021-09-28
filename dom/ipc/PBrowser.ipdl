@@ -232,7 +232,9 @@ parent:
      * parent process to start painting the new document, if it's still painting
      * the old one.
      */
-    [Priority=mediumhigh] async DidUnsuppressPainting();
+    [Priority=control] async DidUnsuppressPainting();
+
+    async DidUnsuppressPaintingNormalPriority();
 
     /**
      * When child sends this message, parent should move focus to
