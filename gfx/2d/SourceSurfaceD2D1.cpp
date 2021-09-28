@@ -198,10 +198,7 @@ bool DataSourceSurfaceD2D1::Map(MapType aMapType,
   MOZ_ASSERT(!mImplicitMapped);
   MOZ_ASSERT(!mIsMapped);
 
-  D2D1_MAP_OPTIONS options;
-  if (aMapType == MapType::READ) {
-    options = D2D1_MAP_OPTIONS_READ;
-  } else {
+  if (aMapType != MapType::READ) {
     gfxWarning() << "Attempt to map D2D1 DrawTarget for writing.";
     return false;
   }

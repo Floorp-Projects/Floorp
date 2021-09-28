@@ -1017,7 +1017,6 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
     if (cmapSize != GDI_ERROR && cmapSize > 0 &&
         cmapData.SetLength(cmapSize, fallible)) {
       ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
-      bool cmapLoaded = false;
       RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
       uint32_t offset;
 
