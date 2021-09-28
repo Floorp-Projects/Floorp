@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_JSON_URL = URL_ROOT + "chunked_json.sjs";
+const TEST_JSON_URL = URL_ROOT_SSL + "chunked_json.sjs";
 
 add_task(async function() {
   info("Test chunked JSON started");
