@@ -9,7 +9,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
@@ -46,6 +45,9 @@ class SettingsPrivacyTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
     }
 
     @After
@@ -272,7 +274,6 @@ class SettingsPrivacyTest {
         }
     }
 
-    @Ignore("Disabled for failing with new Compose Awesomebar")
     @Test
     fun openExternalLinksInPrivateTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

@@ -12,6 +12,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -51,6 +52,9 @@ class TabbedBrowsingTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+
+        val settings = activityTestRule.activity.applicationContext.settings()
+        settings.hasShownHomeOnboardingDialog = true
     }
 
     @After
@@ -281,7 +285,6 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            // verifyPageContent(defaultWebPage.content)
         }.openTabDrawer {
             verifyExistingTabList()
             verifyNewTabButton()
@@ -289,7 +292,9 @@ class TabbedBrowsingTest {
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)
         }.openNewTab {
-        }.dismissSearchBar { }
+            verifySearchBarEmpty()
+            verifyKeyboardVisibility()
+        }
     }
 
     @Test
@@ -298,14 +303,6 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            // verifyPageContent(defaultWebPage.content)
-        }.openTabDrawer {
-            verifyExistingTabList()
-            verifyNewTabButton()
-            verifyTabTrayOverflowMenu(true)
-            verifyExistingOpenTabs(defaultWebPage.title)
-            verifyCloseTabsButton(defaultWebPage.title)
-        }.closeTabDrawer {
         }.openTabButtonShortcutsMenu {
             verifyTabButtonShortcutMenuItems()
         }.closeTabFromShortcutsMenu {
@@ -316,28 +313,19 @@ class TabbedBrowsingTest {
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
-            verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
-            verifyHomeWordmark()
-            verifyTabButton()
             verifyPrivateSessionMessage()
             verifyHomeToolbar()
-            verifyHomeComponent()
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-
         }.openTabButtonShortcutsMenu {
         }.openTabFromShortcutsMenu {
             verifyKeyboardVisible()
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
-            verifyHomeMenu()
             verifyHomeWordmark()
-            verifyTabButton()
             verifyHomeToolbar()
-            verifyHomeComponent()
         }
     }
 }
