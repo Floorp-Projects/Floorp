@@ -616,11 +616,11 @@
 /* Pinned tabs */
 
 #TabsToolbar {
-  --attention-icon-color: rgb(42,195,162);
+  --attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(42,195,162));
 }
 
 #TabsToolbar[brighttext] {
-  --attention-icon-color: rgb(84,255,189);
+  --attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
 }
 
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
