@@ -10,6 +10,11 @@
 #include "ThreadAllows.h"
 #include "plugin.h"
 
+#if CLANG_VERSION_FULL >= 1300
+// Starting with clang-13 some functions from StringRef have been renamed
+#define compare_lower compare_insensitive
+#endif
+
 inline StringRef getFilename(const SourceManager &SM, SourceLocation Loc) {
   // We use the presumed location to handle #line directives and such, so the
   // plugin is friendly to icecc / sccache users.
@@ -489,4 +494,5 @@ inline bool isInfixBinaryOp(const CXXOperatorCallExpr *OpCall) {
 #endif
 }
 
+#undef compare_lower
 #endif
