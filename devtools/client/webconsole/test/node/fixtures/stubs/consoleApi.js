@@ -258,7 +258,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj31",
+          "actor": "server0.conn0.windowGlobal10737418241/obj32",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -283,7 +283,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
             "safeGetterValues": {}
           }
         },
-        "actorID": "server0.conn0.child1/obj31"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj32"
       }
     ],
     "chromeContext": false,
@@ -352,7 +352,7 @@ rawPackets.set(`console.dirxml(window)`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj34",
+          "actor": "server0.conn0.windowGlobal10737418241/obj35",
           "class": "Window",
           "ownPropertyLength": 818,
           "extensible": true,
@@ -364,7 +364,7 @@ rawPackets.set(`console.dirxml(window)`, {
             "url": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html"
           }
         },
-        "actorID": "server0.conn0.child1/obj34"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj35"
       }
     ],
     "chromeContext": false,
@@ -397,7 +397,7 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj36",
+          "actor": "server0.conn0.windowGlobal10737418241/obj37",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -414,7 +414,7 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
             ]
           }
         },
-        "actorID": "server0.conn0.child1/obj36"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj37"
       }
     ],
     "chromeContext": false,
@@ -447,7 +447,7 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj38",
+          "actor": "server0.conn0.windowGlobal10737418241/obj39",
           "class": "RegExp",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -456,7 +456,7 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
           "isError": false,
           "displayString": "/a.b.c/"
         },
-        "actorID": "server0.conn0.child1/obj38"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj39"
       }
     ],
     "chromeContext": false,
@@ -488,7 +488,7 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj40",
+          "actor": "server0.conn0.windowGlobal10737418241/obj41",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -517,7 +517,7 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
             }
           }
         },
-        "actorID": "server0.conn0.child1/obj40"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj41"
       }
     ],
     "chromeContext": false,
@@ -550,7 +550,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj42",
+          "actor": "server0.conn0.windowGlobal10737418241/obj43",
           "class": "Object",
           "ownPropertyLength": 3,
           "extensible": true,
@@ -587,7 +587,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
             "safeGetterValues": {}
           }
         },
-        "actorID": "server0.conn0.child1/obj42"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj43"
       }
     ],
     "chromeContext": false,
@@ -713,7 +713,7 @@ rawPackets.set(`console.log('mymap')`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj47",
+          "actor": "server0.conn0.windowGlobal10737418241/obj48",
           "class": "Map",
           "ownPropertyLength": 0,
           "extensible": true,
@@ -735,7 +735,7 @@ rawPackets.set(`console.log('mymap')`, {
             ]
           }
         },
-        "actorID": "server0.conn0.child1/obj47"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj48"
       }
     ],
     "chromeContext": false,
@@ -768,7 +768,7 @@ rawPackets.set(`console.log('myset')`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj49",
+          "actor": "server0.conn0.windowGlobal10737418241/obj50",
           "class": "Set",
           "ownPropertyLength": 0,
           "extensible": true,
@@ -784,7 +784,7 @@ rawPackets.set(`console.log('myset')`, {
             ]
           }
         },
-        "actorID": "server0.conn0.child1/obj49"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj50"
       }
     ],
     "chromeContext": false,
@@ -866,7 +866,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj52",
+          "actor": "server0.conn0.windowGlobal10737418241/obj53",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -891,12 +891,12 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
             "safeGetterValues": {}
           }
         },
-        "actorID": "server0.conn0.child1/obj52"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj53"
       },
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj53",
+          "actor": "server0.conn0.windowGlobal10737418241/obj54",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -913,7 +913,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
             ]
           }
         },
-        "actorID": "server0.conn0.child1/obj53"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj54"
       }
     ],
     "chromeContext": false,
@@ -1105,7 +1105,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj55",
+          "actor": "server0.conn0.windowGlobal10737418241/obj57",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -1130,7 +1130,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
             "safeGetterValues": {}
           }
         },
-        "actorID": "server0.conn0.child1/obj55"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj57"
       }
     ],
     "chromeContext": false,
@@ -1286,7 +1286,7 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj58",
+          "actor": "server0.conn0.windowGlobal10737418241/obj60",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -1315,7 +1315,7 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
             }
           }
         },
-        "actorID": "server0.conn0.child1/obj58"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj60"
       }
     ],
     "chromeContext": false,
@@ -1689,7 +1689,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.child1/obj67",
+          "actor": "server0.conn0.windowGlobal10737418241/obj69",
           "class": "Object",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -1732,7 +1732,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
             "safeGetterValues": {}
           }
         },
-        "actorID": "server0.conn0.child1/obj67"
+        "actorID": "server0.conn0.windowGlobal10737418241/obj69"
       }
     ],
     "chromeContext": false,

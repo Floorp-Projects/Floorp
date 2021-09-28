@@ -87,7 +87,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj24",
+        "actor": "server0.conn4.windowGlobal2147483651/obj24",
         "class": "ReferenceError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -104,7 +104,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
           "columnNumber": 5
         }
       },
-      "actorID": "server0.conn0.child4/obj24"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj24"
     },
     "hasException": true
   },
@@ -170,7 +170,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj25",
+        "actor": "server0.conn4.windowGlobal2147483651/obj25",
         "class": "SyntaxError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -187,7 +187,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
           "columnNumber": 9
         }
       },
-      "actorID": "server0.conn0.child4/obj25"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj25"
     },
     "hasException": true
   },
@@ -200,11 +200,11 @@ rawPackets.set(`TypeError longString message`, {
     "errorMessage": {
       "_grip": {
         "type": "longString",
-        "actor": "server0.conn0.child4/longstractor27",
+        "actor": "server0.conn4.windowGlobal2147483651/longstractor27",
         "length": 110007,
         "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon"
       },
-      "actorID": "server0.conn0.child4/longstractor27"
+      "actorID": "server0.conn4.windowGlobal2147483651/longstractor27"
     },
     "errorMessageName": "",
     "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -257,7 +257,7 @@ rawPackets.set(`TypeError longString message`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj28",
+        "actor": "server0.conn4.windowGlobal2147483651/obj28",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -270,11 +270,11 @@ rawPackets.set(`TypeError longString message`, {
           "message": {
             "_grip": {
               "type": "longString",
-              "actor": "server0.conn0.child4/longstractor29",
+              "actor": "server0.conn4.windowGlobal2147483651/longstractor29",
               "length": 110000,
               "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error"
             },
-            "actorID": "server0.conn0.child4/longstractor29"
+            "actorID": "server0.conn4.windowGlobal2147483651/longstractor29"
           },
           "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
           "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -282,7 +282,7 @@ rawPackets.set(`TypeError longString message`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn0.child4/obj28"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj28"
     },
     "hasException": true
   },
@@ -753,7 +753,7 @@ rawPackets.set(`throw Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn0.child4/symbol38",
+      "actor": "server0.conn4.windowGlobal2147483651/symbol38",
       "name": "potato"
     },
     "hasException": true
@@ -816,7 +816,7 @@ rawPackets.set(`throw Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj40",
+        "actor": "server0.conn4.windowGlobal2147483651/obj40",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -841,7 +841,7 @@ rawPackets.set(`throw Object`, {
           "safeGetterValues": {}
         }
       },
-      "actorID": "server0.conn0.child4/obj40"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj40"
     },
     "hasException": true
   },
@@ -903,7 +903,7 @@ rawPackets.set(`throw Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj42",
+        "actor": "server0.conn4.windowGlobal2147483651/obj42",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -920,7 +920,7 @@ rawPackets.set(`throw Error Object`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn0.child4/obj42"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj42"
     },
     "hasException": true
   },
@@ -982,7 +982,7 @@ rawPackets.set(`throw Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj44",
+        "actor": "server0.conn4.windowGlobal2147483651/obj44",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -999,7 +999,7 @@ rawPackets.set(`throw Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn0.child4/obj44"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj44"
     },
     "hasException": true
   },
@@ -1061,7 +1061,7 @@ rawPackets.set(`throw Error Object with error cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj46",
+        "actor": "server0.conn4.windowGlobal2147483651/obj46",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1078,7 +1078,7 @@ rawPackets.set(`throw Error Object with error cause`, {
           "columnNumber": 15,
           "cause": {
             "type": "object",
-            "actor": "server0.conn0.child4/obj47",
+            "actor": "server0.conn4.windowGlobal2147483651/obj47",
             "class": "SyntaxError",
             "ownPropertyLength": 4,
             "extensible": true,
@@ -1097,7 +1097,7 @@ rawPackets.set(`throw Error Object with error cause`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj46"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj46"
     },
     "hasException": true
   },
@@ -1159,7 +1159,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj49",
+        "actor": "server0.conn4.windowGlobal2147483651/obj49",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1176,7 +1176,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
           "columnNumber": 13,
           "cause": {
             "type": "object",
-            "actor": "server0.conn0.child4/obj50",
+            "actor": "server0.conn4.windowGlobal2147483651/obj50",
             "class": "Error",
             "ownPropertyLength": 5,
             "extensible": true,
@@ -1193,7 +1193,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
               "columnNumber": 13,
               "cause": {
                 "type": "object",
-                "actor": "server0.conn0.child4/obj51",
+                "actor": "server0.conn4.windowGlobal2147483651/obj51",
                 "class": "Error",
                 "ownPropertyLength": 5,
                 "extensible": true,
@@ -1210,7 +1210,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
                   "columnNumber": 13,
                   "cause": {
                     "type": "object",
-                    "actor": "server0.conn0.child4/obj52",
+                    "actor": "server0.conn4.windowGlobal2147483651/obj52",
                     "class": "Error",
                     "ownPropertyLength": 4,
                     "extensible": true,
@@ -1233,7 +1233,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj49"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj49"
     },
     "hasException": true
   },
@@ -1295,7 +1295,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj54",
+        "actor": "server0.conn4.windowGlobal2147483651/obj54",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1312,7 +1312,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
           "columnNumber": 13,
           "cause": {
             "type": "object",
-            "actor": "server0.conn0.child4/obj55",
+            "actor": "server0.conn4.windowGlobal2147483651/obj55",
             "class": "Error",
             "ownPropertyLength": 5,
             "extensible": true,
@@ -1329,7 +1329,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
               "columnNumber": 13,
               "cause": {
                 "type": "object",
-                "actor": "server0.conn0.child4/obj56",
+                "actor": "server0.conn4.windowGlobal2147483651/obj56",
                 "class": "Error",
                 "ownPropertyLength": 5,
                 "extensible": true,
@@ -1346,7 +1346,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
                   "columnNumber": 13,
                   "cause": {
                     "type": "object",
-                    "actor": "server0.conn0.child4/obj57",
+                    "actor": "server0.conn4.windowGlobal2147483651/obj57",
                     "class": "Error",
                     "ownPropertyLength": 4,
                     "extensible": true,
@@ -1369,7 +1369,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj54"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj54"
     },
     "hasException": true
   },
@@ -1431,7 +1431,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj59",
+        "actor": "server0.conn4.windowGlobal2147483651/obj59",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1451,7 +1451,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj59"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj59"
     },
     "hasException": true
   },
@@ -1513,7 +1513,7 @@ rawPackets.set(`throw Error Object with number cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj61",
+        "actor": "server0.conn4.windowGlobal2147483651/obj61",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1531,7 +1531,7 @@ rawPackets.set(`throw Error Object with number cause`, {
           "cause": 0
         }
       },
-      "actorID": "server0.conn0.child4/obj61"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj61"
     },
     "hasException": true
   },
@@ -1593,7 +1593,7 @@ rawPackets.set(`throw Error Object with string cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj63",
+        "actor": "server0.conn4.windowGlobal2147483651/obj63",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1611,7 +1611,7 @@ rawPackets.set(`throw Error Object with string cause`, {
           "cause": "cause message"
         }
       },
-      "actorID": "server0.conn0.child4/obj63"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj63"
     },
     "hasException": true
   },
@@ -1673,7 +1673,7 @@ rawPackets.set(`throw Error Object with object cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj65",
+        "actor": "server0.conn4.windowGlobal2147483651/obj65",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1690,7 +1690,7 @@ rawPackets.set(`throw Error Object with object cause`, {
           "columnNumber": 7,
           "cause": {
             "type": "object",
-            "actor": "server0.conn0.child4/obj66",
+            "actor": "server0.conn4.windowGlobal2147483651/obj66",
             "class": "Object",
             "ownPropertyLength": 2,
             "extensible": true,
@@ -1700,7 +1700,7 @@ rawPackets.set(`throw Error Object with object cause`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj65"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj65"
     },
     "hasException": true
   },
@@ -2113,7 +2113,7 @@ rawPackets.set(`Promise reject Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn0.child4/symbol74",
+      "actor": "server0.conn4.windowGlobal2147483651/symbol74",
       "name": "potato"
     },
     "hasException": true
@@ -2176,7 +2176,7 @@ rawPackets.set(`Promise reject Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj76",
+        "actor": "server0.conn4.windowGlobal2147483651/obj76",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -2201,7 +2201,7 @@ rawPackets.set(`Promise reject Object`, {
           "safeGetterValues": {}
         }
       },
-      "actorID": "server0.conn0.child4/obj76"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj76"
     },
     "hasException": true
   },
@@ -2263,7 +2263,7 @@ rawPackets.set(`Promise reject Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj78",
+        "actor": "server0.conn4.windowGlobal2147483651/obj78",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -2280,7 +2280,7 @@ rawPackets.set(`Promise reject Error Object`, {
           "columnNumber": 16
         }
       },
-      "actorID": "server0.conn0.child4/obj78"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj78"
     },
     "hasException": true
   },
@@ -2342,7 +2342,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj80",
+        "actor": "server0.conn4.windowGlobal2147483651/obj80",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -2359,7 +2359,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn0.child4/obj80"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj80"
     },
     "hasException": true
   },
@@ -2429,7 +2429,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child4/obj82",
+        "actor": "server0.conn4.windowGlobal2147483651/obj82",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -2446,7 +2446,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           "columnNumber": 15,
           "cause": {
             "type": "object",
-            "actor": "server0.conn0.child4/obj83",
+            "actor": "server0.conn4.windowGlobal2147483651/obj83",
             "class": "ReferenceError",
             "ownPropertyLength": 4,
             "extensible": true,
@@ -2465,7 +2465,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           }
         }
       },
-      "actorID": "server0.conn0.child4/obj82"
+      "actorID": "server0.conn4.windowGlobal2147483651/obj82"
     },
     "hasException": true
   },

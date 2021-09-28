@@ -25,7 +25,7 @@ rawPackets.set(`new Date(0)`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child1/obj23",
+      "actor": "server0.conn2.windowGlobal10737418243/obj24",
       "class": "Date",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -36,7 +36,7 @@ rawPackets.set(`new Date(0)`, {
         "timestamp": 0
       }
     },
-    "actorID": "server0.conn0.child1/obj23"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj24"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -48,7 +48,7 @@ rawPackets.set(`asdf()`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child1/obj25",
+      "actor": "server0.conn2.windowGlobal10737418243/obj26",
       "class": "ReferenceError",
       "ownPropertyLength": 4,
       "extensible": true,
@@ -65,7 +65,7 @@ rawPackets.set(`asdf()`, {
         "columnNumber": 1
       }
     },
-    "actorID": "server0.conn0.child1/obj25"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj26"
   },
   "exceptionMessage": "ReferenceError: asdf is not defined",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
@@ -98,7 +98,7 @@ rawPackets.set(`1 + @`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child1/obj26",
+      "actor": "server0.conn2.windowGlobal10737418243/obj27",
       "class": "SyntaxError",
       "ownPropertyLength": 4,
       "extensible": true,
@@ -115,7 +115,7 @@ rawPackets.set(`1 + @`, {
         "columnNumber": 4
       }
     },
-    "actorID": "server0.conn0.child1/obj26"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj27"
   },
   "exceptionMessage": "SyntaxError: illegal character U+0040",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
@@ -142,7 +142,7 @@ rawPackets.set(`inspect({a: 1})`, {
     "object": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn0.child1/obj28",
+        "actor": "server0.conn2.windowGlobal10737418243/obj29",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -167,7 +167,7 @@ rawPackets.set(`inspect({a: 1})`, {
           "safeGetterValues": {}
         }
       },
-      "actorID": "server0.conn0.child1/obj28"
+      "actorID": "server0.conn2.windowGlobal10737418243/obj29"
     },
     "forceExpandInConsole": false
   },
@@ -195,7 +195,7 @@ rawPackets.set(`longString message Error`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child1/obj32",
+      "actor": "server0.conn2.windowGlobal10737418243/obj32",
       "class": "Error",
       "ownPropertyLength": 4,
       "extensible": true,
@@ -208,11 +208,11 @@ rawPackets.set(`longString message Error`, {
         "message": {
           "_grip": {
             "type": "longString",
-            "actor": "server0.conn0.child1/longstractor33",
+            "actor": "server0.conn2.windowGlobal10737418243/longstractor33",
             "length": 110000,
             "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error"
           },
-          "actorID": "server0.conn0.child1/longstractor33"
+          "actorID": "server0.conn2.windowGlobal10737418243/longstractor33"
         },
         "stack": "@debugger eval code:1:7\n",
         "fileName": "debugger eval code",
@@ -220,16 +220,16 @@ rawPackets.set(`longString message Error`, {
         "columnNumber": 7
       }
     },
-    "actorID": "server0.conn0.child1/obj32"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj32"
   },
   "exceptionMessage": {
     "_grip": {
       "type": "longString",
-      "actor": "server0.conn0.child1/longstractor34",
+      "actor": "server0.conn2.windowGlobal10737418243/longstractor34",
       "length": 110007,
       "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon"
     },
-    "actorID": "server0.conn0.child1/longstractor34"
+    "actorID": "server0.conn2.windowGlobal10737418243/longstractor34"
   },
   "exceptionStack": [
     {
@@ -431,7 +431,7 @@ rawPackets.set(`eval throw Symbol`, {
   "resultID": "1588154003077-13",
   "exception": {
     "type": "symbol",
-    "actor": "server0.conn2.child2/symbol44",
+    "actor": "server0.conn2.windowGlobal10737418243/symbol42",
     "name": "potato"
   },
   "exceptionMessage": "Symbol(potato)",
@@ -464,7 +464,7 @@ rawPackets.set(`eval throw Object`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn2.child2/obj46",
+      "actor": "server0.conn2.windowGlobal10737418243/obj44",
       "class": "Object",
       "ownPropertyLength": 1,
       "extensible": true,
@@ -489,7 +489,7 @@ rawPackets.set(`eval throw Object`, {
         "safeGetterValues": {}
       }
     },
-    "actorID": "server0.conn2.child2/obj46"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj44"
   },
   "exceptionMessage": "[object Object]",
   "exceptionStack": [
@@ -521,7 +521,7 @@ rawPackets.set(`eval throw Error Object`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn2.child2/obj48",
+      "actor": "server0.conn2.windowGlobal10737418243/obj46",
       "class": "Error",
       "ownPropertyLength": 4,
       "extensible": true,
@@ -538,7 +538,7 @@ rawPackets.set(`eval throw Error Object`, {
         "columnNumber": 7
       }
     },
-    "actorID": "server0.conn2.child2/obj48"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj46"
   },
   "exceptionMessage": "Error: pumpkin",
   "exceptionStack": [
@@ -570,7 +570,7 @@ rawPackets.set(`eval throw Error Object with custom name`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn2.child2/obj50",
+      "actor": "server0.conn2.windowGlobal10737418243/obj48",
       "class": "Error",
       "ownPropertyLength": 6,
       "extensible": true,
@@ -587,7 +587,7 @@ rawPackets.set(`eval throw Error Object with custom name`, {
         "columnNumber": 15
       }
     },
-    "actorID": "server0.conn2.child2/obj50"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj48"
   },
   "exceptionMessage": "JuicyError: pineapple",
   "exceptionStack": [
@@ -619,7 +619,7 @@ rawPackets.set(`eval throw Error Object with error cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj50",
+      "actor": "server0.conn2.windowGlobal10737418243/obj50",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -636,7 +636,7 @@ rawPackets.set(`eval throw Error Object with error cause`, {
         "columnNumber": 15,
         "cause": {
           "type": "object",
-          "actor": "server0.conn2.child4/obj51",
+          "actor": "server0.conn2.windowGlobal10737418243/obj51",
           "class": "SyntaxError",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -655,7 +655,7 @@ rawPackets.set(`eval throw Error Object with error cause`, {
         }
       }
     },
-    "actorID": "server0.conn0.child4/obj50"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj50"
   },
   "exceptionMessage": "Error: something went wrong",
   "exceptionStack": [
@@ -687,7 +687,7 @@ rawPackets.set(`eval throw Error Object with cause chain`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj53",
+      "actor": "server0.conn2.windowGlobal10737418243/obj53",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -704,7 +704,7 @@ rawPackets.set(`eval throw Error Object with cause chain`, {
         "columnNumber": 16,
         "cause": {
           "type": "object",
-          "actor": "server0.conn2.child4/obj54",
+          "actor": "server0.conn2.windowGlobal10737418243/obj54",
           "class": "Error",
           "ownPropertyLength": 5,
           "extensible": true,
@@ -721,7 +721,7 @@ rawPackets.set(`eval throw Error Object with cause chain`, {
             "columnNumber": 16,
             "cause": {
               "type": "object",
-              "actor": "server0.conn2.child4/obj55",
+              "actor": "server0.conn2.windowGlobal10737418243/obj55",
               "class": "Error",
               "ownPropertyLength": 5,
               "extensible": true,
@@ -738,7 +738,7 @@ rawPackets.set(`eval throw Error Object with cause chain`, {
                 "columnNumber": 16,
                 "cause": {
                   "type": "object",
-                  "actor": "server0.conn2.child4/obj56",
+                  "actor": "server0.conn2.windowGlobal10737418243/obj56",
                   "class": "Error",
                   "ownPropertyLength": 4,
                   "extensible": true,
@@ -761,7 +761,7 @@ rawPackets.set(`eval throw Error Object with cause chain`, {
         }
       }
     },
-    "actorID": "server0.conn0.child4/obj53"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj53"
   },
   "exceptionMessage": "Error: err-d",
   "exceptionStack": [
@@ -793,7 +793,7 @@ rawPackets.set(`eval throw Error Object with cyclical cause chain`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj58",
+      "actor": "server0.conn2.windowGlobal10737418243/obj58",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -810,7 +810,7 @@ rawPackets.set(`eval throw Error Object with cyclical cause chain`, {
         "columnNumber": 16,
         "cause": {
           "type": "object",
-          "actor": "server0.conn2.child4/obj59",
+          "actor": "server0.conn2.windowGlobal10737418243/obj59",
           "class": "Error",
           "ownPropertyLength": 5,
           "extensible": true,
@@ -832,7 +832,7 @@ rawPackets.set(`eval throw Error Object with cyclical cause chain`, {
         }
       }
     },
-    "actorID": "server0.conn0.child4/obj58"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj58"
   },
   "exceptionMessage": "Error: err-y",
   "exceptionStack": [
@@ -864,7 +864,7 @@ rawPackets.set(`eval throw Error Object with falsy cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj63",
+      "actor": "server0.conn2.windowGlobal10737418243/obj61",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -882,7 +882,7 @@ rawPackets.set(`eval throw Error Object with falsy cause`, {
         "cause": false
       }
     },
-    "actorID": "server0.conn0.child4/obj63"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj61"
   },
   "exceptionMessage": "Error: false cause",
   "exceptionStack": [
@@ -914,7 +914,7 @@ rawPackets.set(`eval throw Error Object with null cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn2.child4/obj63",
+      "actor": "server0.conn2.windowGlobal10737418243/obj63",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -934,7 +934,7 @@ rawPackets.set(`eval throw Error Object with null cause`, {
         }
       }
     },
-    "actorID": "server0.conn2.child4/obj63"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj63"
   },
   "exceptionMessage": "Error: null cause",
   "exceptionStack": [
@@ -966,7 +966,7 @@ rawPackets.set(`eval throw Error Object with undefined cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn2.child4/obj65",
+      "actor": "server0.conn2.windowGlobal10737418243/obj65",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -986,7 +986,7 @@ rawPackets.set(`eval throw Error Object with undefined cause`, {
         }
       }
     },
-    "actorID": "server0.conn2.child4/obj65"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj65"
   },
   "exceptionMessage": "Error: undefined cause",
   "exceptionStack": [
@@ -1018,7 +1018,7 @@ rawPackets.set(`eval throw Error Object with number cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj65",
+      "actor": "server0.conn2.windowGlobal10737418243/obj67",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -1036,7 +1036,7 @@ rawPackets.set(`eval throw Error Object with number cause`, {
         "cause": 0
       }
     },
-    "actorID": "server0.conn0.child4/obj65"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj67"
   },
   "exceptionMessage": "Error: number cause",
   "exceptionStack": [
@@ -1068,7 +1068,7 @@ rawPackets.set(`eval throw Error Object with string cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj67",
+      "actor": "server0.conn2.windowGlobal10737418243/obj69",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -1086,7 +1086,7 @@ rawPackets.set(`eval throw Error Object with string cause`, {
         "cause": "cause message"
       }
     },
-    "actorID": "server0.conn0.child4/obj67"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj69"
   },
   "exceptionMessage": "Error: string cause",
   "exceptionStack": [
@@ -1118,7 +1118,7 @@ rawPackets.set(`eval throw Error Object with object cause`, {
   "exception": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj69",
+      "actor": "server0.conn2.windowGlobal10737418243/obj71",
       "class": "Error",
       "ownPropertyLength": 5,
       "extensible": true,
@@ -1135,7 +1135,7 @@ rawPackets.set(`eval throw Error Object with object cause`, {
         "columnNumber": 7,
         "cause": {
           "type": "object",
-          "actor": "server0.conn2.child4/obj72",
+          "actor": "server0.conn2.windowGlobal10737418243/obj72",
           "class": "Object",
           "ownPropertyLength": 2,
           "extensible": true,
@@ -1145,7 +1145,7 @@ rawPackets.set(`eval throw Error Object with object cause`, {
         }
       }
     },
-    "actorID": "server0.conn0.child4/obj69"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj71"
   },
   "exceptionMessage": "Error: object cause",
   "exceptionStack": [
@@ -1179,7 +1179,7 @@ rawPackets.set(`eval pending promise`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child3/obj53",
+      "actor": "server0.conn2.windowGlobal10737418243/obj74",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1196,7 +1196,7 @@ rawPackets.set(`eval pending promise`, {
         "ownPropertiesLength": 1
       }
     },
-    "actorID": "server0.conn0.child3/obj53"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj74"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -1209,7 +1209,7 @@ rawPackets.set(`eval Promise.resolve`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child3/obj55",
+      "actor": "server0.conn2.windowGlobal10737418243/obj76",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1229,7 +1229,7 @@ rawPackets.set(`eval Promise.resolve`, {
         "ownPropertiesLength": 2
       }
     },
-    "actorID": "server0.conn0.child3/obj55"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj76"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -1242,7 +1242,7 @@ rawPackets.set(`eval Promise.reject`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child3/obj57",
+      "actor": "server0.conn2.windowGlobal10737418243/obj78",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1262,7 +1262,7 @@ rawPackets.set(`eval Promise.reject`, {
         "ownPropertiesLength": 2
       }
     },
-    "actorID": "server0.conn0.child3/obj57"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj78"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -1275,7 +1275,7 @@ rawPackets.set(`eval resolved promise`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child3/obj59",
+      "actor": "server0.conn2.windowGlobal10737418243/obj80",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1295,7 +1295,7 @@ rawPackets.set(`eval resolved promise`, {
         "ownPropertiesLength": 2
       }
     },
-    "actorID": "server0.conn0.child3/obj59"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj80"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -1308,7 +1308,7 @@ rawPackets.set(`eval rejected promise`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child3/obj61",
+      "actor": "server0.conn2.windowGlobal10737418243/obj82",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1324,7 +1324,7 @@ rawPackets.set(`eval rejected promise`, {
           "<reason>": {
             "value": {
               "type": "object",
-              "actor": "server0.conn0.child3/obj62",
+              "actor": "server0.conn2.windowGlobal10737418243/obj83",
               "class": "ReferenceError",
               "ownPropertyLength": 4,
               "extensible": true,
@@ -1346,7 +1346,7 @@ rawPackets.set(`eval rejected promise`, {
         "ownPropertiesLength": 2
       }
     },
-    "actorID": "server0.conn0.child3/obj61"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj82"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
@@ -1359,7 +1359,7 @@ rawPackets.set(`eval rejected promise with Error`, {
   "result": {
     "_grip": {
       "type": "object",
-      "actor": "server0.conn0.child4/obj84",
+      "actor": "server0.conn2.windowGlobal10737418243/obj86",
       "class": "Promise",
       "ownPropertyLength": 0,
       "extensible": true,
@@ -1375,7 +1375,7 @@ rawPackets.set(`eval rejected promise with Error`, {
           "<reason>": {
             "value": {
               "type": "object",
-              "actor": "server0.conn0.child4/obj85",
+              "actor": "server0.conn2.windowGlobal10737418243/obj87",
               "class": "Error",
               "ownPropertyLength": 5,
               "extensible": true,
@@ -1392,7 +1392,7 @@ rawPackets.set(`eval rejected promise with Error`, {
                 "columnNumber": 15,
                 "cause": {
                   "type": "object",
-                  "actor": "server0.conn2.child4/obj88",
+                  "actor": "server0.conn2.windowGlobal10737418243/obj88",
                   "class": "ReferenceError",
                   "ownPropertyLength": 4,
                   "extensible": true,
@@ -1416,7 +1416,7 @@ rawPackets.set(`eval rejected promise with Error`, {
         "ownPropertiesLength": 2
       }
     },
-    "actorID": "server0.conn0.child4/obj84"
+    "actorID": "server0.conn2.windowGlobal10737418243/obj86"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
