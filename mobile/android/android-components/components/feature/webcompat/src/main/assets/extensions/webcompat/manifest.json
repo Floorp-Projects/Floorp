@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "26.1.0",
+  "version": "27.0.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -76,6 +76,7 @@
       "lib/module_shim.js",
       "lib/messaging_helper.js",
       "lib/intervention_helpers.js",
+      "lib/ua_helpers.js",
       "data/injections.js",
       "data/shims.js",
       "data/ua_overrides.js",
@@ -121,6 +122,7 @@
     "shims/play.svg",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
+    "shims/stackblitz.js",
     "shims/tracking-pixel.png",
     "shims/vast2.xml",
     "shims/vast3.xml",

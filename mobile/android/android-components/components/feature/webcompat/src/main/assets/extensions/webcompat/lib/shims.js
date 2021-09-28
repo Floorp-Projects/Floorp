@@ -36,7 +36,7 @@ let warn = async function() {
 
 class Shim {
   constructor(opts) {
-    const { matches, unblocksOnOptIn } = opts;
+    const { contentScripts, matches, unblocksOnOptIn } = opts;
 
     this.branches = opts.branches;
     this.bug = opts.bug;
@@ -67,9 +67,20 @@ class Shim {
 
     const pref = `disabled_shims.${this.id}`;
 
-    this.redirectsRequests = !!this.file;
+    this.redirectsRequests = !!this.file && matches?.length;
 
-    for (const match of matches) {
+    this._contentScriptRegistrations = [];
+    this.contentScripts = contentScripts || [];
+    for (const script of this.contentScripts) {
+      if (typeof script.css === "string") {
+        script.css = [{ file: `/shims/${script.css}` }];
+      }
+      if (typeof script.js === "string") {
+        script.js = [{ file: `/shims/${script.js}` }];
+      }
+    }
+
+    for (const match of matches || []) {
       if (!match.types) {
         this.matches.push({ patterns: [match], types: ["script"] });
       } else {
@@ -150,20 +161,51 @@ class Shim {
   }
 
   enable() {
+    const wasEnabled = this.enabled;
     this._disabledGlobally = false;
-    this._onEnabledStateChanged();
+    if (!wasEnabled) {
+      this._onEnabledStateChanged();
+    }
   }
 
   disable() {
+    const wasEnabled = this.enabled;
     this._disabledGlobally = true;
-    this._onEnabledStateChanged();
+    if (wasEnabled) {
+      this._onEnabledStateChanged();
+    }
   }
 
-  _onEnabledStateChanged() {
+  async _onEnabledStateChanged() {
     if (!this.enabled) {
+      await this._unregisterContentScripts();
       return this._revokeRequestsInETP();
     }
+    await this._registerContentScripts();
     return this._allowRequestsInETP();
+  }
+
+  async _registerContentScripts() {
+    if (
+      this.contentScripts.length &&
+      !this._contentScriptRegistrations.length
+    ) {
+      const matches = [];
+      for (const options of this.contentScripts) {
+        matches.push(options.matches);
+        const reg = await browser.contentScripts.register(options);
+        this._contentScriptRegistrations.push(reg);
+      }
+      const urls = Array.from(new Set(matches.flat()));
+      debug("Enabling content scripts for these URLs:", urls);
+    }
+  }
+
+  async _unregisterContentScripts() {
+    for (const registration of this._contentScriptRegistrations) {
+      registration.unregister();
+    }
+    this._contentScriptRegistrations = [];
   }
 
   async _allowRequestsInETP() {

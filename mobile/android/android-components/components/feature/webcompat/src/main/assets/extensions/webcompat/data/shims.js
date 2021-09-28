@@ -346,9 +346,9 @@ const AVAILABLE_SHIMS = [
     bug: "1713685",
     file: "google-publisher-tags.js",
     matches: [
-      "*://www.googletagservices.com/tag/js/gpt.js",
-      "*://securepubads.g.doubleclick.net/tag/js/gpt.js",
-      "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js",
+      "*://www.googletagservices.com/tag/js/gpt.js*",
+      "*://securepubads.g.doubleclick.net/tag/js/gpt.js*",
+      "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js*",
     ],
     onlyIfBlockedByETP: true,
   },
@@ -442,6 +442,21 @@ const AVAILABLE_SHIMS = [
     file: "rich-relevance.js",
     matches: ["*://media.richrelevance.com/rrserver/js/1.2/p13n.js"],
     onlyIfBlockedByETP: true,
+  },
+  {
+    id: "StackBlitz",
+    platform: "all",
+    name: "StackBlitz",
+    bug: "1668408",
+    onlyIfDFPIActive: true,
+    contentScripts: [
+      {
+        js: "stackblitz.js",
+        matches: ["*://*.stackblitz.com/*", "*://*.stackblitz.io/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
   },
   {
     id: "Vidible",

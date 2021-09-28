@@ -247,20 +247,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1645064",
-    platform: "desktop",
-    domain: "s-kanava.fi",
-    bug: "1645064",
-    contentScripts: {
-      matches: ["https://www.s-kanava.fi/*"],
-      css: [
-        {
-          file: "injections/css/bug1645064-s-kanava.fi-invisible-charts.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1651917",
     platform: "android",
     domain: "teletrader.com",
@@ -376,6 +362,26 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1731825",
+    platform: "desktop",
+    domain: "Office 365 email handling prompt",
+    bug: "1731825",
+    contentScripts: {
+      matches: [
+        "*://*.live.com/*",
+        "*://*.office.com/*",
+        "*://*.sharepoint.com/*",
+      ],
+      js: [
+        {
+          file:
+            "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
     id: "bug1707795",
     platform: "desktop",
     domain: "Office Excel spreadsheets",
@@ -451,6 +457,24 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/css/bug1719870-lcbo.com-table-clearfix.css",
         },
       ],
+    },
+  },
+  {
+    id: "bug1722955",
+    platform: "android",
+    domain: "frontgate.com",
+    bug: "1722955",
+    contentScripts: {
+      matches: ["*://*.frontgate.com/*"],
+      js: [
+        {
+          file: "lib/ua_helpers.js",
+        },
+        {
+          file: "injections/js/bug1722955-frontgate.com-ua-override.js",
+        },
+      ],
+      allFrames: true,
     },
   },
   {
