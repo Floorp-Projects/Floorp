@@ -811,7 +811,7 @@ impl TextureCache {
     fn get_entry_opt(&self, handle: &TextureCacheHandle) -> Option<&CacheEntry> {
         match handle {
             TextureCacheHandle::Empty => None,
-            TextureCacheHandle::Picture(handle) => self.picture_textures.get_entry_opt(handle),
+            TextureCacheHandle::Picture(_) => unreachable!(),
             TextureCacheHandle::Auto(handle) => self.lru_cache.get_opt(handle),
             TextureCacheHandle::Manual(handle) => self.manual_entries.get_opt(handle),
         }
@@ -820,7 +820,7 @@ impl TextureCache {
     fn get_entry_opt_mut(&mut self, handle: &TextureCacheHandle) -> Option<&mut CacheEntry> {
         match handle {
             TextureCacheHandle::Empty => None,
-            TextureCacheHandle::Picture(handle) => self.picture_textures.get_entry_opt_mut(handle),
+            TextureCacheHandle::Picture(_) => unreachable!(),
             TextureCacheHandle::Auto(handle) => self.lru_cache.get_opt_mut(handle),
             TextureCacheHandle::Manual(handle) => self.manual_entries.get_opt_mut(handle),
         }
@@ -946,6 +946,17 @@ impl TextureCache {
         self.get_entry_opt(handle).is_some()
     }
 
+    // Check if a given picture tile handle has a valid allocation
+    // in the texture cache.
+    pub fn picture_tile_is_allocated(&self, handle: &TextureCacheHandle) -> bool {
+        match handle {
+            TextureCacheHandle::Picture(handle) => {
+                self.picture_textures.entry_exists(handle)
+            }
+            _ => false
+        }
+    }
+
     // Check if a given texture handle was last used as recently
     // as the specified number of previous frames.
     pub fn is_recently_used(&self, handle: &TextureCacheHandle, margin: usize) -> bool {
@@ -960,6 +971,15 @@ impl TextureCache {
         self.get_entry_opt(handle).map(|entry| {
             (entry.input_format.bytes_per_pixel() * entry.size.area()) as usize
         })
+    }
+
+    pub fn get_picture_texture(&self, handle: &TextureCacheHandle) -> TextureSource {
+        match handle {
+            TextureCacheHandle::Picture(handle) => {
+                self.picture_textures.get_texture_source(self.now, handle)
+            }
+            _ => unreachable!(),
+        }
     }
 
     // Retrieve the details of an item in the cache. This is used
