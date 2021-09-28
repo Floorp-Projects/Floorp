@@ -66,6 +66,16 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._browser = options && options.browser;
     this._config = options ? options.config : {};
+    // Sometimes we get iframe targets before the top-level targets
+    // mostly when doing bfcache navigations, lets cache the early iframes targets and
+    // flush them after the top-level target is available. See Bug 1726568 for details.
+    this._earlyIframeTargets = {};
+    // A set of the current top-level targets that are available
+    // This helps to determine if the iframe targets are early or not.
+    // Mostly there is just one top-level window target at a time,
+    // but there are certain case when a new target is available before the
+    // old target is destroyed.
+    this._currentTopLevelWindowGlobalTargets = new Set();
 
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
     this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
@@ -220,16 +230,61 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   /**
+   * Flush any early iframe targets relating to this top level
+   * window target.
+   * @param {number} topInnerWindowID
+   */
+  _flushIframeTargets(topInnerWindowID) {
+    while (this._earlyIframeTargets[topInnerWindowID]?.length > 0) {
+      const actor = this._earlyIframeTargets[topInnerWindowID].shift();
+      this.emit("target-available-form", actor);
+    }
+  },
+
+  /**
    * Called by a Watcher module, whenever a new target is available
    */
   notifyTargetAvailable(actor) {
-    this.emit("target-available-form", actor);
+    // The top-level is always the same for the browser-toolbox
+    if (!this.browserId) {
+      this.emit("target-available-form", actor);
+      return;
+    }
+
+    // Emit immediately for worker, process & extension targets
+    // as they don't have a parent browsing context.
+    if (!actor.traits?.isBrowsingContext) {
+      this.emit("target-available-form", actor);
+      return;
+    }
+
+    if (actor.isTopLevelTarget) {
+      this.emit("target-available-form", actor);
+      this._currentTopLevelWindowGlobalTargets.add(actor.innerWindowId);
+      // Flush any existing early iframe targets
+      this._flushIframeTargets(actor.innerWindowId);
+    } else if (
+      this._currentTopLevelWindowGlobalTargets.has(actor.topInnerWindowId)
+    ) {
+      // Emit the event immediately if the top-level target is already available
+      this.emit("target-available-form", actor);
+    } else if (this._earlyIframeTargets[actor.topInnerWindowId]) {
+      // Add the early iframe target to the list of other early targets.
+      this._earlyIframeTargets[actor.topInnerWindowId].push(actor);
+    } else {
+      // Set the first early iframe target
+      this._earlyIframeTargets[actor.topInnerWindowId] = [actor];
+    }
   },
 
   /**
    * Called by a Watcher module, whenever a target has been destroyed
    */
   notifyTargetDestroyed(actor) {
+    if (this._earlyIframeTargets[actor.innerWindowId]) {
+      delete this._earlyIframeTargets[actor.innerWindowId];
+    }
+    this._currentTopLevelWindowGlobalTargets.delete(actor.innerWindowId);
     this.emit("target-destroyed-form", actor);
   },
 
