@@ -186,3 +186,59 @@ for (let k of [4, 2]) {
                                                       SimdPrefix, varU32(op)])]})])])));
     }
 }
+
+// Relaxed I32x4.TruncFXXX, https://github.com/WebAssembly/relaxed-simd/issues/21
+
+var ins = wasmValidateAndEval(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0, 0, 0, 0]),
+    memorySection(1),
+    exportSection([{funcIndex: 0, name: "from32s"},
+                   {funcIndex: 1, name: "from32u"},
+                   {funcIndex: 2, name: "from64s"},
+                   {funcIndex: 3, name: "from64u"},
+                   {memIndex: 0, name: "mem"}]),
+    bodySection([
+        funcBody({locals:[],
+                  body: [...V128StoreExpr(0, [...V128Load(16),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSSatF32x4)])]}),
+        funcBody({locals:[],
+                  body: [...V128StoreExpr(0, [...V128Load(16),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncUSatF32x4)])]}),
+        funcBody({locals:[],
+                  body: [...V128StoreExpr(0, [...V128Load(16),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2SZero)])]}),
+        funcBody({locals:[],
+                  body: [...V128StoreExpr(0, [...V128Load(16),
+                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2UZero)])]})])]));
+
+var mem = ins.exports.mem.buffer;
+set(new Float32Array(mem), 4, [0, 2.3, -3.4, 100000]);
+ins.exports.from32s();
+var result = get(new Int32Array(mem), 0, 4);
+assertSame(result, [0, 2, -3, 100000]);
+set(new Float32Array(mem), 4, [0, 3.3, 0x80000000, 200000]);
+ins.exports.from32u();
+var result = get(new Uint32Array(mem), 0, 4);
+assertSame(result, [0, 3, 0x80000000, 200000]);
+
+set(new Float64Array(mem), 2, [200000.3, -3.4]);
+ins.exports.from64s();
+var result = get(new Int32Array(mem), 0, 2);
+assertSame(result, [200000, -3]);
+set(new Float64Array(mem), 2, [0x90000000 + 0.1, 0]);
+ins.exports.from64u();
+var result = get(new Uint32Array(mem), 0, 2);
+assertSame(result, [0x90000000, 0]);
+
+for (let op of [I32x4RelaxedTruncSSatF32x4, I32x4RelaxedTruncUSatF32x4,
+                I32x4RelaxedTruncSatF64x2SZero, I32x4RelaxedTruncSatF64x2UZero]) {
+    assertEq(false, WebAssembly.validate(moduleWithSections([
+        sigSection([v2vSig]),
+        declSection([0]),
+        memorySection(1),
+        exportSection([]),
+        bodySection([
+            funcBody({locals:[],
+                      body: [...V128StoreExpr(0, [SimdPrefix, varU32(op)])]})])])));
+}

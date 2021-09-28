@@ -7382,6 +7382,26 @@ static void ConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
   masm.unsignedTruncSatFloat64x2ToInt32x4(rs, rd, temp);
 }
 
+static void RelaxedConvertF32x4ToI32x4(MacroAssembler& masm, RegV128 rs,
+                                       RegV128 rd) {
+  masm.truncSatFloat32x4ToInt32x4Relaxed(rs, rd);
+}
+
+static void RelaxedConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs,
+                                        RegV128 rd) {
+  masm.unsignedTruncSatFloat32x4ToInt32x4Relaxed(rs, rd);
+}
+
+static void RelaxedConvertF64x2ToI32x4(MacroAssembler& masm, RegV128 rs,
+                                       RegV128 rd) {
+  masm.truncSatFloat64x2ToInt32x4Relaxed(rs, rd);
+}
+
+static void RelaxedConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs,
+                                        RegV128 rd) {
+  masm.unsignedTruncSatFloat64x2ToInt32x4Relaxed(rs, rd);
+}
+
 static void DemoteF64x2ToF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertFloat64x2ToFloat32x4(rs, rd);
 }
@@ -9084,6 +9104,26 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorBinary(RelaxedMaxF64x2));
+          case uint32_t(SimdOp::I32x4RelaxedTruncSSatF32x4):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF32x4ToI32x4));
+          case uint32_t(SimdOp::I32x4RelaxedTruncUSatF32x4):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF32x4ToUI32x4));
+          case uint32_t(SimdOp::I32x4RelaxedTruncSatF64x2SZero):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF64x2ToI32x4));
+          case uint32_t(SimdOp::I32x4RelaxedTruncSatF64x2UZero):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF64x2ToUI32x4));
 #  endif
           default:
             break;

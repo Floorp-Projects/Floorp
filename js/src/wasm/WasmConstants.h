@@ -668,8 +668,8 @@ enum class SimdOp {
   // Narrow = 0xa2
   I32x4AllTrue = 0xa3,
   I32x4Bitmask = 0xa4,
-  // Narrow = 0xa5
-  // Narrow = 0xa6
+  I32x4RelaxedTruncSSatF32x4 = 0xa5,
+  I32x4RelaxedTruncUSatF32x4 = 0xa6,
   I32x4WidenLowSI16x8 = 0xa7,
   I32x4WidenHighSI16x8 = 0xa8,
   I32x4WidenLowUI16x8 = 0xa9,
@@ -700,8 +700,8 @@ enum class SimdOp {
   // AnyTrue = 0xc2
   I64x2AllTrue = 0xc3,
   I64x2Bitmask = 0xc4,
-  // Narrow = 0xc5
-  // Narrow = 0xc6
+  I32x4RelaxedTruncSatF64x2SZero = 0xc5,
+  I32x4RelaxedTruncSatF64x2UZero = 0xc6,
   I64x2WidenLowSI32x4 = 0xc7,
   I64x2WidenHighSI32x4 = 0xc8,
   I64x2WidenLowUI32x4 = 0xc9,
