@@ -38,7 +38,7 @@ internal class PocketEndpointRaw internal constructor(
     }
 
     companion object {
-        private const val pocketEndpointUrl = "https://firefox-android-home-recommendations.getpocket.dev/"
+        private const val pocketEndpointUrl = "https://firefox-android-home-recommendations.getpocket.com/"
 
         /**
          * Returns a new instance of [PocketEndpointRaw].

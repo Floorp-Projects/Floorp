@@ -56,7 +56,7 @@ class PocketEndpointRawTest {
 
     @Test
     fun `WHEN requesting stories recommendations THEN the firefox android home recommendations url is used`() {
-        val expectedUrl = "https://firefox-android-home-recommendations.getpocket.dev/"
+        val expectedUrl = "https://firefox-android-home-recommendations.getpocket.com/"
 
         assertRequestParams(
             client,
