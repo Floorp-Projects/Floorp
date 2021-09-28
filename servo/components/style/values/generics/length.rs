@@ -155,7 +155,7 @@ pub enum GenericSize<LengthPercent> {
     #[animation(error)]
     MinContent,
     #[animation(error)]
-    MozFitContent,
+    FitContent,
     #[animation(error)]
     MozAvailable,
     #[animation(error)]
@@ -202,13 +202,11 @@ pub enum GenericMaxSize<LengthPercent> {
     LengthPercentage(LengthPercent),
     None,
     #[animation(error)]
-    #[parse(aliases = "-moz-max-content")]
     MaxContent,
     #[animation(error)]
-    #[parse(aliases = "-moz-min-content")]
     MinContent,
     #[animation(error)]
-    MozFitContent,
+    FitContent,
     #[animation(error)]
     MozAvailable,
     #[animation(error)]

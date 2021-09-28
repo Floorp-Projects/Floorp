@@ -150,7 +150,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
         prefCoord = minCoord;
         break;
       case StyleSize::Tag::MozAvailable:
-      case StyleSize::Tag::MozFitContent:
+      case StyleSize::Tag::FitContent:
       case StyleSize::Tag::FitContentFunction:
         // TODO: Bug 1708310: Make sure fit-content() work properly in table.
       case StyleSize::Tag::Auto:
@@ -163,7 +163,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   if (nsIFrame::ToExtremumLength(maxISize)) {
     if (!aIsCell || maxISize.IsMozAvailable()) {
       maxISize = StyleMaxSize::None();
-    } else if (maxISize.IsMozFitContent() || maxISize.IsFitContentFunction()) {
+    } else if (maxISize.IsFitContent() || maxISize.IsFitContentFunction()) {
       // TODO: Bug 1708310: Make sure fit-content() work properly in table.
       // for 'max-inline-size', '-moz-fit-content' is like 'max-content'
       maxISize = StyleMaxSize::MaxContent();
@@ -190,7 +190,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   if (nsIFrame::ToExtremumLength(maxISize)) {
     if (!aIsCell || minISize.IsMozAvailable()) {
       minISize = StyleSize::LengthPercentage(LengthPercentage::Zero());
-    } else if (minISize.IsMozFitContent() || minISize.IsFitContentFunction()) {
+    } else if (minISize.IsFitContent() || minISize.IsFitContentFunction()) {
       // TODO: Bug 1708310: Make sure fit-content() work properly in table.
       // for 'min-inline-size', '-moz-fit-content' is like 'min-content'
       minISize = StyleSize::MinContent();
