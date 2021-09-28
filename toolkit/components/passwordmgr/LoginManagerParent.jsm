@@ -316,6 +316,15 @@ class LoginManagerParent extends JSWindowActorParent {
         break;
       }
 
+      case "PasswordManager:onIgnorePasswordEdit": {
+        log("Received PasswordManager:onIgnorePasswordEdit");
+        if (gListenerForTests) {
+          log("calling gListenerForTests");
+          gListenerForTests("PasswordIgnoreEdit", {});
+        }
+        break;
+      }
+
       case "PasswordManager:autoCompleteLogins": {
         return this.doAutocompleteSearch(context.origin, data);
       }

@@ -256,6 +256,11 @@ const observer = {
         );
         if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
           log("Ignoring change event on form that hasn't been user-modified");
+          if (aEvent.composedTarget.hasBeenTypePassword) {
+            // Send notification that the password field has not been changed.
+            // This is used only for testing.
+            LoginManagerChild.forWindow(window)._ignorePasswordEdit();
+          }
           break;
         }
 
@@ -284,6 +289,10 @@ const observer = {
                 triggeredByFillingGenerated,
               }
             );
+          } else {
+            // Send a notification that we are not saving the edit to the password field.
+            // This is used only for testing.
+            LoginManagerChild.forWindow(window)._ignorePasswordEdit();
           }
         }
         break;
@@ -2225,6 +2234,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     this._fillConfirmFieldWithGeneratedPassword(passwordField);
   }
 
+  /**
+   * Notify the parent that we are ignoring the password edit
+   * so that tests can listen for this as opposed to waiting for
+   * nothing to happen.
+   */
+  _ignorePasswordEdit() {
+    if (Cu.isInAutomation) {
+      this.sendAsyncMessage("PasswordManager:onIgnorePasswordEdit", {});
+    }
+  }
   /**
    * Notify the parent that a generated password was filled into a field or
    * edited so that it can potentially be saved.
