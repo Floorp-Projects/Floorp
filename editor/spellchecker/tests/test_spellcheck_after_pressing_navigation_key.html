@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1729653
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1729653</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<textarea rows="20" cols="50">That undfgdfg seems OK.</textarea>
+<script>
+let {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+function waitForTick() {
+  return new Promise(resolve => SimpleTest.executeSoon(resolve));
+}
+
+function waitForOnSpellCheck(aTextArea) {
+  info("Waiting for onSpellCheck...");
+  return new Promise(resolve => onSpellCheck(aTextArea, resolve));
+}
+
+/** Test for Bug 1729653 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const textarea = document.querySelector("textarea");
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = "That undfgdfg".length;
+  const editor = SpecialPowers.wrap(textarea).editor;
+  const nsISelectionController = SpecialPowers.Ci.nsISelectionController;
+  const selection = editor.selectionController.getSelection(nsISelectionController.SELECTION_SPELLCHECK);
+  const spellChecker = SpecialPowers.Cu.createSpellChecker();
+  spellChecker.InitSpellChecker(editor, false);
+  info("Waiting for current dictionary update...");
+  await new Promise(resolve => spellChecker.UpdateCurrentDictionary(resolve));
+  if (selection.rangeCount === 0) {
+    await waitForOnSpellCheck(textarea);
+  }
+  if (selection.rangeCount == 1) {
+    is(
+      selection.getRangeAt(0).toString(),
+      "undfgdfg",
+      "\"undfgdfg\" should be marked as misspelled word at start"
+    );
+  } else {
+    is(selection.rangeCount, 1, "We should have a misspelled word at start");
+  }
+  synthesizeKey(" ");
+  synthesizeKey("KEY_Backspace");
+  textarea.addEventListener("keydown", event => {
+    event.stopImmediatePropagation();  // This shouldn't block spellchecker to handle it.
+  }, {once: true});
+  synthesizeKey("KEY_End");
+  await waitForTick();
+  if (selection.rangeCount === 0) {
+    await waitForOnSpellCheck(textarea);
+  }
+  if (selection.rangeCount == 1) {
+    is(
+      selection.getRangeAt(0).toString(),
+      "undfgdfg",
+      "\"undfgdfg\" should be marked as misspelled word at end"
+    );
+  } else {
+    is(selection.rangeCount, 1, "We should have a misspelled word at end");
+  }
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

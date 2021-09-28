@@ -38,9 +38,11 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
@@ -698,38 +700,54 @@ mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking() {
 //    events.
 
 nsresult mozInlineSpellChecker::RegisterEventListeners() {
-  if (NS_WARN_IF(!mEditorBase)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mEditorBase))) {
     return NS_ERROR_FAILURE;
   }
 
   StartToListenToEditSubActions();
 
   RefPtr<Document> doc = mEditorBase->GetDocument();
-  if (NS_WARN_IF(!doc)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!doc))) {
     return NS_ERROR_FAILURE;
   }
-  doc->AddEventListener(u"blur"_ns, this, true, false);
-  doc->AddEventListener(u"click"_ns, this, false, false);
-  doc->AddEventListener(u"keypress"_ns, this, false, false);
+  EventListenerManager* eventListenerManager =
+      doc->GetOrCreateListenerManager();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!eventListenerManager))) {
+    return NS_ERROR_FAILURE;
+  }
+  eventListenerManager->AddEventListenerByType(
+      this, u"blur"_ns, TrustedEventsAtSystemGroupCapture());
+  eventListenerManager->AddEventListenerByType(
+      this, u"click"_ns, TrustedEventsAtSystemGroupCapture());
+  eventListenerManager->AddEventListenerByType(
+      this, u"keydown"_ns, TrustedEventsAtSystemGroupCapture());
   return NS_OK;
 }
 
 // mozInlineSpellChecker::UnregisterEventListeners
 
 nsresult mozInlineSpellChecker::UnregisterEventListeners() {
-  if (NS_WARN_IF(!mEditorBase)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mEditorBase))) {
     return NS_ERROR_FAILURE;
   }
 
   EndListeningToEditSubActions();
 
   RefPtr<Document> doc = mEditorBase->GetDocument();
-  if (NS_WARN_IF(!doc)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!doc))) {
     return NS_ERROR_FAILURE;
   }
-  doc->RemoveEventListener(u"blur"_ns, this, true);
-  doc->RemoveEventListener(u"click"_ns, this, false);
-  doc->RemoveEventListener(u"keypress"_ns, this, false);
+  EventListenerManager* eventListenerManager =
+      doc->GetOrCreateListenerManager();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!eventListenerManager))) {
+    return NS_ERROR_FAILURE;
+  }
+  eventListenerManager->RemoveEventListenerByType(
+      this, u"blur"_ns, TrustedEventsAtSystemGroupCapture());
+  eventListenerManager->RemoveEventListenerByType(
+      this, u"click"_ns, TrustedEventsAtSystemGroupCapture());
+  eventListenerManager->RemoveEventListenerByType(
+      this, u"keydown"_ns, TrustedEventsAtSystemGroupCapture());
   return NS_OK;
 }
 
@@ -1959,64 +1977,72 @@ nsresult mozInlineSpellChecker::HandleNavigationEvent(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-mozInlineSpellChecker::HandleEvent(Event* aEvent) {
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
-
-  if (eventType.EqualsLiteral("blur")) {
-    return OnBlur(aEvent);
-  }
-  if (eventType.EqualsLiteral("click")) {
-    return OnMouseClick(aEvent);
-  }
-  if (eventType.EqualsLiteral("keypress")) {
-    return OnKeyPress(aEvent);
+NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(Event* aEvent) {
+  WidgetEvent* widgetEvent = aEvent->WidgetEventPtr();
+  if (MOZ_UNLIKELY(!widgetEvent)) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  switch (widgetEvent->mMessage) {
+    case eBlur:
+      OnBlur(*aEvent);
+      return NS_OK;
+    case eMouseClick:
+      OnMouseClick(*aEvent);
+      return NS_OK;
+    case eKeyDown:
+      OnKeyDown(*aEvent);
+      return NS_OK;
+    default:
+      MOZ_ASSERT_UNREACHABLE("You must forgot to handle new event type");
+      return NS_OK;
+  }
 }
 
-nsresult mozInlineSpellChecker::OnBlur(Event* aEvent) {
+void mozInlineSpellChecker::OnBlur(Event& aEvent) {
   // force spellcheck on blur, for instance when tabbing out of a textbox
   HandleNavigationEvent(true);
-  return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::OnMouseClick(Event* aMouseEvent) {
-  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
-  NS_ENSURE_TRUE(mouseEvent, NS_OK);
+void mozInlineSpellChecker::OnMouseClick(Event& aMouseEvent) {
+  MouseEvent* mouseEvent = aMouseEvent.AsMouseEvent();
+  if (MOZ_UNLIKELY(!mouseEvent)) {
+    return;
+  }
 
   // ignore any errors from HandleNavigationEvent as we don't want to prevent
   // anyone else from seeing this event.
   HandleNavigationEvent(mouseEvent->Button() != 0);
-  return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::OnKeyPress(Event* aKeyEvent) {
-  RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
-  NS_ENSURE_TRUE(keyEvent, NS_OK);
-
-  uint32_t keyCode = keyEvent->KeyCode();
-
-  // we only care about navigation keys that moved selection
-  switch (keyCode) {
-    case KeyboardEvent_Binding::DOM_VK_RIGHT:
-    case KeyboardEvent_Binding::DOM_VK_LEFT:
-      HandleNavigationEvent(
-          false, keyCode == KeyboardEvent_Binding::DOM_VK_RIGHT ? 1 : -1);
-      break;
-    case KeyboardEvent_Binding::DOM_VK_UP:
-    case KeyboardEvent_Binding::DOM_VK_DOWN:
-    case KeyboardEvent_Binding::DOM_VK_HOME:
-    case KeyboardEvent_Binding::DOM_VK_END:
-    case KeyboardEvent_Binding::DOM_VK_PAGE_UP:
-    case KeyboardEvent_Binding::DOM_VK_PAGE_DOWN:
-      HandleNavigationEvent(true /* force a spelling correction */);
-      break;
+void mozInlineSpellChecker::OnKeyDown(Event& aKeyEvent) {
+  WidgetKeyboardEvent* widgetKeyboardEvent =
+      aKeyEvent.WidgetEventPtr()->AsKeyboardEvent();
+  if (MOZ_UNLIKELY(!widgetKeyboardEvent)) {
+    return;
   }
 
-  return NS_OK;
+  // we only care about navigation keys that moved selection
+  switch (widgetKeyboardEvent->mKeyNameIndex) {
+    case KEY_NAME_INDEX_ArrowRight:
+      // XXX Does this work with RTL text?
+      HandleNavigationEvent(false, 1);
+      return;
+    case KEY_NAME_INDEX_ArrowLeft:
+      // XXX Does this work with RTL text?
+      HandleNavigationEvent(false, -1);
+      return;
+    case KEY_NAME_INDEX_ArrowUp:
+    case KEY_NAME_INDEX_ArrowDown:
+    case KEY_NAME_INDEX_Home:
+    case KEY_NAME_INDEX_End:
+    case KEY_NAME_INDEX_PageDown:
+    case KEY_NAME_INDEX_PageUp:
+      HandleNavigationEvent(true /* force a spelling correction */);
+      return;
+    default:
+      return;
+  }
 }
 
 // Used as the nsIEditorSpellCheck::UpdateCurrentDictionary callback.
