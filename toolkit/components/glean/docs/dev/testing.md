@@ -28,12 +28,9 @@ To turn on logging for FOG, use any of the following:
     * `logging.fog::*` to `5`
     * `logging.glean::*` to `5`
     * `logging.glean_core::*` to `5`
-    * `logging.config.clear_on_startup` to `false` (or all these prefs will be cleared on startup)
 
 For more information on logging in Firefox Desktop, see the
 [Gecko Logging docs](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Gecko_Logging).
-
-**Note:** At present Rust logging in non-main processes just doesn't work.
 
 ## `about:glean`
 
