@@ -15,7 +15,7 @@ import android.view.animation.AnimationUtils;
 import org.mozilla.focus.R;
 
 public class FloatingEraseButton extends FloatingActionButton {
-    private boolean keepHidden = true;
+    private boolean keepHidden;
 
     public FloatingEraseButton(Context context) {
         super(context);
