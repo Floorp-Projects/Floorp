@@ -609,7 +609,7 @@ already_AddRefed<AccAttributes> ARIAGridCellAccessible::NativeAttributes() {
 
 #ifdef DEBUG
   RefPtr<nsAtom> cppClass = NS_Atomize(u"cppclass"_ns);
-  attributes->SetAttribute(cppClass, u"ARIAGridCellAccessible"_ns);
+  attributes->SetAttributeStringCopy(cppClass, u"ARIAGridCellAccessible"_ns);
 #endif
 
   return attributes.forget();

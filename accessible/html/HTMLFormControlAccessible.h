@@ -355,10 +355,10 @@ class HTMLDateTimeAccessible : public AccessibleWrap {
     RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
     // Unfortunately, an nsStaticAtom can't be passed as a
     // template argument, so fetch the type from the DOM.
-    nsAutoString type;
+    nsString type;
     if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
                                        type)) {
-      attributes->SetAttribute(nsGkAtoms::textInputType, type);
+      attributes->SetAttribute(nsGkAtoms::textInputType, std::move(type));
     }
     return attributes.forget();
   }

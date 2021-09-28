@@ -104,7 +104,8 @@ void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
         HasDefinedARIAToken(ancestor, nsGkAtoms::aria_relevant) &&
         ancestor->AsElement()->GetAttr(kNameSpaceID_None,
                                        nsGkAtoms::aria_relevant, relevant)) {
-      aAttributes->SetAttribute(nsGkAtoms::containerRelevant, relevant);
+      aAttributes->SetAttributeStringCopy(nsGkAtoms::containerRelevant,
+                                          relevant);
     }
 
     // container-live, and container-live-role attributes
@@ -124,10 +125,10 @@ void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
       }
 
       if (!live.IsEmpty()) {
-        aAttributes->SetAttribute(nsGkAtoms::containerLive, live);
+        aAttributes->SetAttributeStringCopy(nsGkAtoms::containerLive, live);
         if (role) {
           aAttributes->SetAttribute(nsGkAtoms::containerLiveRole,
-                                    role->ARIARoleString());
+                                    role->roleAtom);
         }
       }
     }
@@ -143,7 +144,7 @@ void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
     if (busy.IsEmpty() && HasDefinedARIAToken(ancestor, nsGkAtoms::aria_busy) &&
         ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy,
                                        busy)) {
-      aAttributes->SetAttribute(nsGkAtoms::containerBusy, busy);
+      aAttributes->SetAttributeStringCopy(nsGkAtoms::containerBusy, busy);
     }
 
     if (ancestor == topEl) {

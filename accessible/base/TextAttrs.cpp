@@ -217,7 +217,7 @@ bool TextAttrsMgr::LangTextAttr::GetValueFor(LocalAccessible* aAccessible,
 
 void TextAttrsMgr::LangTextAttr::ExposeValue(AccAttributes* aAttributes,
                                              const nsString& aValue) {
-  aAttributes->SetAttribute(nsGkAtoms::language, aValue);
+  aAttributes->SetAttributeStringCopy(nsGkAtoms::language, aValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +397,7 @@ bool TextAttrsMgr::FontFamilyTextAttr::GetValueFor(LocalAccessible* aAccessible,
 
 void TextAttrsMgr::FontFamilyTextAttr::ExposeValue(AccAttributes* aAttributes,
                                                    const nsString& aValue) {
-  aAttributes->SetAttribute(nsGkAtoms::font_family, aValue);
+  aAttributes->SetAttributeStringCopy(nsGkAtoms::font_family, aValue);
 }
 
 bool TextAttrsMgr::FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame,
@@ -498,14 +498,13 @@ void TextAttrsMgr::FontStyleTextAttr::ExposeValue(
     aAttributes->SetAttribute(nsGkAtoms::font_style, atom);
   } else {
     auto angle = aValue.ObliqueAngle();
-    nsAutoString string;
-    string.AppendLiteral("oblique");
+    nsString string(u"oblique"_ns);
     if (angle != FontSlantStyle::kDefaultAngle) {
       string.AppendLiteral(" ");
       nsStyleUtil::AppendCSSNumber(angle, string);
       string.AppendLiteral("deg");
     }
-    aAttributes->SetAttribute(nsGkAtoms::font_style, string);
+    aAttributes->SetAttribute(nsGkAtoms::font_style, std::move(string));
   }
 }
 

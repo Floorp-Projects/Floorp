@@ -270,9 +270,9 @@ already_AddRefed<AccAttributes> DocAccessible::Attributes() {
   // Override ARIA object attributes from outerdoc.
   aria::AttrIterator attribIter(mParent->GetContent());
   while (attribIter.Next()) {
-    nsAutoString value;
+    nsString value;
     attribIter.AttrValue(value);
-    attributes->SetAttribute(attribIter.AttrName(), value);
+    attributes->SetAttribute(attribIter.AttrName(), std::move(value));
   }
 
   return attributes.forget();

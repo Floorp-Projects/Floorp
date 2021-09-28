@@ -55,6 +55,9 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       },
       [&aValueString](const DeleteEntry& val) {
         aValueString.Append(u"-delete-entry-");
+      },
+      [&aValueString](const UniquePtr<nsString>& val) {
+        aValueString.Assign(*val);
       });
 }
 

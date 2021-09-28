@@ -261,7 +261,7 @@ already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
 
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
-  nsAutoString type;
+  nsString type;
   // In the case of this element being part of a binding, the binding's
   // parent's type should have precedence. For example an input[type=number]
   // has an embedded anonymous input[type=text] (along with spinner buttons).
@@ -272,21 +272,22 @@ already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
                                                     nsGkAtoms::type, type)) ||
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
                                      type)) {
-    attributes->SetAttribute(nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
-      attributes->SetAttribute(nsGkAtoms::xmlroles, u"searchbox"_ns);
+      attributes->SetAttribute(nsGkAtoms::xmlroles, nsGkAtoms::searchbox);
     }
+    attributes->SetAttribute(nsGkAtoms::textInputType, std::move(type));
   }
 
   // If this element  has the placeholder attribute set,
   // and if that is not identical to the name, expose it as an object attribute.
-  nsAutoString placeholderText;
+  nsString placeholderText;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
                                      placeholderText)) {
     nsAutoString name;
     const_cast<HTMLTextFieldAccessible*>(this)->Name(name);
     if (!name.Equals(placeholderText)) {
-      attributes->SetAttribute(nsGkAtoms::placeholder, placeholderText);
+      attributes->SetAttribute(nsGkAtoms::placeholder,
+                               std::move(placeholderText));
     }
   }
 
