@@ -44,7 +44,6 @@ pth:testing/mozbase/mozversion
 pth:testing/raptor
 pth:testing/talos
 pth:testing/web-platform
-vendored:testing/web-platform/tests/tools/third_party/certifi
 vendored:testing/web-platform/tests/tools/third_party/h2
 vendored:testing/web-platform/tests/tools/third_party/hpack
 vendored:testing/web-platform/tests/tools/third_party/html5lib
@@ -61,6 +60,7 @@ vendored:third_party/python/atomicwrites
 vendored:third_party/python/attrs
 vendored:third_party/python/blessings
 vendored:third_party/python/cbor2
+vendored:third_party/python/certifi
 vendored:third_party/python/chardet
 vendored:third_party/python/Click
 vendored:third_party/python/compare_locales
