@@ -670,11 +670,10 @@ already_AddRefed<Promise> WorkerGlobalScope::CreateImageBitmap(
 }
 
 // https://html.spec.whatwg.org/#structured-cloning
-void WorkerGlobalScope::StructuredClone(JSContext* aCx,
-                                        JS::Handle<JS::Value> aValue,
-                                        const PostMessageOptions& aOptions,
-                                        JS::MutableHandle<JS::Value> aRetval,
-                                        ErrorResult& aError) {
+void WorkerGlobalScope::StructuredClone(
+    JSContext* aCx, JS::Handle<JS::Value> aValue,
+    const StructuredSerializeOptions& aOptions,
+    JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError) {
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
   aError = nsContentUtils::CreateJSValueFromSequenceOfObject(
       aCx, aOptions.mTransfer, &transferArray);
@@ -810,10 +809,9 @@ void DedicatedWorkerGlobalScope::PostMessage(
   mWorkerPrivate->PostMessageToParent(aCx, aMessage, aTransferable, aRv);
 }
 
-void DedicatedWorkerGlobalScope::PostMessage(JSContext* aCx,
-                                             JS::Handle<JS::Value> aMessage,
-                                             const PostMessageOptions& aOptions,
-                                             ErrorResult& aRv) {
+void DedicatedWorkerGlobalScope::PostMessage(
+    JSContext* aCx, JS::Handle<JS::Value> aMessage,
+    const StructuredSerializeOptions& aOptions, ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->PostMessageToParent(aCx, aMessage, aOptions.mTransfer, aRv);
 }

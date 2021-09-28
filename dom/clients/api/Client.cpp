@@ -109,7 +109,8 @@ void Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 }
 
 void Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                         const PostMessageOptions& aOptions, ErrorResult& aRv) {
+                         const StructuredSerializeOptions& aOptions,
+                         ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }
 
