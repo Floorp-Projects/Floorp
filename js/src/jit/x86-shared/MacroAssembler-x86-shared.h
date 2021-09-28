@@ -410,10 +410,14 @@ class MacroAssemblerX86Shared : public Assembler {
   void truncSatFloat32x4ToInt32x4(FloatRegister src, FloatRegister dest);
   void unsignedTruncSatFloat32x4ToInt32x4(FloatRegister src, FloatRegister temp,
                                           FloatRegister dest);
+  void unsignedTruncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                 FloatRegister dest);
   void truncSatFloat64x2ToInt32x4(FloatRegister src, FloatRegister temp,
                                   FloatRegister dest);
   void unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src, FloatRegister temp,
                                           FloatRegister dest);
+  void unsignedTruncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                 FloatRegister dest);
 
   void splatX16(Register input, FloatRegister output);
   void splatX8(Register input, FloatRegister output);

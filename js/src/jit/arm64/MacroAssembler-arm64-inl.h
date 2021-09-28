@@ -3542,6 +3542,28 @@ void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
   Uqxtn(Simd2S(dest), Simd2D(dest));
 }
 
+void MacroAssembler::truncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                       FloatRegister dest) {
+  Fcvtzs(Simd4S(dest), Simd4S(src));
+}
+
+void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
+    FloatRegister src, FloatRegister dest) {
+  Fcvtzu(Simd4S(dest), Simd4S(src));
+}
+
+void MacroAssembler::truncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                       FloatRegister dest) {
+  Fcvtzs(Simd2D(dest), Simd2D(src));
+  Sqxtn(Simd2S(dest), Simd2D(dest));
+}
+
+void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4Relaxed(
+    FloatRegister src, FloatRegister dest) {
+  Fcvtzu(Simd2D(dest), Simd2D(src));
+  Uqxtn(Simd2S(dest), Simd2D(dest));
+}
+
 // Floating point narrowing
 
 void MacroAssembler::convertFloat64x2ToFloat32x4(FloatRegister src,

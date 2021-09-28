@@ -1396,6 +1396,10 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I16x8ExtAddPairwiseI8x16U:
     case wasm::SimdOp::I32x4ExtAddPairwiseI16x8S:
     case wasm::SimdOp::I32x4ExtAddPairwiseI16x8U:
+    case wasm::SimdOp::I32x4RelaxedTruncSSatF32x4:
+    case wasm::SimdOp::I32x4RelaxedTruncUSatF32x4:
+    case wasm::SimdOp::I32x4RelaxedTruncSatF64x2SZero:
+    case wasm::SimdOp::I32x4RelaxedTruncSatF64x2UZero:
       // Prefer src == dest to avoid an unconditional src->dest move.
       useAtStart = true;
       reuseInput = true;

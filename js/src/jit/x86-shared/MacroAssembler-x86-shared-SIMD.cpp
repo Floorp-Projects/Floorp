@@ -1188,6 +1188,28 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   vpaddd(Operand(temp), dest, dest);
 }
 
+void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
+    FloatRegister src, FloatRegister dest) {
+  ScratchSimd128Scope scratch(asMasm());
+  asMasm().moveSimd128Float(src, dest);
+
+  // Place lanes below 80000000h into dest, otherwise into scratch.
+  // Keep dest or scratch 0 as default.
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX4(0x4f000000), scratch);
+  vcmpltps(Operand(src), scratch);
+  vpand(Operand(src), scratch, scratch);
+  vpxor(Operand(scratch), dest, dest);
+
+  // Convert lanes below 80000000h into unsigned int without issues.
+  vcvttps2dq(dest, dest);
+  // Knowing IEEE-754 number representation, to convert lanes above
+  // 7FFFFFFFh, just shift left by 7 bits.
+  vpslld(Imm32(7), scratch, scratch);
+
+  // Combine the results.
+  vpaddd(Operand(scratch), dest, dest);
+}
+
 void MacroAssemblerX86Shared::unsignedConvertInt32x4ToFloat64x2(
     FloatRegister src, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
@@ -1229,6 +1251,20 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(
   asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(4503599627370496.0),
                                     temp);
   vaddpd(Operand(temp), dest, dest);
+  vshufps(0x88, scratch, dest, dest);
+}
+
+void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4Relaxed(
+    FloatRegister src, FloatRegister dest) {
+  ScratchSimd128Scope scratch(asMasm());
+  asMasm().moveSimd128Float(src, dest);
+
+  // The same as unsignedConvertInt32x4ToFloat64x2, but without NaN
+  // and out-of-bounds checks.
+  vroundpd(SSERoundingMode::Trunc, Operand(dest), dest);
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(4503599627370496.0),
+                                    scratch);
+  vaddpd(Operand(scratch), dest, dest);
   vshufps(0x88, scratch, dest, dest);
 }
 
