@@ -72,6 +72,7 @@ class CombinedHistorySuggestionProvider(
         }
 
         val combinedSuggestions = (metadataSuggestions.await() + historySuggestions.await())
+            .distinctBy { it.description }
             .take(maxNumberOfSuggestions)
         combinedSuggestions.firstOrNull()?.description?.let { url -> engine?.speculativeConnect(url) }
 

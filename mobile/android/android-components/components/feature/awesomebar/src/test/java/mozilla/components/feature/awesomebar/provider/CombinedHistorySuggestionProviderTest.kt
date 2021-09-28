@@ -90,4 +90,18 @@ class CombinedHistorySuggestionProviderTest {
         assertEquals(1, result.size)
         assertEquals("http://www.mozilla.com/firefox", result[0].description)
     }
+
+    @Test
+    fun `GIVEN duplicated metadata and storage entries WHEN user changes input THEN return distinct suggestions`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
+        val history = InMemoryHistoryStorage()
+        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        val provider = CombinedHistorySuggestionProvider(history, storage, mock())
+
+        val result = provider.onInputChanged("moz")
+
+        assertEquals(1, result.size)
+        assertEquals("http://www.mozilla.com", result[0].description)
+    }
 }
