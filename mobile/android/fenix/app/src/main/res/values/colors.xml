@@ -282,7 +282,7 @@
     </array>
 
     <!-- Home screen -->
-    <color name="home_show_all_button_text">@color/photonDarkGrey05</color>
+    <color name="home_show_all_button_text">@color/photonViolet70</color>
 
     <!-- Quick action buttons-->
 

@@ -820,6 +820,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun createFirstCollectionTest() {
         val settings = activityTestRule.activity.applicationContext.settings()
         settings.hasShownHomeOnboardingDialog = true
@@ -853,6 +854,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun verifyExpandedCollectionItemsTest() {
         val settings = activityTestRule.activity.applicationContext.settings()
         settings.hasShownHomeOnboardingDialog = true

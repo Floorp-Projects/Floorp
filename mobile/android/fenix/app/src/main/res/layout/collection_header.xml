@@ -2,11 +2,25 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/collections_header_text"
-    android:layout_width="wrap_content"
-    android:layout_height="56dp"
-    android:gravity="center_vertical"
-    android:layout_marginTop="40dp"
-    android:text="@string/collections_header"
-    android:textAppearance="@style/Header20TextStyle" />
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="40dp">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/collections_header_text"
+        style="@style/Header16TextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="@string/collections_header"
+        android:maxLines="2"
+        android:gravity="center_vertical"
+        android:paddingTop="16dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

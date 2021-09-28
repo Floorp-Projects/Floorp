@@ -19,7 +19,6 @@ to keep layout_width="match_parent"-->
         android:minWidth="448dp"
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="8dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:overScrollMode="never"

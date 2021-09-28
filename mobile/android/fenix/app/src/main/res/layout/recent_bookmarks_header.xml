@@ -12,31 +12,35 @@
     android:layout_marginTop="40dp">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/recentlySavedBookmarksHeader"
-        style="@style/Header20TextStyle"
+        android:id="@+id/header"
+        style="@style/Header16TextStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:contentDescription="@string/recently_saved_bookmarks_content_description"
-        android:maxLines="1"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
+        android:maxLines="2"
         android:text="@string/recently_bookmarked"
+        android:gravity="center_vertical"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/showAllBookmarksButton"
-        style="@style/Button12TextStyle"
+        style="@style/Button14TextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/recently_saved_show_all_content_description"
-        android:padding="16dp"
+        android:paddingVertical="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="0dp"
+        android:gravity="end"
         android:text="@string/recently_saved_show_all"
         android:textColor="@color/home_show_all_button_text"
         android:maxLines="1"
         android:scrollbars="none"
         android:nestedScrollingEnabled="false"
-        app:layout_constraintBottom_toBottomOf="@id/recentlySavedBookmarksHeader"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
