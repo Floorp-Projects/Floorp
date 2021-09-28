@@ -14,9 +14,10 @@ add_task(async function test_messageHandlerRegistry_API() {
   const sessionId = 1;
   const type = RootMessageHandler.type;
 
-  const rootMessageHandler = MessageHandlerRegistry.getOrCreateMessageHandler(
-    sessionId,
-    type
+  const rootMessageHandlerRegistry = new MessageHandlerRegistry(type);
+
+  const rootMessageHandler = rootMessageHandlerRegistry.getOrCreateMessageHandler(
+    sessionId
   );
   ok(rootMessageHandler, "Valid ROOT MessageHandler created");
 
@@ -25,21 +26,13 @@ add_task(async function test_messageHandlerRegistry_API() {
 
   is(
     rootMessageHandler,
-    MessageHandlerRegistry.getExistingMessageHandler(
-      sessionId,
-      type,
-      contextId
-    ),
+    rootMessageHandlerRegistry.getExistingMessageHandler(sessionId),
     "ROOT MessageHandler can be retrieved from the registry"
   );
 
   rootMessageHandler.destroy();
   ok(
-    !MessageHandlerRegistry.getExistingMessageHandler(
-      sessionId,
-      type,
-      contextId
-    ),
+    !rootMessageHandlerRegistry.getExistingMessageHandler(sessionId),
     "Destroyed ROOT MessageHandler is no longer returned by the Registry"
   );
 });

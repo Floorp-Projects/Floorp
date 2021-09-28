@@ -101,7 +101,7 @@ class FrameTransport {
   }
 
   toString() {
-    return `[object ${this.constructor.name} ${this._messageHandler.key}]`;
+    return `[object ${this.constructor.name} ${this._messageHandler.name}]`;
   }
 
   _getAllBrowsingContexts() {

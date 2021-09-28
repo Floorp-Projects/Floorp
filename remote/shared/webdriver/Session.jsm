@@ -18,10 +18,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  MessageHandlerRegistry:
-    "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
+  RootMessageHandlerRegistry:
+    "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.jsm",
   WebDriverBiDiConnection:
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
@@ -240,9 +240,8 @@ class WebDriverSession {
 
   get messageHandler() {
     if (!this._messageHandler) {
-      this._messageHandler = MessageHandlerRegistry.getOrCreateMessageHandler(
-        this.id,
-        RootMessageHandler.type
+      this._messageHandler = RootMessageHandlerRegistry.getOrCreateMessageHandler(
+        this.id
       );
       this._onMessageHandlerEvent = this._onMessageHandlerEvent.bind(this);
       this._messageHandler.on(
