@@ -59,6 +59,8 @@ class GeckoInstance(object):
         "dom.max_script_run_time": 0,
         # DOM Push
         "dom.push.connection.enabled": False,
+        # Disable dialog abuse if alerts are triggered too quickly
+        "dom.successive_dialog_time_limit": 0,
         # Only load extensions from the application and user profile
         # AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         "extensions.autoDisableScopes": 0,

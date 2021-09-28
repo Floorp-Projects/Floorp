@@ -179,6 +179,9 @@ const COMMON_PREFERENCES = new Map([
   // DOM Push
   ["dom.push.connection.enabled", false],
 
+  // Disable dialog abuse if alerts are triggered too quickly.
+  ["dom.successive_dialog_time_limit", 0],
+
   // Only load extensions from the application and user profile
   // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
   //
