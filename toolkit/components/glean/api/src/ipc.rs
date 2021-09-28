@@ -13,7 +13,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 #[cfg(feature = "with_gecko")]
 use {
-    std::convert::TryInto,
     std::sync::atomic::{AtomicU32, Ordering},
     xpcom::interfaces::nsIXULRuntime,
 };
@@ -54,54 +53,19 @@ where
 /// Thread-safe.
 #[cfg(feature = "with_gecko")]
 static PROCESS_TYPE: Lazy<AtomicU32> = Lazy::new(|| {
-    extern "C" {
-        fn FOG_GetProcessType() -> i32;
+    if let Some(appinfo) = xpcom::services::get_XULRuntime() {
+        let mut process_type = nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32;
+        let rv = unsafe { appinfo.GetProcessType(&mut process_type) };
+        if rv.succeeded() {
+            return AtomicU32::new(process_type);
+        }
     }
-    // SAFETY NOTE: Safe because it returns a primitive by value.
-    let process_type = unsafe { FOG_GetProcessType() };
-    // It's impossible for i32 to overflow u32, but maybe someone got clever
-    // and introduced a negative process type constant. Default to parent.
-    let process_type = process_type
-        .try_into()
-        .unwrap_or(nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32);
-    // We don't have process-specific init locations outside of the main
-    // process, so we introduce this side-effect to a global static init.
-    // This is the absolute first time we decide which process type we're
-    // treating this process as, so this is the earliest we can do this.
-    register_process_shutdown(process_type);
-    AtomicU32::new(process_type)
+    AtomicU32::new(nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32)
 });
 
 #[cfg(feature = "with_gecko")]
 pub fn need_ipc() -> bool {
     PROCESS_TYPE.load(Ordering::Relaxed) != nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32
-}
-
-/// The first time we're used in a process,
-/// we'll need to start thinking about cleanup.
-///
-/// Please only call once per process.
-/// Multiple calls may register multiple handlers.
-#[cfg(feature = "with_gecko")]
-fn register_process_shutdown(process_type: u32) {
-    match process_type as i64 {
-        nsIXULRuntime::PROCESS_TYPE_DEFAULT => {
-            // Parent process shutdown is handled by the FOG XPCOM Singleton.
-        }
-        nsIXULRuntime::PROCESS_TYPE_CONTENT => {
-            // Content child shutdown is in C++ for access to RunOnShutdown().
-            extern "C" {
-                fn FOG_RegisterContentChildShutdown();
-            }
-            unsafe {
-                FOG_RegisterContentChildShutdown();
-            };
-        }
-        _ => {
-            // We don't yet support other process types.
-            log::error!("Process type {} tried to use FOG, but isn't supported! (Process type constants are in nsIXULRuntime.rs)", process_type);
-        }
-    }
 }
 
 /// An RAII that, on drop, restores the value used to determine whether FOG
