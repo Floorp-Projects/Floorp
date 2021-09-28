@@ -50,7 +50,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1605611-maps.google.com-directions-time.css",
     "injections/css/bug1610344-directv.com.co-hide-unsupported-message.css",
     "injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css",
-    "injections/css/bug1645064-s-kanava.fi-invisible-charts.css",
     "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
     "injections/css/bug1653075-livescience.com-scrollbar-width.css",
     "injections/css/bug1654877-preev.com-moz-appearance-fix.css",
@@ -76,6 +75,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
     "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
     "injections/js/bug1714612-www.rfi.it-outertext.js",
+    "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
@@ -131,6 +131,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["lib"] += [
     "lib/module_shim.js",
     "lib/shim_messaging_helper.js",
     "lib/shims.js",
+    "lib/ua_helpers.js",
     "lib/ua_overrides.js",
 ]
 
