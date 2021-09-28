@@ -19,7 +19,7 @@ namespace {
 TEST(EntropyCoderTest, PackUnpack) {
   for (int32_t i = -31; i < 32; ++i) {
     uint32_t packed = PackSigned(i);
-    EXPECT_LT(packed, 63);
+    EXPECT_LT(packed, 63u);
     int32_t unpacked = UnpackSigned(packed);
     EXPECT_EQ(i, unpacked);
   }

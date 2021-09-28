@@ -21,6 +21,13 @@ if(NOT MINGW)
 find_package(benchmark QUIET)
 
 if(benchmark_FOUND)
+  if(JPEGXL_STATIC AND NOT MINGW)
+    # benchmark::benchmark hardcodes the librt.so which obviously doesn't
+    # compile in static mode.
+    set_target_properties(benchmark::benchmark PROPERTIES
+      INTERFACE_LINK_LIBRARIES "Threads::Threads;-lrt")
+  endif()
+
   # Compiles all the benchmark files into a single binary. Individual benchmarks
   # can be run with --benchmark_filter.
   add_executable(jxl_gbench "${JPEGXL_INTERNAL_SOURCES_GBENCH}")

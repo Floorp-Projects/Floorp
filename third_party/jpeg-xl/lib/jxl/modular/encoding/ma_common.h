@@ -21,7 +21,7 @@ enum MATreeContext : size_t {
   kNumTreeContexts = 6,
 };
 
-static constexpr size_t kMaxTreeSize = 1 << 26;
+static constexpr size_t kMaxTreeSize = 1 << 22;
 
 }  // namespace jxl
 

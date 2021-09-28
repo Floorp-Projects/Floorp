@@ -181,8 +181,20 @@ class BitReader {
 
     // Skip whole bytes
     const size_t whole_bytes = skip / kBitsPerByte;
-    next_byte_ += whole_bytes;
     skip %= kBitsPerByte;
+    if (JXL_UNLIKELY(whole_bytes >
+                     static_cast<size_t>(end_minus_8_ + 8 - next_byte_))) {
+      // This is already an overflow condition (skipping past the end of the bit
+      // stream). However if we increase next_byte_ too much we risk overflowing
+      // that value and potentially making it valid again (next_byte_ < end).
+      // This will set next_byte_ to the end of the stream and still consume
+      // some bits in overread_bytes_, however the TotalBitsConsumed() will be
+      // incorrect (still larger than the TotalBytes()).
+      next_byte_ = end_minus_8_ + 8;
+      skip += kBitsPerByte;
+    } else {
+      next_byte_ += whole_bytes;
+    }
 
     Refill();
     Consume(skip);
@@ -320,8 +332,15 @@ class BitReaderScopedCloser {
     JXL_DASSERT(status_ != nullptr);
   }
   ~BitReaderScopedCloser() {
-    Status close_ret = reader_->Close();
-    if (!close_ret) *status_ = close_ret;
+    if (reader_ != nullptr) {
+      Status close_ret = reader_->Close();
+      if (!close_ret) *status_ = close_ret;
+    }
+  }
+  void CloseAndSuppressError() {
+    JXL_ASSERT(reader_ != nullptr);
+    (void)reader_->Close();
+    reader_ = nullptr;
   }
   BitReaderScopedCloser(const BitReaderScopedCloser&) = delete;
 

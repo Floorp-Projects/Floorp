@@ -569,10 +569,10 @@ Status TreeSamples::SetProperties(const std::vector<uint32_t> &properties,
                                   ModularOptions::TreeMode wp_tree_mode) {
   props_to_use = properties;
   if (wp_tree_mode == ModularOptions::TreeMode::kWPOnly) {
-    props_to_use = {kWPProp};
+    props_to_use = {static_cast<uint32_t>(kWPProp)};
   }
   if (wp_tree_mode == ModularOptions::TreeMode::kGradientOnly) {
-    props_to_use = {kGradientProp};
+    props_to_use = {static_cast<uint32_t>(kGradientProp)};
   }
   if (wp_tree_mode == ModularOptions::TreeMode::kNoWP) {
     auto it = std::find(props_to_use.begin(), props_to_use.end(), kWPProp);
@@ -943,6 +943,7 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
                          std::vector<uint32_t> &channel_pixel_count,
                          std::vector<pixel_type> &pixel_samples,
                          std::vector<pixel_type> &diff_samples) {
+  if (options.nb_repeats == 0) return;
   if (group_pixel_count.size() <= group_id) {
     group_pixel_count.resize(group_id + 1);
   }
@@ -951,8 +952,13 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
   }
   Rng rng(group_id);
   // Sample 10% of the final number of samples for property quantization.
-  float fraction = options.nb_repeats * 0.1;
-  std::geometric_distribution<uint32_t> dist(fraction);
+  float fraction = std::min(options.nb_repeats * 0.1, 0.99);
+  float inv_log_1mf = 1.0 / FastLog2f(1 - fraction);
+  auto geom_sample = [&]() {
+    float f = (rng() >> 1) * (1.0f / (1ULL << 63));
+    float log = FastLog2f(1 - f) * inv_log_1mf;
+    return static_cast<uint32_t>(log);
+  };
   size_t total_pixels = 0;
   std::vector<size_t> channel_ids;
   for (size_t i = 0; i < image.channel.size(); i++) {
@@ -991,8 +997,8 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
       }
     }
   };
-  advance(dist(rng));
-  for (; i < channel_ids.size(); advance(dist(rng) + 1)) {
+  advance(geom_sample());
+  for (; i < channel_ids.size(); advance(geom_sample() + 1)) {
     const pixel_type *row = image.channel[channel_ids[i]].Row(y);
     pixel_samples.push_back(row[x]);
     size_t xp = x == 0 ? 1 : x - 1;

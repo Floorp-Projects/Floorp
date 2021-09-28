@@ -28,7 +28,6 @@
 
 namespace jxl {
 
-void PrintTree(const Tree &tree, const std::string &path);
 Tree LearnTree(TreeSamples &&tree_samples, size_t total_pixels,
                const ModularOptions &options,
                const std::vector<ModularMultiplierInfo> &multiplier_info = {},

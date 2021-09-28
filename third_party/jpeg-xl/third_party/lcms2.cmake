@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(lcms2 STATIC
+add_library(lcms2 STATIC EXCLUDE_FROM_ALL
   lcms/src/cmsalpha.c
   lcms/src/cmscam02.c
   lcms/src/cmscgats.c

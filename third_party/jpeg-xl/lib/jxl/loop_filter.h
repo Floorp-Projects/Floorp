@@ -22,7 +22,7 @@ namespace jxl {
 
 struct LoopFilter : public Fields {
   LoopFilter();
-  const char* Name() const override { return "LoopFilter"; }
+  JXL_FIELDS_NAME(LoopFilter)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 

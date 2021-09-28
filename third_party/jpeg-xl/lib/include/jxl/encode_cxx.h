@@ -3,6 +3,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/// @addtogroup libjxl_encoder
+///@{
+///
 /// @file encode_cxx.h
 /// @brief C++ header-only helper for @ref encode.h.
 ///
@@ -50,3 +53,5 @@ static inline JxlEncoderPtr JxlEncoderMake(
 }
 
 #endif  // JXL_ENCODE_CXX_H_
+
+/// @}

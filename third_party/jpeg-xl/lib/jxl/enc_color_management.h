@@ -47,8 +47,7 @@ class ColorSpaceTransform {
   struct SkcmsICC;
   std::unique_ptr<SkcmsICC> skcms_icc_;
 #else
-  // One per thread - cannot share because of caching.
-  std::vector<void*> transforms_;
+  void* lcms_transform_;
 #endif
 
   ImageF buf_src_;

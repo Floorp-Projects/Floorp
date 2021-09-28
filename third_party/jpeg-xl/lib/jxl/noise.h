@@ -43,8 +43,9 @@ static inline std::pair<int, float> IndexAndFrac(float x) {
   float scaled_x = std::max(0.f, x * kScale);
   float floor_x;
   float frac_x = std::modf(scaled_x, &floor_x);
-  if (JXL_UNLIKELY(scaled_x > kScaleNumerator)) {
-    floor_x = kScaleNumerator;
+  if (JXL_UNLIKELY(scaled_x >= kScaleNumerator)) {
+    floor_x = kScaleNumerator - 1;
+    frac_x = 1;
   }
   return std::make_pair(static_cast<size_t>(static_cast<int>(floor_x)), frac_x);
 }

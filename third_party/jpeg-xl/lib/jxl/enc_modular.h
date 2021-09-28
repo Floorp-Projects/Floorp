@@ -85,6 +85,7 @@ class ModularFrameEncoder {
   std::vector<ModularMultiplierInfo> multiplier_info;
   std::vector<std::vector<uint32_t>> gi_channel;
   std::vector<size_t> image_widths;
+  Predictor delta_pred = Predictor::Average4;
 };
 
 }  // namespace jxl

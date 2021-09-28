@@ -100,7 +100,7 @@ V FastCosf(const DF df, V x) {
   const auto cosx_scale2 = MulAdd(cosx_scale1, cosx_scale1, Set(df, -1));
   // Step 6: change sign if needed.
   const Rebind<uint32_t, DF> du;
-  auto signbit = ShiftLeft<31>(BitCast(du, VecFromMask(above_pihalf)));
+  auto signbit = ShiftLeft<31>(BitCast(du, VecFromMask(df, above_pihalf)));
   return BitCast(df, signbit ^ BitCast(du, cosx_scale2));
 }
 
@@ -124,7 +124,7 @@ V FastErff(const DF df, V x) {
   const auto result = NegMulAdd(inv_denom5, inv_denom5, Set(df, 1.0f));
   // Change sign if needed.
   const Rebind<uint32_t, DF> du;
-  auto signbit = ShiftLeft<31>(BitCast(du, VecFromMask(xle0)));
+  auto signbit = ShiftLeft<31>(BitCast(du, VecFromMask(df, xle0)));
   return BitCast(df, signbit ^ BitCast(du, result));
 }
 

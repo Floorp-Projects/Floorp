@@ -22,6 +22,7 @@
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/opsin_params.h"
+#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/xorshift128plus-inl.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -31,7 +32,9 @@ namespace HWY_NAMESPACE {
 using hwy::HWY_NAMESPACE::ShiftRight;
 using hwy::HWY_NAMESPACE::Vec;
 
-using D = HWY_CAPPED(float, 1);
+using D = HWY_CAPPED(float, kBlockDim);
+using DI = hwy::HWY_NAMESPACE::Rebind<int, D>;
+using DI8 = hwy::HWY_NAMESPACE::Repartition<uint8_t, D>;
 
 // Converts one vector's worth of random bits to floats in [1, 2).
 // NOTE: as the convolution kernel sums to 0, it doesn't matter if inputs are in
@@ -103,21 +106,68 @@ class StrengthEvalLut {
   using V = Vec<D>;
 
   explicit StrengthEvalLut(const NoiseParams& noise_params)
-      : noise_params_(noise_params) {}
+#if HWY_TARGET == HWY_SCALAR
+      : noise_params_(noise_params)
+#endif
+  {
+#if HWY_TARGET != HWY_SCALAR
+    uint32_t lut[8];
+    memcpy(lut, noise_params.lut, sizeof(lut));
+    for (size_t i = 0; i < 8; i++) {
+      low16_lut[2 * i] = (lut[i] >> 0) & 0xFF;
+      low16_lut[2 * i + 1] = (lut[i] >> 8) & 0xFF;
+      high16_lut[2 * i] = (lut[i] >> 16) & 0xFF;
+      high16_lut[2 * i + 1] = (lut[i] >> 24) & 0xFF;
+    }
+#endif
+  }
 
   V operator()(const V vx) const {
-    float x;
-    Store(vx, D(), &x);
-    std::pair<int, float> pos = IndexAndFrac(x);
-    JXL_DASSERT(pos.first >= 0 && static_cast<size_t>(pos.first) <
-                                      NoiseParams::kNumNoisePoints - 1);
-    float low = noise_params_.lut[pos.first];
-    float hi = noise_params_.lut[pos.first + 1];
-    return Set(D(), low * (1.0f - pos.second) + hi * pos.second);
+    constexpr size_t kScale = NoiseParams::kNumNoisePoints - 2;
+    auto scaled_vx = Max(Zero(D()), vx * Set(D(), kScale));
+    auto floor_x = Floor(scaled_vx);
+    auto frac_x = scaled_vx - floor_x;
+    floor_x = IfThenElse(scaled_vx >= Set(D(), kScale), Set(D(), kScale - 1),
+                         floor_x);
+    frac_x = IfThenElse(scaled_vx >= Set(D(), kScale), Set(D(), 1), frac_x);
+    auto floor_x_int = ConvertTo(DI(), floor_x);
+#if HWY_TARGET == HWY_SCALAR
+    auto low = Set(D(), noise_params_.lut[floor_x_int.raw]);
+    auto hi = Set(D(), noise_params_.lut[floor_x_int.raw + 1]);
+#else
+    // Set each lane's bytes to {0, 0, 2x+1, 2x}.
+    auto floorx_indices_low =
+        floor_x_int * Set(DI(), 0x0202) + Set(DI(), 0x0100);
+    // Set each lane's bytes to {2x+1, 2x, 0, 0}.
+    auto floorx_indices_hi =
+        floor_x_int * Set(DI(), 0x02020000) + Set(DI(), 0x01000000);
+    // load LUT
+    auto low16 = BitCast(DI(), LoadDup128(DI8(), low16_lut));
+    auto lowm = Set(DI(), 0xFFFF);
+    auto hi16 = BitCast(DI(), LoadDup128(DI8(), high16_lut));
+    auto him = Set(DI(), 0xFFFF0000);
+    // low = noise_params.lut[floor_x]
+    auto low =
+        BitCast(D(), (TableLookupBytes(low16, floorx_indices_low) & lowm) |
+                         (TableLookupBytes(hi16, floorx_indices_hi) & him));
+    // hi = noise_params.lut[floor_x+1]
+    floorx_indices_low += Set(DI(), 0x0202);
+    floorx_indices_hi += Set(DI(), 0x02020000);
+    auto hi =
+        BitCast(D(), (TableLookupBytes(low16, floorx_indices_low) & lowm) |
+                         (TableLookupBytes(hi16, floorx_indices_hi) & him));
+#endif
+    return MulAdd(hi - low, frac_x, low);
   }
 
  private:
-  const NoiseParams noise_params_;
+#if HWY_TARGET != HWY_SCALAR
+  // noise_params.lut transformed into two 16-bit lookup tables.
+  HWY_ALIGN uint8_t high16_lut[16];
+  HWY_ALIGN uint8_t low16_lut[16];
+#else
+  const NoiseParams& noise_params_;
+#endif
 };
 
 template <class D>
@@ -166,6 +216,8 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
   float ytox = cmap.YtoXRatio(0);
   float ytob = cmap.YtoBRatio(0);
 
+  const size_t xsize_v = RoundUpTo(xsize, Lanes(d));
+
   for (size_t y = 0; y < ysize; ++y) {
     float* JXL_RESTRICT row_x = opsin_rect.PlaneRow(opsin, 0, y);
     float* JXL_RESTRICT row_y = opsin_rect.PlaneRow(opsin, 1, y);
@@ -173,6 +225,10 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
     const float* JXL_RESTRICT row_rnd_r = noise_rect.ConstPlaneRow(noise, 0, y);
     const float* JXL_RESTRICT row_rnd_g = noise_rect.ConstPlaneRow(noise, 1, y);
     const float* JXL_RESTRICT row_rnd_c = noise_rect.ConstPlaneRow(noise, 2, y);
+    // Needed by the calls to Floor() in StrengthEvalLut. Only arithmetic and
+    // shuffles are otherwise done on the data, so this is safe.
+    msan::UnpoisonMemory(row_x + xsize, (xsize_v - xsize) * sizeof(float));
+    msan::UnpoisonMemory(row_y + xsize, (xsize_v - xsize) * sizeof(float));
     for (size_t x = 0; x < xsize; x += Lanes(d)) {
       const auto vx = Load(d, row_x + x);
       const auto vy = Load(d, row_y + x);
@@ -189,6 +245,9 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
                     noise_strength_r, ytox, ytob, row_x + x, row_y + x,
                     row_b + x);
     }
+    msan::PoisonMemory(row_x + xsize, (xsize_v - xsize) * sizeof(float));
+    msan::PoisonMemory(row_y + xsize, (xsize_v - xsize) * sizeof(float));
+    msan::PoisonMemory(row_b + xsize, (xsize_v - xsize) * sizeof(float));
   }
 }
 

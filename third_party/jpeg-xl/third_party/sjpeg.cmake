@@ -19,5 +19,9 @@ set(SJPEG_BUILD_EXAMPLES NO CACHE BOOL "Examples")
 # This setting makes it prefer the new version.
 set(OpenGL_GL_PREFERENCE GLVND)
 
+# Build SJPEG as a static library.
+set(BUILD_SHARED_LIBS_BACKUP ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(sjpeg EXCLUDE_FROM_ALL)
 target_include_directories(sjpeg PUBLIC "${CMAKE_CURRENT_LIST_DIR}/sjpeg/src/")
+set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_BACKUP})

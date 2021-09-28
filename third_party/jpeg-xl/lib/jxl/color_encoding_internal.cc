@@ -106,144 +106,6 @@ std::string ToString(RenderingIntent rendering_intent) {
             static_cast<uint32_t>(rendering_intent));
 }
 
-template <typename Enum>
-Status ParseEnum(const std::string& token, Enum* value) {
-  std::string str;
-  for (Enum e : Values<Enum>()) {
-    if (ToString(e) == token) {
-      *value = e;
-      return true;
-    }
-  }
-  return false;
-}
-
-class Tokenizer {
- public:
-  Tokenizer(const std::string* input, char separator)
-      : input_(input), separator_(separator) {}
-
-  Status Next(std::string* JXL_RESTRICT next) {
-    const size_t end = input_->find(separator_, start_);
-    if (end == std::string::npos) {
-      *next = input_->substr(start_);  // rest of string
-    } else {
-      *next = input_->substr(start_, end - start_);
-    }
-    if (next->empty()) return JXL_FAILURE("Missing token");
-    start_ = end + 1;
-    return true;
-  }
-
- private:
-  const std::string* const input_;  // not owned
-  const char separator_;
-  size_t start_ = 0;  // of next token
-};
-
-Status ParseDouble(const std::string& num, double* JXL_RESTRICT d) {
-  char* end;
-  errno = 0;
-  *d = strtod(num.c_str(), &end);
-  if (*d == 0.0 && end == num.c_str()) {
-    return JXL_FAILURE("Invalid double: %s", num.c_str());
-  }
-  if (std::isnan(*d)) {
-    return JXL_FAILURE("Invalid double: %s", num.c_str());
-  }
-  if (errno == ERANGE) {
-    return JXL_FAILURE("Double out of range: %s", num.c_str());
-  }
-  return true;
-}
-
-Status ParseDouble(Tokenizer* tokenizer, double* JXL_RESTRICT d) {
-  std::string num;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&num));
-  return ParseDouble(num, d);
-}
-
-Status ParseColorSpace(Tokenizer* JXL_RESTRICT tokenizer,
-                       ColorEncoding* JXL_RESTRICT c) {
-  std::string str;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  ColorSpace cs;
-  if (ParseEnum(str, &cs)) {
-    c->SetColorSpace(cs);
-    return true;
-  }
-
-  return JXL_FAILURE("Unknown ColorSpace %s", str.c_str());
-}
-
-Status ParseWhitePoint(Tokenizer* JXL_RESTRICT tokenizer,
-                       ColorEncoding* JXL_RESTRICT c) {
-  if (c->ImplicitWhitePoint()) return true;
-
-  std::string str;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (ParseEnum(str, &c->white_point)) return true;
-
-  CIExy xy;
-  Tokenizer xy_tokenizer(&str, ';');
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.x));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.y));
-  if (c->SetWhitePoint(xy)) return true;
-
-  return JXL_FAILURE("Invalid white point %s", str.c_str());
-}
-
-Status ParsePrimaries(Tokenizer* JXL_RESTRICT tokenizer,
-                      ColorEncoding* JXL_RESTRICT c) {
-  if (!c->HasPrimaries()) return true;
-
-  std::string str;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (ParseEnum(str, &c->primaries)) return true;
-
-  PrimariesCIExy xy;
-  Tokenizer xy_tokenizer(&str, ';');
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.r.x));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.r.y));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.g.x));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.g.y));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.b.x));
-  JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, &xy.b.y));
-  if (c->SetPrimaries(xy)) return true;
-
-  return JXL_FAILURE("Invalid primaries %s", str.c_str());
-}
-
-Status ParseRenderingIntent(Tokenizer* JXL_RESTRICT tokenizer,
-                            ColorEncoding* JXL_RESTRICT c) {
-  std::string str;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (ParseEnum(str, &c->rendering_intent)) return true;
-
-  return JXL_FAILURE("Invalid RenderingIntent %s\n", str.c_str());
-}
-
-Status ParseTransferFunction(Tokenizer* JXL_RESTRICT tokenizer,
-                             ColorEncoding* JXL_RESTRICT c) {
-  if (c->tf.SetImplicit()) return true;
-
-  std::string str;
-  JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  TransferFunction transfer_function;
-  if (ParseEnum(str, &transfer_function)) {
-    c->tf.SetTransferFunction(transfer_function);
-    return true;
-  }
-
-  if (str[0] == 'g') {
-    double gamma;
-    JXL_RETURN_IF_ERROR(ParseDouble(str.substr(1), &gamma));
-    if (c->tf.SetGamma(gamma)) return true;
-  }
-
-  return JXL_FAILURE("Invalid gamma %s", str.c_str());
-}
-
 static double F64FromCustomxyI32(const int32_t i) { return i * 1E-6; }
 static Status F64ToCustomxyI32(const double f, int32_t* JXL_RESTRICT i) {
   if (!(-4 <= f && f <= 4)) {
@@ -251,6 +113,93 @@ static Status F64ToCustomxyI32(const double f, int32_t* JXL_RESTRICT i) {
   }
   *i = static_cast<int32_t>(roundf(f * 1E6));
   return true;
+}
+
+Status ConvertExternalToInternalWhitePoint(const JxlWhitePoint external,
+                                           WhitePoint* internal) {
+  switch (external) {
+    case JXL_WHITE_POINT_D65:
+      *internal = WhitePoint::kD65;
+      return true;
+    case JXL_WHITE_POINT_CUSTOM:
+      *internal = WhitePoint::kCustom;
+      return true;
+    case JXL_WHITE_POINT_E:
+      *internal = WhitePoint::kE;
+      return true;
+    case JXL_WHITE_POINT_DCI:
+      *internal = WhitePoint::kDCI;
+      return true;
+  }
+  return JXL_FAILURE("Invalid WhitePoint enum value");
+}
+
+Status ConvertExternalToInternalPrimaries(const JxlPrimaries external,
+                                          Primaries* internal) {
+  switch (external) {
+    case JXL_PRIMARIES_SRGB:
+      *internal = Primaries::kSRGB;
+      return true;
+    case JXL_PRIMARIES_CUSTOM:
+      *internal = Primaries::kCustom;
+      return true;
+    case JXL_PRIMARIES_2100:
+      *internal = Primaries::k2100;
+      return true;
+    case JXL_PRIMARIES_P3:
+      *internal = Primaries::kP3;
+      return true;
+  }
+  return JXL_FAILURE("Invalid Primaries enum value");
+}
+
+Status ConvertExternalToInternalTransferFunction(
+    const JxlTransferFunction external, TransferFunction* internal) {
+  switch (external) {
+    case JXL_TRANSFER_FUNCTION_709:
+      *internal = TransferFunction::k709;
+      return true;
+    case JXL_TRANSFER_FUNCTION_UNKNOWN:
+      *internal = TransferFunction::kUnknown;
+      return true;
+    case JXL_TRANSFER_FUNCTION_LINEAR:
+      *internal = TransferFunction::kLinear;
+      return true;
+    case JXL_TRANSFER_FUNCTION_SRGB:
+      *internal = TransferFunction::kSRGB;
+      return true;
+    case JXL_TRANSFER_FUNCTION_PQ:
+      *internal = TransferFunction::kPQ;
+      return true;
+    case JXL_TRANSFER_FUNCTION_DCI:
+      *internal = TransferFunction::kDCI;
+      return true;
+    case JXL_TRANSFER_FUNCTION_HLG:
+      *internal = TransferFunction::kHLG;
+      return true;
+    case JXL_TRANSFER_FUNCTION_GAMMA:
+      return JXL_FAILURE("Gamma should be handled separately");
+  }
+  return JXL_FAILURE("Invalid TransferFunction enum value");
+}
+
+Status ConvertExternalToInternalRenderingIntent(
+    const JxlRenderingIntent external, RenderingIntent* internal) {
+  switch (external) {
+    case JXL_RENDERING_INTENT_PERCEPTUAL:
+      *internal = RenderingIntent::kPerceptual;
+      return true;
+    case JXL_RENDERING_INTENT_RELATIVE:
+      *internal = RenderingIntent::kRelative;
+      return true;
+    case JXL_RENDERING_INTENT_SATURATION:
+      *internal = RenderingIntent::kSaturation;
+      return true;
+    case JXL_RENDERING_INTENT_ABSOLUTE:
+      *internal = RenderingIntent::kAbsolute;
+      return true;
+  }
+  return JXL_FAILURE("Invalid RenderingIntent enum value");
 }
 
 }  // namespace
@@ -522,17 +471,6 @@ std::string Description(const ColorEncoding& c_in) {
   return d;
 }
 
-Status ParseDescription(const std::string& description,
-                        ColorEncoding* JXL_RESTRICT c) {
-  Tokenizer tokenizer(&description, '_');
-  JXL_RETURN_IF_ERROR(ParseColorSpace(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseWhitePoint(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParsePrimaries(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseRenderingIntent(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseTransferFunction(&tokenizer, c));
-  return true;
-}
-
 Customxy::Customxy() { Bundle::Init(this); }
 Status Customxy::VisitFields(Visitor* JXL_RESTRICT visitor) {
   uint32_t ux = PackSigned(x);
@@ -554,8 +492,12 @@ Status CustomTransferFunction::VisitFields(Visitor* JXL_RESTRICT visitor) {
     JXL_QUIET_RETURN_IF_ERROR(visitor->Bool(false, &have_gamma_));
 
     if (visitor->Conditional(have_gamma_)) {
+      // Gamma is represented as a 24-bit int, the exponent used is
+      // gamma_ / 1e7. Valid values are (0, 1]. On the low end side, we also
+      // limit it to kMaxGamma/1e7.
       JXL_QUIET_RETURN_IF_ERROR(visitor->Bits(24, kGammaMul, &gamma_));
-      if (gamma_ > kGammaMul || gamma_ * kMaxGamma < kGammaMul) {
+      if (gamma_ > kGammaMul ||
+          static_cast<uint64_t>(gamma_) * kMaxGamma < kGammaMul) {
         return JXL_FAILURE("Invalid gamma %u", gamma_);
       }
     }
@@ -665,24 +607,83 @@ void ConvertInternalToExternalColorEncoding(const ColorEncoding& internal,
       static_cast<JxlRenderingIntent>(internal.rendering_intent);
 }
 
+Status ConvertExternalToInternalColorEncoding(const JxlColorEncoding& external,
+                                              ColorEncoding* internal) {
+  internal->SetColorSpace(static_cast<ColorSpace>(external.color_space));
+
+  JXL_RETURN_IF_ERROR(ConvertExternalToInternalWhitePoint(
+      external.white_point, &internal->white_point));
+  if (external.white_point == JXL_WHITE_POINT_CUSTOM) {
+    CIExy wp;
+    wp.x = external.white_point_xy[0];
+    wp.y = external.white_point_xy[1];
+    JXL_RETURN_IF_ERROR(internal->SetWhitePoint(wp));
+  }
+
+  if (external.color_space == JXL_COLOR_SPACE_RGB ||
+      external.color_space == JXL_COLOR_SPACE_UNKNOWN) {
+    JXL_RETURN_IF_ERROR(ConvertExternalToInternalPrimaries(
+        external.primaries, &internal->primaries));
+    if (external.primaries == JXL_PRIMARIES_CUSTOM) {
+      PrimariesCIExy primaries;
+      primaries.r.x = external.primaries_red_xy[0];
+      primaries.r.y = external.primaries_red_xy[1];
+      primaries.g.x = external.primaries_green_xy[0];
+      primaries.g.y = external.primaries_green_xy[1];
+      primaries.b.x = external.primaries_blue_xy[0];
+      primaries.b.y = external.primaries_blue_xy[1];
+      JXL_RETURN_IF_ERROR(internal->SetPrimaries(primaries));
+    }
+  }
+  CustomTransferFunction tf;
+  if (external.transfer_function == JXL_TRANSFER_FUNCTION_GAMMA) {
+    JXL_RETURN_IF_ERROR(tf.SetGamma(external.gamma));
+  } else {
+    TransferFunction tf_enum;
+    // JXL_TRANSFER_FUNCTION_GAMMA is not handled by this function since there's
+    // no internal enum value for it.
+    JXL_RETURN_IF_ERROR(ConvertExternalToInternalTransferFunction(
+        external.transfer_function, &tf_enum));
+    tf.SetTransferFunction(tf_enum);
+  }
+  internal->tf = tf;
+
+  JXL_RETURN_IF_ERROR(ConvertExternalToInternalRenderingIntent(
+      external.rendering_intent, &internal->rendering_intent));
+
+  // The ColorEncoding caches an ICC profile it created earlier that may no
+  // longer match the profile with the changed fields, so re-create it.
+  if (!(internal->CreateICC())) {
+    // This is not an error: for example, it doesn't have ICC profile creation
+    // implemented for XYB. This should not be returned as error, since
+    // ConvertExternalToInternalColorEncoding still worked correctly, and what
+    // matters is that internal->ICC() will not return the wrong profile.
+  }
+
+  return true;
+}
+
 /* Chromatic adaptation matrices*/
-static float kBradford[9] = {
+static const float kBradford[9] = {
     0.8951f, 0.2664f, -0.1614f, -0.7502f, 1.7135f,
     0.0367f, 0.0389f, -0.0685f, 1.0296f,
 };
 
-static float kBradfordInv[9] = {
+static const float kBradfordInv[9] = {
     0.9869929f, -0.1470543f, 0.1599627f, 0.4323053f, 0.5183603f,
     0.0492912f, -0.0085287f, 0.0400428f, 0.9684867f,
 };
 
 // Adapts whitepoint x, y to D50
 Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
-  if (wx < 0 || wx > 1 || wy < 0 || wy > 1) {
-    return JXL_FAILURE("xy color out of range");
+  if (wx < 0 || wx > 1 || wy <= 0 || wy > 1) {
+    // Out of range values can cause division through zero
+    // further down with the bradford adaptation too.
+    return JXL_FAILURE("Invalid white point");
   }
-
   float w[3] = {wx / wy, 1.0f, (1.0f - wx - wy) / wy};
+  // 1 / tiny float can still overflow
+  JXL_RETURN_IF_ERROR(std::isfinite(w[0]) && std::isfinite(w[2]));
   float w50[3] = {0.96422f, 1.0f, 0.82521f};
 
   float lms[3];
@@ -704,12 +705,12 @@ Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
 
 Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
                          float by, float wx, float wy, float matrix[9]) {
-  if (rx < 0 || rx > 1 || ry < 0 || ry > 1 || gx < 0 || gx > 1 || gy < 0 ||
-      gy > 1 || bx < 0 || bx > 1 || by < 0 || by > 1 || wx < 0 || wx > 1 ||
-      wy < 0 || wy > 1) {
-    return JXL_FAILURE("xy color out of range");
+  if (wx < 0 || wx > 1 || wy <= 0 || wy > 1) {
+    return JXL_FAILURE("Invalid white point");
   }
-
+  // TODO(lode): also require rx, ry, gx, gy, bx, to be in range 0-1? ICC
+  // profiles in theory forbid negative XYZ values, but in practice the ACES P0
+  // color space uses a negative y for the blue primary.
   float primaries[9] = {
       rx, gx, bx, ry, gy, by, 1.0f - rx - ry, 1.0f - gx - gy, 1.0f - bx - by};
   float primaries_inv[9];
@@ -717,6 +718,8 @@ Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
   JXL_RETURN_IF_ERROR(Inv3x3Matrix(primaries_inv));
 
   float w[3] = {wx / wy, 1.0f, (1.0f - wx - wy) / wy};
+  // 1 / tiny float can still overflow
+  JXL_RETURN_IF_ERROR(std::isfinite(w[0]) && std::isfinite(w[2]));
   float xyz[3];
   MatMul(primaries_inv, w, 3, 3, 1, xyz);
 

@@ -21,6 +21,7 @@
 #include "lib/jxl/dec_patch_dictionary.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_params.h"
+#include "lib/jxl/enc_patch_dictionary.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
