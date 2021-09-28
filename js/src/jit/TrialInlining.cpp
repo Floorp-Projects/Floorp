@@ -103,16 +103,14 @@ bool TrialInliner::replaceICStub(ICEntry& entry, ICFallbackStub* fallback,
   fallback->discardStubs(cx(), &entry);
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
-  bool attached = false;
   auto* newStub = AttachBaselineCacheIRStub(cx(), writer, kind, script_,
-                                            icScript_, fallback, &attached);
+                                            icScript_, fallback);
   if (!newStub) {
     MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
     ReportOutOfMemory(cx());
     return false;
   }
 
-  MOZ_ASSERT(attached);
   MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Inlined);
   return true;
 }
