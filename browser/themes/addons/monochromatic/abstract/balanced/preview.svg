@@ -3,7 +3,7 @@
   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg width="680" height="92" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="680" height="92" fill="hsl(15, 62%, 34%)" />
-  <rect x="28" y="5" width="166" height="34" rx="4" fill="hsl(16, 73%, 97%)" stroke="transparent" stroke-width="1.5" />
+  <rect x="28" y="5" width="166" height="34" rx="4" fill="hsl(16, 73%, 97%)" stroke="hsl(0, 0%, 0%)" stroke-width="1.5" />
   <rect x="51" y="20" width="121" height="4" rx="2" fill="hsl(0, 0%, 0%)" />
   <rect x="221" y="20" width="121" height="4" rx="2" fill="hsl(0, 0%, 100%)" />
   <rect y="44" width="680" height="48" fill="hsl(15, 62%, 40%)" />

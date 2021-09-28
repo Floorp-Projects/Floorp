@@ -4,6 +4,7 @@
 
 :root {
   --toolbarbutton-icon-fill-attention: -moz-accent-color;
+  --warning-icon-bgcolor: #FFA436;
 }
 
 :root:-moz-lwtheme {
@@ -13,6 +14,7 @@
 :root[lwt-popup-brighttext] panel,
 toolbar[brighttext]:-moz-lwtheme {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
+  --warning-icon-bgcolor: #FFBD4F;
 }
 
 .toolbarbutton-animatable-box,
