@@ -669,33 +669,6 @@ already_AddRefed<Promise> WorkerGlobalScope::CreateImageBitmap(
       this, aImage, Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aOptions, aRv);
 }
 
-// https://html.spec.whatwg.org/#structured-cloning
-void WorkerGlobalScope::StructuredClone(
-    JSContext* aCx, JS::Handle<JS::Value> aValue,
-    const StructuredSerializeOptions& aOptions,
-    JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError) {
-  JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
-  aError = nsContentUtils::CreateJSValueFromSequenceOfObject(
-      aCx, aOptions.mTransfer, &transferArray);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
-  JS::CloneDataPolicy clonePolicy;
-  clonePolicy.allowIntraClusterClonableSharedObjects();
-  clonePolicy.allowSharedMemoryObjects();
-
-  StructuredCloneHolder holder(StructuredCloneHolder::CloningSupported,
-                               StructuredCloneHolder::TransferringSupported,
-                               JS::StructuredCloneScope::SameProcess);
-  holder.Write(aCx, aValue, transferArray, clonePolicy, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
-  holder.Read(this, aCx, aRetval, clonePolicy, aError);
-}
-
 mozilla::dom::DebuggerNotificationManager*
 WorkerGlobalScope::GetOrCreateDebuggerNotificationManager() {
   if (!mDebuggerNotificationManager) {
@@ -809,9 +782,10 @@ void DedicatedWorkerGlobalScope::PostMessage(
   mWorkerPrivate->PostMessageToParent(aCx, aMessage, aTransferable, aRv);
 }
 
-void DedicatedWorkerGlobalScope::PostMessage(
-    JSContext* aCx, JS::Handle<JS::Value> aMessage,
-    const StructuredSerializeOptions& aOptions, ErrorResult& aRv) {
+void DedicatedWorkerGlobalScope::PostMessage(JSContext* aCx,
+                                             JS::Handle<JS::Value> aMessage,
+                                             const PostMessageOptions& aOptions,
+                                             ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->PostMessageToParent(aCx, aMessage, aOptions.mTransfer, aRv);
 }

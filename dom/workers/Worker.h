@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace dom {
 
-struct StructuredSerializeOptions;
+struct PostMessageOptions;
 struct WorkerOptions;
 class WorkerPrivate;
 
@@ -46,8 +46,7 @@ class Worker : public DOMEventTargetHelper, public SupportsWeakPtr {
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const StructuredSerializeOptions& aOptions,
-                   ErrorResult& aRv);
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   void Terminate();
 

@@ -804,6 +804,6 @@ partial interface Window {
   void setScrollMarks(sequence<unsigned long> marks);
 };
 
-dictionary WindowPostMessageOptions : StructuredSerializeOptions {
+dictionary WindowPostMessageOptions : PostMessageOptions {
   USVString targetOrigin = "/";
 };
