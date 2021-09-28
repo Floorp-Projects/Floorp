@@ -375,6 +375,7 @@ TaskbarPreviewCallback::Done(nsISupports* aCanvas, bool aDrawBorder) {
     hr = DwmSetIconicThumbnail(mPreview->PreviewWindow(), hBitmap, flags);
   }
   MOZ_ASSERT(SUCCEEDED(hr));
+  (void)hr;
   return NS_OK;
 }
 
