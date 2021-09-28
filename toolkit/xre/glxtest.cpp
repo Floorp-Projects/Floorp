@@ -637,34 +637,41 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
 }
 
 #ifdef MOZ_X11
-static void get_x11_screen_info(Display* dpy) {
-  int screenCount = ScreenCount(dpy);
-  int defaultScreen = DefaultScreen(dpy);
-  if (screenCount != 0) {
-    record_value("SCREEN_INFO\n");
-    for (int idx = 0; idx < screenCount; idx++) {
-      Screen* scrn = ScreenOfDisplay(dpy, idx);
-      int current_height = scrn->height;
-      int current_width = scrn->width;
-
-      record_value("%dx%d:%d%s", current_width, current_height,
-                   idx == defaultScreen ? 1 : 0,
-                   idx == screenCount - 1 ? ";\n" : ";");
-    }
-  }
-}
-
-static void get_x11_ddx_info(Display* dpy) {
+static void get_xrandr_info(Display* dpy) {
   Window root = RootWindow(dpy, DefaultScreen(dpy));
   XRRProviderResources* pr = XRRGetProviderResources(dpy, root);
   XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
-  int nProviders = pr->nproviders;
+  RROutput primary = XRRGetOutputPrimary(dpy, root);
 
-  if (nProviders != 0) {
+  if (res->noutput != 0) {
+    bool foundCRTC = false;
+
+    for (int i = 0; i < res->noutput; i++) {
+      XRROutputInfo* outputInfo = XRRGetOutputInfo(dpy, res, res->outputs[i]);
+      if (!outputInfo->crtc) {
+        continue;
+      }
+
+      if (!foundCRTC) {
+        record_value("SCREEN_INFO\n");
+        foundCRTC = true;
+      }
+
+      XRRCrtcInfo* crtcInfo = XRRGetCrtcInfo(dpy, res, outputInfo->crtc);
+      record_value("%dx%d:%d;", crtcInfo->width, crtcInfo->height,
+                   res->outputs[i] == primary ? 1 : 0);
+    }
+
+    if (foundCRTC) {
+      record_value("\n");
+    }
+  }
+
+  if (pr->nproviders != 0) {
     record_value("DDX_DRIVER\n");
-    for (int i = 0; i < nProviders; i++) {
+    for (int i = 0; i < pr->nproviders; i++) {
       XRRProviderInfo* info = XRRGetProviderInfo(dpy, res, pr->providers[i]);
-      record_value("%s%s", info->name, i == nProviders - 1 ? ";\n" : ";");
+      record_value("%s%s", info->name, i == pr->nproviders - 1 ? ";\n" : ";");
     }
   }
 }
@@ -826,11 +833,8 @@ static void get_glx_status(int* gotGlxInfo, int* gotDriDriver) {
     }
   }
 
-  // Get monitor information
-  get_x11_screen_info(dpy);
-
-  // Get DDX driver information
-  get_x11_ddx_info(dpy);
+  // Get monitor and DDX driver information
+  get_xrandr_info(dpy);
 
   ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it
   ///// doesn't need to check GL info) so we might be staying alive for longer
@@ -870,11 +874,8 @@ static bool x11_egltest(int pci_count) {
     return false;
   }
 
-  // Get monitor information
-  get_x11_screen_info(dpy);
-
-  // Get DDX driver information
-  get_x11_ddx_info(dpy);
+  // Get monitor and DDX driver information
+  get_xrandr_info(dpy);
 
   // Bug 1715245: Closing the display connection here crashes on NV prop.
   // drivers. Just leave it open, the process will exit shortly after anyway.
