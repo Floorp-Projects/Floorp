@@ -21,6 +21,22 @@
 
 namespace mozilla {
 
+#ifdef MOZ_GLEAN_ANDROID
+// Defined by `glean_ffi`. We reexport it here for later use.
+extern "C" NS_EXPORT void glean_enable_logging(void);
+
+// Workaround to force a re-export of the `no_mangle` symbols from `glean_ffi`
+//
+// Due to how linking works and hides symbols the symbols from `glean_ffi` might
+// not be re-exported and thus not usable. By forcing use of _at least one_
+// symbol in an exported function the functions will also be rexported.
+//
+// See also https://github.com/rust-lang/rust/issues/50007
+extern "C" NS_EXPORT void _fog_force_reexport_donotcall(void) {
+  glean_enable_logging();
+}
+#endif
+
 static StaticRefPtr<FOG> gFOG;
 
 // We wait for 5s of idle before dumping IPC and flushing ping data to disk.
