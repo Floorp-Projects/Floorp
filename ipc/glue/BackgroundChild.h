@@ -16,14 +16,13 @@ namespace mozilla {
 namespace dom {
 
 class BlobImpl;
-class ContentChild;
 class ContentParent;
+class ContentProcess;
 
 }  // namespace dom
 
 namespace net {
 
-class SocketProcessImpl;
 class SocketProcessChild;
 
 }  // namespace net
@@ -55,9 +54,8 @@ class PBackgroundChild;
 // The PBackgroundChild actor and all its sub-protocol actors will be
 // automatically destroyed when its designated thread completes.
 class BackgroundChild final {
-  friend class mozilla::dom::ContentChild;
   friend class mozilla::dom::ContentParent;
-  friend class mozilla::net::SocketProcessImpl;
+  friend class mozilla::dom::ContentProcess;
   friend class mozilla::net::SocketProcessChild;
 
   typedef mozilla::ipc::Transport Transport;
@@ -82,7 +80,7 @@ class BackgroundChild final {
       nsIEventTarget* aMainEventTarget = nullptr);
 
  private:
-  // Only called by ContentChild or ContentParent.
+  // Only called by this class's friends.
   static void Startup();
 };
 
