@@ -4813,7 +4813,7 @@ impl PicturePrimitive {
                         // display port of this tile cache instance.
                         if let Some(TileSurface::Texture { descriptor, .. }) = tile.surface.as_ref() {
                             if let SurfaceTextureDescriptor::TextureCache { ref handle, .. } = descriptor {
-                                frame_state.resource_cache.texture_cache.request(
+                                frame_state.resource_cache.texture_cache.request_picture_tile(
                                     handle,
                                     frame_state.gpu_cache,
                                 );
@@ -4876,7 +4876,7 @@ impl PicturePrimitive {
                                         // assuming that it's either visible or we want to retain it for
                                         // a while in case it gets scrolled back onto screen soon.
                                         // TODO(gw): Consider switching to manual eviction policy?
-                                        frame_state.resource_cache.texture_cache.request(handle, frame_state.gpu_cache);
+                                        frame_state.resource_cache.texture_cache.request_picture_tile(handle, frame_state.gpu_cache);
                                     } else {
                                         // If the texture was evicted on a previous frame, we need to assume
                                         // that the entire tile rect is dirty.
