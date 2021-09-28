@@ -8,13 +8,7 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
-  "isWindowIncluded",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "isRemoteFrame",
+  "isRemoteBrowserElement",
   "devtools/shared/layout/utils",
   true
 );
@@ -34,6 +28,7 @@ class NodePicker {
     this._onKey = this._onKey.bind(this);
     this._onPick = this._onPick.bind(this);
     this._onSuppressedEvent = this._onSuppressedEvent.bind(this);
+    this._preventContentEvent = this._preventContentEvent.bind(this);
   }
 
   _findAndAttachElement(event) {
@@ -45,20 +40,32 @@ class NodePicker {
   }
 
   /**
-   * Returns `true` if the event was dispatched from a window included in
-   * the current highlighter environment; or if the highlighter environment has
-   * chrome privileges
+   * Returns `true` if the event was dispatched from a window managed by the associated
+   * targetActor.
    *
    * @param {Event} event
    *          The event to allow
    * @return {Boolean}
    */
-  _isEventAllowed({ view }) {
-    const { window } = this._targetActor;
+  _isEventAllowed({ target, view }) {
+    // Allow "non multiprocess" browser toolbox to inspect documents loaded in the parent
+    // process (e.g. about:robots)
+    if (view instanceof Ci.nsIDOMChromeWindow) {
+      return true;
+    }
 
-    return (
-      window instanceof Ci.nsIDOMChromeWindow || isWindowIncluded(window, view)
-    );
+    // If the picked node is a remote browser element, then we need to let the event through,
+    // since there's a highlighter actor in that sub-frame also picking.
+    // ⚠️ This means we will not handle events made on the padding area of the <browser>
+    // elements, but we don't have any way to discriminate those. Note that we can ignore
+    // `<iframe>` elements as the "parent" document does not receive events happening in
+    // the embedded document (e.g. hovering _inside_ the iframe, won't emit a mousemove
+    // event on the top document).
+    if (isRemoteBrowserElement(target)) {
+      return false;
+    }
+
+    return this._targetActor.windows.includes(view);
   }
 
   /**
@@ -72,16 +79,11 @@ class NodePicker {
    * Once a node is picked, events will cease, and listeners will be removed.
    */
   _onPick(event) {
-    // If the picked node is a remote frame, then we need to let the event through
-    // since there's a highlighter actor in that sub-frame also picking.
-    if (isRemoteFrame(event.target)) {
+    if (!this._isEventAllowed(event)) {
       return;
     }
 
     this._preventContentEvent(event);
-    if (!this._isEventAllowed(event)) {
-      return;
-    }
 
     // If Shift is pressed, this is only a preview click.
     // Send the event to the client, but don't stop picking.
@@ -103,16 +105,10 @@ class NodePicker {
   }
 
   _onHovered(event) {
-    // If the hovered node is a remote frame, then we need to let the event through
-    // since there's a highlighter actor in that sub-frame also picking.
-    if (isRemoteFrame(event.target)) {
-      return;
-    }
-
-    this._preventContentEvent(event);
     if (!this._isEventAllowed(event)) {
       return;
     }
+    this._preventContentEvent(event);
 
     this._currentNode = this._findAndAttachElement(event);
     if (this._hoveredNode !== this._currentNode.node) {
@@ -126,10 +122,10 @@ class NodePicker {
       return;
     }
 
-    this._preventContentEvent(event);
     if (!this._isEventAllowed(event)) {
       return;
     }
+    this._preventContentEvent(event);
 
     let currentNode = this._currentNode.node.rawNode;
 
@@ -211,11 +207,11 @@ class NodePicker {
 
   // In most cases, we need to prevent content events from reaching the content. This is
   // needed to avoid triggering actions such as submitting forms or following links.
-  // In the case where the event happens on a remote frame however, we do want to let it
-  // through. That is because otherwise the pickers started in nested remote frames will
-  // never have a chance of picking their own elements.
+  // However, in the case where the event happens on a frame associated with another target,
+  // we do want to let it through. That is because otherwise the pickers started in nested
+  // frames will never have a chance of picking their own elements.
   _preventContentEvent(event) {
-    if (isRemoteFrame(event.target)) {
+    if (!this._isEventAllowed(event)) {
       return;
     }
     event.stopPropagation();
