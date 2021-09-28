@@ -1144,6 +1144,9 @@ struct BaseCompiler final {
   // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
   // at the end of a series of catch blocks (if none matched the exception).
   [[nodiscard]] bool throwFrom(RegRef exn, uint32_t lineOrBytecode);
+
+  // Load a pending exception object from the TlsData.
+  void loadPendingException(Register dest);
 #endif
 
   ////////////////////////////////////////////////////////////

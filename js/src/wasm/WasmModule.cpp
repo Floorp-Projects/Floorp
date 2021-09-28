@@ -1292,12 +1292,6 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
     return false;
   }
 
-  UniqueTlsData tlsData = CreateTlsData(metadata().globalDataLength);
-  if (!tlsData) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
   SharedCode code;
   UniqueDebugState maybeDebug;
   if (metadata().debugEnabled) {
@@ -1317,10 +1311,10 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   }
 
   instance.set(WasmInstanceObject::create(
-      cx, code, dataSegments_, elemSegments_, std::move(tlsData), memory,
-      std::move(tags), std::move(tables), imports.funcs, metadata().globals,
-      imports.globalValues, imports.globalObjs, instanceProto,
-      std::move(maybeDebug)));
+      cx, code, dataSegments_, elemSegments_, metadata().globalDataLength,
+      memory, std::move(tags), std::move(tables), imports.funcs,
+      metadata().globals, imports.globalValues, imports.globalObjs,
+      instanceProto, std::move(maybeDebug)));
   if (!instance) {
     return false;
   }

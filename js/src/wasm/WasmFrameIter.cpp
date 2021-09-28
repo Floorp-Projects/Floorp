@@ -1546,8 +1546,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
-    case SymbolicAddress::GetLocalExceptionIndex:
-      return "call to native get the local index of an exn's tag (in wasm)";
+    case SymbolicAddress::ConsumePendingException:
+      return "call to native that consumes exn and returns its index (in wasm)";
     case SymbolicAddress::PushRefIntoExn:
       return "call to native that pushes a ref value into an exn (in wasm)";
 #endif
