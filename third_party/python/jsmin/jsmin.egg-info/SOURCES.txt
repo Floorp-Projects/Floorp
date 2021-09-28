@@ -1,0 +1,13 @@
+CHANGELOG.txt
+LICENSE.txt
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+jsmin/__init__.py
+jsmin/__main__.py
+jsmin/test.py
+jsmin.egg-info/PKG-INFO
+jsmin.egg-info/SOURCES.txt
+jsmin.egg-info/dependency_links.txt
+jsmin.egg-info/top_level.txt
