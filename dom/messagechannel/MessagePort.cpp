@@ -412,7 +412,7 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 }
 
 void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                              const StructuredSerializeOptions& aOptions,
+                              const PostMessageOptions& aOptions,
                               ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }

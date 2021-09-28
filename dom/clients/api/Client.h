@@ -24,10 +24,11 @@ namespace dom {
 
 class ClientHandle;
 class ClientInfoAndState;
+struct PostMessageOptions;
 class Promise;
+
 template <typename t>
 class Sequence;
-struct StructuredSerializeOptions;
 
 class Client final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -76,8 +77,7 @@ class Client final : public nsISupports, public nsWrapperCache {
                    const Sequence<JSObject*>& aTransferrable, ErrorResult& aRv);
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const StructuredSerializeOptions& aOptions,
-                   ErrorResult& aRv);
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(mozilla::dom::Client)
