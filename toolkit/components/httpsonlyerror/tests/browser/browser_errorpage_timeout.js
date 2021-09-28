@@ -43,6 +43,11 @@ add_task(async function avoid_timeout_and_show_https_only_error_page() {
         errorPage.includes("about-httpsonly-button-continue-to-site"),
         "Potential time-out in https-only mode should cause error page to appear!"
       );
+      // Verify that the right title is set.
+      ok(
+        errorPage.includes("about-httpsonly-title-site-not-available"),
+        "Potential time-out in https-only mode should cause error page to appear with right title!"
+      );
     });
   });
 });
