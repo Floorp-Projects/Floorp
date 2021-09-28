@@ -1527,6 +1527,7 @@ nsresult HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
   // XXX Why don't this method remove proper <col> (and <colgroup>)?
   ErrorResult error;
   IgnoredErrorResult ignoredError;
+
   for (int32_t rowIndex = 0;; rowIndex++) {
     CellData cellData(*this, aTableElement, rowIndex, aColumnIndex,
                       ignoredError);
@@ -1626,7 +1627,8 @@ nsresult HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
     // Note that we decrement rowIndex since a row was deleted.
     rowIndex--;
   }
-  return NS_OK;
+
+  // Not reached because for (;;) loop never breaks.
 }
 
 NS_IMETHODIMP HTMLEditor::DeleteTableRow(int32_t aNumberOfRowsToDelete) {
