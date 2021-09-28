@@ -393,6 +393,9 @@ nsresult nsHttpHandler::Init() {
   // monitor Firefox Version Experiment enrollment
   NimbusFeatures::OnUpdate(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR,
                            ExperimentUserAgentUpdated, &mExperimentUserAgent);
+
+  // Load the experiment state once for startup
+  ExperimentUserAgentUpdated("", &mExperimentUserAgent);
 #endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
