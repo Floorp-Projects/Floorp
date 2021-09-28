@@ -27,7 +27,6 @@
 #endif
 
 #include "nsAppRunner.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
 
 using mozilla::ipc::IOThreadChild;
@@ -218,10 +217,6 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   SetUpSandboxEnvironment();
 #endif
-
-  // Do this as early as possible to get the parent process to initialize the
-  // background thread since we'll likely need database information very soon.
-  ipc::BackgroundChild::Startup();
 
   return true;
 }
