@@ -1076,6 +1076,7 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
     } else {
       MOZ_ASSERT(totalRead == aFromSegment.Length(),
                  "The Unicode decoder consumed the wrong number of bytes.");
+      (void)totalRead;
       if (mDecodingLocalFileWithoutTokenizing &&
           mLocalFileBytesBuffered == LOCAL_FILE_UTF_8_BUFFER_SIZE) {
         auto encoding = mEncoding;
