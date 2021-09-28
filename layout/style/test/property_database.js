@@ -6038,6 +6038,7 @@ var gCSSProperties = {
       "15%",
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -6482,6 +6483,7 @@ var gCSSProperties = {
       "0",
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -6516,6 +6518,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -6546,6 +6549,7 @@ var gCSSProperties = {
       "50%",
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -6578,6 +6582,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -8372,6 +8377,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       // these two keywords are the aliases of above first two.
       "-moz-max-content",
@@ -9714,6 +9720,7 @@ var gCSSProperties = {
       "15%",
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-max-content",
       "-moz-min-content",
       "-moz-fit-content",
@@ -10136,6 +10143,7 @@ var gCSSProperties = {
       // These keywords are treated as initial value.
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       "-moz-max-content",
@@ -10488,6 +10496,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       // these two keywords are the aliases of above first two.
       "-moz-max-content",
@@ -10638,6 +10647,7 @@ var gCSSProperties = {
       // These keywords are treated as initial value.
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       "-moz-max-content",
@@ -10669,6 +10679,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
@@ -10699,6 +10710,7 @@ var gCSSProperties = {
       // These keywords are treated as initial value.
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       "-moz-max-content",
@@ -10731,6 +10743,7 @@ var gCSSProperties = {
       // writing mode
       "max-content",
       "min-content",
+      "fit-content",
       "-moz-fit-content",
       "-moz-available",
       // these two keywords are the aliases of above first two.
