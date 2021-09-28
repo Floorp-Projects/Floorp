@@ -22,6 +22,7 @@ from manifestparser import filters as mpf
 
 
 from mach.decorators import CommandArgument, Command
+from mach.requirements import MachEnvRequirements
 from mach.util import UserError
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -68,11 +69,18 @@ def python(
         raise UserError("Cannot pass both --requirements and --no-virtualenv.")
 
     if no_virtualenv:
-        from mach_initialize import mach_sys_path
-
         python_path = sys.executable
+        requirements = MachEnvRequirements.from_requirements_definition(
+            command_context.topsrcdir,
+            False,
+            os.path.join(
+                command_context.topsrcdir, "build", "mach_virtualenv_packages.txt"
+            ),
+        )
+
         append_env["PYTHONPATH"] = os.pathsep.join(
-            mach_sys_path(command_context.topsrcdir)
+            os.path.join(command_context.topsrcdir, pth.path)
+            for pth in requirements.pth_requirements
         )
     else:
         command_context.virtualenv_manager.ensure()
