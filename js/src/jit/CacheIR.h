@@ -779,7 +779,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
         lastIndex_(0) {
   }
 
-  bool failed() const { return buffer_.oom() || tooLarge_; }
+  bool tooLarge() const { return tooLarge_; }
+  bool oom() const { return buffer_.oom(); }
+  bool failed() const { return tooLarge() || oom(); }
 
   TrialInliningState trialInliningState() const { return trialInliningState_; }
 

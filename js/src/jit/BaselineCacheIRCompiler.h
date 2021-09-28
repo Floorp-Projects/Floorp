@@ -18,7 +18,9 @@ namespace jit {
 class ICCacheIRStub;
 class ICFallbackStub;
 
-ICCacheIRStub* AttachBaselineCacheIRStub(JSContext* cx,
+enum class ICAttachResult { Attached, DuplicateStub, TooLarge, OOM };
+
+ICAttachResult AttachBaselineCacheIRStub(JSContext* cx,
                                          const CacheIRWriter& writer,
                                          CacheKind kind, JSScript* outerScript,
                                          ICScript* icScript,
