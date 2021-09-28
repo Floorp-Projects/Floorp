@@ -7,13 +7,12 @@
 
 
 xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
-  background-color: SelectedItem;
-  color: SelectedItemText;
+  background-color: #F2F2F2;
 }
 
 xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button,
 xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autofill-item-box > .autofill-button {
-  background-color: ButtonHighlight;
+  background-color: #DCDCDE;
 }
 
 xul|richlistitem[originaltype="autofill-insecureWarning"] {
@@ -27,9 +26,8 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --col-spacer: 7px;
   --item-width: calc(50% - (var(--col-spacer) / 2));
   --label-text-color: #262626;
-  --comment-text-color: GreyText;
-  --warning-text-color: GreyText;
-  --warning-background-color: rgba(248, 232, 28, .2);
+  --comment-text-color: #646464;
+  --warning-text-color: #646464;
   --btn-text-color: FieldText;
 
   --default-font-size: 12;
@@ -69,8 +67,8 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  background-color: Field;
-  color: FieldText;
+  background-color: #FFFFFF;
+  color: var(--label-text-color);
 }
 
 .autofill-item-box:last-child {
@@ -100,7 +98,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill;
-  fill: var(--comment-text-color)
+  fill: #4D4D4D;
 }
 
 .autofill-item-box > .profile-label-col > .profile-label {
@@ -149,7 +147,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   padding: 2.5px 0;
   color: var(--warning-text-color);
   text-align: center;
-  background-color: var(--warning-background-color);
+  background-color: rgba(248,232,28,.2);
   border-bottom: 1px solid rgba(38,38,38,.15);
   font-size: calc(var(--warning-font-size) / var(--default-font-size) * 1em);
 }
@@ -158,9 +156,9 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   box-sizing: border-box;
   padding: 0 10px;
   min-height: 40px;
-  background-color: ButtonFace;
+  background-color: #EDEDED;
   font-size: calc(var(--btn-font-size) / var(--default-font-size) * 1em);
-  color: ButtonText;
+  color: var(--btn-text-color);
   text-align: center;
 }
 
