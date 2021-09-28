@@ -7,10 +7,12 @@
         "name": "isDFPIActive",
         "type": "function",
         "description": "Returns whether dFPI is active for private/non-private browsing tabs",
-        "parameters": [{
-          "type": "boolean",
-          "name": "isPrivate"
-        }],
+        "parameters": [
+          {
+            "type": "boolean",
+            "name": "isPrivate"
+          }
+        ],
         "async": true
       },
       {

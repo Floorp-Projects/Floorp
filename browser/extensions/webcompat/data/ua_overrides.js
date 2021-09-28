@@ -10,6 +10,9 @@
 if (typeof InterventionHelpers === "undefined") {
   var InterventionHelpers = require("../lib/intervention_helpers");
 }
+if (typeof UAHelpers === "undefined") {
+  var UAHelpers = require("../lib/ua_helpers");
+}
 
 /**
  * For detailed information on our policies, and a documention on this format
@@ -36,18 +39,18 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1577519 - att.tv - Create a UA override for att.tv for playback on desktop
+     * Bug 1577519 - directv.com - Create a UA override for directv.com for playback on desktop
      * WebCompat issue #3846 - https://webcompat.com/issues/3846
      *
-     * att.tv (atttvnow.com) is blocking Firefox via UA sniffing. Spoofing as Chrome allows
+     * directv.com (attwatchtv.com) is blocking Firefox via UA sniffing. Spoofing as Chrome allows
      * to access the site and playback works fine. This is former directvnow.com
      */
     id: "bug1577519",
     platform: "desktop",
-    domain: "att.tv",
+    domain: "directv.com",
     bug: "1577519",
     config: {
-      matches: ["*://*.att.tv/*"],
+      matches: ["*://*.directv.com/*", "*://*.attwatchtv.com/*"],
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
@@ -119,35 +122,6 @@ const AVAILABLE_UA_OVERRIDES = [
           UAHelpers.getPrefix(originalUA) +
           " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
         );
-      },
-    },
-  },
-  {
-    /*
-     * Bug 945963 - tieba.baidu.com serves simplified mobile content to Firefox Android
-     * additionally, Bug 1525839 for more domains
-     * WebCompat issue #18455 - https://webcompat.com/issues/18455
-     *
-     * tieba.baidu.com and tiebac.baidu.com serve a heavily simplified and less functional
-     * mobile experience to Firefox for Android users. Adding the AppleWebKit indicator
-     * to the User Agent gets us the same experience.
-     */
-    id: "bug945963",
-    platform: "android",
-    domain: "tieba.baidu.com",
-    bug: "945963",
-    config: {
-      matches: [
-        "*://baike.baidu.com/*",
-        "*://image.baidu.com/*",
-        "*://news.baidu.com/*",
-        "*://tieba.baidu.com/*",
-        "*://tiebac.baidu.com/*",
-        "*://wenku.baidu.com/*",
-        "*://zhidao.baidu.com/*",
-      ],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -539,47 +513,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1679847 - Add UA override for avto.pro
-     * Webcompat issue #60043 - https://webcompat.com/issues/60043
-     *
-     * Unless Chrome is in the UA, the site serves a desktop version
-     * on catalog pages
-     */
-    id: "bug1679847",
-    platform: "android",
-    domain: "avto.pro",
-    bug: "1679847",
-    config: {
-      matches: ["https://avto.pro/catalog/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1693827 - Add UA override for www.spectrum.net/voice/
-     * Webcompat issue https://bugzilla.mozilla.org/show_bug.cgi?id=1546167
-     *
-     * The site is not allowing Firefox users to download
-     * voice messages based on UA detection. Chrome UA is required.
-     */
-    id: "bug1693827",
-    platform: "desktop",
-    domain: "spectrum.net",
-    bug: "1693827",
-    config: {
-      matches: ["*://*.spectrum.net/voice/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1704673 - Add UA override for app.xiaomi.com
      * Webcompat issue #66163 - https://webcompat.com/issues/66163
      *
@@ -676,25 +609,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1722955 - Add UA override for frontgate.com
-     * Webcompat issue #36277 - https://github.com/webcompat/web-bugs/issues/36277
-     *
-     * The website is sending the desktop version to Firefox on mobile devices
-     * based on UA sniffing. Spoofing as Chrome fixes this.
-     */
-    id: "bug1722955",
-    platform: "android",
-    domain: "frontgate.com",
-    bug: "1722955",
-    config: {
-      matches: ["*://frontgate.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1722954 - Add UA override for game.granbluefantasy.jp
      * Webcompat issue #34310 - https://github.com/webcompat/web-bugs/issues/34310
      *
@@ -713,31 +627,5 @@ const AVAILABLE_UA_OVERRIDES = [
     },
   },
 ];
-
-const UAHelpers = {
-  getDeviceAppropriateChromeUA() {
-    if (!UAHelpers._deviceAppropriateChromeUA) {
-      const userAgent =
-        typeof navigator !== "undefined" ? navigator.userAgent : "";
-      const RunningFirefoxVersion = (userAgent.match(/Firefox\/([0-9.]+)/) || [
-        "",
-        "58.0",
-      ])[1];
-      const RunningAndroidVersion =
-        userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
-      const ChromeVersionToMimic = "76.0.3809.111";
-      const ChromePhoneUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 5 Build/MRA58N) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Mobile Safari/537.36`;
-      const ChromeTabletUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 7 Build/JSS15Q) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Safari/537.36`;
-      const IsPhone = userAgent.includes("Mobile");
-      UAHelpers._deviceAppropriateChromeUA = IsPhone
-        ? ChromePhoneUA
-        : ChromeTabletUA;
-    }
-    return UAHelpers._deviceAppropriateChromeUA;
-  },
-  getPrefix(originalUA) {
-    return originalUA.substr(0, originalUA.indexOf(")") + 1);
-  },
-};
 
 module.exports = AVAILABLE_UA_OVERRIDES;
