@@ -220,10 +220,6 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // update the cached value whenever the list of available dictionaries changes
   static void UpdateCanEnableInlineSpellChecking();
 
-  nsresult OnBlur(mozilla::dom::Event* aEvent);
-  nsresult OnMouseClick(mozilla::dom::Event* aMouseEvent);
-  nsresult OnKeyPress(mozilla::dom::Event* aKeyEvent);
-
   mozInlineSpellChecker();
 
   // spell checks all of the words between two nodes
@@ -336,6 +332,10 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   void StartToListenToEditSubActions() { mIsListeningToEditSubActions = true; }
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
+
+  void OnBlur(mozilla::dom::Event& aEvent);
+  void OnMouseClick(mozilla::dom::Event& aMouseEvent);
+  void OnKeyDown(mozilla::dom::Event& aKeyEvent);
 };
 
 #endif  // #ifndef mozilla_mozInlineSpellChecker_h
