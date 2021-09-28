@@ -7,6 +7,7 @@
 // A dumping ground for random testing functions
 
 callback PromiseReturner = Promise<any>();
+callback PromiseReturner2 = Promise<any>(any arg, DOMString arg2);
 
 [Pref="dom.expose_test_interfaces",
  Exposed=Window]
