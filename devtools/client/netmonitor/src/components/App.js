@@ -17,7 +17,7 @@ const {
 // Components
 loader.lazyGetter(this, "AppErrorBoundary", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/AppErrorBoundary")
+    require("devtools/client/shared/components/AppErrorBoundary")
   );
 });
 loader.lazyGetter(this, "MonitorPanel", function() {
@@ -34,6 +34,12 @@ loader.lazyGetter(this, "DropHarHandler", function() {
   return createFactory(
     require("devtools/client/netmonitor/src/components/DropHarHandler")
   );
+});
+
+// Localized strings for (devtools/client/locales/en-US/startup.properties)
+loader.lazyGetter(this, "L10N", function() {
+  const { LocalizationHelper } = require("devtools/shared/l10n");
+  return new LocalizationHelper("devtools/client/locales/startup.properties");
 });
 
 const { div } = dom;
@@ -79,7 +85,10 @@ class App extends Component {
     return div(
       { className: "network-monitor" },
       AppErrorBoundary(
-        { className: "app-error-boundary" },
+        {
+          className: "app-error-boundary",
+          panel: L10N.getStr("netmonitor.label"),
+        },
         !statisticsOpen
           ? DropHarHandler(
               {

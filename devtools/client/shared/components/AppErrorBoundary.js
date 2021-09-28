@@ -10,15 +10,17 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div, h1, h2, h3, p, a } = dom;
 
+// Localized strings for (devtools/client/locales/en-US/components.properties)
+loader.lazyGetter(this, "L10N", function() {
+  const { LocalizationHelper } = require("devtools/shared/l10n");
+  return new LocalizationHelper(
+    "devtools/client/locales/components.properties"
+  );
+});
+
 // File a bug for the Net Monitor specifically
 const bugLink =
-  "https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=Netmonitor";
-
-// Localized strings (devtools/client/locales/en-us/netmonitor.properties)
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
-const ERROR_DESCRIPTION = L10N.getStr("netmonitor.errorpanel.description");
-const FILE_BUG_BUTTON = L10N.getStr("netmonitor.errorpanel.fileBugButton");
-const RELOAD_PAGE_INFO = L10N.getStr("netmonitor.errorpanel.reloadPanelInfo");
+  "https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=";
 
 /**
  * Error boundary that wraps around the main App component.
@@ -27,6 +29,7 @@ class AppErrorBoundary extends Component {
   static get propTypes() {
     return {
       children: PropTypes.any.isRequired,
+      panel: PropTypes.any.isRequired,
     };
   }
 
@@ -70,7 +73,7 @@ class AppErrorBoundary extends Component {
       .replace(re, "$&,")
       .split(",")
       .map((trace, index) => {
-        return p({}, trace);
+        return p({ key: `rst-${index}` }, trace);
       });
 
     return div(
@@ -106,14 +109,17 @@ class AppErrorBoundary extends Component {
     const compStack = this.getValidInfo(this.state.errorInfo).componentStack;
     const errorMsg = this.state.errorMsg;
     const msg = (errorMsg + compStack).replace(/\n/gi, "%0A");
-    return `${bugLink}&comment=${msg}`;
+    return `${bugLink}${this.props.panel}&comment=${msg}`;
   }
 
   render() {
     if (this.state.errorInfo !== null) {
       return div(
         { className: "app-error-panel" },
-        h1({ className: "error-panel-header" }, ERROR_DESCRIPTION),
+        h1(
+          { className: "error-panel-header" },
+          L10N.getFormatStr("appErrorBoundary.description", this.props.panel)
+        ),
         a(
           {
             className: "error-panel-file-button",
@@ -122,12 +128,15 @@ class AppErrorBoundary extends Component {
               window.open(this.getBugLink(), "_blank");
             },
           },
-          FILE_BUG_BUTTON
+          L10N.getStr("appErrorBoundary.fileBugButton")
         ),
         h2({ className: "error-panel-error" }, this.state.errorMsg),
         div({}, this.renderErrorInfo(this.state.errorInfo)),
         div({}, this.renderStackTrace(this.state.errorStack)),
-        p({ className: "error-panel-reload-info" }, RELOAD_PAGE_INFO)
+        p(
+          { className: "error-panel-reload-info" },
+          L10N.getStr("appErrorBoundary.reloadPanelInfo")
+        )
       );
     }
     return this.props.children;
