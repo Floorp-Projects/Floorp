@@ -881,10 +881,11 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
 
   ExtContentPolicyType contentPolicyType =
       aLoadInfo->GetExternalContentPolicyType();
-  // restricting reported types to script and styles
+  // restricting reported types to script, styles and documents
   // to be continued in follow-ups of bug 1697163.
   if (contentPolicyType != ExtContentPolicyType::TYPE_SCRIPT &&
-      contentPolicyType != ExtContentPolicyType::TYPE_STYLESHEET) {
+      contentPolicyType != ExtContentPolicyType::TYPE_STYLESHEET &&
+      contentPolicyType != ExtContentPolicyType::TYPE_DOCUMENT) {
     return;
   }
 
