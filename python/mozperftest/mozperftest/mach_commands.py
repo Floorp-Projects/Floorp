@@ -158,7 +158,12 @@ def run_perftest(command_context, **kwargs):
     print("\nFirefox. Fast For Good.\n")
 
 
-@Command("perftest-test", category="testing", description="Run perftest tests")
+@Command(
+    "perftest-test",
+    category="testing",
+    description="Run perftest tests",
+    virtualenv_name="python-test",
+)
 @CommandArgument(
     "tests", default=None, nargs="*", help="Tests to run. By default will run all"
 )
