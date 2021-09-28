@@ -485,7 +485,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   DocAccessiblePlatformExtChild* GetPlatformExtension();
 
  private:
-  LocalAccessible* IdToAccessible(const uint64_t& aID) const;
   LocalAccessible* IdToAccessibleLink(const uint64_t& aID) const;
   LocalAccessible* IdToAccessibleSelect(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
