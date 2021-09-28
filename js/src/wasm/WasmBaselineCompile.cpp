@@ -3581,10 +3581,14 @@ bool BaseCompiler::emitCatch() {
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
 
-  // The code in the landing pad guarantees us that the exception reference
-  // is live in this register.
-  RegRef exn = RegRef(WasmExceptionReg);
-  needRef(exn);
+  // The landing pad uses the block return protocol to communicate the
+  // exception object pointer to the catch block.
+  ResultType exnResult = ResultType::Single(RefType::extern_());
+  captureResultRegisters(exnResult);
+  if (!pushBlockResults(exnResult)) {
+    return false;
+  }
+  RegRef exn = popRef();
   RegRef values = needRef();
   RegRef refs = needRef();
 
@@ -3688,13 +3692,15 @@ bool BaseCompiler::emitCatchAll() {
 
   masm.bind(&tryCatch.catchInfos.back().label);
 
-  // The code in the landing pad guarantees us that the exception reference
-  // is live in this register.
-  RegRef exn = RegRef(WasmExceptionReg);
-  needRef(exn);
+  // The landing pad uses the block return protocol to communicate the
+  // exception object pointer to the catch block.
+  ResultType exnResult = ResultType::Single(RefType::extern_());
+  captureResultRegisters(exnResult);
   // This reference is pushed onto the stack because a potential rethrow
   // may need to access it. It is always popped at the end of the block.
-  pushRef(exn);
+  if (!pushBlockResults(exnResult)) {
+    return false;
+  }
 
   return true;
 }
@@ -3867,9 +3873,6 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     tryNote.end = tryNote.entryPoint;
   }
 
-  RegRef exn = RegRef(WasmExceptionReg);
-  needRef(exn);
-
   // Explicitly restore the TlsData in case the throw was across instances.
   fr.loadTlsPtr(WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
@@ -3881,6 +3884,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 
   // Load exception pointer from TlsData and make sure that it is
   // saved before the following call will clear it.
+  RegRef exn = needRef();
   loadPendingException(exn);
   pushRef(exn);
 
@@ -3889,12 +3893,16 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   }
 
   // Prevent conflict with exn register when popping this result.
-  needRef(exn);
-  RegI32 index = popI32();
-  freeRef(exn);
+  RegI32 temp = popI32();
+  RegI32 index = needI32();
+  moveI32(temp, index);
+  freeI32(temp);
 
-  // Ensure that the exception is materialized before branching.
-  exn = popRef(RegRef(WasmExceptionReg));
+  // Ensure that the exception is assigned to the block return register
+  // before branching to a handler.
+  ResultType exnResult = ResultType::Single(RefType::extern_());
+  popBlockResults(exnResult, tryCatch.stackHeight, ContinuationKind::Jump);
+  freeResultRegisters(exnResult);
 
   bool hasCatchAll = false;
   for (CatchInfo& info : tryCatch.catchInfos) {
@@ -3904,17 +3912,17 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     } else {
       masm.jump(&info.label);
       hasCatchAll = true;
-      // `catch_all` must be the last clause and we won't call throwFrom
-      // below due to the catch_all, so we can free exn here.
-      freeRef(exn);
     }
   }
   freeI32(index);
 
   // If none of the tag checks succeed and there is no catch_all,
   // then we rethrow the exception.
-  if (!hasCatchAll && !throwFrom(exn, lineOrBytecode)) {
-    return false;
+  if (!hasCatchAll) {
+    captureResultRegisters(exnResult);
+    if (!pushBlockResults(exnResult) || !throwFrom(popRef(), lineOrBytecode)) {
+      return false;
+    }
   }
 
   // Reset stack height for join.
