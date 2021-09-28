@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <color name="snackbarBackground">#2E255D</color>
     <color name="colorPoweredBy">#271948</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
@@ -39,8 +39,8 @@
     <color name="settings_summary_text">#ffbbbcc5</color>
     <color name="settings_whats_new">@color/accentBright</color>
 
-    <color name="trackingProtectionSheetBackground" tools:ignore="MissingDefaultResource">#1D1133</color>
-    <color name="primaryTextColor" tools:ignore="MissingDefaultResource">#FBFBFE</color>
+    <color name="trackingProtectionSheetBackground">#1D1133</color>
+    <color name="primaryTextColor">#FBFBFE</color>
 
     <color name="colorPrimary">@color/photonInk60</color>
     <color name="colorSecondary">#342F6D</color>
@@ -58,15 +58,15 @@
     <color name="secondaryText">@color/photonLightGrey50</color>
 
     <!-- Home Tips -->
-    <color name="inactive_dot_background" tools:ignore="MissingDefaultResource">#66FBFBFE</color>
-    <color name="active_dot_background" tools:ignore="MissingDefaultResource">#FBFBFE</color>
-    <color name="tip_text_color" tools:ignore="MissingDefaultResource">#BFBFC9</color>
-    <color name="tip_deeplink_color" tools:ignore="MissingDefaultResource">#cf3e8c</color>
+    <color name="inactive_dot_background">#66FBFBFE</color>
+    <color name="active_dot_background">#FBFBFE</color>
+    <color name="tip_text_color">#BFBFC9</color>
+    <color name="tip_deeplink_color">#cf3e8c</color>
 
 
     <!-- Toolbar -->
-    <color name="toolbar_color" tools:ignore="MissingDefaultResource">#271948</color>
+    <color name="toolbar_color">#271948</color>
     <!-- Temporary colors until light theme it will be implemented -->
-    <color name="enabled_toolbar_button_color" tools:ignore="MissingDefaultResource">#000000</color>
+    <color name="enabled_toolbar_button_color">#000000</color>
 
 </resources>

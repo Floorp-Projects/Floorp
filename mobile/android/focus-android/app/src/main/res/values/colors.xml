@@ -148,4 +148,19 @@
      Temporary resources used by UI tests -->
     <color name="toolbarUrlDarkBackground">#1D1133</color>
     <color name="toolbarUrlLightBackground">#FBFBFE</color>
+
+    <!-- Home Tips -->
+    <color name="inactive_dot_background">#66FBFBFE</color>
+    <color name="active_dot_background">#FBFBFE</color>
+    <color name="tip_text_color">#BFBFC9</color>
+    <color name="tip_deeplink_color">#cf3e8c</color>
+
+    <!-- Toolbar -->
+    <color name="toolbar_color">#271948</color>
+    <!-- Temporary colors until light theme it will be implemented -->
+    <color name="enabled_toolbar_button_color">#000000</color>
+
+    <color name="trackingProtectionSheetBackground">#1D1133</color>
+    <color name="primaryTextColor">#FBFBFE</color>
+
 </resources>
