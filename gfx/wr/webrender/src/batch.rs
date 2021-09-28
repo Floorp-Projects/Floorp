@@ -6,7 +6,7 @@ use api::{AlphaType, ClipMode, ImageRendering, ImageBufferKind};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
-use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId, SpatialNodeContainer};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositeState};
 use crate::glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
