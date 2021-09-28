@@ -932,6 +932,11 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   // We draw transparent popups on non-compositing screens by SW as we don't
   // implement X shape masks in WebRender.
   if (mWindowType == eWindowType_popup) {
+    // See Bug 1731125. NVIDIA drivers does not provide transparent
+    // visual on X11/EGL.
+    if (GdkIsX11Display() && gfxVars::UseEGL()) {
+      return false;
+    }
     return HasRemoteContent() && mCompositedScreen;
   }
 
