@@ -309,15 +309,7 @@ class VirtualenvManager(VirtualenvHelper):
         return self.virtualenv_root
 
     def _requirements(self):
-        try:
-            # When `virtualenv.py` is invoked from an existing Mach process,
-            # import MachEnvRequirements in the expected way.
-            from mozbuild.requirements import MachEnvRequirements
-        except ImportError:
-            # When `virtualenv.py` is invoked standalone, import
-            # MachEnvRequirements from the adjacent "standalone"
-            # requirements module.
-            from requirements import MachEnvRequirements
+        from mach.requirements import MachEnvRequirements
 
         if not os.path.exists(self._manifest_path):
             raise Exception(
@@ -602,6 +594,9 @@ if __name__ == "__main__":
     else:
         populate = False
         opts = parser.parse_args(sys.argv[1:])
+
+    # We want to be able to import the "mach.requirements" module.
+    sys.path.append(os.path.join(opts.topsrcdir, "python", "mach"))
 
     manager = VirtualenvManager(
         opts.topsrcdir,

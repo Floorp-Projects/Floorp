@@ -141,35 +141,6 @@ CATEGORIES = {
     },
 }
 
-
-def search_path(mozilla_dir, packages_txt):
-    with open(os.path.join(mozilla_dir, packages_txt)) as f:
-        packages = [
-            line.strip().split(":", maxsplit=1)
-            for line in f
-            if not line.lstrip().startswith("#")
-        ]
-
-    def handle_package(action, package):
-        if action == "packages.txt":
-            for p in search_path(mozilla_dir, package):
-                yield os.path.join(mozilla_dir, p)
-
-        if action == "pth":
-            yield os.path.join(mozilla_dir, package)
-
-    for current_action, current_package in packages:
-        for path in handle_package(current_action, current_package):
-            yield path
-
-
-def mach_sys_path(mozilla_dir):
-    return [
-        os.path.join(mozilla_dir, path)
-        for path in search_path(mozilla_dir, "build/mach_virtualenv_packages.txt")
-    ]
-
-
 INSTALL_PYTHON_GUIDANCE_LINUX = """
 See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
 for guidance on how to install Python on your system.
@@ -194,6 +165,28 @@ install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
 helpful, if your system package manager does not provide a way to
 install a recent enough Python 3.
 """.strip()
+
+
+def _activate_python_environment(topsrcdir):
+    # We need the "mach" module to access the logic to parse virtualenv
+    # requirements.
+    sys.path.insert(0, os.path.join(topsrcdir, "python", "mach"))
+
+    from mach.requirements import MachEnvRequirements
+
+    thunderbird_dir = os.path.join(topsrcdir, "comm")
+    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
+        os.listdir(thunderbird_dir)
+    )
+
+    requirements = MachEnvRequirements.from_requirements_definition(
+        topsrcdir,
+        is_thunderbird,
+        os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
+    )
+    sys.path[0:0] = [
+        os.path.join(topsrcdir, pth.path) for pth in requirements.pth_requirements
+    ]
 
 
 def initialize(topsrcdir):
@@ -226,8 +219,8 @@ def initialize(topsrcdir):
         sys.path = [path for path in sys.path if path not in site_paths]
 
     state_dir = _create_state_dir()
+    _activate_python_environment(topsrcdir)
 
-    sys.path[0:0] = mach_sys_path(topsrcdir)
     import mach.base
     import mach.main
     from mach.util import setenv
