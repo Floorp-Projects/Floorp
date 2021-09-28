@@ -269,13 +269,12 @@
 #define HWY_TARGETS HWY_STATIC_TARGET
 
 // 3) For tests: include all attainable targets (in particular: scalar)
-#elif defined(HWY_COMPILE_ALL_ATTAINABLE)
+#elif defined(HWY_COMPILE_ALL_ATTAINABLE) || defined(HWY_IS_TEST)
 #define HWY_TARGETS HWY_ATTAINABLE_TARGETS
 
 // 4) Default: attainable WITHOUT non-best baseline. This reduces code size by
 // excluding superseded targets, in particular scalar.
 #else
-
 #define HWY_TARGETS (HWY_ATTAINABLE_TARGETS & (2 * HWY_STATIC_TARGET - 1))
 
 #endif  // target policy

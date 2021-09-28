@@ -1,14 +1,24 @@
 # JPEG XL reference implementation
 
+[![Build&Test](https://github.com/libjxl/libjxl/actions/workflows/build_test.yml/badge.svg)](
+https://github.com/libjxl/libjxl/actions/workflows/build_test.yml)
+[![Releases](https://github.com/libjxl/libjxl/actions/workflows/release.yaml/badge.svg)](
+https://github.com/libjxl/libjxl/actions/workflows/release.yaml)
+[![Doc](https://readthedocs.org/projects/libjxl/badge/?version=latest)](
+https://libjxl.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/libjxl/libjxl/branch/main/graph/badge.svg)](
+https://codecov.io/gh/libjxl/libjxl)
+
 <img src="doc/jxl.svg" width="100" align="right" alt="JXL logo">
 
 This repository contains a reference implementation of JPEG XL (encoder and
-decoder), called `libjxl`.
+decoder), called `libjxl`. This software library is
+[used by many applications that support JPEG XL](doc/software_support.md).
 
-JPEG XL is in the final stages of standardization and its codestream format is
-frozen.
+JPEG XL is in the final stages of standardization and its codestream and file format
+are frozen.
 
-The libraries API, command line options and tools in this repository are subject
+The library API, command line options, and tools in this repository are subject
 to change, however files encoded with `cjxl` conform to the JPEG XL format
 specification and can be decoded with current and future `djxl` decoders or
 `libjxl` decoding library.
@@ -20,13 +30,16 @@ For more details and other workflows see the "Advanced guide" below.
 ### Checking out the code
 
 ```bash
-git clone https://gitlab.com/wg1/jpeg-xl.git --recursive
+git clone https://github.com/libjxl/libjxl.git --recursive
 ```
 
 This repository uses git submodules to handle some third party dependencies
-under `third_party/`, that's why is important to pass `--recursive`. If you
+under `third_party`, that's why is important to pass `--recursive`. If you
 didn't check out with `--recursive`, or any submodule has changed, run:
-`git submodule update --init --recursive`.
+
+```bash
+git submodule update --init --recursive
+```
 
 Important: If you downloaded a zip file or tarball from the web interface you
 won't get the needed submodules and the code will not compile. You can download
@@ -50,17 +63,17 @@ sudo apt install libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev
 ```
 
 We recommend using a recent Clang compiler (version 7 or newer), for that
-install clang and set `CC` and `CXX` variables. For example, with clang-7:
+install clang and set `CC` and `CXX` variables.
 
 ```bash
-sudo apt install clang-7
-export CC=clang-7 CXX=clang++-7
+sudo apt install clang
+export CC=clang CXX=clang++
 ```
 
 ### Building
 
 ```bash
-cd jpeg-xl
+cd libjxl
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
@@ -102,8 +115,8 @@ For speed benchmarks on single images in single or multi-threaded decoding
 on the decoding options and note that the output image is optional for
 benchmarking purposes.
 
-For a more comprehensive comparison of compression density between multiple
-options see "Benchmarking with benchmark_xl" section below.
+For more comprehensive benchmarking options, see the
+[benchmarking guide](doc/benchmarking.md).
 
 ## Advanced guide
 
@@ -112,85 +125,19 @@ options see "Benchmarking with benchmark_xl" section below.
 We build a common environment based on Debian/Ubuntu using Docker. Other
 systems may have different combinations of versions and dependencies that
 have not been tested and may not work. For those cases we recommend using the
-Docker environment as explained in the
+Docker container as explained in the
 [step by step guide](doc/developing_in_docker.md).
 
 ### Building JPEG XL for developers
 
-For experienced developers, we also provide build instructions for an [up to
-date Debian-based Linux](doc/developing_in_debian.md) and [64-bit
-Windows](doc/developing_in_windows.md). If you encounter any difficulties,
-please use Docker instead.
+For experienced developers, we provide build instructions for several other environments:
 
-## Benchmarking with benchmark_xl
+*   [Building on Debian](doc/developing_in_debian.md)
+*   Building on Windows with [vcpkg](doc/developing_in_windows_vcpkg.md) (Visual Studio 2019)
+*   Building on Windows with [MSYS2](doc/developing_in_windows_msys.md)
+*   [Cross Compiling for Windows with Crossroad](doc/developing_with_crossroad.md)
 
-We recommend `build/tools/benchmark_xl` as a convenient method for reading
-images or image sequences, encoding them using various codecs (jpeg jxl png
-webp), decoding the result, and computing objective quality metrics. An example
-invocation is:
-
-```bash
-build/tools/benchmark_xl --input "/path/*.png" --codec jxl:wombat:d1,jxl:cheetah:d2
-```
-
-Multiple comma-separated codecs are allowed. The characters after : are
-parameters for the codec, separated by colons, in this case specifying maximum
-target psychovisual distances of 1 and 2 (higher implies lower quality) and
-the encoder effort (see below). Other common parameters are `r0.5` (target
-bitrate 0.5 bits per pixel) and `q92` (quality 92, on a scale of 0-100, where
-higher is better). The `jxl` codec supports the following additional parameters:
-
-Speed: `falcon`, `cheetah`, `hare`, `wombat`, `squirrel`, `kitten`, `tortoise`
-control the encoder effort in ascending order. This also affects memory usage:
-using lower effort will typically reduce memory consumption during encoding.
-
-*   `falcon` disables all of the following tools.
-*   `cheetah` enables coefficient reordering, context clustering, and heuristics
-    for selecting DCT sizes and quantization steps.
-*   `hare` enables Gaborish filtering, chroma from luma, and an initial estimate
-    of quantization steps.
-*   `wombat` enables error diffusion quantization and full DCT size selection
-    heuristics.
-*   `squirrel` (default) enables dots, patches, and spline detection, and full
-    context clustering.
-*   `kitten` optimizes the adaptive quantization for a psychovisual metric.
-*   `tortoise` enables a more thorough adaptive quantization search.
-
-Mode: JPEG XL has two modes. The default is Var-DCT mode, which is suitable for
-lossy compression. The other mode is Modular mode, which is suitable for lossless
-compression. Modular mode can also do lossy compression (e.g. `jxl:m:q50`).
-
-*   `m` activates modular mode.
-
-Other arguments to benchmark_xl include:
-
-*   `--save_compressed`: save codestreams to `output_dir`.
-*   `--save_decompressed`: save decompressed outputs to `output_dir`.
-*   `--output_extension`: selects the format used to output decoded images.
-*   `--num_threads`: number of codec instances that will independently
-    encode/decode images, or 0.
-*   `--inner_threads`: how many threads each instance should use for parallel
-    encoding/decoding, or 0.
-*   `--encode_reps`/`--decode_reps`: how many times to repeat encoding/decoding
-    each image, for more consistent measurements (we recommend 10).
-
-The benchmark output begins with a header:
-
-```
-Compr              Input    Compr            Compr       Compr  Decomp  Butteraugli
-Method            Pixels     Size              BPP   #    MP/s    MP/s     Distance    Error p norm           BPP*pnorm   Errors
-```
-
-`ComprMethod` lists each each comma-separated codec. `InputPixels` is the number
-of pixels in the input image. `ComprSize` is the codestream size in bytes and
-`ComprBPP` the bitrate. `Compr MP/s` and `Decomp MP/s` are the
-compress/decompress throughput, in units of Megapixels/second.
-`Butteraugli Distance` indicates the maximum psychovisual error in the decoded
-image (larger is worse). `Error p norm` is a similar summary of the psychovisual
-error, but closer to an average, giving less weight to small low-quality
-regions. `BPP*pnorm` is the product of `ComprBPP` and `Error p norm`, which is a
-figure of merit for the codec (lower is better). `Errors` is nonzero if errors
-occurred while loading or encoding/decoding the image.
+If you encounter any difficulties, please use Docker instead.
 
 ## License
 
@@ -207,19 +154,22 @@ format: Cloudinary and Google.
 
 ### Codec description
 
+*   [JPEG XL Format Overview](doc/format_overview.md)
 *   [Introductory paper](https://www.spiedigitallibrary.org/proceedings/Download?fullDOI=10.1117%2F12.2529237) (open-access)
 *   [XL Overview](doc/xl_overview.md) - a brief introduction to the source code modules
 *   [JPEG XL white paper](http://ds.jpeg.org/whitepapers/jpeg-xl-whitepaper.pdf)
-*   [JPEG XL website](https://jpeg.org/jpegxl/)
-*   [Jon's JXL info page](https://sneyers.info/jxl/)
+*   [JPEG XL official website](https://jpeg.org/jpegxl)
+*   [JPEG XL community website](https://jpegxl.info)
 
 ### Development process
-*   [Docker setup - **start here**](doc/developing_in_docker.md)
-*   [Building on Debian](doc/developing_in_debian.md) - for experts only
-*   [Building on Windows](doc/developing_in_windows.md) - for experts only
+
 *   [More information on testing/build options](doc/building_and_testing.md)
-*   [Git guide for JPEG XL](doc/developing_in_github.md) - for developers only
+*   [Git guide for JPEG XL](doc/developing_in_github.md) - for developers
+*   [Fuzzing](doc/fuzzing.md) - for developers
 *   [Building Web Assembly artifacts](doc/building_wasm.md)
+*   [Test coverage on Codecov.io](https://app.codecov.io/gh/libjxl/libjxl) - for
+    developers
+*   [libjxl documentation on readthedocs.io](https://libjxl.readthedocs.io/)
 
 ### Contact
 

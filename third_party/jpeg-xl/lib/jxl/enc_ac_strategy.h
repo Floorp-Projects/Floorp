@@ -31,6 +31,7 @@ namespace jxl {
 struct ACSConfig {
   const DequantMatrices* JXL_RESTRICT dequant;
   float info_loss_multiplier;
+  float info_loss_multiplier2;
   float* JXL_RESTRICT quant_field_row;
   size_t quant_field_stride;
   float* JXL_RESTRICT masking_field_row;
@@ -67,7 +68,6 @@ struct AcStrategyHeuristics {
   void Finalize(AuxOut* aux_out);
   ACSConfig config;
   PassesEncoderState* enc_state;
-  float entropy_adjust[2 * AcStrategy::kNumValidStrategies];
 };
 
 // Debug.

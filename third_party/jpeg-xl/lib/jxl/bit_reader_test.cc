@@ -31,12 +31,12 @@ TEST(BitReaderTest, ExtendsWithZeroes) {
       BitReader br(Span<const uint8_t>(data.data(), n_bytes));
       // Read all the bits
       for (size_t i = 0; i < n_bytes * kBitsPerByte; i++) {
-        ASSERT_EQ(br.ReadBits(1), 1) << "n_bytes=" << n_bytes << " i=" << i;
+        ASSERT_EQ(br.ReadBits(1), 1u) << "n_bytes=" << n_bytes << " i=" << i;
       }
 
       // PEEK more than the declared size - all will be zero. Cannot consume.
       for (size_t i = 0; i < BitReader::kMaxBitsPerCall; i++) {
-        ASSERT_EQ(br.PeekBits(i), 0)
+        ASSERT_EQ(br.PeekBits(i), 0u)
             << "size=" << size << "n_bytes=" << n_bytes << " i=" << i;
       }
 
@@ -116,20 +116,21 @@ TEST(BitReaderTest, TestSkip) {
           BitReader reader2(writer.GetSpan());
           // Verify initial 1-bits
           for (int i = 0; i < task; ++i) {
-            EXPECT_EQ(1, reader1.ReadBits(1));
-            EXPECT_EQ(1, reader2.ReadBits(1));
+            EXPECT_EQ(1u, reader1.ReadBits(1));
+            EXPECT_EQ(1u, reader2.ReadBits(1));
           }
 
           // SkipBits or manually read "skip" bits
           reader1.SkipBits(skip);
           for (size_t i = 0; i < skip; ++i) {
-            EXPECT_EQ(0, reader2.ReadBits(1)) << " skip=" << skip << " i=" << i;
+            EXPECT_EQ(0u, reader2.ReadBits(1))
+                << " skip=" << skip << " i=" << i;
           }
           EXPECT_EQ(reader1.TotalBitsConsumed(), reader2.TotalBitsConsumed());
 
           // Ensure both readers see the terminator bits.
-          EXPECT_EQ(5, reader1.ReadBits(3));
-          EXPECT_EQ(5, reader2.ReadBits(3));
+          EXPECT_EQ(5u, reader1.ReadBits(3));
+          EXPECT_EQ(5u, reader2.ReadBits(3));
 
           EXPECT_TRUE(reader1.Close());
           EXPECT_TRUE(reader2.Close());
@@ -158,8 +159,8 @@ TEST(BitReaderTest, TestOrder) {
     writer.ZeroPadToByte();
     ReclaimAndCharge(&writer, &allotment, 0, nullptr);
     BitReader reader(writer.GetSpan());
-    EXPECT_EQ(0x1F, reader.ReadFixedBits<8>());
-    EXPECT_EQ(0xFC, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0x1Fu, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0xFCu, reader.ReadFixedBits<8>());
     EXPECT_TRUE(reader.Close());
   }
 
@@ -173,8 +174,8 @@ TEST(BitReaderTest, TestOrder) {
     writer.ZeroPadToByte();
     ReclaimAndCharge(&writer, &allotment, 0, nullptr);
     BitReader reader(writer.GetSpan());
-    EXPECT_EQ(0xF8, reader.ReadFixedBits<8>());
-    EXPECT_EQ(0x3F, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0xF8u, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0x3Fu, reader.ReadFixedBits<8>());
     EXPECT_TRUE(reader.Close());
   }
 
@@ -187,8 +188,8 @@ TEST(BitReaderTest, TestOrder) {
     writer.ZeroPadToByte();
     ReclaimAndCharge(&writer, &allotment, 0, nullptr);
     BitReader reader(writer.GetSpan());
-    EXPECT_EQ(0x3F, reader.ReadFixedBits<8>());
-    EXPECT_EQ(0xF8, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0x3Fu, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0xF8u, reader.ReadFixedBits<8>());
     EXPECT_TRUE(reader.Close());
   }
 
@@ -204,8 +205,8 @@ TEST(BitReaderTest, TestOrder) {
     writer.ZeroPadToByte();
     ReclaimAndCharge(&writer, &allotment, 0, nullptr);
     BitReader reader(writer.GetSpan());
-    EXPECT_EQ(0xBD, reader.ReadFixedBits<8>());
-    EXPECT_EQ(0x8D, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0xBDu, reader.ReadFixedBits<8>());
+    EXPECT_EQ(0x8Du, reader.ReadFixedBits<8>());
     EXPECT_TRUE(reader.Close());
   }
 }
@@ -215,21 +216,21 @@ TEST(BitReaderTest, TotalCountersTest) {
   BitReader reader(Span<const uint8_t>(buf, sizeof(buf)));
 
   EXPECT_EQ(sizeof(buf), reader.TotalBytes());
-  EXPECT_EQ(0, reader.TotalBitsConsumed());
+  EXPECT_EQ(0u, reader.TotalBitsConsumed());
   reader.ReadFixedBits<1>();
-  EXPECT_EQ(1, reader.TotalBitsConsumed());
+  EXPECT_EQ(1u, reader.TotalBitsConsumed());
 
   reader.ReadFixedBits<10>();
-  EXPECT_EQ(11, reader.TotalBitsConsumed());
+  EXPECT_EQ(11u, reader.TotalBitsConsumed());
 
   reader.ReadFixedBits<4>();
-  EXPECT_EQ(15, reader.TotalBitsConsumed());
+  EXPECT_EQ(15u, reader.TotalBitsConsumed());
 
   reader.ReadFixedBits<1>();
-  EXPECT_EQ(16, reader.TotalBitsConsumed());
+  EXPECT_EQ(16u, reader.TotalBitsConsumed());
 
   reader.ReadFixedBits<16>();
-  EXPECT_EQ(32, reader.TotalBitsConsumed());
+  EXPECT_EQ(32u, reader.TotalBitsConsumed());
 
   EXPECT_TRUE(reader.Close());
 }
@@ -240,18 +241,18 @@ TEST(BitReaderTest, MoveTest) {
   {
     BitReader reader1(Span<const uint8_t>(buf, sizeof(buf)));
 
-    EXPECT_EQ(0, reader1.TotalBitsConsumed());
+    EXPECT_EQ(0u, reader1.TotalBitsConsumed());
     reader1.ReadFixedBits<16>();
-    EXPECT_EQ(16, reader1.TotalBitsConsumed());
+    EXPECT_EQ(16u, reader1.TotalBitsConsumed());
 
     reader2 = std::move(reader1);
     // From this point reader1 is invalid, but can continue to access reader2
     // and we don't need to call Close() on reader1.
   }
 
-  EXPECT_EQ(16, reader2.TotalBitsConsumed());
+  EXPECT_EQ(16u, reader2.TotalBitsConsumed());
   EXPECT_EQ(3U, reader2.ReadFixedBits<8>());
-  EXPECT_EQ(24, reader2.TotalBitsConsumed());
+  EXPECT_EQ(24u, reader2.TotalBitsConsumed());
 
   EXPECT_TRUE(reader2.Close());
 }

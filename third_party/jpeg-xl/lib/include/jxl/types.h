@@ -4,7 +4,9 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @file types.h
+/** @addtogroup libjxl_common
+ * @{
+ * @file types.h
  * @brief Data types for the JPEG XL API, for both encoding and decoding.
  */
 
@@ -84,7 +86,7 @@ typedef enum {
  */
 typedef struct {
   /** Amount of channels available in a pixel buffer.
-   * 1: single-channel data, e.g. grayscale
+   * 1: single-channel data, e.g. grayscale or a single extra channel
    * 2: single-channel + alpha
    * 3: trichromatic, e.g. RGB
    * 4: trichromatic + alpha
@@ -109,8 +111,14 @@ typedef struct {
   size_t align;
 } JxlPixelFormat;
 
+/** Data type holding the 4-character type name of an ISOBMFF box.
+ */
+typedef char JxlBoxType[4];
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif
 
 #endif /* JXL_TYPES_H_ */
+
+/** @}*/

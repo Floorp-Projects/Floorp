@@ -37,65 +37,6 @@ enum class Predictor : uint32_t {
       15,  // Find the best decision tree for predictors/predictor per row
 };
 
-inline const char* PredictorName(Predictor p) {
-  switch (p) {
-    case Predictor::Zero:
-      return "Zero";
-    case Predictor::Left:
-      return "Left";
-    case Predictor::Top:
-      return "Top";
-    case Predictor::Average0:
-      return "Avg0";
-    case Predictor::Average1:
-      return "Avg1";
-    case Predictor::Average2:
-      return "Avg2";
-    case Predictor::Average3:
-      return "Avg3";
-    case Predictor::Average4:
-      return "Avg4";
-    case Predictor::Select:
-      return "Sel";
-    case Predictor::Gradient:
-      return "Grd";
-    case Predictor::Weighted:
-      return "Wgh";
-    case Predictor::TopLeft:
-      return "TopL";
-    case Predictor::TopRight:
-      return "TopR";
-    case Predictor::LeftLeft:
-      return "LL";
-    default:
-      return "INVALID";
-  };
-}
-
-inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
-  switch (p) {
-    case Predictor::Zero:
-      return {0, 0, 0};
-    case Predictor::Left:
-      return {255, 0, 0};
-    case Predictor::Top:
-      return {0, 255, 0};
-    case Predictor::Average0:
-      return {0, 0, 255};
-    case Predictor::Average4:
-      return {192, 128, 128};
-    case Predictor::Select:
-      return {255, 255, 0};
-    case Predictor::Gradient:
-      return {255, 0, 255};
-    case Predictor::Weighted:
-      return {0, 255, 255};
-      // TODO
-    default:
-      return {255, 255, 255};
-  };
-}
-
 constexpr size_t kNumModularPredictors = static_cast<size_t>(Predictor::Best);
 
 static constexpr ssize_t kNumStaticProperties = 2;  // channel, group_id.
@@ -114,6 +55,9 @@ struct ModularOptions {
   // Stop encoding/decoding when reaching a (non-meta) channel that has a
   // dimension bigger than max_chan_size.
   size_t max_chan_size = 0xFFFFFF;
+
+  // Used during decoding for validation of transforms (sqeeezing) scheme.
+  size_t group_dim = 0x1FFFFFFF;
 
   /// Encode options:
   // Fraction of pixels to look at to learn a MA tree

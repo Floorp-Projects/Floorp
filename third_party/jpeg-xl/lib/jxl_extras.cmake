@@ -3,12 +3,12 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+# codec_jpg is included always for loading of lossless reconstruction but
+# decoding to pixels is only supported if libjpeg is found and
+# JPEGXL_ENABLE_JPEG=1.
 set(JPEGXL_EXTRAS_SOURCES
   extras/codec.cc
   extras/codec.h
-  # codec_jpg is included always for loading of lossless reconstruction but
-  # decoding to pixels is only supported if libjpeg is found and
-  # JPEGXL_ENABLE_JPEG=1.
   extras/codec_jpg.cc
   extras/codec_jpg.h
   extras/codec_pgx.cc
@@ -19,6 +19,12 @@ set(JPEGXL_EXTRAS_SOURCES
   extras/codec_pnm.h
   extras/codec_psd.cc
   extras/codec_psd.h
+  extras/color_description.cc
+  extras/color_description.h
+  extras/color_hints.cc
+  extras/color_hints.h
+  extras/time.cc
+  extras/time.h
   extras/tone_mapping.cc
   extras/tone_mapping.h
 )
@@ -26,7 +32,8 @@ set(JPEGXL_EXTRAS_SOURCES
 # We only define a static library for jxl_extras since it uses internal parts
 # of jxl library which are not accessible from outside the library in the
 # shared library case.
-add_library(jxl_extras-static STATIC "${JPEGXL_EXTRAS_SOURCES}")
+add_library(jxl_extras-static STATIC EXCLUDE_FROM_ALL
+  "${JPEGXL_EXTRAS_SOURCES}")
 target_compile_options(jxl_extras-static PRIVATE "${JPEGXL_INTERNAL_FLAGS}")
 set_property(TARGET jxl_extras-static PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(jxl_extras-static PUBLIC "${PROJECT_SOURCE_DIR}")
@@ -35,7 +42,7 @@ target_link_libraries(jxl_extras-static PUBLIC
   lodepng
 )
 
-find_package(GIF 5)
+find_package(GIF 5.1)
 if(GIF_FOUND)
   target_sources(jxl_extras-static PRIVATE
     extras/codec_gif.cc
@@ -98,7 +105,7 @@ if (OpenEXR_FOUND)
                    ${PROJECT_BINARY_DIR}/LICENSE.libopenexr COPYONLY)
   endif()  # JPEGXL_DEP_LICENSE_DIR
   # OpenEXR generates exceptions, so we need exception support to catch them.
-  # Actully those flags counteract the ones set in JPEGXL_INTERNAL_FLAGS.
+  # Actually those flags counteract the ones set in JPEGXL_INTERNAL_FLAGS.
   if (NOT WIN32)
     set_source_files_properties(extras/codec_exr.cc PROPERTIES COMPILE_FLAGS -fexceptions)
     if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")

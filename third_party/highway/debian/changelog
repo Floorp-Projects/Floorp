@@ -1,3 +1,10 @@
+highway (0.12.2-1) UNRELEASED; urgency=medium
+
+  * fix scalar-only test and Windows macro conflict with Load/StoreFence
+  * replace deprecated wasm intrinsics
+
+ -- Jan Wassenberg <janwas@google.com>  Mon, 31 May 2021 16:00:00 +0200
+
 highway (0.12.1-1) UNRELEASED; urgency=medium
 
   * doc updates, ARM GCC support, fix s390/ppc, complete partial vectors

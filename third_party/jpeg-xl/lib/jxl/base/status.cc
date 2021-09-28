@@ -11,8 +11,9 @@
 
 #include <string>
 
-#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
-    defined(THREAD_SANITIZER)
+#include "lib/jxl/sanitizers.h"
+
+#if JXL_ADDRESS_SANITIZER || JXL_MEMORY_SANITIZER || JXL_THREAD_SANITIZER
 #include "sanitizer/common_interface_defs.h"  // __sanitizer_print_stack_trace
 #endif                                        // defined(*_SANITIZER)
 
@@ -27,13 +28,12 @@ bool Debug(const char* format, ...) {
 }
 
 bool Abort() {
-#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
-    defined(THREAD_SANITIZER)
+#if JXL_ADDRESS_SANITIZER || JXL_MEMORY_SANITIZER || JXL_THREAD_SANITIZER
   // If compiled with any sanitizer print a stack trace. This call doesn't crash
   // the program, instead the trap below will crash it also allowing gdb to
   // break there.
   __sanitizer_print_stack_trace();
-#endif  // defined(*_SANITIZER)
+#endif  // *_SANITIZER)
 
 #if JXL_COMPILER_MSVC
   __debugbreak();

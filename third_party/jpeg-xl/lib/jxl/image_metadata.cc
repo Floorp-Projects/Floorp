@@ -409,5 +409,6 @@ void ImageMetadata::SetAlphaBits(uint32_t bits, bool alpha_is_premultiplied) {
     }
   }
   num_extra_channels = extra_channel_info.size();
+  if (bits > 12) modular_16_bit_buffer_sufficient = false;
 }
 }  // namespace jxl

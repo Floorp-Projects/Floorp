@@ -122,7 +122,9 @@ void ThreadParallelRunner::RunRange(ThreadParallelRunner* self,
     // guided
     const uint32_t num_reserved =
         self->num_reserved_.load(std::memory_order_relaxed);
-    const uint32_t num_remaining = num_tasks - num_reserved;
+    // It is possible that more tasks are reserved than ready to run.
+    const uint32_t num_remaining =
+        num_tasks - std::min(num_reserved, num_tasks);
     const uint32_t my_size =
         std::max(num_remaining / (num_worker_threads * 4), 1u);
 #endif

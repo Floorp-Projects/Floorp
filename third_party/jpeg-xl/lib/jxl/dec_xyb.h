@@ -35,7 +35,10 @@ struct OutputEncodingInfo {
   // Contains an opsin matrix that converts to the primaries of the output
   // encoding.
   OpsinParams opsin_params;
-  Status Set(const ImageMetadata& metadata);
+  // default_enc is used for xyb encoded image with ICC profile, in other
+  // cases it has no effect. Use linear sRGB or grayscale if ICC profile is
+  // not matched (not parsed or no matching ColorEncoding exists)
+  Status Set(const CodecMetadata& metadata, const ColorEncoding& default_enc);
   bool all_default_opsin = true;
   bool color_encoding_is_original = false;
 };
@@ -55,12 +58,6 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
 // see F.1.1.3 of T.81 (because our data type is float, there is no need to add
 // a bias to make the values unsigned).
 void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect);
-
-ImageF UpsampleV2(const ImageF& src, ThreadPool* pool);
-
-// WARNING: this uses unaligned accesses, so the caller must first call
-// src.InitializePaddingForUnalignedAccesses() to avoid msan crashes.
-ImageF UpsampleH2(const ImageF& src, size_t output_xsize, ThreadPool* pool);
 
 bool HasFastXYBTosRGB8();
 void FastXYBTosRGB8(const Image3F& input, const Rect& input_rect,

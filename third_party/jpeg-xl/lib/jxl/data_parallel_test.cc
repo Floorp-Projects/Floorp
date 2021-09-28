@@ -86,26 +86,4 @@ TEST_F(DataParallelTest, RunnerNotCalledOnEmptyRange) {
   EXPECT_EQ(0, runner_called_);
 }
 
-// The TestDivider is slow when compiled in debug mode.
-TEST_F(DataParallelTest, JXL_SLOW_TEST(TestDivider)) {
-  jxl::ThreadPoolInternal pool(8);
-  // 1, 2 are powers of two.
-  pool.Run(3, 2 * 1024, ThreadPool::SkipInit(),
-           [](const int d, const int thread) {
-             // powers of two are not supported.
-             if ((d & (d - 1)) == 0) return;
-
-             const Divider div(d);
-#ifdef NDEBUG
-             const int max_dividend = 4 * 1024 * 1024;
-#else
-             const int max_dividend = 2 * 1024 + 1;
-#endif
-             for (int x = 0; x < max_dividend; ++x) {
-               const int q = div(x);
-               ASSERT_EQ(x / d, q) << x << "/" << d;
-             }
-           });
-}
-
 }  // namespace jxl
