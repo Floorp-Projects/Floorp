@@ -6,6 +6,7 @@ package org.mozilla.fenix.historymetadata
 
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TabListAction
@@ -28,6 +29,10 @@ class HistoryMetadataMiddleware(
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("HistoryMetadataMiddleware")
+
+    // Tracks whether a page load is in progress that was triggered directly by the app
+    // e.g. via the toolbar as opposed to via web content.
+    private var directLoadTriggered: Boolean = false
 
     @Suppress("ComplexMethod")
     override fun invoke(
@@ -84,6 +89,11 @@ class HistoryMetadataMiddleware(
                     }
                 }
             }
+            is EngineAction.LoadUrlAction -> {
+                // This isn't an ideal fix as we shouldn't have to hold any state in the middleware:
+                // https://github.com/mozilla-mobile/android-components/issues/11034
+                directLoadTriggered = true
+            }
         }
 
         next(action)
@@ -105,6 +115,8 @@ class HistoryMetadataMiddleware(
                         createHistoryMetadata(context, tab)
                     }
                 }
+                // Once we get a history update let's reset the flag for future loads.
+                directLoadTriggered = false
             }
             // NB: this could be called bunch of times in quick succession.
             is MediaSessionAction.UpdateMediaMetadataAction -> {
@@ -126,7 +138,10 @@ class HistoryMetadataMiddleware(
                     ?: context.state.search.parseSearchTerms(tabParent.content.url)
                 searchTerms to tabParent.content.url
             }
-            previousUrlIndex >= 0 -> {
+            // We only want to inspect the previous url in history if the user navigated via
+            // web content i.e., they followed a link, not if the user navigated directly via
+            // toolbar.
+            !directLoadTriggered && previousUrlIndex >= 0 -> {
                 val previousUrl = tab.content.history.items[previousUrlIndex].uri
                 val searchTerms = context.state.search.parseSearchTerms(previousUrl)
                 if (searchTerms != null) {

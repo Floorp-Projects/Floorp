@@ -11,6 +11,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
@@ -156,6 +157,30 @@ class HistoryMetadataMiddlewareTest {
 
         verify {
             service.createMetadata(any(), null, null)
+        }
+    }
+
+    @Test
+    fun `GIVEN a normal tab with history state WHEN directly loaded THEN search terms and referrer not recorded`() {
+        val tab = createTab("https://mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        setupGoogleSearchEngine()
+
+        val historyState = listOf(
+            HistoryItem("firefox", "https://google.com?q=mozilla+website"),
+            HistoryItem("mozilla", "https://mozilla.org")
+        )
+        store.dispatch(EngineAction.LoadUrlAction(tab.id, tab.content.url)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
+
+        verify {
+            service.createMetadata(any(), null, null)
+        }
+
+        // Once direct load is "consumed", we're looking up the history stack again.
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
+        verify {
+            service.createMetadata(any(), eq("mozilla website"), eq("https://google.com?q=mozilla+website"))
         }
     }
 
