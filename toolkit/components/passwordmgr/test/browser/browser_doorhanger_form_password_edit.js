@@ -377,17 +377,6 @@ for (let testData of testCases) {
   add_task(tmp[testData.name]);
 }
 
-async function waitForPromise(promise, timeoutMs = 5000) {
-  let timedOut = new Promise((resolve, reject) => {
-    /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
-    let timerId = setTimeout(() => {
-      clearTimeout(timerId);
-      reject(`Timed out in ${timeoutMs} ms.`);
-    }, timeoutMs);
-  });
-  await Promise.race([promise, timedOut]);
-}
-
 async function testPasswordChange(
   {
     logins = [],
@@ -427,23 +416,23 @@ async function testPasswordChange(
       await checkForm(browser, expected.initialForm);
       info("form checked");
 
-      let passwordEditedMessage = listenForTestNotification(
-        "PasswordEditedOrGenerated"
+      // A message is still sent to the parent process when Primary Password is enabled
+      let notificationMessage =
+        expected.doorhanger || !isLoggedIn
+          ? "PasswordEditedOrGenerated"
+          : "PasswordIgnoreEdit";
+      let passwordTestNotification = listenForTestNotification(
+        notificationMessage
       );
 
       await changeContentFormValues(browser, formChanges, shouldBlur);
+
       info(
-        "form edited, waiting for test notification of PasswordEditedOrGenerated"
+        `form edited, waiting for test notification of ${notificationMessage}`
       );
 
-      try {
-        await waitForPromise(passwordEditedMessage, 5000);
-        // A message is still sent to the parent process when Primary Password is enabled
-        ok(expected.doorhanger || !isLoggedIn, "Message sent");
-      } catch (ex) {
-        ok(!expected.doorhanger, "No message sent");
-      }
-      info("Resolved listenForTestNotification promise");
+      await passwordTestNotification;
+      info("Resolved passwordTestNotification promise");
 
       if (!expected.doorhanger) {
         let notif;
