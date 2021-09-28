@@ -48,6 +48,7 @@ class TabbedBrowsingTest {
 
     @Before
     fun setUp() {
+        activityTestRule.activity.applicationContext.settings().hasShownHomeOnboardingDialog = true
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

@@ -80,6 +80,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.StoreProvider
@@ -92,6 +93,7 @@ import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
+import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
@@ -104,6 +106,7 @@ import org.mozilla.fenix.historymetadata.controller.DefaultHistoryMetadataContro
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksFeature
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 import org.mozilla.fenix.home.recenttabs.controller.DefaultRecentTabsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -235,7 +238,10 @@ class HomeFragment : Fragment() {
                     recentBookmarks = emptyList(),
                     showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
                     showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard(),
-                    recentTabs = emptyList(),
+                    // Provide an initial state for recent tabs to prevent re-rendering on the home screen.
+                    //  This will otherwise cause a visual jump as the section gets rendered from no state
+                    //  to some state.
+                    recentTabs = getRecentTabs(components),
                     historyMetadata = emptyList()
                 ),
                 listOf(
@@ -650,7 +656,10 @@ class HomeFragment : Fragment() {
                     ).getTip()
                 },
                 showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
-                recentTabs = emptyList(),
+                // Provide an initial state for recent tabs to prevent re-rendering on the home screen.
+                //  This will otherwise cause a visual jump as the section gets rendered from no state
+                //  to some state.
+                recentTabs = getRecentTabs(components),
                 recentBookmarks = emptyList(),
                 historyMetadata = emptyList()
             )
@@ -1134,6 +1143,14 @@ class HomeFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun handleSwipedItemDeletionCancel() {
         binding.sessionControlRecyclerView.adapter?.notifyDataSetChanged()
+    }
+
+    private fun getRecentTabs(components: Components): List<RecentTab> {
+        return if (components.settings.showRecentTabsFeature) {
+            components.core.store.state.asRecentTabs()
+        } else {
+            emptyList()
+        }
     }
 
     companion object {

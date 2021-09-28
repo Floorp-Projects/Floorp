@@ -42,6 +42,9 @@ class HistoryTest {
 
     @Before
     fun setUp() {
+        InstrumentationRegistry.getInstrumentation().targetContext.settings()
+            .hasShownHomeOnboardingDialog = true
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -221,8 +224,6 @@ class HistoryTest {
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-        val settings = InstrumentationRegistry.getInstrumentation().targetContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {

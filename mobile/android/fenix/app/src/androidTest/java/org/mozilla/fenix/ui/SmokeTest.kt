@@ -108,6 +108,7 @@ class SmokeTest {
         // So we are initializing this here instead of in all related tests.
         browserStore = activityTestRule.activity.components.core.store
 
+        activityTestRule.activity.applicationContext.settings().hasShownHomeOnboardingDialog = true
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

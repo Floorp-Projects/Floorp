@@ -40,6 +40,8 @@ class CollectionTest {
 
     @Before
     fun setUp() {
+        activityTestRule.activity.applicationContext.settings().hasShownHomeOnboardingDialog = true
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -54,8 +56,6 @@ class CollectionTest {
     @Test
     // open a webpage, and add currently opened tab to existing collection
     fun mainMenuSaveToExistingCollection() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -83,8 +83,6 @@ class CollectionTest {
     @Test
     @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun verifyAddTabButtonOfCollectionMenu() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -112,8 +110,6 @@ class CollectionTest {
     @Test
     @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun renameCollectionTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
         val webPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -135,8 +131,6 @@ class CollectionTest {
 
     @Test
     fun createSecondCollectionTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
         val webPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -216,8 +210,6 @@ class CollectionTest {
 
     @Test
     fun selectTabOnLongTapTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
