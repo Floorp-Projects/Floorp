@@ -185,7 +185,8 @@ def _activate_python_environment(topsrcdir):
         os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
     )
     sys.path[0:0] = [
-        os.path.join(topsrcdir, pth.path) for pth in requirements.pth_requirements
+        os.path.join(topsrcdir, pth.path)
+        for pth in requirements.pth_requirements + requirements.vendored_requirements
     ]
 
 
