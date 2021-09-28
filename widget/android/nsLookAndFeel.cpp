@@ -121,14 +121,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
       // not used?
       aColor = mSystemColors.textColorPrimary;
       break;
-
-    case ColorID::ThemedScrollbarThumbInactive:
-    case ColorID::ThemedScrollbarThumb:
-      // We don't need to care about the Active and Hover colors because Android
-      // scrollbars can't be hovered (they always have pointer-events: none).
-      aColor = NS_RGBA(119, 119, 119, 102);
-      break;
-
     case ColorID::Highlight: {
       // Matched to action_accent in java codebase. This works fine with both
       // light and dark color scheme.
@@ -337,10 +329,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
 
     case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
-      break;
-
-    case IntID::UseOverlayScrollbars:
-      aResult = 1;
       break;
 
     case IntID::WindowsDefaultTheme:
