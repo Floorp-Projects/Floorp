@@ -1230,10 +1230,13 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return nullptr;
 }
 
-/* static */ uint32_t Instance::getLocalExceptionIndex(Instance* instance,
-                                                       JSObject* exn) {
-  MOZ_ASSERT(SASigGetLocalExceptionIndex.failureMode ==
+/* static */ uint32_t Instance::consumePendingException(Instance* instance) {
+  MOZ_ASSERT(SASigConsumePendingException.failureMode ==
              FailureMode::Infallible);
+
+  JSContext* cx = TlsContext.get();
+  RootedObject exn(cx, instance->tlsData()->pendingException);
+  instance->tlsData()->pendingException = nullptr;
 
   if (exn->is<WasmExceptionObject>()) {
     ExceptionTag& exnTag = exn->as<WasmExceptionObject>().tag();
@@ -1660,6 +1663,11 @@ Instance::~Instance() {
       }
     }
   }
+
+  // Any pending exceptions should have been consumed.
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(!tlsData()->pendingException);
+#endif
 }
 
 size_t Instance::memoryMappedSize() const {
@@ -1722,6 +1730,11 @@ void Instance::tracePrivate(JSTracer* trc) {
                         "wasm rtt value");
     }
   }
+#endif
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  TraceNullableEdge(trc, &tlsData()->pendingException,
+                    "wasm pending exception value");
 #endif
 
   if (maybeDebug_) {
@@ -2236,6 +2249,11 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
 
   DebugCodegen(DebugChannel::Function, "]\n");
 
+  // Ensure pending exception is cleared before and after (below) call.
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(!tlsData()->pendingException);
+#endif
+
   {
     JitActivation activation(cx);
 
@@ -2245,6 +2263,10 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
       return false;
     }
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(!tlsData()->pendingException);
+#endif
 
   if (isAsmJS() && args.isConstructing()) {
     // By spec, when a JS function is called as a constructor and this

@@ -5304,10 +5304,10 @@ template void AutoGenericRegisterScope<FloatRegister>::reacquire();
 }  // namespace jit
 
 namespace wasm {
-const TlsData* ExtractCallerTlsFromFrameWithTls(const Frame* fp) {
-  return *reinterpret_cast<TlsData* const*>(
-      reinterpret_cast<const uint8_t*>(fp) + sizeof(Frame) + ShadowStackSpace +
-      FrameWithTls::callerTLSOffset());
+TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
+  return *reinterpret_cast<TlsData**>(reinterpret_cast<uint8_t*>(fp) +
+                                      sizeof(Frame) + ShadowStackSpace +
+                                      FrameWithTls::callerTLSOffset());
 }
 
 const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp) {

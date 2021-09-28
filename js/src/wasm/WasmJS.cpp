@@ -1919,7 +1919,7 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 /* static */
 WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
-    const ElemSegmentVector& elemSegments, UniqueTlsData tlsData,
+    const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
     HandleWasmMemoryObject memory, SharedExceptionTagVector&& exceptionTags,
     SharedTableVector&& tables, const JSFunctionVector& funcImports,
     const GlobalDescVector& globals, const ValVector& globalImportValues,
@@ -1995,6 +1995,13 @@ WasmInstanceObject* WasmInstanceObject::create(
     // The INSTANCE_SLOT may not be initialized if Instance allocation fails,
     // leading to an observable "newborn" state in tracing/finalization.
     MOZ_ASSERT(obj->isNewborn());
+
+    // Create this just before constructing Instance to avoid rooting hazards.
+    UniqueTlsData tlsData = CreateTlsData(globalDataLength);
+    if (!tlsData) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
 
     // Root the Instance via WasmInstanceObject before any possible GC.
     instance = cx->new_<Instance>(cx, obj, code, std::move(tlsData), memory,
