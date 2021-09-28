@@ -316,13 +316,11 @@ bool MinidumpGenerator::WriteMinidump() {
     return false;
   }
 
-  MINIDUMP_EXCEPTION_INFORMATION* dump_exception_pointers = NULL;
   MINIDUMP_EXCEPTION_INFORMATION dump_exception_info;
 
   // Setup the exception information object only if it's a dump
   // due to an exception.
   if (exception_pointers_) {
-    dump_exception_pointers = &dump_exception_info;
     dump_exception_info.ThreadId = thread_id_;
     dump_exception_info.ExceptionPointers = exception_pointers_;
     dump_exception_info.ClientPointers = is_client_pointers_;
