@@ -187,6 +187,7 @@ nsresult Logger::Shutdown() {
 
   rv = mThread->Shutdown();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Shutdown failed");
+  (void)rv;
   return NS_OK;
 }
 
