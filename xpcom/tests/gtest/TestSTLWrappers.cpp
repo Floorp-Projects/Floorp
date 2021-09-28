@@ -45,14 +45,11 @@ void ShouldAbort() {
   }
 
   std::vector<int> v;
-  int rv = 1;
 
   TRY {
     // v.at(1) on empty v should abort; NOT throw an exception
 
-    // (Do some arithmetic with result of v.at() to avoid
-    // compiler warnings for unused variable/result.)
-    rv += v.at(1) ? 1 : 2;
+    (void)v.at(1);
   }
   CATCH(const std::out_of_range&) {
     fputs("TEST-FAIL | TestSTLWrappers.cpp | caught an exception?\n", stderr);
