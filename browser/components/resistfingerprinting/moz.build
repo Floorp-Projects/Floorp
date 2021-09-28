@@ -9,6 +9,7 @@ with Files("**"):
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.ini",
+    "test/browser/experiment-useragent/browser.ini",
 ]
 
 MOCHITEST_MANIFESTS += [
