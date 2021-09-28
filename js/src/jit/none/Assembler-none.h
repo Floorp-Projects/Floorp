@@ -101,7 +101,6 @@ static constexpr Register WasmTableCallSigReg{Registers::invalid_reg};
 static constexpr Register WasmTableCallIndexReg{Registers::invalid_reg};
 static constexpr Register WasmTlsReg{Registers::invalid_reg};
 static constexpr Register WasmJitEntryReturnScratch{Registers::invalid_reg};
-static constexpr Register WasmExceptionReg{Registers::invalid_reg};
 
 static constexpr uint32_t ABIStackAlignment = 4;
 static constexpr uint32_t CodeAlignment = 16;
