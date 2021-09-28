@@ -663,12 +663,11 @@ pref("gfx.webrender.debug.capture-profiler", false);
 pref("gfx.webrender.debug.profiler-ui", "Default");
 
 pref("gfx.webrender.multithreading", true);
+pref("gfx.webrender.pbo-uploads", true);
 #ifdef XP_WIN
-pref("gfx.webrender.pbo-uploads", false);
 pref("gfx.webrender.batched-texture-uploads", true);
 pref("gfx.webrender.draw-calls-for-texture-copy", true);
 #else
-pref("gfx.webrender.pbo-uploads", true);
 pref("gfx.webrender.batched-texture-uploads", false);
 pref("gfx.webrender.draw-calls-for-texture-copy", false);
 #endif
