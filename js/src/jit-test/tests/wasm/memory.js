@@ -480,7 +480,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func 
                    WebAssembly.CompileError,
                    nomem);
 
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func (result i32) (memory.grow 1)))`)),
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func (result i32) (memory.grow (i32.const 1))))`)),
                    WebAssembly.CompileError,
                    nomem);
 
