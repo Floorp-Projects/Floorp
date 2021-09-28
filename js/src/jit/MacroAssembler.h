@@ -5368,7 +5368,7 @@ inline DynFn JitPreWriteBarrier(MIRType type);
 
 namespace wasm {
 const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp);
-const TlsData* ExtractCallerTlsFromFrameWithTls(const Frame* fp);
+TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp);
 }  // namespace wasm
 
 }  // namespace js

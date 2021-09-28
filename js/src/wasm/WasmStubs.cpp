@@ -2929,7 +2929,6 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
 static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
                               Offsets* offsets) {
   Register scratch = ABINonArgReturnReg0;
-  Register scratch2 = ABINonArgReturnReg1;
 
   AssertExpectedSP(masm);
   masm.haltingAlign(CodeAlignment);
@@ -2992,29 +2991,12 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   // The case where a Wasm catch handler was found while unwinding the stack.
   masm.bind(&resumeCatch);
-  masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
-               FramePointer);
-  // Defer reloading stackPointer until just before the jump, so as to
-  // protect other live data on the stack.
-
-  // When there is a catch handler, HandleThrow passes it the Value needed for
-  // the handler's argument as well.
-#ifdef JS_64BIT
-  ValueOperand val(scratch);
-#else
-  ValueOperand val(scratch, scratch2);
-#endif
-  masm.loadValue(Address(ReturnReg, offsetof(ResumeFromException, exception)),
-                 val);
-  Register obj = masm.extractObject(val, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
                scratch);
-  // Now it's safe to reload stackPointer.
+  masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
+               FramePointer);
   masm.loadStackPtr(
       Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
-  // This move must come after the SP is reloaded because WasmExceptionReg may
-  // alias ReturnReg.
-  masm.movePtr(obj, WasmExceptionReg);
   masm.jump(scratch);
 
   // No catch handler was found, so we will just return out.

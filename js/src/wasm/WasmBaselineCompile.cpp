@@ -873,20 +873,6 @@ void BaseCompiler::popBlockResults(ResultType type, StackHeight stackBase,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-// Abstracted helper for throwing, used for throw, rethrow, and rethrowing
-// at the end of a series of catch blocks (if none matched the exception).
-bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
-  pushRef(exn);
-
-  // ThrowException invokes a trap, and the rest is dead code.
-  if (!emitInstanceCall(lineOrBytecode, SASigThrowException)) {
-    return false;
-  }
-  freeRef(popRef());
-
-  return true;
-}
-
 // This function is similar to popBlockResults, but additionally handles the
 // implicit exception pointer that is pushed to the value stack on entry to
 // a catch handler by dropping it appropriately.
@@ -1386,6 +1372,29 @@ bool BaseCompiler::pushCallResults(const FunctionCall& call, ResultType type,
 #endif
   return pushResults(type, fr.stackResultsBase(loc.bytes()));
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Exception handling
+#ifdef ENABLE_WASM_EXCEPTIONS
+// Abstracted helper for throwing, used for throw, rethrow, and rethrowing
+// at the end of a series of catch blocks (if none matched the exception).
+bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
+  pushRef(exn);
+
+  // ThrowException invokes a trap, and the rest is dead code.
+  if (!emitInstanceCall(lineOrBytecode, SASigThrowException)) {
+    return false;
+  }
+  freeRef(popRef());
+
+  return true;
+}
+
+void BaseCompiler::loadPendingException(Register dest) {
+  masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, pendingException)), dest);
+}
+#endif
 
 ////////////////////////////////////////////////////////////
 //
@@ -3695,14 +3704,35 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
 
   // Only emit a landing pad if a `delegate` has generated a jump to here.
   if (block.otherLabel.used()) {
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
     StackHeight savedHeight = fr.stackHeight();
     fr.setStackHeight(block.stackHeight);
     masm.bind(&block.otherLabel);
 
-    // We can assume this is live because `delegate` received it from a throw.
-    RegRef exn = RegRef(WasmExceptionReg);
-    needRef(exn);
-    if (!throwFrom(exn, readCallSiteLineOrBytecode())) {
+    // Try-delegate does not restore the TlsData on throw, so it needs to be
+    // done here as is done in endTryCatch().
+    fr.loadTlsPtr(WasmTlsReg);
+    masm.loadWasmPinnedRegsFromTls();
+    RegRef scratch = needRef();
+    RegRef scratch2 = needRef();
+    masm.switchToWasmTlsRealm(scratch, scratch2);
+    freeRef(scratch);
+    freeRef(scratch2);
+
+    // Try-delegate keeps the pending exception in the TlsData, so we extract
+    // it here rather than relying on an ABI register.
+    RegRef exn = needRef();
+    loadPendingException(exn);
+    pushRef(exn);
+
+    // Called only to clear the pending exception, the result is not used.
+    if (!emitInstanceCall(lineOrBytecode, SASigConsumePendingException)) {
+      return false;
+    }
+    freeI32(popI32());
+    exn = popRef();
+
+    if (!throwFrom(exn, lineOrBytecode)) {
       return false;
     }
     fr.setStackHeight(savedHeight);
@@ -3840,20 +3870,21 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   RegRef exn = RegRef(WasmExceptionReg);
   needRef(exn);
 
-  // Explicitly restore the tls data in case the throw was across instances.
+  // Explicitly restore the TlsData in case the throw was across instances.
   fr.loadTlsPtr(WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
   RegRef scratch = needRef();
   RegRef scratch2 = needRef();
   masm.switchToWasmTlsRealm(scratch, scratch2);
+  freeRef(scratch);
   freeRef(scratch2);
 
-  // Make sure that the exception pointer is saved across the call.
-  masm.movePtr(exn, scratch);
+  // Load exception pointer from TlsData and make sure that it is
+  // saved before the following call will clear it.
+  loadPendingException(exn);
   pushRef(exn);
-  pushRef(scratch);
 
-  if (!emitInstanceCall(lineOrBytecode, SASigGetLocalExceptionIndex)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigConsumePendingException)) {
     return false;
   }
 
