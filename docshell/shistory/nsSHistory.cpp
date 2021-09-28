@@ -1404,7 +1404,8 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags,
   }
 
   nsresult rv = LoadEntry(
-      mIndex, loadType, HIST_CMD_RELOAD, aLoadResults, /*aSameEpoch*/ false,
+      mIndex, loadType, HIST_CMD_RELOAD, aLoadResults, /* aSameEpoch */ false,
+      /* aLoadCurrentEntry */ true,
       aReloadFlags & nsIWebNavigation::LOAD_FLAGS_USER_ACTIVATION);
   if (NS_FAILED(rv)) {
     aLoadResults.Clear();
@@ -1429,7 +1430,9 @@ nsresult nsSHistory::ReloadCurrentEntry(
   // Notify listeners
   NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
 
-  return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD, aLoadResults);
+  return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD, aLoadResults,
+                   /* aSameEpoch */ false, /* aLoadCurrentEntry */ true,
+                   /* aUserActivation */ false);
 }
 
 void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
@@ -1964,8 +1967,8 @@ nsSHistory::UpdateIndex() {
 NS_IMETHODIMP
 nsSHistory::GotoIndex(int32_t aIndex, bool aUserActivation) {
   nsTArray<LoadEntryResult> loadResults;
-  nsresult rv =
-      GotoIndex(aIndex, loadResults, /*aSameEpoch*/ false, aUserActivation);
+  nsresult rv = GotoIndex(aIndex, loadResults, /*aSameEpoch*/ false,
+                          aIndex == mIndex, aUserActivation);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LoadURIs(loadResults);
@@ -1982,9 +1985,10 @@ nsSHistory::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
 
 nsresult nsSHistory::GotoIndex(int32_t aIndex,
                                nsTArray<LoadEntryResult>& aLoadResults,
-                               bool aSameEpoch, bool aUserActivation) {
+                               bool aSameEpoch, bool aLoadCurrentEntry,
+                               bool aUserActivation) {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResults,
-                   aSameEpoch, aUserActivation);
+                   aSameEpoch, aLoadCurrentEntry, aUserActivation);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1999,15 +2003,16 @@ nsSHistory::HasUserInteractionAtIndex(int32_t aIndex) {
 
 nsresult nsSHistory::LoadNextPossibleEntry(
     int32_t aNewIndex, long aLoadType, uint32_t aHistCmd,
-    nsTArray<LoadEntryResult>& aLoadResults, bool aUserActivation) {
+    nsTArray<LoadEntryResult>& aLoadResults, bool aLoadCurrentEntry,
+    bool aUserActivation) {
   mRequestedIndex = -1;
   if (aNewIndex < mIndex) {
     return LoadEntry(aNewIndex - 1, aLoadType, aHistCmd, aLoadResults,
-                     /*aSameEpoch*/ false, aUserActivation);
+                     /*aSameEpoch*/ false, aLoadCurrentEntry, aUserActivation);
   }
   if (aNewIndex > mIndex) {
     return LoadEntry(aNewIndex + 1, aLoadType, aHistCmd, aLoadResults,
-                     /*aSameEpoch*/ false, aUserActivation);
+                     /*aSameEpoch*/ false, aLoadCurrentEntry, aUserActivation);
   }
   return NS_ERROR_FAILURE;
 }
@@ -2015,7 +2020,8 @@ nsresult nsSHistory::LoadNextPossibleEntry(
 nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
                                uint32_t aHistCmd,
                                nsTArray<LoadEntryResult>& aLoadResults,
-                               bool aSameEpoch, bool aUserActivation) {
+                               bool aSameEpoch, bool aLoadCurrentEntry,
+                               bool aUserActivation) {
   MOZ_LOG(gSHistoryLog, LogLevel::Debug,
           ("LoadEntry(%d, 0x%lx, %u)", aIndex, aLoadType, aHistCmd));
   if (!mRootBC) {
@@ -2085,17 +2091,19 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults, aUserActivation);
+    InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults, aLoadCurrentEntry,
+                 aUserActivation);
     return NS_OK;
   }
 
   // Going back or forward.
-  bool differenceFound = LoadDifferingEntries(
-      prevEntry, nextEntry, mRootBC, aLoadType, aLoadResults, aUserActivation);
+  bool differenceFound =
+      LoadDifferingEntries(prevEntry, nextEntry, mRootBC, aLoadType,
+                           aLoadResults, aLoadCurrentEntry, aUserActivation);
   if (!differenceFound) {
     // We did not find any differences. Go further in the history.
     return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd, aLoadResults,
-                                 aUserActivation);
+                                 aLoadCurrentEntry, aUserActivation);
   }
 
   return NS_OK;
@@ -2105,6 +2113,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
                                       nsISHEntry* aNextEntry,
                                       BrowsingContext* aParent, long aLoadType,
                                       nsTArray<LoadEntryResult>& aLoadResults,
+                                      bool aLoadCurrentEntry,
                                       bool aUserActivation) {
   MOZ_ASSERT(aPrevEntry && aNextEntry && aParent);
 
@@ -2115,7 +2124,8 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
   if (prevID != nextID) {
     // Set the Subframe flag if not navigating the root docshell.
     aNextEntry->SetIsSubFrame(aParent != mRootBC);
-    InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults, aUserActivation);
+    InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults,
+                 aLoadCurrentEntry, aUserActivation);
     return true;
   }
 
@@ -2174,7 +2184,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
     // This will either load a new page to shell or some subshell or
     // do nothing.
     if (LoadDifferingEntries(pChild, nChild, bcChild, aLoadType, aLoadResults,
-                             aUserActivation)) {
+                             aLoadCurrentEntry, aUserActivation)) {
       differenceFound = true;
     }
   }
@@ -2184,7 +2194,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
 void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
                               BrowsingContext* aFrameBC, long aLoadType,
                               nsTArray<LoadEntryResult>& aLoadResults,
-                              bool aUserActivation) {
+                              bool aLoadCurrentEntry, bool aUserActivation) {
   MOZ_ASSERT(aFrameBC && aFrameEntry);
 
   LoadEntryResult* loadResult = aLoadResults.AppendElement();
@@ -2205,20 +2215,19 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
   loadState->SetSHEntry(aFrameEntry);
 
-  // If we're loading from the current active entry we want to treat it as not
-  // a same-document navigation (see nsDocShell::IsSameDocumentNavigation), so
+  // If we're loading the current entry we want to treat it as not a
+  // same-document navigation (see nsDocShell::IsSameDocumentNavigation), so
   // record that here in the LoadingSessionHistoryEntry.
-  bool loadingFromActiveEntry;
+  bool loadingCurrentEntry;
   if (mozilla::SessionHistoryInParent()) {
-    loadingFromActiveEntry =
-        aFrameBC->Canonical()->GetActiveSessionHistoryEntry() == aFrameEntry;
+    loadingCurrentEntry = aLoadCurrentEntry;
   } else {
-    loadingFromActiveEntry =
+    loadingCurrentEntry =
         aFrameBC->GetDocShell() &&
         nsDocShell::Cast(aFrameBC->GetDocShell())->IsOSHE(aFrameEntry);
   }
   loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length(),
-                                         loadingFromActiveEntry);
+                                         loadingCurrentEntry);
 
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aFrameEntry);
