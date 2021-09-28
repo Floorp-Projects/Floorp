@@ -272,12 +272,12 @@ async def dump_module(
 
     if has_code:
         cmd = (
-            f"{dump_syms} {code_file} --code-id {code_id} "
+            f"{dump_syms} {code_file} --code-id {code_id} --check-cfi "
             f"--store {output} --symbol-server '{sym_srv}' --verbose error"
         )
     else:
         cmd = (
-            f"{dump_syms} {filename} --debug-id {debug_id} "
+            f"{dump_syms} {filename} --debug-id {debug_id} --check-cfi "
             f"--store {output} --symbol-server '{sym_srv}' --verbose error"
         )
 
@@ -344,7 +344,7 @@ async def collect(modules):
     tasks = []
 
     # In case of errors (Too many open files), just change limit_per_host
-    connector = TCPConnector(limit=100, limit_per_host=1)
+    connector = TCPConnector(limit=100, limit_per_host=4)
 
     async with ClientSession(
         loop=loop, timeout=ClientTimeout(total=TIMEOUT), connector=connector
