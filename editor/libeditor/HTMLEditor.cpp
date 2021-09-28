@@ -4262,6 +4262,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   nsCOMPtr<nsIContent> newLeftNodeOfMostAncestor;
   EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
   SplitNodeResult lastSplitNodeResult(atStartOfRightNode);
+
   while (true) {
     // Need to insert rules code call here to do things like not split a list
     // if you are after the last <li> or before the first, etc.  For now we
@@ -4338,7 +4339,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     }
   }
 
-  return SplitNodeResult(NS_ERROR_FAILURE);
+  // Not reached because while (true) loop never breaks.
 }
 
 void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
