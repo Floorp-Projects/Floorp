@@ -24,24 +24,21 @@ import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiSelector
-import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
-import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.appName
-import org.mozilla.fenix.helpers.TestHelper.packageName
-import org.mozilla.fenix.helpers.isVisibleForUser
-import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.Calendar
 import java.util.Date
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
+import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.isVisibleForUser
+import org.mozilla.fenix.settings.SupportUtils
 
 /**
  * Implementation of Robot Pattern for the settings search sub menu.
@@ -145,16 +142,6 @@ private fun assertWhatIsNewInFirefoxPreview() {
     onView(withText("What’s new in $appName"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
-
-    // Commenting out since the Text to verify in the web site seems to be different now
-    /*
-    TestHelper.verifyUrl(
-         SupportUtils.SumoTopic.WHATS_NEW.topicStr,
-         "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
-         R.id.mozac_browser_toolbar_url_view
-    )*/
-
-    Espresso.pressBack()
 }
 
 private fun assertSupport() {
@@ -171,8 +158,6 @@ private fun assertSupport() {
         "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
         R.id.mozac_browser_toolbar_url_view
     )
-
-    Espresso.pressBack()
 }
 
 private fun assertCrashes() {
@@ -197,13 +182,6 @@ private fun assertCrashes() {
     for (i in 1..3) {
         Espresso.pressBack()
     }
-
-    mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/homeLayout")
-    ).waitForExists(waitingTime)
-
-    onView(ViewMatchers.withResourceName("homeLayout"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertPrivacyNotice() {
@@ -220,8 +198,6 @@ private fun assertPrivacyNotice() {
         "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
         R.id.mozac_browser_toolbar_url_view
     )
-
-    Espresso.pressBack()
 }
 
 private fun assertKnowYourRights() {
@@ -238,8 +214,6 @@ private fun assertKnowYourRights() {
         "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
         R.id.mozac_browser_toolbar_url_view
     )
-
-    Espresso.pressBack()
 }
 
 private fun assertLicensingInformation() {
@@ -256,8 +230,6 @@ private fun assertLicensingInformation() {
         "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
         R.id.mozac_browser_toolbar_url_view
     )
-
-    Espresso.pressBack()
 }
 
 private fun assertLibrariesUsed() {
