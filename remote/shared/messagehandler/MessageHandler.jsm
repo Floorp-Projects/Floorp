@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
-  MessageHandlerInfo:
-    "chrome://remote/content/shared/messagehandler/MessageHandlerInfo.jsm",
   ModuleCache: "chrome://remote/content/shared/messagehandler/ModuleCache.jsm",
 });
 
@@ -40,7 +38,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * emit all the relevant events captured by the network.
  *
  * However, even to create this ROOT MessageHandler, consumers should use the
- * MessageHandlerRegistry. This singleton will ensure that MessageHandler
+ * RootMessageHandlerRegistry. This singleton will ensure that MessageHandler
  * instances are properly registered and can be retrieved based on a given
  * session id as well as some other context information.
  */
@@ -56,25 +54,23 @@ class MessageHandler extends EventEmitter {
   constructor(sessionId, context) {
     super();
 
-    this._messageHandlerInfo = new MessageHandlerInfo(
-      sessionId,
-      this.constructor.type,
-      this.constructor.getIdFromContext(context)
-    );
-
     this._moduleCache = new ModuleCache(this);
+
+    this._sessionId = sessionId;
+    this._context = context;
+    this._contextId = this.constructor.getIdFromContext(context);
   }
 
   get contextId() {
-    return this._messageHandlerInfo.contextId;
+    return this._contextId;
   }
 
-  get key() {
-    return this._messageHandlerInfo.key;
+  get name() {
+    return [this.sessionId, this.constructor.type, this.contextId].join("-");
   }
 
   get sessionId() {
-    return this._messageHandlerInfo.sessionId;
+    return this._sessionId;
   }
 
   destroy() {
@@ -100,13 +96,9 @@ class MessageHandler extends EventEmitter {
    */
   emitMessageHandlerEvent(method, params) {
     this.emit("message-handler-event", {
-      // TODO: The messageHandlerInfo needs to be wrapped in the event so
-      // that consumers can check the type/context. Once MessageHandlerRegistry
-      // becomes context-specific (Bug 1722659), only the sessionId will be
-      // required.
-      messageHandlerInfo: this._messageHandlerInfo,
       method,
       params,
+      sessionId: this.sessionId,
     });
   }
 
@@ -156,7 +148,7 @@ class MessageHandler extends EventEmitter {
   }
 
   toString() {
-    return `[object ${this.constructor.name} ${this.key}]`;
+    return `[object ${this.constructor.name} ${this.name}]`;
   }
 
   _isCommandSupportedByModule(commandName, module) {

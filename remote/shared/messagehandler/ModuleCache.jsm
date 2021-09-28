@@ -133,7 +133,7 @@ class ModuleCache {
   }
 
   toString() {
-    return `[object ${this.constructor.name} ${this.messageHandler.key}]`;
+    return `[object ${this.constructor.name} ${this.messageHandler.name}]`;
   }
 
   _getModuleFullPath(moduleName, destination) {

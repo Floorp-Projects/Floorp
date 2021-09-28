@@ -11,8 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  MessageHandlerRegistry:
-    "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
+  RootMessageHandlerRegistry:
+    "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.jsm",
 });
 
 /**
@@ -26,7 +26,7 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
       case "MessageHandlerFrameChild:messageHandlerEvent":
         const { method, params, sessionId } = message.data;
 
-        const messageHandler = MessageHandlerRegistry.getRootMessageHandler(
+        const messageHandler = RootMessageHandlerRegistry.getExistingMessageHandler(
           sessionId
         );
 
