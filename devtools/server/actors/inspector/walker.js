@@ -321,7 +321,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {},
+      traits: {
+        // @backward-compat { version 94 } This can be removed once 94 is in release
+        clearPickerSupport: true,
+      },
     };
   },
 
@@ -2791,6 +2794,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   cancelPick() {
     this.nodePicker.cancelPick();
+  },
+
+  clearPicker() {
+    this.nodePicker.resetHoveredNodeReference();
   },
 
   /**
