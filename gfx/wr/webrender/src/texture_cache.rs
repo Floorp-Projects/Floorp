@@ -26,7 +26,6 @@ use crate::texture_pack::{
     AtlasAllocatorList,
     ShelfAllocator,
     ShelfAllocatorOptions,
-    SlabAllocator, SlabAllocatorParameters,
 };
 use smallvec::SmallVec;
 use std::cell::Cell;
@@ -327,7 +326,7 @@ struct SharedTextures {
     color8_nearest: AllocatorList<ShelfAllocator, TextureParameters>,
     alpha8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     alpha8_glyphs: AllocatorList<ShelfAllocator, TextureParameters>,
-    alpha16_linear: AllocatorList<SlabAllocator, TextureParameters>,
+    alpha16_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_glyphs: AllocatorList<ShelfAllocator, TextureParameters>,
     bytes_per_texture_of_type: [i32 ; BudgetType::COUNT],
@@ -381,8 +380,10 @@ impl SharedTextures {
         // production Firefox.
         let alpha16_linear = AllocatorList::new(
             config.alpha16_texture_size,
-            SlabAllocatorParameters {
-                region_size: TEXTURE_REGION_DIMENSIONS,
+            ShelfAllocatorOptions {
+                num_columns: if config.alpha16_texture_size >= 1024 { 2 } else { 1 },
+                alignment: size2(8, 8),
+                .. ShelfAllocatorOptions::default()
             },
             TextureParameters {
                 formats: TextureFormatPair::from(ImageFormat::R16),
