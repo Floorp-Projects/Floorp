@@ -5,7 +5,7 @@
 
 #include "SharedSurfaceDMABUF.h"
 
-#include "gfxPlatformGtk.h"
+#include "gfxPlatform.h"
 #include "GLContextEGL.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
@@ -54,7 +54,7 @@ Maybe<layers::SurfaceDescriptor> SharedSurface_DMABUF::ToSurfaceDescriptor() {
 
 /*static*/
 UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
-  if (!gfxPlatformGtk::GetPlatform()->UseDMABufWebGL()) {
+  if (!widget::GetDMABufDevice()->IsDMABufWebGLEnabled()) {
     return nullptr;
   }
 
@@ -65,7 +65,7 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
 
   LOGDMABUF(
       ("SurfaceFactory_DMABUF::Create() failed, fallback to SW buffers.\n"));
-  gfxPlatformGtk::GetPlatform()->DisableDMABufWebGL();
+  widget::GetDMABufDevice()->DisableDMABufWebGL();
   return nullptr;
 }
 
