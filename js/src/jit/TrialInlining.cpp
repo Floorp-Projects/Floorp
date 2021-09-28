@@ -107,6 +107,7 @@ bool TrialInliner::replaceICStub(ICEntry& entry, ICFallbackStub* fallback,
                                             icScript_, fallback);
   if (!newStub) {
     MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
+    icScript_->removeInlinedChild(fallback->pcOffset());
     ReportOutOfMemory(cx());
     return false;
   }
@@ -638,12 +639,7 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
                              data->callFlags);
   writer.returnFromIC();
 
-  if (!replaceICStub(entry, fallback, writer, CacheKind::Call)) {
-    icScript_->removeInlinedChild(fallback->pcOffset());
-    return false;
-  }
-
-  return true;
+  return replaceICStub(entry, fallback, writer, CacheKind::Call);
 }
 
 bool TrialInliner::maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
@@ -680,12 +676,7 @@ bool TrialInliner::maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
                                  newICScript, data->sameRealm);
   writer.returnFromIC();
 
-  if (!replaceICStub(entry, fallback, writer, CacheKind::GetProp)) {
-    icScript_->removeInlinedChild(fallback->pcOffset());
-    return false;
-  }
-
-  return true;
+  return replaceICStub(entry, fallback, writer, CacheKind::GetProp);
 }
 
 bool TrialInliner::maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
@@ -723,12 +714,7 @@ bool TrialInliner::maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
                            data->rhsOperand, newICScript, data->sameRealm);
   writer.returnFromIC();
 
-  if (!replaceICStub(entry, fallback, writer, CacheKind::SetProp)) {
-    icScript_->removeInlinedChild(fallback->pcOffset());
-    return false;
-  }
-
-  return true;
+  return replaceICStub(entry, fallback, writer, CacheKind::SetProp);
 }
 
 bool TrialInliner::tryInlining() {
