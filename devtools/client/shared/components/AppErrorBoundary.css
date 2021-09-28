@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Container */
-.network-monitor .app-error-panel {
+.app-error-panel {
   color: var(--theme-text-color-strong);
   display: flex;
   flex-direction: column;
@@ -11,40 +11,41 @@
   margin: 0 0 2rem;
   overflow-y: scroll;
   padding: 1rem 3rem;
+  width: 100%;
 }
 
 /* "Has crashed" header */
-.network-monitor .app-error-panel .error-panel-header {
+.app-error-panel .error-panel-header {
   align-self: center;
   font-size: 22px;
   font-weight: 300;
 }
 
 /* "File a Bug" button */
-.network-monitor .app-error-panel .error-panel-file-button {
+.app-error-panel .error-panel-file-button {
   align-self: center;
   background-color: var(--blue-60);
   outline: none;
   color: white;
   font-size: 15px;
   font-weight: 400;
-  margin: 1rem 0;
+  margin-bottom: 14.74px;
   padding: 0.75rem;
   text-align: center;
   inline-size: 200px;
   text-decoration: none;
 }
 
-.network-monitor .app-error-panel .error-panel-file-button:hover {
+.app-error-panel .error-panel-file-button:hover {
   background-color: var(--blue-70);
 }
 
-.network-monitor .app-error-panel .error-panel-file-button:hover:active {
+.app-error-panel .error-panel-file-button:hover:active {
   background-color: var(--blue-80);
 }
 
 /* Text of the error itself, not the stack trace */
-.network-monitor .app-error-panel .error-panel-error {
+.app-error-panel .error-panel-error {
   background-color: var(--theme-body-emphasized-background);
   border: 1px solid var(--theme-toolbar-separator);
   border-block-end: 0;
@@ -55,24 +56,25 @@
 }
 
 /* Stack trace; composed of <p> elements */
-.network-monitor .app-error-panel .stack-trace-section {
+.app-error-panel .stack-trace-section {
   background-color: var(--theme-body-emphasized-background);
   border: 1px solid var(--theme-toolbar-separator);
   padding: 2rem;
+  margin-bottom: 1rem;
 }
 
-.network-monitor .app-error-panel .stack-trace-section p {
+.app-error-panel .stack-trace-section p {
   color: var(--theme-stack-trace-text);
   margin: 0;
   margin-inline-start: 1rem;
 }
 
-.network-monitor .app-error-panel .stack-trace-section p:first-child {
+.app-error-panel .stack-trace-section p:first-child {
   margin: 0;
 }
 
 /* Instructions to reopen the toolbox */
-.network-monitor .app-error-panel .error-panel-reload-info {
+.app-error-panel .error-panel-reload-info {
   font-size: 15px;
   font-weight: 400;
   margin: 2rem 0 1rem;
