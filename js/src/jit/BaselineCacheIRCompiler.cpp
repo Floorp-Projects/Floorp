@@ -2054,16 +2054,20 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
   return script->zone()->jitZone()->optimizedStubSpace();
 }
 
-ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
+ICAttachResult js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
     JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub) {
   // We shouldn't GC or report OOM (or any other exception) here.
   AutoAssertNoPendingException aanpe(cx);
   JS::AutoCheckCannotGC nogc;
 
-  if (writer.failed()) {
-    return nullptr;
+  if (writer.tooLarge()) {
+    return ICAttachResult::TooLarge;
   }
+  if (writer.oom()) {
+    return ICAttachResult::OOM;
+  }
+  MOZ_ASSERT(!writer.failed());
 
   // Just a sanity check: the caller should ensure we don't attach an
   // unlimited number of stubs.
@@ -2088,12 +2092,12 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
     JitContext jctx(cx, nullptr);
     BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
     if (!comp.init(kind)) {
-      return nullptr;
+      return ICAttachResult::OOM;
     }
 
     code = comp.compile();
     if (!code) {
-      return nullptr;
+      return ICAttachResult::OOM;
     }
 
     // Allocate the shared CacheIRStubInfo. Note that the
@@ -2105,12 +2109,12 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
         CacheIRStubInfo::New(kind, ICStubEngine::Baseline, comp.makesGCCalls(),
                              stubDataOffset, writer);
     if (!stubInfo) {
-      return nullptr;
+      return ICAttachResult::OOM;
     }
 
     CacheIRStubKey key(stubInfo);
     if (!jitZone->putBaselineCacheIRStubCode(lookup, key, code)) {
-      return nullptr;
+      return ICAttachResult::OOM;
     }
   }
 
@@ -2140,7 +2144,7 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
             "Tried attaching identical stub for (%s:%u:%u)",
             outerScript->filename(), outerScript->lineno(),
             outerScript->column());
-    return nullptr;
+    return ICAttachResult::DuplicateStub;
   }
 
   // Time to allocate and attach a new stub.
@@ -2151,7 +2155,7 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
       StubSpaceForStub(stubInfo->makesGCCalls(), outerScript, icScript);
   void* newStubMem = stubSpace->alloc(bytesNeeded);
   if (!newStubMem) {
-    return nullptr;
+    return ICAttachResult::OOM;
   }
 
   // Resetting the entered counts on the IC chain makes subsequent reasoning
@@ -2174,7 +2178,7 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
   writer.copyStubData(newStub->stubDataStart());
   newStub->setTypeData(writer.typeData());
   stub->addNewStub(icEntry, newStub);
-  return newStub;
+  return ICAttachResult::Attached;
 }
 
 uint8_t* ICCacheIRStub::stubDataStart() {
