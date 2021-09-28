@@ -714,10 +714,6 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg3;
 // must be a volatile register.
 static constexpr Register WasmJitEntryReturnScratch = r9;
 
-// Register used to store a reference to an exception thrown by Wasm to an
-// exception handling block. Should not overlap with WasmTlsReg.
-static constexpr Register WasmExceptionReg = ABINonArgReg2;
-
 static inline bool GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs,
                                 Register* out) {
   if (usedIntArgs >= NumIntArgRegs) {
