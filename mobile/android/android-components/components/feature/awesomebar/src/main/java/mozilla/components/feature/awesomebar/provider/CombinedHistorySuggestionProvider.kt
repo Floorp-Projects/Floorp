@@ -58,22 +58,37 @@ class CombinedHistorySuggestionProvider(
         }
 
         // Do both queries in parallel to optimize for speed.
-        val metadataSuggestions = async {
+        val metadataSuggestionsAsync = async {
             historyMetadataStorage
                 .queryHistoryMetadata(text, maxNumberOfSuggestions)
                 .filter { it.totalViewTime > 0 }
                 .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase)
         }
-        val historySuggestions = async {
+        val historySuggestionsAsync = async {
             historyStorage.getSuggestions(text, maxNumberOfSuggestions)
                 .sortedByDescending { it.score }
                 .distinctBy { it.id }
                 .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase)
         }
 
-        val combinedSuggestions = (metadataSuggestions.await() + historySuggestions.await())
+        val metadataSuggestions = metadataSuggestionsAsync.await()
+        val historySuggestions = historySuggestionsAsync.await()
+        val historyTopScore = historySuggestions.firstOrNull()?.score
+        val updatedMetadataSuggestions = if (historyTopScore != null) {
+            // Make sure history metadata suggestions have a higher score than regular history
+            // suggestions but otherwise retain their relative order.
+            val size = metadataSuggestions.size
+            metadataSuggestions.mapIndexed { index, suggestion ->
+                suggestion.copy(score = (size - index) + historyTopScore)
+            }
+        } else {
+            metadataSuggestions
+        }
+
+        val combinedSuggestions = (updatedMetadataSuggestions + historySuggestions)
             .distinctBy { it.description }
             .take(maxNumberOfSuggestions)
+
         combinedSuggestions.firstOrNull()?.description?.let { url -> engine?.speculativeConnect(url) }
 
         return@coroutineScope combinedSuggestions

@@ -13,6 +13,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
+import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -96,12 +97,71 @@ class CombinedHistorySuggestionProviderTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
         val history = InMemoryHistoryStorage()
-        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        history.recordVisit(
+            "http://www.mozilla.com",
+            PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE)
+        )
         val provider = CombinedHistorySuggestionProvider(history, storage, mock())
 
         val result = provider.onInputChanged("moz")
 
         assertEquals(1, result.size)
         assertEquals("http://www.mozilla.com", result[0].description)
+    }
+
+    @Test
+    fun `GIVEN a combined list of suggestions WHEN history results exist THEN urls are deduped and scores are adjusted`() = runBlocking {
+        val metadataEntry1 = HistoryMetadata(
+            key = HistoryMetadataKey("https://www.mozilla.com", null, null),
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
+        val metadataEntry2 = HistoryMetadata(
+            key = HistoryMetadataKey("https://www.mozilla.com/firefox", null, null),
+            title = "firefox",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 20,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
+        val searchResult1 = SearchResult(
+            id = "1",
+            url = "https://www.mozilla.com",
+            title = "mozilla",
+            score = 1
+        )
+
+        val searchResult2 = SearchResult(
+            id = "2",
+            url = "https://www.mozilla.com/pocket",
+            title = "pocket",
+            score = 2
+        )
+
+        val metadataStorage: HistoryMetadataStorage = mock()
+        val historyStorage: InMemoryHistoryStorage = mock()
+        doReturn(listOf(metadataEntry2, metadataEntry1)).`when`(metadataStorage).queryHistoryMetadata(eq("moz"), anyInt())
+        doReturn(listOf(searchResult1, searchResult2)).`when`(historyStorage).getSuggestions(eq("moz"), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(historyStorage, metadataStorage, mock())
+
+        val result = provider.onInputChanged("moz")
+
+        assertEquals(3, result.size)
+        assertEquals("https://www.mozilla.com/firefox", result[0].description)
+        assertEquals(4, result[0].score)
+
+        assertEquals("https://www.mozilla.com", result[1].description)
+        assertEquals(3, result[1].score)
+
+        assertEquals("https://www.mozilla.com/pocket", result[2].description)
+        assertEquals(2, result[2].score)
     }
 }
