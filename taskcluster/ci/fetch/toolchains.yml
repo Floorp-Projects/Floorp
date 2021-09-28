@@ -418,7 +418,7 @@ wasi-sdk:
     fetch:
         type: git
         repo: https://github.com/WebAssembly/wasi-sdk
-        revision: b36c433738f0c29160a5ac1c1cee1b1b884bf4a0
+        revision: f0d40b6491efc1e2332f55eb22e6292abdce4335
 
 ninja:
     description: ninja 1.9.0
