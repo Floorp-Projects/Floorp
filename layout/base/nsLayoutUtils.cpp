@@ -4478,7 +4478,7 @@ static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
     return false;
   }
 
-  if (aStyle == nsIFrame::ExtremumLength::MozFitContent) {
+  if (aStyle == nsIFrame::ExtremumLength::FitContent) {
     switch (aProperty) {
       case nsIFrame::SizeProperty::Size:
         // handle like 'width: auto'

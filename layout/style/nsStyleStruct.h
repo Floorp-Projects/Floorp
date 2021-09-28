@@ -841,7 +841,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
     if (aCoord.IsLengthPercentage()) {
       return aCoord.AsLengthPercentage().HasPercent();
     }
-    return aCoord.IsMozFitContent() || aCoord.IsMozAvailable();
+    return aCoord.IsFitContent() || aCoord.IsMozAvailable();
   }
 
   template <typename SizeOrMaxSize>
