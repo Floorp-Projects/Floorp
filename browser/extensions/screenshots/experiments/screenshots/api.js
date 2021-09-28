@@ -47,8 +47,8 @@ this.screenshots = class extends ExtensionAPI {
             name: "experiments.screenshots.onScreenshotCommand",
             register: fire => {
               let observer = (subject, topic, data) => {
-                let isContexMenuClick = data;
-                fire.sync(isContexMenuClick);
+                let type = data;
+                fire.sync(type);
               };
               Services.obs.addObserver(observer, TOPIC);
               return () => {
