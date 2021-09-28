@@ -175,6 +175,7 @@ class nsDMABufDevice {
   bool IsDMABufVAAPIEnabled();
   // Use dmabuf for WebGL content
   bool IsDMABufWebGLEnabled();
+  void DisableDMABufWebGL();
 
   GbmFormat* GetGbmFormat(bool aHasAlpha);
   GbmFormat* GetExactGbmFormat(int aFormat);
@@ -182,6 +183,9 @@ class nsDMABufDevice {
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
   bool Configure(nsACString& aFailureId);
+
+ private:
+  bool mUseWebGLDmabufBackend;
 
  private:
   bool IsDMABufEnabled();
