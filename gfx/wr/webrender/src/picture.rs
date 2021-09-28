@@ -655,11 +655,9 @@ impl SurfaceTextureDescriptor {
     ) -> ResolvedSurfaceTexture {
         match self {
             SurfaceTextureDescriptor::TextureCache { handle } => {
-                let cache_item = resource_cache.texture_cache.get(handle);
+                let texture = resource_cache.texture_cache.get_picture_texture(handle);
 
-                ResolvedSurfaceTexture::TextureCache {
-                    texture: cache_item.texture_id,
-                }
+                ResolvedSurfaceTexture::TextureCache { texture }
             }
             SurfaceTextureDescriptor::Native { id } => {
                 ResolvedSurfaceTexture::Native {
@@ -4869,7 +4867,7 @@ impl PicturePrimitive {
                             match descriptor {
                                 SurfaceTextureDescriptor::TextureCache { ref handle, .. } => {
                                     // Invalidate if the backing texture was evicted.
-                                    if frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                    if frame_state.resource_cache.texture_cache.picture_tile_is_allocated(handle) {
                                         // Request the backing texture so it won't get evicted this frame.
                                         // We specifically want to mark the tile texture as used, even
                                         // if it's detected not visible below and skipped. This is because
@@ -4929,7 +4927,7 @@ impl PicturePrimitive {
                             if let TileSurface::Texture { ref mut descriptor } = tile.surface.as_mut().unwrap() {
                                 match descriptor {
                                     SurfaceTextureDescriptor::TextureCache { ref mut handle } => {
-                                        if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                        if !frame_state.resource_cache.texture_cache.picture_tile_is_allocated(handle) {
                                             frame_state.resource_cache.texture_cache.update_picture_cache(
                                                 tile_cache.current_tile_size,
                                                 handle,
