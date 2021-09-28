@@ -98,7 +98,7 @@ use api::units::*;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId, SpatialNodeContainer};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use crate::ellipse::Ellipse;
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{BoxShadowStretchMode};

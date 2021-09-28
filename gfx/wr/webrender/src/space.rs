@@ -215,11 +215,11 @@ impl SpaceSnapper {
             return
         }
 
-        let ref_spatial_node = spatial_tree.get_spatial_node(self.ref_spatial_node_index);
-        let target_spatial_node = spatial_tree.get_spatial_node(target_node_index);
+        let ref_snap = spatial_tree.get_node_info(self.ref_spatial_node_index).snapping_transform;
+        let target_snap = spatial_tree.get_node_info(target_node_index).snapping_transform;
 
         self.current_target_spatial_node_index = target_node_index;
-        self.snapping_transform = match (ref_spatial_node.snapping_transform, target_spatial_node.snapping_transform) {
+        self.snapping_transform = match (ref_snap, target_snap) {
             (Some(ref ref_scale_offset), Some(ref target_scale_offset)) => {
                 Some(ref_scale_offset
                     .inverse()

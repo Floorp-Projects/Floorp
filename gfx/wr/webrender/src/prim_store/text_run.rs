@@ -17,7 +17,7 @@ use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
 use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind};
-use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, SpatialNodeContainer};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::space::SpaceSnapper;
 use crate::util::PrimaryArc;
 

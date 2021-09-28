@@ -529,7 +529,7 @@ impl<'a> SceneBuilder<'a> {
             output_rect: view.device_rect.size().into(),
             background_color,
             hit_testing_scene: Arc::new(builder.hit_testing_scene),
-            spatial_tree: SpatialTree::new(builder.spatial_tree),
+            spatial_tree: SpatialTree::new(&builder.spatial_tree),
             prim_store: builder.prim_store,
             clip_store: builder.clip_store,
             config: builder.config,
@@ -2045,7 +2045,7 @@ impl<'a> SceneBuilder<'a> {
         if stacking_context.flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) &&
            self.sc_stack.is_empty() &&
            self.tile_cache_builder.can_add_container_tile_cache() &&
-           self.spatial_tree.get_spatial_node(stacking_context.spatial_node_index).is_root_coord_system
+           self.spatial_tree.get_node_info(stacking_context.spatial_node_index).is_root_coord_system
         {
             self.tile_cache_builder.add_tile_cache(
                 stacking_context.prim_list,
