@@ -344,6 +344,7 @@ class HomeFragment : Fragment() {
                 navController = findNavController()
             ),
             pocketStoriesController = DefaultPocketStoriesController(
+                homeActivity = activity,
                 homeStore = homeFragmentStore
             )
         )

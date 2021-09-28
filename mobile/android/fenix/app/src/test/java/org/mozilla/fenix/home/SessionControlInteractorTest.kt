@@ -248,4 +248,13 @@ class SessionControlInteractorTest {
 
         verify { pocketStoriesController.handleCategoryClick(clickedCategory) }
     }
+
+    @Test
+    fun `GIVEN a PocketStoriesInteractor WHEN an external link is clicked THEN handle it in a PocketStoriesController`() {
+        val link = "https://www.mozilla.org/en-US/firefox/pocket/"
+
+        interactor.onExternalLinkClicked(link)
+
+        verify { pocketStoriesController.handleExternalLinkClick(link) }
+    }
 }

@@ -15,15 +15,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
+import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.theme.FirefoxTheme
 
-internal const val POCKET_STORIES_TO_SHOW_COUNT = 7
-internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 7
+internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
+internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 
 /**
  * [RecyclerView.ViewHolder] that will display a list of [PocketRecommendedStory]es
@@ -46,7 +50,15 @@ class PocketStoriesViewHolder(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
         composeView.setContent {
-            PocketStories(store, client, interactor::onStoriesShown, interactor::onCategoryClick)
+            FirefoxTheme {
+                PocketStories(
+                    store,
+                    client,
+                    interactor::onStoriesShown,
+                    interactor::onCategoryClick,
+                    interactor::onExternalLinkClicked
+                )
+            }
         }
     }
 
@@ -60,7 +72,8 @@ fun PocketStories(
     store: HomeFragmentStore,
     client: Client,
     onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
-    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit
+    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit,
+    onExternalLinkClicked: (String) -> Unit
 ) {
     val stories = store
         .observeAsComposableState { state -> state.pocketStories }.value
@@ -76,21 +89,32 @@ fun PocketStories(
         }
     }
 
-    ExpandableCard(
-        Modifier
-            .fillMaxWidth()
-            .padding(top = 40.dp)
-    ) {
-        PocketRecommendations {
-            Column {
-                PocketStories(stories ?: emptyList(), client)
+    Column(modifier = Modifier.padding(vertical = 48.dp)) {
+        SectionHeader(
+            text = stringResource(R.string.pocket_stories_header),
+            modifier = Modifier
+                .fillMaxWidth()
+        )
 
-                Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(17.dp))
 
-                PocketStoriesCategories(categories ?: emptyList()) {
-                    onCategoryClick(it)
-                }
-            }
+        PocketStories(stories ?: emptyList(), client, onExternalLinkClicked)
+
+        Spacer(Modifier.height(24.dp))
+
+        SectionHeader(
+            text = stringResource(R.string.pocket_stories_categories_header),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(17.dp))
+
+        PocketStoriesCategories(categories ?: emptyList()) {
+            onCategoryClick(it)
         }
+
+        Spacer(Modifier.height(24.dp))
+
+        PoweredByPocketHeader(onExternalLinkClicked)
     }
 }

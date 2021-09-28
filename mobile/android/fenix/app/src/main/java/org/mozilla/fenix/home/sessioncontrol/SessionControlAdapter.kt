@@ -219,6 +219,7 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
     }
 }
 
+@Suppress("LongParameterList")
 class SessionControlAdapter(
     private val store: HomeFragmentStore,
     private val interactor: SessionControlInteractor,

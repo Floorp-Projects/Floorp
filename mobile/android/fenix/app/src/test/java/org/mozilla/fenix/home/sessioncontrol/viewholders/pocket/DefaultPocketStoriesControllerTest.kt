@@ -9,6 +9,8 @@ import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Test
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
@@ -23,7 +25,7 @@ class DefaultPocketStoriesControllerTest {
                 HomeFragmentState(pocketStoriesCategories = listOf(category1, category2))
             )
         )
-        val controller = DefaultPocketStoriesController(store)
+        val controller = DefaultPocketStoriesController(mockk(), store)
 
         controller.handleCategoryClick(category1)
         verify(exactly = 0) { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(category1.name)) }
@@ -33,7 +35,39 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
-    fun `GIVEN 7 categories are selected WHEN when a new one is clicked THEN the oldest seleected is deselected before selecting the new one`() {
+    fun `GIVEN 8 categories are selected WHEN when a new one is clicked THEN the oldest selected is deselected before selecting the new one`() {
+        val category1 = PocketRecommendedStoryCategory(
+            "cat1", emptyList(), isSelected = true, lastInteractedWithTimestamp = 111
+        )
+        val category2 = category1.copy("cat2", lastInteractedWithTimestamp = 222)
+        val category3 = category1.copy("cat3", lastInteractedWithTimestamp = 333)
+        val oldestSelectedCategory = category1.copy("oldestSelectedCategory", lastInteractedWithTimestamp = 0)
+        val category4 = category1.copy("cat4", lastInteractedWithTimestamp = 444)
+        val category5 = category1.copy("cat5", lastInteractedWithTimestamp = 555)
+        val category6 = category1.copy("cat6", lastInteractedWithTimestamp = 678)
+        val category7 = category1.copy("cat6", lastInteractedWithTimestamp = 890)
+        val newSelectedCategory = category1.copy(
+            "newSelectedCategory", isSelected = false, lastInteractedWithTimestamp = 654321
+        )
+        val store = spyk(
+            HomeFragmentStore(
+                HomeFragmentState(
+                    pocketStoriesCategories = listOf(
+                        category1, category2, category3, category4, category5, category6, category7, oldestSelectedCategory
+                    )
+                )
+            )
+        )
+        val controller = DefaultPocketStoriesController(mockk(), store)
+
+        controller.handleCategoryClick(newSelectedCategory)
+
+        verify { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
+        verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
+    }
+
+    @Test
+    fun `GIVEN fewer than 8 categories are selected WHEN when a new one is clicked THEN don't deselect anything but select the newly clicked category`() {
         val category1 = PocketRecommendedStoryCategory(
             "cat1", emptyList(), isSelected = true, lastInteractedWithTimestamp = 111
         )
@@ -55,37 +89,7 @@ class DefaultPocketStoriesControllerTest {
                 )
             )
         )
-        val controller = DefaultPocketStoriesController(store)
-
-        controller.handleCategoryClick(newSelectedCategory)
-
-        verify { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
-        verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
-    }
-
-    @Test
-    fun `GIVEN fewer than 7 categories are selected WHEN when a new one is clicked THEN don't deselect anything but select the newly clicked category`() {
-        val category1 = PocketRecommendedStoryCategory(
-            "cat1", emptyList(), isSelected = true, lastInteractedWithTimestamp = 111
-        )
-        val category2 = category1.copy("cat2", lastInteractedWithTimestamp = 222)
-        val category3 = category1.copy("cat3", lastInteractedWithTimestamp = 333)
-        val oldestSelectedCategory = category1.copy("oldestSelectedCategory", lastInteractedWithTimestamp = 0)
-        val category4 = category1.copy("cat4", lastInteractedWithTimestamp = 444)
-        val category5 = category1.copy("cat5", lastInteractedWithTimestamp = 555)
-        val newSelectedCategory = category1.copy(
-            "newSelectedCategory", isSelected = false, lastInteractedWithTimestamp = 654321
-        )
-        val store = spyk(
-            HomeFragmentStore(
-                HomeFragmentState(
-                    pocketStoriesCategories = listOf(
-                        category1, category2, category3, category4, category5, oldestSelectedCategory
-                    )
-                )
-            )
-        )
-        val controller = DefaultPocketStoriesController(store)
+        val controller = DefaultPocketStoriesController(mockk(), store)
 
         controller.handleCategoryClick(newSelectedCategory)
 
@@ -96,11 +100,22 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN new stories are shown THEN update the State`() {
         val store = spyk(HomeFragmentStore())
-        val controller = DefaultPocketStoriesController(store)
+        val controller = DefaultPocketStoriesController(mockk(), store)
         val storiesShown: List<PocketRecommendedStory> = mockk()
 
         controller.handleStoriesShown(storiesShown)
 
         verify { store.dispatch(HomeFragmentAction.PocketStoriesShown(storiesShown)) }
+    }
+
+    @Test
+    fun `WHEN an external link is clicked then open that using HomeActivity`() {
+        val link = "https://www.mozilla.org/en-US/firefox/pocket/"
+        val homeActivity: HomeActivity = mockk(relaxed = true)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
+
+        controller.handleExternalLinkClick(link)
+
+        verify { homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome) }
     }
 }

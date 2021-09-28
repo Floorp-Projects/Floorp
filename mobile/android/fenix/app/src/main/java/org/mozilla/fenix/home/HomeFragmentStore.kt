@@ -53,7 +53,7 @@ data class Tab(
  * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property historyMetadata The list of [HistoryMetadataGroup].
- * @property pocketStories Currently shown [PocketRecommendedStory]ies.
+ * @property pocketStories The list of currently shown [PocketRecommendedStory]s.
  * @property pocketStoriesCategories All [PocketRecommendedStory] categories.
  * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
  */

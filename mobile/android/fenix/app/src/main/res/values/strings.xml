@@ -1909,4 +1909,17 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Close</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header">Thought provoking stories</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Stories by topic</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Discover more</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Powered by Pocket</string>
+    <!-- Caption which concatenates the text of "pocket_stories_feature_learn_more"  -->
+    <string name="pocket_stories_feature_caption">Part of the Firefox family. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Learn more</string>
 </resources>

@@ -141,7 +141,7 @@ class HomeFragmentStateTest {
     }
 
     @Test
-    fun `GIVEN two categories are selected WHEN getFilteredStories is called for an odd number of stories THEN there are more by one stories from the oldest category`() {
+    fun `GIVEN two categories are selected WHEN getFilteredStories is called for an odd number of stories THEN there are more by one stories from the newest category`() {
         val firstSelectedCategory = otherStoriesCategory.copy(lastInteractedWithTimestamp = 0, isSelected = true)
         val lastSelectedCategory = anotherStoriesCategory.copy(lastInteractedWithTimestamp = 1, isSelected = true)
         val homeState = HomeFragmentState(
@@ -153,8 +153,8 @@ class HomeFragmentStateTest {
         val result = homeState.getFilteredStories(5)
 
         assertEquals(5, result.size)
-        assertEquals(3, result.filter { it.category == firstSelectedCategory.name }.size)
-        assertEquals(2, result.filter { it.category == lastSelectedCategory.name }.size)
+        assertEquals(2, result.filter { it.category == firstSelectedCategory.name }.size)
+        assertEquals(3, result.filter { it.category == lastSelectedCategory.name }.size)
     }
 
     @Test
@@ -280,7 +280,7 @@ class HomeFragmentStateTest {
     @Test
     fun `GIVEN two categories selected with more than needed stories WHEN getFilteredStories is called THEN the results are sorted in the order of least shown`() {
         val firstCategory = PocketRecommendedStoryCategory(
-            "first", getFakePocketStories(3, "first"), true, 222
+            "first", getFakePocketStories(3, "first"), true, 0
         ).run {
             // Avoid the first item also being the oldest to eliminate a potential bug in code
             // that would still get the expected result.
@@ -295,7 +295,7 @@ class HomeFragmentStateTest {
             )
         }
         val secondCategory = PocketRecommendedStoryCategory(
-            "second", getFakePocketStories(3, "second"), true, 0
+            "second", getFakePocketStories(3, "second"), true, 222
         ).run {
             // Avoid the first item also being the oldest to eliminate a potential bug in code
             // that would still get the expected result.

@@ -36,7 +36,7 @@ fun HomeFragmentState.getFilteredStories(
     }
 
     val oldestSortedCategories = currentlySelectedCategories
-        .sortedBy { it.lastInteractedWithTimestamp }
+        .sortedByDescending { it.lastInteractedWithTimestamp }
 
     val filteredStoriesCount = getFilteredStoriesCount(
         pocketStoriesCategories, oldestSortedCategories, neededStoriesCount

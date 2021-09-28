@@ -393,4 +393,8 @@ class SessionControlInteractor(
     override fun onStoriesShown(storiesShown: List<PocketRecommendedStory>) {
         pocketStoriesController.handleStoriesShown(storiesShown)
     }
+
+    override fun onExternalLinkClicked(link: String) {
+        pocketStoriesController.handleExternalLinkClick(link)
+    }
 }

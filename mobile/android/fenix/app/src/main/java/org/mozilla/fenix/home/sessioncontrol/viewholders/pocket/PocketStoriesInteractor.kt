@@ -23,4 +23,11 @@ interface PocketStoriesInteractor {
      * @param storiesShown the new list of [PocketRecommendedStory]es shown to the user.
      */
     fun onStoriesShown(storiesShown: List<PocketRecommendedStory>)
+
+    /**
+     * Callback for when the user clicks an external link.
+     *
+     * @param link URL clicked.
+     */
+    fun onExternalLinkClicked(link: String)
 }
