@@ -21,7 +21,7 @@ const rawPackets = new Map();
 rawPackets.set(`GET request`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent4",
+  "actor": "server0.conn3.netEvent4",
   "startedDateTime": "2019-11-04T11:06:34.542Z",
   "method": "GET",
   "url": "http://example.com/inexistent.html",
@@ -60,7 +60,7 @@ rawPackets.set(`GET request`, {
 rawPackets.set(`GET request update`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent5",
+  "actor": "server0.conn3.netEvent4",
   "startedDateTime": "2020-07-07T14:41:14.572Z",
   "method": "GET",
   "url": "http://example.com/inexistent.html",
@@ -99,7 +99,7 @@ rawPackets.set(`GET request update`, {
 rawPackets.set(`XHR GET request`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent21",
+  "actor": "server0.conn3.netEvent20",
   "startedDateTime": "2020-07-07T14:41:14.612Z",
   "method": "GET",
   "url": "http://example.com/inexistent.html",
@@ -138,7 +138,7 @@ rawPackets.set(`XHR GET request`, {
 rawPackets.set(`XHR GET request update`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent20",
+  "actor": "server0.conn3.netEvent20",
   "method": "GET",
   "url": "http://example.com/inexistent.html",
   "isXHR": true,
@@ -176,7 +176,7 @@ rawPackets.set(`XHR GET request update`, {
 rawPackets.set(`XHR POST request`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent36",
+  "actor": "server0.conn3.netEvent36",
   "startedDateTime": "2019-11-04T11:06:35.007Z",
   "method": "POST",
   "url": "http://example.com/inexistent.html",
@@ -215,7 +215,7 @@ rawPackets.set(`XHR POST request`, {
 rawPackets.set(`XHR POST request update`, {
   "resourceType": "network-event",
   "timeStamp": 1572867483805,
-  "actor": "server0.conn0.netEvent36",
+  "actor": "server0.conn3.netEvent36",
   "method": "POST",
   "url": "http://example.com/inexistent.html",
   "isXHR": true,
