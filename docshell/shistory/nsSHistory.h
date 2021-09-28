@@ -165,8 +165,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                   nsTArray<LoadEntryResult>& aLoadResults);
   nsresult ReloadCurrentEntry(nsTArray<LoadEntryResult>& aLoadResults);
   nsresult GotoIndex(int32_t aIndex, nsTArray<LoadEntryResult>& aLoadResults,
-                     bool aSameEpoch, bool aLoadCurrentEntry,
-                     bool aUserActivation);
+                     bool aSameEpoch = false, bool aUserActivation = false);
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
@@ -223,15 +222,15 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                             mozilla::dom::BrowsingContext* aParent,
                             long aLoadType,
                             nsTArray<LoadEntryResult>& aLoadResults,
-                            bool aLoadCurrentEntry, bool aUserActivation);
+                            bool aUserActivation);
   void InitiateLoad(nsISHEntry* aFrameEntry,
                     mozilla::dom::BrowsingContext* aFrameBC, long aLoadType,
                     nsTArray<LoadEntryResult>& aLoadResult,
-                    bool aLoadCurrentEntry, bool aUserActivation);
+                    bool aUserActivation);
 
   nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
-                     nsTArray<LoadEntryResult>& aLoadResults, bool aSameEpoch,
-                     bool aLoadCurrentEntry, bool aUserActivation);
+                     nsTArray<LoadEntryResult>& aLoadResults,
+                     bool aSameEpoch = false, bool aUserActivation = false);
 
   // Find the history entry for a given bfcache entry. It only looks up between
   // the range where alive viewers may exist (i.e nsSHistory::VIEWER_WINDOW).
@@ -252,7 +251,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
                                  uint32_t aHistCmd,
                                  nsTArray<LoadEntryResult>& aLoadResults,
-                                 bool aLoadCurrentEntry, bool aUserActivation);
+                                 bool aUserActivation);
 
   // aIndex is the index of the entry which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,

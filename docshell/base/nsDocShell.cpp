@@ -8636,7 +8636,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
   }
 
   if (aState.mHistoryNavBetweenSameDoc &&
-      !aLoadState->GetLoadingSessionHistoryInfo()->mLoadingCurrentEntry) {
+      !aLoadState->GetLoadingSessionHistoryInfo()->mLoadingCurrentActiveEntry) {
     return true;
   }
 
@@ -11751,12 +11751,13 @@ nsresult nsDocShell::LoadHistoryEntry(const LoadingSessionHistoryInfo& aEntry,
   loadState->SetHasValidUserGestureActivation(
       loadState->HasValidUserGestureActivation() || aUserActivation);
 
-  return LoadHistoryEntry(loadState, aLoadType, aEntry.mLoadingCurrentEntry);
+  return LoadHistoryEntry(loadState, aLoadType,
+                          aEntry.mLoadingCurrentActiveEntry);
 }
 
 nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
                                       uint32_t aLoadType,
-                                      bool aLoadingCurrentEntry) {
+                                      bool aReloadingActiveEntry) {
   if (!IsNavigationAllowed()) {
     return NS_OK;
   }
@@ -11777,7 +11778,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
     rv = CreateAboutBlankContentViewer(
         aLoadState->PrincipalToInherit(),
         aLoadState->PartitionedPrincipalToInherit(), nullptr, nullptr,
-        /* aIsInitialDocument */ false, Nothing(), !aLoadingCurrentEntry);
+        /* aIsInitialDocument */ false, Nothing(), !aReloadingActiveEntry);
 
     if (NS_FAILED(rv)) {
       // The creation of the intermittent about:blank content
