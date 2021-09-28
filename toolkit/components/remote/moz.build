@@ -13,10 +13,7 @@ SOURCES += [
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     SOURCES += [
-        "nsGTKRemoteServer.cpp",
         "nsUnixRemoteServer.cpp",
-        "nsXRemoteClient.cpp",
-        "nsXRemoteServer.cpp",
         "RemoteUtils.cpp",
     ]
     if CONFIG["MOZ_ENABLE_DBUS"]:
@@ -28,6 +25,12 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         EXPORTS += [
             "nsUnixRemoteServer.h",
             "RemoteUtils.h",
+        ]
+    else:
+        SOURCES += [
+            "nsGTKRemoteServer.cpp",
+            "nsXRemoteClient.cpp",
+            "nsXRemoteServer.cpp",
         ]
     CXXFLAGS += CONFIG["TK_CFLAGS"]
 

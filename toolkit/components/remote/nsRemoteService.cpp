@@ -13,10 +13,11 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/WidgetUtilsGtk.h"
 #  include "nsGTKRemoteServer.h"
-#  include "nsXRemoteClient.h"
 #  ifdef MOZ_ENABLE_DBUS
 #    include "nsDBusRemoteServer.h"
 #    include "nsDBusRemoteClient.h"
+#  else
+#    include "nsXRemoteClient.h"
 #  endif
 #elif defined(XP_WIN)
 #  include "nsWinRemoteServer.h"
@@ -39,10 +40,6 @@
 // Time to wait for the remoting service to start
 #define START_TIMEOUT_SEC 5
 #define START_SLEEP_MSEC 100
-
-// When MOZ_DBUS_REMOTE is set both X11 and Wayland backends
-// use only DBus remote.
-#define DBUS_REMOTE_ENV "MOZ_DBUS_REMOTE"
 
 using namespace mozilla;
 
@@ -102,19 +99,12 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   }
 
   UniquePtr<nsRemoteClient> client;
-
 #ifdef MOZ_WIDGET_GTK
-  bool useX11Remote = mozilla::widget::GdkIsX11Display();
-
 #  if defined(MOZ_ENABLE_DBUS)
-  const char* dbusRemoteEnv = getenv(DBUS_REMOTE_ENV);
-  if (!useX11Remote || (dbusRemoteEnv && *dbusRemoteEnv == '1')) {
-    client = MakeUnique<nsDBusRemoteClient>();
-  }
+  client = MakeUnique<nsDBusRemoteClient>();
+#  else
+  client = MakeUnique<nsXRemoteClient>();
 #  endif
-  if (!client && useX11Remote) {
-    client = MakeUnique<nsXRemoteClient>();
-  }
 #elif defined(XP_WIN)
   client = MakeUnique<nsWinRemoteClient>();
 #elif defined(XP_DARWIN)
@@ -154,16 +144,11 @@ void nsRemoteService::StartupServer() {
   }
 
 #ifdef MOZ_WIDGET_GTK
-  bool useX11Remote = mozilla::widget::GdkIsX11Display();
-
 #  if defined(MOZ_ENABLE_DBUS)
-  if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
-    mRemoteServer = MakeUnique<nsDBusRemoteServer>();
-  }
+  mRemoteServer = MakeUnique<nsDBusRemoteServer>();
+#  else
+  mRemoteServer = MakeUnique<nsGTKRemoteServer>();
 #  endif
-  if (!mRemoteServer && useX11Remote) {
-    mRemoteServer = MakeUnique<nsGTKRemoteServer>();
-  }
 #elif defined(XP_WIN)
   mRemoteServer = MakeUnique<nsWinRemoteServer>();
 #elif defined(XP_DARWIN)
