@@ -99,20 +99,25 @@ add_task(async function test_with_downloads_pref_enabled() {
   BrowserTestUtils.loadURI(gBrowser, kTestURI);
   // wait until downloadsPanel opens before continuing with test
   await downloadsPanelPromise;
-  let downloads = await downloadsPromise;
+  let downloadList = await downloadsPromise;
 
   is(DownloadsPanel.isPanelShowing, true, "DownloadsPanel should be open.");
-  is(downloads._downloads.length, 1, "File should be successfully downloaded.");
+  is(
+    downloadList._downloads.length,
+    1,
+    "File should be successfully downloaded."
+  );
 
-  let [download] = downloads._downloads;
+  let [download] = downloadList._downloads;
   is(download.contentType, "text/html", "File contentType should be correct.");
   is(
     download.source.url,
     "data:text/html,<body>data download</body>",
     "File name should be correct."
   );
+
+  info("cleaning up downloads");
   try {
-    info("cleaning up downloads");
     if (Services.appinfo.OS === "WINNT") {
       // We need to make the file writable to delete it on Windows.
       await IOUtils.setPermissions(download.target.path, 0o600);
@@ -121,4 +126,7 @@ add_task(async function test_with_downloads_pref_enabled() {
   } catch (error) {
     info("The file " + download.target.path + " is not removed, " + error);
   }
+
+  await downloadList.remove(download);
+  await download.finalize();
 });
