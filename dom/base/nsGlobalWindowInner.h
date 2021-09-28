@@ -897,6 +897,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       const mozilla::dom::ImageBitmapOptions& aOptions,
       mozilla::ErrorResult& aRv);
 
+  void StructuredClone(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                       const mozilla::dom::PostMessageOptions& aOptions,
+                       JS::MutableHandle<JS::Value> aRetval,
+                       mozilla::ErrorResult& aError);
+
   // ChromeWindow bits.  Do NOT call these unless your window is in
   // fact chrome.
   uint16_t WindowState();
