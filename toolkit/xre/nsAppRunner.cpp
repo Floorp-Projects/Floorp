@@ -5167,13 +5167,14 @@ nsresult XREMain::XRE_mainRun() {
       free(tempArgv);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+#  ifdef MOZILLA_OFFICIAL
       // Check if we're running from a DMG and allow the user to install to the
       // Applications directory.
-      if (mProfileSvc->GetIsFirstRun() &&
-          MacRunFromDmgUtils::MaybeInstallFromDmgAndRelaunch()) {
+      if (MacRunFromDmgUtils::MaybeInstallFromDmgAndRelaunch()) {
         bool userAllowedQuit = true;
         appStartup->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
       }
+#  endif
 #endif
 
       nsCOMPtr<nsIObserverService> obsService =
