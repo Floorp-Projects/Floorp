@@ -23,11 +23,11 @@ remote.jar:
 
   # shared modules (messagehandler architecture)
   content/shared/messagehandler/MessageHandler.jsm (shared/messagehandler/MessageHandler.jsm)
-  content/shared/messagehandler/MessageHandlerInfo.jsm (shared/messagehandler/MessageHandlerInfo.jsm)
   content/shared/messagehandler/MessageHandlerRegistry.jsm (shared/messagehandler/MessageHandlerRegistry.jsm)
   content/shared/messagehandler/Module.jsm (shared/messagehandler/Module.jsm)
   content/shared/messagehandler/ModuleCache.jsm (shared/messagehandler/ModuleCache.jsm)
   content/shared/messagehandler/RootMessageHandler.jsm (shared/messagehandler/RootMessageHandler.jsm)
+  content/shared/messagehandler/RootMessageHandlerRegistry.jsm (shared/messagehandler/RootMessageHandlerRegistry.jsm)
   content/shared/messagehandler/WindowGlobalMessageHandler.jsm (shared/messagehandler/WindowGlobalMessageHandler.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm)
