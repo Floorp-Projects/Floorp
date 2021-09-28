@@ -58,10 +58,6 @@ pub enum EntryDetails {
         /// Number of bytes this entry allocates
         size_in_bytes: usize,
     },
-    Picture {
-        /// Size of the tile (used for debug clears only)
-        size: DeviceIntSize,
-    },
     Cache {
         /// Origin within the texture layer where this item exists.
         origin: DeviceIntPoint,
@@ -76,7 +72,6 @@ impl EntryDetails {
     fn describe(&self) -> DeviceIntPoint {
         match *self {
             EntryDetails::Standalone { .. }  => DeviceIntPoint::zero(),
-            EntryDetails::Picture { .. } => DeviceIntPoint::zero(),
             EntryDetails::Cache { origin, .. } => origin,
         }
     }
@@ -110,7 +105,7 @@ pub struct CacheEntry {
     /// The last frame this item was requested for rendering.
     // TODO(gw): This stamp is only used for picture cache tiles, and some checks
     //           in the glyph cache eviction code. We could probably remove it
-    //           entirely in future (or move to EntryDetails::Picture).
+    //           entirely in future (or move to PictureCacheEntry).
     pub last_access: FrameStamp,
     /// Handle to the resource rect in the GPU cache.
     pub uv_rect_handle: GpuCacheHandle,
@@ -164,7 +159,7 @@ impl CacheEntry {
     // This ensures that the UV rect, and texture layer index
     // are up to date in the GPU cache for vertex shaders
     // to fetch from.
-    pub fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
+    fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
         if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
             let origin = self.details.describe();
             let image_source = ImageSource {
@@ -177,7 +172,7 @@ impl CacheEntry {
         }
     }
 
-    pub fn evict(&self) {
+    fn evict(&self) {
         if let Some(eviction_notice) = self.eviction_notice.as_ref() {
             eviction_notice.notify();
         }
@@ -1148,9 +1143,6 @@ impl TextureCache {
     // Free a cache entry from the standalone list or shared cache.
     fn free(&mut self, entry: &CacheEntry) {
         match entry.details {
-            EntryDetails::Picture { .. } => {
-                unreachable!();
-            }
             EntryDetails::Standalone { size_in_bytes, .. } => {
                 self.bytes_allocated[BudgetType::Standalone as usize] -= size_in_bytes;
 
