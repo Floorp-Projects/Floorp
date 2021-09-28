@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const DMB_TEST_URL =
-  "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
+  "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
 
 async function enableMutationBreakpoints() {
   await pushPref("devtools.debugger.features.dom-mutation-breakpoints", true);
