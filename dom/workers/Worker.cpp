@@ -162,8 +162,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 }
 
 void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                         const StructuredSerializeOptions& aOptions,
-                         ErrorResult& aRv) {
+                         const PostMessageOptions& aOptions, ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }
 

@@ -24,11 +24,11 @@ namespace dom {
 
 class MessageData;
 class MessagePortChild;
+struct PostMessageOptions;
 class PostMessageRunnable;
-class RefMessageBodyService;
 class SharedMessageBody;
+class RefMessageBodyService;
 class StrongWorkerRef;
-struct StructuredSerializeOptions;
 
 // A class to hold a MessagePortIdentifier from
 // MessagePort::CloneAndDistentangle() and close if neither passed to
@@ -96,8 +96,7 @@ class MessagePort final : public DOMEventTargetHelper {
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const StructuredSerializeOptions& aOptions,
-                   ErrorResult& aRv);
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
   void Start();
 

@@ -50,10 +50,6 @@ interface mixin WindowOrWorkerGlobalScope {
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage,
                                          long aSx, long aSy, long aSw, long aSh,
                                          optional ImageBitmapOptions aOptions = {});
-
-  // structured cloning
-  [Throws]
-  any structuredClone(any value, optional StructuredSerializeOptions options = {});
 };
 
 // https://fetch.spec.whatwg.org/#fetch-method

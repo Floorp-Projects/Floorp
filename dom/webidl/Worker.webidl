@@ -22,7 +22,7 @@ interface Worker : EventTarget {
   [Throws]
   void postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional StructuredSerializeOptions aOptions = {});
+  void postMessage(any message, optional PostMessageOptions aOptions = {});
 
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;
