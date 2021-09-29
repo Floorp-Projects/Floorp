@@ -125,7 +125,6 @@ nsresult txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
   NS_ENSURE_SUCCESS(rv, rv);
 
   txNodeSetContext* evalContext = new txNodeSetContext(aNodes, aEs);
-  NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
 
   rv = aEs->pushEvalContext(evalContext);
   NS_ENSURE_SUCCESS(rv, rv);
