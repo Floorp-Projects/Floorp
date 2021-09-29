@@ -577,11 +577,10 @@ CandidateFinder::CandidateFinder(
 nsTArray<nsCOMPtr<Element>> CandidateFinder::OrderedCandidates() {
   if (mCandidates.Count() == 1) {
     // Fast path for one candidate.
-    for (auto iter = mCandidates.Iter(); !iter.Done(); iter.Next()) {
-      nsTArray<nsCOMPtr<Element>> rval({std::move(iter.Data())});
-      iter.Remove();
-      return rval;
-    }
+    auto iter = mCandidates.Iter();
+    nsTArray<nsCOMPtr<Element>> rval({std::move(iter.Data())});
+    iter.Remove();
+    return rval;
   }
 
   nsTArray<nsCOMPtr<Element>> orderedElements(mCandidates.Count());
