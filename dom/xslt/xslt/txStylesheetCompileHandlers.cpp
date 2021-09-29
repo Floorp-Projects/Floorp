@@ -1882,10 +1882,9 @@ static nsresult txFnStartSort(int32_t aNamespaceID, nsAtom* aLocalName,
                   caseOrder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aState.mSorter->addSort(std::move(select), std::move(lang),
-                               std::move(dataType), std::move(order),
-                               std::move(caseOrder));
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.mSorter->addSort(std::move(select), std::move(lang),
+                          std::move(dataType), std::move(order),
+                          std::move(caseOrder));
 
   return aState.pushHandlerTable(gTxIgnoreHandler);
 }
