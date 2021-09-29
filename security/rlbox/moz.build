@@ -26,7 +26,6 @@ CFLAGS += [
 ]
 
 WASM_DEFINES["MOZILLA_CLIENT"] = True
-WASM_DEFINES["MOZ_IN_WASM_SANDBOX"] = True
 
 SANDBOXED_WASM_LIBRARY_NAME = "rlbox"
 
@@ -54,10 +53,3 @@ if CONFIG["MOZ_WASM_SANDBOXING_OGG"]:
     include("/media/libogg/sources.mozbuild")
     WASM_SOURCES += ["/media/libogg/" + s for s in ogg_sources]
     LOCAL_INCLUDES += ["/media/libogg"]
-
-if CONFIG["MOZ_WASM_SANDBOXING_EXPAT"]:
-    include("/parser/expat/lib/sources.mozbuild")
-    WASM_SOURCES += ["/parser/expat/lib/" + s for s in expat_sources]
-    for k, v in expat_defines:
-        WASM_DEFINES[k] = v
-    LOCAL_INCLUDES += ["/parser/expat/lib/"]
