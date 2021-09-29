@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -4017,11 +4018,22 @@ class AddonList extends HTMLElement {
   }
 
   createSectionHeading(headingIndex) {
-    let { headingId } = this.sections[headingIndex];
+    let { headingId, subheadingId } = this.sections[headingIndex];
+    let frag = document.createDocumentFragment();
     let heading = document.createElement("h2");
     heading.classList.add("list-section-heading");
     document.l10n.setAttributes(heading, headingId);
-    return heading;
+    frag.append(heading);
+
+    if (subheadingId) {
+      let subheading = document.createElement("h3");
+      subheading.classList.add("list-section-subheading");
+      heading.className = "header-name";
+      document.l10n.setAttributes(subheading, subheadingId);
+      frag.append(subheading);
+    }
+
+    return frag;
   }
 
   createEmptyListMessage() {
@@ -4574,7 +4586,7 @@ class RecommendedThemesFooter extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "open-amo":
-        openAmoInTab(this);
+        openAmoInTab(this, "themes");
         break;
     }
   }
@@ -4655,11 +4667,23 @@ gViewController.defineView("list", async type => {
     return null;
   }
 
-  let frag = document.createDocumentFragment();
+  // If monochromatic themes are enabled and any are builtin to Firefox, we
+  // display those themes together in a separate subsection.
+  let isMonochromaticTheme = addon =>
+    addon.id.endsWith("-colorway@mozilla.org");
 
+  let monochromaticEnabled =
+    AppConstants.NIGHTLY_BUILD &&
+    Services.prefs.getBoolPref(
+      "browser.theme.temporary.monochromatic.enabled",
+      false
+    );
+
+  let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
   list.type = type;
-  list.setSections([
+
+  let sections = [
     {
       headingId: type + "-enabled-heading",
       filterFn: addon =>
@@ -4668,9 +4692,25 @@ gViewController.defineView("list", async type => {
     {
       headingId: type + "-disabled-heading",
       filterFn: addon =>
-        !addon.hidden && !addon.isActive && !isPending(addon, "uninstall"),
+        !addon.hidden &&
+        !addon.isActive &&
+        !isPending(addon, "uninstall") &&
+        !isMonochromaticTheme(addon),
     },
-  ]);
+  ];
+
+  if (type == "theme" && monochromaticEnabled) {
+    sections.push({
+      headingId: type + "-monochromatic-heading",
+      subheadingId: type + "-monochromatic-subheading",
+      filterFn: addon =>
+        !addon.hidden &&
+        !addon.isActive &&
+        !isPending(addon, "uninstall") &&
+        isMonochromaticTheme(addon),
+    });
+  }
+  list.setSections(sections);
   frag.appendChild(list);
 
   // Show recommendations for themes and extensions.
@@ -4798,7 +4838,7 @@ function getTelemetryViewName(el) {
 /**
  * @param {Element} el The button element.
  */
-function openAmoInTab(el) {
+function openAmoInTab(el, path) {
   // The element is a button but opens a URL, so record as link.
   AMTelemetry.recordLinkEvent({
     object: "aboutAddons",
@@ -4810,6 +4850,11 @@ function openAmoInTab(el) {
   let amoUrl = Services.urlFormatter.formatURLPref(
     "extensions.getAddons.link.url"
   );
+
+  if (path) {
+    amoUrl += path;
+  }
+
   amoUrl = formatUTMParams("find-more-link-bottom", amoUrl);
   windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
 }
