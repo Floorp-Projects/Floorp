@@ -1015,7 +1015,7 @@ parent:
                                                                 nsString aName);
 
     async GetLoadingSessionHistoryInfoFromParent(MaybeDiscardedBrowsingContext aContext)
-        returns (LoadingSessionHistoryInfo? aLoadingInfo, int32_t aRequestedIndex, int32_t aLength);
+        returns (LoadingSessionHistoryInfo? aLoadingInfo);
 
     async RemoveFromBFCache(MaybeDiscardedBrowsingContext aContext);
 

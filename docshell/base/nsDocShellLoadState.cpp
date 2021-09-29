@@ -556,12 +556,10 @@ nsDocShellLoadState::GetLoadingSessionHistoryInfo() const {
 }
 
 void nsDocShellLoadState::SetLoadIsFromSessionHistory(
-    int32_t aRequestedIndex, int32_t aSessionHistoryLength,
-    bool aLoadingFromActiveEntry) {
+    int32_t aOffset, bool aLoadingFromActiveEntry) {
   if (mLoadingSessionHistoryInfo) {
     mLoadingSessionHistoryInfo->mLoadIsFromSessionHistory = true;
-    mLoadingSessionHistoryInfo->mRequestedIndex = aRequestedIndex;
-    mLoadingSessionHistoryInfo->mSessionHistoryLength = aSessionHistoryLength;
+    mLoadingSessionHistoryInfo->mOffset = aOffset;
     mLoadingSessionHistoryInfo->mLoadingCurrentActiveEntry =
         aLoadingFromActiveEntry;
   }

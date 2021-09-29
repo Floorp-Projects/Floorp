@@ -487,11 +487,7 @@ void CanonicalBrowsingContext::AddLoadingSessionHistoryEntry(
 }
 
 void CanonicalBrowsingContext::GetLoadingSessionHistoryInfoFromParent(
-    Maybe<LoadingSessionHistoryInfo>& aLoadingInfo, int32_t* aRequestedIndex,
-    int32_t* aLength) {
-  *aRequestedIndex = -1;
-  *aLength = 0;
-
+    Maybe<LoadingSessionHistoryInfo>& aLoadingInfo) {
   nsISHistory* shistory = GetSessionHistory();
   if (!shistory || !GetParent()) {
     return;
@@ -512,8 +508,6 @@ void CanonicalBrowsingContext::GetLoadingSessionHistoryInfoFromParent(
           aLoadingInfo.emplace(she);
           mLoadingEntries.AppendElement(LoadingSessionHistoryEntry{
               aLoadingInfo.value().mLoadId, she.get()});
-          *aRequestedIndex = shistory->GetRequestedIndex();
-          *aLength = shistory->GetCount();
           Unused << SetHistoryID(she->DocshellID());
         }
         break;
@@ -758,14 +752,24 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         return;
       }
 
-      CallerWillNotifyHistoryIndexAndLengthChanges caller(shistory);
-
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
 
       bool loadFromSessionHistory = !newActiveEntry->ForInitialLoad();
       newActiveEntry->SetForInitialLoad(false);
       SessionHistoryEntry::RemoveLoadId(aLoadId);
       mLoadingEntries.RemoveElementAt(i);
+
+      int32_t indexOfHistoryLoad = -1;
+      if (loadFromSessionHistory) {
+        nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(newActiveEntry);
+        indexOfHistoryLoad = shistory->GetIndexOfEntry(root);
+        if (indexOfHistoryLoad < 0) {
+          // Entry has been removed from the session history.
+          return;
+        }
+      }
+
+      CallerWillNotifyHistoryIndexAndLengthChanges caller(shistory);
 
       // If there is a name in the new entry, clear the name of all contiguous
       // entries. This is for https://html.spec.whatwg.org/#history-traversal
@@ -806,6 +810,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
 
         if (loadFromSessionHistory) {
           // XXX Synchronize browsing context tree and session history tree?
+          shistory->InternalSetRequestedIndex(indexOfHistoryLoad);
           shistory->UpdateIndex();
         } else if (addEntry) {
           shistory->AddEntry(mActiveEntry, aPersist);
@@ -824,6 +829,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                          this);
           }
           mActiveEntry = newActiveEntry;
+
+          shistory->InternalSetRequestedIndex(indexOfHistoryLoad);
           // FIXME UpdateIndex() here may update index too early (but even the
           //       old implementation seems to have similar issues).
           shistory->UpdateIndex();
@@ -921,15 +928,9 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   }
 
   if (aLoadState) {
-    int32_t index = 0;
-    int32_t requestedIndex = -1;
-    int32_t length = 0;
-    shistory->GetIndex(&index);
-    shistory->GetRequestedIndex(&requestedIndex);
-    shistory->GetCount(&length);
-    aLoadState.ref()->SetLoadIsFromSessionHistory(
-        requestedIndex >= 0 ? requestedIndex : index, length,
-        aReloadActiveEntry.value());
+    // Use 0 as the offset, since aLoadState will be be used for reload.
+    aLoadState.ref()->SetLoadIsFromSessionHistory(0,
+                                                  aReloadActiveEntry.value());
   }
   // If we don't have an active entry and we don't have a loading entry then
   // the nsDocShell will create a load state based on its document.

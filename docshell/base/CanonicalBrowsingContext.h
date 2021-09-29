@@ -274,8 +274,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                                      SessionHistoryEntry* aEntry);
 
   void GetLoadingSessionHistoryInfoFromParent(
-      Maybe<LoadingSessionHistoryInfo>& aLoadingInfo, int32_t* aRequestedIndex,
-      int32_t* aLength);
+      Maybe<LoadingSessionHistoryInfo>& aLoadingInfo);
 
   void HistoryCommitIndexAndLength();
 
