@@ -50,12 +50,6 @@ class NodePicker {
    * @return {Boolean}
    */
   _isEventAllowed({ target, view }) {
-    // Allow "non multiprocess" browser toolbox to inspect documents loaded in the parent
-    // process (e.g. about:robots)
-    if (view instanceof Ci.nsIDOMChromeWindow) {
-      return true;
-    }
-
     // If the picked node is a remote browser element, then we need to let the event through,
     // since there's a highlighter actor in that sub-frame also picking.
     // ⚠️ This means we will not handle events made on the padding area of the <browser>
@@ -65,6 +59,12 @@ class NodePicker {
     // event on the top document).
     if (isRemoteBrowserElement(target)) {
       return false;
+    }
+
+    // Allow "non multiprocess" browser toolbox to inspect documents loaded in the parent
+    // process (e.g. about:robots)
+    if (view instanceof Ci.nsIDOMChromeWindow) {
+      return true;
     }
 
     return this._targetActor.windows.includes(view);
