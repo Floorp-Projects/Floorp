@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-    <iframe src="file_bug1452037.html"></iframe>
+    <iframe></iframe>
 
 <script class="testbody">
     SimpleTest.requestCompleteLog();
@@ -26,13 +26,14 @@
     });
     
     frame.addEventListener("load",()=>{
-    let link = frame.contentWindow.document.querySelector("a");
-    frame.contentWindow.document.addEventListener("securitypolicyviolation",()=>{
+      let link = frame.contentWindow.document.querySelector("a");
+      frame.contentWindow.document.addEventListener("securitypolicyviolation",()=>{
         ok(true, "The CSP did block javascript:uri");
         SimpleTest.finish();
-    })
-    link.click();
-    })
+      })
+      link.click();
+    });
+    frame.src = "file_bug1452037.html";
 
 
 </script>
