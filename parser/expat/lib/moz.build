@@ -4,17 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("sources.mozbuild")
+
 EXPORTS += [
     'expat.h',
     'expat_external.h',
 ]
 
-SOURCES += [
-    'xmlparse.c',
-    'xmlrole.c',
-    'xmltok.c',
-]
+SOURCES += expat_sources
 
 FINAL_LIBRARY = 'gkmedias'
 
-DEFINES['HAVE_EXPAT_CONFIG_H'] = True
+for k, v in expat_defines:
+    DEFINES[k] = v

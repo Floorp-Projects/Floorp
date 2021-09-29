@@ -84,6 +84,9 @@
 #include "expat_config.h"
 #include "expat.h"
 #include "rlbox_expat.h"
+#ifdef MOZ_WASM_SANDBOXING_EXPAT
+#  include "mozilla/ipc/LibrarySandboxPreload.h"
+#endif
 
 extern "C" {
 // Defined in intl/encoding_glue/src/lib.rs
@@ -650,7 +653,11 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
 
     // Create sandbox and set the thread local user data to ud
     rlbox_sandbox_expat sandbox;
+#ifdef MOZ_WASM_SANDBOXING_EXPAT
+    sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
+#else
     sandbox.create_sandbox();
+#endif
     sandbox.sandbox_storage = &ud;
 
     tainted_expat<const XML_Memory_Handling_Suite*> t_memsuite = nullptr;
