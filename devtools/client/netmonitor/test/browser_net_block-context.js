@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -20,7 +20,7 @@ add_task(async function() {
 
   info("Loading initial page");
   const wait = waitForNetworkEvents(monitor, 1);
-  await navigateTo(SIMPLE_URL);
+  await navigateTo(HTTPS_SIMPLE_URL);
   await wait;
 
   info("Opening the blocked requests panel");

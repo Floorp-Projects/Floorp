@@ -25,7 +25,7 @@ add_task(async function() {
         },
         {
           urls: [
-            "http://example.com/browser/devtools/client/netmonitor/test/request_0",
+            "https://example.com/browser/devtools/client/netmonitor/test/request_0",
           ],
         },
         ["blocking"]
@@ -38,7 +38,7 @@ add_task(async function() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  const { tab, monitor } = await initNetMonitor(SINGLE_GET_URL, {
+  const { tab, monitor } = await initNetMonitor(HTTPS_SINGLE_GET_URL, {
     requestCount: 2,
   });
 
