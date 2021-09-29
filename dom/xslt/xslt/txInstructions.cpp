@@ -21,6 +21,7 @@
 #include "txTextHandler.h"
 #include "txXSLTNumber.h"
 
+using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
 nsresult txApplyDefaultElementTemplate::execute(txExecutionState& aEs) {
@@ -547,23 +548,19 @@ nsresult txPushNewContext::execute(txExecutionState& aEs) {
   rv = sorter.sortNodeSet(nodes, &aEs, getter_AddRefs(sortedNodes));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  txNodeSetContext* context = new txNodeSetContext(sortedNodes, &aEs);
+  auto context = MakeUnique<txNodeSetContext>(sortedNodes, &aEs);
   context->next();
 
-  rv = aEs.pushEvalContext(context);
-  if (NS_FAILED(rv)) {
-    delete context;
-    return rv;
-  }
+  aEs.pushEvalContext(context.release());
 
   return NS_OK;
 }
 
 void txPushNewContext::addSort(UniquePtr<Expr>&& aSelectExpr,
-                                   UniquePtr<Expr>&& aLangExpr,
-                                   UniquePtr<Expr>&& aDataTypeExpr,
-                                   UniquePtr<Expr>&& aOrderExpr,
-                                   UniquePtr<Expr>&& aCaseOrderExpr) {
+                               UniquePtr<Expr>&& aLangExpr,
+                               UniquePtr<Expr>&& aDataTypeExpr,
+                               UniquePtr<Expr>&& aOrderExpr,
+                               UniquePtr<Expr>&& aCaseOrderExpr) {
   SortKey* key = mSortKeys.AppendElement();
   // workaround for not triggering the Copy Constructor
   key->mSelectExpr = std::move(aSelectExpr);

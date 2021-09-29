@@ -305,11 +305,9 @@ void txExecutionState::receiveError(const nsAString& aMsg, nsresult aRes) {
   // XXX implement me
 }
 
-nsresult txExecutionState::pushEvalContext(txIEvalContext* aContext) {
+void txExecutionState::pushEvalContext(txIEvalContext* aContext) {
   mEvalContextStack.push(mEvalContext);
   mEvalContext = aContext;
-
-  return NS_OK;
 }
 
 txIEvalContext* txExecutionState::popEvalContext() {
