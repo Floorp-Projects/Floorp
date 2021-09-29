@@ -37,12 +37,6 @@ namespace dom {
 constexpr auto kFinishEnrollment = u"navigator.id.finishEnrollment"_ns;
 constexpr auto kGetAssertion = u"navigator.id.getAssertion"_ns;
 
-// Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-constexpr auto kGoogleAccountsAppId1 =
-    u"https://www.gstatic.com/securitykey/origins.json"_ns;
-constexpr auto kGoogleAccountsAppId2 =
-    u"https://www.gstatic.com/securitykey/a/google.com/origins.json"_ns;
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(U2F)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(WebAuthnManagerBase)
