@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <title>nsIAccessible value testing for datetime-local input element</title>
+  <link rel="stylesheet"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../promisified-events.js"></script>
+
+  <script>
+    async function doTest() {
+      const dateTimeNode = getNode("datetime");
+      const dateTime = getAccessible(dateTimeNode);
+      // We assume en-US for testing. However, the OS date format might
+      // override the en-US date format.
+      const monthFirst = dateTime.getChildAt(0).name == "Month";
+      const month = dateTime.getChildAt(monthFirst ? 0 : 2);
+      const day = dateTime.getChildAt(monthFirst ? 2 : 0);
+      const year = dateTime.getChildAt(4);
+      const hour = dateTime.getChildAt(6);
+      const minute = dateTime.getChildAt(8);
+      const amPm = dateTime.getChildAt(10);
+
+      // We don't use testValue() because it also checks numeric value, but
+      // we don't support numeric value here because it isn't useful.
+      function assertIsClear() {
+        is(year.value, "");
+        is(month.value, "");
+        is(day.value, "");
+        is(hour.value, "");
+        is(minute.value, "");
+        // Unlike the numeric fields, amPm is a textbox. Since textboxes take
+        // their a11y value from their text content and "--" is set as the text
+        // content, the a11y value is "--".
+        is(amPm.value, "--");
+      }
+
+      info("Checking that input is initially clear");
+      assertIsClear();
+
+      // The container doesn't notify of value changes, so we wait for a value
+      // change on one of the fields to know when it's updated.
+      info("Setting value");
+      let changed = waitForEvent(EVENT_TEXT_VALUE_CHANGE, month);
+      dateTimeNode.value = "2000-01-02T03:04";
+      await changed;
+      is(year.value, "2000");
+      is(month.value, "01");
+      is(day.value, "02");
+      is(hour.value, "03");
+      is(minute.value, "04");
+      // Again, the OS date format might override, so we might get "am" instead
+      // of "AM".
+      is(amPm.value.toLowerCase(), "am");
+
+      info("Clearing value");
+      changed = waitForEvent(EVENT_TEXT_VALUE_CHANGE, month);
+      dateTimeNode.value = "";
+      await changed;
+      assertIsClear();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <input type="datetime-local" id="datetime">
+</body>
+</html>

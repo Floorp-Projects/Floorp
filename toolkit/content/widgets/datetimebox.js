@@ -345,6 +345,7 @@ this.DateTimeBoxWidget = class {
     field.classList.add("datetime-edit-field");
     field.textContent = aPlaceHolder;
     field.placeholder = aPlaceHolder;
+    field.setAttribute("aria-valuetext", "");
     field.tabIndex = this.mInputElement.tabIndex;
 
     field.setAttribute("readonly", this.mInputElement.readOnly);
@@ -490,6 +491,7 @@ this.DateTimeBoxWidget = class {
   clearFieldValue(aField) {
     aField.textContent = aField.placeholder;
     aField.setAttribute("value", "");
+    aField.setAttribute("aria-valuetext", "");
     if (aField.classList.contains("numeric")) {
       aField.setAttribute("typeBuffer", "");
     }
