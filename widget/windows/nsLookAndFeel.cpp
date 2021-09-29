@@ -112,9 +112,16 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;  // Fetch system colors next time they're used.
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                        nscolor& aColor) {
   EnsureInit();
+
+  if (aScheme == ColorScheme::Dark) {
+    if (auto color = GenericDarkColor(aID)) {
+      aColor = *color;
+      return NS_OK;
+    }
+  }
 
   nsresult res = NS_OK;
 
