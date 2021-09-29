@@ -32,7 +32,7 @@ use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
-use crate::internal_types::{FastHashMap, RenderedDocument, ResultMsg};
+use crate::internal_types::{FastHashMap, RenderedDocument, ResultMsg, FrameId, FrameStamp};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::picture::{TileCacheLogger, PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
@@ -56,7 +56,6 @@ use serde::{Serialize, Deserialize};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{UNIX_EPOCH, SystemTime};
 use std::{mem, u32};
 #[cfg(feature = "capture")]
 use std::path::PathBuf;
@@ -81,140 +80,10 @@ pub struct SceneView {
     pub quality_settings: QualitySettings,
 }
 
-#[derive(Copy, Clone, Hash, MallocSizeOf, PartialEq, PartialOrd, Debug, Eq, Ord)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameId(usize);
-
-impl FrameId {
-    /// Returns a FrameId corresponding to the first frame.
-    ///
-    /// Note that we use 0 as the internal id here because the current code
-    /// increments the frame id at the beginning of the frame, rather than
-    /// at the end, and we want the first frame to be 1. It would probably
-    /// be sensible to move the advance() call to after frame-building, and
-    /// then make this method return FrameId(1).
-    pub fn first() -> Self {
-        FrameId(0)
-    }
-
-    /// Returns the backing usize for this FrameId.
-    pub fn as_usize(&self) -> usize {
-        self.0
-    }
-
-    /// Advances this FrameId to the next frame.
-    pub fn advance(&mut self) {
-        self.0 += 1;
-    }
-
-    /// An invalid sentinel FrameId, which will always compare less than
-    /// any valid FrameId.
-    pub const INVALID: FrameId = FrameId(0);
-}
-
-impl Default for FrameId {
-    fn default() -> Self {
-        FrameId::INVALID
-    }
-}
-
-impl ::std::ops::Add<usize> for FrameId {
-    type Output = Self;
-    fn add(self, other: usize) -> FrameId {
-        FrameId(self.0 + other)
-    }
-}
-
-impl ::std::ops::Sub<usize> for FrameId {
-    type Output = Self;
-    fn sub(self, other: usize) -> FrameId {
-        assert!(self.0 >= other, "Underflow subtracting FrameIds");
-        FrameId(self.0 - other)
-    }
-}
 enum RenderBackendStatus {
     Continue,
     StopRenderBackend,
     ShutDown(Option<Sender<()>>),
-}
-
-/// Identifier to track a sequence of frames.
-///
-/// This is effectively a `FrameId` with a ridealong timestamp corresponding
-/// to when advance() was called, which allows for more nuanced cache eviction
-/// decisions. As such, we use the `FrameId` for equality and comparison, since
-/// we should never have two `FrameStamps` with the same id but different
-/// timestamps.
-#[derive(Copy, Clone, Debug, MallocSizeOf)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameStamp {
-    id: FrameId,
-    time: SystemTime,
-    document_id: DocumentId,
-}
-
-impl Eq for FrameStamp {}
-
-impl PartialEq for FrameStamp {
-    fn eq(&self, other: &Self) -> bool {
-        // We should not be checking equality unless the documents are the same
-        debug_assert!(self.document_id == other.document_id);
-        self.id == other.id
-    }
-}
-
-impl PartialOrd for FrameStamp {
-    fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
-        self.id.partial_cmp(&other.id)
-    }
-}
-
-impl FrameStamp {
-    /// Gets the FrameId in this stamp.
-    pub fn frame_id(&self) -> FrameId {
-        self.id
-    }
-
-    /// Gets the time associated with this FrameStamp.
-    pub fn time(&self) -> SystemTime {
-        self.time
-    }
-
-    /// Gets the DocumentId in this stamp.
-    pub fn document_id(&self) -> DocumentId {
-        self.document_id
-    }
-
-    pub fn is_valid(&self) -> bool {
-        // If any fields are their default values, the whole struct should equal INVALID
-        debug_assert!((self.time != UNIX_EPOCH && self.id != FrameId(0) && self.document_id != DocumentId::INVALID) ||
-                      *self == Self::INVALID);
-        self.document_id != DocumentId::INVALID
-    }
-
-    /// Returns a FrameStamp corresponding to the first frame.
-    pub fn first(document_id: DocumentId) -> Self {
-        FrameStamp {
-            id: FrameId::first(),
-            time: SystemTime::now(),
-            document_id,
-        }
-    }
-
-    /// Advances to a new frame.
-    pub fn advance(&mut self) {
-        self.id.advance();
-        self.time = SystemTime::now();
-    }
-
-    /// An invalid sentinel FrameStamp.
-    pub const INVALID: FrameStamp = FrameStamp {
-        id: FrameId(0),
-        time: UNIX_EPOCH,
-        document_id: DocumentId::INVALID,
-    };
 }
 
 macro_rules! declare_data_stores {

@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
-use crate::internal_types::FastHashMap;
-use crate::render_backend::{FrameId, FrameStamp};
+use crate::internal_types::{FrameId, FrameStamp, FastHashMap};
 use crate::resource_cache::ResourceClassCache;
 use std::sync::Arc;
 use crate::texture_cache::{EvictionNotice, TextureCache};

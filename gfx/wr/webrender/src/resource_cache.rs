@@ -25,10 +25,12 @@ use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
-use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
+use crate::internal_types::{
+    CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList,
+    FrameId, FrameStamp,
+};
 use crate::picture::SurfaceInfo;
 use crate::profiler::{self, TransactionProfile, bytes_to_mb};
-use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey, RenderTaskParent};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};

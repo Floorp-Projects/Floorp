@@ -12,7 +12,7 @@ use crate::{
     prim_store::DeferredResolve,
     profiler,
     render_api::MemoryReport,
-    render_backend::FrameId,
+    internal_types::FrameId,
 };
 
 /// Enabling this toggle would force the GPU cache scattered texture to
