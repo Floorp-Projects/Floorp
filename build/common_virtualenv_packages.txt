@@ -44,6 +44,7 @@ pth:testing/mozbase/mozversion
 pth:testing/raptor
 pth:testing/talos
 pth:testing/web-platform
+vendored:testing/web-platform/tests/tools/third_party/funcsigs
 vendored:testing/web-platform/tests/tools/third_party/h2
 vendored:testing/web-platform/tests/tools/third_party/hpack
 vendored:testing/web-platform/tests/tools/third_party/html5lib
@@ -72,7 +73,6 @@ vendored:third_party/python/ecdsa
 vendored:third_party/python/esprima
 vendored:third_party/python/fluent.migrate
 vendored:third_party/python/fluent.syntax
-vendored:third_party/python/funcsigs
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/idna
 vendored:third_party/python/idna-ssl
@@ -95,7 +95,6 @@ vendored:third_party/python/pyasn1_modules
 vendored:third_party/python/pylru
 vendored:third_party/python/pyparsing
 vendored:third_party/python/pyrsistent
-vendored:third_party/python/pystache
 vendored:third_party/python/python-hglib
 vendored:third_party/python/pytoml
 vendored:third_party/python/PyYAML/lib3/

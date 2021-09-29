@@ -156,10 +156,6 @@ fluent.syntax==0.18.1 \
     #   -r requirements-mach-vendor-python.in
     #   compare-locales
     #   fluent.migrate
-funcsigs==1.0.2 \
-    --hash=sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca \
-    --hash=sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50
-    # via -r requirements-mach-vendor-python.in
 glean_parser==3.6.0 \
     --hash=sha256:1da46764d93ec563eb93235bd477814444742d1ee6b5231dc6684cebf46a6057 \
     --hash=sha256:655a2038ec0be5364f351f592d5476fe7b028ebb0d9fd75f07c6c54287859552
@@ -234,9 +230,7 @@ markupsafe==1.1.1 \
 mohawk==0.3.4 \
     --hash=sha256:b3f85ffa93a5c7d2f9cc591246ef9f8ac4a9fa716bfd5bae0377699a2d89d78c \
     --hash=sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3
-    # via
-    #   -r requirements-mach-vendor-python.in
-    #   taskcluster
+    # via taskcluster
 mozilla-version==0.3.4 \
     --hash=sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255 \
     --hash=sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f
@@ -320,9 +314,6 @@ pyparsing==2.4.7 \
 pyrsistent==0.16.0 \
     --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3
     # via jsonschema
-pystache==0.5.4 \
-    --hash=sha256:f7bbc265fb957b4d6c7c042b336563179444ab313fb93a719759111eabd3b85a
-    # via -r requirements-mach-vendor-python.in
 python-hglib==2.4 \
     --hash=sha256:693d6ed92a6566e78802c7a03c256cda33d08c63ad3f00fcfa11379b184b9462
     # via -r requirements-mach-vendor-python.in

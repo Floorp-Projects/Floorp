@@ -11,14 +11,8 @@ with Files('**'):
 with Files('attrs/**'):
     BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
 
-with Files('blessings/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
-with Files('compare-locales/**'):
+with Files('compare_locales/**'):
     BUG_COMPONENT = ('Localization Infrastructure and Tools', 'compare-locales')
-
-with Files('dlmanager/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('fluent.migrate/**'):
     BUG_COMPONENT = ('Localization Infrastructure and Tools', 'Fluent Migration')
@@ -27,56 +21,29 @@ with Files('fluent.migrate/**'):
 with Files('fluent.syntax/**'):
     BUG_COMPONENT = ('Localization Infrastructure and Tools', 'General')
 
-with Files('futures/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
 with Files('jsmin/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
-
-with Files('mock-1.0.0/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mohawk/**'):
     BUG_COMPONENT = ('Taskcluster', 'Platform Libraries')
 
-with Files('mozilla-version/**'):
+with Files('mozilla_version/**'):
     BUG_COMPONENT = ('Release Engineering', 'General')
-
-with Files('psutil/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
-with Files('py/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('pyasn1/**'):
     BUG_COMPONENT = ('Release Engineering', 'General')
 
-with Files('pyasn1-modules/**'):
+with Files('pyasn1_modules/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
 
 with Files('pylru/**'):
     BUG_COMPONENT = ('mozilla.org', 'MozillaBuild')
 
-with Files('pystache/**'):
-    BUG_COMPONENT = ('Taskcluster', 'General')
-
 with Files('pytest/**'):
     BUG_COMPONENT = ('Testing', 'General')
 
-with Files('pytoml/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
 with Files('pyyaml/**'):
     BUG_COMPONENT = ('Taskcluster', 'General')
-
-with Files('redo/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
-with Files('requests*/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
-
-with Files('requirements.*'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('rsa/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
@@ -86,9 +53,6 @@ with Files('slugid/**'):
 
 with Files('taskcluster/**'):
     BUG_COMPONENT = ('Taskcluster', 'Platform Libraries')
-
-with Files('virtualenv/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('voluptuous/**'):
     BUG_COMPONENT = ('Firefox Build System', 'Task Configuration')
