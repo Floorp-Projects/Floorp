@@ -141,6 +141,11 @@ ScriptPreloader& ScriptPreloader::GetSingleton() {
 //  parent process. The first content process of each type sends back the data
 //  for scripts that were loaded in early startup, and the parent merges them
 //  and writes them to a cache file.
+//
+// - Currently, content processes only benefit from the cache data written
+//  during the *previous* session. Ideally, new content processes should
+//  probably use the cache data written during this session if there was no
+//  previous cache file, but I'd rather do that as a follow-up.
 ScriptPreloader& ScriptPreloader::GetChildSingleton() {
   static RefPtr<ScriptPreloader> singleton;
 
@@ -770,14 +775,6 @@ void ScriptPreloader::CacheWriteComplete() {
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
   barrier->RemoveBlocker(this);
-
-  ScriptPreloader& contentPreloader = GetChildSingleton();
-  auto fd = contentPreloader.mCacheData.cloneFileDescriptor();
-  // If we don't have cache data, then we should load the next-session in the
-  // cache for content children.
-  if (!fd.IsValid()) {
-    Unused << contentPreloader.OpenCache();
-  }
 }
 
 void ScriptPreloader::NoteStencil(const nsCString& url,
