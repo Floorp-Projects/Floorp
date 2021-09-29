@@ -37,6 +37,10 @@
 
 #include "mozilla/Logging.h"
 
+#ifdef MOZ_WASM_SANDBOXING_EXPAT
+#  include "mozilla/ipc/LibrarySandboxPreload.h"
+#endif
+
 using mozilla::fallible;
 using mozilla::LogLevel;
 using mozilla::MakeStringSpan;
@@ -1424,7 +1428,11 @@ RLBoxExpatData::RLBoxExpatData(bool isSystemPrincipal) {
   // Create sandbox
   mSandbox = new rlbox_sandbox_expat();
   MOZ_RELEASE_ASSERT(mSandbox, "Failed to create sandbox");
+#ifdef MOZ_WASM_SANDBOXING_EXPAT
+  mSandbox->create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
+#else
   mSandbox->create_sandbox();
+#endif
 
   // Register callbacks
   mHandleXMLDeclaration =
@@ -1481,6 +1489,10 @@ RLBoxExpatData::~RLBoxExpatData() {
 // Create and load sandbox (if not already done).
 std::shared_ptr<RLBoxExpatData> RLBoxExpatData::GetRLBoxExpatData(
     bool isSystemPrincipal) {
+#ifdef MOZ_WASM_SANDBOXING_EXPAT
+  mozilla::ipc::PreloadSandboxedDynamicLibrary();
+#endif
+
   if (isSystemPrincipal) {
     if (!sSystemSandboxData) {
       sSystemSandboxData = std::make_shared<RLBoxExpatData>(isSystemPrincipal);

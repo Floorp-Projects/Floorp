@@ -4,14 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'XML')
-
-DIRS += ['lib']
-
-EXPORTS += [
-    'expat_config.h',
-    'expat_config_moz.h',
-    'expat_config_rlbox.h',
+expat_sources = [
+    'xmlparse.c',
+    'xmlrole.c',
+    'xmltok.c',
 ]
 
+expat_defines = [
+    ('HAVE_EXPAT_CONFIG_H', True)
+]
