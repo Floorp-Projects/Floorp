@@ -27,7 +27,12 @@ class txStack : private nsTArray<void*> {
    * @param obj a pointer to the object that is to be added to the
    * top of this stack.
    */
-  inline void push(void* aObject) { AppendElement(aObject); }
+  inline nsresult push(void* aObject) {
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    AppendElement(aObject);
+    return NS_OK;
+  }
 
   /**
    * Removes and returns the specified object from the top of this

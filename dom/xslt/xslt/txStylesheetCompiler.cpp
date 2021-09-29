@@ -161,7 +161,7 @@ nsresult txStylesheetCompiler::startElementInternal(
   nsresult rv = NS_OK;
   int32_t i;
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
-    ++mInScopeVariables[i].mLevel;
+    ++mInScopeVariables[i]->mLevel;
   }
 
   // Update the elementcontext if we have special attributes
@@ -213,6 +213,8 @@ nsresult txStylesheetCompiler::startElementInternal(
         if (namespaceID == kNameSpaceID_Unknown)
           return NS_ERROR_XSLT_PARSE_FAILURE;
 
+        // XXX(Bug 1631371) Check if this should use a fallible operation as it
+        // pretended earlier.
         mElementContext->mInstructionNamespaces.AppendElement(namespaceID);
       }
 
@@ -272,7 +274,8 @@ nsresult txStylesheetCompiler::startElementInternal(
     }
   }
 
-  pushPtr(const_cast<txElementHandler*>(handler), eElementHandler);
+  rv = pushPtr(const_cast<txElementHandler*>(handler), eElementHandler);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mElementContext->mDepth++;
 
@@ -291,17 +294,20 @@ nsresult txStylesheetCompiler::endElement() {
 
   int32_t i;
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
-    txInScopeVariable& var = mInScopeVariables[i];
-    if (!--(var.mLevel)) {
-      addInstruction(MakeUnique<txRemoveVariable>(var.mName));
+    txInScopeVariable* var = mInScopeVariables[i];
+    if (!--(var->mLevel)) {
+      UniquePtr<txInstruction> instr(new txRemoveVariable(var->mName));
+      addInstruction(std::move(instr));
 
       mInScopeVariables.RemoveElementAt(i);
+      delete var;
     }
   }
 
   const txElementHandler* handler = const_cast<const txElementHandler*>(
       static_cast<txElementHandler*>(popPtr(eElementHandler)));
-  (handler->mEndFunction)(*this);
+  rv = (handler->mEndFunction)(*this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!--mElementContext->mDepth) {
     // this will delete the old object
@@ -413,7 +419,10 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
   }
 
   UniquePtr<txElementContext> context(new txElementContext(*mElementContext));
-  pushObject(mElementContext.release());
+  nsresult rv = pushObject(mElementContext.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << mElementContext.release();
   mElementContext = std::move(context);
 
   return NS_OK;
@@ -502,9 +511,11 @@ nsresult txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
   }
 
   mElementContext = MakeUnique<txElementContext>(aStylesheetURI);
+  NS_ENSURE_TRUE(mElementContext->mMappings, NS_ERROR_OUT_OF_MEMORY);
 
   // Push the "old" txElementContext
-  pushObject(nullptr);
+  rv = pushObject(0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -513,29 +524,47 @@ txStylesheetCompilerState::~txStylesheetCompilerState() {
   while (!mObjectStack.isEmpty()) {
     delete popObject();
   }
+
+  int32_t i;
+  for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
+    delete mInScopeVariables[i];
+  }
 }
 
-void txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
-  pushPtr(mHandlerTable, eHandlerTable);
+nsresult txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
+  nsresult rv = pushPtr(mHandlerTable, eHandlerTable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mHandlerTable = aTable;
+
+  return NS_OK;
 }
 
 void txStylesheetCompilerState::popHandlerTable() {
   mHandlerTable = static_cast<txHandlerTable*>(popPtr(eHandlerTable));
 }
 
-void txStylesheetCompilerState::pushSorter(txPushNewContext* aSorter) {
-  pushPtr(mSorter, ePushNewContext);
+nsresult txStylesheetCompilerState::pushSorter(txPushNewContext* aSorter) {
+  nsresult rv = pushPtr(mSorter, ePushNewContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mSorter = aSorter;
+
+  return NS_OK;
 }
 
 void txStylesheetCompilerState::popSorter() {
   mSorter = static_cast<txPushNewContext*>(popPtr(ePushNewContext));
 }
 
-void txStylesheetCompilerState::pushChooseGotoList() {
-  pushObject(mChooseGotoList.release());
+nsresult txStylesheetCompilerState::pushChooseGotoList() {
+  nsresult rv = pushObject(mChooseGotoList.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << mChooseGotoList.release();
   mChooseGotoList = MakeUnique<txList>();
+
+  return NS_OK;
 }
 
 void txStylesheetCompilerState::popChooseGotoList() {
@@ -543,21 +572,21 @@ void txStylesheetCompilerState::popChooseGotoList() {
   mChooseGotoList = WrapUnique(static_cast<txList*>(popObject()));
 }
 
-void txStylesheetCompilerState::pushObject(txObject* aObject) {
-  mObjectStack.push(aObject);
+nsresult txStylesheetCompilerState::pushObject(txObject* aObject) {
+  return mObjectStack.push(aObject);
 }
 
 txObject* txStylesheetCompilerState::popObject() {
   return static_cast<txObject*>(mObjectStack.pop());
 }
 
-void txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
+nsresult txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
 #ifdef TX_DEBUG_STACK
   MOZ_LOG(txLog::xslt, LogLevel::Debug,
           ("pushPtr: 0x%x type %u\n", aPtr, aType));
 #endif
   mTypeStack.AppendElement(aType);
-  mOtherStack.push(aPtr);
+  return mOtherStack.push(aPtr);
 }
 
 void* txStylesheetCompilerState::popPtr(enumStackType aType) {
@@ -598,7 +627,7 @@ void txStylesheetCompilerState::closeInstructionContainer() {
   mNextInstrPtr = 0;
 }
 
-txInstruction* txStylesheetCompilerState::addInstruction(
+void txStylesheetCompilerState::addInstruction(
     UniquePtr<txInstruction>&& aInstruction) {
   MOZ_ASSERT(mNextInstrPtr, "adding instruction outside container");
 
@@ -612,8 +641,6 @@ txInstruction* txStylesheetCompilerState::addInstruction(
     *mGotoTargetPointers[i] = newInstr;
   }
   mGotoTargetPointers.Clear();
-
-  return newInstr;
 }
 
 nsresult txStylesheetCompilerState::loadIncludedStylesheet(
@@ -627,6 +654,7 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
 
   UniquePtr<txToplevelItem> item(new txDummyItem);
+  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
   mToplevelIterator.addBefore(item.release());
 
@@ -637,10 +665,13 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
 
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       aURI, mStylesheet, &mToplevelIterator, mReferrerPolicy, observer);
+  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
   // step forward before calling the observer in case of syncronous loading
   mToplevelIterator.next();
 
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
   mChildCompilerList.AppendElement(compiler);
 
   nsresult rv =
@@ -669,7 +700,10 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
 
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       aURI, mStylesheet, &iter, mReferrerPolicy, observer);
+  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
   mChildCompilerList.AppendElement(compiler);
 
   nsresult rv =
@@ -681,12 +715,20 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
   return rv;
 }
 
-void txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer) {
+nsresult txStylesheetCompilerState::addGotoTarget(
+    txInstruction** aTargetPointer) {
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
   mGotoTargetPointers.AppendElement(aTargetPointer);
+  return NS_OK;
 }
 
-void txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
-  mInScopeVariables.AppendElement(aName);
+nsresult txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
+  txInScopeVariable* var = new txInScopeVariable(aName);
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mInScopeVariables.AppendElement(var);
+  return NS_OK;
 }
 
 nsresult txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix,

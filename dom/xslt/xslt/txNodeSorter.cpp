@@ -16,7 +16,6 @@
 #include "mozilla/UniquePtrExtensions.h"
 
 using mozilla::CheckedUint32;
-using mozilla::MakeUnique;
 using mozilla::MakeUniqueFallible;
 using mozilla::UniquePtr;
 
@@ -125,6 +124,12 @@ nsresult txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
   nsresult rv = aEs->recycler()->getNodeSet(getter_AddRefs(sortedNodes));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  txNodeSetContext* evalContext = new txNodeSetContext(aNodes, aEs);
+  NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = aEs->pushEvalContext(evalContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Create and set up memoryblock for sort-values and indexarray
   CheckedUint32 len = aNodes->size();
   CheckedUint32 numSortValues = len * mNKeys;
@@ -145,17 +150,12 @@ nsresult txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
   }
   memset(sortValues.get(), 0, sortValuesSize.value());
 
-  auto nodeSetContext = MakeUnique<txNodeSetContext>(aNodes, aEs);
-
   // Sort the indexarray
   SortData sortData;
   sortData.mNodeSorter = this;
-  sortData.mContext = nodeSetContext.get();
+  sortData.mContext = evalContext;
   sortData.mSortValues = sortValues.get();
   sortData.mRv = NS_OK;
-
-  aEs->pushEvalContext(nodeSetContext.release());
-
   NS_QuickSort(indexes.get(), len.value(), sizeof(uint32_t), compareNodes,
                &sortData);
 

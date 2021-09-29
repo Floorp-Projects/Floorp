@@ -25,6 +25,7 @@ class txNamespaceMap;
 class txToplevelItem;
 class txPushNewContext;
 class txStylesheetCompiler;
+class txInScopeVariable;
 
 class txElementContext : public txObject {
  public:
@@ -62,14 +63,6 @@ class txACompileObserver {
                        const char16_t* aErrorText = nullptr,              \
                        const char16_t* aParam = nullptr) override;
 
-class txInScopeVariable {
- public:
-  explicit txInScopeVariable(const txExpandedName& aName)
-      : mName(aName), mLevel(1) {}
-  txExpandedName mName;
-  int32_t mLevel;
-};
-
 class txStylesheetCompilerState : public txIParseContext {
  public:
   explicit txStylesheetCompilerState(txACompileObserver* aObserver);
@@ -94,34 +87,29 @@ class txStylesheetCompilerState : public txIParseContext {
     eCheckParam,
     ePushNullTemplateRule
   };
-  void pushHandlerTable(txHandlerTable* aTable);
+  nsresult pushHandlerTable(txHandlerTable* aTable);
   void popHandlerTable();
-  void pushSorter(txPushNewContext* aSorter);
+  nsresult pushSorter(txPushNewContext* aSorter);
   void popSorter();
-  void pushChooseGotoList();
+  nsresult pushChooseGotoList();
   void popChooseGotoList();
-  void pushObject(txObject* aObject);
+  nsresult pushObject(txObject* aObject);
   txObject* popObject();
-  void pushPtr(void* aPtr, enumStackType aType);
+  nsresult pushPtr(void* aPtr, enumStackType aType);
   void* popPtr(enumStackType aType);
 
   // stylesheet functions
   void addToplevelItem(txToplevelItem* aItem);
   nsresult openInstructionContainer(txInstructionContainer* aContainer);
   void closeInstructionContainer();
-  txInstruction* addInstruction(
-      mozilla::UniquePtr<txInstruction>&& aInstruction);
-  template <class T>
-  T* addInstruction(mozilla::UniquePtr<T> aInstruction) {
-    return static_cast<T*>(addInstruction(std::move(aInstruction)));
-  }
+  void addInstruction(mozilla::UniquePtr<txInstruction>&& aInstruction);
   nsresult loadIncludedStylesheet(const nsAString& aURI);
   nsresult loadImportedStylesheet(const nsAString& aURI,
                                   txStylesheet::ImportFrame* aFrame);
 
   // misc
-  void addGotoTarget(txInstruction** aTargetPointer);
-  void addVariable(const txExpandedName& aName);
+  nsresult addGotoTarget(txInstruction** aTargetPointer);
+  nsresult addVariable(const txExpandedName& aName);
 
   // txIParseContext
   nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
@@ -155,7 +143,7 @@ class txStylesheetCompilerState : public txIParseContext {
 
  protected:
   RefPtr<txACompileObserver> mObserver;
-  nsTArray<txInScopeVariable> mInScopeVariables;
+  nsTArray<txInScopeVariable*> mInScopeVariables;
   nsTArray<txStylesheetCompiler*> mChildCompilerList;
   // embed info, target information is the ID
   nsString mTarget;
@@ -228,6 +216,14 @@ class txStylesheetCompiler final : private txStylesheetCompilerState,
 
   nsString mCharacters;
   nsresult mStatus;
+};
+
+class txInScopeVariable {
+ public:
+  explicit txInScopeVariable(const txExpandedName& aName)
+      : mName(aName), mLevel(1) {}
+  txExpandedName mName;
+  int32_t mLevel;
 };
 
 #endif

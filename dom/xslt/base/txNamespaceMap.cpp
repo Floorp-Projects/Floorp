@@ -46,7 +46,12 @@ nsresult txNamespaceMap::mapNamespace(nsAtom* aPrefix,
   }
 
   // New mapping
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
   mPrefixes.AppendElement(prefix);
+
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
   mNamespaces.AppendElement(nsId);
 
   return NS_OK;

@@ -9,7 +9,7 @@
 #include "txXMLEventHandler.h"
 #include "nsIScriptLoaderObserver.h"
 #include "txOutputFormat.h"
-#include "nsTArray.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "txStack.h"
@@ -42,7 +42,7 @@ class txTransformNotifier final : public nsIScriptLoaderObserver,
                               nsresult aStatus) override;
 
   void Init(nsITransformObserver* aObserver);
-  void AddScriptElement(nsIScriptElement* aElement);
+  nsresult AddScriptElement(nsIScriptElement* aElement);
   void AddPendingStylesheet();
   void OnTransformEnd(nsresult aResult = NS_OK);
   void OnTransformStart();
@@ -54,7 +54,7 @@ class txTransformNotifier final : public nsIScriptLoaderObserver,
 
   nsCOMPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsITransformObserver> mObserver;
-  nsTArray<nsCOMPtr<nsIScriptElement>> mScriptElements;
+  nsCOMArray<nsIScriptElement> mScriptElements;
   uint32_t mPendingStylesheetCount;
   bool mInTransform;
 };
@@ -78,7 +78,7 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
  private:
   nsresult createTxWrapper();
   nsresult startHTMLElement(nsIContent* aElement, bool aXHTML);
-  void endHTMLElement(nsIContent* aElement);
+  nsresult endHTMLElement(nsIContent* aElement);
   void processHTTPEquiv(nsAtom* aHeader, const nsString& aValue);
   nsresult createHTMLElement(nsAtom* aName, mozilla::dom::Element** aResult);
 
@@ -96,7 +96,7 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
   nsCOMPtr<mozilla::dom::Element> mOpenedElement;
   RefPtr<nsNodeInfoManager> mNodeInfoManager;
 
-  nsTArray<nsCOMPtr<nsINode>> mCurrentNodeStack;
+  nsCOMArray<nsINode> mCurrentNodeStack;
 
   nsCOMPtr<nsIContent> mNonAddedNode;
 
