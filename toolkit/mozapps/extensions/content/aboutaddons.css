@@ -193,6 +193,12 @@ message-bar-stack > * {
   margin-bottom: 16px;
 }
 
+.list-section-subheading {
+  font-size: 0.9em;
+  font-weight: 400;
+  margin-block-start: 0.5em;
+}
+
 .section {
   margin-bottom: 32px;
 }
