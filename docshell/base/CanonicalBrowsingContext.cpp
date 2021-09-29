@@ -1883,6 +1883,20 @@ CanonicalBrowsingContext::ChangeRemoteness(
     return promise.forget();
   }
 
+  // If we're aiming to end up in a new process of the same type as our old
+  // process, and then putting our previous document in the BFCache, try to stay
+  // in the same process to avoid creating new processes unnecessarially.
+  RefPtr<ContentParent> existingProcess = GetContentParent();
+  if (existingProcess && existingProcess->IsAlive() &&
+      aOptions.mReplaceBrowsingContext &&
+      aOptions.mRemoteType == existingProcess->GetRemoteType() &&
+      aOptions.mRemoteType != LARGE_ALLOCATION_REMOTE_TYPE) {
+    change->mContentParent = existingProcess;
+    change->mContentParent->AddKeepAlive();
+    change->ProcessLaunched();
+    return promise.forget();
+  }
+
   // Try to predict which BrowsingContextGroup will be used for the final load
   // in this BrowsingContext. This has to be accurate if switching into an
   // existing group, as it will control what pool of processes will be used
