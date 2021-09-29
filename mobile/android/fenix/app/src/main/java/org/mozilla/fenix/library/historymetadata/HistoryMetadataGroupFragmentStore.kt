@@ -29,6 +29,8 @@ sealed class HistoryMetadataGroupFragmentAction : Action {
     data class Select(val item: History.Metadata) : HistoryMetadataGroupFragmentAction()
     data class Deselect(val item: History.Metadata) : HistoryMetadataGroupFragmentAction()
     object DeselectAll : HistoryMetadataGroupFragmentAction()
+    data class Delete(val item: History.Metadata) : HistoryMetadataGroupFragmentAction()
+    object DeleteAll : HistoryMetadataGroupFragmentAction()
 }
 
 /**
@@ -82,5 +84,12 @@ private fun historyStateReducer(
                 items = state.items.toMutableList()
                     .map { it.copy(selected = false) }
             )
+        is HistoryMetadataGroupFragmentAction.Delete -> {
+            val items = state.items.toMutableList()
+            items.remove(action.item)
+            state.copy(items = items)
+        }
+        is HistoryMetadataGroupFragmentAction.DeleteAll ->
+            state.copy(items = emptyList())
     }
 }

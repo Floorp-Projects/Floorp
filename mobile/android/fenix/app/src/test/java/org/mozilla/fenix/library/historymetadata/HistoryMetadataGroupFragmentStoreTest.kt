@@ -82,4 +82,25 @@ class HistoryMetadataGroupFragmentStoreTest {
         assertFalse(store.state.items[0].selected)
         assertFalse(store.state.items[1].selected)
     }
+
+    @Test
+    fun `Test deleting an item in HistoryMetadataGroupFragmentStore`() = runBlocking {
+        val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
+
+        store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
+        store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem)).join()
+
+        assertEquals(1, store.state.items.size)
+        assertEquals(firefoxHistoryMetadataItem, store.state.items.first())
+    }
+
+    @Test
+    fun `Test deleting all items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+        val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
+
+        store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
+        store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll).join()
+
+        assertEquals(0, store.state.items.size)
+    }
 }

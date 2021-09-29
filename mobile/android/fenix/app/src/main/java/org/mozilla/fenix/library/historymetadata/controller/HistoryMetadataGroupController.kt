@@ -5,9 +5,12 @@
 package org.mozilla.fenix.library.historymetadata.controller
 
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
@@ -53,6 +56,16 @@ interface HistoryMetadataGroupController {
      * @param items The set of [History]s to share.
      */
     fun handleShare(items: Set<History.Metadata>)
+
+    /**
+     * Deletes the given history metadata [items] from storage.
+     */
+    fun handleDelete(items: Set<History.Metadata>)
+
+    /**
+     * Deletes all the history metadata items in this group.
+     */
+    fun handleDeleteAll()
 }
 
 /**
@@ -62,6 +75,8 @@ class DefaultHistoryMetadataGroupController(
     private val activity: HomeActivity,
     private val store: HistoryMetadataGroupFragmentStore,
     private val navController: NavController,
+    private val scope: CoroutineScope,
+    private val searchTerm: String,
 ) : HistoryMetadataGroupController {
 
     override fun handleOpen(item: History.Metadata) {
@@ -96,5 +111,21 @@ class DefaultHistoryMetadataGroupController(
                 data = items.map { ShareData(url = it.url, title = it.title) }.toTypedArray()
             )
         )
+    }
+
+    override fun handleDelete(items: Set<History.Metadata>) {
+        scope.launch {
+            items.forEach {
+                store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
+                activity.components.core.historyStorage.deleteHistoryMetadata(it.historyMetadataKey)
+            }
+        }
+    }
+
+    override fun handleDeleteAll() {
+        scope.launch {
+            store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
+            activity.components.core.historyStorage.deleteHistoryMetadata(searchTerm)
+        }
     }
 }

@@ -53,6 +53,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private lateinit var historyStore: HistoryFragmentStore
     private lateinit var historyInteractor: HistoryInteractor
     private lateinit var viewModel: HistoryViewModel
+    private lateinit var historyProvider: DefaultPagedHistoryProvider
+
     private var undoScope: CoroutineScope? = null
     private var pendingHistoryDeletionJob: (suspend () -> Unit)? = null
 
@@ -65,7 +67,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val view = binding.root
@@ -110,9 +112,9 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = HistoryViewModel(
-            historyProvider = DefaultPagedHistoryProvider(requireComponents.core.historyStorage)
-        )
+        historyProvider = DefaultPagedHistoryProvider(requireComponents.core.historyStorage)
+
+        viewModel = HistoryViewModel(historyProvider)
 
         viewModel.userHasHistory.observe(
             this,
@@ -126,7 +128,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         setHasOptionsMenu(true)
     }
 
-    private fun deleteHistoryItems(items: Set<History.Regular>) {
+    private fun deleteHistoryItems(items: Set<History>) {
         updatePendingHistoryToDelete(items)
         undoScope = CoroutineScope(IO)
         undoScope?.allowUndo(
@@ -178,8 +180,28 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
             val selectedHistory = historyStore.state.mode.selectedItems
-            val shareTabs = selectedHistory.map { ShareData(url = it.url, title = it.title) }
+            val shareTabs = mutableListOf<ShareData>()
+
+            for (history in selectedHistory) {
+                when (history) {
+                    is History.Regular -> {
+                        shareTabs.add(ShareData(url = history.url, title = history.title))
+                    }
+                    is History.Group -> {
+                        shareTabs.addAll(
+                            history.items.map { metadata ->
+                                ShareData(url = metadata.url, title = metadata.title)
+                            }
+                        )
+                    }
+                    else -> {
+                        // no-op, There is no [History.Metadata] in the HistoryFragment.
+                    }
+                }
+            }
+
             share(shareTabs)
+
             true
         }
         R.id.delete_history_multi_select -> {
@@ -227,15 +249,19 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         )
     }
 
-    private fun getMultiSelectSnackBarMessage(historyItems: Set<History.Regular>): String {
+    private fun getMultiSelectSnackBarMessage(historyItems: Set<History>): String {
         return if (historyItems.size > 1) {
             getString(R.string.history_delete_multiple_items_snackbar)
         } else {
+            val historyItem = historyItems.first()
+
             String.format(
-                requireContext().getString(
-                    R.string.history_delete_single_item_snackbar
-                ),
-                historyItems.first().url.toShortUrl(requireComponents.publicSuffixList)
+                requireContext().getString(R.string.history_delete_single_item_snackbar),
+                if (historyItem is History.Regular) {
+                    historyItem.url.toShortUrl(requireComponents.publicSuffixList)
+                } else {
+                    historyItem.title
+                }
             )
         }
     }
@@ -318,14 +344,35 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         )
     }
 
-    private fun getDeleteHistoryItemsOperation(items: Set<History.Regular>): (suspend () -> Unit) {
+    private fun getDeleteHistoryItemsOperation(items: Set<History>): (suspend () -> Unit) {
         return {
             CoroutineScope(IO).launch {
                 historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
                 context?.components?.run {
                     for (item in items) {
                         analytics.metrics.track(Event.HistoryItemRemoved)
-                        core.historyStorage.deleteVisit(item.url, item.visitedAt)
+
+                        if (item is History.Regular) {
+                            core.historyStorage.deleteVisit(
+                                url = item.url,
+                                timestamp = item.visitedAt
+                            )
+                        } else if (item is History.Group) {
+                            for (historyMetadata in item.items) {
+                                historyProvider.getMatchingHistory(historyMetadata)?.let {
+                                    core.historyStorage.deleteVisit(
+                                        url = it.url,
+                                        timestamp = it.visitTime
+                                    )
+                                }
+                            }
+
+                            core.historyStorage.deleteHistoryMetadata(
+                                searchTerm = item.title
+                            )
+
+                            historyProvider.clearHistoryGroups()
+                        }
                     }
                 }
                 historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
@@ -334,13 +381,13 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
     }
 
-    private fun updatePendingHistoryToDelete(items: Set<History.Regular>) {
+    private fun updatePendingHistoryToDelete(items: Set<History>) {
         pendingHistoryDeletionJob = getDeleteHistoryItemsOperation(items)
         val ids = items.map { item -> item.visitedAt }.toSet()
         historyStore.dispatch(HistoryFragmentAction.AddPendingDeletionSet(ids))
     }
 
-    private fun undoPendingDeletion(items: Set<History.Regular>) {
+    private fun undoPendingDeletion(items: Set<History>) {
         pendingHistoryDeletionJob = null
         val ids = items.map { item -> item.visitedAt }.toSet()
         historyStore.dispatch(HistoryFragmentAction.UndoPendingDeletionSet(ids))

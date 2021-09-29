@@ -53,8 +53,6 @@ class HistoryListItemViewHolder(
             binding.historyLayout.visibility = View.VISIBLE
         }
 
-        binding.historyLayout.overflowView.isVisible = item !is History.Group
-
         binding.historyLayout.titleView.text = item.title
 
         binding.historyLayout.urlView.text = Do exhaustive when (item) {

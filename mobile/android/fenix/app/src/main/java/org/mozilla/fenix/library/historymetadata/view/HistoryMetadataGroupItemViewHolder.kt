@@ -27,6 +27,14 @@ class HistoryMetadataGroupItemViewHolder(
 
     private var item: History.Metadata? = null
 
+    init {
+        binding.historyLayout.overflowView.setImageResource(R.drawable.ic_close)
+        binding.historyLayout.overflowView.setOnClickListener {
+            val item = this.item ?: return@setOnClickListener
+            interactor.onDelete(setOf(item))
+        }
+    }
+
     fun bind(item: History.Metadata) {
         binding.historyLayout.titleView.text = item.title
         binding.historyLayout.urlView.text = item.url
@@ -37,8 +45,6 @@ class HistoryMetadataGroupItemViewHolder(
         if (this.item?.url != item.url) {
             binding.historyLayout.loadFavicon(item.url)
         }
-
-        binding.historyLayout.overflowView.setImageResource(R.drawable.ic_close)
 
         if (selectionHolder.selectedItems.isEmpty()) {
             binding.historyLayout.overflowView.showAndEnable()

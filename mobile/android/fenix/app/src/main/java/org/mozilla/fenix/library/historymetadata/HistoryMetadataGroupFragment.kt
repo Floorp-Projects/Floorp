@@ -12,6 +12,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,7 +36,8 @@ import org.mozilla.fenix.library.historymetadata.view.HistoryMetadataGroupView
 /**
  * Displays a list of history metadata items for a history metadata search group.
  */
-class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), UserInteractionHandler {
+class HistoryMetadataGroupFragment :
+    LibraryPageFragment<History.Metadata>(), UserInteractionHandler {
 
     private lateinit var historyMetadataGroupStore: HistoryMetadataGroupFragmentStore
     private lateinit var interactor: HistoryMetadataGroupInteractor
@@ -43,6 +45,8 @@ class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), Us
     private var _historyMetadataGroupView: HistoryMetadataGroupView? = null
     private val historyMetadataGroupView: HistoryMetadataGroupView
         get() = _historyMetadataGroupView!!
+    private var _binding: FragmentHistoryMetadataGroupBinding? = null
+    private val binding get() = _binding!!
 
     private val args by navArgs<HistoryMetadataGroupFragmentArgs>()
 
@@ -54,9 +58,9 @@ class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), Us
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val binding = FragmentHistoryMetadataGroupBinding.inflate(inflater, container, false)
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = FragmentHistoryMetadataGroupBinding.inflate(inflater, container, false)
 
         historyMetadataGroupStore = StoreProvider.get(this) {
             HistoryMetadataGroupFragmentStore(
@@ -70,7 +74,9 @@ class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), Us
             controller = DefaultHistoryMetadataGroupController(
                 activity = activity as HomeActivity,
                 store = historyMetadataGroupStore,
-                navController = findNavController()
+                navController = findNavController(),
+                scope = lifecycleScope,
+                searchTerm = args.title
             )
         )
 
@@ -117,7 +123,7 @@ class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), Us
                 true
             }
             R.id.delete_history_multi_select -> {
-                interactor.onDeleteMenuItem(selectedItems)
+                interactor.onDelete(selectedItems)
                 true
             }
             R.id.open_history_in_new_tabs_multi_select -> {
@@ -152,10 +158,12 @@ class HistoryMetadataGroupFragment : LibraryPageFragment<History.Metadata>(), Us
     override fun onDestroyView() {
         super.onDestroyView()
         _historyMetadataGroupView = null
+        _binding = null
     }
 
-    override val selectedItems: Set<History.Metadata> get() =
-        historyMetadataGroupStore.state.items.filter { it.selected }.toSet()
+    override val selectedItems: Set<History.Metadata>
+        get() =
+            historyMetadataGroupStore.state.items.filter { it.selected }.toSet()
 
     override fun onBackPressed(): Boolean = interactor.onBackPressed(selectedItems)
 

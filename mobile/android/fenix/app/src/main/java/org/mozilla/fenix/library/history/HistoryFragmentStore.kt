@@ -105,8 +105,8 @@ class HistoryFragmentStore(initialState: HistoryFragmentState) :
  */
 sealed class HistoryFragmentAction : Action {
     object ExitEditMode : HistoryFragmentAction()
-    data class AddItemForRemoval(val item: History.Regular) : HistoryFragmentAction()
-    data class RemoveItemForRemoval(val item: History.Regular) : HistoryFragmentAction()
+    data class AddItemForRemoval(val item: History) : HistoryFragmentAction()
+    data class RemoveItemForRemoval(val item: History) : HistoryFragmentAction()
     data class AddPendingDeletionSet(val itemIds: Set<Long>) : HistoryFragmentAction()
     data class UndoPendingDeletionSet(val itemIds: Set<Long>) : HistoryFragmentAction()
     object EnterDeletionMode : HistoryFragmentAction()
@@ -127,11 +127,11 @@ data class HistoryFragmentState(
     val isDeletingItems: Boolean
 ) : State {
     sealed class Mode {
-        open val selectedItems = emptySet<History.Regular>()
+        open val selectedItems = emptySet<History>()
 
         object Normal : Mode()
         object Syncing : Mode()
-        data class Editing(override val selectedItems: Set<History.Regular>) : Mode()
+        data class Editing(override val selectedItems: Set<History>) : Mode()
     }
 }
 

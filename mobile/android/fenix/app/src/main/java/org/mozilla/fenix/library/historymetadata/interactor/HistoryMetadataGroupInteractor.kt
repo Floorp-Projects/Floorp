@@ -21,15 +21,15 @@ interface HistoryMetadataGroupInteractor : SelectionInteractor<History.Metadata>
     fun onBackPressed(items: Set<History.Metadata>): Boolean
 
     /**
-     * Deletes the given set of history [items] that are selected. Called when a user clicks on the
-     * "Delete" menu item.
+     * Deletes the given set of history metadata [items]. Called when a user clicks on the
+     * "Delete" menu item or the "x" button associated with a history metadata item.
      *
      * @param items The set of [History]s to delete.
      */
-    fun onDeleteMenuItem(items: Set<History.Metadata>)
+    fun onDelete(items: Set<History.Metadata>)
 
     /**
-     * Deletes the all the history items in the history metadata group. Called when a user clicks
+     * Deletes all the history items in the history metadata group. Called when a user clicks
      * on the "Delete history" menu item.
      */
     fun onDeleteAllMenuItem()
@@ -66,12 +66,12 @@ class DefaultHistoryMetadataGroupInteractor(
         return controller.handleBackPressed(items)
     }
 
-    override fun onDeleteMenuItem(items: Set<History.Metadata>) {
-        // no-op
+    override fun onDelete(items: Set<History.Metadata>) {
+        controller.handleDelete(items)
     }
 
     override fun onDeleteAllMenuItem() {
-        // no-op
+        controller.handleDeleteAll()
     }
 
     override fun onShareMenuItem(items: Set<History.Metadata>) {

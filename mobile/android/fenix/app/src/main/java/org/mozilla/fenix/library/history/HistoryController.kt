@@ -33,7 +33,7 @@ class DefaultHistoryController(
     private val openToBrowser: (item: History.Regular) -> Unit,
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
-    private val deleteHistoryItems: (Set<History.Regular>) -> Unit,
+    private val deleteHistoryItems: (Set<History>) -> Unit,
     private val syncHistory: suspend () -> Unit,
     private val metrics: MetricController
 ) : HistoryController {
@@ -59,15 +59,11 @@ class DefaultHistoryController(
             return
         }
 
-        if (item is History.Regular) {
-            store.dispatch(HistoryFragmentAction.AddItemForRemoval(item))
-        }
+        store.dispatch(HistoryFragmentAction.AddItemForRemoval(item))
     }
 
     override fun handleDeselect(item: History) {
-        if (item is History.Regular) {
-            store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(item))
-        }
+        store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(item))
     }
 
     override fun handleBackPressed(): Boolean {
@@ -88,9 +84,7 @@ class DefaultHistoryController(
     }
 
     override fun handleDeleteSome(items: Set<History>) {
-        items.filterIsInstance<History.Regular>().let {
-            deleteHistoryItems.invoke(it.toSet())
-        }
+        deleteHistoryItems.invoke(items)
     }
 
     override fun handleRequestSync() {

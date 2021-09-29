@@ -5,13 +5,19 @@
 package org.mozilla.fenix.library.historymetadata.controller
 
 import androidx.navigation.NavController
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -20,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.library.history.History
@@ -32,6 +39,7 @@ import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentSto
 class HistoryMetadataGroupControllerTest {
 
     private val testDispatcher = TestCoroutineDispatcher()
+    private val scope = TestCoroutineScope()
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
@@ -39,14 +47,17 @@ class HistoryMetadataGroupControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
+    private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
 
+    private val searchTerm = "mozilla"
+    private val historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", searchTerm, null)
     private val mozillaHistoryMetadataItem = History.Metadata(
         id = 0,
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
         totalViewTime = 1,
-        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        historyMetadataKey = historyMetadataKey
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
         id = 0,
@@ -54,7 +65,7 @@ class HistoryMetadataGroupControllerTest {
         url = "firefox.com",
         visitedAt = 0,
         totalViewTime = 1,
-        historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
+        historyMetadataKey = historyMetadataKey
     )
 
     private lateinit var controller: DefaultHistoryMetadataGroupController
@@ -64,8 +75,17 @@ class HistoryMetadataGroupControllerTest {
         controller = DefaultHistoryMetadataGroupController(
             activity = activity,
             store = store,
-            navController = navController
+            navController = navController,
+            scope = scope,
+            searchTerm = "mozilla"
         )
+
+        every { activity.components.core.historyStorage } returns historyStorage
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
     }
 
     @Test
@@ -130,6 +150,28 @@ class HistoryMetadataGroupControllerTest {
             navController.navigate(
                 directionsEq(HistoryMetadataGroupFragmentDirections.actionGlobalShareFragment(data))
             )
+        }
+    }
+
+    @Test
+    fun handleDelete() = testDispatcher.runBlockingTest {
+        controller.handleDelete(setOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem))
+
+        coVerify {
+            store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem))
+            store.dispatch(HistoryMetadataGroupFragmentAction.Delete(firefoxHistoryMetadataItem))
+            historyStorage.deleteHistoryMetadata(mozillaHistoryMetadataItem.historyMetadataKey)
+            historyStorage.deleteHistoryMetadata(firefoxHistoryMetadataItem.historyMetadataKey)
+        }
+    }
+
+    @Test
+    fun handleDeleteAll() = testDispatcher.runBlockingTest {
+        controller.handleDeleteAll()
+
+        coVerify {
+            store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
+            historyStorage.deleteHistoryMetadata(searchTerm)
         }
     }
 }
