@@ -67,6 +67,7 @@ jobs:
                 - linux64-node
                 - sysroot-i686-linux-gnu
                 - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
 
     linux64-shippable/opt:
         description: "Linux64 Instrumented"
@@ -262,6 +263,7 @@ jobs:
                 - linux64-winchecksec
                 - nsis
                 - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
             fetch:
                 - upx-3.95-win
 
