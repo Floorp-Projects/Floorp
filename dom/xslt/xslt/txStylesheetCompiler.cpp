@@ -302,8 +302,7 @@ nsresult txStylesheetCompiler::endElement() {
 
   const txElementHandler* handler = const_cast<const txElementHandler*>(
       static_cast<txElementHandler*>(popPtr(eElementHandler)));
-  rv = (handler->mEndFunction)(*this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  (handler->mEndFunction)(*this);
 
   if (!--mElementContext->mDepth) {
     // this will delete the old object
@@ -504,7 +503,6 @@ nsresult txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
   }
 
   mElementContext = MakeUnique<txElementContext>(aStylesheetURI);
-  NS_ENSURE_TRUE(mElementContext->mMappings, NS_ERROR_OUT_OF_MEMORY);
 
   // Push the "old" txElementContext
   pushObject(nullptr);
@@ -689,17 +687,12 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
   return rv;
 }
 
-nsresult txStylesheetCompilerState::addGotoTarget(
-    txInstruction** aTargetPointer) {
+void txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer) {
   mGotoTargetPointers.AppendElement(aTargetPointer);
-
-  return NS_OK;
 }
 
-nsresult txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
+void txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
   mInScopeVariables.AppendElement(new txInScopeVariable(aName));
-
-  return NS_OK;
 }
 
 nsresult txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix,

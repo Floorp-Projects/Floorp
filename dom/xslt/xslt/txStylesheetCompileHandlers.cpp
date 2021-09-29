@@ -46,7 +46,7 @@ static nsresult txFnStartLRE(int32_t aNamespaceID, nsAtom* aLocalName,
                              nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                              int32_t aAttrCount,
                              txStylesheetCompilerState& aState);
-static nsresult txFnEndLRE(txStylesheetCompilerState& aState);
+static void txFnEndLRE(txStylesheetCompilerState& aState);
 
 #define TX_RETURN_IF_WHITESPACE(_str, _state)           \
   do {                                                  \
@@ -348,9 +348,7 @@ static nsresult txFnStartElementIgnore(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndElementIgnore(txStylesheetCompilerState& aState) {
-  return NS_OK;
-}
+static void txFnEndElementIgnore(txStylesheetCompilerState& aState) {}
 
 static nsresult txFnStartElementSetIgnore(int32_t aNamespaceID,
                                           nsAtom* aLocalName, nsAtom* aPrefix,
@@ -366,9 +364,8 @@ static nsresult txFnStartElementSetIgnore(int32_t aNamespaceID,
   return NS_OK;
 }
 
-static nsresult txFnEndElementSetIgnore(txStylesheetCompilerState& aState) {
+static void txFnEndElementSetIgnore(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 static nsresult txFnStartElementError(int32_t aNamespaceID, nsAtom* aLocalName,
@@ -379,9 +376,8 @@ static nsresult txFnStartElementError(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_ERROR_XSLT_PARSE_FAILURE;
 }
 
-static nsresult txFnEndElementError(txStylesheetCompilerState& aState) {
-  NS_ERROR("txFnEndElementError shouldn't be called");
-  return NS_ERROR_XSLT_PARSE_FAILURE;
+static void txFnEndElementError(txStylesheetCompilerState& aState) {
+  MOZ_CRASH("txFnEndElementError shouldn't be called");
 }
 
 /**
@@ -412,9 +408,8 @@ static nsresult txFnStartStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndStylesheet(txStylesheetCompilerState& aState) {
+static void txFnEndStylesheet(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 static nsresult txFnStartElementContinueTopLevel(
@@ -451,17 +446,14 @@ static nsresult txFnStartLREStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
                       aAttrCount, aState);
 }
 
-static nsresult txFnEndLREStylesheet(txStylesheetCompilerState& aState) {
-  nsresult rv = txFnEndLRE(aState);
-  NS_ENSURE_SUCCESS(rv, rv);
+static void txFnEndLREStylesheet(txStylesheetCompilerState& aState) {
+  txFnEndLRE(aState);
 
   aState.popHandlerTable();
 
   aState.addInstruction(MakeUnique<txReturn>());
 
   aState.closeInstructionContainer();
-
-  return NS_OK;
 }
 
 static nsresult txFnStartEmbed(int32_t aNamespaceID, nsAtom* aLocalName,
@@ -480,13 +472,12 @@ static nsresult txFnStartEmbed(int32_t aNamespaceID, nsAtom* aLocalName,
                              aAttrCount, aState);
 }
 
-static nsresult txFnEndEmbed(txStylesheetCompilerState& aState) {
+static void txFnEndEmbed(txStylesheetCompilerState& aState) {
   if (!aState.handleEmbeddedSheet()) {
-    return NS_OK;
+    return;
   }
-  nsresult rv = txFnEndStylesheet(aState);
+  txFnEndStylesheet(aState);
   aState.doneEmbedding();
-  return rv;
 }
 
 /**
@@ -507,9 +498,8 @@ static nsresult txFnStartOtherTop(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndOtherTop(txStylesheetCompilerState& aState) {
+static void txFnEndOtherTop(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 // xsl:attribute-set
@@ -537,14 +527,12 @@ static nsresult txFnStartAttributeSet(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndAttributeSet(txStylesheetCompilerState& aState) {
+static void txFnEndAttributeSet(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   aState.addInstruction(MakeUnique<txReturn>());
 
   aState.closeInstructionContainer();
-
-  return NS_OK;
 }
 
 // xsl:decimal-format
@@ -617,10 +605,8 @@ static nsresult txFnStartDecimalFormat(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndDecimalFormat(txStylesheetCompilerState& aState) {
+static void txFnEndDecimalFormat(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:import
@@ -648,10 +634,8 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndImport(txStylesheetCompilerState& aState) {
+static void txFnEndImport(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:include
@@ -674,10 +658,8 @@ static nsresult txFnStartInclude(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndInclude(txStylesheetCompilerState& aState) {
+static void txFnEndInclude(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:key
@@ -712,10 +694,8 @@ static nsresult txFnStartKey(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndKey(txStylesheetCompilerState& aState) {
+static void txFnEndKey(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:namespace-alias
@@ -740,10 +720,8 @@ static nsresult txFnStartNamespaceAlias(int32_t aNamespaceID,
   return NS_OK;
 }
 
-static nsresult txFnEndNamespaceAlias(txStylesheetCompilerState& aState) {
+static void txFnEndNamespaceAlias(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:output
@@ -839,10 +817,8 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndOutput(txStylesheetCompilerState& aState) {
+static void txFnEndOutput(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:strip-space/xsl:preserve-space
@@ -897,12 +873,8 @@ static nsresult txFnStartStripSpace(int32_t aNamespaceID, nsAtom* aLocalName,
       ns = aState.mElementContext->mMappings->lookupNamespace(prefix);
       NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, NS_ERROR_FAILURE);
     }
-    UniquePtr<txStripSpaceTest> sst(
+    stripItem->addStripSpaceTest(
         new txStripSpaceTest(prefix, localName, ns, strip));
-    rv = stripItem->addStripSpaceTest(sst.get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    Unused << sst.release();
   }
 
   aState.addToplevelItem(stripItem.release());
@@ -912,10 +884,8 @@ static nsresult txFnStartStripSpace(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndStripSpace(txStylesheetCompilerState& aState) {
+static void txFnEndStripSpace(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 // xsl:template
@@ -955,14 +925,12 @@ static nsresult txFnStartTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndTemplate(txStylesheetCompilerState& aState) {
+static void txFnEndTemplate(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   aState.addInstruction(MakeUnique<txReturn>());
 
   aState.closeInstructionContainer();
-
-  return NS_OK;
 }
 
 // xsl:variable, xsl:param
@@ -999,7 +967,7 @@ static nsresult txFnStartTopVariable(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndTopVariable(txStylesheetCompilerState& aState) {
+static void txFnEndTopVariable(txStylesheetCompilerState& aState) {
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
   txVariableItem* var =
@@ -1015,8 +983,6 @@ static nsresult txFnEndTopVariable(txStylesheetCompilerState& aState) {
   }
 
   aState.closeInstructionContainer();
-
-  return NS_OK;
 }
 
 static nsresult txFnStartElementStartTopVar(int32_t aNamespaceID,
@@ -1090,10 +1056,8 @@ static nsresult txFnStartLRE(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndLRE(txStylesheetCompilerState& aState) {
+static void txFnEndLRE(txStylesheetCompilerState& aState) {
   aState.addInstruction(MakeUnique<txEndElement>());
-
-  return NS_OK;
 }
 
 /*
@@ -1129,10 +1093,8 @@ static nsresult txFnStartApplyImports(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndApplyImports(txStylesheetCompilerState& aState) {
+static void txFnEndApplyImports(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 /*
@@ -1181,7 +1143,7 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
   return NS_OK;
 }
 
-static nsresult txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
+static void txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   txPushNewContext* pushcontext =
@@ -1194,8 +1156,6 @@ static nsresult txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
   aState.addInstruction(MakeUnique<txLoopNodeSet>(instr));
 
   pushcontext->mBailTarget = aState.addInstruction(MakeUnique<txPopParams>());
-
-  return NS_OK;
 }
 
 /*
@@ -1234,11 +1194,9 @@ static nsresult txFnStartAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndAttribute(txStylesheetCompilerState& aState) {
+static void txFnEndAttribute(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   aState.addInstruction(popInstruction(aState));
-
-  return NS_OK;
 }
 
 /*
@@ -1270,15 +1228,13 @@ static nsresult txFnStartCallTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndCallTemplate(txStylesheetCompilerState& aState) {
+static void txFnEndCallTemplate(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   // txCallTemplate
   aState.addInstruction(popInstruction(aState));
 
   aState.addInstruction(MakeUnique<txPopParams>());
-
-  return NS_OK;
 }
 
 /*
@@ -1306,19 +1262,15 @@ static nsresult txFnStartChoose(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndChoose(txStylesheetCompilerState& aState) {
-  nsresult rv = NS_OK;
+static void txFnEndChoose(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   txListIterator iter(aState.mChooseGotoList.get());
   txGoTo* gotoinstr;
   while ((gotoinstr = static_cast<txGoTo*>(iter.next()))) {
-    rv = aState.addGotoTarget(&gotoinstr->mTarget);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.addGotoTarget(&gotoinstr->mTarget);
   }
 
   aState.popChooseGotoList();
-
-  return NS_OK;
 }
 
 /*
@@ -1337,10 +1289,8 @@ static nsresult txFnStartComment(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndComment(txStylesheetCompilerState& aState) {
+static void txFnEndComment(txStylesheetCompilerState& aState) {
   aState.addInstruction(MakeUnique<txComment>());
-
-  return NS_OK;
 }
 
 /*
@@ -1361,11 +1311,11 @@ static nsresult txFnStartCopy(int32_t aNamespaceID, nsAtom* aLocalName,
   return parseUseAttrSets(aAttributes, aAttrCount, false, aState);
 }
 
-static nsresult txFnEndCopy(txStylesheetCompilerState& aState) {
+static void txFnEndCopy(txStylesheetCompilerState& aState) {
   aState.addInstruction(MakeUnique<txEndElement>());
 
   txCopy* copy = static_cast<txCopy*>(aState.popPtr(aState.eCopy));
-  return aState.addGotoTarget(&copy->mBailTarget);
+  aState.addGotoTarget(&copy->mBailTarget);
 }
 
 /*
@@ -1391,9 +1341,8 @@ static nsresult txFnStartCopyOf(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndCopyOf(txStylesheetCompilerState& aState) {
+static void txFnEndCopyOf(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 /*
@@ -1428,10 +1377,8 @@ static nsresult txFnStartElement(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndElement(txStylesheetCompilerState& aState) {
+static void txFnEndElement(txStylesheetCompilerState& aState) {
   aState.addInstruction(MakeUnique<txEndElement>());
-
-  return NS_OK;
 }
 
 /*
@@ -1451,12 +1398,11 @@ static nsresult txFnStartFallback(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndFallback(txStylesheetCompilerState& aState) {
+static void txFnEndFallback(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   NS_ASSERTION(!aState.mSearchingForFallback,
                "bad nesting of unknown-instruction and fallback handlers");
-  return NS_OK;
 }
 
 /*
@@ -1492,7 +1438,7 @@ static nsresult txFnStartForEach(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndForEach(txStylesheetCompilerState& aState) {
+static void txFnEndForEach(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   // This is a txPushNullTemplateRule
@@ -1505,8 +1451,6 @@ static nsresult txFnEndForEach(txStylesheetCompilerState& aState) {
   txPushNewContext* pushcontext =
       static_cast<txPushNewContext*>(aState.popPtr(aState.ePushNewContext));
   aState.addGotoTarget(&pushcontext->mBailTarget);
-
-  return NS_OK;
 }
 
 static nsresult txFnStartElementContinueTemplate(
@@ -1552,10 +1496,10 @@ static nsresult txFnStartIf(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndIf(txStylesheetCompilerState& aState) {
+static void txFnEndIf(txStylesheetCompilerState& aState) {
   txConditionalGoto* condGoto =
       static_cast<txConditionalGoto*>(aState.popPtr(aState.eConditionalGoto));
-  return aState.addGotoTarget(&condGoto->mTarget);
+  aState.addGotoTarget(&condGoto->mTarget);
 }
 
 /*
@@ -1581,10 +1525,8 @@ static nsresult txFnStartMessage(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndMessage(txStylesheetCompilerState& aState) {
+static void txFnEndMessage(txStylesheetCompilerState& aState) {
   aState.addInstruction(popInstruction(aState));
-
-  return NS_OK;
 }
 
 /*
@@ -1662,10 +1604,8 @@ static nsresult txFnStartNumber(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndNumber(txStylesheetCompilerState& aState) {
+static void txFnEndNumber(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 /*
@@ -1683,11 +1623,9 @@ static nsresult txFnStartOtherwise(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndOtherwise(txStylesheetCompilerState& aState) {
+static void txFnEndOtherwise(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   aState.mHandlerTable = gTxIgnoreHandler;  // XXX should be gTxErrorHandler
-
-  return NS_OK;
 }
 
 /*
@@ -1732,7 +1670,7 @@ static nsresult txFnStartParam(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndParam(txStylesheetCompilerState& aState) {
+static void txFnEndParam(txStylesheetCompilerState& aState) {
   UniquePtr<txSetVariable> var = popInstruction<txSetVariable>(aState);
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
@@ -1743,16 +1681,13 @@ static nsresult txFnEndParam(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
-  nsresult rv = aState.addVariable(var->mName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addVariable(var->mName);
 
   aState.addInstruction(std::move(var));
 
   txCheckParam* checkParam =
       static_cast<txCheckParam*>(aState.popPtr(aState.eCheckParam));
   aState.addGotoTarget(&checkParam->mBailTarget);
-
-  return NS_OK;
 }
 
 /*
@@ -1778,10 +1713,8 @@ static nsresult txFnStartPI(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndPI(txStylesheetCompilerState& aState) {
+static void txFnEndPI(txStylesheetCompilerState& aState) {
   aState.addInstruction(popInstruction(aState));
-
-  return NS_OK;
 }
 
 /*
@@ -1834,10 +1767,8 @@ static nsresult txFnStartSort(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndSort(txStylesheetCompilerState& aState) {
+static void txFnEndSort(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-
-  return NS_OK;
 }
 
 /*
@@ -1864,10 +1795,9 @@ static nsresult txFnStartText(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndText(txStylesheetCompilerState& aState) {
+static void txFnEndText(txStylesheetCompilerState& aState) {
   aState.mDOE = false;
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 static nsresult txFnTextText(const nsAString& aStr,
@@ -1905,9 +1835,8 @@ static nsresult txFnStartValueOf(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndValueOf(txStylesheetCompilerState& aState) {
+static void txFnEndValueOf(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  return NS_OK;
 }
 
 /*
@@ -1948,7 +1877,7 @@ static nsresult txFnStartVariable(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndVariable(txStylesheetCompilerState& aState) {
+static void txFnEndVariable(txStylesheetCompilerState& aState) {
   UniquePtr<txSetVariable> var = popInstruction<txSetVariable>(aState);
 
   txHandlerTable* prev = aState.mHandlerTable;
@@ -1960,12 +1889,9 @@ static nsresult txFnEndVariable(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
-  nsresult rv = aState.addVariable(var->mName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addVariable(var->mName);
 
   aState.addInstruction(std::move(var));
-
-  return NS_OK;
 }
 
 static nsresult txFnStartElementStartRTF(int32_t aNamespaceID,
@@ -2016,17 +1942,14 @@ static nsresult txFnStartWhen(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndWhen(txStylesheetCompilerState& aState) {
+static void txFnEndWhen(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   aState.mChooseGotoList->add(
       aState.addInstruction(MakeUnique<txGoTo>(nullptr)));
 
   txConditionalGoto* condGoto =
       static_cast<txConditionalGoto*>(aState.popPtr(aState.eConditionalGoto));
-  nsresult rv = aState.addGotoTarget(&condGoto->mTarget);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  aState.addGotoTarget(&condGoto->mTarget);
 }
 
 /*
@@ -2066,7 +1989,7 @@ static nsresult txFnStartWithParam(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static nsresult txFnEndWithParam(txStylesheetCompilerState& aState) {
+static void txFnEndWithParam(txStylesheetCompilerState& aState) {
   UniquePtr<txSetParam> var = popInstruction<txSetParam>(aState);
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
@@ -2078,8 +2001,6 @@ static nsresult txFnEndWithParam(txStylesheetCompilerState& aState) {
   }
 
   aState.addInstruction(std::move(var));
-
-  return NS_OK;
 }
 
 /*
@@ -2108,7 +2029,7 @@ static nsresult txFnStartUnknownInstruction(int32_t aNamespaceID,
   return NS_OK;
 }
 
-static nsresult txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
+static void txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   if (aState.mSearchingForFallback) {
@@ -2116,8 +2037,6 @@ static nsresult txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
   }
 
   aState.mSearchingForFallback = false;
-
-  return NS_OK;
 }
 
 /**
