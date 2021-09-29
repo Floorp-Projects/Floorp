@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-lush-bold@mozilla.org"
+      "id": "lush-bold-colorway@mozilla.org"
     }
   },
   "name": "Lush – Bold",

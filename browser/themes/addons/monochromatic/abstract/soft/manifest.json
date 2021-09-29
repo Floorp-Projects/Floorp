@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-abstract-soft@mozilla.org"
+      "id": "abstract-soft-colorway@mozilla.org"
     }
   },
   "name": "Abstract – Soft",

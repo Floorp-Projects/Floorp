@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-graffiti-soft@mozilla.org"
+      "id": "graffiti-soft-colorway@mozilla.org"
     }
   },
   "name": "Graffiti – Soft",
