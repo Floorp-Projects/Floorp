@@ -90,11 +90,11 @@ menu.subviewbutton > .menu-right {
 }
 
 .panel-button@buttonStateHover@ {
-  background-color: var(--arrowpanel-dimmed-further);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 
 .panel-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .panel-button:-moz-focusring {

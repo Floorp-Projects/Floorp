@@ -207,15 +207,12 @@ toolbarseparator + .panel-subview-body,
 }
 
 .panel-info-button@buttonStateHoverOrFocus@ {
-  background-color: var(--arrowpanel-dimmed);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 
-.panel-info-button:not(:hover)[checked] {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
+.panel-info-button:not(:hover)[checked],
 .panel-info-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .panel-info-button > image {
@@ -1996,7 +1993,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
      to make them more visible on the header background */
   --arrowpanel-dimmed: #0003;
   --arrowpanel-dimmed-further: #0005;
-  --arrowpanel-dimmed-even-further: #0007;
+  --panel-item-active-bgcolor: #0007;
 }
 
 #PanelUI-profiler-header[isinfocollapsed="false"]:-moz-locale-dir(rtl) {
