@@ -743,7 +743,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
               if (remotePrintJob) {
                 printData->mPrintProgressListeners.AppendElement(
                     remotePrintJob);
-                remotePrintJobListening = true;
               }
             }
           }
