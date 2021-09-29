@@ -247,10 +247,6 @@ class ABIResultIter {
   }
 };
 
-extern bool GenerateIndirectStub(jit::MacroAssembler& masm,
-                                 uint8_t* calleeCheckedEntry, TlsData* tlsPtr,
-                                 Offsets* offsets);
-
 extern bool GenerateBuiltinThunk(jit::MacroAssembler& masm,
                                  jit::ABIFunctionType abiType,
                                  ExitReason exitReason, void* funcPtr,

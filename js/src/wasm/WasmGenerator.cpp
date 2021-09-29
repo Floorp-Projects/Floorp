@@ -477,8 +477,7 @@ bool ModuleGenerator::linkCallSites() {
     const CallSiteTarget& target = callSiteTargets_[lastPatchedCallSite_];
     uint32_t callerOffset = callSite.returnAddressOffset();
     switch (callSite.kind()) {
-      case CallSiteDesc::Import:
-      case CallSiteDesc::Indirect:
+      case CallSiteDesc::Dynamic:
       case CallSiteDesc::Symbolic:
         break;
       case CallSiteDesc::Func: {
@@ -581,9 +580,6 @@ void ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex,
       break;
     case CodeRange::Throw:
       // Jumped to by other stubs, so nothing to do.
-      break;
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("Indirect stub generates later - at runtime.");
       break;
     case CodeRange::FarJumpIsland:
     case CodeRange::BuiltinThunk:

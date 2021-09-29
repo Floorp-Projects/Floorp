@@ -1694,7 +1694,7 @@ class FunctionCompiler {
       callee = CalleeDesc::wasmTable(table, funcTypeId);
     }
 
-    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Indirect);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     ArgTypeVector args(funcType);
     ResultType resultType = ResultType::Vector(funcType.results());
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
@@ -1715,7 +1715,7 @@ class FunctionCompiler {
       return true;
     }
 
-    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Import);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto callee = CalleeDesc::import(globalDataOffset);
     ArgTypeVector args(funcType);
     ResultType resultType = ResultType::Vector(funcType.results());
