@@ -496,6 +496,14 @@ def repackage_msix(
     if log:
         log_copy_result(log, time.time() - start, output_dir, result)
 
+    if verbose:
+        # Dump AppxManifest.xml contents for ease of debugging.
+        log(logging.DEBUG, "msix", {}, "AppxManifest.xml")
+        log(logging.DEBUG, "msix", {}, ">>>")
+        for line in open(mozpath.join(output_dir, "AppxManifest.xml")).readlines():
+            log(logging.DEBUG, "msix", {}, line[:-1])  # Drop trailing line terminator.
+        log(logging.DEBUG, "msix", {}, "<<<")
+
     if not makeappx:
         makeappx = find_sdk_tool("makeappx.exe", log=log)
     if not makeappx:
