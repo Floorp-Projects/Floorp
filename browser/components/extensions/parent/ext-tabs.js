@@ -989,7 +989,8 @@ this.tabs = class extends ExtensionAPI {
 
         async detectLanguage(tabId) {
           let tab = await promiseTabWhenReady(tabId);
-          return tab.sendMessage(context, "Extension:DetectLanguage");
+          let results = await tab.queryContent("DetectLanguage", {});
+          return results[0];
         },
 
         async executeScript(tabId, details) {

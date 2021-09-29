@@ -4,7 +4,7 @@
 
 add_task(async function testExecuteScript() {
   let { MessageChannel } = ChromeUtils.import(
-    "resource://gre/modules/MessageChannel.jsm"
+    "resource://testing-common/MessageChannel.jsm"
   );
 
   function countMM(messageManagerMap) {

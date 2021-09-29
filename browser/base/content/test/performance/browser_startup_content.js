@@ -47,7 +47,6 @@ const known_scripts = {
     // Extensions
     "resource://gre/modules/ExtensionProcessScript.jsm",
     "resource://gre/modules/ExtensionUtils.jsm",
-    "resource://gre/modules/MessageChannel.jsm",
   ]),
   frameScripts: new Set([
     // Test related
