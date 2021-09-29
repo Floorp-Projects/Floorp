@@ -5,7 +5,7 @@
 // Test that style editor shows sheets loaded with @import rules.
 
 // http rather than chrome to improve coverage
-const TESTCASE_URI = TEST_BASE_HTTP + "import.html";
+const TESTCASE_URI = TEST_BASE_HTTPS + "import.html";
 
 add_task(async function() {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
@@ -14,19 +14,19 @@ add_task(async function() {
 
   is(
     ui.editors[0].styleSheet.href,
-    TEST_BASE_HTTP + "simple.css",
+    TEST_BASE_HTTPS + "simple.css",
     "stylesheet 1 is simple.css"
   );
 
   is(
     ui.editors[1].styleSheet.href,
-    TEST_BASE_HTTP + "import.css",
+    TEST_BASE_HTTPS + "import.css",
     "stylesheet 2 is import.css"
   );
 
   is(
     ui.editors[2].styleSheet.href,
-    TEST_BASE_HTTP + "import2.css",
+    TEST_BASE_HTTPS + "import2.css",
     "stylesheet 3 is import2.css"
   );
 });
