@@ -3141,10 +3141,23 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
             const nsString& data = item.data().get_nsString();
             variant->SetAsAString(data);
           } else if (item.data().type() == IPCDataTransferData::TShmem) {
-            Shmem data = item.data().get_Shmem();
-            variant->SetAsACString(
-                nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-            Unused << DeallocShmem(data);
+            if (nsContentUtils::IsFlavorImage(item.flavor())) {
+              // An image! Get the imgIContainer for it and set it in the
+              // variant.
+              nsCOMPtr<imgIContainer> imageContainer;
+              nsresult rv = nsContentUtils::DataTransferItemToImage(
+                  item, getter_AddRefs(imageContainer));
+              if (NS_FAILED(rv)) {
+                continue;
+              }
+              variant->SetAsISupports(imageContainer);
+            } else {
+              Shmem data = item.data().get_Shmem();
+              variant->SetAsACString(
+                  nsDependentCSubstring(data.get<char>(), data.Size<char>()));
+            }
+
+            Unused << DeallocShmem(item.data().get_Shmem());
           } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
             RefPtr<BlobImpl> blobImpl =
                 IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
