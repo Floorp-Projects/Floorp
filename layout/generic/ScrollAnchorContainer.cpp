@@ -20,9 +20,9 @@
 
 using namespace mozilla::dom;
 
+#ifdef DEBUG
 static mozilla::LazyLogModule sAnchorLog("scrollanchor");
 
-#ifdef DEBUG
 #  define ANCHOR_LOG(fmt, ...)                       \
     MOZ_LOG(sAnchorLog, LogLevel::Debug,             \
             ("ANCHOR(%p, %s, root: %d): " fmt, this, \
