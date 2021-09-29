@@ -55,7 +55,6 @@ const known_scripts = {
     // Extensions
     "resource://gre/modules/ExtensionProcessScript.jsm",
     "resource://gre/modules/ExtensionUtils.jsm",
-    "resource://gre/modules/MessageChannel.jsm",
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",

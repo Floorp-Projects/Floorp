@@ -34,7 +34,6 @@ EXTRA_JS_MODULES += [
     "ExtensionUtils.jsm",
     "FindContent.jsm",
     "MatchURLFilters.jsm",
-    "MessageChannel.jsm",
     "MessageManagerProxy.jsm",
     "NativeManifests.jsm",
     "NativeMessaging.jsm",
@@ -53,6 +52,7 @@ EXTRA_COMPONENTS += [
 TESTING_JS_MODULES += [
     "ExtensionTestCommon.jsm",
     "ExtensionXPCShellUtils.jsm",
+    "MessageChannel.jsm",
 ]
 
 DIRS += [

@@ -74,38 +74,6 @@ class TabBase {
   }
 
   /**
-   * Sends a message, via the given context, to the ExtensionContent running in
-   * this tab. The tab's current innerWindowID is automatically added to the
-   * recipient filter for the message, and is used to ensure that the message is
-   * not processed if the content process navigates to a different content page
-   * before the message is received.
-   *
-   * @param {BaseContext} context
-   *        The context through which to send the message.
-   * @param {string} messageName
-   *        The name of the message to send.
-   * @param {object} [data = {}]
-   *        Arbitrary, structured-clonable message data to send.
-   * @param {object} [options]
-   *        An options object, as accepted by BaseContext.sendMessage.
-   *
-   * @returns {Promise}
-   */
-  sendMessage(context, messageName, data = {}, options = null) {
-    let { browser, innerWindowID } = this;
-
-    options = Object.assign({}, options);
-    options.recipient = Object.assign({ innerWindowID }, options.recipient);
-
-    return context.sendMessage(
-      browser.messageManager,
-      messageName,
-      data,
-      options
-    );
-  }
-
-  /**
    * Capture the visible area of this tab, and return the result as a data: URI.
    *
    * @param {BaseContext} context

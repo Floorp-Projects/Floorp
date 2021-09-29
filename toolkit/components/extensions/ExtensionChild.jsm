@@ -33,7 +33,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
-  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
@@ -66,9 +65,6 @@ const {
 } = ExtensionCommon;
 
 const { sharedData } = Services.cpmm;
-
-const isContentProcess =
-  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
 const MSG_SET_ENABLED = "Extension:ActivityLog:SetEnabled";
 const MSG_LOG = "Extension:ActivityLog:DoLog";
@@ -525,9 +521,6 @@ class BrowserExtensionContent extends EventEmitter {
     ExtensionManager.extensions.delete(this.id);
     ExtensionContent.shutdownExtension(this);
     Services.cpmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
-    if (isContentProcess) {
-      MessageChannel.abortResponses({ extensionId: this.id });
-    }
     this.emit("shutdown");
   }
 

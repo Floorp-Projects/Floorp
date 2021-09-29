@@ -60,7 +60,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
-  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
@@ -2885,8 +2884,6 @@ class Extension extends ExtensionData {
         `Timeout while waiting for extension child to shutdown: ${this.policy.debugName}`
       );
     }
-
-    MessageChannel.abortResponses({ extensionId: this.id });
 
     this.policy.active = false;
 
