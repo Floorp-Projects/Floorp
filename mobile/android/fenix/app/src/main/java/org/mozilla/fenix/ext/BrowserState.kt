@@ -9,7 +9,6 @@ import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tabs.ext.hasMediaPlayed
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.tabstray.browser.TabGroup
 import org.mozilla.fenix.tabstray.browser.maxActiveTime
@@ -35,9 +34,7 @@ fun BrowserState.asRecentTabs(): List<RecentTab> {
             inProgressMediaTab?.let { add(RecentTab.Tab(it)) }
         }
 
-        if (FeatureFlags.tabGroupFeature) {
-            lastSearchGroup?.let { add(it) }
-        }
+        lastSearchGroup?.let { add(it) }
     }
 }
 
