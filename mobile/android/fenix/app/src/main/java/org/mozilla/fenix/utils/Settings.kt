@@ -832,6 +832,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
+    var shouldShowInactiveTabsOnboardingPopup by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_inactive_tabs_popup),
+        default = true
+    )
+
     fun getSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,
         default: Action = Action.ASK_TO_ALLOW

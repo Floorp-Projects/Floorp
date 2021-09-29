@@ -31,7 +31,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
@@ -43,6 +42,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
+import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
@@ -72,6 +72,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
     private val secureTabsTrayBinding = ViewBoundFeatureWrapper<SecureTabsTrayBinding>()
+    private val tabsTrayInactiveTabsOnboardingBinding = ViewBoundFeatureWrapper<TabsTrayInactiveTabsOnboardingBinding>()
 
     @VisibleForTesting @Suppress("VariableNaming")
     internal var _tabsTrayBinding: ComponentTabstray2Binding? = null
@@ -314,6 +315,18 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 settings = requireComponents.settings,
                 fragment = this,
                 dialog = dialog as TabsTrayDialog
+            ),
+            owner = this,
+            view = view
+        )
+
+        tabsTrayInactiveTabsOnboardingBinding.set(
+            feature = TabsTrayInactiveTabsOnboardingBinding(
+                context = requireContext(),
+                store = requireComponents.core.store,
+                tabsTrayBinding = tabsTrayBinding,
+                settings = requireComponents.settings,
+                navigationInteractor = navigationInteractor
             ),
             owner = this,
             view = view

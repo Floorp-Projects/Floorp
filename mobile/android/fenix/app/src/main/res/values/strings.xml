@@ -107,9 +107,9 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Dismiss</string>
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Tabs you haven’t viewed for two weeks get moved here.</string>
+    <string name="tab_tray_inactive_onboarding_message">Tabs you haven’t viewed for two weeks get moved here.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Turn off in settings</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Turn off in settings</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

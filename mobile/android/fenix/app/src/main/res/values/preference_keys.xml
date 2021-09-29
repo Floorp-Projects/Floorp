@@ -225,6 +225,10 @@
     <!-- A value  of `true` means the Auto Close Tabs Banner has not been shown yet -->
     <string name="pref_key_should_show_auto_close_tabs_banner" translatable="false">pref_key_should_show_auto_close_tabs_banner</string>
 
+    <!-- A value  of `true` means the Inactive tabs onboarding popup has not been shown yet -->
+    <string name="pref_key_should_show_inactive_tabs_popup" translatable="false">pref_key_should_show_inactive_tabs_popup</string>
+
+
     <string name="pref_key_migrating_from_fenix_nightly_tip" translatable="false">pref_key_migrating_from_fenix_nightly_tip</string>
     <string name="pref_key_migrating_from_firefox_nightly_tip" translatable="false">pref_key_migrating_from_firefox_nightly_tip</string>
     <string name="pref_key_migrating_from_fenix_tip" translatable="false">pref_key_migrating_from_fenix_tip</string>
