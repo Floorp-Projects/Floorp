@@ -92,10 +92,14 @@ void txUnionPattern::toString(nsAString& aDest) {
  * (dealt with by the parser)
  */
 
-void txLocPathPattern::addStep(txPattern* aPattern, bool isChild) {
+nsresult txLocPathPattern::addStep(txPattern* aPattern, bool isChild) {
   Step* step = mSteps.AppendElement();
+  if (!step) return NS_ERROR_OUT_OF_MEMORY;
+
   step->pattern = WrapUnique(aPattern);
   step->isChild = isChild;
+
+  return NS_OK;
 }
 
 nsresult txLocPathPattern::matches(const txXPathNode& aNode,

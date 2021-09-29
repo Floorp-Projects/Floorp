@@ -46,7 +46,7 @@ static nsresult txFnStartLRE(int32_t aNamespaceID, nsAtom* aLocalName,
                              nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                              int32_t aAttrCount,
                              txStylesheetCompilerState& aState);
-static void txFnEndLRE(txStylesheetCompilerState& aState);
+static nsresult txFnEndLRE(txStylesheetCompilerState& aState);
 
 #define TX_RETURN_IF_WHITESPACE(_str, _state)           \
   do {                                                  \
@@ -96,7 +96,8 @@ static nsresult parseUseAttrSets(txStylesheetAttr* aAttributes,
     rv = name.init(tok.nextToken(), aState.mElementContext->mMappings, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aState.addInstruction(MakeUnique<txInsertAttrSet>(name));
+    UniquePtr<txInstruction> instr(new txInsertAttrSet(name));
+    aState.addInstruction(std::move(instr));
   }
   return NS_OK;
 }
@@ -304,16 +305,6 @@ static nsresult getCharAttr(txStylesheetAttr* aAttributes, int32_t aAttrCount,
   return NS_OK;
 }
 
-static void pushInstruction(txStylesheetCompilerState& aState,
-                            UniquePtr<txInstruction> aInstruction) {
-  aState.pushObject(aInstruction.release());
-}
-
-template <class T = txInstruction>
-static UniquePtr<T> popInstruction(txStylesheetCompilerState& aState) {
-  return UniquePtr<T>(static_cast<T*>(aState.popObject()));
-}
-
 /**
  * Ignore and error handlers
  */
@@ -348,7 +339,9 @@ static nsresult txFnStartElementIgnore(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static void txFnEndElementIgnore(txStylesheetCompilerState& aState) {}
+static nsresult txFnEndElementIgnore(txStylesheetCompilerState& aState) {
+  return NS_OK;
+}
 
 static nsresult txFnStartElementSetIgnore(int32_t aNamespaceID,
                                           nsAtom* aLocalName, nsAtom* aPrefix,
@@ -359,13 +352,12 @@ static nsresult txFnStartElementSetIgnore(int32_t aNamespaceID,
     clearAttributes(aAttributes, aAttrCount);
   }
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndElementSetIgnore(txStylesheetCompilerState& aState) {
+static nsresult txFnEndElementSetIgnore(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 static nsresult txFnStartElementError(int32_t aNamespaceID, nsAtom* aLocalName,
@@ -376,8 +368,9 @@ static nsresult txFnStartElementError(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_ERROR_XSLT_PARSE_FAILURE;
 }
 
-static void txFnEndElementError(txStylesheetCompilerState& aState) {
-  MOZ_CRASH("txFnEndElementError shouldn't be called");
+static nsresult txFnEndElementError(txStylesheetCompilerState& aState) {
+  NS_ERROR("txFnEndElementError shouldn't be called");
+  return NS_ERROR_XSLT_PARSE_FAILURE;
 }
 
 /**
@@ -403,13 +396,12 @@ static nsresult txFnStartStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
                     nsGkAtoms::version, true, &attr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxImportHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxImportHandler);
 }
 
-static void txFnEndStylesheet(txStylesheetCompilerState& aState) {
+static nsresult txFnEndStylesheet(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 static nsresult txFnStartElementContinueTopLevel(
@@ -438,22 +430,29 @@ static nsresult txFnStartLREStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txTemplateItem> templ(
       new txTemplateItem(std::move(match), nullExpr, nullExpr, prio));
   aState.openInstructionContainer(templ.get());
-  aState.addToplevelItem(templ.release());
+  aState.addToplevelItem(templ.get());
 
-  aState.pushHandlerTable(gTxTemplateHandler);
+  Unused << templ.release();
+
+  rv = aState.pushHandlerTable(gTxTemplateHandler);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return txFnStartLRE(aNamespaceID, aLocalName, aPrefix, aAttributes,
                       aAttrCount, aState);
 }
 
-static void txFnEndLREStylesheet(txStylesheetCompilerState& aState) {
-  txFnEndLRE(aState);
+static nsresult txFnEndLREStylesheet(txStylesheetCompilerState& aState) {
+  nsresult rv = txFnEndLRE(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aState.popHandlerTable();
 
-  aState.addInstruction(MakeUnique<txReturn>());
+  UniquePtr<txInstruction> instr(new txReturn());
+  aState.addInstruction(std::move(instr));
 
   aState.closeInstructionContainer();
+
+  return NS_OK;
 }
 
 static nsresult txFnStartEmbed(int32_t aNamespaceID, nsAtom* aLocalName,
@@ -472,12 +471,13 @@ static nsresult txFnStartEmbed(int32_t aNamespaceID, nsAtom* aLocalName,
                              aAttrCount, aState);
 }
 
-static void txFnEndEmbed(txStylesheetCompilerState& aState) {
+static nsresult txFnEndEmbed(txStylesheetCompilerState& aState) {
   if (!aState.handleEmbeddedSheet()) {
-    return;
+    return NS_OK;
   }
-  txFnEndStylesheet(aState);
+  nsresult rv = txFnEndStylesheet(aState);
   aState.doneEmbedding();
+  return rv;
 }
 
 /**
@@ -493,13 +493,12 @@ static nsresult txFnStartOtherTop(int32_t aNamespaceID, nsAtom* aLocalName,
     return NS_ERROR_XSLT_PARSE_FAILURE;
   }
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndOtherTop(txStylesheetCompilerState& aState) {
+static nsresult txFnEndOtherTop(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 // xsl:attribute-set
@@ -517,22 +516,25 @@ static nsresult txFnStartAttributeSet(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txAttributeSetItem> attrSet(new txAttributeSetItem(name));
   aState.openInstructionContainer(attrSet.get());
 
-  aState.addToplevelItem(attrSet.release());
+  aState.addToplevelItem(attrSet.get());
+
+  Unused << attrSet.release();
 
   rv = parseUseAttrSets(aAttributes, aAttrCount, false, aState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxAttributeSetHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxAttributeSetHandler);
 }
 
-static void txFnEndAttributeSet(txStylesheetCompilerState& aState) {
+static nsresult txFnEndAttributeSet(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
-  aState.addInstruction(MakeUnique<txReturn>());
+  UniquePtr<txInstruction> instr(new txReturn());
+  aState.addInstruction(std::move(instr));
 
   aState.closeInstructionContainer();
+
+  return NS_OK;
 }
 
 // xsl:decimal-format
@@ -600,13 +602,13 @@ static nsresult txFnStartDecimalFormat(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.mStylesheet->addDecimalFormat(name, std::move(format));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndDecimalFormat(txStylesheetCompilerState& aState) {
+static nsresult txFnEndDecimalFormat(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:import
@@ -616,8 +618,9 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
                                 txStylesheetCompilerState& aState) {
   UniquePtr<txImportItem> import(new txImportItem);
   import->mFrame = MakeUnique<txStylesheet::ImportFrame>();
-  txStylesheet::ImportFrame* frame = import->mFrame.get();
-  aState.addToplevelItem(import.release());
+  aState.addToplevelItem(import.get());
+
+  txImportItem* importPtr = import.release();
 
   txStylesheetAttr* attr = nullptr;
   nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
@@ -626,16 +629,16 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
 
   nsAutoString absUri;
   URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI, absUri);
-  rv = aState.loadImportedStylesheet(absUri, frame);
+  rv = aState.loadImportedStylesheet(absUri, importPtr->mFrame.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndImport(txStylesheetCompilerState& aState) {
+static nsresult txFnEndImport(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:include
@@ -653,13 +656,13 @@ static nsresult txFnStartInclude(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.loadIncludedStylesheet(absUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndInclude(txStylesheetCompilerState& aState) {
+static nsresult txFnEndInclude(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:key
@@ -689,13 +692,13 @@ static nsresult txFnStartKey(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.mStylesheet->addKey(name, std::move(match), std::move(use));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndKey(txStylesheetCompilerState& aState) {
+static nsresult txFnEndKey(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:namespace-alias
@@ -715,13 +718,13 @@ static nsresult txFnStartNamespaceAlias(int32_t aNamespaceID,
 
   // XXX Needs to be implemented.
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndNamespaceAlias(txStylesheetCompilerState& aState) {
+static nsresult txFnEndNamespaceAlias(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:output
@@ -812,13 +815,13 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.addToplevelItem(item.release());
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndOutput(txStylesheetCompilerState& aState) {
+static nsresult txFnEndOutput(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:strip-space/xsl:preserve-space
@@ -873,19 +876,23 @@ static nsresult txFnStartStripSpace(int32_t aNamespaceID, nsAtom* aLocalName,
       ns = aState.mElementContext->mMappings->lookupNamespace(prefix);
       NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, NS_ERROR_FAILURE);
     }
-    stripItem->addStripSpaceTest(
+    UniquePtr<txStripSpaceTest> sst(
         new txStripSpaceTest(prefix, localName, ns, strip));
+    rv = stripItem->addStripSpaceTest(sst.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    Unused << sst.release();
   }
 
   aState.addToplevelItem(stripItem.release());
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndStripSpace(txStylesheetCompilerState& aState) {
+static nsresult txFnEndStripSpace(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 // xsl:template
@@ -920,17 +927,18 @@ static nsresult txFnStartTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
   aState.openInstructionContainer(templ.get());
   aState.addToplevelItem(templ.release());
 
-  aState.pushHandlerTable(gTxParamHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxParamHandler);
 }
 
-static void txFnEndTemplate(txStylesheetCompilerState& aState) {
+static nsresult txFnEndTemplate(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
-  aState.addInstruction(MakeUnique<txReturn>());
+  UniquePtr<txInstruction> instr(new txReturn());
+  aState.addInstruction(std::move(instr));
 
   aState.closeInstructionContainer();
+
+  return NS_OK;
 }
 
 // xsl:variable, xsl:param
@@ -953,13 +961,16 @@ static nsresult txFnStartTopVariable(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txVariableItem> var(new txVariableItem(
       name, std::move(select), aLocalName == nsGkAtoms::param));
   aState.openInstructionContainer(var.get());
-  aState.pushPtr(var.get(), aState.eVariableItem);
+  rv = aState.pushPtr(var.get(), aState.eVariableItem);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    aState.pushHandlerTable(gTxIgnoreHandler);
+    rv = aState.pushHandlerTable(gTxIgnoreHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    aState.pushHandlerTable(gTxTopVariableHandler);
+    rv = aState.pushHandlerTable(gTxTopVariableHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   aState.addToplevelItem(var.release());
@@ -967,7 +978,7 @@ static nsresult txFnStartTopVariable(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static void txFnEndTopVariable(txStylesheetCompilerState& aState) {
+static nsresult txFnEndTopVariable(txStylesheetCompilerState& aState) {
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
   txVariableItem* var =
@@ -979,10 +990,13 @@ static void txFnEndTopVariable(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   } else if (!var->mValue) {
     // If we don't have a select-expression there mush be children.
-    aState.addInstruction(MakeUnique<txReturn>());
+    UniquePtr<txInstruction> instr(new txReturn());
+    aState.addInstruction(std::move(instr));
   }
 
   aState.closeInstructionContainer();
+
+  return NS_OK;
 }
 
 static nsresult txFnStartElementStartTopVar(int32_t aNamespaceID,
@@ -1023,8 +1037,9 @@ static nsresult txFnStartLRE(int32_t aNamespaceID, nsAtom* aLocalName,
                              txStylesheetCompilerState& aState) {
   nsresult rv = NS_OK;
 
-  aState.addInstruction(
-      MakeUnique<txStartLREElement>(aNamespaceID, aLocalName, aPrefix));
+  UniquePtr<txInstruction> instr(
+      new txStartLREElement(aNamespaceID, aLocalName, aPrefix));
+  aState.addInstruction(std::move(instr));
 
   rv = parseExcludeResultPrefixes(aAttributes, aAttrCount, kNameSpaceID_XSLT);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1049,15 +1064,19 @@ static nsresult txFnStartLRE(int32_t aNamespaceID, nsAtom* aLocalName,
     rv = txExprParser::createAVT(attr->mValue, &aState, getter_Transfers(avt));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aState.addInstruction(MakeUnique<txLREAttribute>(
-        attr->mNamespaceID, attr->mLocalName, attr->mPrefix, std::move(avt)));
+    instr = MakeUnique<txLREAttribute>(attr->mNamespaceID, attr->mLocalName,
+                                       attr->mPrefix, std::move(avt));
+    aState.addInstruction(std::move(instr));
   }
 
   return NS_OK;
 }
 
-static void txFnEndLRE(txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txEndElement>());
+static nsresult txFnEndLRE(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(new txEndElement);
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1069,7 +1088,8 @@ static nsresult txFnText(const nsAString& aStr,
                          txStylesheetCompilerState& aState) {
   TX_RETURN_IF_WHITESPACE(aStr, aState);
 
-  aState.addInstruction(MakeUnique<txText>(aStr, false));
+  UniquePtr<txInstruction> instr(new txText(aStr, false));
+  aState.addInstruction(std::move(instr));
 
   return NS_OK;
 }
@@ -1085,16 +1105,19 @@ static nsresult txFnStartApplyImports(int32_t aNamespaceID, nsAtom* aLocalName,
                                       txStylesheetAttr* aAttributes,
                                       int32_t aAttrCount,
                                       txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txApplyImportsStart>());
-  aState.addInstruction(MakeUnique<txApplyImportsEnd>());
+  UniquePtr<txInstruction> instr(new txApplyImportsStart);
+  aState.addInstruction(std::move(instr));
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
+  instr = MakeUnique<txApplyImportsEnd>();
+  aState.addInstruction(std::move(instr));
 
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndApplyImports(txStylesheetCompilerState& aState) {
+static nsresult txFnEndApplyImports(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 /*
@@ -1114,14 +1137,19 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
                                         txStylesheetCompilerState& aState) {
   nsresult rv = NS_OK;
 
-  aState.addInstruction(MakeUnique<txPushParams>());
+  UniquePtr<txInstruction> instr(new txPushParams);
+  aState.addInstruction(std::move(instr));
 
   txExpandedName mode;
   rv = getQNameAttr(aAttributes, aAttrCount, nsGkAtoms::mode, false, aState,
                     mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  pushInstruction(aState, MakeUnique<txApplyTemplates>(mode));
+  instr = MakeUnique<txApplyTemplates>(mode);
+  rv = aState.pushObject(instr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << instr.release();
 
   UniquePtr<Expr> select;
   rv = getExprAttr(aAttributes, aAttrCount, nsGkAtoms::select, false, aState,
@@ -1135,27 +1163,40 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
 
   UniquePtr<txPushNewContext> pushcontext(
       new txPushNewContext(std::move(select)));
-  aState.pushSorter(pushcontext.get());
-  pushInstruction(aState, std::move(pushcontext));
+  rv = aState.pushSorter(pushcontext.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxApplyTemplatesHandler);
+  rv = aState.pushObject(pushcontext.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  Unused << pushcontext.release();
+
+  return aState.pushHandlerTable(gTxApplyTemplatesHandler);
 }
 
-static void txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
+static nsresult txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   txPushNewContext* pushcontext =
-      aState.addInstruction(popInstruction<txPushNewContext>(aState));
+      static_cast<txPushNewContext*>(aState.popObject());
+  UniquePtr<txInstruction> instr(pushcontext);  // txPushNewContext
+  aState.addInstruction(std::move(instr));
 
   aState.popSorter();
 
-  // txApplyTemplates
-  txInstruction* instr = aState.addInstruction(popInstruction(aState));
-  aState.addInstruction(MakeUnique<txLoopNodeSet>(instr));
+  instr = WrapUnique(
+      static_cast<txInstruction*>(aState.popObject()));  // txApplyTemplates
+  UniquePtr<txLoopNodeSet> loop(new txLoopNodeSet(instr.get()));
+  aState.addInstruction(std::move(instr));
 
-  pushcontext->mBailTarget = aState.addInstruction(MakeUnique<txPopParams>());
+  instr = std::move(loop);
+  aState.addInstruction(std::move(instr));
+
+  instr = MakeUnique<txPopParams>();
+  pushcontext->mBailTarget = instr.get();
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1172,7 +1213,8 @@ static nsresult txFnStartAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
                                    txStylesheetCompilerState& aState) {
   nsresult rv = NS_OK;
 
-  aState.addInstruction(MakeUnique<txPushStringHandler>(true));
+  UniquePtr<txInstruction> instr(new txPushStringHandler(true));
+  aState.addInstruction(std::move(instr));
 
   UniquePtr<Expr> name;
   rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::name, true, aState, name);
@@ -1183,20 +1225,25 @@ static nsresult txFnStartAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
                   nspace);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  pushInstruction(aState,
-                  MakeUnique<txAttribute>(std::move(name), std::move(nspace),
-                                          aState.mElementContext->mMappings));
+  instr = MakeUnique<txAttribute>(std::move(name), std::move(nspace),
+                                  aState.mElementContext->mMappings);
+  rv = aState.pushObject(instr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << instr.release();
 
   // We need to push the template-handler since the current might be
   // the attributeset-handler
-  aState.pushHandlerTable(gTxTemplateHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxTemplateHandler);
 }
 
-static void txFnEndAttribute(txStylesheetCompilerState& aState) {
+static nsresult txFnEndAttribute(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  aState.addInstruction(popInstruction(aState));
+  UniquePtr<txInstruction> instr(
+      static_cast<txInstruction*>(aState.popObject()));
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1214,27 +1261,35 @@ static nsresult txFnStartCallTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
                                       txStylesheetCompilerState& aState) {
   nsresult rv = NS_OK;
 
-  aState.addInstruction(MakeUnique<txPushParams>());
+  UniquePtr<txInstruction> instr(new txPushParams);
+  aState.addInstruction(std::move(instr));
 
   txExpandedName name;
   rv = getQNameAttr(aAttributes, aAttrCount, nsGkAtoms::name, true, aState,
                     name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  pushInstruction(aState, MakeUnique<txCallTemplate>(name));
+  instr = MakeUnique<txCallTemplate>(name);
+  rv = aState.pushObject(instr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxCallTemplateHandler);
+  Unused << instr.release();
 
-  return NS_OK;
+  return aState.pushHandlerTable(gTxCallTemplateHandler);
 }
 
-static void txFnEndCallTemplate(txStylesheetCompilerState& aState) {
+static nsresult txFnEndCallTemplate(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   // txCallTemplate
-  aState.addInstruction(popInstruction(aState));
+  UniquePtr<txInstruction> instr(
+      static_cast<txInstruction*>(aState.popObject()));
+  aState.addInstruction(std::move(instr));
 
-  aState.addInstruction(MakeUnique<txPopParams>());
+  instr = MakeUnique<txPopParams>();
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1255,22 +1310,25 @@ static nsresult txFnStartChoose(int32_t aNamespaceID, nsAtom* aLocalName,
                                 nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                                 int32_t aAttrCount,
                                 txStylesheetCompilerState& aState) {
-  aState.pushChooseGotoList();
+  nsresult rv = aState.pushChooseGotoList();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxChooseHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxChooseHandler);
 }
 
-static void txFnEndChoose(txStylesheetCompilerState& aState) {
+static nsresult txFnEndChoose(txStylesheetCompilerState& aState) {
+  nsresult rv = NS_OK;
   aState.popHandlerTable();
   txListIterator iter(aState.mChooseGotoList.get());
   txGoTo* gotoinstr;
   while ((gotoinstr = static_cast<txGoTo*>(iter.next()))) {
-    aState.addGotoTarget(&gotoinstr->mTarget);
+    rv = aState.addGotoTarget(&gotoinstr->mTarget);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   aState.popChooseGotoList();
+
+  return NS_OK;
 }
 
 /*
@@ -1284,13 +1342,17 @@ static nsresult txFnStartComment(int32_t aNamespaceID, nsAtom* aLocalName,
                                  nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                                  int32_t aAttrCount,
                                  txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txPushStringHandler>(true));
+  UniquePtr<txInstruction> instr(new txPushStringHandler(true));
+  aState.addInstruction(std::move(instr));
 
   return NS_OK;
 }
 
-static void txFnEndComment(txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txComment>());
+static nsresult txFnEndComment(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(new txComment);
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1306,16 +1368,28 @@ static nsresult txFnStartCopy(int32_t aNamespaceID, nsAtom* aLocalName,
                               nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                               int32_t aAttrCount,
                               txStylesheetCompilerState& aState) {
-  aState.pushPtr(aState.addInstruction(MakeUnique<txCopy>()), aState.eCopy);
+  UniquePtr<txCopy> copy(new txCopy);
+  nsresult rv = aState.pushPtr(copy.get(), aState.eCopy);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return parseUseAttrSets(aAttributes, aAttrCount, false, aState);
+  UniquePtr<txInstruction> instr(copy.release());
+  aState.addInstruction(std::move(instr));
+
+  rv = parseUseAttrSets(aAttributes, aAttrCount, false, aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
-static void txFnEndCopy(txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txEndElement>());
+static nsresult txFnEndCopy(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(new txEndElement);
+  aState.addInstruction(std::move(instr));
 
   txCopy* copy = static_cast<txCopy*>(aState.popPtr(aState.eCopy));
-  aState.addGotoTarget(&copy->mBailTarget);
+  nsresult rv = aState.addGotoTarget(&copy->mBailTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 /*
@@ -1334,15 +1408,15 @@ static nsresult txFnStartCopyOf(int32_t aNamespaceID, nsAtom* aLocalName,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(MakeUnique<txCopyOf>(std::move(select)));
+  UniquePtr<txInstruction> instr(new txCopyOf(std::move(select)));
+  aState.addInstruction(std::move(instr));
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndCopyOf(txStylesheetCompilerState& aState) {
+static nsresult txFnEndCopyOf(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 /*
@@ -1368,8 +1442,9 @@ static nsresult txFnStartElement(int32_t aNamespaceID, nsAtom* aLocalName,
                   nspace);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(MakeUnique<txStartElement>(
+  UniquePtr<txInstruction> instr(new txStartElement(
       std::move(name), std::move(nspace), aState.mElementContext->mMappings));
+  aState.addInstruction(std::move(instr));
 
   rv = parseUseAttrSets(aAttributes, aAttrCount, false, aState);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1377,8 +1452,11 @@ static nsresult txFnStartElement(int32_t aNamespaceID, nsAtom* aLocalName,
   return NS_OK;
 }
 
-static void txFnEndElement(txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txEndElement>());
+static nsresult txFnEndElement(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(new txEndElement);
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1393,16 +1471,15 @@ static nsresult txFnStartFallback(int32_t aNamespaceID, nsAtom* aLocalName,
                                   txStylesheetCompilerState& aState) {
   aState.mSearchingForFallback = false;
 
-  aState.pushHandlerTable(gTxTemplateHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxTemplateHandler);
 }
 
-static void txFnEndFallback(txStylesheetCompilerState& aState) {
+static nsresult txFnEndFallback(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   NS_ASSERTION(!aState.mSearchingForFallback,
                "bad nesting of unknown-instruction and fallback handlers");
+  return NS_OK;
 }
 
 /*
@@ -1425,32 +1502,42 @@ static nsresult txFnStartForEach(int32_t aNamespaceID, nsAtom* aLocalName,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  txPushNewContext* pushcontext =
-      aState.addInstruction(MakeUnique<txPushNewContext>(std::move(select)));
-  aState.pushPtr(pushcontext, aState.ePushNewContext);
-  aState.pushSorter(pushcontext);
+  UniquePtr<txPushNewContext> pushcontext(
+      new txPushNewContext(std::move(select)));
+  rv = aState.pushPtr(pushcontext.get(), aState.ePushNewContext);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushPtr(aState.addInstruction(MakeUnique<txPushNullTemplateRule>()),
-                 aState.ePushNullTemplateRule);
+  rv = aState.pushSorter(pushcontext.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxForEachHandler);
+  UniquePtr<txInstruction> instr(pushcontext.release());
+  aState.addInstruction(std::move(instr));
 
-  return NS_OK;
+  instr = MakeUnique<txPushNullTemplateRule>();
+  rv = aState.pushPtr(instr.get(), aState.ePushNullTemplateRule);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aState.addInstruction(std::move(instr));
+
+  return aState.pushHandlerTable(gTxForEachHandler);
 }
 
-static void txFnEndForEach(txStylesheetCompilerState& aState) {
+static nsresult txFnEndForEach(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   // This is a txPushNullTemplateRule
   txInstruction* pnullrule =
       static_cast<txInstruction*>(aState.popPtr(aState.ePushNullTemplateRule));
 
-  aState.addInstruction(MakeUnique<txLoopNodeSet>(pnullrule));
+  UniquePtr<txInstruction> instr(new txLoopNodeSet(pnullrule));
+  aState.addInstruction(std::move(instr));
 
   aState.popSorter();
   txPushNewContext* pushcontext =
       static_cast<txPushNewContext*>(aState.popPtr(aState.ePushNewContext));
   aState.addGotoTarget(&pushcontext->mBailTarget);
+
+  return NS_OK;
 }
 
 static nsresult txFnStartElementContinueTemplate(
@@ -1489,17 +1576,21 @@ static nsresult txFnStartIf(int32_t aNamespaceID, nsAtom* aLocalName,
       getExprAttr(aAttributes, aAttrCount, nsGkAtoms::test, true, aState, test);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushPtr(aState.addInstruction(
-                     MakeUnique<txConditionalGoto>(std::move(test), nullptr)),
-                 aState.eConditionalGoto);
+  UniquePtr<txConditionalGoto> condGoto(
+      new txConditionalGoto(std::move(test), nullptr));
+  rv = aState.pushPtr(condGoto.get(), aState.eConditionalGoto);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UniquePtr<txInstruction> instr(condGoto.release());
+  aState.addInstruction(std::move(instr));
 
   return NS_OK;
 }
 
-static void txFnEndIf(txStylesheetCompilerState& aState) {
+static nsresult txFnEndIf(txStylesheetCompilerState& aState) {
   txConditionalGoto* condGoto =
       static_cast<txConditionalGoto*>(aState.popPtr(aState.eConditionalGoto));
-  aState.addGotoTarget(&condGoto->mTarget);
+  return aState.addGotoTarget(&condGoto->mTarget);
 }
 
 /*
@@ -1513,20 +1604,29 @@ static nsresult txFnStartMessage(int32_t aNamespaceID, nsAtom* aLocalName,
                                  nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                                  int32_t aAttrCount,
                                  txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txPushStringHandler>(false));
+  UniquePtr<txInstruction> instr(new txPushStringHandler(false));
+  aState.addInstruction(std::move(instr));
 
   txThreeState term;
   nsresult rv = getYesNoAttr(aAttributes, aAttrCount, nsGkAtoms::terminate,
                              false, aState, term);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  pushInstruction(aState, MakeUnique<txMessage>(term == eTrue));
+  instr = MakeUnique<txMessage>(term == eTrue);
+  rv = aState.pushObject(instr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << instr.release();
 
   return NS_OK;
 }
 
-static void txFnEndMessage(txStylesheetCompilerState& aState) {
-  aState.addInstruction(popInstruction(aState));
+static nsresult txFnEndMessage(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(
+      static_cast<txInstruction*>(aState.popObject()));
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1594,18 +1694,19 @@ static nsresult txFnStartNumber(int32_t aNamespaceID, nsAtom* aLocalName,
                   aState, groupingSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(MakeUnique<txNumber>(
-      level, std::move(count), std::move(from), std::move(value),
-      std::move(format), std::move(groupingSeparator),
-      std::move(groupingSize)));
+  UniquePtr<txInstruction> instr(
+      new txNumber(level, std::move(count), std::move(from), std::move(value),
+                   std::move(format), std::move(groupingSeparator),
+                   std::move(groupingSize)));
+  aState.addInstruction(std::move(instr));
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndNumber(txStylesheetCompilerState& aState) {
+static nsresult txFnEndNumber(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 /*
@@ -1618,14 +1719,14 @@ static nsresult txFnStartOtherwise(int32_t aNamespaceID, nsAtom* aLocalName,
                                    txStylesheetAttr* aAttributes,
                                    int32_t aAttrCount,
                                    txStylesheetCompilerState& aState) {
-  aState.pushHandlerTable(gTxTemplateHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxTemplateHandler);
 }
 
-static void txFnEndOtherwise(txStylesheetCompilerState& aState) {
+static nsresult txFnEndOtherwise(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   aState.mHandlerTable = gTxIgnoreHandler;  // XXX should be gTxErrorHandler
+
+  return NS_OK;
 }
 
 /*
@@ -1648,30 +1749,40 @@ static nsresult txFnStartParam(int32_t aNamespaceID, nsAtom* aLocalName,
                     name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushPtr(aState.addInstruction(MakeUnique<txCheckParam>(name)),
-                 aState.eCheckParam);
+  UniquePtr<txCheckParam> checkParam(new txCheckParam(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aState.pushPtr(checkParam.get(), aState.eCheckParam);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UniquePtr<txInstruction> instr(checkParam.release());
+  aState.addInstruction(std::move(instr));
 
   UniquePtr<Expr> select;
   rv = getExprAttr(aAttributes, aAttrCount, nsGkAtoms::select, false, aState,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UniquePtr<txSetVariable> var =
-      MakeUnique<txSetVariable>(name, std::move(select));
+  UniquePtr<txSetVariable> var(new txSetVariable(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    aState.pushHandlerTable(gTxIgnoreHandler);
+    rv = aState.pushHandlerTable(gTxIgnoreHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    aState.pushHandlerTable(gTxVariableHandler);
+    rv = aState.pushHandlerTable(gTxVariableHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  pushInstruction(aState, std::move(var));
+  rv = aState.pushObject(var.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << var.release();
 
   return NS_OK;
 }
 
-static void txFnEndParam(txStylesheetCompilerState& aState) {
-  UniquePtr<txSetVariable> var = popInstruction<txSetVariable>(aState);
+static nsresult txFnEndParam(txStylesheetCompilerState& aState) {
+  UniquePtr<txSetVariable> var(static_cast<txSetVariable*>(aState.popObject()));
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
 
@@ -1681,13 +1792,17 @@ static void txFnEndParam(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
-  aState.addVariable(var->mName);
+  nsresult rv = aState.addVariable(var->mName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(std::move(var));
+  UniquePtr<txInstruction> instr(var.release());
+  aState.addInstruction(std::move(instr));
 
   txCheckParam* checkParam =
       static_cast<txCheckParam*>(aState.popPtr(aState.eCheckParam));
   aState.addGotoTarget(&checkParam->mBailTarget);
+
+  return NS_OK;
 }
 
 /*
@@ -1701,20 +1816,29 @@ static nsresult txFnStartPI(int32_t aNamespaceID, nsAtom* aLocalName,
                             nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                             int32_t aAttrCount,
                             txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txPushStringHandler>(true));
+  UniquePtr<txInstruction> instr(new txPushStringHandler(true));
+  aState.addInstruction(std::move(instr));
 
   UniquePtr<Expr> name;
   nsresult rv =
       getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::name, true, aState, name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  pushInstruction(aState, MakeUnique<txProcessingInstruction>(std::move(name)));
+  instr = MakeUnique<txProcessingInstruction>(std::move(name));
+  rv = aState.pushObject(instr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << instr.release();
 
   return NS_OK;
 }
 
-static void txFnEndPI(txStylesheetCompilerState& aState) {
-  aState.addInstruction(popInstruction(aState));
+static nsresult txFnEndPI(txStylesheetCompilerState& aState) {
+  UniquePtr<txInstruction> instr(
+      static_cast<txInstruction*>(aState.popObject()));
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -1758,17 +1882,18 @@ static nsresult txFnStartSort(int32_t aNamespaceID, nsAtom* aLocalName,
                   caseOrder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.mSorter->addSort(std::move(select), std::move(lang),
-                          std::move(dataType), std::move(order),
-                          std::move(caseOrder));
+  rv = aState.mSorter->addSort(std::move(select), std::move(lang),
+                               std::move(dataType), std::move(order),
+                               std::move(caseOrder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndSort(txStylesheetCompilerState& aState) {
+static nsresult txFnEndSort(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+
+  return NS_OK;
 }
 
 /*
@@ -1790,19 +1915,19 @@ static nsresult txFnStartText(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.mDOE = doe == eTrue;
 
-  aState.pushHandlerTable(gTxTextHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxTextHandler);
 }
 
-static void txFnEndText(txStylesheetCompilerState& aState) {
+static nsresult txFnEndText(txStylesheetCompilerState& aState) {
   aState.mDOE = false;
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 static nsresult txFnTextText(const nsAString& aStr,
                              txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txText>(aStr, aState.mDOE));
+  UniquePtr<txInstruction> instr(new txText(aStr, aState.mDOE));
+  aState.addInstruction(std::move(instr));
 
   return NS_OK;
 }
@@ -1828,15 +1953,16 @@ static nsresult txFnStartValueOf(int32_t aNamespaceID, nsAtom* aLocalName,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(MakeUnique<txValueOf>(std::move(select), doe == eTrue));
+  UniquePtr<txInstruction> instr(
+      new txValueOf(std::move(select), doe == eTrue));
+  aState.addInstruction(std::move(instr));
 
-  aState.pushHandlerTable(gTxIgnoreHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
-static void txFnEndValueOf(txStylesheetCompilerState& aState) {
+static nsresult txFnEndValueOf(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
+  return NS_OK;
 }
 
 /*
@@ -1863,22 +1989,26 @@ static nsresult txFnStartVariable(int32_t aNamespaceID, nsAtom* aLocalName,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UniquePtr<txSetVariable> var =
-      MakeUnique<txSetVariable>(name, std::move(select));
+  UniquePtr<txSetVariable> var(new txSetVariable(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    aState.pushHandlerTable(gTxIgnoreHandler);
+    rv = aState.pushHandlerTable(gTxIgnoreHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    aState.pushHandlerTable(gTxVariableHandler);
+    rv = aState.pushHandlerTable(gTxVariableHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  pushInstruction(aState, std::move(var));
+  rv = aState.pushObject(var.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << var.release();
 
   return NS_OK;
 }
 
-static void txFnEndVariable(txStylesheetCompilerState& aState) {
-  UniquePtr<txSetVariable> var = popInstruction<txSetVariable>(aState);
+static nsresult txFnEndVariable(txStylesheetCompilerState& aState) {
+  UniquePtr<txSetVariable> var(static_cast<txSetVariable*>(aState.popObject()));
 
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
@@ -1889,9 +2019,13 @@ static void txFnEndVariable(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
-  aState.addVariable(var->mName);
+  nsresult rv = aState.addVariable(var->mName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.addInstruction(std::move(var));
+  UniquePtr<txInstruction> instr(var.release());
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 static nsresult txFnStartElementStartRTF(int32_t aNamespaceID,
@@ -1899,7 +2033,8 @@ static nsresult txFnStartElementStartRTF(int32_t aNamespaceID,
                                          txStylesheetAttr* aAttributes,
                                          int32_t aAttrCount,
                                          txStylesheetCompilerState& aState) {
-  aState.addInstruction(MakeUnique<txPushRTFHandler>());
+  UniquePtr<txInstruction> instr(new txPushRTFHandler);
+  aState.addInstruction(std::move(instr));
 
   aState.mHandlerTable = gTxTemplateHandler;
 
@@ -1910,7 +2045,8 @@ static nsresult txFnTextStartRTF(const nsAString& aStr,
                                  txStylesheetCompilerState& aState) {
   TX_RETURN_IF_WHITESPACE(aStr, aState);
 
-  aState.addInstruction(MakeUnique<txPushRTFHandler>());
+  UniquePtr<txInstruction> instr(new txPushRTFHandler);
+  aState.addInstruction(std::move(instr));
 
   aState.mHandlerTable = gTxTemplateHandler;
 
@@ -1933,23 +2069,31 @@ static nsresult txFnStartWhen(int32_t aNamespaceID, nsAtom* aLocalName,
       getExprAttr(aAttributes, aAttrCount, nsGkAtoms::test, true, aState, test);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushPtr(aState.addInstruction(
-                     MakeUnique<txConditionalGoto>(std::move(test), nullptr)),
-                 aState.eConditionalGoto);
+  UniquePtr<txConditionalGoto> condGoto(
+      new txConditionalGoto(std::move(test), nullptr));
+  rv = aState.pushPtr(condGoto.get(), aState.eConditionalGoto);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aState.pushHandlerTable(gTxTemplateHandler);
+  UniquePtr<txInstruction> instr(condGoto.release());
+  aState.addInstruction(std::move(instr));
 
-  return NS_OK;
+  return aState.pushHandlerTable(gTxTemplateHandler);
 }
 
-static void txFnEndWhen(txStylesheetCompilerState& aState) {
+static nsresult txFnEndWhen(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
-  aState.mChooseGotoList->add(
-      aState.addInstruction(MakeUnique<txGoTo>(nullptr)));
+  UniquePtr<txGoTo> gotoinstr(new txGoTo(nullptr));
+  aState.mChooseGotoList->add(gotoinstr.get());
+
+  UniquePtr<txInstruction> instr(gotoinstr.release());
+  aState.addInstruction(std::move(instr));
 
   txConditionalGoto* condGoto =
       static_cast<txConditionalGoto*>(aState.popPtr(aState.eConditionalGoto));
-  aState.addGotoTarget(&condGoto->mTarget);
+  nsresult rv = aState.addGotoTarget(&condGoto->mTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 /*
@@ -1976,21 +2120,26 @@ static nsresult txFnStartWithParam(int32_t aNamespaceID, nsAtom* aLocalName,
                    select);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UniquePtr<txSetParam> var = MakeUnique<txSetParam>(name, std::move(select));
+  UniquePtr<txSetParam> var(new txSetParam(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    aState.pushHandlerTable(gTxIgnoreHandler);
+    rv = aState.pushHandlerTable(gTxIgnoreHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    aState.pushHandlerTable(gTxVariableHandler);
+    rv = aState.pushHandlerTable(gTxVariableHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  pushInstruction(aState, std::move(var));
+  rv = aState.pushObject(var.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << var.release();
 
   return NS_OK;
 }
 
-static void txFnEndWithParam(txStylesheetCompilerState& aState) {
-  UniquePtr<txSetParam> var = popInstruction<txSetParam>(aState);
+static nsresult txFnEndWithParam(txStylesheetCompilerState& aState) {
+  UniquePtr<txSetParam> var(static_cast<txSetParam*>(aState.popObject()));
   txHandlerTable* prev = aState.mHandlerTable;
   aState.popHandlerTable();
 
@@ -2000,7 +2149,10 @@ static void txFnEndWithParam(txStylesheetCompilerState& aState) {
     var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
-  aState.addInstruction(std::move(var));
+  UniquePtr<txInstruction> instr(var.release());
+  aState.addInstruction(std::move(instr));
+
+  return NS_OK;
 }
 
 /*
@@ -2024,19 +2176,20 @@ static nsresult txFnStartUnknownInstruction(int32_t aNamespaceID,
 
   aState.mSearchingForFallback = true;
 
-  aState.pushHandlerTable(gTxFallbackHandler);
-
-  return NS_OK;
+  return aState.pushHandlerTable(gTxFallbackHandler);
 }
 
-static void txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
+static nsresult txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
 
   if (aState.mSearchingForFallback) {
-    aState.addInstruction(MakeUnique<txErrorInstruction>());
+    UniquePtr<txInstruction> instr(new txErrorInstruction());
+    aState.addInstruction(std::move(instr));
   }
 
   aState.mSearchingForFallback = false;
+
+  return NS_OK;
 }
 
 /**

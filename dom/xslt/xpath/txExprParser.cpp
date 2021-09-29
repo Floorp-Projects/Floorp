@@ -121,11 +121,13 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
     } else {
       if (!concat) {
         concat = new txCoreFunctionCall(txCoreFunctionCall::CONCAT);
-        concat->addParam(expr.release());
+        rv = concat->addParam(expr.release());
         expr = WrapUnique(concat);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      concat->addParam(newExpr.release());
+      rv = concat->addParam(newExpr.release());
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -172,7 +174,8 @@ nsresult txExprParser::createExprInternal(const nsAString& aExpression,
 
   txXPathOptimizer optimizer;
   Expr* newExpr = nullptr;
-  optimizer.optimize(expr.get(), &newExpr);
+  rv = optimizer.optimize(expr.get(), &newExpr);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aExpr = newExpr ? newExpr : expr.release();
 
@@ -250,6 +253,7 @@ nsresult txExprParser::createBinaryExpr(UniquePtr<Expr>& left,
       MOZ_ASSERT_UNREACHABLE("operator tokens should be already checked");
       return NS_ERROR_UNEXPECTED;
   }
+  NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
   Unused << left.release();
   Unused << right.release();
@@ -284,11 +288,13 @@ nsresult txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 
     if (negations > 0) {
       if (negations % 2 == 0) {
-        auto fcExpr =
-            MakeUnique<txCoreFunctionCall>(txCoreFunctionCall::NUMBER);
+        FunctionCall* fcExpr =
+            new txCoreFunctionCall(txCoreFunctionCall::NUMBER);
 
-        fcExpr->addParam(expr.release());
-        expr = std::move(fcExpr);
+        rv = fcExpr->addParam(expr.get());
+        if (NS_FAILED(rv)) return rv;
+        Unused << expr.release();
+        expr = WrapUnique(fcExpr);
       } else {
         expr = MakeUnique<UnaryExpr>(expr.release());
       }
@@ -585,6 +591,8 @@ nsresult txExprParser::createNodeTypeTest(txExprLexer& lexer,
       return NS_ERROR_XPATH_NO_NODE_TYPE_TEST;
   }
 
+  NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
+
   if (nodeTok->mType == Token::PROC_INST_AND_PAREN &&
       lexer.peek()->mType == Token::LITERAL) {
     Token* tok = lexer.nextToken();
@@ -643,7 +651,11 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
 
   // We have a PathExpr containing several steps
   UniquePtr<PathExpr> pathExpr(new PathExpr());
-  pathExpr->addExpr(expr.release(), PathExpr::RELATIVE_OP);
+
+  rv = pathExpr->addExpr(expr.get(), PathExpr::RELATIVE_OP);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << expr.release();
 
   // this is ugly
   while (1) {
@@ -664,7 +676,10 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
     rv = createLocationStep(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    pathExpr->addExpr(expr.release(), pathOp);
+    rv = pathExpr->addExpr(expr.get(), pathOp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    Unused << expr.release();
   }
   MOZ_ASSERT_UNREACHABLE("internal xpath parser error");
   return NS_ERROR_UNEXPECTED;
@@ -689,7 +704,11 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
   }
 
   UniquePtr<UnionExpr> unionExpr(new UnionExpr());
-  unionExpr->addExpr(expr.release());
+
+  rv = unionExpr->addExpr(expr.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  Unused << expr.release();
 
   while (lexer.peek()->mType == Token::UNION_OP) {
     lexer.nextToken();  //-- eat token
@@ -697,7 +716,8 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
     rv = createPathExpr(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    unionExpr->addExpr(expr.release());
+    rv = unionExpr->addExpr(expr.release());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   *aResult = unionExpr.release();
@@ -736,7 +756,10 @@ nsresult txExprParser::parsePredicates(PredicateList* aPredicateList,
     rv = createExpr(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aPredicateList->add(expr.release());
+    rv = aPredicateList->add(expr.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    Unused << expr.release();
 
     if (lexer.peek()->mType != Token::R_BRACKET) {
       return NS_ERROR_XPATH_BRACKET_EXPECTED;
@@ -769,7 +792,8 @@ nsresult txExprParser::parseParameters(FunctionCall* aFnCall,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aFnCall) {
-      aFnCall->addParam(expr.release());
+      rv = aFnCall->addParam(expr.release());
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     switch (lexer.peek()->mType) {

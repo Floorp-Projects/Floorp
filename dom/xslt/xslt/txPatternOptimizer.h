@@ -18,11 +18,11 @@ class txPatternOptimizer {
    * @param aOutPattern   Resulting pattern, null if optimization didn't
    *                      result in a new pattern.
    */
-  void optimize(txPattern* aInPattern, txPattern** aOutPattern);
+  nsresult optimize(txPattern* aInPattern, txPattern** aOutPattern);
 
  private:
   // Helper methods for optimizing specific classes
-  void optimizeStep(txPattern* aInPattern, txPattern** aOutPattern);
+  nsresult optimizeStep(txPattern* aInPattern, txPattern** aOutPattern);
 
   txXPathOptimizer mXPathOptimizer;
 };

@@ -82,7 +82,7 @@ class txStripSpaceItem : public txToplevelItem {
 
   TX_DECL_TOPLEVELITEM
 
-  void addStripSpaceTest(txStripSpaceTest* aStripSpaceTest);
+  nsresult addStripSpaceTest(txStripSpaceTest* aStripSpaceTest);
 
   nsTArray<txStripSpaceTest*> mStripSpaceTests;
 };
