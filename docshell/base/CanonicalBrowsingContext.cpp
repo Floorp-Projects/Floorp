@@ -568,12 +568,13 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
 
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
-    LoadingSessionHistoryInfo* aInfo, nsIChannel* aChannel) {
+    LoadingSessionHistoryInfo* aInfo, nsIChannel* aOldChannel,
+    nsIChannel* aNewChannel) {
   MOZ_ASSERT(aInfo);
-  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aNewChannel);
 
   SessionHistoryInfo newInfo = SessionHistoryInfo(
-      aChannel, aInfo->mInfo.LoadType(),
+      aOldChannel, aNewChannel, aInfo->mInfo.LoadType(),
       aInfo->mInfo.GetPartitionedPrincipalToInherit(), aInfo->mInfo.GetCsp());
 
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
@@ -584,9 +585,9 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
       if (IsTop()) {
         // Only top level pages care about Get/SetPersist.
         nsCOMPtr<nsIURI> uri;
-        aChannel->GetURI(getter_AddRefs(uri));
+        aNewChannel->GetURI(getter_AddRefs(uri));
         loadingEntry->SetPersist(
-            nsDocShell::ShouldAddToSessionHistory(uri, aChannel));
+            nsDocShell::ShouldAddToSessionHistory(uri, aNewChannel));
       } else {
         loadingEntry->SetIsSubFrame(aInfo->mInfo.IsSubFrame());
       }

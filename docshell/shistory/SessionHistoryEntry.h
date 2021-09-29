@@ -47,7 +47,8 @@ class SessionHistoryInfo {
                      nsIPrincipal* aPartitionedPrincipalToInherit,
                      nsIContentSecurityPolicy* aCsp,
                      const nsACString& aContentType);
-  SessionHistoryInfo(nsIChannel* aChannel, uint32_t aLoadType,
+  SessionHistoryInfo(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
+                     uint32_t aLoadType,
                      nsIPrincipal* aPartitionedPrincipalToInherit,
                      nsIContentSecurityPolicy* aCsp);
 

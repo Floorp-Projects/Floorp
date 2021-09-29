@@ -77,6 +77,9 @@ interface nsIChannelEventSink : nsISupports
      * the redirect is vetoed and no callback must be done. Repeat: No
      * callback must be done if this method throws!
      *
+     * NOTE: originalURI isn't yet set on the new channel when
+     * asyncOnChannelRedirect is called.
+     *
      * @see nsIAsyncVerifyRedirectCallback::onRedirectVerifyCallback()
      *
      * @param oldChannel
