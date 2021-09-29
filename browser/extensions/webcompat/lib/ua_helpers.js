@@ -6,7 +6,7 @@
 
 /* globals exportFunction, module */
 
-const UAHelpers = {
+var UAHelpers = {
   getDeviceAppropriateChromeUA() {
     if (!UAHelpers._deviceAppropriateChromeUA) {
       const userAgent =
