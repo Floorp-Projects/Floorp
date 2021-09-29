@@ -322,8 +322,6 @@ txIEvalContext* txExecutionState::popEvalContext() {
 }
 
 nsresult txExecutionState::pushBool(bool aBool) {
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier, or change the return type to void.
   mBoolStack.AppendElement(aBool);
   return NS_OK;
 }
