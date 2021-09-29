@@ -83,10 +83,6 @@
 // our symbol names.
 #include "expat_config.h"
 #include "expat.h"
-#include "rlbox_expat.h"
-#ifdef MOZ_WASM_SANDBOXING_EXPAT
-#  include "mozilla/ipc/LibrarySandboxPreload.h"
-#endif
 
 extern "C" {
 // Defined in intl/encoding_glue/src/lib.rs
@@ -535,69 +531,41 @@ void nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding) {
 // Using a separate user data struct also avoids bloating nsHtml5StreamParser
 // by one pointer.
 struct UserData {
-  tainted_expat<XML_Parser> mExpat;
+  XML_Parser mExpat;
   nsHtml5StreamParser* mStreamParser;
 };
 
 // Using no-namespace handler callbacks to avoid including expat.h in
 // nsHtml5StreamParser.h, since doing so would cause naming conclicts.
-static void HandleXMLDeclaration(rlbox_sandbox_expat& aSandbox,
-                                 tainted_expat<void*> /* aUserData */,
-                                 tainted_expat<const XML_Char*> /* aVersion */,
-                                 tainted_expat<const XML_Char*> t_aEncoding,
-                                 tainted_expat<int> /* aStandalone */) {
-  UserData* ud = static_cast<UserData*>(aSandbox.sandbox_storage);
-  MOZ_RELEASE_ASSERT(ud);
-
-  bool copied_encoding = false;
-  auto* encoding =
-      transfer_xmlstring_no_validate(aSandbox, t_aEncoding, copied_encoding);
-
-  // The attacker has control over the encoding. This could potentially lead to
-  // confusion/XSS attacks. We should try to restrict the encoding to something
-  // safe. Bug 1693991 tracks this.
+static void HandleXMLDeclaration(void* aUserData, const XML_Char* aVersion,
+                                 const XML_Char* aEncoding, int aStandalone) {
+  UserData* ud = static_cast<UserData*>(aUserData);
   ud->mStreamParser->SetEncodingFromExpat(
-      reinterpret_cast<const char16_t*>(encoding));
-
-  if (copied_encoding) {
-    free(encoding);
-  }
-
-  aSandbox.invoke_sandbox_function(MOZ_XML_StopParser, ud->mExpat, false);
+      reinterpret_cast<const char16_t*>(aEncoding));
+  XML_StopParser(ud->mExpat, false);
 }
 
-static void HandleStartElement(rlbox_sandbox_expat& aSandbox,
-                               tainted_expat<void*> /* aUserData */,
-                               tainted_expat<const XML_Char*> /* aName */,
-                               tainted_expat<const XML_Char**> /*aAtts */) {
-  UserData* ud = static_cast<UserData*>(aSandbox.sandbox_storage);
-  MOZ_RELEASE_ASSERT(ud);
-  aSandbox.invoke_sandbox_function(MOZ_XML_StopParser, ud->mExpat, false);
+static void HandleStartElement(void* aUserData, const XML_Char* aName,
+                               const XML_Char** aAtts) {
+  UserData* ud = static_cast<UserData*>(aUserData);
+  XML_StopParser(ud->mExpat, false);
 }
 
-static void HandleEndElement(rlbox_sandbox_expat& aSandbox,
-                             tainted_expat<void*> /* aUserData */,
-                             tainted_expat<const XML_Char*> /* aName */) {
-  UserData* ud = static_cast<UserData*>(aSandbox.sandbox_storage);
-  MOZ_RELEASE_ASSERT(ud);
-  aSandbox.invoke_sandbox_function(MOZ_XML_StopParser, ud->mExpat, false);
+static void HandleEndElement(void* aUserData, const XML_Char* aName) {
+  UserData* ud = static_cast<UserData*>(aUserData);
+  XML_StopParser(ud->mExpat, false);
 }
 
-static void HandleComment(rlbox_sandbox_expat& aSandbox,
-                          tainted_expat<void*> /* aUserData */,
-                          tainted_expat<const XML_Char*> /* aName */) {
-  UserData* ud = static_cast<UserData*>(aSandbox.sandbox_storage);
-  MOZ_RELEASE_ASSERT(ud);
-  aSandbox.invoke_sandbox_function(MOZ_XML_StopParser, ud->mExpat, false);
+static void HandleComment(void* aUserData, const XML_Char* aName) {
+  UserData* ud = static_cast<UserData*>(aUserData);
+  XML_StopParser(ud->mExpat, false);
 }
 
-static void HandleProcessingInstruction(
-    rlbox_sandbox_expat& aSandbox, tainted_expat<void*> /* aUserData */,
-    tainted_expat<const XML_Char*> /* aTarget */,
-    tainted_expat<const XML_Char*> /* aData */) {
-  UserData* ud = static_cast<UserData*>(aSandbox.sandbox_storage);
-  MOZ_RELEASE_ASSERT(ud);
-  aSandbox.invoke_sandbox_function(MOZ_XML_StopParser, ud->mExpat, false);
+static void HandleProcessingInstruction(void* aUserData,
+                                        const XML_Char* aTarget,
+                                        const XML_Char* aData) {
+  UserData* ud = static_cast<UserData*>(aUserData);
+  XML_StopParser(ud->mExpat, false);
 }
 
 void nsHtml5StreamParser::FinalizeSniffingWithDetector(
@@ -634,6 +602,10 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
   MOZ_ASSERT(mCharsetSource < kCharsetFromXmlDeclarationUtf16,
              "Should not finalize sniffing with strong decision already made.");
   if (mMode == VIEW_SOURCE_XML) {
+    static const XML_Memory_Handling_Suite memsuite = {
+        (void* (*)(size_t))moz_xmalloc, (void* (*)(void*, size_t))moz_xrealloc,
+        free};
+
     static const char16_t kExpatSeparator[] = {0xFFFF, '\0'};
 
     static const char16_t kISO88591[] = {'I', 'S', 'O', '-', '8', '8',
@@ -650,68 +622,12 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
     // and without triggering expat's unknown encoding code paths. This is
     // enough to be able to use expat to parse the XML declaration in order
     // to extract the encoding name from it.
-
-    // Create sandbox and set the thread local user data to ud
-    rlbox_sandbox_expat sandbox;
-#ifdef MOZ_WASM_SANDBOXING_EXPAT
-    sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
-#else
-    sandbox.create_sandbox();
-#endif
-    sandbox.sandbox_storage = &ud;
-
-    tainted_expat<const XML_Memory_Handling_Suite*> t_memsuite = nullptr;
-#ifndef MOZ_WASM_SANDBOXING_EXPAT
-    // In the noop sandbox we can use the moz allocator.
-    static const XML_Memory_Handling_Suite s_memsuite = {
-        (void* (*)(size_t))moz_xmalloc, (void* (*)(void*, size_t))moz_xrealloc,
-        free};
-    // Since the code running in a noop sandbox is not actually sandboxed, we
-    // can expose the memsuite directly using UNSAFE_accept_pointer.  We don't
-    // want to convert these functions to callbacks that can be used when
-    // expat is actually in a memory isolated sandbox -- expat should use the
-    // sandbox-local memsuite.
-    t_memsuite = sandbox.UNSAFE_accept_pointer(&s_memsuite);
-#endif
-
-    // We need to copy the encoding and namespace separator into the sandbox.
-    // For the noop sandbox we pass in the memsuite; for the Wasm sandbox, we
-    // pass in nullptr to let expat use the standard library memory suite.
-    bool copied_kExpatSeparator = false;
-    auto t_kExpatSeparator = rlbox::copy_memory_or_grant_access(
-        sandbox, kExpatSeparator, sizeof(kExpatSeparator), false,
-        copied_kExpatSeparator);
-    bool copied_kISO88591 = false;
-    auto t_kISO88591 = rlbox::copy_memory_or_grant_access(
-        sandbox, kISO88591, sizeof(kISO88591), false, copied_kISO88591);
-
-    ud.mExpat = sandbox.invoke_sandbox_function(
-        MOZ_XML_ParserCreate_MM,
-        rlbox::sandbox_const_cast<const char16_t*>(t_kISO88591), t_memsuite,
-        t_kExpatSeparator);
-    if (copied_kExpatSeparator) {
-      sandbox.free_in_sandbox(t_kExpatSeparator);
-    }
-    if (copied_kISO88591) {
-      sandbox.free_in_sandbox(t_kISO88591);
-    }
-
-    auto t_HandleXMLDeclaration =
-        sandbox.register_callback(HandleXMLDeclaration);
-    auto t_HandleStartElement = sandbox.register_callback(HandleStartElement);
-    auto t_HandleEndElement = sandbox.register_callback(HandleEndElement);
-    auto t_HandleComment = sandbox.register_callback(HandleComment);
-    auto t_HandleProcessingInstruction =
-        sandbox.register_callback(HandleProcessingInstruction);
-
-    sandbox.invoke_sandbox_function(MOZ_XML_SetXmlDeclHandler, ud.mExpat,
-                                    t_HandleXMLDeclaration);
-    sandbox.invoke_sandbox_function(MOZ_XML_SetElementHandler, ud.mExpat,
-                                    t_HandleStartElement, t_HandleEndElement);
-    sandbox.invoke_sandbox_function(MOZ_XML_SetCommentHandler, ud.mExpat,
-                                    t_HandleComment);
-    sandbox.invoke_sandbox_function(MOZ_XML_SetProcessingInstructionHandler,
-                                    ud.mExpat, t_HandleProcessingInstruction);
+    ud.mExpat = XML_ParserCreate_MM(kISO88591, &memsuite, kExpatSeparator);
+    XML_SetXmlDeclHandler(ud.mExpat, HandleXMLDeclaration);
+    XML_SetElementHandler(ud.mExpat, HandleStartElement, HandleEndElement);
+    XML_SetCommentHandler(ud.mExpat, HandleComment);
+    XML_SetProcessingInstructionHandler(ud.mExpat, HandleProcessingInstruction);
+    XML_SetUserData(ud.mExpat, static_cast<void*>(&ud));
 
     XML_Status status = XML_STATUS_OK;
 
@@ -723,42 +639,16 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
     // 1024 bytes long or shorter). Thus, we parse both buffers, but if the
     // first call succeeds already, we skip parsing the second buffer.
     if (mSniffingBuffer) {
-      // copy (or transfer) mSniffingBuffer into the sandbox
-      bool copied_mSniffingBuffer = false;
-      auto t_mSniffingBuffer = rlbox::copy_memory_or_grant_access(
-          sandbox, reinterpret_cast<const char*>(mSniffingBuffer.get()),
-          mSniffingLength, false, copied_mSniffingBuffer);
-      status = sandbox
-                   .invoke_sandbox_function(MOZ_XML_Parse, ud.mExpat,
-                                            t_mSniffingBuffer, mSniffingLength,
-                                            false)
-                   .copy_and_verify(status_verifier);
-      if (copied_mSniffingBuffer) {
-        sandbox.free_in_sandbox(t_mSniffingBuffer);
-      }
+      status = XML_Parse(ud.mExpat,
+                         reinterpret_cast<const char*>(mSniffingBuffer.get()),
+                         mSniffingLength, false);
     }
     if (status == XML_STATUS_OK && mCharsetSource < kCharsetFromMetaTag) {
-      bool copied_aFromSegmentElements = false;
-      auto t_aFromSegmentElements = rlbox::copy_memory_or_grant_access(
-          sandbox, reinterpret_cast<const char*>(aFromSegment.Elements()),
-          aFromSegment.LengthBytes(), false, copied_aFromSegmentElements);
-      mozilla::Unused << sandbox
-                             .invoke_sandbox_function(MOZ_XML_Parse, ud.mExpat,
-                                                      t_aFromSegmentElements,
-                                                      aCountToSniffingLimit,
-                                                      false)
-                             .copy_and_verify(status_verifier);
-      if (copied_aFromSegmentElements) {
-        sandbox.free_in_sandbox(t_aFromSegmentElements);
-      }
+      mozilla::Unused << XML_Parse(
+          ud.mExpat, reinterpret_cast<const char*>(aFromSegment.Elements()),
+          aCountToSniffingLimit, false);
     }
-    sandbox.invoke_sandbox_function(MOZ_XML_ParserFree, ud.mExpat);
-    t_HandleXMLDeclaration.unregister();
-    t_HandleStartElement.unregister();
-    t_HandleEndElement.unregister();
-    t_HandleComment.unregister();
-    t_HandleProcessingInstruction.unregister();
-    sandbox.destroy_sandbox();
+    XML_ParserFree(ud.mExpat);
 
     if (mCharsetSource < kCharsetFromMetaTag) {
       // Failed to get an encoding from the XML declaration. XML defaults
