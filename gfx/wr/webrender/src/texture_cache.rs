@@ -17,6 +17,7 @@ use crate::internal_types::{
     TextureCacheAllocInfo, TextureCacheUpdate, TextureCacheCategory,
 };
 use crate::lru_cache::LRUCache;
+use crate::picture_textures::PictureTextures;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::resource_cache::{CacheItem, CachedImageData};
@@ -27,9 +28,8 @@ use crate::texture_pack::{
     ShelfAllocator,
     ShelfAllocatorOptions,
 };
-use smallvec::SmallVec;
 use std::cell::Cell;
-use std::{cmp, mem};
+use std::mem;
 use std::rc::Rc;
 use euclid::size2;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -54,7 +54,7 @@ pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-enum EntryDetails {
+pub enum EntryDetails {
     Standalone {
         /// Number of bytes this entry allocates
         size_in_bytes: usize,
@@ -104,34 +104,34 @@ pub enum ManualCacheEntryMarker {}
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct CacheEntry {
+pub struct CacheEntry {
     /// Size of the requested item, in device pixels. Does not include any
     /// padding for alignment that the allocator may have added to this entry's
     /// allocation.
-    size: DeviceIntSize,
+    pub size: DeviceIntSize,
     /// Details specific to standalone or shared items.
-    details: EntryDetails,
+    pub details: EntryDetails,
     /// Arbitrary user data associated with this item.
-    user_data: [f32; 4],
+    pub user_data: [f32; 4],
     /// The last frame this item was requested for rendering.
     // TODO(gw): This stamp is only used for picture cache tiles, and some checks
     //           in the glyph cache eviction code. We could probably remove it
     //           entirely in future (or move to EntryDetails::Picture).
-    last_access: FrameStamp,
+    pub last_access: FrameStamp,
     /// Handle to the resource rect in the GPU cache.
-    uv_rect_handle: GpuCacheHandle,
+    pub uv_rect_handle: GpuCacheHandle,
     /// Image format of the data that the entry expects.
-    input_format: ImageFormat,
-    filter: TextureFilter,
-    swizzle: Swizzle,
+    pub input_format: ImageFormat,
+    pub filter: TextureFilter,
+    pub swizzle: Swizzle,
     /// The actual device texture ID this is part of.
-    texture_id: CacheTextureId,
+    pub texture_id: CacheTextureId,
     /// Optional notice when the entry is evicted from the cache.
-    eviction_notice: Option<EvictionNotice>,
+    pub eviction_notice: Option<EvictionNotice>,
     /// The type of UV rect this entry specifies.
-    uv_rect_kind: UvRectKind,
+    pub uv_rect_kind: UvRectKind,
 
-    shader: TargetShader,
+    pub shader: TargetShader,
 }
 
 malloc_size_of::malloc_size_of_is_0!(
@@ -512,181 +512,6 @@ impl SharedTextures {
     }
 }
 
-/// The textures used to hold picture cache tiles.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct PictureTexture {
-    texture_id: CacheTextureId,
-    size: DeviceIntSize,
-    is_allocated: bool,
-    last_frame_used: FrameId,
-}
-
-/// The textures used to hold picture cache tiles.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct PictureTextures {
-    /// Current list of textures in the pool
-    textures: Vec<PictureTexture>,
-    /// Default tile size for content tiles
-    default_tile_size: DeviceIntSize,
-    /// Number of currently allocated textures in the pool
-    allocated_texture_count: usize,
-    /// Texture filter to use for picture cache textures
-    filter: TextureFilter,
-}
-
-impl PictureTextures {
-    fn new(
-        default_tile_size: DeviceIntSize,
-        filter: TextureFilter,
-    ) -> Self {
-        PictureTextures {
-            textures: Vec::new(),
-            default_tile_size,
-            allocated_texture_count: 0,
-            filter,
-        }
-    }
-
-    fn get_or_allocate_tile(
-        &mut self,
-        tile_size: DeviceIntSize,
-        now: FrameStamp,
-        next_texture_id: &mut CacheTextureId,
-        pending_updates: &mut TextureUpdateList,
-    ) -> CacheEntry {
-        let mut texture_id = None;
-        self.allocated_texture_count += 1;
-
-        for texture in &mut self.textures {
-            if texture.size == tile_size && !texture.is_allocated {
-                // Found a target that's not currently in use which matches. Update
-                // the last_frame_used for GC purposes.
-                texture.is_allocated = true;
-                texture.last_frame_used = FrameId::INVALID;
-                texture_id = Some(texture.texture_id);
-                break;
-            }
-        }
-
-        // Need to create a new render target and add it to the pool
-
-        let texture_id = texture_id.unwrap_or_else(|| {
-            let texture_id = *next_texture_id;
-            next_texture_id.0 += 1;
-
-            // Push a command to allocate device storage of the right size / format.
-            let info = TextureCacheAllocInfo {
-                target: ImageBufferKind::Texture2D,
-                width: tile_size.width,
-                height: tile_size.height,
-                format: ImageFormat::RGBA8,
-                filter: self.filter,
-                is_shared_cache: false,
-                has_depth: true,
-                category: TextureCacheCategory::PictureTile,
-            };
-
-            pending_updates.push_alloc(texture_id, info);
-
-            self.textures.push(PictureTexture {
-                texture_id,
-                is_allocated: true,
-                size: tile_size,
-                last_frame_used: FrameId::INVALID,
-            });
-
-            texture_id
-        });
-
-        CacheEntry {
-            size: tile_size,
-            user_data: [0.0; 4],
-            last_access: now,
-            details: EntryDetails::Picture {
-                size: tile_size,
-            },
-            uv_rect_handle: GpuCacheHandle::new(),
-            input_format: ImageFormat::RGBA8,
-            filter: self.filter,
-            swizzle: Swizzle::default(),
-            texture_id,
-            eviction_notice: None,
-            uv_rect_kind: UvRectKind::Rect,
-            shader: TargetShader::Default,
-        }
-    }
-
-    fn free_tile(
-        &mut self,
-        id: CacheTextureId,
-        current_frame_id: FrameId,
-    ) {
-        self.allocated_texture_count -= 1;
-
-        let texture = self.textures
-            .iter_mut()
-            .find(|t| t.texture_id == id)
-            .expect("bug: invalid texture id");
-
-        assert!(texture.is_allocated);
-        texture.is_allocated = false;
-
-        assert_eq!(texture.last_frame_used, FrameId::INVALID);
-        texture.last_frame_used = current_frame_id;
-    }
-
-    fn clear(&mut self, pending_updates: &mut TextureUpdateList) {
-        for texture in self.textures.drain(..) {
-            pending_updates.push_free(texture.texture_id);
-        }
-    }
-
-    fn update_profile(&self, profile: &mut TransactionProfile) {
-        profile.set(profiler::PICTURE_TILES, self.textures.len());
-    }
-
-    /// Simple garbage collect of picture cache tiles
-    fn gc(
-        &mut self,
-        pending_updates: &mut TextureUpdateList,
-    ) {
-        // Allow the picture cache pool to keep 25% of the current allocated tile count
-        // as free textures to be reused. This ensures the allowed tile count is appropriate
-        // based on current window size.
-        let free_texture_count = self.textures.len() - self.allocated_texture_count;
-        let allowed_retained_count = (self.allocated_texture_count as f32 * 0.25).ceil() as usize;
-        let do_gc = free_texture_count > allowed_retained_count;
-
-        if do_gc {
-            // Sort the current pool by age, so that we remove oldest textures first
-            self.textures.sort_unstable_by_key(|t| cmp::Reverse(t.last_frame_used));
-
-            // We can't just use retain() because `PictureTexture` requires manual cleanup.
-            let mut allocated_targets = SmallVec::<[PictureTexture; 32]>::new();
-            let mut retained_targets = SmallVec::<[PictureTexture; 32]>::new();
-
-            for target in self.textures.drain(..) {
-                if target.is_allocated {
-                    // Allocated targets can't be collected
-                    allocated_targets.push(target);
-                } else if retained_targets.len() < allowed_retained_count {
-                    // Retain the most recently used targets up to the allowed count
-                    retained_targets.push(target);
-                } else {
-                    // The rest of the targets get freed
-                    assert_ne!(target.last_frame_used, FrameId::INVALID);
-                    pending_updates.push_free(target.texture_id);
-                }
-            }
-
-            self.textures.extend(retained_targets);
-            self.textures.extend(allocated_targets);
-        }
-    }
-}
-
 /// Container struct for the various parameters used in cache allocation.
 struct CacheAllocParams {
     descriptor: ImageDescriptor,
@@ -1050,7 +875,7 @@ impl TextureCache {
 
     #[cfg(feature = "replay")]
     pub fn picture_texture_filter(&self) -> TextureFilter {
-        self.picture_textures.filter
+        self.picture_textures.filter()
     }
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {
@@ -1764,7 +1589,7 @@ impl TextureCache {
 
 
     pub fn default_picture_tile_size(&self) -> DeviceIntSize {
-        self.picture_textures.default_tile_size
+        self.picture_textures.default_tile_size()
     }
 
     #[cfg(test)]
