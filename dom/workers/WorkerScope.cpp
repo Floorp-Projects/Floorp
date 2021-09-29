@@ -58,6 +58,7 @@
 #include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapSource.h"
+#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
