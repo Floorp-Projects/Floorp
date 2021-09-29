@@ -1,4 +1,3 @@
 . $topsrcdir/browser/config/mozconfigs/linux64/nightly
 
 ac_add_options --disable-unified-build
-ac_add_options --disable-warnings-as-errors
