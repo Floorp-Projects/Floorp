@@ -11,7 +11,5 @@ DIRS += ['lib']
 
 EXPORTS += [
     'expat_config.h',
-    'expat_config_moz.h',
-    'expat_config_rlbox.h',
 ]
 
