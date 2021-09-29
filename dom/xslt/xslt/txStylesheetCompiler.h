@@ -25,7 +25,6 @@ class txNamespaceMap;
 class txToplevelItem;
 class txPushNewContext;
 class txStylesheetCompiler;
-class txInScopeVariable;
 
 class txElementContext : public txObject {
  public:
@@ -62,6 +61,14 @@ class txACompileObserver {
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const char16_t* aErrorText = nullptr,              \
                        const char16_t* aParam = nullptr) override;
+
+class txInScopeVariable {
+ public:
+  explicit txInScopeVariable(const txExpandedName& aName)
+      : mName(aName), mLevel(1) {}
+  txExpandedName mName;
+  int32_t mLevel;
+};
 
 class txStylesheetCompilerState : public txIParseContext {
  public:
@@ -148,7 +155,7 @@ class txStylesheetCompilerState : public txIParseContext {
 
  protected:
   RefPtr<txACompileObserver> mObserver;
-  nsTArray<txInScopeVariable*> mInScopeVariables;
+  nsTArray<txInScopeVariable> mInScopeVariables;
   nsTArray<txStylesheetCompiler*> mChildCompilerList;
   // embed info, target information is the ID
   nsString mTarget;
@@ -221,14 +228,6 @@ class txStylesheetCompiler final : private txStylesheetCompilerState,
 
   nsString mCharacters;
   nsresult mStatus;
-};
-
-class txInScopeVariable {
- public:
-  explicit txInScopeVariable(const txExpandedName& aName)
-      : mName(aName), mLevel(1) {}
-  txExpandedName mName;
-  int32_t mLevel;
 };
 
 #endif
