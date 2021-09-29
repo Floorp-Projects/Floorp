@@ -255,6 +255,8 @@
     <string name="search_engine_suggestions_title">Search %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Search directly from the address bar</string>
+
+    <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title">What’s new in Firefox!</string>
     <!-- Onboarding home screen dialog description text. -->
