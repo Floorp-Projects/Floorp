@@ -11,10 +11,9 @@ use crate::internal_types::{
     CacheTextureId, TextureUpdateList, Swizzle, TextureCacheAllocInfo, TextureCacheCategory,
     TextureSource,
 };
-use crate::texture_cache::{CacheEntry, EntryDetails, TargetShader};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::profiler::{self, TransactionProfile};
-use crate::gpu_types::UvRectKind;
+use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 
@@ -29,6 +28,43 @@ malloc_size_of::malloc_size_of_is_0!(PictureCacheEntryMarker);
 pub type PictureCacheTextureHandle = WeakFreeListHandle<PictureCacheEntryMarker>;
 
 use std::cmp;
+
+// Stores information related to a single entry in the texture
+// cache. This is stored for each item whether it's in the shared
+// cache or a standalone texture.
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PictureCacheEntry {
+    /// Size of the requested tile.
+    pub size: DeviceIntSize,
+    /// The last frame this item was requested for rendering.
+    // TODO(gw): This stamp is only used for picture cache tiles, and some checks
+    //           in the glyph cache eviction code. We could probably remove it
+    //           entirely in future (or move to EntryDetails::Picture).
+    pub last_access: FrameStamp,
+    /// Handle to the resource rect in the GPU cache.
+    pub uv_rect_handle: GpuCacheHandle,
+    /// Image format of the data that the entry expects.
+    pub filter: TextureFilter,
+    /// The actual device texture ID this is part of.
+    pub texture_id: CacheTextureId,
+}
+
+impl PictureCacheEntry {
+    fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
+        if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
+            let origin = DeviceIntPoint::zero();
+            let image_source = ImageSource {
+                p0: origin.to_f32(),
+                p1: (origin + self.size).to_f32(),
+                uv_rect_kind: UvRectKind::Rect,
+                user_data: [0.0; 4],
+            };
+            image_source.write_gpu_blocks(&mut request);
+        }
+    }
+}
 
 /// The textures used to hold picture cache tiles.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -56,7 +92,7 @@ pub struct PictureTextures {
     debug_flags: DebugFlags,
 
     /// Cache of picture cache entries.
-    cache_entries: FreeList<CacheEntry, PictureCacheEntryMarker>,
+    cache_entries: FreeList<PictureCacheEntry, PictureCacheEntryMarker>,
     /// Strong handles for the picture_cache_entries FreeList.
     cache_handles: Vec<FreeListHandle<PictureCacheEntryMarker>>,
 
@@ -183,21 +219,12 @@ impl PictureTextures {
             texture_id
         });
 
-        let cache_entry = CacheEntry {
+        let cache_entry = PictureCacheEntry {
             size: tile_size,
-            user_data: [0.0; 4],
             last_access: self.now,
-            details: EntryDetails::Picture {
-                size: tile_size,
-            },
             uv_rect_handle: GpuCacheHandle::new(),
-            input_format: ImageFormat::RGBA8,
             filter: self.filter,
-            swizzle: Swizzle::default(),
             texture_id,
-            eviction_notice: None,
-            uv_rect_kind: UvRectKind::Rect,
-            shader: TargetShader::Default,
         };
 
         // Add the cache entry to the picture_textures.cache_entries FreeList.
@@ -259,7 +286,7 @@ impl PictureTextures {
 
         debug_assert_eq!(entry.last_access, self.now);
 
-        TextureSource::TextureCache(entry.texture_id, entry.swizzle)
+        TextureSource::TextureCache(entry.texture_id, Swizzle::default())
     }
 
     /// Expire picture cache tiles that haven't been referenced in the last frame.
@@ -282,7 +309,6 @@ impl PictureTextures {
             if evict {
                 let handle = self.cache_handles.swap_remove(i);
                 let entry = self.cache_entries.free(handle);
-                entry.evict();
                 self.free_tile(entry.texture_id, self.now.frame_id(), pending_updates);
             }
         }
@@ -291,7 +317,6 @@ impl PictureTextures {
     pub fn clear(&mut self, pending_updates: &mut TextureUpdateList) {
         for handle in mem::take(&mut self.cache_handles) {
             let entry = self.cache_entries.free(handle);
-            entry.evict();
             self.free_tile(entry.texture_id, self.now.frame_id(), pending_updates);
         }
 
