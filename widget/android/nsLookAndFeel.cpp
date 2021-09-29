@@ -94,6 +94,34 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     return NS_ERROR_FAILURE;
   }
 
+  // Highlight/Highlighttext have native equivalents that we can map to (on
+  // Android) which should work fine, regardless of the color-scheme.
+  switch (aID) {
+    case ColorID::Highlight: {
+      // Matched to action_accent in java codebase. This works fine with both
+      // light and dark color scheme.
+      nscolor accent =
+          Color(ColorID::MozAccentColor, aColorScheme, UseStandins::No);
+      aColor =
+          NS_RGBA(NS_GET_R(accent), NS_GET_G(accent), NS_GET_B(accent), 153);
+      return NS_OK;
+    }
+    case ColorID::Highlighttext:
+      // Selection background is transparent enough that any foreground color
+      // will do.
+      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      return NS_OK;
+    default:
+      break;
+  }
+
+  if (aColorScheme == ColorScheme::Dark) {
+    if (auto darkColor = GenericDarkColor(aID)) {
+      aColor = *darkColor;
+      return NS_OK;
+    }
+  }
+
   // XXX we'll want to use context.obtainStyledAttributes on the java side to
   // get all of these; see TextView.java for a good example.
   auto UseNativeAccent = [this] {
@@ -129,20 +157,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
       aColor = NS_RGBA(119, 119, 119, 102);
       break;
 
-    case ColorID::Highlight: {
-      // Matched to action_accent in java codebase. This works fine with both
-      // light and dark color scheme.
-      nscolor accent =
-          Color(ColorID::MozAccentColor, aColorScheme, UseStandins::No);
-      aColor =
-          NS_RGBA(NS_GET_R(accent), NS_GET_G(accent), NS_GET_B(accent), 153);
-      break;
-    }
-    case ColorID::Highlighttext:
-      // Selection background is transparent enough that any foreground color
-      // does.
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
-      break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::WidgetSelectBackground:

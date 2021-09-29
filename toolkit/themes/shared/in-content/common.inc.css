@@ -110,7 +110,13 @@
 @media (-moz-toolbar-prefers-color-scheme: dark) {
   :host,
   :root {
-    /* Keep these in sync with layout/base/PresShell.cpp, and plaintext.css */
+    /* Keep these in sync with layout/base/PresShell.cpp, plaintext.css,
+     * and nsXPLookAndFeel::GenericDarkColor
+     *
+     * TODO (emilio): Once color-scheme support is complete, perhaps we can
+     * just replace most of these for system colors and remove all this
+     * duplication (assuming we honor the preferred color scheme for
+     * in-content privileged pages and plain-text documents). */
     --in-content-page-background: rgb(28,27,34);
     --in-content-page-color: rgb(251,251,254);
     --in-content-deemphasized-text: rgb(191,191,201);

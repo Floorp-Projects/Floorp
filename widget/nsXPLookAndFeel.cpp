@@ -504,7 +504,14 @@ static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
   return false;
 }
 
-nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
+nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
+                                                  ColorScheme aScheme) {
+  if (aScheme == ColorScheme::Dark) {
+    if (auto color = GenericDarkColor(aID)) {
+      return *color;
+    }
+  }
+
   // The stand-in colors are taken from the Windows 7 Aero theme
   // except Mac-specific colors which are taken from Mac OS 10.7.
 
@@ -591,6 +598,54 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
       break;
   }
   return NS_RGB(0xFF, 0xFF, 0xFF);
+}
+
+#undef COLOR
+
+// Taken from in-content/common.inc.css's dark theme.
+Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
+  nscolor color = NS_RGB(0, 0, 0);
+  switch (aID) {
+    case ColorID::Window:  // --in-content-page-background
+    case ColorID::WindowBackground:
+    case ColorID::Background:
+    case ColorID::TextBackground:
+      color = NS_RGB(28, 27, 34);
+      break;
+    case ColorID::MozDialog:  // --in-content-box-background
+      color = NS_RGB(35, 34, 43);
+      break;
+    case ColorID::Windowtext:  // --in-content-page-color
+    case ColorID::WindowForeground:
+    case ColorID::MozDialogtext:
+    case ColorID::TextForeground:
+    case ColorID::Fieldtext:
+    case ColorID::Buttontext:  // --in-content-button-text-color (via
+                               // --in-content-page-color)
+      color = NS_RGB(251, 251, 254);
+      break;
+    case ColorID::Graytext:  // --in-content-deemphasized-text
+      color = NS_RGB(191, 191, 201);
+      break;
+    case ColorID::Selecteditem:  // --in-content-primary-button-background /
+                                 // --in-content-item-selected
+    case ColorID::Highlight:
+      // TODO(emilio): Perhaps for selection (highlight / highlighttext) we want
+      // something more subtle like Android / macOS do.
+      color = NS_RGB(0, 221, 255);
+      break;
+    case ColorID::Field:
+    case ColorID::Buttonface:        // --in-content-button-background
+    case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
+                                     // --in-content-item-selected-text
+    case ColorID::Highlighttext:
+      color = NS_RGB(43, 42, 51);
+      break;
+
+    default:
+      return Nothing();
+  }
+  return Some(color);
 }
 
 // Uncomment the #define below if you want to debug system color use in a skin
@@ -705,7 +760,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
 #endif
 
   if (aUseStandins == UseStandins::Yes) {
-    aResult = GetStandinForNativeColor(aID);
+    aResult = GetStandinForNativeColor(aID, aScheme);
     return NS_OK;
   }
 
