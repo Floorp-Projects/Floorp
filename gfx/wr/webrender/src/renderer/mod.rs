@@ -95,6 +95,7 @@ use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTar
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob};
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
+use crate::picture_textures::PictureTextures;
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
 use crate::rectangle_occlusion as occlusion;
@@ -1286,10 +1287,13 @@ impl Renderer {
             let texture_cache = TextureCache::new(
                 max_internal_texture_size,
                 image_tiling_threshold,
-                picture_tile_size,
                 color_cache_formats,
                 swizzle_settings,
                 &texture_cache_config,
+            );
+
+            let picture_textures = PictureTextures::new(
+                picture_tile_size,
                 picture_texture_filter,
             );
 
@@ -1297,6 +1301,7 @@ impl Renderer {
 
             let mut resource_cache = ResourceCache::new(
                 texture_cache,
+                picture_textures,
                 glyph_rasterizer,
                 glyph_cache,
                 rb_font_instances,
