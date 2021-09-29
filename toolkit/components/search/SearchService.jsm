@@ -24,17 +24,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gExperiment",
-  SearchUtils.BROWSER_SEARCH_PREF + "experiment",
-  false,
-  () => {
-    Services.search.wrappedJSObject._maybeReloadEngines();
-  }
-);
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
@@ -1064,7 +1055,7 @@ SearchService.prototype = {
       locale,
       region,
       channel,
-      experiment: gExperiment,
+      experiment: NimbusFeatures.search.getVariable("experiment"),
       distroID: SearchUtils.distroID,
     });
 
@@ -2736,6 +2727,10 @@ SearchService.prototype = {
     }
     this._observersAdded = true;
 
+    NimbusFeatures.search.onUpdate(() =>
+      Services.search.wrappedJSObject._maybeReloadEngines()
+    );
+
     Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
@@ -2795,6 +2790,10 @@ SearchService.prototype = {
     }
 
     this._settings.removeObservers();
+
+    NimbusFeatures.search.off(() =>
+      Services.search.wrappedJSObject._maybeReloadEngines()
+    );
 
     Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
