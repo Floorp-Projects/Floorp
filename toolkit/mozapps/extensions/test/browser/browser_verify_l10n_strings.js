@@ -10,7 +10,11 @@ add_task(async function test_ensure_bundled_addons_are_localized() {
   );
   let addons = await AddonManager.getAllAddons();
   let themeAddons = addons.filter(
-    addon => addon.isBuiltin && addon.type === "theme"
+    addon =>
+      addon.isBuiltin &&
+      // Temporary workaround until bug 1731652 lands.
+      !addon.id.endsWith("colorway@mozilla.org") &&
+      addon.type === "theme"
   );
   let bundle = bundles.next().value;
 

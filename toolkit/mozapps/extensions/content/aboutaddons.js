@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -79,96 +79,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const PLUGIN_ICON_URL = "chrome://global/skin/icons/plugin.svg";
 const EXTENSION_ICON_URL =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-const BUILTIN_THEME_PREVIEWS = new Map([
-  [
-    "default-theme@mozilla.org",
-    "chrome://mozapps/content/extensions/default-theme/preview.svg",
-  ],
-  [
-    "firefox-compact-light@mozilla.org",
-    "resource://builtin-themes/light/preview.svg",
-  ],
-  [
-    "firefox-compact-dark@mozilla.org",
-    "resource://builtin-themes/dark/preview.svg",
-  ],
-  [
-    "firefox-alpenglow@mozilla.org",
-    "resource://builtin-themes/alpenglow/preview.svg",
-  ],
-  [
-    "lush-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/soft/preview.svg",
-  ],
-  [
-    "lush-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/balanced/preview.svg",
-  ],
-  [
-    "lush-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/lush/bold/preview.svg",
-  ],
-  [
-    "abstract-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/soft/preview.svg",
-  ],
-  [
-    "abstract-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/balanced/preview.svg",
-  ],
-  [
-    "abstract-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/abstract/bold/preview.svg",
-  ],
-  [
-    "elemental-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/soft/preview.svg",
-  ],
-  [
-    "elemental-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/balanced/preview.svg",
-  ],
-  [
-    "elemental-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/elemental/bold/preview.svg",
-  ],
-  [
-    "cheers-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/soft/preview.svg",
-  ],
-  [
-    "cheers-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/balanced/preview.svg",
-  ],
-  [
-    "cheers-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/cheers/bold/preview.svg",
-  ],
-  [
-    "graffiti-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/soft/preview.svg",
-  ],
-  [
-    "graffiti-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/balanced/preview.svg",
-  ],
-  [
-    "graffiti-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/graffiti/bold/preview.svg",
-  ],
-  [
-    "foto-soft-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/soft/preview.svg",
-  ],
-  [
-    "foto-balanced-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/balanced/preview.svg",
-  ],
-  [
-    "foto-bold-colorway@mozilla.org",
-    "resource://builtin-themes/monochromatic/foto/bold/preview.svg",
-  ],
-]);
 
 const PERMISSION_MASKS = {
   enable: AddonManager.PERM_CAN_ENABLE,
@@ -541,8 +451,12 @@ function nl2br(text) {
  *          The URL of the best fitting screenshot, if any.
  */
 function getScreenshotUrlForAddon(addon) {
-  if (BUILTIN_THEME_PREVIEWS.has(addon.id)) {
-    return BUILTIN_THEME_PREVIEWS.get(addon.id);
+  if (addon.id == "default-theme@mozilla.org") {
+    return "chrome://mozapps/content/extensions/default-theme/preview.svg";
+  }
+  const builtInThemePreview = BuiltInThemes.previewForBuiltInThemeId(addon.id);
+  if (builtInThemePreview) {
+    return builtInThemePreview;
   }
 
   let { screenshots } = addon;
@@ -3948,6 +3862,10 @@ class AddonList extends HTMLElement {
     let type = this.type == "all" ? null : [this.type];
     let addons = await AddonManager.getAddonsByTypes(type);
 
+    if (type == "theme") {
+      await BuiltInThemes.ensureBuiltInThemes();
+    }
+
     // Put the add-ons into the sections, an add-on goes in the first section
     // that it matches the filterFn for. It might not go in any section.
     let sectionedAddons = this.sections.map(() => []);
@@ -4672,12 +4590,10 @@ gViewController.defineView("list", async type => {
   let isMonochromaticTheme = addon =>
     addon.id.endsWith("-colorway@mozilla.org");
 
-  let monochromaticEnabled =
-    AppConstants.NIGHTLY_BUILD &&
-    Services.prefs.getBoolPref(
-      "browser.theme.temporary.monochromatic.enabled",
-      false
-    );
+  let monochromaticEnabled = Services.prefs.getBoolPref(
+    "browser.theme.colorways.enabled",
+    true
+  );
 
   let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
