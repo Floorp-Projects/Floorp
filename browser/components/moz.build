@@ -55,9 +55,10 @@ DIRS += [
     "shell",
     "syncedtabs",
     "tabunloader",
+    "themes",
+    "translation",
     "uitour",
     "urlbar",
-    "translation",
 ]
 
 DIRS += ["build"]

@@ -1428,6 +1428,8 @@ defineAddonWrapperProperty("signedDate", function() {
     if (
       (aProp === "name" || aProp === "description") &&
       addon.location.name === KEY_APP_BUILTINS &&
+      // Temporary workaround until bug 1731652 lands.
+      !addon.id.endsWith("colorway@mozilla.org") &&
       addon.type === "theme"
     ) {
       // Built-in themes are localized with Fluent instead of the WebExtension API.
