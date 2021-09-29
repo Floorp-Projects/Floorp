@@ -187,6 +187,7 @@ def _activate_python_environment(topsrcdir):
     ]
 
     from mach.requirements import MachEnvRequirements
+    from mach.virtualenv import MozVirtualenvMetadata
 
     thunderbird_dir = os.path.join(topsrcdir, "comm")
     is_thunderbird = os.path.exists(thunderbird_dir) and bool(
@@ -200,6 +201,8 @@ def _activate_python_environment(topsrcdir):
         os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
     )
 
+    active_metadata = MozVirtualenvMetadata.from_runtime()
+    is_mach_virtualenv = active_metadata and active_metadata.virtualenv_name == "mach"
     if os.environ.get("MACH_USE_SYSTEM_PYTHON") or os.environ.get("MOZ_AUTOMATION"):
         env_var = (
             "MOZ_AUTOMATION"
@@ -252,16 +255,21 @@ def _activate_python_environment(topsrcdir):
             # (optional) dependencies are not installed.
             _scrub_system_site_packages()
 
-    elif sys.prefix == sys.base_prefix:
-        # We're in an environment where we normally use the Mach virtualenv,
+        sys.path[0:0] = [
+            os.path.join(topsrcdir, pth.path)
+            for pth in requirements.pth_requirements
+            + requirements.vendored_requirements
+        ]
+    elif not is_mach_virtualenv:
+        # We're in an environment where we normally *would* use the Mach virtualenv,
         # but we're running a "nativecmd" such as "create-mach-environment".
         # Remove global site packages from sys.path to improve isolation accordingly.
         _scrub_system_site_packages()
-
-    sys.path[0:0] = [
-        os.path.join(topsrcdir, pth.path)
-        for pth in requirements.pth_requirements + requirements.vendored_requirements
-    ]
+        sys.path[0:0] = [
+            os.path.join(topsrcdir, pth.path)
+            for pth in requirements.pth_requirements
+            + requirements.vendored_requirements
+        ]
 
 
 def initialize(topsrcdir):

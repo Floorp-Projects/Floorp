@@ -198,7 +198,7 @@ class MozbuildSymbols(Directive):
 
 
 def setup(app):
-    from mozbuild.virtualenv import VirtualenvManager
+    from mach.virtualenv import VirtualenvManager
     from moztreedocs import manager
 
     app.add_directive("mozbuildsymbols", MozbuildSymbols)
