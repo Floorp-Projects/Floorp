@@ -102,7 +102,12 @@ class txStylesheetCompilerState : public txIParseContext {
   void addToplevelItem(txToplevelItem* aItem);
   nsresult openInstructionContainer(txInstructionContainer* aContainer);
   void closeInstructionContainer();
-  void addInstruction(mozilla::UniquePtr<txInstruction>&& aInstruction);
+  txInstruction* addInstruction(
+      mozilla::UniquePtr<txInstruction>&& aInstruction);
+  template <class T>
+  T* addInstruction(mozilla::UniquePtr<T> aInstruction) {
+    return static_cast<T*>(addInstruction(std::move(aInstruction)));
+  }
   nsresult loadIncludedStylesheet(const nsAString& aURI);
   nsresult loadImportedStylesheet(const nsAString& aURI,
                                   txStylesheet::ImportFrame* aFrame);
