@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-foto-soft@mozilla.org"
+      "id": "foto-soft-colorway@mozilla.org"
     }
   },
   "name": "Foto – Soft",

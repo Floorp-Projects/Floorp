@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-cheers-balanced@mozilla.org"
+      "id": "cheers-balanced-colorway@mozilla.org"
     }
   },
   "name": "Cheers – Balanced",

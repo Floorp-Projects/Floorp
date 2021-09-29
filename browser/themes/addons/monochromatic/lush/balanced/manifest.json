@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-lush-balanced@mozilla.org"
+      "id": "lush-balanced-colorway@mozilla.org"
     }
   },
   "name": "Lush – Balanced",

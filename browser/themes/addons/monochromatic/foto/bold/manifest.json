@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-foto-bold@mozilla.org"
+      "id": "foto-bold-colorway@mozilla.org"
     }
   },
   "name": "Foto – Bold",

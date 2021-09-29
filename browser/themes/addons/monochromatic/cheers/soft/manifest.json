@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-cheers-soft@mozilla.org"
+      "id": "cheers-soft-colorway@mozilla.org"
     }
   },
   "name": "Cheers – Soft",
