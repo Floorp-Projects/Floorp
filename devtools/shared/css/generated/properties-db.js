@@ -9793,6 +9793,32 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "size": {
+    "isInherited": false,
+    "subproperties": [
+      "size"
+    ],
+    "supports": [],
+    "values": [
+      "a3",
+      "a4",
+      "a5",
+      "auto",
+      "b4",
+      "b5",
+      "inherit",
+      "initial",
+      "jis-b4",
+      "jis-b5",
+      "landscape",
+      "ledger",
+      "legal",
+      "letter",
+      "portrait",
+      "revert",
+      "unset"
+    ]
+  },
   "stop-color": {
     "isInherited": false,
     "subproperties": [
