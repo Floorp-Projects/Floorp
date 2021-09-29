@@ -194,10 +194,7 @@ void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
         EXPECT_TRUE(rv);
         result = Some(true);
       },
-      [&result]() {
-        FAIL() << "Shutdown should never be rejected";
-        result = Some(false);
-      });
+      []() { FAIL() << "Shutdown should never be rejected"; });
   SpinEventLoopUntil([&result]() { return result; });
 }
 
