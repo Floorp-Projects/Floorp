@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ internal fun Suggestion(
         modifier = Modifier
             .clickable { onSuggestionClicked(suggestion) }
             .defaultMinSize(minHeight = 56.dp)
+            .testTag("mozac.awesomebar.suggestion")
             .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
     ) {
         val icon = suggestion.icon
