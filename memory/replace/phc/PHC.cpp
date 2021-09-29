@@ -317,7 +317,9 @@ static const size_t kAllPagesSize = kNumAllPages * kPageSize;
 //
 // Also note that, unlike mozjemalloc, PHC doesn't have a poison value for freed
 // allocations because freed allocations are protected by OS page protection.
+#ifdef DEBUG
 const uint8_t kAllocJunk = 0xe4;
+#endif
 
 // The maximum time.
 static const Time kMaxTime = ~(Time(0));
