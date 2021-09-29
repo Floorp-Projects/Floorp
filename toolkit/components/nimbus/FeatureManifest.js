@@ -190,6 +190,13 @@ const FeatureManifest = {
           "browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled",
         description: "Enable an updated Pocket section topics footer",
       },
+      saveToPocketCard: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled",
+        description:
+          "A save to Pocket button inside the card, shown on the card thumbnail, on hover.",
+      },
     },
   },
   "password-autocomplete": {

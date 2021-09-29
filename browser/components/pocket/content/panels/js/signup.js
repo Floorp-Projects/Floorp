@@ -32,6 +32,9 @@ var PKT_PANEL_OVERLAY = function(options) {
     // Extract local variables passed into template via URL query params
     let queryParams = new URL(window.location.href).searchParams;
     let pockethost = queryParams.get(`pockethost`) || `getpocket.com`;
+    let utmCampaign =
+      queryParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
+    let utmSource = queryParams.get(`utmSource`) || `control`;
     let language = queryParams
       .get(`locale`)
       ?.split(`-`)[0]
@@ -44,8 +47,8 @@ var PKT_PANEL_OVERLAY = function(options) {
 
     const templateData = {
       pockethost,
-      utmCampaign: "firefox_door_hanger_menu",
-      utmSource: "control",
+      utmCampaign,
+      utmSource,
     };
 
     // extra modifier class for language
