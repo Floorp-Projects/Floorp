@@ -25,7 +25,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ConsoleAPI: "resource://gre/modules/Console.jsm",
-  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   SchemaRoot: "resource://gre/modules/Schemas.jsm",
@@ -536,8 +535,6 @@ class BaseContext {
       );
     }
 
-    MessageChannel.setupMessageManagers([this.messageManager]);
-
     let windowRef = new InnerWindowReference(contentWindow, this.innerWindowID);
     Object.defineProperty(this, "active", {
       configurable: true,
@@ -671,33 +668,6 @@ class BaseContext {
 
   forgetOnClose(obj) {
     this.onClose.delete(obj);
-  }
-
-  /**
-   * A wrapper around MessageChannel.sendMessage which adds the extension ID
-   * to the recipient object, and ensures replies are not processed after the
-   * context has been unloaded.
-   *
-   * @param {nsIMessageManager} target
-   * @param {string} messageName
-   * @param {object} data
-   * @param {object} [options]
-   * @param {object} [options.sender]
-   * @param {object} [options.recipient]
-   *
-   * @returns {Promise}
-   */
-  sendMessage(target, messageName, data, options = {}) {
-    options.recipient = Object.assign(
-      { extensionId: this.extension.id },
-      options.recipient
-    );
-    options.sender = options.sender || {};
-
-    options.sender.extensionId = this.extension.id;
-    options.sender.contextId = this.contextId;
-
-    return MessageChannel.sendMessage(target, messageName, data, options);
   }
 
   get lastError() {
@@ -912,11 +882,6 @@ class BaseContext {
 
   unload() {
     this.unloaded = true;
-
-    MessageChannel.abortResponses({
-      extensionId: this.extension.id,
-      contextId: this.contextId,
-    });
 
     for (let obj of this.onClose) {
       obj.close();

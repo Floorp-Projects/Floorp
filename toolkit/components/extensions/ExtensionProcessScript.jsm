@@ -12,9 +12,6 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionProcessScript", "ExtensionAPIRequestHandler"];
 
-const { MessageChannel } = ChromeUtils.import(
-  "resource://gre/modules/MessageChannel.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -74,8 +71,6 @@ class ExtensionGlobal {
     this.global.addMessageListener("Extension:SetFrameData", this);
 
     this.frameData = null;
-
-    MessageChannel.addListener(global, "Extension:DetectLanguage", this);
   }
 
   get messageFilterStrict() {
@@ -104,24 +99,7 @@ class ExtensionGlobal {
         if (data.viewType && WebExtensionPolicy.isExtensionProcess) {
           ExtensionPageChild.expectViewLoad(this.global, data.viewType);
         }
-        return;
     }
-
-    // SetFrameData does not have a recipient extension, or it would be
-    // an extension process. Anything following this point must have
-    // a recipient extension, so check access to the window.
-    let policy = WebExtensionPolicy.getByID(recipient.extensionId);
-    if (!policy.canAccessWindow(this.global.content)) {
-      throw new Error("Extension cannot access window");
-    }
-
-    return ExtensionContent.receiveMessage(
-      this.global,
-      messageName,
-      target,
-      data,
-      recipient
-    );
   }
 }
 
@@ -132,8 +110,6 @@ ExtensionManager = {
   globals: new WeakMap(),
 
   init() {
-    MessageChannel.setupMessageManagers([Services.cpmm]);
-
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);

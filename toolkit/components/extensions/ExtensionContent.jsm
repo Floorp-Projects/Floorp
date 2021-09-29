@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
   LanguageDetector: "resource:///modules/translation/LanguageDetector.jsm",
-  MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
@@ -1005,8 +1004,6 @@ DocumentManager = {
     "inner-window-destroyed"(subject, topic, data) {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
-      MessageChannel.abortResponses({ innerWindowID: windowId });
-
       // Close any existent content-script context for the destroyed window.
       if (this.contexts.has(windowId)) {
         let extensions = this.contexts.get(windowId);
@@ -1110,45 +1107,27 @@ var ExtensionContent = {
     return context;
   },
 
-  handleDetectLanguage(global, target) {
-    let doc = target.content.document;
+  async handleDetectLanguage({ windows }) {
+    let wgc = WindowGlobalChild.getByInnerWindowId(windows[0]);
+    let doc = wgc.browsingContext.window.document;
+    await promiseDocumentReady(doc);
 
-    return promiseDocumentReady(doc).then(() => {
-      let elem = doc.documentElement;
+    // The CLD2 library can analyze HTML, but that uses more memory, and
+    // emscripten can't shrink its heap, so we use plain text instead.
+    let encoder = Cu.createDocumentEncoder("text/plain");
+    encoder.init(doc, "text/plain", Ci.nsIDocumentEncoder.SkipInvisibleContent);
 
-      let language =
-        elem.getAttribute("xml:lang") ||
-        elem.getAttribute("lang") ||
+    let result = await LanguageDetector.detectLanguage({
+      language:
+        doc.documentElement.getAttribute("xml:lang") ||
+        doc.documentElement.getAttribute("lang") ||
         doc.contentLanguage ||
-        null;
-
-      // We only want the last element of the TLD here.
-      // Only country codes have any effect on the results, but other
-      // values cause no harm.
-      let tld = doc.location.hostname.match(/[a-z]*$/)[0];
-
-      // The CLD2 library used by the language detector is capable of
-      // analyzing raw HTML. Unfortunately, that takes much more memory,
-      // and since it's hosted by emscripten, and therefore can't shrink
-      // its heap after it's grown, it has a performance cost.
-      // So we send plain text instead.
-      let encoder = Cu.createDocumentEncoder("text/plain");
-      encoder.init(
-        doc,
-        "text/plain",
-        Ci.nsIDocumentEncoder.SkipInvisibleContent
-      );
-      let text = encoder.encodeToStringWithMaxLength(60 * 1024);
-
-      let encoding = doc.characterSet;
-
-      return LanguageDetector.detectLanguage({
-        language,
-        tld,
-        text,
-        encoding,
-      }).then(result => (result.language === "un" ? "und" : result.language));
+        null,
+      tld: doc.location.hostname.match(/[a-z]*$/)[0],
+      text: encoder.encodeToStringWithMaxLength(60 * 1024),
+      encoding: doc.characterSet,
     });
+    return result.language === "un" ? "und" : result.language;
   },
 
   // Used to executeScript, insertCSS and removeCSS.
@@ -1187,30 +1166,6 @@ var ExtensionContent = {
       return Promise.reject({ message, fileName: path });
     }
   },
-
-  async receiveMessage(global, name, target) {
-    if (name === "Extension:DetectLanguage") {
-      return this.handleDetectLanguage(global, target);
-    }
-  },
-
-  // Helpers
-
-  *enumerateWindows(docShell) {
-    let docShells = docShell.getAllDocShellsInSubtree(
-      docShell.typeContent,
-      docShell.ENUMERATE_FORWARDS
-    );
-
-    for (let docShell of docShells) {
-      try {
-        yield docShell.domWindow;
-      } catch (e) {
-        // This can fail if the docShell is being destroyed, so just
-        // ignore the error.
-      }
-    }
-  },
 };
 
 /**
@@ -1222,6 +1177,8 @@ class ExtensionContentChild extends JSProcessActorChild {
       return;
     }
     switch (name) {
+      case "DetectLanguage":
+        return ExtensionContent.handleDetectLanguage(data);
       case "Execute":
         return ExtensionContent.handleActorExecute(data);
     }
