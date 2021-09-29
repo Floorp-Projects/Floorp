@@ -306,9 +306,7 @@ void txExecutionState::receiveError(const nsAString& aMsg, nsresult aRes) {
 }
 
 nsresult txExecutionState::pushEvalContext(txIEvalContext* aContext) {
-  nsresult rv = mEvalContextStack.push(mEvalContext);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  mEvalContextStack.push(mEvalContext);
   mEvalContext = aContext;
 
   return NS_OK;
@@ -333,9 +331,7 @@ bool txExecutionState::popBool() {
 }
 
 nsresult txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {
-  nsresult rv = mResultHandlerStack.push(mResultHandler);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  mResultHandlerStack.push(mResultHandler);
   mResultHandler = aHandler;
 
   return NS_OK;
@@ -426,11 +422,8 @@ nsresult txExecutionState::runTemplate(txInstruction* aTemplate) {
   NS_ENSURE_TRUE(++mRecursionDepth < kMaxRecursionDepth,
                  NS_ERROR_XSLT_BAD_RECURSION);
 
-  nsresult rv = mLocalVarsStack.push(mLocalVariables);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mReturnStack.push(mNextInstruction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mLocalVarsStack.push(mLocalVariables);
+  mReturnStack.push(mNextInstruction);
 
   mLocalVariables = nullptr;
   mNextInstruction = aTemplate;
