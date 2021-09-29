@@ -42,6 +42,7 @@ job-defaults:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
 
 android-arm/debug:
     description: "Android 5.0 Arm Debug"
@@ -365,7 +366,6 @@ android-aarch64/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-aarch64-lite/opt:
     description: "Android 5.0 AArch64 Opt Lite"
@@ -392,7 +392,6 @@ android-aarch64-lite/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-aarch64/debug:
     description: "Android 5.0 AArch64 Debug"
@@ -418,7 +417,6 @@ android-aarch64/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-aarch64-lite/debug:
     description: "Android 5.0 AArch64 Debug Lite"
@@ -444,7 +442,6 @@ android-aarch64-lite/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
@@ -476,7 +473,6 @@ android-aarch64-shippable/opt:
         toolchain:
             - linux64-clang
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-aarch64-shippable-lite/opt:
     description: "Android 5.0 AArch64 Shippable Lite"
@@ -509,7 +505,6 @@ android-aarch64-shippable-lite/opt:
         toolchain:
             - linux64-clang
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-x86_64/opt:
     description: "Android 5.0 x86-64 Opt"
@@ -536,7 +531,6 @@ android-x86_64/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-x86_64-lite/opt:
     description: "Android 5.0 x86-64 Opt Lite"
@@ -564,7 +558,6 @@ android-x86_64-lite/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-x86_64-shippable/opt:
     description: "Android 5.0 x86-64 Shippable"
@@ -595,7 +588,6 @@ android-x86_64-shippable/opt:
         toolchain:
             - linux64-clang
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-x86_64-shippable-lite/opt:
     description: "Android 5.0 x86-64 Shippable Lite"
@@ -627,7 +619,6 @@ android-x86_64-shippable-lite/opt:
         toolchain:
             - linux64-clang
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-x86_64/debug:
     description: "Android 5.0 x86-64 Debug"
@@ -653,7 +644,6 @@ android-x86_64/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-x86_64-lite/debug:
     description: "Android 5.0 x86-64 Debug Lite"
@@ -680,7 +670,6 @@ android-x86_64-lite/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies-lite
-            - sysroot-wasm32-wasi
 
 android-x86_64/debug-isolated-process:
     description: "Android 5.0 x86-64 Debug with Isolated Process"
@@ -707,7 +696,6 @@ android-x86_64/debug-isolated-process:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
 
 android-arm-gcp/debug:
     description: "Android 5.0 Arm Debug - built on GCP"
@@ -819,7 +807,6 @@ android-aarch64-gcp/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
 
@@ -848,7 +835,6 @@ android-aarch64-gcp/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
 
@@ -877,7 +863,6 @@ android-x86_64-gcp/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
 
@@ -904,7 +889,6 @@ android-x86_64-gcp/debug:
         toolchain:
             - linux64-clang
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
 
@@ -929,6 +913,5 @@ android-x86_64-asan-fuzzing/opt:
             - linux64-clang-android-cross
             - linux64-sccache
             - android-gradle-dependencies
-            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
