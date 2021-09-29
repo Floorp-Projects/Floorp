@@ -993,9 +993,9 @@ class RecursiveMakeBackend(MakeBackend):
                 with io.open(obj.output_path, encoding="utf-8") as fh:
                     content = fh.read()
                     # Directories with a Makefile containing a tools target, or
-                    # XPI_PKGNAME or INSTALL_EXTENSION_ID can't be skipped and
-                    # must run during the 'tools' tier.
-                    for t in ("XPI_PKGNAME", "INSTALL_EXTENSION_ID", "tools"):
+                    # XPI_PKGNAME can't be skipped and must run during the
+                    # 'tools' tier.
+                    for t in ("XPI_PKGNAME", "tools"):
                         if t not in content:
                             continue
                         if t == "tools" and not re.search(
