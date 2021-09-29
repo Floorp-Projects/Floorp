@@ -51,7 +51,7 @@ object DownloadUtils {
      *
      */
     private const val contentDispositionFileNameAsterisk =
-        "\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*)"
+        "\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'([^;\\s]*)"
 
     /**
      * Format as defined in RFC 2616 and RFC 5987

@@ -59,6 +59,16 @@ class DownloadUtilsTest {
                 "filename.jpg",
                 "$contentDisposition; filename=_.jpg; filename*=utf-8'en'filename.jpg"
             )
+            // Wrong order of the "filename*" segment
+            assertContentDisposition(
+                "filename.jpg",
+                "$contentDisposition; filename*=utf-8'en'filename.jpg; filename=_.jpg"
+            )
+            // Semicolon at the end
+            assertContentDisposition(
+                "filename.jpg",
+                "$contentDisposition; filename*=utf-8'en'filename.jpg; foo"
+            )
 
             // ISO-8859-1 encoded filename* field
             assertContentDisposition(
