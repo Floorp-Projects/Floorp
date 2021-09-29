@@ -9,9 +9,8 @@ use api::units::*;
 use crate::device::TextureFilter;
 use crate::internal_types::{
     CacheTextureId, TextureUpdateList, Swizzle, TextureCacheAllocInfo, TextureCacheCategory,
-    TextureSource,
+    TextureSource, FrameStamp, FrameId,
 };
-use crate::render_backend::{FrameStamp, FrameId};
 use crate::profiler::{self, TransactionProfile};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};

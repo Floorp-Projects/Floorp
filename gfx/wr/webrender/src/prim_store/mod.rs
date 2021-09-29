@@ -21,8 +21,6 @@ use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
 use crate::picture::PicturePrimitive;
-#[cfg(debug_assertions)]
-use crate::render_backend::{FrameId};
 use crate::render_task_graph::RenderTaskId;
 use crate::resource_cache::ImageProperties;
 use crate::scene::SceneProperties;
@@ -31,6 +29,8 @@ use std::{hash, ops, u32, usize};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::util::Recycler;
 use crate::internal_types::LayoutPrimitiveInfo;
+#[cfg(debug_assertions)]
+use crate::internal_types::FrameId;
 use crate::visibility::PrimitiveVisibility;
 
 pub mod backdrop;

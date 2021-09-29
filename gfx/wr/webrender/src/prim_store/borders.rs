@@ -10,7 +10,7 @@ use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingState};
 use crate::gpu_cache::GpuDataRequest;
 use crate::intern;
-use crate::internal_types::LayoutPrimitiveInfo;
+use crate::internal_types::{LayoutPrimitiveInfo, FrameId};
 use crate::prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimTemplate, PrimTemplateCommonData,
@@ -20,7 +20,6 @@ use crate::prim_store::{
 use crate::resource_cache::ImageRequest;
 use crate::render_task::RenderTask;
 use crate::render_task_graph::RenderTaskId;
-use crate::render_backend::FrameId;
 
 use super::storage;
 
