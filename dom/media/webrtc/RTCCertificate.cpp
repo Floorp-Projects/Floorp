@@ -87,7 +87,14 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
         mExpires(aExpires),
         mAuthType(ssl_kea_null),
         mCertificate(nullptr),
-        mSignatureAlg(SEC_OID_UNKNOWN) {}
+        mSignatureAlg(SEC_OID_UNKNOWN) {
+    if (NS_FAILED(mEarlyRv)) {
+      // webrtc-pc says to throw NotSupportedError if we have passed "an
+      // algorithm that the user agent cannot or will not use to generate a
+      // certificate". This catches these cases.
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+  }
 
  private:
   PRTime mExpires;
