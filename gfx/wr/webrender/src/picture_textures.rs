@@ -59,6 +59,8 @@ pub struct PictureTextures {
     cache_entries: FreeList<CacheEntry, PictureCacheEntryMarker>,
     /// Strong handles for the picture_cache_entries FreeList.
     cache_handles: Vec<FreeListHandle<PictureCacheEntryMarker>>,
+
+    now: FrameStamp,
 }
 
 impl PictureTextures {
@@ -74,7 +76,12 @@ impl PictureTextures {
             debug_flags: DebugFlags::empty(),
             cache_entries: FreeList::new(),
             cache_handles: Vec::new(),
+            now: FrameStamp::INVALID,
         }
+    }
+
+    pub fn begin_frame(&mut self, stamp: FrameStamp) {
+        self.now = stamp;
     }
 
     pub fn default_tile_size(&self) -> DeviceIntSize {
@@ -83,14 +90,13 @@ impl PictureTextures {
 
     pub fn update(
         &mut self,
-        now: FrameStamp,
         tile_size: DeviceIntSize,
         handle: &mut TextureCacheHandle,
         gpu_cache: &mut GpuCache,
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
     ) {
-        debug_assert!(now.is_valid());
+        debug_assert!(self.now.is_valid());
         debug_assert!(tile_size.width > 0 && tile_size.height > 0);
 
         let need_alloc = match handle {
@@ -107,7 +113,6 @@ impl PictureTextures {
         if need_alloc {
             let new_handle = self.get_or_allocate_tile(
                 tile_size,
-                now,
                 next_texture_id,
                 pending_updates,
             );
@@ -129,7 +134,6 @@ impl PictureTextures {
     pub fn get_or_allocate_tile(
         &mut self,
         tile_size: DeviceIntSize,
-        now: FrameStamp,
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
     ) -> PictureCacheTextureHandle {
@@ -180,7 +184,7 @@ impl PictureTextures {
         let cache_entry = CacheEntry {
             size: tile_size,
             user_data: [0.0; 4],
-            last_access: now,
+            last_access: self.now,
             details: EntryDetails::Picture {
                 size: tile_size,
             },
@@ -235,8 +239,9 @@ impl PictureTextures {
         }
     }
 
-    pub fn request(&mut self, handle: &PictureCacheTextureHandle, now: FrameStamp, gpu_cache: &mut GpuCache) -> bool {
+    pub fn request(&mut self, handle: &PictureCacheTextureHandle, gpu_cache: &mut GpuCache) -> bool {
         let entry = self.cache_entries.get_opt_mut(handle);
+        let now = self.now;
         entry.map_or(true, |entry| {
             // If an image is requested that is already in the cache,
             // refresh the GPU cache data associated with this item.
@@ -246,11 +251,11 @@ impl PictureTextures {
         })
     }
 
-    pub fn get_texture_source(&self, now: FrameStamp, handle: &PictureCacheTextureHandle) -> TextureSource {
+    pub fn get_texture_source(&self, handle: &PictureCacheTextureHandle) -> TextureSource {
         let entry = self.cache_entries.get_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
 
-        debug_assert_eq!(entry.last_access, now);
+        debug_assert_eq!(entry.last_access, self.now);
 
         TextureSource::TextureCache(entry.texture_id, entry.swizzle)
     }
@@ -258,7 +263,7 @@ impl PictureTextures {
     /// Expire picture cache tiles that haven't been referenced in the last frame.
     /// The picture cache code manually keeps tiles alive by calling `request` on
     /// them if it wants to retain a tile that is currently not visible.
-    pub fn expire_old_tiles(&mut self, now: FrameStamp, pending_updates: &mut TextureUpdateList) {
+    pub fn expire_old_tiles(&mut self, pending_updates: &mut TextureUpdateList) {
         for i in (0 .. self.cache_handles.len()).rev() {
             let evict = {
                 let entry = self.cache_entries.get(
@@ -269,23 +274,23 @@ impl PictureTextures {
                 // so we don't yet know which picture cache tiles will be
                 // requested this frame. Therefore only evict picture cache
                 // tiles which weren't requested in the *previous* frame.
-                entry.last_access.frame_id() < now.frame_id() - 1
+                entry.last_access.frame_id() < self.now.frame_id() - 1
             };
 
             if evict {
                 let handle = self.cache_handles.swap_remove(i);
                 let entry = self.cache_entries.free(handle);
                 entry.evict();
-                self.free_tile(entry.texture_id, now.frame_id(), pending_updates);
+                self.free_tile(entry.texture_id, self.now.frame_id(), pending_updates);
             }
         }
     }
 
-    pub fn clear(&mut self, now: FrameStamp, pending_updates: &mut TextureUpdateList) {
+    pub fn clear(&mut self, pending_updates: &mut TextureUpdateList) {
         for handle in mem::take(&mut self.cache_handles) {
             let entry = self.cache_entries.free(handle);
             entry.evict();
-            self.free_tile(entry.texture_id, now.frame_id(), pending_updates);
+            self.free_tile(entry.texture_id, self.now.frame_id(), pending_updates);
         }
 
         for texture in self.textures.drain(..) {
