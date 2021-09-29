@@ -60,7 +60,6 @@ class OnErrorEventHandlerNonNull;
 template <typename T>
 class Optional;
 class Performance;
-struct PostMessageOptions;
 class Promise;
 class RequestOrUSVString;
 template <typename T>
@@ -68,6 +67,7 @@ class Sequence;
 class ServiceWorkerDescriptor;
 class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
+struct StructuredSerializeOptions;
 class WorkerLocation;
 class WorkerNavigator;
 class WorkerPrivate;
@@ -275,7 +275,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
       int32_t aSh, const ImageBitmapOptions& aOptions, ErrorResult& aRv);
 
   void StructuredClone(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                       const PostMessageOptions& aOptions,
+                       const StructuredSerializeOptions& aOptions,
                        JS::MutableHandle<JS::Value> aRetval,
                        ErrorResult& aError);
 
@@ -337,7 +337,8 @@ class DedicatedWorkerGlobalScope final
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const PostMessageOptions& aOptions, ErrorResult& aRv);
+                   const StructuredSerializeOptions& aOptions,
+                   ErrorResult& aRv);
 
   void Close();
 
