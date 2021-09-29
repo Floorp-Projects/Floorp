@@ -12,6 +12,7 @@ r"""Repackage ZIP archives (or directories) into MSIX App Packages.
 
 from __future__ import absolute_import, print_function
 
+from collections import defaultdict
 import logging
 import os
 import sys
@@ -182,6 +183,28 @@ def get_embedded_version(version, buildid):
     return version
 
 
+def get_appconstants_jsm_values(finder, *args):
+    r"""Extract values, such as the display version like `MOZ_APP_VERSION_DISPLAY:
+    "...";`, from the omnijar.  This allows to determine the beta number, like
+    `X.YbW`, where the regular beta version is only `X.Y`.  Takes a list of
+    names and returns an iterator of the unique such value found for each name.
+    Raises an exception if a name is not found or if multiple values are found.
+    """
+
+    lines = defaultdict(list)
+    for _, f in finder.find("**/modules/AppConstants.jsm"):
+        for line in f.open().read().decode("utf-8").splitlines():
+            for arg in args:
+                if arg in line:
+                    lines[arg].append(line)
+
+    for arg in args:
+        (value,) = lines[arg]  # We expect exactly one definition.
+        _, _, value = value.partition(":")
+        value = value.strip().strip('",;')
+        yield value
+
+
 def repackage_msix(
     dir_or_package,
     channel=None,
@@ -213,7 +236,6 @@ def repackage_msix(
     if not os.path.isdir(branding):
         raise Exception("branding dir {} does not exist".format(branding))
 
-        version = "1.2.3"  # XXX
     # TODO: maybe we can fish this from the package directly?  Maybe from a DLL,
     # maybe from application.ini?
     if arch is None or arch not in _MSIX_ARCH.keys():
@@ -233,17 +255,46 @@ def repackage_msix(
         finder,
         dict(section="App", value="CodeName", fallback="Name"),
         dict(section="App", value="Vendor"),
-        dict(section="App", value="Version"),
-        dict(section="App", value="BuildID"),
     )
     first = next(values)
     displayname = displayname or "Mozilla {}".format(first)
     second = next(values)
     vendor = vendor or second
+
+    # For `AppConstants.jsm` and `brand.properties`, which are in the omnijar in
+    # packaged builds.
+    unpack_finder = UnpackFinder(finder)
+
     if not version:
-        version = next(values)
+        values = get_appconstants_jsm_values(
+            unpack_finder, "MOZ_APP_VERSION_DISPLAY", "MOZ_BUILDID"
+        )
+        display_version = next(values)
         buildid = next(values)
-        version = get_embedded_version(version, buildid)
+        version = get_embedded_version(display_version, buildid)
+        log(
+            logging.INFO,
+            "msix",
+            {
+                "version": version,
+                "display_version": display_version,
+                "buildid": buildid,
+            },
+            "AppConstants.jsm display version is '{display_version}' and build ID is '{buildid}':"
+            + " embedded version will be '{version}'",
+        )
+
+    # TODO: Bug 1721922: localize this description via Fluent.
+    lines = []
+    for _, f in unpack_finder.find("**/chrome/en-US/locale/branding/brand.properties"):
+        lines.extend(
+            line
+            for line in f.open().read().decode("utf-8").splitlines()
+            if "brandFullName" in line
+        )
+    (brandFullName,) = lines  # We expect exactly one definition.
+    _, _, brandFullName = brandFullName.partition("=")
+    brandFullName = brandFullName.strip()
 
     # We don't have a build at repackage-time to gives us this value, and the
     # source of truth is a branding-specific `configure.sh` shell script that we
@@ -259,20 +310,6 @@ def repackage_msix(
     MOZ_IGECKOBACKCHANNEL_IID = MOZ_IGECKOBACKCHANNEL_IID.strip()
     if MOZ_IGECKOBACKCHANNEL_IID.startswith(('"', "'")):
         MOZ_IGECKOBACKCHANNEL_IID = MOZ_IGECKOBACKCHANNEL_IID[1:-1]
-
-    # TODO: Bug 1721922: localize this description via Fluent.
-    # For `brand.properties`, which is in the omnijar in packaged builds.
-    unpack_finder = UnpackFinder(finder)
-    lines = []
-    for _, f in unpack_finder.find("**/chrome/en-US/locale/branding/brand.properties"):
-        lines.extend(
-            line
-            for line in f.open().read().decode("utf-8").splitlines()
-            if "brandFullName" in line
-        )
-    (brandFullName,) = lines  # We expect exactly one definition.
-    _, _, brandFullName = brandFullName.partition("=")
-    brandFullName = brandFullName.strip()
 
     # The convention is $MOZBUILD_STATE_PATH/cache/$FEATURE.
     output_dir = mozpath.normsep(
@@ -423,7 +460,8 @@ def repackage_msix(
         "APPX_ARCH": _MSIX_ARCH[arch],
         "APPX_DISPLAYNAME": brandFullName,
         "APPX_DESCRIPTION": brandFullName,
-        # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
+        # Like 'Mozilla.MozillaFirefox', 'Mozilla.MozillaFirefoxBeta', or
+        # 'Mozilla.MozillaFirefoxNightly'.
         "APPX_IDENTITY": identity,
         # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox
         # Beta Package Root'.  See above.
