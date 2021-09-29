@@ -32,6 +32,10 @@ function waitForGeolocationPrompt(win, browser) {
 addRDMTask(
   null,
   async function() {
+    // we want to explicitly tests http and https, hence
+    // disabling https-first mode for this test.
+    await pushPref("dom.security.https_first", false);
+
     const tab = await addTab(DUMMY_URL);
     const browser = tab.linkedBrowser;
     const win = browser.ownerGlobal;
