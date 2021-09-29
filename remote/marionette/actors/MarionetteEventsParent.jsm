@@ -5,10 +5,10 @@
 ("use strict");
 
 const EXPORTED_SYMBOLS = [
+  "disableEventsActor",
+  "enableEventsActor",
   "EventDispatcher",
   "MarionetteEventsParent",
-  "registerEventsActor",
-  "unregisterEventsActor",
 ];
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -16,6 +16,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
@@ -47,10 +49,17 @@ class MarionetteEventsParent extends JSWindowActorParent {
   }
 }
 
+// Flag to check if the MarionetteEvents actors have already been registed.
+let eventsActorRegistered = false;
+
 /**
  * Register Events actors to listen for page load events via EventDispatcher.
  */
 function registerEventsActor() {
+  if (eventsActorRegistered) {
+    return;
+  }
+
   try {
     // Register the JSWindowActor pair for events as used by Marionette
     ChromeUtils.registerWindowActor("MarionetteEvents", {
@@ -80,6 +89,8 @@ function registerEventsActor() {
       allFrames: true,
       includeChrome: true,
     });
+
+    eventsActorRegistered = true;
   } catch (e) {
     if (e.name === "NotSupportedError") {
       logger.warn(`MarionetteEvents actor is already registered!`);
@@ -89,6 +100,25 @@ function registerEventsActor() {
   }
 }
 
-function unregisterEventsActor() {
-  ChromeUtils.unregisterWindowActor("MarionetteEvents");
+/**
+ * Enable MarionetteEvents actors to start forwarding page load events from the
+ * child actor to the parent actor. Register the MarionetteEvents actor if necessary.
+ */
+function enableEventsActor() {
+  // sharedData is replicated across processes and will be checked by
+  // MarionetteEventsChild before forward events to the parent actor.
+  Services.ppmm.sharedData.set("MARIONETTE_EVENTS_ENABLED", true);
+  // Request to immediately flush the data to the content processes to avoid races.
+  Services.ppmm.sharedData.flush();
+
+  registerEventsActor();
+}
+
+/**
+ * Disable MarionetteEvents actors to stop forwarding page load events from the
+ * child actor to the parent actor.
+ */
+function disableEventsActor() {
+  Services.ppmm.sharedData.set("MARIONETTE_EVENTS_ENABLED", false);
+  Services.ppmm.sharedData.flush();
 }
