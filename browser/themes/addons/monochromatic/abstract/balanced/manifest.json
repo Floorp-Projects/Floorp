@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-abstract-balanced@mozilla.org"
+      "id": "abstract-balanced-colorway@mozilla.org"
     }
   },
   "name": "Abstract – Balanced",

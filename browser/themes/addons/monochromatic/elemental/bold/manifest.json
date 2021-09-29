@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-elemental-bold@mozilla.org"
+      "id": "elemental-bold-colorway@mozilla.org"
     }
   },
   "name": "Elemental – Bold",

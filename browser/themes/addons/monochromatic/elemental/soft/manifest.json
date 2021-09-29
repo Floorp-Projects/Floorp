@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-elemental-soft@mozilla.org"
+      "id": "elemental-soft-colorway@mozilla.org"
     }
   },
   "name": "Elemental – Soft",

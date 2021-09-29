@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-foto-balanced@mozilla.org"
+      "id": "foto-balanced-colorway@mozilla.org"
     }
   },
   "name": "Foto – Balanced",

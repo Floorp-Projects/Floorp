@@ -1404,102 +1404,92 @@ BrowserGlue.prototype = {
       // resource://builtin-themes/monochromatic/.
       const kMonochromaticThemeList = [
         {
-          id: "firefox-lush-soft@mozilla.org",
+          id: "lush-soft-colorway@mozilla.org",
           version: "1.0",
           path: "lush/soft/",
         },
         {
-          id: "firefox-lush-balanced@mozilla.org",
+          id: "lush-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "lush/balanced/",
         },
         {
-          id: "firefox-lush-soft@mozilla.org",
-          version: "1.0",
-          path: "lush/soft/",
-        },
-        {
-          id: "firefox-lush-balanced@mozilla.org",
-          version: "1.0",
-          path: "lush/balanced/",
-        },
-        {
-          id: "firefox-lush-bold@mozilla.org",
+          id: "lush-bold-colorway@mozilla.org",
           version: "1.0",
           path: "lush/bold/",
         },
         {
-          id: "firefox-abstract-soft@mozilla.org",
+          id: "abstract-soft-colorway@mozilla.org",
           version: "1.0",
           path: "abstract/soft/",
         },
         {
-          id: "firefox-abstract-balanced@mozilla.org",
+          id: "abstract-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "abstract/balanced/",
         },
         {
-          id: "firefox-abstract-bold@mozilla.org",
+          id: "abstract-bold-colorway@mozilla.org",
           version: "1.0",
           path: "abstract/bold/",
         },
         {
-          id: "firefox-elemental-soft@mozilla.org",
+          id: "elemental-soft-colorway@mozilla.org",
           version: "1.0",
           path: "elemental/soft/",
         },
         {
-          id: "firefox-elemental-balanced@mozilla.org",
+          id: "elemental-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "elemental/balanced/",
         },
         {
-          id: "firefox-elemental-bold@mozilla.org",
+          id: "elemental-bold-colorway@mozilla.org",
           version: "1.0",
           path: "elemental/bold/",
         },
         {
-          id: "firefox-cheers-soft@mozilla.org",
+          id: "cheers-soft-colorway@mozilla.org",
           version: "1.0",
           path: "cheers/soft/",
         },
         {
-          id: "firefox-cheers-balanced@mozilla.org",
+          id: "cheers-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "cheers/balanced/",
         },
         {
-          id: "firefox-cheers-bold@mozilla.org",
+          id: "cheers-bold-colorway@mozilla.org",
           version: "1.0",
           path: "cheers/bold/",
         },
         {
-          id: "firefox-graffiti-soft@mozilla.org",
+          id: "graffiti-soft-colorway@mozilla.org",
           version: "1.0",
           path: "graffiti/soft/",
         },
         {
-          id: "firefox-graffiti-balanced@mozilla.org",
+          id: "graffiti-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "graffiti/balanced/",
         },
         {
-          id: "firefox-graffiti-bold@mozilla.org",
+          id: "graffiti-bold-colorway@mozilla.org",
           version: "1.0",
           path: "graffiti/bold/",
         },
         {
-          id: "firefox-foto-soft@mozilla.org",
+          id: "foto-soft-colorway@mozilla.org",
           version: "1.0",
           path: "foto/soft/",
         },
         {
-          id: "firefox-foto-balanced@mozilla.org",
+          id: "foto-balanced-colorway@mozilla.org",
           version: "1.0",
           path: "foto/balanced/",
         },
         {
-          id: "firefox-foto-bold@mozilla.org",
+          id: "foto-bold-colorway@mozilla.org",
           version: "1.0",
           path: "foto/bold/",
         },
@@ -3443,7 +3433,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 118;
+    const UI_VERSION = 119;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4071,13 +4061,41 @@ BrowserGlue.prototype = {
       UrlbarPrefs.migrateResultBuckets();
     }
 
-    if (currentUIVersion < 118 && AppConstants.NIGHTLY_BUILD) {
-      // Uninstall experimental monochromatic purple theme.
-      let addonPromise;
+    if (currentUIVersion < 119 && AppConstants.NIGHTLY_BUILD) {
+      // Uninstall outdated monochromatic themes for the following UI versions:
+      // 118: Uninstall prototype monochromatic purple theme.
+      // 119 (bug 1732957): Uninstall themes with old IDs.
+      const themeIdsToMigrate = [
+        "firefox-monochromatic-purple@mozilla.org",
+        "firefox-lush-soft@mozilla.org",
+        "firefox-lush-balanced@mozilla.org",
+        "firefox-lush-bold@mozilla.org",
+        "firefox-abstract-soft@mozilla.org",
+        "firefox-abstract-balanced@mozilla.org",
+        "firefox-abstract-bold@mozilla.org",
+        "firefox-elemental-soft@mozilla.org",
+        "firefox-elemental-balanced@mozilla.org",
+        "firefox-elemental-bold@mozilla.org",
+        "firefox-cheers-soft@mozilla.org",
+        "firefox-cheers-balanced@mozilla.org",
+        "firefox-cheers-bold@mozilla.org",
+        "firefox-graffiti-soft@mozilla.org",
+        "firefox-graffiti-balanced@mozilla.org",
+        "firefox-graffiti-bold@mozilla.org",
+        "firefox-foto-soft@mozilla.org",
+        "firefox-foto-balanced@mozilla.org",
+        "firefox-foto-bold@mozilla.org",
+      ];
       try {
-        addonPromise = AddonManager.getAddonByID(
-          "firefox-monochromatic-purple@mozilla.org"
-        );
+        for (let id of themeIdsToMigrate) {
+          AddonManager.getAddonByID(id).then(addon => {
+            if (!addon) {
+              // Either the addon wasn't installed, or the call to getAddonByID failed.
+              return;
+            }
+            addon.uninstall().catch(Cu.reportError);
+          }, Cu.reportError);
+        }
       } catch (error) {
         Cu.reportError(
           "Could not access the AddonManager to upgrade the profile. This is most " +
@@ -4085,13 +4103,6 @@ BrowserGlue.prototype = {
             "the AddonManager is not initialized."
         );
       }
-      Promise.resolve(addonPromise).then(addon => {
-        if (!addon) {
-          // Either the addon wasn't installed, or the call to getAddonByID failed.
-          return;
-        }
-        addon.uninstall().catch(Cu.reportError);
-      }, Cu.reportError);
     }
 
     // Update the migration version.

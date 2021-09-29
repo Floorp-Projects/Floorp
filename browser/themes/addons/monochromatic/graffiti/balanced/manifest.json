@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-graffiti-balanced@mozilla.org"
+      "id": "graffiti-balanced-colorway@mozilla.org"
     }
   },
   "name": "Graffiti – Balanced",

@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-graffiti-bold@mozilla.org"
+      "id": "graffiti-bold-colorway@mozilla.org"
     }
   },
   "name": "Graffiti – Bold",

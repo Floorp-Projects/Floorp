@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "applications": {
     "gecko": {
-      "id": "firefox-elemental-balanced@mozilla.org"
+      "id": "elemental-balanced-colorway@mozilla.org"
     }
   },
   "name": "Elemental – Balanced",
