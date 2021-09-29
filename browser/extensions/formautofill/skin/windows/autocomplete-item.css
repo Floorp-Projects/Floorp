@@ -9,13 +9,17 @@
   --default-font-size: 12;
 }
 
+xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button,
+xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autofill-item-box > .autofill-button {
+  background-color: color-mix(in srgb, Field 90%, FieldText);
+}
+
 @media (-moz-windows-default-theme: 0) {
   xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
     background-color: SelectedItem;
   }
 
   .autofill-item-box {
-    --label-text-color: FieldText;
     --comment-text-color: GrayText;
   }
 }
