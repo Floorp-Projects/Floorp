@@ -150,11 +150,7 @@ void WasmFrameIter::popFrame() {
   }
 
   Frame* prevFP = fp_;
-  if (fp_->callerIsTrampolineFP()) {
-    fp_ = fp_->trampolineCaller();
-  } else {
-    fp_ = fp_->wasmCaller();
-  }
+  fp_ = fp_->wasmCaller();
   resumePCinCurrentFrame_ = prevFP->returnAddress();
 
   if (!fp_) {
@@ -210,9 +206,7 @@ void WasmFrameIter::popFrame() {
   const CallSite* callsite = code_->lookupCallSite(returnAddress);
   MOZ_ASSERT(callsite);
 
-  if (callsite->isImportCall()) {
-    tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
-  } else if (callsite->isIndirectCall() && prevFP->callerIsTrampolineFP()) {
+  if (callsite->mightBeCrossInstance()) {
     tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
   }
 
@@ -927,7 +921,6 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
       callerFP_ = fp->rawCaller();
       AssertMatchesCallSite(callerPC_, callerFP_);
       break;
-    case CodeRange::IndirectStub:
     case CodeRange::ImportJitExit:
     case CodeRange::ImportInterpExit:
     case CodeRange::BuiltinThunk:
@@ -959,10 +952,6 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
 
 const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   while (true) {
-    if (fp->callerIsTrampolineFP()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
       MOZ_ASSERT(!LookupCode(fp->returnAddress()));
@@ -978,14 +967,10 @@ const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
       return ExtractCalleeTlsFromFrameWithTls(fp);
     }
 
-    if (codeRange->isIndirectStub()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp->wasmCaller());
-    }
-
     MOZ_ASSERT(codeRange->kind() == CodeRange::Function);
     MOZ_ASSERT(code);
     const CallSite* callsite = code->lookupCallSite(returnAddress);
-    if (callsite->isImportCall()) {
+    if (callsite->mightBeCrossInstance()) {
       return ExtractCalleeTlsFromFrameWithTls(fp);
     }
 
@@ -1172,9 +1157,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
           // Frame have been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
-          fixedFP = frame->callerIsTrampolineFP()
-                        ? reinterpret_cast<uint8_t*>(frame->trampolineCaller())
-                        : reinterpret_cast<uint8_t*>(frame->wasmCaller());
+          fixedFP = frame->rawCaller();
           fixedPC = frame->returnAddress();
           AssertMatchesCallSite(fixedPC, fixedFP);
           break;
@@ -1204,16 +1187,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       // entry trampoline also doesn't GeneratePrologue/Epilogue so we can't
       // use the general unwinding logic above.
       break;
-    case CodeRange::IndirectStub: {
-      // IndirectStub is used now as a trivial proxy into the function
-      // so we aren't in the prologue/epilogue.
-      fixedPC = pc;
-      fixedFP = fp;
-      *unwoundCaller = false;
-      AssertMatchesCallSite(Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
-                            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
-      break;
-    }
     case CodeRange::JitEntry:
       // There's a jit frame above the current one; we don't care about pc
       // since the Jit entry frame is a jit frame which can be considered as
@@ -1394,8 +1367,6 @@ void ProfilingFrameIterator::operator++() {
     }
     case CodeRange::InterpEntry:
       MOZ_CRASH("should have had null caller fp");
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("we can't profile indirect stub");
     case CodeRange::JitEntry:
       MOZ_CRASH("should have been guarded above");
     case CodeRange::Throw:
@@ -1617,8 +1588,6 @@ const char* ProfilingFrameIterator::label() const {
       return code_->profilingLabel(codeRange_->funcIndex());
     case CodeRange::InterpEntry:
       MOZ_CRASH("should be an ExitReason");
-    case CodeRange::IndirectStub:
-      return "indirect stub";
     case CodeRange::JitEntry:
       return "fast entry trampoline (in wasm)";
     case CodeRange::ImportJitExit:

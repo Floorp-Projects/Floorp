@@ -53,7 +53,6 @@ class Table : public ShareableBase<Table> {
   TableAnyRefVector objects_;     //   or objects_, but not both
   const RefType elemType_;
   const bool isAsmJS_;
-  const bool importedOrExported;
   uint32_t length_;
   const Maybe<uint32_t> maximum_;
 
@@ -79,12 +78,6 @@ class Table : public ShareableBase<Table> {
     MOZ_ASSERT(elemType_.isFunc());
     return isAsmJS_;
   }
-
-  bool isImportedOrExported() const {
-    MOZ_ASSERT(elemType_.isFunc());
-    return importedOrExported;
-  }
-
   bool isFunction() const { return elemType().isFunc(); }
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
@@ -100,7 +93,7 @@ class Table : public ShareableBase<Table> {
   bool getFuncRef(JSContext* cx, uint32_t index,
                   MutableHandleFunction fun) const;
   void setFuncRef(uint32_t index, void* code, const Instance* instance);
-  bool fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
+  void fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
                    JSContext* cx);
 
   AnyRef getAnyRef(uint32_t index) const;
