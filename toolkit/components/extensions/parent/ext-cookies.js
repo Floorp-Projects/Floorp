@@ -30,6 +30,52 @@ const dropBracketIfIPv6 = host =>
     ? host.slice(1, -1)
     : host;
 
+// Converts the partitionKey format of the extension API (i.e. PartitionKey) to
+// a valid format for the "partitionKey" member of OriginAttributes.
+function fromExtPartitionKey(extPartitionKey) {
+  if (!extPartitionKey) {
+    // Unpartitioned by default.
+    return "";
+  }
+  const { topLevelSite } = extPartitionKey;
+  // TODO: Expand API to force the generation of a partitionKey that differs
+  // from the default that's specified by privacy.dynamic_firstparty.use_site.
+  if (topLevelSite) {
+    // If topLevelSite is set and a non-empty string (a site in a URL format).
+    try {
+      return ChromeUtils.getPartitionKeyFromURL(topLevelSite);
+    } catch (e) {
+      throw new ExtensionError("Invalid value for 'partitionKey' attribute");
+    }
+  }
+  // Unpartitioned.
+  return "";
+}
+// Converts an internal partitionKey (format used by OriginAttributes) to the
+// string value as exposed through the extension API.
+function toExtPartitionKey(partitionKey) {
+  if (!partitionKey) {
+    // Canonical representation of an empty partitionKey is null.
+    // In theory {topLevelSite: ""} also works, but alas.
+    return null;
+  }
+  // Parse partitionKey in order to generate the desired return type (URL).
+  // OriginAttributes::ParsePartitionKey cannot be used because it assumes that
+  // the input matches the format of the privacy.dynamic_firstparty.use_site
+  // pref, which is not necessarily the case for cookies before the pref flip.
+  if (!partitionKey.startsWith("(")) {
+    // A partitionKey generated with privacy.dynamic_firstparty.use_site=false.
+    return { topLevelSite: `https://${partitionKey}` };
+  }
+  // partitionKey starts with "(" and ends with ")".
+  let [scheme, domain, port] = partitionKey.slice(1, -1).split(",");
+  let topLevelSite = `${scheme}://${domain}`;
+  if (port) {
+    topLevelSite += `:${port}`;
+  }
+  return { topLevelSite };
+}
+
 const convertCookie = ({ cookie, isPrivate }) => {
   let result = {
     name: cookie.name,
@@ -42,6 +88,7 @@ const convertCookie = ({ cookie, isPrivate }) => {
     sameSite: SAME_SITE_STATUSES[cookie.sameSite],
     session: cookie.isSession,
     firstPartyDomain: cookie.originAttributes.firstPartyDomain || "",
+    partitionKey: toExtPartitionKey(cookie.originAttributes.partitionKey),
   };
 
   if (!cookie.isSession) {
@@ -167,12 +214,70 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
 };
 
 /**
+ * Converts the details received from the cookies API to the OriginAttributes
+ * format, using default values when needed (firstPartyDomain/partitionKey).
+ *
+ * If allowPattern is true, an OriginAttributesPattern may be returned instead.
+ *
+ * @param {Object} details
+ *        The details received from the extension.
+ * @param {boolean} allowPattern
+ *        Whether to potentially return an OriginAttributesPattern instead of
+ *        OriginAttributes. The get/set/remove cookie methods operate on exact
+ *        OriginAttributes, the getAll method allows a partial pattern and may
+ *        potentially match cookies with distinct origin attributes.
+ * @returns {Object} An object with the following properties:
+ *  - originAttributes {OriginAttributes|OriginAttributesPattern}
+ *  - isPattern {boolean} Whether originAttributes is a pattern.
+ **/
+const oaFromDetails = (details, allowPattern) => {
+  // Default values, may be filled in based on details.
+  let originAttributes = {
+    userContextId: 0, // TODO bug 1669716: merge from query*/cookies.set.
+    privateBrowsingId: 0, // TODO bug 1669716: merge from query*/cookies.set.
+    // The following two keys may be deleted if useDefaultOA=false
+    firstPartyDomain: details.firstPartyDomain ?? "",
+    partitionKey: fromExtPartitionKey(details.partitionKey),
+  };
+  // If any of the originAttributes's keys are deleted, this becomes true.
+  let isPattern = false;
+  if (allowPattern) {
+    // firstPartyDomain is unset / void / string.
+    // If unset, then we default to non-FPI cookies (or if FPI is enabled,
+    // an error is thrown by validateFirstPartyDomain). We are able to detect
+    // whether the property is set due to "omit-key-if-missing" in cookies.json.
+    // If set to a string, we keep the filter.
+    // If set to void (undefined / null), we drop the FPI filter:
+    if ("firstPartyDomain" in details && details.firstPartyDomain == null) {
+      delete originAttributes.firstPartyDomain;
+      isPattern = true;
+    }
+
+    // partitionKey is an object or null.
+    // null implies the default (unpartitioned cookies).
+    // An object is a filter for partitionKey; currently we require topLevelSite
+    // to be set to determine the exact partitionKey. Without it, we drop the
+    // dFPI filter:
+    if (details.partitionKey && details.partitionKey.topLevelSite == null) {
+      delete originAttributes.partitionKey;
+      isPattern = true;
+    }
+  }
+  return { originAttributes, isPattern };
+};
+
+/**
  * Query the cookie store for matching cookies.
  * @param {Object} detailsIn
  * @param {Array} props          Properties the extension is interested in matching against.
+ *                               The firstPartyDomain / partitionKey props are
+ *                               always accounted for.
  * @param {BaseContext} context  The context making the query.
+ * @param {boolean} allowPattern Whether to allow the query to match distinct
+ *                               origin attributes instead of falling back to
+ *                               default values. See the oaFromDetails method.
  */
-const query = function*(detailsIn, props, context) {
+const query = function*(detailsIn, props, context, allowPattern) {
   let details = {};
   props.forEach(property => {
     if (detailsIn[property] !== null) {
@@ -180,12 +285,13 @@ const query = function*(detailsIn, props, context) {
     }
   });
 
+  let { originAttributes, isPattern } = oaFromDetails(detailsIn, allowPattern);
+
   if ("domain" in details) {
     details.domain = details.domain.toLowerCase().replace(/^\./, "");
     details.domain = dropBracketIfIPv6(details.domain);
   }
 
-  let userContextId = 0;
   let isPrivate = context.incognito;
   if (details.storeId) {
     if (!isValidCookieStoreId(details.storeId)) {
@@ -198,16 +304,18 @@ const query = function*(detailsIn, props, context) {
       isPrivate = true;
     } else if (isContainerCookieStoreId(details.storeId)) {
       isPrivate = false;
-      userContextId = getContainerForCookieStoreId(details.storeId);
+      let userContextId = getContainerForCookieStoreId(details.storeId);
       if (!userContextId) {
         return;
       }
+      originAttributes.userContextId = userContextId;
     }
   }
 
   let storeId = DEFAULT_STORE;
   if (isPrivate) {
     storeId = PRIVATE_STORE;
+    originAttributes.privateBrowsingId = 1;
   } else if ("storeId" in details) {
     storeId = details.storeId;
   }
@@ -221,13 +329,6 @@ const query = function*(detailsIn, props, context) {
   let cookies;
   let host;
   let url;
-  let originAttributes = {
-    userContextId,
-    privateBrowsingId: isPrivate ? 1 : 0,
-  };
-  if ("firstPartyDomain" in details) {
-    originAttributes.firstPartyDomain = details.firstPartyDomain;
-  }
   if ("url" in details) {
     try {
       url = new URL(details.url);
@@ -240,7 +341,7 @@ const query = function*(detailsIn, props, context) {
     host = details.domain;
   }
 
-  if (host && "firstPartyDomain" in originAttributes) {
+  if (host && !isPattern) {
     // getCookiesFromHost is more efficient than getCookiesWithOriginAttributes
     // if the host and all origin attributes are known.
     cookies = Services.cookies.getCookiesFromHost(host, originAttributes);
@@ -329,7 +430,7 @@ const query = function*(detailsIn, props, context) {
   }
 };
 
-const normalizeFirstPartyDomain = details => {
+const validateFirstPartyDomain = details => {
   if (details.firstPartyDomain != null) {
     return;
   }
@@ -338,10 +439,6 @@ const normalizeFirstPartyDomain = details => {
       "First-Party Isolation is enabled, but the required 'firstPartyDomain' attribute was not set."
     );
   }
-
-  // When FPI is disabled, the "firstPartyDomain" attribute is optional
-  // and defaults to the empty string.
-  details.firstPartyDomain = "";
 };
 
 this.cookies = class extends ExtensionAPI {
@@ -350,10 +447,10 @@ this.cookies = class extends ExtensionAPI {
     let self = {
       cookies: {
         get: function(details) {
-          normalizeFirstPartyDomain(details);
+          validateFirstPartyDomain(details);
 
           // FIXME: We don't sort by length of path and creation time.
-          let allowed = ["url", "name", "storeId", "firstPartyDomain"];
+          let allowed = ["url", "name", "storeId"];
           for (let cookie of query(details, allowed, context)) {
             return Promise.resolve(convertCookie(cookie));
           }
@@ -364,7 +461,8 @@ this.cookies = class extends ExtensionAPI {
 
         getAll: function(details) {
           if (!("firstPartyDomain" in details)) {
-            normalizeFirstPartyDomain(details);
+            // Check and throw an error if firstPartyDomain is required.
+            validateFirstPartyDomain(details);
           }
 
           let allowed = [
@@ -377,13 +475,8 @@ this.cookies = class extends ExtensionAPI {
             "storeId",
           ];
 
-          // firstPartyDomain may be set to null or undefined to not filter by FPD.
-          if (details.firstPartyDomain != null) {
-            allowed.push("firstPartyDomain");
-          }
-
           let result = Array.from(
-            query(details, allowed, context),
+            query(details, allowed, context, /* allowPattern = */ true),
             convertCookie
           );
 
@@ -391,7 +484,14 @@ this.cookies = class extends ExtensionAPI {
         },
 
         set: function(details) {
-          normalizeFirstPartyDomain(details);
+          validateFirstPartyDomain(details);
+          if (details.firstPartyDomain && details.partitionKey) {
+            // FPI and dFPI are mutually exclusive, so it does not make sense
+            // to accept non-empty (i.e. non-default) values for both.
+            throw new ExtensionError(
+              "Partitioned cookies cannot have a 'firstPartyDomain' attribute."
+            );
+          }
 
           let uri = Services.io.newURI(details.url);
 
@@ -455,7 +555,8 @@ this.cookies = class extends ExtensionAPI {
           let originAttributes = {
             userContextId,
             privateBrowsingId: isPrivate ? 1 : 0,
-            firstPartyDomain: details.firstPartyDomain,
+            firstPartyDomain: details.firstPartyDomain ?? "",
+            partitionKey: fromExtPartitionKey(details.partitionKey),
           };
 
           let sameSite = SAME_SITE_STATUSES.indexOf(details.sameSite);
@@ -489,9 +590,9 @@ this.cookies = class extends ExtensionAPI {
         },
 
         remove: function(details) {
-          normalizeFirstPartyDomain(details);
+          validateFirstPartyDomain(details);
 
-          let allowed = ["url", "name", "storeId", "firstPartyDomain"];
+          let allowed = ["url", "name", "storeId"];
           for (let { cookie, storeId } of query(details, allowed, context)) {
             if (
               isPrivateCookieStoreId(details.storeId) &&
@@ -511,7 +612,10 @@ this.cookies = class extends ExtensionAPI {
               url: details.url,
               name: details.name,
               storeId,
-              firstPartyDomain: details.firstPartyDomain,
+              firstPartyDomain: cookie.originAttributes.firstPartyDomain,
+              partitionKey: toExtPartitionKey(
+                cookie.originAttributes.partitionKey
+              ),
             });
           }
 
