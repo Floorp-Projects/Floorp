@@ -46,7 +46,7 @@ class VendorPython(MozbuildObject):
                     "compile",
                     tmpspec,
                     "--no-header",
-                    "--no-index",
+                    "--no-emit-index-url",
                     "--output-file",
                     tmp_requirements_absolute,
                     "--generate-hashes",
