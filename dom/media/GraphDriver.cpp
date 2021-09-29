@@ -590,11 +590,13 @@ void AudioCallbackDriver::Init() {
 
   output.rate = mSampleRate;
 
-  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
-    output.format = CUBEB_SAMPLE_S16NE;
-  } else {
-    output.format = CUBEB_SAMPLE_FLOAT32NE;
-  }
+#ifdef MOZ_SAMPLE_TYPE_S16
+  MOZ_ASSERT(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16);
+  output.format = CUBEB_SAMPLE_S16NE;
+#else
+  MOZ_ASSERT(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32);
+  output.format = CUBEB_SAMPLE_FLOAT32NE;
+#endif
 
   if (!mOutputChannelCount) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
