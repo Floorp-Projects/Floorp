@@ -30,8 +30,6 @@ nsresult txExpandedNameMap_base::addItem(const txExpandedName& aKey,
   }
 
   MapItem* item = mItems.AppendElement();
-  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
-
   item->mNamespaceID = aKey.mNamespaceID;
   item->mLocalName = aKey.mLocalName;
   item->mValue = aValue;
@@ -57,8 +55,6 @@ nsresult txExpandedNameMap_base::setItem(const txExpandedName& aKey,
   }
 
   MapItem* item = mItems.AppendElement();
-  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
-
   item->mNamespaceID = aKey.mNamespaceID;
   item->mLocalName = aKey.mLocalName;
   item->mValue = aValue;
