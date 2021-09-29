@@ -7,7 +7,7 @@
   -moz-context-properties: fill, fill-opacity;
   list-style-image: url(chrome://global/skin/icons/close.svg);
   border-radius: 4px;
-  color: inherit !important;
+  color: inherit;
   fill: currentColor;
   padding: 2px;
   width: 20px;
@@ -23,7 +23,6 @@
 @media (prefers-contrast) {
   .close-icon:hover {
     outline: 1px solid currentColor;
-    outline-offset: -1px;
   }
 }
 
