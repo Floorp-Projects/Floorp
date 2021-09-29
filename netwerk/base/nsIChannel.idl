@@ -42,6 +42,9 @@ interface nsIChannel : nsIRequest
      * NOTE: this is distinctly different from the http Referer (referring URI),
      * which is typically the page that contained the original URI (accessible
      * from nsIHttpChannel).
+     *
+     * NOTE: originalURI isn't yet set on the new channel when
+     * asyncOnChannelRedirect is called.
      */
     attribute nsIURI originalURI;
 

@@ -125,7 +125,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
 
   UniquePtr<LoadingSessionHistoryInfo> ReplaceLoadingSessionHistoryEntryForLoad(
-      LoadingSessionHistoryInfo* aInfo, nsIChannel* aChannel);
+      LoadingSessionHistoryInfo* aInfo, nsIChannel* aOldChannel,
+      nsIChannel* aNewChannel);
 
   already_AddRefed<Promise> Print(nsIPrintSettings* aPrintSettings,
                                   ErrorResult& aRv);

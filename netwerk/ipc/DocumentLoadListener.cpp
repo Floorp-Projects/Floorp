@@ -2474,7 +2474,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
       mLoadingSessionHistoryInfo =
           GetDocumentBrowsingContext()
               ->ReplaceLoadingSessionHistoryEntryForLoad(
-                  mLoadingSessionHistoryInfo.get(), aNewChannel);
+                  mLoadingSessionHistoryInfo.get(), aOldChannel, aNewChannel);
     }
     if (!net::ChannelIsPost(aOldChannel)) {
       AddURIVisit(aOldChannel, 0);
