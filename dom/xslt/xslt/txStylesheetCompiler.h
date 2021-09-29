@@ -113,8 +113,8 @@ class txStylesheetCompilerState : public txIParseContext {
                                   txStylesheet::ImportFrame* aFrame);
 
   // misc
-  nsresult addGotoTarget(txInstruction** aTargetPointer);
-  nsresult addVariable(const txExpandedName& aName);
+  void addGotoTarget(txInstruction** aTargetPointer);
+  void addVariable(const txExpandedName& aName);
 
   // txIParseContext
   nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
