@@ -22,13 +22,6 @@
 
 using mozilla::LogLevel;
 
-#if defined(ANDROID)
-static const char* default_tmp_dir = "/dev/null";
-static const char* default_log_name = "nspr";
-#else  // Assume a POSIX environment
-constexpr auto default_log_name = "WebRTC.log"_ns;
-#endif
-
 static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");
 static mozilla::LazyLogModule sLogAEC("AEC");
 
@@ -131,6 +124,7 @@ nsCString ConfigAecLog() {
     return ""_ns;
   }
 #if defined(ANDROID)
+  const char* default_tmp_dir = "/dev/null";
   aecLogDir.Assign(default_tmp_dir);
 #else
   nsCOMPtr<nsIFile> tempDir;
