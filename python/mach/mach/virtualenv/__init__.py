@@ -176,10 +176,22 @@ class VirtualenvManager(VirtualenvHelper):
             return False
 
         env_requirements = self._requirements()
-        deps = [__file__] + env_requirements.requirements_paths
 
-        # Modifications to our package dependency list or to this file mean the
-        # virtualenv should be rebuilt.
+        virtualenv_package = os.path.join(
+            self.topsrcdir,
+            "third_party",
+            "python",
+            "virtualenv",
+            "virtualenv",
+            "version.py",
+        )
+        deps = [__file__, virtualenv_package] + env_requirements.requirements_paths
+
+        # Modifications to any of the following files mean the virtualenv should be
+        # rebuilt:
+        # * This file
+        # * The `virtualenv` package
+        # * Any of our requirements manifest files
         activate_mtime = os.path.getmtime(self.activate_path)
         dep_mtime = max(os.path.getmtime(p) for p in deps)
         if dep_mtime > activate_mtime:
