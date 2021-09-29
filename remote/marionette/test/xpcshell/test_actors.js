@@ -11,13 +11,13 @@ const {
 } = ChromeUtils.import(
   "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm"
 );
-const { registerEventsActor, unregisterEventsActor } = ChromeUtils.import(
+const { enableEventsActor, disableEventsActor } = ChromeUtils.import(
   "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm"
 );
 
 registerCleanupFunction(function() {
   unregisterCommandsActor();
-  unregisterEventsActor();
+  disableEventsActor();
 });
 
 add_test(function test_commandsActor_register() {
@@ -49,13 +49,13 @@ add_test(async function test_commandsActor_getActorProxy_noBrowsingContext() {
   run_next_test();
 });
 
-add_test(function test_eventsActor_register() {
-  registerEventsActor();
-  unregisterEventsActor();
+add_test(function test_eventsActor_enable_disable() {
+  enableEventsActor();
+  disableEventsActor();
 
-  registerEventsActor();
-  registerEventsActor();
-  unregisterEventsActor();
+  enableEventsActor();
+  enableEventsActor();
+  disableEventsActor();
 
   run_next_test();
 });
