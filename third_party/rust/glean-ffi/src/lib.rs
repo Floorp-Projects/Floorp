@@ -149,9 +149,15 @@ pub extern "C" fn glean_enable_logging() {
     #[cfg(target_os = "android")]
     {
         let _ = std::panic::catch_unwind(|| {
+            let filter = android_logger::FilterBuilder::new()
+                .filter_module("glean_ffi", log::LevelFilter::Debug)
+                .filter_module("glean_core", log::LevelFilter::Debug)
+                .filter_module("glean", log::LevelFilter::Debug)
+                .build();
             android_logger::init_once(
                 android_logger::Config::default()
                     .with_min_level(log::Level::Debug)
+                    .with_filter(filter)
                     .with_tag("libglean_ffi"),
             );
             log::trace!("Android logging should be hooked up!")
