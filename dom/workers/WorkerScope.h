@@ -274,6 +274,11 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
       const ImageBitmapSource& aImage, int32_t aSx, int32_t aSy, int32_t aSw,
       int32_t aSh, const ImageBitmapOptions& aOptions, ErrorResult& aRv);
 
+  void StructuredClone(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                       const PostMessageOptions& aOptions,
+                       JS::MutableHandle<JS::Value> aRetval,
+                       ErrorResult& aError);
+
   already_AddRefed<Promise> Fetch(const RequestOrUSVString& aInput,
                                   const RequestInit& aInit,
                                   CallerType aCallerType, ErrorResult& aRv);
