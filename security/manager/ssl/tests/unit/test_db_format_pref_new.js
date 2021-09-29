@@ -10,13 +10,25 @@
 function run_test() {
   let profileDir = do_get_profile();
   let certificateDBFile = profileDir.clone();
-  certificateDBFile.append("cert9.db");
-  ok(!certificateDBFile.exists(), "cert9.db should not exist beforehand");
+  let certificateDBName = AppConstants.NIGHTLY_BUILD
+    ? "gecko-no-share-cert9.db"
+    : "cert9.db";
+  certificateDBFile.append(certificateDBName);
+  ok(
+    !certificateDBFile.exists(),
+    `${certificateDBName} should not exist beforehand`
+  );
   let keyDBFile = profileDir.clone();
-  keyDBFile.append("key4.db");
-  ok(!keyDBFile.exists(), "key4.db should not exist beforehand");
+  let keyDBName = AppConstants.NIGHTLY_BUILD
+    ? "gecko-no-share-key4.db"
+    : "key4.db";
+  keyDBFile.append(keyDBName);
+  ok(!keyDBFile.exists(), `${keyDBName} should not exist beforehand`);
   // This should start PSM.
   Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
-  ok(certificateDBFile.exists(), "cert9.db should exist in the profile");
-  ok(keyDBFile.exists(), "key4.db should exist in the profile");
+  ok(
+    certificateDBFile.exists(),
+    `${certificateDBName} should exist in the profile`
+  );
+  ok(keyDBFile.exists(), `${keyDBName} should exist in the profile`);
 }
