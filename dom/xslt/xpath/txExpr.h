@@ -776,12 +776,8 @@ class UnionExpr : public Expr {
    * The ownership of the given Expr is passed over the UnionExpr,
    * even on failure.
    * @param aExpr the Expr to add to this UnionExpr
-   * @return nsresult indicating out of memory
    */
-  nsresult addExpr(Expr* aExpr) {
-    mExpressions.AppendElement(aExpr);
-    return NS_OK;
-  }
+  void addExpr(Expr* aExpr) { mExpressions.AppendElement(aExpr); }
 
   /**
    * Removes and deletes the expression at the given index.
