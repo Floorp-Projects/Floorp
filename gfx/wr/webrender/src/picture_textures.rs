@@ -7,7 +7,10 @@ use smallvec::SmallVec;
 use api::{ImageFormat, ImageBufferKind, DebugFlags};
 use api::units::*;
 use crate::device::TextureFilter;
-use crate::internal_types::{CacheTextureId, TextureUpdateList, Swizzle, TextureCacheAllocInfo, TextureCacheCategory};
+use crate::internal_types::{
+    CacheTextureId, TextureUpdateList, Swizzle, TextureCacheAllocInfo, TextureCacheCategory,
+    TextureSource,
+};
 use crate::texture_cache::{TextureCacheHandle, CacheEntry, EntryDetails, TargetShader};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::profiler::{self, TransactionProfile};
@@ -243,12 +246,13 @@ impl PictureTextures {
         })
     }
 
-    pub fn get_entry_opt(&self, handle: &PictureCacheTextureHandle) -> Option<&CacheEntry> {
-        self.cache_entries.get_opt(handle)
-    }
+    pub fn get_texture_source(&self, now: FrameStamp, handle: &PictureCacheTextureHandle) -> TextureSource {
+        let entry = self.cache_entries.get_opt(handle)
+            .expect("BUG: was dropped from cache or not updated!");
 
-    pub fn get_entry_opt_mut(&mut self, handle: &PictureCacheTextureHandle) -> Option<&mut CacheEntry> {
-        self.cache_entries.get_opt_mut(handle)
+        debug_assert_eq!(entry.last_access, now);
+
+        TextureSource::TextureCache(entry.texture_id, entry.swizzle)
     }
 
     /// Expire picture cache tiles that haven't been referenced in the last frame.
