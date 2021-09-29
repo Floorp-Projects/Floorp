@@ -81,7 +81,7 @@ class txExecutionState : public txIMatchContext {
   };
 
   // Stack functions
-  void pushEvalContext(txIEvalContext* aContext);
+  nsresult pushEvalContext(txIEvalContext* aContext);
   txIEvalContext* popEvalContext();
 
   /**
@@ -91,9 +91,9 @@ class txExecutionState : public txIMatchContext {
    */
   void popAndDeleteEvalContextUntil(txIEvalContext* aContext);
 
-  void pushBool(bool aBool);
+  nsresult pushBool(bool aBool);
   bool popBool();
-  void pushResultHandler(txAXMLEventHandler* aHandler);
+  nsresult pushResultHandler(txAXMLEventHandler* aHandler);
   txAXMLEventHandler* popResultHandler();
   void pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                         const txExpandedName& aMode, txParameterMap* aParams);

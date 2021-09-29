@@ -222,8 +222,14 @@ class FunctionCall : public Expr {
    * The ownership of the given Expr is passed over to the FunctionCall,
    * even on failure.
    * @param aExpr the Expr to add to this FunctionCall's parameter list
+   * @return nsresult indicating out of memory
    */
-  void addParam(Expr* aExpr) { mParams.AppendElement(aExpr); }
+  nsresult addParam(Expr* aExpr) {
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mParams.AppendElement(aExpr);
+    return NS_OK;
+  }
 
   /**
    * Check if the number of parameters falls within a range.
@@ -441,10 +447,14 @@ class PredicateList {
    * The ownership of the given Expr is passed over the PredicateList,
    * even on failure.
    * @param aExpr the Expr to add to the list
+   * @return nsresult indicating out of memory
    */
-  void add(Expr* aExpr) {
+  nsresult add(Expr* aExpr) {
     NS_ASSERTION(aExpr, "missing expression");
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
     mPredicates.AppendElement(aExpr);
+    return NS_OK;
   }
 
   nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);
@@ -700,8 +710,9 @@ class PathExpr : public Expr {
    * The ownership of the given Expr is passed over the PathExpr,
    * even on failure.
    * @param aExpr the Expr to add to this PathExpr
+   * @return nsresult indicating out of memory
    */
-  void addExpr(Expr* aExpr, PathOperator pathOp);
+  nsresult addExpr(Expr* aExpr, PathOperator pathOp);
 
   /**
    * Removes and deletes the expression at the given index.
@@ -776,8 +787,14 @@ class UnionExpr : public Expr {
    * The ownership of the given Expr is passed over the UnionExpr,
    * even on failure.
    * @param aExpr the Expr to add to this UnionExpr
+   * @return nsresult indicating out of memory
    */
-  void addExpr(Expr* aExpr) { mExpressions.AppendElement(aExpr); }
+  nsresult addExpr(Expr* aExpr) {
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mExpressions.AppendElement(aExpr);
+    return NS_OK;
+  }
 
   /**
    * Removes and deletes the expression at the given index.
@@ -817,8 +834,11 @@ class txNamedAttributeStep : public Expr {
  */
 class txUnionNodeTest : public txNodeTest {
  public:
-  void addNodeTest(txNodeTest* aNodeTest) {
+  nsresult addNodeTest(txNodeTest* aNodeTest) {
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
     mNodeTests.AppendElement(aNodeTest);
+    return NS_OK;
   }
 
   TX_DECL_NODE_TEST

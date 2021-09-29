@@ -6,16 +6,18 @@
 #include "txPatternOptimizer.h"
 #include "txXSLTPatterns.h"
 
-void txPatternOptimizer::optimize(txPattern* aInPattern,
-                                  txPattern** aOutPattern) {
+nsresult txPatternOptimizer::optimize(txPattern* aInPattern,
+                                      txPattern** aOutPattern) {
   *aOutPattern = nullptr;
+  nsresult rv = NS_OK;
 
   // First optimize sub expressions
   uint32_t i = 0;
   Expr* subExpr;
   while ((subExpr = aInPattern->getSubExprAt(i))) {
     Expr* newExpr = nullptr;
-    mXPathOptimizer.optimize(subExpr, &newExpr);
+    rv = mXPathOptimizer.optimize(subExpr, &newExpr);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (newExpr) {
       delete subExpr;
       aInPattern->setSubExprAt(i, newExpr);
@@ -29,7 +31,8 @@ void txPatternOptimizer::optimize(txPattern* aInPattern,
   i = 0;
   while ((subPattern = aInPattern->getSubPatternAt(i))) {
     txPattern* newPattern = nullptr;
-    optimize(subPattern, &newPattern);
+    rv = optimize(subPattern, &newPattern);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (newPattern) {
       delete subPattern;
       aInPattern->setSubPatternAt(i, newPattern);
@@ -41,16 +44,17 @@ void txPatternOptimizer::optimize(txPattern* aInPattern,
   // Finally see if current pattern can be optimized
   switch (aInPattern->getType()) {
     case txPattern::STEP_PATTERN:
-      optimizeStep(aInPattern, aOutPattern);
-      return;
+      return optimizeStep(aInPattern, aOutPattern);
 
     default:
       break;
   }
+
+  return NS_OK;
 }
 
-void txPatternOptimizer::optimizeStep(txPattern* aInPattern,
-                                      txPattern** aOutPattern) {
+nsresult txPatternOptimizer::optimizeStep(txPattern* aInPattern,
+                                          txPattern** aOutPattern) {
   txStepPattern* step = static_cast<txStepPattern*>(aInPattern);
 
   // Test for predicates that can be combined into the nodetest
@@ -62,4 +66,6 @@ void txPatternOptimizer::optimizeStep(txPattern* aInPattern,
     step->dropFirst();
     step->setNodeTest(predTest);
   }
+
+  return NS_OK;
 }

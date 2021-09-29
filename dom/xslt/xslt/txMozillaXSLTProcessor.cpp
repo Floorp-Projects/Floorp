@@ -182,6 +182,7 @@ nsresult txToFragmentHandlerFactory::createHandlerWith(
       break;
     }
   }
+  NS_ENSURE_TRUE(*aHandler, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
 
@@ -432,6 +433,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
   }
 
   var = new txVariable(value);
+  NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
 
   return mVariables.add(varName, var);
 }
@@ -1214,6 +1216,10 @@ nsresult txVariable::Convert(nsIVariant* aValue, txAExprResult** aResult) {
         }
 
         *aResult = new txNodeSet(*xpathNode, nullptr);
+        if (!*aResult) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         NS_ADDREF(*aResult);
 
         return NS_OK;
@@ -1227,6 +1233,9 @@ nsresult txVariable::Convert(nsIVariant* aValue, txAExprResult** aResult) {
       nsCOMPtr<nsINodeList> nodeList = do_QueryInterface(supports);
       if (nodeList) {
         RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
+        if (!nodeSet) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         uint32_t length = nodeList->Length();
 

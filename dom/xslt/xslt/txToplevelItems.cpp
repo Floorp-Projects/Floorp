@@ -27,8 +27,12 @@ txStripSpaceItem::~txStripSpaceItem() {
   }
 }
 
-void txStripSpaceItem::addStripSpaceTest(txStripSpaceTest* aStripSpaceTest) {
+nsresult txStripSpaceItem::addStripSpaceTest(
+    txStripSpaceTest* aStripSpaceTest) {
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
   mStripSpaceTests.AppendElement(aStripSpaceTest);
+  return NS_OK;
 }
 
 TX_IMPL_GETTYPE(txTemplateItem, txToplevelItem::templ)
