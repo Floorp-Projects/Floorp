@@ -292,8 +292,7 @@ nsresult txCopy::execute(txExecutionState& aEs) {
       rv = aEs.mResultHandler->characters(u""_ns, false);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aEs.pushBool(false);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aEs.pushBool(false);
 
       break;
     }
@@ -306,8 +305,7 @@ nsresult txCopy::execute(txExecutionState& aEs) {
 
       // XXX copy namespace nodes once we have them
 
-      rv = aEs.pushBool(true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aEs.pushBool(true);
 
       break;
     }
@@ -722,8 +720,7 @@ nsresult txStartElement::execute(txExecutionState& aEs) {
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aEs.pushBool(success);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aEs.pushBool(success);
 
   return NS_OK;
 }
@@ -741,8 +738,7 @@ nsresult txStartLREElement::execute(txExecutionState& aEs) {
       mPrefix, mLocalName, mLowercaseLocalName, mNamespaceID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aEs.pushBool(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aEs.pushBool(true);
 
   return NS_OK;
 }
