@@ -7353,13 +7353,8 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
   }
 
   Maybe<LoadingSessionHistoryInfo> info;
-  int32_t requestedIndex = -1;
-  int32_t sessionHistoryLength = 0;
-  aContext.get_canonical()->GetLoadingSessionHistoryInfoFromParent(
-      info, &requestedIndex, &sessionHistoryLength);
-  aResolver(
-      Tuple<const mozilla::Maybe<LoadingSessionHistoryInfo>&, const int32_t&,
-            const int32_t&>(info, requestedIndex, sessionHistoryLength));
+  aContext.get_canonical()->GetLoadingSessionHistoryInfoFromParent(info);
+  aResolver(info);
 
   return IPC_OK();
 }

@@ -230,10 +230,9 @@ struct LoadingSessionHistoryInfo {
   // but session-history-in-parent needs to pass needed information explicitly
   // to the relevant child process.
   bool mLoadIsFromSessionHistory = false;
-  // mRequestedIndex, mSessionHistoryLength and mLoadingCurrentActiveEntry are
-  // relevant only if mLoadIsFromSessionHistory is true.
-  int32_t mRequestedIndex = -1;
-  int32_t mSessionHistoryLength = 0;
+  // mOffset and mLoadingCurrentActiveEntry are relevant only if
+  // mLoadIsFromSessionHistory is true.
+  int32_t mOffset = 0;
   // If we're loading from the current active entry we want to treat it as not
   // a same-document navigation (see nsDocShell::IsSameDocumentNavigation).
   bool mLoadingCurrentActiveEntry = false;

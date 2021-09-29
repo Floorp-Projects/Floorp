@@ -222,11 +222,11 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                             mozilla::dom::BrowsingContext* aParent,
                             long aLoadType,
                             nsTArray<LoadEntryResult>& aLoadResults,
-                            bool aUserActivation);
+                            bool aUserActivation, int32_t aOffset);
   void InitiateLoad(nsISHEntry* aFrameEntry,
                     mozilla::dom::BrowsingContext* aFrameBC, long aLoadType,
                     nsTArray<LoadEntryResult>& aLoadResult,
-                    bool aUserActivation);
+                    bool aUserActivation, int32_t aOffset);
 
   nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
                      nsTArray<LoadEntryResult>& aLoadResults,

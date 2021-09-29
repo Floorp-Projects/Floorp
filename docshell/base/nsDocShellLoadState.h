@@ -326,8 +326,7 @@ class nsDocShellLoadState final {
 
   mozilla::dom::DocShellLoadStateInit Serialize();
 
-  void SetLoadIsFromSessionHistory(int32_t aRequestedIndex,
-                                   int32_t aSessionHistoryLength,
+  void SetLoadIsFromSessionHistory(int32_t aOffset,
                                    bool aLoadingFromActiveEntry);
   void ClearLoadIsFromSessionHistory();
 

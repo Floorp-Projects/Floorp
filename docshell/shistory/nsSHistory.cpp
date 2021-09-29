@@ -2028,6 +2028,10 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
     return NS_ERROR_FAILURE;
   }
 
+  int32_t originalRequestedIndex = mRequestedIndex;
+  int32_t previousRequest = mRequestedIndex > -1 ? mRequestedIndex : mIndex;
+  int32_t requestedOffset = aIndex - previousRequest;
+
   // This is a normal local history navigation.
 
   nsCOMPtr<nsISHEntry> prevEntry;
@@ -2085,14 +2089,20 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults, aUserActivation);
+    InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults, aUserActivation,
+                 requestedOffset);
     return NS_OK;
   }
 
   // Going back or forward.
-  bool differenceFound = LoadDifferingEntries(
-      prevEntry, nextEntry, mRootBC, aLoadType, aLoadResults, aUserActivation);
+  bool differenceFound =
+      LoadDifferingEntries(prevEntry, nextEntry, mRootBC, aLoadType,
+                           aLoadResults, aUserActivation, requestedOffset);
   if (!differenceFound) {
+    // LoadNextPossibleEntry will change the offset by one, and in order
+    // to keep track of the requestedOffset, need to reset mRequestedIndex to
+    // the value it had initially.
+    mRequestedIndex = originalRequestedIndex;
     // We did not find any differences. Go further in the history.
     return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd, aLoadResults,
                                  aUserActivation);
@@ -2105,7 +2115,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
                                       nsISHEntry* aNextEntry,
                                       BrowsingContext* aParent, long aLoadType,
                                       nsTArray<LoadEntryResult>& aLoadResults,
-                                      bool aUserActivation) {
+                                      bool aUserActivation, int32_t aOffset) {
   MOZ_ASSERT(aPrevEntry && aNextEntry && aParent);
 
   uint32_t prevID = aPrevEntry->GetID();
@@ -2115,7 +2125,8 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
   if (prevID != nextID) {
     // Set the Subframe flag if not navigating the root docshell.
     aNextEntry->SetIsSubFrame(aParent != mRootBC);
-    InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults, aUserActivation);
+    InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults, aUserActivation,
+                 aOffset);
     return true;
   }
 
@@ -2174,7 +2185,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
     // This will either load a new page to shell or some subshell or
     // do nothing.
     if (LoadDifferingEntries(pChild, nChild, bcChild, aLoadType, aLoadResults,
-                             aUserActivation)) {
+                             aUserActivation, aOffset)) {
       differenceFound = true;
     }
   }
@@ -2184,7 +2195,7 @@ bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
 void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
                               BrowsingContext* aFrameBC, long aLoadType,
                               nsTArray<LoadEntryResult>& aLoadResults,
-                              bool aUserActivation) {
+                              bool aUserActivation, int32_t aOffset) {
   MOZ_ASSERT(aFrameBC && aFrameEntry);
 
   LoadEntryResult* loadResult = aLoadResults.AppendElement();
@@ -2217,8 +2228,8 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
         aFrameBC->GetDocShell() &&
         nsDocShell::Cast(aFrameBC->GetDocShell())->IsOSHE(aFrameEntry);
   }
-  loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length(),
-                                         loadingFromActiveEntry);
+
+  loadState->SetLoadIsFromSessionHistory(aOffset, loadingFromActiveEntry);
 
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aFrameEntry);
