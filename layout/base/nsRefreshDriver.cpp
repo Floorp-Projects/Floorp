@@ -1462,8 +1462,15 @@ bool nsRefreshDriver::CanDoCatchUpTick() {
 
   if (mTickVsyncTime.IsNull()) {
     // Don't try to run a catch-up tick before there has been at least one
-    // normal tick. The catch-up tick could affect negatively to the page load
+    // normal tick. The catch-up tick could negatively affect page load
     // performance.
+    return false;
+  }
+
+  if (mPresContext && mPresContext->Document()->GetReadyStateEnum() <
+                          Document::READYSTATE_COMPLETE) {
+    // Don't try to run a catch-up tick before the page has finished loading.
+    // The catch-up tick could negatively affect page load performance.
     return false;
   }
 
