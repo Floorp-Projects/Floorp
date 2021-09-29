@@ -346,9 +346,7 @@ def _get_clang_tools(command_context, clang_tools_path):
     # Create base directory where we store clang binary
     os.mkdir(clang_tools_path)
 
-    from mozbuild.artifact_commands import PackageFrontend
-
-    _artifact_manager = PackageFrontend(command_context._mach_context)
+    from mozbuild.artifact_commands import artifact_toolchain
 
     job, _ = command_context.platform
 
@@ -368,7 +366,7 @@ def _get_clang_tools(command_context, clang_tools_path):
     # We want to unpack data in the clang-tidy mozbuild folder
     currentWorkingDir = os.getcwd()
     os.chdir(clang_tools_path)
-    rc = _artifact_manager.artifact_toolchain(
+    rc = artifact_toolchain(
         command_context, verbose=False, from_build=[job], no_unpack=False, retry=0
     )
     # Change back the cwd
