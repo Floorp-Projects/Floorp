@@ -3,18 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-This script takes the list of release locales defined in locales.py
-and removes all non-release translations from the application's
-resource folder.
-This script is run before building a release version so that
-those builds only contain locales we actually want to ship.
+The following script was invoked for release builds in CI and used to remove strings.xml files for
+locales that were not defined in a release locales list.
+With #5474 we change this behavior: Now we ship all translations without explicitly approving them.
+This script is still called in automation and we keep it in case we will have to explicitly remove
+a locale from our releases.
 """
 
+print("Filtering of release locales disabled (#5474)")
+
+"""
 import os
 import re
 import shutil
-
-from locales import RELEASE_LOCALES
 
 LANGUAGE_REGEX = re.compile('^[a-z]{2,3}$')
 LANGUAGE_REGION_REGEX = re.compile('^([a-z]{2})-r([A-Z]{2})$')
@@ -47,3 +48,5 @@ for locale in locales_to_remove:
 	
 	print "* Removing: ", path
 	shutil.rmtree(path)
+"""
+
