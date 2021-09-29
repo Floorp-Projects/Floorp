@@ -76,6 +76,7 @@ job-defaults:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
 
 jobs:
     android-geckoview-fat-aar-shippable/opt:

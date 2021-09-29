@@ -177,6 +177,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
 
     android-x86_64-shippable/opt:
         description: "Android 5.0 x86_64 PGO instrumented"
