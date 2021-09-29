@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URL = "http://example.com/";
+const TEST_URL = "https://example.com/";
 
 // These allowed rejections are copied from
 // browser/components/extensions/test/browser/head.js.
@@ -113,7 +113,7 @@ addRDMTask(TEST_URL, async function test_tab_sender() {
     },
 
     async background() {
-      const TEST_URL = "http://example.com/"; // eslint-disable-line no-shadow
+      const TEST_URL = "https://example.com/"; // eslint-disable-line no-shadow
 
       browser.test.log("Background script init");
 
