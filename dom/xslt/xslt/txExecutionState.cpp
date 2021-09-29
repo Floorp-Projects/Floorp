@@ -242,15 +242,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
       return rv;
     }
   } else {
-    UniquePtr<txRtfHandler> rtfHandler(new txRtfHandler);
-
-    rv = pushResultHandler(rtfHandler.get());
-    if (NS_FAILED(rv)) {
-      popAndDeleteEvalContextUntil(mInitialEvalContext);
-      return rv;
-    }
-
-    Unused << rtfHandler.release();
+    pushResultHandler(new txRtfHandler);
 
     txInstruction* prevInstr = mNextInstruction;
     // set return to nullptr to stop execution
@@ -271,7 +263,8 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
     popTemplateRule();
 
     mNextInstruction = prevInstr;
-    rtfHandler = WrapUnique((txRtfHandler*)popResultHandler());
+    UniquePtr<txRtfHandler> rtfHandler(
+        static_cast<txRtfHandler*>(popResultHandler()));
     rv = rtfHandler->getAsRTF(&aResult);
     if (NS_FAILED(rv)) {
       popAndDeleteEvalContextUntil(mInitialEvalContext);
@@ -325,11 +318,9 @@ bool txExecutionState::popBool() {
   return mBoolStack.IsEmpty() ? false : mBoolStack.PopLastElement();
 }
 
-nsresult txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {
+void txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {
   mResultHandlerStack.push(mResultHandler);
   mResultHandler = aHandler;
-
-  return NS_OK;
 }
 
 txAXMLEventHandler* txExecutionState::popResultHandler() {

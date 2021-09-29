@@ -93,7 +93,7 @@ class txExecutionState : public txIMatchContext {
 
   void pushBool(bool aBool);
   bool popBool();
-  nsresult pushResultHandler(txAXMLEventHandler* aHandler);
+  void pushResultHandler(txAXMLEventHandler* aHandler);
   txAXMLEventHandler* popResultHandler();
   void pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                         const txExpandedName& aMode, txParameterMap* aParams);
