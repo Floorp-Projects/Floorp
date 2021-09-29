@@ -2741,21 +2741,28 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
         break;
     }
 
-#define FRAME_IS_REFLOW_ROOT(_f)                          \
-  ((_f)->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |           \
-                         NS_FRAME_DYNAMIC_REFLOW_ROOT) && \
-   ((_f) != subtreeRoot || !targetNeedsReflowFromParent))
+    auto FrameIsReflowRoot = [](const nsIFrame* aFrame) {
+      return aFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
+                                     NS_FRAME_DYNAMIC_REFLOW_ROOT);
+    };
+
+    auto CanStopClearingAncestorIntrinsics = [&](const nsIFrame* aFrame) {
+      return FrameIsReflowRoot(aFrame) && aFrame != subtreeRoot;
+    };
+
+    auto IsReflowBoundary = [&](const nsIFrame* aFrame) {
+      return FrameIsReflowRoot(aFrame) &&
+             (aFrame != subtreeRoot || !targetNeedsReflowFromParent);
+    };
 
     // Mark the intrinsic widths as dirty on the frame, all of its ancestors,
     // and all of its descendants, if needed:
 
     if (aIntrinsicDirty != IntrinsicDirty::Resize) {
-      // Mark argument and all ancestors dirty. (Unless we hit a reflow
-      // root that should contain the reflow.  That root could be
-      // subtreeRoot itself if it's not dirty, or it could be some
-      // ancestor of subtreeRoot.)
-      for (nsIFrame* a = subtreeRoot; a && !FRAME_IS_REFLOW_ROOT(a);
-           a = a->GetParent()) {
+      // Mark argument and all ancestors dirty. (Unless we hit a reflow root
+      // that should contain the reflow.
+      for (nsIFrame* a = subtreeRoot;
+           a && !CanStopClearingAncestorIntrinsics(a); a = a->GetParent()) {
         a->MarkIntrinsicISizesDirty();
         if (a->IsAbsolutelyPositioned()) {
           // If we get here, 'a' is abspos, so its subtree's intrinsic sizing
@@ -2815,7 +2822,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
     // a reflow root.
     nsIFrame* f = subtreeRoot;
     for (;;) {
-      if (FRAME_IS_REFLOW_ROOT(f) || !f->GetParent()) {
+      if (IsReflowBoundary(f) || !f->GetParent()) {
         // we've hit a reflow root or the root frame
         if (!wasDirty) {
           mDirtyRoots.Add(f);
