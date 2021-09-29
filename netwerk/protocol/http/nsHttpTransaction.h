@@ -482,6 +482,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void CollectTelemetryForUploads();
 
+  // This performs diagnostic assertions to detect the case that SecurityInfo
+  // is present, but the certificate is not set.
+  void CheckCert();
+
  public:
   uint32_t ClassOfService() { return mClassOfService; }
 
