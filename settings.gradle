@@ -2,6 +2,8 @@
 // is launched from within IntelliJ.
 def topsrcdir = rootProject.projectDir.absolutePath
 
+apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
+
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
 if (System.properties['os.name'].toLowerCase().contains('windows')) {
     // gradle is called before parsing config.status, we cannot use PYTHON
@@ -13,7 +15,8 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
         }
     }
 }
-def proc = commandLine.execute(null, new File(topsrcdir))
+
+def proc = commandLine.execute(machEnv(topsrcdir), new File(topsrcdir))
 def standardOutput = new ByteArrayOutputStream()
 def standardError = new ByteArrayOutputStream()
 proc.consumeProcessOutput(standardOutput, standardError)
