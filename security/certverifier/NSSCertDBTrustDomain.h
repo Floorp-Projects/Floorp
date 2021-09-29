@@ -49,7 +49,7 @@ enum class NetscapeStepUpPolicy : uint32_t {
 };
 
 SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
-                        PKCS11DBConfig pkcs11DbConfig);
+                        PKCS11DBConfig pkcs11DbConfig, const char* nssDBPrefix);
 
 void DisableMD5();
 
