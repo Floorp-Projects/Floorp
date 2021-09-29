@@ -68,7 +68,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
             final boolean shouldBeVisible = tabCount >= 2;
 
             if (behavior != null) {
-                behavior.setEnabled(shouldBeVisible);
+                behavior.setAutoHideEnabled(shouldBeVisible);
             }
 
             if (shouldBeVisible) {

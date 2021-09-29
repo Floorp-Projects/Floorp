@@ -19,7 +19,7 @@ import android.view.View;
  * is visible or not.
  */
 @SuppressWarnings("unused") // This behavior is set from xml (fragment_browser.xml)
-public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<FloatingActionButton> implements AppBarLayout.OnOffsetChangedListener {
+public class FloatingActionButtonBehavior extends FloatingSessionsButton.Behavior implements AppBarLayout.OnOffsetChangedListener {
     private static final int ANIMATION_DURATION = 300;
 
     private AppBarLayout layout;
@@ -29,13 +29,7 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
 
     public FloatingActionButtonBehavior(Context context, AttributeSet attrs) {
         super();
-
-        enabled = true;
         visible = false;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     @Override
@@ -64,10 +58,6 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
 
     @Override
     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-        if (!enabled) {
-            return;
-        }
-
         if (verticalOffset == 0 && !visible) {
             showButton();
         } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() && visible) {
