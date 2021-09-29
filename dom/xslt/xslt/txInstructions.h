@@ -229,11 +229,11 @@ class txPushNewContext : public txInstruction {
 
   TX_DECL_TXINSTRUCTION
 
-  nsresult addSort(mozilla::UniquePtr<Expr>&& aSelectExpr,
-                   mozilla::UniquePtr<Expr>&& aLangExpr,
-                   mozilla::UniquePtr<Expr>&& aDataTypeExpr,
-                   mozilla::UniquePtr<Expr>&& aOrderExpr,
-                   mozilla::UniquePtr<Expr>&& aCaseOrderExpr);
+  void addSort(mozilla::UniquePtr<Expr>&& aSelectExpr,
+               mozilla::UniquePtr<Expr>&& aLangExpr,
+               mozilla::UniquePtr<Expr>&& aDataTypeExpr,
+               mozilla::UniquePtr<Expr>&& aOrderExpr,
+               mozilla::UniquePtr<Expr>&& aCaseOrderExpr);
 
   struct SortKey {
     mozilla::UniquePtr<Expr> mSelectExpr;
