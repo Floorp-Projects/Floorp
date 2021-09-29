@@ -5,7 +5,12 @@
 const server = createHttpServer({
   // We need the 127.0.0.1 proxy because the sec-fetch headers are not sent to
   // "127.0.0.1:<any port other than 80 or 443>".
-  hosts: ["127.0.0.1"],
+  hosts: ["127.0.0.1", "127.0.0.2"],
+});
+
+server.registerPathHandler("/page.html", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Access-Control-Allow-Origin", "*");
 });
 
 server.registerPathHandler("/return_headers", (request, response) => {
@@ -26,6 +31,26 @@ server.registerPathHandler("/return_headers", (request, response) => {
   response.write(JSON.stringify(headers));
 });
 
+async function contentScript() {
+  const results = await Promise.all([
+    // A cross-origin request from the content script.
+    // Sending requests with CORS from content scripts is currently not possible
+    // (Bug 1605197)
+    //fetch("http://127.0.0.1/return_headers").then(res => res.json()),
+
+    // A cross-origin request that behaves as if it was sent by the content it
+    // self.
+    content.fetch("http://127.0.0.1/return_headers").then(res => res.json()),
+    // A same-origin request that behaves as if it was sent by the content it
+    // self.
+    content.fetch("http://127.0.0.2/return_headers").then(res => res.json()),
+    // A same-origin request from the content script.
+    fetch("http://127.0.0.2/return_headers").then(res => res.json()),
+  ]);
+
+  browser.test.sendMessage("content_results", results);
+}
+
 async function runSecFetchTest(test) {
   let data = {
     async background() {
@@ -40,6 +65,15 @@ async function runSecFetchTest(test) {
     },
     manifest: {
       manifest_version: 2,
+      content_scripts: [
+        {
+          matches: ["http://127.0.0.2/*"],
+          js: ["content_script.js"],
+        },
+      ],
+    },
+    files: {
+      "content_script.js": contentScript,
     },
   };
 
@@ -48,7 +82,7 @@ async function runSecFetchTest(test) {
   const site = "http://127.0.0.1";
 
   if (test.permission) {
-    data.manifest.permissions = [`${site}/*`];
+    data.manifest.permissions = ["http://127.0.0.2/*", `${site}/*`];
   }
 
   let extension = ExtensionTestUtils.loadExtension(data);
@@ -56,29 +90,70 @@ async function runSecFetchTest(test) {
 
   extension.sendMessage(site);
   let backgroundResults = await extension.awaitMessage("background_results");
-  Assert.deepEqual(backgroundResults, test.expectedHeaders);
+  Assert.deepEqual(backgroundResults, test.expectedBackgroundHeaders);
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `http://127.0.0.2/page.html`
+  );
+  let contentResults = await extension.awaitMessage("content_results");
+  Assert.deepEqual(contentResults, test.expectedContentHeaders);
+  await contentPage.close();
 
   await extension.unload();
 }
 
-add_task(async function test_background_fetch_without_permission() {
+add_task(async function test_fetch_without_permissions() {
   await runSecFetchTest({
     permission: false,
-    expectedHeaders: {
+    expectedBackgroundHeaders: {
       "sec-fetch-site": "cross-site",
       "sec-fetch-mode": "cors",
       "sec-fetch-dest": "empty",
     },
+    expectedContentHeaders: [
+      {
+        "sec-fetch-site": "cross-site",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+      {
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+      {
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+    ],
   });
 });
 
-add_task(async function test_background_fetch_with_permission() {
+add_task(async function test_fetch_with_permissions() {
   await runSecFetchTest({
     permission: true,
-    expectedHeaders: {
+    expectedBackgroundHeaders: {
       "sec-fetch-site": "same-origin",
       "sec-fetch-mode": "cors",
       "sec-fetch-dest": "empty",
     },
+    expectedContentHeaders: [
+      {
+        "sec-fetch-site": "cross-site",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+      {
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+      {
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+      },
+    ],
   });
 });
