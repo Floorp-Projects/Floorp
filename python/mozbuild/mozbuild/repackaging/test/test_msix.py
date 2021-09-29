@@ -16,17 +16,38 @@ class TestMSIX(unittest.TestCase):
 
         buildid = "YYYY0M0D0HMmSs"
         for input, output in [
-            ("X.YaZ", "X.YYYY.M0D.HMm"),
-            ("X.YbZ", "X.Y.0.Z"),
-            ("X.Y.ZbW", "X.Y.Z.W"),
+            ("X.0a1", "X.YY0M.D0H.0"),
+            ("X.YbZ", "X.Y.Z.0"),
             ("X.Yesr", "X.Y.0.0"),
             ("X.Y.Zesr", "X.Y.Z.0"),
-            ("X.YrcZ", "X.Y.0.Z"),
-            ("X.Y.ZrcW", "X.Y.Z.W"),
+            ("X.YrcZ", "X.Y.Z.0"),
             ("X.Y", "X.Y.0.0"),
             ("X.Y.Z", "X.Y.Z.0"),
         ]:
-            self.assertEquals(get_embedded_version(input, buildid), output)
+            version = get_embedded_version(input, buildid)
+            self.assertEquals(version, output)
+            # Some parts of the MSIX packaging ecosystem require the final digit
+            # in the dotted quad to be 0.
+            self.assertTrue(version.endswith(".0"))
+
+        buildid = "YYYYMmDdHhMmSs"
+        for input, output in [
+            ("X.0a1", "X.YYMm.DdHh.0"),
+        ]:
+            version = get_embedded_version(input, buildid)
+            self.assertEquals(version, output)
+            # Some parts of the MSIX packaging ecosystem require the final digit
+            # in the dotted quad to be 0.
+            self.assertTrue(version.endswith(".0"))
+
+        for input in [
+            "X.Ya1",
+            "X.0a2",
+            "X.Y.ZbW",
+            "X.Y.ZrcW",
+        ]:
+            with self.assertRaises(ValueError):
+                get_embedded_version(input, buildid)
 
 
 if __name__ == "__main__":

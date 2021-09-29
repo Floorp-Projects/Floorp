@@ -2235,6 +2235,13 @@ def repackage_msix(
     if sign:
         repackage_sign_msix(command_context, output, force=False, verbose=verbose)
 
+    command_context.log(
+        logging.INFO,
+        "msix",
+        {"output": output},
+        "Wrote MSIX: {output}",
+    )
+
 
 @SubCommand("repackage", "sign-msix", description="Sign an MSIX for local testing")
 @CommandArgument("--input", type=str, required=True, help="MSIX to sign.")
