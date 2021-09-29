@@ -45,7 +45,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BinarySearch;
-using mozilla::BinarySearchIf;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
 
@@ -110,17 +109,6 @@ CodeSegment::~CodeSegment() {
   if (unregisterOnDestroy_) {
     UnregisterCodeSegment(this);
   }
-}
-
-template <class T, class Container, class Comparator>
-void InsertIntoSortedContainer(Container& container, T&& value,
-                               Comparator&& comparator) {
-  size_t indexInSortedVector = 0;
-  MOZ_ALWAYS_FALSE(BinarySearchIf(container, 0, container.length(),
-                                  std::forward<Comparator>(comparator),
-                                  &indexInSortedVector));
-  MOZ_ALWAYS_TRUE(container.insert(container.begin() + indexInSortedVector,
-                                   std::forward<T>(value)));
 }
 
 static uint32_t RoundupCodeLength(uint32_t codeLength) {
@@ -661,34 +649,6 @@ bool LazyStubSegment::addStubs(size_t codeLength,
   return true;
 }
 
-bool LazyStubSegment::addIndirectStubs(
-    size_t codeLength, const VectorOfIndirectStubTarget& targets,
-    const CodeRangeVector& codeRanges, uint8_t** codePtr,
-    size_t* indexFirstInsertedCodeRange) {
-  MOZ_ASSERT(hasSpace(codeLength));
-
-  if (!codeRanges_.reserve(codeRanges_.length() + codeRanges.length())) {
-    return false;
-  }
-
-  size_t offsetInSegment = usedBytes_;
-  *codePtr = base() + usedBytes_;
-  usedBytes_ += codeLength;
-  *indexFirstInsertedCodeRange = codeRanges_.length();
-
-  for (size_t i = 0; i < targets.length(); ++i) {
-    DebugOnly<uint32_t> funcIndex = targets[i].functionIdx;
-    const CodeRange& indirectStubRange = codeRanges[i];
-    MOZ_ASSERT(indirectStubRange.isIndirectStub());
-    MOZ_ASSERT(indirectStubRange.funcIndex() == funcIndex);
-
-    codeRanges_.infallibleAppend(indirectStubRange);
-    codeRanges_.back().offsetBy(offsetInSegment);
-  }
-
-  return true;
-}
-
 const CodeRange* LazyStubSegment::lookupRange(const void* pc) const {
   return LookupInSorted(codeRanges_,
                         CodeRange::OffsetInCode((uint8_t*)pc - base()));
@@ -701,12 +661,21 @@ void LazyStubSegment::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
   *data += mallocSizeOf(this);
 }
 
+struct ProjectLazyFuncIndex {
+  const LazyFuncExportVector& funcExports;
+  explicit ProjectLazyFuncIndex(const LazyFuncExportVector& funcExports)
+      : funcExports(funcExports) {}
+  uint32_t operator[](size_t index) const {
+    return funcExports[index].funcIndex;
+  }
+};
+
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
-bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
-                                        const CodeTier& codeTier,
-                                        bool flushAllThreadsIcaches,
-                                        size_t* stubSegmentIndex) {
+bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
+                              const CodeTier& codeTier,
+                              bool flushAllThreadsIcaches,
+                              size_t* stubSegmentIndex) {
   MOZ_ASSERT(funcExportIndices.length());
 
   LifoAlloc lifo(LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE);
@@ -809,13 +778,9 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
                               interpRangeIndex);
 
     size_t exportIndex;
-    const uint32_t targetFunctionIndex = fe.funcIndex();
-    MOZ_ALWAYS_FALSE(BinarySearchIf(
-        exports_, 0, exports_.length(),
-        [targetFunctionIndex](const LazyFuncExport& funcExport) {
-          return targetFunctionIndex - funcExport.funcIndex;
-        },
-        &exportIndex));
+    MOZ_ALWAYS_FALSE(BinarySearch(ProjectLazyFuncIndex(exports_), 0,
+                                  exports_.length(), fe.funcIndex(),
+                                  &exportIndex));
     MOZ_ALWAYS_TRUE(
         exports_.insert(exports_.begin() + exportIndex, std::move(lazyExport)));
 
@@ -826,8 +791,8 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
   return true;
 }
 
-bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
-                                      const CodeTier& codeTier) {
+bool LazyStubTier::createOne(uint32_t funcExportIndex,
+                             const CodeTier& codeTier) {
   Uint32Vector funcExportIndexes;
   if (!funcExportIndexes.append(funcExportIndex)) {
     return false;
@@ -839,8 +804,8 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
   bool flushAllThreadIcaches = false;
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndexes, codeTier, flushAllThreadIcaches,
-                            &stubSegmentIndex)) {
+  if (!createMany(funcExportIndexes, codeTier, flushAllThreadIcaches,
+                  &stubSegmentIndex)) {
     return false;
   }
 
@@ -864,127 +829,6 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
   return true;
 }
 
-auto IndirectStubComparator = [](uint32_t funcIndex, void* tlsData,
-                                 const IndirectStub& stub) -> int {
-  if (funcIndex != stub.funcIndex) {
-    return static_cast<int>(funcIndex - stub.funcIndex);
-  }
-
-  // If function indices are equal then compare by tls.
-  const auto tlsDataAsIntegral = reinterpret_cast<uintptr_t>(tlsData);
-  const auto stubTlsAsIntegral = reinterpret_cast<uintptr_t>(stub.tls);
-  return static_cast<int>(tlsDataAsIntegral - stubTlsAsIntegral);
-};
-
-bool LazyStubTier::createManyIndirectStubs(
-    const VectorOfIndirectStubTarget& targets, const CodeTier& codeTier) {
-  MOZ_ASSERT(targets.length());
-
-  LifoAlloc lifo(LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE);
-  TempAllocator alloc(&lifo);
-  JitContext jitContext(&alloc);
-  WasmMacroAssembler masm(alloc);
-  AutoCreatedBy acb(masm, "LazyStubTier::createManyIndirectStubs");
-
-  CodeRangeVector codeRanges;
-  for (const auto& target : targets) {
-    MOZ_ASSERT(!lookupIndirectStub(target.functionIdx, target.tls));
-
-    Offsets offsets;
-    if (!GenerateIndirectStub(
-            masm, static_cast<uint8_t*>(target.checkedCallEntryAddress),
-            target.tls, &offsets)) {
-      return false;
-    }
-    if (!codeRanges.emplaceBack(CodeRange::IndirectStub, target.functionIdx,
-                                offsets)) {
-      return false;
-    }
-  }
-
-  masm.finish();
-
-  MOZ_ASSERT(masm.callSites().empty());
-  MOZ_ASSERT(masm.callSiteTargets().empty());
-  MOZ_ASSERT(masm.trapSites().empty());
-
-  if (masm.oom()) {
-    return false;
-  }
-
-  size_t codeLength = LazyStubSegment::AlignBytesNeeded(masm.bytesNeeded());
-
-  if (!stubSegments_.length() ||
-      !stubSegments_[lastStubSegmentIndex_]->hasSpace(codeLength)) {
-    size_t newSegmentSize = std::max(codeLength, ExecutableCodePageSize);
-    UniqueLazyStubSegment newSegment =
-        LazyStubSegment::create(codeTier, newSegmentSize);
-    if (!newSegment) {
-      return false;
-    }
-    lastStubSegmentIndex_ = stubSegments_.length();
-    if (!stubSegments_.emplaceBack(std::move(newSegment))) {
-      return false;
-    }
-  }
-
-  LazyStubSegment* segment = stubSegments_[lastStubSegmentIndex_].get();
-
-  size_t indirectStubRangeIndex;
-  uint8_t* codePtr = nullptr;
-  if (!segment->addIndirectStubs(codeLength, targets, codeRanges, &codePtr,
-                                 &indirectStubRangeIndex)) {
-    return false;
-  }
-
-  masm.executableCopy(codePtr);
-  PatchDebugSymbolicAccesses(codePtr, masm);
-  memset(codePtr + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
-
-  for (const CodeLabel& label : masm.codeLabels()) {
-    Assembler::Bind(codePtr, label);
-  }
-
-  if (!ExecutableAllocator::makeExecutableAndFlushICache(
-          FlushICacheSpec::LocalThreadOnly, codePtr, codeLength)) {
-    return false;
-  }
-
-  // Record the runtime info about generated indirect stubs.
-  if (!indirectStubVector_.reserve(indirectStubVector_.length() +
-                                   targets.length())) {
-    return false;
-  }
-
-  for (const auto& target : targets) {
-    auto stub = IndirectStub{target.functionIdx, lastStubSegmentIndex_,
-                             indirectStubRangeIndex, target.tls};
-
-    size_t indirectStubIndex;
-    MOZ_ALWAYS_FALSE(BinarySearchIf(
-        indirectStubVector_, 0, indirectStubVector_.length(),
-        [&stub](const IndirectStub& otherStub) {
-          return IndirectStubComparator(stub.funcIndex, stub.tls, otherStub);
-        },
-        &indirectStubIndex));
-    MOZ_ALWAYS_TRUE(indirectStubVector_.insert(
-        indirectStubVector_.begin() + indirectStubIndex, std::move(stub)));
-
-    ++indirectStubRangeIndex;
-  }
-  return true;
-}
-
-const CodeRange* LazyStubTier::lookupRange(const void* pc) const {
-  for (const UniqueLazyStubSegment& stubSegment : stubSegments_) {
-    const CodeRange* result = stubSegment->lookupRange(pc);
-    if (result) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-
 bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
                                const CodeTier& codeTier,
                                Maybe<size_t>* outStubSegmentIndex) {
@@ -997,8 +841,8 @@ bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
   bool flushAllThreadIcaches = true;
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndices, codeTier, flushAllThreadIcaches,
-                            &stubSegmentIndex)) {
+  if (!createMany(funcExportIndices, codeTier, flushAllThreadIcaches,
+                  &stubSegmentIndex)) {
     return false;
   }
 
@@ -1020,47 +864,21 @@ void LazyStubTier::setJitEntries(const Maybe<size_t>& stubSegmentIndex,
   }
 }
 
-bool LazyStubTier::hasEntryStub(uint32_t funcIndex) const {
+bool LazyStubTier::hasStub(uint32_t funcIndex) const {
   size_t match;
-  return BinarySearchIf(
-      exports_, 0, exports_.length(),
-      [funcIndex](const LazyFuncExport& funcExport) {
-        return funcIndex - funcExport.funcIndex;
-      },
-      &match);
+  return BinarySearch(ProjectLazyFuncIndex(exports_), 0, exports_.length(),
+                      funcIndex, &match);
 }
 
 void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
   size_t match;
-  if (!BinarySearchIf(
-          exports_, 0, exports_.length(),
-          [funcIndex](const LazyFuncExport& funcExport) {
-            return funcIndex - funcExport.funcIndex;
-          },
-          &match)) {
+  if (!BinarySearch(ProjectLazyFuncIndex(exports_), 0, exports_.length(),
+                    funcIndex, &match)) {
     return nullptr;
   }
   const LazyFuncExport& fe = exports_[match];
   const LazyStubSegment& stub = *stubSegments_[fe.lazyStubSegmentIndex];
   return stub.base() + stub.codeRanges()[fe.funcCodeRangeIndex].begin();
-}
-
-void* LazyStubTier::lookupIndirectStub(uint32_t funcIndex, void* tls) const {
-  size_t match;
-  if (!BinarySearchIf(
-          indirectStubVector_, 0, indirectStubVector_.length(),
-          [funcIndex, tls](const IndirectStub& stub) {
-            return IndirectStubComparator(funcIndex, tls, stub);
-          },
-          &match)) {
-    return nullptr;
-  }
-
-  const IndirectStub& indirectStub = indirectStubVector_[match];
-
-  const LazyStubSegment& segment = *stubSegments_[indirectStub.segmentIndex];
-  return segment.base() +
-         segment.codeRanges()[indirectStub.codeRangeIndex].begin();
 }
 
 void LazyStubTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
@@ -1252,7 +1070,7 @@ bool CodeTier::initialize(IsTier2 isTier2, const Code& code,
   MOZ_ASSERT(!initialized());
   code_ = &code;
 
-  MOZ_ASSERT(lazyStubs_.lock()->entryStubsEmpty());
+  MOZ_ASSERT(lazyStubs_.lock()->empty());
 
   // See comments in CodeSegment::initialize() for why this must be last.
   if (!segment_->initialize(isTier2, *this, linkData, metadata, *metadata_)) {
@@ -1503,22 +1321,6 @@ const CodeRange* Code::lookupFuncRange(void* pc) const {
   for (Tier t : tiers()) {
     const CodeRange* result = codeTier(t).lookupRange(pc);
     if (result && result->isFunction()) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-
-const CodeRange* Code::lookupIndirectStubRange(void* pc) const {
-  // TODO / OPTIMIZE:
-  // There is only one client of this function - Table::getFuncRef.
-  // Table::getFuncRef can return only exported function,
-  // so if we pregenerate indirect stubs for all exported functions
-  // we can eliminate the lock below.
-  for (Tier tier : tiers()) {
-    auto stubs = codeTier(tier).lazyStubs().lock();
-    const CodeRange* result = stubs->lookupRange(pc);
-    if (result && result->isIndirectStub()) {
       return result;
     }
   }
