@@ -425,7 +425,6 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
-  NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
 
   channel->SetNotificationCallbacks(sink);
 
@@ -447,11 +446,9 @@ nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
 
   RefPtr<txCompileObserver> observer =
       new txCompileObserver(aProcessor, aLoaderDocument);
-  NS_ENSURE_TRUE(observer, NS_ERROR_OUT_OF_MEMORY);
 
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       NS_ConvertUTF8toUTF16(spec), aReferrerPolicy, observer);
-  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
   return observer->startLoad(aUri, compiler, principal, aReferrerPolicy);
 }
@@ -611,11 +608,9 @@ nsresult TX_CompileStylesheet(nsINode* aNode,
   NS_ConvertUTF8toUTF16 stylesheetURI(spec);
 
   RefPtr<txSyncCompileObserver> obs = new txSyncCompileObserver(aProcessor);
-  NS_ENSURE_TRUE(obs, NS_ERROR_OUT_OF_MEMORY);
 
   RefPtr<txStylesheetCompiler> compiler =
       new txStylesheetCompiler(stylesheetURI, doc->GetReferrerPolicy(), obs);
-  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
   compiler->setBaseURI(baseURI);
 
