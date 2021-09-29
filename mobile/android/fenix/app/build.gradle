@@ -479,9 +479,7 @@ dependencies {
     implementation Deps.mozilla_service_sync_autofill
     implementation Deps.mozilla_service_sync_logins
     implementation Deps.mozilla_service_firefox_accounts
-    implementation(Deps.mozilla_service_glean) {
-      exclude group: 'org.mozilla.telemetry', module: 'glean-native'
-    }
+    implementation(Deps.mozilla_service_glean)
     implementation Deps.mozilla_service_location
     implementation Deps.mozilla_service_nimbus
 
