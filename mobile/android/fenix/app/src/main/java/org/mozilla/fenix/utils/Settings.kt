@@ -1175,6 +1175,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var pocketRecommendations by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
-        default = false
+        default = true
     )
 }

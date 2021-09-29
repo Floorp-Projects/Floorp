@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.sessioncontrol
 import androidx.recyclerview.widget.RecyclerView
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -19,7 +18,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
@@ -145,7 +143,6 @@ class SessionControlViewTest {
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
-            testContext,
             topSites,
             collections,
             expandedCollections,
@@ -173,7 +170,6 @@ class SessionControlViewTest {
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
-            testContext,
             topSites,
             collections,
             expandedCollections,
@@ -202,7 +198,6 @@ class SessionControlViewTest {
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
-            testContext,
             topSites,
             collections,
             expandedCollections,
@@ -229,14 +224,8 @@ class SessionControlViewTest {
         val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<HistoryMetadataGroup>()
         val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", "", 1, 1))
-        val context = spyk(testContext)
-
-        val settings: Settings = mockk()
-        every { settings.pocketRecommendations } returns true
-        every { context.settings() } returns settings
 
         val results = normalModeAdapterItems(
-            context,
             topSites,
             collections,
             expandedCollections,
@@ -262,14 +251,8 @@ class SessionControlViewTest {
         val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<HistoryMetadataGroup>()
         val pocketArticles = emptyList<PocketRecommendedStory>()
-        val context = spyk(testContext)
-
-        val settings: Settings = mockk()
-        every { settings.pocketRecommendations } returns true
-        every { context.settings() } returns settings
 
         val results = normalModeAdapterItems(
-            context,
             topSites,
             collections,
             expandedCollections,

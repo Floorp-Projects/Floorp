@@ -252,13 +252,17 @@ class HomeFragment : Fragment() {
             )
         }
 
-        if (requireContext().settings().pocketRecommendations) {
-            lifecycleScope.launch(IO) {
+        lifecycleScope.launch(IO) {
+            if (FeatureFlags.isPocketRecommendationsFeatureEnabled(requireContext()) &&
+                requireContext().settings().pocketRecommendations
+            ) {
                 val categories = components.core.pocketStoriesService.getStories()
                     .groupBy { story -> story.category }
                     .map { (category, stories) -> PocketRecommendedStoryCategory(category, stories) }
 
                 homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesCategoriesChange(categories))
+            } else {
+                homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(emptyList()))
             }
         }
 
