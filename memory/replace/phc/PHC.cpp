@@ -55,12 +55,16 @@
 //
 // The basic cost of PHC's operation is as follows.
 //
-// - The physical memory cost is 64 * 4 KiB = 256 KiB per process (assuming 4
-//   KiB pages) plus some metadata (including stack traces) for each page.
+// - The physical memory cost is 64 pages plus some metadata (including stack
+//   traces) for each page. This amounts to 256 KiB per process on
+//   architectures with 4 KiB pages and 1024 KiB on macOS/AArch64 which uses
+//   16 KiB pages.
 //
 // - The virtual memory cost is the physical memory cost plus the guard pages:
-//   another 64 * 4 KiB = 256 KiB per process. PHC is currently only enabled on
-//   64-bit platforms so the impact of the virtual memory usage is negligible.
+//   another 64 pages. This amounts to another 256 KiB per process on
+//   architectures with 4 KiB pages and 1024 KiB on macOS/AArch64 which uses
+//   16 KiB pages. PHC is currently only enabled on 64-bit platforms so the
+//   impact of the virtual memory usage is negligible.
 //
 // - Every allocation requires a size check and a decrement-and-check of an
 //   atomic counter. When the counter reaches zero a PHC allocation can occur,
@@ -283,8 +287,16 @@ using Time = uint64_t;   // A moment in time.
 using Delay = uint32_t;  // A time duration.
 
 // PHC only runs if the page size is 4 KiB; anything more is uncommon and would
-// use too much memory. So we hardwire this size.
-static const size_t kPageSize = 4096;
+// use too much memory. So we hardwire this size for all platforms but macOS
+// on ARM processors. For the latter we make an exception because the minimum
+// page size supported is 16KiB so there's no way to go below that.
+static const size_t kPageSize =
+#if defined(XP_MACOSX) && defined(__aarch64__)
+    16384
+#else
+    4096
+#endif
+    ;
 
 // There are two kinds of page.
 // - Allocation pages, from which allocations are made.
