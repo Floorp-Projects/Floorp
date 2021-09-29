@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * For more information on this interface, please see
- * http://www.whatwg.org/specs/web-apps/current-work/#channel-messaging
+ * https://html.spec.whatwg.org/#message-ports
  */
 
 [Exposed=(Window,Worker,AudioWorklet)]
@@ -12,7 +12,7 @@ interface MessagePort : EventTarget {
   [Throws]
   void postMessage(any message, sequence<object> transferable);
   [Throws]
-  void postMessage(any message, optional PostMessageOptions options = {});
+  void postMessage(any message, optional StructuredSerializeOptions options = {});
 
   void start();
   void close();
@@ -22,6 +22,6 @@ interface MessagePort : EventTarget {
   attribute EventHandler onmessageerror;
 };
 
-dictionary PostMessageOptions {
+dictionary StructuredSerializeOptions {
   sequence<object> transfer = [];
 };
