@@ -898,7 +898,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mozilla::ErrorResult& aRv);
 
   void StructuredClone(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                       const mozilla::dom::PostMessageOptions& aOptions,
+                       const mozilla::dom::StructuredSerializeOptions& aOptions,
                        JS::MutableHandle<JS::Value> aRetval,
                        mozilla::ErrorResult& aError);
 
