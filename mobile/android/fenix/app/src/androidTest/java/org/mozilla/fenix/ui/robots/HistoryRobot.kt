@@ -19,8 +19,10 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -50,6 +52,8 @@ class HistoryRobot {
         )
         assertVisitedTimeTitle()
     }
+
+    fun verifyHistoryItemExists(url: String) = assertHistoryItemExists(url)
 
     fun verifyFirstTestPageTitle(title: String) = assertTestPageTitle(title)
 
@@ -119,6 +123,11 @@ private fun assertEmptyHistoryView() =
 
 private fun assertHistoryListExists() =
     mDevice.findObject(UiSelector().resourceId("R.id.history_list")).waitForExists(waitingTime)
+
+private fun assertHistoryItemExists(url: String) {
+    mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains(url)))
+    assertTrue(mDevice.findObject(UiSelector().textContains(url)).waitForExists(waitingTime))
+}
 
 private fun assertVisitedTimeTitle() =
     onView(withId(R.id.header_title)).check(matches(withText("Today")))

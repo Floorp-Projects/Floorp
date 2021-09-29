@@ -227,16 +227,18 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondWebPage.url) {
             mDevice.waitForIdle()
+            verifyUrl(secondWebPage.url.toString())
         }.openThreeDotMenu {
         }.openHistory {
             verifyHistoryListExists()
             historyListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 2)
             IdlingRegistry.getInstance().register(historyListIdlingResource!!)
+            verifyHistoryItemExists(firstWebPage.url.toString())
+            verifyHistoryItemExists(secondWebPage.url.toString())
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
