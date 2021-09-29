@@ -61,20 +61,22 @@ JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
     return nullptr;
   }
 
-  nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
-  if (!domElement) {
-    return nullptr;
-  }
-
-  JSObject* globalObject =
-      domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
-  JSAutoRealm ar(aCx, globalObject);
-
   JS::Rooted<JS::Value> elementValue(aCx);
-  nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
-                                           /* aAllowWrapping = */ true);
-  if (NS_FAILED(rv)) {
-    return nullptr;
+  {
+    nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
+      if (!domElement) {
+      return nullptr;
+    }
+
+    JSObject* globalObject =
+        domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
+    JSAutoRealm ar(aCx, globalObject);
+
+    nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
+                                              /* aAllowWrapping = */ true);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
   }
 
   return &elementValue.toObject();
