@@ -91,7 +91,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void popHandlerTable();
   void pushSorter(txPushNewContext* aSorter);
   void popSorter();
-  nsresult pushChooseGotoList();
+  void pushChooseGotoList();
   void popChooseGotoList();
   void pushObject(txObject* aObject);
   txObject* popObject();

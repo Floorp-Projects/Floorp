@@ -542,11 +542,9 @@ void txStylesheetCompilerState::popSorter() {
   mSorter = static_cast<txPushNewContext*>(popPtr(ePushNewContext));
 }
 
-nsresult txStylesheetCompilerState::pushChooseGotoList() {
+void txStylesheetCompilerState::pushChooseGotoList() {
   pushObject(mChooseGotoList.release());
   mChooseGotoList = MakeUnique<txList>();
-
-  return NS_OK;
 }
 
 void txStylesheetCompilerState::popChooseGotoList() {
