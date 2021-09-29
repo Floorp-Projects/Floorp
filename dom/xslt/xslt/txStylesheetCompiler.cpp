@@ -537,11 +537,9 @@ void txStylesheetCompilerState::popHandlerTable() {
   mHandlerTable = static_cast<txHandlerTable*>(popPtr(eHandlerTable));
 }
 
-nsresult txStylesheetCompilerState::pushSorter(txPushNewContext* aSorter) {
+void txStylesheetCompilerState::pushSorter(txPushNewContext* aSorter) {
   pushPtr(mSorter, ePushNewContext);
   mSorter = aSorter;
-
-  return NS_OK;
 }
 
 void txStylesheetCompilerState::popSorter() {
