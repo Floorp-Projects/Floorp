@@ -441,12 +441,10 @@ class PredicateList {
    * The ownership of the given Expr is passed over the PredicateList,
    * even on failure.
    * @param aExpr the Expr to add to the list
-   * @return nsresult indicating out of memory
    */
-  nsresult add(Expr* aExpr) {
+  void add(Expr* aExpr) {
     NS_ASSERTION(aExpr, "missing expression");
     mPredicates.AppendElement(aExpr);
-    return NS_OK;
   }
 
   nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);

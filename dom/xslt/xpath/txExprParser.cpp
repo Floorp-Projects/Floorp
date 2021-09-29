@@ -749,10 +749,7 @@ nsresult txExprParser::parsePredicates(PredicateList* aPredicateList,
     rv = createExpr(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aPredicateList->add(expr.get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    Unused << expr.release();
+    aPredicateList->add(expr.release());
 
     if (lexer.peek()->mType != Token::R_BRACKET) {
       return NS_ERROR_XPATH_BRACKET_EXPECTED;
