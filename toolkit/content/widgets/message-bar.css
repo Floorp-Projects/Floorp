@@ -216,9 +216,12 @@
   vertical-align: middle;
 }
 
-/* Align inline icon images in the message content */
 .container.infobar > .notification-content > .notification-message img.inline-icon {
+  /* Align inline icon images in the message content */
   vertical-align: bottom;
+  /* Ensure they get the right fill color. */
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .close {
