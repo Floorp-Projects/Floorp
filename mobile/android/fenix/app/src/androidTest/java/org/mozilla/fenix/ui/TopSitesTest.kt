@@ -83,16 +83,12 @@ class TopSitesTest {
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismissSearchBar {
+        }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openTopSiteTabWithTitle(title = defaultWebPageTitle) {
             verifyUrl(defaultWebPage.url.toString().replace("http://", ""))
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismissSearchBar {
+        }.goToHomescreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {

@@ -524,6 +524,7 @@ class BrowserRobot {
             onView(withContentDescription("Home screen"))
                 .check(matches(isDisplayed()))
                 .click()
+            mDevice.waitForIdle()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
