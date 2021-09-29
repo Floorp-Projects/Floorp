@@ -123,7 +123,7 @@ legacy_ids:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/issues/4901
+      - https://github.com/mozilla-mobile/focus-android/pull/5512#issuecomment-1023668181
     notification_emails:
       - jalmeida@mozilla.com
       - android-probes@mozilla.com
