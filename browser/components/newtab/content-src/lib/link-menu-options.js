@@ -211,7 +211,7 @@ export const LinkMenuOptions = {
     }),
     userEvent: "UNPIN",
   }),
-  SaveToPocket: (site, index, eventSource) => ({
+  SaveToPocket: (site, index, eventSource = "CARDGRID") => ({
     id: "newtab-menu-save-to-pocket",
     icon: "pocket-save",
     action: ac.AlsoToMain({
@@ -265,10 +265,10 @@ export const LinkMenuOptions = {
     site.isPinned
       ? LinkMenuOptions.UnpinTopSite(site)
       : LinkMenuOptions.PinTopSite(site, index),
-  CheckSavedToPocket: (site, index) =>
+  CheckSavedToPocket: (site, index, source) =>
     site.pocket_id
       ? LinkMenuOptions.DeleteFromPocket(site)
-      : LinkMenuOptions.SaveToPocket(site, index),
+      : LinkMenuOptions.SaveToPocket(site, index, source),
   CheckBookmarkOrArchive: site =>
     site.pocket_id
       ? LinkMenuOptions.ArchiveFromPocket(site)

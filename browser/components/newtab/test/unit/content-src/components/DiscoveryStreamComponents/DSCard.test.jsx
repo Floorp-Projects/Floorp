@@ -11,7 +11,7 @@ import {
   StatusMessage,
   SponsorLabel,
 } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
@@ -19,6 +19,8 @@ import { shallow, mount } from "enzyme";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 
 const DEFAULT_PROPS = {
+  url: "url",
+  title: "title",
   App: {
     isForStartupCache: false,
   },
@@ -27,11 +29,13 @@ const DEFAULT_PROPS = {
 describe("<DSCard>", () => {
   let wrapper;
   let sandbox;
+  let dispatch;
 
   beforeEach(() => {
-    wrapper = shallow(<DSCard {...DEFAULT_PROPS} />);
-    wrapper.setState({ isSeen: true });
     sandbox = sinon.createSandbox();
+    dispatch = sandbox.stub();
+    wrapper = shallow(<DSCard dispatch={dispatch} {...DEFAULT_PROPS} />);
+    wrapper.setState({ isSeen: true });
   });
 
   afterEach(() => {
@@ -109,14 +113,6 @@ describe("<DSCard>", () => {
   });
 
   describe("onLinkClick", () => {
-    let dispatch;
-
-    beforeEach(() => {
-      dispatch = sandbox.stub();
-      wrapper = shallow(<DSCard dispatch={dispatch} {...DEFAULT_PROPS} />);
-      wrapper.setState({ isSeen: true });
-    });
-
     it("should call dispatch with the correct events", () => {
       wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
 
@@ -274,6 +270,7 @@ describe("<DSCard>", () => {
       );
     });
   });
+
   describe("DSCard with Intersection Observer", () => {
     beforeEach(() => {
       wrapper = shallow(<DSCard {...DEFAULT_PROPS} />);
@@ -312,6 +309,7 @@ describe("<DSCard>", () => {
       assert.isTrue(!!wrapper.instance().observer);
     });
   });
+
   describe("DSCard with Idle Callback", () => {
     let windowStub = {
       requestIdleCallback: sinon.stub().returns(1),
@@ -330,6 +328,7 @@ describe("<DSCard>", () => {
       assert.calledOnce(windowStub.cancelIdleCallback);
     });
   });
+
   describe("DSCard when rendered for about:home startup cache", () => {
     beforeEach(() => {
       const props = {
@@ -342,6 +341,106 @@ describe("<DSCard>", () => {
 
     it("should be set as isSeen automatically", () => {
       assert.isTrue(wrapper.instance().state.isSeen);
+    });
+  });
+
+  describe("DSCard onSaveClick", () => {
+    it("should fire telemetry for onSaveClick", () => {
+      wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
+      wrapper.instance().onSaveClick();
+
+      assert.calledThrice(dispatch);
+      assert.calledWith(
+        dispatch,
+        ac.AlsoToMain({
+          type: at.SAVE_TO_POCKET,
+          data: { site: { url: "url", title: "title" } },
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.UserEvent({
+          event: "SAVE_TO_POCKET",
+          source: "CARDGRID_HOVER",
+          action_position: 1,
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.ImpressionStats({
+          source: "CARDGRID_HOVER",
+          pocket: 0,
+          tiles: [
+            {
+              id: "fooidx",
+              pos: 1,
+            },
+          ],
+        })
+      );
+    });
+  });
+
+  describe("DSCard menu open states", () => {
+    let cardNode;
+    let fakeDocument;
+    let fakeWindow;
+
+    beforeEach(() => {
+      fakeDocument = { l10n: { translateFragment: sinon.stub() } };
+      fakeWindow = {
+        document: fakeDocument,
+        requestIdleCallback: sinon.stub().returns(1),
+        cancelIdleCallback: sinon.stub(),
+      };
+      wrapper = mount(<DSCard {...DEFAULT_PROPS} windowObj={fakeWindow} />);
+      wrapper.setState({ isSeen: true });
+      cardNode = wrapper.getDOMNode();
+    });
+
+    it("Should remove active on Menu Update", () => {
+      // Add active class name to DSCard wrapper
+      // to simulate menu open state
+      cardNode.classList.add("active");
+      assert.equal(cardNode.className, "ds-card active");
+
+      wrapper.instance().onMenuUpdate(false);
+      wrapper.update();
+
+      assert.equal(cardNode.className, "ds-card");
+    });
+
+    it("Should add active on Menu Show", async () => {
+      await wrapper.instance().onMenuShow();
+      wrapper.update();
+      assert.equal(cardNode.className, "ds-card active");
+    });
+
+    it("Should add last-item to support resized window", async () => {
+      fakeWindow.scrollMaxX = 20;
+      await wrapper.instance().onMenuShow();
+      wrapper.update();
+      assert.equal(cardNode.className, "ds-card last-item active");
+    });
+
+    it("should remove .active and .last-item classes", () => {
+      const instance = wrapper.instance();
+      const remove = sinon.stub();
+      instance.contextMenuButtonHostElement = {
+        classList: { remove },
+      };
+      instance.onMenuUpdate();
+      assert.calledOnce(remove);
+    });
+
+    it("should add .active and .last-item classes", async () => {
+      const instance = wrapper.instance();
+      const add = sinon.stub();
+      instance.contextMenuButtonHostElement = {
+        classList: { add },
+      };
+      await instance.onMenuShow();
+      assert.calledOnce(add);
     });
   });
 });

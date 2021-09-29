@@ -2717,9 +2717,13 @@ main.has-snippet {
 .ds-card-grid.ds-card-grid-compact-variant .ds-card .meta {
   padding: 12px 0 0;
 }
+.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-footer {
+  margin-top: 2px;
+}
 .ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .source,
 .ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .ds-last-card-desc,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-sponsored-label {
+.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-sponsored-label,
+.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .status-message {
   font-size: 13px;
   color: var(--newtab-text-secondary-color);
   -webkit-line-clamp: 2;
@@ -3598,6 +3602,83 @@ main.has-snippet {
 .ds-card .img-wrapper {
   width: 100%;
   position: relative;
+}
+.ds-card .card-stp-button-hover-background {
+  opacity: 0;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  height: 0;
+  transition: opacity;
+  transition-duration: 0s;
+  padding-top: 50%;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+}
+.ds-card .card-stp-button-hover-background .card-stp-button-position-wrapper {
+  position: absolute;
+  margin-top: -16px;
+  left: 0;
+  right: 0;
+  top: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ds-card .card-stp-button-hover-background .icon-pocket-save,
+.ds-card .card-stp-button-hover-background .icon-pocket {
+  margin-inline-end: 4px;
+  height: 14px;
+  width: 14px;
+  background-size: 14px;
+}
+.ds-card .card-stp-button-hover-background .icon-pocket {
+  fill: #EF4056;
+}
+.ds-card .card-stp-button-hover-background .context-menu-button {
+  position: static;
+  transition: none;
+}
+.ds-card .card-stp-button-hover-background .context-menu-position-container {
+  position: relative;
+}
+.ds-card .card-stp-button-hover-background .context-menu {
+  margin-inline-start: 18.5px;
+  inset-inline-start: auto;
+  position: absolute;
+  top: 20.25px;
+}
+.ds-card .card-stp-button-hover-background .card-stp-button {
+  display: flex;
+  margin-inline-end: 12px;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 16px;
+  background-color: var(--newtab-background-color-secondary);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px;
+  white-space: nowrap;
+}
+.ds-card .card-stp-button-hover-background .card-stp-button:hover .icon-pocket-save {
+  fill: #EF4056;
+}
+.ds-card .card-stp-button-hover-background button,
+.ds-card .card-stp-button-hover-background .context-menu {
+  pointer-events: auto;
+}
+.ds-card .card-stp-button-hover-background button {
+  cursor: pointer;
+}
+.ds-card.last-item .card-stp-button-hover-background .context-menu {
+  margin-inline-start: auto;
+  margin-inline-end: 18.5px;
+}
+.ds-card:hover .card-stp-button-hover-background, .ds-card.active .card-stp-button-hover-background {
+  display: block;
+  opacity: 1;
+  transition-duration: 0.3s;
 }
 .ds-card .img {
   height: 0;

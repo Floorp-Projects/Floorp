@@ -69,6 +69,11 @@ ChromeUtils.defineModuleGetter(
   "pktTelemetry",
   "chrome://pocket/content/pktTelemetry.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 const POCKET_ONSAVERECS_PREF = "extensions.pocket.onSaveRecs";
 const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";
@@ -106,6 +111,7 @@ var pktUI = (function() {
       POCKET_ONSAVERECS_LOCLES_PREF,
       ""
     );
+
     pocketHomePref = Services.prefs.getBoolPref(POCKET_HOME_PREF);
   }
   initPrefs();
@@ -149,10 +155,19 @@ var pktUI = (function() {
   function showSignUp() {
     getFirefoxAccountSignedInUser(function(userdata) {
       let sizes = initialPanelSize.signup.control;
+      const experiment = ExperimentAPI.getExperiment({
+        featureId: "pocketNewtab",
+      });
+      let utmCampaign = experiment?.slug || `firefox_door_hanger_menu`;
+      let utmSource = experiment?.branch?.slug || `control`;
 
       showPanel(
         "about:pocket-signup?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
+          "&utmCampaign=" +
+          utmCampaign +
+          "&utmSource=" +
+          utmSource +
           "&locale=" +
           getUILocale(),
         sizes
