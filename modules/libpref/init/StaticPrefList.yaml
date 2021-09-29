@@ -7075,10 +7075,10 @@
   value: true
   mirror: always
 
-# Enables support for the size property inside of CSS @page rules.
+# Enables parsing size properties in page at-rules
 - name: layout.css.page-size.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
