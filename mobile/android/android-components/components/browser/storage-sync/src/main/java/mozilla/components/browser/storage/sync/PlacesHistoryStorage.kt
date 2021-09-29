@@ -38,7 +38,7 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 open class PlacesHistoryStorage(
     context: Context,
     crashReporter: CrashReporting? = null
@@ -299,6 +299,28 @@ open class PlacesHistoryStorage(
         withContext(writeScope.coroutineContext) {
             handlePlacesExceptions("deleteHistoryMetadata") {
                 places.writer().deleteHistoryMetadata(key.into())
+            }
+        }
+    }
+
+    override suspend fun deleteHistoryMetadata(searchTerm: String) {
+        // Ideally, we want this to live in A-S as a simple DELETE statement.
+        // As-is, this isn't an atomic operation. For how we're using these data, both lack of
+        // atomicity and a performance penalty is acceptable for now.
+        withContext(writeScope.coroutineContext) {
+            handlePlacesExceptions("deleteHistoryMetadataSearchGroup") {
+                places.reader().getHistoryMetadataSince(Long.MIN_VALUE)
+                    // NB: searchTerms are always lower-case in the database.
+                    .filter { it.searchTerm == searchTerm.lowercase() }
+                    .forEach {
+                        places.writer().deleteHistoryMetadata(
+                            HistoryMetadataKey(
+                                url = it.url,
+                                searchTerm = it.searchTerm,
+                                referrerUrl = it.referrerUrl
+                            ).into()
+                        )
+                    }
             }
         }
     }

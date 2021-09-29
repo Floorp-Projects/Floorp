@@ -17,7 +17,7 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #10982](https://github.com/mozilla-mobile/android-components/issues/10982) - Add ScrollView as a main container in mozac_feature_context_dialog in order to see the entire image context menu on small screens
 
 * **concept-storage**, **browser-storage-sync**
-  * 🌟️ New API: `HistoryMetadataStorage.deleteHistoryMetadata`, allows removing specific metadata entries.
+  * 🌟️ New API: `HistoryMetadataStorage.deleteHistoryMetadata`, allows removing specific metadata entries either by key or search term.
 
 * **browser-engine-gecko**:
   * Switch to the `geckoview-omni` releases. `-omni` packages also ship the Glean Core native code.
