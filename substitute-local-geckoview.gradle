@@ -36,11 +36,15 @@ if (!project.ext.has('topsrcdir')) {
     throw new GradleException("ext.topsrcdir must be specified to substitute for a local GeckoView")
 }
 
+apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
+
 // Cribbed from https://hg.mozilla.org/mozilla-central/file/tip/settings.gradle.  When run in
 // topobjdir, `mach environment` correctly finds the mozconfig corresponding to that object
 // directory.
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
-def proc = commandLine.execute(null, new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
+def proc = commandLine.execute(
+      machEnv(topsrcdir),
+      new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
 def standardOutput = new ByteArrayOutputStream()
 proc.consumeProcessOutput(standardOutput, standardOutput)
 proc.waitFor()
