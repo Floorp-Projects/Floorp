@@ -12,13 +12,12 @@ use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::internal_types::{
-    CacheTextureId, Swizzle, SwizzleSettings,
+    CacheTextureId, Swizzle, SwizzleSettings, FrameStamp, FrameId,
     TextureUpdateList, TextureUpdateSource, TextureSource,
     TextureCacheAllocInfo, TextureCacheUpdate, TextureCacheCategory,
 };
 use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
-use crate::render_backend::{FrameStamp, FrameId};
 use crate::resource_cache::{CacheItem, CachedImageData};
 use crate::texture_pack::{
     AllocatorList,
@@ -906,14 +905,6 @@ impl TextureCache {
     // in the texture cache.
     pub fn is_allocated(&self, handle: &TextureCacheHandle) -> bool {
         self.get_entry_opt(handle).is_some()
-    }
-
-    // Check if a given texture handle was last used as recently
-    // as the specified number of previous frames.
-    pub fn is_recently_used(&self, handle: &TextureCacheHandle, margin: usize) -> bool {
-        self.get_entry_opt(handle).map_or(false, |entry| {
-            entry.last_access.frame_id() + margin >= self.now.frame_id()
-        })
     }
 
     // Return the allocated size of the texture handle's associated data,

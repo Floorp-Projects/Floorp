@@ -10,8 +10,7 @@
 use api::units::*;
 use api::ImageFormat;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
-use crate::internal_types::{TextureSource, CacheTextureId, FastHashMap, FastHashSet};
-use crate::render_backend::FrameId;
+use crate::internal_types::{TextureSource, CacheTextureId, FastHashMap, FastHashSet, FrameId};
 use crate::render_task::{StaticRenderTaskSurface, RenderTaskLocation, RenderTask};
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTaskData, RenderTaskKind};
@@ -1055,7 +1054,7 @@ impl RenderTaskGraphBuilder {
         total_surface_count: usize,
         unique_surfaces: &[(i32, i32, ImageFormat)],
     ) {
-        use crate::render_backend::FrameStamp;
+        use crate::internal_types::FrameStamp;
         use api::{DocumentId, IdNamespace};
 
         let mut rc = ResourceCache::new_for_testing();
