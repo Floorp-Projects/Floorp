@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntentionalCrash.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
@@ -1002,6 +1003,9 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
   // avoid making noise with other kind of processes crashing
   if (const char* dontSend = PR_GetEnv("MOZ_BUILDID_MATCH_DONTSEND")) {
     if (dontSend[0] == '1') {
+      // Bug 1732999: We are going to crash, so we need to advise leak check
+      // tooling to avoid intermittent missing leakcheck
+      NoteIntentionalCrash(XRE_GetProcessTypeString());
       if (XRE_IsContentProcess()) {
         // Make sure we do not die too early, as this causes weird behavior
         PR_Sleep(PR_MillisecondsToInterval(1000));
