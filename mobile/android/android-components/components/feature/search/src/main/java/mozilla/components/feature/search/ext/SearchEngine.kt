@@ -108,7 +108,9 @@ fun SearchEngine.parseSearchTerms(url: Uri): String? {
 
     return if (searchResultsRoot == urlRoot) {
         val searchTerms = try {
-            url.getQueryParameter(this.searchParameterName)
+            this.searchParameterName?.let {
+                url.getQueryParameter(it)
+            }
         } catch (e: UnsupportedOperationException) {
             // Non-hierarchical url.
             null

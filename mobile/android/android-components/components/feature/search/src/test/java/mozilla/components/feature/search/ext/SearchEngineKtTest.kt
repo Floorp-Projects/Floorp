@@ -143,4 +143,21 @@ class SearchEngineKtTest {
             searchState.parseSearchTerms("https://www.ecosia.org/search?r=134s7&attr=moz-test&q=Another%20test&d=136697676793")
         )
     }
+
+    @Test
+    fun `GIVEN search engine parameter can not be found THEN search terms are never determined`() {
+        val invalidEngine = SearchEngine(
+            id = UUID.randomUUID().toString(),
+            name = "invalid",
+            icon = mock(),
+            type = SearchEngine.Type.CUSTOM,
+            resultUrls = listOf("https://mozilla.org/search/?q={invalid}")
+        )
+
+        val searchState = SearchState(
+            regionSearchEngines = listOf(invalidEngine)
+        )
+
+        assertNull(searchState.parseSearchTerms("https://mozilla.org/search/?q=test"))
+    }
 }
