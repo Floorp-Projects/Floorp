@@ -36,16 +36,21 @@
           publicExponent: new Uint8Array([1, 0, 1])
       }, "NotSupportedError", "SHA-384 isn't supported yet"),
 
+      // A SyntaxError happens in the "generate key operation" step, but
+      // webrtc-pc does not say to reject the promise if this step fails.
+      // It does say to throw NotSupportedError if we have passed "an
+      // algorithm that the user agent cannot or will not use to generate a
+      // certificate".
       badCertificate({
         name: "ECDH",
         namedCurve: "P-256"
-      }, "DataError", "otherwise valid ECDH config is rejected"),
+      }, "NotSupportedError", "ECDH is rejected because the usage is neither \"deriveKey\" or \"deriveBits\""),
 
       badCertificate({
         name: "not a valid algorithm"
-      }, "SyntaxError", "not a valid algorithm"),
+      }, "NotSupportedError", "not a valid algorithm"),
 
-      badCertificate("ECDSA", "SyntaxError", "a bare name is not enough"),
+      badCertificate("ECDSA", "NotSupportedError", "a bare name is not enough"),
 
       badCertificate({
         name: "ECDSA",
@@ -127,7 +132,7 @@
           new RTCPeerConnection({ certificates: [expiredCert] });
           ok(false, 'Constructing peer connection with an expired cert is not allowed');
         } catch(e) {
-          is(e.name, 'InvalidParameterError',
+          is(e.name, 'InvalidAccessError',
              'Constructing peer connection with an expired certs is not allowed');
         }
       })
