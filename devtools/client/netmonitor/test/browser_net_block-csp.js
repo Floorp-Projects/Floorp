@@ -10,16 +10,16 @@
 add_task(async function() {
   info("Test requests blocked by CSP in the top level document");
   await testRequestsBlockedByCSP(
-    EXAMPLE_URL,
-    EXAMPLE_URL + "html_csp-test-page.html"
+    HTTPS_EXAMPLE_URL,
+    HTTPS_EXAMPLE_URL + "html_csp-test-page.html"
   );
 
   // The html_csp-frame-test-page.html (in the .com domain) includes
   // an iframe from the .org domain
   info("Test requests blocked by CSP in remote frames");
   await testRequestsBlockedByCSP(
-    EXAMPLE_ORG_URL,
-    EXAMPLE_URL + "html_csp-frame-test-page.html"
+    HTTPS_EXAMPLE_ORG_URL,
+    HTTPS_EXAMPLE_URL + "html_csp-frame-test-page.html"
   );
 });
 
