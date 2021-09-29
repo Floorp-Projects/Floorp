@@ -1638,10 +1638,9 @@ def clear_cache(command_context, verbose=False):
     if rc != 0:
         return rc
 
-    from mozbuild.atifact_commands import PackageFrontend
+    from mozbuild.artifact_commands import artifact_clear_cache
 
-    artifact_manager = PackageFrontend(command_context._mach_context)
-    return artifact_manager.artifact_clear_cache(command_context)
+    return artifact_clear_cache(command_context)
 
 
 @StaticAnalysisSubCommand(
@@ -2287,9 +2286,7 @@ def _get_clang_tools(
     if source:
         return _get_clang_tools_from_source(command_context, clang_paths, source)
 
-    from mozbuild.artifact_commands import PackageFrontend
-
-    artifact_manager = PackageFrontend(command_context._mach_context)
+    from mozbuild.artifact_commands import artifact_toolchain
 
     if not download_if_needed:
         return 0, clang_paths
@@ -2308,7 +2305,7 @@ def _get_clang_tools(
     # We want to unpack data in the clang-tidy mozbuild folder
     currentWorkingDir = os.getcwd()
     os.chdir(clang_paths._clang_tools_path)
-    rc = artifact_manager.artifact_toolchain(
+    rc = artifact_toolchain(
         command_context,
         verbose=verbose,
         skip_cache=skip_cache,
