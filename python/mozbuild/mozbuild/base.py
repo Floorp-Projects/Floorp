@@ -289,7 +289,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @property
     def virtualenv_manager(self):
-        from .virtualenv import VirtualenvManager
+        from mach.virtualenv import VirtualenvManager
 
         if self._virtualenv_manager is None:
             self._virtualenv_manager = VirtualenvManager(
