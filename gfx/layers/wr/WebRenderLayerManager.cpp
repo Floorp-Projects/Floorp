@@ -27,6 +27,7 @@
 
 #ifdef XP_WIN
 #  include "gfxDWriteFonts.h"
+#  include "mozilla/WindowsProcessMitigations.h"
 #endif
 
 namespace mozilla {
@@ -737,10 +738,18 @@ void WebRenderLayerManager::ScheduleComposite() {
 already_AddRefed<PersistentBufferProvider>
 WebRenderLayerManager::CreatePersistentBufferProvider(
     const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
-  // Ensure devices initialization for canvas 2d if not remote. The devices are
-  // lazily initialized with WebRender to reduce memory usage.
   if (!gfxPlatform::UseRemoteCanvas()) {
+#ifdef XP_WIN
+    // Any kind of hardware acceleration is incompatible with Win32k Lockdown
+    // We don't initialize devices here so that PersistentBufferProviderShared
+    // will fall back to using a piece of shared memory as a backing for the
+    // canvas
+    if (!IsWin32kLockedDown()) {
+      gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+    }
+#else
     gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+#endif
   }
 
   RefPtr<PersistentBufferProvider> provider =
