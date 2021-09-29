@@ -233,7 +233,9 @@ dependencies {
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
 
-    implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}", {
+        exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+    }
     implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
 
     implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
@@ -256,7 +258,7 @@ dependencies {
 
     jnaForTest "net.java.dev.jna:jna:${jna_version}@jar"
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
-    testImplementation "org.mozilla.telemetry:glean-forUnitTests:${project.ext.glean_version}"
+    testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
