@@ -1519,8 +1519,7 @@ nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
 
   bool verticalWM = aWM.IsVertical();
   // We need to have the proper un-themed scrollbar size, regardless of whether
-  // we're using e.g. scrollbar-width: thin, or overlay scrollbars. That's why
-  // we use ScrollbarNonDisappearing.
+  // we're using e.g. scrollbar-width: thin, or overlay scrollbars.
   nsIFrame* box = verticalWM ? mHScrollbarBox : mVScrollbarBox;
   if (box) {
     auto sizes = aState->PresContext()->Theme()->GetScrollbarSizes(
