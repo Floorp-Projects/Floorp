@@ -83,6 +83,14 @@ subprojects {
                 details.useVersion Versions.support_libraries
             }
         }
+
+        resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
+            def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
+            if (toBeSelected != null) {
+                select(toBeSelected)
+            }
+            because 'use GeckoView Glean instead of standalone Glean'
+        }
     }
 
     // Allow local appservices substitution in each subproject.
