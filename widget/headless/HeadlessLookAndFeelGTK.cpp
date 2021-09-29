@@ -16,10 +16,13 @@ HeadlessLookAndFeel::HeadlessLookAndFeel() {}
 
 HeadlessLookAndFeel::~HeadlessLookAndFeel() = default;
 
-nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
+nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                              nscolor& aColor) {
   // For headless mode, we use GetStandinForNativeColor for everything we can,
   // and hardcoded values for everything else.
+  //
+  // TODO(emilio): We should probably just move these to
+  // GetStandinForNativeColor.
 
   nsresult res = NS_OK;
 
@@ -114,7 +117,7 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
     default:
-      aColor = GetStandinForNativeColor(aID);
+      aColor = GetStandinForNativeColor(aID, aScheme);
       break;
   }
 

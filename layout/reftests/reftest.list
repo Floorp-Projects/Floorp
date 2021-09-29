@@ -153,6 +153,9 @@ include css-variables/reftest.list
 
 include cssom/reftest.list
 
+# color-scheme
+include color-scheme/reftest.list
+
 # columns/
 include columns/reftest.list
 
