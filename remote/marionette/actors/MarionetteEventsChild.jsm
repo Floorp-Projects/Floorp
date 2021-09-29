@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   event: "chrome://remote/content/marionette/event.js",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
@@ -39,6 +41,13 @@ class MarionetteEventsChild extends JSWindowActorChild {
   }
 
   handleEvent({ target, type }) {
+    if (!Services.cpmm.sharedData.get("MARIONETTE_EVENTS_ENABLED")) {
+      // The parent process will set MARIONETTE_EVENTS_ENABLED to false when
+      // the Marionette session ends to avoid unnecessary inter process
+      // communications
+      return;
+    }
+
     // Ignore invalid combinations of load events and document's readyState.
     if (
       (type === "DOMContentLoaded" && target.readyState != "interactive") ||
