@@ -50,6 +50,8 @@ EXPORTS += [
     "nsHtml5ViewSourceUtils.h",
     "nsIContentHandle.h",
     "nsParserUtils.h",
+    "rlbox_expat.h",
+    "rlbox_expat_types.h",
 ]
 
 UNIFIED_SOURCES += [
