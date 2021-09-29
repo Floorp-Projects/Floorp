@@ -8,10 +8,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import org.mozilla.focus.R
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import mozilla.components.ui.colors.PhotonColors
+
+val localColors = staticCompositionLocalOf { lightColorPalette() }
 
 /**
  * The theme used for Firefox Focus/Klar for Android.
@@ -21,18 +25,55 @@ fun FocusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colors = if (darkTheme) darkColorPalette() else lightColorPalette(),
-        content = content
-    )
+
+    val colors = if (darkTheme) {
+        darkColorPalette()
+    } else {
+        lightColorPalette()
+    }
+
+    CompositionLocalProvider(localColors provides colors) {
+        MaterialTheme(
+            colors = colors.material,
+            content = content,
+        )
+    }
 }
 
-@Composable
-private fun darkColorPalette(): Colors = darkColors(
-    background = colorResource(R.color.colorPrimary),
-    onBackground = Color.White
+val focusColors: FocusColors
+    @Composable
+    @ReadOnlyComposable
+    get() = localColors.current
+
+private fun darkColorPalette(): FocusColors = FocusColors(
+    material = darkColorsMaterial(),
+    topSiteBackground = PhotonColors.Ink05,
+    topSiteFaviconText = PhotonColors.LightGrey05,
+    topSiteTitle = PhotonColors.LightGrey05,
+    topSiteMenuBackground = PhotonColors.Ink05,
+    topSiteMenuText = PhotonColors.White,
+    aboutPageText = PhotonColors.White,
+    aboutPageLink = PhotonColors.Pink70,
 )
 
-// Just a copy of the dark palette until we actually have a light theme
-@Composable
-private fun lightColorPalette(): Colors = darkColorPalette()
+private fun lightColorPalette(): FocusColors = FocusColors(
+    material = lightColorsMaterial(),
+    topSiteBackground = PhotonColors.White,
+    topSiteFaviconText = PhotonColors.Ink50,
+    topSiteTitle = PhotonColors.DarkGrey05,
+    topSiteMenuBackground = PhotonColors.White,
+    topSiteMenuText = PhotonColors.Black,
+    aboutPageText = PhotonColors.Black,
+    aboutPageLink = PhotonColors.Pink70,
+)
+
+/**
+ * Material baseline colors can be overridden here.
+ */
+private fun darkColorsMaterial(): Colors = darkColors(
+    surface = PhotonColors.Ink60,
+)
+
+private fun lightColorsMaterial(): Colors = lightColors(
+    surface = PhotonColors.Violet05
+)

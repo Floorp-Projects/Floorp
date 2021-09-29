@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,10 +37,10 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.kotlin.getRepresentativeCharacter
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.R
 import org.mozilla.focus.components
+import org.mozilla.focus.theme.focusColors
 
 /**
  * A list of top sites.
@@ -121,7 +120,7 @@ private fun TopSiteItem(
             Text(
                 text = topSite.title ?: topSite.url,
                 modifier = Modifier.padding(top = 8.dp),
-                color = PhotonColors.LightGrey05,
+                color = focusColors.topSiteTitle,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
@@ -131,7 +130,7 @@ private fun TopSiteItem(
         DropdownMenu(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
-            modifier = Modifier.background(color = PhotonColors.Ink05)
+            modifier = Modifier.background(color = focusColors.topSiteMenuBackground)
         ) {
             for (item in menuItems) {
                 DropdownMenuItem(
@@ -142,7 +141,7 @@ private fun TopSiteItem(
                 ) {
                     Text(
                         text = item.title,
-                        color = colorResource(R.color.contrastColor)
+                        color = focusColors.topSiteMenuText
                     )
                 }
             }
@@ -160,7 +159,7 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
     Card(
         modifier = Modifier.size(60.dp),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = PhotonColors.Ink05
+        backgroundColor = focusColors.topSiteBackground
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -169,7 +168,7 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
             Surface(
                 modifier = Modifier.size(36.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = PhotonColors.Ink60
+                color = focusColors.surface
             ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
@@ -177,7 +176,7 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
                 ) {
                     Text(
                         text = topSite.url.getRepresentativeCharacter(),
-                        color = PhotonColors.LightGrey05,
+                        color = focusColors.topSiteFaviconText,
                         fontSize = 20.sp
                     )
                 }

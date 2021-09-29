@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
@@ -37,6 +36,8 @@ import org.mozilla.focus.databinding.FragmentAboutBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.theme.FocusTheme
+import org.mozilla.focus.theme.focusColors
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
 import org.mozilla.geckoview.BuildConfig
 
@@ -113,19 +114,22 @@ private fun AboutPageContent(
     learnMore: String,
     openLearnMore: () -> Job
 ) {
-    Column(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
 
-    ) {
-        LogoIcon()
-        VersionInfo(aboutVersion)
-        AboutContent(content)
-        LearnMoreLink(learnMore, openLearnMore)
+    FocusTheme {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+
+        ) {
+            LogoIcon()
+            VersionInfo(aboutVersion)
+            AboutContent(content)
+            LearnMoreLink(learnMore, openLearnMore)
+        }
     }
 }
 
@@ -143,7 +147,7 @@ private fun LogoIcon() {
 private fun VersionInfo(aboutVersion: String) {
     Text(
         text = aboutVersion,
-        color = colorResource(R.color.contrastColor),
+        color = focusColors.aboutPageText,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         modifier = Modifier
@@ -155,7 +159,7 @@ private fun VersionInfo(aboutVersion: String) {
 private fun AboutContent(content: String) {
     Text(
         text = content,
-        color = colorResource(R.color.contrastColor),
+        color = focusColors.aboutPageText,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         modifier = Modifier
@@ -170,7 +174,7 @@ fun ColumnScope.LearnMoreLink(
 ) {
     Text(
         text = learnMore,
-        color = colorResource(id = R.color.preference_learn_more_link),
+        color = focusColors.aboutPageLink,
         style = TextStyle(textDecoration = TextDecoration.Underline),
         fontSize = 16.sp,
         lineHeight = 24.sp,

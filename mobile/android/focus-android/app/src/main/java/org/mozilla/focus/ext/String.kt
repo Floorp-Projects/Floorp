@@ -5,6 +5,7 @@
 package org.mozilla.focus.ext
 
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.utils.UrlUtils
 
@@ -83,3 +84,9 @@ fun String.removePrefixesIgnoreCase(vararg prefixes: String): String {
 val String.tryGetRootDomain: String
     get() =
         this.tryGetHostFromUrl().replaceAfter(".", "").removeSuffix(".")
+
+/**
+ * Tries to parse a color string and return a [Color]
+ */
+val String.color: Color
+    get() = Color(android.graphics.Color.parseColor(this))
