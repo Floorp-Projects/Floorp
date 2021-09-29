@@ -579,12 +579,7 @@ nsresult txPushParams::execute(txExecutionState& aEs) {
 }
 
 nsresult txPushRTFHandler::execute(txExecutionState& aEs) {
-  txAXMLEventHandler* handler = new txRtfHandler;
-  nsresult rv = aEs.pushResultHandler(handler);
-  if (NS_FAILED(rv)) {
-    delete handler;
-    return rv;
-  }
+  aEs.pushResultHandler(new txRtfHandler);
 
   return NS_OK;
 }
@@ -593,12 +588,7 @@ txPushStringHandler::txPushStringHandler(bool aOnlyText)
     : mOnlyText(aOnlyText) {}
 
 nsresult txPushStringHandler::execute(txExecutionState& aEs) {
-  txAXMLEventHandler* handler = new txTextHandler(mOnlyText);
-  nsresult rv = aEs.pushResultHandler(handler);
-  if (NS_FAILED(rv)) {
-    delete handler;
-    return rv;
-  }
+  aEs.pushResultHandler(new txTextHandler(mOnlyText));
 
   return NS_OK;
 }
