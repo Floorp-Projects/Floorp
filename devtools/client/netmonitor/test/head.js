@@ -59,6 +59,8 @@ const EXAMPLE_ORG_URL =
   "http://example.org/browser/devtools/client/netmonitor/test/";
 const HTTPS_EXAMPLE_URL =
   "https://example.com/browser/devtools/client/netmonitor/test/";
+const HTTPS_EXAMPLE_ORG_URL =
+  "https://example.org/browser/devtools/client/netmonitor/test/";
 /* Since the test server will proxy `ws://example.com` to websocket server on 9988,
 so we must sepecify the port explicitly */
 const WS_URL = "ws://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
@@ -70,8 +72,9 @@ const WS_BASE_URL =
 const WS_PAGE_URL = WS_BASE_URL + "html_ws-test-page.html";
 const WS_PAGE_EARLY_CONNECTION_URL =
   WS_BASE_URL + "html_ws-early-connection-page.html";
-const API_CALLS_URL = EXAMPLE_URL + "html_api-calls-test-page.html";
+const API_CALLS_URL = HTTPS_EXAMPLE_URL + "html_api-calls-test-page.html";
 const SIMPLE_URL = EXAMPLE_URL + "html_simple-test-page.html";
+const HTTPS_SIMPLE_URL = HTTPS_EXAMPLE_URL + "html_simple-test-page.html";
 const NAVIGATE_URL = EXAMPLE_URL + "html_navigate-test-page.html";
 const CONTENT_TYPE_WITHOUT_CACHE_URL =
   EXAMPLE_URL + "html_content-type-without-cache-test-page.html";
@@ -102,6 +105,7 @@ const INFINITE_GET_URL = EXAMPLE_URL + "html_infinite-get-page.html";
 const CUSTOM_GET_URL = EXAMPLE_URL + "html_custom-get-page.html";
 const HTTPS_CUSTOM_GET_URL = HTTPS_EXAMPLE_URL + "html_custom-get-page.html";
 const SINGLE_GET_URL = EXAMPLE_URL + "html_single-get-page.html";
+const HTTPS_SINGLE_GET_URL = HTTPS_EXAMPLE_URL + "html_single-get-page.html";
 const STATISTICS_URL = EXAMPLE_URL + "html_statistics-test-page.html";
 const CURL_URL = EXAMPLE_URL + "html_copy-as-curl.html";
 const CURL_UTILS_URL = EXAMPLE_URL + "html_curl-utils.html";
@@ -133,6 +137,7 @@ const METHOD_SJS = EXAMPLE_URL + "sjs_method-test-server.sjs";
 const SLOW_SJS = EXAMPLE_URL + "sjs_slow-test-server.sjs";
 const SET_COOKIE_SAME_SITE_SJS = EXAMPLE_URL + "sjs_set-cookie-same-site.sjs";
 const SEARCH_SJS = EXAMPLE_URL + "sjs_search-test-server.sjs";
+const HTTPS_SEARCH_SJS = HTTPS_EXAMPLE_URL + "sjs_search-test-server.sjs";
 
 const HSTS_BASE_URL = EXAMPLE_URL;
 const HSTS_PAGE_URL = CUSTOM_GET_URL;

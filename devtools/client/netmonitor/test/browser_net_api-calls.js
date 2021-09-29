@@ -23,11 +23,11 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   const REQUEST_URIS = [
-    "http://example.com/api/fileName.xml",
-    "http://example.com/api/file%E2%98%A2.xml",
-    "http://example.com/api/ascii/get/",
-    "http://example.com/api/unicode/%E2%98%A2/",
-    "http://example.com/api/search/?q=search%E2%98%A2",
+    "https://example.com/api/fileName.xml",
+    "https://example.com/api/file%E2%98%A2.xml",
+    "https://example.com/api/ascii/get/",
+    "https://example.com/api/unicode/%E2%98%A2/",
+    "https://example.com/api/search/?q=search%E2%98%A2",
   ];
 
   // Execute requests.
