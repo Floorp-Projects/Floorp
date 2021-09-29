@@ -170,8 +170,17 @@ class HomeScreenRobot {
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/menuButton")), waitingTime)
-            threeDotButton().perform(click())
+            // Issue: https://github.com/mozilla-mobile/fenix/issues/21578
+            try {
+                mDevice.waitNotNull(
+                    Until.findObject(By.res("$packageName:id/menuButton")),
+                    waitingTime
+                )
+            } catch (e: AssertionError) {
+                mDevice.pressBack()
+            } finally {
+                threeDotButton().perform(click())
+            }
 
             ThreeDotMenuMainRobot().interact()
             return ThreeDotMenuMainRobot.Transition()
