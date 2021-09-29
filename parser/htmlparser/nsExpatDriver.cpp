@@ -179,31 +179,6 @@ static void Driver_HandleProcessingInstruction(
   }
 }
 
-static void Driver_HandleDefault(rlbox_sandbox_expat& aSandbox,
-                                 tainted_expat<void*> t_aUserData,
-                                 tainted_expat<const XML_Char*> t_aData,
-                                 tainted_expat<int> t_aLength) {
-  nsExpatDriver* driver = aSandbox.lookup_app_ptr(
-      rlbox::sandbox_static_cast<nsExpatDriver*>(t_aUserData));
-  NS_ASSERTION(driver, "expat driver should exist");
-  if (driver) {
-    if (t_aData != nullptr) {
-      uint32_t aLength = static_cast<uint32_t>(
-          t_aLength.copy_and_verify(safe_unverified<int>));
-      bool copied_aData = false;
-      auto* aData = rlbox::copy_memory_or_deny_access(
-          aSandbox, rlbox::sandbox_const_cast<char16_t*>(t_aData),
-          aLength * sizeof(char16_t), false, copied_aData);
-      driver->HandleCharacterData(aData, aLength);
-      if (copied_aData) {
-        free(aData);
-      }
-    } else {
-      driver->HandleCharacterData(nullptr, 0);
-    }
-  }
-}
-
 static void Driver_HandleStartCdataSection(rlbox_sandbox_expat& aSandbox,
                                            tainted_expat<void*> t_aUserData) {
   nsExpatDriver* driver = aSandbox.lookup_app_ptr(
@@ -1471,7 +1446,6 @@ RLBoxExpatData::RLBoxExpatData(bool isSystemPrincipal) {
       mSandbox->register_callback(Driver_HandleCharacterData);
   mHandleProcessingInstruction =
       mSandbox->register_callback(Driver_HandleProcessingInstruction);
-  mHandleDefault = mSandbox->register_callback(Driver_HandleDefault);
   mHandleExternalEntityRef =
       mSandbox->register_callback(Driver_HandleExternalEntityRef);
   mHandleComment = mSandbox->register_callback(Driver_HandleComment);
@@ -1492,7 +1466,6 @@ RLBoxExpatData::~RLBoxExpatData() {
   mHandleEndElement.unregister();
   mHandleCharacterData.unregister();
   mHandleProcessingInstruction.unregister();
-  mHandleDefault.unregister();
   mHandleExternalEntityRef.unregister();
   mHandleComment.unregister();
   mHandleStartCdataSection.unregister();
@@ -1626,7 +1599,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   RLBOX_EXPAT_MCALL(MOZ_XML_SetProcessingInstructionHandler,
                     mSandboxData->mHandleProcessingInstruction);
   RLBOX_EXPAT_MCALL(MOZ_XML_SetDefaultHandlerExpand,
-                    mSandboxData->mHandleDefault);
+                    mSandboxData->mHandleCharacterData);
   RLBOX_EXPAT_MCALL(MOZ_XML_SetExternalEntityRefHandler,
                     mSandboxData->mHandleExternalEntityRef);
   RLBOX_EXPAT_MCALL(MOZ_XML_SetCommentHandler, mSandboxData->mHandleComment);
