@@ -15,7 +15,7 @@
  */
 
 console.info(
-  "Service Workers are disabled by Firefox on this page due to https://bugzilla.mozilla.org/show_bug.cgi?id=1668408 for details."
+  "Service Workers are disabled by Firefox on this page to prevent breakage. See https://bugzilla.mozilla.org/show_bug.cgi?id=1668408 for details."
 );
 
 delete window.navigator.wrappedJSObject.__proto__.serviceWorker;
