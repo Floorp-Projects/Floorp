@@ -82,5 +82,3 @@ SOURCES += [
 
 if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
     include("/tools/fuzzing/libfuzzer-config.mozbuild")
-
-REQUIRES_UNIFIED_BUILD = True
