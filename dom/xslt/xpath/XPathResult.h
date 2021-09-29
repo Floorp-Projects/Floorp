@@ -8,9 +8,9 @@
 
 #include "nsStubMutationObserver.h"
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsString.h"
@@ -110,7 +110,7 @@ class XPathResult final : public nsIXPathResult,
       return nullptr;
     }
 
-    return mResultNodes.SafeObjectAt(0);
+    return mResultNodes.SafeElementAt(0);
   }
   bool InvalidIteratorState() const {
     return isIterator() && mInvalidIteratorState;
@@ -121,7 +121,7 @@ class XPathResult final : public nsIXPathResult,
       return 0;
     }
 
-    return (uint32_t)mResultNodes.Count();
+    return (uint32_t)mResultNodes.Length();
   }
   nsINode* IterateNext(ErrorResult& aRv);
   nsINode* SnapshotItem(uint32_t aIndex, ErrorResult& aRv) const {
@@ -130,7 +130,7 @@ class XPathResult final : public nsIXPathResult,
       return nullptr;
     }
 
-    return mResultNodes.SafeObjectAt(aIndex);
+    return mResultNodes.SafeElementAt(aIndex);
   }
 
   // nsIMutationObserver interface
@@ -168,7 +168,7 @@ class XPathResult final : public nsIXPathResult,
 
   nsCOMPtr<nsINode> mParent;
   RefPtr<txAExprResult> mResult;
-  nsCOMArray<nsINode> mResultNodes;
+  nsTArray<nsCOMPtr<nsINode>> mResultNodes;
   RefPtr<Document> mDocument;
   nsWeakPtr mContextNode;
   uint32_t mCurrentPos;
