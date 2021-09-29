@@ -6,8 +6,8 @@
 // A test to ensure Style Editor only issues 1 request for each stylesheet (instead of 2)
 // by using the cache on the platform.
 
-const EMPTY_TEST_URL = TEST_BASE_HTTP + "doc_empty.html";
-const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
+const EMPTY_TEST_URL = TEST_BASE_HTTPS + "doc_empty.html";
+const TEST_URL = TEST_BASE_HTTPS + "doc_fetch_from_netmonitor.html";
 
 add_task(async function() {
   info("Opening netmonitor");
