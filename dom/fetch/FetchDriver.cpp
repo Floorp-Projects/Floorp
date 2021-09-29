@@ -235,21 +235,18 @@ AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest) {
     // call FetchDriver::HttpFetch to load main body
     MOZ_ASSERT(mFetchDriver);
     return mFetchDriver->HttpFetch();
-
-  } else {
-    // Needn't load alternative data, since alternative data does not exist.
-    // Set status to FALLBACK to reuse the opened channel to load main body,
-    // then call FetchDriver::OnStartRequest to continue the work. Unfortunately
-    // can't change the stream listener to mFetchDriver, need to keep
-    // AlternativeDataStreamListener alive to redirect OnDataAvailable and
-    // OnStopRequest to mFetchDriver.
-    MOZ_ASSERT(alternativeDataType.IsEmpty());
-    mStatus = AlternativeDataStreamListener::FALLBACK;
-    mAlternativeDataCacheEntryId = 0;
-    MOZ_ASSERT(mFetchDriver);
-    return mFetchDriver->OnStartRequest(aRequest);
   }
-  return NS_OK;
+  // Needn't load alternative data, since alternative data does not exist.
+  // Set status to FALLBACK to reuse the opened channel to load main body,
+  // then call FetchDriver::OnStartRequest to continue the work. Unfortunately
+  // can't change the stream listener to mFetchDriver, need to keep
+  // AlternativeDataStreamListener alive to redirect OnDataAvailable and
+  // OnStopRequest to mFetchDriver.
+  MOZ_ASSERT(alternativeDataType.IsEmpty());
+  mStatus = AlternativeDataStreamListener::FALLBACK;
+  mAlternativeDataCacheEntryId = 0;
+  MOZ_ASSERT(mFetchDriver);
+  return mFetchDriver->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
