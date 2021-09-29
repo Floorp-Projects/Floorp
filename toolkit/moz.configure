@@ -2115,13 +2115,21 @@ def wasm_sandboxing_libraries():
 
 @depends(dependable(wasm_sandboxing_libraries), target, "MOZ_AUTOMATION")
 def default_wasm_sandboxing_libraries(libraries, target, automation):
+    non_default_libs = set()
+    if target.bitness == 32:
+        non_default_libs.add("ogg")
+
     if automation and (
-        (target.kernel == "Linux" and target.os == "GNU" and target.cpu == "x86_64")
+        (
+            target.kernel == "Linux"
+            and target.os == "GNU"
+            and target.cpu in ("x86", "x86_64")
+        )
         or (target.os == "Android" and target.bitness == 64)
         or (target.kernel == "Darwin" and target.bitness == 64)
-        or (target.kernel == "WINNT" and target.bitness == 64)
+        or target.kernel == "WINNT"
     ):
-        return libraries
+        return tuple(l for l in libraries if l not in non_default_libs)
 
 
 option(
@@ -2238,13 +2246,10 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     set_config("WASM_CXXFLAGS", wasm_cxxflags)
 
 
-@depends("--with-wasm-sandboxed-libraries", target)
-def wasm_sandboxing(libraries, target):
+@depends("--with-wasm-sandboxed-libraries")
+def wasm_sandboxing(libraries):
     if not libraries:
         return
-
-    if target.bitness != 64:
-        die("wasm sandboxing is only supported on 64-bits platforms")
 
     return namespace(**{name: True for name in libraries})
 
