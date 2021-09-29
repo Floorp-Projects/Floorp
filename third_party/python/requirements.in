@@ -11,11 +11,9 @@ ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.11
 fluent.syntax==0.18.1
-funcsigs==1.0.2
 glean_parser==3.6.0
 jsmin==2.1.0
 json-e==2.7.0
-mohawk==0.3.4
 mozilla-version==0.3.4
 packaging==21.0
 pathspec==0.8
@@ -24,7 +22,6 @@ ply==3.10
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pylru==1.0.9
-pystache==0.5.4
 python-hglib==2.4
 pytoml==0.1.10
 pyyaml==5.4.1
