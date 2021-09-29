@@ -167,6 +167,7 @@ class MachExec extends Exec {
         // $topsrcdir/settings.gradle.
         project.ext.mozconfig.mozconfig.env.unmodified.each { k, v -> environment.remove(k) }
         environment project.ext.mozconfig.orig_mozconfig.env.unmodified
+        environment 'MOZCONFIG', project.ext.mozconfig.substs.MOZCONFIG
     }
 }
 

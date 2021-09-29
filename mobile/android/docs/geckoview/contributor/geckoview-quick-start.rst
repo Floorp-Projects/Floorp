@@ -126,6 +126,30 @@ native code. `Bug
 1509539 <https://bugzilla.mozilla.org/show_bug.cgi?id=1509539>`_ tracks
 making Android Studio and Gradle do this automatically.
 
+Custom mozconfig with Android Studio
+------------------------------------
+
+Out of the box, Android Studio will use the default mozconfig file, normally
+located at ``mozconfig`` in the root directory of your ``mozilla-central``
+checkout.
+
+To make Android Studio use a mozconfig in a custom location, you can add the
+following to your ``local.properties``:
+
+::
+
+   mozilla-central.mozconfig=relative/path/to/mozconfig
+
+Note that, when running mach from the command line, this value will be ignored,
+and the mozconfig from the mach environment will be used instead.
+
+To override the mozconfig used by mach, you can use the `MOZCONFIG` environment
+variable, for example:
+
+::
+
+   MOZCONFIG=debug.mozconfig ./mach build
+
 Performing a bug fix
 --------------------
 
