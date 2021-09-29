@@ -919,15 +919,15 @@ bool nsDocShell::MaybeHandleSubframeHistory(
 
             auto resolve =
                 [currentLoadIdentifier, browsingContext, parentDoc, loadState,
-                 isNavigating](Tuple<mozilla::Maybe<LoadingSessionHistoryInfo>,
-                                     int32_t, int32_t>&& aResult) {
+                 isNavigating](
+                    mozilla::Maybe<LoadingSessionHistoryInfo>&& aResult) {
                   if (currentLoadIdentifier ==
                           browsingContext->GetCurrentLoadIdentifier() &&
-                      Get<0>(aResult).isSome()) {
-                    loadState->SetLoadingSessionHistoryInfo(
-                        Get<0>(aResult).value());
-                    loadState->SetLoadIsFromSessionHistory(
-                        Get<1>(aResult), Get<2>(aResult), false);
+                      aResult.isSome()) {
+                    loadState->SetLoadingSessionHistoryInfo(aResult.value());
+                    // This is an initial subframe load from the session
+                    // history, index doesn't need to be updated.
+                    loadState->SetLoadIsFromSessionHistory(0, false);
                   }
                   RefPtr<nsDocShell> docShell =
                       static_cast<nsDocShell*>(browsingContext->GetDocShell());
@@ -947,14 +947,13 @@ bool nsDocShell::MaybeHandleSubframeHistory(
           }
         } else {
           Maybe<LoadingSessionHistoryInfo> info;
-          int32_t requestedIndex = -1;
-          int32_t sessionHistoryLength = 0;
           mBrowsingContext->Canonical()->GetLoadingSessionHistoryInfoFromParent(
-              info, &requestedIndex, &sessionHistoryLength);
+              info);
           if (info.isSome()) {
             aLoadState->SetLoadingSessionHistoryInfo(info.value());
-            aLoadState->SetLoadIsFromSessionHistory(
-                requestedIndex, sessionHistoryLength, false);
+            // This is an initial subframe load from the session
+            // history, index doesn't need to be updated.
+            aLoadState->SetLoadIsFromSessionHistory(0, false);
           }
         }
       }

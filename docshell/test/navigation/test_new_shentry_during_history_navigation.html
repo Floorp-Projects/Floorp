@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test adding new session history entries while navigating to another one</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    var win;
+
+    function waitForMessage(msg) {
+      return new Promise(
+        function(resolve) {
+          window.addEventListener("message",
+            function(event) {
+              is(event.data, msg, "Got the expected message " + msg);
+              resolve();
+            }, { once: true }
+          );
+        }
+      );
+    }
+
+    async function test() {
+
+      let loadPromise = waitForMessage("load");
+      win = window.open("file_new_shentry_during_history_navigation_1.html");
+      await loadPromise;
+
+      loadPromise = waitForMessage("load");
+      win.location.href = "file_new_shentry_during_history_navigation_2.html";
+      await loadPromise;
+
+      let beforeunloadPromise = waitForMessage("beforeunload");
+      win.history.back();
+      await beforeunloadPromise;
+      await waitForMessage("load");
+
+      win.history.back();
+      SimpleTest.requestFlakyTimeout("Test that history.back() does not work on the initial entry.");
+      setTimeout(function() {
+          win.onmessage = null;
+          win.close();
+          SimpleTest.finish();
+      }, 500);
+      window.onmessage = function(event) {
+        ok(false, "Should not get a message " + event.data);
+      }
+    }
+
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

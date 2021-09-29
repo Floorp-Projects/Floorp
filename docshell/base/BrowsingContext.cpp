@@ -3426,10 +3426,8 @@ void BrowsingContext::SessionHistoryCommit(
           changeID = rootSH->AddPendingHistoryChange();
         }
       } else {
-        // This is a load from session history, so we can update
-        // index and length immediately.
-        rootSH->SetIndexAndLength(aInfo.mRequestedIndex,
-                                  aInfo.mSessionHistoryLength, changeID);
+        // History load doesn't change the length, only index.
+        changeID = rootSH->AddPendingHistoryChange(aInfo.mOffset, 0);
       }
     }
     ContentChild* cc = ContentChild::GetSingleton();
