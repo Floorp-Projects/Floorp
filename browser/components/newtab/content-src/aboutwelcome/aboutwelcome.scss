@@ -108,14 +108,19 @@ body {
   }
 
   .brand-logo {
-    background: url('chrome://branding/content/about-logo.svg') top
-    center / $logo-size no-repeat;
+    background: url('chrome://branding/content/about-logo.svg') top center / $logo-size no-repeat;
     padding: $logo-size 0 10px;
     margin-top: 60px;
     transition: var(--transition);
 
     &.cta-top {
       margin-top: 25px;
+    }
+
+    &.hide {
+      visibility: hidden;
+      padding: unset;
+      margin-top: 50px;
     }
   }
 
@@ -184,7 +189,14 @@ body {
   }
 
   .tiles-theme-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin: 10px auto;
+
+    &.colorway {
+      flex-direction: column-reverse;
+    }
   }
 
   .sr-only {
@@ -195,6 +207,60 @@ body {
     &.input {
       height: 1px;
       width: 1px;
+    }
+  }
+
+  .colorway-variations {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 190px;
+    height: 190px;
+    border-radius: 190px;
+    color: #FFF;
+    padding-top: 50px;
+    margin-bottom: 10px;
+    &.default { background: linear-gradient(180deg, #4B4B4B 0%, #4B4B4B 100%); }
+    &.abstract { background: linear-gradient(180deg, #CD5F3A 0%, #A54727 100%); }
+    &.cheers { background: linear-gradient(180deg, #FBB900 0%, #CE9800 100%); }
+    &.elemental { background: linear-gradient(180deg, #8F8E89 0%, #6B675E 100%); }
+    &.foto { background: linear-gradient(180deg, #F2BDC5 0%, #C47985 100%); }
+    &.graffiti { background: linear-gradient(180deg, #B27ECA 0%, #844D9E 100%); }
+    &.lush { background: linear-gradient(180deg, #5F9B78 0%, #4E6A5A 100%); }
+
+    &:active,
+    &:focus-within {
+      outline: 2px var(--in-content-primary-button-background) solid;
+    }
+
+
+    .colorway-text {
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 24px;
+      margin-bottom: 15px;
+    }
+
+    .variation-button {
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 12px;
+      padding: 6px 12px;
+      width: auto;
+      height: 24px;
+      min-height: 24px;
+      margin: 0;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+      }
+
+      &.selected,
+      &:active {
+        background: rgba(0, 0, 0, 0.64);
+        border-radius: 2px;
+      }
     }
   }
 
@@ -229,6 +295,10 @@ body {
       cursor: pointer;
       z-index: 0;
 
+      &.colorway {
+        width: auto;
+      }
+
       &:focus,
       &:active {
         outline: initial;
@@ -243,6 +313,11 @@ body {
         outline: 1px solid var(--in-content-border-color);
         outline-offset: -0.5px;
         z-index: -1;
+
+        &.colorway {
+          width: 20px;
+          height: 20px;
+        }
 
         &:dir(rtl) {
           transform: scaleX(-1);
@@ -266,8 +341,33 @@ body {
           background-image: url('resource://builtin-themes/alpenglow/icon.svg');
         }
 
+        &.default,
         &.automatic {
           background-image: url('resource://default-theme/icon.svg');
+        }
+
+        &.abstract {
+          background-image: url('resource://builtin-themes/monochromatic/abstract/balanced/icon.svg');
+        }
+
+        &.cheers {
+          background-image: url('resource://builtin-themes/monochromatic/cheers/balanced/icon.svg');
+        }
+
+        &.elemental {
+          background-image: url('resource://builtin-themes/monochromatic/elemental/balanced/icon.svg');
+        }
+
+        &.foto {
+          background-image: url('resource://builtin-themes/monochromatic/foto/balanced/icon.svg');
+        }
+
+        &.graffiti {
+          background-image: url('resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg');
+        }
+
+        &.lush {
+          background-image: url('resource://builtin-themes/monochromatic/lush/balanced/icon.svg');
         }
       }
 
