@@ -239,6 +239,31 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
+    fun handleToolbackClickWithSearchTerms() {
+        val searchResultsTab = createTab("https://google.com?q=mozilla+website", searchTerms = "mozilla website")
+        store.dispatch(TabListAction.AddTabAction(searchResultsTab, select = true)).joinBlocking()
+
+        val controller = createController()
+        controller.handleToolbarClick()
+
+        val homeDirections = BrowserFragmentDirections.actionGlobalHome()
+        val searchDialogDirections = BrowserFragmentDirections.actionGlobalSearchDialog(
+            sessionId = searchResultsTab.id
+        )
+
+        verify {
+            metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
+        }
+        // Does not show the home screen "behind" the search dialog if the current session has search terms.
+        verify(exactly = 0) {
+            navController.navigate(homeDirections)
+        }
+        verify {
+            navController.navigate(searchDialogDirections, any<NavOptions>())
+        }
+    }
+
+    @Test
     fun handleToolbarCloseTabPressWithLastPrivateSession() {
         val item = TabCounterMenu.Item.CloseTab
 

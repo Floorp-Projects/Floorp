@@ -434,7 +434,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 true
             }
             else -> {
-                if (FeatureFlags.showHomeBehindSearch) {
+                // In case we're displaying search results, we wouldn't have navigated to home, and
+                // so we don't need to navigate "back to" browser fragment.
+                // See mirror of this logic in BrowserToolbarController#handleToolbarClick.
+                if (FeatureFlags.showHomeBehindSearch && store.state.searchTerms.isBlank()) {
                     val args by navArgs<SearchDialogFragmentArgs>()
                     args.sessionId?.let {
                         findNavController().navigate(

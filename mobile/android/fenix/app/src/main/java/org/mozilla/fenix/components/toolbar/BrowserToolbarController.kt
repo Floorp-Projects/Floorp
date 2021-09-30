@@ -92,7 +92,11 @@ class DefaultBrowserToolbarController(
 
     override fun handleToolbarClick() {
         metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
-        if (FeatureFlags.showHomeBehindSearch) {
+        // If we're displaying awesomebar search results, Home screen will not be visible (it's
+        // covered up with the search results). So, skip the navigation event in that case.
+        // If we don't, there's a visual flickr as we navigate to Home and then display search
+        // results on top it.
+        if (FeatureFlags.showHomeBehindSearch && currentSession?.content?.searchTerms.isNullOrBlank()) {
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalHome()
             )
