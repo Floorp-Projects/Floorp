@@ -740,6 +740,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x15d8);
       // Renoir
       APPEND_DEVICE(0x1636);
+      // Cezanne
+      APPEND_DEVICE(0x1638);
 
       // Evergreen
       APPEND_RANGE(0x6840, 0x684b);
