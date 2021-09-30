@@ -209,7 +209,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -483,7 +482,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -749,7 +747,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -965,7 +962,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -1172,7 +1168,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -1356,7 +1351,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -1549,7 +1543,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -1755,7 +1748,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -1935,7 +1927,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -2106,7 +2097,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -2301,7 +2291,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -2508,7 +2497,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -2712,7 +2700,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -2936,7 +2923,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -3173,7 +3159,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -3437,7 +3422,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -3702,7 +3686,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],
@@ -3966,7 +3949,6 @@ Object {
         "_workInProgressHook": null,
       },
     },
-    Symbol(enzyme.__setState__): [Function],
   },
   "props": Object {
     "blackBoxSources": [MockFunction],

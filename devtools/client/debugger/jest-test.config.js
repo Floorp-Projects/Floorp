@@ -10,6 +10,7 @@ module.exports = {
   rootDir,
   displayName: "test",
   testURL: "http://localhost/",
+  testEnvironment: "jsdom",
   testPathIgnorePatterns: [
     "/node_modules/",
     "/helpers/",
@@ -32,7 +33,7 @@ module.exports = {
     "\\.[jt]sx?$": "babel-jest",
   },
   transformIgnorePatterns: ["node_modules/(?!(devtools-|react-aria-))"],
-  setupTestFrameworkScriptFile: "<rootDir>/src/test/tests-setup.js",
+  setupFilesAfterEnv: ["<rootDir>/src/test/tests-setup.js"],
   setupFiles: ["<rootDir>/src/test/shim.js", "jest-localstorage-mock"],
   snapshotSerializers: [
     "jest-serializer-babel-ast",
