@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +52,10 @@ import org.mozilla.fenix.compose.TabTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
 import kotlin.random.Random
+
+private const val URI_PARAM_UTM_KEY = "utm_source"
+private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
+private const val POCKET_FEATURE_UTM_KEY_VALUE = "utm_source=ff_android"
 
 /**
  * Placeholder [PocketRecommendedStory] allowing to combine other items in the same list that shows stories.
@@ -129,11 +134,15 @@ fun PocketStories(
                 columnItems.forEach { story ->
                     if (story == placeholderStory) {
                         ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
-                            onExternalLinkClicked("http://getpocket.com/explore")
+                            onExternalLinkClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
                         }
                     } else {
+                        val uri = Uri.parse(story.url)
+                            .buildUpon()
+                            .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
+                            .build().toString()
                         PocketStory(story) {
-                            onExternalLinkClicked(story.url)
+                            onExternalLinkClicked(uri)
                         }
                     }
                 }
@@ -221,7 +230,7 @@ fun PoweredByPocketHeader(
                 )
 
                 ClickableSubstringLink(text, color, linkStartIndex, linkEndIndex) {
-                    onExternalLinkClicked("https://www.mozilla.org/en-US/firefox/pocket/")
+                    onExternalLinkClicked("https://www.mozilla.org/en-US/firefox/pocket/?$POCKET_FEATURE_UTM_KEY_VALUE")
                 }
             }
         }
