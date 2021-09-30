@@ -1098,7 +1098,7 @@ void MediaDecoder::SetSecondaryVideoContainer(
   if (mSecondaryVideoContainer.Ref() == aSecondaryVideoContainer) {
     return;
   }
-  mSecondaryVideoContainer = std::move(aSecondaryVideoContainer);
+  mSecondaryVideoContainer = aSecondaryVideoContainer;
   UpdateVideoDecodeMode();
 }
 
