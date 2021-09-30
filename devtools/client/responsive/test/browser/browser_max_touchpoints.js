@@ -47,7 +47,7 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   );
 
   info("Check maxTouchPoints override persists after reload");
-  await reloadViewport(ui);
+  await reloadBrowser();
 
   is(
     await getMaxTouchPoints(browser),
@@ -60,12 +60,12 @@ addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
   );
   const previousBrowsingContextId = browser.browsingContext.id;
 
-  const { onPageLoaded } = await waitForViewportLoad(ui);
+  const waitForDevToolsReload = await watchForDevToolsReload(browser);
   BrowserTestUtils.loadURI(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
-  await onPageLoaded;
+  await waitForDevToolsReload();
 
   isnot(
     browser.browsingContext.id,
