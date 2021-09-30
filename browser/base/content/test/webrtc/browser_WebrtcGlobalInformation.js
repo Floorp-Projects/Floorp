@@ -83,6 +83,9 @@ let openTabInNewProcess = async file => {
 };
 
 let killTabProcess = async tab => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    ChromeUtils.privateNoteIntentionalCrash();
+  });
   ProcessTools.kill(tab.linkedBrowser.frameLoader.remoteTab.osPid);
 };
 
