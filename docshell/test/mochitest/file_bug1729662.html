@@ -1,8 +1,0 @@
-<script>
-addEventListener("load", () => {
-    (new BroadcastChannel("bug1729662")).postMessage("load");
-    history.pushState(1, null, location.href);
-    history.back();
-    history.forward();
-});
-</script>
