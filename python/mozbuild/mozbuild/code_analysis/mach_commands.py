@@ -837,7 +837,7 @@ def dump_cov_artifact(command_context, cov_config, cov_results, source, output):
 
 
 def get_coverity_secrets(command_context):
-    from taskgraph.util.taskcluster import get_root_url
+    from gecko_taskgraph.util.taskcluster import get_root_url
 
     secret_name = "project/relman/coverity"
     secrets_url = "{}/secrets/v1/secret/{}".format(get_root_url(True), secret_name)

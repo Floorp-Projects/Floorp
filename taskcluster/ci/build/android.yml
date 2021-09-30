@@ -4,7 +4,7 @@
 ---
 job-defaults:
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
+        artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
     index:
         product: mobile
     worker:

@@ -11,10 +11,10 @@ import pytest
 from mach.logging import LoggingManager
 from responses import RequestsMock, logger as rsps_logger
 
-from taskgraph.generator import TaskGraphGenerator
-from taskgraph.parameters import parameters_loader
-from taskgraph.util.hg import PUSHLOG_PUSHES_TMPL
-from taskgraph.util.bugbug import BUGBUG_BASE_URL
+from gecko_taskgraph.generator import TaskGraphGenerator
+from gecko_taskgraph.parameters import parameters_loader
+from gecko_taskgraph.util.hg import PUSHLOG_PUSHES_TMPL
+from gecko_taskgraph.util.bugbug import BUGBUG_BASE_URL
 
 here = os.path.abspath(os.path.dirname(__file__))
 

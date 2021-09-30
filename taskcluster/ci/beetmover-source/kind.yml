@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
-    - taskgraph.transforms.name_sanity:transforms
-    - taskgraph.transforms.beetmover:transforms
-    - taskgraph.transforms.beetmover_source:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.beetmover:transforms
+    - gecko_taskgraph.transforms.beetmover_source:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - release-source-signing
@@ -16,4 +16,4 @@ kind-dependencies:
 job-template:
     shipping-phase: promote
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/source_files.yml
+        artifact_map: taskcluster/gecko_taskgraph/manifests/source_files.yml

@@ -16,7 +16,7 @@ from tryselect.push import (
 )
 from tryselect.tasks import generate_tasks
 
-from taskgraph.target_tasks import filter_by_uncommon_try_tasks
+from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 here = os.path.abspath(os.path.dirname(__file__))
 

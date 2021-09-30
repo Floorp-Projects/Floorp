@@ -15,7 +15,7 @@ Optimization Strategies
 
 Each task has a single named optimization strategy, and can provide an argument
 to that strategy. Each strategy is defined as an ``OptimizationStrategy``
-instance in ``taskcluster/taskgraph/optimization.py``.
+instance in ``taskcluster/gecko_taskgraph/optimization.py``.
 
 Each task has a ``task.optimization`` property describing the optimization
 strategy that applies, specified as a dictionary mapping strategy to argument. For

@@ -150,9 +150,9 @@ The ``parameters.yml`` file is downloadable from a previous decision or action t
 .. _release promotion: release-promotion.html
 .. _optimization: optimization.html
 .. _kinds: kinds.html
-.. _release promotion action: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/actions/release_promotion.py
+.. _release promotion action: https://searchfox.org/mozilla-central/source/taskcluster/gecko_taskgraph/actions/release_promotion.py
 .. _Treeherder: https://treeherder.mozilla.org
-.. _Release Promotion Projects: https://searchfox.org/mozilla-central/search?q=RELEASE_PROMOTION_PROJECTS&path=taskcluster/taskgraph/util/attributes.py
+.. _Release Promotion Projects: https://searchfox.org/mozilla-central/search?q=RELEASE_PROMOTION_PROJECTS&path=taskcluster/gecko_taskgraph/util/attributes.py
 .. _releasewarrior docs: https://github.com/mozilla-releng/releasewarrior-2.0/blob/master/docs/release-promotion/desktop/howto.md#how
 .. _trigger_action.py: https://searchfox.org/build-central/source/tools/buildfarm/release/trigger_action.py#118
 .. _.taskcluster.yml: https://searchfox.org/mozilla-central/source/.taskcluster.yml

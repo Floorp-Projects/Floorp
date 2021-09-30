@@ -377,7 +377,7 @@ merge-automation:
             to-branch: 'esr91'
 
 scriptworker:
-    # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
+    # See additional configuration in taskcluster/gecko_taskgraph/util/scriptworker.py
     scope-prefix: 'project:releng'
 
 partner-urls:

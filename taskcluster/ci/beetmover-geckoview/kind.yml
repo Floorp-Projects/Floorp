@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
-    - taskgraph.transforms.name_sanity:transforms
-    - taskgraph.transforms.beetmover_geckoview:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.beetmover_geckoview:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - build-signing
@@ -34,7 +34,7 @@ not-for-build-platforms:
 
 job-template:
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
+        artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
     run-on-projects: ['mozilla-release']
     run-on-hg-branches:
         by-project:

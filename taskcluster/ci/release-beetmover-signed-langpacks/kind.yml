@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
-    - taskgraph.transforms.name_sanity:transforms
-    - taskgraph.transforms.release_beetmover_signed_addons:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.release_beetmover_signed_addons:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - build-signing
@@ -32,5 +32,5 @@ job-template:
     attributes:
         artifact_map:
             by-release-type:
-                beta|release.*|esr.*: taskcluster/taskgraph/manifests/firefox_candidates.yml
-                default: taskcluster/taskgraph/manifests/firefox_nightly.yml
+                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
+                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml

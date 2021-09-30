@@ -16,7 +16,7 @@ level: "3"
 message: ""
 moz_build_date: "20210202200353"
 next_version: null
-optimize_strategies: taskgraph.optimize:project.autoland
+optimize_strategies: gecko_taskgraph.optimize:project.autoland
 optimize_target_tasks: true
 owner: cbrindusan@mozilla.com
 phabricator_diff: null

@@ -42,7 +42,7 @@ input matching the schema is collected, passed to a new task which then calls
 your python callback, enabling it to do pretty much anything it wants to.
 
 To create a new callback action you must create a file
-``taskcluster/taskgraph/actions/my-action.py``, that at minimum contains::
+``taskcluster/gecko_taskgraph/actions/my-action.py``, that at minimum contains::
 
   from __future__ import absolute_import, print_function, unicode_literals
 

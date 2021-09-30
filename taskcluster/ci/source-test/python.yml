@@ -35,7 +35,7 @@ job-defaults:
             - 'python/mach_commands.py'
 
 firefox-ci:
-    description: taskcluster/taskgraph unit tests
+    description: taskcluster/gecko_taskgraph unit tests
     python-version: [3]
     treeherder:
         symbol: ci
@@ -326,7 +326,7 @@ reftest-harness:
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
 
 taskgraph-tests:
-    description: taskcluster/taskgraph unit tests
+    description: taskcluster/gecko_taskgraph unit tests
     python-version: [3]
     treeherder:
         symbol: tg
@@ -352,7 +352,7 @@ tryselect:
     when:
         files-changed:
             - 'taskcluster/ci/test/**'
-            - 'taskcluster/taskgraph/transforms/**'
+            - 'taskcluster/gecko_taskgraph/transforms/**'
             - 'tools/tryselect/**'
 
 mozbuild:

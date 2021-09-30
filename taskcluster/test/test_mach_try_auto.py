@@ -7,8 +7,8 @@ import pytest
 from mozunit import main
 from tryselect.selectors.auto import TRY_AUTO_PARAMETERS
 
-from taskgraph.util.bugbug import push_schedules
-from taskgraph.util.chunking import BugbugLoader
+from gecko_taskgraph.util.bugbug import push_schedules
+from gecko_taskgraph.util.chunking import BugbugLoader
 
 
 pytestmark = pytest.mark.slow

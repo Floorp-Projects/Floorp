@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
-    - taskgraph.transforms.chunk_partners:transforms
-    - taskgraph.transforms.name_sanity:transforms
-    - taskgraph.transforms.beetmover_repackage_partner:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.chunk_partners:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.beetmover_repackage_partner:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - release-partner-repack-repackage-signing
