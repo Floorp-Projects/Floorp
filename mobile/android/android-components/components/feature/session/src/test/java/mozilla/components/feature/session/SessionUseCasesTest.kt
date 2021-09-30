@@ -39,18 +39,26 @@ class SessionUseCasesTest {
     private lateinit var store: BrowserStore
     private lateinit var useCases: SessionUseCases
     private lateinit var engineSession: EngineSession
+    private lateinit var childEngineSession: EngineSession
 
     @Before
     fun setUp() {
         engineSession = mock()
+        childEngineSession = mock()
         middleware = CaptureActionsMiddleware()
         store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     createTab(
-                        url = "https://wwww.mozilla.org",
+                        url = "https://mozilla.org",
                         id = "mozilla",
                         engineSession = engineSession
+                    ),
+                    createTab(
+                        url = "https://bugzilla.com",
+                        id = "bugzilla",
+                        engineSession = childEngineSession,
+                        parentId = "mozilla"
                     )
                 ),
                 selectedTabId = "mozilla"
@@ -61,7 +69,58 @@ class SessionUseCasesTest {
     }
 
     @Test
-    fun loadUrl() {
+    fun loadUrlWithEngineSession() {
+        useCases.loadUrl("https://getpocket.com")
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
+        verify(engineSession).loadUrl(url = "https://getpocket.com")
+
+        useCases.loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
+        verify(engineSession).loadUrl(
+            url = "https://www.mozilla.org",
+            flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
+        )
+
+        useCases.loadUrl("https://firefox.com", store.state.selectedTabId)
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
+        verify(engineSession).loadUrl(url = "https://firefox.com")
+
+        useCases.loadUrl.invoke(
+            "https://developer.mozilla.org",
+            store.state.selectedTabId,
+            LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+        )
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
+        verify(engineSession).loadUrl(
+            url = "https://developer.mozilla.org",
+            flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
+        )
+
+        useCases.loadUrl.invoke(
+            "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
+            "bugzilla"
+        )
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
+        verify(childEngineSession).loadUrl(
+            url = "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
+            parent = engineSession
+        )
+    }
+
+    @Test
+    fun loadUrlWithoutEngineSession() {
+        store.dispatch(EngineAction.UnlinkEngineSessionAction("mozilla")).joinBlocking()
+
         useCases.loadUrl("https://getpocket.com")
         store.waitUntilIdle()
 
@@ -70,25 +129,25 @@ class SessionUseCasesTest {
             assertEquals("https://getpocket.com", action.url)
         }
 
-        useCases.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        useCases.loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         store.waitUntilIdle()
 
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals("mozilla", action.tabId)
-            assertEquals("http://www.mozilla.org", action.url)
+            assertEquals("https://www.mozilla.org", action.url)
             assertEquals(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL), action.flags)
         }
 
-        useCases.loadUrl("http://getpocket.com", store.state.selectedTabId)
+        useCases.loadUrl("https://firefox.com", store.state.selectedTabId)
         store.waitUntilIdle()
 
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals("mozilla", action.tabId)
-            assertEquals("http://getpocket.com", action.url)
+            assertEquals("https://firefox.com", action.url)
         }
 
         useCases.loadUrl.invoke(
-            "http://getpocket.com",
+            "https://developer.mozilla.org",
             store.state.selectedTabId,
             LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
         )
@@ -96,7 +155,7 @@ class SessionUseCasesTest {
 
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals("mozilla", action.tabId)
-            assertEquals("http://getpocket.com", action.url)
+            assertEquals("https://developer.mozilla.org", action.url)
             assertEquals(LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY), action.flags)
         }
     }
