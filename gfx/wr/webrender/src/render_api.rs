@@ -19,7 +19,7 @@ use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageK
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
 use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent};
 use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
-use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags, ScrollNodeState};
+use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags};
 use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
 use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use crate::api::DEFAULT_TILE_SIZE;
@@ -802,8 +802,6 @@ pub enum FrameMsg {
     ///
     ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     ///
-    GetScrollNodeState(Sender<Vec<ScrollNodeState>>),
-    ///
     ResetDynamicProperties,
     ///
     AppendDynamicProperties(DynamicProperties),
@@ -833,7 +831,6 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
             FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
             FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
-            FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
             FrameMsg::ResetDynamicProperties => "FrameMsg::ResetDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::AppendDynamicTransformProperties(..) => "FrameMsg::AppendDynamicTransformProperties",
@@ -1294,13 +1291,6 @@ impl RenderApi {
         );
 
         HitTesterRequest { rx }
-    }
-
-    ///
-    pub fn get_scroll_node_state(&self, document_id: DocumentId) -> Vec<ScrollNodeState> {
-        let (tx, rx) = single_msg_channel();
-        self.send_frame_msg(document_id, FrameMsg::GetScrollNodeState(tx));
-        rx.recv().unwrap()
     }
 
     // Some internal scheduling magic that leaked into the API.

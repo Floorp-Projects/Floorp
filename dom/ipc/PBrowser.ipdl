@@ -45,7 +45,6 @@ include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
 
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
-using mozilla::gfx::MaybeMatrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
@@ -57,7 +56,6 @@ using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/Scrollabl
 using struct mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
@@ -715,7 +713,7 @@ child:
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
-    async ChildToParentMatrix(MaybeMatrix4x4 aMatrix,
+    async ChildToParentMatrix(Matrix4x4? aMatrix,
                               ScreenRect aRemoteDocumentRect);
 
     async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);

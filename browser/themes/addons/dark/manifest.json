@@ -91,9 +91,9 @@
       "tab_icon_overlay_fill": "--tab-icon-overlay-fill"
     },
     "properties": {
-      "panel_hover": "--arrowpanel-dimmed",
+      "panel_hover": "--panel-item-hover-bgcolor",
       "panel_active": "--arrowpanel-dimmed-further",
-      "panel_active_darker": "--arrowpanel-dimmed-even-further",
+      "panel_active_darker": "--panel-item-active-bgcolor",
       "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity",
       "zap_gradient": "--panel-separator-zap-gradient"
     }

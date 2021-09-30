@@ -32,7 +32,9 @@ using namespace mozilla;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
 
+#ifdef DEBUG
 static LazyLogModule gCommandLog("nsXULCommandDispatcher");
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 

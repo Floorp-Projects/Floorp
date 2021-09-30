@@ -115,8 +115,7 @@ struct RepaintRequest {
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
     // Refer to FrameMetrics::DisplayportPixelsPerCSSPixel() for explanation.
-    return mZoom * ParentLayerToLayerScale(1.0f) *
-           ViewAs<LayerToScreenScale2D>(mTransformToAncestorScale);
+    return mZoom * mTransformToAncestorScale;
   }
 
   CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
@@ -179,7 +178,7 @@ struct RepaintRequest {
 
   const CSSRect& GetLayoutViewport() const { return mLayoutViewport; }
 
-  const Scale2D& GetTransformToAncestorScale() const {
+  const ParentLayerToScreenScale2D& GetTransformToAncestorScale() const {
     return mTransformToAncestorScale;
   }
 
@@ -280,7 +279,7 @@ struct RepaintRequest {
   CSSRect mLayoutViewport;
 
   // The scale on this scroll frame induced by enclosing CSS transforms.
-  Scale2D mTransformToAncestorScale;
+  ParentLayerToScreenScale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;

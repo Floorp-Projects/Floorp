@@ -400,10 +400,6 @@ impl Document {
                     ..DocumentOps::nop()
                 };
             }
-            FrameMsg::GetScrollNodeState(tx) => {
-                profile_scope!("GetScrollNodeState");
-                tx.send(self.scene.spatial_tree.get_scroll_node_state()).unwrap();
-            }
             FrameMsg::ResetDynamicProperties => {
                 self.dynamic_properties.reset_properties();
             }

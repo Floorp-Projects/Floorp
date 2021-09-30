@@ -45,7 +45,7 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
 
   mozilla::ipc::IPCResult RecvUpdateZoomConstraints(
       const ScrollableLayerGuid& aGuid,
-      const MaybeZoomConstraints& aConstraints);
+      const Maybe<ZoomConstraints>& aConstraints);
 
   mozilla::ipc::IPCResult RecvSetDPI(const float& aDpiValue);
 

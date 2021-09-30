@@ -575,10 +575,10 @@ class JSONPoliciesProvider {
       ) {
         // Do nothing, _policies will remain null
       } else if (ex instanceof SyntaxError) {
-        log.error("Error parsing JSON file");
+        log.error(`Error parsing JSON file: ${ex}`);
         this._failed = true;
       } else {
-        log.error("Error reading file");
+        log.error(`Error reading JSON file: ${ex}`);
         this._failed = true;
       }
     }

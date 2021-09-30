@@ -161,10 +161,7 @@ const SIGNED_TYPES = new Set(["extension", "locale", "theme"]);
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
 
-const LOCALE_BUNDLES = [
-  "chrome://global/locale/global-extension-fields.properties",
-  "chrome://global/locale/app-extension-fields.properties",
-].map(url => Services.strings.createBundle(url));
+const l10n = new Localization(["browser/appExtensionFields.ftl"], true);
 
 /**
  * Schedules an idle task, and returns a promise which resolves to an
@@ -1325,15 +1322,6 @@ function chooseValue(aAddon, aObj, aProp) {
     return [repositoryAddon[aProp], true];
   }
 
-  let id = `extension.${aAddon.id}.${aProp}`;
-  for (let bundle of LOCALE_BUNDLES) {
-    try {
-      return [bundle.GetStringFromName(id), false];
-    } catch (e) {
-      // Ignore missing overrides.
-    }
-  }
-
   return [objValue, false];
 }
 
@@ -1434,6 +1422,24 @@ defineAddonWrapperProperty("signedDate", function() {
 ["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
+
+    // We want to make sure that all built-in themes that are localizable can
+    // actually localized, particularly those for thunderbird and desktop.
+    if (
+      (aProp === "name" || aProp === "description") &&
+      addon.location.name === KEY_APP_BUILTINS &&
+      // Temporary workaround until bug 1731652 lands.
+      !addon.id.endsWith("colorway@mozilla.org") &&
+      addon.type === "theme"
+    ) {
+      // Built-in themes are localized with Fluent instead of the WebExtension API.
+      let addonIdPrefix = addon.id.replace("@mozilla.org", "");
+      let [formattedMessage] = l10n.formatMessagesSync([
+        { id: `extension-${addonIdPrefix}-${aProp}` },
+      ]);
+
+      return formattedMessage.value;
+    }
 
     let [result, usedRepository] = chooseValue(
       addon,
