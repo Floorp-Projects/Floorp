@@ -7,10 +7,10 @@
     }
   },
 
-  "name": "System theme",
+  "name": "System theme — auto",
   "description": "Follow the operating system setting for buttons, menus, and windows.",
   "author": "Mozilla",
-  "version": "1.2",
+  "version": "1.3",
 
   "icons": {"32": "icon.svg"},
 
